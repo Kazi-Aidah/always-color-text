@@ -6,7 +6,7 @@
   "author": "Kazi Aidah Haque",
   "authorUrl": "https://github.com/Kazi-Aidah",
   "description": "Colors specific words throughout the Vault in both editor and preview modes.",
-  "repository": "Kazi-Aidah/always-color-text",
+  "repo": "Kazi-Aidah/always-color-text",
   "isDesktopOnly": true,
   "main": "main.js"
 }
