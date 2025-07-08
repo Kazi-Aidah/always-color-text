@@ -207,7 +207,10 @@ module.exports = class AlwaysColorText extends Plugin {
       replaceDefaultSwatches: false,
       customSwatches: [
         '#eb3b5a', '#fa8231', '#e5a216', '#20bf6b',
-        '#0fb9b1', '#2d98da', '#3867d6', '#8854d0',
+        '#0fb9b1', '#2d98da', '#3867d6', 
+        '#5454d0', 
+        '#8854d0', // 0p
+        '#a954d0', 
         '#e832c1', '#e83289', '#965b3b', '#8392a4'
       ],
       disableToggleModes: {
@@ -713,7 +716,18 @@ class ColorPickerModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl('h2', { text: 'Pick Color' });
+
+    this.modalEl.style.maxWidth = '360px'; // Pick Color Modal Width
+    this.modalEl.style.width = '100%';
+    this.modalEl.style.margin = '0 auto';
+    this.modalEl.style.padding = '0';
+
+    contentEl.style.padding = '32px 28px 24px 28px';
+    contentEl.style.boxSizing = 'border-box';
+
+    const h2 = contentEl.createEl('h2', { text: 'Pick Color' });
+    h2.style.marginTop = '-10px'; // oulta remove top margin of H2!!!
+    h2.style.marginBottom = '18px';
 
     const inputDiv = contentEl.createDiv();
     inputDiv.style.display = 'flex';
@@ -722,7 +736,7 @@ class ColorPickerModal extends Modal {
 
     const picker = inputDiv.createEl('input', { type: 'color' });
     picker.value = '#000000';
-    picker.style.width = '60px';
+    picker.style.width = '60px'; // Colour Picker Box Width (pill)
     picker.style.height = '35px';
     picker.style.border = 'none';
     picker.style.borderRadius = '5px';
@@ -735,6 +749,7 @@ class ColorPickerModal extends Modal {
     hexInput.style.padding = '8px';
     hexInput.style.borderRadius = '5px';
     hexInput.style.border = '1px solid var(--background-modifier-border)';
+    hexInput.style.width = '100px'; // Hex Box Input Width
 
     picker.onchange = () => {
       hexInput.value = picker.value;
@@ -758,7 +773,10 @@ class ColorPickerModal extends Modal {
 
     const defaultSwatches = [
       '#eb3b5a', '#fa8231', '#e5a216', '#20bf6b',
-      '#0fb9b1', '#2d98da', '#3867d6', '#8854d0',
+      '#0fb9b1', '#2d98da', '#3867d6',
+      '#5454d0', 
+      '#8854d0', // OG
+      '#b554d0', 
       '#e832c1', '#e83289', '#965b3b', '#8392a4'
     ];
 
@@ -814,7 +832,8 @@ class ConfirmationModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl('h2', { text: this.title });
+    const h2 = contentEl.createEl('h2', { text: this.title });
+    h2.style.marginTop = '0'; // Remove top margin
     contentEl.createEl('p', { text: this.message });
 
     const buttonDiv = contentEl.createDiv();
