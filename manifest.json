@@ -1,0 +1,10 @@
+{
+  "id": "always-color-text",
+  "name": "Always Color Text",
+  "version": "0.1.0",
+  "minAppVersion": "1.0.0",
+  "author": "Kazi Aidah Haque",
+  "authorUrl": "https://github.com/Kazi-Aidah",
+  "description": "Colors texts across the Vault.",
+  "main": "main.js"
+}
