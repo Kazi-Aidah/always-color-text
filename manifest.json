@@ -6,5 +6,6 @@
   "author": "Kazi Aidah Haque",
   "authorUrl": "https://github.com/Kazi-Aidah",
   "description": "Colors texts across the Vault.",
-  "main": "main.js"
+  "main": "main.js",
+  "platforms": ["desktop"]
 }
