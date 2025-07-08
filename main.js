@@ -726,7 +726,7 @@ class ColorPickerModal extends Modal {
     contentEl.style.boxSizing = 'border-box';
 
     const h2 = contentEl.createEl('h2', { text: 'Pick Color' });
-    h2.style.marginTop = '-10px'; // oulta remove top margin of H2!!!
+    h2.style.marginTop = '-15px'; // oulta remove top margin of H2!!!
     h2.style.marginBottom = '18px';
 
     const inputDiv = contentEl.createDiv();
@@ -736,10 +736,10 @@ class ColorPickerModal extends Modal {
 
     const picker = inputDiv.createEl('input', { type: 'color' });
     picker.value = '#000000';
-    picker.style.width = '60px'; // Colour Picker Box Width (pill)
-    picker.style.height = '35px';
+    picker.style.width = '80px'; // Colour Picker Box Width (pill)
+    picker.style.height = '30px';
     picker.style.border = 'none';
-    picker.style.borderRadius = '5px';
+    picker.style.borderRadius = '0px';
     picker.style.cursor = 'pointer';
 
     const hexInput = inputDiv.createEl('input', { type: 'text' });
@@ -750,6 +750,7 @@ class ColorPickerModal extends Modal {
     hexInput.style.borderRadius = '5px';
     hexInput.style.border = '1px solid var(--background-modifier-border)';
     hexInput.style.width = '100px'; // Hex Box Input Width
+    hexInput.textalign = 'center';
 
     picker.onchange = () => {
       hexInput.value = picker.value;
