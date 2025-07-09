@@ -31,6 +31,9 @@ module.exports = class AlwaysColorText extends Plugin {
         this.saveSettings();
         new Notice(`Always Color Text ${this.settings.enabled ? 'Enabled' : 'Disabled'}`);
         this.updateStatusBar();
+        this.reconfigureEditorExtensions();
+        this.forceRefreshAllEditors();
+        this.forceRefreshAllReadingViews();
       });
     } else {
       this.ribbonIcon = null;
@@ -44,6 +47,9 @@ module.exports = class AlwaysColorText extends Plugin {
         this.settings.enabled = !this.settings.enabled;
         this.saveSettings();
         this.updateStatusBar();
+        this.reconfigureEditorExtensions();
+        this.forceRefreshAllEditors();
+        this.forceRefreshAllReadingViews();
       };
     } else {
       this.statusBar = null;
@@ -62,6 +68,8 @@ module.exports = class AlwaysColorText extends Plugin {
               this.settings.disabledFiles.push(file.path);
             }
             await this.saveSettings();
+            this.forceRefreshAllEditors();
+            this.forceRefreshAllReadingViews();
           });
       });
     }));
@@ -75,18 +83,29 @@ module.exports = class AlwaysColorText extends Plugin {
           item.setTitle("Color Once")
             .setIcon('brush')
             .onClick(() => {
+              // Warn if blacklisted
+              if (this.settings.blacklistWords.includes(selectedText)) {
+                new Notice(`"${selectedText}" is blacklisted and cannot be colored.`);
+                return;
+              }
               new ColorPickerModal(this.app, this, (color) => {
                 const html = `<span style="color: ${color}">${selectedText}</span>`;
                 editor.replaceSelection(html);
               }).open();
             });
         });
+        
         // Highlight Once:
         if (this.settings.enableAlwaysHighlight) {
           menu.addItem(item => {
             item.setTitle("Highlight Once")
               .setIcon('highlighter')
               .onClick(() => {
+                // Warn if blacklisted
+                if (this.settings.blacklistWords.includes(selectedText)) {
+                  new Notice(`"${selectedText}" is blacklisted and cannot be highlighted.`);
+                  return;
+                }
                 new ColorPickerModal(this.app, this, (color) => {
                   const html = `<span style="background-color: ${color}">${selectedText}</span>`;
                   editor.replaceSelection(html);
@@ -94,19 +113,44 @@ module.exports = class AlwaysColorText extends Plugin {
               });
           });
         }
+        
         // Always Color Text:
         menu.addItem(item => {
           item.setTitle("Always Color Text")
             .setIcon('palette')
             .onClick(() => {
+              // Warn if blacklisted
+              if (this.settings.blacklistWords.includes(selectedText)) {
+                new Notice(`"${selectedText}" is blacklisted and cannot be colored.`);
+                return;
+              }
               new ColorPickerModal(this.app, this, async (color) => {
                 await this.saveEntry(selectedText, color);
                 this.refreshEditor(view, true);
               }).open();
             });
         });
+
+        // Blacklist Words from Coloring
+        if (this.settings.enableBlacklistMenu) {
+          menu.addItem(item => {
+            item.setTitle("Blacklist Words from Coloring")
+              .setIcon('ban')
+              .onClick(async () => {
+                if (!this.settings.blacklistWords.includes(selectedText)) {
+                  this.settings.blacklistWords.push(selectedText);
+                  await this.saveSettings();
+                  new Notice(`"${selectedText}" added to blacklist.`);
+                  this.refreshEditor(view, true);
+                } else {
+                  new Notice(`"${selectedText}" is already blacklisted.`);
+                }
+              });
+          });
+        }
       }
     }));
+    
 
     // --- Command palette thingy ---
     if (!this.settings.disableToggleModes.command) {
@@ -123,6 +167,60 @@ module.exports = class AlwaysColorText extends Plugin {
             await this.saveEntry(word, color);
             this.forceRefreshAllEditors();
           }).open();
+        }
+      });
+
+      // --- Disable coloring for current document ---
+      this.addCommand({
+        id: 'disable-coloring-for-current-document',
+        name: 'Disable Coloring for Current Document',
+        callback: async () => {
+          const md = this.app.workspace.getActiveFile();
+          if (md && !this.settings.disabledFiles.includes(md.path)) {
+            this.settings.disabledFiles.push(md.path);
+            await this.saveSettings();
+            new Notice(`Coloring disabled for ${md.path}`);
+          } else if (md && this.settings.disabledFiles.includes(md.path)) {
+            new Notice(`Coloring is already disabled for ${md.path}`);
+          } else {
+            new Notice('No active file to disable coloring for.');
+          }
+        }
+      });
+
+      // --- Disable Always Color Text globally ---
+      this.addCommand({
+        id: 'disable-always-color-text',
+        name: 'Disable Always Color Text',
+        callback: async () => {
+          if (!this.settings.enabled) {
+            new Notice('Always Color Text is already disabled.');
+            return;
+          }
+          this.settings.enabled = false;
+          await this.saveSettings();
+          new Notice('Always Color Text Disabled');
+          this.reconfigureEditorExtensions();
+          this.forceRefreshAllEditors();
+          this.forceRefreshAllReadingViews();
+        }
+      });
+
+      // --- Enable Always Color Text globally ---
+      this.addCommand({
+        id: 'enable-always-color-text',
+        name: 'Enable Always Color Text',
+        callback: async () => {
+          if (this.settings.enabled) {
+            new Notice('Always Color Text is already enabled.');
+            return;
+          }
+          this.settings.enabled = true;
+          await this.saveSettings();
+          new Notice('Always Color Text Enabled');
+          this.reconfigureEditorExtensions();
+          this.forceRefreshAllEditors();
+          this.forceRefreshAllReadingViews();
         }
       });
     }
@@ -200,8 +298,9 @@ module.exports = class AlwaysColorText extends Plugin {
       wordColors: {},
       caseSensitive: false,
       enabled: false,
-      partialMatch: false,
       highlightStyle: 'text',
+      backgroundOpacity: 35, // percent
+      highlightBorderRadius: 4, // px
       disabledFiles: [],
       customSwatchesEnabled: false,
       replaceDefaultSwatches: false,
@@ -209,7 +308,7 @@ module.exports = class AlwaysColorText extends Plugin {
         '#eb3b5a', '#fa8231', '#e5a216', '#20bf6b',
         '#0fb9b1', '#2d98da', '#3867d6', 
         '#5454d0', 
-        '#8854d0', // 0p
+        '#8854d0', // purple
         '#a954d0', 
         '#e832c1', '#e83289', '#965b3b', '#8392a4'
       ],
@@ -219,6 +318,10 @@ module.exports = class AlwaysColorText extends Plugin {
         ribbon: false
       },
       enableAlwaysHighlight: false,
+      partialMatch: false,
+      blacklistWords: [],
+      enableBlacklistMenu: false,
+      symbolWordColoring: false,
     }, await this.loadData() || {});
   }
 
@@ -231,7 +334,6 @@ module.exports = class AlwaysColorText extends Plugin {
       this.enablePluginFeatures();
     }
     this.updateStatusBar();
-    this.reconfigureEditorExtensions();
   }
 
   // --- Save a persistent color for a word ---
@@ -241,11 +343,27 @@ module.exports = class AlwaysColorText extends Plugin {
     this.reconfigureEditorExtensions();
   }
 
-  // --- Force refresh all open Markdown editors ---
+  // --- FORCE REFRESH all open Markdown editors ---
   forceRefreshAllEditors() {
     this.app.workspace.iterateAllLeaves(leaf => {
       if (leaf.view instanceof MarkdownView && leaf.view.editor?.cm) {
         leaf.view.editor.cm.dispatch({ changes: [] });
+      }
+    });
+  }
+
+  // --- FORCE REFRESH all reading views (reading mode panes) ---
+  forceRefreshAllReadingViews() {
+    this.app.workspace.iterateAllLeaves(leaf => {
+      if (leaf.view instanceof MarkdownView && leaf.view.getMode && leaf.view.getMode() === 'preview') {
+        // Re-render reading mode
+        if (typeof leaf.view.previewMode?.rerender === 'function') {
+          leaf.view.previewMode.rerender(true);
+        } else if (typeof leaf.view.previewMode?.render === 'function') {
+          leaf.view.previewMode.render();
+        } else if (typeof leaf.view?.rerender === 'function') {
+          leaf.view.rerender();
+        }
       }
     });
   }
@@ -266,7 +384,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
-  // --- Refresh only the Active Editor ---
+  // --- Refresh only the Active Editor!!! ---
   refreshActiveEditor(force = false) {
     if (this._refreshTimeout) clearTimeout(this._refreshTimeout);
     this._refreshTimeout = setTimeout(() => {
@@ -293,17 +411,32 @@ module.exports = class AlwaysColorText extends Plugin {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
-  // --- Get Sorted Word Entries (Longest words first for correct matching) ---
+  // --- Get Sorted Word Entries (Longest words first!!!) ---
   getSortedWordEntries() {
     const numWords = Object.keys(this.settings.wordColors).length;
     if (numWords > 200) {
       console.warn(`Always Color Text: You have ${numWords} colored words! That's a lot. Your app might slow down a bit.`);
     }
     return Object.entries(this.settings.wordColors)
+      .filter(([word]) => !this.settings.blacklistWords.includes(word))
       .sort((a, b) => b[0].length - a[0].length);
   }
 
-  // --- Efficient Apply Highlights in Reading View (Markdown Post Processor) ---
+  // --- Helper: Convert hex to rgba with opacity ---
+  hexToRgba(hex, opacityPercent) {
+    let c = hex.replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    const num = parseInt(c, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    // Clamp and convert percent to 0-1
+    let o = Math.max(0, Math.min(100, Number(opacityPercent)));
+    o = o / 100;
+    return `rgba(${r},${g},${b},${o})`;
+  }
+
+  // --- Apply Highlights in Reading View (Markdown Post Processor) ---
   applyHighlights(el) {
     const entries = this.getSortedWordEntries();
     if (entries.length === 0) return;
@@ -330,23 +463,121 @@ module.exports = class AlwaysColorText extends Plugin {
         const text = node.textContent;
         if (!text || text.length > 2000) continue;
         let matches = [];
+
+        const isBlacklisted = (textToCheck, coloredWord = null) => {
+          return this.settings.blacklistWords.some(bw => {
+            if (!bw) return false;
+            if (this.settings.caseSensitive) {
+              if (textToCheck === bw) return true;
+              if (coloredWord && bw.includes(coloredWord)) return true;
+            } else {
+              const lowerText = textToCheck.toLowerCase();
+              const lowerBW = bw.toLowerCase();
+              if (lowerText === lowerBW) return true;
+              if (coloredWord && lowerBW.includes(coloredWord.toLowerCase())) return true;
+            }
+            return false;
+          });
+        };
+
         for (const [word, color] of entries) {
           const flags = this.settings.caseSensitive ? 'g' : 'gi';
           let pattern;
-          if (this.settings.partialMatch) {
-            pattern = `${this.escapeRegex(word)}\\w*`;
+          if (/^[^a-zA-Z0-9]+$/.test(word)) {
+            pattern = this.escapeRegex(word);
           } else {
             pattern = (word.includes(' ') ? this.escapeRegex(word) : `\\b${this.escapeRegex(word)}\\b`);
           }
           const regex = new RegExp(pattern, flags);
           let match;
           while ((match = regex.exec(text))) {
-            matches.push({ start: match.index, end: match.index + match[0].length, color, word: match[0] });
-            if (matches.length > 50) break;
+            const matchedText = match[0];
+            // Only block if the whole match is blacklisted, not if it contains a blacklisted word as substring
+            if (this.settings.caseSensitive) {
+              if (this.settings.blacklistWords.includes(matchedText)) continue;
+            } else {
+              if (this.settings.blacklistWords.map(w => w.toLowerCase()).includes(matchedText.toLowerCase())) continue;
+            }
+            matches.push({ start: match.index, end: match.index + matchedText.length, color, word: matchedText });
+            if (matches.length > 100) break;
           }
-          if (matches.length > 50) break;
+          if (matches.length > 100) break;
         }
-        if (matches.length > 50) continue;
+
+        // --- Partial Match coloring ---
+        if (this.settings.partialMatch) {
+          // Find all word-like substrings
+          const wordRegex = /\w+/g;
+          let match;
+          while ((match = wordRegex.exec(text))) {
+            const w = match[0];
+            const start = match.index;
+            const end = start + w.length;
+            // Check if the entire word is blacklisted first
+            if (isBlacklisted(w)) continue;
+            for (const [colored, color] of entries) {
+              if (/^[^a-zA-Z0-9]+$/.test(colored)) continue;
+              // Skip if the colored word itself is blacklisted
+              if (isBlacklisted(colored)) continue;
+              // Check if colored word is a substring of w (case-insensitive if needed)
+              let found = false;
+              if (this.settings.caseSensitive) {
+                if (w.includes(colored)) found = true;
+              } else {
+                if (w.toLowerCase().includes(colored.toLowerCase())) found = true;
+              }
+              if (found) {
+                // Remove any existing matches that overlap this word
+                matches = matches.filter(m => m.end <= start || m.start >= end);
+                matches.push({
+                  start: start,
+                  end: end,
+                  color,
+                  word: w
+                });
+                break; // Only color once per word
+              }
+            }
+          }
+        }
+
+        // --- Symbol-Word Coloring ---
+        // Always do normal symbol coloring (individual symbols)
+        for (const [word, color] of entries) {
+          if (/^[^a-zA-Z0-9]+$/.test(word)) {
+            const flags = this.settings.caseSensitive ? 'g' : 'gi';
+            const regex = new RegExp(this.escapeRegex(word), flags);
+            let match;
+            while ((match = regex.exec(text))) {
+              matches.push({ start: match.index, end: match.index + match[0].length, color, word });
+            }
+          }
+        }
+
+        // If enabled, also color the whole word if it contains a colored symbol
+        if (this.settings.symbolWordColoring) {
+          const symbolEntries = entries.filter(([word]) => /^[^a-zA-Z0-9]+$/.test(word));
+          if (symbolEntries.length > 0) {
+            const wordRegex = /\b\w+[^\s]*\b/g;
+            let match;
+            while ((match = wordRegex.exec(text))) {
+              const w = match[0];
+              const start = match.index;
+              const end = start + w.length;
+              if (isBlacklisted(w)) continue;
+              for (const [symbol, color] of symbolEntries) {
+                const flags = this.settings.caseSensitive ? '' : 'i';
+                const regex = new RegExp(this.escapeRegex(symbol), flags);
+                if (regex.test(w)) {
+                  matches.push({ start, end, color, word: w });
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // --- Remove overlapping matches, prefer longest ---
         matches.sort((a, b) => a.start - b.start || b.end - a.end);
         let lastEnd = 0;
         let nonOverlapping = [];
@@ -367,7 +598,11 @@ module.exports = class AlwaysColorText extends Plugin {
             span.className = 'always-color-text-highlight';
             span.textContent = text.slice(m.start, m.end);
             if (this.settings.highlightStyle === 'text') span.style.color = m.color;
-            else span.style.backgroundColor = m.color;
+            else {
+              // background style
+              span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
+              span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+            }
             frag.appendChild(span);
             pos = m.end;
           }
@@ -378,7 +613,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
-  // --- Efficient Build CodeMirror Editor Extension (Editing View) ---
+  // --- Build CodeMirror Editor Extension (Editing View) ---
   buildEditorExtension() {
     const plugin = this;
     return ViewPlugin.fromClass(class {
@@ -404,22 +639,104 @@ module.exports = class AlwaysColorText extends Plugin {
         const entries = plugin.getSortedWordEntries();
         if (entries.length === 0) return builder.finish();
         let matches = [];
+
         for (const [word, color] of entries) {
           const flags = plugin.settings.caseSensitive ? 'g' : 'gi';
           let pattern;
-          if (plugin.settings.partialMatch) {
-            pattern = `${plugin.escapeRegex(word)}\\w*`;
+          if (/^[^a-zA-Z0-9]+$/.test(word)) {
+            pattern = plugin.escapeRegex(word);
           } else {
             pattern = (word.includes(' ') ? plugin.escapeRegex(word) : `\\b${plugin.escapeRegex(word)}\\b`);
           }
           const regex = new RegExp(pattern, flags);
           let match;
           while ((match = regex.exec(text))) {
-            matches.push({ start: from + match.index, end: from + match.index + match[0].length, color });
-            if (matches.length > 50) break;
+            const matchedText = match[0];
+            // Only block if the whole match is blacklisted, not if it contains a blacklisted word as substring
+            if (plugin.settings.caseSensitive) {
+              if (plugin.settings.blacklistWords.includes(matchedText)) continue;
+            } else {
+              if (plugin.settings.blacklistWords.map(w => w.toLowerCase()).includes(matchedText.toLowerCase())) continue;
+            }
+            matches.push({ start: from + match.index, end: from + match.index + matchedText.length, color });
+            if (matches.length > 100) break;
           }
-          if (matches.length > 50) break;
+          if (matches.length > 100) break;
         }
+
+        // --- Partial Match coloring ---
+        if (plugin.settings.partialMatch) {
+          const words = text.split(/(\b|\W+)/);
+          let pos = from;
+          for (const w of words) {
+            if (!w) {
+              pos += w.length;
+              continue;
+            }
+            // Symbol coloring
+            for (const [colored, color] of entries) {
+              if (/^[^a-zA-Z0-9]+$/.test(colored)) {
+                const flags = plugin.settings.caseSensitive ? 'g' : 'gi';
+                const regex = new RegExp(plugin.escapeRegex(colored), flags);
+                let match;
+                while ((match = regex.exec(w))) {
+                  matches.push({ start: pos + match.index, end: pos + match.index + match[0].length, color });
+                }
+              }
+            }
+            // Whole word coloring
+            if (/\w/.test(w) && !plugin.settings.blacklistWords.includes(w)) {
+              for (const [colored, color] of entries) {
+                if (/^[^a-zA-Z0-9]+$/.test(colored)) continue;
+                const flags = plugin.settings.caseSensitive ? '' : 'i';
+                const regex = new RegExp(plugin.escapeRegex(colored), flags);
+                if (regex.test(w)) {
+                  matches.push({ start: pos, end: pos + w.length, color });
+                  break;
+                }
+              }
+            }
+            pos += w.length;
+          }
+        }
+
+        // --- Symbol-Word Coloring ---
+        if (plugin.settings.symbolWordColoring) {
+          // If enabled, color the whole word if it contains a colored symbol
+          const symbolEntries = entries.filter(([word]) => /^[^a-zA-Z0-9]+$/.test(word));
+          if (symbolEntries.length > 0) {
+            const wordRegex = /\b\w+[^\s]*\b/g;
+            let match;
+            while ((match = wordRegex.exec(text))) {
+              const w = match[0];
+              const start = from + match.index;
+              const end = start + w.length;
+              if (plugin.settings.blacklistWords.includes(w)) continue;
+              for (const [symbol, color] of symbolEntries) {
+                const flags = plugin.settings.caseSensitive ? '' : 'i';
+                const regex = new RegExp(plugin.escapeRegex(symbol), flags);
+                if (regex.test(w)) {
+                  matches.push({ start, end, color });
+                  break; // Only color once per word
+                }
+              }
+            }
+          }
+        } else {
+          // Default: color symbols individually
+          for (const [word, color] of entries) {
+            if (/^[^a-zA-Z0-9]+$/.test(word)) {
+              const flags = plugin.settings.caseSensitive ? 'g' : 'gi';
+              const regex = new RegExp(plugin.escapeRegex(word), flags);
+              let match;
+              while ((match = regex.exec(text))) {
+                matches.push({ start: from + match.index, end: from + match.index + match[0].length, color });
+              }
+            }
+          }
+        }
+
+        // --- Remove overlapping matches, prefer longest ---
         matches.sort((a, b) => a.start - b.start || b.end - a.end);
         let lastEnd = from;
         let nonOverlapping = [];
@@ -429,12 +746,13 @@ module.exports = class AlwaysColorText extends Plugin {
             lastEnd = m.end;
           }
         }
-        nonOverlapping = nonOverlapping.slice(0, 50);
+        nonOverlapping = nonOverlapping.slice(0, 100);
         for (const m of nonOverlapping) {
+          const style = plugin.settings.highlightStyle === 'text'
+            ? `color: ${m.color} !important;`
+            : `background-color: ${plugin.hexToRgba(m.color, plugin.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(plugin.settings.highlightBorderRadius ?? 8)}px !important;`;
           const deco = Decoration.mark({
-            attributes: plugin.settings.highlightStyle === 'text'
-              ? { style: `color: ${m.color} !important;` }
-              : { style: `background-color: ${m.color} !important;` }
+            attributes: { style }
           });
           builder.add(m.start, m.end, deco);
         }
@@ -462,6 +780,7 @@ class ColorSettingTab extends PluginSettingTab {
     const h2 = containerEl.createEl('h2', { text: 'Always Color Text Settings' });
     h2.style.marginTop = '0.5em';
 
+    // 1. Enable Document Colour
     new Setting(containerEl)
       .setName('Enable Document Colour')
       .addToggle(t => t.setValue(this.plugin.settings.enabled).onChange(async v => {
@@ -469,14 +788,7 @@ class ColorSettingTab extends PluginSettingTab {
         await this.debouncedSaveSettings();
       }));
 
-    new Setting(containerEl)
-      .setName('Enable Highlight Once')
-      .setDesc('This adds "Highlight Once" to your right-click menu. You can highlight selected text with a background color.')
-      .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysHighlight).onChange(async v => {
-        this.plugin.settings.enableAlwaysHighlight = v;
-        await this.debouncedSaveSettings();
-      }));
-
+    // 2. Case Sensitive
     new Setting(containerEl)
       .setName('Case Sensitive')
       .setDesc('If this is on, "word" and "Word" are totally different. If it\'s off, they\'re the same.')
@@ -485,16 +797,9 @@ class ColorSettingTab extends PluginSettingTab {
         await this.debouncedSaveSettings();
       }));
 
+    // 3. Color Style (was Highlight Style)
     new Setting(containerEl)
-      .setName('Partial Match')
-      .setDesc('If this is on, "Art" will color "Artist" too! It matches words that contain your defined word.')
-      .addToggle(t => t.setValue(this.plugin.settings.partialMatch).onChange(async v => {
-        this.plugin.settings.partialMatch = v;
-        await this.debouncedSaveSettings();
-      }));
-
-    new Setting(containerEl)
-      .setName('Highlight Style')
+      .setName('Color Style')
       .setDesc('Do you want to color the text itself or the background behind it?')
       .addDropdown(d => d
         .addOption('text', 'Text Color')
@@ -503,7 +808,146 @@ class ColorSettingTab extends PluginSettingTab {
         .onChange(async v => {
           this.plugin.settings.highlightStyle = v;
           await this.debouncedSaveSettings();
+          this.display();
         }));
+
+    // --- Background Opacity and Border Radius (only if background) ---
+    if (this.plugin.settings.highlightStyle === 'background') {
+      // Opacity input (percent)
+      new Setting(containerEl)
+        .setName('Background Opacity (%)')
+        .setDesc('Set the opacity of the background highlight (0-100, percent)')
+        .addText(text => text
+          .setPlaceholder('0-100')
+          .setValue(String(this.plugin.settings.backgroundOpacity ?? 25))
+          .onChange(async v => {
+            let val = parseInt(v);
+            if (isNaN(val) || val < 0) val = 0;
+            if (val > 100) val = 100;
+            this.plugin.settings.backgroundOpacity = val;
+            await this.debouncedSaveSettings();
+          })
+        )
+        .addExtraButton(btn => btn
+          .setIcon('reset')
+          .setTooltip('Reset to 25')
+          .onClick(async () => {
+            this.plugin.settings.backgroundOpacity = 25;
+            await this.debouncedSaveSettings();
+            this.display();
+          }));
+
+      // Border Radius input (px)
+      new Setting(containerEl)
+        .setName('Highlight Border Radius (px)')
+        .setDesc('Set the border radius (in px) for rounded highlight corners')
+        .addText(text => text
+          .setPlaceholder('e.g. 0, 4, 8')
+          .setValue(String(this.plugin.settings.highlightBorderRadius ?? 8))
+          .onChange(async v => {
+            let val = parseInt(v);
+            if (isNaN(val) || val < 0) val = 0;
+            this.plugin.settings.highlightBorderRadius = val;
+            await this.debouncedSaveSettings();
+          })
+        )
+        .addExtraButton(btn => btn
+          .setIcon('reset')
+          .setTooltip('Reset to 8')
+          .onClick(async () => {
+            this.plugin.settings.highlightBorderRadius = 8;
+            await this.debouncedSaveSettings();
+            this.display();
+          }));
+    }
+
+    // 4. Enable Highlight Once
+    new Setting(containerEl)
+      .setName('Enable Highlight Once')
+      .setDesc('This adds "Highlight Once" to your right-click menu. You can highlight selected text with a background color.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysHighlight).onChange(async v => {
+        this.plugin.settings.enableAlwaysHighlight = v;
+        await this.debouncedSaveSettings();
+      }));
+
+    // 5. Partial Match
+    new Setting(containerEl)
+      .setName('Partial Match')
+      .setDesc('If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')
+      .addToggle(t => t.setValue(this.plugin.settings.partialMatch).onChange(async v => {
+        this.plugin.settings.partialMatch = v;
+        await this.debouncedSaveSettings();
+      }));
+
+    // 6. Symbol-Word Coloring
+    new Setting(containerEl)
+      .setName('Symbol-Word Coloring')
+      .setDesc('If enabled, any word containing a colored symbol will inherit the symbol\'s color (e.g., "9:30" will be colored if ":" is colored).')
+      .addToggle(t => t.setValue(this.plugin.settings.symbolWordColoring).onChange(async v => {
+        this.plugin.settings.symbolWordColoring = v;
+        await this.debouncedSaveSettings();
+      }));
+
+    // 7. Blacklist Words
+    containerEl.createEl('h3', { text: 'Blacklist Words' });
+    containerEl.createEl('p', { text: 'Words in this list will never be colored, even if they match (including partial matches).' });
+
+    const blDiv = containerEl.createDiv();
+    blDiv.addClass('blacklist-words-list');
+
+    this.plugin.settings.blacklistWords.forEach((word, i) => {
+      const row = blDiv.createDiv();
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.marginBottom = '8px';
+
+      const textInput = row.createEl('input', { type: 'text', value: word });
+      textInput.style.flex = '1';
+      textInput.style.padding = '6px';
+      textInput.style.borderRadius = '4px';
+      textInput.style.border = '1px solid var(--background-modifier-border)';
+      textInput.style.marginRight = '8px';
+      textInput.addEventListener('change', async () => {
+        const newWord = textInput.value.trim();
+        if (newWord && newWord !== word) {
+          this.plugin.settings.blacklistWords[i] = newWord;
+          await this.plugin.saveSettings();
+          this.display();
+        } else if (!newWord) {
+          this.plugin.settings.blacklistWords.splice(i, 1);
+          await this.plugin.saveSettings();
+          this.display();
+        }
+      });
+
+      const del = row.createEl('button', { text: '✕' });
+      del.addClass('mod-warning');
+      del.style.marginLeft = '8px';
+      del.style.padding = '4px 8px';
+      del.style.borderRadius = '4px';
+      del.style.cursor = 'pointer';
+      del.addEventListener('click', async () => {
+        this.plugin.settings.blacklistWords.splice(i, 1);
+        await this.plugin.saveSettings();
+        this.display();
+      });
+    });
+
+    new Setting(containerEl)
+      .addButton(b => b.setButtonText('Add Blacklist Word').onClick(async () => {
+        this.plugin.settings.blacklistWords.push('');
+        await this.plugin.saveSettings();
+        this.display();
+      }));
+
+    new Setting(containerEl)
+      .setName('Enable "Blacklist Words from Coloring" in right-click menu')
+      .setDesc('Adds a right-click menu item to blacklist selected text from coloring.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async v => {
+        this.plugin.settings.enableBlacklistMenu = v;
+        await this.plugin.saveSettings();
+        this.display();
+      }));
 
     // --- Custom Swatches Settings ---
     containerEl.createEl('h3', { text: 'Color Swatches' });
@@ -575,11 +1019,13 @@ class ColorSettingTab extends PluginSettingTab {
           this.plugin.settings.wordColors[newWord] = existingColor;
           await this.plugin.saveSettings();
           this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
           this.display();
         } else if (!newWord) {
           delete this.plugin.settings.wordColors[word];
           await this.plugin.saveSettings();
           this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
           this.display();
         }
       });
@@ -595,6 +1041,7 @@ class ColorSettingTab extends PluginSettingTab {
         this.plugin.settings.wordColors[word] = cp.value;
         await this.debouncedSaveSettings();
         this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
       });
 
       const del = row.createEl('button', { text: '✕' });
@@ -607,6 +1054,7 @@ class ColorSettingTab extends PluginSettingTab {
         delete this.plugin.settings.wordColors[word];
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
         this.display();
       });
     });
@@ -616,6 +1064,7 @@ class ColorSettingTab extends PluginSettingTab {
         this.plugin.settings.wordColors[`New Word ${Object.keys(this.plugin.settings.wordColors).length + 1}`] = '#000000';
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
         this.display();
       }));
 
@@ -628,6 +1077,7 @@ class ColorSettingTab extends PluginSettingTab {
             this.plugin.settings.wordColors = {};
             await this.plugin.saveSettings();
             this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
             this.display();
           }).open();
         }));
