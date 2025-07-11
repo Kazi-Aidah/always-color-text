@@ -483,10 +483,13 @@ module.exports = class AlwaysColorText extends Plugin {
         for (const [word, color] of entries) {
           const flags = this.settings.caseSensitive ? 'g' : 'gi';
           let pattern;
+          // --- if word contains any letter or digit, match as-is (no word boundary), else treat as symbol ---
           if (/^[^a-zA-Z0-9]+$/.test(word)) {
+            // pure symbol: match as symbol
             pattern = this.escapeRegex(word);
           } else {
-            pattern = (word.includes(' ') ? this.escapeRegex(word) : `\\b${this.escapeRegex(word)}\\b`);
+            // word with any letter/digit (even if it contains symbols): match as-is, no word boundary
+            pattern = this.escapeRegex(word);
           }
           const regex = new RegExp(pattern, flags);
           let match;
@@ -643,10 +646,13 @@ module.exports = class AlwaysColorText extends Plugin {
         for (const [word, color] of entries) {
           const flags = plugin.settings.caseSensitive ? 'g' : 'gi';
           let pattern;
+          // --- CHANGED LOGIC: if word contains any letter or digit, match as-is (no word boundary), else treat as symbol ---
           if (/^[^a-zA-Z0-9]+$/.test(word)) {
+            // pure symbol: match as symbol
             pattern = plugin.escapeRegex(word);
           } else {
-            pattern = (word.includes(' ') ? plugin.escapeRegex(word) : `\\b${plugin.escapeRegex(word)}\\b`);
+            // word with any letter/digit (even if it contains symbols): match as-is, no word boundary
+            pattern = plugin.escapeRegex(word);
           }
           const regex = new RegExp(pattern, flags);
           let match;
