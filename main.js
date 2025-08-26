@@ -4,20 +4,14 @@ const {
   Setting,
   Modal,
   MarkdownView,
-  Notice
+  Notice,
+  debounce
 } = require('obsidian');
 const { RangeSetBuilder } = require('@codemirror/state');
 const { Decoration, ViewPlugin } = require('@codemirror/view');
 const { syntaxTree } = require('@codemirror/language');
 
 
-function debounce(func, wait = 100) {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
 
 module.exports = class AlwaysColorText extends Plugin {
   async onload() {
@@ -25,19 +19,15 @@ module.exports = class AlwaysColorText extends Plugin {
     this.addSettingTab(new ColorSettingTab(this.app, this));
 
     // --- Ribbon icon ---
-    if (!this.settings.disableToggleModes.ribbon) {
-      this.ribbonIcon = this.addRibbonIcon('palette', 'Toggle Always Color Text', () => {
-        this.settings.enabled = !this.settings.enabled;
-        this.saveSettings();
-        new Notice(`Always Color Text ${this.settings.enabled ? 'Enabled' : 'Disabled'}`);
-        this.updateStatusBar();
-        this.reconfigureEditorExtensions();
-        this.forceRefreshAllEditors();
-        this.forceRefreshAllReadingViews();
-      });
-    } else {
-      this.ribbonIcon = null;
-    }
+    this.ribbonIcon = this.addRibbonIcon('palette', 'Always color text', async () => {
+      this.settings.enabled = !this.settings.enabled;
+      await this.saveSettings();
+      this.updateStatusBar();
+      this.reconfigureEditorExtensions();
+      this.forceRefreshAllEditors();
+      this.forceRefreshAllReadingViews();
+      new Notice(`Always color text ${this.settings.enabled ? 'enabled' : 'disabled'}`);
+    });
 
     // --- The Status bar toggle ---
     if (!this.settings.disableToggleModes.statusBar) {
@@ -59,7 +49,7 @@ module.exports = class AlwaysColorText extends Plugin {
     this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
       menu.addItem(item => {
         const isDisabled = this.settings.disabledFiles.includes(file.path);
-        item.setTitle(`${isDisabled ? 'Enable' : 'Disable'} Always Color Text for this file`)
+        item.setTitle(`${isDisabled ? 'Enable' : 'Disable'} always color text for this file`)
           .setIcon(isDisabled ? 'eye' : 'eye-off')
           .onClick(async () => {
             if (isDisabled) {
@@ -78,9 +68,9 @@ module.exports = class AlwaysColorText extends Plugin {
     this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor, view) => {
       const selectedText = editor.getSelection().trim();
       if (selectedText.length > 0) {
-        // Color Once:
+        // Color once:
         menu.addItem(item => {
-          item.setTitle("Color Once")
+          item.setTitle("Color once")
             .setIcon('brush')
             .onClick(() => {
               // Warn if blacklisted
@@ -94,11 +84,10 @@ module.exports = class AlwaysColorText extends Plugin {
               }).open();
             });
         });
-        
-        // Highlight Once:
+        // Highlight once:
         if (this.settings.enableAlwaysHighlight) {
           menu.addItem(item => {
-            item.setTitle("Highlight Once")
+            item.setTitle("Highlight once")
               .setIcon('highlighter')
               .onClick(() => {
                 // Warn if blacklisted
@@ -113,10 +102,9 @@ module.exports = class AlwaysColorText extends Plugin {
               });
           });
         }
-        
-        // Always Color Text:
+        // Always color text:
         menu.addItem(item => {
-          item.setTitle("Always Color Text")
+          item.setTitle("Always color text")
             .setIcon('palette')
             .onClick(() => {
               // Warn if blacklisted
@@ -130,11 +118,23 @@ module.exports = class AlwaysColorText extends Plugin {
               }).open();
             });
         });
-
-        // Blacklist Words from Coloring
+        // Remove always text color:
+        if (this.settings.wordColors.hasOwnProperty(selectedText)) {
+          menu.addItem(item => {
+            item.setTitle("Remove always text color")
+              .setIcon('eraser')
+              .onClick(async () => {
+                delete this.settings.wordColors[selectedText];
+                await this.saveSettings();
+                this.refreshEditor(view, true);
+                new Notice(`Removed always color for \"${selectedText}\".`);
+              });
+          });
+        }
+        // Blacklist words from coloring
         if (this.settings.enableBlacklistMenu) {
           menu.addItem(item => {
-            item.setTitle("Blacklist Words from Coloring")
+            item.setTitle("Blacklist words from coloring")
               .setIcon('ban')
               .onClick(async () => {
                 if (!this.settings.blacklistWords.includes(selectedText)) {
@@ -156,7 +156,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (!this.settings.disableToggleModes.command) {
       this.addCommand({
         id: 'set-color-for-selection',
-        name: 'Always Color Text',
+  name: 'Always color text',
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
@@ -173,7 +173,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // --- Disable coloring for current document ---
       this.addCommand({
         id: 'disable-coloring-for-current-document',
-        name: 'Disable Coloring for Current Document',
+  name: 'Disable coloring for current document',
         callback: async () => {
           const md = this.app.workspace.getActiveFile();
           if (md && !this.settings.disabledFiles.includes(md.path)) {
@@ -191,7 +191,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // --- Disable Always Color Text globally ---
       this.addCommand({
         id: 'disable-always-color-text',
-        name: 'Disable Always Color Text',
+  name: 'Disable always color text',
         callback: async () => {
           if (!this.settings.enabled) {
             new Notice('Always Color Text is already disabled.');
@@ -209,7 +209,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // --- Enable Always Color Text globally ---
       this.addCommand({
         id: 'enable-always-color-text',
-        name: 'Enable Always Color Text',
+  name: 'Enable always color text',
         callback: async () => {
           if (this.settings.enabled) {
             new Notice('Always Color Text is already enabled.');
@@ -308,7 +308,7 @@ module.exports = class AlwaysColorText extends Plugin {
         '#eb3b5a', '#fa8231', '#e5a216', '#20bf6b',
         '#0fb9b1', '#2d98da', '#3867d6', 
         '#5454d0', 
-        '#8854d0', // purple
+        '#8854d0', // 0p
         '#a954d0', 
         '#e832c1', '#e83289', '#965b3b', '#8392a4'
       ],
@@ -380,7 +380,7 @@ module.exports = class AlwaysColorText extends Plugin {
   // --- Update Status Bar Text ---
   updateStatusBar() {
     if (this.statusBar) {
-      this.statusBar.setText(`COL: ${this.settings.enabled ? 'ON' : 'OFF'}`);
+  this.statusBar.setText(`COL: ${this.settings.enabled ? 'ON' : 'OFF'}`);
     }
   }
 
@@ -430,7 +430,7 @@ module.exports = class AlwaysColorText extends Plugin {
     const r = (num >> 16) & 255;
     const g = (num >> 8) & 255;
     const b = num & 255;
-    // Clamp and convert percent to 0-1
+    // Clampe and convert percent to 0-1
     let o = Math.max(0, Math.min(100, Number(opacityPercent)));
     o = o / 100;
     return `rgba(${r},${g},${b},${o})`;
@@ -782,34 +782,32 @@ class ColorSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    // --- Main plugin settings header ---
-    const h2 = containerEl.createEl('h2', { text: 'Always Color Text Settings' });
-    h2.style.marginTop = '0.5em';
 
-    // 1. Enable Document Colour
+
+    // 1. Enable document color
     new Setting(containerEl)
-      .setName('Enable Document Colour')
+      .setName('Enable document color')
       .addToggle(t => t.setValue(this.plugin.settings.enabled).onChange(async v => {
         this.plugin.settings.enabled = v;
         await this.debouncedSaveSettings();
       }));
 
-    // 2. Case Sensitive
+    // 2. Case sensitive
     new Setting(containerEl)
-      .setName('Case Sensitive')
+      .setName('Case sensitive')
       .setDesc('If this is on, "word" and "Word" are totally different. If it\'s off, they\'re the same.')
       .addToggle(t => t.setValue(this.plugin.settings.caseSensitive).onChange(async v => {
         this.plugin.settings.caseSensitive = v;
         await this.debouncedSaveSettings();
       }));
 
-    // 3. Color Style (was Highlight Style)
+    // 3. Color style (was highlight style)
     new Setting(containerEl)
-      .setName('Color Style')
+      .setName('Color style')
       .setDesc('Do you want to color the text itself or the background behind it?')
       .addDropdown(d => d
-        .addOption('text', 'Text Color')
-        .addOption('background', 'Background Highlight')
+        .addOption('text', 'Text color')
+        .addOption('background', 'Background highlight')
         .setValue(this.plugin.settings.highlightStyle)
         .onChange(async v => {
           this.plugin.settings.highlightStyle = v;
@@ -817,11 +815,11 @@ class ColorSettingTab extends PluginSettingTab {
           this.display();
         }));
 
-    // --- Background Opacity and Border Radius (only if background) ---
+    // --- Background opacity and border radius (only if background) ---
     if (this.plugin.settings.highlightStyle === 'background') {
       // Opacity input (percent)
       new Setting(containerEl)
-        .setName('Background Opacity (%)')
+        .setName('Background opacity (%)')
         .setDesc('Set the opacity of the background highlight (0-100, percent)')
         .addText(text => text
           .setPlaceholder('0-100')
@@ -843,9 +841,9 @@ class ColorSettingTab extends PluginSettingTab {
             this.display();
           }));
 
-      // Border Radius input (px)
+      // Border radius input (px)
       new Setting(containerEl)
-        .setName('Highlight Border Radius (px)')
+        .setName('Highlight border radius (px)')
         .setDesc('Set the border radius (in px) for rounded highlight corners')
         .addText(text => text
           .setPlaceholder('e.g. 0, 4, 8')
@@ -867,99 +865,40 @@ class ColorSettingTab extends PluginSettingTab {
           }));
     }
 
-    // 4. Enable Highlight Once
+    // 4. Enable highlight once
     new Setting(containerEl)
-      .setName('Enable Highlight Once')
-      .setDesc('This adds "Highlight Once" to your right-click menu. You can highlight selected text with a background color.')
+      .setName('Enable highlight once')
+      .setDesc('This adds "Highlight once" to your right-click menu. You can highlight selected text with a background color.')
       .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysHighlight).onChange(async v => {
         this.plugin.settings.enableAlwaysHighlight = v;
         await this.debouncedSaveSettings();
       }));
 
-    // 5. Partial Match
+    // 5. Partial match
     new Setting(containerEl)
-      .setName('Partial Match')
+      .setName('Partial match')
       .setDesc('If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')
       .addToggle(t => t.setValue(this.plugin.settings.partialMatch).onChange(async v => {
         this.plugin.settings.partialMatch = v;
         await this.debouncedSaveSettings();
       }));
 
-    // 6. Symbol-Word Coloring
+    // 6. Symbol-word coloring
     new Setting(containerEl)
-      .setName('Symbol-Word Coloring')
+      .setName('Symbol-word coloring')
       .setDesc('If enabled, any word containing a colored symbol will inherit the symbol\'s color (e.g., "9:30" will be colored if ":" is colored).')
       .addToggle(t => t.setValue(this.plugin.settings.symbolWordColoring).onChange(async v => {
         this.plugin.settings.symbolWordColoring = v;
         await this.debouncedSaveSettings();
       }));
 
-    // 7. Blacklist Words
-    containerEl.createEl('h3', { text: 'Blacklist Words' });
-    containerEl.createEl('p', { text: 'Words in this list will never be colored, even if they match (including partial matches).' });
-
-    const blDiv = containerEl.createDiv();
-    blDiv.addClass('blacklist-words-list');
-
-    this.plugin.settings.blacklistWords.forEach((word, i) => {
-      const row = blDiv.createDiv();
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.marginBottom = '8px';
-
-      const textInput = row.createEl('input', { type: 'text', value: word });
-      textInput.style.flex = '1';
-      textInput.style.padding = '6px';
-      textInput.style.borderRadius = '4px';
-      textInput.style.border = '1px solid var(--background-modifier-border)';
-      textInput.style.marginRight = '8px';
-      textInput.addEventListener('change', async () => {
-        const newWord = textInput.value.trim();
-        if (newWord && newWord !== word) {
-          this.plugin.settings.blacklistWords[i] = newWord;
-          await this.plugin.saveSettings();
-          this.display();
-        } else if (!newWord) {
-          this.plugin.settings.blacklistWords.splice(i, 1);
-          await this.plugin.saveSettings();
-          this.display();
-        }
-      });
-
-      const del = row.createEl('button', { text: '✕' });
-      del.addClass('mod-warning');
-      del.style.marginLeft = '8px';
-      del.style.padding = '4px 8px';
-      del.style.borderRadius = '4px';
-      del.style.cursor = 'pointer';
-      del.addEventListener('click', async () => {
-        this.plugin.settings.blacklistWords.splice(i, 1);
-        await this.plugin.saveSettings();
-        this.display();
-      });
-    });
+    // --- Custom swatches settings ---
+    new Setting(containerEl)
+      .setName('Color swatches')
+      .setHeading();
 
     new Setting(containerEl)
-      .addButton(b => b.setButtonText('Add Blacklist Word').onClick(async () => {
-        this.plugin.settings.blacklistWords.push('');
-        await this.plugin.saveSettings();
-        this.display();
-      }));
-
-    new Setting(containerEl)
-      .setName('Enable "Blacklist Words from Coloring" in right-click menu')
-      .setDesc('Adds a right-click menu item to blacklist selected text from coloring.')
-      .addToggle(t => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async v => {
-        this.plugin.settings.enableBlacklistMenu = v;
-        await this.plugin.saveSettings();
-        this.display();
-      }));
-
-    // --- Custom Swatches Settings ---
-    containerEl.createEl('h3', { text: 'Color Swatches' });
-
-    new Setting(containerEl)
-      .setName('Enable Custom Swatches')
+      .setName('Enable custom swatches')
       .setDesc('Turn this on if you want to pick your own colors for the color picker.')
       .addToggle(t => t.setValue(this.plugin.settings.customSwatchesEnabled).onChange(async v => {
         this.plugin.settings.customSwatchesEnabled = v;
@@ -969,7 +908,7 @@ class ColorSettingTab extends PluginSettingTab {
 
     if (this.plugin.settings.customSwatchesEnabled) {
       new Setting(containerEl)
-        .setName('Replace Default Swatches')
+        .setName('Replace default swatches')
         .setDesc('If this is on, only your custom colors will show up in the color picker. No default ones!')
         .addToggle(t => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async v => {
           this.plugin.settings.replaceDefaultSwatches = v;
@@ -983,7 +922,7 @@ class ColorSettingTab extends PluginSettingTab {
             this.plugin.settings.customSwatches[i] = c;
             await this.debouncedSaveSettings();
           }))
-          .addExtraButton(btn => btn.setIcon('trash').setTooltip('Remove Swatch').onClick(async () => {
+          .addExtraButton(btn => btn.setIcon('trash').setTooltip('Remove swatch').onClick(async () => {
             this.plugin.settings.customSwatches.splice(i, 1);
             await this.plugin.saveSettings();
             this.display();
@@ -991,15 +930,17 @@ class ColorSettingTab extends PluginSettingTab {
       });
 
       new Setting(containerEl)
-        .addButton(b => b.setButtonText('+ Add Colour').onClick(async () => {
+        .addButton(b => b.setButtonText('+ Add color').onClick(async () => {
           this.plugin.settings.customSwatches.push('#000000');
           await this.plugin.saveSettings();
           this.display();
         }));
     }
 
-    // --- Colored Words List UI ---
-    containerEl.createEl('h3', { text: 'Defined Colored Words' });
+    // --- Defined colored words ---
+    new Setting(containerEl)
+      .setName('Defined colored words')
+      .setHeading();
     containerEl.createEl('p', { text: 'Here\'s where you manage your words and their colors. Changes here update your notes instantly!' });
 
     const listDiv = containerEl.createDiv();
@@ -1066,8 +1007,8 @@ class ColorSettingTab extends PluginSettingTab {
     });
 
     new Setting(containerEl)
-      .addButton(b => b.setButtonText('Add New Word').onClick(async () => {
-        this.plugin.settings.wordColors[`New Word ${Object.keys(this.plugin.settings.wordColors).length + 1}`] = '#000000';
+      .addButton(b => b.setButtonText('Add new word').onClick(async () => {
+        this.plugin.settings.wordColors[`New word ${Object.keys(this.plugin.settings.wordColors).length + 1}`] = '#000000';
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
@@ -1077,9 +1018,9 @@ class ColorSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .addExtraButton(b => b
         .setIcon('trash')
-        .setTooltip('Delete All Defined Words')
+        .setTooltip('Delete all defined words')
         .onClick(async () => {
-          new ConfirmationModal(this.app, 'Delete All Words', 'Are you sure you want to delete ALL your colored words? You can\'t undo this!', async () => {
+          new ConfirmationModal(this.app, 'Delete all words', 'Are you sure you want to delete all your colored words? You can\'t undo this!', async () => {
             this.plugin.settings.wordColors = {};
             await this.plugin.saveSettings();
             this.plugin.reconfigureEditorExtensions();
@@ -1088,13 +1029,78 @@ class ColorSettingTab extends PluginSettingTab {
           }).open();
         }));
 
-    // --- File-Specific Settings ---
-    containerEl.createEl('h3', { text: 'File-Specific Settings' });
+    // Blacklist words
+    new Setting(containerEl)
+      .setName('Blacklist words')
+      .setHeading();
+    containerEl.createEl('p', { text: 'Words in this list will never be colored, even if they match (including partial matches).' });
+
+    const blDiv = containerEl.createDiv();
+    blDiv.addClass('blacklist-words-list');
+
+    this.plugin.settings.blacklistWords.forEach((word, i) => {
+      const row = blDiv.createDiv();
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.marginBottom = '8px';
+
+      const textInput = row.createEl('input', { type: 'text', value: word });
+      textInput.style.flex = '1';
+      textInput.style.padding = '6px';
+      textInput.style.borderRadius = '4px';
+      textInput.style.border = '1px solid var(--background-modifier-border)';
+      textInput.style.marginRight = '8px';
+      textInput.addEventListener('change', async () => {
+        const newWord = textInput.value.trim();
+        if (newWord && newWord !== word) {
+          this.plugin.settings.blacklistWords[i] = newWord;
+          await this.plugin.saveSettings();
+          this.display();
+        } else if (!newWord) {
+          this.plugin.settings.blacklistWords.splice(i, 1);
+          await this.plugin.saveSettings();
+          this.display();
+        }
+      });
+
+      const del = row.createEl('button', { text: '✕' });
+      del.addClass('mod-warning');
+      del.style.marginLeft = '8px';
+      del.style.padding = '4px 8px';
+      del.style.borderRadius = '4px';
+      del.style.cursor = 'pointer';
+      del.addEventListener('click', async () => {
+        this.plugin.settings.blacklistWords.splice(i, 1);
+        await this.plugin.saveSettings();
+        this.display();
+      });
+    });
+
+    new Setting(containerEl)
+      .addButton(b => b.setButtonText('Add blacklist word').onClick(async () => {
+        this.plugin.settings.blacklistWords.push('');
+        await this.plugin.saveSettings();
+        this.display();
+      }));
+
+    new Setting(containerEl)
+      .setName('Enable "Blacklist words from coloring" in right-click menu')
+      .setDesc('Adds a right-click menu item to blacklist selected text from coloring.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async v => {
+        this.plugin.settings.enableBlacklistMenu = v;
+        await this.plugin.saveSettings();
+        this.display();
+      }));
+
+    // --- File-specific options ---
+    new Setting(containerEl)
+      .setName('File-specific options')
+      .setHeading();
     containerEl.createEl('p', { text: 'Here\'s where you manage files where coloring is taking a break.' });
 
     if (this.plugin.settings.disabledFiles.length > 0) {
       const disabledFilesDiv = containerEl.createDiv();
-      disabledFilesDiv.createEl('h4', { text: 'Files with Coloring Disabled:' });
+      disabledFilesDiv.createEl('h4', { text: 'Files with coloring disabled:' });
       this.plugin.settings.disabledFiles.forEach(filePath => {
         new Setting(disabledFilesDiv)
           .setName(filePath)
@@ -1109,9 +1115,9 @@ class ColorSettingTab extends PluginSettingTab {
     }
 
     new Setting(containerEl)
-      .setName('Disable Coloring for Current File')
+      .setName('Disable coloring for current file')
       .setDesc('Click this to turn off coloring just for the note you\'re looking at right now.')
-      .addButton(b => b.setButtonText('Disable for This File').onClick(async () => {
+      .addButton(b => b.setButtonText('Disable for this file').onClick(async () => {
         const md = this.app.workspace.getActiveFile();
         if (md && !this.plugin.settings.disabledFiles.includes(md.path)) {
           this.plugin.settings.disabledFiles.push(md.path);
@@ -1125,12 +1131,14 @@ class ColorSettingTab extends PluginSettingTab {
         }
       }));
 
-    // --- Toggle Visibility Settings ---
-    containerEl.createEl('h3', { text: 'Toggle Visibility' });
-    containerEl.createEl('p', { text: 'These settings control where you can turn the coloring feature on or off.' });
+    // --- Toggle visibility ---
+    new Setting(containerEl)
+      .setName('Toggle visibility')
+      .setHeading();
+    containerEl.createEl('p', { text: 'These options control where you can turn the coloring feature on or off.' });
 
     new Setting(containerEl)
-      .setName('Disable Toggle on Statusbar')
+      .setName('Disable toggle on status bar')
       .addToggle(t => t
         .setValue(this.plugin.settings.disableToggleModes.statusBar)
         .onChange(async v => {
@@ -1140,21 +1148,11 @@ class ColorSettingTab extends PluginSettingTab {
         }));
 
     new Setting(containerEl)
-      .setName('Disable Toggle in Command')
+      .setName('Disable toggle in command')
       .addToggle(t => t
         .setValue(this.plugin.settings.disableToggleModes.command)
         .onChange(async v => {
           this.plugin.settings.disableToggleModes.command = v;
-          await this.plugin.saveSettings();
-          location.reload();
-        }));
-
-    new Setting(containerEl)
-      .setName('Disable Toggle in Ribbon')
-      .addToggle(t => t
-        .setValue(this.plugin.settings.disableToggleModes.ribbon)
-        .onChange(async v => {
-          this.plugin.settings.disableToggleModes.ribbon = v;
           await this.plugin.saveSettings();
           location.reload();
         }));
