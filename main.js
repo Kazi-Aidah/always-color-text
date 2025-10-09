@@ -266,6 +266,16 @@ module.exports = class AlwaysColorText extends Plugin {
       this.activeLeafChangeListenerRegistered = true;
     }
 
+    // --- switching to reading view and refresh coloring fix ---
+    this.registerEvent(
+      this.app.workspace.on('layout-change', () => {
+        const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (activeLeaf && activeLeaf.getMode && activeLeaf.getMode() === 'preview') {
+          this.forceRefreshAllReadingViews();
+        }
+      })
+    );
+
     this.refreshActiveEditor(true);
   }
 
