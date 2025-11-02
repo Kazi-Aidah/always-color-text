@@ -46,7 +46,9 @@ module.exports = class AlwaysColorText extends Plugin {
     }
 
     // --- Add toggle to the file menu ---
+    const { TFile } = require('obsidian');
     this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
+      if (!(file instanceof TFile)) return;
       menu.addItem(item => {
         const isDisabled = this.settings.disabledFiles.includes(file.path);
         item.setTitle(`${isDisabled ? 'Enable' : 'Disable'} always color text for this file`)
