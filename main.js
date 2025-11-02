@@ -471,6 +471,12 @@ module.exports = class AlwaysColorText extends Plugin {
 
     for (const block of queue) {
       let processed = 0;
+      // Unwrap any existing highlights created by this plugin to avoid stacking when re-applying
+      const existingHighlights = Array.from(block.querySelectorAll('span.always-color-text-highlight'));
+      for (const ex of existingHighlights) {
+        const tn = document.createTextNode(ex.textContent);
+        ex.replaceWith(tn);
+      }
       for (const node of Array.from(block.childNodes)) {
         if (node.nodeType !== Node.TEXT_NODE) continue;
         const text = node.textContent;
@@ -493,7 +499,7 @@ module.exports = class AlwaysColorText extends Plugin {
           });
         };
 
-        for (const [word, color] of entries) {
+  for (const [word, color] of entries) {
           const flags = this.settings.caseSensitive ? 'g' : 'gi';
           let pattern;
           // --- if word contains any letter or digit, match as-is (no word boundary), else treat as symbol ---
@@ -514,7 +520,7 @@ module.exports = class AlwaysColorText extends Plugin {
             } else {
               if (this.settings.blacklistWords.map(w => w.toLowerCase()).includes(matchedText.toLowerCase())) continue;
             }
-            matches.push({ start: match.index, end: match.index + matchedText.length, color, word: matchedText });
+            matches.push({ start: match.index, end: match.index + matchedText.length, color, word: matchedText, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
             if (matches.length > 100) break;
           }
           if (matches.length > 100) break;
@@ -549,7 +555,9 @@ module.exports = class AlwaysColorText extends Plugin {
                   start: start,
                   end: end,
                   color,
-                  word: w
+                  word: w,
+                  highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4,
+                  highlightBorderRadius: this.settings.highlightBorderRadius ?? 8
                 });
                 break; // Only color once per word
               }
@@ -565,7 +573,7 @@ module.exports = class AlwaysColorText extends Plugin {
             const regex = new RegExp(this.escapeRegex(word), flags);
             let match;
             while ((match = regex.exec(text))) {
-              matches.push({ start: match.index, end: match.index + match[0].length, color, word });
+              matches.push({ start: match.index, end: match.index + match[0].length, color, word, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
             }
           }
         }
@@ -608,27 +616,51 @@ module.exports = class AlwaysColorText extends Plugin {
           if (processed > 10) break;
           const frag = document.createDocumentFragment();
           let pos = 0;
-          for (const m of nonOverlapping) {
+          
+          let i = 0;
+          while (i < nonOverlapping.length) {
+            let m = nonOverlapping[i];
+            let j = i + 1;
+            
+            // Merge adjacent highlights with the same color
+            while (j < nonOverlapping.length && 
+                  nonOverlapping[j].start === nonOverlapping[j - 1].end && 
+                  nonOverlapping[j].color === m.color) {
+              m = { start: m.start, end: nonOverlapping[j].end, color: m.color };
+              j++;
+            }
+            
             if (m.start > pos) frag.appendChild(document.createTextNode(text.slice(pos, m.start)));
+            
             const span = document.createElement('span');
             span.className = 'always-color-text-highlight';
             span.textContent = text.slice(m.start, m.end);
-            if (this.settings.highlightStyle === 'text') span.style.color = m.color;
-            else {
-              // background style
+            
+            if (this.settings.highlightStyle === 'text') {
+              span.style.color = m.color;
+            } else {
+              span.style.background = '';
               span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
-              span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
               span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+              if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
+                span.style.borderRadius = '0px';
+              } else {
+                span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+              }
             }
+            
             frag.appendChild(span);
             pos = m.end;
+            i = j;
           }
+          
           if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
           node.replaceWith(frag);
         }
       }
     }
   }
+
 
   // --- Build CodeMirror Editor Extension (Editing View) ---
   buildEditorExtension() {
@@ -770,7 +802,7 @@ module.exports = class AlwaysColorText extends Plugin {
         for (const m of nonOverlapping) {
           const style = plugin.settings.highlightStyle === 'text'
             ? `color: ${m.color} !important;`
-            : `background-color: ${plugin.hexToRgba(m.color, plugin.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(plugin.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+            : `background: none !important; background-color: ${plugin.hexToRgba(m.color, plugin.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (plugin.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (plugin.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important;`;
           const deco = Decoration.mark({
             attributes: { style }
           });
@@ -877,29 +909,30 @@ class ColorSettingTab extends PluginSettingTab {
             await this.debouncedSaveSettings();
             this.display();
           }));
+
+      // Horizontal padding input (px)
+      new Setting(containerEl)
+        .setName('Highlight horizontal padding (px)')
+        .setDesc('Set the left and right padding (in px) for highlighted text')
+        .addText(text => text
+          .setPlaceholder('e.g. 0, 4, 8')
+          .setValue(String(this.plugin.settings.highlightHorizontalPadding ?? 4))
+          .onChange(async v => {
+            let val = parseInt(v);
+            if (isNaN(val) || val < 0) val = 0;
+            this.plugin.settings.highlightHorizontalPadding = val;
+            await this.debouncedSaveSettings();
+          })
+        )
+        .addExtraButton(btn => btn
+          .setIcon('reset')
+          .setTooltip('Reset to 4')
+          .onClick(async () => {
+            this.plugin.settings.highlightHorizontalPadding = 4;
+            await this.debouncedSaveSettings();
+            this.display();
+          }));
     }
-    // Horizontal padding input (px)
-    new Setting(containerEl)
-      .setName('Highlight horizontal padding (px)')
-      .setDesc('Set the left and right padding (in px) for highlighted text')
-      .addText(text => text
-        .setPlaceholder('e.g. 0, 4, 8')
-        .setValue(String(this.plugin.settings.highlightHorizontalPadding ?? 4))
-        .onChange(async v => {
-          let val = parseInt(v);
-          if (isNaN(val) || val < 0) val = 0;
-          this.plugin.settings.highlightHorizontalPadding = val;
-          await this.debouncedSaveSettings();
-        })
-      )
-      .addExtraButton(btn => btn
-        .setIcon('reset')
-        .setTooltip('Reset to 4')
-        .onClick(async () => {
-          this.plugin.settings.highlightHorizontalPadding = 4;
-          await this.debouncedSaveSettings();
-          this.display();
-        }));
 
     // 4. Enable highlight once
     new Setting(containerEl)
