@@ -313,6 +313,7 @@ module.exports = class AlwaysColorText extends Plugin {
       highlightStyle: 'text',
       backgroundOpacity: 35, // percent
       highlightBorderRadius: 4, // px
+      highlightHorizontalPadding: 4, // px
       disabledFiles: [],
       customSwatchesEnabled: false,
       replaceDefaultSwatches: false,
@@ -617,6 +618,7 @@ module.exports = class AlwaysColorText extends Plugin {
               // background style
               span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
               span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+              span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
             }
             frag.appendChild(span);
             pos = m.end;
@@ -768,7 +770,7 @@ module.exports = class AlwaysColorText extends Plugin {
         for (const m of nonOverlapping) {
           const style = plugin.settings.highlightStyle === 'text'
             ? `color: ${m.color} !important;`
-            : `background-color: ${plugin.hexToRgba(m.color, plugin.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(plugin.settings.highlightBorderRadius ?? 8)}px !important;`;
+            : `background-color: ${plugin.hexToRgba(m.color, plugin.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(plugin.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important;`;
           const deco = Decoration.mark({
             attributes: { style }
           });
@@ -876,6 +878,28 @@ class ColorSettingTab extends PluginSettingTab {
             this.display();
           }));
     }
+    // Horizontal padding input (px)
+    new Setting(containerEl)
+      .setName('Highlight horizontal padding (px)')
+      .setDesc('Set the left and right padding (in px) for highlighted text')
+      .addText(text => text
+        .setPlaceholder('e.g. 0, 4, 8')
+        .setValue(String(this.plugin.settings.highlightHorizontalPadding ?? 4))
+        .onChange(async v => {
+          let val = parseInt(v);
+          if (isNaN(val) || val < 0) val = 0;
+          this.plugin.settings.highlightHorizontalPadding = val;
+          await this.debouncedSaveSettings();
+        })
+      )
+      .addExtraButton(btn => btn
+        .setIcon('reset')
+        .setTooltip('Reset to 4')
+        .onClick(async () => {
+          this.plugin.settings.highlightHorizontalPadding = 4;
+          await this.debouncedSaveSettings();
+          this.display();
+        }));
 
     // 4. Enable highlight once
     new Setting(containerEl)

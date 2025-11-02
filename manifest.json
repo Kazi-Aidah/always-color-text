@@ -1,10 +1,10 @@
 {
   "id": "always-color-text",
   "name": "Always Color Text",
-  "description": "Colors specific words throughout the Vault in both editor and preview modes.",
-  "version": "0.1.2",
+  "description": "Colors specific words throughout the Vault in both editor and reading views.",
+  "version": "0.1.3",
   "minAppVersion": "0.15.0",
   "author": "Kazi Aidah Haque",
   "authorUrl": "https://github.com/Kazi-Aidah",
-  "isDesktopOnly": true
+  "isDesktopOnly": false
 }
