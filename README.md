@@ -1,10 +1,10 @@
 ## Always Color Text
-This plugin lets you color specific words and updates it across your Obsidian vault. Just select a word, pick a color, and that word will automatically appear in that color every time you type it, in both editing and reading modes.
-![Always Color Text Preview](https://github.com/user-attachments/assets/bd78b234-d72d-411f-be34-65f87d5cf91b)
+This plugin lets you color specific words and updates it across your Obsidian vault. Just select a word, pick a color, and that word will automatically appear in that color every time you type it, in both live preview and reading modes.
+![Example](https://github.com/user-attachments/assets/9c38d1f9-e2fb-4291-b68e-23d96837ebce)
 
 This was inspired by the <span style="color: #2d98da">warn</span> <span style="color: #e5a216">deprecated</span> text I’d see in the terminal. I thought it’d be so cool, especially since I often need to repeat a bunch of categorized words!
 
-***You can:***
+## Key Features
 Assign colors to words or phrases that stay consistent across your vault, right from the right-click menu, command palette or the plugin settings.
 
 ![Image](https://github.com/user-attachments/assets/43e5c595-ceaa-4193-b20b-86432554b5b4)
@@ -39,3 +39,16 @@ Use the tiny “Delete All Words” button to clear everything, with a confirmat
 ![Image](https://github.com/user-attachments/assets/4767546e-e646-4e96-b89e-9df0b38abe70)
 
 
+## Use Cases
+- **Status Tracking:** Color `TODO`, `INPROGRESS`, and `DONE` in different colors.
+- **Name Highlighting:** Color names, words, and sentences to recognize them at a glance from their colors alone!
+- **People & Characters:** Color names in novels or RPG notes.
+- **Priority Systems:** Highlight `!!!URGENT!!!` or `Low-Effort`.
+- **Learning:** Color key vocabulary terms in study notes.
+<img width="1113" height="433" alt="repeating words example" src="https://github.com/user-attachments/assets/e16e3121-2c14-43fe-b022-9e442d031f25" />
+
+# Installation:
+This plugin is now available on Obsidian Community Plugins!
+
+## TO-DO:
+- [ ] Allow folder-specific colouring
