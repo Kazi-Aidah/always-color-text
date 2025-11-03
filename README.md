@@ -17,6 +17,8 @@ Right-click to **Color Once**, **Highlight Once**, or add to the always-colored 
 ![Image](https://github.com/user-attachments/assets/43717d51-8b5a-40e3-96ce-2fd35c1abb31)
 
 Choose your Coloring Style, whether you want to color the words or highlight them across your vault.
+<img width="669" height="411" alt="Document" src="https://github.com/user-attachments/assets/d7797516-93ae-4f13-b571-e70fc290d164" />
+
 
 Customize your **Own Color Swatches** for faster picking, you can even replace the default swatches.
 
