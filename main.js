@@ -5,6 +5,7 @@ const {
   Modal,
   MarkdownView,
   Notice,
+  FuzzySuggestModal,
   debounce
 } = require('obsidian');
 const { RangeSetBuilder } = require('@codemirror/state');
@@ -252,7 +253,12 @@ module.exports = class AlwaysColorText extends Plugin {
       this._unregisterMarkdownPostProcessor = this.registerMarkdownPostProcessor((el, ctx) => {
         if (!this.settings.enabled) return;
         if (!ctx || !ctx.sourcePath) return;
+        // File-specific disable via settings
         if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
+        // Frontmatter can override per-file disabling: always-color-text: false
+        if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
+        // Folder-specific restrictions
+        if (this.isFileInExcludedFolder(ctx.sourcePath)) return;
         this.applyHighlights(el);
       });
       this.markdownPostProcessorRegistered = true;
@@ -314,6 +320,8 @@ module.exports = class AlwaysColorText extends Plugin {
       backgroundOpacity: 35, // percent
       highlightBorderRadius: 4, // px
       highlightHorizontalPadding: 4, // px
+      enableFolderRestrictions: false,
+      excludedFolders: [],
       disabledFiles: [],
       customSwatchesEnabled: false,
       replaceDefaultSwatches: false,
@@ -336,6 +344,15 @@ module.exports = class AlwaysColorText extends Plugin {
       enableBlacklistMenu: false,
       symbolWordColoring: false,
     }, await this.loadData() || {});
+    // --- Normalize migrated folder exclusion settings ---
+    if (!Array.isArray(this.settings.excludedFolders)) this.settings.excludedFolders = [];
+    // Support old format (array of strings) by converting to objects { path, excluded }
+    this.settings.excludedFolders = this.settings.excludedFolders.map(f => {
+      if (!f) return null;
+      if (typeof f === 'string') return { path: f, excluded: true };
+      if (typeof f === 'object' && f.path) return { path: f.path, excluded: typeof f.excluded === 'boolean' ? f.excluded : true };
+      return null;
+    }).filter(x => x && x.path && String(x.path).trim() !== '');
   }
 
   // --- Save settings and refresh plugin state ---
@@ -447,6 +464,80 @@ module.exports = class AlwaysColorText extends Plugin {
     let o = Math.max(0, Math.min(100, Number(opacityPercent)));
     o = o / 100;
     return `rgba(${r},${g},${b},${o})`;
+  }
+
+  // --- Helper: Check frontmatter for disabling coloring ---
+  // `always-color-text: false` means no coloring
+  isFrontmatterColoringDisabled(source) {
+    if (!source) return false;
+    const { TFile } = require('obsidian');
+    let file = null;
+    if (typeof source === 'string') {
+      file = this.app.vault.getAbstractFileByPath(source);
+    } else if (source instanceof TFile) {
+      file = source;
+    } else if (source.path) {
+      file = source;
+    }
+    if (!file) return false;
+    const cache = this.app.metadataCache.getFileCache(file);
+    if (!cache || !cache.frontmatter) return false;
+    // If frontmatter sets always-color-text: false -> disable
+    if (Object.prototype.hasOwnProperty.call(cache.frontmatter, 'always-color-text')) {
+      return cache.frontmatter['always-color-text'] === false;
+    }
+    return false;
+  }
+
+  // --- Helper: RegExp Folder Pattern ---
+  _folderPatternToRegExp(pattern) {
+    // Normalize slashes
+    let p = String(pattern || '').replace(/\\/g, '/').trim();
+    if (!p) return null;
+    if (p.endsWith('/')) p = p.slice(0, -1);
+    const hasWildcard = p.includes('*');
+    if (!hasWildcard) {
+      const esc = this.escapeRegex(p);
+      return new RegExp('^' + esc + '(?:/.*)?$');
+    }
+    let regexStr = this.escapeRegex(p)
+      .replace(/\\\*\\\*/g, '::DOUBLESTAR::')
+      .replace(/\\\*/g, '[^/]*')
+      .replace(/::DOUBLESTAR::/g, '.*');
+    return new RegExp('^' + regexStr + '$');
+  }
+
+  // Helper: Check if a file path is in an excluded folder
+  isFileInExcludedFolder(filePath) {
+    if (!this.settings.enableFolderRestrictions) return false;
+    if (!filePath) return false;
+    const fp = String(filePath).replace(/\\/g, '/');
+    if (!Array.isArray(this.settings.excludedFolders) || this.settings.excludedFolders.length === 0) return false;
+    // Collect matching entries and pick the most specific one (child overrides parent), IMP
+    const matched = [];
+    for (const entry of this.settings.excludedFolders) {
+      if (!entry || typeof entry.path !== 'string') continue;
+      const pattern = entry.path.trim();
+      if (!pattern) continue;
+      // Longer means more specifiv
+      const specificity = pattern.replace(/\*/g, '').length;
+      if (pattern.includes('*')) {
+        const re = this._folderPatternToRegExp(pattern);
+        if (re && re.test(fp)) matched.push({ entry, specificity });
+      } else {
+        const norm = pattern.replace(/\\/g, '/');
+        if (fp === norm || fp.startsWith(norm + '/')) matched.push({ entry, specificity });
+      }
+    }
+    if (matched.length === 0) return false;
+    // Choose the most specific match. If no, prefer exact match to the file path.
+    matched.sort((a, b) => {
+      if (b.specificity !== a.specificity) return b.specificity - a.specificity;
+      const aExact = String(a.entry.path).replace(/\\/g, '/') === fp ? 1 : 0;
+      const bExact = String(b.entry.path).replace(/\\/g, '/') === fp ? 1 : 0;
+      return bExact - aExact;
+    });
+    return !!matched[0].entry.excluded;
   }
 
   // --- Apply Highlights in Reading View (Markdown Post Processor) ---
@@ -682,6 +773,8 @@ module.exports = class AlwaysColorText extends Plugin {
         const activeFile = plugin.app.workspace.getActiveFile();
         if (!plugin.settings.enabled ||
             (activeFile && plugin.settings.disabledFiles.includes(activeFile.path)) ||
+            (activeFile && plugin.isFrontmatterColoringDisabled(activeFile.path)) ||
+            (activeFile && plugin.isFileInExcludedFolder(activeFile.path)) ||
             (view.file && activeFile && view.file.path !== activeFile.path)) {
           return builder.finish();
         }
@@ -1199,6 +1292,181 @@ class ColorSettingTab extends PluginSettingTab {
           new Notice('No active file to disable coloring for.');
         }
       }));
+
+  // Folder-specific settings
+    new Setting(containerEl)
+      .setName('Folder-Specific Coloring')
+      .setHeading();
+
+    new Setting(containerEl)
+      .setName('Enable folder restrictions')
+      .setDesc('When ON, files in the checked folders below will have coloring disabled. Leave OFF to ignore the list.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableFolderRestrictions).onChange(async v => {
+        this.plugin.settings.enableFolderRestrictions = v;
+        await this.debouncedSaveSettings();
+        this.display();
+      }));
+
+  // Folder list
+    const folderListDiv = containerEl.createDiv();
+    folderListDiv.addClass('excluded-folders-list');
+
+  // Folder suggestions
+  const populateFolderSuggestions = () => {
+      const files = this.app.vault.getFiles();
+      const folders = new Set();
+      files.forEach(f => {
+        const p = f.path.replace(/\\/g, '/');
+        const idx = p.lastIndexOf('/');
+        const folder = idx !== -1 ? p.slice(0, idx) : '';
+        if (folder) {
+          const parts = folder.split('/');
+          let acc = '';
+          parts.forEach(part => {
+            acc = acc ? `${acc}/${part}` : part;
+            folders.add(acc);
+          });
+        } else {
+          folders.add('');
+        }
+      });
+      return Array.from(folders).sort();
+    };
+
+    const createFolderRow = (entry, idx) => {
+      const row = folderListDiv.createDiv();
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.marginBottom = '8px';
+
+      const chk = row.createEl('input', { type: 'checkbox' });
+      chk.checked = !!entry.excluded;
+      chk.style.marginRight = '8px';
+      chk.onchange = async () => {
+        this.plugin.settings.excludedFolders[idx].excluded = chk.checked;
+        await this.debouncedSaveSettings();
+      };
+
+      const textInput = row.createEl('input', { type: 'text', value: entry.path });
+      textInput.style.flex = '1';
+      textInput.style.padding = '6px';
+      textInput.style.borderRadius = '4px';
+      textInput.style.border = '1px solid var(--background-modifier-border)';
+      textInput.style.marginRight = '8px';
+      // Show folder picker on focus
+      textInput.addEventListener('focus', () => {
+        // remove existing dropdown
+        if (textInput._actDropdown) {
+          textInput._actDropdown.remove();
+          textInput._actDropdown = null;
+        }
+
+        const suggestions = populateFolderSuggestions();
+  // build dropdown
+        const dd = document.createElement('div');
+        dd.className = 'act-folder-dropdown';
+        Object.assign(dd.style, {
+          position: 'absolute',
+          zIndex: 2000,
+          background: 'var(--background-primary)',
+          color: 'var(--text-normal)',
+          border: '1px solid var(--background-modifier-border)',
+          borderRadius: '6px',
+          boxShadow: '0 6px 18px rgba(0,0,0,0.4)',
+          maxHeight: '240px',
+          overflowY: 'auto',
+          padding: '6px 0',
+          minWidth: Math.max(240, textInput.offsetWidth) + 'px'
+        });
+
+        const buildItem = (folder) => {
+          const item = document.createElement('div');
+          item.className = 'act-folder-item';
+          item.textContent = folder === '' ? '/' : folder;
+          Object.assign(item.style, {
+            padding: '8px 12px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          });
+          item.onmouseenter = () => item.style.background = 'var(--background-secondary)';
+          item.onmouseleave = () => item.style.background = 'transparent';
+          item.onclick = async (e) => {
+            e.stopPropagation();
+            textInput.value = folder;
+            // trigger change handler
+            const ev = new Event('change', { bubbles: true });
+            textInput.dispatchEvent(ev);
+            dd.remove();
+            textInput._actDropdown = null;
+          };
+          return item;
+        };
+
+        suggestions.forEach(s => dd.appendChild(buildItem(s)));
+
+        // position dropdown
+        document.body.appendChild(dd);
+        const rect = textInput.getBoundingClientRect();
+        dd.style.left = (rect.left + window.scrollX) + 'px';
+        dd.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+
+        // store reference
+        textInput._actDropdown = dd;
+
+        // close on outside click
+        const onDocClick = (ev) => {
+          if (ev.target === textInput) return;
+          if (!dd.contains(ev.target)) {
+            dd.remove();
+            textInput._actDropdown = null;
+            document.removeEventListener('click', onDocClick);
+          }
+        };
+        setTimeout(() => document.addEventListener('click', onDocClick));
+      });
+      textInput.addEventListener('change', async () => {
+        const newPath = textInput.value.trim();
+        if (!newPath) {
+          // remove if empty
+          this.plugin.settings.excludedFolders.splice(idx, 1);
+        } else {
+          this.plugin.settings.excludedFolders[idx].path = newPath.replace(/\\\\/g, '/');
+        }
+        await this.debouncedSaveSettings();
+        this.display();
+      });
+
+      const del = row.createEl('button', { text: '✕' });
+      del.addClass('mod-warning');
+      del.style.marginLeft = '8px';
+      del.style.padding = '4px 8px';
+      del.style.borderRadius = '4px';
+      del.style.cursor = 'pointer';
+      del.addEventListener('click', async () => {
+        this.plugin.settings.excludedFolders.splice(idx, 1);
+        await this.plugin.saveSettings();
+        this.display();
+      });
+    };
+
+    // Render existing rows
+    if (this.plugin.settings.excludedFolders.length > 0) {
+      this.plugin.settings.excludedFolders.forEach((entry, i) => {
+        createFolderRow(entry, i);
+      });
+    } else {
+      const p = folderListDiv.createEl('p', { text: 'No folder exclusions configured.' });
+      p.style.marginBottom = '8px';
+    }
+
+    // [ Add Excluded folder ] button
+    new Setting(containerEl)
+      .addButton(b => b.setButtonText('+ Add excluded folder').onClick(async () => {
+        this.plugin.settings.excludedFolders.push({ path: '', excluded: true });
+        await this.plugin.saveSettings();
+        this.display();
+      }));
+
 
     // --- Toggle visibility ---
     new Setting(containerEl)
