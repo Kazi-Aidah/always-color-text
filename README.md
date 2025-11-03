@@ -1,5 +1,6 @@
 ## Always Color Text
 This plugin lets you color specific words and updates it across your Obsidian vault. Just select a word, pick a color, and that word will automatically appear in that color every time you type it, in both live preview and reading modes.
+
 ![Example](https://github.com/user-attachments/assets/9c38d1f9-e2fb-4291-b68e-23d96837ebce)
 
 This was inspired by the <span style="color: #2d98da">warn</span> <span style="color: #e5a216">deprecated</span> text I’d see in the terminal. I thought it’d be so cool, especially since I often need to repeat a bunch of categorized words!
