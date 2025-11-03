@@ -39,6 +39,12 @@ When Global Coloring is off, Texts coloured with "Always Color Text" disappear b
 Use the tiny “Delete All Words” button to clear everything, with a confirmation modal, just to be safe :D
 ![Image](https://github.com/user-attachments/assets/4767546e-e646-4e96-b89e-9df0b38abe70)
 
+Frontmatter YAML works too, you can use this to hide colors for the specific document.
+```
+---
+always-color-text: false
+---
+```
 
 ## Use Cases
 - **Status Tracking:** Color `TODO`, `INPROGRESS`, and `DONE` in different colors.
