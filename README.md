@@ -55,6 +55,11 @@ For folders, you can target parent folders to have coloring turned off. Then all
 
 <img width="1170" height="442" alt="Screenshot 2025-11-03 163237" src="https://github.com/user-attachments/assets/58a3e48e-70bb-4dc5-9a4f-f3b474cb56ce" />
 
+## Folder Specific Coloring
+Choose your styling per folder: apply a simple text color for some, or a text color with a background highlight for others.
+<img width="1165" height="515" alt="image" src="https://github.com/user-attachments/assets/07c3aa53-2d9f-4ff1-8f72-aa4d95c1eab0" />
+
+
 ### Too many words?
 Use the "Delete All Words" button to clear everything, with a confirmation modal for safety :D
 ![Image](https://github.com/user-attachments/assets/4767546e-e646-4e96-b89e-9df0b38abe70)
