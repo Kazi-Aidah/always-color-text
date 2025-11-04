@@ -257,9 +257,10 @@ module.exports = class AlwaysColorText extends Plugin {
         if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
         // Frontmatter can override per-file disabling: always-color-text: false
         if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
-        // Folder-specific restrictions
-        if (this.isFileInExcludedFolder(ctx.sourcePath)) return;
-        this.applyHighlights(el);
+        // Folder-specific rules
+        const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
+        if (folderEntry && folderEntry.excluded) return;
+        this.applyHighlights(el, folderEntry || null);
       });
       this.markdownPostProcessorRegistered = true;
     }
@@ -349,8 +350,13 @@ module.exports = class AlwaysColorText extends Plugin {
     // Support old format (array of strings) by converting to objects { path, excluded }
     this.settings.excludedFolders = this.settings.excludedFolders.map(f => {
       if (!f) return null;
-      if (typeof f === 'string') return { path: f, excluded: true };
-      if (typeof f === 'object' && f.path) return { path: f.path, excluded: typeof f.excluded === 'boolean' ? f.excluded : true };
+      if (typeof f === 'string') return { path: f, excluded: true, defaultColor: null, defaultStyle: null };
+      if (typeof f === 'object' && f.path) return {
+        path: f.path,
+        excluded: typeof f.excluded === 'boolean' ? f.excluded : true,
+        defaultColor: f.defaultColor || f.color || null,
+        defaultStyle: f.defaultStyle || null
+      };
       return null;
     }).filter(x => x && x.path && String(x.path).trim() !== '');
   }
@@ -507,6 +513,35 @@ module.exports = class AlwaysColorText extends Plugin {
     return new RegExp('^' + regexStr + '$');
   }
 
+  // Return the most specific folder entry that matches filePath, or null
+  getBestFolderEntry(filePath) {
+    if (!filePath) return null;
+    const fp = String(filePath).replace(/\\/g, '/');
+    if (!Array.isArray(this.settings.excludedFolders) || this.settings.excludedFolders.length === 0) return null;
+    const matched = [];
+    for (const entry of this.settings.excludedFolders) {
+      if (!entry || typeof entry.path !== 'string') continue;
+      const pattern = entry.path.trim();
+      if (!pattern) continue;
+      const specificity = pattern.replace(/\*/g, '').length;
+      if (pattern.includes('*')) {
+        const re = this._folderPatternToRegExp(pattern);
+        if (re && re.test(fp)) matched.push({ entry, specificity });
+      } else {
+        const norm = pattern.replace(/\\/g, '/');
+        if (fp === norm || fp.startsWith(norm + '/')) matched.push({ entry, specificity });
+      }
+    }
+    if (matched.length === 0) return null;
+    matched.sort((a, b) => {
+      if (b.specificity !== a.specificity) return b.specificity - a.specificity;
+      const aExact = String(a.entry.path).replace(/\\/g, '/') === fp ? 1 : 0;
+      const bExact = String(b.entry.path).replace(/\\/g, '/') === fp ? 1 : 0;
+      return bExact - aExact;
+    });
+    return matched[0].entry;
+  }
+
   // Helper: Check if a file path is in an excluded folder
   isFileInExcludedFolder(filePath) {
     if (!this.settings.enableFolderRestrictions) return false;
@@ -541,15 +576,16 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // --- Apply Highlights in Reading View (Markdown Post Processor) ---
-  applyHighlights(el) {
+  // optional folderEntry may contain defaultColor to override match colors
+  applyHighlights(el, folderEntry = null) {
     const entries = this.getSortedWordEntries();
     if (entries.length === 0) return;
     if (el.offsetParent === null) return;
-    this._wrapMatchesRecursive(el, entries);
+    this._wrapMatchesRecursive(el, entries, folderEntry);
   }
 
   // Efficient, non-recursive, DOM walker for reading mode
-  _wrapMatchesRecursive(element, entries) {
+  _wrapMatchesRecursive(element, entries, folderEntry = null) {
     const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
     const queue = [];
     for (const node of Array.from(element.childNodes)) {
@@ -561,6 +597,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (element.nodeType === Node.ELEMENT_NODE && blockTags.includes(element.nodeName)) queue.unshift(element);
 
     for (const block of queue) {
+      const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
       let processed = 0;
       // Unwrap any existing highlights created by this plugin to avoid stacking when re-applying
       const existingHighlights = Array.from(block.querySelectorAll('span.always-color-text-highlight'));
@@ -611,7 +648,9 @@ module.exports = class AlwaysColorText extends Plugin {
             } else {
               if (this.settings.blacklistWords.map(w => w.toLowerCase()).includes(matchedText.toLowerCase())) continue;
             }
-            matches.push({ start: match.index, end: match.index + matchedText.length, color, word: matchedText, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
+            // If folder has a defaultColor set, use it instead of the word color
+            const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : color;
+            matches.push({ start: match.index, end: match.index + matchedText.length, color: useColor, word: matchedText, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
             if (matches.length > 100) break;
           }
           if (matches.length > 100) break;
@@ -642,10 +681,12 @@ module.exports = class AlwaysColorText extends Plugin {
               if (found) {
                 // Remove any existing matches that overlap this word
                 matches = matches.filter(m => m.end <= start || m.start >= end);
+                // apply folder default color if present
+                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : color;
                 matches.push({
                   start: start,
                   end: end,
-                  color,
+                  color: useColor,
                   word: w,
                   highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4,
                   highlightBorderRadius: this.settings.highlightBorderRadius ?? 8
@@ -664,7 +705,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const regex = new RegExp(this.escapeRegex(word), flags);
             let match;
             while ((match = regex.exec(text))) {
-              matches.push({ start: match.index, end: match.index + match[0].length, color, word, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
+              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : color;
+              matches.push({ start: match.index, end: match.index + match[0].length, color: useColor, word, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
             }
           }
         }
@@ -684,7 +726,8 @@ module.exports = class AlwaysColorText extends Plugin {
                 const flags = this.settings.caseSensitive ? '' : 'i';
                 const regex = new RegExp(this.escapeRegex(symbol), flags);
                 if (regex.test(w)) {
-                  matches.push({ start, end, color, word: w });
+                  const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : color;
+                  matches.push({ start, end, color: useColor, word: w });
                   break;
                 }
               }
@@ -727,7 +770,7 @@ module.exports = class AlwaysColorText extends Plugin {
             span.className = 'always-color-text-highlight';
             span.textContent = text.slice(m.start, m.end);
             
-            if (this.settings.highlightStyle === 'text') {
+            if (effectiveStyle === 'text') {
               span.style.color = m.color;
             } else {
               span.style.background = '';
@@ -771,13 +814,13 @@ module.exports = class AlwaysColorText extends Plugin {
         if (to - from > 10000) return builder.finish();
         const text = view.state.doc.sliceString(from, to);
         const activeFile = plugin.app.workspace.getActiveFile();
-        if (!plugin.settings.enabled ||
-            (activeFile && plugin.settings.disabledFiles.includes(activeFile.path)) ||
-            (activeFile && plugin.isFrontmatterColoringDisabled(activeFile.path)) ||
-            (activeFile && plugin.isFileInExcludedFolder(activeFile.path)) ||
-            (view.file && activeFile && view.file.path !== activeFile.path)) {
-          return builder.finish();
-        }
+        if (!plugin.settings.enabled) return builder.finish();
+        if (activeFile && plugin.settings.disabledFiles.includes(activeFile.path)) return builder.finish();
+        if (activeFile && plugin.isFrontmatterColoringDisabled(activeFile.path)) return builder.finish();
+        // Determine folder rule for this file (may contain defaultColor/excluded)
+        const folderEntry = activeFile ? plugin.getBestFolderEntry(activeFile.path) : null;
+        if (folderEntry && folderEntry.excluded) return builder.finish();
+        if (view.file && activeFile && view.file.path !== activeFile.path) return builder.finish();
         const entries = plugin.getSortedWordEntries();
         if (entries.length === 0) return builder.finish();
         let matches = [];
@@ -881,6 +924,11 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
 
+        // If folder sets a default color for this path, override collected match colors
+        if (folderEntry && folderEntry.defaultColor) {
+          matches = matches.map(m => Object.assign({}, m, { color: folderEntry.defaultColor }));
+        }
+
         // --- Remove overlapping matches, prefer longest ---
         matches.sort((a, b) => a.start - b.start || b.end - a.end);
         let lastEnd = from;
@@ -892,8 +940,9 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
         nonOverlapping = nonOverlapping.slice(0, 100);
+        const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : plugin.settings.highlightStyle;
         for (const m of nonOverlapping) {
-          const style = plugin.settings.highlightStyle === 'text'
+          const style = effectiveStyle === 'text'
             ? `color: ${m.color} !important;`
             : `background: none !important; background-color: ${plugin.hexToRgba(m.color, plugin.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (plugin.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (plugin.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important;`;
           const deco = Decoration.mark({
@@ -934,7 +983,7 @@ class ColorSettingTab extends PluginSettingTab {
     // 2. Case sensitive
     new Setting(containerEl)
       .setName('Case sensitive')
-      .setDesc('If this is on, "word" and "Word" are totally different. If it\'s off, they\'re the same.')
+      .setDesc('If this is on, "word" and "Word" are treated as different. If it\'s off, they\'re colored the same.')
       .addToggle(t => t.setValue(this.plugin.settings.caseSensitive).onChange(async v => {
         this.plugin.settings.caseSensitive = v;
         await this.debouncedSaveSettings();
@@ -1436,6 +1485,18 @@ class ColorSettingTab extends PluginSettingTab {
         this.display();
       });
 
+      // Folder color style dropdown
+      const styleSelect = row.createEl('select');
+      styleSelect.style.marginRight = '8px';
+      styleSelect.style.height = '30px';
+      styleSelect.innerHTML = `<option value="">(use global)</option><option value="text">Text color</option><option value="background">Background highlight</option>`;
+      styleSelect.value = entry.defaultStyle || '';
+      styleSelect.addEventListener('change', async () => {
+        this.plugin.settings.excludedFolders[idx].defaultStyle = styleSelect.value || null;
+        await this.debouncedSaveSettings();
+        this.display();
+      });
+
       const del = row.createEl('button', { text: '✕' });
       del.addClass('mod-warning');
       del.style.marginLeft = '8px';
@@ -1462,7 +1523,7 @@ class ColorSettingTab extends PluginSettingTab {
     // [ Add Excluded folder ] button
     new Setting(containerEl)
       .addButton(b => b.setButtonText('+ Add excluded folder').onClick(async () => {
-        this.plugin.settings.excludedFolders.push({ path: '', excluded: true });
+        this.plugin.settings.excludedFolders.push({ path: '', excluded: true, defaultColor: null, defaultStyle: null });
         await this.plugin.saveSettings();
         this.display();
       }));
@@ -1649,3 +1710,5 @@ class ConfirmationModal extends Modal {
     this.contentEl.empty();
   }
 }
+
+/* nosourcemap */
