@@ -1,3 +1,5 @@
+![Version](https://img.shields.io/github/manifest-json/v/Kazi-Aidah/always-color-text?style=for-the-badge&color=9ccfd8&labelColor=26233a) ![Downloads](https://img.shields.io/badge/Downloads-748+-brightgreen?style=for-the-badge&labelColor=26233a)  ![Stars](https://img.shields.io/github/stars/Kazi-Aidah/always-color-text?style=for-the-badge&color=c4a7e7&labelColor=26233a) ![Last update](https://img.shields.io/github/last-commit/Kazi-Aidah/always-color-text?style=for-the-badge&color=ebbcba&labelColor=26233a)
+
 ## Always Color Text
 This plugin lets you color specific words across your Obsidian vault. Just select a word, pick a color, and that word will automatically appear in that color every time you type it, in both live preview and reading modes.
 
