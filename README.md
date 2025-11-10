@@ -172,13 +172,6 @@ https?://(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
 - Pattern: `\b\d{4}-\d{2}-\d{2}\b`
 - Enable "Use regex"
 - Color: Blue
-
-2023-12-25
-1999-01-01
-2050-06-30
-0001-01-01
-9999-12-31
-
 ![Blue Dates Example](https://github.com/user-attachments/assets/b5ab1939-6de5-4092-be09-ce2fc6d5c83c)
 ## Use Cases
 
