@@ -239,12 +239,73 @@ module.exports = class AlwaysColorText extends Plugin {
   isRegexTooComplex(pattern) {
     if (!pattern || typeof pattern !== 'string') return false;
     try {
+      // Special handling for quoted strings pattern
+      if (pattern === '\"[^\"]*\"') {
+        return false; // Allow this specific pattern
+      }
+
+      // Special handling for time patterns
+      if (pattern.includes(':00') && /(?:AM|PM)/.test(pattern)) {
+        return false; // Allow time patterns
+      }
+
+      // Special handling for measurement patterns
+      if (pattern === '\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|°C|°F|lbs)\\b' || 
+          /^\b\d+(?:\.\d+)?(?:kg|cm|m|km|°C|°F|lbs)\b$/.test(pattern)) {
+        return false; // Allow measurement patterns
+      }
+
+      // Check for certain safe patterns we want to allow
+      const safePatterns = [
+        /^https?:\/\/[^\s?]+(?:\?[^\s#]+)?(?:#[^\s]*)?$/,  // URLs
+        /^\b\d{4}-\d{2}-\d{2}\b$/,                         // Dates
+        /^\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b$/, // Emails
+        /^\\b(?:1[0-2]|0?[1-9]):[0-5][0-9]\\s?(?:AM|PM|am|pm)?\\b$/,  // Times with AM/PM
+        /^\\b(?:[0-2]?[0-9]|2[0-3]):[0-5][0-9](?:am|pm)?\\b$/,        // 24hr times + am/pm
+        /^\\b(?:today|tomorrow|yesterday|next week|last week)\\b$/,  // Time words
+        /^\b\d+(?:\.\d+)?(?:kg|cm|m|km|°C|°F|lbs)\b$/,             // Measurements
+      ];
+
+      for (const safePattern of safePatterns) {
+        if (safePattern.test(pattern)) return false;
+      }
+
       // Limit alternations (a|b|c|d|e|f)
       if ((pattern.match(/\|/g) || []).length > 5) return true;
-      // Limit pattern length
-      if (pattern.length > 150) return true;
-      // Limit nested quantifiers like (.*)* or (.+)+ or similar constructs
+      
+      // Length limit with exceptions for known good patterns
+      if (pattern.length > 150 && !pattern.startsWith('https?://')) return true;
+      
+      // Block nested quantifiers like (.*)* or (.+)+ or similar constructs
       if (/\([^)]*\)[*+][*+]/.test(pattern)) return true;
+
+      // Block known problematic constructs
+      const dangerousPatterns = [
+        /\([^)]*[*+]\)[*+]/,        // Nested groups with quantifiers
+        /\{.+\}\{.+\}/,             // Multiple numeric quantifiers
+        /\[([^\]]+\]){5,}/,         // Too many character classes
+        /\(\?[=!<]/,                // Lookaheads/lookbehinds
+        /\(\?[<][=!]/,              // Lookbehinds specifically
+        /\*\+|\+\*/,                // Adjacent quantifiers
+        /[*+]{3,}/,                 // Three or more consecutive quantifiers
+        /\[[^\]]{100,}\]/,          // Very large character classes
+        /\(\?[^:)].*\(\?[^:)]/      // Nested lookarounds
+      ];
+      
+      if (dangerousPatterns.some(p => p.test(pattern))) return true;
+
+      // Test compilation time but with a higher threshold for known patterns
+      const start = Date.now();
+      new RegExp(pattern);
+      const compileTime = Date.now() - start;
+      
+      // More lenient timeout for known good patterns
+      const isKnownGoodPattern = pattern.includes('https?://') || 
+                                pattern.includes(':[0-5][0-9]') ||
+                                pattern.includes('\"[^\"]*\"');
+                                
+      return isKnownGoodPattern ? compileTime > 100 : compileTime > 50;
+      
     } catch (e) {
       return true;
     }
@@ -613,6 +674,72 @@ module.exports = class AlwaysColorText extends Plugin {
     return matched[0].entry;
   }
 
+  // Check for known problematic patterns that should be blocked
+  isKnownProblematicPattern(pattern) {
+    if (!pattern || typeof pattern !== 'string') return false;
+    
+    // List of patterns known to cause issues
+    const dangerousPatterns = [
+      // Quote patterns that cause freezing
+      '"[^"]*"',
+      '\'[^\']*\'',
+      '\\"[^\\"]*\\"',
+      '\'(?:[^\'\\\\]|\\\\.)*\'',
+      '"(?:[^"\\\\]|\\\\.)*"',
+
+      // Complex date patterns
+      '\\b\\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)-\\d{1,2}\\b',
+      
+      // Nested quantifiers (catastrophic backtracking)
+      '(\\w+)*\\s+',
+      '([a-z]+)*\\d+',
+      '(\\d+){2,}*',
+      '(a*)*b',
+      '(a+)*b',
+      
+      // Backreferences with quantifiers
+      '(\\w+)\\1+',
+      '(\\w+)(\\1){3,}',
+      
+      // Complex lookarounds
+      '(?<=\\b\\w{3})\\w+(?=\\w{3}\\b)',
+      '\\w+(?<!bad)\\w+(?!worst)',
+      '(?<!bad)(?<!worst)(?<!terrible)\\w+',
+      
+      // Long alternations with backreferences
+      '\\b(word1|word2|word3|word4|word5)\\s+\\1\\b',
+      
+      // Complex nested groups
+      '\\b((\\w+)\\s+((\\d+)\\s*)){3,}\\b',
+      
+      // HTML-like patterns
+      '<([a-z]+)(?:\\s+\\w+="[^"]*")*>.*?</\\1>',
+      
+      // Overlapping patterns with quantifiers
+      '(?:\\w+|\\d+)*\\s+',
+      '(?:[a-z]*|[0-9]*)*',
+      
+      // Exponential patterns
+      '^(a|a?)+$',
+      '^(a|aa)+$',
+      '^(.*a){10}.*$',
+      
+      // Deeply nested structures
+      '\\((?:[^()]|\\([^()]*\\))*\\)',
+      
+      // Multiple lookarounds
+      '(?<=\\w+)(?<!\\d+)\\w+(?=\\s+)(?!\\d+)',
+      
+      // Greedy patterns with nested groups
+      '\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\}',
+    ];
+    
+    // Normalize patterns by removing whitespace before comparison
+    return dangerousPatterns.some(dangerous => 
+      pattern.replace(/\s/g, '') === dangerous.replace(/\s/g, '')
+    );
+  }
+
   // Compile word entries into runtime structures (regexes, testRegex, validity)
   compileWordEntries() {
     try {
@@ -623,6 +750,18 @@ module.exports = class AlwaysColorText extends Plugin {
         const pattern = String(e.pattern || '').trim();
         const color = e.color || '#000000';
         const isRegex = !!e.isRegex;
+        
+        // HARD-BLOCK known problematic patterns
+        if (this.isKnownProblematicPattern(pattern)) {
+          console.warn(`BLOCKED dangerous pattern: ${pattern.substring(0, 50)}`);
+          const compiled = { pattern, color, isRegex, flags: '', regex: null, testRegex: null, invalid: true, specificity: 0 };
+          this._compiledWordEntries.push(compiled);
+          try {
+            new Notice(`Pattern blocked for Memory Safety: ${pattern.substring(0, 30)}...`);
+          } catch (e) {}
+          continue;
+        }
+
         const rawFlags = String(e.flags || '').replace(/[^gimsuy]/g, '');
         // base flags (without g for testRegex)
         let flags = rawFlags || '';
@@ -1363,6 +1502,11 @@ class ColorSettingTab extends PluginSettingTab {
           const newPattern = textInput.value.trim();
           if (!newPattern) {
             this.plugin.settings.wordEntries.splice(i, 1);
+          } else if (this.plugin.settings.enableRegexSupport && entry.isRegex && this.plugin.isRegexTooComplex(newPattern)) {
+            new Notice(`Pattern too complex: ${newPattern.substring(0, 60)}...`);
+            // Revert to previous pattern
+            textInput.value = entry.pattern;
+            return;
           } else {
             this.plugin.settings.wordEntries[i].pattern = newPattern;
           }

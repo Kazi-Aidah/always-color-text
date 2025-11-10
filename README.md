@@ -96,8 +96,11 @@ Here are ready-to-use regex patterns for common scenarios!!
 # or a lighter date format
 \b\d{4}-[A-Za-z]+-\d{1,2}\b
 
-# Time patterns (14:30, 9:05 AM)
+# Time patterns (Targets 14:30, 9:05 AM, 12:30pm)
 \b(?:1[0-2]|0?[1-9]):[0-5][0-9]\s?(?:AM|PM)?\b
+
+# Time Pattern Only (Targets 9:05 AM & 12:30pm but not 13:20)
+\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\b
 
 # Relative dates (today, tomorrow, next week)
 \b(?:today|tomorrow|yesterday|next week|last week)\b
@@ -137,6 +140,9 @@ https?://(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
 
 # Username mentions (@username)
 @[a-zA-Z0-9_]+
+
+# Code-like patterns (variable_name, functionName)
+\b[a-z_][a-z0-9_]*\b
 ```
 
 ### **Numbers & Measurements**
@@ -151,17 +157,22 @@ https?://(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
 \b\d{3}[-.]?\d{3}[-.]?\d{4}\b
 ```
 
-### **Specialized Patterns**
-```regex
-# Hashtags (#tag, #multiple-words)
-#\w+(?:-\w+)*
 
-# Code-like patterns (variable_name, functionName)
-\b[a-z_][a-z0-9_]*\b
+### Safety and Pattern Restrictions
+To ensure optimal performance and prevent freezing, the plugin now includes automatic safety measures:
+- **Pattern Validation**: Complex patterns that might cause performance issues are automatically blocked
+- **Progressive Loading**: Only processes visible content first, then handles the rest when idle
+- **Active File Only**: Only processes the current file you're viewing for better performance
 
-# UUIDs and IDs
-\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b
-```
+#### Blocked Patterns
+The following types of patterns are automatically blocked for safety:
+- Nested quote patterns (e.g., `"[^"]*"`, `'[^']*'`)
+- Patterns with nested quantifiers (e.g., `(\w+)*`)
+- Complex lookarounds and backreferences
+- Deeply nested groups
+- Patterns known to cause catastrophic backtracking
+
+When a pattern is blocked, you'll see a notice explaining why. Instead of complex patterns, try using simpler alternatives listed in [Practical Regex Examples](#practical-regex-examples).
 
 ### Quick Tips for Using These Patterns
 
