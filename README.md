@@ -49,12 +49,136 @@ always-color-text: false
 
 For folders, you can target parent folders to have coloring turned off. Then all files in the parent folder and subfolders won't show colors. However, if you enable coloring for a specific subfolder, then all subfolders except that specific one won't have colors.
 
-<img width="1170" height="442" alt="Screenshot 2025-11-03 163237" src="https://github.com/user-attachments/assets/58a3e48e-70bb-4dc5-9a4f-f3b474cb56ce" />
+![Screenshot 2025-11-03 163237](https://github.com/user-attachments/assets/58a3e48e-70bb-4dc5-9a4f-f3b474cb56ce)
 
-### Too many words?
-Use the "Delete All Words" button to clear everything, with a confirmation modal for safety :D
-![Image](https://github.com/user-attachments/assets/4767546e-e646-4e96-b89e-9df0b38abe70)
+## Advanced Regex Support
 
+Enable powerful pattern matching using JavaScript regular expressions. When "Use regex" is checked for an entry, your pattern becomes a full regex with advanced capabilities:
+
+### Supported Features
+
+- **Lookahead/lookbehind**: `(?<=\$)\d+` (numbers after dollar signs)
+- **Unicode properties**: `\p{Emoji}+` (match emojis, requires `u` flag)
+- **Word boundaries**: `\bTODO\b` (match "TODO" as whole word only)
+- **Character classes**: `[A-Z]{2,}` (2+ uppercase letters)
+- **Alternation**: `TODO|DONE|WIP` (multiple status words)
+
+### Available Flags
+
+- `g` - Global match (always enabled for matching)
+- `i` - Case insensitive (auto-added if case-sensitive setting is off)
+- `m` - Multiline mode
+- `s` - Dot matches newlines
+- `u` - Unicode mode (enables `\p{...}` properties)
+- `y` - Sticky matching
+
+### Examples
+
+- `\b[A-Z]{3,}\b` - Match acronyms (3+ capital letters)
+- `\$\d+\.\d{2}` - Match currency amounts like `$29.99`
+- `\p{Script=Han}+` - Match Chinese characters (with `u` flag)
+- `^#\s+.*$` - Match heading lines (start with # and space)
+
+_Note: For literal text with special characters like `.` or `*`, leave "Use regex" unchecked - they'll be matched exactly._
+
+## Practical Regex Examples
+
+Here are ready-to-use regex patterns for common scenarios!!
+
+### **Date & Time Patterns**
+```regex
+# YYYY-MM-DD (2009-01-19)
+\b\d{4}-\d{2}-\d{2}\b
+
+# Various date formats (2008-January-19, 2009-Jan-19)
+\b\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)-\d{1,2}\b
+
+# less heavier version for dates
+\b\d{4}-[A-Za-z]+-\d{1,2}\b
+
+# Time patterns (14:30, 9:05 AM)
+\b(?:1[0-2]|0?[1-9]):[0-5][0-9]\s?(?:AM|PM)?\b
+
+# Relative dates (today, tomorrow, next week)
+\b(?:today|tomorrow|yesterday|next week|last week)\b
+```
+
+### **URLs & Links Patterns**
+```regex
+# Basic URLs (https://kaziaidah.dev.pages)
+https?://(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
+
+# Markdown links
+\[[^\]]+\]\(https?://[^)]+\)
+
+# Simple domain names
+\b[a-zA-Z0-9-]+\.[a-zA-Z]{2,}\b
+```
+
+### **Status & Priority Systems**
+```regex
+# Common status words
+\b(?:TODO|DONE|WIP|INPROGRESS|BLOCKED|REVIEW|URGENT)\b
+
+# Priority indicators (!!!URGENT!!!, *IMPORTANT*)
+\b!{2,}.+!{2,}\b|\*{1,}.+\*{1,}\b
+
+# Progress percentages (25%, 100%)
+\b\d{1,3}%\b
+```
+
+### **People & Names**
+```regex
+# Capitalized names
+\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b
+
+# Email addresses
+\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b
+
+# Username mentions (@username)
+@[a-zA-Z0-9_]+
+```
+
+### **Numbers & Measurements**
+```regex
+# Currency ($29.99, €50, ¥1000)
+\$(?:\d+\.?\d*)|[€£¥]?\d+(?:\.\d{2})?
+
+# Measurements (25kg, 180cm, 98.6°F)
+\b\d+(?:\.\d+)?(?:kg|cm|m|km|°C|°F|lbs)\b
+
+# Phone numbers (basic pattern)
+\b\d{3}[-.]?\d{3}[-.]?\d{4}\b
+```
+
+### **Specialized Patterns**
+```regex
+# Hashtags (#tag, #multiple-words)
+#\w+(?:-\w+)*
+
+# Code-like patterns (variable_name, functionName)
+\b[a-z_][a-z0-9_]*\b
+
+# UUIDs and IDs
+\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b
+```
+
+### Quick Tips for Using These Patterns
+
+1. **Enable "Use regex"** in your color entry settings
+2. **Test patterns** in a regex tester first if unsure
+3. **Use flags wisely**:
+    - `i` for case-insensitive matching
+    - `u` for Unicode/emoji patterns
+4. **Start simple** - test basic patterns before complex ones
+
+**Example**: To color all dates in blue:
+
+- Pattern: `\b\d{4}-\d{2}-\d{2}\b`
+- Enable "Use regex"
+- Color: Blue
+
+![Blue Dates Example](https://github.com/user-attachments/assets/b5ab1939-6de5-4092-be09-ce2fc6d5c83c)
 ## Use Cases
 
 - **Status Tracking:** Color `TODO`, `INPROGRESS`, and `DONE` in different colors

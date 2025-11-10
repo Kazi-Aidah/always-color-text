@@ -235,6 +235,22 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
+  // --- Regex complexity checker to avoid catastrophic patterns ---
+  isRegexTooComplex(pattern) {
+    if (!pattern || typeof pattern !== 'string') return false;
+    try {
+      // Limit alternations (a|b|c|d|e|f)
+      if ((pattern.match(/\|/g) || []).length > 5) return true;
+      // Limit pattern length
+      if (pattern.length > 150) return true;
+      // Limit nested quantifiers like (.*)* or (.+)+ or similar constructs
+      if (/\([^)]*\)[*+][*+]/.test(pattern)) return true;
+    } catch (e) {
+      return true;
+    }
+    return false;
+  }
+
   // --- When the plugin is UNLOADING, remove all its UI and features ---
   onunload() {
     this.ribbonIcon?.remove();
@@ -254,14 +270,17 @@ module.exports = class AlwaysColorText extends Plugin {
       this._unregisterMarkdownPostProcessor = this.registerMarkdownPostProcessor((el, ctx) => {
         if (!this.settings.enabled) return;
         if (!ctx || !ctx.sourcePath) return;
-        // File-specific disable via settings
-        if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
-        // Frontmatter can override per-file disabling: always-color-text: false
-        if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
-        // Folder-specific rules
-        const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
-        if (folderEntry && folderEntry.excluded) return;
-        this.applyHighlights(el, folderEntry || null);
+
+        // ONLY process the active file to avoid coloring all open notes
+        const activeFile = this.app.workspace.getActiveFile();
+        if (!activeFile || ctx.sourcePath !== activeFile.path) return;
+
+        // Delegate to the active-file-only processor (handles DOM caps, deferral)
+        try {
+          this.processActiveFileOnly(el, ctx);
+        } catch (e) {
+          console.warn('Always Color Text: processActiveFileOnly failed', e);
+        }
       });
       this.markdownPostProcessorRegistered = true;
     }
@@ -618,6 +637,15 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         try {
           if (this.settings.enableRegexSupport && isRegex) {
+            // Safety: block overly complex regexes early
+            if (this.isRegexTooComplex(pattern)) {
+              compiled.invalid = true;
+              try {
+                new Notice(`Pattern too complex: ${pattern.substring(0, 60)}...`);
+              } catch (e) {}
+              this._compiledWordEntries.push(compiled);
+              continue;
+            }
             // compile with combined flags
             compiled.regex = new RegExp(pattern, flags);
             // testRegex: same flags but without global to safely use .test()
@@ -678,15 +706,68 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // --- Apply Highlights in Reading View (Markdown Post Processor) ---
   // optional folderEntry may contain defaultColor to override match colors
-  applyHighlights(el, folderEntry = null) {
+  applyHighlights(el, folderEntry = null, options = {}) {
     const entries = this.getSortedWordEntries();
     if (entries.length === 0) return;
     if (el.offsetParent === null) return;
-    this._wrapMatchesRecursive(el, entries, folderEntry);
+    // options: immediateBlocks, skipFirstN, clearExisting
+    this._wrapMatchesRecursive(el, entries, folderEntry, options || {});
+  }
+
+  // Process only the active file: immediate visible blocks then deferred idle processing
+  processActiveFileOnly(el, ctx) {
+    if (!el || !ctx || !ctx.sourcePath) return;
+    // Safety: skip if DOM is already large
+    try {
+      if (document.querySelectorAll('*').length > 2000) {
+        console.warn('Always Color Text: Skipping processing because DOM is too large');
+        return;
+      }
+    } catch (e) {}
+
+    // File-specific disable via settings
+    if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
+    // Frontmatter can override per-file disabling: always-color-text: false
+    if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
+    // Folder-specific rules
+    const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
+    if (folderEntry && folderEntry.excluded) return;
+
+    const immediateBlocks = 20;
+    const processNow = () => this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true });
+
+    // Fast-path immediate pass for visible content
+    processNow();
+
+    // Schedule deferred pass for remaining content in idle time
+    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+      try {
+        window.requestIdleCallback(() => {
+          try {
+            this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: false });
+          } catch (e) {}
+        }, { timeout: 2000 });
+      } catch (e) {
+        setTimeout(() => {
+          try {
+            this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: false });
+          } catch (e) {}
+        }, 1000);
+      }
+    } else {
+      setTimeout(() => {
+        try {
+          this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: false });
+        } catch (e) {}
+      }, 1000);
+    }
   }
 
   // Efficient, non-recursive, DOM walker for reading mode
-  _wrapMatchesRecursive(element, entries, folderEntry = null) {
+  _wrapMatchesRecursive(element, entries, folderEntry = null, options = {}) {
+    const immediateLimit = Number(options.immediateBlocks) || 0;
+    const skipFirstN = Number(options.skipFirstN) || 0;
+    const clearExisting = options.clearExisting !== false;
     const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'EM', 'I', 'B', 'STRONG', 'CODE', 'PRE', 'A'];
     const queue = [];
     for (const node of Array.from(element.childNodes)) {
@@ -696,15 +777,23 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     }
     if (element.nodeType === Node.ELEMENT_NODE && blockTags.includes(element.nodeName)) queue.unshift(element);
-
-    for (const block of queue) {
+    let visited = 0;
+    for (let qIndex = 0; qIndex < queue.length; qIndex++) {
+      const block = queue[qIndex];
+      // Skip blocks we've been asked to skip (deferred pass)
+      if (qIndex < skipFirstN) {
+        visited++;
+        continue;
+      }
       const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
       let processed = 0;
       // Unwrap any existing highlights created by this plugin to avoid stacking when re-applying
-      const existingHighlights = Array.from(block.querySelectorAll('span.always-color-text-highlight'));
-      for (const ex of existingHighlights) {
-        const tn = document.createTextNode(ex.textContent);
-        ex.replaceWith(tn);
+      if (clearExisting) {
+        const existingHighlights = Array.from(block.querySelectorAll('span.always-color-text-highlight'));
+        for (const ex of existingHighlights) {
+          const tn = document.createTextNode(ex.textContent);
+          ex.replaceWith(tn);
+        }
       }
       for (const node of Array.from(block.childNodes)) {
         if (node.nodeType !== Node.TEXT_NODE) continue;
@@ -834,7 +923,20 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         if (nonOverlapping.length) {
           processed++;
-          if (processed > 10) break;
+          // If we reached the immediate limit, schedule remaining work and return
+          if (immediateLimit > 0 && processed >= immediateLimit) {
+            const remainingSkip = qIndex + 1; // skip blocks we've already visited in the queue
+            try {
+              if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(() => this.applyHighlights(element, folderEntry, { skipFirstN: remainingSkip, clearExisting: false }), { timeout: 2000 });
+              } else {
+                setTimeout(() => this.applyHighlights(element, folderEntry, { skipFirstN: remainingSkip, clearExisting: false }), 50);
+              }
+            } catch (e) {
+              setTimeout(() => this.applyHighlights(element, folderEntry, { skipFirstN: remainingSkip, clearExisting: false }), 50);
+            }
+            return;
+          }
           const frag = document.createDocumentFragment();
           let pos = 0;
           
