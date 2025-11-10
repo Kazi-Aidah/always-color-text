@@ -1,5 +1,3 @@
-![Version](https://img.shields.io/github/manifest-json/v/Kazi-Aidah/always-color-text?style=for-the-badge&color=9ccfd8&labelColor=26233a) ![Downloads](https://img.shields.io/badge/Downloads-748+-brightgreen?style=for-the-badge&labelColor=26233a)  ![Stars](https://img.shields.io/github/stars/Kazi-Aidah/always-color-text?style=for-the-badge&color=c4a7e7&labelColor=26233a) ![Last update](https://img.shields.io/github/last-commit/Kazi-Aidah/always-color-text?style=for-the-badge&color=ebbcba&labelColor=26233a)
-
 ## Always Color Text
 
 This plugin lets you color specific words across your Obsidian vault. Just select a word, pick a color, and that word will automatically appear in that color every time you type it, in both live preview and reading modes. ![Different Styles in different Folders](https://github.com/user-attachments/assets/905f5f4b-8b8b-440a-b00f-b32548e721db)
@@ -54,6 +52,9 @@ For folders, you can target parent folders to have coloring turned off. Then all
 ## Advanced Regex Support
 
 Enable powerful pattern matching using JavaScript regular expressions. When "Use regex" is checked for an entry, your pattern becomes a full regex with advanced capabilities:
+![](https://github.com/user-attachments/assets/8bafe832-7d95-46ac-ae2d-8580fa010138)
+You will have to enable regex support for this.
+
 
 ### Supported Features
 
@@ -93,7 +94,7 @@ Here are ready-to-use regex patterns for common scenarios!!
 # Various date formats (2008-January-19, 2009-Jan-19)
 \b\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)-\d{1,2}\b
 
-# less heavier version for dates
+# or a lighter date format
 \b\d{4}-[A-Za-z]+-\d{1,2}\b
 
 # Time patterns (14:30, 9:05 AM)
@@ -142,7 +143,7 @@ https?://(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
 ### **Numbers & Measurements**
 ```regex
 # Currency ($29.99, €50, ¥1000)
-\$(?:\d+\.?\d*)|[€£¥]?\d+(?:\.\d{2})?
+\$\d+(?:\.\d{2})?|\b[€£¥]\d+(?:\.\d{2})?\b
 
 # Measurements (25kg, 180cm, 98.6°F)
 \b\d+(?:\.\d+)?(?:kg|cm|m|km|°C|°F|lbs)\b
@@ -177,7 +178,6 @@ https?://(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
 - Pattern: `\b\d{4}-\d{2}-\d{2}\b`
 - Enable "Use regex"
 - Color: Blue
-
 ![Blue Dates Example](https://github.com/user-attachments/assets/b5ab1939-6de5-4092-be09-ce2fc6d5c83c)
 ## Use Cases
 
