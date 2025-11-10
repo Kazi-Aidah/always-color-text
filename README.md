@@ -93,9 +93,6 @@ Here are ready-to-use regex patterns for common scenarios!!
 # YYYY-MM-DD (2009-01-19)
 \b\d{4}-\d{2}-\d{2}\b
 
-# Various date formats (2008-January-19, 2009-Jan-19)
-\b\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)-\d{1,2}\b
-
 # or a lighter date format
 \b\d{4}-[A-Za-z]+-\d{1,2}\b
 
