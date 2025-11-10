@@ -92,7 +92,7 @@ Here are ready-to-use regex patterns for common scenarios!!
 \b\d{4}-\d{2}-\d{2}\b
 
 # Various date formats (2008-January-19, 2009-Jan-19)
-\b\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)-\d{1,2}\b
+\b\d{4}-[A-Za-z]+-\d{1,2}\b
 
 # Time patterns (14:30, 9:05 AM)
 \b(?:1[0-2]|0?[1-9]):[0-5][0-9]\s?(?:AM|PM)?\b
@@ -140,7 +140,7 @@ https?://(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
 ### **Numbers & Measurements**
 ```regex
 # Currency ($29.99, €50, ¥1000)
-\$(?:\d+\.?\d*)|[€£¥]?\d+(?:\.\d{2})?
+\$\d+(?:\.\d{2})?|\b[€£¥]\d+(?:\.\d{2})?\b
 
 # Measurements (25kg, 180cm, 98.6°F)
 \b\d+(?:\.\d+)?(?:kg|cm|m|km|°C|°F|lbs)\b
