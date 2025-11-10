@@ -121,13 +121,14 @@ module.exports = class AlwaysColorText extends Plugin {
               }).open();
             });
         });
-        // Remove always text color:
-        if (this.settings.wordColors.hasOwnProperty(selectedText)) {
+        // Remove always text color (checks new wordEntries model)
+        const hasLiteralEntry = this.settings.wordEntries.some(e => e && e.pattern === selectedText && !e.isRegex);
+        if (hasLiteralEntry) {
           menu.addItem(item => {
             item.setTitle("Remove always text color")
               .setIcon('eraser')
               .onClick(async () => {
-                delete this.settings.wordColors[selectedText];
+                this.settings.wordEntries = this.settings.wordEntries.filter(e => !(e && e.pattern === selectedText && !e.isRegex));
                 await this.saveSettings();
                 this.refreshEditor(view, true);
                 new Notice(`Removed always color for \"${selectedText}\".`);
@@ -314,7 +315,9 @@ module.exports = class AlwaysColorText extends Plugin {
   // --- Load plugin settings from disk, with defaults ---
   async loadSettings() {
     this.settings = Object.assign({
+      // legacy: wordColors map. New model below: wordEntries array
       wordColors: {},
+      wordEntries: [],
       caseSensitive: false,
       enabled: false,
       highlightStyle: 'text',
@@ -344,8 +347,10 @@ module.exports = class AlwaysColorText extends Plugin {
       blacklistWords: [],
       enableBlacklistMenu: false,
       symbolWordColoring: false,
+      // Enable/disable regex support in the settings UI/runtime
+      enableRegexSupport: false,
     }, await this.loadData() || {});
-    // --- Normalize migrated folder exclusion settings ---
+  // --- Normalize migrated folder exclusion settings ---
     if (!Array.isArray(this.settings.excludedFolders)) this.settings.excludedFolders = [];
     // Support old format (array of strings) by converting to objects { path, excluded }
     this.settings.excludedFolders = this.settings.excludedFolders.map(f => {
@@ -359,11 +364,40 @@ module.exports = class AlwaysColorText extends Plugin {
       };
       return null;
     }).filter(x => x && x.path && String(x.path).trim() !== '');
+
+    // --- Migrate wordColors -> wordEntries (backwards compatible) ---
+    if (!Array.isArray(this.settings.wordEntries) || this.settings.wordEntries.length === 0) {
+      // If user already has wordEntries saved, keep them. Otherwise convert old map.
+      const obj = this.settings.wordColors || {};
+      const arr = [];
+      for (const k of Object.keys(obj)) {
+        const c = obj[k];
+        arr.push({ pattern: String(k), color: String(c), isRegex: false, flags: '' });
+      }
+      this.settings.wordEntries = arr;
+    } else {
+      // Ensure shape for existing entries
+      this.settings.wordEntries = this.settings.wordEntries.map(e => {
+        if (!e) return null;
+        if (typeof e === 'string') return { pattern: e, color: '#000000', isRegex: false, flags: '' };
+        return {
+          pattern: e.pattern || e.word || '',
+          color: e.color || e.hex || '#000000',
+          isRegex: !!e.isRegex,
+          flags: e.flags || ''
+        };
+      }).filter(x => x && String(x.pattern).trim() !== '');
+    }
+
+    // compile word entries into fast runtime structures
+    this.compileWordEntries();
   }
 
   // --- Save settings and refresh plugin state ---
   async saveSettings() {
     await this.saveData(this.settings);
+    // Recompile entries after saving
+    this.compileWordEntries();
 
     this.disablePluginFeatures();
     if (this.settings.enabled) {
@@ -374,7 +408,15 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // --- Save a persistent color for a word ---
   async saveEntry(word, color) {
-    this.settings.wordColors[word] = color;
+    // Save or update a literal (non-regex) entry in the new wordEntries model
+    const pattern = String(word);
+    const col = String(color);
+    const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === pattern && !e.isRegex);
+    if (idx !== -1) {
+      this.settings.wordEntries[idx].color = col;
+    } else {
+      this.settings.wordEntries.push({ pattern, color: col, isRegex: false, flags: '' });
+    }
     await this.saveSettings();
     this.reconfigureEditorExtensions();
   }
@@ -449,13 +491,23 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // --- Get Sorted Word Entries (Longest words first!!!) ---
   getSortedWordEntries() {
-    const numWords = Object.keys(this.settings.wordColors).length;
+    const entries = Array.isArray(this._compiledWordEntries) ? this._compiledWordEntries.slice() : [];
+    const numWords = entries.length;
     if (numWords > 200) {
-      console.warn(`Always Color Text: You have ${numWords} colored words! That's a lot. Your app might slow down a bit.`);
+      console.warn(`Always Color Text: You have ${numWords} colored words/patterns! That's a lot. Your app might slow down a bit.`);
     }
-    return Object.entries(this.settings.wordColors)
-      .filter(([word]) => !this.settings.blacklistWords.includes(word))
-      .sort((a, b) => b[0].length - a[0].length);
+    // Filter out blacklisted simple patterns (case-sensitive handling)
+    const filtered = entries.filter(e => {
+      if (!e || !e.pattern) return false;
+      if (!this.settings.blacklistWords || this.settings.blacklistWords.length === 0) return true;
+      if (this.settings.caseSensitive) {
+        return !this.settings.blacklistWords.includes(e.pattern);
+      }
+      const lower = e.pattern.toLowerCase();
+      return !this.settings.blacklistWords.map(w => w.toLowerCase()).includes(lower);
+    });
+    // Already sorted by specificity during compilation, return filtered list
+    return filtered;
   }
 
   // --- Helper: Convert hex to rgba with opacity ---
@@ -542,6 +594,55 @@ module.exports = class AlwaysColorText extends Plugin {
     return matched[0].entry;
   }
 
+  // Compile word entries into runtime structures (regexes, testRegex, validity)
+  compileWordEntries() {
+    try {
+      this._compiledWordEntries = [];
+      if (!Array.isArray(this.settings.wordEntries)) return;
+      for (const e of this.settings.wordEntries) {
+        if (!e) continue;
+        const pattern = String(e.pattern || '').trim();
+        const color = e.color || '#000000';
+        const isRegex = !!e.isRegex;
+        const rawFlags = String(e.flags || '').replace(/[^gimsuy]/g, '');
+        // base flags (without g for testRegex)
+        let flags = rawFlags || '';
+        if (!flags.includes('g')) flags += 'g';
+        if (!this.settings.caseSensitive && !flags.includes('i')) flags += 'i';
+
+        const compiled = { pattern, color, isRegex, flags, regex: null, testRegex: null, invalid: false, specificity: pattern.replace(/\*/g, '').length };
+        if (!pattern) {
+          compiled.invalid = true;
+          this._compiledWordEntries.push(compiled);
+          continue;
+        }
+        try {
+          if (this.settings.enableRegexSupport && isRegex) {
+            // compile with combined flags
+            compiled.regex = new RegExp(pattern, flags);
+            // testRegex: same flags but without global to safely use .test()
+            const testFlags = flags.replace(/g/g, '');
+            compiled.testRegex = testFlags === '' ? new RegExp(pattern) : new RegExp(pattern, testFlags);
+          } else {
+            // literal: escape pattern
+            const esc = this.escapeRegex(pattern);
+            const literalFlags = this.settings.caseSensitive ? 'g' : 'gi';
+            compiled.regex = new RegExp(esc, literalFlags);
+            compiled.testRegex = this.settings.caseSensitive ? new RegExp(esc) : new RegExp(esc, 'i');
+          }
+        } catch (err) {
+          compiled.invalid = true;
+        }
+        this._compiledWordEntries.push(compiled);
+      }
+      // sort by specificity (longer patterns first)
+      this._compiledWordEntries.sort((a, b) => b.specificity - a.specificity || b.pattern.length - a.pattern.length);
+    } catch (err) {
+      console.error('Always Color Text: compileWordEntries failed', err);
+      this._compiledWordEntries = [];
+    }
+  }
+
   // Helper: Check if a file path is in an excluded folder
   isFileInExcludedFolder(filePath) {
     if (!this.settings.enableFolderRestrictions) return false;
@@ -586,7 +687,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // Efficient, non-recursive, DOM walker for reading mode
   _wrapMatchesRecursive(element, entries, folderEntry = null) {
-    const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+    const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'EM', 'I', 'B', 'STRONG', 'CODE', 'PRE', 'A'];
     const queue = [];
     for (const node of Array.from(element.childNodes)) {
       if (node.nodeType === Node.ELEMENT_NODE && !['CODE', 'PRE'].includes(node.nodeName)) {
@@ -627,29 +728,21 @@ module.exports = class AlwaysColorText extends Plugin {
           });
         };
 
-  for (const [word, color] of entries) {
-          const flags = this.settings.caseSensitive ? 'g' : 'gi';
-          let pattern;
-          // --- if word contains any letter or digit, match as-is (no word boundary), else treat as symbol ---
-          if (/^[^a-zA-Z0-9]+$/.test(word)) {
-            // pure symbol: match as symbol
-            pattern = this.escapeRegex(word);
-          } else {
-            // word with any letter/digit (even if it contains symbols): match as-is, no word boundary
-            pattern = this.escapeRegex(word);
-          }
-          const regex = new RegExp(pattern, flags);
+        for (const entry of entries) {
+          if (!entry || entry.invalid) continue;
+          const flags = entry.flags || (this.settings.caseSensitive ? 'g' : 'gi');
+          const regex = entry.regex;
+          if (!regex) continue;
           let match;
           while ((match = regex.exec(text))) {
             const matchedText = match[0];
-            // Only block if the whole match is blacklisted, not if it contains a blacklisted word as substring
+            // Only block if the whole match is blacklisted
             if (this.settings.caseSensitive) {
               if (this.settings.blacklistWords.includes(matchedText)) continue;
             } else {
               if (this.settings.blacklistWords.map(w => w.toLowerCase()).includes(matchedText.toLowerCase())) continue;
             }
-            // If folder has a defaultColor set, use it instead of the word color
-            const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : color;
+            const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
             matches.push({ start: match.index, end: match.index + matchedText.length, color: useColor, word: matchedText, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
             if (matches.length > 100) break;
           }
@@ -667,22 +760,16 @@ module.exports = class AlwaysColorText extends Plugin {
             const end = start + w.length;
             // Check if the entire word is blacklisted first
             if (isBlacklisted(w)) continue;
-            for (const [colored, color] of entries) {
-              if (/^[^a-zA-Z0-9]+$/.test(colored)) continue;
+            for (const entry of entries) {
+              if (!entry || entry.invalid) continue;
+              if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue; // skip symbols here
               // Skip if the colored word itself is blacklisted
-              if (isBlacklisted(colored)) continue;
-              // Check if colored word is a substring of w (case-insensitive if needed)
-              let found = false;
-              if (this.settings.caseSensitive) {
-                if (w.includes(colored)) found = true;
-              } else {
-                if (w.toLowerCase().includes(colored.toLowerCase())) found = true;
-              }
-              if (found) {
-                // Remove any existing matches that overlap this word
+              if (isBlacklisted(entry.pattern)) continue;
+              // Use testRegex to check substring membership without global lastIndex issues
+              const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
+              if (testRe.test(w)) {
                 matches = matches.filter(m => m.end <= start || m.start >= end);
-                // apply folder default color if present
-                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : color;
+                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
                 matches.push({
                   start: start,
                   end: end,
@@ -699,21 +786,22 @@ module.exports = class AlwaysColorText extends Plugin {
 
         // --- Symbol-Word Coloring ---
         // Always do normal symbol coloring (individual symbols)
-        for (const [word, color] of entries) {
-          if (/^[^a-zA-Z0-9]+$/.test(word)) {
-            const flags = this.settings.caseSensitive ? 'g' : 'gi';
-            const regex = new RegExp(this.escapeRegex(word), flags);
+        for (const entry of entries) {
+          if (!entry || entry.invalid) continue;
+          if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) {
+            const regex = entry.regex;
+            if (!regex) continue;
             let match;
             while ((match = regex.exec(text))) {
-              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : color;
-              matches.push({ start: match.index, end: match.index + match[0].length, color: useColor, word, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
+              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+              matches.push({ start: match.index, end: match.index + match[0].length, color: useColor, word: match[0], highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
             }
           }
         }
 
         // If enabled, also color the whole word if it contains a colored symbol
         if (this.settings.symbolWordColoring) {
-          const symbolEntries = entries.filter(([word]) => /^[^a-zA-Z0-9]+$/.test(word));
+          const symbolEntries = entries.filter(entry => entry && !entry.invalid && /^[^a-zA-Z0-9]+$/.test(entry.pattern));
           if (symbolEntries.length > 0) {
             const wordRegex = /\b\w+[^\s]*\b/g;
             let match;
@@ -722,11 +810,10 @@ module.exports = class AlwaysColorText extends Plugin {
               const start = match.index;
               const end = start + w.length;
               if (isBlacklisted(w)) continue;
-              for (const [symbol, color] of symbolEntries) {
-                const flags = this.settings.caseSensitive ? '' : 'i';
-                const regex = new RegExp(this.escapeRegex(symbol), flags);
-                if (regex.test(w)) {
-                  const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : color;
+              for (const symEntry of symbolEntries) {
+                const testRe = symEntry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(symEntry.pattern)) : new RegExp(this.escapeRegex(symEntry.pattern), 'i'));
+                if (testRe.test(w)) {
+                  const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : symEntry.color;
                   matches.push({ start, end, color: useColor, word: w });
                   break;
                 }
@@ -811,7 +898,7 @@ module.exports = class AlwaysColorText extends Plugin {
       buildDeco(view) {
         const builder = new RangeSetBuilder();
         const { from, to } = view.viewport;
-        if (to - from > 10000) return builder.finish();
+        const chunkSize = 50000; // Process in 50k char chunks for better performance!!!
         const text = view.state.doc.sliceString(from, to);
         const activeFile = plugin.app.workspace.getActiveFile();
         if (!plugin.settings.enabled) return builder.finish();
@@ -825,28 +912,19 @@ module.exports = class AlwaysColorText extends Plugin {
         if (entries.length === 0) return builder.finish();
         let matches = [];
 
-        for (const [word, color] of entries) {
-          const flags = plugin.settings.caseSensitive ? 'g' : 'gi';
-          let pattern;
-          // --- CHANGED LOGIC: if word contains any letter or digit, match as-is (no word boundary), else treat as symbol ---
-          if (/^[^a-zA-Z0-9]+$/.test(word)) {
-            // pure symbol: match as symbol
-            pattern = plugin.escapeRegex(word);
-          } else {
-            // word with any letter/digit (even if it contains symbols): match as-is, no word boundary
-            pattern = plugin.escapeRegex(word);
-          }
-          const regex = new RegExp(pattern, flags);
+        for (const entry of entries) {
+          if (!entry || entry.invalid) continue;
+          const regex = entry.regex;
+          if (!regex) continue;
           let match;
           while ((match = regex.exec(text))) {
             const matchedText = match[0];
-            // Only block if the whole match is blacklisted, not if it contains a blacklisted word as substring
             if (plugin.settings.caseSensitive) {
               if (plugin.settings.blacklistWords.includes(matchedText)) continue;
             } else {
               if (plugin.settings.blacklistWords.map(w => w.toLowerCase()).includes(matchedText.toLowerCase())) continue;
             }
-            matches.push({ start: from + match.index, end: from + match.index + matchedText.length, color });
+            matches.push({ start: from + match.index, end: from + match.index + matchedText.length, color: entry.color });
             if (matches.length > 100) break;
           }
           if (matches.length > 100) break;
@@ -862,24 +940,25 @@ module.exports = class AlwaysColorText extends Plugin {
               continue;
             }
             // Symbol coloring
-            for (const [colored, color] of entries) {
-              if (/^[^a-zA-Z0-9]+$/.test(colored)) {
-                const flags = plugin.settings.caseSensitive ? 'g' : 'gi';
-                const regex = new RegExp(plugin.escapeRegex(colored), flags);
+            for (const entry of entries) {
+              if (!entry || entry.invalid) continue;
+              if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) {
+                const regex = entry.testRegex || entry.regex;
+                if (!regex) continue;
                 let match;
                 while ((match = regex.exec(w))) {
-                  matches.push({ start: pos + match.index, end: pos + match.index + match[0].length, color });
+                  matches.push({ start: pos + match.index, end: pos + match.index + match[0].length, color: entry.color });
                 }
               }
             }
             // Whole word coloring
             if (/\w/.test(w) && !plugin.settings.blacklistWords.includes(w)) {
-              for (const [colored, color] of entries) {
-                if (/^[^a-zA-Z0-9]+$/.test(colored)) continue;
-                const flags = plugin.settings.caseSensitive ? '' : 'i';
-                const regex = new RegExp(plugin.escapeRegex(colored), flags);
-                if (regex.test(w)) {
-                  matches.push({ start: pos, end: pos + w.length, color });
+              for (const entry of entries) {
+                if (!entry || entry.invalid) continue;
+                if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+                const testRe = entry.testRegex || (plugin.settings.caseSensitive ? new RegExp(plugin.escapeRegex(entry.pattern)) : new RegExp(plugin.escapeRegex(entry.pattern), 'i'));
+                if (testRe.test(w)) {
+                  matches.push({ start: pos, end: pos + w.length, color: entry.color });
                   break;
                 }
               }
@@ -891,7 +970,7 @@ module.exports = class AlwaysColorText extends Plugin {
         // --- Symbol-Word Coloring ---
         if (plugin.settings.symbolWordColoring) {
           // If enabled, color the whole word if it contains a colored symbol
-          const symbolEntries = entries.filter(([word]) => /^[^a-zA-Z0-9]+$/.test(word));
+          const symbolEntries = entries.filter(e => e && /^[^a-zA-Z0-9]+$/.test(e.pattern));
           if (symbolEntries.length > 0) {
             const wordRegex = /\b\w+[^\s]*\b/g;
             let match;
@@ -900,9 +979,13 @@ module.exports = class AlwaysColorText extends Plugin {
               const start = from + match.index;
               const end = start + w.length;
               if (plugin.settings.blacklistWords.includes(w)) continue;
-              for (const [symbol, color] of symbolEntries) {
+              for (const entry of symbolEntries) {
+                const symbol = entry.pattern;
+                const color = entry.color;
                 const flags = plugin.settings.caseSensitive ? '' : 'i';
-                const regex = new RegExp(plugin.escapeRegex(symbol), flags);
+                // Use compiled testRegex if available (regex entries) or a simple escaped regex
+                const regex = entry.testRegex || (entry.isRegex ? entry.regex : new RegExp(plugin.escapeRegex(symbol), flags));
+                if (!regex) continue;
                 if (regex.test(w)) {
                   matches.push({ start, end, color });
                   break; // Only color once per word
@@ -912,13 +995,15 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         } else {
           // Default: color symbols individually
-          for (const [word, color] of entries) {
-            if (/^[^a-zA-Z0-9]+$/.test(word)) {
+          for (const entry of entries) {
+            if (!entry) continue;
+            if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) {
               const flags = plugin.settings.caseSensitive ? 'g' : 'gi';
-              const regex = new RegExp(plugin.escapeRegex(word), flags);
+              const regex = entry.testRegex || (entry.isRegex ? entry.regex : new RegExp(plugin.escapeRegex(entry.pattern), flags));
+              if (!regex) continue;
               let match;
               while ((match = regex.exec(text))) {
-                matches.push({ start: from + match.index, end: from + match.index + match[0].length, color });
+                matches.push({ start: from + match.index, end: from + match.index + match[0].length, color: entry.color });
               }
             }
           }
@@ -1148,95 +1233,124 @@ class ColorSettingTab extends PluginSettingTab {
         }));
     }
 
-    // --- Defined colored words ---
+    // --- Defined colored words / patterns ---
     new Setting(containerEl)
       .setName('Defined colored words')
       .setHeading();
-    containerEl.createEl('p', { text: 'Here\'s where you manage your words and their colors. Changes here update your notes instantly!' });
+    containerEl.createEl('p', { text: 'Here\'s where you manage your words/patterns and their colors. Changes here update your notes instantly!' });
 
     const listDiv = containerEl.createDiv();
     listDiv.addClass('color-words-list');
 
-    Object.entries(this.plugin.settings.wordColors).forEach(([word, color]) => {
-      const row = listDiv.createDiv();
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.marginBottom = '8px';
+    // Render entries from the unified wordEntries array
+    const renderEntries = () => {
+      listDiv.empty();
+      this.plugin.settings.wordEntries.forEach((entry, i) => {
+        const row = listDiv.createDiv();
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.marginBottom = '8px';
 
-      const textInput = row.createEl('input', { type: 'text', value: word });
-      textInput.style.flex = '1';
-      textInput.style.padding = '6px';
-      textInput.style.borderRadius = '4px';
-      textInput.style.border = '1px solid var(--background-modifier-border)';
-      textInput.style.marginRight = '8px';
-      textInput.addEventListener('change', async () => {
-        const newWord = textInput.value.trim();
-        if (newWord && newWord !== word) {
-          const existingColor = this.plugin.settings.wordColors[word];
-          delete this.plugin.settings.wordColors[word];
-          this.plugin.settings.wordColors[newWord] = existingColor;
+        const textInput = row.createEl('input', { type: 'text', value: entry.pattern });
+        textInput.style.flex = '1';
+        textInput.style.padding = '6px';
+        textInput.style.borderRadius = '4px';
+        textInput.style.border = '1px solid var(--background-modifier-border)';
+        textInput.style.marginRight = '8px';
+        textInput.addEventListener('change', async () => {
+          const newPattern = textInput.value.trim();
+          if (!newPattern) {
+            this.plugin.settings.wordEntries.splice(i, 1);
+          } else {
+            this.plugin.settings.wordEntries[i].pattern = newPattern;
+          }
           await this.plugin.saveSettings();
           this.plugin.reconfigureEditorExtensions();
           this.plugin.forceRefreshAllEditors();
-          this.display();
-        } else if (!newWord) {
-          delete this.plugin.settings.wordColors[word];
+          renderEntries();
+        });
+
+        const cp = row.createEl('input', { type: 'color' });
+        cp.value = entry.color || '#000000';
+        cp.style.width = '30px';
+        cp.style.height = '30px';
+        cp.style.border = 'none';
+        cp.style.borderRadius = '4px';
+        cp.style.cursor = 'pointer';
+        cp.addEventListener('input', async () => {
+          this.plugin.settings.wordEntries[i].color = cp.value;
+          await this.debouncedSaveSettings();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+        });
+
+        // Use regex checkbox (toggled per-entry)
+        const regexChk = row.createEl('input', { type: 'checkbox' });
+        regexChk.checked = !!entry.isRegex;
+        regexChk.title = 'Treat pattern as a JavaScript regular expression';
+        regexChk.style.marginLeft = '8px';
+        regexChk.addEventListener('change', async () => {
+          this.plugin.settings.wordEntries[i].isRegex = regexChk.checked;
           await this.plugin.saveSettings();
           this.plugin.reconfigureEditorExtensions();
           this.plugin.forceRefreshAllEditors();
-          this.display();
-        }
-      });
+          renderEntries();
+        });
 
-      const cp = row.createEl('input', { type: 'color' });
-      cp.value = color;
-      cp.style.width = '30px';
-      cp.style.height = '30px';
-      cp.style.border = 'none';
-      cp.style.borderRadius = '4px';
-      cp.style.cursor = 'pointer';
-      cp.addEventListener('input', async () => {
-        this.plugin.settings.wordColors[word] = cp.value;
-        await this.debouncedSaveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      });
+        // Flags input (visible when isRegex true)
+        const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
+        flagsInput.placeholder = 'flags (e.g. gi)';
+        flagsInput.style.width = '64px';
+        flagsInput.style.marginLeft = '8px';
+        flagsInput.addEventListener('change', async () => {
+          this.plugin.settings.wordEntries[i].flags = flagsInput.value || '';
+          await this.plugin.saveSettings();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+        });
 
-      const del = row.createEl('button', { text: '✕' });
-      del.addClass('mod-warning');
-      del.style.marginLeft = '8px';
-      del.style.padding = '4px 8px';
-      del.style.borderRadius = '4px';
-      del.style.cursor = 'pointer';
-      del.addEventListener('click', async () => {
-        delete this.plugin.settings.wordColors[word];
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        this.display();
+        // Only show flags input when regex is enabled for this entry
+        if (!entry.isRegex) flagsInput.style.display = 'none';
+
+        const del = row.createEl('button', { text: '✕' });
+        del.addClass('mod-warning');
+        del.style.marginLeft = '8px';
+        del.style.padding = '4px 8px';
+        del.style.borderRadius = '4px';
+        del.style.cursor = 'pointer';
+        del.addEventListener('click', async () => {
+          this.plugin.settings.wordEntries.splice(i, 1);
+          await this.plugin.saveSettings();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          renderEntries();
+        });
       });
-    });
+    };
+
+    renderEntries();
 
     new Setting(containerEl)
-      .addButton(b => b.setButtonText('Add new word').onClick(async () => {
-        this.plugin.settings.wordColors[`New word ${Object.keys(this.plugin.settings.wordColors).length + 1}`] = '#000000';
+      .addButton(b => b.setButtonText('Add new word/pattern').onClick(async () => {
+        const n = this.plugin.settings.wordEntries.length + 1;
+        this.plugin.settings.wordEntries.push({ pattern: `New word ${n}`, color: '#000000', isRegex: false, flags: '' });
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
-        this.display();
+        renderEntries();
       }));
 
     new Setting(containerEl)
       .addExtraButton(b => b
         .setIcon('trash')
-        .setTooltip('Delete all defined words')
+        .setTooltip('Delete all defined words/patterns')
         .onClick(async () => {
-          new ConfirmationModal(this.app, 'Delete all words', 'Are you sure you want to delete all your colored words? You can\'t undo this!', async () => {
-            this.plugin.settings.wordColors = {};
+          new ConfirmationModal(this.app, 'Delete all words', 'Are you sure you want to delete all your colored words/patterns? You can\'t undo this!', async () => {
+            this.plugin.settings.wordEntries = [];
             await this.plugin.saveSettings();
             this.plugin.reconfigureEditorExtensions();
             this.plugin.forceRefreshAllEditors();
-            this.display();
+            renderEntries();
           }).open();
         }));
 
@@ -1554,6 +1668,16 @@ class ColorSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
           location.reload();
         }));
+
+    // --- Regex support (global toggle) ---
+    new Setting(containerEl)
+      .setName('Enable regex support')
+      .setDesc('Allow patterns to be regular expressions. Invalid regexes are ignored for safety.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async v => {
+        this.plugin.settings.enableRegexSupport = v;
+        await this.plugin.saveSettings();
+        this.display();
+      }));
   }
 }
 
@@ -1710,5 +1834,3 @@ class ConfirmationModal extends Modal {
     this.contentEl.empty();
   }
 }
-
-/* nosourcemap */
