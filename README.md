@@ -52,6 +52,9 @@ For folders, you can target parent folders to have coloring turned off. Then all
 ## Advanced Regex Support
 
 Enable powerful pattern matching using JavaScript regular expressions. When "Use regex" is checked for an entry, your pattern becomes a full regex with advanced capabilities:
+![](https://github.com/user-attachments/assets/8bafe832-7d95-46ac-ae2d-8580fa010138)
+You will have to enable regex support for this.
+
 
 ### Supported Features
 
