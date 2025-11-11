@@ -55,7 +55,7 @@ always-color-text: false
 
 For folders, you can target different folders to have different styles, or no colour at all!
 
-![Folder Specific Exclusion Settings](https://github.com/user-attachments/assets/b69bdb6d-1886-470c-a345-9b97c0405ed6)
+![Folder Specific Exclusion Settings](https://github.com/user-attachments/assets/a6920d6d-9cd9-410a-bf60-0c556b15cb2e)
 
 
 ## Advanced Regex Support
