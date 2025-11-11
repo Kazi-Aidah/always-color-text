@@ -1,8 +1,9 @@
 ![Version](https://img.shields.io/github/manifest-json/v/Kazi-Aidah/always-color-text?style=for-the-badge&color=9ccfd8&labelColor=26233a) ![Downloads](https://img.shields.io/badge/Downloads-748+-brightgreen?style=for-the-badge&labelColor=26233a)  ![Stars](https://img.shields.io/github/stars/Kazi-Aidah/always-color-text?style=for-the-badge&color=c4a7e7&labelColor=26233a) ![Last update](https://img.shields.io/github/last-commit/Kazi-Aidah/always-color-text?style=for-the-badge&color=ebbcba&labelColor=26233a)
 
 ## Always Color Text
+Color keywords, status words, dates, names, anything! Once assigned, the color triggers everywhere in your vault, in Live Preview and Reading view.
 
-This plugin lets you color specific words across your Obsidian vault. Just select a word, pick a color, and that word will automatically appear in that color every time you type it, in both live preview and reading modes. ![Different Styles in different Folders](https://github.com/user-attachments/assets/905f5f4b-8b8b-440a-b00f-b32548e721db)
+Just select a word, pick a color, and that word will automatically appear in that color every time you type it, in both live preview and reading modes. ![Different Styles in different Folders](https://github.com/user-attachments/assets/905f5f4b-8b8b-440a-b00f-b32548e721db)
 
 ![Example](https://github.com/user-attachments/assets/9c38d1f9-e2fb-4291-b68e-23d96837ebce)
 
@@ -31,13 +32,18 @@ Toggle Case-Sensitive and **Partial-Word matching**. For example, if "Art" is co
 Blacklisting can be added to the right-click menu for easier access.
 
 ![Image](https://github.com/user-attachments/assets/190cde28-5e15-4cb7-8582-1a5abd0137fa) ![Image](https://github.com/user-attachments/assets/eda79d09-de1f-476a-9dcd-0729de4f6161)
+
+
 ### File & Folder Coloring Exclusion
 
 Disable coloring for specific files, or toggle **Global Coloring** ON or OFF via the ribbon, status bar, or command palette.
 
+
 ![Image](https://github.com/user-attachments/assets/83d2aa60-d7a0-49d2-9338-e92bcb0933b0) ![Image](https://github.com/user-attachments/assets/657fce97-13e7-457e-ad35-826452cecb3b)
 
+
 When Global Coloring is off, text colored with "Always Color Text" disappears, but one-time colors remain since they use inline HTML.
+
 
 YAML Frontmatter works too, you can use this to hide colors for specific documents:
 
@@ -47,9 +53,10 @@ always-color-text: false
 ---
 ```
 
-For folders, you can target parent folders to have coloring turned off. Then all files in the parent folder and subfolders won't show colors. However, if you enable coloring for a specific subfolder, then all subfolders except that specific one won't have colors.
+For folders, you can target different folders to have different styles, or no colour at all!
 
-![Screenshot 2025-11-03 163237](https://github.com/user-attachments/assets/58a3e48e-70bb-4dc5-9a4f-f3b474cb56ce)
+![Folder Specific Exclusion Settings](https://github.com/user-attachments/assets/b69bdb6d-1886-470c-a345-9b97c0405ed6)
+
 
 ## Advanced Regex Support
 
@@ -84,8 +91,25 @@ You will have to enable regex support for this.
 
 _Note: For literal text with special characters like `.` or `*`, leave "Use regex" unchecked - they'll be matched exactly._
 
-## Practical Regex Examples
 
+### Safety and Pattern Restrictions
+To ensure optimal performance and prevent freezing, the plugin includes automatic safety measures:
+- **Pattern Validation**: Complex patterns that might cause performance issues are automatically blocked.
+- **Progressive Loading**: Colors visible content first, then processes the rest during browser idle time.
+- **Active File Only**: Only colors the file you're currently viewing for better performance.
+- **Memory Monitoring**: Automatically cleans up if memory usage gets too high.
+
+#### Reading Mode Safety
+Coloring in reading mode is buggy by default. To make the text color smoothly, please turn on **"Force full render in Reading mode"**. Just note that this *might* cause performance issues.
+
+![](https://github.com/user-attachments/assets/ed7d77c4-277a-4544-8dfe-a9d61fb9ac7c)
+
+I tested it with 200,000-character documents without any issues, but to protect users from potential freezing, this setting is disabled by default.
+
+
+Now, if you're going to be using expressions...
+
+## Practical Regex Examples
 Here are ready-to-use regex patterns for common scenarios!!
 
 ### **Date & Time Patterns**
@@ -157,26 +181,19 @@ https?://(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
 \b\d{3}[-.]?\d{3}[-.]?\d{4}\b
 ```
 
-
-### Safety and Pattern Restrictions
-To ensure optimal performance and prevent freezing, the plugin now includes automatic safety measures:
-- **Pattern Validation**: Complex patterns that might cause performance issues are automatically blocked
-- **Progressive Loading**: Only processes visible content first, then handles the rest when idle
-- **Active File Only**: Only processes the current file you're viewing for better performance
-
 #### Blocked Patterns
 The following types of patterns are automatically blocked for safety:
 - Nested quote patterns (e.g., `"[^"]*"`, `'[^']*'`)
-- Patterns with nested quantifiers (e.g., `(\w+)*`)
-- Complex lookarounds and backreferences
-- Deeply nested groups
+- Patterns with nested quantifiers (e.g., `(\w+)*`, `(a+)+`)
+- Complex lookarounds and backreferences (e.g., `(?<=...)`, `\1`)
+- Deeply nested groups and exponential patterns
 - Patterns known to cause catastrophic backtracking
 
-When a pattern is blocked, you'll see a notice explaining why. Instead of complex patterns, try using simpler alternatives listed in [Practical Regex Examples](#practical-regex-examples).
+When a pattern is blocked, you'll see a notice explaining why. Use simpler alternatives from the [Practical Regex Examples](#practical-regex-examples) section.
+
 
 ### Quick Tips for Using These Patterns
-
-1. **Enable "Use regex"** in your color entry settings
+1. **Enable "Treat Pattern as Expression"** (The checkbox) in your color entry settings
 2. **Test patterns** in a regex tester first if unsure
 3. **Use flags wisely**:
     - `i` for case-insensitive matching
@@ -186,7 +203,7 @@ When a pattern is blocked, you'll see a notice explaining why. Instead of comple
 **Example**: To color all dates in blue:
 
 - Pattern: `\b\d{4}-\d{2}-\d{2}\b`
-- Enable "Use regex"
+- Enable the Checkbox beside the color circle.
 - Color: Blue
 ![Blue Dates Example](https://github.com/user-attachments/assets/b5ab1939-6de5-4092-be09-ce2fc6d5c83c)
 ## Use Cases
