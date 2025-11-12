@@ -12,7 +12,37 @@ const { RangeSetBuilder } = require('@codemirror/state');
 const { Decoration, ViewPlugin } = require('@codemirror/view');
 const { syntaxTree } = require('@codemirror/language');
 
+// Performance tuning constants for editor decoration
+const EDITOR_PERFORMANCE_CONSTANTS = {
+  MAX_PATTERNS_STANDARD: 30,      // Use standard processing for <= 30 patterns
+  MAX_TEXT_LENGTH_STANDARD: 10000, // Use standard processing for <= 10k chars
+  PATTERN_CHUNK_SIZE: 20,         // Process 20 patterns per chunk  
+  TEXT_CHUNK_SIZE: 5000,          // Process 5k chars per chunk
+  MAX_MATCHES_PER_PATTERN: 10,    // Max matches per pattern in chunks
+  MAX_TOTAL_MATCHES: 200          // Absolute limit for decorations
+};
 
+// Development mode flag - set to false for production
+const IS_DEVELOPMENT = false;
+
+// Helper function for conditional debug logging
+const debugLog = (tag, ...args) => {
+  if (IS_DEVELOPMENT) {
+    console.log(`[${tag}]`, ...args);
+  }
+};
+
+const debugError = (tag, ...args) => {
+  if (IS_DEVELOPMENT) {
+    console.error(`[${tag}]`, ...args);
+  }
+};
+
+const debugWarn = (tag, ...args) => {
+  if (IS_DEVELOPMENT) {
+    console.warn(`[${tag}]`, ...args);
+  }
+};
 
 module.exports = class AlwaysColorText extends Plugin {
   constructor(...args) {
@@ -38,26 +68,35 @@ module.exports = class AlwaysColorText extends Plugin {
       };
       this.performanceMonitor = { isOverloaded };
     }).call(this);
-    // Instrumentation counters for diagnostics
+    
+    // SIMPLIFIED: Keep only essential tracking to reduce memory
     this._perfCounters = {
       totalRegexExecs: 0,
       avoidedRegexExecs: 0,
-      totalMatchesFound: 0,
-      totalBlocksProcessed: 0,
     };
+    
     // Helper to report or retrieve counters
     this.getPerfCounters = () => Object.assign({}, this._perfCounters);
-    // Cache for sorted/filtered entries to avoid allocating large arrays on each call
+    
+    // Simple cache for sorted entries
     this._cachedSortedEntries = null;
     this._cacheDirty = true;
-    // WeakMap to track temporary DOM-related metadata without retaining nodes
-  this._domRefs = new WeakMap();
-  // Map to hold IntersectionObservers for viewport-based rendering (keyed by root element)
-  this._viewportObservers = new Map();
-    // throttle perf-gate warnings (timestamp ms)
+    
+    // WeakMaps to track temporary DOM-related metadata without retaining nodes
+    try {
+      this._domRefs = new WeakMap();
+    } catch (e) {
+      this._domRefs = new WeakMap();
+    }
+    
+    try {
+      this._viewportObservers = new Map(); // Use Map for storing observers
+    } catch (e) {
+      this._viewportObservers = new Map();
+    }
+    
+    // Throttle perf-gate warnings (timestamp ms)
     this._lastPerfWarning = 0;
-    // Memory monitor interval handle
-    this._memoryCheckInterval = null;
   }
 
   async onload() {
@@ -280,6 +319,11 @@ module.exports = class AlwaysColorText extends Plugin {
   isRegexTooComplex(pattern) {
     if (!pattern || typeof pattern !== 'string') return true;
     
+    // ALLOW NON-ROMAN CHARACTERS - Add this at the beginning
+    if (this.containsNonRomanCharacters(pattern)) {
+      return false; // Never block non-Roman patterns
+    }
+    
     // Whitelist of known safe patterns that are allowed despite complexity metrics
     const safePatterns = [
       '\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|°C|°F|lbs)\\b',  // Measurements (kg, cm, m, km, °C, °F, lbs)
@@ -322,6 +366,201 @@ module.exports = class AlwaysColorText extends Plugin {
     return false;
   }
 
+  // NEW METHOD: Decode HTML entities for reading mode compatibility
+  decodeHtmlEntities(text) {
+    if (!text || typeof text !== 'string') return text;
+    
+    const entities = {
+      '&amp;': '&',
+      '&lt;': '<', 
+      '&gt;': '>',
+      '&quot;': '"',
+      '&#39;': "'",
+      '&#x27;': "'",
+      '&#x2F;': '/',
+      '&#x22;': '"',
+      '&#x3C;': '<',
+      '&#x3E;': '>',
+      '&#x26;': '&',
+      '&nbsp;': ' ',
+      '&copy;': '©',
+      '&reg;': '®',
+      '&trade;': '™',
+      '&hellip;': '…',
+      '&mdash;': '—',
+      '&ndash;': '–',
+      '&bull;': '•',
+      '&check;': '✓',
+      '&checkmark;': '✓',
+      '&#10003;': '✓',
+      '&#x2713;': '✓',
+      '&#10004;': '✔',
+      '&#x2714;': '✔',
+      '&rarr;': '→',
+      '&rightarrow;': '→',
+      '&#8594;': '→',
+      '&#x2192;': '→',
+      '&larr;': '←',
+      '&leftarrow;': '←',
+      '&#8592;': '←',
+      '&#x2190;': '←',
+      '&uarr;': '↑',
+      '&uparrow;': '↑',
+      '&#8593;': '↑',
+      '&#x2191;': '↑',
+      '&darr;': '↓',
+      '&downarrow;': '↓',
+      '&#8595;': '↓',
+      '&#x2193;': '↓'
+    };
+    
+    return text.replace(/&[#a-zA-Z0-9]+;/g, match => {
+      return entities[match] || match;
+    });
+  }
+
+  // NEW HELPER METHOD: Detect non-Roman characters
+  containsNonRomanCharacters(text) {
+    if (!text) return false;
+    // Match any character outside basic Latin, numbers, and common punctuation
+    return /[^\u0000-\u007F\u00A0-\u00FF\u0100-\u017F\u0180-\u024F]/.test(text);
+  }
+
+  // NEW HELPER: Count non-Roman characters
+  countNonRomanCharacters(text) {
+    if (!text) return 0;
+    const nonRomanMatches = text.match(/[^\u0000-\u007F\u00A0-\u00FF\u0100-\u017F\u0180-\u024F]/g);
+    return nonRomanMatches ? nonRomanMatches.length : 0;
+  }
+
+  // NEW HELPER: Get the ratio of non-Roman characters in text
+  getNonRomanCharacterRatio(text) {
+    if (!text || typeof text !== 'string') return 0;
+    const totalChars = text.length;
+    if (totalChars === 0) return 0;
+    return this.countNonRomanCharacters(text) / totalChars;
+  }
+
+  // NEW METHOD: Detect if pattern is simple (no regex needed)
+  isSimplePattern(pattern) {
+    if (!pattern || typeof pattern !== 'string') return false;
+    
+    // Decode HTML entities first to handle reading mode
+    const decodedPattern = this.decodeHtmlEntities(pattern);
+    
+    // Simple patterns: alphanumeric, basic punctuation, common symbols
+    // This covers: DO:, (✓), →, etc.
+    const isSimple = /^[\w\s\u00A0-\u00FF\u2000-\u206F\u25A0-\u25FF\u2700-\u27BF✓✔→←↑↓+\-=*/.()&;]+$/.test(decodedPattern);
+    
+    // Log checkmark patterns for debugging
+    if (pattern.includes('✓') || decodedPattern.includes('✓')) {
+      debugLog('ISIMPLE', { pattern, decodedPattern, isSimple });
+    }
+    
+    return isSimple;
+  }
+
+  // NEW METHOD: Ultra-fast simple pattern processing
+  processSimplePatternsOptimized(element, simpleEntries, folderEntry = null, options = {}) {
+    debugLog('SIMPLE', `Processing ${simpleEntries.length} simple patterns`);
+    
+    const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    
+    // Fast DOM collection - avoid TreeWalker overhead
+    const blocks = element.querySelectorAll?.(blockTags.join(', ')) || [];
+    
+    for (const block of blocks) {
+      // Skip code blocks and preformatted text
+      if (block.closest('code, pre')) continue;
+      
+      this.processBlockWithSimplePatterns(block, simpleEntries, folderEntry, effectiveStyle);
+    }
+  }
+
+  // NEW METHOD: Process block with simple string matching
+  processBlockWithSimplePatterns(block, simpleEntries, folderEntry, effectiveStyle) {
+    const walker = document.createTreeWalker(
+      block, 
+      NodeFilter.SHOW_TEXT, 
+      { 
+        acceptNode: function(node) {
+          // Skip text nodes in code blocks
+          if (node.parentElement?.closest('code, pre')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      },
+      false
+    );
+    
+    let node;
+    while (node = walker.nextNode()) {
+      let text = node.textContent;
+      if (!text) continue;
+      
+      // DECODE HTML ENTITIES FOR READING MODE COMPATIBILITY
+      const originalText = text;
+      text = this.decodeHtmlEntities(text);
+      
+      let matches = [];
+      
+      // ULTRA-FAST string search for simple patterns
+      for (const entry of simpleEntries) {
+        let pattern = entry.pattern;
+        // ALSO DECODE PATTERN FOR COMPARISON
+        pattern = this.decodeHtmlEntities(pattern);
+        let pos = 0;
+        
+        while ((pos = text.indexOf(pattern, pos)) !== -1) {
+          matches.push({
+            start: pos,
+            end: pos + pattern.length,
+            color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
+          });
+          pos += pattern.length;
+          
+          // Conservative limit for performance
+          if (matches.length > 50) break;
+        }
+        
+        if (matches.length > 50) break;
+      }
+      
+      // Apply highlights if we found matches
+      if (matches.length > 0) {
+        this.applySimpleHighlights(node, matches, text, effectiveStyle);
+      }
+    }
+  }
+
+  // NEW METHOD: Only use complex processing when absolutely necessary
+  processComplexPatterns(element, complexEntries, folderEntry, options = {}) {
+    // Use existing _wrapMatchesRecursive logic but with performance safeguards
+    const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+    const blocks = element.querySelectorAll?.(blockTags.join(', ')) || [];
+    
+    // Process in small batches to avoid UI freeze
+    const BATCH_SIZE = 10;
+    let processed = 0;
+    
+    for (const block of blocks) {
+      if (block.closest('code, pre')) continue;
+      
+      this.processSingleBlockComplex(block, complexEntries, folderEntry, options);
+      processed++;
+      
+      // Yield to browser every BATCH_SIZE blocks
+      if (processed % BATCH_SIZE === 0) {
+        setTimeout(() => {
+          // Continue processing if needed
+        }, 0);
+        break; // Process rest in next frame
+      }
+    }
+  }
+
   // --- When the plugin is UNLOADING, remove all its UI and features ---
   onunload() {
     // Clear any pending timers
@@ -348,14 +587,14 @@ module.exports = class AlwaysColorText extends Plugin {
     try { this.ribbonIcon?.remove(); } catch (e) {}
     try { this.statusBar?.remove(); } catch (e) {}
 
-    // Clear large in-memory structures and emit instrumentation summary
+    // Clear large in-memory structures
     try {
-      const ctr = this._perfCounters || {};
-      console.info('Always Color Text: perf counters on unload', ctr);
       if (Array.isArray(this._compiledWordEntries) && this._compiledWordEntries.length > 0) {
         const top = this._compiledWordEntries.slice().sort((a, b) => (b.execs || 0) - (a.execs || 0)).slice(0, 5);
-        for (const e of top) {
-          console.info('Always Color Text: pattern summary', { pattern: e.pattern, execs: e.execs || 0, avoided: e.avoidedExecs || 0, matches: e.matchesFound || 0, blocks: e.blocksProcessed || 0 });
+        if (IS_DEVELOPMENT) {
+          for (const e of top) {
+            debugLog('UNLOAD', `pattern: ${e.pattern}, execs: ${e.execs || 0}, avoided: ${e.avoidedExecs || 0}, matches: ${e.matchesFound || 0}`);
+          }
         }
       }
     } catch (e) {}
@@ -389,7 +628,7 @@ module.exports = class AlwaysColorText extends Plugin {
         try {
           this.processActiveFileOnly(el, ctx);
         } catch (e) {
-          console.warn('Always Color Text: processActiveFileOnly failed', e);
+          debugWarn('ACT', 'processActiveFileOnly failed', e);
         }
 
         // Don't call processActiveFileOnly twice to avoid double-processing
@@ -567,6 +806,7 @@ module.exports = class AlwaysColorText extends Plugin {
   // --- Save settings and refresh plugin state ---
   async saveSettings() {
     await this.saveData(this.settings);
+    
     // Recompile entries after saving
     this.compileWordEntries();
 
@@ -679,6 +919,16 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
     safeRegexTest(regex, text, timeout = 50) {
+    // BAIL OUT EARLY FOR NON-ROMAN TEXT
+    if (this.containsNonRomanCharacters(text)) {
+      try {
+        return Promise.resolve(regex.test(text));
+      } catch (e) {
+        return Promise.resolve(false);
+      }
+    }
+    
+    // ... existing timeout logic for Roman scripts
     return new Promise((resolve) => {
       const timeoutId = setTimeout(() => {
         resolve(false); // Return false if timeout occurs
@@ -713,7 +963,7 @@ module.exports = class AlwaysColorText extends Plugin {
         safetyCounter++;
       }
     } catch (e) {
-      console.warn('Always Color Text: safeMatchLoop error', e);
+      debugWarn('MATCH', 'safeMatchLoop error', e);
     }
     
     return matches;
@@ -723,6 +973,17 @@ module.exports = class AlwaysColorText extends Plugin {
   createFastTester(pattern, isRegex, caseSensitive) {
     try {
       if (!pattern) return () => true;
+
+      // NON-ROMAN CHARACTERS - SIMPLE HANDLING
+      if (this.containsNonRomanCharacters(pattern)) {
+        if (caseSensitive) {
+          return (text) => typeof text === 'string' && text.includes(pattern);
+        } else {
+          // For non-Roman, case sensitivity often doesn't apply, but we'll respect the setting
+          const lowerPattern = pattern.toLowerCase();
+          return (text) => typeof text === 'string' && text.toLowerCase().includes(lowerPattern);
+        }
+      }
 
       // Literal patterns: simple substring check
       if (!isRegex) {
@@ -769,11 +1030,40 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // --- Lightweight mode decision for very large documents ---
-  shouldUseLightweightMode(textLength) {
+  shouldUseLightweightMode(textLength, textContent = '') {
     try {
-      return Number(textLength) > 50000; // Use optimized/lean processing for very large docs
+      // Use lightweight mode for very large documents OR non-Roman heavy content
+      const isLargeDoc = Number(textLength) > 50000;
+      const isNonRomanHeavy = this.getNonRomanCharacterRatio(textContent) > 0.3;
+      
+      return isLargeDoc || isNonRomanHeavy;
     } catch (e) {
       return false;
+    }
+  }
+
+  // NEW METHOD: Check if we should skip complex processing
+  isPerformanceOverloaded() {
+    try {
+      // Simple performance check - avoid complex processing if system is busy
+      if (typeof performance !== 'undefined' && performance.memory) {
+        const usedMB = performance.memory.usedJSHeapSize / (1024 * 1024);
+        if (usedMB > 1000) { // If using >1GB RAM, skip complex processing
+          debugWarn('[ACT] High memory usage, skipping complex pattern processing');
+          return true;
+        }
+      }
+      
+      // Quick check if we have too many entries
+      const totalEntries = this.getSortedWordEntries().length;
+      if (totalEntries > 100) {
+        debugLog('ACT', 'Many patterns defined, using conservative processing');
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      return false; // Default to processing if we can't check
     }
   }
 
@@ -785,7 +1075,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const entries = Array.isArray(this._compiledWordEntries) ? this._compiledWordEntries : [];
       const numWords = entries.length;
       if (numWords > 200) {
-        console.warn(`Always Color Text: You have ${numWords} colored words/patterns! That's a lot. Your app might slow down a bit.`);
+        debugWarn('GET_SORTED', `You have ${numWords} colored words/patterns! That's a lot and may impact performance.`);
       }
       // Filter out blacklisted simple patterns (case-sensitive handling)
       const filtered = entries.filter(e => {
@@ -943,13 +1233,17 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!Array.isArray(this.settings.wordEntries)) return;
       for (const e of this.settings.wordEntries) {
         if (!e) continue;
-        const pattern = String(e.pattern || '').trim();
+        let pattern = String(e.pattern || '').trim();
+        
+        // DECODE HTML ENTITIES FOR READING MODE COMPATIBILITY
+        pattern = this.decodeHtmlEntities(pattern);
+        
         const color = e.color || '#000000';
         const isRegex = !!e.isRegex;
         
         // HARD-BLOCK known problematic patterns
         if (this.isKnownProblematicPattern(pattern)) {
-          console.warn(`BLOCKED dangerous pattern: ${pattern.substring(0, 50)}`);
+          debugWarn('COMPILE', `Blocked dangerous pattern: ${pattern.substring(0, 50)}`);
           const compiled = { pattern, color, isRegex, flags: '', regex: null, testRegex: null, invalid: true, specificity: 0 };
           this._compiledWordEntries.push(compiled);
           try {
@@ -1026,7 +1320,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // mark cached filtered/sorted entries dirty so callers rebuild lazily
       try { this._cacheDirty = true; this._cachedSortedEntries = null; } catch (e) {}
     } catch (err) {
-      console.error('Always Color Text: compileWordEntries failed', err);
+      debugError('COMPILE', 'compileWordEntries failed', err);
       try { this._compiledWordEntries = []; this._cachedSortedEntries = null; this._cacheDirty = true; } catch (e) {}
     }
   }
@@ -1074,15 +1368,67 @@ module.exports = class AlwaysColorText extends Plugin {
     this._wrapMatchesRecursive(el, entries, folderEntry, options || {});
   }
 
+  // NEW METHOD: Apply highlights for simple patterns (ultra-fast version)
+  applySimpleHighlights(textNode, matches, text, effectiveStyle) {
+    if (!matches || matches.length === 0) return;
+    
+    // Sort matches by start position and remove overlaps
+    matches.sort((a, b) => a.start - b.start);
+    
+    const nonOverlapping = [];
+    for (const m of matches) {
+      let overlaps = false;
+      for (const existing of nonOverlapping) {
+        if (m.start < existing.end && m.end > existing.start) {
+          overlaps = true;
+          break;
+        }
+      }
+      if (!overlaps) nonOverlapping.push(m);
+    }
+    
+    // Build DOM fragment with highlights
+    const frag = document.createDocumentFragment();
+    let pos = 0;
+    
+    for (const m of nonOverlapping) {
+      if (m.start > pos) {
+        frag.appendChild(document.createTextNode(text.slice(pos, m.start)));
+      }
+      
+      const span = document.createElement('span');
+      span.className = 'always-color-text-highlight';
+      span.textContent = text.slice(m.start, m.end);
+      
+      if (effectiveStyle === 'text') {
+        span.style.color = m.color;
+      } else if (effectiveStyle !== 'none') {
+        span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
+        span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+        span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+      }
+      
+      frag.appendChild(span);
+      pos = m.end;
+    }
+    
+    if (pos < text.length) {
+      frag.appendChild(document.createTextNode(text.slice(pos)));
+    }
+    
+    textNode.replaceWith(frag);
+  }
+
   // Process only the active file: immediate visible blocks then deferred idle processing
   processActiveFileOnly(el, ctx) {
     if (!el || !ctx || !ctx.sourcePath) return;
     const startTime = performance.now();
-    console.log('[ACT] processActiveFileOnly start', { sourcePath: ctx.sourcePath.slice(-30) });
+    debugLog('ACT', 'Processing active file', ctx.sourcePath.slice(-30));
+    
      // Force full reading-mode rendering (user explicitly opted in - bypass perf gates)
      if (this.settings.forceFullRenderInReading) {
        try {
-         console.warn('[ACT] forceFullRenderInReading enabled - forcing full processing');
+         debugWarn('ACT', 'forceFullRenderInReading enabled - forcing full processing');
          // File-specific disable via settings
          if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
          // Frontmatter can override per-file disabling: always-color-text: false
@@ -1099,7 +1445,7 @@ module.exports = class AlwaysColorText extends Plugin {
            maxMatches: Infinity
          });
        } catch (e) {
-         console.error('[ACT] forceFullRenderInReading failed', e);
+         debugError('ACT', 'forceFullRenderInReading failed', e);
        }
        return;
      }
@@ -1110,13 +1456,13 @@ module.exports = class AlwaysColorText extends Plugin {
         try {
           const now = Date.now();
           if (!this._lastPerfWarning || (now - this._lastPerfWarning) > 1000) {
-            console.warn('[ACT] Skipping: perf overload', { elapsed: (performance.now() - startTime).toFixed(1) });
+            debugLog('ACT', 'Skipping: perf overload');
             this._lastPerfWarning = now;
           }
-        } catch (e) { console.warn('[ACT] Skipping: perf overload'); }
+        } catch (e) { debugError('ACT', 'perf gate error', e); }
         return;
       }
-    } catch (e) { console.error('[ACT] perf gate error', e); }
+    } catch (e) { debugError('ACT', 'perf gate error', e); }
     // NOTE: detailed DOM-size checks handled in block-level walker using TreeWalker (less false positives)
     // Avoid querying entire document to prevent skipping preview processing on busy pages
 
@@ -1155,12 +1501,12 @@ module.exports = class AlwaysColorText extends Plugin {
     // If this is a very large document, prefer viewport-based incremental rendering
     try {
       if (this.shouldUseLightweightMode && this.shouldUseLightweightMode(el.textContent ? el.textContent.length : 0)) {
-        console.log('[ACT] Large doc detected -> using viewport-based rendering');
+        debugLog('ACT', 'Large doc detected -> using viewport-based rendering');
         // Setup an IntersectionObserver-based pipeline to process blocks as they enter view
         try {
           this.setupViewportObserver(el, folderEntry || null, { clearExisting: true });
         } catch (e) {
-          console.error('[ACT] setupViewportObserver failed', e);
+          debugError('ACT', 'setupViewportObserver failed', e);
           // fallback to immediate small-pass
           this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true });
         }
@@ -1174,7 +1520,7 @@ module.exports = class AlwaysColorText extends Plugin {
     // Fast-path immediate pass for visible content
     const t0 = performance.now();
     processNow();
-    console.log('[ACT] immediate pass', { elapsed: (performance.now() - t0).toFixed(1) });
+    debugLog('ACT', `immediate pass: ${(performance.now() - t0).toFixed(1)}ms`);
 
     // Schedule deferred pass for remaining content in idle time, guarding callback to run at most once per root
     // We use requestIdleCallback with setTimeout fallback to ensure eventual completion
@@ -1189,18 +1535,17 @@ module.exports = class AlwaysColorText extends Plugin {
           try { this._domRefs.set(el, meta); } catch (e) {}
           const t1 = performance.now();
           // More aggressive deferred processing: force chunked processing of remaining blocks
-          console.log('[DEFERRED] runDeferred start', { label, skipFirstN: immediateBlocks });
+          debugLog('DEFERRED', `Start: ${label}, skipFirstN=${immediateBlocks}`);
           try {
             // Prefer chunked processing for large documents; force completion (bypass perf gate)
             this.processInChunks(el, this.getSortedWordEntries(), folderEntry || null, { skipFirstN: immediateBlocks, batchSize: 30, clearExisting: true, forceProcess: true })
-              .then(() => console.log('[DEFERRED] processInChunks completed', { label, elapsed: (performance.now() - t1).toFixed(1) }))
-              .catch(e => console.error('[DEFERRED] processInChunks error', e));
+              .then(() => debugLog('DEFERRED', `Completed: ${label} in ${(performance.now() - t1).toFixed(1)}ms`))
+              .catch(e => debugError('DEFERRED', 'processInChunks error', e));
           } catch (e) {
-            console.error('[DEFERRED] fallback applyHighlights due to error', e);
+            debugError('DEFERRED', 'fallback applyHighlights due to error', e);
             this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: true });
           }
-          console.log('[ACT] deferred pass scheduled', { label, elapsed: (performance.now() - t1).toFixed(1) });
-        } catch (e) { console.error('[ACT] deferred pass error', e); }
+        } catch (e) { debugError('ACT', 'deferred pass error', e); }
       };
 
       if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
@@ -1223,17 +1568,17 @@ module.exports = class AlwaysColorText extends Plugin {
         try {
           const t3 = performance.now();
           this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: false });
-          console.log('[ACT] deferred (fallback-final)', { elapsed: (performance.now() - t3).toFixed(1) });
-        } catch (err) { console.error('[ACT] fallback-final error', err); }
+          debugLog('ACT', `deferred (fallback-final) in ${(performance.now() - t3).toFixed(1)}ms`);
+        } catch (err) { debugError('ACT', 'fallback-final error', err); }
       }, 1500);
     }
-    console.log('[ACT] scheduled', { totalElapsed: (performance.now() - startTime).toFixed(1) });
+    debugLog('ACT', `scheduled total: ${(performance.now() - startTime).toFixed(1)}ms`);
   }
 
   // Progressive optimized processing for very large documents
   processLargeDocument(el, ctx, folderEntry) {
     try {
-      console.log('[LARGE] Processing large document with optimized mode');
+      debugLog('LARGE', 'Processing large document with optimized mode');
       // Process only visible/initial content first
       this.applyHighlights(el, folderEntry, {
         immediateBlocks: 50,
@@ -1248,13 +1593,173 @@ module.exports = class AlwaysColorText extends Plugin {
             batchSize: 30,
             clearExisting: false
           });
-        } catch (e) { console.error('[LARGE] deferred processing failed', e); }
+        } catch (e) { debugError('LARGE', 'deferred processing failed', e); }
       }, 1000);
-    } catch (e) { console.error('[LARGE] processLargeDocument failed', e); }
+    } catch (e) { debugError('LARGE', 'processLargeDocument failed', e); }
+  }
+
+  // NEW METHOD: Optimized processing for non-Roman text
+  processNonRomanOptimized(element, entries, folderEntry = null, options = {}) {
+    const nonRomanEntries = entries.filter(entry => 
+      entry && !entry.invalid && this.containsNonRomanCharacters(entry.pattern)
+    );
+    
+    if (nonRomanEntries.length === 0) return;
+    
+    const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+    const queue = [];
+    
+    // Simplified DOM collection - avoid heavy TreeWalker for non-Roman text
+    for (const node of element.childNodes) {
+      if (node.nodeType === Node.ELEMENT_NODE && blockTags.includes(node.nodeName)) {
+        queue.push(node);
+      }
+    }
+    
+    // Process each block with language-specific optimizations
+    for (const block of queue) {
+      this.processNonRomanBlock(block, nonRomanEntries, folderEntry, options);
+    }
+  }
+
+  // NEW METHOD: Process single block with non-Roman text
+  processNonRomanBlock(block, entries, folderEntry, opts = {}) {
+    const clearExisting = opts.clearExisting !== false;
+    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    
+    // Clear existing highlights
+    if (clearExisting) {
+      const highlights = block.querySelectorAll('span.always-color-text-highlight');
+      for (const ex of highlights) {
+        const tn = document.createTextNode(ex.textContent);
+        ex.replaceWith(tn);
+      }
+    }
+    
+    // Process text nodes - SIMPLIFIED for non-Roman scripts
+    for (const node of block.childNodes) {
+      if (node.nodeType !== Node.TEXT_NODE) continue;
+      
+      let text = node.textContent;
+      if (!text || text.length > 5000) continue; // Conservative limit
+      
+      // DECODE HTML ENTITIES FOR READING MODE COMPATIBILITY
+      text = this.decodeHtmlEntities(text);
+      
+      let matches = [];
+      
+      // SIMPLE string matching for non-Roman scripts - avoid complex regex
+      for (const entry of entries) {
+        if (!entry || entry.invalid) continue;
+        
+        let pattern = entry.pattern;
+        // ALSO DECODE PATTERN FOR COMPARISON
+        pattern = this.decodeHtmlEntities(pattern);
+        
+        const color = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+        
+        // Simple string search for non-Roman patterns (more efficient)
+        let pos = 0;
+        while ((pos = text.indexOf(pattern, pos)) !== -1) {
+          matches.push({
+            start: pos,
+            end: pos + pattern.length,
+            color: color,
+            word: pattern
+          });
+          pos += pattern.length;
+          
+          if (matches.length > 100) break; // Conservative limit
+        }
+        
+        if (matches.length > 100) break;
+      }
+      
+      // Apply highlights
+      if (matches.length > 0) {
+        matches.sort((a, b) => a.start - b.start);
+        
+        const frag = document.createDocumentFragment();
+        let pos = 0;
+        
+        for (const m of matches) {
+          if (m.start > pos) {
+            frag.appendChild(document.createTextNode(text.slice(pos, m.start)));
+          }
+          
+          const span = document.createElement('span');
+          span.className = 'always-color-text-highlight';
+          span.textContent = text.slice(m.start, m.end);
+          
+          if (effectiveStyle === 'text') {
+            span.style.color = m.color;
+          } else {
+            span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
+            span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+          }
+          
+          frag.appendChild(span);
+          pos = m.end;
+        }
+        
+        if (pos < text.length) {
+          frag.appendChild(document.createTextNode(text.slice(pos)));
+        }
+        
+        node.replaceWith(frag);
+      }
+    }
   }
 
   // Efficient, non-recursive, DOM walker for reading mode
   _wrapMatchesRecursive(element, entries, folderEntry = null, options = {}) {
+    debugLog('WRAP', `Starting with ${entries.length} entries`);
+    
+    // EARLY BAILOUT FOR LARGE NON-ROMAN TEXTS
+    try {
+      const textContent = element.textContent || '';
+      const nonRomanCharCount = this.countNonRomanCharacters(textContent);
+      const totalChars = textContent.length;
+      
+      // If text is primarily non-Roman and large, use optimized processing
+      if (nonRomanCharCount > 100 && nonRomanCharCount / totalChars > 0.3) {
+        debugLog('ACT', 'Using optimized non-Roman text processing');
+        return this.processNonRomanOptimized(element, entries, folderEntry, options);
+      }
+    } catch (e) {
+      // Continue with normal processing if check fails
+    }
+
+    // SEPARATE SIMPLE PATTERNS FOR OPTIMIZED PROCESSING
+    const simpleEntries = entries.filter(entry => 
+      entry && !entry.invalid && this.isSimplePattern(entry.pattern)
+    );
+    const complexEntries = entries.filter(entry => 
+      entry && !entry.invalid && !this.isSimplePattern(entry.pattern)
+    );
+
+    debugLog('WRAP', `Pattern split: ${simpleEntries.length} simple, ${complexEntries.length} complex`);
+
+    // Process simple patterns first (fast path)
+    if (simpleEntries.length > 0) {
+      try {
+        debugLog('WRAP', `Processing ${simpleEntries.length} simple patterns`);
+        this.processSimplePatternsOptimized(element, simpleEntries, folderEntry, options);
+      } catch (e) {
+        debugError('SIMPLE', 'processSimplePatternsOptimized failed', e);
+      }
+    }
+
+    // Only process complex patterns if needed (and if we have capacity)
+    if (complexEntries.length > 0 && !this.isPerformanceOverloaded()) {
+      // Continue with standard complex pattern processing below
+      debugLog('ACT', `Processing ${complexEntries.length} complex patterns`);
+    } else if (complexEntries.length > 0) {
+      debugLog('ACT', 'Skipping complex pattern processing due to performance constraints');
+      // DON'T return here - we already processed simple patterns!
+    }
+    
     const immediateLimit = Number(options.immediateBlocks) || 0;
     const skipFirstN = Number(options.skipFirstN) || 0;
     const clearExisting = options.clearExisting !== false;
@@ -1264,7 +1769,7 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       // If the user requested a full render in reading mode, skip these safety checks
       if (this.settings.forceFullRenderInReading) {
-        try { console.warn('[DOM] forceFullRenderInReading active - skipping DOM size checks'); } catch (e) {}
+        try { debugWarn('DOM', 'forceFullRenderInReading active - skipping DOM size checks'); } catch (e) {}
       } else {
         // Global performance gate for DOM work
         try {
@@ -1273,10 +1778,10 @@ module.exports = class AlwaysColorText extends Plugin {
             try {
               const now = Date.now();
               if (!this._lastPerfWarning || (now - this._lastPerfWarning) > 1000) {
-                console.warn('[DOM] Skipping: perf overload');
+                debugLog('DOM', 'Skipping: perf overload');
                 this._lastPerfWarning = now;
               }
-            } catch (e) { console.warn('[DOM] Skipping: perf overload'); }
+            } catch (e) { debugLog('DOM', 'Skipping: perf overload'); }
             return;
           }
         } catch (e) {}
@@ -1289,7 +1794,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (nodeCount > MAX_DOM_NODES) break;
         }
         if (nodeCount > MAX_DOM_NODES) {
-          console.warn('[DOM] Skipping: DOM too large', { nodeCount });
+          debugLog('DOM', `Skipping: DOM too large (${nodeCount} nodes)`);
           return;
         }
 
@@ -1307,19 +1812,19 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         if (blockCount > MAX_BLOCK_NODES) {
           // Defer to chunked processor for large numbers of blocks to avoid UI freeze
-          console.log('[DOM] Chunking', { blockCount });
+          debugLog('DOM', `Chunking large block count: ${blockCount}`);
           try {
             this.processInChunks(element, entries, folderEntry, options);
           } catch (e) {
             // Fallback: warn and return
-            console.warn('[DOM] Chunking failed', e);
+            debugError('DOM', 'Chunking failed', e);
           }
           return;
         }
       }
     } catch (e) {
       // If TreeWalker isn't available or another error occurs, continue with the old path
-      console.error('[DOM] TreeWalker error', e);
+      debugError('DOM', 'TreeWalker error', e);
     }
 
     // Use TreeWalker instead of querySelectorAll to avoid materializing large arrays of DOM references
@@ -1350,20 +1855,20 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     
     // Debug: report how many block-like elements were discovered and what will be skipped
-    try { console.log('[COLOR] Processing blocks:', queue.length, 'skipFirstN:', skipFirstN); console.log('[COLOR] Will process blocks from index:', skipFirstN, 'to', queue.length); } catch (e) {}
+    try { debugLog('COLOR', `Processing ${queue.length} blocks, skipping first ${skipFirstN}`); } catch (e) {}
     let visited = 0;
     for (let qIndex = 0; qIndex < queue.length; qIndex++) {
       const block = queue[qIndex];
       // Skip blocks we've been asked to skip (deferred pass)
       if (qIndex < skipFirstN) {
         // Debug: note skipped block index
-        try { if ((qIndex % 50) === 0) console.log('[COLOR] Skipping block index:', qIndex); } catch (e) {}
+        try { if ((qIndex % 50) === 0) debugLog('COLOR', `Skipping block ${qIndex}`); } catch (e) {}
         visited++;
         continue;
       }
       const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
       // Call extracted per-block processor
-      try { if ((qIndex % 100) === 0) console.log('[COLOR] Processing block index:', qIndex); } catch (e) {}
+      try { if ((qIndex % 100) === 0) debugLog('COLOR', `Processing block ${qIndex}`); } catch (e) {}
       this._processBlock(block, entries, folderEntry, { clearExisting, effectiveStyle, immediateLimit, qIndex, skipFirstN, element, forceProcess: (options && options.forceProcess) || this.settings.forceFullRenderInReading, maxMatches: (options && options.maxMatches) || (this.settings.forceFullRenderInReading ? Infinity : undefined) });
     }
     
@@ -1422,7 +1927,20 @@ module.exports = class AlwaysColorText extends Plugin {
     // Iterate through child nodes directly to avoid Array.from materializing large arrays
     for (const node of block.childNodes) {
       if (node.nodeType !== Node.TEXT_NODE) continue;
-      const text = node.textContent;
+      let text = node.textContent;
+      
+      // DECODE HTML ENTITIES FOR READING MODE COMPATIBILITY
+      const originalText = text;
+      text = this.decodeHtmlEntities(text);
+      
+      // Log if decoding changed the text (for debugging)
+      if (originalText !== text && (text.includes('✓') || originalText.includes('&#10003;'))) {
+        debugLog('PROCESSBLOCK', 'Decoded checkmark:', { 
+          from: originalText.substring(0, 30),
+          to: text.substring(0, 30)
+        });
+      }
+      
   // For forced processing, use unlimited matches; otherwise cap at 500
   const isForced = (opts && opts.forceProcess) || this.settings.forceFullRenderInReading;
   const maxMatches = typeof opts.maxMatches === 'number' ? opts.maxMatches : (isForced ? Infinity : 500);
@@ -1442,13 +1960,6 @@ module.exports = class AlwaysColorText extends Plugin {
         });
       };
 
-      // Debug: log the order of entries being processed
-      try {
-        if (text && text.includes('color')) {
-          console.log('[ENTRY_ORDER] Processing entries in this order:', entries.map(e => ({ pattern: e.pattern, length: e.pattern.length })));
-        }
-      } catch (e) {}
-
       for (const entry of entries) {
         if (!entry || entry.invalid) continue;
         // mark that this entry was considered for a block
@@ -1461,14 +1972,14 @@ module.exports = class AlwaysColorText extends Plugin {
             if (!possible) {
               entry.avoidedExecs = (entry.avoidedExecs || 0) + 1;
               this._perfCounters.avoidedRegexExecs = (this._perfCounters.avoidedRegexExecs || 0) + 1;
-              console.log('[BLOCK] fastTest rejected', { pattern: entry.pattern.slice(0, 20) });
+              debugLog('BLOCK', `fastTest rejected: ${entry.pattern.slice(0, 20)}`);
               continue;
             }
           } else if (entry.fastTest && skipFastTest) {
             // Forced processing: bypass fastTest to ensure full scanning
             try { entry.fastTestBypassed = (entry.fastTestBypassed || 0) + 1; } catch (e) {}
           }
-        } catch (e) { console.error('[BLOCK] fastTest error', e); }
+        } catch (e) { debugError('BLOCK', 'fastTest error', e); }
         const regex = entry.regex;
         if (!regex) continue;
         let match;
@@ -1518,13 +2029,6 @@ module.exports = class AlwaysColorText extends Plugin {
           const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
           matches.push({ start: match.index, end: match.index + matchedText.length, color: useColor, word: matchedText, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
           
-          // Debug: log when "color" or "always-color-text" matches are added
-          try {
-            if (matchedText === 'color' || matchedText === 'always-color-text') {
-              console.log('[MATCH_ADDED] Pattern:', entry.pattern, 'Text:', matchedText, 'At index:', match.index, 'To:', match.index + matchedText.length, 'Total matches so far:', matches.length);
-            }
-          } catch (e) {}
-          
           // instrumentation
           try { entry.matchesFound = (entry.matchesFound || 0) + 1; } catch (e) {}
           try { this._perfCounters.totalMatchesFound = (this._perfCounters.totalMatchesFound || 0) + 1; } catch (e) {}
@@ -1543,16 +2047,15 @@ module.exports = class AlwaysColorText extends Plugin {
           const HOT_ITERS_SINGLE = 100; // many iterations in a single block (lowered from 200)
           const HOT_ITERS_TOTAL = 500; // many execs over time for this pattern (lowered from 1000)
           if ((iterCount > HOT_ITERS_SINGLE || (entry.execs || 0) > HOT_ITERS_TOTAL) && !entry._hotLogged) {
-            console.warn(`[BLOCK] HOT: "${entry.pattern.slice(0, 30)}" iter=${iterCount} total=${entry.execs}`);
+            debugWarn('BLOCK', `HOT: "${entry.pattern.slice(0, 30)}" iter=${iterCount} total=${entry.execs}`);
             entry._hotLogged = true;
           }
         } catch (e) {}
       }
 
       // Resolve overlaps from main matching loop first (must run BEFORE Partial Match so longer matches win)
-      console.log('[OVERLAP_CHECK] After main loop - matches.length:', matches.length);
       if (matches.length > 1) {
-        console.log('[OVERLAP] Before resolution: Main loop found multiple matches:', matches.map(m => ({ word: m.word, start: m.start, end: m.end })));
+        debugLog('OVERLAP', `Before resolution: ${matches.length} matches found`);
         
         // Sort by start position, then by LENGTH (longest first)
         matches.sort((a, b) => {
@@ -1568,7 +2071,6 @@ module.exports = class AlwaysColorText extends Plugin {
           for (const selected of nonOverlapping) {
             if (m.start < selected.end && m.end > selected.start) {
               overlapsWithSelected = true;
-              console.log('[OVERLAP] Removing match:', m.word, `[${m.start}-${m.end}]`, 'in favor of:', selected.word, `[${selected.start}-${selected.end}]`);
               break;
             }
           }
@@ -1578,7 +2080,6 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
         
-        console.log('[OVERLAP] After resolution:', nonOverlapping.map(m => ({ word: m.word, start: m.start, end: m.end })));
         matches = nonOverlapping;
       }
 
@@ -1666,8 +2167,6 @@ module.exports = class AlwaysColorText extends Plugin {
       // Remove overlapping matches, prefer longest - handles overlaps from Partial Match and Symbol-Word features
       // (main loop overlaps are already resolved above)
       if (matches.length > 1) {
-        console.log('[OVERLAP_CHECK] After partial/symbol features - checking for new overlaps:', matches.length, 'matches');
-        
         // Sort by start position, then by LENGTH (longest first)
         matches.sort((a, b) => {
           if (a.start !== b.start) return a.start - b.start;
@@ -1768,17 +2267,17 @@ module.exports = class AlwaysColorText extends Plugin {
     
     const startIndex = Number(options.skipFirstN) || 0;
     const forceProcess = !!options.forceProcess;
-    console.log('[CHUNK] start', { blockCount: blocks.length, batch, startIndex, forceProcess });
+    debugLog('CHUNK', `start: ${blocks.length} blocks, batch=${batch}, startIndex=${startIndex}, forceProcess=${forceProcess}`);
 
     for (let i = startIndex; i < blocks.length; i++) {
       // Check global performance monitor per batch unless forced
       if (!forceProcess && this.performanceMonitor && this.performanceMonitor.isOverloaded && this.performanceMonitor.isOverloaded()) {
-        console.warn('[CHUNK] paused: perf overload at block', { i });
+        debugWarn('CHUNK', `paused at block ${i} due to perf overload`);
         // schedule continuation to avoid tight retry loops
         setTimeout(() => {
           try {
             this.processInChunks(element, entries, folderEntry, options);
-          } catch (e) { console.error('[CHUNK] retry failed', e); }
+          } catch (e) { debugError('CHUNK', 'retry failed', e); }
         }, 300);
         blocks.length = 0; // Clear array to help GC
         return;
@@ -1792,7 +2291,7 @@ module.exports = class AlwaysColorText extends Plugin {
           maxMatches: (options && typeof options.maxMatches !== 'undefined') ? options.maxMatches : (forceProcess || this.settings.forceFullRenderInReading ? Infinity : undefined)
         });
       } catch (e) { 
-        console.error('[CHUNK] block error', e); 
+        debugError('CHUNK', 'block error', e); 
       }
       
       if (!forceProcess && (i % batch === 0 || i % 100 === 0)) {
@@ -1802,14 +2301,10 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     }
     
-    console.log('[CHUNK] done', { blockCount: blocks.length });
+    debugLog('CHUNK', `done: ${blocks.length} blocks processed`);
     
     // Clear blocks array to help garbage collection
     blocks.length = 0;
-        // update domRefs for blocks cleared (optional)
-        try {
-          // nothing to do here; blocks were temporary and WeakMap won't retain them
-        } catch (e) {}
   }
 
 
@@ -1817,11 +2312,19 @@ module.exports = class AlwaysColorText extends Plugin {
   setupViewportObserver(rootEl, folderEntry = null, options = {}) {
     try {
       if (!rootEl || !rootEl.isConnected) return;
+      
+      // Ensure _viewportObservers is initialized
+      if (!this._viewportObservers) {
+        this._viewportObservers = new Map();
+      }
+      
       // If an observer already exists for this root, disconnect and recreate
       try {
         const prev = this._viewportObservers.get(rootEl);
         if (prev && typeof prev.disconnect === 'function') prev.disconnect();
-      } catch (e) {}
+      } catch (e) {
+        debugError('VIEWPORT', 'Error disconnecting old observer', e);
+      }
 
       const selectorTags = new Set(['P','LI','DIV','SPAN','TD','TH','BLOCKQUOTE','H1','H2','H3','H4','H5','H6']);
 
@@ -1840,7 +2343,9 @@ module.exports = class AlwaysColorText extends Plugin {
         try {
           const nodeList = rootEl.querySelectorAll('p, li, div, span, td, th, blockquote, h1, h2, h3, h4, h5, h6');
           for (const n of nodeList) blocks.push(n);
-        } catch (err) {}
+        } catch (err) {
+          debugError('VIEWPORT', 'querySelectorAll fallback failed', err);
+        }
       }
 
       if (blocks.length === 0) return;
@@ -1869,19 +2374,26 @@ module.exports = class AlwaysColorText extends Plugin {
               // Process the block (clearExisting true to avoid conflicts)
               try {
                 this._processBlock(block, this.getSortedWordEntries(), folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle, forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)) });
-              } catch (e) { console.error('[VIEWPORT] _processBlock failed', e); }
+              } catch (e) { debugError('VIEWPORT', '_processBlock failed', e); }
             }
-          } catch (e) { console.error('[VIEWPORT] observer entry error', e); }
+          } catch (e) { debugError('VIEWPORT', 'observer entry error', e); }
         }
       }, observerOptions);
 
       // Observe each block
       for (const b of blocks) {
-        try { io.observe(b); } catch (e) {}
+        try { io.observe(b); } catch (e) {
+          debugError('VIEWPORT', 'Error observing block', e);
+        }
       }
 
       // Store observer so we can disconnect later
-      try { this._viewportObservers.set(rootEl, io); } catch (e) {}
+      try { 
+        if (!this._viewportObservers) this._viewportObservers = new Map();
+        this._viewportObservers.set(rootEl, io); 
+      } catch (e) { 
+        debugError('VIEWPORT', 'Error storing observer', e); 
+      }
 
       // Prefetch: process first N visible blocks synchronously to reduce perceived delay
       try {
@@ -1900,14 +2412,72 @@ module.exports = class AlwaysColorText extends Plugin {
             count++;
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        debugError('VIEWPORT', 'Error prefetching visible blocks', e);
+      }
 
-      console.log('[VIEWPORT] observer set', { blocks: blocks.length, immediate: options.immediateBlocks || 10 });
+      debugLog('VIEWPORT', `observer set: ${blocks.length} blocks, immediate=${options.immediateBlocks || 10}`);
     } catch (e) {
-      console.error('[VIEWPORT] setup failed', e);
+      debugError('VIEWPORT', 'setup failed', e);
     }
   }
 
+  // NEW METHOD: Optimized decorations for non-Roman text
+  buildNonRomanOptimizedDeco(view, builder, from, to, text) {
+    const plugin = this;
+    const activeFile = this.app.workspace.getActiveFile();
+    if (!this.settings.enabled) return builder.finish();
+    if (activeFile && this.settings.disabledFiles.includes(activeFile.path)) return builder.finish();
+    if (activeFile && this.isFrontmatterColoringDisabled(activeFile.path)) return builder.finish();
+    
+    const folderEntry = activeFile ? this.getBestFolderEntry(activeFile.path) : null;
+    if (folderEntry && folderEntry.excluded) return builder.finish();
+    
+    const entries = this.getSortedWordEntries();
+    const nonRomanEntries = entries.filter(entry => 
+      entry && !entry.invalid && this.containsNonRomanCharacters(entry.pattern)
+    );
+    
+    if (nonRomanEntries.length === 0) return builder.finish();
+    
+    let matches = [];
+    
+    // Simple string search for non-Roman patterns
+    for (const entry of nonRomanEntries) {
+      const pattern = entry.pattern;
+      let pos = 0;
+      
+      while ((pos = text.indexOf(pattern, pos)) !== -1) {
+        matches.push({
+          start: from + pos,
+          end: from + pos + pattern.length,
+          color: entry.color
+        });
+        pos += pattern.length;
+        
+        if (matches.length > 200) break;
+      }
+      
+      if (matches.length > 200) break;
+    }
+    
+    // Apply decorations
+    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    if (effectiveStyle === 'none') return builder.finish();
+    
+    for (const m of matches) {
+      const style = effectiveStyle === 'text'
+        ? `color: ${m.color} !important;`
+        : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+      
+      const deco = Decoration.mark({
+        attributes: { style }
+      });
+      builder.add(m.start, m.end, deco);
+    }
+    
+    return builder.finish();
+  }
 
   // --- Build CodeMirror Editor Extension (Editing View) ---
   buildEditorExtension() {
@@ -1923,292 +2493,314 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       buildDeco(view) {
         const builder = new RangeSetBuilder();
+        
+        const entries = plugin.getSortedWordEntries();
         const { from, to } = view.viewport;
-  const chunkSize = 100000; // Process in 100k char chunks for large texts
         const text = view.state.doc.sliceString(from, to);
-        // If this viewport text is very large, enable optimized processing mode
-        try {
-          if (plugin.shouldUseLightweightMode && plugin.shouldUseLightweightMode(text.length)) {
-            plugin.useOptimizedProcessing = true;
-          }
-        } catch (e) {}
+        
         const activeFile = plugin.app.workspace.getActiveFile();
         if (!plugin.settings.enabled) return builder.finish();
         if (activeFile && plugin.settings.disabledFiles.includes(activeFile.path)) return builder.finish();
         if (activeFile && plugin.isFrontmatterColoringDisabled(activeFile.path)) return builder.finish();
-        // Determine folder rule for this file (may contain defaultColor/excluded)
+        
         const folderEntry = activeFile ? plugin.getBestFolderEntry(activeFile.path) : null;
         if (folderEntry && folderEntry.excluded) return builder.finish();
         if (view.file && activeFile && view.file.path !== activeFile.path) return builder.finish();
-        const entries = plugin.getSortedWordEntries();
+        
         if (entries.length === 0) return builder.finish();
-        // Perf gate for editor decoration
-        try {
-          if (plugin.performanceMonitor && plugin.performanceMonitor.isOverloaded && plugin.performanceMonitor.isOverloaded()) {
-            console.warn('Always Color Text: Skipping editor decoration due to performance overload');
-            return builder.finish();
-          }
-        } catch (e) {}
-        let matches = [];
-
-        for (const entry of entries) {
-          if (!entry || entry.invalid) continue;
-          // Fast pre-check on large text blocks to avoid expensive regex loops
-          try {
-            if (entry.fastTest && typeof entry.fastTest === 'function' && !entry.fastTest(text)) continue;
-          } catch (e) {}
-          const regex = entry.regex;
-          if (!regex) continue;
-          let match;
-          let iterCount = 0;
-          while ((match = regex.exec(text))) {
-            iterCount++;
-            const matchedText = match[0];
-            const matchStart = match.index;
-            const matchEnd = match.index + matchedText.length;
-            
-            // Check if this match is part of a blacklisted word
-            // Extract the full word containing this match
-            let fullWordStart = matchStart;
-            let fullWordEnd = matchEnd;
-            
-            // Expand left to find word boundary
-            while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
-              fullWordStart--;
-            }
-            
-            // Expand right to find word boundary
-            while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
-              fullWordEnd++;
-            }
-            
-            const fullWord = text.substring(fullWordStart, fullWordEnd);
-            
-            // Check if the full word is blacklisted
-            let isBlacklistedMatch = false;
-            if (plugin.settings.blacklistWords && plugin.settings.blacklistWords.length > 0) {
-              for (const bw of plugin.settings.blacklistWords) {
-                if (!bw) continue;
-                if (plugin.settings.caseSensitive) {
-                  if (fullWord === bw) {
-                    isBlacklistedMatch = true;
-                    break;
-                  }
-                } else {
-                  if (fullWord.toLowerCase() === bw.toLowerCase()) {
-                    isBlacklistedMatch = true;
-                    break;
-                  }
-                }
-              }
-            }
-            if (isBlacklistedMatch) continue;
-            matches.push({ start: from + match.index, end: from + match.index + matchedText.length, color: entry.color });
-            try { entry.matchesFound = (entry.matchesFound || 0) + 1; } catch (e) {}
-            try { plugin._perfCounters.totalMatchesFound = (plugin._perfCounters.totalMatchesFound || 0) + 1; } catch (e) {}
-            if (matches.length > 500) break;
-          }
-          if (iterCount > 0) {
-            try { entry.execs = (entry.execs || 0) + iterCount; } catch (e) {}
-            try { plugin._perfCounters.totalRegexExecs = (plugin._perfCounters.totalRegexExecs || 0) + iterCount; } catch (e) {}
-          }
-          // hot pattern logging
-          try {
-            const HOT_ITERS_SINGLE = 100;
-            const HOT_ITERS_TOTAL = 500;
-            if ((iterCount > HOT_ITERS_SINGLE || (entry.execs || 0) > HOT_ITERS_TOTAL) && !entry._hotLogged) {
-              console.warn(`[EDITOR] HOT: "${entry.pattern.slice(0, 30)}" iter=${iterCount} total=${entry.execs}`);
-              entry._hotLogged = true;
-            }
-          } catch (e) {}
-          if (matches.length > 500) break;
+        
+        // CHUNKED PROCESSING: Handle large pattern sets or large text with chunking
+        if (entries.length > EDITOR_PERFORMANCE_CONSTANTS.MAX_PATTERNS_STANDARD || 
+            text.length > EDITOR_PERFORMANCE_CONSTANTS.MAX_TEXT_LENGTH_STANDARD) {
+          return plugin.buildDecoChunked(view, builder, from, to, text, entries, folderEntry);
         }
-
-        // --- Partial Match coloring --- (color entire word if pattern matches within it)
-        if (plugin.settings.partialMatch) {
-          const wordRegex = /\w+/g;
-          let match;
-          while ((match = wordRegex.exec(text))) {
-            const w = match[0];
-            const start = from + match.index;
-            const end = start + w.length;
-            
-            // Check if word exactly matches a blacklisted word
-            let isBlacklistedWord = false;
-            if (plugin.settings.blacklistWords && plugin.settings.blacklistWords.length > 0) {
-              for (const bw of plugin.settings.blacklistWords) {
-                if (!bw) continue;
-                if (plugin.settings.caseSensitive) {
-                  if (w === bw) {
-                    isBlacklistedWord = true;
-                    break;
-                  }
-                } else {
-                  if (w.toLowerCase() === bw.toLowerCase()) {
-                    isBlacklistedWord = true;
-                    break;
-                  }
-                }
-              }
-            }
-            if (isBlacklistedWord) continue;
-            
-            // Check if pattern is blacklisted
-            let patternBlacklisted = false;
-            for (const entry of entries) {
-              if (!entry || entry.invalid) continue;
-              if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
-              if (plugin.settings.blacklistWords && plugin.settings.blacklistWords.length > 0) {
-                for (const bw of plugin.settings.blacklistWords) {
-                  if (!bw) continue;
-                  if (plugin.settings.caseSensitive) {
-                    if (entry.pattern === bw) {
-                      patternBlacklisted = true;
-                      break;
-                    }
-                  } else {
-                    if (entry.pattern.toLowerCase() === bw.toLowerCase()) {
-                      patternBlacklisted = true;
-                      break;
-                    }
-                  }
-                }
-              }
-              if (patternBlacklisted) break;
-            }
-            if (patternBlacklisted) continue;
-            
-            // Test if word contains the pattern
-            for (const entry of entries) {
-              if (!entry || entry.invalid) continue;
-              if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
-              const testRe = entry.testRegex || (plugin.settings.caseSensitive ? new RegExp(plugin.escapeRegex(entry.pattern)) : new RegExp(plugin.escapeRegex(entry.pattern), 'i'));
-              if (testRe.test(w)) {
-                // Check if this partial match overlaps with any existing match
-                let overlapsWithExisting = false;
-                for (const existingMatch of matches) {
-                  if (start < existingMatch.end && end > existingMatch.start) {
-                    overlapsWithExisting = true;
-                    break;
-                  }
-                }
-                // Only add partial match if it doesn't overlap with existing matches
-                // OR if it's replacing smaller overlapping matches
-                if (!overlapsWithExisting) {
-                  matches.push({ start: start, end: end, color: entry.color });
-                } else {
-                  // Remove smaller overlapping matches and add the full word instead
-                  matches = matches.filter(m => !(m.start >= start && m.end <= end && (m.end - m.start) < (end - start)));
-                  matches.push({ start: start, end: end, color: entry.color });
-                }
-                break;
-              }
-            }
-          }
-        }
-
-        // --- Symbol-Word Coloring ---
-        if (plugin.settings.symbolWordColoring) {
-          // If enabled, color the whole word if it contains a colored symbol
-          const symbolEntries = entries.filter(e => e && /^[^a-zA-Z0-9]+$/.test(e.pattern));
-          if (symbolEntries.length > 0) {
-            const wordRegex = /\b\w+[^\s]*\b/g;
-            let match;
-            while ((match = wordRegex.exec(text))) {
-              const w = match[0];
-              const start = from + match.index;
-              const end = start + w.length;
-              // Check if word exactly matches a blacklisted word
-              let isBlacklistedWord = false;
-              if (plugin.settings.blacklistWords && plugin.settings.blacklistWords.length > 0) {
-                for (const bw of plugin.settings.blacklistWords) {
-                  if (!bw) continue;
-                  if (plugin.settings.caseSensitive) {
-                    if (w === bw) {
-                      isBlacklistedWord = true;
-                      break;
-                    }
-                  } else {
-                    if (w.toLowerCase() === bw.toLowerCase()) {
-                      isBlacklistedWord = true;
-                      break;
-                    }
-                  }
-                }
-              }
-              if (isBlacklistedWord) continue;
-              for (const entry of symbolEntries) {
-                const symbol = entry.pattern;
-                const color = entry.color;
-                const flags = plugin.settings.caseSensitive ? '' : 'i';
-                // Use compiled testRegex if available (regex entries) or a simple escaped regex
-                const regex = entry.testRegex || (entry.isRegex ? entry.regex : new RegExp(plugin.escapeRegex(symbol), flags));
-                if (!regex) continue;
-                if (regex.test(w)) {
-                  matches.push({ start, end, color });
-                  break; // Only color once per word
-                }
-              }
-            }
-          }
-        } else {
-          // Default: color symbols individually
-          for (const entry of entries) {
-            if (!entry) continue;
-            if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) {
-              const flags = plugin.settings.caseSensitive ? 'g' : 'gi';
-              const regex = entry.testRegex || (entry.isRegex ? entry.regex : new RegExp(plugin.escapeRegex(entry.pattern), flags));
-              if (!regex) continue;
-              let match;
-              let iterCount = 0;
-              while ((match = regex.exec(text))) {
-                iterCount++;
-                matches.push({ start: from + match.index, end: from + match.index + match[0].length, color: entry.color });
-                try { entry.matchesFound = (entry.matchesFound || 0) + 1; } catch (e) {}
-                try { plugin._perfCounters.totalMatchesFound = (plugin._perfCounters.totalMatchesFound || 0) + 1; } catch (e) {}
-              }
-              if (iterCount > 0) {
-                try { entry.execs = (entry.execs || 0) + iterCount; } catch (e) {}
-                try { plugin._perfCounters.totalRegexExecs = (plugin._perfCounters.totalRegexExecs || 0) + iterCount; } catch (e) {}
-              }
-            }
-          }
-        }
-
-        // If folder sets a default color for this path, override collected match colors
-        if (folderEntry && folderEntry.defaultColor) {
-          matches = matches.map(m => Object.assign({}, m, { color: folderEntry.defaultColor }));
-        }
-
-        // --- Remove overlapping matches, prefer longest ---
-        matches.sort((a, b) => a.start - b.start || b.end - a.end);
-        let lastEnd = from;
-        let nonOverlapping = [];
-        for (let m of matches) {
-          if (m.start >= lastEnd) {
-            nonOverlapping.push(m);
-            lastEnd = m.end;
-          }
-        }
-  nonOverlapping = nonOverlapping.slice(0, 500);
-        const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : plugin.settings.highlightStyle;
-        // If effective style is 'none', skip editor decorations entirely
-        if (effectiveStyle === 'none') return builder.finish();
-
-        for (const m of nonOverlapping) {
-          const style = effectiveStyle === 'text'
-            ? `color: ${m.color} !important;`
-            : `background: none !important; background-color: ${plugin.hexToRgba(m.color, plugin.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (plugin.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (plugin.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(plugin.settings.highlightHorizontalPadding ?? 4)}px !important;`;
-          const deco = Decoration.mark({
-            attributes: { style }
-          });
-          builder.add(m.start, m.end, deco);
-        }
-        return builder.finish();
+        
+        // Standard processing for small/medium cases
+        return plugin.buildDecoStandard(view, builder, from, to, text, entries, folderEntry);
       }
     }, {
       decorations: v => v.decorations
     });
+  }
+
+  // NEW METHOD: Extract full word containing a match
+  extractFullWord(text, matchStart, matchEnd) {
+    let fullWordStart = matchStart;
+    let fullWordEnd = matchEnd;
+    
+    // Expand left to word boundary
+    while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
+      fullWordStart--;
+    }
+    
+    // Expand right to word boundary  
+    while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
+      fullWordEnd++;
+    }
+    
+    return text.substring(fullWordStart, fullWordEnd);
+  }
+
+  // NEW METHOD: Check if word is blacklisted
+  isWordBlacklisted(word) {
+    if (!this.settings.blacklistWords || this.settings.blacklistWords.length === 0) {
+      return false;
+    }
+    
+    return this.settings.blacklistWords.some(bw => {
+      if (!bw) return false;
+      if (this.settings.caseSensitive) {
+        return word === bw;
+      } else {
+        return word.toLowerCase() === bw.toLowerCase();
+      }
+    });
+  }
+
+  // NEW METHOD: Standard editor processing for small/medium pattern/text sizes
+  buildDecoStandard(view, builder, from, to, text, entries, folderEntry) {
+    const entries_copy = entries || this.getSortedWordEntries();
+    let matches = [];
+
+    // Process all patterns with full regex support
+    for (const entry of entries_copy) {
+      if (!entry || entry.invalid) continue;
+      try {
+        if (entry.fastTest && typeof entry.fastTest === 'function' && !entry.fastTest(text)) continue;
+      } catch (e) {}
+      
+      const regex = entry.regex;
+      if (!regex) continue;
+      
+      let match;
+      let iterCount = 0;
+      
+      while ((match = regex.exec(text))) {
+        iterCount++;
+        const matchedText = match[0];
+        
+        // Use helper to extract full word and check if blacklisted
+        const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
+        if (this.isWordBlacklisted(fullWord)) continue;
+        
+        matches.push({
+          start: from + match.index,
+          end: from + match.index + matchedText.length,
+          color: entry.color
+        });
+        
+        if (matches.length > 500) break;
+      }
+      
+      if (iterCount > 0) {
+        try { entry.execs = (entry.execs || 0) + iterCount; } catch (e) {}
+        try { this._perfCounters.totalRegexExecs = (this._perfCounters.totalRegexExecs || 0) + iterCount; } catch (e) {}
+      }
+      
+      if (matches.length > 500) break;
+    }
+
+    // Apply folder color override
+    if (folderEntry && folderEntry.defaultColor) {
+      matches = matches.map(m => Object.assign({}, m, { color: folderEntry.defaultColor }));
+    }
+
+    // Remove overlapping matches
+    matches.sort((a, b) => a.start - b.start || b.end - a.end);
+    let lastEnd = from;
+    let nonOverlapping = [];
+    for (let m of matches) {
+      if (m.start >= lastEnd) {
+        nonOverlapping.push(m);
+        lastEnd = m.end;
+      }
+    }
+    nonOverlapping = nonOverlapping.slice(0, 500);
+
+    // Apply decorations
+    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    if (effectiveStyle === 'none') return builder.finish();
+
+    for (const m of nonOverlapping) {
+      const style = effectiveStyle === 'text'
+        ? `color: ${m.color} !important;`
+        : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+      const deco = Decoration.mark({ attributes: { style } });
+      builder.add(m.start, m.end, deco);
+    }
+
+    return builder.finish();
+  }
+
+  // NEW METHOD: Chunked editor processing for large pattern sets or large text
+  buildDecoChunked(view, builder, from, to, text, entries, folderEntry) {
+    const CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
+    const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
+    const MAX_MATCHES = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
+    let allMatches = [];
+
+    // Strategy 1: If too many patterns, process patterns in chunks
+    if (entries.length > CHUNK_SIZE) {
+      debugLog('EDITOR', `Processing ${entries.length} patterns in chunks (chunk size: ${CHUNK_SIZE})`);
+      
+      for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+        const chunk = entries.slice(i, i + CHUNK_SIZE);
+        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry);
+        allMatches = allMatches.concat(chunkMatches);
+        
+        // Log progress
+        const chunkNum = Math.floor(i / CHUNK_SIZE) + 1;
+        const totalChunks = Math.ceil(entries.length / CHUNK_SIZE);
+        debugLog('EDITOR', `Chunk ${chunkNum}/${totalChunks}: ${chunkMatches.length} matches`);
+        
+        // Hard limit to prevent excessive decorations
+        if (allMatches.length > MAX_MATCHES) {
+          debugLog('EDITOR', `Reached match limit (${allMatches.length}), stopping early`);
+          break;
+        }
+      }
+    }
+    // Strategy 2: If text is very long, process text in chunks
+    else if (text.length > TEXT_CHUNK_SIZE) {
+      debugLog('EDITOR', `Processing long text (${text.length} chars) in chunks (chunk size: ${TEXT_CHUNK_SIZE})`);
+      
+      let chunkNum = 0;
+      const totalChunks = Math.ceil(text.length / TEXT_CHUNK_SIZE);
+      for (let pos = 0; pos < text.length; pos += TEXT_CHUNK_SIZE) {
+        chunkNum++;
+        const chunkEnd = Math.min(pos + TEXT_CHUNK_SIZE, text.length);
+        const chunkText = text.slice(pos, chunkEnd);
+        const chunkFrom = from + pos;
+        
+        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry);
+        allMatches = allMatches.concat(chunkMatches);
+        
+        debugLog('EDITOR', `Text chunk ${chunkNum}/${totalChunks}: ${chunkMatches.length} matches`);
+        
+        if (allMatches.length > MAX_MATCHES) {
+          debugLog('EDITOR', `Reached match limit (${allMatches.length}), stopping early`);
+          break;
+        }
+      }
+    }
+
+    debugLog('EDITOR', `Processing complete: ${allMatches.length} total matches`);
+
+    // Apply decorations from collected matches
+    return this.applyDecorationsFromMatches(builder, allMatches, folderEntry);
+  }
+
+  // NEW METHOD: Process a chunk of patterns
+  processPatternChunk(text, baseFrom, patternChunk, folderEntry) {
+    const MAX_MATCHES_PER_PATTERN = EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
+    const matches = [];
+    
+    for (const entry of patternChunk) {
+      if (!entry || entry.invalid) continue;
+      
+      // Fast pre-check
+      if (entry.fastTest && !entry.fastTest(text)) continue;
+      
+      const regex = entry.regex;
+      if (!regex) continue;
+      
+      let match;
+      let matchCount = 0;
+      
+      // Reset regex state
+      regex.lastIndex = 0;
+      
+      while ((match = regex.exec(text)) && matchCount < MAX_MATCHES_PER_PATTERN) {
+        const matchedText = match[0];
+        
+        // Use helper to extract full word and check if blacklisted
+        const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
+        if (this.isWordBlacklisted(fullWord)) continue;
+        
+        matches.push({
+          start: baseFrom + match.index,
+          end: baseFrom + match.index + matchedText.length,
+          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
+        });
+        
+        matchCount++;
+        if (matches.length > 50) break;
+      }
+      
+      if (matches.length > 50) break;
+    }
+    
+    return matches;
+  }
+
+  // NEW METHOD: Process a chunk of text
+  processTextChunk(chunkText, chunkFrom, entries, folderEntry) {
+    const matches = [];
+    
+    for (const entry of entries) {
+      if (!entry || entry.invalid) continue;
+      
+      // Fast pre-check on chunk text
+      if (entry.fastTest && !entry.fastTest(chunkText)) continue;
+      
+      const regex = entry.regex;
+      if (!regex) continue;
+      
+      let match;
+      let matchCount = 0;
+      
+      regex.lastIndex = 0;
+      
+      while ((match = regex.exec(chunkText)) && matchCount < 5) {
+        const matchedText = match[0];
+        
+        // Use helper to extract full word and check if blacklisted
+        const fullWord = this.extractFullWord(chunkText, match.index, match.index + matchedText.length);
+        if (this.isWordBlacklisted(fullWord)) continue;
+        
+        matches.push({
+          start: chunkFrom + match.index,
+          end: chunkFrom + match.index + matchedText.length,
+          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
+        });
+        
+        matchCount++;
+        if (matches.length > 30) break;
+      }
+      
+      if (matches.length > 30) break;
+    }
+    
+    return matches;
+  }
+
+  // NEW METHOD: Apply decorations from collected matches
+  applyDecorationsFromMatches(builder, matches, folderEntry) {
+    // Remove overlapping matches
+    matches.sort((a, b) => a.start - b.start || b.end - a.end);
+    let lastEnd = -Infinity;
+    let nonOverlapping = [];
+    for (let m of matches) {
+      if (m.start >= lastEnd) {
+        nonOverlapping.push(m);
+        lastEnd = m.end;
+      }
+    }
+    nonOverlapping = nonOverlapping.slice(0, 200);
+
+    // Apply decorations
+    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    if (effectiveStyle === 'none') return builder.finish();
+
+    for (const m of nonOverlapping) {
+      const style = effectiveStyle === 'text'
+        ? `color: ${m.color} !important;`
+        : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+      const deco = Decoration.mark({ attributes: { style } });
+      builder.add(m.start, m.end, deco);
+    }
+
+    return builder.finish();
   }
 
   // --- Memory management helpers ---
@@ -2252,7 +2844,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // Hint GC if available (may not be in renderer)
       try { if (typeof global !== 'undefined' && typeof global.gc === 'function') global.gc(); } catch (e) {}
     } catch (e) {
-      console.error('Always Color Text: cleanup error', e);
+      debugError('CLEANUP', 'cleanup error', e);
     }
   }
 
@@ -2277,34 +2869,16 @@ module.exports = class AlwaysColorText extends Plugin {
           el.replaceWith(tn);
         } catch (e) {}
       }
-    } catch (e) { console.error('[CLEAR] clearHighlightsInRoot failed', e); }
+    } catch (e) { debugError('CLEAR', 'clearHighlightsInRoot failed', e); }
   }
 
   startMemoryMonitor() {
-    try {
-      if (this._memoryCheckInterval) return;
-      this._memoryCheckInterval = setInterval(() => {
-        try {
-          if (typeof performance !== 'undefined' && performance.memory) {
-            const used = performance.memory.usedJSHeapSize || 0;
-            const limit = performance.memory.jsHeapSizeLimit || 0;
-            if (limit > 0 && used / limit > 0.8) {
-              console.warn('Always Color Text: High memory usage, triggering cleanup');
-              try { this.cleanup(); } catch (e) {}
-            }
-          }
-        } catch (e) {}
-      }, 30000);
-    } catch (e) { console.error('Always Color Text: startMemoryMonitor failed', e); }
+    // DISABLED: Removed memory monitoring to reduce overhead
+    // Memory checks happen dynamically in isPerformanceOverloaded()
   }
 
   stopMemoryMonitor() {
-    try {
-      if (this._memoryCheckInterval) {
-        clearInterval(this._memoryCheckInterval);
-        this._memoryCheckInterval = null;
-      }
-    } catch (e) { console.error('Always Color Text: stopMemoryMonitor failed', e); }
+    // DISABLED: Memory monitoring disabled
   }
 }
 
@@ -2444,7 +3018,7 @@ class ColorSettingTab extends PluginSettingTab {
 
       this._entryRows.set(entry, { row, elements: { textInput, cp, regexChk, flagsInput, del }, cleanup });
       this._cleanupHandlers.push(cleanup);
-    } catch (e) { console.error('[SETTINGS] _createEntryRow error', e); }
+    } catch (e) { debugError('SETTINGS', '_createEntryRow error', e); }
   }
 
   _refreshDisabledFiles() {
@@ -2469,7 +3043,7 @@ class ColorSettingTab extends PluginSettingTab {
       } else {
         this._disabledFilesContainer.createEl('p', { text: 'No files currently have coloring disabled.' });
       }
-    } catch (e) { console.error('[SETTINGS] _refreshDisabledFiles error', e); }
+    } catch (e) { debugError('SETTINGS', '_refreshDisabledFiles error', e); }
   }
 
   _refreshBlacklistWords() {
@@ -2520,7 +3094,7 @@ class ColorSettingTab extends PluginSettingTab {
         del.addEventListener('click', delHandler);
         this._cleanupHandlers.push(() => del.removeEventListener('click', delHandler));
       });
-    } catch (e) { console.error('[SETTINGS] _refreshBlacklistWords error', e); }
+    } catch (e) { debugError('SETTINGS', '_refreshBlacklistWords error', e); }
   }
 
   _refreshCustomSwatches() {
@@ -2558,7 +3132,7 @@ class ColorSettingTab extends PluginSettingTab {
             this._refreshCustomSwatches();
           }));
       }
-    } catch (e) { console.error('[SETTINGS] _refreshCustomSwatches error', e); }
+    } catch (e) { debugError('SETTINGS', '_refreshCustomSwatches error', e); }
   }
 
   _refreshEntries() {
@@ -2589,7 +3163,7 @@ class ColorSettingTab extends PluginSettingTab {
       }
       // mark initialized so subsequent display() calls refresh only entries
       this._initializedSettingsUI = true;
-    } catch (e) { console.error('[SETTINGS] _refreshEntries error', e); }
+    } catch (e) { debugError('SETTINGS', '_refreshEntries error', e); }
   }
 
   // Clean up event listeners to prevent leaks
@@ -2597,7 +3171,7 @@ class ColorSettingTab extends PluginSettingTab {
     try {
       // Run standard cleanup handlers
       this._cleanupHandlers?.forEach(cleanup => {
-        try { cleanup(); } catch (e) { console.error('[SETTINGS] cleanup error', e); }
+        try { cleanup(); } catch (e) { debugError('SETTINGS', 'cleanup error', e); }
       });
       this._cleanupHandlers = [];
       // Run any dynamic handlers (e.g., dropdown click watchers)
@@ -2609,7 +3183,7 @@ class ColorSettingTab extends PluginSettingTab {
       this._cachedFolderSuggestions = null;
       // Clear DOM content to drop references
       try { this.containerEl?.empty(); } catch (e) {}
-    } catch (e) { console.error('[SETTINGS] onClose error', e); }
+    } catch (e) { debugError('SETTINGS', 'onClose error', e); }
   }
 
   display() {
@@ -2667,7 +3241,7 @@ class ColorSettingTab extends PluginSettingTab {
             // Re-enable: force previews to rerender so highlights are applied again
             try { this.plugin.forceRefreshAllReadingViews(); } catch (e) {}
           }
-        } catch (e) { console.error('[SETTINGS] disableReadingModeColoring handler failed', e); }
+        } catch (e) { debugError('SETTINGS', 'disableReadingModeColoring handler failed', e); }
       }));
 
     // Opt-in: Force full reading-mode render (dangerous)
@@ -2678,7 +3252,7 @@ class ColorSettingTab extends PluginSettingTab {
         this.plugin.settings.forceFullRenderInReading = v;
         await this.debouncedSaveSettings();
         // Trigger immediate refresh of reading views so the new mode takes effect
-        try { this.plugin.forceRefreshAllReadingViews(); } catch (e) { console.error('[SETTINGS] forceFullRenderInReading handler failed', e); }
+        try { this.plugin.forceRefreshAllReadingViews(); } catch (e) { debugError('SETTINGS', 'forceFullRenderInReading handler failed', e); }
       }));
 
     // 2. Case sensitive
@@ -3384,3 +3958,5 @@ try {
     };
   }
 } catch (e) {}
+
+// 0.1.8 yay 25NOV13
