@@ -2600,28 +2600,91 @@ module.exports = class AlwaysColorText extends Plugin {
       if (matches.length > 500) break;
     }
 
+    // --- Partial Match coloring (for editor, matching reading mode behavior) ---
+    if (this.settings.partialMatch && matches.length < 500) {
+      const wordRegex = /\w+/g;
+      let match;
+      while ((match = wordRegex.exec(text))) {
+        const w = match[0];
+        const wStart = match.index;
+        const wEnd = wStart + w.length;
+        
+        if (this.isWordBlacklisted(w)) continue;
+        
+        for (const entry of entries_copy) {
+          if (!entry || entry.invalid) continue;
+          // Skip pure symbol patterns in partial match
+          if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+          if (this.isWordBlacklisted(entry.pattern)) continue;
+          
+          const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
+          if (testRe.test(w)) {
+            // Check if this partial match overlaps with any existing match
+            let overlapsWithExisting = false;
+            for (const existingMatch of matches) {
+              if (wStart < existingMatch.end && wEnd > existingMatch.start) {
+                overlapsWithExisting = true;
+                break;
+              }
+            }
+            
+            // Add partial match if no overlap with existing, or replace if replacing smaller overlaps
+            if (!overlapsWithExisting) {
+              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+              matches.push({ start: from + wStart, end: from + wEnd, color: useColor });
+              if (matches.length > 500) break;
+            } else {
+              // Remove smaller overlapping matches and add the full word instead
+              matches = matches.filter(m => !(m.start >= (from + wStart) && m.end <= (from + wEnd) && (m.end - m.start) < (wEnd - wStart)));
+              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+              matches.push({ start: from + wStart, end: from + wEnd, color: useColor });
+              if (matches.length > 500) break;
+            }
+            break;
+          }
+        }
+        
+        if (matches.length > 500) break;
+        // Avoid infinite loop on zero-length matches
+        try { if (typeof wordRegex.lastIndex === 'number' && wordRegex.lastIndex === match.index) wordRegex.lastIndex++; } catch (e) {}
+      }
+    }
+
     // Apply folder color override
     if (folderEntry && folderEntry.defaultColor) {
       matches = matches.map(m => Object.assign({}, m, { color: folderEntry.defaultColor }));
     }
 
-    // Remove overlapping matches
-    matches.sort((a, b) => a.start - b.start || b.end - a.end);
-    let lastEnd = from;
-    let nonOverlapping = [];
-    for (let m of matches) {
-      if (m.start >= lastEnd) {
-        nonOverlapping.push(m);
-        lastEnd = m.end;
+    // Remove overlapping matches - greedy algorithm (prefer longest)
+    if (matches.length > 1) {
+      matches.sort((a, b) => {
+        if (a.start !== b.start) return a.start - b.start;
+        return (b.end - b.start) - (a.end - a.start); // Longer first
+      });
+      
+      let nonOverlapping = [];
+      for (const m of matches) {
+        let overlapsWithSelected = false;
+        for (const selected of nonOverlapping) {
+          if (m.start < selected.end && m.end > selected.start) {
+            overlapsWithSelected = true;
+            break;
+          }
+        }
+        if (!overlapsWithSelected) {
+          nonOverlapping.push(m);
+        }
       }
+      matches = nonOverlapping;
     }
-    nonOverlapping = nonOverlapping.slice(0, 500);
+    
+    matches = matches.slice(0, 500);
 
     // Apply decorations
     const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
     if (effectiveStyle === 'none') return builder.finish();
 
-    for (const m of nonOverlapping) {
+    for (const m of matches) {
       const style = effectiveStyle === 'text'
         ? `color: ${m.color} !important;`
         : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
@@ -2729,6 +2792,66 @@ module.exports = class AlwaysColorText extends Plugin {
       
       if (matches.length > 50) break;
     }
+
+    // --- Partial Match coloring for pattern chunks ---
+    if (this.settings.partialMatch && matches.length < 50) {
+      const wordRegex = /\w+/g;
+      let match;
+      while ((match = wordRegex.exec(text))) {
+        const w = match[0];
+        const wStart = match.index;
+        const wEnd = wStart + w.length;
+        
+        if (this.isWordBlacklisted(w)) continue;
+        
+        for (const entry of patternChunk) {
+          if (!entry || entry.invalid) continue;
+          if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+          if (this.isWordBlacklisted(entry.pattern)) continue;
+          
+          const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
+          if (testRe.test(w)) {
+            // Check if this partial match overlaps with any existing match
+            let overlapsWithExisting = false;
+            for (const existingMatch of matches) {
+              if ((baseFrom + wStart) < existingMatch.end && (baseFrom + wEnd) > existingMatch.start) {
+                overlapsWithExisting = true;
+                break;
+              }
+            }
+            
+            if (!overlapsWithExisting) {
+              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+              matches.push({
+                start: baseFrom + wStart,
+                end: baseFrom + wEnd,
+                color: useColor
+              });
+              if (matches.length > 50) break;
+            } else {
+              // Remove smaller overlapping matches and add the full word instead
+              for (let i = matches.length - 1; i >= 0; i--) {
+                const m = matches[i];
+                if (m.start >= (baseFrom + wStart) && m.end <= (baseFrom + wEnd) && (m.end - m.start) < (wEnd - wStart)) {
+                  matches.splice(i, 1);
+                }
+              }
+              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+              matches.push({
+                start: baseFrom + wStart,
+                end: baseFrom + wEnd,
+                color: useColor
+              });
+              if (matches.length > 50) break;
+            }
+            break;
+          }
+        }
+        
+        if (matches.length > 50) break;
+        try { if (typeof wordRegex.lastIndex === 'number' && wordRegex.lastIndex === match.index) wordRegex.lastIndex++; } catch (e) {}
+      }
+    }
     
     return matches;
   }
@@ -2769,6 +2892,66 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       
       if (matches.length > 30) break;
+    }
+
+    // --- Partial Match coloring for chunked processing ---
+    if (this.settings.partialMatch && matches.length < 30) {
+      const wordRegex = /\w+/g;
+      let match;
+      while ((match = wordRegex.exec(chunkText))) {
+        const w = match[0];
+        const wStart = match.index;
+        const wEnd = wStart + w.length;
+        
+        if (this.isWordBlacklisted(w)) continue;
+        
+        for (const entry of entries) {
+          if (!entry || entry.invalid) continue;
+          if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+          if (this.isWordBlacklisted(entry.pattern)) continue;
+          
+          const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
+          if (testRe.test(w)) {
+            // Check if this partial match overlaps with any existing match
+            let overlapsWithExisting = false;
+            for (const existingMatch of matches) {
+              if ((chunkFrom + wStart) < existingMatch.end && (chunkFrom + wEnd) > existingMatch.start) {
+                overlapsWithExisting = true;
+                break;
+              }
+            }
+            
+            if (!overlapsWithExisting) {
+              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+              matches.push({
+                start: chunkFrom + wStart,
+                end: chunkFrom + wEnd,
+                color: useColor
+              });
+              if (matches.length > 30) break;
+            } else {
+              // Remove smaller overlapping matches and add the full word instead
+              for (let i = matches.length - 1; i >= 0; i--) {
+                const m = matches[i];
+                if (m.start >= (chunkFrom + wStart) && m.end <= (chunkFrom + wEnd) && (m.end - m.start) < (wEnd - wStart)) {
+                  matches.splice(i, 1);
+                }
+              }
+              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+              matches.push({
+                start: chunkFrom + wStart,
+                end: chunkFrom + wEnd,
+                color: useColor
+              });
+              if (matches.length > 30) break;
+            }
+            break;
+          }
+        }
+        
+        if (matches.length > 30) break;
+        try { if (typeof wordRegex.lastIndex === 'number' && wordRegex.lastIndex === match.index) wordRegex.lastIndex++; } catch (e) {}
+      }
     }
     
     return matches;
