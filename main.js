@@ -18,8 +18,8 @@ const EDITOR_PERFORMANCE_CONSTANTS = {
   MAX_TEXT_LENGTH_STANDARD: 10000, // Use standard processing for <= 10k chars
   PATTERN_CHUNK_SIZE: 20,         // Process 20 patterns per chunk  
   TEXT_CHUNK_SIZE: 5000,          // Process 5k chars per chunk
-  MAX_MATCHES_PER_PATTERN: 10,    // Max matches per pattern in chunks
-  MAX_TOTAL_MATCHES: 200          // Absolute limit for decorations
+  MAX_MATCHES_PER_PATTERN: 100,   // Max matches per pattern in chunks
+  MAX_TOTAL_MATCHES: 3000         // Absolute limit for decorations
 };
 
 // Development mode flag - set to false for production
@@ -1763,7 +1763,7 @@ module.exports = class AlwaysColorText extends Plugin {
     const immediateLimit = Number(options.immediateBlocks) || 0;
     const skipFirstN = Number(options.skipFirstN) || 0;
     const clearExisting = options.clearExisting !== false;
-    const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'EM', 'I', 'B', 'STRONG', 'CODE', 'PRE', 'A'];
+    const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'CODE', 'PRE', 'A'];
 
     // Early DOM-safety checks using TreeWalker to avoid materializing huge NodeLists
     try {
@@ -1924,9 +1924,30 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     } catch (e) {}
 
-    // Iterate through child nodes directly to avoid Array.from materializing large arrays
-    for (const node of block.childNodes) {
-      if (node.nodeType !== Node.TEXT_NODE) continue;
+    // Use TreeWalker to find text nodes at any depth, including inside formatting tags like <em>, <i>, <b>, <strong>
+    const textNodes = [];
+    const walker = document.createTreeWalker(
+      block,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          // Skip text nodes in code blocks
+          if (node.parentElement?.closest('code, pre')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      },
+      false
+    );
+    
+    let currentNode;
+    while (currentNode = walker.nextNode()) {
+      textNodes.push(currentNode);
+    }
+
+    // Process each text node
+    for (const node of textNodes) {
       let text = node.textContent;
       
       // DECODE HTML ENTITIES FOR READING MODE COMPATIBILITY
@@ -2575,6 +2596,10 @@ module.exports = class AlwaysColorText extends Plugin {
       let match;
       let iterCount = 0;
       
+      // CRITICAL FIX: Reset regex state before each text search
+      // This ensures lastIndex starts at 0 for this viewport chunk
+      try { regex.lastIndex = 0; } catch (e) {}
+      
       while ((match = regex.exec(text))) {
         iterCount++;
         const matchedText = match[0];
@@ -2589,7 +2614,7 @@ module.exports = class AlwaysColorText extends Plugin {
           color: entry.color
         });
         
-        if (matches.length > 500) break;
+        if (matches.length > 3000) break;
       }
       
       if (iterCount > 0) {
@@ -2597,11 +2622,11 @@ module.exports = class AlwaysColorText extends Plugin {
         try { this._perfCounters.totalRegexExecs = (this._perfCounters.totalRegexExecs || 0) + iterCount; } catch (e) {}
       }
       
-      if (matches.length > 500) break;
+      if (matches.length > 3000) break;
     }
 
     // --- Partial Match coloring (for editor, matching reading mode behavior) ---
-    if (this.settings.partialMatch && matches.length < 500) {
+    if (this.settings.partialMatch && matches.length < 3000) {
       const wordRegex = /\w+/g;
       let match;
       while ((match = wordRegex.exec(text))) {
@@ -2632,19 +2657,19 @@ module.exports = class AlwaysColorText extends Plugin {
             if (!overlapsWithExisting) {
               const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
               matches.push({ start: from + wStart, end: from + wEnd, color: useColor });
-              if (matches.length > 500) break;
+              if (matches.length > 3000) break;
             } else {
               // Remove smaller overlapping matches and add the full word instead
               matches = matches.filter(m => !(m.start >= (from + wStart) && m.end <= (from + wEnd) && (m.end - m.start) < (wEnd - wStart)));
               const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
               matches.push({ start: from + wStart, end: from + wEnd, color: useColor });
-              if (matches.length > 500) break;
+              if (matches.length > 3000) break;
             }
             break;
           }
         }
         
-        if (matches.length > 500) break;
+        if (matches.length > 3000) break;
         // Avoid infinite loop on zero-length matches
         try { if (typeof wordRegex.lastIndex === 'number' && wordRegex.lastIndex === match.index) wordRegex.lastIndex++; } catch (e) {}
       }
@@ -2678,7 +2703,7 @@ module.exports = class AlwaysColorText extends Plugin {
       matches = nonOverlapping;
     }
     
-    matches = matches.slice(0, 500);
+    matches = matches.slice(0, 3000);
 
     // Apply decorations
     const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
@@ -2770,8 +2795,8 @@ module.exports = class AlwaysColorText extends Plugin {
       let match;
       let matchCount = 0;
       
-      // Reset regex state
-      regex.lastIndex = 0;
+      // CRITICAL FIX: Always reset regex state before processing
+      try { regex.lastIndex = 0; } catch (e) {}
       
       while ((match = regex.exec(text)) && matchCount < MAX_MATCHES_PER_PATTERN) {
         const matchedText = match[0];
@@ -2787,14 +2812,14 @@ module.exports = class AlwaysColorText extends Plugin {
         });
         
         matchCount++;
-        if (matches.length > 50) break;
+        if (matches.length > 200) break;
       }
       
-      if (matches.length > 50) break;
+      if (matches.length > 200) break;
     }
 
     // --- Partial Match coloring for pattern chunks ---
-    if (this.settings.partialMatch && matches.length < 50) {
+    if (this.settings.partialMatch && matches.length < 200) {
       const wordRegex = /\w+/g;
       let match;
       while ((match = wordRegex.exec(text))) {
@@ -2827,7 +2852,7 @@ module.exports = class AlwaysColorText extends Plugin {
                 end: baseFrom + wEnd,
                 color: useColor
               });
-              if (matches.length > 50) break;
+              if (matches.length > 200) break;
             } else {
               // Remove smaller overlapping matches and add the full word instead
               for (let i = matches.length - 1; i >= 0; i--) {
@@ -2842,13 +2867,13 @@ module.exports = class AlwaysColorText extends Plugin {
                 end: baseFrom + wEnd,
                 color: useColor
               });
-              if (matches.length > 50) break;
+              if (matches.length > 200) break;
             }
             break;
           }
         }
         
-        if (matches.length > 50) break;
+        if (matches.length > 200) break;
         try { if (typeof wordRegex.lastIndex === 'number' && wordRegex.lastIndex === match.index) wordRegex.lastIndex++; } catch (e) {}
       }
     }
@@ -2872,7 +2897,8 @@ module.exports = class AlwaysColorText extends Plugin {
       let match;
       let matchCount = 0;
       
-      regex.lastIndex = 0;
+      // CRITICAL FIX: Always reset regex state before processing
+      try { regex.lastIndex = 0; } catch (e) {}
       
       while ((match = regex.exec(chunkText)) && matchCount < 5) {
         const matchedText = match[0];
@@ -2888,14 +2914,14 @@ module.exports = class AlwaysColorText extends Plugin {
         });
         
         matchCount++;
-        if (matches.length > 30) break;
+        if (matches.length > 100) break;
       }
       
       if (matches.length > 30) break;
     }
 
     // --- Partial Match coloring for chunked processing ---
-    if (this.settings.partialMatch && matches.length < 30) {
+    if (this.settings.partialMatch && matches.length < 100) {
       const wordRegex = /\w+/g;
       let match;
       while ((match = wordRegex.exec(chunkText))) {
@@ -2928,7 +2954,7 @@ module.exports = class AlwaysColorText extends Plugin {
                 end: chunkFrom + wEnd,
                 color: useColor
               });
-              if (matches.length > 30) break;
+              if (matches.length > 100) break;
             } else {
               // Remove smaller overlapping matches and add the full word instead
               for (let i = matches.length - 1; i >= 0; i--) {
@@ -2943,13 +2969,13 @@ module.exports = class AlwaysColorText extends Plugin {
                 end: chunkFrom + wEnd,
                 color: useColor
               });
-              if (matches.length > 30) break;
+              if (matches.length > 100) break;
             }
             break;
           }
         }
         
-        if (matches.length > 30) break;
+        if (matches.length > 100) break;
         try { if (typeof wordRegex.lastIndex === 'number' && wordRegex.lastIndex === match.index) wordRegex.lastIndex++; } catch (e) {}
       }
     }
@@ -2969,7 +2995,7 @@ module.exports = class AlwaysColorText extends Plugin {
         lastEnd = m.end;
       }
     }
-    nonOverlapping = nonOverlapping.slice(0, 200);
+    nonOverlapping = nonOverlapping.slice(0, 1000);
 
     // Apply decorations
     const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
@@ -4142,4 +4168,4 @@ try {
   }
 } catch (e) {}
 
-// 0.1.8 yay 25NOV13
+// 0.1.9 sob 25NOV14
