@@ -3745,9 +3745,6 @@ class ColorSettingTab extends PluginSettingTab {
     // Sort button (left side)
     const sortBtn = buttonRowDiv.createEl('button');
     sortBtn.textContent = this._wordsSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
-    sortBtn.style.padding = '8px 12px';
-    sortBtn.style.borderRadius = '4px';
-    sortBtn.style.color = 'var(--text-normal)';
     sortBtn.style.cursor = 'pointer';
     sortBtn.style.flex = '0 0 auto';
     const sortBtnHandler = async () => {
@@ -3762,8 +3759,6 @@ class ColorSettingTab extends PluginSettingTab {
     // Add button (right side, takes remaining space)
     const addBtn = buttonRowDiv.createEl('button');
     addBtn.textContent = 'Add new word / pattern';
-    addBtn.style.padding = '8px 12px';
-    addBtn.style.borderRadius = '4px';
     addBtn.style.cursor = 'pointer';
     addBtn.style.flex = '1';
     addBtn.addClass('mod-cta');
