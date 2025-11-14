@@ -763,12 +763,17 @@ module.exports = class AlwaysColorText extends Plugin {
     this.settings.excludedFolders = this.settings.excludedFolders.map(f => {
       if (!f) return null;
       if (typeof f === 'string') return { path: f, excluded: true, defaultColor: null, defaultStyle: null };
-      if (typeof f === 'object' && f.path) return {
-        path: f.path,
-        excluded: typeof f.excluded === 'boolean' ? f.excluded : true,
-        defaultColor: f.defaultColor || f.color || null,
-        defaultStyle: f.defaultStyle || null
-      };
+      if (typeof f === 'object' && f.path) {
+        const defaultColor = f.defaultColor || f.color;
+        // Sanitize color: if invalid, set to null
+        const sanitizedColor = defaultColor && this.isValidHexColor(defaultColor) ? defaultColor : null;
+        return {
+          path: f.path,
+          excluded: typeof f.excluded === 'boolean' ? f.excluded : true,
+          defaultColor: sanitizedColor,
+          defaultStyle: f.defaultStyle || null
+        };
+      }
       return null;
     }).filter(x => x && x.path && String(x.path).trim() !== '');
 
@@ -779,19 +784,23 @@ module.exports = class AlwaysColorText extends Plugin {
       const arr = [];
       for (const k of Object.keys(obj)) {
         const c = obj[k];
-        arr.push({ pattern: String(k), color: String(c), isRegex: false, flags: '' });
+        arr.push({ pattern: String(k), color: String(c), isRegex: false, flags: '', groupedPatterns: null });
       }
       this.settings.wordEntries = arr;
     } else {
       // Ensure shape for existing entries
       this.settings.wordEntries = this.settings.wordEntries.map(e => {
         if (!e) return null;
-        if (typeof e === 'string') return { pattern: e, color: '#000000', isRegex: false, flags: '' };
+        if (typeof e === 'string') return { pattern: e, color: '#000000', isRegex: false, flags: '', groupedPatterns: null };
+        const color = e.color || e.hex || '#000000';
+        // Sanitize color: if invalid, default to black
+        const sanitizedColor = this.isValidHexColor(color) ? color : '#000000';
         return {
           pattern: e.pattern || e.word || '',
-          color: e.color || e.hex || '#000000',
+          color: sanitizedColor,
           isRegex: !!e.isRegex,
-          flags: e.flags || ''
+          flags: e.flags || '',
+          groupedPatterns: e.groupedPatterns || null
         };
       }).filter(x => x && String(x.pattern).trim() !== '');
     }
@@ -916,6 +925,13 @@ module.exports = class AlwaysColorText extends Plugin {
   // --- Escape Regex Special Characters ---
   escapeRegex(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // NEW HELPER: Check if a match is a whole word (word boundaries on both sides)
+  isWholeWordMatch(text, matchStart, matchEnd) {
+    const leftOk = matchStart === 0 || !/\w/.test(text[matchStart - 1]);
+    const rightOk = matchEnd === text.length || !/\w/.test(text[matchEnd]);
+    return leftOk && rightOk;
   }
 
     safeRegexTest(regex, text, timeout = 50) {
@@ -1095,14 +1111,27 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // --- Helper: Convert hex to rgba with opacity ---
+  // Helper: Validate hex color format to prevent CSS injection
+  isValidHexColor(hex) {
+    // Only allow valid hex colors: #RGB or #RRGGBB
+    const hexRegex = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/;
+    return hexRegex.test(hex);
+  }
+
   hexToRgba(hex, opacityPercent) {
+    // Validate hex color to prevent CSS injection
+    if (!this.isValidHexColor(hex)) {
+      // Fallback to black if invalid
+      return `rgba(0,0,0,1)`;
+    }
+    
     let c = hex.replace('#', '');
     if (c.length === 3) c = c.split('').map(x => x + x).join('');
     const num = parseInt(c, 16);
     const r = (num >> 16) & 255;
     const g = (num >> 8) & 255;
     const b = num & 255;
-    // Clampe and convert percent to 0-1
+    // Clamp and convert percent to 0-1
     let o = Math.max(0, Math.min(100, Number(opacityPercent)));
     o = o / 100;
     return `rgba(${r},${g},${b},${o})`;
@@ -1233,13 +1262,22 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!Array.isArray(this.settings.wordEntries)) return;
       for (const e of this.settings.wordEntries) {
         if (!e) continue;
-        let pattern = String(e.pattern || '').trim();
         
-        // DECODE HTML ENTITIES FOR READING MODE COMPATIBILITY
-        pattern = this.decodeHtmlEntities(pattern);
+        // Support comma-separated grouped patterns: compile each pattern separately with same color
+        const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0
+          ? e.groupedPatterns
+          : [String(e.pattern || '').trim()];
         
         const color = e.color || '#000000';
         const isRegex = !!e.isRegex;
+        
+        // Compile each pattern individually
+        for (let pattern of patterns) {
+          pattern = String(pattern).trim();
+          if (!pattern) continue;
+        
+          // DECODE HTML ENTITIES FOR READING MODE COMPATIBILITY
+          pattern = this.decodeHtmlEntities(pattern);
         
         // HARD-BLOCK known problematic patterns
         if (this.isKnownProblematicPattern(pattern)) {
@@ -1314,7 +1352,8 @@ module.exports = class AlwaysColorText extends Plugin {
           compiled.fastTest = (text) => true;
         }
         this._compiledWordEntries.push(compiled);
-      }
+        } // End of inner for loop for each pattern in groupedPatterns
+      } // End of outer for loop for each entry
       // sort by specificity (longer patterns first)
       this._compiledWordEntries.sort((a, b) => b.specificity - a.specificity || b.pattern.length - a.pattern.length);
       // mark cached filtered/sorted entries dirty so callers rebuild lazily
@@ -2010,6 +2049,13 @@ module.exports = class AlwaysColorText extends Plugin {
           const matchStart = match.index;
           const matchEnd = match.index + matchedText.length;
           
+          // NEW: If partialMatch is disabled, only accept whole-word matches
+          if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+            iterCount++;
+            try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+            continue;
+          }
+          
           // Extract full word containing this match by expanding left and right to word boundaries
           let fullWordStart = matchStart;
           let fullWordEnd = matchEnd;
@@ -2604,6 +2650,12 @@ module.exports = class AlwaysColorText extends Plugin {
         iterCount++;
         const matchedText = match[0];
         
+        // NEW: If partialMatch is disabled, only accept whole-word matches
+        if (!this.settings.partialMatch && !this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
+          try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+          continue;
+        }
+        
         // Use helper to extract full word and check if blacklisted
         const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
         if (this.isWordBlacklisted(fullWord)) continue;
@@ -2801,6 +2853,11 @@ module.exports = class AlwaysColorText extends Plugin {
       while ((match = regex.exec(text)) && matchCount < MAX_MATCHES_PER_PATTERN) {
         const matchedText = match[0];
         
+        // NEW: If partialMatch is disabled, only accept whole-word matches
+        if (!this.settings.partialMatch && !this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
+          continue;
+        }
+        
         // Use helper to extract full word and check if blacklisted
         const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
         if (this.isWordBlacklisted(fullWord)) continue;
@@ -2902,6 +2959,11 @@ module.exports = class AlwaysColorText extends Plugin {
       
       while ((match = regex.exec(chunkText)) && matchCount < 5) {
         const matchedText = match[0];
+        
+        // NEW: If partialMatch is disabled, only accept whole-word matches
+        if (!this.settings.partialMatch && !this.isWholeWordMatch(chunkText, match.index, match.index + matchedText.length)) {
+          continue;
+        }
         
         // Use helper to extract full word and check if blacklisted
         const fullWord = this.extractFullWord(chunkText, match.index, match.index + matchedText.length);
@@ -3105,6 +3167,8 @@ class ColorSettingTab extends PluginSettingTab {
     this._disabledFilesContainer = null;
     this._blacklistWordsContainer = null;
     this._customSwatchesContainer = null;
+    // Sorting state for word entries (null, 'last-added', or 'a-z')
+    this._wordsSortMode = 'last-added';
   }
 
   // Create a settings row for a single entry and track cleanup
@@ -3115,12 +3179,18 @@ class ColorSettingTab extends PluginSettingTab {
       row.style.alignItems = 'center';
       row.style.marginBottom = '8px';
 
-      const textInput = row.createEl('input', { type: 'text', value: entry.pattern });
+      // Display comma-separated patterns if grouped, otherwise just the pattern
+      const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
+        ? entry.groupedPatterns.join(', ')
+        : entry.pattern;
+
+      const textInput = row.createEl('input', { type: 'text', value: displayPatterns });
       textInput.style.flex = '1';
       textInput.style.padding = '6px';
       textInput.style.borderRadius = '4px';
       textInput.style.border = '1px solid var(--background-modifier-border)';
       textInput.style.marginRight = '8px';
+      textInput.placeholder = 'pattern, word or comma-separated words (e.g. "hello, world, foo")';
 
       const cp = row.createEl('input', { type: 'color' });
       cp.value = entry.color || '#000000';
@@ -3159,7 +3229,10 @@ class ColorSettingTab extends PluginSettingTab {
           textInput.value = entry.pattern;
           return;
         } else {
-          this.plugin.settings.wordEntries[idx].pattern = newPattern;
+          // Parse comma-separated patterns
+          const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
+          this.plugin.settings.wordEntries[idx].pattern = patterns[0]; // Keep first pattern as main
+          this.plugin.settings.wordEntries[idx].groupedPatterns = patterns.length > 1 ? patterns : null;
         }
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
@@ -3170,7 +3243,13 @@ class ColorSettingTab extends PluginSettingTab {
       const cpHandler = async () => {
         const idx = this.plugin.settings.wordEntries.indexOf(entry);
         if (idx === -1) return;
-        this.plugin.settings.wordEntries[idx].color = cp.value;
+        // Validate color before saving
+        const newColor = cp.value;
+        if (!this.plugin.isValidHexColor(newColor)) {
+          new Notice('Invalid color format. Please use the color picker.');
+          return;
+        }
+        this.plugin.settings.wordEntries[idx].color = newColor;
         await this.debouncedSaveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
@@ -3236,7 +3315,8 @@ class ColorSettingTab extends PluginSettingTab {
       this._disabledFilesContainer.empty();
       
       if (this.plugin.settings.disabledFiles.length > 0) {
-        this._disabledFilesContainer.createEl('h4', { text: 'Files with coloring disabled:' });
+        const h4 = this._disabledFilesContainer.createEl('h5', { text: 'Files with coloring disabled:' });
+        h4.style.margin = '-10px 0 8px 0';
         this.plugin.settings.disabledFiles.forEach(filePath => {
           new Setting(this._disabledFilesContainer)
             .setName(filePath)
@@ -3348,36 +3428,86 @@ class ColorSettingTab extends PluginSettingTab {
     try {
       const listDiv = this.containerEl.querySelector('.color-words-list');
       if (!listDiv) return;
-      const existing = new Set();
-      this.plugin.settings.wordEntries.forEach((entry) => {
-        existing.add(entry);
-        if (!this._entryRows.has(entry)) {
-          this._createEntryRow(entry, listDiv);
+      
+      // Clear existing rows first
+      listDiv.empty();
+      
+      // Apply sorting based on current sort mode
+      const entriesToDisplay = [...this.plugin.settings.wordEntries];
+      
+      if (this._wordsSortMode === 'a-z') {
+        entriesToDisplay.sort((a, b) => {
+          // Extract patterns for comparison
+          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) 
+            ? a.groupedPatterns[0] 
+            : (a.pattern || '');
+          
+          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) 
+            ? b.groupedPatterns[0] 
+            : (b.pattern || '');
+          
+          // Check if patterns contain special characters (expressions)
+          const aHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternA);
+          const bHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternB);
+          
+          // Expressions first, then alphabetical
+          if (aHasSpecialChars && !bHasSpecialChars) return -1;
+          if (!aHasSpecialChars && bHasSpecialChars) return 1;
+          
+          // Both are same type, sort alphabetically
+          return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+        });
+      }
+      // 'last-added' keeps original array order (newest at bottom)
+      
+      // Re-create all rows in the correct order
+      entriesToDisplay.forEach((entry) => {
+        this._createEntryRow(entry, listDiv);
+      });
+      
+      // Clear the map since we recreated all rows
+      this._entryRows.clear();
+      
+      // Re-populate the map with new rows
+      entriesToDisplay.forEach((entry) => {
+        const rowInfo = this._entryRows.get(entry);
+        if (rowInfo) {
+          // Row was already created, keep the reference
         } else {
-          const info = this._entryRows.get(entry);
-          if (!info) return;
-          const { textInput, cp, regexChk, flagsInput } = info.elements;
-          if (textInput && textInput.value !== entry.pattern) textInput.value = entry.pattern;
-          if (cp && cp.value !== (entry.color || '#000000')) cp.value = entry.color || '#000000';
-          if (regexChk) regexChk.checked = !!entry.isRegex;
-          if (flagsInput && flagsInput.value !== (entry.flags || '')) flagsInput.value = entry.flags || '';
-          flagsInput.style.display = entry.isRegex ? '' : 'none';
+          // This will be populated by _createEntryRow
         }
       });
-      for (const [entry, info] of Array.from(this._entryRows.entries())) {
-        if (!existing.has(entry)) {
-          try { info.cleanup(); } catch (e) {}
-          this._entryRows.delete(entry);
-        }
-      }
+      
       // mark initialized so subsequent display() calls refresh only entries
       this._initializedSettingsUI = true;
-    } catch (e) { debugError('SETTINGS', '_refreshEntries error', e); }
+    } catch (e) { 
+      debugError('SETTINGS', '_refreshEntries error', e); 
+    }
   }
 
   // Clean up event listeners to prevent leaks
   onClose() {
     try {
+      // Force close any open dropdowns and clean up their listeners
+      try {
+        const allInputs = this.containerEl?.querySelectorAll('input[type="text"]') || [];
+        allInputs.forEach(input => {
+          if (input._actDropdown) {
+            const dd = input._actDropdown;
+            if (input._dropdownScrollListener) {
+              document.removeEventListener('scroll', input._dropdownScrollListener, true);
+              input._dropdownScrollListener = null;
+            }
+            if (input._dropdownClickListener) {
+              document.removeEventListener('click', input._dropdownClickListener);
+              input._dropdownClickListener = null;
+            }
+            dd.remove();
+            input._actDropdown = null;
+          }
+        });
+      } catch (e) { debugError('SETTINGS', 'dropdown cleanup error', e); }
+      
       // Run standard cleanup handlers
       this._cleanupHandlers?.forEach(cleanup => {
         try { cleanup(); } catch (e) { debugError('SETTINGS', 'cleanup error', e); }
@@ -3579,15 +3709,6 @@ class ColorSettingTab extends PluginSettingTab {
         await this.debouncedSaveSettings();
       }));
 
-    // 6. Symbol-word coloring
-    new Setting(containerEl)
-      .setName('Symbol-word coloring')
-      .setDesc('If enabled, any word containing a colored symbol will inherit the symbol\'s color (e.g., "9:30" will be colored if ":" is colored).')
-      .addToggle(t => t.setValue(this.plugin.settings.symbolWordColoring).onChange(async v => {
-        this.plugin.settings.symbolWordColoring = v;
-        await this.debouncedSaveSettings();
-      }));
-
     // --- Custom swatches settings ---
     containerEl.createEl('h2', { text: 'Color Swatches' });
 
@@ -3614,15 +3735,47 @@ class ColorSettingTab extends PluginSettingTab {
     // Populate initial entries list via shared refresh helper
     try { this._refreshEntries(); } catch (e) {}
 
-    new Setting(containerEl)
-      .addButton(b => b.setButtonText('Add new word/pattern').onClick(async () => {
-        const n = this.plugin.settings.wordEntries.length + 1;
-        this.plugin.settings.wordEntries.push({ pattern: `New word ${n}`, color: '#000000', isRegex: false, flags: '' });
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        this._refreshEntries();
-      }));
+    // Create a custom button row with sort and add buttons side by side
+    const buttonRowDiv = containerEl.createDiv();
+    buttonRowDiv.style.display = 'flex';
+    buttonRowDiv.style.gap = '8px';
+    buttonRowDiv.style.marginBottom = '16px';
+    buttonRowDiv.style.marginTop = '14px';
+
+    // Sort button (left side)
+    const sortBtn = buttonRowDiv.createEl('button');
+    sortBtn.textContent = this._wordsSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+    sortBtn.style.padding = '8px 12px';
+    sortBtn.style.borderRadius = '4px';
+    sortBtn.style.color = 'var(--text-normal)';
+    sortBtn.style.cursor = 'pointer';
+    sortBtn.style.flex = '0 0 auto';
+    const sortBtnHandler = async () => {
+      // Toggle between sort modes
+      this._wordsSortMode = this._wordsSortMode === 'a-z' ? 'last-added' : 'a-z';
+      sortBtn.textContent = this._wordsSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+      this._refreshEntries();
+    };
+    sortBtn.addEventListener('click', sortBtnHandler);
+    this._cleanupHandlers.push(() => sortBtn.removeEventListener('click', sortBtnHandler));
+
+    // Add button (right side, takes remaining space)
+    const addBtn = buttonRowDiv.createEl('button');
+    addBtn.textContent = 'Add new word / pattern';
+    addBtn.style.padding = '8px 12px';
+    addBtn.style.borderRadius = '4px';
+    addBtn.style.cursor = 'pointer';
+    addBtn.style.flex = '1';
+    addBtn.addClass('mod-cta');
+    const addBtnHandler = async () => {
+      this.plugin.settings.wordEntries.push({ pattern: '', color: '#000000', isRegex: false, flags: '', groupedPatterns: null });
+      await this.plugin.saveSettings();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this._refreshEntries();
+    };
+    addBtn.addEventListener('click', addBtnHandler);
+    this._cleanupHandlers.push(() => addBtn.removeEventListener('click', addBtnHandler));
 
     new Setting(containerEl)
       .addExtraButton(b => b
@@ -3660,32 +3813,6 @@ class ColorSettingTab extends PluginSettingTab {
       .addToggle(t => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async v => {
         this.plugin.settings.enableBlacklistMenu = v;
         await this.plugin.saveSettings();
-      }));
-
-    // --- File-specific options ---
-    containerEl.createEl('h3', { text: 'File-specific options' });
-    containerEl.createEl('p', { text: 'Here\'s where you manage files where coloring is taking a break.' });
-    new Setting(containerEl);
-
-    // Store reference to disabled files container for updating
-    this._disabledFilesContainer = containerEl.createDiv();
-    this._refreshDisabledFiles();
-
-    new Setting(containerEl)
-      .setName('Disable coloring for current file')
-      .setDesc('Click this to turn off coloring just for the note you\'re looking at right now.')
-      .addButton(b => b.setButtonText('Disable for this file').onClick(async () => {
-        const md = this.app.workspace.getActiveFile();
-        if (md && !this.plugin.settings.disabledFiles.includes(md.path)) {
-          this.plugin.settings.disabledFiles.push(md.path);
-          await this.plugin.saveSettings();
-          new Notice(`Coloring disabled for ${md.path}`);
-          this._refreshDisabledFiles();
-        } else if (md && this.plugin.settings.disabledFiles.includes(md.path)) {
-          new Notice(`Coloring is already disabled for ${md.path}`);
-        } else {
-          new Notice('No active file to disable coloring for.');
-        }
       }));
 
   // Folder-specific settings
@@ -3732,9 +3859,19 @@ class ColorSettingTab extends PluginSettingTab {
       
       // Helper function to create and update the dropdown
       const updateDropdown = () => {
-        // remove existing dropdown
+        // remove existing dropdown and clean up its listeners
         if (textInput._actDropdown) {
-          textInput._actDropdown.remove();
+          const dd = textInput._actDropdown;
+          // Clean up any listeners attached to this dropdown
+          if (textInput._dropdownScrollListener) {
+            document.removeEventListener('scroll', textInput._dropdownScrollListener, true);
+            textInput._dropdownScrollListener = null;
+          }
+          if (textInput._dropdownClickListener) {
+            document.removeEventListener('click', textInput._dropdownClickListener);
+            textInput._dropdownClickListener = null;
+          }
+          dd.remove();
           textInput._actDropdown = null;
         }
 
@@ -3805,19 +3942,23 @@ class ColorSettingTab extends PluginSettingTab {
 
         textInput._actDropdown = dd;
         
-        // Update position on scroll
-        document.addEventListener('scroll', updateDropdownPosition, true);
-
-        const onDocClick = (ev) => {
+        // Store listeners so they can be cleaned up later
+        textInput._dropdownScrollListener = updateDropdownPosition;
+        textInput._dropdownClickListener = (ev) => {
           if (ev.target === textInput) return;
           if (!dd.contains(ev.target)) {
             dd.remove();
             textInput._actDropdown = null;
-            document.removeEventListener('click', onDocClick);
-            document.removeEventListener('scroll', updateDropdownPosition, true);
+            document.removeEventListener('click', textInput._dropdownClickListener);
+            document.removeEventListener('scroll', textInput._dropdownScrollListener, true);
+            textInput._dropdownClickListener = null;
+            textInput._dropdownScrollListener = null;
           }
         };
-        document.addEventListener('click', onDocClick);
+        
+        // Update position on scroll
+        document.addEventListener('scroll', updateDropdownPosition, true);
+        document.addEventListener('click', textInput._dropdownClickListener);
       };
 
       // Show dropdown on focus with all suggestions
@@ -3927,8 +4068,36 @@ class ColorSettingTab extends PluginSettingTab {
         await this.plugin.saveSettings();
       }));
 
+
+    // --- File-specific options ---
+    containerEl.createEl('h3', { text: 'File-specific options' });
+    containerEl.createEl('p', { text: 'Here\'s where you manage files where coloring is taking a break.' });
+    new Setting(containerEl);
+
+    // Store reference to disabled files container for updating
+    this._disabledFilesContainer = containerEl.createDiv();
+    this._refreshDisabledFiles();
+
+    new Setting(containerEl)
+      .setName('Disable coloring for current file')
+      .setDesc('Click this to turn off coloring just for the note you\'re looking at right now.')
+      .addButton(b => b.setButtonText('Disable for this file').onClick(async () => {
+        const md = this.app.workspace.getActiveFile();
+        if (md && !this.plugin.settings.disabledFiles.includes(md.path)) {
+          this.plugin.settings.disabledFiles.push(md.path);
+          await this.plugin.saveSettings();
+          new Notice(`Coloring disabled for ${md.path}`);
+          this._refreshDisabledFiles();
+        } else if (md && this.plugin.settings.disabledFiles.includes(md.path)) {
+          new Notice(`Coloring is already disabled for ${md.path}`);
+        } else {
+          new Notice('No active file to disable coloring for.');
+        }
+      }));
+
+
     // --- Toggle visibility ---
-    containerEl.createEl('h2', { text: 'Toggle visibility' });
+    containerEl.createEl('h3', { text: 'Toggle visibility' });
     containerEl.createEl('p', { text: 'These options control where you can turn the coloring feature on or off.' });
     new Setting(containerEl)
       .setName('Disable toggle on status bar')
@@ -4168,4 +4337,4 @@ try {
   }
 } catch (e) {}
 
-// 0.1.9 sob 25NOV14
+// 0.1.11 yay 25NOV14
