@@ -756,20 +756,21 @@ module.exports = class AlwaysColorText extends Plugin {
       forceFullRenderInReading: false,
       // Disable coloring in reading/preview mode (editor remains colored)
       disableReadingModeColoring: false,
+      // Text & Background Coloring entries
+      textBgColoringEntries: [],
     }, await this.loadData() || {});
   // --- Normalize migrated folder exclusion settings ---
     if (!Array.isArray(this.settings.excludedFolders)) this.settings.excludedFolders = [];
-    // Support old format (array of strings) by converting to objects { path, excluded }
+    // Support old format (array of strings) by converting to objects { path, defaultStyle }
     this.settings.excludedFolders = this.settings.excludedFolders.map(f => {
       if (!f) return null;
-      if (typeof f === 'string') return { path: f, excluded: true, defaultColor: null, defaultStyle: null };
+      if (typeof f === 'string') return { path: f, defaultColor: null, defaultStyle: null };
       if (typeof f === 'object' && f.path) {
         const defaultColor = f.defaultColor || f.color;
         // Sanitize color: if invalid, set to null
         const sanitizedColor = defaultColor && this.isValidHexColor(defaultColor) ? defaultColor : null;
         return {
           path: f.path,
-          excluded: typeof f.excluded === 'boolean' ? f.excluded : true,
           defaultColor: sanitizedColor,
           defaultStyle: f.defaultStyle || null
         };
@@ -807,6 +808,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // compile word entries into fast runtime structures
     this.compileWordEntries();
+    this.compileTextBgColoringEntries();
 
     // Start memory monitoring to proactively cleanup if heap usage gets high
     try { this.startMemoryMonitor(); } catch (e) {}
@@ -818,6 +820,7 @@ module.exports = class AlwaysColorText extends Plugin {
     
     // Recompile entries after saving
     this.compileWordEntries();
+    this.compileTextBgColoringEntries();
 
     this.disablePluginFeatures();
     if (this.settings.enabled) {
@@ -1364,6 +1367,67 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
+  // Compile text + background coloring entries
+  compileTextBgColoringEntries() {
+    try {
+      try { this._compiledTextBgEntries = []; } catch (e) {}
+      if (!Array.isArray(this.settings.textBgColoringEntries)) return;
+      
+      for (const e of this.settings.textBgColoringEntries) {
+        if (!e || !e.pattern) continue;
+        
+        let pattern = String(e.pattern).trim();
+        if (!pattern) continue;
+        
+        // Decode HTML entities for reading mode compatibility
+        pattern = this.decodeHtmlEntities(pattern);
+        
+        // Block dangerous patterns
+        if (this.isKnownProblematicPattern(pattern)) {
+          debugWarn('COMPILE_TEXTBG', `Blocked dangerous pattern: ${pattern.substring(0, 50)}`);
+          continue;
+        }
+        
+        const textColor = e.textColor || '#000000';
+        const backgroundColor = e.backgroundColor || '#FFFF00';
+        
+        // Validate colors
+        if (!this.isValidHexColor(textColor) || !this.isValidHexColor(backgroundColor)) {
+          continue;
+        }
+        
+        // Build regex for this pattern (treat as literal string)
+        const esc = this.escapeRegex(pattern);
+        const literalFlags = this.settings.caseSensitive ? 'g' : 'gi';
+        
+        const compiled = {
+          pattern,
+          textColor,
+          backgroundColor,
+          regex: new RegExp(esc, literalFlags),
+          testRegex: this.settings.caseSensitive ? new RegExp(esc) : new RegExp(esc, 'i'),
+          invalid: false,
+          specificity: pattern.length,
+          isTextBg: true // Mark as text+bg entry
+        };
+        
+        try {
+          compiled.fastTest = this.createFastTester(pattern, false, this.settings.caseSensitive);
+        } catch (e) {
+          compiled.fastTest = (text) => true;
+        }
+        
+        this._compiledTextBgEntries.push(compiled);
+      }
+      
+      // Sort by specificity (longer patterns first)
+      this._compiledTextBgEntries.sort((a, b) => b.specificity - a.specificity);
+    } catch (err) {
+      debugError('COMPILE_TEXTBG', 'compileTextBgColoringEntries failed', err);
+      try { this._compiledTextBgEntries = []; } catch (e) {}
+    }
+  }
+
   // Helper: Check if a file path is in an excluded folder
   isFileInExcludedFolder(filePath) {
     if (!this.settings.enableFolderRestrictions) return false;
@@ -1474,7 +1538,6 @@ module.exports = class AlwaysColorText extends Plugin {
          if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
          // Folder-specific rules
          const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
-         if (folderEntry && folderEntry.excluded) return;
          // Force immediate full chunked processing without skip
          this.processInChunks(el, this.getSortedWordEntries(), folderEntry, {
            skipFirstN: 0,
@@ -1511,7 +1574,6 @@ module.exports = class AlwaysColorText extends Plugin {
     if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
     // Folder-specific rules
     const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
-    if (folderEntry && folderEntry.excluded) return;
 
     // Respect user preference to disable reading/preview coloring
     if (this.settings.disableReadingModeColoring) {
@@ -2001,11 +2063,7 @@ module.exports = class AlwaysColorText extends Plugin {
         });
       }
       
-  // For forced processing, use unlimited matches; otherwise cap at 500
-  const isForced = (opts && opts.forceProcess) || this.settings.forceFullRenderInReading;
-  const maxMatches = typeof opts.maxMatches === 'number' ? opts.maxMatches : (isForced ? Infinity : 500);
-  let matches = [];
-
+      // Define isBlacklisted helper function early so it can be used throughout
       const isBlacklisted = (textToCheck, coloredWord = null) => {
         if (!this.settings.blacklistWords || this.settings.blacklistWords.length === 0) return false;
         
@@ -2019,6 +2077,60 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         });
       };
+      
+  // For forced processing, use unlimited matches; otherwise cap at 500
+  const isForced = (opts && opts.forceProcess) || this.settings.forceFullRenderInReading;
+  const maxMatches = typeof opts.maxMatches === 'number' ? opts.maxMatches : (isForced ? Infinity : 500);
+  let matches = [];
+
+      // FIRST: Process text+bg entries (they have priority)
+      const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+      for (const entry of textBgEntries) {
+        if (!entry || entry.invalid) continue;
+        
+        try {
+          if (entry.fastTest && typeof entry.fastTest === 'function') {
+            if (!entry.fastTest(text)) continue;
+          }
+        } catch (e) {}
+        
+        const regex = entry.regex;
+        if (!regex) continue;
+        
+        let match;
+        try { regex.lastIndex = 0; } catch (e) {}
+        
+        while ((match = regex.exec(text))) {
+          const matchedText = match[0];
+          const matchStart = match.index;
+          const matchEnd = match.index + matchedText.length;
+          
+          // Extract full word and check blacklist
+          let fullWordStart = matchStart;
+          let fullWordEnd = matchEnd;
+          while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
+            fullWordStart--;
+          }
+          while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
+            fullWordEnd++;
+          }
+          const fullWord = text.substring(fullWordStart, fullWordEnd);
+          
+          if (isBlacklisted(fullWord)) continue;
+          
+          matches.push({
+            start: matchStart,
+            end: matchEnd,
+            textColor: entry.textColor,
+            backgroundColor: entry.backgroundColor,
+            isTextBg: true
+          });
+          
+          if (matches.length > maxMatches) break;
+        }
+        
+        if (matches.length > maxMatches) break;
+      }
 
       for (const entry of entries) {
         if (!entry || entry.invalid) continue;
@@ -2092,6 +2204,16 @@ module.exports = class AlwaysColorText extends Plugin {
           }
           
           if (isBlacklistedMatch) continue;
+          
+          // Skip if overlaps with any text+bg entry
+          let overlapsWithTextBg = false;
+          for (const tbMatch of matches.filter(m => m.isTextBg)) {
+            if (match.index < tbMatch.end && match.index + matchedText.length > tbMatch.start) {
+              overlapsWithTextBg = true;
+              break;
+            }
+          }
+          if (overlapsWithTextBg) continue;
           
           const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
           matches.push({ start: match.index, end: match.index + matchedText.length, color: useColor, word: matchedText, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
@@ -2271,7 +2393,8 @@ module.exports = class AlwaysColorText extends Plugin {
         while (i < nonOverlapping.length) {
           let m = nonOverlapping[i];
           let j = i + 1;
-          while (j < nonOverlapping.length && nonOverlapping[j].start === nonOverlapping[j - 1].end && nonOverlapping[j].color === m.color) {
+          // Don't merge text+bg entries; only merge regular entries with same color
+          while (j < nonOverlapping.length && nonOverlapping[j].start === nonOverlapping[j - 1].end && !m.isTextBg && !nonOverlapping[j].isTextBg && nonOverlapping[j].color === m.color) {
             m = { start: m.start, end: nonOverlapping[j].end, color: m.color };
             j++;
           }
@@ -2283,7 +2406,18 @@ module.exports = class AlwaysColorText extends Plugin {
             const span = document.createElement('span');
             span.className = 'always-color-text-highlight';
             span.textContent = text.slice(m.start, m.end);
-            if (effectiveStyle === 'text') {
+            if (m.isTextBg) {
+              // For text+bg entries, always apply both colors
+              span.style.color = m.textColor;
+              span.style.background = '';
+              span.style.backgroundColor = this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25);
+              span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+              if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
+                span.style.borderRadius = '0px';
+              } else {
+                span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+              }
+            } else if (effectiveStyle === 'text') {
               span.style.color = m.color;
             } else {
               span.style.background = '';
@@ -2498,7 +2632,6 @@ module.exports = class AlwaysColorText extends Plugin {
     if (activeFile && this.isFrontmatterColoringDisabled(activeFile.path)) return builder.finish();
     
     const folderEntry = activeFile ? this.getBestFolderEntry(activeFile.path) : null;
-    if (folderEntry && folderEntry.excluded) return builder.finish();
     
     const entries = this.getSortedWordEntries();
     const nonRomanEntries = entries.filter(entry => 
@@ -2552,9 +2685,16 @@ module.exports = class AlwaysColorText extends Plugin {
     return ViewPlugin.fromClass(class {
       constructor(view) {
         this.decorations = this.buildDeco(view);
+        this.lastFilePath = view.file ? view.file.path : null;
       }
       update(update) {
-        if (update.docChanged || update.viewportChanged) {
+        // Get current active file to detect folder changes
+        const currentFilePath = plugin.app.workspace.getActiveFile()?.path;
+        const fileChanged = this.lastFilePath !== currentFilePath;
+        this.lastFilePath = currentFilePath;
+        
+        // Rebuild decorations if document changed, viewport changed, OR file/folder changed
+        if (update.docChanged || update.viewportChanged || fileChanged) {
           this.decorations = this.buildDeco(update.view);
         }
       }
@@ -2571,7 +2711,6 @@ module.exports = class AlwaysColorText extends Plugin {
         if (activeFile && plugin.isFrontmatterColoringDisabled(activeFile.path)) return builder.finish();
         
         const folderEntry = activeFile ? plugin.getBestFolderEntry(activeFile.path) : null;
-        if (folderEntry && folderEntry.excluded) return builder.finish();
         if (view.file && activeFile && view.file.path !== activeFile.path) return builder.finish();
         
         if (entries.length === 0) return builder.finish();
@@ -2629,7 +2768,42 @@ module.exports = class AlwaysColorText extends Plugin {
     const entries_copy = entries || this.getSortedWordEntries();
     let matches = [];
 
-    // Process all patterns with full regex support
+    // FIRST: Process text+bg entries (they have priority and override other styling)
+    const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+    for (const entry of textBgEntries) {
+      if (!entry || entry.invalid) continue;
+      try {
+        if (entry.fastTest && typeof entry.fastTest === 'function' && !entry.fastTest(text)) continue;
+      } catch (e) {}
+      
+      const regex = entry.regex;
+      if (!regex) continue;
+      
+      let match;
+      try { regex.lastIndex = 0; } catch (e) {}
+      
+      while ((match = regex.exec(text))) {
+        const matchedText = match[0];
+        
+        // Check blacklist
+        const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
+        if (this.isWordBlacklisted(fullWord)) continue;
+        
+        matches.push({
+          start: from + match.index,
+          end: from + match.index + matchedText.length,
+          textColor: entry.textColor,
+          backgroundColor: entry.backgroundColor,
+          isTextBg: true
+        });
+        
+        if (matches.length > 3000) break;
+      }
+      
+      if (matches.length > 3000) break;
+    }
+
+    // SECOND: Process regular entries, but skip areas covered by text+bg entries
     for (const entry of entries_copy) {
       if (!entry || entry.invalid) continue;
       try {
@@ -2642,16 +2816,30 @@ module.exports = class AlwaysColorText extends Plugin {
       let match;
       let iterCount = 0;
       
-      // CRITICAL FIX: Reset regex state before each text search
-      // This ensures lastIndex starts at 0 for this viewport chunk
       try { regex.lastIndex = 0; } catch (e) {}
       
       while ((match = regex.exec(text))) {
         iterCount++;
         const matchedText = match[0];
         
-        // NEW: If partialMatch is disabled, only accept whole-word matches
-        if (!this.settings.partialMatch && !this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
+        // Check if this match overlaps with any text+bg entry
+        const matchStart = from + match.index;
+        const matchEnd = from + match.index + matchedText.length;
+        let overlapsWithTextBg = false;
+        for (const tbMatch of matches.filter(m => m.isTextBg)) {
+          if (matchStart < tbMatch.end && matchEnd > tbMatch.start) {
+            overlapsWithTextBg = true;
+            break;
+          }
+        }
+        if (overlapsWithTextBg) {
+          try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+          continue;
+        }
+        
+        // ALWAYS check for whole-word matches (the main loop only accepts exact pattern matches at word boundaries)
+        // The partialMatch flag is handled by a SEPARATE pass after this loop
+        if (!this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
           try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
           continue;
         }
@@ -2696,10 +2884,12 @@ module.exports = class AlwaysColorText extends Plugin {
           
           const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
           if (testRe.test(w)) {
-            // Check if this partial match overlaps with any existing match
+            // Check if this partial match overlaps with any existing match (convert existing to text-relative for comparison)
             let overlapsWithExisting = false;
             for (const existingMatch of matches) {
-              if (wStart < existingMatch.end && wEnd > existingMatch.start) {
+              const existStart = existingMatch.start - from;
+              const existEnd = existingMatch.end - from;
+              if (wStart < existEnd && wEnd > existStart) {
                 overlapsWithExisting = true;
                 break;
               }
@@ -2722,25 +2912,27 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         
         if (matches.length > 3000) break;
-        // Avoid infinite loop on zero-length matches
         try { if (typeof wordRegex.lastIndex === 'number' && wordRegex.lastIndex === match.index) wordRegex.lastIndex++; } catch (e) {}
       }
     }
 
-    // Apply folder color override
+    // Apply folder color override (but not to text+bg entries)
     if (folderEntry && folderEntry.defaultColor) {
-      matches = matches.map(m => Object.assign({}, m, { color: folderEntry.defaultColor }));
+      matches = matches.map(m => m.isTextBg ? m : Object.assign({}, m, { color: folderEntry.defaultColor }));
     }
 
-    // Remove overlapping matches - greedy algorithm (prefer longest)
+    // Remove overlapping matches - greedy algorithm (prefer longest, but keep text+bg matches)
     if (matches.length > 1) {
-      matches.sort((a, b) => {
+      const textBgMatches = matches.filter(m => m.isTextBg);
+      const regularMatches = matches.filter(m => !m.isTextBg);
+      
+      regularMatches.sort((a, b) => {
         if (a.start !== b.start) return a.start - b.start;
         return (b.end - b.start) - (a.end - a.start); // Longer first
       });
       
-      let nonOverlapping = [];
-      for (const m of matches) {
+      let nonOverlapping = [...textBgMatches]; // Start with text+bg entries
+      for (const m of regularMatches) {
         let overlapsWithSelected = false;
         for (const selected of nonOverlapping) {
           if (m.start < selected.end && m.end > selected.start) {
@@ -2759,12 +2951,18 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // Apply decorations
     const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
-    if (effectiveStyle === 'none') return builder.finish();
+    if (effectiveStyle === 'none' && matches.length > 0 && !matches.some(m => m.isTextBg)) return builder.finish();
 
     for (const m of matches) {
-      const style = effectiveStyle === 'text'
-        ? `color: ${m.color} !important;`
-        : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+      let style;
+      if (m.isTextBg) {
+        // Text+bg entries always use both colors
+        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+      } else {
+        style = effectiveStyle === 'text'
+          ? `color: ${m.color} !important;`
+          : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+      }
       const deco = Decoration.mark({ attributes: { style } });
       builder.add(m.start, m.end, deco);
     }
@@ -2779,13 +2977,47 @@ module.exports = class AlwaysColorText extends Plugin {
     const MAX_MATCHES = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
 
+    // FIRST: Process text+bg entries (they have priority)
+    const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+    if (textBgEntries.length > 0) {
+      for (const entry of textBgEntries) {
+        if (!entry || entry.invalid) continue;
+        
+        if (entry.fastTest && !entry.fastTest(text)) continue;
+        
+        const regex = entry.regex;
+        if (!regex) continue;
+        
+        let match;
+        try { regex.lastIndex = 0; } catch (e) {}
+        
+        while ((match = regex.exec(text))) {
+          const fullWord = this.extractFullWord(text, match.index, match.index + match[0].length);
+          if (this.isWordBlacklisted(fullWord)) continue;
+          
+          allMatches.push({
+            start: from + match.index,
+            end: from + match.index + match[0].length,
+            textColor: entry.textColor,
+            backgroundColor: entry.backgroundColor,
+            isTextBg: true
+          });
+          
+          if (allMatches.length > MAX_MATCHES) break;
+        }
+        
+        if (allMatches.length > MAX_MATCHES) break;
+      }
+    }
+
+    // SECOND: Process regular patterns, avoiding text+bg matches
     // Strategy 1: If too many patterns, process patterns in chunks
     if (entries.length > CHUNK_SIZE) {
       debugLog('EDITOR', `Processing ${entries.length} patterns in chunks (chunk size: ${CHUNK_SIZE})`);
       
       for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
         const chunk = entries.slice(i, i + CHUNK_SIZE);
-        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry);
+        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches);
         allMatches = allMatches.concat(chunkMatches);
         
         // Log progress
@@ -2812,7 +3044,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const chunkText = text.slice(pos, chunkEnd);
         const chunkFrom = from + pos;
         
-        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry);
+        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry, allMatches);
         allMatches = allMatches.concat(chunkMatches);
         
         debugLog('EDITOR', `Text chunk ${chunkNum}/${totalChunks}: ${chunkMatches.length} matches`);
@@ -2831,7 +3063,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Process a chunk of patterns
-  processPatternChunk(text, baseFrom, patternChunk, folderEntry) {
+  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = []) {
     const MAX_MATCHES_PER_PATTERN = EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     const matches = [];
     
@@ -2852,9 +3084,22 @@ module.exports = class AlwaysColorText extends Plugin {
       
       while ((match = regex.exec(text)) && matchCount < MAX_MATCHES_PER_PATTERN) {
         const matchedText = match[0];
+        const matchStart = baseFrom + match.index;
+        const matchEnd = baseFrom + match.index + matchedText.length;
         
-        // NEW: If partialMatch is disabled, only accept whole-word matches
-        if (!this.settings.partialMatch && !this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
+        // Skip if overlaps with text+bg entries
+        let overlapsWithTextBg = false;
+        for (const existing of existingMatches) {
+          if (existing.isTextBg && matchStart < existing.end && matchEnd > existing.start) {
+            overlapsWithTextBg = true;
+            break;
+          }
+        }
+        if (overlapsWithTextBg) continue;
+        
+        // ALWAYS check for whole-word matches (the main loop only accepts exact pattern matches at word boundaries)
+        // The partialMatch flag is handled by a SEPARATE pass after this loop
+        if (!this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
           continue;
         }
         
@@ -2863,8 +3108,8 @@ module.exports = class AlwaysColorText extends Plugin {
         if (this.isWordBlacklisted(fullWord)) continue;
         
         matches.push({
-          start: baseFrom + match.index,
-          end: baseFrom + match.index + matchedText.length,
+          start: matchStart,
+          end: matchEnd,
           color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
         });
         
@@ -2893,7 +3138,7 @@ module.exports = class AlwaysColorText extends Plugin {
           
           const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
           if (testRe.test(w)) {
-            // Check if this partial match overlaps with any existing match
+            // Check if this partial match overlaps with any existing match or text+bg
             let overlapsWithExisting = false;
             for (const existingMatch of matches) {
               if ((baseFrom + wStart) < existingMatch.end && (baseFrom + wEnd) > existingMatch.start) {
@@ -2901,28 +3146,18 @@ module.exports = class AlwaysColorText extends Plugin {
                 break;
               }
             }
+            for (const textBgMatch of existingMatches) {
+              if (textBgMatch.isTextBg && (baseFrom + wStart) < textBgMatch.end && (baseFrom + wEnd) > textBgMatch.start) {
+                overlapsWithExisting = true;
+                break;
+              }
+            }
             
             if (!overlapsWithExisting) {
-              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
               matches.push({
                 start: baseFrom + wStart,
                 end: baseFrom + wEnd,
-                color: useColor
-              });
-              if (matches.length > 200) break;
-            } else {
-              // Remove smaller overlapping matches and add the full word instead
-              for (let i = matches.length - 1; i >= 0; i--) {
-                const m = matches[i];
-                if (m.start >= (baseFrom + wStart) && m.end <= (baseFrom + wEnd) && (m.end - m.start) < (wEnd - wStart)) {
-                  matches.splice(i, 1);
-                }
-              }
-              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
-              matches.push({
-                start: baseFrom + wStart,
-                end: baseFrom + wEnd,
-                color: useColor
+                color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
               });
               if (matches.length > 200) break;
             }
@@ -2939,7 +3174,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Process a chunk of text
-  processTextChunk(chunkText, chunkFrom, entries, folderEntry) {
+  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = []) {
     const matches = [];
     
     for (const entry of entries) {
@@ -2959,9 +3194,22 @@ module.exports = class AlwaysColorText extends Plugin {
       
       while ((match = regex.exec(chunkText)) && matchCount < 5) {
         const matchedText = match[0];
+        const matchStart = chunkFrom + match.index;
+        const matchEnd = chunkFrom + match.index + matchedText.length;
         
-        // NEW: If partialMatch is disabled, only accept whole-word matches
-        if (!this.settings.partialMatch && !this.isWholeWordMatch(chunkText, match.index, match.index + matchedText.length)) {
+        // Skip if overlaps with text+bg entries
+        let overlapsWithTextBg = false;
+        for (const existing of existingMatches) {
+          if (existing.isTextBg && matchStart < existing.end && matchEnd > existing.start) {
+            overlapsWithTextBg = true;
+            break;
+          }
+        }
+        if (overlapsWithTextBg) continue;
+        
+        // ALWAYS check for whole-word matches (the main loop only accepts exact pattern matches at word boundaries)
+        // The partialMatch flag is handled by a SEPARATE pass after this loop
+        if (!this.isWholeWordMatch(chunkText, match.index, match.index + matchedText.length)) {
           continue;
         }
         
@@ -2970,8 +3218,8 @@ module.exports = class AlwaysColorText extends Plugin {
         if (this.isWordBlacklisted(fullWord)) continue;
         
         matches.push({
-          start: chunkFrom + match.index,
-          end: chunkFrom + match.index + matchedText.length,
+          start: matchStart,
+          end: matchEnd,
           color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
         });
         
@@ -3000,10 +3248,16 @@ module.exports = class AlwaysColorText extends Plugin {
           
           const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
           if (testRe.test(w)) {
-            // Check if this partial match overlaps with any existing match
+            // Check if this partial match overlaps with any existing match or text+bg
             let overlapsWithExisting = false;
             for (const existingMatch of matches) {
               if ((chunkFrom + wStart) < existingMatch.end && (chunkFrom + wEnd) > existingMatch.start) {
+                overlapsWithExisting = true;
+                break;
+              }
+            }
+            for (const textBgMatch of existingMatches) {
+              if (textBgMatch.isTextBg && (chunkFrom + wStart) < textBgMatch.end && (chunkFrom + wEnd) > textBgMatch.start) {
                 overlapsWithExisting = true;
                 break;
               }
@@ -3047,26 +3301,49 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // NEW METHOD: Apply decorations from collected matches
   applyDecorationsFromMatches(builder, matches, folderEntry) {
-    // Remove overlapping matches
-    matches.sort((a, b) => a.start - b.start || b.end - a.end);
+    // Separate text+bg entries from regular ones
+    const textBgMatches = matches.filter(m => m.isTextBg);
+    const regularMatches = matches.filter(m => !m.isTextBg);
+    
+    // Remove overlapping matches in regular matches
+    regularMatches.sort((a, b) => a.start - b.start || b.end - a.end);
     let lastEnd = -Infinity;
-    let nonOverlapping = [];
-    for (let m of matches) {
+    let nonOverlappingRegular = [];
+    for (let m of regularMatches) {
+      // Skip if overlaps with any text+bg match
+      let overlapsWithTextBg = false;
+      for (const tbm of textBgMatches) {
+        if (m.start < tbm.end && m.end > tbm.start) {
+          overlapsWithTextBg = true;
+          break;
+        }
+      }
+      if (overlapsWithTextBg) continue;
+      
       if (m.start >= lastEnd) {
-        nonOverlapping.push(m);
+        nonOverlappingRegular.push(m);
         lastEnd = m.end;
       }
     }
-    nonOverlapping = nonOverlapping.slice(0, 1000);
+    
+    const nonOverlapping = [...textBgMatches, ...nonOverlappingRegular];
+    const sorted = nonOverlapping.sort((a, b) => a.start - b.start);
+    const limited = sorted.slice(0, 1000);
 
     // Apply decorations
     const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
-    if (effectiveStyle === 'none') return builder.finish();
 
-    for (const m of nonOverlapping) {
-      const style = effectiveStyle === 'text'
-        ? `color: ${m.color} !important;`
-        : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+    for (const m of limited) {
+      let style;
+      if (m.isTextBg) {
+        // Text+bg entries always use both colors
+        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+      } else {
+        if (effectiveStyle === 'none') continue;
+        style = effectiveStyle === 'text'
+          ? `color: ${m.color} !important;`
+          : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+      }
       const deco = Decoration.mark({ attributes: { style } });
       builder.add(m.start, m.end, deco);
     }
@@ -3169,6 +3446,8 @@ class ColorSettingTab extends PluginSettingTab {
     this._customSwatchesContainer = null;
     // Sorting state for word entries (null, 'last-added', or 'a-z')
     this._wordsSortMode = 'last-added';
+    // Sorting state for text & background coloring entries
+    this._textBgSortMode = 'last-added';
   }
 
   // Create a settings row for a single entry and track cleanup
@@ -3502,6 +3781,10 @@ class ColorSettingTab extends PluginSettingTab {
               document.removeEventListener('click', input._dropdownClickListener);
               input._dropdownClickListener = null;
             }
+            if (input._dropdownKeyListener) {
+              document.removeEventListener('keydown', input._dropdownKeyListener);
+              input._dropdownKeyListener = null;
+            }
             dd.remove();
             input._actDropdown = null;
           }
@@ -3758,7 +4041,7 @@ class ColorSettingTab extends PluginSettingTab {
 
     // Add button (right side, takes remaining space)
     const addBtn = buttonRowDiv.createEl('button');
-    addBtn.textContent = 'Add new word / pattern';
+    addBtn.textContent = '+ Add new word / pattern';
     addBtn.style.cursor = 'pointer';
     addBtn.style.flex = '1';
     addBtn.addClass('mod-cta');
@@ -3796,7 +4079,7 @@ class ColorSettingTab extends PluginSettingTab {
     this._refreshBlacklistWords();
 
     new Setting(containerEl)
-      .addButton(b => b.setButtonText('Add blacklist word').onClick(async () => {
+      .addButton(b => b.setButtonText('+ Add blacklist word').onClick(async () => {
         this.plugin.settings.blacklistWords.push('');
         await this.plugin.saveSettings();
         this._refreshBlacklistWords();
@@ -3898,6 +4181,9 @@ class ColorSettingTab extends PluginSettingTab {
           minWidth: Math.max(240, textInput.offsetWidth) + 'px'
         });
 
+        // Track highlighted item for keyboard navigation
+        let highlightedIndex = -1;
+        
         const buildItem = (folder) => {
           const item = document.createElement('div');
           item.className = 'act-folder-item';
@@ -3907,7 +4193,15 @@ class ColorSettingTab extends PluginSettingTab {
             cursor: 'pointer',
             whiteSpace: 'nowrap'
           });
-          item.onmouseenter = () => item.style.background = 'var(--background-secondary)';
+          item.onmouseenter = () => {
+            // Unhighlight previous item
+            if (highlightedIndex >= 0) {
+              dd.children[highlightedIndex].style.background = 'transparent';
+            }
+            // Highlight this item
+            item.style.background = 'var(--background-secondary)';
+            highlightedIndex = Array.from(dd.children).indexOf(item);
+          };
           item.onmouseleave = () => item.style.background = 'transparent';
           item.onclick = async (e) => {
             e.stopPropagation();
@@ -3916,6 +4210,7 @@ class ColorSettingTab extends PluginSettingTab {
             textInput.dispatchEvent(ev);
             dd.remove();
             textInput._actDropdown = null;
+            textInput._dropdownKeyListener = null;
             document.removeEventListener('scroll', updateDropdownPosition, true);
           };
           return item;
@@ -3946,14 +4241,69 @@ class ColorSettingTab extends PluginSettingTab {
             textInput._actDropdown = null;
             document.removeEventListener('click', textInput._dropdownClickListener);
             document.removeEventListener('scroll', textInput._dropdownScrollListener, true);
+            document.removeEventListener('keydown', textInput._dropdownKeyListener);
             textInput._dropdownClickListener = null;
             textInput._dropdownScrollListener = null;
+            textInput._dropdownKeyListener = null;
           }
         };
         
         // Update position on scroll
         document.addEventListener('scroll', updateDropdownPosition, true);
         document.addEventListener('click', textInput._dropdownClickListener);
+        
+        // Keyboard navigation for dropdown (up/down arrow keys)
+        textInput._dropdownKeyListener = (ev) => {
+          if (!textInput._actDropdown || !textInput._actDropdown.isConnected) return;
+          
+          const items = Array.from(dd.children);
+          if (items.length === 0) return;
+          
+          if (ev.key === 'ArrowDown') {
+            ev.preventDefault();
+            highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
+            // Unhighlight all
+            items.forEach(item => item.style.background = 'transparent');
+            // Highlight new item
+            if (highlightedIndex >= 0) {
+              items[highlightedIndex].style.background = 'var(--background-secondary)';
+              items[highlightedIndex].scrollIntoView({ block: 'nearest' });
+            }
+          } else if (ev.key === 'ArrowUp') {
+            ev.preventDefault();
+            highlightedIndex = Math.max(highlightedIndex - 1, -1);
+            // Unhighlight all
+            items.forEach(item => item.style.background = 'transparent');
+            // Highlight new item if available
+            if (highlightedIndex >= 0) {
+              items[highlightedIndex].style.background = 'var(--background-secondary)';
+              items[highlightedIndex].scrollIntoView({ block: 'nearest' });
+            }
+          } else if (ev.key === 'Enter' && highlightedIndex >= 0) {
+            ev.preventDefault();
+            // Simulate click on highlighted item
+            items[highlightedIndex].click();
+          } else if (ev.key === 'Escape') {
+            ev.preventDefault();
+            // Close dropdown
+            dd.remove();
+            textInput._actDropdown = null;
+            document.removeEventListener('keydown', textInput._dropdownKeyListener);
+            textInput._dropdownKeyListener = null;
+          }
+        };
+        document.addEventListener('keydown', textInput._dropdownKeyListener);
+        
+        // Add cleanup handlers for dropdown listeners to prevent DOM leaks
+        this._cleanupHandlers.push(() => {
+          try { document.removeEventListener('scroll', updateDropdownPosition, true); } catch (e) {}
+          try { document.removeEventListener('click', textInput._dropdownClickListener); } catch (e) {}
+          try { document.removeEventListener('keydown', textInput._dropdownKeyListener); } catch (e) {}
+          if (textInput._actDropdown) {
+            try { textInput._actDropdown.remove(); } catch (e) {}
+            textInput._actDropdown = null;
+          }
+        });
       };
 
       // Show dropdown on focus with all suggestions
@@ -4064,8 +4414,179 @@ class ColorSettingTab extends PluginSettingTab {
       }));
 
 
+    // --- Text & Background Coloring ---
+    const textBgHeading = containerEl.createEl('h3', { text: 'Text & Background Coloring' });
+    textBgHeading.style.marginTop = '8px';
+    containerEl.createEl('p', { text: 'Keywords here will always use both text color and background color, ignoring folder style.' });
+
+    const textBgListDiv = containerEl.createDiv();
+    textBgListDiv.addClass('text-bg-coloring-list');
+
+    // Reference to the empty state paragraph for dynamic removal
+    let textBgEmptyStateP = null;
+
+    // Initialize textBgColoringEntries if not present in settings
+    if (!Array.isArray(this.plugin.settings.textBgColoringEntries)) {
+      this.plugin.settings.textBgColoringEntries = [];
+    }
+
+    const createTextBgRow = (entry, idx) => {
+      const row = textBgListDiv.createDiv();
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.marginBottom = '8px';
+      row.style.gap = '8px';
+
+      const textInput = row.createEl('input', { type: 'text', value: entry.pattern || '' });
+      textInput.placeholder = 'Keyword or pattern';
+      textInput.style.flex = '1';
+      textInput.style.padding = '6px';
+      textInput.style.borderRadius = '4px';
+      textInput.style.border = '1px solid var(--background-modifier-border)';
+
+      const textColorPicker = row.createEl('input', { type: 'color' });
+      textColorPicker.value = entry.textColor || '#000000';
+      textColorPicker.style.width = '30px';
+      textColorPicker.style.height = '30px';
+      textColorPicker.style.border = 'none';
+      textColorPicker.style.borderRadius = '4px';
+      textColorPicker.style.cursor = 'pointer';
+      textColorPicker.title = 'Text color';
+
+      const bgColorPicker = row.createEl('input', { type: 'color' });
+      bgColorPicker.value = entry.backgroundColor || '#FFFF00';
+      bgColorPicker.style.width = '30px';
+      bgColorPicker.style.height = '30px';
+      bgColorPicker.style.border = 'none';
+      bgColorPicker.style.borderRadius = '4px';
+      bgColorPicker.style.cursor = 'pointer';
+      bgColorPicker.title = 'Background color';
+
+      const del = row.createEl('button', { text: '✕' });
+      del.addClass('mod-warning');
+      del.style.padding = '4px 8px';
+      del.style.borderRadius = '4px';
+      del.style.cursor = 'pointer';
+
+      const textInputHandler = async () => {
+        const newPattern = textInput.value.trim();
+        if (!newPattern) {
+          this.plugin.settings.textBgColoringEntries.splice(idx, 1);
+        } else {
+          this.plugin.settings.textBgColoringEntries[idx].pattern = newPattern;
+        }
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const textColorHandler = async () => {
+        const newColor = textColorPicker.value;
+        if (!this.plugin.isValidHexColor(newColor)) {
+          new Notice('Invalid color format.');
+          return;
+        }
+        this.plugin.settings.textBgColoringEntries[idx].textColor = newColor;
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const bgColorHandler = async () => {
+        const newColor = bgColorPicker.value;
+        if (!this.plugin.isValidHexColor(newColor)) {
+          new Notice('Invalid color format.');
+          return;
+        }
+        this.plugin.settings.textBgColoringEntries[idx].backgroundColor = newColor;
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const delHandler = async () => {
+        this.plugin.settings.textBgColoringEntries.splice(idx, 1);
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        row.remove();
+      };
+
+      textInput.addEventListener('change', textInputHandler);
+      textColorPicker.addEventListener('input', textColorHandler);
+      bgColorPicker.addEventListener('input', bgColorHandler);
+      del.addEventListener('click', delHandler);
+
+      this._cleanupHandlers.push(() => {
+        textInput.removeEventListener('change', textInputHandler);
+        textColorPicker.removeEventListener('input', textColorHandler);
+        bgColorPicker.removeEventListener('input', bgColorHandler);
+        del.removeEventListener('click', delHandler);
+      });
+    };
+
+    // Render existing rows
+    if (this.plugin.settings.textBgColoringEntries.length > 0) {
+      this.plugin.settings.textBgColoringEntries.forEach((entry, i) => {
+        createTextBgRow(entry, i);
+      });
+    }
+
+    // Create button row with sort and add buttons
+    const textBgButtonRowDiv = containerEl.createDiv();
+    textBgButtonRowDiv.style.display = 'flex';
+    textBgButtonRowDiv.style.gap = '8px';
+    textBgButtonRowDiv.style.marginBottom = '16px';
+    textBgButtonRowDiv.style.marginTop = '8px';
+
+    // Sort button
+    const textBgSortBtn = textBgButtonRowDiv.createEl('button');
+    textBgSortBtn.textContent = this._textBgSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+    textBgSortBtn.style.cursor = 'pointer';
+    textBgSortBtn.style.flex = '0 0 auto';
+    
+    const textBgSortHandler = async () => {
+      this._textBgSortMode = this._textBgSortMode === 'a-z' ? 'last-added' : 'a-z';
+      textBgSortBtn.textContent = this._textBgSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+      // Re-render rows with new sort order
+      textBgListDiv.empty();
+      const entriesToDisplay = [...this.plugin.settings.textBgColoringEntries];
+      if (this._textBgSortMode === 'a-z') {
+        entriesToDisplay.sort((a, b) => (a.pattern || '').toLowerCase().localeCompare((b.pattern || '').toLowerCase()));
+      }
+      entriesToDisplay.forEach((entry, i) => {
+        createTextBgRow(entry, i);
+      });
+    };
+    textBgSortBtn.addEventListener('click', textBgSortHandler);
+    this._cleanupHandlers.push(() => textBgSortBtn.removeEventListener('click', textBgSortHandler));
+
+    // Add button
+    const textBgAddBtn = textBgButtonRowDiv.createEl('button');
+    textBgAddBtn.textContent = '+ Add new word / pattern';
+    textBgAddBtn.style.cursor = 'pointer';
+    textBgAddBtn.style.flex = '1';
+    textBgAddBtn.addClass('mod-cta');
+    
+    const textBgAddHandler = async () => {
+      if (textBgEmptyStateP) {
+        textBgEmptyStateP.remove();
+        textBgEmptyStateP = null;
+      }
+      
+      const newEntry = { pattern: '', textColor: '#000000', backgroundColor: '#FFFF00' };
+      this.plugin.settings.textBgColoringEntries.push(newEntry);
+      await this.plugin.saveSettings();
+      const idx = this.plugin.settings.textBgColoringEntries.length - 1;
+      createTextBgRow(newEntry, idx);
+    };
+    textBgAddBtn.addEventListener('click', textBgAddHandler);
+    this._cleanupHandlers.push(() => textBgAddBtn.removeEventListener('click', textBgAddHandler));
+
+
     // --- File-specific options ---
-    containerEl.createEl('h3', { text: 'File-specific options' });
+    const fileOptHeading = containerEl.createEl('h3', { text: 'File-specific options' });
+    fileOptHeading.style.marginTop = '38px';
     containerEl.createEl('p', { text: 'Here\'s where you manage files where coloring is taking a break.' });
     new Setting(containerEl);
 
@@ -4332,4 +4853,4 @@ try {
   }
 } catch (e) {}
 
-// 0.1.11 yay 25NOV14
+// 0.1.12 yay 25NOV17
