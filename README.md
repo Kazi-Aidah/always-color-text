@@ -59,7 +59,7 @@ For folders, you can target different folders to have different styles, or no co
 
 ## Text AND Background Coloring
 The **"Text & Background Coloring"** list overrides all other settings. Words in this list will always have colored text and a background, regardless of your folder color rules. To have a document with no coloring at all, you must disable the coloring feature for that document.
-<img alt="image" src="https://github.com/user-attachments/assets/5ef96262-9c86-47c2-9bdd-d99ad9c528d0" />
+<img alt="image" src="https://github.com/user-attachments/assets/4d562ac5-5557-4978-b63a-1e352abe58aa" />
 
 
 ## Advanced Regex Support
