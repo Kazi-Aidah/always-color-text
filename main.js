@@ -1589,29 +1589,29 @@ module.exports = class AlwaysColorText extends Plugin {
     const startTime = performance.now();
     debugLog('ACT', 'Processing active file', ctx.sourcePath.slice(-30));
     
-     // Force full reading-mode rendering (user explicitly opted in - bypass perf gates)
-     if (this.settings.forceFullRenderInReading) {
-       try {
-         debugWarn('ACT', 'forceFullRenderInReading enabled - forcing full processing');
-         // File-specific disable via settings
-         if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
-         // Frontmatter can override per-file disabling: always-color-text: false
-         if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
-         // Folder-specific rules
-         const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
-         // Force immediate full chunked processing without skip
-         this.processInChunks(el, this.getSortedWordEntries(), folderEntry, {
-           skipFirstN: 0,
-           batchSize: 0,
-           clearExisting: true,
-           forceProcess: true,
-           maxMatches: Infinity
-         });
-       } catch (e) {
-         debugError('ACT', 'forceFullRenderInReading failed', e);
-       }
-       return;
-     }
+         // Force full reading-mode rendering (user explicitly opted in - bypass perf gates)
+         if (this.settings.forceFullRenderInReading) {
+           try {
+             debugWarn('ACT', 'forceFullRenderInReading enabled - forcing full processing');
+             // File-specific disable via settings
+             if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
+             // Frontmatter can override per-file disabling: always-color-text: false
+             if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
+             // Folder-specific rules
+             const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
+             // Force immediate full chunked processing with regular batch size to avoid UI lockup
+             this.processInChunks(el, this.getSortedWordEntries(), folderEntry, {
+               skipFirstN: 0,
+               batchSize: 30,  // Use regular batch size even when forced to yield periodically
+               clearExisting: true,
+               forceProcess: true,
+               maxMatches: Infinity
+             });
+           } catch (e) {
+             debugError('ACT', 'forceFullRenderInReading failed', e);
+           }
+           return;
+         }
     // Global performance gate
     try {
       if (this.performanceMonitor && this.performanceMonitor.isOverloaded && this.performanceMonitor.isOverloaded()) {
@@ -2689,10 +2689,13 @@ module.exports = class AlwaysColorText extends Plugin {
         debugError('CHUNK', 'block error', e); 
       }
       
-      if (!forceProcess && (i % batch === 0 || i % 100 === 0)) {
-        // yield to the browser occasionally to keep UI responsive
+      // Yield to browser every batch blocks to keep UI responsive
+      // Even with forceProcess, we yield periodically to prevent main thread lockup
+      const yieldInterval = forceProcess ? 50 : batch; // More frequent yields when forced
+      if (i % yieldInterval === 0 && i > 0) {
+        // yield to the browser to keep UI responsive
         // use a very short timeout so large documents progress quickly
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await new Promise(resolve => setTimeout(resolve, 0));
       }
     }
     
