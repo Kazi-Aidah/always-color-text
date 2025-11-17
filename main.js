@@ -4674,7 +4674,7 @@ class ColorSettingTab extends PluginSettingTab {
       this.plugin.settings.textBgColoringEntries = [];
     }
 
-    const createTextBgRow = (entry, idx) => {
+    const createTextBgRow = (entry) => {
       const row = textBgListDiv.createDiv();
       row.style.display = 'flex';
       row.style.alignItems = 'center';
@@ -4731,9 +4731,11 @@ class ColorSettingTab extends PluginSettingTab {
       del.style.cursor = 'pointer';
 
       const textInputHandler = async () => {
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
         const newPattern = textInput.value.trim();
         if (!newPattern) {
-          this.plugin.settings.textBgColoringEntries.splice(idx, 1);
+          this.plugin.settings.textBgColoringEntries.splice(entryIdx, 1);
         } else if (this.plugin.settings.enableRegexSupport && entry.isRegex && this.plugin.isRegexTooComplex(newPattern)) {
           new Notice(`Pattern too complex: ${newPattern.substring(0, 60)}...`);
           textInput.value = displayPatterns;
@@ -4741,8 +4743,8 @@ class ColorSettingTab extends PluginSettingTab {
         } else {
           // Parse comma-separated patterns
           const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
-          this.plugin.settings.textBgColoringEntries[idx].pattern = patterns[0]; // Keep first pattern as main
-          this.plugin.settings.textBgColoringEntries[idx].groupedPatterns = patterns.length > 1 ? patterns : null;
+          this.plugin.settings.textBgColoringEntries[entryIdx].pattern = patterns[0]; // Keep first pattern as main
+          this.plugin.settings.textBgColoringEntries[entryIdx].groupedPatterns = patterns.length > 1 ? patterns : null;
         }
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
@@ -4750,31 +4752,37 @@ class ColorSettingTab extends PluginSettingTab {
       };
 
       const textColorHandler = async () => {
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
         const newColor = textColorPicker.value;
         if (!this.plugin.isValidHexColor(newColor)) {
           new Notice('Invalid color format.');
           return;
         }
-        this.plugin.settings.textBgColoringEntries[idx].textColor = newColor;
+        this.plugin.settings.textBgColoringEntries[entryIdx].textColor = newColor;
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
       };
 
       const bgColorHandler = async () => {
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
         const newColor = bgColorPicker.value;
         if (!this.plugin.isValidHexColor(newColor)) {
           new Notice('Invalid color format.');
           return;
         }
-        this.plugin.settings.textBgColoringEntries[idx].backgroundColor = newColor;
+        this.plugin.settings.textBgColoringEntries[entryIdx].backgroundColor = newColor;
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
       };
 
       const regexChkHandler = async () => {
-        this.plugin.settings.textBgColoringEntries[idx].isRegex = regexChk.checked;
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
+        this.plugin.settings.textBgColoringEntries[entryIdx].isRegex = regexChk.checked;
         flagsInput.style.display = regexChk.checked ? 'inline-block' : 'none';
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
@@ -4782,14 +4790,18 @@ class ColorSettingTab extends PluginSettingTab {
       };
 
       const flagsInputHandler = async () => {
-        this.plugin.settings.textBgColoringEntries[idx].flags = flagsInput.value || '';
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
+        this.plugin.settings.textBgColoringEntries[entryIdx].flags = flagsInput.value || '';
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
       };
 
       const delHandler = async () => {
-        this.plugin.settings.textBgColoringEntries.splice(idx, 1);
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was already removed
+        this.plugin.settings.textBgColoringEntries.splice(entryIdx, 1);
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
@@ -4816,7 +4828,7 @@ class ColorSettingTab extends PluginSettingTab {
     // Render existing rows
     if (this.plugin.settings.textBgColoringEntries.length > 0) {
       this.plugin.settings.textBgColoringEntries.forEach((entry, i) => {
-        createTextBgRow(entry, i);
+        createTextBgRow(entry);
       });
     }
 
@@ -4843,7 +4855,7 @@ class ColorSettingTab extends PluginSettingTab {
         entriesToDisplay.sort((a, b) => (a.pattern || '').toLowerCase().localeCompare((b.pattern || '').toLowerCase()));
       }
       entriesToDisplay.forEach((entry, i) => {
-        createTextBgRow(entry, i);
+        createTextBgRow(entry);
       });
     };
     textBgSortBtn.addEventListener('click', textBgSortHandler);
@@ -4865,8 +4877,7 @@ class ColorSettingTab extends PluginSettingTab {
       const newEntry = { pattern: '', textColor: '#000000', backgroundColor: '#FFFF00', isRegex: false, flags: '', groupedPatterns: null };
       this.plugin.settings.textBgColoringEntries.push(newEntry);
       await this.plugin.saveSettings();
-      const idx = this.plugin.settings.textBgColoringEntries.length - 1;
-      createTextBgRow(newEntry, idx);
+      createTextBgRow(newEntry);
     };
     textBgAddBtn.addEventListener('click', textBgAddHandler);
     this._cleanupHandlers.push(() => textBgAddBtn.removeEventListener('click', textBgAddHandler));
