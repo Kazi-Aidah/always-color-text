@@ -57,6 +57,10 @@ For folders, you can target different folders to have different styles, or no co
 
 ![Folder Specific Exclusion Settings](https://github.com/user-attachments/assets/a6920d6d-9cd9-410a-bf60-0c556b15cb2e)
 
+## Text AND Background Coloring
+The **"Text & Background Coloring"** list overrides all other settings. Words in this list will always have colored text and a background, regardless of your folder color rules. To have a document with no coloring at all, you must disable the coloring feature for that document.
+<img alt="image" src="https://github.com/user-attachments/assets/5ef96262-9c86-47c2-9bdd-d99ad9c528d0" />
+
 
 ## Advanced Regex Support
 
