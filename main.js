@@ -1374,50 +1374,111 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!Array.isArray(this.settings.textBgColoringEntries)) return;
       
       for (const e of this.settings.textBgColoringEntries) {
-        if (!e || !e.pattern) continue;
+        if (!e) continue;
         
-        let pattern = String(e.pattern).trim();
-        if (!pattern) continue;
-        
-        // Decode HTML entities for reading mode compatibility
-        pattern = this.decodeHtmlEntities(pattern);
-        
-        // Block dangerous patterns
-        if (this.isKnownProblematicPattern(pattern)) {
-          debugWarn('COMPILE_TEXTBG', `Blocked dangerous pattern: ${pattern.substring(0, 50)}`);
-          continue;
-        }
+        // Support comma-separated grouped patterns: compile each pattern separately with same colors
+        const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0
+          ? e.groupedPatterns
+          : [String(e.pattern || '').trim()];
         
         const textColor = e.textColor || '#000000';
         const backgroundColor = e.backgroundColor || '#FFFF00';
+        const isRegex = !!e.isRegex;
         
         // Validate colors
         if (!this.isValidHexColor(textColor) || !this.isValidHexColor(backgroundColor)) {
           continue;
         }
         
-        // Build regex for this pattern (treat as literal string)
-        const esc = this.escapeRegex(pattern);
-        const literalFlags = this.settings.caseSensitive ? 'g' : 'gi';
-        
-        const compiled = {
-          pattern,
-          textColor,
-          backgroundColor,
-          regex: new RegExp(esc, literalFlags),
-          testRegex: this.settings.caseSensitive ? new RegExp(esc) : new RegExp(esc, 'i'),
-          invalid: false,
-          specificity: pattern.length,
-          isTextBg: true // Mark as text+bg entry
-        };
-        
-        try {
-          compiled.fastTest = this.createFastTester(pattern, false, this.settings.caseSensitive);
-        } catch (e) {
-          compiled.fastTest = (text) => true;
+        // Compile each pattern individually
+        for (let pattern of patterns) {
+          pattern = String(pattern).trim();
+          if (!pattern) continue;
+          
+          // Decode HTML entities for reading mode compatibility
+          pattern = this.decodeHtmlEntities(pattern);
+          
+          // Block dangerous patterns
+          if (this.isKnownProblematicPattern(pattern)) {
+            debugWarn('COMPILE_TEXTBG', `Blocked dangerous pattern: ${pattern.substring(0, 50)}`);
+            const compiled = { 
+              pattern, 
+              textColor, 
+              backgroundColor, 
+              isRegex, 
+              flags: '', 
+              regex: null, 
+              testRegex: null, 
+              invalid: true, 
+              specificity: 0,
+              isTextBg: true 
+            };
+            this._compiledTextBgEntries.push(compiled);
+            try {
+              new Notice(`Pattern blocked for Memory Safety: ${pattern.substring(0, 30)}...`);
+            } catch (e) {}
+            continue;
+          }
+          
+          const rawFlags = String(e.flags || '').replace(/[^gimsuy]/g, '');
+          // base flags (without g for testRegex)
+          let flags = rawFlags || '';
+          if (!flags.includes('g')) flags += 'g';
+          if (!this.settings.caseSensitive && !flags.includes('i')) flags += 'i';
+          
+          const compiled = {
+            pattern,
+            textColor,
+            backgroundColor,
+            isRegex,
+            flags,
+            regex: null,
+            testRegex: null,
+            invalid: false,
+            specificity: pattern.replace(/\*/g, '').length,
+            isTextBg: true // Mark as text+bg entry
+          };
+          
+          try {
+            if (this.settings.enableRegexSupport && isRegex) {
+              // Safety: block overly complex regexes early
+              if (this.isRegexTooComplex(pattern)) {
+                compiled.invalid = true;
+                try {
+                  new Notice(`Pattern too complex: ${pattern.substring(0, 60)}...`);
+                } catch (e) {}
+                this._compiledTextBgEntries.push(compiled);
+                continue;
+              }
+              // compile with combined flags
+              compiled.regex = new RegExp(pattern, flags);
+              // testRegex: same flags but without global to safely use .test()
+              const testFlags = flags.replace(/g/g, '');
+              compiled.testRegex = testFlags === '' ? new RegExp(pattern) : new RegExp(pattern, testFlags);
+            } else {
+              // literal: escape pattern and create with appropriate flags
+              const esc = this.escapeRegex(pattern);
+              compiled.regex = new RegExp(esc, flags);
+              const testFlags = flags.replace(/g/g, '');
+              compiled.testRegex = testFlags === '' ? new RegExp(esc) : new RegExp(esc, testFlags);
+            }
+            
+            // Create fast tester for performance
+            try {
+              compiled.fastTest = this.createFastTester(pattern, isRegex, this.settings.caseSensitive);
+            } catch (e) {
+              compiled.fastTest = (text) => true;
+            }
+            
+            this._compiledTextBgEntries.push(compiled);
+          } catch (err) {
+            compiled.invalid = true;
+            compiled.regex = null;
+            compiled.testRegex = null;
+            debugError('COMPILE_TEXTBG', `Failed to compile pattern: ${pattern}`, err);
+            this._compiledTextBgEntries.push(compiled);
+          }
         }
-        
-        this._compiledTextBgEntries.push(compiled);
       }
       
       // Sort by specificity (longer patterns first)
@@ -2083,53 +2144,129 @@ module.exports = class AlwaysColorText extends Plugin {
   const maxMatches = typeof opts.maxMatches === 'number' ? opts.maxMatches : (isForced ? Infinity : 500);
   let matches = [];
 
-      // FIRST: Process text+bg entries (they have priority)
+      // FIRST: Process text+bg entries (they have priority) - with chunking for performance
       const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
-      for (const entry of textBgEntries) {
-        if (!entry || entry.invalid) continue;
-        
-        try {
-          if (entry.fastTest && typeof entry.fastTest === 'function') {
-            if (!entry.fastTest(text)) continue;
+      const TEXT_BG_CHUNK_SIZE = 10; // Process text+bg entries in chunks of 10 to avoid lag
+      
+      if (textBgEntries.length > TEXT_BG_CHUNK_SIZE) {
+        // Process in chunks
+        for (let i = 0; i < textBgEntries.length && matches.length < maxMatches; i += TEXT_BG_CHUNK_SIZE) {
+          const chunk = textBgEntries.slice(i, i + TEXT_BG_CHUNK_SIZE);
+          for (const entry of chunk) {
+            if (!entry || entry.invalid) continue;
+            
+            try {
+              if (entry.fastTest && typeof entry.fastTest === 'function') {
+                if (!entry.fastTest(text)) continue;
+              }
+            } catch (e) {}
+            
+            const regex = entry.regex;
+            if (!regex) continue;
+            
+            let match;
+            try { regex.lastIndex = 0; } catch (e) {}
+            
+            while ((match = regex.exec(text))) {
+              const matchedText = match[0];
+              const matchStart = match.index;
+              const matchEnd = match.index + matchedText.length;
+              
+              // Respect partialMatch setting: if disabled, only accept whole-word matches
+              if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+                try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+                continue;
+              }
+              
+              // Extract full word and check blacklist
+              let fullWordStart = matchStart;
+              let fullWordEnd = matchEnd;
+              while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
+                fullWordStart--;
+              }
+              while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
+                fullWordEnd++;
+              }
+              const fullWord = text.substring(fullWordStart, fullWordEnd);
+              
+              if (isBlacklisted(fullWord)) continue;
+              
+              // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
+              const colorStart = this.settings.partialMatch ? fullWordStart : matchStart;
+              const colorEnd = this.settings.partialMatch ? fullWordEnd : matchEnd;
+              
+              matches.push({
+                start: colorStart,
+                end: colorEnd,
+                textColor: entry.textColor,
+                backgroundColor: entry.backgroundColor,
+                isTextBg: true
+              });
+              
+              if (matches.length > maxMatches) break;
+            }
+            
+            if (matches.length > maxMatches) break;
           }
-        } catch (e) {}
-        
-        const regex = entry.regex;
-        if (!regex) continue;
-        
-        let match;
-        try { regex.lastIndex = 0; } catch (e) {}
-        
-        while ((match = regex.exec(text))) {
-          const matchedText = match[0];
-          const matchStart = match.index;
-          const matchEnd = match.index + matchedText.length;
+        }
+      } else {
+        // Process all at once if fewer than chunk size
+        for (const entry of textBgEntries) {
+          if (!entry || entry.invalid) continue;
           
-          // Extract full word and check blacklist
-          let fullWordStart = matchStart;
-          let fullWordEnd = matchEnd;
-          while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
-            fullWordStart--;
+          try {
+            if (entry.fastTest && typeof entry.fastTest === 'function') {
+              if (!entry.fastTest(text)) continue;
+            }
+          } catch (e) {}
+          
+          const regex = entry.regex;
+          if (!regex) continue;
+          
+          let match;
+          try { regex.lastIndex = 0; } catch (e) {}
+          
+          while ((match = regex.exec(text))) {
+            const matchedText = match[0];
+            const matchStart = match.index;
+            const matchEnd = match.index + matchedText.length;
+            
+            // Respect partialMatch setting: if disabled, only accept whole-word matches
+            if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+              try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+              continue;
+            }
+            
+            // Extract full word and check blacklist
+            let fullWordStart = matchStart;
+            let fullWordEnd = matchEnd;
+            while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
+              fullWordStart--;
+            }
+            while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
+              fullWordEnd++;
+            }
+            const fullWord = text.substring(fullWordStart, fullWordEnd);
+            
+            if (isBlacklisted(fullWord)) continue;
+            
+            // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
+            const colorStart = this.settings.partialMatch ? fullWordStart : matchStart;
+            const colorEnd = this.settings.partialMatch ? fullWordEnd : matchEnd;
+            
+            matches.push({
+              start: colorStart,
+              end: colorEnd,
+              textColor: entry.textColor,
+              backgroundColor: entry.backgroundColor,
+              isTextBg: true
+            });
+            
+            if (matches.length > maxMatches) break;
           }
-          while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
-            fullWordEnd++;
-          }
-          const fullWord = text.substring(fullWordStart, fullWordEnd);
-          
-          if (isBlacklisted(fullWord)) continue;
-          
-          matches.push({
-            start: matchStart,
-            end: matchEnd,
-            textColor: entry.textColor,
-            backgroundColor: entry.backgroundColor,
-            isTextBg: true
-          });
           
           if (matches.length > maxMatches) break;
         }
-        
-        if (matches.length > maxMatches) break;
       }
 
       for (const entry of entries) {
@@ -2156,6 +2293,7 @@ module.exports = class AlwaysColorText extends Plugin {
         if (!regex) continue;
         let match;
         let iterCount = 0;
+        try { regex.lastIndex = 0; } catch (e) {}
         while ((match = regex.exec(text))) {
           const matchedText = match[0];
           const matchStart = match.index;
@@ -2270,6 +2408,62 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         
         matches = nonOverlapping;
+      }
+
+      // --- Partial Match coloring for text+bg entries ---
+      if (this.settings.partialMatch && textBgEntries.length > 0) {
+        const wordRegex = /\w+/g;
+        let match;
+        while ((match = wordRegex.exec(text))) {
+          const w = match[0];
+          const start = match.index;
+          const end = start + w.length;
+          if (isBlacklisted(w)) continue;
+          
+          // Check text & background entries for partial matches
+          for (const entry of textBgEntries) {
+            if (!entry || entry.invalid) continue;
+            if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+            if (isBlacklisted(entry.pattern)) continue;
+            
+            const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
+            if (testRe.test(w)) {
+              // Check if this partial match overlaps with any existing match
+              let overlapsWithExisting = false;
+              for (const existingMatch of matches) {
+                if (start < existingMatch.end && end > existingMatch.start) {
+                  overlapsWithExisting = true;
+                  break;
+                }
+              }
+              
+              // Add partial match if no overlap with existing, or replace if replacing smaller overlaps
+              if (!overlapsWithExisting) {
+                matches.push({ 
+                  start: start, 
+                  end: end, 
+                  textColor: entry.textColor,
+                  backgroundColor: entry.backgroundColor,
+                  isTextBg: true
+                });
+              } else {
+                // Remove smaller overlapping matches and add the full word instead
+                matches = matches.filter(m => !(m.start >= start && m.end <= end && (m.end - m.start) < (end - start)));
+                matches.push({ 
+                  start: start, 
+                  end: end, 
+                  textColor: entry.textColor,
+                  backgroundColor: entry.backgroundColor,
+                  isTextBg: true
+                });
+              }
+              break;
+            }
+          }
+          
+          // Avoid infinite loop on zero-length matches for this wordRegex
+          try { if (typeof wordRegex.lastIndex === 'number' && wordRegex.lastIndex === match.index) wordRegex.lastIndex++; } catch (e) {}
+        }
       }
 
       // --- Partial Match coloring --- (respect already-resolved matches)
@@ -2784,14 +2978,39 @@ module.exports = class AlwaysColorText extends Plugin {
       
       while ((match = regex.exec(text))) {
         const matchedText = match[0];
+        const matchStart = match.index;
+        const matchEnd = match.index + matchedText.length;
+        
+        // Respect partialMatch setting: if disabled, only accept whole-word matches
+        if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+          try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+          continue;
+        }
         
         // Check blacklist
-        const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
+        const fullWord = this.extractFullWord(text, matchStart, matchEnd);
         if (this.isWordBlacklisted(fullWord)) continue;
         
+        // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
+        const fullWordStart = this.extractFullWord(text, matchStart, matchEnd);
+        let colorStart = matchStart;
+        let colorEnd = matchEnd;
+        
+        if (this.settings.partialMatch) {
+          // Find actual word boundaries
+          colorStart = matchStart;
+          colorEnd = matchEnd;
+          while (colorStart > 0 && /\w/.test(text[colorStart - 1])) {
+            colorStart--;
+          }
+          while (colorEnd < text.length && /\w/.test(text[colorEnd])) {
+            colorEnd++;
+          }
+        }
+        
         matches.push({
-          start: from + match.index,
-          end: from + match.index + matchedText.length,
+          start: from + colorStart,
+          end: from + colorEnd,
           textColor: entry.textColor,
           backgroundColor: entry.backgroundColor,
           isTextBg: true
@@ -2992,12 +3211,37 @@ module.exports = class AlwaysColorText extends Plugin {
         try { regex.lastIndex = 0; } catch (e) {}
         
         while ((match = regex.exec(text))) {
-          const fullWord = this.extractFullWord(text, match.index, match.index + match[0].length);
+          const matchStart = match.index;
+          const matchEnd = match.index + match[0].length;
+          
+          // Respect partialMatch setting: if disabled, only accept whole-word matches
+          if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+            try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+            continue;
+          }
+          
+          const fullWord = this.extractFullWord(text, matchStart, matchEnd);
           if (this.isWordBlacklisted(fullWord)) continue;
           
+          // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
+          let colorStart = matchStart;
+          let colorEnd = matchEnd;
+          
+          if (this.settings.partialMatch) {
+            // Find actual word boundaries
+            colorStart = matchStart;
+            colorEnd = matchEnd;
+            while (colorStart > 0 && /\w/.test(text[colorStart - 1])) {
+              colorStart--;
+            }
+            while (colorEnd < text.length && /\w/.test(text[colorEnd])) {
+              colorEnd++;
+            }
+          }
+          
           allMatches.push({
-            start: from + match.index,
-            end: from + match.index + match[0].length,
+            start: from + colorStart,
+            end: from + colorEnd,
             textColor: entry.textColor,
             backgroundColor: entry.backgroundColor,
             isTextBg: true
@@ -3469,7 +3713,7 @@ class ColorSettingTab extends PluginSettingTab {
       textInput.style.borderRadius = '4px';
       textInput.style.border = '1px solid var(--background-modifier-border)';
       textInput.style.marginRight = '8px';
-      textInput.placeholder = 'pattern, word or comma-separated words (e.g. "hello, world, foo")';
+      textInput.placeholder = 'pattern, word or comma-separated words (e.g. hello, world, foo)';
 
       const cp = row.createEl('input', { type: 'color' });
       cp.value = entry.color || '#000000';
@@ -4437,12 +4681,30 @@ class ColorSettingTab extends PluginSettingTab {
       row.style.marginBottom = '8px';
       row.style.gap = '8px';
 
-      const textInput = row.createEl('input', { type: 'text', value: entry.pattern || '' });
-      textInput.placeholder = 'Keyword or pattern';
+      // Display comma-separated patterns if grouped, otherwise just the pattern
+      const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
+        ? entry.groupedPatterns.join(', ')
+        : entry.pattern;
+
+      const textInput = row.createEl('input', { type: 'text', value: displayPatterns || '' });
+      textInput.placeholder = 'Keyword or pattern, or comma-separated words (e.g. hello, world)';
       textInput.style.flex = '1';
       textInput.style.padding = '6px';
       textInput.style.borderRadius = '4px';
       textInput.style.border = '1px solid var(--background-modifier-border)';
+
+      const regexChk = row.createEl('input', { type: 'checkbox' });
+      regexChk.checked = !!entry.isRegex;
+      regexChk.title = 'Treat pattern as a JavaScript regular expression';
+      regexChk.style.cursor = 'pointer';
+
+      const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
+      flagsInput.placeholder = 'flags';
+      flagsInput.style.width = '50px';
+      flagsInput.style.padding = '6px';
+      flagsInput.style.borderRadius = '4px';
+      flagsInput.style.border = '1px solid var(--background-modifier-border)';
+      if (!entry.isRegex) flagsInput.style.display = 'none';
 
       const textColorPicker = row.createEl('input', { type: 'color' });
       textColorPicker.value = entry.textColor || '#000000';
@@ -4472,8 +4734,15 @@ class ColorSettingTab extends PluginSettingTab {
         const newPattern = textInput.value.trim();
         if (!newPattern) {
           this.plugin.settings.textBgColoringEntries.splice(idx, 1);
+        } else if (this.plugin.settings.enableRegexSupport && entry.isRegex && this.plugin.isRegexTooComplex(newPattern)) {
+          new Notice(`Pattern too complex: ${newPattern.substring(0, 60)}...`);
+          textInput.value = displayPatterns;
+          return;
         } else {
-          this.plugin.settings.textBgColoringEntries[idx].pattern = newPattern;
+          // Parse comma-separated patterns
+          const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
+          this.plugin.settings.textBgColoringEntries[idx].pattern = patterns[0]; // Keep first pattern as main
+          this.plugin.settings.textBgColoringEntries[idx].groupedPatterns = patterns.length > 1 ? patterns : null;
         }
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
@@ -4504,6 +4773,21 @@ class ColorSettingTab extends PluginSettingTab {
         this.plugin.forceRefreshAllEditors();
       };
 
+      const regexChkHandler = async () => {
+        this.plugin.settings.textBgColoringEntries[idx].isRegex = regexChk.checked;
+        flagsInput.style.display = regexChk.checked ? 'inline-block' : 'none';
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const flagsInputHandler = async () => {
+        this.plugin.settings.textBgColoringEntries[idx].flags = flagsInput.value || '';
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
       const delHandler = async () => {
         this.plugin.settings.textBgColoringEntries.splice(idx, 1);
         await this.plugin.saveSettings();
@@ -4513,12 +4797,16 @@ class ColorSettingTab extends PluginSettingTab {
       };
 
       textInput.addEventListener('change', textInputHandler);
+      regexChk.addEventListener('change', regexChkHandler);
+      flagsInput.addEventListener('change', flagsInputHandler);
       textColorPicker.addEventListener('input', textColorHandler);
       bgColorPicker.addEventListener('input', bgColorHandler);
       del.addEventListener('click', delHandler);
 
       this._cleanupHandlers.push(() => {
         textInput.removeEventListener('change', textInputHandler);
+        regexChk.removeEventListener('change', regexChkHandler);
+        flagsInput.removeEventListener('change', flagsInputHandler);
         textColorPicker.removeEventListener('input', textColorHandler);
         bgColorPicker.removeEventListener('input', bgColorHandler);
         del.removeEventListener('click', delHandler);
@@ -4574,7 +4862,7 @@ class ColorSettingTab extends PluginSettingTab {
         textBgEmptyStateP = null;
       }
       
-      const newEntry = { pattern: '', textColor: '#000000', backgroundColor: '#FFFF00' };
+      const newEntry = { pattern: '', textColor: '#000000', backgroundColor: '#FFFF00', isRegex: false, flags: '', groupedPatterns: null };
       this.plugin.settings.textBgColoringEntries.push(newEntry);
       await this.plugin.saveSettings();
       const idx = this.plugin.settings.textBgColoringEntries.length - 1;
