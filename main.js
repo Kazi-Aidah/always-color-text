@@ -4344,12 +4344,12 @@ class ColorSettingTab extends PluginSettingTab {
         // Border Thickness input
         new Setting(containerEl)
           .setName('Border Thickness (px)')
-          .setDesc('Set the border thickness from 0-5 pixels')
+          .setDesc('Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)')
           .addText(text => text
-            .setPlaceholder('e.g. 1, 2, 3')
+            .setPlaceholder('e.g. 1, 2.5, 3.7')
             .setValue(String(this.plugin.settings.borderThickness ?? 1))
             .onChange(async v => {
-              let val = parseInt(v);
+              let val = parseFloat(v);
               if (isNaN(val) || val < 0) val = 0;
               if (val > 5) val = 5;
               this.plugin.settings.borderThickness = val;
