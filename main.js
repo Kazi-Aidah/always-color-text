@@ -3294,18 +3294,13 @@ module.exports = class AlwaysColorText extends Plugin {
     
     matches = matches.slice(0, 3000);
 
-    // Ensure matches are sorted by `start` then `end` before adding to the RangeSetBuilder.
-    // RangeSetBuilder requires ranges to be added in order by `from` position (and startSide),
-    // otherwise it throws: "Ranges must be added sorted by `from` position and `startSide`".
-    try {
-      matches.sort((a, b) => {
-        if (a.start !== b.start) return a.start - b.start;
-        return a.end - b.end;
-      });
-    } catch (e) {
-      // If sorting fails for any reason, still attempt to continue (defensive).
-      debugError('EDITOR', 'Failed to sort matches before adding decorations', e);
-    }
+    // CRITICAL: Sort matches by `start` then `end` BEFORE adding to RangeSetBuilder.
+    // RangeSetBuilder requires ranges in order, and the overlap removal above can unsort them.
+    // This is especially important when text+bg entries are mixed with regular entries.
+    matches.sort((a, b) => {
+      if (a.start !== b.start) return a.start - b.start;
+      return a.end - b.end;
+    });
 
     // Apply decorations
     const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
