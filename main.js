@@ -751,10 +751,11 @@ module.exports = class AlwaysColorText extends Plugin {
       backgroundOpacity: 35, // percent
       highlightBorderRadius: 4, // px
       highlightHorizontalPadding: 4, // px
+      enableBoxDecorationBreak: true, // Toggle for rounded corners on text wrapping
       enableBorderThickness: false, // Toggle for border on background highlights
       borderOpacity: 100, // percent (0-100)
       borderThickness: 2, // px (0-5)
-      borderStyle: 'full', // 'full' or 'bottom'
+      borderStyle: 'full', // 'full', 'top', 'bottom', 'left', 'right', 'top-bottom', 'left-right'
       enableFolderRestrictions: false,
       excludedFolders: [],
       disabledFiles: [],
@@ -1175,10 +1176,33 @@ module.exports = class AlwaysColorText extends Plugin {
     const borderColorRgba = this.hexToRgba(textColor, borderOpacity);
     const borderStyleType = this.settings.borderStyle ?? 'full';
     
-    if (borderStyleType === 'bottom') {
-      element.style.borderBottom = `${borderThickness}px solid ${borderColorRgba}`;
-    } else {
-      element.style.border = `${borderThickness}px solid ${borderColorRgba}`;
+    const borderCSS = `${borderThickness}px solid ${borderColorRgba}`;
+    
+    switch (borderStyleType) {
+      case 'bottom':
+        element.style.borderBottom = borderCSS;
+        break;
+      case 'top':
+        element.style.borderTop = borderCSS;
+        break;
+      case 'left':
+        element.style.borderLeft = borderCSS;
+        break;
+      case 'right':
+        element.style.borderRight = borderCSS;
+        break;
+      case 'top-bottom':
+        element.style.borderTop = borderCSS;
+        element.style.borderBottom = borderCSS;
+        break;
+      case 'left-right':
+        element.style.borderLeft = borderCSS;
+        element.style.borderRight = borderCSS;
+        break;
+      case 'full':
+      default:
+        element.style.border = borderCSS;
+        break;
     }
   }
 
@@ -1192,11 +1216,24 @@ module.exports = class AlwaysColorText extends Plugin {
     const borderOpacity = this.settings.borderOpacity ?? 100;
     const borderColorRgba = this.hexToRgba(textColor, borderOpacity);
     const borderStyleType = this.settings.borderStyle ?? 'full';
+    const borderCSS = `${borderThickness}px solid ${borderColorRgba} !important;`;
     
-    if (borderStyleType === 'bottom') {
-      return ` border-bottom: ${borderThickness}px solid ${borderColorRgba} !important;`;
-    } else {
-      return ` border: ${borderThickness}px solid ${borderColorRgba} !important;`;
+    switch (borderStyleType) {
+      case 'bottom':
+        return ` border-bottom: ${borderCSS}`;
+      case 'top':
+        return ` border-top: ${borderCSS}`;
+      case 'left':
+        return ` border-left: ${borderCSS}`;
+      case 'right':
+        return ` border-right: ${borderCSS}`;
+      case 'top-bottom':
+        return ` border-top: ${borderCSS} border-bottom: ${borderCSS}`;
+      case 'left-right':
+        return ` border-left: ${borderCSS} border-right: ${borderCSS}`;
+      case 'full':
+      default:
+        return ` border: ${borderCSS}`;
     }
   }
 
@@ -1630,6 +1667,10 @@ module.exports = class AlwaysColorText extends Plugin {
         span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
         span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
         span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+        if (this.settings.enableBoxDecorationBreak ?? true) {
+          span.style.boxDecorationBreak = 'clone';
+          span.style.WebkitBoxDecorationBreak = 'clone';
+        }
         
         // Add border styling if enabled
         this.applyBorderStyleToElement(span, m.color);
@@ -1922,6 +1963,10 @@ module.exports = class AlwaysColorText extends Plugin {
             span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
             span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
             span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+            if (this.settings.enableBoxDecorationBreak ?? true) {
+              span.style.boxDecorationBreak = 'clone';
+              span.style.WebkitBoxDecorationBreak = 'clone';
+            }
             
             // Add border styling if enabled
             this.applyBorderStyleToElement(span, m.color);
@@ -2677,6 +2722,10 @@ module.exports = class AlwaysColorText extends Plugin {
               } else {
                 span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
               }
+              if (this.settings.enableBoxDecorationBreak ?? true) {
+                span.style.boxDecorationBreak = 'clone';
+                span.style.WebkitBoxDecorationBreak = 'clone';
+              }
               // Add border for text+bg entries
               this.applyBorderStyleToElement(span, m.textColor);
             } else if (effectiveStyle === 'text') {
@@ -2689,6 +2738,10 @@ module.exports = class AlwaysColorText extends Plugin {
                 span.style.borderRadius = '0px';
               } else {
                 span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+              }
+              if (this.settings.enableBoxDecorationBreak ?? true) {
+                span.style.boxDecorationBreak = 'clone';
+                span.style.WebkitBoxDecorationBreak = 'clone';
               }
               // Add border for regular background highlights
               this.applyBorderStyleToElement(span, m.color);
@@ -2935,7 +2988,7 @@ module.exports = class AlwaysColorText extends Plugin {
     for (const m of matches) {
       const style = effectiveStyle === 'text'
         ? `color: ${m.color} !important;`
-        : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+        : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
       
       const deco = Decoration.mark({
         attributes: { style }
@@ -3241,6 +3294,19 @@ module.exports = class AlwaysColorText extends Plugin {
     
     matches = matches.slice(0, 3000);
 
+    // Ensure matches are sorted by `start` then `end` before adding to the RangeSetBuilder.
+    // RangeSetBuilder requires ranges to be added in order by `from` position (and startSide),
+    // otherwise it throws: "Ranges must be added sorted by `from` position and `startSide`".
+    try {
+      matches.sort((a, b) => {
+        if (a.start !== b.start) return a.start - b.start;
+        return a.end - b.end;
+      });
+    } catch (e) {
+      // If sorting fails for any reason, still attempt to continue (defensive).
+      debugError('EDITOR', 'Failed to sort matches before adding decorations', e);
+    }
+
     // Apply decorations
     const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
     if (effectiveStyle === 'none' && matches.length > 0 && !matches.some(m => m.isTextBg)) return builder.finish();
@@ -3250,13 +3316,13 @@ module.exports = class AlwaysColorText extends Plugin {
       if (m.isTextBg) {
         // Text+bg entries always use both colors
         const borderStyle = this.generateBorderStyle(m.textColor, m.backgroundColor);
-        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${borderStyle}`;
+        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
       } else {
         if (effectiveStyle === 'text') {
           style = `color: ${m.color} !important;`;
         } else {
           const borderStyle = this.generateBorderStyle(m.color, m.color);
-          style = `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${borderStyle}`;
+          style = `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
         }
       }
       const deco = Decoration.mark({ attributes: { style } });
@@ -3659,14 +3725,14 @@ module.exports = class AlwaysColorText extends Plugin {
       if (m.isTextBg) {
         // Text+bg entries always use both colors
         const borderStyle = this.generateBorderStyle(m.textColor, m.backgroundColor);
-        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${borderStyle}`;
+        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
       } else {
         if (effectiveStyle === 'none') continue;
         if (effectiveStyle === 'text') {
           style = `color: ${m.color} !important;`;
         } else {
           const borderStyle = this.generateBorderStyle(m.color, m.color);
-          style = `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${borderStyle}`;
+          style = `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
         }
       }
       const deco = Decoration.mark({ attributes: { style } });
@@ -4299,6 +4365,17 @@ class ColorSettingTab extends PluginSettingTab {
             this.display();
           }));
 
+      // Toggle for box decoration break on line wrapping
+      new Setting(containerEl)
+        .setName('Rounded corners on line wrapping')
+        .setDesc('When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line. When disabled, only the outer edges will be rounded.')
+        .addToggle(t => t
+          .setValue(this.plugin.settings.enableBoxDecorationBreak ?? true)
+          .onChange(async v => {
+            this.plugin.settings.enableBoxDecorationBreak = v;
+            await this.debouncedSaveSettings();
+          }));
+
       // NEW: Enable Background Highlight Border toggle
       new Setting(containerEl)
         .setName('Enable Background Highlight Border')
@@ -4318,10 +4395,15 @@ class ColorSettingTab extends PluginSettingTab {
         // Border Style dropdown
         new Setting(containerEl)
           .setName('Border Style')
-          .setDesc('Choose between full border or bottom border only')
+          .setDesc('Choose which sides to apply the border')
           .addDropdown(d => d
-            .addOption('full', 'Full border')
+            .addOption('full', 'Full border (all sides)')
+            .addOption('top-bottom', 'Top & Bottom borders')
+            .addOption('left-right', 'Left & Right borders')
+            .addOption('top', 'Top border only')
             .addOption('bottom', 'Bottom border only')
+            .addOption('left', 'Left border only')
+            .addOption('right', 'Right border only')
             .setValue(this.plugin.settings.borderStyle ?? 'full')
             .onChange(async v => {
               this.plugin.settings.borderStyle = v;
