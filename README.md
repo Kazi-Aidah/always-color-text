@@ -61,6 +61,14 @@ For folders, you can target different folders to have different styles, or no co
 The **"Text & Background Coloring"** list overrides all other settings. Words in this list will always have colored text and a background, regardless of your folder color rules. To have a document with no coloring at all, you must disable the coloring feature for that document.
 <img alt="image" src="https://github.com/user-attachments/assets/4d562ac5-5557-4978-b63a-1e352abe58aa" />
 
+### Background Highlight Styling Enhancements
+- **Border Thickness & Color:** Customize the thickness and color of the background highlight border.
+- **Border Style:** Choose between full borders or bottom-only borders for cleaner visuals.
+<div style="display:flex; gap:10px;">
+  <img src="https://github.com/user-attachments/assets/6023dd29-6ad3-4976-8f8a-99e4e1d9c264" width="425"/>
+  <img src="https://github.com/user-attachments/assets/30d2af10-45a8-46b8-92ac-768306be7ad8" width="400"/>
+</div>
+
 
 ## Advanced Regex Support
 
@@ -137,7 +145,7 @@ Here are ready-to-use regex patterns for common scenarios!!
 ### **URLs & Links Patterns**
 ```regex
 # Basic URLs (https://kaziaidah.dev.pages)
-https?://(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
+\bhttps?://\S+\b
 
 # Markdown links
 \[[^\]]+\]\(https?://[^)]+\)
@@ -223,3 +231,8 @@ When a pattern is blocked, you'll see a notice explaining why. Use simpler alter
 
 ## Installation
 This plugin is now available on Obsidian Community Plugins!
+
+Check out the [Release Notes](https://github.com/Kazi-Aidah/always-color-text/releases) for details on new features and updates.
+
+## Known Issues
+- **Links in Live Preview**: Colored text inside links may not display correctly in Live Preview mode due to Obsidian's rendering engine.
