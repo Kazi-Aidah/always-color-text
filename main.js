@@ -160,21 +160,23 @@ module.exports = class AlwaysColorText extends Plugin {
       const selectedText = editor.getSelection().trim();
       if (selectedText.length > 0) {
         // Color once:
-        menu.addItem(item => {
-          item.setTitle("Color once")
-            .setIcon('brush')
-            .onClick(() => {
-              // Warn if blacklisted
-              if (this.settings.blacklistWords.includes(selectedText)) {
-                new Notice(`"${selectedText}" is blacklisted and cannot be colored.`);
-                return;
-              }
-              new ColorPickerModal(this.app, this, (color) => {
-                const html = `<span style="color: ${color}">${selectedText}</span>`;
-                editor.replaceSelection(html);
-              }).open();
-            });
-        });
+        if (this.settings.enableAlwaysColor) {
+          menu.addItem(item => {
+            item.setTitle("Color once")
+              .setIcon('brush')
+              .onClick(() => {
+                // Warn if blacklisted
+                if (this.settings.blacklistWords.includes(selectedText)) {
+                  new Notice(`"${selectedText}" is blacklisted and cannot be colored.`);
+                  return;
+                }
+                new ColorPickerModal(this.app, this, (color) => {
+                  const html = `<span style="color: ${color}">${selectedText}</span>`;
+                  editor.replaceSelection(html);
+                }).open();
+              });
+          });
+        }
         // Highlight once:
         if (this.settings.enableAlwaysHighlight) {
           menu.addItem(item => {
@@ -694,6 +696,23 @@ module.exports = class AlwaysColorText extends Plugin {
       })
     );
 
+    // --- Refresh coloring when file is moved/renamed (folder-specific styling changes) ---
+    this.registerEvent(
+      this.app.vault.on('rename', (file, oldPath) => {
+        try {
+          // If the active file was moved, refresh it immediately
+          const activeFile = this.app.workspace.getActiveFile();
+          if (activeFile && activeFile.path === file.path) {
+            // File was moved while it was active, force refresh
+            this.forceRefreshAllEditors();
+            this.forceRefreshAllReadingViews();
+          }
+        } catch (e) {
+          debugError('RENAME', 'File rename handler failed', e);
+        }
+      })
+    );
+
     this.refreshActiveEditor(true);
   }
 
@@ -732,6 +751,10 @@ module.exports = class AlwaysColorText extends Plugin {
       backgroundOpacity: 35, // percent
       highlightBorderRadius: 4, // px
       highlightHorizontalPadding: 4, // px
+      enableBorderThickness: false, // Toggle for border on background highlights
+      borderOpacity: 100, // percent (0-100)
+      borderThickness: 2, // px (0-5)
+      borderStyle: 'full', // 'full' or 'bottom'
       enableFolderRestrictions: false,
       excludedFolders: [],
       disabledFiles: [],
@@ -746,6 +769,7 @@ module.exports = class AlwaysColorText extends Plugin {
         ribbon: false
       },
       enableAlwaysHighlight: false,
+      enableAlwaysColor: true,
       partialMatch: false,
       blacklistWords: [],
       enableBlacklistMenu: false,
@@ -1138,6 +1162,42 @@ module.exports = class AlwaysColorText extends Plugin {
     let o = Math.max(0, Math.min(100, Number(opacityPercent)));
     o = o / 100;
     return `rgba(${r},${g},${b},${o})`;
+  }
+
+  // Helper: Apply border style to a span element based on settings
+  applyBorderStyleToElement(element, textColor) {
+    if (!this.settings.enableBorderThickness) {
+      return;
+    }
+    
+    const borderThickness = this.settings.borderThickness ?? 1;
+    const borderOpacity = this.settings.borderOpacity ?? 100;
+    const borderColorRgba = this.hexToRgba(textColor, borderOpacity);
+    const borderStyleType = this.settings.borderStyle ?? 'full';
+    
+    if (borderStyleType === 'bottom') {
+      element.style.borderBottom = `${borderThickness}px solid ${borderColorRgba}`;
+    } else {
+      element.style.border = `${borderThickness}px solid ${borderColorRgba}`;
+    }
+  }
+
+  // Helper: Generate border CSS string based on settings (border always uses text color)
+  generateBorderStyle(textColor, backgroundColor) {
+    if (!this.settings.enableBorderThickness) {
+      return '';
+    }
+    
+    const borderThickness = this.settings.borderThickness ?? 1;
+    const borderOpacity = this.settings.borderOpacity ?? 100;
+    const borderColorRgba = this.hexToRgba(textColor, borderOpacity);
+    const borderStyleType = this.settings.borderStyle ?? 'full';
+    
+    if (borderStyleType === 'bottom') {
+      return ` border-bottom: ${borderThickness}px solid ${borderColorRgba} !important;`;
+    } else {
+      return ` border: ${borderThickness}px solid ${borderColorRgba} !important;`;
+    }
   }
 
   // Helper: Check frontmatter for disabling coloring (`always-color-text: false` disables)
@@ -1570,6 +1630,9 @@ module.exports = class AlwaysColorText extends Plugin {
         span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
         span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
         span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+        
+        // Add border styling if enabled
+        this.applyBorderStyleToElement(span, m.color);
       }
       
       frag.appendChild(span);
@@ -1859,6 +1922,9 @@ module.exports = class AlwaysColorText extends Plugin {
             span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
             span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
             span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+            
+            // Add border styling if enabled
+            this.applyBorderStyleToElement(span, m.color);
           }
           
           frag.appendChild(span);
@@ -2611,6 +2677,8 @@ module.exports = class AlwaysColorText extends Plugin {
               } else {
                 span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
               }
+              // Add border for text+bg entries
+              this.applyBorderStyleToElement(span, m.textColor);
             } else if (effectiveStyle === 'text') {
               span.style.color = m.color;
             } else {
@@ -2622,6 +2690,8 @@ module.exports = class AlwaysColorText extends Plugin {
               } else {
                 span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
               }
+              // Add border for regular background highlights
+              this.applyBorderStyleToElement(span, m.color);
             }
             frag.appendChild(span);
           }
@@ -3179,11 +3249,15 @@ module.exports = class AlwaysColorText extends Plugin {
       let style;
       if (m.isTextBg) {
         // Text+bg entries always use both colors
-        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+        const borderStyle = this.generateBorderStyle(m.textColor, m.backgroundColor);
+        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${borderStyle}`;
       } else {
-        style = effectiveStyle === 'text'
-          ? `color: ${m.color} !important;`
-          : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+        if (effectiveStyle === 'text') {
+          style = `color: ${m.color} !important;`;
+        } else {
+          const borderStyle = this.generateBorderStyle(m.color, m.color);
+          style = `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${borderStyle}`;
+        }
       }
       const deco = Decoration.mark({ attributes: { style } });
       builder.add(m.start, m.end, deco);
@@ -3584,12 +3658,16 @@ module.exports = class AlwaysColorText extends Plugin {
       let style;
       if (m.isTextBg) {
         // Text+bg entries always use both colors
-        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+        const borderStyle = this.generateBorderStyle(m.textColor, m.backgroundColor);
+        style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${borderStyle}`;
       } else {
         if (effectiveStyle === 'none') continue;
-        style = effectiveStyle === 'text'
-          ? `color: ${m.color} !important;`
-          : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;`;
+        if (effectiveStyle === 'text') {
+          style = `color: ${m.color} !important;`;
+        } else {
+          const borderStyle = this.generateBorderStyle(m.color, m.color);
+          style = `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${borderStyle}`;
+        }
       }
       const deco = Decoration.mark({ attributes: { style } });
       builder.add(m.start, m.end, deco);
@@ -4081,7 +4159,7 @@ class ColorSettingTab extends PluginSettingTab {
     // Option: disable coloring in reading/preview panes
     new Setting(containerEl)
       .setName('Disable coloring in Reading mode')
-      .setDesc('When ON, coloring will not be applied to reading/preview panes. Editor coloring remains active.')
+      // .setDesc('When ON, coloring will not be applied to reading/preview panes. Editor coloring remains active.')
       .addToggle(t => t.setValue(this.plugin.settings.disableReadingModeColoring).onChange(async v => {
         this.plugin.settings.disableReadingModeColoring = v;
         await this.debouncedSaveSettings();
@@ -4116,7 +4194,7 @@ class ColorSettingTab extends PluginSettingTab {
     // Opt-in: Force full reading-mode render (dangerous)
     new Setting(containerEl)
       .setName('Force full render in Reading mode')
-      .setDesc('When ON, reading-mode will attempt to color the entire document in one pass (May cause performance issues on large documents). Use with caution!')
+      .setDesc('When ON, reading-mode will attempt to color the entire document in one pass. May cause performance issues on large documents. Use with caution!')
       .addToggle(t => t.setValue(this.plugin.settings.forceFullRenderInReading).onChange(async v => {
         this.plugin.settings.forceFullRenderInReading = v;
         await this.debouncedSaveSettings();
@@ -4132,6 +4210,18 @@ class ColorSettingTab extends PluginSettingTab {
         this.plugin.settings.caseSensitive = v;
         await this.debouncedSaveSettings();
       }));
+
+    // Partial match (moved before Color Style)
+    new Setting(containerEl)
+      .setName('Partial match')
+      .setDesc('If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')
+      .addToggle(t => t.setValue(this.plugin.settings.partialMatch).onChange(async v => {
+        this.plugin.settings.partialMatch = v;
+        await this.debouncedSaveSettings();
+      }));
+
+    // --- Global Coloring Appearance ---
+    containerEl.createEl('h3', { text: 'Global Coloring Appearance' });
 
     // 3. Color style (was highlight style)
     new Setting(containerEl)
@@ -4150,28 +4240,17 @@ class ColorSettingTab extends PluginSettingTab {
 
     // --- Background opacity and border radius (only if background) ---
     if (this.plugin.settings.highlightStyle === 'background') {
-      // Opacity input (percent)
+      // Opacity slider (percent)
       new Setting(containerEl)
-        .setName('Background opacity (%)')
-        .setDesc('Set the opacity of the background highlight (0-100, percent)')
-        .addText(text => text
-          .setPlaceholder('0-100')
-          .setValue(String(this.plugin.settings.backgroundOpacity ?? 25))
+        .setName('Background opacity')
+        .setDesc('Set the opacity of the background highlight (0-100%)')
+        .addSlider(slider => slider
+          .setLimits(0, 100, 1)
+          .setValue(this.plugin.settings.backgroundOpacity ?? 25)
+          .setDynamicTooltip()
           .onChange(async v => {
-            let val = parseInt(v);
-            if (isNaN(val) || val < 0) val = 0;
-            if (val > 100) val = 100;
-            this.plugin.settings.backgroundOpacity = val;
+            this.plugin.settings.backgroundOpacity = v;
             await this.debouncedSaveSettings();
-          })
-        )
-        .addExtraButton(btn => btn
-          .setIcon('reset')
-          .setTooltip('Reset to 25')
-          .onClick(async () => {
-            this.plugin.settings.backgroundOpacity = 25;
-            await this.debouncedSaveSettings();
-            this.display();
           }));
 
       // Border radius input (px)
@@ -4219,23 +4298,92 @@ class ColorSettingTab extends PluginSettingTab {
             await this.debouncedSaveSettings();
             this.display();
           }));
+
+      // NEW: Enable Background Highlight Border toggle
+      new Setting(containerEl)
+        .setName('Enable Background Highlight Border')
+        .setDesc('Add a border around background highlights. The border will match the text or background color.')
+        .addToggle(t => t
+          .setValue(this.plugin.settings.enableBorderThickness ?? false)
+          .onChange(async v => {
+            this.plugin.settings.enableBorderThickness = v;
+            await this.plugin.saveSettings();
+            // Force full re-render to show/hide border settings
+            this._initializedSettingsUI = false;
+            this.display();
+          }));
+
+      // Show border controls only when enabled
+      if (this.plugin.settings.enableBorderThickness) {
+        // Border Style dropdown
+        new Setting(containerEl)
+          .setName('Border Style')
+          .setDesc('Choose between full border or bottom border only')
+          .addDropdown(d => d
+            .addOption('full', 'Full border')
+            .addOption('bottom', 'Bottom border only')
+            .setValue(this.plugin.settings.borderStyle ?? 'full')
+            .onChange(async v => {
+              this.plugin.settings.borderStyle = v;
+              await this.debouncedSaveSettings();
+            }));
+
+        // Border Opacity slider
+        new Setting(containerEl)
+          .setName('Border Opacity')
+          .setDesc('Set the opacity of the border (0-100%)')
+          .addSlider(slider => slider
+            .setLimits(0, 100, 1)
+            .setValue(this.plugin.settings.borderOpacity ?? 100)
+            .setDynamicTooltip()
+            .onChange(async v => {
+              this.plugin.settings.borderOpacity = v;
+              await this.debouncedSaveSettings();
+            }));
+
+        // Border Thickness input
+        new Setting(containerEl)
+          .setName('Border Thickness (px)')
+          .setDesc('Set the border thickness from 0-5 pixels')
+          .addText(text => text
+            .setPlaceholder('e.g. 1, 2, 3')
+            .setValue(String(this.plugin.settings.borderThickness ?? 1))
+            .onChange(async v => {
+              let val = parseInt(v);
+              if (isNaN(val) || val < 0) val = 0;
+              if (val > 5) val = 5;
+              this.plugin.settings.borderThickness = val;
+              await this.debouncedSaveSettings();
+            }))
+          .addExtraButton(btn => btn
+            .setIcon('reset')
+            .setTooltip('Reset to 1')
+            .onClick(async () => {
+              this.plugin.settings.borderThickness = 1;
+              await this.debouncedSaveSettings();
+              this.display();
+            }));
+      }
     }
 
-    // 4. Enable highlight once
+    // --- Quick Actions (One-time coloring/highlighting) ---
+    containerEl.createEl('h2', { text: 'Quick Actions' });
+
+    // Color Once
     new Setting(containerEl)
-      .setName('Enable highlight once')
-      .setDesc('This adds "Highlight once" to your right-click menu. You can highlight selected text with a background color.')
-      .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysHighlight).onChange(async v => {
-        this.plugin.settings.enableAlwaysHighlight = v;
+      .setName('Enable Color Once')
+      .setDesc('This adds "Color once" to your right-click menu. You can color selected text with a single tap.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysColor).onChange(async v => {
+        this.plugin.settings.enableAlwaysColor = v;
         await this.debouncedSaveSettings();
       }));
 
-    // 5. Partial match
+    // Highlight Once
     new Setting(containerEl)
-      .setName('Partial match')
-      .setDesc('If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')
-      .addToggle(t => t.setValue(this.plugin.settings.partialMatch).onChange(async v => {
-        this.plugin.settings.partialMatch = v;
+      .setName('Enable Highlight Once')
+      .setDesc('This adds "Highlight once" to your right-click menu. You can highlight selected text with a background color.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysHighlight).onChange(async v => {
+        this.plugin.settings.enableAlwaysHighlight = v;
         await this.debouncedSaveSettings();
       }));
 
