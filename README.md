@@ -63,11 +63,14 @@ The **"Text & Background Coloring"** list overrides all other settings. Words 
 
 ### Background Highlight Styling Enhancements
 - **Border Thickness & Color:** Customize the thickness and color of the background highlight border.
-- **Border Style:** Choose between full borders or bottom-only borders for cleaner visuals.
+- **Border Style:** Choose between full borders and 6 other types of borders for cleaner visuals.
 <div style="display:flex; gap:10px;">
   <img src="https://github.com/user-attachments/assets/6023dd29-6ad3-4976-8f8a-99e4e1d9c264" width="425"/>
   <img src="https://github.com/user-attachments/assets/30d2af10-45a8-46b8-92ac-768306be7ad8" width="400"/>
 </div>
+  <img src="https://github.com/user-attachments/assets/b5610a53-0070-4ad7-a00a-0b2c6734275f" />
+  
+<img width="874" height="721" alt="7 border styles" src="https://github.com/user-attachments/assets/06202fbf-2562-4c30-98a5-a07f58c4942b" />
 
 
 ## Advanced Regex Support
