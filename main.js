@@ -212,16 +212,139 @@ module.exports = class AlwaysColorText extends Plugin {
             });
         });
         // Remove always text color (checks new wordEntries model)
-        const hasLiteralEntry = this.settings.wordEntries.some(e => e && e.pattern === selectedText && !e.isRegex);
-        if (hasLiteralEntry) {
+        // Helper function to compare patterns with case-sensitivity setting
+        const patternMatches = (pattern, text) => {
+          if (this.settings.caseSensitive) {
+            return pattern === text;
+          } else {
+            return pattern.toLowerCase() === text.toLowerCase();
+          }
+        };
+        
+        const hasLiteralEntry = this.settings.wordEntries.some(e => e && patternMatches(e.pattern, selectedText) && !e.isRegex);
+        const hasGroupedEntry = this.settings.wordEntries.some(e => e && !e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText)));
+        if (hasLiteralEntry || hasGroupedEntry) {
           menu.addItem(item => {
             item.setTitle("Remove always text color")
               .setIcon('eraser')
               .onClick(async () => {
-                this.settings.wordEntries = this.settings.wordEntries.filter(e => !(e && e.pattern === selectedText && !e.isRegex));
+                // If it's a grouped pattern, remove only that pattern from the group
+                if (hasGroupedEntry) {
+                  const entryWithGroup = this.settings.wordEntries.find(e => e && !e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText)));
+                  if (entryWithGroup) {
+                    const idx = this.settings.wordEntries.indexOf(entryWithGroup);
+                    if (idx !== -1) {
+                      // Remove the selected text from groupedPatterns (case-insensitive comparison)
+                      entryWithGroup.groupedPatterns = entryWithGroup.groupedPatterns.filter(p => !patternMatches(p, selectedText));
+                      // If only one pattern remains, move it to pattern and clear groupedPatterns
+                      if (entryWithGroup.groupedPatterns.length === 1) {
+                        entryWithGroup.pattern = entryWithGroup.groupedPatterns[0];
+                        entryWithGroup.groupedPatterns = null;
+                      } else if (entryWithGroup.groupedPatterns.length === 0) {
+                        // If no patterns left, remove the entire entry
+                        this.settings.wordEntries.splice(idx, 1);
+                      }
+                    }
+                  }
+                } else {
+                  // Remove the entire entry if it's a literal pattern
+                  this.settings.wordEntries = this.settings.wordEntries.filter(e => !(e && patternMatches(e.pattern, selectedText) && !e.isRegex));
+                }
                 await this.saveSettings();
                 this.refreshEditor(view, true);
                 new Notice(`Removed always color for \"${selectedText}\".`);
+                // Refresh settings UI if the settings tab is open - force full re-render
+                if (this.settingTab) {
+                  this.settingTab._initializedSettingsUI = false;
+                  this.settingTab.display();
+                }
+              });
+          });
+        }
+        // Text & Background Coloring:
+        if (this.settings.enableTextBgMenu) {
+          menu.addItem(item => {
+            item.setTitle("Text & Background Color")
+              .setIcon('paint-bucket')
+              .onClick(() => {
+                // Warn if blacklisted
+                if (this.settings.blacklistWords.includes(selectedText)) {
+                  new Notice(`"${selectedText}" is blacklisted and cannot be colored.`);
+                  return;
+                }
+                // Open settings window
+                this.app.setting.open();
+                // Wait for settings to open, then navigate to our tab and focus the entry
+                setTimeout(() => {
+                  try {
+                    // Find and click on our plugin's settings tab
+                    const settingsTabs = document.querySelectorAll('.vertical-tab-nav-item');
+                    for (const tab of settingsTabs) {
+                      if (tab.textContent && tab.textContent.includes('Always Color Text')) {
+                        tab.click();
+                        break;
+                      }
+                    }
+                    // Now focus the text & background entry
+                    setTimeout(() => {
+                      if (this.settingTab) {
+                        try {
+                          this.settingTab.focusTextBgEntry(selectedText);
+                        } catch (e) {
+                          debugError('MENU', 'Failed to focus text bg entry', e);
+                        }
+                      }
+                    }, 200);
+                  } catch (e) {
+                    debugError('MENU', 'Failed to open settings tab', e);
+                  }
+                }, 100);
+              });
+          });
+        }
+        // Remove Text & Background Color
+        const hasTextBgEntry = this.settings.textBgColoringEntries.some(e => 
+          e && (patternMatches(e.pattern, selectedText) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText))))
+        );
+        if (hasTextBgEntry) {
+          menu.addItem(item => {
+            item.setTitle("Remove Text & Background Color")
+              .setIcon('eraser')
+              .onClick(async () => {
+                // If it's a grouped pattern, remove only that pattern from the group
+                const entryWithGroup = this.settings.textBgColoringEntries.find(e => 
+                  e && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText))
+                );
+                if (entryWithGroup) {
+                  const idx = this.settings.textBgColoringEntries.indexOf(entryWithGroup);
+                  if (idx !== -1) {
+                    // Remove the selected text from groupedPatterns (case-insensitive comparison)
+                    entryWithGroup.groupedPatterns = entryWithGroup.groupedPatterns.filter(p => !patternMatches(p, selectedText));
+                    // If only one pattern remains, move it to pattern and clear groupedPatterns
+                    if (entryWithGroup.groupedPatterns.length === 1) {
+                      entryWithGroup.pattern = entryWithGroup.groupedPatterns[0];
+                      entryWithGroup.groupedPatterns = null;
+                    } else if (entryWithGroup.groupedPatterns.length === 0) {
+                      // If no patterns left, remove the entire entry
+                      this.settings.textBgColoringEntries.splice(idx, 1);
+                    }
+                  }
+                } else {
+                  // Remove the entire entry if it's a direct pattern match (case-insensitive comparison)
+                  this.settings.textBgColoringEntries = this.settings.textBgColoringEntries.filter(e => !(e && patternMatches(e.pattern, selectedText)));
+                }
+                await this.saveSettings();
+                this.refreshEditor(view, true);
+                new Notice(`Removed Text & Background Color for \"${selectedText}\".`);
+                // Refresh settings UI if the settings tab is open - force full re-render
+                if (this.settingTab) {
+                  try {
+                    this.settingTab._initializedSettingsUI = false;
+                    this.settingTab.display();
+                  } catch (e) {
+                    debugError('MENU', 'Failed to refresh settings', e);
+                  }
+                }
               });
           });
         }
@@ -783,6 +906,8 @@ module.exports = class AlwaysColorText extends Plugin {
       disableReadingModeColoring: false,
       // Text & Background Coloring entries
       textBgColoringEntries: [],
+      // Enable/disable Text & Background Coloring option in right-click menu
+      enableTextBgMenu: true,
     }, await this.loadData() || {});
   // --- Normalize migrated folder exclusion settings ---
     if (!Array.isArray(this.settings.excludedFolders)) this.settings.excludedFolders = [];
@@ -4196,6 +4321,8 @@ class ColorSettingTab extends PluginSettingTab {
 
   display() {
     const { containerEl } = this;
+    // Store reference to containerEl for use in other methods like focusTextBgEntry
+    this.containerEl = containerEl;
     // If we've already created the static UI once, only refresh dynamic sections
     if (this._initializedSettingsUI) {
       try { this._refreshEntries(); } catch (e) {}
@@ -4541,6 +4668,264 @@ class ColorSettingTab extends PluginSettingTab {
           }).open();
         }));
 
+    // --- Text & Background Coloring ---
+    const textBgHeading = containerEl.createEl('h3', { text: 'Text & Background Coloring' });
+    textBgHeading.style.marginTop = '8px';
+    containerEl.createEl('p', { text: 'Keywords here will always use both text color and background color, ignoring folder style.' });
+
+    // Toggle for enabling/disabling Text & Background Coloring in right-click menu
+    new Setting(containerEl)
+      .setName('Show Text & Background Coloring in right-click menu')
+      .setDesc('Enable or disable the "Text & Background Color" option in the editor right-click menu')
+      .addToggle(toggle => {
+        toggle
+          .setValue(this.plugin.settings.enableTextBgMenu ?? true)
+          .onChange(async (value) => {
+            this.plugin.settings.enableTextBgMenu = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    // Native divider (creates a visual separator like other settings sections)
+    new Setting(containerEl);
+
+    const textBgListDiv = containerEl.createDiv();
+    textBgListDiv.addClass('text-bg-coloring-list');
+
+    // Reference to the empty state paragraph for dynamic removal
+    let textBgEmptyStateP = null;
+
+    // Initialize textBgColoringEntries if not present in settings
+    if (!Array.isArray(this.plugin.settings.textBgColoringEntries)) {
+      this.plugin.settings.textBgColoringEntries = [];
+    }
+
+    const createTextBgRow = (entry) => {
+      const row = textBgListDiv.createDiv();
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.marginBottom = '8px';
+      row.style.gap = '8px';
+
+      // Display comma-separated patterns if grouped, otherwise just the pattern
+      const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
+        ? entry.groupedPatterns.join(', ')
+        : entry.pattern;
+
+      const textInput = row.createEl('input', { type: 'text', value: displayPatterns || '' });
+      textInput.placeholder = 'Keyword or pattern, or comma-separated words (e.g. hello, world)';
+      textInput.style.flex = '1';
+      textInput.style.padding = '6px';
+      textInput.style.borderRadius = '4px';
+      textInput.style.border = '1px solid var(--background-modifier-border)';
+
+      const regexChk = row.createEl('input', { type: 'checkbox' });
+      regexChk.checked = !!entry.isRegex;
+      regexChk.title = 'Treat pattern as a JavaScript regular expression';
+      regexChk.style.cursor = 'pointer';
+
+      const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
+      flagsInput.placeholder = 'flags';
+      flagsInput.style.width = '50px';
+      flagsInput.style.padding = '6px';
+      flagsInput.style.borderRadius = '4px';
+      flagsInput.style.border = '1px solid var(--background-modifier-border)';
+      if (!entry.isRegex) flagsInput.style.display = 'none';
+
+      const textColorPicker = row.createEl('input', { type: 'color' });
+      textColorPicker.value = entry.textColor || '#000000';
+      textColorPicker.style.width = '30px';
+      textColorPicker.style.height = '30px';
+      textColorPicker.style.border = 'none';
+      textColorPicker.style.borderRadius = '4px';
+      textColorPicker.style.cursor = 'pointer';
+      textColorPicker.title = 'Text color';
+
+      const bgColorPicker = row.createEl('input', { type: 'color' });
+      bgColorPicker.value = entry.backgroundColor || '#FFFF00';
+      bgColorPicker.style.width = '30px';
+      bgColorPicker.style.height = '30px';
+      bgColorPicker.style.border = 'none';
+      bgColorPicker.style.borderRadius = '4px';
+      bgColorPicker.style.cursor = 'pointer';
+      bgColorPicker.title = 'Background color';
+
+      const del = row.createEl('button', { text: '✕' });
+      del.addClass('mod-warning');
+      del.style.padding = '4px 8px';
+      del.style.borderRadius = '4px';
+      del.style.cursor = 'pointer';
+
+      const textInputHandler = async () => {
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
+        const newPattern = textInput.value.trim();
+        if (!newPattern) {
+          this.plugin.settings.textBgColoringEntries.splice(entryIdx, 1);
+        } else if (this.plugin.settings.enableRegexSupport && entry.isRegex && this.plugin.isRegexTooComplex(newPattern)) {
+          new Notice(`Pattern too complex: ${newPattern.substring(0, 60)}...`);
+          textInput.value = displayPatterns;
+          return;
+        } else {
+          // Parse comma-separated patterns
+          const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
+          this.plugin.settings.textBgColoringEntries[entryIdx].pattern = patterns[0]; // Keep first pattern as main
+          this.plugin.settings.textBgColoringEntries[entryIdx].groupedPatterns = patterns.length > 1 ? patterns : null;
+        }
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const textColorHandler = async () => {
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
+        const newColor = textColorPicker.value;
+        if (!this.plugin.isValidHexColor(newColor)) {
+          new Notice('Invalid color format.');
+          return;
+        }
+        this.plugin.settings.textBgColoringEntries[entryIdx].textColor = newColor;
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const bgColorHandler = async () => {
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
+        const newColor = bgColorPicker.value;
+        if (!this.plugin.isValidHexColor(newColor)) {
+          new Notice('Invalid color format.');
+          return;
+        }
+        this.plugin.settings.textBgColoringEntries[entryIdx].backgroundColor = newColor;
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const regexChkHandler = async () => {
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
+        this.plugin.settings.textBgColoringEntries[entryIdx].isRegex = regexChk.checked;
+        flagsInput.style.display = regexChk.checked ? 'inline-block' : 'none';
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const flagsInputHandler = async () => {
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was removed
+        this.plugin.settings.textBgColoringEntries[entryIdx].flags = flagsInput.value || '';
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const delHandler = async () => {
+        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
+        if (entryIdx === -1) return; // Entry was already removed
+        this.plugin.settings.textBgColoringEntries.splice(entryIdx, 1);
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        row.remove();
+      };
+
+      textInput.addEventListener('change', textInputHandler);
+      regexChk.addEventListener('change', regexChkHandler);
+      flagsInput.addEventListener('change', flagsInputHandler);
+      textColorPicker.addEventListener('input', textColorHandler);
+      bgColorPicker.addEventListener('input', bgColorHandler);
+      del.addEventListener('click', delHandler);
+
+      this._cleanupHandlers.push(() => {
+        textInput.removeEventListener('change', textInputHandler);
+        regexChk.removeEventListener('change', regexChkHandler);
+        flagsInput.removeEventListener('change', flagsInputHandler);
+        textColorPicker.removeEventListener('input', textColorHandler);
+        bgColorPicker.removeEventListener('input', bgColorHandler);
+        del.removeEventListener('click', delHandler);
+      });
+    };
+
+    // Render existing rows
+    if (this.plugin.settings.textBgColoringEntries.length > 0) {
+      this.plugin.settings.textBgColoringEntries.forEach((entry, i) => {
+        createTextBgRow(entry);
+      });
+    }
+
+    // Create button row with sort and add buttons
+    const textBgButtonRowDiv = containerEl.createDiv();
+    textBgButtonRowDiv.style.display = 'flex';
+    textBgButtonRowDiv.style.gap = '8px';
+    textBgButtonRowDiv.style.marginBottom = '16px';
+    textBgButtonRowDiv.style.marginTop = '8px';
+
+    // Sort button
+    const textBgSortBtn = textBgButtonRowDiv.createEl('button');
+    textBgSortBtn.textContent = this._textBgSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+    textBgSortBtn.style.cursor = 'pointer';
+    textBgSortBtn.style.flex = '0 0 auto';
+    
+    const textBgSortHandler = async () => {
+      this._textBgSortMode = this._textBgSortMode === 'a-z' ? 'last-added' : 'a-z';
+      textBgSortBtn.textContent = this._textBgSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+      // Re-render rows with new sort order
+      textBgListDiv.empty();
+      const entriesToDisplay = [...this.plugin.settings.textBgColoringEntries];
+      if (this._textBgSortMode === 'a-z') {
+        entriesToDisplay.sort((a, b) => (a.pattern || '').toLowerCase().localeCompare((b.pattern || '').toLowerCase()));
+      }
+      entriesToDisplay.forEach((entry, i) => {
+        createTextBgRow(entry);
+      });
+    };
+    textBgSortBtn.addEventListener('click', textBgSortHandler);
+    this._cleanupHandlers.push(() => textBgSortBtn.removeEventListener('click', textBgSortHandler));
+
+    // Add button
+    const textBgAddBtn = textBgButtonRowDiv.createEl('button');
+    textBgAddBtn.textContent = '+ Add new word / pattern';
+    textBgAddBtn.style.cursor = 'pointer';
+    textBgAddBtn.style.flex = '1';
+    textBgAddBtn.addClass('mod-cta');
+    
+    const textBgAddHandler = async () => {
+      if (textBgEmptyStateP) {
+        textBgEmptyStateP.remove();
+        textBgEmptyStateP = null;
+      }
+      
+      const newEntry = { pattern: '', textColor: '#000000', backgroundColor: '#FFFF00', isRegex: false, flags: '', groupedPatterns: null };
+      this.plugin.settings.textBgColoringEntries.push(newEntry);
+      await this.plugin.saveSettings();
+      createTextBgRow(newEntry);
+    };
+    textBgAddBtn.addEventListener('click', textBgAddHandler);
+    this._cleanupHandlers.push(() => textBgAddBtn.removeEventListener('click', textBgAddHandler));
+
+    new Setting(containerEl)
+      .addExtraButton(b => b
+        .setIcon('trash')
+        .setTooltip('Delete all text & background coloring entries')
+        .onClick(async () => {
+          new ConfirmationModal(this.app, 'Delete all text & background colors', 'Are you sure you want to delete all your text & background coloring entries? You can\'t undo this!', async () => {
+            this.plugin.settings.textBgColoringEntries = [];
+            await this.plugin.saveSettings();
+            this.plugin.compileTextBgColoringEntries();
+            this.plugin.forceRefreshAllEditors();
+            this._initializedSettingsUI = false;
+            this.display();
+          }).open();
+        }));
+
+    // Divider before Blacklist section
+    new Setting(containerEl);
+
     // Blacklist words
     containerEl.createEl('h2', { text: 'Blacklist words' });
     containerEl.createEl('p', { text: 'Words in this list will never be colored, even if they match (including partial matches).' });
@@ -4885,232 +5270,6 @@ class ColorSettingTab extends PluginSettingTab {
         await this.plugin.saveSettings();
       }));
 
-
-    // --- Text & Background Coloring ---
-    const textBgHeading = containerEl.createEl('h3', { text: 'Text & Background Coloring' });
-    textBgHeading.style.marginTop = '8px';
-    containerEl.createEl('p', { text: 'Keywords here will always use both text color and background color, ignoring folder style.' });
-
-    const textBgListDiv = containerEl.createDiv();
-    textBgListDiv.addClass('text-bg-coloring-list');
-
-    // Reference to the empty state paragraph for dynamic removal
-    let textBgEmptyStateP = null;
-
-    // Initialize textBgColoringEntries if not present in settings
-    if (!Array.isArray(this.plugin.settings.textBgColoringEntries)) {
-      this.plugin.settings.textBgColoringEntries = [];
-    }
-
-    const createTextBgRow = (entry) => {
-      const row = textBgListDiv.createDiv();
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.marginBottom = '8px';
-      row.style.gap = '8px';
-
-      // Display comma-separated patterns if grouped, otherwise just the pattern
-      const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
-        ? entry.groupedPatterns.join(', ')
-        : entry.pattern;
-
-      const textInput = row.createEl('input', { type: 'text', value: displayPatterns || '' });
-      textInput.placeholder = 'Keyword or pattern, or comma-separated words (e.g. hello, world)';
-      textInput.style.flex = '1';
-      textInput.style.padding = '6px';
-      textInput.style.borderRadius = '4px';
-      textInput.style.border = '1px solid var(--background-modifier-border)';
-
-      const regexChk = row.createEl('input', { type: 'checkbox' });
-      regexChk.checked = !!entry.isRegex;
-      regexChk.title = 'Treat pattern as a JavaScript regular expression';
-      regexChk.style.cursor = 'pointer';
-
-      const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
-      flagsInput.placeholder = 'flags';
-      flagsInput.style.width = '50px';
-      flagsInput.style.padding = '6px';
-      flagsInput.style.borderRadius = '4px';
-      flagsInput.style.border = '1px solid var(--background-modifier-border)';
-      if (!entry.isRegex) flagsInput.style.display = 'none';
-
-      const textColorPicker = row.createEl('input', { type: 'color' });
-      textColorPicker.value = entry.textColor || '#000000';
-      textColorPicker.style.width = '30px';
-      textColorPicker.style.height = '30px';
-      textColorPicker.style.border = 'none';
-      textColorPicker.style.borderRadius = '4px';
-      textColorPicker.style.cursor = 'pointer';
-      textColorPicker.title = 'Text color';
-
-      const bgColorPicker = row.createEl('input', { type: 'color' });
-      bgColorPicker.value = entry.backgroundColor || '#FFFF00';
-      bgColorPicker.style.width = '30px';
-      bgColorPicker.style.height = '30px';
-      bgColorPicker.style.border = 'none';
-      bgColorPicker.style.borderRadius = '4px';
-      bgColorPicker.style.cursor = 'pointer';
-      bgColorPicker.title = 'Background color';
-
-      const del = row.createEl('button', { text: '✕' });
-      del.addClass('mod-warning');
-      del.style.padding = '4px 8px';
-      del.style.borderRadius = '4px';
-      del.style.cursor = 'pointer';
-
-      const textInputHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        const newPattern = textInput.value.trim();
-        if (!newPattern) {
-          this.plugin.settings.textBgColoringEntries.splice(entryIdx, 1);
-        } else if (this.plugin.settings.enableRegexSupport && entry.isRegex && this.plugin.isRegexTooComplex(newPattern)) {
-          new Notice(`Pattern too complex: ${newPattern.substring(0, 60)}...`);
-          textInput.value = displayPatterns;
-          return;
-        } else {
-          // Parse comma-separated patterns
-          const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
-          this.plugin.settings.textBgColoringEntries[entryIdx].pattern = patterns[0]; // Keep first pattern as main
-          this.plugin.settings.textBgColoringEntries[entryIdx].groupedPatterns = patterns.length > 1 ? patterns : null;
-        }
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const textColorHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        const newColor = textColorPicker.value;
-        if (!this.plugin.isValidHexColor(newColor)) {
-          new Notice('Invalid color format.');
-          return;
-        }
-        this.plugin.settings.textBgColoringEntries[entryIdx].textColor = newColor;
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const bgColorHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        const newColor = bgColorPicker.value;
-        if (!this.plugin.isValidHexColor(newColor)) {
-          new Notice('Invalid color format.');
-          return;
-        }
-        this.plugin.settings.textBgColoringEntries[entryIdx].backgroundColor = newColor;
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const regexChkHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        this.plugin.settings.textBgColoringEntries[entryIdx].isRegex = regexChk.checked;
-        flagsInput.style.display = regexChk.checked ? 'inline-block' : 'none';
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const flagsInputHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        this.plugin.settings.textBgColoringEntries[entryIdx].flags = flagsInput.value || '';
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const delHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was already removed
-        this.plugin.settings.textBgColoringEntries.splice(entryIdx, 1);
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        row.remove();
-      };
-
-      textInput.addEventListener('change', textInputHandler);
-      regexChk.addEventListener('change', regexChkHandler);
-      flagsInput.addEventListener('change', flagsInputHandler);
-      textColorPicker.addEventListener('input', textColorHandler);
-      bgColorPicker.addEventListener('input', bgColorHandler);
-      del.addEventListener('click', delHandler);
-
-      this._cleanupHandlers.push(() => {
-        textInput.removeEventListener('change', textInputHandler);
-        regexChk.removeEventListener('change', regexChkHandler);
-        flagsInput.removeEventListener('change', flagsInputHandler);
-        textColorPicker.removeEventListener('input', textColorHandler);
-        bgColorPicker.removeEventListener('input', bgColorHandler);
-        del.removeEventListener('click', delHandler);
-      });
-    };
-
-    // Render existing rows
-    if (this.plugin.settings.textBgColoringEntries.length > 0) {
-      this.plugin.settings.textBgColoringEntries.forEach((entry, i) => {
-        createTextBgRow(entry);
-      });
-    }
-
-    // Create button row with sort and add buttons
-    const textBgButtonRowDiv = containerEl.createDiv();
-    textBgButtonRowDiv.style.display = 'flex';
-    textBgButtonRowDiv.style.gap = '8px';
-    textBgButtonRowDiv.style.marginBottom = '16px';
-    textBgButtonRowDiv.style.marginTop = '8px';
-
-    // Sort button
-    const textBgSortBtn = textBgButtonRowDiv.createEl('button');
-    textBgSortBtn.textContent = this._textBgSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
-    textBgSortBtn.style.cursor = 'pointer';
-    textBgSortBtn.style.flex = '0 0 auto';
-    
-    const textBgSortHandler = async () => {
-      this._textBgSortMode = this._textBgSortMode === 'a-z' ? 'last-added' : 'a-z';
-      textBgSortBtn.textContent = this._textBgSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
-      // Re-render rows with new sort order
-      textBgListDiv.empty();
-      const entriesToDisplay = [...this.plugin.settings.textBgColoringEntries];
-      if (this._textBgSortMode === 'a-z') {
-        entriesToDisplay.sort((a, b) => (a.pattern || '').toLowerCase().localeCompare((b.pattern || '').toLowerCase()));
-      }
-      entriesToDisplay.forEach((entry, i) => {
-        createTextBgRow(entry);
-      });
-    };
-    textBgSortBtn.addEventListener('click', textBgSortHandler);
-    this._cleanupHandlers.push(() => textBgSortBtn.removeEventListener('click', textBgSortHandler));
-
-    // Add button
-    const textBgAddBtn = textBgButtonRowDiv.createEl('button');
-    textBgAddBtn.textContent = '+ Add new word / pattern';
-    textBgAddBtn.style.cursor = 'pointer';
-    textBgAddBtn.style.flex = '1';
-    textBgAddBtn.addClass('mod-cta');
-    
-    const textBgAddHandler = async () => {
-      if (textBgEmptyStateP) {
-        textBgEmptyStateP.remove();
-        textBgEmptyStateP = null;
-      }
-      
-      const newEntry = { pattern: '', textColor: '#000000', backgroundColor: '#FFFF00', isRegex: false, flags: '', groupedPatterns: null };
-      this.plugin.settings.textBgColoringEntries.push(newEntry);
-      await this.plugin.saveSettings();
-      createTextBgRow(newEntry);
-    };
-    textBgAddBtn.addEventListener('click', textBgAddHandler);
-    this._cleanupHandlers.push(() => textBgAddBtn.removeEventListener('click', textBgAddHandler));
-
-
     // --- File-specific options ---
     const fileOptHeading = containerEl.createEl('h3', { text: 'File-specific options' });
     fileOptHeading.style.marginTop = '38px';
@@ -5171,6 +5330,73 @@ class ColorSettingTab extends PluginSettingTab {
         await this.plugin.saveSettings();
         this.display();
       }));
+  }
+
+  // Method to focus and/or create a text & background coloring entry with pre-filled text
+  async focusTextBgEntry(selectedText) {
+    try {
+      if (!selectedText || !this.containerEl) return;
+      
+      // Find the text input for this entry, or create a new one
+      let foundEntry = this.plugin.settings.textBgColoringEntries.find(e => 
+        e && (e.pattern === selectedText || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.includes(selectedText)))
+      );
+      
+      let isNewEntry = false;
+      // If entry doesn't exist, create it
+      if (!foundEntry) {
+        isNewEntry = true;
+        foundEntry = {
+          pattern: selectedText,
+          textColor: '#000000',
+          backgroundColor: '#FFFF00',
+          isRegex: false,
+          flags: '',
+          groupedPatterns: null
+        };
+        this.plugin.settings.textBgColoringEntries.push(foundEntry);
+        // Need to recompile entries when a new one is added
+        this.plugin.compileTextBgColoringEntries();
+        // Save the settings
+        await this.plugin.saveSettings();
+        
+        // Force a full re-render by clearing the initialization flag
+        this._initializedSettingsUI = false;
+        this.display();
+      }
+      
+      // Scroll to the text & background coloring section after a delay to let DOM update
+      setTimeout(() => {
+        const textBgListDiv = this.containerEl.querySelector('.text-bg-coloring-list');
+        if (textBgListDiv) {
+          textBgListDiv.scrollIntoView({ behavior: 'auto', block: 'center' });
+          
+          // Find and focus the text input for this entry
+          setTimeout(() => {
+            const inputs = textBgListDiv.querySelectorAll('input[type="text"]');
+            for (const input of inputs) {
+              if (input.value.includes(selectedText)) {
+                input.focus();
+                input.select();
+                // Add visual focus highlight with accent color border
+                input.style.borderColor = 'var(--color-accent)';
+                input.style.boxShadow = '0 0 0 2px var(--color-accent-1)';
+                input.style.transition = 'border-color 0.2s ease, box-shadow 0.2s ease';
+                
+                // Remove the highlight after 3 seconds
+                setTimeout(() => {
+                  input.style.borderColor = 'var(--background-modifier-border)';
+                  input.style.boxShadow = 'none';
+                }, 3000);
+                break;
+              }
+            }
+          }, 300); // Wait for scroll to complete
+        }
+      }, isNewEntry ? 500 : 100); // Wait longer if we just re-rendered the display
+    } catch (e) {
+      debugError('FOCUS_TEXTBG', 'Failed to focus text bg entry', e);
+    }
   }
 }
 
