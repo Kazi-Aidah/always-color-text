@@ -70,7 +70,7 @@ The **"Text & Background Coloring"** list overrides all other settings. Words 
 </div>
   <img src="https://github.com/user-attachments/assets/b5610a53-0070-4ad7-a00a-0b2c6734275f" />
   
-<img width="874" height="721" alt="7 border styles" src="https://github.com/user-attachments/assets/06202fbf-2562-4c30-98a5-a07f58c4942b" />
+<img alt="7 border styles" src="https://github.com/user-attachments/assets/06202fbf-2562-4c30-98a5-a07f58c4942b" />
 
 
 ## Advanced Regex Support
@@ -105,6 +105,8 @@ You will have to enable regex support for this.
 - `^#\s+.*$` - Match heading lines (start with # and space)
 
 _Note: For literal text with special characters like `.` or `*`, leave "Use regex" unchecked - they'll be matched exactly._
+
+You can test out regex patterns before using them from https://regex101.com/.
 
 
 ### Safety and Pattern Restrictions
@@ -195,6 +197,7 @@ Here are ready-to-use regex patterns for common scenarios!!
 # Phone numbers (basic pattern)
 \b\d{3}[-.]?\d{3}[-.]?\d{4}\b
 ```
+
 
 #### Blocked Patterns
 The following types of patterns are automatically blocked for safety:
