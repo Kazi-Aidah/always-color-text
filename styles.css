@@ -104,3 +104,96 @@ a .always-color-text-highlight,
   --text-normal: var(--highlight-color, currentColor) !important;
   color: var(--highlight-color, currentColor) !important;
 }
+
+/* Fix padding/layout for color settings UI elements */
+
+/* Standardize checkbox and input styling to prevent padding inconsistencies */
+.setting-item input[type="checkbox"] {
+  margin: 0;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.setting-item input[type="text"],
+.setting-item input[type="color"],
+.setting-item select {
+  padding: 6px;
+  margin: 0;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+.setting-item input[type="color"] {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* Ensure consistent spacing in color entry rows */
+.always-color-list > div,
+.text-bg-coloring-list > div,
+.text-bg-coloring-full-list > div,
+.blacklist-words-list > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+/* Ensure swatch select dropdowns have consistent padding */
+.setting-item select {
+  min-width: 140px;
+  flex: 0 0 auto;
+}
+
+/* Fix color picker and checkbox alignment */
+.setting-item {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Prevent checkbox from being shifted */
+.setting-item input[type="checkbox"] {
+  margin-top: 2px;
+}
+
+/* Consistent swatch select styling */
+select {
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  height: auto;
+  line-height: 1.5;
+}
+
+/* Fix flex alignment for row items */
+.always-color-list > div input[type="checkbox"],
+.text-bg-coloring-list > div input[type="checkbox"],
+.text-bg-coloring-full-list > div input[type="checkbox"],
+.blacklist-words-list > div input[type="checkbox"] {
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Ensure consistent padding in input fields */
+.always-color-list > div input[type="text"],
+.text-bg-coloring-list > div input[type="text"],
+.text-bg-coloring-full-list > div input[type="text"],
+.blacklist-words-list > div input[type="text"],
+.always-color-list > div input[type="color"],
+.text-bg-coloring-list > div input[type="color"],
+.text-bg-coloring-full-list > div input[type="color"] {
+  padding: 6px;
+  margin: 0;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  box-sizing: border-box;
+}

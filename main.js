@@ -11,7 +11,7 @@ const {
 const { RangeSetBuilder } = require('@codemirror/state');
 const { Decoration, ViewPlugin } = require('@codemirror/view');
 const { syntaxTree } = require('@codemirror/language');
-
+        
 // Performance tuning constants for editor decoration
 const EDITOR_PERFORMANCE_CONSTANTS = {
   MAX_PATTERNS_STANDARD: 30,      // Use standard processing for <= 30 patterns
@@ -21,7 +21,6 @@ const EDITOR_PERFORMANCE_CONSTANTS = {
   MAX_MATCHES_PER_PATTERN: 100,   // Max matches per pattern in chunks
   MAX_TOTAL_MATCHES: 3000         // Absolute limit for decorations
 };
-
 // Development mode flag - set to false for production
 const IS_DEVELOPMENT = false;
 
@@ -97,23 +96,29 @@ module.exports = class AlwaysColorText extends Plugin {
     
     // Throttle perf-gate warnings (timestamp ms)
     this._lastPerfWarning = 0;
+    this._commandsRegistered = false;
   }
 
   async onload() {
     await this.loadSettings();
-    this.settingTab = new ColorSettingTab(this.app, this);
-    this.addSettingTab(this.settingTab);
+    try {
+      this.settingTab = new ColorSettingTab(this.app, this);
+      this.addSettingTab(this.settingTab);
+    } catch (e) {
+      try { debugError('SETTINGS_TAB', 'Failed to initialize settings tab', e); } catch (_) {}
+    }
 
-    // --- Ribbon icon ---
-    this.ribbonIcon = this.addRibbonIcon('palette', 'Always color text', async () => {
-      this.settings.enabled = !this.settings.enabled;
-      await this.saveSettings();
-      this.updateStatusBar();
-      this.reconfigureEditorExtensions();
-      this.forceRefreshAllEditors();
-      this.forceRefreshAllReadingViews();
-      new Notice(`Always color text ${this.settings.enabled ? 'enabled' : 'disabled'}`);
-    });
+    if (!this.settings.disableToggleModes.ribbon) {
+      this.ribbonIcon = this.addRibbonIcon('palette', 'Always color text', async () => {
+        this.settings.enabled = !this.settings.enabled;
+        await this.saveSettings();
+        this.updateStatusBar();
+        this.reconfigureEditorExtensions();
+        this.forceRefreshAllEditors();
+        this.forceRefreshAllReadingViews();
+        new Notice(`Always color text ${this.settings.enabled ? 'enabled' : 'disabled'}`);
+      });
+    }
 
     // --- The Status bar toggle ---
     if (!this.settings.disableToggleModes.statusBar) {
@@ -159,58 +164,47 @@ module.exports = class AlwaysColorText extends Plugin {
     this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor, view) => {
       const selectedText = editor.getSelection().trim();
       if (selectedText.length > 0) {
-        // Color once:
-        if (this.settings.enableAlwaysColor) {
-          menu.addItem(item => {
-            item.setTitle("Color once")
-              .setIcon('brush')
-              .onClick(() => {
-                // Warn if blacklisted
-                if (this.settings.blacklistWords.includes(selectedText)) {
-                  new Notice(`"${selectedText}" is blacklisted and cannot be colored.`);
-                  return;
-                }
-                new ColorPickerModal(this.app, this, (color) => {
-                  const html = `<span style="color: ${color}">${selectedText}</span>`;
-                  editor.replaceSelection(html);
-                }).open();
-              });
-          });
-        }
-        // Highlight once:
-        if (this.settings.enableAlwaysHighlight) {
-          menu.addItem(item => {
-            item.setTitle("Highlight once")
-              .setIcon('highlighter')
-              .onClick(() => {
-                // Warn if blacklisted
-                if (this.settings.blacklistWords.includes(selectedText)) {
-                  new Notice(`"${selectedText}" is blacklisted and cannot be highlighted.`);
-                  return;
-                }
-                new ColorPickerModal(this.app, this, (color) => {
-                  const html = `<span style="background-color: ${color}">${selectedText}</span>`;
-                  editor.replaceSelection(html);
-                }).open();
-              });
-          });
-        }
         // Always color text:
         menu.addItem(item => {
           item.setTitle("Always color text")
             .setIcon('palette')
             .onClick(() => {
               // Warn if blacklisted
-              if (this.settings.blacklistWords.includes(selectedText)) {
+              if (this.isWordBlacklisted(selectedText)) {
                 new Notice(`"${selectedText}" is blacklisted and cannot be colored.`);
                 return;
               }
-              new ColorPickerModal(this.app, this, async (color) => {
-                await this.saveEntry(selectedText, color);
+              new ColorPickerModal(this.app, this, async (color, result) => {
+                const sel = result || {};
+                const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
+                const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+                const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === selectedText && !e.isRegex);
+                if (idx !== -1) {
+                  const entry = this.settings.wordEntries[idx];
+                  if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; }
+                  else if (tc) { entry.color = tc; entry.styleType = 'text'; entry.textColor = null; entry.backgroundColor = null; }
+                  else if (bc) { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.styleType = 'highlight'; }
+                  else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; }
+                } else {
+                  if (tc && bc) {
+                    this.settings.wordEntries.push({ pattern: selectedText, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both' });
+                  } else if (tc) {
+                    this.settings.wordEntries.push({ pattern: selectedText, color: tc, isRegex: false, flags: '', styleType: 'text' });
+                  } else if (bc) {
+                    this.settings.wordEntries.push({ pattern: selectedText, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight' });
+                  } else if (color && this.isValidHexColor(color)) {
+                    this.settings.wordEntries.push({ pattern: selectedText, color: color, isRegex: false, flags: '', styleType: 'text' });
+                  }
+                }
+                await this.saveSettings();
+                this.compileWordEntries();
+                this.compileTextBgColoringEntries();
+                this.reconfigureEditorExtensions();
                 this.refreshEditor(view, true);
-              }).open();
+              }, 'text-and-background', selectedText).open();
             });
         });
+        
         // Remove always text color (checks new wordEntries model)
         // Helper function to compare patterns with case-sensitivity setting
         const patternMatches = (pattern, text) => {
@@ -221,39 +215,71 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         };
         
+        const hasRegexEntry = this.settings.enableRegexSupport && this.settings.wordEntries.some(e => e && e.isRegex && (() => { try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; } })());
         const hasLiteralEntry = this.settings.wordEntries.some(e => e && patternMatches(e.pattern, selectedText) && !e.isRegex);
         const hasGroupedEntry = this.settings.wordEntries.some(e => e && !e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText)));
-        if (hasLiteralEntry || hasGroupedEntry) {
+        const hasTextBgEntry = (Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : []).some(e => {
+          if (!e || !e.backgroundColor) return false;
+          if (e.isRegex && this.settings.enableRegexSupport) {
+            try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; }
+          } else {
+            const literal = patternMatches(e.pattern || '', selectedText);
+            const grouped = Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText));
+            return literal || grouped;
+          }
+        });
+        
+        if (hasLiteralEntry || hasGroupedEntry || hasRegexEntry || hasTextBgEntry) {
           menu.addItem(item => {
-            item.setTitle("Remove always text color")
+            item.setTitle("Remove Always Color Text")
               .setIcon('eraser')
               .onClick(async () => {
-                // If it's a grouped pattern, remove only that pattern from the group
                 if (hasGroupedEntry) {
                   const entryWithGroup = this.settings.wordEntries.find(e => e && !e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText)));
                   if (entryWithGroup) {
                     const idx = this.settings.wordEntries.indexOf(entryWithGroup);
                     if (idx !== -1) {
-                      // Remove the selected text from groupedPatterns (case-insensitive comparison)
                       entryWithGroup.groupedPatterns = entryWithGroup.groupedPatterns.filter(p => !patternMatches(p, selectedText));
-                      // If only one pattern remains, move it to pattern and clear groupedPatterns
                       if (entryWithGroup.groupedPatterns.length === 1) {
                         entryWithGroup.pattern = entryWithGroup.groupedPatterns[0];
                         entryWithGroup.groupedPatterns = null;
                       } else if (entryWithGroup.groupedPatterns.length === 0) {
-                        // If no patterns left, remove the entire entry
                         this.settings.wordEntries.splice(idx, 1);
                       }
                     }
                   }
-                } else {
-                  // Remove the entire entry if it's a literal pattern
+                }
+                if (hasLiteralEntry) {
                   this.settings.wordEntries = this.settings.wordEntries.filter(e => !(e && patternMatches(e.pattern, selectedText) && !e.isRegex));
+                }
+                if (hasRegexEntry) {
+                  const idxToRemove = this.settings.wordEntries.findIndex(e => e && e.isRegex && (() => { try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; } })());
+                  if (idxToRemove !== -1) {
+                    this.settings.wordEntries.splice(idxToRemove, 1);
+                  }
+                }
+                if (hasTextBgEntry) {
+                  const entries = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+                  const matchedGrouped = entries.find(e => e && e.backgroundColor && !e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText)));
+                  if (matchedGrouped) {
+                    const idx = entries.indexOf(matchedGrouped);
+                    matchedGrouped.groupedPatterns = matchedGrouped.groupedPatterns.filter(p => !patternMatches(p, selectedText));
+                    if (matchedGrouped.groupedPatterns.length === 1) {
+                      matchedGrouped.pattern = matchedGrouped.groupedPatterns[0];
+                      matchedGrouped.groupedPatterns = null;
+                    } else if (matchedGrouped.groupedPatterns.length === 0) {
+                      entries.splice(idx, 1);
+                    }
+                  }
+                  this.settings.wordEntries = entries.filter(e => !(e && e.backgroundColor && !e.isRegex && patternMatches(e.pattern || '', selectedText)));
+                  const ridx = this.settings.wordEntries.findIndex(e => e && e.backgroundColor && e.isRegex && (() => { try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; } })());
+                  if (ridx !== -1) {
+                    this.settings.wordEntries.splice(ridx, 1);
+                  }
                 }
                 await this.saveSettings();
                 this.refreshEditor(view, true);
-                new Notice(`Removed always color for \"${selectedText}\".`);
-                // Refresh settings UI if the settings tab is open - force full re-render
+                new Notice(`Removed always coloring for \"${selectedText}\".`);
                 if (this.settingTab) {
                   this.settingTab._initializedSettingsUI = false;
                   this.settingTab.display();
@@ -261,105 +287,21 @@ module.exports = class AlwaysColorText extends Plugin {
               });
           });
         }
-        // Text & Background Coloring:
-        if (this.settings.enableTextBgMenu) {
-          menu.addItem(item => {
-            item.setTitle("Text & Background Color")
-              .setIcon('paint-bucket')
-              .onClick(() => {
-                // Warn if blacklisted
-                if (this.settings.blacklistWords.includes(selectedText)) {
-                  new Notice(`"${selectedText}" is blacklisted and cannot be colored.`);
-                  return;
-                }
-                // Open settings window
-                this.app.setting.open();
-                // Wait for settings to open, then navigate to our tab and focus the entry
-                setTimeout(() => {
-                  try {
-                    // Find and click on our plugin's settings tab
-                    const settingsTabs = document.querySelectorAll('.vertical-tab-nav-item');
-                    for (const tab of settingsTabs) {
-                      if (tab.textContent && tab.textContent.includes('Always Color Text')) {
-                        tab.click();
-                        break;
-                      }
-                    }
-                    // Now focus the text & background entry
-                    setTimeout(() => {
-                      if (this.settingTab) {
-                        try {
-                          this.settingTab.focusTextBgEntry(selectedText);
-                        } catch (e) {
-                          debugError('MENU', 'Failed to focus text bg entry', e);
-                        }
-                      }
-                    }, 200);
-                  } catch (e) {
-                    debugError('MENU', 'Failed to open settings tab', e);
-                  }
-                }, 100);
-              });
-          });
-        }
-        // Remove Text & Background Color
-        const hasTextBgEntry = this.settings.textBgColoringEntries.some(e => 
-          e && (patternMatches(e.pattern, selectedText) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText))))
-        );
-        if (hasTextBgEntry) {
-          menu.addItem(item => {
-            item.setTitle("Remove Text & Background Color")
-              .setIcon('eraser')
-              .onClick(async () => {
-                // If it's a grouped pattern, remove only that pattern from the group
-                const entryWithGroup = this.settings.textBgColoringEntries.find(e => 
-                  e && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText))
-                );
-                if (entryWithGroup) {
-                  const idx = this.settings.textBgColoringEntries.indexOf(entryWithGroup);
-                  if (idx !== -1) {
-                    // Remove the selected text from groupedPatterns (case-insensitive comparison)
-                    entryWithGroup.groupedPatterns = entryWithGroup.groupedPatterns.filter(p => !patternMatches(p, selectedText));
-                    // If only one pattern remains, move it to pattern and clear groupedPatterns
-                    if (entryWithGroup.groupedPatterns.length === 1) {
-                      entryWithGroup.pattern = entryWithGroup.groupedPatterns[0];
-                      entryWithGroup.groupedPatterns = null;
-                    } else if (entryWithGroup.groupedPatterns.length === 0) {
-                      // If no patterns left, remove the entire entry
-                      this.settings.textBgColoringEntries.splice(idx, 1);
-                    }
-                  }
-                } else {
-                  // Remove the entire entry if it's a direct pattern match (case-insensitive comparison)
-                  this.settings.textBgColoringEntries = this.settings.textBgColoringEntries.filter(e => !(e && patternMatches(e.pattern, selectedText)));
-                }
-                await this.saveSettings();
-                this.refreshEditor(view, true);
-                new Notice(`Removed Text & Background Color for \"${selectedText}\".`);
-                // Refresh settings UI if the settings tab is open - force full re-render
-                if (this.settingTab) {
-                  try {
-                    this.settingTab._initializedSettingsUI = false;
-                    this.settingTab.display();
-                  } catch (e) {
-                    debugError('MENU', 'Failed to refresh settings', e);
-                  }
-                }
-              });
-          });
-        }
+        
         // Blacklist words from coloring
         if (this.settings.enableBlacklistMenu) {
           menu.addItem(item => {
             item.setTitle("Blacklist words from coloring")
               .setIcon('ban')
               .onClick(async () => {
-                if (!this.settings.blacklistWords.includes(selectedText)) {
-                  this.settings.blacklistWords.push(selectedText);
+                const existsLegacy = Array.isArray(this.settings.blacklistWords) && this.settings.blacklistWords.includes(selectedText);
+                const existsNew = Array.isArray(this.settings.blacklistEntries) && this.settings.blacklistEntries.some(e => e && !e.isRegex && String(e.pattern).toLowerCase() === String(selectedText).toLowerCase());
+                if (!existsLegacy && !existsNew) {
+                  if (!Array.isArray(this.settings.blacklistEntries)) this.settings.blacklistEntries = [];
+                  this.settings.blacklistEntries.push({ pattern: selectedText, isRegex: false, flags: '', groupedPatterns: null });
                   await this.saveSettings();
                   new Notice(`"${selectedText}" added to blacklist.`);
                   this.refreshEditor(view, true);
-                  // Refresh blacklist section in settings if open
                   if (this.settingTab && this.settingTab._refreshBlacklistWords) {
                     this.settingTab._refreshBlacklistWords();
                   }
@@ -384,10 +326,34 @@ module.exports = class AlwaysColorText extends Plugin {
             new Notice("Please select some text first.");
             return;
           }
-          new ColorPickerModal(this.app, this, async (color) => {
-            await this.saveEntry(word, color);
+          new ColorPickerModal(this.app, this, async (color, result) => {
+            const sel = result || {};
+            const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
+            const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+            const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === word && !e.isRegex);
+            if (idx !== -1) {
+              const entry = this.settings.wordEntries[idx];
+              if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; }
+              else if (tc) { entry.color = tc; entry.styleType = 'text'; entry.textColor = null; entry.backgroundColor = null; }
+              else if (bc) { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.styleType = 'highlight'; }
+              else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; }
+            } else {
+              if (tc && bc) {
+                this.settings.wordEntries.push({ pattern: word, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both' });
+              } else if (tc) {
+                this.settings.wordEntries.push({ pattern: word, color: tc, isRegex: false, flags: '', styleType: 'text' });
+              } else if (bc) {
+                this.settings.wordEntries.push({ pattern: word, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight' });
+              } else if (color && this.isValidHexColor(color)) {
+                this.settings.wordEntries.push({ pattern: word, color: color, isRegex: false, flags: '', styleType: 'text' });
+              }
+            }
+            await this.saveSettings();
+            this.compileWordEntries();
+            this.compileTextBgColoringEntries();
+            this.reconfigureEditorExtensions();
             this.forceRefreshAllEditors();
-          }).open();
+          }, 'text-and-background', word).open();
         }
       });
 
@@ -432,12 +398,138 @@ module.exports = class AlwaysColorText extends Plugin {
           this.forceRefreshAllReadingViews();
         }
       });
+      this._commandsRegistered = true;
     }
 
     // --- Enable plugin features ---
     if (this.settings.enabled) {
       this.enablePluginFeatures();
     }
+  }
+
+  registerCommandPalette() {
+    try {
+      if (this._commandsRegistered) return;
+      this.addCommand({
+        id: 'set-color-for-selection',
+        name: 'Color Selected Text',
+        editorCallback: (editor, view) => {
+          const word = editor.getSelection().trim();
+          if (!word) {
+            new Notice('Please select some text first.');
+            return;
+          }
+          new ColorPickerModal(this.app, this, async (color, result) => {
+            const sel = result || {};
+            const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
+            const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+            const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === word && !e.isRegex);
+            if (idx !== -1) {
+              const entry = this.settings.wordEntries[idx];
+              if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; }
+              else if (tc) { entry.color = tc; entry.styleType = 'text'; entry.textColor = null; entry.backgroundColor = null; }
+              else if (bc) { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.styleType = 'highlight'; }
+              else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; }
+            } else {
+              if (tc && bc) {
+                this.settings.wordEntries.push({ pattern: word, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both' });
+              } else if (tc) {
+                this.settings.wordEntries.push({ pattern: word, color: tc, isRegex: false, flags: '', styleType: 'text' });
+              } else if (bc) {
+                this.settings.wordEntries.push({ pattern: word, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight' });
+              } else if (color && this.isValidHexColor(color)) {
+                this.settings.wordEntries.push({ pattern: word, color: color, isRegex: false, flags: '', styleType: 'text' });
+              }
+            }
+            await this.saveSettings();
+            this.compileWordEntries();
+            this.compileTextBgColoringEntries();
+            this.reconfigureEditorExtensions();
+            this.forceRefreshAllEditors();
+          }, 'text-and-background', word).open();
+        }
+      });
+      this.addCommand({
+        id: 'toggle-coloring-for-current-document',
+        name: 'Enable/Disable coloring for current document',
+        callback: async () => {
+          const md = this.app.workspace.getActiveFile();
+          if (!md) {
+            new Notice('No active file to toggle coloring for.');
+            return;
+          }
+          if (this.settings.disabledFiles.includes(md.path)) {
+            const index = this.settings.disabledFiles.indexOf(md.path);
+            if (index > -1) this.settings.disabledFiles.splice(index, 1);
+            await this.saveSettings();
+            new Notice(`Coloring enabled for ${md.path}`);
+          } else {
+            this.settings.disabledFiles.push(md.path);
+            await this.saveSettings();
+            new Notice(`Coloring disabled for ${md.path}`);
+          }
+        }
+      });
+      this.addCommand({
+        id: 'toggle-always-color-text',
+        name: 'Enable/Disable Always Color Text',
+        callback: async () => {
+          this.settings.enabled = !this.settings.enabled;
+          await this.saveSettings();
+          new Notice(this.settings.enabled ? 'Always Color Text Enabled' : 'Always Color Text Disabled');
+          this.reconfigureEditorExtensions();
+          this.forceRefreshAllEditors();
+          this.forceRefreshAllReadingViews();
+        }
+      });
+      this.addCommand({
+        id: 'run-self-tests',
+        name: 'Run Always Color Text self-tests',
+        callback: async () => {
+          const results = [];
+          try {
+            const alpha = { pattern: 'alpha', color: '#123456', isRegex: false, flags: '', styleType: 'text' };
+            const beta = { pattern: 'beta', textColor: '#111111', backgroundColor: '#222222', isRegex: false, flags: '', styleType: 'both' };
+            const gamma = { pattern: 'gamma', textColor: 'currentColor', backgroundColor: '#333333', isRegex: false, flags: '', styleType: 'highlight' };
+            this.settings.wordEntries = this.settings.wordEntries.filter(e => !e || (e.pattern !== 'alpha' && e.pattern !== 'beta' && e.pattern !== 'gamma'));
+            this.settings.wordEntries.push(alpha, beta, gamma);
+            await this.saveSettings();
+            this.compileWordEntries();
+            this.compileTextBgColoringEntries();
+            // Reload settings twice to simulate cycles
+            await this.loadSettings();
+            await this.saveSettings();
+            await this.loadSettings();
+            // Validate initial persistence
+            const a = this.settings.wordEntries.find(e => e.pattern === 'alpha');
+            const b = this.settings.wordEntries.find(e => e.pattern === 'beta');
+            const g = this.settings.wordEntries.find(e => e.pattern === 'gamma');
+            results.push(a && a.styleType === 'text' && a.color === '#123456' ? 'A: OK' : 'A: FAIL');
+            results.push(b && b.styleType === 'both' && b.textColor === '#111111' && b.backgroundColor === '#222222' ? 'B: OK' : 'B: FAIL');
+            results.push(g && g.styleType === 'highlight' && g.backgroundColor === '#333333' && g.textColor === 'currentColor' ? 'C: OK' : 'C: FAIL');
+            // 4) Update from text to highlight
+            try {
+              a.backgroundColor = a.color; a.textColor = 'currentColor'; a.color = ''; a.styleType = 'highlight';
+            } catch (e) {}
+            // 5) Update from highlight to text
+            try {
+              g.color = g.backgroundColor; g.textColor = null; g.backgroundColor = null; g.styleType = 'text';
+            } catch (e) {}
+            await this.saveSettings();
+            await this.loadSettings();
+            const a2 = this.settings.wordEntries.find(e => e.pattern === 'alpha');
+            const g2 = this.settings.wordEntries.find(e => e.pattern === 'gamma');
+            results.push(a2 && a2.styleType === 'highlight' && a2.backgroundColor === '#123456' && a2.textColor === 'currentColor' && (!a2.color || a2.color === '') ? 'D: OK' : 'D: FAIL');
+            results.push(g2 && g2.styleType === 'text' && g2.color === '#333333' && !g2.backgroundColor ? 'E: OK' : 'E: FAIL');
+            const ok = results.every(r => r.includes('OK'));
+            new Notice(`Self-tests ${ok ? 'passed' : 'failed'}: ${results.join(', ')}`);
+          } catch (e) {
+            new Notice('Self-tests error: ' + (e && e.message ? e.message : String(e)));
+          }
+        }
+      });
+      this._commandsRegistered = true;
+    } catch (e) {}
   }
 
   // --- Regex complexity checker to avoid catastrophic patterns ---
@@ -590,7 +682,7 @@ module.exports = class AlwaysColorText extends Plugin {
     debugLog('SIMPLE', `Processing ${simpleEntries.length} simple patterns`);
     
     const blockTags = ['P', 'LI', 'DIV', 'SPAN', 'TD', 'TH', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
-    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    const effectiveStyle = 'text';
     
     // Fast DOM collection - avoid TreeWalker overhead
     const blocks = element.querySelectorAll?.(blockTags.join(', ')) || [];
@@ -869,7 +961,7 @@ module.exports = class AlwaysColorText extends Plugin {
       wordColors: {},
       wordEntries: [],
       caseSensitive: false,
-      enabled: false,
+      enabled: true,
       highlightStyle: 'text',
       backgroundOpacity: 35, // percent
       highlightBorderRadius: 4, // px
@@ -879,14 +971,31 @@ module.exports = class AlwaysColorText extends Plugin {
       borderOpacity: 100, // percent (0-100)
       borderThickness: 2, // px (0-5)
       borderStyle: 'full', // 'full', 'top', 'bottom', 'left', 'right', 'top-bottom', 'left-right'
-      enableFolderRestrictions: false,
-      excludedFolders: [],
       disabledFiles: [],
       customSwatchesEnabled: false,
       replaceDefaultSwatches: false,
       customSwatches: [
         
       ],
+      // Default named swatches (never edited by user, only read-only display)
+      swatches: [
+        { name: 'Red', color: '#eb3b5a' },
+        { name: 'Orange', color: '#fa8231' },
+        { name: 'Yellow', color: '#e5a216' },
+        { name: 'Green', color: '#20bf6b' },
+        { name: 'Cyan', color: '#0fb9b1' },
+        { name: 'Blue', color: '#2d98da' },
+        { name: 'Dark Blue', color: '#3867d6' },
+        { name: 'Indigo', color: '#5454d0' },
+        { name: 'Purple', color: '#8854d0' },
+        { name: 'Light Purple', color: '#b554d0' },
+        { name: 'Neon Pink', color: '#e832c1' },
+        { name: 'Hot Pink', color: '#e83289' },
+        { name: 'Brown', color: '#965b3b' },
+        { name: 'Gray', color: '#8392a4' }
+      ],
+      // User-added custom swatches (separate from defaults)
+      userCustomSwatches: [],
       disableToggleModes: {
         statusBar: false,
         command: false,
@@ -896,6 +1005,8 @@ module.exports = class AlwaysColorText extends Plugin {
       enableAlwaysColor: true,
       partialMatch: false,
       blacklistWords: [],
+      // New: pattern-capable blacklist entries
+      blacklistEntries: [],
       enableBlacklistMenu: false,
       symbolWordColoring: false,
       // Enable/disable regex support in the settings UI/runtime
@@ -908,25 +1019,99 @@ module.exports = class AlwaysColorText extends Plugin {
       textBgColoringEntries: [],
       // Enable/disable Text & Background Coloring option in right-click menu
       enableTextBgMenu: true,
+      // Use swatch names for coloring entries
+      useSwatchNamesForText: false,
+      colorPickerMode: 'both',
+      pathRules: [],
     }, await this.loadData() || {});
-  // --- Normalize migrated folder exclusion settings ---
-    if (!Array.isArray(this.settings.excludedFolders)) this.settings.excludedFolders = [];
-    // Support old format (array of strings) by converting to objects { path, defaultStyle }
-    this.settings.excludedFolders = this.settings.excludedFolders.map(f => {
-      if (!f) return null;
-      if (typeof f === 'string') return { path: f, defaultColor: null, defaultStyle: null };
-      if (typeof f === 'object' && f.path) {
-        const defaultColor = f.defaultColor || f.color;
-        // Sanitize color: if invalid, set to null
-        const sanitizedColor = defaultColor && this.isValidHexColor(defaultColor) ? defaultColor : null;
-        return {
-          path: f.path,
-          defaultColor: sanitizedColor,
-          defaultStyle: f.defaultStyle || null
-        };
+    // Migrate legacy customSwatches (array of hex strings) into userCustomSwatches
+    try {
+      if (Array.isArray(this.settings.customSwatches) && this.settings.customSwatches.length > 0) {
+        const hasStringItems = this.settings.customSwatches.some(s => typeof s === 'string');
+        if (hasStringItems) {
+          const migrated = this.settings.customSwatches.filter(s => typeof s === 'string').map((c, idx) => ({ name: `Swatch ${idx + 1}`, color: c }));
+          // Move legacy custom swatches to userCustomSwatches (user-added colors)
+          if (!Array.isArray(this.settings.userCustomSwatches)) {
+            this.settings.userCustomSwatches = [];
+          }
+          // Avoid duplicating colors if already present in userCustomSwatches
+          const existingColors = new Set(this.settings.userCustomSwatches.map(s => s && s.color));
+          migrated.forEach(ms => { if (ms && !existingColors.has(ms.color)) this.settings.userCustomSwatches.push(ms); });
+          // Clear the legacy customSwatches array
+          this.settings.customSwatches = [];
+        }
+      } else {
+        // Ensure customSwatches is empty or mirrors userCustomSwatches colors
+        this.settings.customSwatches = Array.isArray(this.settings.userCustomSwatches) ? this.settings.userCustomSwatches.map(s => s.color) : [];
       }
-      return null;
-    }).filter(x => x && x.path && String(x.path).trim() !== '');
+    } catch (e) {}
+    
+    // Migrate user-added swatches from swatches array to userCustomSwatches
+    // (before 1.0.0, it used to add extra swatches directly to the swatches array)
+    try {
+      const defaultSwatches = [
+        { name: 'Red', color: '#eb3b5a' },
+        { name: 'Orange', color: '#fa8231' },
+        { name: 'Yellow', color: '#e5a216' },
+        { name: 'Green', color: '#20bf6b' },
+        { name: 'Cyan', color: '#0fb9b1' },
+        { name: 'Blue', color: '#2d98da' },
+        { name: 'Dark Blue', color: '#3867d6' },
+        { name: 'Indigo', color: '#5454d0' },
+        { name: 'Purple', color: '#8854d0' },
+        { name: 'Light Purple', color: '#b554d0' },
+        { name: 'Neon Pink', color: '#e832c1' },
+        { name: 'Hot Pink', color: '#e83289' },
+        { name: 'Brown', color: '#965b3b' },
+        { name: 'Gray', color: '#8392a4' }
+      ];
+      
+      if (Array.isArray(this.settings.swatches) && this.settings.swatches.length > defaultSwatches.length) {
+        // User has added extra swatches beyond the default 14
+        const userAddedSwatches = this.settings.swatches.slice(defaultSwatches.length);
+        
+        if (!Array.isArray(this.settings.userCustomSwatches)) {
+          this.settings.userCustomSwatches = [];
+        }
+        
+        // Avoid duplicating colors
+        const existingColors = new Set(this.settings.userCustomSwatches.map(s => s && s.color));
+        userAddedSwatches.forEach(swatch => {
+          if (swatch && swatch.color && !existingColors.has(swatch.color)) {
+            this.settings.userCustomSwatches.push(swatch);
+            existingColors.add(swatch.color);
+          }
+        });
+        
+        // Remove the user-added swatches from the swatches array, keeping only the default 14
+        this.settings.swatches = defaultSwatches;
+      }
+    } catch (e) {}
+    
+    try {
+      if (Array.isArray(this.settings.pathRules)) {
+        this.settings.pathRules = this.settings.pathRules.map(r => {
+          if (!r) return r;
+          const mt = r.matchType;
+          if (mt === 'wildcard') {
+            const p = String(r.path || '').trim();
+            if (p.includes('*')) {
+              const raw = this.normalizePath(p);
+              const esc = raw.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+              const re = '^' + esc.replace(/\*/g, '.*') + '$';
+              return { ...r, matchType: 'regex', path: re };
+            } else {
+              return { ...r, matchType: 'has-name' };
+            }
+          }
+          if (!mt) {
+            return { ...r, matchType: 'has-name' };
+          }
+          return r;
+        });
+      }
+    } catch (e) {}
+
 
     // --- Migrate wordColors -> wordEntries (backwards compatible) ---
     if (!Array.isArray(this.settings.wordEntries) || this.settings.wordEntries.length === 0) {
@@ -935,26 +1120,82 @@ module.exports = class AlwaysColorText extends Plugin {
       const arr = [];
       for (const k of Object.keys(obj)) {
         const c = obj[k];
-        arr.push({ pattern: String(k), color: String(c), isRegex: false, flags: '', groupedPatterns: null });
+        arr.push({ pattern: String(k), color: this.isValidHexColor(String(c)) ? String(c) : '', isRegex: false, flags: '', groupedPatterns: null, styleType: 'text' });
       }
       this.settings.wordEntries = arr;
     } else {
-      // Ensure shape for existing entries
+      // Ensure shape for existing entries and derive styleType
       this.settings.wordEntries = this.settings.wordEntries.map(e => {
         if (!e) return null;
-        if (typeof e === 'string') return { pattern: e, color: '#000000', isRegex: false, flags: '', groupedPatterns: null };
-        const color = e.color || e.hex || '#000000';
-        // Sanitize color: if invalid, default to black
-        const sanitizedColor = this.isValidHexColor(color) ? color : '#000000';
+        if (typeof e === 'string') return { pattern: e, color: '', isRegex: false, flags: '', groupedPatterns: null, styleType: 'text' };
+        const color = e.color || e.hex || '';
+        const textColor = e.textColor;
+        const backgroundColor = e.backgroundColor;
+        const hasValidColor = this.isValidHexColor(color);
+        const hasValidText = (textColor === 'currentColor') || this.isValidHexColor(textColor);
+        const hasValidBg = this.isValidHexColor(backgroundColor);
+        let styleType = e.styleType;
+        if (!styleType) {
+          if (hasValidText && hasValidBg) styleType = 'both';
+          else if (hasValidBg) styleType = 'highlight';
+          else styleType = 'text';
+        }
+        // If text+bg, clear plain color to avoid conflicting compile
+        const finalColor = (styleType === 'both' || styleType === 'highlight') ? '' : (hasValidColor ? color : '');
+        const finalText = hasValidText ? textColor : (styleType === 'highlight' ? 'currentColor' : null);
+        const finalBg = hasValidBg ? backgroundColor : null;
         return {
           pattern: e.pattern || e.word || '',
-          color: sanitizedColor,
+          color: finalColor,
+          textColor: finalText,
+          backgroundColor: finalBg,
+          styleType,
           isRegex: !!e.isRegex,
           flags: e.flags || '',
-          groupedPatterns: e.groupedPatterns || null
+          groupedPatterns: e.groupedPatterns || null,
+          presetLabel: e.presetLabel || undefined
         };
       }).filter(x => x && String(x.pattern).trim() !== '');
     }
+
+    // Migrate textBgColoringEntries into wordEntries (unify storage)
+    try {
+      const tbg = Array.isArray(this.settings.textBgColoringEntries) ? this.settings.textBgColoringEntries : [];
+      if (tbg.length > 0) {
+        for (const e of tbg) {
+          if (!e) continue;
+          const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || '').trim()];
+          const textColor = e.textColor || 'currentColor';
+          const backgroundColor = e.backgroundColor;
+          const isRegex = !!e.isRegex;
+          const flags = e.flags || '';
+          if (!patterns[0]) continue;
+          let merged = false;
+          for (let i = 0; i < this.settings.wordEntries.length; i++) {
+            const we = this.settings.wordEntries[i];
+            if (!we) continue;
+            const wePatterns = Array.isArray(we.groupedPatterns) && we.groupedPatterns.length > 0 ? we.groupedPatterns : [String(we.pattern || '').trim()];
+            const match = wePatterns.some(p => String(p).trim() === String(patterns[0]).trim());
+            if (match) {
+              we.textColor = textColor;
+              we.backgroundColor = backgroundColor;
+              we.color = '';
+              we.styleType = (textColor && textColor !== 'currentColor') ? (backgroundColor ? 'both' : 'text') : (backgroundColor ? 'highlight' : (we.styleType || 'text'));
+              we.isRegex = isRegex;
+              we.flags = flags;
+              we.groupedPatterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : we.groupedPatterns || null;
+              merged = true;
+              break;
+            }
+          }
+          if (!merged) {
+            const styleType = (textColor && textColor !== 'currentColor') ? (backgroundColor ? 'both' : 'text') : (backgroundColor ? 'highlight' : 'text');
+            this.settings.wordEntries.push({ pattern: patterns[0], color: styleType === 'text' ? (textColor || '') : '', isRegex, flags, groupedPatterns: Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : null, textColor: (styleType !== 'text' ? textColor : null), backgroundColor, styleType });
+          }
+        }
+        this.settings.textBgColoringEntries = [];
+      }
+    } catch (e) {}
 
     // compile word entries into fast runtime structures
     this.compileWordEntries();
@@ -984,11 +1225,24 @@ module.exports = class AlwaysColorText extends Plugin {
     // Save or update a literal (non-regex) entry in the new wordEntries model
     const pattern = String(word);
     const col = String(color);
+    debugLog('SAVE', 'saveEntry', { pattern, color: col });
     const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === pattern && !e.isRegex);
     if (idx !== -1) {
       this.settings.wordEntries[idx].color = col;
+      this.settings.wordEntries[idx].styleType = 'text'; // EXPLICITLY SET TO TEXT
+      // Clear any background/text color fields to ensure it's pure text coloring
+      this.settings.wordEntries[idx].textColor = null;
+      this.settings.wordEntries[idx].backgroundColor = null;
     } else {
-      this.settings.wordEntries.push({ pattern, color: col, isRegex: false, flags: '' });
+      this.settings.wordEntries.push({ 
+        pattern, 
+        color: col, 
+        isRegex: false, 
+        flags: '', 
+        styleType: 'text', // EXPLICITLY SET TO TEXT
+        textColor: null, // Ensure no textColor
+        backgroundColor: null // Ensure no backgroundColor
+      });
     }
     await this.saveSettings();
     this.reconfigureEditorExtensions();
@@ -1001,6 +1255,21 @@ module.exports = class AlwaysColorText extends Plugin {
         leaf.view.editor.cm.dispatch({ changes: [] });
       }
     });
+
+    // Migrate simple blacklistWords to pattern-capable blacklistEntries
+    try {
+      if (Array.isArray(this.settings.blacklistWords) && this.settings.blacklistWords.length > 0) {
+        const existing = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+        const existingPatterns = new Set(existing.map(e => e && e.pattern));
+        const migrated = this.settings.blacklistWords
+          .filter(w => typeof w === 'string' && w.trim().length > 0)
+          .map(w => ({ pattern: w.trim(), isRegex: false, flags: '', groupedPatterns: null }));
+        migrated.forEach(m => { if (m && !existingPatterns.has(m.pattern)) existing.push(m); });
+        this.settings.blacklistEntries = existing;
+      } else if (!Array.isArray(this.settings.blacklistEntries)) {
+        this.settings.blacklistEntries = [];
+      }
+    } catch (e) {}
   }
 
   // --- FORCE REFRESH all reading views (reading mode panes) ---
@@ -1246,15 +1515,30 @@ module.exports = class AlwaysColorText extends Plugin {
       if (numWords > 200) {
         debugWarn('GET_SORTED', `You have ${numWords} colored words/patterns! That's a lot and may impact performance.`);
       }
-      // Filter out blacklisted simple patterns (case-sensitive handling)
+      // Filter out patterns that are blacklisted (supports regex/literals)
       const filtered = entries.filter(e => {
         if (!e || !e.pattern) return false;
-        if (!this.settings.blacklistWords || this.settings.blacklistWords.length === 0) return true;
+        const bw = Array.isArray(this.settings.blacklistWords) ? this.settings.blacklistWords : [];
         if (this.settings.caseSensitive) {
-          return !this.settings.blacklistWords.includes(e.pattern);
+          if (bw.includes(e.pattern)) return false;
+        } else {
+          const lower = e.pattern.toLowerCase();
+          if (bw.map(w => String(w).toLowerCase()).includes(lower)) return false;
         }
-        const lower = e.pattern.toLowerCase();
-        return !this.settings.blacklistWords.map(w => w.toLowerCase()).includes(lower);
+        const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+        for (const be of blEntries) {
+          if (!be || be.isRegex) continue;
+          const patterns = Array.isArray(be.groupedPatterns) && be.groupedPatterns.length > 0 ? be.groupedPatterns : [be.pattern];
+          for (const p of patterns) {
+            if (!p) continue;
+            if (this.settings.caseSensitive) {
+              if (p === e.pattern) return false;
+            } else {
+              if (String(p).toLowerCase() === e.pattern.toLowerCase()) return false;
+            }
+          }
+        }
+        return true;
       });
       // Cache and clear dirty flag
       this._cachedSortedEntries = filtered;
@@ -1267,6 +1551,7 @@ module.exports = class AlwaysColorText extends Plugin {
   // Helper: Validate hex color format to prevent CSS injection
   isValidHexColor(hex) {
     // Only allow valid hex colors: #RGB or #RRGGBB
+    if (hex === 'inherit' || hex === 'currentColor') return true;
     const hexRegex = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/;
     return hexRegex.test(hex);
   }
@@ -1291,14 +1576,22 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // Helper: Apply border style to a span element based on settings
-  applyBorderStyleToElement(element, textColor) {
+  applyBorderStyleToElement(element, textColor, backgroundColor) {
     if (!this.settings.enableBorderThickness) {
       return;
     }
     
     const borderThickness = this.settings.borderThickness ?? 1;
     const borderOpacity = this.settings.borderOpacity ?? 100;
-    const borderColorRgba = this.hexToRgba(textColor, borderOpacity);
+    let sourceColor = null;
+    if (textColor && textColor !== 'currentColor' && this.isValidHexColor(textColor)) {
+      sourceColor = textColor;
+    } else if (backgroundColor && this.isValidHexColor(backgroundColor)) {
+      sourceColor = backgroundColor;
+    } else {
+      sourceColor = '#000000';
+    }
+    const borderColorRgba = this.hexToRgba(sourceColor, borderOpacity);
     const borderStyleType = this.settings.borderStyle ?? 'full';
     
     const borderCSS = `${borderThickness}px solid ${borderColorRgba}`;
@@ -1339,9 +1632,17 @@ module.exports = class AlwaysColorText extends Plugin {
     
     const borderThickness = this.settings.borderThickness ?? 1;
     const borderOpacity = this.settings.borderOpacity ?? 100;
-    const borderColorRgba = this.hexToRgba(textColor, borderOpacity);
+    let borderColor;
+    if (textColor && textColor !== 'currentColor' && this.isValidHexColor(textColor)) {
+      borderColor = this.hexToRgba(textColor, borderOpacity);
+    } else if (backgroundColor && this.isValidHexColor(backgroundColor)) {
+      borderColor = this.hexToRgba(backgroundColor, borderOpacity);
+    } else {
+      // Fallback to fully opaque black if colors are invalid/missing
+      borderColor = 'rgba(0,0,0,1)';
+    }
     const borderStyleType = this.settings.borderStyle ?? 'full';
-    const borderCSS = `${borderThickness}px solid ${borderColorRgba} !important;`;
+    const borderCSS = `${borderThickness}px solid ${borderColor} !important;`;
     
     switch (borderStyleType) {
       case 'bottom':
@@ -1385,50 +1686,203 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // --- Helper: RegExp Folder Pattern ---
-  _folderPatternToRegExp(pattern) {
-    // Normalize slashes
-    let p = String(pattern || '').replace(/\\/g, '/').trim();
-    if (!p) return null;
-    if (p.endsWith('/')) p = p.slice(0, -1);
-    const hasWildcard = p.includes('*');
-    if (!hasWildcard) {
-      const esc = this.escapeRegex(p);
-      return new RegExp('^' + esc + '(?:/.*)?$');
-    }
-    let regexStr = this.escapeRegex(p)
-      .replace(/\\\*\\\*/g, '::DOUBLESTAR::')
-      .replace(/\\\*/g, '[^/]*')
-      .replace(/::DOUBLESTAR::/g, '.*');
-    return new RegExp('^' + regexStr + '$');
+  normalizePath(p) {
+    return String(p || '').replace(/\\/g, '/');
   }
-
-  // Return the most specific folder entry that matches filePath, or null
-  getBestFolderEntry(filePath) {
-    if (!filePath) return null;
-    const fp = String(filePath).replace(/\\/g, '/');
-    if (!Array.isArray(this.settings.excludedFolders) || this.settings.excludedFolders.length === 0) return null;
-    const matched = [];
-    for (const entry of this.settings.excludedFolders) {
-      if (!entry || typeof entry.path !== 'string') continue;
-      const pattern = entry.path.trim();
-      if (!pattern) continue;
-      const specificity = pattern.replace(/\*/g, '').length;
-      if (pattern.includes('*')) {
-        const re = this._folderPatternToRegExp(pattern);
-        if (re && re.test(fp)) matched.push({ entry, specificity });
-      } else {
-        const norm = pattern.replace(/\\/g, '/');
-        if (fp === norm || fp.startsWith(norm + '/')) matched.push({ entry, specificity });
+  _folderPatternToRegExp(p) {
+    const raw = this.normalizePath(p).replace(/\/$/, '');
+    const esc = raw.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+    const re = '^' + esc.replace(/\*/g, '.*') + '(?:\/.*)?$';
+    try { return new RegExp(re); } catch (e) { return null; }
+  }
+  _pathPatternToRegExp(p) {
+    const raw = this.normalizePath(p);
+    const esc = raw.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+    const re = '^' + esc.replace(/\*/g, '.*') + '$';
+    try { return new RegExp(re); } catch (e) { return null; }
+  }
+  _basename(p) {
+    const fp = this.normalizePath(p);
+    const idx = fp.lastIndexOf('/');
+    return idx === -1 ? fp : fp.slice(idx + 1);
+  }
+  _parentFolders(p) {
+    const fp = this.normalizePath(p);
+    const parts = fp.split('/');
+    parts.pop();
+    const res = [];
+    let acc = '';
+    for (const part of parts) {
+      acc = acc ? acc + '/' + part : part;
+      res.push(acc);
+    }
+    return res;
+  }
+  detectRuleTarget(path, matchType) {
+    const s = String(path || '');
+    const hasSlash = s.includes('/');
+    const endsWithSlash = /\/$/.test(s);
+    const hasStarSlash = s.includes('*/');
+    const hasExt = /\.[a-zA-Z0-9]+$/.test(s);
+    const hasStarDotStar = s.includes('*.*');
+    if (matchType === 'exact') {
+      if (endsWithSlash || hasStarSlash) return 'folder';
+      if (hasExt || hasStarDotStar) return 'file';
+      return hasSlash ? 'folder' : 'file';
+    }
+    if (matchType === 'regex') {
+      return 'both';
+    }
+    if (matchType === 'has-name') {
+      return 'both';
+    }
+    return 'both';
+  }
+  detectRuleKind(path) {
+    const s = String(path || '').trim();
+    if (!s) return { kind: 'vault' };
+    const isParenRegex = s.startsWith('(') && s.endsWith(')');
+    if (isParenRegex) return { kind: 'regex', pattern: s.slice(1, -1) };
+    if (/\/$/.test(s)) return { kind: 'exact-folder', path: s.replace(/\/$/, '') };
+    if (s.includes('/')) return { kind: 'exact-file', path: s };
+    return { kind: 'name', name: s };
+  }
+  _matchesByName(filePath, name) {
+    const fp = this.normalizePath(filePath);
+    const nm = String(name || '').trim();
+    if (!nm) return { fileMatch: true, folderMatch: true };
+    const fileMatch = this._basename(fp) === nm;
+    let folderMatch = false;
+    const parents = this._parentFolders(fp);
+    for (const folder of parents) {
+      if (this._basename(folder) === nm) { folderMatch = true; break; }
+    }
+    return { fileMatch, folderMatch };
+  }
+  _matchFolder(pattern, filePath) {
+    const fp = this.normalizePath(filePath);
+    const re = this._folderPatternToRegExp(pattern);
+    return !!(re && re.test(fp));
+  }
+  _matchFile(rulePath, filePath) {
+    const a = this.normalizePath(rulePath);
+    const b = this.normalizePath(filePath);
+    return a === b;
+  }
+  evaluatePathRules(filePath) {
+    const rules = Array.isArray(this.settings.pathRules) ? this.settings.pathRules : [];
+    if (!filePath || rules.length === 0) return { included: false, excluded: false, hasIncludes: false };
+    const fp = this.normalizePath(filePath);
+    let fileInclude = false;
+    let fileExclude = false;
+    let folderInclude = false;
+    let folderExclude = false;
+    let hasIncludes = false;
+    const parents = this._parentFolders(fp);
+    for (const r of rules) {
+      if (!r) continue;
+      const mode = r.mode === 'exclude' ? 'exclude' : 'include';
+      const pathStr = String(r.path || '').trim();
+      const pathEmpty = pathStr.length === 0;
+      if (mode === 'include') hasIncludes = true;
+      if (pathEmpty) {
+        if (mode === 'include') { folderInclude = true; fileInclude = true; }
+        else { folderExclude = true; fileExclude = true; }
+        continue;
+      }
+      const dk = this.detectRuleKind(pathStr);
+      if (dk.kind === 'name') {
+        const { fileMatch, folderMatch } = this._matchesByName(fp, dk.name);
+        if (fileMatch) { if (mode === 'include') fileInclude = true; else fileExclude = true; }
+        if (folderMatch) { if (mode === 'include') folderInclude = true; else folderExclude = true; }
+        continue;
+      }
+      if (dk.kind === 'exact-folder') {
+        for (const p of parents) {
+          if (this.normalizePath(p) === this.normalizePath(dk.path)) {
+            if (mode === 'include') folderInclude = true; else folderExclude = true;
+            break;
+          }
+        }
+        continue;
+      }
+      if (dk.kind === 'exact-file') {
+        if (this._matchFile(dk.path, fp)) { if (mode === 'include') fileInclude = true; else fileExclude = true; }
+        continue;
+      }
+      if (dk.kind === 'regex') {
+        let re = null;
+        try { re = new RegExp(dk.pattern); } catch (e) { re = null; }
+        if (re) {
+          if (re.test(fp)) { if (mode === 'include') fileInclude = true; else fileExclude = true; }
+          for (const p of parents) {
+            if (re.test(p)) { if (mode === 'include') folderInclude = true; else folderExclude = true; break; }
+          }
+        }
+        continue;
       }
     }
-    if (matched.length === 0) return null;
-    matched.sort((a, b) => {
-      if (b.specificity !== a.specificity) return b.specificity - a.specificity;
-      const aExact = String(a.entry.path).replace(/\\/g, '/') === fp ? 1 : 0;
-      const bExact = String(b.entry.path).replace(/\\/g, '/') === fp ? 1 : 0;
-      return bExact - aExact;
-    });
-    return matched[0].entry;
+    let included = false;
+    let excluded = false;
+    if (fileInclude) { included = true; excluded = false; }
+    else if (fileExclude) { included = false; excluded = true; }
+    else if (folderInclude) { included = true; excluded = false; }
+    else if (folderExclude) { included = false; excluded = true; }
+    return { included, excluded, hasIncludes };
+  }
+
+  // Return the most specific folder rule that matches filePath, or null
+  getBestFolderEntry(filePath) {
+    try {
+      const rules = Array.isArray(this.settings.pathRules) ? this.settings.pathRules : [];
+      if (!filePath || rules.length === 0) return null;
+      const fp = this.normalizePath(filePath);
+      const parents = this._parentFolders(fp);
+      let best = null;
+      for (const r of rules) {
+        if (!r) continue;
+        const mode = r.mode === 'exclude' ? 'exclude' : 'include';
+        const pathStr = String(r.path || '').trim();
+        const dk = this.detectRuleKind(pathStr);
+        if (pathStr.length === 0) {
+          const candidate = { path: '', mode };
+          best = candidate; // vault-wide rule has lowest specificity but still applies
+          continue;
+        }
+        if (dk.kind === 'name') {
+          for (const p of parents) {
+            if (this._basename(p) === dk.name) {
+              if (!best || p.length > best.path.length) best = { path: p, mode };
+              break;
+            }
+          }
+          continue;
+        }
+        if (dk.kind === 'exact-folder') {
+          for (const p of parents) {
+            if (this.normalizePath(p) === this.normalizePath(dk.path)) {
+              if (!best || p.length > best.path.length) best = { path: p, mode };
+              break;
+            }
+          }
+          continue;
+        }
+        if (dk.kind === 'regex') {
+          let re = null;
+          try { re = new RegExp(dk.pattern); } catch (e) { re = null; }
+          if (re) {
+            for (const p of parents) {
+              if (re.test(p)) {
+                if (!best || p.length > best.path.length) best = { path: p, mode };
+                break;
+              }
+            }
+          }
+          continue;
+        }
+      }
+      return best;
+    } catch (e) { return null; }
   }
 
   // Check for known problematic patterns that should be blocked
@@ -1487,13 +1941,21 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!Array.isArray(this.settings.wordEntries)) return;
       for (const e of this.settings.wordEntries) {
         if (!e) continue;
+        if (e && e.backgroundColor) {
+          // Skip background/text+bg entries here; they are compiled via compileTextBgColoringEntries
+          continue;
+        }
         
         // Support comma-separated grouped patterns: compile each pattern separately with same color
         const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0
           ? e.groupedPatterns
           : [String(e.pattern || '').trim()];
         
-        const color = e.color || '#000000';
+        const color = e.color;
+        if (!this.isValidHexColor(color)) {
+          // Skip invalid or empty color entries for regular text coloring
+          continue;
+        }
         const isRegex = !!e.isRegex;
         
         // Compile each pattern individually
@@ -1593,34 +2055,30 @@ module.exports = class AlwaysColorText extends Plugin {
   compileTextBgColoringEntries() {
     try {
       try { this._compiledTextBgEntries = []; } catch (e) {}
-      if (!Array.isArray(this.settings.textBgColoringEntries)) return;
-      
-      for (const e of this.settings.textBgColoringEntries) {
-        if (!e) continue;
+      const source = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      for (const e of source) {
+        if (!e || !e.backgroundColor) continue;
         
         // Support comma-separated grouped patterns: compile each pattern separately with same colors
         const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0
           ? e.groupedPatterns
           : [String(e.pattern || '').trim()];
         
-        const textColor = e.textColor || '#000000';
-        const backgroundColor = e.backgroundColor || '#FFFF00';
+        const textColor = e.textColor || 'currentColor';
+        const backgroundColor = e.backgroundColor;
         const isRegex = !!e.isRegex;
         
         // Validate colors
-        if (!this.isValidHexColor(textColor) || !this.isValidHexColor(backgroundColor)) {
+        const textOk = (textColor === 'currentColor') || this.isValidHexColor(textColor);
+        const bgOk = this.isValidHexColor(backgroundColor);
+        if (!textOk || !bgOk) {
           continue;
         }
         
-        // Compile each pattern individually
         for (let pattern of patterns) {
           pattern = String(pattern).trim();
           if (!pattern) continue;
-          
-          // Decode HTML entities for reading mode compatibility
           pattern = this.decodeHtmlEntities(pattern);
-          
-          // Block dangerous patterns
           if (this.isKnownProblematicPattern(pattern)) {
             debugWarn('COMPILE_TEXTBG', `Blocked dangerous pattern: ${pattern.substring(0, 50)}`);
             const compiled = { 
@@ -1643,7 +2101,6 @@ module.exports = class AlwaysColorText extends Plugin {
           }
           
           const rawFlags = String(e.flags || '').replace(/[^gimsuy]/g, '');
-          // base flags (without g for testRegex)
           let flags = rawFlags || '';
           if (!flags.includes('g')) flags += 'g';
           if (!this.settings.caseSensitive && !flags.includes('i')) flags += 'i';
@@ -1663,7 +2120,6 @@ module.exports = class AlwaysColorText extends Plugin {
           
           try {
             if (this.settings.enableRegexSupport && isRegex) {
-              // Safety: block overly complex regexes early
               if (this.isRegexTooComplex(pattern)) {
                 compiled.invalid = true;
                 try {
@@ -1672,20 +2128,15 @@ module.exports = class AlwaysColorText extends Plugin {
                 this._compiledTextBgEntries.push(compiled);
                 continue;
               }
-              // compile with combined flags
               compiled.regex = new RegExp(pattern, flags);
-              // testRegex: same flags but without global to safely use .test()
               const testFlags = flags.replace(/g/g, '');
               compiled.testRegex = testFlags === '' ? new RegExp(pattern) : new RegExp(pattern, testFlags);
             } else {
-              // literal: escape pattern and create with appropriate flags
               const esc = this.escapeRegex(pattern);
               compiled.regex = new RegExp(esc, flags);
               const testFlags = flags.replace(/g/g, '');
               compiled.testRegex = testFlags === '' ? new RegExp(esc) : new RegExp(esc, testFlags);
             }
-            
-            // Create fast tester for performance
             try {
               compiled.fastTest = this.createFastTester(pattern, isRegex, this.settings.caseSensitive);
             } catch (e) {
@@ -1702,8 +2153,6 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
       }
-      
-      // Sort by specificity (longer patterns first)
       this._compiledTextBgEntries.sort((a, b) => b.specificity - a.specificity);
     } catch (err) {
       debugError('COMPILE_TEXTBG', 'compileTextBgColoringEntries failed', err);
@@ -1711,38 +2160,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
-  // Helper: Check if a file path is in an excluded folder
-  isFileInExcludedFolder(filePath) {
-    if (!this.settings.enableFolderRestrictions) return false;
-    if (!filePath) return false;
-    const fp = String(filePath).replace(/\\/g, '/');
-    if (!Array.isArray(this.settings.excludedFolders) || this.settings.excludedFolders.length === 0) return false;
-    // Collect matching entries and pick the most specific one (child overrides parent), IMP
-    const matched = [];
-    for (const entry of this.settings.excludedFolders) {
-      if (!entry || typeof entry.path !== 'string') continue;
-      const pattern = entry.path.trim();
-      if (!pattern) continue;
-      // Longer means more specifiv
-      const specificity = pattern.replace(/\*/g, '').length;
-      if (pattern.includes('*')) {
-        const re = this._folderPatternToRegExp(pattern);
-        if (re && re.test(fp)) matched.push({ entry, specificity });
-      } else {
-        const norm = pattern.replace(/\\/g, '/');
-        if (fp === norm || fp.startsWith(norm + '/')) matched.push({ entry, specificity });
-      }
-    }
-    if (matched.length === 0) return false;
-    // Choose the most specific match. If no, prefer exact match to the file path.
-    matched.sort((a, b) => {
-      if (b.specificity !== a.specificity) return b.specificity - a.specificity;
-      const aExact = String(a.entry.path).replace(/\\/g, '/') === fp ? 1 : 0;
-      const bExact = String(b.entry.path).replace(/\\/g, '/') === fp ? 1 : 0;
-      return bExact - aExact;
-    });
-    return !!matched[0].entry.excluded;
-  }
+  
 
   // Apply Highlights in Reading View (Markdown Post Processor) - optional folderEntry may override match colors
   applyHighlights(el, folderEntry = null, options = {}) {
@@ -1788,6 +2206,7 @@ module.exports = class AlwaysColorText extends Plugin {
       
       if (effectiveStyle === 'text') {
         span.style.color = m.color;
+        try { span.style.setProperty('--highlight-color', m.color); } catch (e) {}
       } else if (effectiveStyle !== 'none') {
         span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
         span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
@@ -1798,7 +2217,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         
         // Add border styling if enabled
-        this.applyBorderStyleToElement(span, m.color);
+        this.applyBorderStyleToElement(span, null, m.color);
       }
       
       frag.appendChild(span);
@@ -1820,12 +2239,14 @@ module.exports = class AlwaysColorText extends Plugin {
     
          // Force full reading-mode rendering (user explicitly opted in - bypass perf gates)
          if (this.settings.forceFullRenderInReading) {
-           try {
-             debugWarn('ACT', 'forceFullRenderInReading enabled - forcing full processing');
-             // File-specific disable via settings
-             if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
-             // Frontmatter can override per-file disabling: always-color-text: false
-             if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
+         try {
+            debugWarn('ACT', 'forceFullRenderInReading enabled - forcing full processing');
+            const pr0 = this.evaluatePathRules(ctx.sourcePath);
+            if (pr0.excluded || (pr0.hasIncludes && !pr0.included)) return;
+            // File-specific disable via settings
+            if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
+            // Frontmatter can override per-file disabling: always-color-text: false
+            if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
              // Folder-specific rules
              const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
              // Force immediate full chunked processing with regular batch size to avoid UI lockup
@@ -1859,6 +2280,8 @@ module.exports = class AlwaysColorText extends Plugin {
     // Avoid querying entire document to prevent skipping preview processing on busy pages
 
     // File-specific disable via settings
+    const pr = this.evaluatePathRules(ctx.sourcePath);
+    if (pr.excluded || (pr.hasIncludes && !pr.included)) return;
     if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
     // Frontmatter can override per-file disabling: always-color-text: false
     if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
@@ -2016,7 +2439,7 @@ module.exports = class AlwaysColorText extends Plugin {
   // NEW METHOD: Process single block with non-Roman text
   processNonRomanBlock(block, entries, folderEntry, opts = {}) {
     const clearExisting = opts.clearExisting !== false;
-    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    const effectiveStyle = 'text';
     
     // Clear existing highlights
     if (clearExisting) {
@@ -2084,6 +2507,7 @@ module.exports = class AlwaysColorText extends Plugin {
           
           if (effectiveStyle === 'text') {
             span.style.color = m.color;
+            try { span.style.setProperty('--highlight-color', m.color); } catch (e) {}
           } else {
             span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
             span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
@@ -2094,7 +2518,7 @@ module.exports = class AlwaysColorText extends Plugin {
             }
             
             // Add border styling if enabled
-            this.applyBorderStyleToElement(span, m.color);
+            this.applyBorderStyleToElement(span, null, m.color);
           }
           
           frag.appendChild(span);
@@ -2264,7 +2688,7 @@ module.exports = class AlwaysColorText extends Plugin {
         visited++;
         continue;
       }
-      const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+      const effectiveStyle = 'text';
       // Call extracted per-block processor
       try { if ((qIndex % 100) === 0) debugLog('COLOR', `Processing block ${qIndex}`); } catch (e) {}
       this._processBlock(block, entries, folderEntry, { clearExisting, effectiveStyle, immediateLimit, qIndex, skipFirstN, element, forceProcess: (options && options.forceProcess) || this.settings.forceFullRenderInReading, maxMatches: (options && options.maxMatches) || (this.settings.forceFullRenderInReading ? Infinity : undefined) });
@@ -2288,7 +2712,7 @@ module.exports = class AlwaysColorText extends Plugin {
     } else if (folderEntry && folderEntry.defaultStyle) {
       effectiveStyle = folderEntry.defaultStyle;
     } else {
-      effectiveStyle = this.settings.highlightStyle;
+      effectiveStyle = 'text';
     }
     const immediateLimit = opts.immediateLimit || 0;
 
@@ -2361,18 +2785,8 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       
       // Define isBlacklisted helper function early so it can be used throughout
-      const isBlacklisted = (textToCheck, coloredWord = null) => {
-        if (!this.settings.blacklistWords || this.settings.blacklistWords.length === 0) return false;
-        
-        // Check if textToCheck exactly matches any blacklisted word
-        return this.settings.blacklistWords.some(bw => {
-          if (!bw) return false;
-          if (this.settings.caseSensitive) {
-            return textToCheck === bw;
-          } else {
-            return textToCheck.toLowerCase() === bw.toLowerCase();
-          }
-        });
+      const isBlacklisted = (textToCheck) => {
+        try { return this.isWordBlacklisted(textToCheck); } catch (e) { return false; }
       };
       
   // For forced processing, use unlimited matches; otherwise cap at 500
@@ -2558,26 +2972,8 @@ module.exports = class AlwaysColorText extends Plugin {
           
           const fullWord = text.substring(fullWordStart, fullWordEnd);
           
-          // Check if the full word is blacklisted
-          let isBlacklistedMatch = false;
-          if (this.settings.blacklistWords && this.settings.blacklistWords.length > 0) {
-            for (const bw of this.settings.blacklistWords) {
-              if (!bw) continue;
-              if (this.settings.caseSensitive) {
-                if (fullWord === bw) {
-                  isBlacklistedMatch = true;
-                  break;
-                }
-              } else {
-                if (fullWord.toLowerCase() === bw.toLowerCase()) {
-                  isBlacklistedMatch = true;
-                  break;
-                }
-              }
-            }
-          }
-          
-          if (isBlacklistedMatch) continue;
+          // Check if the full word is blacklisted (supports patterns)
+          if (this.isWordBlacklisted(fullWord)) continue;
           
           // Skip if overlaps with any text+bg entry
           let overlapsWithTextBg = false;
@@ -2839,6 +3235,7 @@ module.exports = class AlwaysColorText extends Plugin {
             if (m.isTextBg) {
               // For text+bg entries, always apply both colors
               span.style.color = m.textColor;
+              try { span.style.setProperty('--highlight-color', m.textColor); } catch (e) {}
               span.style.background = '';
               span.style.backgroundColor = this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25);
               span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
@@ -2852,9 +3249,10 @@ module.exports = class AlwaysColorText extends Plugin {
                 span.style.WebkitBoxDecorationBreak = 'clone';
               }
               // Add border for text+bg entries
-              this.applyBorderStyleToElement(span, m.textColor);
+              this.applyBorderStyleToElement(span, m.textColor, m.backgroundColor);
             } else if (effectiveStyle === 'text') {
               span.style.color = m.color;
+              try { span.style.setProperty('--highlight-color', m.color); } catch (e) {}
             } else {
               span.style.background = '';
               span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
@@ -2869,7 +3267,7 @@ module.exports = class AlwaysColorText extends Plugin {
                 span.style.WebkitBoxDecorationBreak = 'clone';
               }
               // Add border for regular background highlights
-              this.applyBorderStyleToElement(span, m.color);
+              this.applyBorderStyleToElement(span, null, m.color);
             }
             frag.appendChild(span);
           }
@@ -2929,7 +3327,7 @@ module.exports = class AlwaysColorText extends Plugin {
       try {
         this._processBlock(blocks[i], entries, folderEntry, { 
           clearExisting: options.clearExisting !== false, 
-          effectiveStyle: (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle,
+          effectiveStyle: 'text',
           forceProcess: forceProcess || this.settings.forceFullRenderInReading,
           maxMatches: (options && typeof options.maxMatches !== 'undefined') ? options.maxMatches : (forceProcess || this.settings.forceFullRenderInReading ? Infinity : undefined)
         });
@@ -3019,7 +3417,7 @@ module.exports = class AlwaysColorText extends Plugin {
               try { io.unobserve(block); } catch (e) {}
               // Process the block (clearExisting true to avoid conflicts)
               try {
-                this._processBlock(block, this.getSortedWordEntries(), folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle, forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)) });
+                this._processBlock(block, this.getSortedWordEntries(), folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: 'text', forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)) });
               } catch (e) { debugError('VIEWPORT', '_processBlock failed', e); }
             }
           } catch (e) { debugError('VIEWPORT', 'observer entry error', e); }
@@ -3053,7 +3451,7 @@ module.exports = class AlwaysColorText extends Plugin {
             if (!processed.has(b)) {
               processed.add(b);
               try { io.unobserve(b); } catch (e) {}
-              this._processBlock(b, this.getSortedWordEntries(), folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle, forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)) });
+              this._processBlock(b, this.getSortedWordEntries(), folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: 'text', forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)) });
             }
             count++;
           }
@@ -3073,6 +3471,10 @@ module.exports = class AlwaysColorText extends Plugin {
     const plugin = this;
     const activeFile = this.app.workspace.getActiveFile();
     if (!this.settings.enabled) return builder.finish();
+    if (activeFile) {
+      const prnr = this.evaluatePathRules(activeFile.path);
+      if (prnr.excluded || (prnr.hasIncludes && !prnr.included)) return builder.finish();
+    }
     if (activeFile && this.settings.disabledFiles.includes(activeFile.path)) return builder.finish();
     if (activeFile && this.isFrontmatterColoringDisabled(activeFile.path)) return builder.finish();
     
@@ -3107,7 +3509,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     
     // Apply decorations
-    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    const effectiveStyle = 'text';
     if (effectiveStyle === 'none') return builder.finish();
     
     for (const m of matches) {
@@ -3152,6 +3554,10 @@ module.exports = class AlwaysColorText extends Plugin {
         
         const activeFile = plugin.app.workspace.getActiveFile();
         if (!plugin.settings.enabled) return builder.finish();
+        if (activeFile) {
+          const prb = plugin.evaluatePathRules(activeFile.path);
+          if (prb.excluded || (prb.hasIncludes && !prb.included)) return builder.finish();
+        }
         if (activeFile && plugin.settings.disabledFiles.includes(activeFile.path)) return builder.finish();
         if (activeFile && plugin.isFrontmatterColoringDisabled(activeFile.path)) return builder.finish();
         
@@ -3194,18 +3600,39 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // NEW METHOD: Check if word is blacklisted
   isWordBlacklisted(word) {
-    if (!this.settings.blacklistWords || this.settings.blacklistWords.length === 0) {
-      return false;
-    }
-    
-    return this.settings.blacklistWords.some(bw => {
-      if (!bw) return false;
-      if (this.settings.caseSensitive) {
-        return word === bw;
-      } else {
-        return word.toLowerCase() === bw.toLowerCase();
+    try {
+      const entries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      const words = Array.isArray(this.settings.blacklistWords) ? this.settings.blacklistWords : [];
+      const w = this.settings.caseSensitive ? String(word) : String(word).toLowerCase();
+
+      for (const bw of words) {
+        if (!bw) continue;
+        const cmp = this.settings.caseSensitive ? String(bw) : String(bw).toLowerCase();
+        if (w === cmp) return true;
       }
-    });
+
+      // Check pattern-capable entries
+      for (const entry of entries) {
+        if (!entry) continue;
+        if (entry.isRegex && this.settings.enableRegexSupport) {
+          try {
+            const flags = entry.flags || (this.settings.caseSensitive ? '' : 'i');
+            const re = new RegExp(entry.pattern, flags);
+            if (re.test(word)) return true;
+          } catch (e) {}
+        } else {
+          const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0
+            ? entry.groupedPatterns
+            : [entry.pattern];
+          for (const p of patterns) {
+            if (!p) continue;
+            const cmp = this.settings.caseSensitive ? String(p) : String(p).toLowerCase();
+            if (w === cmp) return true;
+          }
+        }
+      }
+    } catch (e) {}
+    return false;
   }
 
   // NEW METHOD: Standard editor processing for small/medium pattern/text sizes
@@ -3391,6 +3818,18 @@ module.exports = class AlwaysColorText extends Plugin {
       matches = matches.map(m => m.isTextBg ? m : Object.assign({}, m, { color: folderEntry.defaultColor }));
     }
 
+    // Priority: text+bg with explicit text color should suppress background-only overlaps
+    if (matches.some(m => m.isTextBg)) {
+      const fullTextBg = matches.filter(m => m.isTextBg && m.textColor && m.textColor !== 'currentColor');
+      if (fullTextBg.length > 0) {
+        matches = matches.filter(m => {
+          if (!(m.isTextBg && (!m.textColor || m.textColor === 'currentColor'))) return true;
+          // Suppress bg-only if overlaps any full text+bg
+          return !fullTextBg.some(f => m.start < f.end && m.end > f.start);
+        });
+      }
+    }
+
     // Remove overlapping matches - greedy algorithm (prefer longest, but keep text+bg matches)
     if (matches.length > 1) {
       const textBgMatches = matches.filter(m => m.isTextBg);
@@ -3428,10 +3867,27 @@ module.exports = class AlwaysColorText extends Plugin {
     });
 
     // Apply decorations
-    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    const effectiveStyle = 'text';
     if (effectiveStyle === 'none' && matches.length > 0 && !matches.some(m => m.isTextBg)) return builder.finish();
 
-    for (const m of matches) {
+    let toApply = matches;
+    if (matches.length > 1 && effectiveStyle !== 'text') {
+      const merged = [];
+      for (const m of matches) {
+        const last = merged[merged.length - 1];
+        if (last && (
+          (m.isTextBg && last.isTextBg && m.textColor === last.textColor && m.backgroundColor === last.backgroundColor && m.start <= last.end) ||
+          (!m.isTextBg && !last.isTextBg && effectiveStyle === 'background' && m.color === last.color && m.start <= last.end)
+        )) {
+          if (m.end > last.end) last.end = m.end;
+        } else {
+          merged.push(Object.assign({}, m));
+        }
+      }
+      toApply = merged;
+    }
+
+    for (const m of toApply) {
       let style;
       if (m.isTextBg) {
         // Text+bg entries always use both colors
@@ -3811,6 +4267,12 @@ module.exports = class AlwaysColorText extends Plugin {
     // Separate text+bg entries from regular ones
     const textBgMatches = matches.filter(m => m.isTextBg);
     const regularMatches = matches.filter(m => !m.isTextBg);
+
+    // Priority: text+bg with a real text color overrides background-only entries
+    const fullTextBg = textBgMatches.filter(m => m.textColor && m.textColor !== 'currentColor');
+    const bgOnlyTextBg = textBgMatches.filter(m => !m.textColor || m.textColor === 'currentColor');
+    const filteredBgOnly = bgOnlyTextBg.filter(m => !fullTextBg.some(f => m.start < f.end && m.end > f.start));
+    const prioritizedTextBg = [...fullTextBg, ...filteredBgOnly];
     
     // Remove overlapping matches in regular matches
     regularMatches.sort((a, b) => a.start - b.start || b.end - a.end);
@@ -3819,7 +4281,7 @@ module.exports = class AlwaysColorText extends Plugin {
     for (let m of regularMatches) {
       // Skip if overlaps with any text+bg match
       let overlapsWithTextBg = false;
-      for (const tbm of textBgMatches) {
+      for (const tbm of prioritizedTextBg) {
         if (m.start < tbm.end && m.end > tbm.start) {
           overlapsWithTextBg = true;
           break;
@@ -3833,12 +4295,24 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     }
     
-    const nonOverlapping = [...textBgMatches, ...nonOverlappingRegular];
+    let mergedTextBg = [];
+    if (prioritizedTextBg.length > 0) {
+      const tbs = [...prioritizedTextBg].sort((a, b) => a.start - b.start || a.end - b.end);
+      for (const m of tbs) {
+        const last = mergedTextBg[mergedTextBg.length - 1];
+        if (last && m.textColor === last.textColor && m.backgroundColor === last.backgroundColor && m.start <= last.end) {
+          if (m.end > last.end) last.end = m.end;
+        } else {
+          mergedTextBg.push(Object.assign({}, m));
+        }
+      }
+    }
+    const nonOverlapping = [...mergedTextBg, ...nonOverlappingRegular];
     const sorted = nonOverlapping.sort((a, b) => a.start - b.start);
     const limited = sorted.slice(0, 1000);
 
     // Apply decorations
-    const effectiveStyle = (folderEntry && folderEntry.defaultStyle) ? folderEntry.defaultStyle : this.settings.highlightStyle;
+    const effectiveStyle = 'text';
 
     for (const m of limited) {
       let style;
@@ -3883,7 +4357,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (Array.isArray(this.settings.wordEntries)) this.settings.wordEntries.length = 0;
           if (Array.isArray(this.settings.blacklistWords)) this.settings.blacklistWords.length = 0;
           if (Array.isArray(this.settings.disabledFiles)) this.settings.disabledFiles.length = 0;
-          if (Array.isArray(this.settings.excludedFolders)) this.settings.excludedFolders.length = 0;
+          
         }
       } catch (e) {}
 
@@ -3941,6 +4415,54 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 }
 
+class PresetModal extends Modal {
+  constructor(app, plugin, onChoose) {
+    super(app);
+    this.plugin = plugin;
+    this.onChoose = onChoose;
+    this._listeners = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    const presets = [
+      { label: 'Dates (YYYY-MM-DD)', pattern: '\\b\\d{4}-\\d{2}-\\d{2}\\b', flags: '', examples: ['2009-01-19'] },
+      { label: 'Times (AM/PM)', pattern: '\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b', flags: 'i', examples: ['9:05pm'] },
+      { label: 'Relative dates', pattern: '\\b(?:today|tomorrow|yesterday|next week|last week)\\b', flags: 'i', examples: ['today'] },
+      { label: 'Basic URLs', pattern: '\\bhttps?://\\S+\\b', flags: '', examples: ['https://example.com'] },
+      { label: 'Markdown links', pattern: '\\[[^\\]]+\\]\\(https?://[^)]+\\)', flags: '', examples: ['[Link](https://example.com)'] },
+      { label: 'Domain names', pattern: '\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b', flags: '', examples: ['example.com'] },
+      { label: 'Status words', pattern: '\\b(?:TODO|DONE|WIP|INPROGRESS|BLOCKED|REVIEW|URGENT)\\b', flags: 'i', examples: ['TODO'] },
+      { label: 'Capitalized names', pattern: '\\b[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*\\b', flags: '', examples: ['John Doe'] },
+      { label: 'Email addresses', pattern: '\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', flags: '', examples: ['name@example.com'] },
+      { label: 'Username mentions', pattern: '@[a-zA-Z0-9_]+', flags: '', examples: ['@username'] },
+      { label: 'Code identifiers', pattern: '\\b[a-z_][a-z0-9_]*\\b', flags: '', examples: ['variable_name'] },
+      { label: 'Currency', pattern: '\\$\\d+(?:\\.\\d{2})?|\\b[€£¥]\\d+(?:\\.\\d{2})?\\b', flags: '', examples: ['$29.99'] },
+      { label: 'Measurements', pattern: '\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|°C|°F|lbs)\\b', flags: '', examples: ['25kg'] },
+      { label: 'Phone numbers', pattern: '\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b', flags: '', examples: ['123-456-7890'] }
+    ];
+    const list = contentEl.createDiv();
+    presets.forEach(p => {
+      const row = list.createDiv();
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '8px';
+      row.style.marginBottom = '8px';
+      const btn = row.createEl('button', { text: p.label });
+      const sample = row.createEl('span', { text: p.examples && p.examples[0] ? `(${p.examples[0]})` : '' });
+      sample.style.opacity = '0.7';
+      const handler = () => { try { this.onChoose && this.onChoose(p); } finally { this.close(); } };
+      btn.addEventListener('click', handler);
+      this._listeners.push({ el: btn, h: handler });
+    });
+  }
+  onClose() {
+    this._listeners.forEach(x => { try { x.el.removeEventListener('click', x.h); } catch (e) {} });
+    this._listeners = [];
+    this.contentEl.empty();
+  }
+}
+
 // --- Color Setting Tab Class ---
 class ColorSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
@@ -3952,6 +4474,7 @@ class ColorSettingTab extends PluginSettingTab {
     // Dynamic handlers and cached suggestions for folder UI
     this._dynamicHandlers = [];
     this._cachedFolderSuggestions = null;
+    this._pathRulesContainer = null;
     this._disabledFilesContainer = null;
     this._blacklistWordsContainer = null;
     this._customSwatchesContainer = null;
@@ -3959,6 +4482,12 @@ class ColorSettingTab extends PluginSettingTab {
     this._wordsSortMode = 'last-added';
     // Sorting state for text & background coloring entries
     this._textBgSortMode = 'last-added';
+    // Sorting state for blacklist entries
+    this._blacklistSortMode = 'last-added';
+    this._pathSortMode = 'last-added';
+    // Fold states for color swatches sections
+    this._defaultColorsFolded = true;   // Default colors start folded
+    this._customSwatchesFolded = false; // Custom swatches start unfolded (when settings open)
   }
 
   // Create a settings row for a single entry and track cleanup
@@ -3967,21 +4496,52 @@ class ColorSettingTab extends PluginSettingTab {
       const row = listDiv.createDiv();
       row.style.display = 'flex';
       row.style.alignItems = 'center';
+      row.style.gap = '8px';
       row.style.marginBottom = '8px';
 
-      // Display comma-separated patterns if grouped, otherwise just the pattern
-      const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
-        ? entry.groupedPatterns.join(', ')
-        : entry.pattern;
+      // ELEMENT 1: Style selector (moved first)
+      const styleSelect = row.createEl('select');
+      styleSelect.style.padding = '6px';
+      styleSelect.style.borderRadius = '4px';
+      styleSelect.style.border = '1px solid var(--background-modifier-border)';
+      styleSelect.style.background = 'var(--background-modifier-form-field)';
+      styleSelect.style.color = 'var(--text-normal)';
+      styleSelect.style.flex = '0 0 auto';
+      styleSelect.innerHTML = `<option value="text">color</option><option value="highlight">highlight</option><option value="both">both</option>`;
 
+      // ELEMENT 2: Word/pattern input
+      const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0) ? entry.groupedPatterns.join(', ') : entry.pattern;
+      if (entry.presetLabel) {
+        const badge = row.createEl('span', { text: entry.presetLabel });
+        badge.style.marginRight = '8px';
+        badge.style.opacity = '0.7';
+      }
       const textInput = row.createEl('input', { type: 'text', value: displayPatterns });
       textInput.style.flex = '1';
       textInput.style.padding = '6px';
       textInput.style.borderRadius = '4px';
       textInput.style.border = '1px solid var(--background-modifier-border)';
-      textInput.style.marginRight = '8px';
       textInput.placeholder = 'pattern, word or comma-separated words (e.g. hello, world, foo)';
 
+      // ELEMENT 3: Regex checkbox & flags
+      const regexChk = row.createEl('input', { type: 'checkbox' });
+      regexChk.checked = !!entry.isRegex;
+      regexChk.title = 'Treat pattern as a JavaScript regular expression';
+      regexChk.style.cursor = 'pointer';
+      regexChk.style.flex = '0 0 auto';
+
+      const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
+      flagsInput.placeholder = 'flags (e.g. gi)';
+      flagsInput.style.width = '64px';
+      flagsInput.style.padding = '6px';
+      flagsInput.style.borderRadius = '4px';
+      flagsInput.style.border = '1px solid var(--background-modifier-border)';
+      flagsInput.style.flex = '0 0 auto';
+
+      // ELEMENT 4: Color pickers (with swatches grouped)
+      const swatchesArr = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
+      
+      // Text color and swatch
       const cp = row.createEl('input', { type: 'color' });
       cp.value = entry.color || '#000000';
       cp.style.width = '30px';
@@ -3989,24 +4549,73 @@ class ColorSettingTab extends PluginSettingTab {
       cp.style.border = 'none';
       cp.style.borderRadius = '4px';
       cp.style.cursor = 'pointer';
+      cp.style.flex = '0 0 auto';
 
-      const regexChk = row.createEl('input', { type: 'checkbox' });
-      regexChk.checked = !!entry.isRegex;
-      regexChk.title = 'Treat pattern as a JavaScript regular expression';
-      regexChk.style.marginLeft = '8px';
+      let swatchSelect = null;
+      if (this.plugin.settings.useSwatchNamesForText && swatchesArr.length > 0) {
+        swatchSelect = row.createEl('select');
+        swatchSelect.style.padding = '6px';
+        swatchSelect.style.borderRadius = '4px';
+        swatchSelect.style.border = '1px solid var(--background-modifier-border)';
+        swatchSelect.style.background = 'var(--background-modifier-form-field)';
+        swatchSelect.style.color = 'var(--text-normal)';
+        swatchSelect.style.flex = '0 0 auto';
+        const defaultOpt = swatchSelect.createEl('option', { text: 'Select swatch…' });
+        defaultOpt.value = '';
+        swatchesArr.forEach(sw => {
+          const opt = swatchSelect.createEl('option', { text: sw.name || '' });
+          opt.value = sw.name || '';
+          if (sw.color && (entry.color || '').toLowerCase() === sw.color.toLowerCase()) { swatchSelect.value = opt.value; }
+        });
+      }
 
-      const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
-      flagsInput.placeholder = 'flags (e.g. gi)';
-      flagsInput.style.width = '64px';
-      flagsInput.style.marginLeft = '8px';
-      if (!entry.isRegex) flagsInput.style.display = 'none';
+      // Background color and swatch
+      const cpBg = row.createEl('input', { type: 'color' });
+      cpBg.value = entry.backgroundColor || '#000000';
+      cpBg.style.width = '30px';
+      cpBg.style.height = '30px';
+      cpBg.style.border = 'none';
+      cpBg.style.borderRadius = '4px';
+      cpBg.style.cursor = 'pointer';
+      cpBg.style.flex = '0 0 auto';
 
+      let swatchSelect2 = null;
+      if (this.plugin.settings.useSwatchNamesForText && swatchesArr.length > 0) {
+        swatchSelect2 = row.createEl('select');
+        swatchSelect2.style.padding = '6px';
+        swatchSelect2.style.borderRadius = '4px';
+        swatchSelect2.style.border = '1px solid var(--background-modifier-border)';
+        swatchSelect2.style.background = 'var(--background-modifier-form-field)';
+        swatchSelect2.style.color = 'var(--text-normal)';
+        swatchSelect2.style.flex = '0 0 auto';
+        const defaultOpt2 = swatchSelect2.createEl('option', { text: 'Select highlight swatch…' });
+        defaultOpt2.value = '';
+        swatchesArr.forEach(sw => { const opt = swatchSelect2.createEl('option', { text: sw.name || '' }); opt.value = sw.name || ''; });
+      }
+
+      // ELEMENT 5: Delete button
       const del = row.createEl('button', { text: '✕' });
       del.addClass('mod-warning');
-      del.style.marginLeft = '8px';
       del.style.padding = '4px 8px';
       del.style.borderRadius = '4px';
       del.style.cursor = 'pointer';
+      del.style.flex = '0 0 auto';
+
+      const initBgEntry = entry;
+      const initialStyle = (initBgEntry && initBgEntry.styleType) ? initBgEntry.styleType : null;
+      if (initialStyle) {
+        styleSelect.value = initialStyle;
+      } else if (initBgEntry && (initBgEntry.backgroundColor || initBgEntry.textColor)) {
+        const hasText = !!(initBgEntry.textColor && initBgEntry.textColor !== 'currentColor');
+        const hasBg = !!initBgEntry.backgroundColor;
+        styleSelect.value = hasText && hasBg ? 'both' : (hasBg ? 'highlight' : 'text');
+      } else {
+        styleSelect.value = 'text';
+      }
+      if (initBgEntry && initBgEntry.textColor && initBgEntry.textColor !== 'currentColor') cp.value = initBgEntry.textColor;
+      if (initBgEntry && initBgEntry.backgroundColor) cpBg.value = initBgEntry.backgroundColor;
+      // Set flags input visibility based on current style and regex state
+      flagsInput.style.display = entry.isRegex ? '' : 'none';
 
       const textInputHandler = async () => {
         const newPattern = textInput.value.trim();
@@ -4019,10 +4628,11 @@ class ColorSettingTab extends PluginSettingTab {
           textInput.value = entry.pattern;
           return;
         } else {
-          // Parse comma-separated patterns
           const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
-          this.plugin.settings.wordEntries[idx].pattern = patterns[0]; // Keep first pattern as main
+          this.plugin.settings.wordEntries[idx].pattern = patterns[0];
           this.plugin.settings.wordEntries[idx].groupedPatterns = patterns.length > 1 ? patterns : null;
+          const e = findTextBgEntry();
+          if (e) { e.pattern = patterns[0]; e.groupedPatterns = patterns.length > 1 ? patterns : null; }
         }
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
@@ -4031,15 +4641,66 @@ class ColorSettingTab extends PluginSettingTab {
       };
 
       const cpHandler = async () => {
-        const idx = this.plugin.settings.wordEntries.indexOf(entry);
-        if (idx === -1) return;
-        // Validate color before saving
         const newColor = cp.value;
-        if (!this.plugin.isValidHexColor(newColor)) {
-          new Notice('Invalid color format. Please use the color picker.');
-          return;
+        if (!this.plugin.isValidHexColor(newColor)) { new Notice('Invalid color format.'); return; }
+        const idx = this.plugin.settings.wordEntries.indexOf(entry);
+        if (idx !== -1) {
+          // Text color picker should set the text-related fields
+          // Check if we already have a background color
+          const hasBg = !!this.plugin.settings.wordEntries[idx].backgroundColor;
+          
+          if (hasBg) {
+            // If background already exists, this is for "both" mode
+            this.plugin.settings.wordEntries[idx].textColor = newColor;
+            this.plugin.settings.wordEntries[idx].color = '';
+            this.plugin.settings.wordEntries[idx].styleType = 'both';
+          } else {
+            // Only text color, no background
+            this.plugin.settings.wordEntries[idx].color = newColor;
+            this.plugin.settings.wordEntries[idx].textColor = null;
+            this.plugin.settings.wordEntries[idx].backgroundColor = null;
+            this.plugin.settings.wordEntries[idx].styleType = 'text';
+          }
+          // Sync dropdown to current style
+          styleSelect.value = this.plugin.settings.wordEntries[idx].styleType || 'text';
         }
-        this.plugin.settings.wordEntries[idx].color = newColor;
+        if (swatchSelect) {
+          try { const match = (Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : []).find(sw => sw.color && sw.color.toLowerCase() === newColor.toLowerCase()); swatchSelect.value = match ? (match.name || '') : ''; } catch (e) {}
+        }
+        await this.debouncedSaveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+      };
+
+      const cpBgHandler = async () => {
+        const newColor = cpBg.value;
+        if (!this.plugin.isValidHexColor(newColor)) return;
+        const idx = this.plugin.settings.wordEntries.indexOf(entry);
+        if (idx !== -1) {
+          // Background color picker should ALWAYS set backgroundColor
+          this.plugin.settings.wordEntries[idx].backgroundColor = newColor;
+          // Set textColor to currentColor if not already set to a valid hex
+          if (!this.plugin.settings.wordEntries[idx].textColor || this.plugin.settings.wordEntries[idx].textColor === 'currentColor') {
+            this.plugin.settings.wordEntries[idx].textColor = 'currentColor';
+          }
+          // Clear the plain color field
+          this.plugin.settings.wordEntries[idx].color = '';
+          // Auto-determine the style based on what fields are filled
+          const hasText = !!(this.plugin.settings.wordEntries[idx].textColor && this.plugin.settings.wordEntries[idx].textColor !== 'currentColor');
+          const hasBg = !!this.plugin.settings.wordEntries[idx].backgroundColor;
+          if (hasText && hasBg) {
+            this.plugin.settings.wordEntries[idx].styleType = 'both';
+          } else if (hasBg) {
+            this.plugin.settings.wordEntries[idx].styleType = 'highlight';
+          } else {
+            this.plugin.settings.wordEntries[idx].styleType = 'text';
+          }
+          // Sync dropdown to current style
+          styleSelect.value = this.plugin.settings.wordEntries[idx].styleType || 'text';
+        }
+        if (swatchSelect2) {
+          try { const match = (Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : []).find(sw => sw.color && sw.color.toLowerCase() === newColor.toLowerCase()); swatchSelect2.value = match ? (match.name || '') : ''; } catch (e) {}
+        }
         await this.debouncedSaveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
@@ -4047,18 +4708,16 @@ class ColorSettingTab extends PluginSettingTab {
 
       const regexChkHandler = async () => {
         const idx = this.plugin.settings.wordEntries.indexOf(entry);
-        if (idx === -1) return;
-        this.plugin.settings.wordEntries[idx].isRegex = regexChk.checked;
+        if (idx !== -1) this.plugin.settings.wordEntries[idx].isRegex = regexChk.checked;
+        flagsInput.style.display = regexChk.checked ? '' : 'none';
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
-        this._refreshEntries();
       };
 
       const flagsInputHandler = async () => {
         const idx = this.plugin.settings.wordEntries.indexOf(entry);
-        if (idx === -1) return;
-        this.plugin.settings.wordEntries[idx].flags = flagsInput.value || '';
+        if (idx !== -1) this.plugin.settings.wordEntries[idx].flags = flagsInput.value || '';
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
@@ -4066,35 +4725,132 @@ class ColorSettingTab extends PluginSettingTab {
 
       const delHandler = async () => {
         const idx = this.plugin.settings.wordEntries.indexOf(entry);
-        if (idx === -1) return;
-        this.plugin.settings.wordEntries.splice(idx, 1);
+        if (idx !== -1) this.plugin.settings.wordEntries.splice(idx, 1);
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
         const info = this._entryRows.get(entry);
-        if (info) {
-          try { info.cleanup(); } catch (e) {}
-          this._entryRows.delete(entry);
-        }
+        if (info) { try { info.cleanup(); } catch (e) {} this._entryRows.delete(entry); }
         this._refreshEntries();
       };
 
       textInput.addEventListener('change', textInputHandler);
       cp.addEventListener('input', cpHandler);
+      cpBg.addEventListener('input', cpBgHandler);
       regexChk.addEventListener('change', regexChkHandler);
       flagsInput.addEventListener('change', flagsInputHandler);
       del.addEventListener('click', delHandler);
 
+      const swatchSelectHandler = async () => {
+        if (!swatchSelect) return;
+        const chosen = (Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : []).find(sw => (sw.name || '') === swatchSelect.value);
+        if (!chosen) return;
+        const c = chosen.color;
+        if (!this.plugin.isValidHexColor(c)) return;
+        cp.value = c;
+        await cpHandler();
+      };
+      if (swatchSelect) { swatchSelect.addEventListener('change', swatchSelectHandler); }
+
+      const swatchSelect2Handler = async () => {
+        if (!swatchSelect2) return;
+        const chosen = (Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : []).find(sw => (sw.name || '') === swatchSelect2.value);
+        if (!chosen) return;
+        const c = chosen.color;
+        if (!this.plugin.isValidHexColor(c)) return;
+        cpBg.value = c;
+        await cpBgHandler();
+      };
+      if (swatchSelect2) { swatchSelect2.addEventListener('change', swatchSelect2Handler); }
+
+      const updateVisibility = () => {
+        const style = styleSelect.value;
+        if (style === 'text') {
+          cp.style.display = '';
+          if (swatchSelect) swatchSelect.style.display = '';
+          cpBg.style.display = 'none';
+          if (swatchSelect2) swatchSelect2.style.display = 'none';
+          flagsInput.style.display = entry.isRegex ? '' : 'none';
+          try {
+            // Synchronize picker values with entry fields
+            const val = entry.color || (entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : (entry.backgroundColor || '')) || cp.value;
+            if (val && this.plugin.isValidHexColor(val)) cp.value = val;
+          } catch (e) {}
+        } else if (style === 'highlight') {
+          cp.style.display = 'none';
+          if (swatchSelect) swatchSelect.style.display = 'none';
+          cpBg.style.display = '';
+          if (swatchSelect2) swatchSelect2.style.display = '';
+          flagsInput.style.display = entry.isRegex ? '' : 'none';
+          try {
+            const val = entry.backgroundColor || (entry.color || (entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : '')) || cpBg.value;
+            if (val && this.plugin.isValidHexColor(val)) cpBg.value = val;
+          } catch (e) {}
+        } else {
+          cp.style.display = '';
+          if (swatchSelect) swatchSelect.style.display = '';
+          cpBg.style.display = '';
+          if (swatchSelect2) swatchSelect2.style.display = '';
+          flagsInput.style.display = entry.isRegex ? '' : 'none';
+          try {
+            const t = entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : (entry.color || '');
+            const b = entry.backgroundColor || '';
+            if (t && this.plugin.isValidHexColor(t)) cp.value = t;
+            if (b && this.plugin.isValidHexColor(b)) cpBg.value = b;
+          } catch (e) {}
+        }
+      };
+      updateVisibility();
+      const styleChangeHandler = async () => {
+        const idx = this.plugin.settings.wordEntries.indexOf(entry);
+        if (idx !== -1) {
+          const curr = this.plugin.settings.wordEntries[idx];
+          const prevStyle = curr.styleType || 'text';
+          const nextStyle = styleSelect.value;
+          // Preserve existing visible color when switching styles
+          if (prevStyle !== nextStyle) {
+            if (nextStyle === 'text') {
+              // TEXT: Move any existing color into color field, clear others
+              const base = (curr.textColor && curr.textColor !== 'currentColor') ? curr.textColor : (curr.backgroundColor || curr.color || '');
+              curr.color = base;
+              curr.textColor = null;
+              curr.backgroundColor = null;
+            } else if (nextStyle === 'highlight') {
+              // HIGHLIGHT: Move any existing color into backgroundColor, set textColor to currentColor
+              const base = curr.backgroundColor || (curr.textColor && curr.textColor !== 'currentColor' ? curr.textColor : curr.color || '');
+              curr.backgroundColor = base;
+              curr.textColor = 'currentColor';
+              curr.color = '';
+            } else {
+              // BOTH: Ensure we have both textColor and backgroundColor
+              const textBase = (curr.textColor && curr.textColor !== 'currentColor') ? curr.textColor : (curr.color || '');
+              const bgBase = curr.backgroundColor || (curr.color && curr.color !== textBase ? curr.color : '');
+              curr.textColor = textBase || '#000000';
+              curr.backgroundColor = bgBase || '#000000';
+              curr.color = '';
+            }
+          }
+          curr.styleType = nextStyle;
+          await this.plugin.saveSettings();
+        }
+        updateVisibility();
+      };
+      styleSelect.addEventListener('change', styleChangeHandler);
+
       const cleanup = () => {
         try { textInput.removeEventListener('change', textInputHandler); } catch (e) {}
         try { cp.removeEventListener('input', cpHandler); } catch (e) {}
+        try { cpBg.removeEventListener('input', cpBgHandler); } catch (e) {}
         try { regexChk.removeEventListener('change', regexChkHandler); } catch (e) {}
         try { flagsInput.removeEventListener('change', flagsInputHandler); } catch (e) {}
         try { del.removeEventListener('click', delHandler); } catch (e) {}
+        try { if (swatchSelect) swatchSelect.removeEventListener('change', swatchSelectHandler); } catch (e) {}
+        try { if (swatchSelect2) swatchSelect2.removeEventListener('change', swatchSelect2Handler); } catch (e) {}
+        try { styleSelect.removeEventListener('change', styleChangeHandler); } catch (e) {}
         try { row.remove(); } catch (e) {}
       };
 
-      this._entryRows.set(entry, { row, elements: { textInput, cp, regexChk, flagsInput, del }, cleanup });
+      this._entryRows.set(entry, { row, elements: { textInput, styleSelect, cp, cpBg, regexChk, flagsInput, del }, cleanup });
       this._cleanupHandlers.push(cleanup);
     } catch (e) { debugError('SETTINGS', '_createEntryRow error', e); }
   }
@@ -4119,9 +4875,7 @@ class ColorSettingTab extends PluginSettingTab {
               this._refreshDisabledFiles();
             }));
         });
-      } else {
-        this._disabledFilesContainer.createEl('p', { text: 'No files currently have coloring disabled.' });
-      }
+      } 
     } catch (e) { debugError('SETTINGS', '_refreshDisabledFiles error', e); }
   }
 
@@ -4130,50 +4884,222 @@ class ColorSettingTab extends PluginSettingTab {
       if (!this._blacklistWordsContainer) return;
       this._blacklistWordsContainer.empty();
       
-      this.plugin.settings.blacklistWords.forEach((word, i) => {
+      let entries = Array.isArray(this.plugin.settings.blacklistEntries) ? [...this.plugin.settings.blacklistEntries] : [];
+      if (this._blacklistSortMode === 'a-z') {
+        entries.sort((a, b) => (a.pattern || '').toLowerCase().localeCompare((b.pattern || '').toLowerCase()));
+      }
+      entries.forEach((entry) => {
         const row = this._blacklistWordsContainer.createDiv();
         row.style.display = 'flex';
         row.style.alignItems = 'center';
         row.style.marginBottom = '8px';
+        row.style.gap = '8px';
 
-        const textInput = row.createEl('input', { type: 'text', value: word });
+        const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
+          ? entry.groupedPatterns.join(', ')
+          : (entry.pattern || '');
+
+        if (entry.presetLabel) {
+          const badge = row.createEl('span', { text: entry.presetLabel });
+          badge.style.marginRight = '8px';
+          badge.style.opacity = '0.7';
+        }
+        const textInput = row.createEl('input', { type: 'text', value: displayPatterns });
         textInput.style.flex = '1';
         textInput.style.padding = '6px';
         textInput.style.borderRadius = '4px';
         textInput.style.border = '1px solid var(--background-modifier-border)';
-        textInput.style.marginRight = '8px';
-        
-        const textInputHandler = async () => {
-          const newWord = textInput.value.trim();
-          if (newWord && newWord !== word) {
-            this.plugin.settings.blacklistWords[i] = newWord;
-            await this.plugin.saveSettings();
-            this._refreshBlacklistWords();
-          } else if (!newWord) {
-            this.plugin.settings.blacklistWords.splice(i, 1);
-            await this.plugin.saveSettings();
-            this._refreshBlacklistWords();
-          }
-        };
-        textInput.addEventListener('change', textInputHandler);
-        this._cleanupHandlers.push(() => textInput.removeEventListener('change', textInputHandler));
+        textInput.placeholder = 'Keyword or pattern, or comma-separated words';
+
+        const regexChk = row.createEl('input', { type: 'checkbox' });
+        regexChk.checked = !!entry.isRegex;
+        regexChk.title = 'Treat pattern as a JavaScript regular expression';
+        regexChk.style.cursor = 'pointer';
+
+        const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
+        flagsInput.placeholder = 'flags';
+        flagsInput.style.width = '50px';
+        flagsInput.style.padding = '6px';
+        flagsInput.style.borderRadius = '4px';
+        flagsInput.style.border = '1px solid var(--background-modifier-border)';
+        if (!entry.isRegex) flagsInput.style.display = 'none';
 
         const del = row.createEl('button', { text: '✕' });
         del.addClass('mod-warning');
-        del.style.marginLeft = '8px';
         del.style.padding = '4px 8px';
         del.style.borderRadius = '4px';
         del.style.cursor = 'pointer';
-        
-        const delHandler = async () => {
-          this.plugin.settings.blacklistWords.splice(i, 1);
+
+        const textInputHandler = async () => {
+          const newPattern = textInput.value.trim();
+          const entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          if (entryIdx === -1) return;
+          if (!newPattern) {
+            this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
+          } else if (this.plugin.settings.enableRegexSupport && entry.isRegex && this.plugin.isRegexTooComplex(newPattern)) {
+            new Notice(`Pattern too complex: ${newPattern.substring(0, 60)}...`);
+            textInput.value = displayPatterns;
+            return;
+          } else {
+            const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
+            this.plugin.settings.blacklistEntries[entryIdx].pattern = patterns[0];
+            this.plugin.settings.blacklistEntries[entryIdx].groupedPatterns = patterns.length > 1 ? patterns : null;
+          }
           await this.plugin.saveSettings();
           this._refreshBlacklistWords();
         };
+
+        const regexChkHandler = async () => {
+          const entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          if (entryIdx === -1) return;
+          this.plugin.settings.blacklistEntries[entryIdx].isRegex = regexChk.checked;
+          flagsInput.style.display = regexChk.checked ? 'inline-block' : 'none';
+          await this.plugin.saveSettings();
+          this._refreshBlacklistWords();
+        };
+
+        const flagsInputHandler = async () => {
+          const entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          if (entryIdx === -1) return;
+          this.plugin.settings.blacklistEntries[entryIdx].flags = flagsInput.value || '';
+          await this.plugin.saveSettings();
+          this._refreshBlacklistWords();
+        };
+
+        const delHandler = async () => {
+          const entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          if (entryIdx === -1) return;
+          this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
+          await this.plugin.saveSettings();
+          this._refreshBlacklistWords();
+        };
+
+        textInput.addEventListener('change', textInputHandler);
+        regexChk.addEventListener('change', regexChkHandler);
+        flagsInput.addEventListener('change', flagsInputHandler);
+        del.addEventListener('click', delHandler);
+        this._cleanupHandlers.push(() => {
+          textInput.removeEventListener('change', textInputHandler);
+          regexChk.removeEventListener('change', regexChkHandler);
+          flagsInput.removeEventListener('change', flagsInputHandler);
+          del.removeEventListener('click', delHandler);
+        });
+      });
+    } catch (e) { debugError('SETTINGS', '_refreshBlacklistWords error', e); }
+  }
+
+  _refreshPathRules() {
+    try {
+      if (!this._pathRulesContainer) return;
+      this._pathRulesContainer.empty();
+      const rows = Array.isArray(this.plugin.settings.pathRules) ? [...this.plugin.settings.pathRules] : [];
+      if (this._pathSortMode === 'a-z') {
+        rows.sort((a, b) => (String(a.path || '').toLowerCase().localeCompare(String(b.path || '').toLowerCase())));
+      }
+      const buildSuggestions = () => {
+        const files = this.app.vault.getFiles();
+        const folders = new Set();
+        const filePaths = [];
+        files.forEach(f => {
+          const p = String(f.path).replace(/\\/g, '/');
+          filePaths.push(p);
+          const idx = p.lastIndexOf('/');
+          const folder = idx !== -1 ? p.slice(0, idx) : '';
+          if (folder) {
+            const parts = folder.split('/');
+            let acc = '';
+            parts.forEach(part => { acc = acc ? acc + '/' + part : part; folders.add(acc); });
+          }
+        });
+        return { files: filePaths.sort(), folders: Array.from(folders).sort() };
+      };
+      const sugg = buildSuggestions();
+      rows.forEach((entry, i) => {
+        const row = this._pathRulesContainer.createDiv();
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '8px';
+        row.style.marginBottom = '8px';
+        const modeSel = row.createEl('select');
+        modeSel.style.flex = '0 0 auto';
+        modeSel.style.padding = '6px';
+        modeSel.style.borderRadius = '4px';
+        modeSel.style.border = '1px solid var(--background-modifier-border)';
+        modeSel.style.background = 'var(--background-modifier-form-field)';
+        modeSel.innerHTML = `<option value="include">include</option><option value="exclude">exclude</option>`;
+        modeSel.value = entry.mode === 'exclude' ? 'exclude' : 'include';
+        const input = row.createEl('input', { type: 'text', value: entry.path || '' });
+        input.placeholder = 'Enter path or pattern';
+        input.style.flex = '1';
+        input.style.padding = '6px';
+        input.style.borderRadius = '4px';
+        input.style.border = '1px solid var(--background-modifier-border)';
+        const del = row.createEl('button', { text: '✕' });
+        del.addClass('mod-warning');
+        del.style.cursor = 'pointer';
+        del.style.flex = '0 0 auto';
+        const updateDropdown = () => {
+          if (input._actDropdown) {
+            const dd = input._actDropdown;
+            if (input._dropdownScrollListener) { document.removeEventListener('scroll', input._dropdownScrollListener, true); input._dropdownScrollListener = null; }
+            if (input._dropdownClickListener) { document.removeEventListener('click', input._dropdownClickListener); input._dropdownClickListener = null; }
+            if (input._dropdownKeyListener) { document.removeEventListener('keydown', input._dropdownKeyListener); input._dropdownKeyListener = null; }
+            dd.remove();
+            input._actDropdown = null;
+          }
+          const val = String(input.value || '').trim().toLowerCase();
+          const list = [];
+          sugg.folders.forEach(f => list.push({ t: 'folder', p: f }));
+          sugg.files.forEach(f => list.push({ t: 'file', p: f }));
+          const filtered = val ? list.filter(x => x.p.toLowerCase().includes(val)) : list;
+          if (filtered.length === 0) return;
+          const dd = document.createElement('div');
+          Object.assign(dd.style, { position: 'fixed', zIndex: 2000, background: 'var(--background-primary)', color: 'var(--text-normal)', border: '1px solid var(--background-modifier-border)', borderRadius: '6px', boxShadow: '0 6px 18px rgba(0,0,0,0.4)', maxHeight: '240px', overflowY: 'auto', padding: '6px 0', minWidth: Math.max(240, input.offsetWidth) + 'px' });
+          let hi = -1;
+          filtered.forEach(item => {
+            const it = document.createElement('div');
+            it.textContent = item.p || '/';
+            Object.assign(it.style, { padding: '8px 12px', cursor: 'pointer', whiteSpace: 'nowrap' });
+            it.onmouseenter = () => { if (hi >= 0 && dd.children[hi]) dd.children[hi].style.background = 'transparent'; it.style.background = 'var(--background-secondary)'; hi = Array.from(dd.children).indexOf(it); };
+            it.onmouseleave = () => { it.style.background = 'transparent'; };
+            it.onclick = async (e) => { e.stopPropagation(); input.value = item.p; const ev = new Event('change', { bubbles: true }); input.dispatchEvent(ev); dd.remove(); input._actDropdown = null; };
+            dd.appendChild(it);
+          });
+          document.body.appendChild(dd);
+          const pos = () => { const r = input.getBoundingClientRect(); dd.style.left = r.left + 'px'; dd.style.top = (r.bottom + 6) + 'px'; dd.style.width = input.offsetWidth + 'px'; };
+          pos();
+          input._actDropdown = dd;
+          input._dropdownScrollListener = pos;
+          input._dropdownClickListener = (ev) => { if (ev.target === input) return; if (!dd.contains(ev.target)) { dd.remove(); input._actDropdown = null; document.removeEventListener('click', input._dropdownClickListener); document.removeEventListener('scroll', input._dropdownScrollListener, true); document.removeEventListener('keydown', input._dropdownKeyListener); input._dropdownClickListener = null; input._dropdownScrollListener = null; input._dropdownKeyListener = null; } };
+          input._dropdownKeyListener = (ev) => { const items = Array.from(dd.children); if (items.length === 0) return; if (ev.key === 'ArrowDown') { ev.preventDefault(); hi = Math.min(hi + 1, items.length - 1); items.forEach(item => item.style.background = 'transparent'); if (hi >= 0) { items[hi].style.background = 'var(--background-secondary)'; items[hi].scrollIntoView({ block: 'nearest' }); } } else if (ev.key === 'ArrowUp') { ev.preventDefault(); hi = Math.max(hi - 1, -1); items.forEach(item => item.style.background = 'transparent'); if (hi >= 0) { items[hi].style.background = 'var(--background-secondary)'; items[hi].scrollIntoView({ block: 'nearest' }); } } else if (ev.key === 'Enter' && hi >= 0) { ev.preventDefault(); items[hi].click(); } else if (ev.key === 'Escape') { ev.preventDefault(); dd.remove(); input._actDropdown = null; document.removeEventListener('keydown', input._dropdownKeyListener); input._dropdownKeyListener = null; } };
+          document.addEventListener('scroll', pos, true);
+          document.addEventListener('click', input._dropdownClickListener);
+          document.addEventListener('keydown', input._dropdownKeyListener);
+          this._cleanupHandlers.push(() => { try { document.removeEventListener('scroll', pos, true); } catch (e) {} try { document.removeEventListener('click', input._dropdownClickListener); } catch (e) {} try { document.removeEventListener('keydown', input._dropdownKeyListener); } catch (e) {} if (input._actDropdown) { try { input._actDropdown.remove(); } catch (e) {} input._actDropdown = null; } });
+        };
+        const focusHandler = () => { updateDropdown(); };
+        input.addEventListener('focus', focusHandler);
+        this._cleanupHandlers.push(() => input.removeEventListener('focus', focusHandler));
+        const inputHandler = () => { updateDropdown(); };
+        input.addEventListener('input', inputHandler);
+        this._cleanupHandlers.push(() => input.removeEventListener('input', inputHandler));
+        const changeHandler = async () => {
+          const newPath = String(input.value || '').trim().replace(/\\\\/g, '/');
+          this.plugin.settings.pathRules[i].path = newPath;
+          await this.plugin.saveSettings();
+          this._refreshPathRules();
+        };
+        input.addEventListener('change', changeHandler);
+        this._cleanupHandlers.push(() => input.removeEventListener('change', changeHandler));
+        const modeHandler = async () => { this.plugin.settings.pathRules[i].mode = modeSel.value; await this.plugin.saveSettings(); };
+        modeSel.addEventListener('change', modeHandler);
+        this._cleanupHandlers.push(() => modeSel.removeEventListener('change', modeHandler));
+        const delHandler = async () => { const idx = this.plugin.settings.pathRules.indexOf(entry); if (idx !== -1) { this.plugin.settings.pathRules.splice(idx, 1); await this.plugin.saveSettings(); } row.remove(); if (!this.plugin.settings.pathRules.length) { this._pathRulesContainer.createEl('p', { text: 'No rules configured.' }); } };
         del.addEventListener('click', delHandler);
         this._cleanupHandlers.push(() => del.removeEventListener('click', delHandler));
       });
-    } catch (e) { debugError('SETTINGS', '_refreshBlacklistWords error', e); }
+      if (rows.length === 0) { this._pathRulesContainer.createEl('p', { text: 'No rules configured.' }); }
+    } catch (e) { debugError('SETTINGS', '_refreshPathRules error', e); }
   }
 
   _refreshCustomSwatches() {
@@ -4181,36 +5107,214 @@ class ColorSettingTab extends PluginSettingTab {
       if (!this._customSwatchesContainer) return;
       this._customSwatchesContainer.empty();
       
-      if (this.plugin.settings.customSwatchesEnabled) {
-        new Setting(this._customSwatchesContainer)
-          .setName('Replace default swatches')
-          .setDesc('If this is on, only your custom colors will show up in the color picker. No default ones!')
-          .addToggle(t => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async v => {
-            this.plugin.settings.replaceDefaultSwatches = v;
+      // Toggle: Replace default swatches (affects color picker modal composition)
+      new Setting(this._customSwatchesContainer)
+        .setName('Replace default swatches')
+        .setDesc('If this is on, only your custom colors will show up in the color picker. No default ones!')
+        .addToggle(t => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async v => {
+          this.plugin.settings.replaceDefaultSwatches = v;
+          await this.plugin.saveSettings();
+        }));
+
+      // Toggle: Use swatch names for coloring text
+      new Setting(this._customSwatchesContainer)
+        .setName('Use swatch names for coloring text')
+        .setDesc('Show a dropdown of swatch names next to word/pattern inputs')
+        .addToggle(t => t.setValue(this.plugin.settings.useSwatchNamesForText).onChange(async v => {
+          this.plugin.settings.useSwatchNamesForText = v;
+          await this.plugin.saveSettings();
+          this._initializedSettingsUI = false;
+          try { this.display(); } catch (e) {}
+        }));
+
+      // Determine fold states (initialize if not set)
+      if (typeof this._defaultColorsFolded === 'undefined') {
+        this._defaultColorsFolded = true; // Default colors start folded
+      }
+      if (typeof this._customSwatchesFolded === 'undefined') {
+        this._customSwatchesFolded = false; // Custom swatches start unfolded when settings open
+      }
+
+      // ===== DEFAULT COLORS SECTION =====
+      const defaultColorsHeaderDiv = this._customSwatchesContainer.createDiv();
+      defaultColorsHeaderDiv.style.display = 'flex';
+      defaultColorsHeaderDiv.style.alignItems = 'center';
+      defaultColorsHeaderDiv.style.gap = '8px';
+      defaultColorsHeaderDiv.style.marginTop = '16px';
+      defaultColorsHeaderDiv.style.marginBottom = '8px';
+      defaultColorsHeaderDiv.style.cursor = 'pointer';
+
+      const defaultColorsToggle = defaultColorsHeaderDiv.createEl('span');
+      defaultColorsToggle.textContent = this._defaultColorsFolded ? '▶' : '▼';
+      defaultColorsToggle.style.fontSize = '12px';
+      defaultColorsToggle.style.fontWeight = 'bold';
+      defaultColorsToggle.style.display = 'inline-block';
+      defaultColorsToggle.style.width = '16px';
+
+      const defaultColorsTitle = defaultColorsHeaderDiv.createEl('h3', { text: 'Default Colors' });
+      defaultColorsTitle.style.margin = '0';
+      defaultColorsTitle.style.padding = '0';
+      defaultColorsTitle.style.flex = '1';
+      defaultColorsTitle.style.fontSize = '16px';
+      defaultColorsTitle.style.fontWeight = '600';
+
+      const defaultColorsContent = this._customSwatchesContainer.createDiv();
+      defaultColorsContent.style.display = this._defaultColorsFolded ? 'none' : 'block';
+      defaultColorsContent.style.marginBottom = '16px';
+
+      const defaultColorsToggleHandler = () => {
+        this._defaultColorsFolded = !this._defaultColorsFolded;
+        defaultColorsToggle.textContent = this._defaultColorsFolded ? '▶' : '▼';
+        defaultColorsContent.style.display = this._defaultColorsFolded ? 'none' : 'block';
+      };
+
+      defaultColorsHeaderDiv.addEventListener('click', defaultColorsToggleHandler);
+      this._cleanupHandlers.push(() => defaultColorsHeaderDiv.removeEventListener('click', defaultColorsToggleHandler));
+
+      // Render default colors from settings.swatches (always displayed in default section, read-only)
+      const swatches = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
+      swatches.forEach((sw) => {
+        const row = defaultColorsContent.createDiv();
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '8px';
+        row.style.marginBottom = '8px';
+
+        const nameInput = row.createEl('input', { type: 'text', value: sw && sw.name ? sw.name : 'Unnamed' });
+        nameInput.style.flex = '1';
+        nameInput.style.padding = '6px';
+        nameInput.style.borderRadius = '4px';
+        nameInput.style.border = '1px solid var(--background-modifier-border)';
+        nameInput.disabled = true; // Can't rename default colors
+
+        const colorPicker = row.createEl('input', { type: 'color' });
+        colorPicker.value = sw && sw.color ? sw.color : '#000000';
+        colorPicker.style.width = '30px';
+        colorPicker.style.height = '30px';
+        colorPicker.style.border = 'none';
+        colorPicker.style.borderRadius = '4px';
+        colorPicker.style.cursor = 'pointer';
+        colorPicker.disabled = true; // Can't edit default colors
+
+        const infoSpan = row.createEl('span', { text: '(built-in)' });
+        infoSpan.style.fontSize = '12px';
+        infoSpan.style.opacity = '0.6';
+        infoSpan.style.flex = '0 0 auto';
+      });
+
+      // ===== CUSTOM SWATCHES SECTION =====
+      const customSwatchesHeaderDiv = this._customSwatchesContainer.createDiv();
+      customSwatchesHeaderDiv.style.display = 'flex';
+      customSwatchesHeaderDiv.style.alignItems = 'center';
+      customSwatchesHeaderDiv.style.gap = '8px';
+      customSwatchesHeaderDiv.style.marginTop = '16px';
+      customSwatchesHeaderDiv.style.marginBottom = '8px';
+      customSwatchesHeaderDiv.style.cursor = 'pointer';
+
+      const customSwatchesToggle = customSwatchesHeaderDiv.createEl('span');
+      customSwatchesToggle.textContent = this._customSwatchesFolded ? '▶' : '▼';
+      customSwatchesToggle.style.fontSize = '12px';
+      customSwatchesToggle.style.fontWeight = 'bold';
+      customSwatchesToggle.style.display = 'inline-block';
+      customSwatchesToggle.style.width = '16px';
+
+      const customSwatchesTitle = customSwatchesHeaderDiv.createEl('h3', { text: 'Custom Swatches' });
+      customSwatchesTitle.style.margin = '0';
+      customSwatchesTitle.style.padding = '0';
+      customSwatchesTitle.style.flex = '1';
+      customSwatchesTitle.style.fontSize = '16px';
+      customSwatchesTitle.style.fontWeight = '600';
+
+      const customSwatchesContent = this._customSwatchesContainer.createDiv();
+      customSwatchesContent.style.display = this._customSwatchesFolded ? 'none' : 'block';
+      customSwatchesContent.style.marginBottom = '16px';
+
+      const customSwatchesToggleHandler = () => {
+        this._customSwatchesFolded = !this._customSwatchesFolded;
+        customSwatchesToggle.textContent = this._customSwatchesFolded ? '▶' : '▼';
+        customSwatchesContent.style.display = this._customSwatchesFolded ? 'none' : 'block';
+      };
+
+      customSwatchesHeaderDiv.addEventListener('click', customSwatchesToggleHandler);
+      this._cleanupHandlers.push(() => customSwatchesHeaderDiv.removeEventListener('click', customSwatchesToggleHandler));
+
+      // Render user-added custom swatches
+      const userCustomSwatches = Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches : [];
+      
+      if (userCustomSwatches.length === 0) {
+        const emptyMsg = customSwatchesContent.createEl('p', { text: 'No custom swatches yet. Click "+ Add color" to create one.' });
+        emptyMsg.style.opacity = '0.6';
+        emptyMsg.style.fontSize = '12px';
+      } else {
+        // Render editable custom swatches
+        userCustomSwatches.forEach((sw, i) => {
+          const row = customSwatchesContent.createDiv();
+          row.style.display = 'flex';
+          row.style.alignItems = 'center';
+          row.style.gap = '8px';
+          row.style.marginBottom = '8px';
+
+          const nameInput = row.createEl('input', { type: 'text', value: sw && sw.name ? sw.name : `Swatch ${i + 1}` });
+          nameInput.style.flex = '1';
+          nameInput.style.padding = '6px';
+          nameInput.style.borderRadius = '4px';
+          nameInput.style.border = '1px solid var(--background-modifier-border)';
+
+          const colorPicker = row.createEl('input', { type: 'color' });
+          colorPicker.value = sw && sw.color ? sw.color : '#000000';
+          colorPicker.style.width = '30px';
+          colorPicker.style.height = '30px';
+          colorPicker.style.border = 'none';
+          colorPicker.style.borderRadius = '4px';
+          colorPicker.style.cursor = 'pointer';
+
+          const delBtn = row.createEl('button', { text: '✕' });
+          delBtn.addClass('mod-warning');
+          delBtn.style.padding = '4px 8px';
+          delBtn.style.borderRadius = '4px';
+          delBtn.style.cursor = 'pointer';
+
+          const nameHandler = async () => {
+            const val = nameInput.value.trim();
+            this.plugin.settings.userCustomSwatches[i].name = val || `Swatch ${i + 1}`;
+            this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map(s => s.color);
             await this.plugin.saveSettings();
-          }));
-
-        this.plugin.settings.customSwatches.forEach((color, i) => {
-          new Setting(this._customSwatchesContainer)
-            .setName(`Swatch ${i + 1}`)
-            .addColorPicker(cp => cp.setValue(color).onChange(async c => {
-              this.plugin.settings.customSwatches[i] = c;
-              await this.plugin.saveSettings();
-            }))
-            .addExtraButton(btn => btn.setIcon('trash').setTooltip('Remove swatch').onClick(async () => {
-              this.plugin.settings.customSwatches.splice(i, 1);
-              await this.plugin.saveSettings();
-              this._refreshCustomSwatches();
-            }));
-        });
-
-        new Setting(this._customSwatchesContainer)
-          .addButton(b => b.setButtonText('+ Add color').onClick(async () => {
-            this.plugin.settings.customSwatches.push('#000000');
+          };
+          const colorHandler = async () => {
+            const val = colorPicker.value;
+            if (!this.plugin.isValidHexColor(val)) return;
+            this.plugin.settings.userCustomSwatches[i].color = val;
+            this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map(s => s.color);
+            await this.plugin.saveSettings();
+          };
+          const delHandler = async () => {
+            this.plugin.settings.userCustomSwatches.splice(i, 1);
+            this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map(s => s.color);
             await this.plugin.saveSettings();
             this._refreshCustomSwatches();
-          }));
+          };
+
+          nameInput.addEventListener('change', nameHandler);
+          colorPicker.addEventListener('input', colorHandler);
+          delBtn.addEventListener('click', delHandler);
+        });
       }
+
+      // Add button
+      const addButtonSetting = new Setting(customSwatchesContent);
+      addButtonSetting.addButton(b => b.setButtonText('+ Add color').onClick(async () => {
+        const nextIndex = (Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches.length : 0) + 1;
+        const newSwatch = { name: `Swatch ${nextIndex}`, color: '#000000' };
+        if (!Array.isArray(this.plugin.settings.userCustomSwatches)) this.plugin.settings.userCustomSwatches = [];
+        this.plugin.settings.userCustomSwatches.push(newSwatch);
+        this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map(s => s.color);
+        await this.plugin.saveSettings();
+        
+        // Auto-unfold Custom Swatches when adding a color
+        this._customSwatchesFolded = false;
+        
+        this._refreshCustomSwatches();
+      }));
     } catch (e) { debugError('SETTINGS', '_refreshCustomSwatches error', e); }
   }
 
@@ -4245,6 +5349,72 @@ class ColorSettingTab extends PluginSettingTab {
           if (!aHasSpecialChars && bHasSpecialChars) return 1;
           
           // Both are same type, sort alphabetically
+          return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+        });
+      } else if (this._wordsSortMode === 'reverse-a-z') {
+        entriesToDisplay.sort((a, b) => {
+          // Extract patterns for comparison
+          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) 
+            ? a.groupedPatterns[0] 
+            : (a.pattern || '');
+          
+          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) 
+            ? b.groupedPatterns[0] 
+            : (b.pattern || '');
+          
+          // Check if patterns contain special characters (expressions)
+          const aHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternA);
+          const bHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternB);
+          
+          // Expressions first, then reverse alphabetical
+          if (aHasSpecialChars && !bHasSpecialChars) return -1;
+          if (!aHasSpecialChars && bHasSpecialChars) return 1;
+          
+          // Both are same type, sort reverse alphabetically (Z-A)
+          return patternB.toLowerCase().localeCompare(patternA.toLowerCase());
+        });
+      } else if (this._wordsSortMode === 'style-order') {
+        // Sort by style: text → highlight → both, then alphabetically within each
+        const styleOrder = { 'text': 0, 'highlight': 1, 'both': 2 };
+        entriesToDisplay.sort((a, b) => {
+          const styleA = styleOrder[a.styleType] ?? 0;
+          const styleB = styleOrder[b.styleType] ?? 0;
+          
+          if (styleA !== styleB) {
+            return styleA - styleB;
+          }
+          
+          // Within same style, sort alphabetically
+          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) 
+            ? a.groupedPatterns[0] 
+            : (a.pattern || '');
+          
+          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) 
+            ? b.groupedPatterns[0] 
+            : (b.pattern || '');
+          
+          return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+        });
+      } else if (this._wordsSortMode === 'color') {
+        // Sort by color (hex value), then alphabetically within same color
+        entriesToDisplay.sort((a, b) => {
+          // Get the color for comparison (prefer backgroundColor if it exists, otherwise color/textColor)
+          const colorA = (a.backgroundColor || a.textColor || a.color || '').toLowerCase();
+          const colorB = (b.backgroundColor || b.textColor || b.color || '').toLowerCase();
+          
+          if (colorA !== colorB) {
+            return colorA.localeCompare(colorB);
+          }
+          
+          // Same color, sort alphabetically by pattern
+          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) 
+            ? a.groupedPatterns[0] 
+            : (a.pattern || '');
+          
+          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) 
+            ? b.groupedPatterns[0] 
+            : (b.pattern || '');
+          
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
       }
@@ -4344,23 +5514,20 @@ class ColorSettingTab extends PluginSettingTab {
         await this.debouncedSaveSettings();
       }));
 
-    // Option: disable coloring in reading/preview panes
+    // Option: color in reading/preview panes
     new Setting(containerEl)
-      .setName('Disable coloring in Reading mode')
-      // .setDesc('When ON, coloring will not be applied to reading/preview panes. Editor coloring remains active.')
-      .addToggle(t => t.setValue(this.plugin.settings.disableReadingModeColoring).onChange(async v => {
-        this.plugin.settings.disableReadingModeColoring = v;
+      .setName('Color in reading mode')
+      .addToggle(t => t.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async v => {
+        this.plugin.settings.disableReadingModeColoring = !v;
         await this.debouncedSaveSettings();
-        // If disabling, immediately clear any existing highlights in all preview roots
         try {
-          if (v) {
+          if (!v) {
             this.plugin.app.workspace.iterateAllLeaves(leaf => {
               if (leaf.view instanceof MarkdownView && leaf.view.getMode && leaf.view.getMode() === 'preview') {
                 try {
                   const root = (leaf.view.previewMode && leaf.view.previewMode.containerEl) || leaf.view.contentEl || leaf.view.containerEl;
                   if (root) {
                     try { this.plugin.clearHighlightsInRoot(root); } catch (e) {}
-                    // disconnect any viewport observer tied to this root
                     try {
                       const obs = this.plugin._viewportObservers && this.plugin._viewportObservers.get && this.plugin._viewportObservers.get(root);
                       if (obs && typeof obs.disconnect === 'function') {
@@ -4373,7 +5540,6 @@ class ColorSettingTab extends PluginSettingTab {
               }
             });
           } else {
-            // Re-enable: force previews to rerender so highlights are applied again
             try { this.plugin.forceRefreshAllReadingViews(); } catch (e) {}
           }
         } catch (e) { debugError('SETTINGS', 'disableReadingModeColoring handler failed', e); }
@@ -4390,7 +5556,85 @@ class ColorSettingTab extends PluginSettingTab {
         try { this.plugin.forceRefreshAllReadingViews(); } catch (e) { debugError('SETTINGS', 'forceFullRenderInReading handler failed', e); }
       }));
 
-    // 2. Case sensitive
+    new Setting(containerEl)
+      .setName('Show Toggle in Status Bar')
+      .addToggle(t => t
+        .setValue(!this.plugin.settings.disableToggleModes.statusBar)
+        .onChange(async v => {
+          this.plugin.settings.disableToggleModes.statusBar = !v;
+          await this.plugin.saveSettings();
+          try {
+            if (v && !this.plugin.statusBar) {
+              this.plugin.statusBar = this.plugin.addStatusBarItem();
+              this.plugin.updateStatusBar();
+              this.plugin.statusBar.onclick = () => {
+                this.plugin.settings.enabled = !this.plugin.settings.enabled;
+                this.plugin.saveSettings();
+                this.plugin.updateStatusBar();
+                this.plugin.reconfigureEditorExtensions();
+                this.plugin.forceRefreshAllEditors();
+                this.plugin.forceRefreshAllReadingViews();
+              };
+            } else if (!v && this.plugin.statusBar) {
+              try { this.plugin.statusBar.remove(); } catch (e) {}
+              this.plugin.statusBar = null;
+            }
+          } catch (e) {}
+        }));
+
+    new Setting(containerEl)
+      .setName('Show Toggle icon in ribbon')
+      .addToggle(t => t
+        .setValue(!this.plugin.settings.disableToggleModes.ribbon)
+        .onChange(async v => {
+          this.plugin.settings.disableToggleModes.ribbon = !v;
+          await this.plugin.saveSettings();
+          try {
+            if (v && !this.ribbonIcon) {
+              this.ribbonIcon = this.addRibbonIcon('palette', 'Always color text', async () => {
+                this.settings.enabled = !this.settings.enabled;
+                await this.saveSettings();
+                this.updateStatusBar();
+                this.reconfigureEditorExtensions();
+                this.forceRefreshAllEditors();
+                this.forceRefreshAllReadingViews();
+                new Notice(`Always color text ${this.settings.enabled ? 'enabled' : 'disabled'}`);
+              });
+            } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
+              try { this.ribbonIcon.remove(); } catch (e) {}
+              this.ribbonIcon = null;
+            }
+          } catch (e) {}
+        }));
+
+    new Setting(containerEl)
+      .setName('Show Toggle in command')
+      .addToggle(t => t
+        .setValue(!this.plugin.settings.disableToggleModes.command)
+        .onChange(async v => {
+          this.plugin.settings.disableToggleModes.command = !v;
+          await this.plugin.saveSettings();
+          try {
+            if (v) {
+              if (!this.plugin._commandsRegistered) {
+                try { this.plugin.registerCommandPalette?.(); } catch (e) {}
+                this.plugin._commandsRegistered = true;
+              }
+            } else {
+              new ConfirmationModal(this.app, 'Restart required', 'Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?', () => { try { location.reload(); } catch (e) {} }).open();
+            }
+          } catch (e) {}
+        }));
+
+    containerEl.createEl('h3', { text: 'Coloring Settings' });
+    new Setting(containerEl)
+      .setName('Regex support')
+      .setDesc('Allow patterns to be regular expressions. Invalid regexes are ignored for safety.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async v => {
+        this.plugin.settings.enableRegexSupport = v;
+        await this.plugin.saveSettings();
+        this.display();
+      }));
     new Setting(containerEl)
       .setName('Case sensitive')
       .setDesc('If this is on, "word" and "Word" are treated as different. If it\'s off, they\'re colored the same.')
@@ -4398,8 +5642,6 @@ class ColorSettingTab extends PluginSettingTab {
         this.plugin.settings.caseSensitive = v;
         await this.debouncedSaveSettings();
       }));
-
-    // Partial match (moved before Color Style)
     new Setting(containerEl)
       .setName('Partial match')
       .setDesc('If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')
@@ -4408,30 +5650,56 @@ class ColorSettingTab extends PluginSettingTab {
         await this.debouncedSaveSettings();
       }));
 
-    // --- Global Coloring Appearance ---
-    containerEl.createEl('h3', { text: 'Global Coloring Appearance' });
+    // --- Global Highlight Coloring Appearance ---
+    containerEl.createEl('h3', { text: 'Global Highlight Coloring Appearance' });
+      // Preview of highlight styling
+      const previewSection = containerEl.createDiv();
+      previewSection.style.marginBottom = '16px';
+      previewSection.style.padding = '12px';
+      previewSection.style.borderRadius = '8px';
+      previewSection.style.border = '1px solid var(--background-modifier-border)';
+      previewSection.style.backgroundColor = 'var(--background-secondary)';
+      
+      const previewLabel = previewSection.createEl('div');
+      previewLabel.style.marginBottom = '8px';
+      previewLabel.style.fontWeight = '600';
+      previewLabel.style.fontSize = '14px';
+      previewLabel.textContent = 'Highlight Preview';
+      
+      const previewText = previewSection.createEl('div');
+      previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
+      previewText.style.display = 'inline-block';
+      previewText.style.maxWidth = 'auto';
+      previewText.style.wordWrap = 'break-word';
+      previewText.textContent = 'This is how your highlight will look like!';
+      
+      const updatePreview = () => {
+        const color = this.plugin.settings.wordEntries.length > 0 
+          ? (this.plugin.settings.wordEntries[0].backgroundColor || this.plugin.settings.wordEntries[0].color || '#FFFF00')
+          : '#FFFF00';
+        const rgba = this.plugin.hexToRgba(color, this.plugin.settings.backgroundOpacity ?? 25);
+        previewText.style.backgroundColor = rgba;
+        previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
+        previewText.style.paddingLeft = previewText.style.paddingRight = `${this.plugin.settings.highlightHorizontalPadding ?? 4}px`;
+        
+        // Clear all existing border styles first
+        previewText.style.border = '';
+        previewText.style.borderTop = '';
+        previewText.style.borderBottom = '';
+        previewText.style.borderLeft = '';
+        previewText.style.borderRight = '';
+        
+        // Apply new border styles if enabled
+        if (this.plugin.settings.enableBorderThickness) {
+          this.plugin.applyBorderStyleToElement(previewText, null, color);
+        }
+      };
+      updatePreview();
 
-    // 3. Color style (was highlight style)
-    new Setting(containerEl)
-      .setName('Color style')
-      .setDesc('Do you want to color the text itself or the background behind it?')
-      .addDropdown(d => d
-        .addOption('text', 'Text color')
-        .addOption('background', 'Background highlight')
-        .addOption('none', 'None')
-        .setValue(this.plugin.settings.highlightStyle)
-        .onChange(async v => {
-          this.plugin.settings.highlightStyle = v;
-          await this.debouncedSaveSettings();
-          this.display();
-        }));
-
-    // --- Background opacity and border radius (only if background) ---
-    if (this.plugin.settings.highlightStyle === 'background') {
       // Opacity slider (percent)
       new Setting(containerEl)
-        .setName('Background opacity')
-        .setDesc('Set the opacity of the background highlight (0-100%)')
+        .setName('Highlight opacity')
+        .setDesc('Set the opacity of the highlight (0-100%)')
         .addSlider(slider => slider
           .setLimits(0, 100, 1)
           .setValue(this.plugin.settings.backgroundOpacity ?? 25)
@@ -4439,6 +5707,7 @@ class ColorSettingTab extends PluginSettingTab {
           .onChange(async v => {
             this.plugin.settings.backgroundOpacity = v;
             await this.debouncedSaveSettings();
+            updatePreview();
           }));
 
       // Border radius input (px)
@@ -4453,6 +5722,7 @@ class ColorSettingTab extends PluginSettingTab {
             if (isNaN(val) || val < 0) val = 0;
             this.plugin.settings.highlightBorderRadius = val;
             await this.debouncedSaveSettings();
+            updatePreview();
           })
         )
         .addExtraButton(btn => btn
@@ -4461,7 +5731,7 @@ class ColorSettingTab extends PluginSettingTab {
           .onClick(async () => {
             this.plugin.settings.highlightBorderRadius = 8;
             await this.debouncedSaveSettings();
-            this.display();
+            updatePreview();
           }));
 
       // Horizontal padding input (px)
@@ -4476,6 +5746,7 @@ class ColorSettingTab extends PluginSettingTab {
             if (isNaN(val) || val < 0) val = 0;
             this.plugin.settings.highlightHorizontalPadding = val;
             await this.debouncedSaveSettings();
+            updatePreview();
           })
         )
         .addExtraButton(btn => btn
@@ -4484,13 +5755,13 @@ class ColorSettingTab extends PluginSettingTab {
           .onClick(async () => {
             this.plugin.settings.highlightHorizontalPadding = 4;
             await this.debouncedSaveSettings();
-            this.display();
+            updatePreview();
           }));
 
       // Toggle for box decoration break on line wrapping
       new Setting(containerEl)
         .setName('Rounded corners on line wrapping')
-        .setDesc('When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line. When disabled, only the outer edges will be rounded.')
+        .setDesc('When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line.')
         .addToggle(t => t
           .setValue(this.plugin.settings.enableBoxDecorationBreak ?? true)
           .onChange(async v => {
@@ -4498,15 +5769,16 @@ class ColorSettingTab extends PluginSettingTab {
             await this.debouncedSaveSettings();
           }));
 
-      // NEW: Enable Background Highlight Border toggle
+      // NEW: Enable Highlight Border toggle
       new Setting(containerEl)
-        .setName('Enable Background Highlight Border')
-        .setDesc('Add a border around background highlights. The border will match the text or background color.')
+        .setName('Enable Highlight Border')
+        .setDesc('Add a border around highlights. The border will match the text or highlight color.')
         .addToggle(t => t
           .setValue(this.plugin.settings.enableBorderThickness ?? false)
           .onChange(async v => {
             this.plugin.settings.enableBorderThickness = v;
             await this.plugin.saveSettings();
+            updatePreview();
             // Force full re-render to show/hide border settings
             this._initializedSettingsUI = false;
             this.display();
@@ -4518,19 +5790,23 @@ class ColorSettingTab extends PluginSettingTab {
         new Setting(containerEl)
           .setName('Border Style')
           .setDesc('Choose which sides to apply the border')
-          .addDropdown(d => d
-            .addOption('full', 'Full border (all sides)')
-            .addOption('top-bottom', 'Top & Bottom borders')
-            .addOption('left-right', 'Left & Right borders')
-            .addOption('top', 'Top border only')
-            .addOption('bottom', 'Bottom border only')
-            .addOption('left', 'Left border only')
-            .addOption('right', 'Right border only')
-            .setValue(this.plugin.settings.borderStyle ?? 'full')
-            .onChange(async v => {
-              this.plugin.settings.borderStyle = v;
-              await this.debouncedSaveSettings();
-            }));
+          .addDropdown(d => {
+            d.selectEl.style.width = '200px';
+            return d
+              .addOption('full', 'Full border (all sides)')
+              .addOption('top-bottom', 'Top & Bottom borders')
+              .addOption('left-right', 'Left & Right borders')
+              .addOption('top', 'Top border only')
+              .addOption('bottom', 'Bottom border only')
+              .addOption('left', 'Left border only')
+              .addOption('right', 'Right border only')
+              .setValue(this.plugin.settings.borderStyle ?? 'full')
+              .onChange(async v => {
+                this.plugin.settings.borderStyle = v;
+                await this.debouncedSaveSettings();
+                updatePreview();
+              });
+          });
 
         // Border Opacity slider
         new Setting(containerEl)
@@ -4543,6 +5819,7 @@ class ColorSettingTab extends PluginSettingTab {
             .onChange(async v => {
               this.plugin.settings.borderOpacity = v;
               await this.debouncedSaveSettings();
+              updatePreview();
             }));
 
         // Border Thickness input
@@ -4558,6 +5835,7 @@ class ColorSettingTab extends PluginSettingTab {
               if (val > 5) val = 5;
               this.plugin.settings.borderThickness = val;
               await this.debouncedSaveSettings();
+              updatePreview();
             }))
           .addExtraButton(btn => btn
             .setIcon('reset')
@@ -4565,34 +5843,25 @@ class ColorSettingTab extends PluginSettingTab {
             .onClick(async () => {
               this.plugin.settings.borderThickness = 1;
               await this.debouncedSaveSettings();
-              this.display();
+              updatePreview();
             }));
       }
-    }
-
-    // --- Quick Actions (One-time coloring/highlighting) ---
-    containerEl.createEl('h2', { text: 'Quick Actions' });
-
-    // Color Once
-    new Setting(containerEl)
-      .setName('Enable Color Once')
-      .setDesc('This adds "Color once" to your right-click menu. You can color selected text with a single tap.')
-      .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysColor).onChange(async v => {
-        this.plugin.settings.enableAlwaysColor = v;
-        await this.debouncedSaveSettings();
-      }));
-
-    // Highlight Once
-    new Setting(containerEl)
-      .setName('Enable Highlight Once')
-      .setDesc('This adds "Highlight once" to your right-click menu. You can highlight selected text with a background color.')
-      .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysHighlight).onChange(async v => {
-        this.plugin.settings.enableAlwaysHighlight = v;
-        await this.debouncedSaveSettings();
-      }));
+    // }
 
     // --- Custom swatches settings ---
     containerEl.createEl('h2', { text: 'Color Swatches' });
+
+    new Setting(containerEl)
+      .setName('Color Picker Layout')
+      .setDesc('Choose which color types to show when picking colors for text')
+      .addDropdown(dd => {
+        dd.addOption('both', 'Both text and highlight colors');
+        dd.addOption('text', 'Text color only');
+        dd.addOption('background', 'Highlight color only');
+        dd.setValue(this.plugin.settings.colorPickerMode || 'both');
+        try { dd.selectEl.style.minWidth = '280px'; } catch (e) {}
+        dd.onChange(async v => { this.plugin.settings.colorPickerMode = v; await this.plugin.saveSettings(); });
+      });
 
     new Setting(containerEl)
       .setName('Enable custom swatches')
@@ -4607,9 +5876,9 @@ class ColorSettingTab extends PluginSettingTab {
     this._customSwatchesContainer = containerEl.createDiv();
     this._refreshCustomSwatches();
 
-    // --- Defined colored words / patterns ---
-    containerEl.createEl('h3', { text: 'Defined colored words' });
-    containerEl.createEl('p', { text: 'Here\'s where you manage your words/patterns and their colors. Changes here update your notes instantly!' });
+    // --- Always Colored Texts / patterns ---
+    containerEl.createEl('h3', { text: 'Always Colored Texts' });
+    containerEl.createEl('p', { text: 'Here\'s where you manage your word/patterns and their colors.' });
     new Setting(containerEl);
 
     const listDiv = containerEl.createDiv();
@@ -4624,15 +5893,25 @@ class ColorSettingTab extends PluginSettingTab {
     buttonRowDiv.style.marginBottom = '16px';
     buttonRowDiv.style.marginTop = '14px';
 
-    // Sort button (left side)
+    // Sort button (left side) - now cycles through multiple sort modes
     const sortBtn = buttonRowDiv.createEl('button');
-    sortBtn.textContent = this._wordsSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+    const sortModes = ['last-added', 'a-z', 'reverse-a-z', 'style-order', 'color'];
+    const sortLabels = {
+      'last-added': 'Sort: Last Added',
+      'a-z': 'Sort: A-Z',
+      'reverse-a-z': 'Sort: Z-A',
+      'style-order': 'Sort: Style Order',
+      'color': 'Sort: Color'
+    };
+    sortBtn.textContent = sortLabels[this._wordsSortMode] || 'Sort: Last Added';
     sortBtn.style.cursor = 'pointer';
     sortBtn.style.flex = '0 0 auto';
     const sortBtnHandler = async () => {
-      // Toggle between sort modes
-      this._wordsSortMode = this._wordsSortMode === 'a-z' ? 'last-added' : 'a-z';
-      sortBtn.textContent = this._wordsSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+      // Cycle through sort modes
+      const currentIndex = sortModes.indexOf(this._wordsSortMode);
+      const nextIndex = (currentIndex + 1) % sortModes.length;
+      this._wordsSortMode = sortModes[nextIndex];
+      sortBtn.textContent = sortLabels[this._wordsSortMode];
       this._refreshEntries();
     };
     sortBtn.addEventListener('click', sortBtnHandler);
@@ -4640,12 +5919,12 @@ class ColorSettingTab extends PluginSettingTab {
 
     // Add button (right side, takes remaining space)
     const addBtn = buttonRowDiv.createEl('button');
-    addBtn.textContent = '+ Add new word / pattern';
+    addBtn.textContent = '+ Add new colored word / pattern';
     addBtn.style.cursor = 'pointer';
     addBtn.style.flex = '1';
     addBtn.addClass('mod-cta');
     const addBtnHandler = async () => {
-      this.plugin.settings.wordEntries.push({ pattern: '', color: '#000000', isRegex: false, flags: '', groupedPatterns: null });
+      this.plugin.settings.wordEntries.push({ pattern: '', color: '', isRegex: false, flags: '', groupedPatterns: null, styleType: 'text' });
       await this.plugin.saveSettings();
       this.plugin.reconfigureEditorExtensions();
       this.plugin.forceRefreshAllEditors();
@@ -4653,6 +5932,37 @@ class ColorSettingTab extends PluginSettingTab {
     };
     addBtn.addEventListener('click', addBtnHandler);
     this._cleanupHandlers.push(() => addBtn.removeEventListener('click', addBtnHandler));
+
+    const presetsBtn = buttonRowDiv.createEl('button');
+    presetsBtn.textContent = 'Presets';
+    presetsBtn.style.cursor = 'pointer';
+    presetsBtn.style.flex = '0 0 auto';
+          const presetsHandler = () => {
+        new PresetModal(this.app, this.plugin, async (preset) => {
+          if (!preset) return;
+          new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+            const sel = result || {};
+            const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : null;
+            const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+            if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
+            const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label };
+            if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; }
+            else if (tc) { entry.color = tc; entry.styleType = 'text'; }
+            else if (bc) { entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'highlight'; }
+            else { entry.color = color; }
+            this.plugin.settings.wordEntries.push(entry);
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.compileTextBgColoringEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this._initializedSettingsUI = false;
+            this.display();
+          }).open();
+        }).open();
+      };
+    presetsBtn.addEventListener('click', presetsHandler);
+    this._cleanupHandlers.push(() => presetsBtn.removeEventListener('click', presetsHandler));
 
     new Setting(containerEl)
       .addExtraButton(b => b
@@ -4667,669 +5977,134 @@ class ColorSettingTab extends PluginSettingTab {
             this._refreshEntries();
           }).open();
         }));
-
-    // --- Text & Background Coloring ---
-    const textBgHeading = containerEl.createEl('h3', { text: 'Text & Background Coloring' });
-    textBgHeading.style.marginTop = '8px';
-    containerEl.createEl('p', { text: 'Keywords here will always use both text color and background color, ignoring folder style.' });
-
-    // Toggle for enabling/disabling Text & Background Coloring in right-click menu
-    new Setting(containerEl)
-      .setName('Show Text & Background Coloring in right-click menu')
-      .setDesc('Enable or disable the "Text & Background Color" option in the editor right-click menu')
-      .addToggle(toggle => {
-        toggle
-          .setValue(this.plugin.settings.enableTextBgMenu ?? true)
-          .onChange(async (value) => {
-            this.plugin.settings.enableTextBgMenu = value;
-            await this.plugin.saveSettings();
-          });
-      });
-
-    // Native divider (creates a visual separator like other settings sections)
-    new Setting(containerEl);
-
-    const textBgListDiv = containerEl.createDiv();
-    textBgListDiv.addClass('text-bg-coloring-list');
-
-    // Reference to the empty state paragraph for dynamic removal
-    let textBgEmptyStateP = null;
-
-    // Initialize textBgColoringEntries if not present in settings
-    if (!Array.isArray(this.plugin.settings.textBgColoringEntries)) {
-      this.plugin.settings.textBgColoringEntries = [];
-    }
-
-    const createTextBgRow = (entry) => {
-      const row = textBgListDiv.createDiv();
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.marginBottom = '8px';
-      row.style.gap = '8px';
-
-      // Display comma-separated patterns if grouped, otherwise just the pattern
-      const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
-        ? entry.groupedPatterns.join(', ')
-        : entry.pattern;
-
-      const textInput = row.createEl('input', { type: 'text', value: displayPatterns || '' });
-      textInput.placeholder = 'Keyword or pattern, or comma-separated words (e.g. hello, world)';
-      textInput.style.flex = '1';
-      textInput.style.padding = '6px';
-      textInput.style.borderRadius = '4px';
-      textInput.style.border = '1px solid var(--background-modifier-border)';
-
-      const regexChk = row.createEl('input', { type: 'checkbox' });
-      regexChk.checked = !!entry.isRegex;
-      regexChk.title = 'Treat pattern as a JavaScript regular expression';
-      regexChk.style.cursor = 'pointer';
-
-      const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
-      flagsInput.placeholder = 'flags';
-      flagsInput.style.width = '50px';
-      flagsInput.style.padding = '6px';
-      flagsInput.style.borderRadius = '4px';
-      flagsInput.style.border = '1px solid var(--background-modifier-border)';
-      if (!entry.isRegex) flagsInput.style.display = 'none';
-
-      const textColorPicker = row.createEl('input', { type: 'color' });
-      textColorPicker.value = entry.textColor || '#000000';
-      textColorPicker.style.width = '30px';
-      textColorPicker.style.height = '30px';
-      textColorPicker.style.border = 'none';
-      textColorPicker.style.borderRadius = '4px';
-      textColorPicker.style.cursor = 'pointer';
-      textColorPicker.title = 'Text color';
-
-      const bgColorPicker = row.createEl('input', { type: 'color' });
-      bgColorPicker.value = entry.backgroundColor || '#FFFF00';
-      bgColorPicker.style.width = '30px';
-      bgColorPicker.style.height = '30px';
-      bgColorPicker.style.border = 'none';
-      bgColorPicker.style.borderRadius = '4px';
-      bgColorPicker.style.cursor = 'pointer';
-      bgColorPicker.title = 'Background color';
-
-      const del = row.createEl('button', { text: '✕' });
-      del.addClass('mod-warning');
-      del.style.padding = '4px 8px';
-      del.style.borderRadius = '4px';
-      del.style.cursor = 'pointer';
-
-      const textInputHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        const newPattern = textInput.value.trim();
-        if (!newPattern) {
-          this.plugin.settings.textBgColoringEntries.splice(entryIdx, 1);
-        } else if (this.plugin.settings.enableRegexSupport && entry.isRegex && this.plugin.isRegexTooComplex(newPattern)) {
-          new Notice(`Pattern too complex: ${newPattern.substring(0, 60)}...`);
-          textInput.value = displayPatterns;
-          return;
-        } else {
-          // Parse comma-separated patterns
-          const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
-          this.plugin.settings.textBgColoringEntries[entryIdx].pattern = patterns[0]; // Keep first pattern as main
-          this.plugin.settings.textBgColoringEntries[entryIdx].groupedPatterns = patterns.length > 1 ? patterns : null;
-        }
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const textColorHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        const newColor = textColorPicker.value;
-        if (!this.plugin.isValidHexColor(newColor)) {
-          new Notice('Invalid color format.');
-          return;
-        }
-        this.plugin.settings.textBgColoringEntries[entryIdx].textColor = newColor;
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const bgColorHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        const newColor = bgColorPicker.value;
-        if (!this.plugin.isValidHexColor(newColor)) {
-          new Notice('Invalid color format.');
-          return;
-        }
-        this.plugin.settings.textBgColoringEntries[entryIdx].backgroundColor = newColor;
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const regexChkHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        this.plugin.settings.textBgColoringEntries[entryIdx].isRegex = regexChk.checked;
-        flagsInput.style.display = regexChk.checked ? 'inline-block' : 'none';
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const flagsInputHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was removed
-        this.plugin.settings.textBgColoringEntries[entryIdx].flags = flagsInput.value || '';
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-      };
-
-      const delHandler = async () => {
-        const entryIdx = this.plugin.settings.textBgColoringEntries.indexOf(entry);
-        if (entryIdx === -1) return; // Entry was already removed
-        this.plugin.settings.textBgColoringEntries.splice(entryIdx, 1);
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        row.remove();
-      };
-
-      textInput.addEventListener('change', textInputHandler);
-      regexChk.addEventListener('change', regexChkHandler);
-      flagsInput.addEventListener('change', flagsInputHandler);
-      textColorPicker.addEventListener('input', textColorHandler);
-      bgColorPicker.addEventListener('input', bgColorHandler);
-      del.addEventListener('click', delHandler);
-
-      this._cleanupHandlers.push(() => {
-        textInput.removeEventListener('change', textInputHandler);
-        regexChk.removeEventListener('change', regexChkHandler);
-        flagsInput.removeEventListener('change', flagsInputHandler);
-        textColorPicker.removeEventListener('input', textColorHandler);
-        bgColorPicker.removeEventListener('input', bgColorHandler);
-        del.removeEventListener('click', delHandler);
-      });
-    };
-
-    // Render existing rows
-    if (this.plugin.settings.textBgColoringEntries.length > 0) {
-      this.plugin.settings.textBgColoringEntries.forEach((entry, i) => {
-        createTextBgRow(entry);
-      });
-    }
-
-    // Create button row with sort and add buttons
-    const textBgButtonRowDiv = containerEl.createDiv();
-    textBgButtonRowDiv.style.display = 'flex';
-    textBgButtonRowDiv.style.gap = '8px';
-    textBgButtonRowDiv.style.marginBottom = '16px';
-    textBgButtonRowDiv.style.marginTop = '8px';
-
-    // Sort button
-    const textBgSortBtn = textBgButtonRowDiv.createEl('button');
-    textBgSortBtn.textContent = this._textBgSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
-    textBgSortBtn.style.cursor = 'pointer';
-    textBgSortBtn.style.flex = '0 0 auto';
-    
-    const textBgSortHandler = async () => {
-      this._textBgSortMode = this._textBgSortMode === 'a-z' ? 'last-added' : 'a-z';
-      textBgSortBtn.textContent = this._textBgSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
-      // Re-render rows with new sort order
-      textBgListDiv.empty();
-      const entriesToDisplay = [...this.plugin.settings.textBgColoringEntries];
-      if (this._textBgSortMode === 'a-z') {
-        entriesToDisplay.sort((a, b) => (a.pattern || '').toLowerCase().localeCompare((b.pattern || '').toLowerCase()));
-      }
-      entriesToDisplay.forEach((entry, i) => {
-        createTextBgRow(entry);
-      });
-    };
-    textBgSortBtn.addEventListener('click', textBgSortHandler);
-    this._cleanupHandlers.push(() => textBgSortBtn.removeEventListener('click', textBgSortHandler));
-
-    // Add button
-    const textBgAddBtn = textBgButtonRowDiv.createEl('button');
-    textBgAddBtn.textContent = '+ Add new word / pattern';
-    textBgAddBtn.style.cursor = 'pointer';
-    textBgAddBtn.style.flex = '1';
-    textBgAddBtn.addClass('mod-cta');
-    
-    const textBgAddHandler = async () => {
-      if (textBgEmptyStateP) {
-        textBgEmptyStateP.remove();
-        textBgEmptyStateP = null;
-      }
-      
-      const newEntry = { pattern: '', textColor: '#000000', backgroundColor: '#FFFF00', isRegex: false, flags: '', groupedPatterns: null };
-      this.plugin.settings.textBgColoringEntries.push(newEntry);
-      await this.plugin.saveSettings();
-      createTextBgRow(newEntry);
-    };
-    textBgAddBtn.addEventListener('click', textBgAddHandler);
-    this._cleanupHandlers.push(() => textBgAddBtn.removeEventListener('click', textBgAddHandler));
-
-    new Setting(containerEl)
-      .addExtraButton(b => b
-        .setIcon('trash')
-        .setTooltip('Delete all text & background coloring entries')
-        .onClick(async () => {
-          new ConfirmationModal(this.app, 'Delete all text & background colors', 'Are you sure you want to delete all your text & background coloring entries? You can\'t undo this!', async () => {
-            this.plugin.settings.textBgColoringEntries = [];
-            await this.plugin.saveSettings();
-            this.plugin.compileTextBgColoringEntries();
-            this.plugin.forceRefreshAllEditors();
-            this._initializedSettingsUI = false;
-            this.display();
-          }).open();
-        }));
-
-    // Divider before Blacklist section
-    new Setting(containerEl);
-
+        
     // Blacklist words
     containerEl.createEl('h2', { text: 'Blacklist words' });
-    containerEl.createEl('p', { text: 'Words in this list will never be colored, even if they match (including partial matches).' });
+    containerEl.createEl('p', { text: 'Keywords or patterns here will never be colored, even for partial matches.' });
+
+      new Setting(containerEl)
+    .setName('Show Blacklist words in right-click menu')
+    .setDesc('Adds a right-click menu item to blacklist selected text from coloring.')
+    .addToggle(t => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async v => {
+      this.plugin.settings.enableBlacklistMenu = v;
+      await this.plugin.saveSettings();
+    }));
 
     // Store reference to blacklist words container for updating
     this._blacklistWordsContainer = containerEl.createDiv();
     this._blacklistWordsContainer.addClass('blacklist-words-list');
     this._refreshBlacklistWords();
 
-    new Setting(containerEl)
-      .addButton(b => b.setButtonText('+ Add blacklist word').onClick(async () => {
-        this.plugin.settings.blacklistWords.push('');
+    const blacklistButtonRowDiv = containerEl.createDiv();
+    blacklistButtonRowDiv.style.display = 'flex';
+    blacklistButtonRowDiv.style.gap = '8px';
+    blacklistButtonRowDiv.style.marginBottom = '16px';
+    blacklistButtonRowDiv.style.marginTop = '8px';
+
+    const blacklistSortBtn = blacklistButtonRowDiv.createEl('button');
+    blacklistSortBtn.textContent = this._blacklistSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+    blacklistSortBtn.style.cursor = 'pointer';
+    blacklistSortBtn.style.flex = '0 0 auto';
+    const blacklistSortHandler = async () => {
+      this._blacklistSortMode = this._blacklistSortMode === 'a-z' ? 'last-added' : 'a-z';
+      blacklistSortBtn.textContent = this._blacklistSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+      this._refreshBlacklistWords();
+    };
+    blacklistSortBtn.addEventListener('click', blacklistSortHandler);
+    this._cleanupHandlers.push(() => blacklistSortBtn.removeEventListener('click', blacklistSortHandler));
+
+    const blacklistAddBtn = blacklistButtonRowDiv.createEl('button');
+    blacklistAddBtn.textContent = '+ Add blacklist word or pattern';
+    blacklistAddBtn.style.cursor = 'pointer';
+    blacklistAddBtn.style.flex = '1';
+    blacklistAddBtn.addClass('mod-cta');
+    const blacklistAddHandler = async () => {
+      const newEntry = { pattern: '', isRegex: false, flags: '', groupedPatterns: null };
+      if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
+      this.plugin.settings.blacklistEntries.push(newEntry);
+      await this.plugin.saveSettings();
+      this._refreshBlacklistWords();
+    };
+    blacklistAddBtn.addEventListener('click', blacklistAddHandler);
+    this._cleanupHandlers.push(() => blacklistAddBtn.removeEventListener('click', blacklistAddHandler));
+
+    const blacklistPresetsBtn = blacklistButtonRowDiv.createEl('button');
+    blacklistPresetsBtn.textContent = 'Presets';
+    blacklistPresetsBtn.style.cursor = 'pointer';
+    blacklistPresetsBtn.style.flex = '0 0 auto';
+    const blacklistPresetsHandler = () => {
+      new PresetModal(this.app, this.plugin, async (preset) => {
+        if (!preset) return;
+        const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label };
+        if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
+        this.plugin.settings.blacklistEntries.push(newEntry);
         await this.plugin.saveSettings();
         this._refreshBlacklistWords();
-      }));
+      }).open();
+    };
+    blacklistPresetsBtn.addEventListener('click', blacklistPresetsHandler);
+    this._cleanupHandlers.push(() => blacklistPresetsBtn.removeEventListener('click', blacklistPresetsHandler));
 
     new Setting(containerEl)
-      .setName('Enable "Blacklist words from coloring" in right-click menu')
-      .setDesc('Adds a right-click menu item to blacklist selected text from coloring.')
-      .addToggle(t => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async v => {
-        this.plugin.settings.enableBlacklistMenu = v;
-        await this.plugin.saveSettings();
-      }));
-
-  // Folder-specific settings
-    containerEl.createEl('h3', { text: 'Folder-Specific Coloring' });
-
-  // Folder list (always show)
-    const folderListDiv = containerEl.createDiv();
-    folderListDiv.addClass('excluded-folders-list');
-
-  // Folder suggestions
-  const populateFolderSuggestions = () => {
-      const files = this.app.vault.getFiles();
-      const folders = new Set();
-      files.forEach(f => {
-        const p = f.path.replace(/\\/g, '/');
-        const idx = p.lastIndexOf('/');
-        const folder = idx !== -1 ? p.slice(0, idx) : '';
-        if (folder) {
-          const parts = folder.split('/');
-          let acc = '';
-          parts.forEach(part => {
-            acc = acc ? `${acc}/${part}` : part;
-            folders.add(acc);
-          });
-        } else {
-          folders.add('');
-        }
-      });
-      return Array.from(folders).sort();
-    };
-
-    const createFolderRow = (entry, idx) => {
-      const row = folderListDiv.createDiv();
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.marginBottom = '8px';
-
-      const textInput = row.createEl('input', { type: 'text', value: entry.path });
-      textInput.style.flex = '1';
-      textInput.style.padding = '6px';
-      textInput.style.borderRadius = '4px';
-      textInput.style.border = '1px solid var(--background-modifier-border)';
-      textInput.style.marginRight = '8px';
-      
-      // Helper function to create and update the dropdown
-      const updateDropdown = () => {
-        // remove existing dropdown and clean up its listeners
-        if (textInput._actDropdown) {
-          const dd = textInput._actDropdown;
-          // Clean up any listeners attached to this dropdown
-          if (textInput._dropdownScrollListener) {
-            document.removeEventListener('scroll', textInput._dropdownScrollListener, true);
-            textInput._dropdownScrollListener = null;
-          }
-          if (textInput._dropdownClickListener) {
-            document.removeEventListener('click', textInput._dropdownClickListener);
-            textInput._dropdownClickListener = null;
-          }
-          dd.remove();
-          textInput._actDropdown = null;
-        }
-
-        const allSuggestions = populateFolderSuggestions();
-        const inputValue = textInput.value.trim().toLowerCase();
-        
-        // Filter suggestions based on input value
-        const suggestions = inputValue === '' 
-          ? allSuggestions 
-          : allSuggestions.filter(folder => folder.toLowerCase().includes(inputValue));
-
-        if (suggestions.length === 0) {
-          return; // Don't show dropdown if no matches
-        }
-
-        const dd = document.createElement('div');
-        dd.className = 'act-folder-dropdown';
-        Object.assign(dd.style, {
-          position: 'fixed',
-          zIndex: 2000,
-          background: 'var(--background-primary)',
-          color: 'var(--text-normal)',
-          border: '1px solid var(--background-modifier-border)',
-          borderRadius: '6px',
-          boxShadow: '0 6px 18px rgba(0,0,0,0.4)',
-          maxHeight: '240px',
-          overflowY: 'auto',
-          padding: '6px 0',
-          minWidth: Math.max(240, textInput.offsetWidth) + 'px'
-        });
-
-        // Track highlighted item for keyboard navigation
-        let highlightedIndex = -1;
-        
-        const buildItem = (folder) => {
-          const item = document.createElement('div');
-          item.className = 'act-folder-item';
-          item.textContent = folder === '' ? '/' : folder;
-          Object.assign(item.style, {
-            padding: '8px 12px',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap'
-          });
-          item.onmouseenter = () => {
-            // Unhighlight previous item
-            if (highlightedIndex >= 0) {
-              dd.children[highlightedIndex].style.background = 'transparent';
-            }
-            // Highlight this item
-            item.style.background = 'var(--background-secondary)';
-            highlightedIndex = Array.from(dd.children).indexOf(item);
-          };
-          item.onmouseleave = () => item.style.background = 'transparent';
-          item.onclick = async (e) => {
-            e.stopPropagation();
-            textInput.value = folder;
-            const ev = new Event('change', { bubbles: true });
-            textInput.dispatchEvent(ev);
-            dd.remove();
-            textInput._actDropdown = null;
-            textInput._dropdownKeyListener = null;
-            document.removeEventListener('scroll', updateDropdownPosition, true);
-          };
-          return item;
-        };
-
-        suggestions.forEach(s => dd.appendChild(buildItem(s)));
-
-        document.body.appendChild(dd);
-        
-        // Function to position dropdown
-        const updateDropdownPosition = () => {
-          const rect = textInput.getBoundingClientRect();
-          dd.style.left = rect.left + 'px';
-          dd.style.top = (rect.bottom + 6) + 'px';
-          dd.style.width = textInput.offsetWidth + 'px';
-        };
-        
-        updateDropdownPosition();
-
-        textInput._actDropdown = dd;
-        
-        // Store listeners so they can be cleaned up later
-        textInput._dropdownScrollListener = updateDropdownPosition;
-        textInput._dropdownClickListener = (ev) => {
-          if (ev.target === textInput) return;
-          if (!dd.contains(ev.target)) {
-            dd.remove();
-            textInput._actDropdown = null;
-            document.removeEventListener('click', textInput._dropdownClickListener);
-            document.removeEventListener('scroll', textInput._dropdownScrollListener, true);
-            document.removeEventListener('keydown', textInput._dropdownKeyListener);
-            textInput._dropdownClickListener = null;
-            textInput._dropdownScrollListener = null;
-            textInput._dropdownKeyListener = null;
-          }
-        };
-        
-        // Update position on scroll
-        document.addEventListener('scroll', updateDropdownPosition, true);
-        document.addEventListener('click', textInput._dropdownClickListener);
-        
-        // Keyboard navigation for dropdown (up/down arrow keys)
-        textInput._dropdownKeyListener = (ev) => {
-          if (!textInput._actDropdown || !textInput._actDropdown.isConnected) return;
-          
-          const items = Array.from(dd.children);
-          if (items.length === 0) return;
-          
-          if (ev.key === 'ArrowDown') {
-            ev.preventDefault();
-            highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
-            // Unhighlight all
-            items.forEach(item => item.style.background = 'transparent');
-            // Highlight new item
-            if (highlightedIndex >= 0) {
-              items[highlightedIndex].style.background = 'var(--background-secondary)';
-              items[highlightedIndex].scrollIntoView({ block: 'nearest' });
-            }
-          } else if (ev.key === 'ArrowUp') {
-            ev.preventDefault();
-            highlightedIndex = Math.max(highlightedIndex - 1, -1);
-            // Unhighlight all
-            items.forEach(item => item.style.background = 'transparent');
-            // Highlight new item if available
-            if (highlightedIndex >= 0) {
-              items[highlightedIndex].style.background = 'var(--background-secondary)';
-              items[highlightedIndex].scrollIntoView({ block: 'nearest' });
-            }
-          } else if (ev.key === 'Enter' && highlightedIndex >= 0) {
-            ev.preventDefault();
-            // Simulate click on highlighted item
-            items[highlightedIndex].click();
-          } else if (ev.key === 'Escape') {
-            ev.preventDefault();
-            // Close dropdown
-            dd.remove();
-            textInput._actDropdown = null;
-            document.removeEventListener('keydown', textInput._dropdownKeyListener);
-            textInput._dropdownKeyListener = null;
-          }
-        };
-        document.addEventListener('keydown', textInput._dropdownKeyListener);
-        
-        // Add cleanup handlers for dropdown listeners to prevent DOM leaks
-        this._cleanupHandlers.push(() => {
-          try { document.removeEventListener('scroll', updateDropdownPosition, true); } catch (e) {}
-          try { document.removeEventListener('click', textInput._dropdownClickListener); } catch (e) {}
-          try { document.removeEventListener('keydown', textInput._dropdownKeyListener); } catch (e) {}
-          if (textInput._actDropdown) {
-            try { textInput._actDropdown.remove(); } catch (e) {}
-            textInput._actDropdown = null;
-          }
-        });
-      };
-
-      // Show dropdown on focus with all suggestions
-      const focusHandler = () => {
-        updateDropdown();
-      };
-      textInput.addEventListener('focus', focusHandler);
-      this._cleanupHandlers.push(() => textInput.removeEventListener('focus', focusHandler));
-      
-      // Update dropdown as user types
-      const inputHandler = () => {
-        updateDropdown();
-      };
-      textInput.addEventListener('input', inputHandler);
-      this._cleanupHandlers.push(() => textInput.removeEventListener('input', inputHandler));
-      
-      const textChangeHandler = async () => {
-        const newPath = textInput.value.trim();
-        if (!newPath) {
-          this.plugin.settings.excludedFolders.splice(idx, 1);
-        } else {
-          this.plugin.settings.excludedFolders[idx].path = newPath.replace(/\\\\/g, '/');
-        }
-        await this.debouncedSaveSettings();
-        this.display();
-      };
-      textInput.addEventListener('change', textChangeHandler);
-      this._cleanupHandlers.push(() => textInput.removeEventListener('change', textChangeHandler));
-
-    // Folder color style dropdown
-    const styleSelect = row.createEl('select');
-    styleSelect.style.marginRight = '8px';
-    styleSelect.style.height = '30px';
-    styleSelect.style.flex = '0 0 180px';
-    styleSelect.style.minWidth = '140px';
-    styleSelect.style.maxWidth = '320px';
-    styleSelect.style.boxSizing = 'border-box';
-    styleSelect.innerHTML = `<option value="">(use global)</option><option value="text">Text color</option><option value="background">Background highlight</option><option value="none">None</option>`;
-      styleSelect.value = entry.defaultStyle || '';
-      
-      const styleChangeHandler = async () => {
-        this.plugin.settings.excludedFolders[idx].defaultStyle = styleSelect.value || null;
-        await this.debouncedSaveSettings();
-        this.display();
-      };
-      styleSelect.addEventListener('change', styleChangeHandler);
-      this._cleanupHandlers.push(() => styleSelect.removeEventListener('change', styleChangeHandler));
-
-      const del = row.createEl('button', { text: '✕' });
-      del.addClass('mod-warning');
-      del.style.marginLeft = '8px';
-      del.style.padding = '4px 8px';
-      del.style.borderRadius = '4px';
-      del.style.cursor = 'pointer';
-      
-      const delHandler = async () => {
-        // Find the entry in the settings array and remove it
-        const entryIndex = this.plugin.settings.excludedFolders.indexOf(entry);
-        if (entryIndex !== -1) {
-          this.plugin.settings.excludedFolders.splice(entryIndex, 1);
-          await this.plugin.saveSettings();
-        }
-        // Remove the row from the DOM
-        row.remove();
-        
-        // If no folders left, show the empty state message
-        if (this.plugin.settings.excludedFolders.length === 0) {
-          emptyStateP = folderListDiv.createEl('p', { text: 'No folder exclusions configured.' });
-          emptyStateP.style.marginBottom = '8px';
-        }
-      };
-      del.addEventListener('click', delHandler);
-      this._cleanupHandlers.push(() => del.removeEventListener('click', delHandler));
-    };
-
-    // Reference to the empty state paragraph for dynamic removal
-    let emptyStateP = null;
-
-    // Render existing rows
-    if (this.plugin.settings.excludedFolders.length > 0) {
-      this.plugin.settings.excludedFolders.forEach((entry, i) => {
-        createFolderRow(entry, i);
-      });
-    } else {
-      emptyStateP = folderListDiv.createEl('p', { text: 'No folder exclusions configured.' });
-      emptyStateP.style.marginBottom = '8px';
-    }
-
-    // [ Add folder ] button
-    new Setting(containerEl)
-      .addButton(b => b.setButtonText('+ Add folder').onClick(async () => {
-        // Remove empty state if it exists
-        if (emptyStateP) {
-          emptyStateP.remove();
-          emptyStateP = null;
-        }
-        
-        // Add new entry to settings
-        const newEntry = { path: '', excluded: false, defaultColor: null, defaultStyle: null };
-        this.plugin.settings.excludedFolders.push(newEntry);
-        
-        // Create the row in the DOM immediately without full re-render
-        const idx = this.plugin.settings.excludedFolders.length - 1;
-        createFolderRow(newEntry, idx);
-        
-        // Save settings
-        await this.plugin.saveSettings();
-      }));
-
-    // --- File-specific options ---
-    const fileOptHeading = containerEl.createEl('h3', { text: 'File-specific options' });
-    fileOptHeading.style.marginTop = '38px';
-    containerEl.createEl('p', { text: 'Here\'s where you manage files where coloring is taking a break.' });
-    new Setting(containerEl);
-
-    // Store reference to disabled files container for updating
-    this._disabledFilesContainer = containerEl.createDiv();
-    this._refreshDisabledFiles();
+      .addExtraButton(b => b
+        .setIcon('trash')
+        .setTooltip('Delete all blacklisted words/patterns')
+        .onClick(async () => {
+          new ConfirmationModal(this.app, 'Delete all blacklisted words', 'Are you sure you want to delete all blacklist entries? You can\'t undo this!', async () => {
+            this.plugin.settings.blacklistEntries = [];
+            await this.plugin.saveSettings();
+            this._refreshBlacklistWords();
+          }).open();
+        }));
+    
+    
+    containerEl.createEl('h3', { text: 'File & Folder Coloring Rules' });
+    containerEl.createEl('p', { text: 'Control coloring with name matching, exact paths, or regex patterns. Leave an Empty Exclude to disable coloring vault-wide.' });
+    this._pathRulesContainer = containerEl.createDiv();
+    this._pathRulesContainer.addClass('path-rules-list');
+    this._refreshPathRules();
+    const pathBtnRow = containerEl.createDiv();
+    pathBtnRow.style.display = 'flex';
+    pathBtnRow.style.gap = '8px';
+    pathBtnRow.style.marginBottom = '16px';
+    pathBtnRow.style.marginTop = '8px';
+    const pathSortBtn = pathBtnRow.createEl('button');
+    pathSortBtn.textContent = this._pathSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added';
+    pathSortBtn.style.cursor = 'pointer';
+    pathSortBtn.style.flex = '0 0 auto';
+    const pathSortHandler = async () => { this._pathSortMode = this._pathSortMode === 'a-z' ? 'last-added' : 'a-z'; pathSortBtn.textContent = this._pathSortMode === 'a-z' ? 'Sort: A-Z' : 'Sort: Last Added'; this._refreshPathRules(); };
+    pathSortBtn.addEventListener('click', pathSortHandler);
+    this._cleanupHandlers.push(() => pathSortBtn.removeEventListener('click', pathSortHandler));
+    const pathAddBtn = pathBtnRow.createEl('button');
+    pathAddBtn.textContent = '+ Add file/folder rule';
+    pathAddBtn.style.cursor = 'pointer';
+    pathAddBtn.style.flex = '1';
+    pathAddBtn.addClass('mod-cta');
+    const pathAddHandler = async () => { const newEntry = { path: '', mode: 'include', matchType: 'has-name' }; if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = []; this.plugin.settings.pathRules.push(newEntry); await this.plugin.saveSettings(); this._refreshPathRules(); };
+    pathAddBtn.addEventListener('click', pathAddHandler);
+    this._cleanupHandlers.push(() => pathAddBtn.removeEventListener('click', pathAddHandler));
 
     new Setting(containerEl)
       .setName('Disable coloring for current file')
-      .setDesc('Click this to turn off coloring just for the note you\'re looking at right now.')
+      .setDesc('Adds an exclude rule for the active file under File & Folder Coloring Rules.')
       .addButton(b => b.setButtonText('Disable for this file').onClick(async () => {
         const md = this.app.workspace.getActiveFile();
-        if (md && !this.plugin.settings.disabledFiles.includes(md.path)) {
-          this.plugin.settings.disabledFiles.push(md.path);
-          await this.plugin.saveSettings();
-          new Notice(`Coloring disabled for ${md.path}`);
-          this._refreshDisabledFiles();
-        } else if (md && this.plugin.settings.disabledFiles.includes(md.path)) {
-          new Notice(`Coloring is already disabled for ${md.path}`);
-        } else {
-          new Notice('No active file to disable coloring for.');
-        }
-      }));
-
-
-    // --- Toggle visibility ---
-    containerEl.createEl('h3', { text: 'Toggle visibility' });
-    containerEl.createEl('p', { text: 'These options control where you can turn the coloring feature on or off.' });
-    new Setting(containerEl)
-      .setName('Disable toggle on status bar')
-      .addToggle(t => t
-        .setValue(this.plugin.settings.disableToggleModes.statusBar)
-        .onChange(async v => {
-          this.plugin.settings.disableToggleModes.statusBar = v;
-          await this.plugin.saveSettings();
-          location.reload();
-        }));
-
-    new Setting(containerEl)
-      .setName('Disable toggle in command')
-      .addToggle(t => t
-        .setValue(this.plugin.settings.disableToggleModes.command)
-        .onChange(async v => {
-          this.plugin.settings.disableToggleModes.command = v;
-          await this.plugin.saveSettings();
-          location.reload();
-        }));
-
-    // --- Regex support (global toggle) ---
-    new Setting(containerEl)
-      .setName('Enable regex support')
-      .setDesc('Allow patterns to be regular expressions. Invalid regexes are ignored for safety.')
-      .addToggle(t => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async v => {
-        this.plugin.settings.enableRegexSupport = v;
+        if (!md) { new Notice('No active file to disable coloring for.'); return; }
+        const p = String(md.path || '');
+        if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = [];
+        const np = this.plugin.normalizePath(p);
+        const exists = this.plugin.settings.pathRules.some(r => r && r.mode === 'exclude' && !r.isFolder && this.plugin.normalizePath(String(r.path || '')) === np);
+        if (exists) { new Notice(`Coloring is already disabled for ${md.path}`); return; }
+        this.plugin.settings.pathRules.push({ path: p, mode: 'exclude', isFolder: false });
         await this.plugin.saveSettings();
-        this.display();
+        this._refreshPathRules();
+        new Notice(`Coloring disabled for ${md.path}`);
       }));
+    
+    // Store reference to disabled files container for updating
+    this._disabledFilesContainer = containerEl.createDiv();
+    this._refreshDisabledFiles();
+    
   }
 
   // Method to focus and/or create a text & background coloring entry with pre-filled text
@@ -5338,7 +6113,7 @@ class ColorSettingTab extends PluginSettingTab {
       if (!selectedText || !this.containerEl) return;
       
       // Find the text input for this entry, or create a new one
-      let foundEntry = this.plugin.settings.textBgColoringEntries.find(e => 
+      let foundEntry = (Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : []).find(e => 
         e && (e.pattern === selectedText || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.includes(selectedText)))
       );
       
@@ -5348,13 +6123,15 @@ class ColorSettingTab extends PluginSettingTab {
         isNewEntry = true;
         foundEntry = {
           pattern: selectedText,
-          textColor: '#000000',
-          backgroundColor: '#FFFF00',
+          color: '',
+          textColor: 'currentColor',
+          backgroundColor: '',
           isRegex: false,
           flags: '',
           groupedPatterns: null
         };
-        this.plugin.settings.textBgColoringEntries.push(foundEntry);
+        if (!Array.isArray(this.plugin.settings.wordEntries)) this.plugin.settings.wordEntries = [];
+        this.plugin.settings.wordEntries.push(foundEntry);
         // Need to recompile entries when a new one is added
         this.plugin.compileTextBgColoringEntries();
         // Save the settings
@@ -5402,10 +6179,12 @@ class ColorSettingTab extends PluginSettingTab {
 
 // --- Color Picker Modal Class ---
 class ColorPickerModal extends Modal {
-  constructor(app, plugin, callback) {
+  constructor(app, plugin, callback, mode = 'text', selectedText = '') {
     super(app);
     this.plugin = plugin;
     this.callback = callback;
+    this.mode = (mode === 'background' || mode === 'text-and-background') ? mode : 'text';
+    this._selectedText = selectedText || '';
     this._eventListeners = []; // Track event listeners for cleanup
   }
 
@@ -5413,126 +6192,508 @@ class ColorPickerModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     this._eventListeners = []; // Reset listeners
-
-    this.modalEl.style.maxWidth = '360px'; // Pick Color Modal Width
+    const cpm = this.plugin.settings.colorPickerMode || 'both';
+    this.modalEl.style.maxWidth = (cpm === 'both') ? '720px' : '480px';
     this.modalEl.style.width = '100%';
-    this.modalEl.style.margin = '0 auto';
+    this.modalEl.style.margin = '0';
     this.modalEl.style.padding = '0';
 
-    contentEl.style.padding = '32px 28px 24px 28px';
+    contentEl.style.padding = '24px';
     contentEl.style.boxSizing = 'border-box';
 
     const h2 = contentEl.createEl('h2', { text: 'Pick Color' });
-    h2.style.marginTop = '-15px'; // oulta remove top margin of H2!!!
-    h2.style.marginBottom = '18px';
+    h2.style.marginTop = '0';
+    h2.style.marginBottom = '16px';
 
-    const inputDiv = contentEl.createDiv();
-    inputDiv.style.display = 'flex';
-    inputDiv.style.gap = '8px';
-    inputDiv.style.marginBottom = '15px';
+    this.selectedTextColor = null;
+    this.selectedBgColor = null;
 
-    const picker = inputDiv.createEl('input', { type: 'color' });
-    picker.value = '#000000';
-    picker.style.width = '80px'; // Colour Picker Box Width (pill)
-    picker.style.height = '30px';
-    picker.style.border = 'none';
-    picker.style.borderRadius = '0px';
-    picker.style.cursor = 'pointer';
+    const previewWrap = contentEl.createDiv();
+    previewWrap.style.border = '1px solid var(--background-modifier-border)';
+    previewWrap.style.borderRadius = '14px';
+    previewWrap.style.padding = '14px';
+    previewWrap.style.marginBottom = '16px';
+    previewWrap.style.display = 'flex';
+    previewWrap.style.alignItems = 'center';
+    previewWrap.style.justifyContent = 'center';
 
-    const hexInput = inputDiv.createEl('input', { type: 'text' });
-    hexInput.value = picker.value;
-    hexInput.placeholder = '#RRGGBB';
-    hexInput.style.flex = '1';
-    hexInput.style.padding = '8px';
-    hexInput.style.borderRadius = '5px';
-    hexInput.style.border = '1px solid var(--background-modifier-border)';
-    hexInput.style.width = '100px'; // Hex Box Input Width
-    hexInput.textalign = 'center';
+    const preview = previewWrap.createDiv();
+    preview.textContent = this._selectedText || 'Selected Text';
+    preview.style.display = 'inline-block';
+    preview.style.borderRadius = '8px';
+    // preview.style.padding = '6px 12px';
+    preview.style.fontWeight = '600';
+    preview.style.backgroundColor = '';
+    preview.style.color = '';
 
-    // Handle picker change with tracked listener
-    const pickerChangeHandler = () => {
-      hexInput.value = picker.value;
-      this.callback(picker.value);
-      this.plugin.forceRefreshAllEditors();
-      this.close();
-    };
-    picker.addEventListener('change', pickerChangeHandler);
-    this._eventListeners.push({ el: picker, event: 'change', handler: pickerChangeHandler });
-
-    // Handle hex input change with tracked listener
-    const hexInputChangeHandler = () => {
-      let v = hexInput.value.trim();
-      if (!v.startsWith('#')) v = '#' + v;
-      if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(v)) {
-        picker.value = v;
-        this.callback(v);
-        this.plugin.forceRefreshAllEditors();
-        this.close();
-      } else {
-        new Notice('Invalid hex color format. Please use #RRGGBB or #RGB.');
-      }
-    };
-    hexInput.addEventListener('change', hexInputChangeHandler);
-    this._eventListeners.push({ el: hexInput, event: 'change', handler: hexInputChangeHandler });
+    const panels = contentEl.createDiv();
+    panels.style.display = (cpm === 'both') ? 'grid' : 'block';
+    panels.style.gridTemplateColumns = (cpm === 'both') ? '1fr 1fr' : '1fr';
+    panels.style.gap = '16px';
+    if (cpm === 'both') {
+      panels.style.border = '1px solid var(--background-modifier-border)';
+      panels.style.borderRadius = '14px';
+      panels.style.padding = '16px';
+    } else {
+      panels.style.border = 'none';
+      panels.style.borderRadius = '';
+      panels.style.padding = '0';
+    }
 
     const defaultSwatches = [
       '#eb3b5a', '#fa8231', '#e5a216', '#20bf6b',
-      '#0fb9b1', '#2d98da', '#3867d6',
-      '#5454d0', 
-      '#8854d0', // OG
-      '#b554d0', 
-      '#e832c1', '#e83289', '#965b3b', '#8392a4'
+      '#0fb9b1', '#2d98da', '#3867d6', '#5454d0',
+      '#8854d0', '#b554d0', '#e832c1', '#e83289',
+      '#965b3b', '#8392a4'
     ];
 
-    const swatches = this.plugin.settings.customSwatchesEnabled
-      ? (this.plugin.settings.replaceDefaultSwatches
-        ? this.plugin.settings.customSwatches
-        : this.plugin.settings.customSwatches.concat(defaultSwatches)
-      )
-      : defaultSwatches;
+    const namedSwatches = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
+    const namedColors = namedSwatches.map(sw => sw && sw.color).filter(Boolean);
+    const userCustomSwatches = Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches : [];
+    const userCustomColors = userCustomSwatches.map(sw => sw && sw.color).filter(c => typeof c === 'string' && this.plugin.isValidHexColor(c));
+    
+    let colorPool = [];
+    const replaceDefaults = !!this.plugin.settings.replaceDefaultSwatches;
+    
+    // Logic for color pool:
+    // 1. If replaceDefaults is ON and there are custom colors, ONLY show custom colors
+    // 2. If replaceDefaults is OFF, show defaults THEN custom colors after
+    if (replaceDefaults && userCustomColors.length > 0) {
+      // ONLY custom colors
+      colorPool = userCustomColors;
+    } else if (replaceDefaults && namedColors.length > 0 && userCustomColors.length === 0) {
+      // User turned on replaceDefaults but has no custom colors, show named defaults only
+      colorPool = namedColors;
+    } else if (!replaceDefaults) {
+      // Show defaults first, then custom colors after
+      colorPool = namedColors.concat(userCustomColors);
+    } else {
+      // Fallback
+      colorPool = namedColors;
+    }
+    
+    const seen = new Set();
+    const swatchItems = [];
+    for (const c of colorPool) {
+      if (!c || typeof c !== 'string') continue;
+      const lc = c.toLowerCase();
+      if (!this.plugin.isValidHexColor(c)) continue;
+      if (seen.has(lc)) continue;
+      seen.add(lc);
+      const match = namedSwatches.find(sw => sw && sw.color && sw.color.toLowerCase() === lc);
+      const customMatch = userCustomSwatches.find(sw => sw && sw.color && sw.color.toLowerCase() === lc);
+      swatchItems.push({ color: c, name: (customMatch && customMatch.name) || (match && match.name) });
+    }
 
-    const swDiv = contentEl.createDiv();
-    swDiv.style.display = 'grid';
-    swDiv.style.gridTemplateColumns = 'repeat(auto-fill, minmax(35px, 1fr))';
-    swDiv.style.gap = '8px';
-    swDiv.style.maxWidth = '300px';
-    swDiv.style.margin = '0 auto';
+    const panelStates = {};
+    const buildPanel = (titleText, type) => {
+      const col = panels.createDiv();
+      col.style.border = '1px solid var(--background-modifier-border)';
+      col.style.borderRadius = '12px';
+      col.style.padding = '12px';
 
-    swatches.forEach(c => {
-      const btn = swDiv.createEl('button');
-      btn.style.cssText = `
-        background-color:${c};
-        width:35px;
-        height:35px;
-        border:1px solid var(--background-modifier-border);
-        border-radius:5px;
-        cursor:pointer;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: transform 0.1s ease-in-out;
-      `;
-      
-      // Track mouseover listener
-      const mouseoverHandler = () => btn.style.transform = 'scale(1.05)';
-      btn.addEventListener('mouseover', mouseoverHandler);
-      this._eventListeners.push({ el: btn, event: 'mouseover', handler: mouseoverHandler });
-      
-      // Track mouseout listener
-      const mouseoutHandler = () => btn.style.transform = 'scale(1)';
-      btn.addEventListener('mouseout', mouseoutHandler);
-      this._eventListeners.push({ el: btn, event: 'mouseout', handler: mouseoutHandler });
-      
-      // Track click listener
-      const clickHandler = () => {
-        this.callback(c);
-        this.close();
+      const header = col.createDiv();
+      header.style.display = 'flex';
+      header.style.alignItems = 'center';
+      header.style.gap = '8px';
+      const label = header.createEl('div', { text: titleText });
+      label.style.opacity = '0.9';
+
+      const resetBtn = header.createEl('button', { text: 'Reset' });
+      resetBtn.style.marginLeft = 'auto';
+      resetBtn.style.fontSize = '12px';
+      resetBtn.style.padding = '4px 8px';
+
+      const row = col.createDiv();
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '10px';
+      row.style.marginTop = '10px';
+
+      const colorInput = row.createEl('input', { type: 'color' });
+      colorInput.style.width = '44px';
+      colorInput.style.height = '44px';
+      colorInput.style.border = 'none';
+      colorInput.style.borderRadius = '12px';
+      colorInput.style.cursor = 'pointer';
+      colorInput.value = '#000000';
+
+      const hex = row.createEl('input', { type: 'text' });
+      hex.style.flex = '1';
+      hex.style.padding = '8px';
+      hex.style.borderRadius = '8px';
+      hex.style.border = '1px solid var(--background-modifier-border)';
+      hex.style.width = '120px';
+      hex.placeholder = '#000000';
+      hex.value = '';
+
+      const grid = col.createDiv();
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = (cpm === 'both') ? 'repeat(5, 44px)' : 'repeat(auto-fill, minmax(44px, 1fr))';
+      grid.style.gap = '10px';
+      grid.style.marginTop = '12px';
+
+      const apply = (val) => {
+        if (type === 'text') {
+          this.selectedTextColor = val;
+          preview.style.color = val;
+          try { preview.style.setProperty('--highlight-color', val); } catch (e) {}
+        } else {
+          this.selectedBgColor = val;
+          const rgba = this.plugin.hexToRgba(val, this.plugin.settings.backgroundOpacity ?? 25);
+          preview.style.backgroundColor = rgba;
+          this.plugin.applyBorderStyleToElement(preview, null, val);
+          preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + 'px';
+          if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
+            preview.style.borderRadius = '0px';
+          } else {
+            preview.style.borderRadius = (this.plugin.settings.highlightBorderRadius ?? 8) + 'px';
+          }
+          if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
+            preview.style.boxDecorationBreak = 'clone';
+            preview.style.WebkitBoxDecorationBreak = 'clone';
+          }
+        }
+        hex.value = val;
+        colorInput.value = val;
       };
-      btn.addEventListener('click', clickHandler);
-      this._eventListeners.push({ el: btn, event: 'click', handler: clickHandler });
-    });
+
+      const colorChange = () => {
+        const v = colorInput.value;
+        apply(v);
+      };
+      colorInput.addEventListener('input', colorChange);
+      this._eventListeners.push({ el: colorInput, event: 'input', handler: colorChange });
+      colorInput.addEventListener('change', colorChange);
+      this._eventListeners.push({ el: colorInput, event: 'change', handler: colorChange });
+
+      const hexChange = () => {
+        let v = hex.value.trim();
+        if (!v.startsWith('#')) v = '#' + v;
+        if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(v)) {
+          apply(v);
+        } else {
+          new Notice('Invalid hex color format. Use #RRGGBB or #RGB.');
+        }
+      };
+      hex.addEventListener('change', hexChange);
+      this._eventListeners.push({ el: hex, event: 'change', handler: hexChange });
+
+      const resetHandler = () => {
+        if (type === 'text') {
+          this.selectedTextColor = null;
+          preview.style.color = '';
+        } else {
+          this.selectedBgColor = null;
+          preview.style.backgroundColor = '';
+          // Clear all border styles when resetting background color
+          preview.style.border = '';
+          preview.style.borderTop = '';
+          preview.style.borderBottom = '';
+          preview.style.borderLeft = '';
+          preview.style.borderRight = '';
+        }
+        hex.value = '';
+        colorInput.value = '#000000';
+      };
+      resetBtn.addEventListener('click', resetHandler);
+      this._eventListeners.push({ el: resetBtn, event: 'click', handler: resetHandler });
+
+      swatchItems.forEach(item => {
+        const btn = grid.createEl('button');
+        btn.style.backgroundColor = item.color;
+        btn.style.width = (cpm === 'both') ? '44px' : '100%';
+        btn.style.height = '44px';
+        btn.style.border = '1px solid var(--background-modifier-border)';
+        btn.style.borderRadius = '12px';
+        btn.style.cursor = 'pointer';
+        btn.style.opacity = '1';
+        btn.setAttr('title', item.name || item.color);
+        const clickHandler = () => { apply(item.color); };
+        btn.addEventListener('click', clickHandler);
+        this._eventListeners.push({ el: btn, event: 'click', handler: clickHandler });
+      });
+
+      panelStates[type] = { hex, colorInput };
+      return col;
+    };
+
+    if (cpm === 'both' || cpm === 'text') buildPanel('Text Color', 'text');
+    if (cpm === 'both' || cpm === 'background') buildPanel('Highlight Color', 'background');
+
+    const s = this._selectedText || '';
+    let initText = null;
+    let initBg = null;
+    let existingStyle = null;
+    const caseSensitive = !!this.plugin.settings.caseSensitive;
+    const eq = (a, b) => (caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
+    const wordEntries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+    for (const e of wordEntries) {
+      if (!e) continue;
+      if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+        try {
+          const re = new RegExp(e.pattern, e.flags || '');
+          if (re.test(s) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
+        } catch (err) {}
+      } else {
+        if (eq(e.pattern || '', s) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
+        if (this.plugin.settings.partialMatch) {
+          const a = caseSensitive ? String(s) : String(s).toLowerCase();
+          const b = caseSensitive ? String(e.pattern || '') : String(e.pattern || '').toLowerCase();
+          if (b && a.includes(b) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
+        }
+        if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
+      }
+    }
+    const tbgEntries = (Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : []).filter(e => e && e.backgroundColor);
+    for (const e of tbgEntries) {
+      if (!e) continue;
+      let match = false;
+      if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+        try { const re = new RegExp(e.pattern, e.flags || ''); match = re.test(s); } catch (err) { match = false; }
+      } else {
+        match = eq(e.pattern || '', s) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)));
+      }
+      if (match || (this.plugin.settings.partialMatch && !e.isRegex && ((caseSensitive ? String(s) : String(s).toLowerCase()).includes(caseSensitive ? String(e.pattern || '') : String(e.pattern || '').toLowerCase())))) {
+        if (e.textColor && e.textColor !== 'currentColor') initText = e.textColor;
+        if (e.backgroundColor) initBg = e.backgroundColor;
+        existingStyle = e.styleType || ((e.textColor && e.textColor !== 'currentColor') && e.backgroundColor ? 'both' : (e.backgroundColor ? 'highlight' : 'text'));
+        break;
+      }
+    }
+    const tp = panelStates['text'];
+    const bp = panelStates['background'];
+    // Initialize modal mode based on existing entry
+    if (!existingStyle) {
+      existingStyle = (initText && initBg) ? 'both' : (initBg ? 'highlight' : (initText ? 'text' : this.mode));
+    }
+    this.mode = (existingStyle === 'highlight') ? 'background' : (existingStyle === 'both' ? 'text-and-background' : 'text');
+
+    if (initText && tp && this.mode !== 'background') {
+      preview.style.color = initText;
+      tp.hex.value = initText;
+      tp.colorInput.value = initText;
+      if (this.mode === 'text' || this.mode === 'text-and-background') this.selectedTextColor = initText;
+    }
+    if (initBg && bp) {
+      const rgba = this.plugin.hexToRgba(initBg, this.plugin.settings.backgroundOpacity ?? 25);
+      preview.style.backgroundColor = rgba;
+      this.plugin.applyBorderStyleToElement(preview, initText, initBg);
+      preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + 'px';
+      if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
+        preview.style.borderRadius = '0px';
+      } else {
+        preview.style.borderRadius = (this.plugin.settings.highlightBorderRadius ?? 8) + 'px';
+      }
+      if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
+        preview.style.boxDecorationBreak = 'clone';
+        preview.style.WebkitBoxDecorationBreak = 'clone';
+      }
+      bp.hex.value = initBg;
+      bp.colorInput.value = initBg;
+      if (this.mode === 'background' || this.mode === 'text-and-background') this.selectedBgColor = initBg;
+    }
+    // Also update the mode handling to properly detect text-and-background
+    const actionRow = contentEl.createDiv();
+    actionRow.style.display = 'flex';
+    actionRow.style.justifyContent = 'flex-end';
+    actionRow.style.gap = '8px';
+    actionRow.style.marginTop = '16px';
+
+    const submitFn = async () => {
+        const textPanel = panelStates['text'];
+        const bgPanel = panelStates['background'];
+        const textColor = this.selectedTextColor || (textPanel && textPanel.hex.value ? textPanel.hex.value : null);
+        const bgColor = this.selectedBgColor || (bgPanel && bgPanel.hex.value ? bgPanel.hex.value : null);
+
+        const textSelected = !!(textColor && this.plugin.isValidHexColor(textColor));
+        const bgSelected = !!(bgColor && this.plugin.isValidHexColor(bgColor));
+        debugLog('MODAL', 'submit', { word: this._selectedText, textSelected, bgSelected, textColor, bgColor });
+        
+        // If both colors are empty/reset, remove the entry
+        if (!textSelected && !bgSelected) {
+          const word = this._selectedText || '';
+          const caseSensitive = !!this.plugin.settings.caseSensitive;
+          const eq = (a, b) => (caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
+          const arr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+          for (let i = arr.length - 1; i >= 0; i--) {
+            const e = arr[i];
+            if (!e) continue;
+            let match = false;
+            if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+              try { const re = new RegExp(e.pattern, e.flags || ''); match = re.test(word); } catch (err) { match = false; }
+            } else {
+              match = eq(e.pattern || '', word) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, word)));
+            }
+            if (match) {
+              arr.splice(i, 1);
+              await this.plugin.saveSettings();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              break;
+            }
+          }
+          return;
+        }
+
+        const word = this._selectedText || '';
+        try {
+          if (typeof this.callback === 'function') {
+            try { this.callback(textSelected ? textColor : (bgSelected ? bgColor : null), { textColor: textSelected ? textColor : null, backgroundColor: bgSelected ? bgColor : null, word }); } catch (e) {}
+            return;
+          }
+          const caseSensitive = !!this.plugin.settings.caseSensitive;
+          const eq = (a, b) => (caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
+          let updated = false;
+          
+          // FIXED LOGIC: Clear logic for each case
+          if (textSelected && bgSelected) {
+            // BOTH: text color + background color
+            const arr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+            for (let i = 0; i < arr.length; i++) {
+              const e = arr[i];
+              if (!e) continue;
+              let match = false;
+              if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                try { const re = new RegExp(e.pattern, e.flags || ''); match = re.test(word); } catch (err) { match = false; }
+              } else {
+                match = eq(e.pattern || '', word) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, word)));
+              }
+              if (match) {
+                e.textColor = textColor;
+                e.backgroundColor = bgColor;
+                e.color = ''; // Clear plain color field
+                e.styleType = 'both'; // EXPLICITLY SET TO BOTH
+                debugLog('MODAL', 'update both', e);
+                updated = true;
+                break;
+              }
+            }
+            if (!updated) {
+              const newEntry = { 
+                pattern: word, 
+                color: '', // No plain color
+                textColor: textColor, 
+                backgroundColor: bgColor, 
+                isRegex: false, 
+                flags: '', 
+                styleType: 'both' // EXPLICITLY SET TO BOTH
+              };
+              if (!Array.isArray(this.plugin.settings.wordEntries)) this.plugin.settings.wordEntries = [];
+              this.plugin.settings.wordEntries.push(newEntry);
+              debugLog('MODAL', 'create both', newEntry);
+            }
+            await this.plugin.saveSettings();
+            this.plugin.compileTextBgColoringEntries();
+          } else if (textSelected) {
+            // TEXT ONLY: text color only
+            const arr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+            for (let i = 0; i < arr.length; i++) {
+              const e = arr[i];
+              if (!e) continue;
+              if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                try { const re = new RegExp(e.pattern, e.flags || ''); if (re.test(word)) { 
+                  e.color = textColor; 
+                  e.textColor = null; // Clear textColor field
+                  e.backgroundColor = null; // Clear background field
+                  e.styleType = 'text'; // EXPLICITLY SET TO TEXT
+                  updated = true; 
+                  break; 
+                } } catch (err) {}
+              } else {
+                if (eq(e.pattern || '', word)) { 
+                  e.color = textColor; 
+                  e.textColor = null; // Clear textColor field
+                  e.backgroundColor = null; // Clear background field
+                  e.styleType = 'text'; // EXPLICITLY SET TO TEXT
+                  updated = true; 
+                  break; 
+                }
+                if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, word))) { 
+                  e.color = textColor; 
+                  e.textColor = null; // Clear textColor field
+                  e.backgroundColor = null; // Clear background field
+                  e.styleType = 'text'; // EXPLICITLY SET TO TEXT
+                  updated = true; 
+                  break; 
+                }
+              }
+            }
+            if (!updated) {
+              // Use saveEntry for text-only which should create a text-style entry
+              await this.plugin.saveEntry(word, textColor);
+              // Ensure the new entry has the correct styleType
+              const newEntry = this.plugin.settings.wordEntries.find(e => e && e.pattern === word && !e.isRegex);
+              if (newEntry) {
+                newEntry.styleType = 'text'; // EXPLICITLY SET TO TEXT
+              }
+            } else {
+              await this.plugin.saveSettings();
+            }
+            debugLog('MODAL', 'text-only', { word, textColor });
+          } else if (bgSelected) {
+            // BACKGROUND ONLY: highlight only
+            const arr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+            for (let i = 0; i < arr.length; i++) {
+              const e = arr[i];
+              if (!e) continue;
+              let match = false;
+              if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                try { const re = new RegExp(e.pattern, e.flags || ''); match = re.test(word); } catch (err) { match = false; }
+              } else {
+                match = eq(e.pattern || '', word) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, word)));
+              }
+              if (match) {
+                e.backgroundColor = bgColor;
+                // HIGHLIGHT ONLY: set textColor to currentColor and clear plain color
+                e.textColor = 'currentColor';
+                e.color = ''; // Clear plain color field
+                e.styleType = 'highlight'; // EXPLICITLY SET TO HIGHLIGHT
+                debugLog('MODAL', 'update highlight', e);
+                updated = true;
+                break;
+              }
+            }
+            if (!updated) {
+              const newEntry = { 
+                pattern: word, 
+                color: '', // No plain color
+                textColor: 'currentColor', 
+                backgroundColor: bgColor, 
+                isRegex: false, 
+                flags: '', 
+                styleType: 'highlight' // EXPLICITLY SET TO HIGHLIGHT
+              };
+              if (!Array.isArray(this.plugin.settings.wordEntries)) this.plugin.settings.wordEntries = [];
+              this.plugin.settings.wordEntries.push(newEntry);
+              debugLog('MODAL', 'create highlight', newEntry);
+            }
+            await this.plugin.saveSettings();
+            this.plugin.compileTextBgColoringEntries();
+          }
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
+        } catch (e) {}
+    };
+
+    this._submitFn = submitFn;
+    // If settings tab is open, ensure it refreshes after modal actions
+    try {
+      const originalSubmit = this._submitFn;
+      this._submitFn = async () => {
+        await originalSubmit();
+        if (this.plugin.settingTab) {
+          this.plugin.settingTab._initializedSettingsUI = false;
+          this.plugin.settingTab.display();
+        }
+      };
+    } catch (e) {}
   }
 
   onClose() {
     // Properly clean up all event listeners before emptying
+    try { if (typeof this._submitFn === 'function') this._submitFn(); } catch (e) {}
     this._eventListeners.forEach(({ el, event, handler }) => {
       el.removeEventListener(event, handler);
     });
@@ -5606,4 +6767,4 @@ try {
   }
 } catch (e) {}
 
-// 0.1.12 yay 25NOV17
+/* nosourcemap */
