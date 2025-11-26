@@ -100,4 +100,17 @@ Available in Obsidian Community Plugins. Check [Release Notes](https://github.co
 **Known issue**: Colored text inside links may render without your set color in Live Preview mode due to Obsidian's rendering engine.
 
 ### Questions or Suggestions?
-Create a new issue [here](https://github.com/Kazi-Aidah/always-color-text/issues) to report bugs or request new features.
+Create a new issue [here](https://github.com/Kazi-Aidah/always-color-text/issues) to report bugs or request new features!
+
+---
+
+## My personal favourite use cases,
+![Double Quotes Example](assets/double-quotes-example.png)
+pattern: `"[^"]*"`
+requirements: Disable Regex Safety
+
+![Single Quote Example](assets/single-quote-example.png)
+pattern: `'[^']*'`
+requirements: Disable Regex Safety
+
+![Tasks Example](assets/tasks-ss.png)
