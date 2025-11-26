@@ -4767,6 +4767,9 @@ class ColorSettingTab extends PluginSettingTab {
   // Create a settings row for a single entry and track cleanup
   _createEntryRow(entry, listDiv) {
     try {
+      if (!entry.uid) {
+        try { entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { entry.uid = Date.now(); }
+      }
       const row = listDiv.createDiv();
       row.style.display = 'flex';
       row.style.alignItems = 'center';
@@ -4910,6 +4913,10 @@ class ColorSettingTab extends PluginSettingTab {
       };
 
       const resolveIdx = () => {
+        if (entry && entry.uid) {
+          const byUid = this.plugin.settings.wordEntries.findIndex(e => e && e.uid === entry.uid);
+          if (byUid !== -1) return byUid;
+        }
         let idx = this.plugin.settings.wordEntries.indexOf(entry);
         if (idx !== -1) return idx;
         const curr = String(textInput.value || '').trim();
@@ -5275,6 +5282,9 @@ class ColorSettingTab extends PluginSettingTab {
         del.style.borderRadius = '4px';
         del.style.cursor = 'pointer';
 
+        if (!entry.uid) {
+          try { entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { entry.uid = Date.now(); }
+        }
         const updateInputDisplay = () => {
           // Update the input field to show the current state from entry
           const patterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
@@ -5286,7 +5296,11 @@ class ColorSettingTab extends PluginSettingTab {
         const textInputHandler = async () => {
           try {
             const newPattern = textInput.value.trim();
-            const entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+            let entryIdx = -1;
+            if (entry && entry.uid) {
+              entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === entry.uid);
+            }
+            if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
             if (entryIdx === -1) return;
             if (!newPattern) {
               this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
@@ -5314,7 +5328,9 @@ class ColorSettingTab extends PluginSettingTab {
 
         // cpHandler for blacklist color picker
         const regexChkHandler = async () => {
-          const entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          let entryIdx = -1;
+          if (entry && entry.uid) entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === entry.uid);
+          if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
           if (entryIdx === -1) return;
           this.plugin.settings.blacklistEntries[entryIdx].isRegex = regexChk.checked;
           flagsInput.style.display = regexChk.checked ? 'inline-block' : 'none';
@@ -5323,7 +5339,9 @@ class ColorSettingTab extends PluginSettingTab {
         };
 
         const flagsInputHandler = async () => {
-          const entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          let entryIdx = -1;
+          if (entry && entry.uid) entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === entry.uid);
+          if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
           if (entryIdx === -1) return;
           this.plugin.settings.blacklistEntries[entryIdx].flags = flagsInput.value || '';
           await this.plugin.saveSettings();
@@ -5331,7 +5349,9 @@ class ColorSettingTab extends PluginSettingTab {
         };
 
         const delHandler = async () => {
-          const entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          let entryIdx = -1;
+          if (entry && entry.uid) entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === entry.uid);
+          if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
           if (entryIdx === -1) return;
           this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
           await this.plugin.saveSettings();
@@ -5851,7 +5871,9 @@ class ColorSettingTab extends PluginSettingTab {
         rows.forEach(([entry, info]) => {
           if (!entry || !info || !info.elements) return;
           const { textInput, styleSelect, cp, cpBg, regexChk, flagsInput } = info.elements;
-          const idx = this.plugin.settings.wordEntries.indexOf(entry);
+          let idx = -1;
+          if (entry && entry.uid) idx = this.plugin.settings.wordEntries.findIndex(e => e && e.uid === entry.uid);
+          if (idx === -1) idx = this.plugin.settings.wordEntries.indexOf(entry);
           if (idx === -1) return;
           const s = this.plugin.settings.wordEntries[idx];
           if (textInput && typeof textInput.value === 'string') {
@@ -6425,7 +6447,8 @@ class ColorSettingTab extends PluginSettingTab {
     addBtn.style.flex = '1';
     addBtn.addClass('mod-cta');
       const addBtnHandler = async () => {
-        this.plugin.settings.wordEntries.push({ pattern: '', color: '', isRegex: false, flags: '', groupedPatterns: null, styleType: 'text' });
+        const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+        this.plugin.settings.wordEntries.push({ pattern: '', color: '', isRegex: false, flags: '', groupedPatterns: null, styleType: 'text', uid });
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
@@ -6448,6 +6471,7 @@ class ColorSettingTab extends PluginSettingTab {
             const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
             if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
             const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label };
+            try { entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { entry.uid = Date.now(); }
             if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
             else if (tc) { entry.color = tc; entry.styleType = 'text'; entry._savedTextColor = tc; }
             else if (bc) { entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
@@ -6536,7 +6560,8 @@ class ColorSettingTab extends PluginSettingTab {
     blacklistAddBtn.style.flex = '1';
     blacklistAddBtn.addClass('mod-cta');
     const blacklistAddHandler = async () => {
-      const newEntry = { pattern: '', isRegex: false, flags: '', groupedPatterns: null };
+      const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+      const newEntry = { pattern: '', isRegex: false, flags: '', groupedPatterns: null, uid };
       if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
       this.plugin.settings.blacklistEntries.push(newEntry);
       await this.plugin.saveSettings();
