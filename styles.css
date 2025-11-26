@@ -10,6 +10,24 @@
   color: var(--highlight-color, inherit) !important;
 }
 
+/* Settings button rows base layout */
+.entries-button-row,
+.blacklist-button-row,
+.path-button-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.color-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
 /* Override Obsidian's link color variables for elements with our highlights */
 .cm-line .always-color-text-highlight,
 .cm-content .always-color-text-highlight,
@@ -197,3 +215,44 @@ select {
   border: 1px solid var(--background-modifier-border);
   box-sizing: border-box;
 }
+
+.entries-button-row,
+.blacklist-button-row,
+.path-button-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .color-swatch-grid {
+    grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+    gap: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .entries-button-row,
+  .blacklist-button-row,
+  .path-button-row {
+    flex-direction: column;
+  }
+  .entries-button-row > button,
+  .blacklist-button-row > button,
+  .path-button-row > button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .color-swatch-grid {
+    grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+  }
+  .color-picker-panel {
+    padding: 12px;
+    width: 100%;
+  }
+}
+
