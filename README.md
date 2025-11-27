@@ -5,6 +5,7 @@ Color & highlight keywords, status words, dates, names, ***anything***! Once ass
 ![banner](assets/banner.png)
 
 **Just select a word → pick a color → watch it appear everywhere.** Lightning-fast performance.
+![highlight coloring example in editor](assets/highlight-color-example.gif)
 
 Whether you're a writer tracking characters, a student highlighting key terms, or someone who wants to recognize important words at a glance, this plugin adapts to your workflow.
 
