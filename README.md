@@ -114,4 +114,8 @@ requirements: Disable Regex Safety
 pattern: `'[^']*'`
 requirements: Disable Regex Safety
 
+![Brackets Example](assets/brackets-example.png)
+pattern: `\(([^)]*)\)`
+flag: g
+
 ![Tasks Example](assets/tasks-ss.png)
