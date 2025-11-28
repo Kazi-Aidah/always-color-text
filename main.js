@@ -6253,7 +6253,7 @@ class ColorSettingTab extends PluginSettingTab {
         await this.debouncedSaveSettings();
       }));
 
-    containerEl.createEl('h3', { text: 'One-Time Actions' });
+    containerEl.createEl('h2', { text: 'One-Time Actions' });
     new Setting(containerEl)
       .setName('Color Once')
       .setDesc('Inserts HTML inline for the selected text. This persists even if the plugin is turned off.')
