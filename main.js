@@ -165,12 +165,57 @@ module.exports = class AlwaysColorText extends Plugin {
     this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor, view) => {
       const selectedText = editor.getSelection().trim();
       if (selectedText.length > 0) {
-        // Always color text:
+        if (this.settings.enableQuickColorOnce) {
+          menu.addItem(item => {
+            item.setTitle("Color Once")
+              .setIcon('palette')
+              .onClick(() => {
+                new ColorPickerModal(this.app, this, async (color) => {
+                  if (color && this.isValidHexColor(color)) {
+                    const html = `<span style="color: ${color}">${selectedText}</span>`;
+                    editor.replaceSelection(html);
+                  }
+                }, 'text', selectedText).open();
+              });
+          });
+        }
+
+        if (this.settings.enableQuickHighlightOnce) {
+          menu.addItem(item => {
+            item.setTitle("Highlight Once")
+              .setIcon('highlighter')
+              .onClick(() => {
+                new ColorPickerModal(this.app, this, async (color, result) => {
+                  const bg = (result && result.backgroundColor && this.isValidHexColor(result.backgroundColor)) ? result.backgroundColor : (this.isValidHexColor(color) ? color : null);
+                  if (!bg) return;
+                  let style = '';
+                  if (this.settings.quickHighlightUseGlobalStyle) {
+                    const rgba = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25);
+                    const radius = this.settings.highlightBorderRadius ?? 8;
+                    const pad = this.settings.highlightHorizontalPadding ?? 4;
+                    const border = this.generateBorderStyle(null, bg);
+                    style = `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${border}`;
+                  } else if (this.settings.quickHighlightStyleEnable) {
+                    const hexWithAlpha = this.hexToHexWithAlpha(bg, this.settings.quickHighlightOpacity ?? 25);
+                    const radius = this.settings.quickHighlightBorderRadius ?? 8;
+                    const pad = this.settings.quickHighlightHorizontalPadding ?? 4;
+                    const border = this.generateOnceBorderStyle(bg);
+                    style = `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${border}`;
+                  } else {
+                    const rgba = this.hexToRgba(bg, 25);
+                    style = `background-color: ${rgba};`;
+                  }
+                  const html = `<span class="always-color-text-highlight" style="${style}">${selectedText}</span>`;
+                  editor.replaceSelection(html);
+                }, 'background', selectedText, true).open();
+              });
+          });
+        }
+
         menu.addItem(item => {
           item.setTitle("Always color text")
             .setIcon('palette')
             .onClick(() => {
-              // Warn if blacklisted
               if (this.isWordBlacklisted(selectedText)) {
                 new Notice(`"${selectedText}" is blacklisted and cannot be colored.`);
                 return;
@@ -202,7 +247,7 @@ module.exports = class AlwaysColorText extends Plugin {
                 this.compileTextBgColoringEntries();
                 this.reconfigureEditorExtensions();
                 this.refreshEditor(view, true);
-              }, 'text-and-background', selectedText).open();
+                }, 'text-and-background', selectedText, false).open();
             });
         });
         
@@ -289,10 +334,9 @@ module.exports = class AlwaysColorText extends Plugin {
           });
         }
         
-        // Blacklist words from coloring
         if (this.settings.enableBlacklistMenu) {
           menu.addItem(item => {
-            item.setTitle("Blacklist words from coloring")
+            item.setTitle("Blacklist Word from Coloring")
               .setIcon('ban')
               .onClick(async () => {
                 const existsLegacy = Array.isArray(this.settings.blacklistWords) && this.settings.blacklistWords.includes(selectedText);
@@ -354,7 +398,7 @@ module.exports = class AlwaysColorText extends Plugin {
             this.compileTextBgColoringEntries();
             this.reconfigureEditorExtensions();
             this.forceRefreshAllEditors();
-          }, 'text-and-background', word).open();
+          }, 'text-and-background', word, false).open();
         }
       });
 
@@ -447,7 +491,7 @@ module.exports = class AlwaysColorText extends Plugin {
             this.compileTextBgColoringEntries();
             this.reconfigureEditorExtensions();
             this.forceRefreshAllEditors();
-          }, 'text-and-background', word).open();
+          }, 'text-and-background', word, false).open();
         }
       });
       this.addCommand({
@@ -1084,6 +1128,17 @@ module.exports = class AlwaysColorText extends Plugin {
       pathRules: [],
       // Allow disabling regex safety checks (dangerous)
       disableRegexSafety: false,
+      enableQuickColorOnce: false,
+      enableQuickHighlightOnce: false,
+      quickHighlightStyleEnable: false,
+      quickHighlightUseGlobalStyle: false,
+      quickHighlightOpacity: 25,
+      quickHighlightBorderRadius: 8,
+      quickHighlightHorizontalPadding: 4,
+      quickHighlightEnableBorder: false,
+      quickHighlightBorderStyle: 'full',
+      quickHighlightBorderOpacity: 100,
+      quickHighlightBorderThickness: 1,
     }, loadedData);
     try { this.sanitizeSettings(); } catch (e) {}
     // Migrate legacy customSwatches (array of hex strings) into userCustomSwatches
@@ -1351,6 +1406,17 @@ module.exports = class AlwaysColorText extends Plugin {
         x.isFolder = !!x.isFolder;
         return x;
       });
+      s.enableQuickColorOnce = !!s.enableQuickColorOnce;
+      s.enableQuickHighlightOnce = !!s.enableQuickHighlightOnce;
+      s.quickHighlightStyleEnable = !!s.quickHighlightStyleEnable;
+      s.quickHighlightUseGlobalStyle = !!s.quickHighlightUseGlobalStyle;
+      s.quickHighlightOpacity = Math.max(0, Math.min(100, Number(s.quickHighlightOpacity ?? 25)));
+      s.quickHighlightBorderRadius = Math.max(0, parseInt(s.quickHighlightBorderRadius ?? 8) || 0);
+      s.quickHighlightHorizontalPadding = Math.max(0, parseInt(s.quickHighlightHorizontalPadding ?? 4) || 0);
+      s.quickHighlightEnableBorder = !!s.quickHighlightEnableBorder;
+      s.quickHighlightBorderStyle = String(s.quickHighlightBorderStyle || 'full');
+      s.quickHighlightBorderOpacity = Math.max(0, Math.min(100, Number(s.quickHighlightBorderOpacity ?? 100)));
+      s.quickHighlightBorderThickness = Math.max(0, Math.min(5, Number(s.quickHighlightBorderThickness ?? 1)));
       this.settings = s;
     } catch (e) {}
   }
@@ -1767,6 +1833,25 @@ module.exports = class AlwaysColorText extends Plugin {
     return `rgba(${r},${g},${b},${o})`;
   }
 
+  hexToHexWithAlpha(hex, opacityPercent) {
+    try {
+      const h = String(hex || '').trim();
+      if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(h)) return h;
+      const pct = Math.max(0, Math.min(100, Number(opacityPercent)));
+      const alpha = Math.round(pct / 100 * 255).toString(16).padStart(2, '0');
+      if (h.length === 4) {
+        const r = h[1];
+        const g = h[2];
+        const b = h[3];
+        const full = `#${r}${r}${g}${g}${b}${b}`;
+        return `${full}${alpha}`;
+      }
+      return `${h}${alpha}`;
+    } catch (_) {
+      return hex;
+    }
+  }
+
   // Helper: Apply border style to a span element based on settings
   applyBorderStyleToElement(element, textColor, backgroundColor) {
     if (!this.settings.enableBorderThickness) {
@@ -1876,6 +1961,34 @@ module.exports = class AlwaysColorText extends Plugin {
       case 'full':
       default:
         return ` border: ${borderCSS}`;
+    }
+  }
+
+  generateOnceBorderStyle(backgroundColor) {
+    try {
+      if (!this.settings.quickHighlightEnableBorder) return '';
+      const thickness = this.settings.quickHighlightBorderThickness ?? 1;
+      const opacity = this.settings.quickHighlightBorderOpacity ?? 100;
+      const borderColor = this.hexToRgba(backgroundColor, opacity);
+      const type = this.settings.quickHighlightBorderStyle ?? 'full';
+      const css = `${thickness}px solid ${borderColor}`;
+      switch (type) {
+        case 'bottom': return ` border-bottom: ${css};`;
+        case 'top': return ` border-top: ${css};`;
+        case 'left': return ` border-left: ${css};`;
+        case 'right': return ` border-right: ${css};`;
+        case 'top-bottom': return ` border-top: ${css}; border-bottom: ${css};`;
+        case 'left-right': return ` border-left: ${css}; border-right: ${css};`;
+        case 'top-right': return ` border-top: ${css}; border-right: ${css};`;
+        case 'top-left': return ` border-top: ${css}; border-left: ${css};`;
+        case 'bottom-right': return ` border-bottom: ${css}; border-right: ${css};`;
+        case 'bottom-left': return ` border-bottom: ${css}; border-left: ${css};`;
+        case 'full':
+        default:
+          return ` border: ${css};`;
+      }
+    } catch (_) {
+      return '';
     }
   }
 
@@ -6140,6 +6253,230 @@ class ColorSettingTab extends PluginSettingTab {
         await this.debouncedSaveSettings();
       }));
 
+    containerEl.createEl('h3', { text: 'One-Time Actions' });
+    new Setting(containerEl)
+      .setName('Color Once')
+      .setDesc('Inserts HTML inline for the selected text. This persists even if the plugin is turned off.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableQuickColorOnce).onChange(async v => {
+        this.plugin.settings.enableQuickColorOnce = v;
+        await this.plugin.saveSettings();
+      }));
+
+    new Setting(containerEl)
+      .setName('Highlight Once')
+      .setDesc('Inserts HTML inline with background styling. This persists even if the plugin is turned off.')
+      .addToggle(t => t.setValue(this.plugin.settings.enableQuickHighlightOnce).onChange(async v => {
+        this.plugin.settings.enableQuickHighlightOnce = v;
+        await this.plugin.saveSettings();
+        this._initializedSettingsUI = false;
+        this.display();
+      }));
+
+    if (this.plugin.settings.enableQuickHighlightOnce) {
+      new Setting(containerEl)
+        .setName('Use Global Highlight Style for Highlight Once')
+        .setDesc('Uses your global inline style. The added HTML/CSS may be long.')
+        .addToggle(t => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async v => {
+          this.plugin.settings.quickHighlightUseGlobalStyle = v;
+          await this.plugin.saveSettings();
+          this._initializedSettingsUI = false;
+          this.display();
+        }));
+
+      new Setting(containerEl)
+        .setName('Style Highlight Once')
+        .setDesc('Uses your custom inline style. The added HTML/CSS may be long.')
+        .addToggle(t => t.setValue(this.plugin.settings.quickHighlightStyleEnable).onChange(async v => {
+          this.plugin.settings.quickHighlightStyleEnable = v;
+          await this.plugin.saveSettings();
+          this._initializedSettingsUI = false;
+          this.display();
+        }));
+
+      // Preview for Highlight Once styling (non-interactive), shown under the toggle
+      if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
+        const previewSection = containerEl.createDiv();
+        previewSection.style.margin = '8px 0 12px 0';
+        previewSection.style.padding = '12px';
+        previewSection.style.borderRadius = '8px';
+        previewSection.style.border = '1px solid var(--background-modifier-border)';
+        previewSection.style.backgroundColor = 'var(--background-secondary)';
+        const previewLabel = previewSection.createEl('div');
+        previewLabel.style.marginBottom = '8px';
+        previewLabel.style.fontWeight = '600';
+        previewLabel.style.fontSize = '14px';
+        previewLabel.textContent = 'Highlight Once Preview';
+        const previewText = previewSection.createEl('div');
+        previewText.textContent = 'This is how Highlight Once will look like!';
+        previewText.style.display = 'inline-block';
+
+        const updateQuickOncePreview = () => {
+          const sampleColor = '#fa8231';
+          const hexWithAlpha = this.plugin.hexToHexWithAlpha(sampleColor, this.plugin.settings.quickHighlightOpacity ?? 25);
+          const radius = this.plugin.settings.quickHighlightBorderRadius ?? 8;
+          const pad = this.plugin.settings.quickHighlightHorizontalPadding ?? 4;
+          previewText.style.backgroundColor = hexWithAlpha;
+          previewText.style.borderRadius = radius + 'px';
+          previewText.style.paddingLeft = previewText.style.paddingRight = pad + 'px';
+          // Clear borders before re-applying
+          previewText.style.border = '';
+          previewText.style.borderTop = '';
+          previewText.style.borderBottom = '';
+          previewText.style.borderLeft = '';
+          previewText.style.borderRight = '';
+          const borderCss = this.plugin.generateOnceBorderStyle(sampleColor);
+          try { previewText.style.cssText += borderCss; } catch (e) {}
+        };
+        updateQuickOncePreview();
+
+        // Hook up live updates for controls below
+        this._updateQuickOncePreview = updateQuickOncePreview;
+      }
+
+      if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
+        new Setting(containerEl)
+          .setName('Highlight once opacity')
+          .addSlider(slider => slider
+            .setLimits(0, 100, 1)
+            .setValue(this.plugin.settings.quickHighlightOpacity ?? 25)
+            .setDynamicTooltip()
+            .onChange(async v => {
+              this.plugin.settings.quickHighlightOpacity = v;
+              await this.plugin.saveSettings();
+              try { this._updateQuickOncePreview?.(); } catch (e) {}
+            }));
+
+        {
+          let brInput;
+          new Setting(containerEl)
+            .setName('Highlight once border radius (px)')
+            .addText(text => {
+              brInput = text;
+              text
+                .setPlaceholder('e.g. 0, 4, 8')
+                .setValue(String(this.plugin.settings.quickHighlightBorderRadius ?? 8))
+                .onChange(async v => {
+                  let val = parseInt(v);
+                  if (isNaN(val) || val < 0) val = 0;
+                  this.plugin.settings.quickHighlightBorderRadius = val;
+                  await this.plugin.saveSettings();
+                  try { this._updateQuickOncePreview?.(); } catch (e) {}
+                });
+            })
+            .addExtraButton(btn => btn
+              .setIcon('reset')
+              .setTooltip('Reset to 8')
+                .onClick(async () => {
+                  this.plugin.settings.quickHighlightBorderRadius = 8;
+                  await this.plugin.saveSettings();
+                  if (brInput) brInput.setValue('8');
+                  try { this._updateQuickOncePreview?.(); } catch (e) {}
+                }));
+        }
+
+        {
+          let hpInput;
+          new Setting(containerEl)
+            .setName('Highlight horizontal padding (px)')
+            .addText(text => {
+              hpInput = text;
+              text
+                .setPlaceholder('e.g. 0, 4, 8')
+                .setValue(String(this.plugin.settings.quickHighlightHorizontalPadding ?? 4))
+                .onChange(async v => {
+                  let val = parseInt(v);
+                  if (isNaN(val) || val < 0) val = 0;
+                  this.plugin.settings.quickHighlightHorizontalPadding = val;
+                  await this.plugin.saveSettings();
+                  try { this._updateQuickOncePreview?.(); } catch (e) {}
+                });
+            })
+            .addExtraButton(btn => btn
+              .setIcon('reset')
+              .setTooltip('Reset to 4')
+                .onClick(async () => {
+                  this.plugin.settings.quickHighlightHorizontalPadding = 4;
+                  await this.plugin.saveSettings();
+                  if (hpInput) hpInput.setValue('4');
+                  try { this._updateQuickOncePreview?.(); } catch (e) {}
+                }));
+        }
+
+        new Setting(containerEl)
+          .setName('Enable Border for Highlight Once')
+          .setDesc('Add a border to your inline highlight. The added HTML/CSS WILL be long.')
+          .addToggle(t => t
+            .setValue(this.plugin.settings.quickHighlightEnableBorder ?? false)
+            .onChange(async v => {
+              this.plugin.settings.quickHighlightEnableBorder = v;
+              await this.plugin.saveSettings();
+              try { this._updateQuickOncePreview?.(); } catch (e) {}
+              this._initializedSettingsUI = false;
+              this.display();
+            }));
+
+        if (this.plugin.settings.quickHighlightEnableBorder) {
+          new Setting(containerEl)
+            .setName('Highlight Once Border Style')
+            .addDropdown(d => {
+              d.selectEl.style.width = '200px';
+              return d
+                .addOption('full', 'Full border (all sides)')
+                .addOption('top-bottom', 'Top & Bottom borders')
+                .addOption('left-right', 'Left & Right borders')
+                .addOption('top-right', 'Top & Right borders')
+                .addOption('top-left', 'Top & Left borders')
+                .addOption('bottom-right', 'Bottom & Right borders')
+                .addOption('bottom-left', 'Bottom & Left borders')
+                .addOption('top', 'Top border only')
+                .addOption('bottom', 'Bottom border only')
+                .addOption('left', 'Left border only')
+                .addOption('right', 'Right border only')
+                .setValue(this.plugin.settings.quickHighlightBorderStyle ?? 'full')
+                .onChange(async v => { this.plugin.settings.quickHighlightBorderStyle = v; await this.plugin.saveSettings(); try { this._updateQuickOncePreview?.(); } catch (e) {} });
+            });
+
+          new Setting(containerEl)
+            .setName('Highlight Once Border Opacity')
+            .addSlider(slider => slider
+              .setLimits(0, 100, 1)
+              .setValue(this.plugin.settings.quickHighlightBorderOpacity ?? 100)
+              .setDynamicTooltip()
+              .onChange(async v => { this.plugin.settings.quickHighlightBorderOpacity = v; await this.plugin.saveSettings(); try { this._updateQuickOncePreview?.(); } catch (e) {} }));
+
+          {
+            let btInput;
+            new Setting(containerEl)
+              .setName('Highlight Once Border Thickness (px)')
+              .addText(text => {
+                btInput = text;
+                text
+                  .setPlaceholder('e.g. 1, 2.5, 3.7')
+                  .setValue(String(this.plugin.settings.quickHighlightBorderThickness ?? 1))
+                  .onChange(async v => {
+                    let val = parseFloat(v);
+                    if (isNaN(val) || val < 0) val = 0;
+                    if (val > 5) val = 5;
+                  this.plugin.settings.quickHighlightBorderThickness = val;
+                  await this.plugin.saveSettings();
+                  try { this._updateQuickOncePreview?.(); } catch (e) {}
+                  });
+              })
+              .addExtraButton(btn => btn
+                .setIcon('reset')
+                .setTooltip('Reset to 1')
+                .onClick(async () => {
+                  this.plugin.settings.quickHighlightBorderThickness = 1;
+                  await this.plugin.saveSettings();
+                  if (btInput) btInput.setValue('1');
+                  try { this._updateQuickOncePreview?.(); } catch (e) {}
+                }));
+          }
+        }
+      }
+    }
+    
+
     // --- Global Highlight Coloring Appearance ---
     containerEl.createEl('h3', { text: 'Global Highlight Coloring Appearance' });
       // Preview of highlight styling
@@ -6164,7 +6501,7 @@ class ColorSettingTab extends PluginSettingTab {
       previewText.textContent = 'This is how your highlight will look like!';
       
       const updatePreview = () => {
-        const color = '#1b764a'; 
+        const color = '#01c8ff'; 
         const rgba = this.plugin.hexToRgba(color, this.plugin.settings.backgroundOpacity ?? 25);
         previewText.style.backgroundColor = rgba;
         previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
@@ -6395,14 +6732,18 @@ class ColorSettingTab extends PluginSettingTab {
     containerEl.createEl('p', { text: 'Here\'s where you manage your word/patterns and their colors.' });
     new Setting(containerEl);
     const entriesSearchContainer = containerEl.createDiv();
+    try { entriesSearchContainer.addClass('act-search-container'); } catch (e) { try { entriesSearchContainer.classList.add('act-search-container'); } catch (_) {} }
     entriesSearchContainer.style.margin = '8px 0';
     entriesSearchContainer.style.marginTop = '-10px';
     const entriesSearch = entriesSearchContainer.createEl('input', { type: 'text' });
+    try { entriesSearch.addClass('act-search-input'); } catch (e) { try { entriesSearch.classList.add('act-search-input'); } catch (_) {} }
     entriesSearch.placeholder = 'Search colored words/patterns…';
     entriesSearch.style.width = '100%';
     entriesSearch.style.padding = '6px';
     entriesSearch.style.border = '1px solid var(--background-modifier-border)';
     entriesSearch.style.borderRadius = '4px';
+    const entriesIcon = entriesSearchContainer.createDiv();
+    try { entriesIcon.addClass('act-search-icon'); } catch (e) { try { entriesIcon.classList.add('act-search-icon'); } catch (_) {} }
     const entriesSearchHandler = () => { this._entriesSearchQuery = String(entriesSearch.value || '').trim().toLowerCase(); try { this._refreshEntries(); } catch (e) {} };
     entriesSearch.addEventListener('input', entriesSearchHandler);
     this._cleanupHandlers.push(() => entriesSearch.removeEventListener('input', entriesSearchHandler));
@@ -6462,7 +6803,7 @@ class ColorSettingTab extends PluginSettingTab {
     presetsBtn.textContent = 'Presets';
     presetsBtn.style.cursor = 'pointer';
     presetsBtn.style.flex = '0 0 auto';
-          const presetsHandler = () => {
+      const presetsHandler = () => {
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
           new ColorPickerModal(this.app, this.plugin, async (color, result) => {
@@ -6485,7 +6826,7 @@ class ColorSettingTab extends PluginSettingTab {
             this.plugin.forceRefreshAllReadingViews();
             this._initializedSettingsUI = false;
             this.display();
-          }).open();
+          }, 'text-and-background', '', false).open();
         }).open();
       };
     presetsBtn.addEventListener('click', presetsHandler);
@@ -6519,13 +6860,17 @@ class ColorSettingTab extends PluginSettingTab {
 
     // Search bar for Blacklist entries
     const blSearchContainer = containerEl.createDiv();
+    try { blSearchContainer.addClass('act-search-container'); } catch (e) { try { blSearchContainer.classList.add('act-search-container'); } catch (_) {} }
     blSearchContainer.style.margin = '8px 0';
     const blSearch = blSearchContainer.createEl('input', { type: 'text' });
+    try { blSearch.addClass('act-search-input'); } catch (e) { try { blSearch.classList.add('act-search-input'); } catch (_) {} }
     blSearch.placeholder = 'Search blacklist patterns…';
     blSearch.style.width = '100%';
     blSearch.style.padding = '6px';
     blSearch.style.border = '1px solid var(--background-modifier-border)';
     blSearch.style.borderRadius = '4px';
+    const blIcon = blSearchContainer.createDiv();
+    try { blIcon.addClass('act-search-icon'); } catch (e) { try { blIcon.classList.add('act-search-icon'); } catch (_) {} }
     const blSearchHandler = () => { this._blacklistSearchQuery = String(blSearch.value || '').trim().toLowerCase(); try { this._refreshBlacklistWords(); } catch (e) {} };
     blSearch.addEventListener('input', blSearchHandler);
     this._cleanupHandlers.push(() => blSearch.removeEventListener('input', blSearchHandler));
@@ -6604,13 +6949,17 @@ class ColorSettingTab extends PluginSettingTab {
     containerEl.createEl('p', { text: 'Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.' });
     // Search bar for Path rules
     const prSearchContainer = containerEl.createDiv();
+    try { prSearchContainer.addClass('act-search-container'); } catch (e) { try { prSearchContainer.classList.add('act-search-container'); } catch (_) {} }
     prSearchContainer.style.margin = '8px 0';
     const prSearch = prSearchContainer.createEl('input', { type: 'text' });
+    try { prSearch.addClass('act-search-input'); } catch (e) { try { prSearch.classList.add('act-search-input'); } catch (_) {} }
     prSearch.placeholder = 'Search file/folder rules…';
     prSearch.style.width = '100%';
     prSearch.style.padding = '6px';
     prSearch.style.border = '1px solid var(--background-modifier-border)';
     prSearch.style.borderRadius = '4px';
+    const prIcon = prSearchContainer.createDiv();
+    try { prIcon.addClass('act-search-icon'); } catch (e) { try { prIcon.classList.add('act-search-icon'); } catch (_) {} }
     const prSearchHandler = () => { this._pathRulesSearchQuery = String(prSearch.value || '').trim().toLowerCase(); try { this._refreshPathRules(); } catch (e) {} };
     prSearch.addEventListener('input', prSearchHandler);
     this._cleanupHandlers.push(() => prSearch.removeEventListener('input', prSearchHandler));
@@ -6741,13 +7090,14 @@ class ColorSettingTab extends PluginSettingTab {
 
 // --- Color Picker Modal Class ---
 class ColorPickerModal extends Modal {
-  constructor(app, plugin, callback, mode = 'text', selectedText = '') {
+  constructor(app, plugin, callback, mode = 'text', selectedText = '', isQuickOnce = false) {
     super(app);
     this.plugin = plugin;
     this.callback = callback;
     this.mode = (mode === 'background' || mode === 'text-and-background') ? mode : 'text';
     this._selectedText = selectedText || '';
     this._eventListeners = []; // Track event listeners for cleanup
+    this.isQuickOnce = !!isQuickOnce;
   }
 
   onOpen() {
@@ -6755,7 +7105,8 @@ class ColorPickerModal extends Modal {
     contentEl.empty();
     this._eventListeners = []; // Reset listeners
     const cpm = this.plugin.settings.colorPickerMode || 'both';
-    const isBoth = (cpm === 'both' || cpm === 'both-bg-left');
+    const forcedSingle = (this.mode === 'text' || this.mode === 'background');
+    const isBoth = !forcedSingle && (cpm === 'both' || cpm === 'both-bg-left');
     this.modalEl.style.maxWidth = (isBoth) ? '650px' : '480px';
     this.modalEl.style.width = '100%';
     this.modalEl.style.margin = '0';
@@ -6794,6 +7145,21 @@ class ColorPickerModal extends Modal {
     preview.style.fontWeight = '600';
     preview.style.backgroundColor = '';
     preview.style.color = '';
+
+    // For Highlight Once: show no styling until a color is picked
+    if (this.isQuickOnce) {
+      try {
+        preview.style.backgroundColor = '';
+        preview.style.border = '';
+        preview.style.borderTop = '';
+        preview.style.borderBottom = '';
+        preview.style.borderLeft = '';
+        preview.style.borderRight = '';
+        preview.style.borderRadius = '';
+        preview.style.paddingLeft = '';
+        preview.style.paddingRight = '';
+      } catch (e) {}
+    }
 
     const updateGridCols = () => {
       try {
@@ -6910,18 +7276,58 @@ class ColorPickerModal extends Modal {
           try { preview.style.setProperty('--highlight-color', val); } catch (e) {}
         } else {
           this.selectedBgColor = val;
-          const rgba = this.plugin.hexToRgba(val, this.plugin.settings.backgroundOpacity ?? 25);
-          preview.style.backgroundColor = rgba;
-          this.plugin.applyBorderStyleToElement(preview, null, val);
-          preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + 'px';
-          if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
-            preview.style.borderRadius = '0px';
+          // Clear any existing border styles first
+          preview.style.border = '';
+          preview.style.borderTop = '';
+          preview.style.borderBottom = '';
+          preview.style.borderLeft = '';
+          preview.style.borderRight = '';
+          // Use quick-highlight styling only when invoked for Highlight Once
+          if (this.isQuickOnce) {
+            if (this.plugin.settings.quickHighlightUseGlobalStyle) {
+              const rgba = this.plugin.hexToRgba(val, this.plugin.settings.backgroundOpacity ?? 25);
+              const radius = this.plugin.settings.highlightBorderRadius ?? 8;
+              const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
+              preview.style.backgroundColor = rgba;
+              preview.style.borderRadius = radius + 'px';
+              preview.style.paddingLeft = preview.style.paddingRight = pad + 'px';
+              if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
+                preview.style.boxDecorationBreak = 'clone';
+                preview.style.WebkitBoxDecorationBreak = 'clone';
+              }
+              this.plugin.applyBorderStyleToElement(preview, null, val);
+            } else if (this.plugin.settings.quickHighlightStyleEnable) {
+              const hexWithAlpha = this.plugin.hexToHexWithAlpha(val, this.plugin.settings.quickHighlightOpacity ?? 25);
+              const radius = this.plugin.settings.quickHighlightBorderRadius ?? 8;
+              const pad = this.plugin.settings.quickHighlightHorizontalPadding ?? 4;
+              preview.style.backgroundColor = hexWithAlpha;
+              preview.style.borderRadius = radius + 'px';
+              preview.style.paddingLeft = preview.style.paddingRight = pad + 'px';
+              // Apply once-style border using generated CSS
+              const borderCss = this.plugin.generateOnceBorderStyle(val);
+              try { preview.style.cssText += borderCss; } catch (e) {}
+            } else {
+              // Default simple highlight
+              const rgba = this.plugin.hexToRgba(val, 25);
+              preview.style.backgroundColor = rgba;
+              preview.style.borderRadius = '';
+              preview.style.paddingLeft = preview.style.paddingRight = '';
+            }
           } else {
-            preview.style.borderRadius = (this.plugin.settings.highlightBorderRadius ?? 8) + 'px';
-          }
-          if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
-            preview.style.boxDecorationBreak = 'clone';
-            preview.style.WebkitBoxDecorationBreak = 'clone';
+            // Non-quick background preview uses global appearance settings
+            const rgba = this.plugin.hexToRgba(val, this.plugin.settings.backgroundOpacity ?? 25);
+            preview.style.backgroundColor = rgba;
+            this.plugin.applyBorderStyleToElement(preview, null, val);
+            preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + 'px';
+            if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
+              preview.style.borderRadius = '0px';
+            } else {
+              preview.style.borderRadius = (this.plugin.settings.highlightBorderRadius ?? 8) + 'px';
+            }
+            if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
+              preview.style.boxDecorationBreak = 'clone';
+              preview.style.WebkitBoxDecorationBreak = 'clone';
+            }
           }
         }
         hex.value = val;
@@ -6990,12 +7396,22 @@ class ColorPickerModal extends Modal {
       return col;
     };
 
-    if (cpm === 'both-bg-left') {
-      buildPanel('Highlight Color', 'background');
+    if (this.mode === 'text') {
       buildPanel('Text Color', 'text');
+    } else if (this.mode === 'background') {
+      buildPanel('Highlight Color', 'background');
     } else {
-      if (cpm === 'both' || cpm === 'text') buildPanel('Text Color', 'text');
-      if (cpm === 'both' || cpm === 'background') buildPanel('Highlight Color', 'background');
+      if (cpm === 'text') {
+        buildPanel('Text Color', 'text');
+      } else if (cpm === 'background') {
+        buildPanel('Highlight Color', 'background');
+      } else if (cpm === 'both-bg-left') {
+        buildPanel('Highlight Color', 'background');
+        buildPanel('Text Color', 'text');
+      } else {
+        buildPanel('Text Color', 'text');
+        buildPanel('Highlight Color', 'background');
+      }
     }
 
     const s = this._selectedText || '';
@@ -7044,7 +7460,9 @@ class ColorPickerModal extends Modal {
     if (!existingStyle) {
       existingStyle = (initText && initBg) ? 'both' : (initBg ? 'highlight' : (initText ? 'text' : this.mode));
     }
-    this.mode = (existingStyle === 'highlight') ? 'background' : (existingStyle === 'both' ? 'text-and-background' : 'text');
+    if (!forcedSingle) {
+      this.mode = (existingStyle === 'highlight') ? 'background' : (existingStyle === 'both' ? 'text-and-background' : 'text');
+    }
 
     if (initText && tp && this.mode !== 'background') {
       preview.style.color = initText;
@@ -7052,7 +7470,7 @@ class ColorPickerModal extends Modal {
       tp.colorInput.value = initText;
       if (this.mode === 'text' || this.mode === 'text-and-background') this.selectedTextColor = initText;
     }
-    if (initBg && bp) {
+    if (initBg && bp && this.mode !== 'background') {
       const rgba = this.plugin.hexToRgba(initBg, this.plugin.settings.backgroundOpacity ?? 25);
       preview.style.backgroundColor = rgba;
       this.plugin.applyBorderStyleToElement(preview, initText, initBg);
