@@ -1992,6 +1992,52 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
+  // Helper: Extract color and background from selected HTML text in editor
+  extractSelectedTextStyles(selectedText) {
+    try {
+      // If selectedText is plain text, no styles to extract
+      if (!selectedText || typeof selectedText !== 'string') {
+        return { textColor: null, backgroundColor: null };
+      }
+
+      // Check if it contains HTML span with style attribute
+      // Looking for patterns like <span style="...color: #XXXXXX...">
+      const spanMatch = selectedText.match(/<span\s+(?:class="[^"]*"\s+)?style="([^"]*)"/i);
+      if (!spanMatch || !spanMatch[1]) {
+        return { textColor: null, backgroundColor: null };
+      }
+
+      const styleString = spanMatch[1];
+      let textColor = null;
+      let backgroundColor = null;
+
+      // Extract color: (hex, rgb, rgba, or named color)
+      const colorMatch = styleString.match(/color\s*:\s*(#[0-9A-Fa-f]{3,6}|rgb\([^)]*\)|rgba\([^)]*\)|[a-z]+)/i);
+      if (colorMatch && colorMatch[1]) {
+        const colorValue = colorMatch[1].trim();
+        // Only accept hex colors for consistency
+        if (/^#[0-9A-Fa-f]{3,6}$/.test(colorValue)) {
+          textColor = colorValue;
+        }
+      }
+
+      // Extract background-color: (hex, rgb, rgba, or named color)
+      const bgMatch = styleString.match(/background-color\s*:\s*(#[0-9A-Fa-f]{3,6}|rgb\([^)]*\)|rgba\([^)]*\)|[a-z]+)/i);
+      if (bgMatch && bgMatch[1]) {
+        const bgValue = bgMatch[1].trim();
+        // Only accept hex colors for consistency
+        if (/^#[0-9A-Fa-f]{3,6}$/.test(bgValue)) {
+          backgroundColor = bgValue;
+        }
+      }
+
+      return { textColor, backgroundColor };
+    } catch (e) {
+      debugError('EXTRACT_STYLES', e);
+      return { textColor: null, backgroundColor: null };
+    }
+  }
+
   // Helper: Check frontmatter for disabling coloring (`always-color-text: false` disables)
   isFrontmatterColoringDisabled(source) {
     if (!source) return false;
@@ -7470,7 +7516,7 @@ class ColorPickerModal extends Modal {
       tp.colorInput.value = initText;
       if (this.mode === 'text' || this.mode === 'text-and-background') this.selectedTextColor = initText;
     }
-    if (initBg && bp && this.mode !== 'background') {
+    if (initBg && bp && this.mode !== 'text') {
       const rgba = this.plugin.hexToRgba(initBg, this.plugin.settings.backgroundOpacity ?? 25);
       preview.style.backgroundColor = rgba;
       this.plugin.applyBorderStyleToElement(preview, initText, initBg);
