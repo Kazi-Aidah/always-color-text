@@ -3416,7 +3416,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
       // --- Partial Match coloring for text+bg entries ---
       if (this.settings.partialMatch && textBgEntries.length > 0) {
-        const wordRegex = /\w+/g;
+        const wordRegex = /\S+/g;
         let match;
         while ((match = wordRegex.exec(text))) {
           const w = match[0];
@@ -3472,7 +3472,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
       // --- Partial Match coloring --- (respect already-resolved matches)
       if (this.settings.partialMatch) {
-        const wordRegex = /\w+/g;
+        const wordRegex = /\S+/g;
         let match;
         while ((match = wordRegex.exec(text))) {
           const w = match[0];
@@ -4127,7 +4127,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // --- Partial Match coloring (for editor, matching reading mode behavior) ---
     if (this.settings.partialMatch && matches.length < 3000) {
-      const wordRegex = /\w+/g;
+      const wordRegex = /\S+/g;
       let match;
       while ((match = wordRegex.exec(text))) {
         const w = match[0];
@@ -4435,7 +4435,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // --- Partial Match coloring for pattern chunks ---
     if (this.settings.partialMatch && matches.length < 200) {
-      const wordRegex = /\w+/g;
+      const wordRegex = /\S+/g;
       let match;
       while ((match = wordRegex.exec(text))) {
         const w = match[0];
@@ -4545,7 +4545,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // --- Partial Match coloring for chunked processing ---
     if (this.settings.partialMatch && matches.length < 100) {
-      const wordRegex = /\w+/g;
+      const wordRegex = /\S+/g;
       let match;
       while ((match = wordRegex.exec(chunkText))) {
         const w = match[0];
