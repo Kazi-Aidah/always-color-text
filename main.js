@@ -804,7 +804,8 @@ module.exports = class AlwaysColorText extends Plugin {
           matches.push({
             start: pos,
             end: pos + pattern.length,
-            color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
+            entry: entry,
+            folderEntry: folderEntry
           });
           pos += pattern.length;
           
@@ -817,7 +818,7 @@ module.exports = class AlwaysColorText extends Plugin {
       
       // Apply highlights if we found matches
       if (matches.length > 0) {
-        this.applySimpleHighlights(node, matches, text, effectiveStyle);
+        this.applySimpleHighlights(node, matches, text);
       }
     }
   }
@@ -2586,7 +2587,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Apply highlights for simple patterns (ultra-fast version)
-  applySimpleHighlights(textNode, matches, text, effectiveStyle) {
+  applySimpleHighlights(textNode, matches, text) {
     if (!matches || matches.length === 0) return;
     
     // Sort matches by start position and remove overlaps
@@ -2617,20 +2618,44 @@ module.exports = class AlwaysColorText extends Plugin {
       span.className = 'always-color-text-highlight';
       span.textContent = text.slice(m.start, m.end);
       
-      if (effectiveStyle === 'text') {
-        span.style.color = m.color;
-        try { span.style.setProperty('--highlight-color', m.color); } catch (e) {}
-      } else if (effectiveStyle !== 'none') {
-        span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
+      // Get the entry and determine the style type
+      const entry = m.entry;
+      const styleType = entry && entry.styleType ? entry.styleType : 'text';
+      
+      // Determine color to use (folder entry color overrides if available)
+      const color = (m.folderEntry && m.folderEntry.defaultColor) ? m.folderEntry.defaultColor : entry.color;
+      
+      // Apply styling based on styleType
+      if (styleType === 'text') {
+        // Text color only
+        span.style.color = color || '#000000';
+        try { span.style.setProperty('--highlight-color', color); } catch (e) {}
+      } else if (styleType === 'highlight') {
+        // Background highlight only
+        const bgColor = entry.backgroundColor || color;
+        span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
         span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
         span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
         if (this.settings.enableBoxDecorationBreak ?? true) {
           span.style.boxDecorationBreak = 'clone';
           span.style.WebkitBoxDecorationBreak = 'clone';
         }
-        
         // Add border styling if enabled
-        this.applyBorderStyleToElement(span, null, m.color);
+        this.applyBorderStyleToElement(span, null, bgColor);
+      } else if (styleType === 'both') {
+        // Both text color and background color
+        const textColor = entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : (color || '#000000');
+        const bgColor = entry.backgroundColor || color;
+        span.style.color = textColor;
+        span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
+        span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+        span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+        if (this.settings.enableBoxDecorationBreak ?? true) {
+          span.style.boxDecorationBreak = 'clone';
+          span.style.WebkitBoxDecorationBreak = 'clone';
+        }
+        // Add border styling if enabled
+        this.applyBorderStyleToElement(span, null, bgColor);
       }
       
       frag.appendChild(span);
@@ -3455,7 +3480,17 @@ module.exports = class AlwaysColorText extends Plugin {
           if (overlapsWithTextBg) continue;
           
           const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
-          matches.push({ start: match.index, end: match.index + matchedText.length, color: useColor, word: matchedText, highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
+          matches.push({ 
+            start: match.index, 
+            end: match.index + matchedText.length, 
+            color: useColor, 
+            word: matchedText, 
+            highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, 
+            highlightBorderRadius: this.settings.highlightBorderRadius ?? 8,
+            styleType: entry.styleType,
+            textColor: entry.textColor,
+            backgroundColor: entry.backgroundColor
+          });
           
           // instrumentation
           try { entry.matchesFound = (entry.matchesFound || 0) + 1; } catch (e) {}
@@ -3697,12 +3732,39 @@ module.exports = class AlwaysColorText extends Plugin {
             const span = document.createElement('span');
             span.className = 'always-color-text-highlight';
             span.textContent = text.slice(m.start, m.end);
-            if (m.isTextBg) {
-              // For text+bg entries, always apply both colors
-              span.style.color = m.textColor;
-              try { span.style.setProperty('--highlight-color', m.textColor); } catch (e) {}
+            
+            // Determine style based on styleType (for regular entries) or isTextBg flag
+            const styleType = m.isTextBg ? 'both' : (m.styleType || 'text');
+            
+            if (styleType === 'text') {
+              // Text color only
+              span.style.color = m.color;
+              try { span.style.setProperty('--highlight-color', m.color); } catch (e) {}
+            } else if (styleType === 'highlight') {
+              // Background highlight only
+              const bgColor = m.backgroundColor || m.color;
               span.style.background = '';
-              span.style.backgroundColor = this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25);
+              span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
+              span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+              if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
+                span.style.borderRadius = '0px';
+              } else {
+                span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+              }
+              if (this.settings.enableBoxDecorationBreak ?? true) {
+                span.style.boxDecorationBreak = 'clone';
+                span.style.WebkitBoxDecorationBreak = 'clone';
+              }
+              // Add border styling if enabled
+              this.applyBorderStyleToElement(span, null, bgColor);
+            } else if (styleType === 'both') {
+              // Both text color and background color
+              const textColor = m.textColor && m.textColor !== 'currentColor' ? m.textColor : (m.color || '#000000');
+              const bgColor = m.backgroundColor || m.color;
+              span.style.color = textColor;
+              try { span.style.setProperty('--highlight-color', textColor); } catch (e) {}
+              span.style.background = '';
+              span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
               span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
               if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
                 span.style.borderRadius = '0px';
@@ -3714,25 +3776,7 @@ module.exports = class AlwaysColorText extends Plugin {
                 span.style.WebkitBoxDecorationBreak = 'clone';
               }
               // Add border for text+bg entries
-              this.applyBorderStyleToElement(span, m.textColor, m.backgroundColor);
-            } else if (effectiveStyle === 'text') {
-              span.style.color = m.color;
-              try { span.style.setProperty('--highlight-color', m.color); } catch (e) {}
-            } else {
-              span.style.background = '';
-              span.style.backgroundColor = this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25);
-              span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
-              if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
-                span.style.borderRadius = '0px';
-              } else {
-                span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
-              }
-              if (this.settings.enableBoxDecorationBreak ?? true) {
-                span.style.boxDecorationBreak = 'clone';
-                span.style.WebkitBoxDecorationBreak = 'clone';
-              }
-              // Add border for regular background highlights
-              this.applyBorderStyleToElement(span, null, m.color);
+              this.applyBorderStyleToElement(span, textColor, bgColor);
             }
             frag.appendChild(span);
           }
@@ -4017,17 +4061,16 @@ module.exports = class AlwaysColorText extends Plugin {
         const { from, to } = view.viewport;
         const text = view.state.doc.sliceString(from, to);
         
-        const activeFile = plugin.app.workspace.getActiveFile();
+        const fileForView = view.file || plugin.app.workspace.getActiveFile();
         if (!plugin.settings.enabled) return builder.finish();
-        if (activeFile) {
-          const prb = plugin.evaluatePathRules(activeFile.path);
+        if (fileForView) {
+          const prb = plugin.evaluatePathRules(fileForView.path);
           if (prb.excluded || (plugin.hasGlobalExclude() && prb.hasIncludes && !prb.included)) return builder.finish();
+          if (plugin.settings.disabledFiles.includes(fileForView.path)) return builder.finish();
+          if (plugin.isFrontmatterColoringDisabled(fileForView.path)) return builder.finish();
         }
-        if (activeFile && plugin.settings.disabledFiles.includes(activeFile.path)) return builder.finish();
-        if (activeFile && plugin.isFrontmatterColoringDisabled(activeFile.path)) return builder.finish();
-        
-        const folderEntry = activeFile ? plugin.getBestFolderEntry(activeFile.path) : null;
-        if (view.file && activeFile && view.file.path !== activeFile.path) return builder.finish();
+
+        const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
         
         if (entries.length === 0) return builder.finish();
         
@@ -4277,7 +4320,10 @@ module.exports = class AlwaysColorText extends Plugin {
         matches.push({
           start: from + match.index,
           end: from + match.index + matchedText.length,
-          color: entry.color
+          color: entry.color,
+          styleType: entry.styleType,
+          textColor: entry.textColor,
+          backgroundColor: entry.backgroundColor
         });
         
         if (matches.length > 3000) break;
@@ -4418,14 +4464,28 @@ module.exports = class AlwaysColorText extends Plugin {
         const borderStyle = this.generateBorderStyle(m.textColor, m.backgroundColor);
         style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
       } else {
-        if (effectiveStyle === 'text') {
+        // Check the styleType to determine how to apply the color
+        const styleType = m.styleType || 'text';
+        
+        if (styleType === 'text') {
           style = `color: ${m.color} !important;`;
+        } else if (styleType === 'highlight') {
+          // Background highlight only
+          const bgColor = m.backgroundColor || m.color;
+          const borderStyle = this.generateBorderStyle(null, bgColor);
+          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
+        } else if (styleType === 'both') {
+          // Both text and background color
+          const textColor = m.textColor && m.textColor !== 'currentColor' ? m.textColor : (m.color || '#000000');
+          const bgColor = m.backgroundColor || m.color;
+          const borderStyle = this.generateBorderStyle(textColor, bgColor);
+          style = `color: ${textColor} !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
         } else {
-          const borderStyle = this.generateBorderStyle(m.color, m.color);
-          style = `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
+          // Default to text color
+          style = `color: ${m.color} !important;`;
         }
       }
-      const deco = Decoration.mark({ attributes: { style } });
+      const deco = Decoration.mark({ attributes: { style, class: 'always-color-text-highlight' } });
       builder.add(m.start, m.end, deco);
     }
 
@@ -4440,10 +4500,11 @@ module.exports = class AlwaysColorText extends Plugin {
     let allMatches = [];
 
     let headingRanges = [];
+    let hasHeadingBlacklist = false;
     try {
       const label = 'All Headings (H1-H6)';
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label && !!e.isRegex);
+      hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label && !!e.isRegex);
       headingRanges = [];
       let posScan = 0;
       while (posScan <= text.length) {
@@ -4664,7 +4725,10 @@ module.exports = class AlwaysColorText extends Plugin {
         matches.push({
           start: matchStart,
           end: matchEnd,
-          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
+          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color,
+          styleType: entry.styleType,
+          textColor: entry.textColor,
+          backgroundColor: entry.backgroundColor
         });
         
         matchCount++;
@@ -4711,7 +4775,10 @@ module.exports = class AlwaysColorText extends Plugin {
               matches.push({
                 start: baseFrom + wStart,
                 end: baseFrom + wEnd,
-                color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
+                color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color,
+                styleType: entry.styleType,
+                textColor: entry.textColor,
+                backgroundColor: entry.backgroundColor
               });
               if (matches.length > 200) break;
             }
@@ -4780,7 +4847,10 @@ module.exports = class AlwaysColorText extends Plugin {
         matches.push({
           start: matchStart,
           end: matchEnd,
-          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color
+          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color,
+          styleType: entry.styleType,
+          textColor: entry.textColor,
+          backgroundColor: entry.backgroundColor
         });
         
         matchCount++;
@@ -4828,7 +4898,10 @@ module.exports = class AlwaysColorText extends Plugin {
               matches.push({
                 start: chunkFrom + wStart,
                 end: chunkFrom + wEnd,
-                color: useColor
+                color: useColor,
+                styleType: entry.styleType,
+                textColor: entry.textColor,
+                backgroundColor: entry.backgroundColor
               });
               if (matches.length > 100) break;
             } else {
@@ -4843,7 +4916,10 @@ module.exports = class AlwaysColorText extends Plugin {
               matches.push({
                 start: chunkFrom + wStart,
                 end: chunkFrom + wEnd,
-                color: useColor
+                color: useColor,
+                styleType: entry.styleType,
+                textColor: entry.textColor,
+                backgroundColor: entry.backgroundColor
               });
               if (matches.length > 100) break;
             }
@@ -4898,11 +4974,26 @@ module.exports = class AlwaysColorText extends Plugin {
         style = `color: ${m.textColor} !important; background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
       } else {
         if (effectiveStyle === 'none') continue;
-        if (effectiveStyle === 'text') {
+        
+        // Check the styleType to determine how to apply the color
+        const styleType = m.styleType || 'text';
+        
+        if (styleType === 'text') {
           style = `color: ${m.color} !important;`;
+        } else if (styleType === 'highlight') {
+          // Background highlight only
+          const bgColor = m.backgroundColor || m.color;
+          const borderStyle = this.generateBorderStyle(null, bgColor);
+          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
+        } else if (styleType === 'both') {
+          // Both text and background color
+          const textColor = m.textColor && m.textColor !== 'currentColor' ? m.textColor : (m.color || '#000000');
+          const bgColor = m.backgroundColor || m.color;
+          const borderStyle = this.generateBorderStyle(textColor, bgColor);
+          style = `color: ${textColor} !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
         } else {
-          const borderStyle = this.generateBorderStyle(m.color, m.color);
-          style = `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
+          // Default to text color
+          style = `color: ${m.color} !important;`;
         }
       }
       const deco = Decoration.mark({ attributes: { style } });
