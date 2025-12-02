@@ -1390,9 +1390,9 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!Array.isArray(s.pathRules)) s.pathRules = [];
       s.wordEntries = s.wordEntries.map(e => {
         const x = Object.assign({}, e || {});
-        x.pattern = String(x.pattern || '').trim();
+        x.pattern = String(x.pattern || '');
         if (Array.isArray(x.groupedPatterns)) {
-          x.groupedPatterns = x.groupedPatterns.map(p => String(p || '').trim()).filter(p => p.length > 0);
+          x.groupedPatterns = x.groupedPatterns.map(p => String(p || '')).filter(p => (p || '').length > 0);
           if (x.groupedPatterns.length === 0) x.groupedPatterns = null;
         } else {
           x.groupedPatterns = null;
@@ -1409,9 +1409,9 @@ module.exports = class AlwaysColorText extends Plugin {
       });
       s.blacklistEntries = s.blacklistEntries.map(e => {
         const x = Object.assign({}, e || {});
-        x.pattern = String(x.pattern || '').trim();
+        x.pattern = String(x.pattern || '');
         if (Array.isArray(x.groupedPatterns)) {
-          x.groupedPatterns = x.groupedPatterns.map(p => String(p || '').trim()).filter(p => p.length > 0);
+          x.groupedPatterns = x.groupedPatterns.map(p => String(p || '')).filter(p => (p || '').length > 0);
           if (x.groupedPatterns.length === 0) x.groupedPatterns = null;
         } else {
           x.groupedPatterns = null;
@@ -1491,8 +1491,8 @@ module.exports = class AlwaysColorText extends Plugin {
         const existing = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
         const existingPatterns = new Set(existing.map(e => e && e.pattern));
         const migrated = this.settings.blacklistWords
-          .filter(w => typeof w === 'string' && w.trim().length > 0)
-          .map(w => ({ pattern: w.trim(), isRegex: false, flags: '', groupedPatterns: null }));
+          .filter(w => typeof w === 'string' && String(w).length > 0)
+          .map(w => ({ pattern: String(w), isRegex: false, flags: '', groupedPatterns: null }));
         migrated.forEach(m => { if (m && !existingPatterns.has(m.pattern)) existing.push(m); });
         this.settings.blacklistEntries = existing;
       } else if (!Array.isArray(this.settings.blacklistEntries)) {
@@ -3188,7 +3188,7 @@ module.exports = class AlwaysColorText extends Plugin {
       if (headingEl) {
         const label = 'All Headings (H1-H6)';
         const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-        const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label);
+        const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label && !!e.isRegex);
         if (hasHeadingBlacklist) {
           continue;
         }
@@ -4104,11 +4104,29 @@ module.exports = class AlwaysColorText extends Plugin {
   buildDecoStandard(view, builder, from, to, text, entries, folderEntry) {
     const entries_copy = entries || this.getSortedWordEntries();
     let matches = [];
+    let headingRanges = [];
+    let hasHeadingBlacklist = false;
 
     try {
       const label = 'All Headings (H1-H6)';
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label);
+      hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label && !!e.isRegex);
+      headingRanges = [];
+      let posScan = 0;
+      while (posScan <= text.length) {
+        const lineStartScan = posScan;
+        const nextNLScan = text.indexOf('\n', posScan);
+        const lineEndScan = nextNLScan === -1 ? text.length : nextNLScan;
+        let iScan = lineStartScan;
+        while (iScan < lineEndScan && /\s/.test(text[iScan])) iScan++;
+        let hScan = 0;
+        while (iScan < lineEndScan && text[iScan] === '#' && hScan < 6) { hScan++; iScan++; }
+        if (hScan > 0 && iScan < lineEndScan && text[iScan] === ' ') {
+          headingRanges.push({ start: from + lineStartScan, end: from + lineEndScan });
+        }
+        if (nextNLScan === -1) break;
+        posScan = nextNLScan + 1;
+      }
       if (!hasHeadingBlacklist) {
         const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
         const headingEntry = we.find(e => e && e.presetLabel === label);
@@ -4169,6 +4187,14 @@ module.exports = class AlwaysColorText extends Plugin {
         // Check blacklist
         const fullWord = this.extractFullWord(text, matchStart, matchEnd);
         if (this.isWordBlacklisted(fullWord)) continue;
+
+        const absStart = from + matchStart;
+        const absEnd = from + matchEnd;
+        if (hasHeadingBlacklist && headingRanges && headingRanges.length > 0) {
+          let inHeading = false;
+          for (const hr of headingRanges) { if (absStart < hr.end && absEnd > hr.start) { inHeading = true; break; } }
+          if (inHeading) continue;
+        }
         
         // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
         const fullWordStart = this.extractFullWord(text, matchStart, matchEnd);
@@ -4231,6 +4257,12 @@ module.exports = class AlwaysColorText extends Plugin {
           try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
           continue;
         }
+
+        if (hasHeadingBlacklist && headingRanges && headingRanges.length > 0) {
+          let inHeading = false;
+          for (const hr of headingRanges) { if (matchStart < hr.end && matchEnd > hr.start) { inHeading = true; break; } }
+          if (inHeading) continue;
+        }
         
         // ALWAYS check for whole-word matches (the main loop only accepts exact pattern matches at word boundaries)
         // The partialMatch flag is handled by a SEPARATE pass after this loop
@@ -4269,6 +4301,14 @@ module.exports = class AlwaysColorText extends Plugin {
         const wEnd = wStart + w.length;
         
         if (this.isWordBlacklisted(w)) continue;
+
+        const absWStart = from + wStart;
+        const absWEnd = from + wEnd;
+        if (hasHeadingBlacklist && headingRanges && headingRanges.length > 0) {
+          let inHeading = false;
+          for (const hr of headingRanges) { if (absWStart < hr.end && absWEnd > hr.start) { inHeading = true; break; } }
+          if (inHeading) continue;
+        }
         
         for (const entry of entries_copy) {
           if (!entry || entry.invalid) continue;
@@ -4399,10 +4439,27 @@ module.exports = class AlwaysColorText extends Plugin {
     const MAX_MATCHES = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
 
+    let headingRanges = [];
     try {
       const label = 'All Headings (H1-H6)';
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label);
+      const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label && !!e.isRegex);
+      headingRanges = [];
+      let posScan = 0;
+      while (posScan <= text.length) {
+        const lineStartScan = posScan;
+        const nextNLScan = text.indexOf('\n', posScan);
+        const lineEndScan = nextNLScan === -1 ? text.length : nextNLScan;
+        let iScan = lineStartScan;
+        while (iScan < lineEndScan && /\s/.test(text[iScan])) iScan++;
+        let hScan = 0;
+        while (iScan < lineEndScan && text[iScan] === '#' && hScan < 6) { hScan++; iScan++; }
+        if (hScan > 0 && iScan < lineEndScan && text[iScan] === ' ') {
+          headingRanges.push({ start: from + lineStartScan, end: from + lineEndScan });
+        }
+        if (nextNLScan === -1) break;
+        posScan = nextNLScan + 1;
+      }
       if (!hasHeadingBlacklist) {
         const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
         const headingEntry = we.find(e => e && e.presetLabel === label);
@@ -4461,6 +4518,14 @@ module.exports = class AlwaysColorText extends Plugin {
           
           const fullWord = this.extractFullWord(text, matchStart, matchEnd);
           if (this.isWordBlacklisted(fullWord)) continue;
+
+          if (hasHeadingBlacklist && headingRanges && headingRanges.length > 0) {
+            const absStart = from + matchStart;
+            const absEnd = from + matchEnd;
+            let inHeading = false;
+            for (const hr of headingRanges) { if (absStart < hr.end && absEnd > hr.start) { inHeading = true; break; } }
+            if (inHeading) continue;
+          }
           
           // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
           let colorStart = matchStart;
@@ -4500,7 +4565,7 @@ module.exports = class AlwaysColorText extends Plugin {
       
       for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
         const chunk = entries.slice(i, i + CHUNK_SIZE);
-        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches);
+        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : []);
         allMatches = allMatches.concat(chunkMatches);
         
         // Log progress
@@ -4527,7 +4592,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const chunkText = text.slice(pos, chunkEnd);
         const chunkFrom = from + pos;
         
-        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry, allMatches);
+        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : []);
         allMatches = allMatches.concat(chunkMatches);
         
         debugLog('EDITOR', `Text chunk ${chunkNum}/${totalChunks}: ${chunkMatches.length} matches`);
@@ -4546,7 +4611,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Process a chunk of patterns
-  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = []) {
+  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = []) {
     const MAX_MATCHES_PER_PATTERN = EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     const matches = [];
     
@@ -4579,6 +4644,12 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
         if (overlapsWithTextBg) continue;
+
+        if (headingRanges && headingRanges.length > 0) {
+          let inHeading = false;
+          for (const hr of headingRanges) { if (matchStart < hr.end && matchEnd > hr.start) { inHeading = true; break; } }
+          if (inHeading) continue;
+        }
         
         // ALWAYS check for whole-word matches (the main loop only accepts exact pattern matches at word boundaries)
         // The partialMatch flag is handled by a SEPARATE pass after this loop
@@ -4657,7 +4728,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Process a chunk of text
-  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = []) {
+  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = []) {
     const matches = [];
     
     for (const entry of entries) {
@@ -4689,6 +4760,12 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
         if (overlapsWithTextBg) continue;
+
+        if (headingRanges && headingRanges.length > 0) {
+          let inHeading = false;
+          for (const hr of headingRanges) { if (matchStart < hr.end && matchEnd > hr.start) { inHeading = true; break; } }
+          if (inHeading) continue;
+        }
         
         // ALWAYS check for whole-word matches (the main loop only accepts exact pattern matches at word boundaries)
         // The partialMatch flag is handled by a SEPARATE pass after this loop
@@ -4928,7 +5005,7 @@ class PresetModal extends Modal {
       { label: 'All Headings (H1-H6)', pattern: '^\\s*#{1,6}\\s+.*$', flags: 'm', examples: ['# Heading'] },
       { label: 'Dates (YYYY-MM-DD)', pattern: '\\b\\d{4}-\\d{2}-\\d{2}\\b', flags: '', examples: ['2009-01-19'] },
       { label: 'Times (AM/PM)', pattern: '\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b', flags: 'i', examples: ['9:05pm'] },
-      { label: 'Relative dates', pattern: '\\b(?:today|tomorrow|yesterday|next week|last week)\\b', flags: 'i', examples: ['today'] },
+      { label: 'Relative dates', pattern: '\\b(?:today|tomorrow|yesterday|next week|last week)\\b', flags: 'i', examples: ['today, tomorrow'] },
       { label: 'Basic URLs', pattern: '\\bhttps?://\\S+\\b', flags: '', examples: ['https://example.com'] },
       { label: 'Markdown links', pattern: '\\[[^\\]]+\\]\\(https?://[^)]+\\)', flags: '', examples: ['[Link](https://example.com)'] },
       { label: 'Domain names', pattern: '\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b', flags: '', examples: ['example.com'] },
@@ -4936,10 +5013,10 @@ class PresetModal extends Modal {
       // { label: 'Capitalized names', pattern: '\\b[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*\\b', flags: '', examples: ['John Doe'] },
       { label: 'Email addresses', pattern: '\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', flags: '', examples: ['name@example.com'] },
       { label: 'Username mentions', pattern: '@[a-zA-Z0-9_]+', flags: '', examples: ['@username'] },
-      { label: 'Code identifiers', pattern: '\\b[a-z_][a-z0-9_]*\\b', flags: '', examples: ['variable_name'] },
       { label: 'Currency', pattern: '\\$\\d+(?:\\.\\d{2})?|\\b[€£¥]\\d+(?:\\.\\d{2})?\\b', flags: '', examples: ['$29.99'] },
       { label: 'Measurements', pattern: '\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|°C|°F|lbs)\\b', flags: '', examples: ['25kg'] },
-      { label: 'Phone numbers', pattern: '\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b', flags: '', examples: ['123-456-7890'] }
+      { label: 'Phone numbers', pattern: '\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b', flags: '', examples: ['123-456-7890'] },
+      { label: 'All texts', pattern: '.+', flags: '', examples: ['This will target all texts.'] }
     ];
     const list = contentEl.createDiv();
     presets.forEach(p => {
@@ -5236,10 +5313,14 @@ class ColorSettingTab extends PluginSettingTab {
 
       const updateInputDisplay = () => {
         // Update the input field to show the current state from entry
-        const patterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0) 
-          ? entry.groupedPatterns 
-          : (entry.pattern ? [entry.pattern] : []);
-        textInput.value = patterns.join(', ');
+        if (entry.isRegex) {
+          textInput.value = entry.pattern || '';
+        } else {
+          const patterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
+            ? entry.groupedPatterns
+            : (entry.pattern ? [entry.pattern] : []);
+          textInput.value = patterns.map(p => String(p).trim()).join(', ');
+        }
       };
 
       const resolveIdx = () => {
@@ -5249,18 +5330,19 @@ class ColorSettingTab extends PluginSettingTab {
         }
         let idx = this.plugin.settings.wordEntries.indexOf(entry);
         if (idx !== -1) return idx;
-        const curr = String(textInput.value || '').trim();
+        const curr = String(textInput.value || '');
         if (!curr) return -1;
         const found = this.plugin.settings.wordEntries.findIndex(e => {
           const pats = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || '')];
-          return pats.some(p => String(p).trim() === curr);
+          const joined = pats.map(p => String(p).trim()).join(', ');
+          return joined === curr;
         });
         return found;
       };
 
       const textInputHandler = async () => {
         try {
-          const newPattern = textInput.value.trim();
+          const newPattern = textInput.value;
           const idx = resolveIdx();
           if (idx === -1) return;
           if (!newPattern) {
@@ -5270,9 +5352,18 @@ class ColorSettingTab extends PluginSettingTab {
             updateInputDisplay();
             return;
           } else {
-            const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
-            this.plugin.settings.wordEntries[idx].pattern = patterns[0];
-            this.plugin.settings.wordEntries[idx].groupedPatterns = patterns.length > 1 ? patterns : null;
+            if (entry.isRegex) {
+              this.plugin.settings.wordEntries[idx].pattern = newPattern;
+              this.plugin.settings.wordEntries[idx].groupedPatterns = null;
+              entry.pattern = newPattern;
+              entry.groupedPatterns = null;
+            } else {
+              const patterns = newPattern.split(',').map(p => String(p).trim()).filter(p => p.length > 0);
+              this.plugin.settings.wordEntries[idx].pattern = patterns[0];
+              this.plugin.settings.wordEntries[idx].groupedPatterns = patterns.length > 1 ? patterns : null;
+              entry.pattern = this.plugin.settings.wordEntries[idx].pattern;
+              entry.groupedPatterns = this.plugin.settings.wordEntries[idx].groupedPatterns;
+            }
           }
           await this.plugin.saveSettings();
           this.plugin.compileWordEntries();
@@ -5281,7 +5372,7 @@ class ColorSettingTab extends PluginSettingTab {
           this.plugin.forceRefreshAllEditors();
           this.plugin.forceRefreshAllReadingViews();
           this.plugin.triggerActiveDocumentRerender();
-          updateInputDisplay();
+          this._refreshEntries();
         } catch (error) {
           debugError('SETTINGS', 'Error saving word entry', error);
           new Notice('Error saving changes. Please try again.');
@@ -5367,6 +5458,8 @@ class ColorSettingTab extends PluginSettingTab {
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
+        entry.isRegex = regexChk.checked;
+        this._refreshEntries();
       };
 
       const flagsInputHandler = async () => {
@@ -5375,6 +5468,8 @@ class ColorSettingTab extends PluginSettingTab {
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
+        entry.flags = flagsInput.value || '';
+        this._refreshEntries();
       };
 
       const delHandler = async () => {
@@ -5505,6 +5600,7 @@ class ColorSettingTab extends PluginSettingTab {
 
       const cleanup = () => {
         try { textInput.removeEventListener('change', textInputHandler); } catch (e) {}
+        try { textInput.removeEventListener('blur', textInputHandler); } catch (e) {}
         try { cp.removeEventListener('input', cpHandler); } catch (e) {}
         try { cpBg.removeEventListener('input', cpBgHandler); } catch (e) {}
         try { regexChk.removeEventListener('change', regexChkHandler); } catch (e) {}
@@ -5630,22 +5726,49 @@ class ColorSettingTab extends PluginSettingTab {
         if (!entry.uid) {
           try { entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { entry.uid = Date.now(); }
         }
-        const updateInputDisplay = () => {
-          // Update the input field to show the current state from entry
+      const updateInputDisplay = () => {
+        // Update the input field to show the current state from entry
+        if (regexChk && regexChk.checked) {
+          textInput.value = entry.pattern || '';
+        } else {
           const patterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0)
-            ? entry.groupedPatterns
-            : (entry.pattern ? [entry.pattern] : []);
-          textInput.value = patterns.join(', ');
+              ? entry.groupedPatterns
+              : (entry.pattern ? [entry.pattern] : []);
+          textInput.value = patterns.map(p => String(p).trim()).join(', ');
+        }
+      };
+
+        const resolveBlacklistIndex = () => {
+          let entryIdx = -1;
+          if (entry && entry.uid) {
+            entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === entry.uid);
+          }
+          if (entryIdx === -1) {
+            // Try to resolve by matching patterns string
+          const currJoined = (() => {
+            const pats = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0) ? entry.groupedPatterns : (entry.pattern ? [entry.pattern] : []);
+            return pats.map(p => String(p).trim()).join(', ');
+          })();
+          entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => {
+            const pats = (Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0) ? e.groupedPatterns : (e.pattern ? [e.pattern] : []);
+            const joined = pats.map(p => String(p).trim()).join(', ');
+            return joined === currJoined && (!!e.isRegex === !!entry.isRegex) && String(e.flags || '') === String(entry.flags || '') && String(e.presetLabel || '') === String(entry.presetLabel || '');
+          });
+          }
+          if (entryIdx !== -1 && (!entry.uid || !this.plugin.settings.blacklistEntries[entryIdx].uid)) {
+            try {
+              const uid = entry.uid || (Date.now().toString(36) + Math.random().toString(36).slice(2));
+              this.plugin.settings.blacklistEntries[entryIdx].uid = uid;
+              entry.uid = uid;
+            } catch (e) {}
+          }
+          return entryIdx;
         };
 
         const textInputHandler = async () => {
           try {
-            const newPattern = textInput.value.trim();
-            let entryIdx = -1;
-            if (entry && entry.uid) {
-              entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === entry.uid);
-            }
-            if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+            const newPattern = textInput.value;
+            let entryIdx = resolveBlacklistIndex();
             if (entryIdx === -1) return;
             if (!newPattern) {
               this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
@@ -5654,9 +5777,19 @@ class ColorSettingTab extends PluginSettingTab {
               updateInputDisplay();
               return;
             } else {
-              const patterns = newPattern.split(',').map(p => p.trim()).filter(p => p.length > 0);
-              this.plugin.settings.blacklistEntries[entryIdx].pattern = patterns[0];
-              this.plugin.settings.blacklistEntries[entryIdx].groupedPatterns = patterns.length > 1 ? patterns : null;
+              if (entry.isRegex) {
+                this.plugin.settings.blacklistEntries[entryIdx].pattern = newPattern;
+                this.plugin.settings.blacklistEntries[entryIdx].groupedPatterns = null;
+                entry.pattern = newPattern;
+                entry.groupedPatterns = null;
+              } else {
+                const patterns = newPattern.split(',').map(p => String(p).trim()).filter(p => p.length > 0);
+                this.plugin.settings.blacklistEntries[entryIdx].pattern = patterns[0];
+                this.plugin.settings.blacklistEntries[entryIdx].groupedPatterns = patterns.length > 1 ? patterns : null;
+                // Sync local entry reference so blur does not revert display
+                entry.pattern = this.plugin.settings.blacklistEntries[entryIdx].pattern;
+                entry.groupedPatterns = this.plugin.settings.blacklistEntries[entryIdx].groupedPatterns;
+              }
             }
             await this.plugin.saveSettings();
             this.plugin.compileWordEntries();
@@ -5664,7 +5797,8 @@ class ColorSettingTab extends PluginSettingTab {
             this.plugin.forceRefreshAllEditors();
             this.plugin.forceRefreshAllReadingViews();
             this.plugin.triggerActiveDocumentRerender();
-            updateInputDisplay();
+            // Refresh the blacklist list to rebuild rows with new object references
+            this._refreshBlacklistWords();
           } catch (error) {
             debugError('SETTINGS', 'Error saving blacklist entry', error);
             new Notice('Error saving changes. Please try again.');
@@ -5673,30 +5807,28 @@ class ColorSettingTab extends PluginSettingTab {
 
         // cpHandler for blacklist color picker
         const regexChkHandler = async () => {
-          let entryIdx = -1;
-          if (entry && entry.uid) entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === entry.uid);
-          if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          let entryIdx = resolveBlacklistIndex();
           if (entryIdx === -1) return;
           this.plugin.settings.blacklistEntries[entryIdx].isRegex = regexChk.checked;
           flagsInput.style.display = regexChk.checked ? 'inline-block' : 'none';
           await this.plugin.saveSettings();
+          // Sync local entry and refresh UI
+          entry.isRegex = regexChk.checked;
           this._refreshBlacklistWords();
         };
 
         const flagsInputHandler = async () => {
-          let entryIdx = -1;
-          if (entry && entry.uid) entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === entry.uid);
-          if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          let entryIdx = resolveBlacklistIndex();
           if (entryIdx === -1) return;
           this.plugin.settings.blacklistEntries[entryIdx].flags = flagsInput.value || '';
           await this.plugin.saveSettings();
+          // Sync local entry and refresh UI
+          entry.flags = flagsInput.value || '';
           this._refreshBlacklistWords();
         };
 
         const delHandler = async () => {
-          let entryIdx = -1;
-          if (entry && entry.uid) entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === entry.uid);
-          if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.indexOf(entry);
+          let entryIdx = resolveBlacklistIndex();
           if (entryIdx === -1) return;
           this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
           await this.plugin.saveSettings();
@@ -5709,10 +5841,11 @@ class ColorSettingTab extends PluginSettingTab {
         flagsInput.addEventListener('change', flagsInputHandler);
         del.addEventListener('click', delHandler);
         this._cleanupHandlers.push(() => {
-          textInput.removeEventListener('change', textInputHandler);
-          regexChk.removeEventListener('change', regexChkHandler);
-          flagsInput.removeEventListener('change', flagsInputHandler);
-          del.removeEventListener('click', delHandler);
+          try { textInput.removeEventListener('change', textInputHandler); } catch (e) {}
+          try { textInput.removeEventListener('blur', textInputHandler); } catch (e) {}
+          try { regexChk.removeEventListener('change', regexChkHandler); } catch (e) {}
+          try { flagsInput.removeEventListener('change', flagsInputHandler); } catch (e) {}
+          try { del.removeEventListener('click', delHandler); } catch (e) {}
         });
       });
     } catch (e) { debugError('SETTINGS', '_refreshBlacklistWords error', e); }
@@ -6251,8 +6384,8 @@ class ColorSettingTab extends PluginSettingTab {
           if (idx === -1) return;
           const s = this.plugin.settings.wordEntries[idx];
           if (textInput && typeof textInput.value === 'string') {
-            const raw = String(textInput.value || '').trim();
-            const patterns = raw.split(',').map(p => p.trim()).filter(p => p.length > 0);
+            const raw = String(textInput.value || '');
+            const patterns = raw.split(',').filter(p => p.length > 0);
             s.pattern = patterns[0] || '';
             s.groupedPatterns = patterns.length > 1 ? patterns : null;
           }
@@ -7126,7 +7259,7 @@ class ColorSettingTab extends PluginSettingTab {
     blSearchContainer.style.margin = '8px 0';
     const blSearch = blSearchContainer.createEl('input', { type: 'text' });
     try { blSearch.addClass('act-search-input'); } catch (e) { try { blSearch.classList.add('act-search-input'); } catch (_) {} }
-    blSearch.placeholder = 'Search blacklist patterns…';
+    blSearch.placeholder = 'Search blacklisted words or patterns…';
     blSearch.style.width = '100%';
     blSearch.style.padding = '6px';
     blSearch.style.border = '1px solid var(--background-modifier-border)';
@@ -8015,16 +8148,5 @@ class ConfirmationModal extends Modal {
     this.contentEl.empty();
   }
 }
-
-// last cleanup on unload
-try {
-  if (module && module.exports && module.exports.prototype) {
-    module.exports.prototype.onunload = function() {
-      try { this._viewportObservers?.forEach(obs => obs.disconnect()); } catch (e) {}
-      try { this._viewportObservers?.clear(); } catch (e) {}
-      try { this._dynamicHandlers?.forEach(cleanup => cleanup()); } catch (e) {}
-    };
-  }
-} catch (e) {}
 
 /* nosourcemap */
