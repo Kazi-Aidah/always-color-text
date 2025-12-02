@@ -1139,6 +1139,9 @@ module.exports = class AlwaysColorText extends Plugin {
       quickHighlightBorderStyle: 'full',
       quickHighlightBorderOpacity: 100,
       quickHighlightBorderThickness: 1,
+      wordsSortMode: 'last-added',
+      blacklistSortMode: 'last-added',
+      pathSortMode: 'last-added',
     }, loadedData);
     try { this.sanitizeSettings(); } catch (e) {}
     // Migrate legacy customSwatches (array of hex strings) into userCustomSwatches
@@ -1342,6 +1345,25 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
+  async fetchAllReleases() {
+    const url = 'https://api.github.com/repos/Kazi-Aidah/always-color-text/releases';
+    try {
+      if (typeof requestUrl === 'function') {
+        const res = await requestUrl({ url, headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Obsidian-Always-Color-Text' } });
+        const data = res.json || (res.text ? JSON.parse(res.text) : null);
+        return Array.isArray(data) ? data : [];
+      }
+    } catch (e) {}
+    try {
+      const r = await fetch(url, { headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Obsidian-Always-Color-Text' } });
+      if (!r.ok) throw new Error('Network error');
+      const data = await r.json();
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   // --- Save settings and refresh plugin state ---
   async saveSettings() {
     try { this.sanitizeSettings(); } catch (e) {}
@@ -1417,6 +1439,12 @@ module.exports = class AlwaysColorText extends Plugin {
       s.quickHighlightBorderStyle = String(s.quickHighlightBorderStyle || 'full');
       s.quickHighlightBorderOpacity = Math.max(0, Math.min(100, Number(s.quickHighlightBorderOpacity ?? 100)));
       s.quickHighlightBorderThickness = Math.max(0, Math.min(5, Number(s.quickHighlightBorderThickness ?? 1)));
+      const allowedSort = new Set(['last-added', 'a-z', 'reverse-a-z', 'style-order', 'color']);
+      if (!allowedSort.has(s.wordsSortMode)) s.wordsSortMode = 'last-added';
+      const allowedBl = new Set(['last-added', 'a-z', 'reverse-a-z']);
+      if (!allowedBl.has(s.blacklistSortMode)) s.blacklistSortMode = 'last-added';
+      const allowedPath = new Set(['last-added', 'a-z', 'reverse-a-z', 'mode', 'type']);
+      if (!allowedPath.has(s.pathSortMode)) s.pathSortMode = 'last-added';
       this.settings = s;
     } catch (e) {}
   }
@@ -1608,8 +1636,11 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // NEW HELPER: Check if a match is a whole word (word boundaries on both sides)
   isWholeWordMatch(text, matchStart, matchEnd) {
-    const leftOk = matchStart === 0 || !/\w/.test(text[matchStart - 1]);
-    const rightOk = matchEnd === text.length || !/\w/.test(text[matchEnd]);
+    const leftChar = matchStart > 0 ? text[matchStart - 1] : '';
+    const rightChar = matchEnd < text.length ? text[matchEnd] : '';
+    const isWordChar = (ch) => /\w/.test(ch) && ch !== '_' && ch !== '*';
+    const leftOk = matchStart === 0 || !isWordChar(leftChar);
+    const rightOk = matchEnd === text.length || !isWordChar(rightChar);
     return leftOk && rightOk;
   }
 
@@ -3153,6 +3184,63 @@ module.exports = class AlwaysColorText extends Plugin {
     // Process each text node
     for (const node of textNodes) {
       let text = node.textContent;
+      const isInsideHeading = node.parentElement?.closest('h1, h2, h3, h4, h5, h6');
+      if (isInsideHeading) {
+        const label = 'All Headings (H1-H6)';
+        const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+        const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label);
+        if (hasHeadingBlacklist) {
+          continue;
+        }
+        const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+        const headingEntry = we.find(e => e && e.presetLabel === label);
+        if (headingEntry) {
+          const span = document.createElement('span');
+          span.className = 'always-color-text-highlight';
+          span.textContent = text;
+          if (headingEntry.styleType === 'both') {
+            span.style.color = headingEntry.textColor;
+            try { span.style.setProperty('--highlight-color', headingEntry.textColor); } catch (e) {}
+            span.style.background = '';
+            span.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, this.settings.backgroundOpacity ?? 25);
+            span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
+              span.style.borderRadius = '0px';
+            } else {
+              span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+            }
+            if (this.settings.enableBoxDecorationBreak ?? true) {
+              span.style.boxDecorationBreak = 'clone';
+              span.style.WebkitBoxDecorationBreak = 'clone';
+            }
+            this.applyBorderStyleToElement(span, headingEntry.textColor, headingEntry.backgroundColor);
+          } else if (headingEntry.styleType === 'highlight') {
+            span.style.background = '';
+            span.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, this.settings.backgroundOpacity ?? 25);
+            span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
+              span.style.borderRadius = '0px';
+            } else {
+              span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+            }
+            if (this.settings.enableBoxDecorationBreak ?? true) {
+              span.style.boxDecorationBreak = 'clone';
+              span.style.WebkitBoxDecorationBreak = 'clone';
+            }
+            this.applyBorderStyleToElement(span, null, headingEntry.backgroundColor);
+          } else {
+            const c = headingEntry.color || headingEntry.textColor;
+            span.style.color = c;
+            try { span.style.setProperty('--highlight-color', c); } catch (e) {}
+          }
+          node.replaceWith(span);
+          try {
+            const info = this._domRefs.get(block);
+            if (info) info.matchCount = 1;
+          } catch (e) {}
+          continue;
+        }
+      }
       
       // DECODE HTML ENTITIES FOR READING MODE COMPATIBILITY
       const originalText = text;
@@ -3210,10 +3298,10 @@ module.exports = class AlwaysColorText extends Plugin {
               // Extract full word and check blacklist
               let fullWordStart = matchStart;
               let fullWordEnd = matchEnd;
-              while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
+              while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1]) && text[fullWordStart - 1] !== '_' && text[fullWordStart - 1] !== '*') {
                 fullWordStart--;
               }
-              while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
+              while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd]) && text[fullWordEnd] !== '_' && text[fullWordEnd] !== '*') {
                 fullWordEnd++;
               }
               const fullWord = text.substring(fullWordStart, fullWordEnd);
@@ -3266,10 +3354,10 @@ module.exports = class AlwaysColorText extends Plugin {
             // Extract full word and check blacklist
             let fullWordStart = matchStart;
             let fullWordEnd = matchEnd;
-            while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
+            while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1]) && text[fullWordStart - 1] !== '_' && text[fullWordStart - 1] !== '*') {
               fullWordStart--;
             }
-            while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
+            while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd]) && text[fullWordEnd] !== '_' && text[fullWordEnd] !== '*') {
               fullWordEnd++;
             }
             const fullWord = text.substring(fullWordStart, fullWordEnd);
@@ -3335,12 +3423,12 @@ module.exports = class AlwaysColorText extends Plugin {
           let fullWordEnd = matchEnd;
           
           // Expand left to find word boundary
-          while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
+          while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1]) && text[fullWordStart - 1] !== '_' && text[fullWordStart - 1] !== '*') {
             fullWordStart--;
           }
           
           // Expand right to find word boundary
-          while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
+          while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd]) && text[fullWordEnd] !== '_' && text[fullWordEnd] !== '*') {
             fullWordEnd++;
           }
           
@@ -3956,12 +4044,12 @@ module.exports = class AlwaysColorText extends Plugin {
     let fullWordEnd = matchEnd;
     
     // Expand left to word boundary
-    while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1])) {
+    while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1]) && text[fullWordStart - 1] !== '_' && text[fullWordStart - 1] !== '*') {
       fullWordStart--;
     }
     
     // Expand right to word boundary  
-    while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd])) {
+    while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd]) && text[fullWordEnd] !== '_' && text[fullWordEnd] !== '*') {
       fullWordEnd++;
     }
     
@@ -4009,6 +4097,42 @@ module.exports = class AlwaysColorText extends Plugin {
   buildDecoStandard(view, builder, from, to, text, entries, folderEntry) {
     const entries_copy = entries || this.getSortedWordEntries();
     let matches = [];
+
+    try {
+      const label = 'All Headings (H1-H6)';
+      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label);
+      if (!hasHeadingBlacklist) {
+        const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+        const headingEntry = we.find(e => e && e.presetLabel === label);
+        if (headingEntry) {
+          let pos = 0;
+          while (pos <= text.length) {
+            const lineStart = pos;
+            const nextNL = text.indexOf('\n', pos);
+            const lineEnd = nextNL === -1 ? text.length : nextNL;
+            let i = lineStart;
+            while (i < lineEnd && /\s/.test(text[i])) i++;
+            let hashes = 0;
+            while (i < lineEnd && text[i] === '#' && hashes < 6) { hashes++; i++; }
+            if (hashes > 0 && i < lineEnd && text[i] === ' ') {
+              const start = from + lineStart;
+              const end = from + lineEnd;
+              if (headingEntry.backgroundColor) {
+                const tc = headingEntry.textColor || 'currentColor';
+                const bc = headingEntry.backgroundColor;
+                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = headingEntry.color || headingEntry.textColor;
+                if (c) matches.push({ start, end, color: c });
+              }
+            }
+            if (nextNL === -1) break;
+            pos = nextNL + 1;
+          }
+        }
+      }
+    } catch (e) {}
 
     // FIRST: Process text+bg entries (they have priority and override other styling)
     const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
@@ -4264,6 +4388,42 @@ module.exports = class AlwaysColorText extends Plugin {
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
     const MAX_MATCHES = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
+
+    try {
+      const label = 'All Headings (H1-H6)';
+      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label);
+      if (!hasHeadingBlacklist) {
+        const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+        const headingEntry = we.find(e => e && e.presetLabel === label);
+        if (headingEntry) {
+          let pos = 0;
+          while (pos <= text.length) {
+            const lineStart = pos;
+            const nextNL = text.indexOf('\n', pos);
+            const lineEnd = nextNL === -1 ? text.length : nextNL;
+            let i = lineStart;
+            while (i < lineEnd && /\s/.test(text[i])) i++;
+            let hashes = 0;
+            while (i < lineEnd && text[i] === '#' && hashes < 6) { hashes++; i++; }
+            if (hashes > 0 && i < lineEnd && text[i] === ' ') {
+              const start = from + lineStart;
+              const end = from + lineEnd;
+              if (headingEntry.backgroundColor) {
+                const tc = headingEntry.textColor || 'currentColor';
+                const bc = headingEntry.backgroundColor;
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = headingEntry.color || headingEntry.textColor;
+                if (c) allMatches.push({ start, end, color: c });
+              }
+            }
+            if (nextNL === -1) break;
+            pos = nextNL + 1;
+          }
+        }
+      }
+    } catch (e) {}
 
     // FIRST: Process text+bg entries (they have priority)
     const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
@@ -4755,6 +4915,7 @@ class PresetModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     const presets = [
+      { label: 'All Headings (H1-H6)', pattern: '^\\s*#{1,6}\\s+.*$', flags: 'm', examples: ['# Heading'] },
       { label: 'Dates (YYYY-MM-DD)', pattern: '\\b\\d{4}-\\d{2}-\\d{2}\\b', flags: '', examples: ['2009-01-19'] },
       { label: 'Times (AM/PM)', pattern: '\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b', flags: 'i', examples: ['9:05pm'] },
       { label: 'Relative dates', pattern: '\\b(?:today|tomorrow|yesterday|next week|last week)\\b', flags: 'i', examples: ['today'] },
@@ -4833,60 +4994,48 @@ class ChangelogModal extends Modal {
     body.style.maxHeight = '70vh';
     body.style.overflow = 'auto';
     
-    const loading = body.createEl('div', { text: 'Loading latest release…' });
+    const loading = body.createEl('div', { text: 'Loading releases…' });
     loading.style.opacity = '0.7';
     loading.style.fontSize = '0.95em';
     loading.style.marginTop = '6px';
     
     try {
-      const rel = await this.plugin.fetchLatestRelease();
+      const rels = await this.plugin.fetchAllReleases();
       body.empty();
-      if (!rel) {
+      if (!Array.isArray(rels) || rels.length === 0) {
         body.createEl('div', { text: 'No release information available.' });
         return;
       }
-      
-      // Release metadata section
-      const meta = body.createEl('div');
-      meta.style.marginBottom = '6px';
-      // meta.style.paddingBottom = '6px';
-      meta.style.borderBottom = '1px solid var(--divider-color)';
-      
-      const releaseName = meta.createEl('div', { text: rel.name || rel.tag_name || 'Latest Release' });
-      releaseName.style.fontSize = '2em';
-      releaseName.style.fontWeight = '900';
-      releaseName.style.marginTop = '12px';
-      releaseName.style.marginBottom = '12px';
-      releaseName.style.color = 'var(--text-normal)';
-      
-      // if (rel.published_at) {
-      //   const pubDate = meta.createEl('div', { text: `Published: ${new Date(rel.published_at).toLocaleString()}` });
-      //   pubDate.style.fontSize = '0.9em';
-      //   pubDate.style.opacity = '0.7';
-      // }
-      
-      // Release notes section
-      const notes = body.createEl('div');
-      notes.style.marginTop = '16px';
-      notes.addClass('markdown-preview-view');
-      notes.style.lineHeight = '1.6';
-      notes.style.fontSize = '0.95em';
-      
-      const md = rel.body || 'No notes';
-      try {
-        await MarkdownRenderer.render(this.plugin.app, md, notes, '', this);
-      } catch (e) {
-        // Fallback: create a pre element to preserve formatting
-        const preEl = notes.createEl('pre');
-        preEl.style.whiteSpace = 'pre-wrap';
-        preEl.style.wordWrap = 'break-word';
-        preEl.style.backgroundColor = 'var(--background-secondary)';
-        preEl.style.padding = '12px';
-        preEl.style.borderRadius = '4px';
-        preEl.style.fontSize = '0.9em';
-        preEl.style.lineHeight = '1.5';
-        preEl.textContent = md;
-      }
+      rels.forEach(async (rel) => {
+        const meta = body.createEl('div');
+        meta.style.marginBottom = '6px';
+        meta.style.borderBottom = '1px solid var(--divider-color)';
+        const releaseName = meta.createEl('div', { text: rel.name || rel.tag_name || 'Release' });
+        releaseName.style.fontSize = '2em';
+        releaseName.style.fontWeight = '900';
+        releaseName.style.marginTop = '12px';
+        releaseName.style.marginBottom = '12px';
+        releaseName.style.color = 'var(--text-normal)';
+        const notes = body.createEl('div');
+        notes.style.marginTop = '16px';
+        notes.addClass('markdown-preview-view');
+        notes.style.lineHeight = '1.6';
+        notes.style.fontSize = '0.95em';
+        const md = rel.body || 'No notes';
+        try {
+          await MarkdownRenderer.render(this.plugin.app, md, notes, '', this);
+        } catch (e) {
+          const preEl = notes.createEl('pre');
+          preEl.style.whiteSpace = 'pre-wrap';
+          preEl.style.wordWrap = 'break-word';
+          preEl.style.backgroundColor = 'var(--background-secondary)';
+          preEl.style.padding = '12px';
+          preEl.style.borderRadius = '4px';
+          preEl.style.fontSize = '0.9em';
+          preEl.style.lineHeight = '1.5';
+          preEl.textContent = md;
+        }
+      });
     } catch (e) {
       body.empty();
       body.createEl('div', { text: 'Failed to load release notes.' });
@@ -4912,12 +5061,12 @@ class ColorSettingTab extends PluginSettingTab {
     this._blacklistWordsContainer = null;
     this._customSwatchesContainer = null;
     // Sorting state for word entries (null, 'last-added', or 'a-z')
-    this._wordsSortMode = 'last-added';
+    this._wordsSortMode = (this.plugin.settings && this.plugin.settings.wordsSortMode) ? this.plugin.settings.wordsSortMode : 'last-added';
     // Sorting state for text & background coloring entries
     this._textBgSortMode = 'last-added';
     // Sorting state for blacklist entries
-    this._blacklistSortMode = 'last-added';
-    this._pathSortMode = 'last-added';
+    this._blacklistSortMode = (this.plugin.settings && this.plugin.settings.blacklistSortMode) ? this.plugin.settings.blacklistSortMode : 'last-added';
+    this._pathSortMode = (this.plugin.settings && this.plugin.settings.pathSortMode) ? this.plugin.settings.pathSortMode : 'last-added';
     // Fold states for color swatches sections
     this._defaultColorsFolded = true;   // Default colors start folded
     this._customSwatchesFolded = false; // Custom swatches start unfolded (when settings open)
@@ -5302,16 +5451,15 @@ class ColorSettingTab extends PluginSettingTab {
               curr.color = textOnly || curr.color || '';
               curr.textColor = null;
               curr.backgroundColor = null;
-            } else if (nextStyle === 'highlight') {
-              // HIGHLIGHT: Preserve previous colors strictly; do not inherit text color
-              if (curr.textColor && curr.textColor !== 'currentColor') curr._savedTextColor = curr.textColor;
-              if (curr.color) curr._savedTextColor = curr.color;
-              if (curr.backgroundColor) curr._savedBackgroundColor = curr.backgroundColor;
-              const bgOnly = curr._savedBackgroundColor || curr.backgroundColor || null;
-              curr.backgroundColor = bgOnly;
-              curr.textColor = 'currentColor';
-              curr.color = '';
-            } else {
+          } else if (nextStyle === 'highlight') {
+            if (curr.textColor && curr.textColor !== 'currentColor') curr._savedTextColor = curr.textColor;
+            if (curr.color) curr._savedTextColor = curr.color;
+            if (curr.backgroundColor) curr._savedBackgroundColor = curr.backgroundColor;
+            const bgOnly = curr._savedBackgroundColor || curr.backgroundColor || curr._savedTextColor || (this.plugin.isValidHexColor(curr.color) ? curr.color : null);
+            curr.backgroundColor = bgOnly;
+            curr.textColor = 'currentColor';
+            curr.color = '';
+          } else {
               // BOTH: Strictly restore previously chosen colors from saved fields
               const textBase = (curr._savedTextColor) || ((curr.textColor && curr.textColor !== 'currentColor') ? curr.textColor : null) || (curr.color || null);
               const bgBase = (curr._savedBackgroundColor) || (curr.backgroundColor || null);
@@ -5394,9 +5542,25 @@ class ColorSettingTab extends PluginSettingTab {
         });
       }
       if (this._blacklistSortMode === 'a-z') {
-        entries.sort((a, b) => (a.pattern || '').toLowerCase().localeCompare((b.pattern || '').toLowerCase()));
+        entries.sort((a, b) => {
+          const aPat = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
+          const bPat = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
+          const aEmpty = String(aPat).trim().length === 0;
+          const bEmpty = String(bPat).trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
+          return String(aPat).toLowerCase().localeCompare(String(bPat).toLowerCase());
+        });
       } else if (this._blacklistSortMode === 'reverse-a-z') {
-        entries.sort((a, b) => (b.pattern || '').toLowerCase().localeCompare((a.pattern || '').toLowerCase()));
+        entries.sort((a, b) => {
+          const aPat = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
+          const bPat = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
+          const aEmpty = String(aPat).trim().length === 0;
+          const bEmpty = String(bPat).trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
+          return String(bPat).toLowerCase().localeCompare(String(aPat).toLowerCase());
+        });
       }
       entries.forEach((entry) => {
         const row = this._blacklistWordsContainer.createDiv();
@@ -5543,14 +5707,50 @@ class ColorSettingTab extends PluginSettingTab {
         return text.includes(q);
       }) : rows;
       if (this._pathSortMode === 'a-z') {
-        filteredRows.sort((a, b) => (String(a.path || '').toLowerCase().localeCompare(String(b.path || '').toLowerCase())));
+        filteredRows.sort((a, b) => {
+          const aPath = String(a.path || '');
+          const bPath = String(b.path || '');
+          const aEmpty = aPath.trim().length === 0;
+          const bEmpty = bPath.trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
+          return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
+        });
       } else if (this._pathSortMode === 'reverse-a-z') {
-        filteredRows.sort((a, b) => (String(b.path || '').toLowerCase().localeCompare(String(a.path || '').toLowerCase())));
+        filteredRows.sort((a, b) => {
+          const aPath = String(a.path || '');
+          const bPath = String(b.path || '');
+          const aEmpty = aPath.trim().length === 0;
+          const bEmpty = bPath.trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
+          return bPath.toLowerCase().localeCompare(aPath.toLowerCase());
+        });
       } else if (this._pathSortMode === 'mode') {
         const order = { 'exclude': 0, 'include': 1 };
-        filteredRows.sort((a, b) => (order[String(a.mode || '')] ?? 1) - (order[String(b.mode || '')] ?? 1) || String(a.path || '').toLowerCase().localeCompare(String(b.path || '').toLowerCase()));
+        filteredRows.sort((a, b) => {
+          const aPath = String(a.path || '');
+          const bPath = String(b.path || '');
+          const aEmpty = aPath.trim().length === 0;
+          const bEmpty = bPath.trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
+          const styleCmp = (order[String(a.mode || '')] ?? 1) - (order[String(b.mode || '')] ?? 1);
+          if (styleCmp !== 0) return styleCmp;
+          return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
+        });
       } else if (this._pathSortMode === 'type') {
-        filteredRows.sort((a, b) => (Boolean(a.isFolder) === Boolean(b.isFolder) ? 0 : (a.isFolder ? -1 : 1)) || String(a.path || '').toLowerCase().localeCompare(String(b.path || '').toLowerCase()));
+        filteredRows.sort((a, b) => {
+          const aPath = String(a.path || '');
+          const bPath = String(b.path || '');
+          const aEmpty = aPath.trim().length === 0;
+          const bEmpty = bPath.trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
+          const typeCmp = (Boolean(a.isFolder) === Boolean(b.isFolder) ? 0 : (a.isFolder ? -1 : 1));
+          if (typeCmp !== 0) return typeCmp;
+          return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
+        });
       }
       const buildSuggestions = () => {
         const files = this.app.vault.getFiles();
@@ -5911,6 +6111,11 @@ class ColorSettingTab extends PluginSettingTab {
             ? b.groupedPatterns[0] 
             : (b.pattern || '');
           
+          const aEmpty = String(patternA).trim().length === 0;
+          const bEmpty = String(patternB).trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
+
           // Check if patterns contain special characters (expressions)
           const aHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternA);
           const bHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternB);
@@ -5933,6 +6138,11 @@ class ColorSettingTab extends PluginSettingTab {
             ? b.groupedPatterns[0] 
             : (b.pattern || '');
           
+          const aEmpty = String(patternA).trim().length === 0;
+          const bEmpty = String(patternB).trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
+
           // Check if patterns contain special characters (expressions)
           const aHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternA);
           const bHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternB);
@@ -5945,47 +6155,30 @@ class ColorSettingTab extends PluginSettingTab {
           return patternB.toLowerCase().localeCompare(patternA.toLowerCase());
         });
       } else if (this._wordsSortMode === 'style-order') {
-        // Sort by style: text → highlight → both, then alphabetically within each
         const styleOrder = { 'text': 0, 'highlight': 1, 'both': 2 };
         entriesFiltered.sort((a, b) => {
+          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
+          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
+          const aEmpty = String(patternA).trim().length === 0;
+          const bEmpty = String(patternB).trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
           const styleA = styleOrder[a.styleType] ?? 0;
           const styleB = styleOrder[b.styleType] ?? 0;
-          
-          if (styleA !== styleB) {
-            return styleA - styleB;
-          }
-          
-          // Within same style, sort alphabetically
-          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) 
-            ? a.groupedPatterns[0] 
-            : (a.pattern || '');
-          
-          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) 
-            ? b.groupedPatterns[0] 
-            : (b.pattern || '');
-          
+          if (styleA !== styleB) return styleA - styleB;
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
       } else if (this._wordsSortMode === 'color') {
-        // Sort by color (hex value), then alphabetically within same color
         entriesFiltered.sort((a, b) => {
-          // Get the color for comparison (prefer backgroundColor if it exists, otherwise color/textColor)
+          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
+          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
+          const aEmpty = String(patternA).trim().length === 0;
+          const bEmpty = String(patternB).trim().length === 0;
+          if (aEmpty && !bEmpty) return 1;
+          if (!aEmpty && bEmpty) return -1;
           const colorA = (a.backgroundColor || a.textColor || a.color || '').toLowerCase();
           const colorB = (b.backgroundColor || b.textColor || b.color || '').toLowerCase();
-          
-          if (colorA !== colorB) {
-            return colorA.localeCompare(colorB);
-          }
-          
-          // Same color, sort alphabetically by pattern
-          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) 
-            ? a.groupedPatterns[0] 
-            : (a.pattern || '');
-          
-          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) 
-            ? b.groupedPatterns[0] 
-            : (b.pattern || '');
-          
+          if (colorA !== colorB) return colorA.localeCompare(colorB);
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
       }
@@ -6056,8 +6249,8 @@ class ColorSettingTab extends PluginSettingTab {
             s.styleType = 'text';
             s._savedTextColor = this.plugin.isValidHexColor(s.color) ? s.color : s._savedTextColor || null;
           } else if (style === 'highlight') {
-            const bg = cpBg && typeof cpBg.value === 'string' ? cpBg.value : s.backgroundColor;
-            s.backgroundColor = this.plugin.isValidHexColor(bg) ? bg : null;
+            const bgCandidate = cpBg && typeof cpBg.value === 'string' ? cpBg.value : (s.backgroundColor || s._savedBackgroundColor || s._savedTextColor || (this.plugin.isValidHexColor(s.color) ? s.color : ''));
+            s.backgroundColor = this.plugin.isValidHexColor(bgCandidate) ? bgCandidate : null;
             s.textColor = 'currentColor';
             s.color = '';
             s.styleType = 'highlight';
@@ -6822,6 +7015,7 @@ class ColorSettingTab extends PluginSettingTab {
       const nextIndex = (currentIndex + 1) % sortModes.length;
       this._wordsSortMode = sortModes[nextIndex];
       sortBtn.textContent = sortLabels[this._wordsSortMode];
+      try { this.plugin.settings.wordsSortMode = this._wordsSortMode; await this.plugin.saveSettings(); } catch (e) {}
       this._refreshEntries();
     };
     sortBtn.addEventListener('click', sortBtnHandler);
@@ -6940,6 +7134,7 @@ class ColorSettingTab extends PluginSettingTab {
       const ni = (i + 1) % blSortModes.length;
       this._blacklistSortMode = blSortModes[ni];
       blacklistSortBtn.textContent = blSortLabels[this._blacklistSortMode];
+      try { this.plugin.settings.blacklistSortMode = this._blacklistSortMode; await this.plugin.saveSettings(); } catch (e) {}
       this._refreshBlacklistWords();
     };
     blacklistSortBtn.addEventListener('click', blacklistSortHandler);
@@ -7026,6 +7221,7 @@ class ColorSettingTab extends PluginSettingTab {
       const ni = (i + 1) % pathSortModes.length;
       this._pathSortMode = pathSortModes[ni];
       pathSortBtn.textContent = pathSortLabels[this._pathSortMode];
+      try { this.plugin.settings.pathSortMode = this._pathSortMode; await this.plugin.saveSettings(); } catch (e) {}
       this._refreshPathRules();
     };
     pathSortBtn.addEventListener('click', pathSortHandler);
@@ -7808,3 +8004,5 @@ try {
     };
   }
 } catch (e) {}
+
+/* nosourcemap */
