@@ -4957,6 +4957,7 @@ class ChangelogModal extends Modal {
   constructor(app, plugin) {
     super(app);
     this.plugin = plugin;
+    this._mdComp = null;
   }
   async onOpen() {
     const { contentEl } = this;
@@ -5021,9 +5022,11 @@ class ChangelogModal extends Modal {
         notes.addClass('markdown-preview-view');
         notes.style.lineHeight = '1.6';
         notes.style.fontSize = '0.95em';
+        try { notes.style.padding = '0 var(--file-margin)'; } catch (e) {}
         const md = rel.body || 'No notes';
         try {
-          await MarkdownRenderer.render(this.plugin.app, md, notes, '', this);
+          if (!this._mdComp) { try { this._mdComp = new Component(); } catch (e) { this._mdComp = null; } }
+          await MarkdownRenderer.render(this.plugin.app, md, notes, '', this._mdComp || undefined);
         } catch (e) {
           const preEl = notes.createEl('pre');
           preEl.style.whiteSpace = 'pre-wrap';
@@ -5040,6 +5043,15 @@ class ChangelogModal extends Modal {
       body.empty();
       body.createEl('div', { text: 'Failed to load release notes.' });
     }
+  }
+  onClose() {
+    try {
+      if (this._mdComp && typeof this._mdComp.unload === 'function') {
+        this._mdComp.unload();
+      }
+    } catch (e) {}
+    this._mdComp = null;
+    try { this.contentEl.empty(); } catch (e) {}
   }
 }
 
