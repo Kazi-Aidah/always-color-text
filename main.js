@@ -3184,8 +3184,8 @@ module.exports = class AlwaysColorText extends Plugin {
     // Process each text node
     for (const node of textNodes) {
       let text = node.textContent;
-      const isInsideHeading = node.parentElement?.closest('h1, h2, h3, h4, h5, h6');
-      if (isInsideHeading) {
+      const headingEl = node.parentElement?.closest('h1, h2, h3, h4, h5, h6');
+      if (headingEl) {
         const label = 'All Headings (H1-H6)';
         const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
         const hasHeadingBlacklist = !!blEntries.find(e => e && e.presetLabel === label);
@@ -3195,50 +3195,57 @@ module.exports = class AlwaysColorText extends Plugin {
         const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
         const headingEntry = we.find(e => e && e.presetLabel === label);
         if (headingEntry) {
-          const span = document.createElement('span');
-          span.className = 'always-color-text-highlight';
-          span.textContent = text;
-          if (headingEntry.styleType === 'both') {
-            span.style.color = headingEntry.textColor;
-            try { span.style.setProperty('--highlight-color', headingEntry.textColor); } catch (e) {}
-            span.style.background = '';
-            span.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, this.settings.backgroundOpacity ?? 25);
-            span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
-            if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
-              span.style.borderRadius = '0px';
-            } else {
-              span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+          if ((headingEntry.styleType === 'highlight' || headingEntry.styleType === 'both')) {
+            if (!headingEl.querySelector('.act-heading-wrapper')) {
+              const wrapper = document.createElement('span');
+              wrapper.className = 'always-color-text-highlight act-heading-wrapper';
+              try { wrapper.style.display = 'inline-block'; } catch (e) {}
+              if (headingEntry.styleType === 'both') {
+                wrapper.style.color = headingEntry.textColor;
+                try { wrapper.style.setProperty('--highlight-color', headingEntry.textColor); } catch (e) {}
+                wrapper.style.background = '';
+                wrapper.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, this.settings.backgroundOpacity ?? 25);
+                wrapper.style.paddingLeft = wrapper.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+                if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
+                  wrapper.style.borderRadius = '0px';
+                } else {
+                  wrapper.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+                }
+                if (this.settings.enableBoxDecorationBreak ?? true) {
+                  wrapper.style.boxDecorationBreak = 'clone';
+                  wrapper.style.WebkitBoxDecorationBreak = 'clone';
+                }
+                this.applyBorderStyleToElement(wrapper, headingEntry.textColor, headingEntry.backgroundColor);
+              } else {
+                wrapper.style.background = '';
+                wrapper.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, this.settings.backgroundOpacity ?? 25);
+                wrapper.style.paddingLeft = wrapper.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+                if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
+                  wrapper.style.borderRadius = '0px';
+                } else {
+                  wrapper.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+                }
+                if (this.settings.enableBoxDecorationBreak ?? true) {
+                  wrapper.style.boxDecorationBreak = 'clone';
+                  wrapper.style.WebkitBoxDecorationBreak = 'clone';
+                }
+                this.applyBorderStyleToElement(wrapper, null, headingEntry.backgroundColor);
+              }
+              const children = Array.from(headingEl.childNodes);
+              children.forEach(ch => wrapper.appendChild(ch));
+              headingEl.appendChild(wrapper);
+              try { const info = this._domRefs.get(block); if (info) info.matchCount = 1; } catch (e) {}
             }
-            if (this.settings.enableBoxDecorationBreak ?? true) {
-              span.style.boxDecorationBreak = 'clone';
-              span.style.WebkitBoxDecorationBreak = 'clone';
-            }
-            this.applyBorderStyleToElement(span, headingEntry.textColor, headingEntry.backgroundColor);
-          } else if (headingEntry.styleType === 'highlight') {
-            span.style.background = '';
-            span.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, this.settings.backgroundOpacity ?? 25);
-            span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
-            if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
-              span.style.borderRadius = '0px';
-            } else {
-              span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
-            }
-            if (this.settings.enableBoxDecorationBreak ?? true) {
-              span.style.boxDecorationBreak = 'clone';
-              span.style.WebkitBoxDecorationBreak = 'clone';
-            }
-            this.applyBorderStyleToElement(span, null, headingEntry.backgroundColor);
+            continue;
           } else {
             const c = headingEntry.color || headingEntry.textColor;
-            span.style.color = c;
-            try { span.style.setProperty('--highlight-color', c); } catch (e) {}
+            if (c) {
+              headingEl.style.color = c;
+              try { headingEl.style.setProperty('--highlight-color', c); } catch (e) {}
+              try { const info = this._domRefs.get(block); if (info) info.matchCount = 1; } catch (e) {}
+              continue;
+            }
           }
-          node.replaceWith(span);
-          try {
-            const info = this._domRefs.get(block);
-            if (info) info.matchCount = 1;
-          } catch (e) {}
-          continue;
         }
       }
       
@@ -4116,7 +4123,10 @@ module.exports = class AlwaysColorText extends Plugin {
             let hashes = 0;
             while (i < lineEnd && text[i] === '#' && hashes < 6) { hashes++; i++; }
             if (hashes > 0 && i < lineEnd && text[i] === ' ') {
-              const start = from + lineStart;
+              // Skip whitespace after hashes
+              while (i < lineEnd && text[i] === ' ') i++;
+              // Only color from the actual content start to the line end
+              const start = from + i;
               const end = from + lineEnd;
               if (headingEntry.backgroundColor) {
                 const tc = headingEntry.textColor || 'currentColor';
