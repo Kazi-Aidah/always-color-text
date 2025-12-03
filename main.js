@@ -2596,13 +2596,33 @@ module.exports = class AlwaysColorText extends Plugin {
     const nonOverlapping = [];
     for (const m of matches) {
       let overlaps = false;
-      for (const existing of nonOverlapping) {
+      const overlappingIndices = [];
+      for (let i = 0; i < nonOverlapping.length; i++) {
+        const existing = nonOverlapping[i];
         if (m.start < existing.end && m.end > existing.start) {
           overlaps = true;
-          break;
+          overlappingIndices.push(i);
         }
       }
-      if (!overlaps) nonOverlapping.push(m);
+      if (!overlaps) {
+        nonOverlapping.push(m);
+      } else {
+        // Check if the new match is longer than ALL overlapping matches
+        // If so, remove the overlapping ones and add this longer match instead
+        const mLength = m.end - m.start;
+        const allShorter = overlappingIndices.every(i => {
+          const existing = nonOverlapping[i];
+          return (existing.end - existing.start) < mLength;
+        });
+        
+        if (allShorter) {
+          // Remove overlapping matches in reverse order to maintain indices
+          for (let i = overlappingIndices.length - 1; i >= 0; i--) {
+            nonOverlapping.splice(overlappingIndices[i], 1);
+          }
+          nonOverlapping.push(m);
+        }
+      }
     }
     
     // Build DOM fragment with highlights
@@ -3469,15 +3489,27 @@ module.exports = class AlwaysColorText extends Plugin {
           // Check if the full word is blacklisted (supports patterns)
           if (this.isWordBlacklisted(fullWord)) continue;
           
-          // Skip if overlaps with any text+bg entry
-          let overlapsWithTextBg = false;
-          for (const tbMatch of matches.filter(m => m.isTextBg)) {
+          const overlappingTextBgIndices = [];
+          for (let i = 0; i < matches.length; i++) {
+            const tbMatch = matches[i];
+            if (!tbMatch || !tbMatch.isTextBg) continue;
             if (match.index < tbMatch.end && match.index + matchedText.length > tbMatch.start) {
-              overlapsWithTextBg = true;
-              break;
+              overlappingTextBgIndices.push(i);
             }
           }
-          if (overlapsWithTextBg) continue;
+          if (overlappingTextBgIndices.length > 0) {
+            const mLength = matchedText.length;
+            const allShorter = overlappingTextBgIndices.every(i => {
+              const s = matches[i];
+              return (s.end - s.start) < mLength;
+            });
+            if (!allShorter) {
+              continue;
+            }
+            for (let i = overlappingTextBgIndices.length - 1; i >= 0; i--) {
+              matches.splice(overlappingTextBgIndices[i], 1);
+            }
+          }
           
           const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
           matches.push({ 
@@ -3518,10 +3550,14 @@ module.exports = class AlwaysColorText extends Plugin {
       if (matches.length > 1) {
         debugLog('OVERLAP', `Before resolution: ${matches.length} matches found`);
         
-        // Sort by start position, then by LENGTH (longest first)
         matches.sort((a, b) => {
           if (a.start !== b.start) return a.start - b.start;
-          return (b.end - b.start) - (a.end - a.start); // Longer first
+          const lenA = (a.end - a.start);
+          const lenB = (b.end - b.start);
+          if (lenA !== lenB) return lenB - lenA;
+          if (a.isTextBg && !b.isTextBg) return -1;
+          if (!a.isTextBg && b.isTextBg) return 1;
+          return 0;
         });
         
         // Use a greedy algorithm: iterate through sorted matches and skip any that overlap
@@ -3682,10 +3718,14 @@ module.exports = class AlwaysColorText extends Plugin {
       // Remove overlapping matches, prefer longest - handles overlaps from Partial Match and Symbol-Word features
       // (main loop overlaps are already resolved above)
       if (matches.length > 1) {
-        // Sort by start position, then by LENGTH (longest first)
         matches.sort((a, b) => {
           if (a.start !== b.start) return a.start - b.start;
-          return (b.end - b.start) - (a.end - a.start); // Longer first
+          const lenA = (a.end - a.start);
+          const lenB = (b.end - b.start);
+          if (lenA !== lenB) return lenB - lenA;
+          if (a.isTextBg && !b.isTextBg) return -1;
+          if (!a.isTextBg && b.isTextBg) return 1;
+          return 0;
         });
         
         // Use a greedy algorithm to remove overlaps
@@ -4286,19 +4326,26 @@ module.exports = class AlwaysColorText extends Plugin {
         iterCount++;
         const matchedText = match[0];
         
-        // Check if this match overlaps with any text+bg entry
         const matchStart = from + match.index;
         const matchEnd = from + match.index + matchedText.length;
-        let overlapsWithTextBg = false;
-        for (const tbMatch of matches.filter(m => m.isTextBg)) {
+        const overlappingTextBgIndices = [];
+        for (let i = 0; i < matches.length; i++) {
+          const tbMatch = matches[i];
+          if (!tbMatch || !tbMatch.isTextBg) continue;
           if (matchStart < tbMatch.end && matchEnd > tbMatch.start) {
-            overlapsWithTextBg = true;
-            break;
+            overlappingTextBgIndices.push(i);
           }
         }
-        if (overlapsWithTextBg) {
-          try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
-          continue;
+        if (overlappingTextBgIndices.length > 0) {
+          const mLength = matchEnd - matchStart;
+          const allShorter = overlappingTextBgIndices.every(i => (matches[i].end - matches[i].start) < mLength);
+          if (!allShorter) {
+            try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+            continue;
+          }
+          for (let i = overlappingTextBgIndices.length - 1; i >= 0; i--) {
+            matches.splice(overlappingTextBgIndices[i], 1);
+          }
         }
 
         if (hasHeadingBlacklist && headingRanges && headingRanges.length > 0) {
@@ -4416,15 +4463,43 @@ module.exports = class AlwaysColorText extends Plugin {
     if (matches.length > 1) {
       const all = matches.slice().sort((a, b) => {
         if (a.start !== b.start) return a.start - b.start;
-        return (b.end - b.start) - (a.end - a.start);
+        const lenA = (a.end - a.start);
+        const lenB = (b.end - b.start);
+        if (lenA !== lenB) return lenB - lenA;
+        if (a.isTextBg && !b.isTextBg) return -1;
+        if (!a.isTextBg && b.isTextBg) return 1;
+        return 0;
       });
       const selected = [];
       for (const m of all) {
         let overlaps = false;
-        for (const s of selected) {
-          if (m.start < s.end && m.end > s.start) { overlaps = true; break; }
+        const overlappingIndices = [];
+        for (let i = 0; i < selected.length; i++) {
+          const s = selected[i];
+          if (m.start < s.end && m.end > s.start) {
+            overlaps = true;
+            overlappingIndices.push(i);
+          }
         }
-        if (!overlaps) selected.push(m);
+        if (!overlaps) {
+          selected.push(m);
+        } else {
+          // Check if the new match is longer than ALL overlapping matches
+          // If so, remove the overlapping ones and add this longer match instead
+          const mLength = m.end - m.start;
+          const allShorter = overlappingIndices.every(i => {
+            const s = selected[i];
+            return (s.end - s.start) < mLength;
+          });
+          
+          if (allShorter) {
+            // Remove overlapping matches in reverse order to maintain indices
+            for (let i = overlappingIndices.length - 1; i >= 0; i--) {
+              selected.splice(overlappingIndices[i], 1);
+            }
+            selected.push(m);
+          }
+        }
       }
       matches = selected;
     }
@@ -4696,15 +4771,24 @@ module.exports = class AlwaysColorText extends Plugin {
         const matchStart = baseFrom + match.index;
         const matchEnd = baseFrom + match.index + matchedText.length;
         
-        // Skip if overlaps with text+bg entries
-        let overlapsWithTextBg = false;
-        for (const existing of existingMatches) {
-          if (existing.isTextBg && matchStart < existing.end && matchEnd > existing.start) {
-            overlapsWithTextBg = true;
-            break;
+        const overlappingTextBgIndices = [];
+        for (let i = 0; i < existingMatches.length; i++) {
+          const existing = existingMatches[i];
+          if (!existing || !existing.isTextBg) continue;
+          if (matchStart < existing.end && matchEnd > existing.start) {
+            overlappingTextBgIndices.push(i);
           }
         }
-        if (overlapsWithTextBg) continue;
+        if (overlappingTextBgIndices.length > 0) {
+          const mLength = matchEnd - matchStart;
+          const allShorter = overlappingTextBgIndices.every(i => (existingMatches[i].end - existingMatches[i].start) < mLength);
+          if (!allShorter) {
+            continue;
+          }
+          for (let i = overlappingTextBgIndices.length - 1; i >= 0; i--) {
+            existingMatches.splice(overlappingTextBgIndices[i], 1);
+          }
+        }
 
         if (headingRanges && headingRanges.length > 0) {
           let inHeading = false;
@@ -4818,15 +4902,24 @@ module.exports = class AlwaysColorText extends Plugin {
         const matchStart = chunkFrom + match.index;
         const matchEnd = chunkFrom + match.index + matchedText.length;
         
-        // Skip if overlaps with text+bg entries
-        let overlapsWithTextBg = false;
-        for (const existing of existingMatches) {
-          if (existing.isTextBg && matchStart < existing.end && matchEnd > existing.start) {
-            overlapsWithTextBg = true;
-            break;
+        const overlappingTextBgIndices2 = [];
+        for (let i = 0; i < existingMatches.length; i++) {
+          const existing = existingMatches[i];
+          if (!existing || !existing.isTextBg) continue;
+          if (matchStart < existing.end && matchEnd > existing.start) {
+            overlappingTextBgIndices2.push(i);
           }
         }
-        if (overlapsWithTextBg) continue;
+        if (overlappingTextBgIndices2.length > 0) {
+          const mLength2 = matchEnd - matchStart;
+          const allShorter2 = overlappingTextBgIndices2.every(i => (existingMatches[i].end - existingMatches[i].start) < mLength2);
+          if (!allShorter2) {
+            continue;
+          }
+          for (let i = overlappingTextBgIndices2.length - 1; i >= 0; i--) {
+            existingMatches.splice(overlappingTextBgIndices2[i], 1);
+          }
+        }
 
         if (headingRanges && headingRanges.length > 0) {
           let inHeading = false;
@@ -4944,10 +5037,33 @@ module.exports = class AlwaysColorText extends Plugin {
     const selected = [];
     for (const m of all) {
       let overlaps = false;
-      for (const s of selected) {
-        if (m.start < s.end && m.end > s.start) { overlaps = true; break; }
+      const overlappingIndices = [];
+      for (let i = 0; i < selected.length; i++) {
+        const s = selected[i];
+        if (m.start < s.end && m.end > s.start) { 
+          overlaps = true; 
+          overlappingIndices.push(i);
+        }
       }
-      if (!overlaps) selected.push(Object.assign({}, m));
+      if (!overlaps) {
+        selected.push(Object.assign({}, m));
+      } else {
+        // Check if the new match is longer than ALL overlapping matches
+        // If so, remove the overlapping ones and add this longer match instead
+        const mLength = m.end - m.start;
+        const allShorter = overlappingIndices.every(i => {
+          const s = selected[i];
+          return (s.end - s.start) < mLength;
+        });
+        
+        if (allShorter) {
+          // Remove overlapping matches in reverse order to maintain indices
+          for (let i = overlappingIndices.length - 1; i >= 0; i--) {
+            selected.splice(overlappingIndices[i], 1);
+          }
+          selected.push(Object.assign({}, m));
+        }
+      }
     }
     const sortedSel = selected.sort((a, b) => a.start - b.start || a.end - b.end).slice(0, 1000);
     const limited = (() => {
@@ -7935,7 +8051,7 @@ class ColorPickerModal extends Modal {
       } else {
         match = eq(e.pattern || '', s) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)));
       }
-      if (match || (this.plugin.settings.partialMatch && !e.isRegex && ((caseSensitive ? String(s) : String(s).toLowerCase()).includes(caseSensitive ? String(e.pattern || '') : String(e.pattern || '').toLowerCase())))) {
+      if (match) {
         if (e.textColor && e.textColor !== 'currentColor') initText = e.textColor;
         if (e.backgroundColor) initBg = e.backgroundColor;
         existingStyle = e.styleType || ((e.textColor && e.textColor !== 'currentColor') && e.backgroundColor ? 'both' : (e.backgroundColor ? 'highlight' : 'text'));
