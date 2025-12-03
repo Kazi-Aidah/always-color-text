@@ -1383,6 +1383,59 @@ module.exports = class AlwaysColorText extends Plugin {
     try { this.forceRefreshAllReadingViews(); } catch (e) {}
   }
 
+  async exportSettingsToVault() {
+    const payload = this.buildExportPayload();
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const fname = `always-color-text-export-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+    const path = `.obsidian/plugins/always-color-text/${fname}`;
+    await this.app.vault.adapter.write(path, JSON.stringify(payload, null, 2));
+    return path;
+  }
+
+  async importSettingsFromJson(text) {
+    let obj = null;
+    try { obj = JSON.parse(String(text || '')); } catch (e) { throw new Error('invalid json'); }
+    const incoming = obj && obj.settings ? obj.settings : obj;
+    if (!incoming || typeof incoming !== 'object') throw new Error('invalid payload');
+    const merged = Object.assign({}, this.settings, incoming);
+    this.settings = merged;
+    try { this.sanitizeSettings(); } catch (e) {}
+    await this.saveSettings();
+    this.reconfigureEditorExtensions();
+    this.forceRefreshAllEditors();
+    this.forceRefreshAllReadingViews();
+  }
+
+  buildExportPayload() {
+    return { plugin: 'always-color-text', version: (this.manifest && this.manifest.version) || '', settings: this.settings };
+  }
+
+  async exportSettingsToPickedLocation() {
+    const payload = this.buildExportPayload();
+    const json = JSON.stringify(payload, null, 2);
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const fname = `always-color-text-export-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+    if (typeof window !== 'undefined' && window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({ suggestedName: fname, types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+      const writable = await handle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      return fname;
+    } else {
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { try { document.body.removeChild(a); } catch (e) {} try { URL.revokeObjectURL(url); } catch (e) {} }, 0);
+      return fname;
+    }
+  }
+
   sanitizeSettings() {
     try {
       const s = this.settings || {};
@@ -7619,6 +7672,43 @@ class ColorSettingTab extends PluginSettingTab {
     // Store reference to disabled files container for updating
     this._disabledFilesContainer = containerEl.createDiv();
     this._refreshDisabledFiles();
+    containerEl.createEl('h2', { text: 'Data Export/Import' });
+    new Setting(containerEl)
+      .setName('Export plugin data')
+      .setDesc('Export settings, words, and rules to a JSON file.')
+      .addButton(b => b.setButtonText('Export').onClick(async () => {
+        try {
+          const fname = await this.plugin.exportSettingsToPickedLocation();
+          new Notice(`Exported: ${fname}`);
+        } catch (e) {
+          new Notice('Export failed');
+        }
+      }));
+    new Setting(containerEl)
+      .setName('Import plugin data')
+      .setDesc('Import settings from a JSON file')
+      .addButton(b => b.setButtonText('Import').onClick(() => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+        input.addEventListener('change', () => {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              await this.plugin.importSettingsFromJson(String(reader.result || ''));
+              this._initializedSettingsUI = false;
+              this.display();
+              new Notice('Import completed');
+            } catch (e) {
+              new Notice('Import failed');
+            }
+          };
+          reader.readAsText(file);
+        });
+        input.click();
+      }));
     
   }
 
