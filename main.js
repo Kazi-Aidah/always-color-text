@@ -44,20 +44,6 @@ const debugWarn = (tag, ...args) => {
   }
 };
 
-const TRANSLATIONS = {
-  en: {
-    settings_title: 'Always Color Text Settings',
-    latest_release_notes_label: 'Latest Release Notes',
-    latest_release_notes_desc: 'View the most recent plugin release notes',
-    open_changelog_button: 'Open Changelog',
-    language_label: 'Language',
-    language_desc: 'Select the language used in this plugin',
-    language_en: 'English',
-    language_es: 'Spanish',
-    language_fr: 'French'
-  }
-};
-
 module.exports = class AlwaysColorText extends Plugin {
   constructor(...args) {
     super(...args);
@@ -112,7 +98,7 @@ module.exports = class AlwaysColorText extends Plugin {
     // Throttle perf-gate warnings (timestamp ms)
     this._lastPerfWarning = 0;
     this._commandsRegistered = false;
-    this._translations = Object.assign({}, TRANSLATIONS);
+    this._translations = {};
     this._externalTranslations = {};
   }
 
@@ -120,8 +106,8 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       const pref = (this.settings && this.settings.language) || 'en';
       const lang = pref === 'auto' ? this.resolveSystemLanguageCode() : pref;
-      const base = this._translations || TRANSLATIONS;
-      const dict = (base && base[lang]) || (base && base.en) || TRANSLATIONS.en;
+      const base = this._translations || {};
+      const dict = (base && base[lang]) || (base && base.en) || {};
       let str = (dict && dict[key]) ? dict[key] : (fallback || key);
       if (params && str && typeof str === 'string') {
         try {
@@ -141,7 +127,7 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       const raw = (navigator && navigator.language) ? navigator.language : 'en';
       const code = String(raw).toLowerCase().split('-')[0].split('_')[0];
-      const dict = this._translations || TRANSLATIONS;
+      const dict = this._translations || {};
       if (dict[code]) return code;
       return 'en';
     } catch (e) {
@@ -164,7 +150,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const base = this.getPluginFolderPath();
       const dir = `${base}/i18n`;
       const exists = await adapter.exists(dir);
-      const merged = Object.assign({}, TRANSLATIONS);
+      const merged = {};
       if (exists) {
         const listing = await adapter.list(dir);
         const files = Array.isArray(listing?.files) ? listing.files : [];
@@ -181,17 +167,17 @@ module.exports = class AlwaysColorText extends Plugin {
       this._externalTranslations = merged;
       this._translations = merged;
     } catch (e) {
-      this._translations = Object.assign({}, TRANSLATIONS);
+      this._translations = {};
     }
   }
 
   getAvailableLanguages() {
     try {
-      const dict = this._translations || TRANSLATIONS;
+      const dict = this._translations || {};
       const list = Object.keys(dict);
       return ['auto', ...list];
     } catch (e) {
-      return ['auto','en'];
+      return ['auto'];
     }
   }
 

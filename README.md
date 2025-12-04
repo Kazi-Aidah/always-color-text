@@ -103,6 +103,28 @@ Available in Obsidian Community Plugins. Check [Release Notes](https://github.co
 ### Questions or Suggestions?
 Create a new issue [here](https://github.com/Kazi-Aidah/always-color-text/issues) to report bugs or request new features!
 
+
+
+
+## Contributing Translations
+Want to add your language to Always Color Text?
+
+1. Go to `i18n/` and copy `en.json`.
+2. Rename it to your language code (like `es.json`, `fr.json`).
+3. Translate the values only, like this:
+
+```json
+{
+    "notice_import_completed": "ইম্পোর্ট সম্পন্ন",
+    "key": "translation"
+}
+```
+
+4. Submit a pull request with your translation file in i18n/.
+
+That's it! Your language will be available to all users.
+
+
 ---
 
 ## My personal favourite use cases,
