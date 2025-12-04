@@ -125,6 +125,8 @@ Want to add your language to Always Color Text?
 
 That's it! Your language will be available to all users.
 
+### Contributors
+- [@wanghong322](https://github.com/wanghong322) – Simplified Chinese Translation
 
 ---
 
