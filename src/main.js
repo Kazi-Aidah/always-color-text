@@ -144,7 +144,7 @@ module.exports = class AlwaysColorText extends Plugin {
       try { raw = moment && typeof moment.locale === 'function' ? moment.locale() : raw; } catch (_) {}
       if (!raw && navigator && navigator.language) raw = navigator.language;
       const code = String(raw).toLowerCase().split('-')[0].split('_')[0];
-      const aliases = { bd: 'bn' };
+      const aliases = { bd: 'bn', zh: 'zh_cn' };
       const resolved = aliases[code] || code;
       const dict = (this._translations && typeof this._translations === 'object') ? this._translations : ((typeof locales === 'object' && locales) ? locales : {});
       if (dict && dict[resolved]) return resolved;

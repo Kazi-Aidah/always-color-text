@@ -4,6 +4,7 @@ const fr = require('./i18n/fr.json');
 const hi = require('./i18n/hi.json');
 const it = require('./i18n/it.json');
 const bn = require('./i18n/bn.json');
+const zh_cn = require('./i18n/zh_cn.json');
 
 module.exports = {
   en,
@@ -11,5 +12,6 @@ module.exports = {
   fr,
   hi,
   it,
-  bn
+  bn,
+  zh_cn
 };
