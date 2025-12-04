@@ -9,9 +9,142 @@ const {
   debounce,
   MarkdownRenderer
 } = require('obsidian');
-const { RangeSetBuilder } = require('@codemirror/state');
-const { Decoration, ViewPlugin } = require('@codemirror/view');
-const { syntaxTree } = require('@codemirror/language');
+
+// Moment is provided by Obsidian
+const moment = window.moment;
+
+// CodeMirror utilities
+let RangeSetBuilder, Decoration, ViewPlugin;
+try {
+  RangeSetBuilder = require('@codemirror/state').RangeSetBuilder;
+  Decoration = require('@codemirror/view').Decoration;
+  ViewPlugin = require('@codemirror/view').ViewPlugin;
+} catch (e) {
+  // Fallback if not available
+  RangeSetBuilder = class {};
+  Decoration = { mark: () => ({}) };
+  ViewPlugin = { fromClass: () => ({}) };
+}
+
+// English translations bundled directly
+const locales = {
+  en: {
+    "settings_title": "Always Color Text Settings",
+    "latest_release_notes_label": "Latest Release Notes",
+    "latest_release_notes_desc": "View the most recent plugin release notes",
+    "open_changelog_button": "Open Changelog",
+    "language_label": "Language",
+    "language_desc": "Select the language to be used in this plugin",
+    "language_en": "English",
+    "language_es": "Spanish",
+    "language_fr": "French",
+    "ribbon_title": "Always color text",
+    "notice_enabled": "Always color text enabled",
+    "notice_disabled": "Always color text disabled",
+    "file_menu_enable": "Enable always color text for this file",
+    "file_menu_disable": "Disable always color text for this file",
+    "menu_color_once": "Color Once",
+    "menu_highlight_once": "Highlight Once",
+    "menu_always_color_text": "Always color text",
+    "menu_remove_always_color_text": "Remove Always Color Text",
+    "menu_blacklist_word": "Blacklist Word from Coloring",
+    "notice_blacklisted_cannot_color": "\"{word}\" is blacklisted and cannot be colored.",
+    "notice_removed_always_color": "Removed always coloring for \"{word}\".",
+    "notice_added_to_blacklist": "\"{word}\" added to blacklist.",
+    "notice_already_blacklisted": "\"{word}\" is already blacklisted.",
+    "command_color_selected": "Color Selected Text",
+    "command_toggle_current": "Enable/Disable coloring for current document",
+    "command_toggle_global": "Enable/Disable Always Color Text",
+    "command_run_self_tests": "Run Always Color Text self-tests",
+    "command_show_release_notes": "Show Latest Release Notes",
+    "notice_select_text_first": "Please select some text first.",
+    "notice_no_active_file": "No active file to toggle coloring for.",
+    "notice_coloring_enabled_for_path": "Coloring enabled for {path}",
+    "notice_coloring_disabled_for_path": "Coloring disabled for {path}",
+    "notice_global_enabled": "Always Color Text Enabled",
+    "notice_global_disabled": "Always Color Text Disabled",
+    "notice_self_tests_passed": "Self-tests passed: {details}",
+    "notice_self_tests_failed": "Self-tests failed: {details}",
+    "notice_self_tests_error": "Self-tests error: ",
+    "notice_unable_open_changelog": "Unable to open changelog modal.",
+    "header_plugin_name": "Always Color Text",
+    "disabled_files_header": "Files with coloring disabled:",
+    "tooltip_enable_for_file": "Enable for this file",
+    "replace_default_swatches": "Replace default swatches",
+    "replace_default_swatches_desc": "If this is on, only your custom colors will show up in the color picker. No default ones!",
+    "use_swatch_names": "Use swatch names for coloring text",
+    "use_swatch_names_desc": "Show a dropdown of swatch names next to word/pattern inputs",
+    "language_auto": "System Default",
+    "btn_add_color": "+ Add color",
+    "enable_document_color": "Enable document color",
+    "color_in_reading_mode": "Color in reading mode",
+    "show_toggle_statusbar": "Show Toggle in Status Bar",
+    "show_toggle_ribbon": "Show Toggle icon in ribbon",
+    "show_toggle_command": "Show Toggle in command",
+    "case_sensitive": "Case sensitive",
+    "case_sensitive_desc": "If this is on, \"word\" and \"Word\" are treated as different. If it's off, they're colored the same.",
+    "partial_match": "Partial match",
+    "partial_match_desc": "If enabled, the whole word will be colored if any colored word is found inside it (e.g., \"as\" colors \"Jasper\").",
+    "regex_support": "Regex support",
+    "regex_support_desc": "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.",
+    "disable_regex_safety": "Disable regex safety",
+    "disable_regex_safety_desc": "Allow complex or potentially dangerous expressions. May cause performance issues or freezes.",
+    "always_colored_texts_header": "Always Colored Texts",
+    "always_colored_texts_desc": "Here's where you manage your word/patterns and their colors.",
+    "search_colored_words_placeholder": "Search colored words/patterns…",
+    "sort_label_last-added": "Sort: Last Added",
+    "sort_label_a-z": "Sort: A-Z",
+    "sort_label_reverse-a-z": "Sort: Z-A",
+    "sort_label_style-order": "Sort: Style Order",
+    "sort_label_color": "Sort: Color",
+    "btn_add_new_word": "+ Add new colored word / pattern",
+    "btn_presets": "Presets",
+    "tooltip_delete_all_words": "Delete all defined words/patterns",
+    "confirm_delete_all_title": "Delete all words",
+    "confirm_delete_all_desc": "Are you sure you want to delete all your colored words/patterns? You can't undo this!",
+    "blacklist_words_header": "Blacklist words",
+    "blacklist_words_desc": "Keywords or patterns here will never be colored, even for partial matches.",
+    "show_blacklist_menu": "Show Blacklist words in right-click menu",
+    "show_blacklist_menu_desc": "Adds a right-click menu item to blacklist selected text from coloring.",
+    "search_blacklist_placeholder": "Search blacklisted words or patterns…",
+    "btn_add_blacklist": "+ Add blacklist word or pattern",
+    "tooltip_delete_all_blacklist": "Delete all blacklisted words/patterns",
+    "confirm_delete_all_blacklist_title": "Delete all blacklisted words",
+    "confirm_delete_all_blacklist_desc": "Are you sure you want to delete all blacklist entries? You can't undo this!",
+    "file_folder_rules_header": "File & Folder Coloring Rules",
+    "file_folder_rules_desc": "Control coloring with name matching, exact paths, or regex patterns.",
+    "search_file_folder_rules_placeholder": "Search file/folder rules…",
+    "btn_add_file_folder_rule": "+ Add file/folder rule",
+    "disable_coloring_current_file": "Disable coloring for current file",
+    "btn_disable_for_this_file": "Disable for this file",
+    "notice_no_active_file_to_disable": "No active file to disable coloring for.",
+    "notice_already_disabled_for_path": "Coloring is already disabled for {path}",
+    "data_export_import_header": "Data Export/Import",
+    "export_plugin_data": "Export plugin data",
+    "export_plugin_data_desc": "Export settings, words, and rules to a JSON file.",
+    "btn_export": "Export",
+    "notice_exported": "Exported: {fname}",
+    "notice_export_failed": "Export failed",
+    "import_plugin_data": "Import plugin data",
+    "import_plugin_data_desc": "Import settings from a JSON file",
+    "btn_import": "Import",
+    "notice_import_completed": "Import completed",
+    "notice_import_failed": "Import failed",
+    "pick_color_header": "Pick Color",
+    "selected_text_preview": "Selected Text",
+    "notice_invalid_hex_format": "Invalid hex color format. Use #RRGGBB or #RGB.",
+    "notice_error_saving_changes": "Error saving changes. Please try again.",
+    "notice_invalid_color_format": "Invalid color format.",
+    "changelog_view_on_github": "View on GitHub",
+    "changelog_loading": "Loading releases…",
+    "changelog_no_info": "No release information available.",
+    "changelog_release": "Release",
+    "changelog_no_notes": "No notes",
+    "changelog_failed_to_load": "Failed to load release notes.",
+    "no_rules_configured": "No rules configured.",
+    "no_custom_swatches_yet": "No custom swatches yet. Click \"+ Add color\" to create one."
+  }
+};
         
 // Performance tuning constants for editor decoration
 const EDITOR_PERFORMANCE_CONSTANTS = {
@@ -98,7 +231,7 @@ module.exports = class AlwaysColorText extends Plugin {
     // Throttle perf-gate warnings (timestamp ms)
     this._lastPerfWarning = 0;
     this._commandsRegistered = false;
-    this._translations = {};
+    this._translations = (typeof locales === 'object' && locales) ? locales : {};
     this._externalTranslations = {};
   }
 
@@ -106,7 +239,7 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       const pref = (this.settings && this.settings.language) || 'en';
       const lang = pref === 'auto' ? this.resolveSystemLanguageCode() : pref;
-      const base = this._translations || {};
+      const base = (this._translations && typeof this._translations === 'object') ? this._translations : ((typeof locales === 'object' && locales) ? locales : {});
       const dict = (base && base[lang]) || (base && base.en) || {};
       let str = (dict && dict[key]) ? dict[key] : (fallback || key);
       if (params && str && typeof str === 'string') {
@@ -125,10 +258,12 @@ module.exports = class AlwaysColorText extends Plugin {
 
   resolveSystemLanguageCode() {
     try {
-      const raw = (navigator && navigator.language) ? navigator.language : 'en';
+      let raw = 'en';
+      try { raw = moment && typeof moment.locale === 'function' ? moment.locale() : raw; } catch (_) {}
+      if (!raw && navigator && navigator.language) raw = navigator.language;
       const code = String(raw).toLowerCase().split('-')[0].split('_')[0];
-      const dict = this._translations || {};
-      if (dict[code]) return code;
+      const dict = (this._translations && typeof this._translations === 'object') ? this._translations : ((typeof locales === 'object' && locales) ? locales : {});
+      if (dict && dict[code]) return code;
       return 'en';
     } catch (e) {
       return 'en';
@@ -145,27 +280,11 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   async loadExternalTranslations() {
+    // Translations are bundled via i18n.js - keep them loaded
     try {
-      const adapter = this.app.vault.adapter;
-      const base = this.getPluginFolderPath();
-      const dir = `${base}/i18n`;
-      const exists = await adapter.exists(dir);
-      const merged = {};
-      if (exists) {
-        const listing = await adapter.list(dir);
-        const files = Array.isArray(listing?.files) ? listing.files : [];
-        for (const f of files) {
-          if (!String(f).toLowerCase().endsWith('.json')) continue;
-          const code = String(f).split('/').pop().replace(/\.json$/i, '');
-          try {
-            const text = await adapter.read(f);
-            const obj = JSON.parse(text || '{}');
-            if (obj && typeof obj === 'object') merged[code] = obj;
-          } catch (_) {}
-        }
-      }
-      this._externalTranslations = merged;
-      this._translations = merged;
+      const safeLocales = (typeof locales === 'object' && locales) ? locales : {};
+      this._externalTranslations = safeLocales;
+      this._translations = safeLocales;
     } catch (e) {
       this._translations = {};
     }
@@ -173,7 +292,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
   getAvailableLanguages() {
     try {
-      const dict = this._translations || {};
+      const dict = (this._translations && typeof this._translations === 'object') ? this._translations : ((typeof locales === 'object' && locales) ? locales : {});
       const list = Object.keys(dict);
       return ['auto', ...list];
     } catch (e) {
@@ -190,38 +309,6 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {
       try { debugError('SETTINGS_TAB', 'Failed to initialize settings tab', e); } catch (_) {}
     }
-
-    // Auto-update languages when files are added/modified/deleted in i18n folder
-    try {
-      const i18nDir = `${this.getPluginFolderPath()}/i18n`;
-      this.registerEvent(this.app.vault.on('create', async (file) => {
-        try {
-          const p = file && file.path ? String(file.path) : '';
-          if (p.startsWith(i18nDir) && p.toLowerCase().endsWith('.json')) {
-            await this.loadExternalTranslations();
-            if (this.settingTab) { this.settingTab._initializedSettingsUI = false; this.settingTab.display(); }
-          }
-        } catch (e) {}
-      }));
-      this.registerEvent(this.app.vault.on('modify', async (file) => {
-        try {
-          const p = file && file.path ? String(file.path) : '';
-          if (p.startsWith(i18nDir) && p.toLowerCase().endsWith('.json')) {
-            await this.loadExternalTranslations();
-            if (this.settingTab) { this.settingTab._initializedSettingsUI = false; this.settingTab.display(); }
-          }
-        } catch (e) {}
-      }));
-      this.registerEvent(this.app.vault.on('delete', async (file) => {
-        try {
-          const p = file && file.path ? String(file.path) : '';
-          if (p.startsWith(i18nDir) && p.toLowerCase().endsWith('.json')) {
-            await this.loadExternalTranslations();
-            if (this.settingTab) { this.settingTab._initializedSettingsUI = false; this.settingTab.display(); }
-          }
-        } catch (e) {}
-      }));
-    } catch (e) { try { debugWarn('I18N_WATCH', e); } catch (_) {} }
 
     if (!this.settings.disableToggleModes.ribbon) {
       this.ribbonIcon = this.addRibbonIcon('palette', this.t('ribbon_title','Always color text'), async () => {
