@@ -109,7 +109,7 @@ Create a new issue [here](https://github.com/Kazi-Aidah/always-color-text/issues
 ## Contributing Translations
 Want to add your language to Always Color Text?
 
-1. Go to `i18n/` and copy `en.json`.
+1. Go to `src/i18n/` and copy `en.json`.
 2. Rename it to your language code (like `es.json`, `fr.json`).
 3. Translate the values only, like this:
 
@@ -119,8 +119,9 @@ Want to add your language to Always Color Text?
     "key": "translation"
 }
 ```
+4. Go to `src/i18n.js` and add your language code to the list of supported languages.
 
-4. Submit a pull request with your translation file in i18n/.
+5. Submit a pull request with your translation file in `src/i18n/`.
 
 That's it! Your language will be available to all users.
 
