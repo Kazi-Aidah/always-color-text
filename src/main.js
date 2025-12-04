@@ -144,8 +144,10 @@ module.exports = class AlwaysColorText extends Plugin {
       try { raw = moment && typeof moment.locale === 'function' ? moment.locale() : raw; } catch (_) {}
       if (!raw && navigator && navigator.language) raw = navigator.language;
       const code = String(raw).toLowerCase().split('-')[0].split('_')[0];
+      const aliases = { bd: 'bn' };
+      const resolved = aliases[code] || code;
       const dict = (this._translations && typeof this._translations === 'object') ? this._translations : ((typeof locales === 'object' && locales) ? locales : {});
-      if (dict && dict[code]) return code;
+      if (dict && dict[resolved]) return resolved;
       return 'en';
     } catch (e) {
       return 'en';
@@ -5355,21 +5357,22 @@ class PresetModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     const presets = [
-      { label: 'All Headings (H1-H6)', pattern: '^\\s*#{1,6}\\s+.*$', flags: 'm', examples: ['# Heading'] },
-      { label: 'Dates (YYYY-MM-DD)', pattern: '\\b\\d{4}-\\d{2}-\\d{2}\\b', flags: '', examples: ['2009-01-19'] },
-      { label: 'Times (AM/PM)', pattern: '\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b', flags: 'i', examples: ['9:05pm'] },
-      { label: 'Relative dates', pattern: '\\b(?:today|tomorrow|yesterday|next week|last week)\\b', flags: 'i', examples: ['today, tomorrow'] },
-      { label: 'Basic URLs', pattern: '\\bhttps?://\\S+\\b', flags: '', examples: ['https://example.com'] },
-      { label: 'Markdown links', pattern: '\\[[^\\]]+\\]\\(https?://[^)]+\\)', flags: '', examples: ['[Link](https://example.com)'] },
-      { label: 'Domain names', pattern: '\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b', flags: '', examples: ['example.com'] },
+      { label: this.plugin.t('preset_all_headings','All Headings (H1-H6)'), pattern: '^\\s*#{1,6}\\s+.*$', flags: 'm', examples: ['# Heading'] },
+      { label: this.plugin.t('preset_dates_yyyy_mm_dd','Dates (YYYY-MM-DD)'), pattern: '\\b\\d{4}-\\d{2}-\\d{2}\\b', flags: '', examples: ['2009-01-19'] },
+      { label: this.plugin.t('preset_dates_yyyy_mmm_dd','Dates (YYYY-MMM-DD)'), pattern: '\\b\\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{2}\\b', flags: 'i', examples: ['2025-Jan-19'] },
+      { label: this.plugin.t('preset_times_am_pm','Times (AM/PM)'), pattern: '\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b', flags: 'i', examples: ['9:05pm'] },
+      { label: this.plugin.t('preset_relative_dates','Relative dates'), pattern: '\\b(?:today|tomorrow|yesterday|next week|last week)\\b', flags: 'i', examples: ['today, tomorrow'] },
+      { label: this.plugin.t('preset_basic_urls','Basic URLs'), pattern: '\\bhttps?://\\S+\\b', flags: '', examples: ['https://example.com'] },
+      { label: this.plugin.t('preset_markdown_links','Markdown links'), pattern: '\\[[^\\]]+\\]\\(https?://[^)]+\\)', flags: '', examples: ['[Link](https://example.com)'] },
+      { label: this.plugin.t('preset_domain_names','Domain names'), pattern: '\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b', flags: '', examples: ['example.com'] },
       // { label: 'Status words', pattern: '\\b(?:TODO|DONE|WIP|INPROGRESS|BLOCKED|REVIEW|URGENT)\\b', flags: 'i', examples: ['TODO'] },
       // { label: 'Capitalized names', pattern: '\\b[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*\\b', flags: '', examples: ['John Doe'] },
-      { label: 'Email addresses', pattern: '\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', flags: '', examples: ['name@example.com'] },
-      { label: 'Username mentions', pattern: '@[a-zA-Z0-9_]+', flags: '', examples: ['@username'] },
-      { label: 'Currency', pattern: '\\$\\d+(?:\\.\\d{2})?|\\b[€£¥]\\d+(?:\\.\\d{2})?\\b', flags: '', examples: ['$29.99'] },
-      { label: 'Measurements', pattern: '\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|°C|°F|lbs)\\b', flags: '', examples: ['25kg'] },
-      { label: 'Phone numbers', pattern: '\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b', flags: '', examples: ['123-456-7890'] },
-      { label: 'All texts', pattern: '.+', flags: '', examples: ['This will target all texts.'] }
+      { label: this.plugin.t('preset_email_addresses','Email addresses'), pattern: '\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', flags: '', examples: ['name@example.com'] },
+      { label: this.plugin.t('preset_at_username','@username'), pattern: '@[a-zA-Z0-9_]+', flags: '', examples: ['@username'] },
+      { label: this.plugin.t('preset_currency','Currency'), pattern: '\\$\\d+(?:\\.\\d{2})?|\\b[€£¥]\\d+(?:\\.\\d{2})?\\b', flags: '', examples: ['$29.99'] },
+      { label: this.plugin.t('preset_measurements','Measurements'), pattern: '\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|°C|°F|lbs)\\b', flags: '', examples: ['25kg'] },
+      { label: this.plugin.t('preset_phone_numbers','Phone numbers'), pattern: '\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b', flags: '', examples: ['123-456-7890'] },
+      { label: this.plugin.t('preset_all_texts','All texts'), pattern: '.+', flags: '', examples: ['This will target all texts.'] }
     ];
     const list = contentEl.createDiv();
     presets.forEach(p => {

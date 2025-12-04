@@ -53,6 +53,8 @@ var require_en = __commonJS({
       tooltip_enable_for_file: "Enable for this file",
       replace_default_swatches: "Replace default swatches",
       replace_default_swatches_desc: "If this is on, only your custom colors will show up in the color picker. No default ones!",
+      enable_custom_swatches: "Enable custom swatches",
+      enable_custom_swatches_desc: "If this is on, your custom swatches will show up in the color picker.",
       use_swatch_names: "Use swatch names for coloring text",
       use_swatch_names_desc: "Show a dropdown of swatch names next to word/pattern inputs",
       default_colors_header: "Default Colors",
@@ -136,6 +138,20 @@ var require_en = __commonJS({
       sort_label_color: "Sort: Color",
       btn_add_new_word: "+ Add new colored word / pattern",
       btn_presets: "Presets",
+      preset_all_headings: "All Headings (H1-H6)",
+      preset_dates_yyyy_mm_dd: "Dates (YYYY-MM-DD)",
+      preset_times_am_pm: "Times (AM/PM)",
+      preset_dates_yyyy_mmm_dd: "Dates (YYYY-MMM-DD)",
+      preset_relative_dates: "Relative dates",
+      preset_basic_urls: "Basic URLs",
+      preset_markdown_links: "Markdown links",
+      preset_domain_names: "Domain names",
+      preset_email_addresses: "Email addresses",
+      preset_at_username: "@username",
+      preset_currency: "Currency",
+      preset_measurements: "Measurements",
+      preset_phone_numbers: "Phone numbers",
+      preset_all_texts: "All texts",
       tooltip_delete_all_words: "Delete all defined words/patterns",
       confirm_delete_all_title: "Delete all words",
       confirm_delete_all_desc: "Are you sure you want to delete all your colored words/patterns? You can't undo this!",
@@ -267,6 +283,8 @@ var require_es = __commonJS({
       tooltip_enable_for_file: "Activar para este archivo",
       replace_default_swatches: "Reemplazar muestras predeterminadas",
       replace_default_swatches_desc: "Si est\xE1 activo, solo se mostrar\xE1n tus colores personalizados en el selector de color. \xA1No los predeterminados!",
+      enable_custom_swatches: "Activar muestras personalizadas",
+      enable_custom_swatches_desc: "Si est\xE1 activo, tus muestras personalizadas aparecer\xE1n en el selector de color.",
       use_swatch_names: "Usar nombres de muestras para colorear texto",
       use_swatch_names_desc: "Muestra un desplegable de nombres de muestras junto a las entradas de palabra/patr\xF3n",
       default_colors_header: "Colores Predeterminados",
@@ -350,6 +368,20 @@ var require_es = __commonJS({
       sort_label_color: "Ordenar: Color",
       btn_add_new_word: "+ A\xF1adir nueva palabra/patr\xF3n coloreado",
       btn_presets: "Ajustes predeterminados",
+      preset_all_headings: "Todos los encabezados (H1-H6)",
+      preset_dates_yyyy_mm_dd: "Fechas (YYYY-MM-DD)",
+      preset_times_am_pm: "Horas (AM/PM)",
+      preset_dates_yyyy_mmm_dd: "Fechas (YYYY-MMM-DD)",
+      preset_relative_dates: "Fechas relativas",
+      preset_basic_urls: "URLs b\xE1sicas",
+      preset_markdown_links: "Enlaces Markdown",
+      preset_domain_names: "Nombres de dominio",
+      preset_email_addresses: "Direcciones de correo",
+      preset_at_username: "@usuario",
+      preset_currency: "Moneda",
+      preset_measurements: "Mediciones",
+      preset_phone_numbers: "N\xFAmeros de tel\xE9fono",
+      preset_all_texts: "Todo el texto",
       tooltip_delete_all_words: "Eliminar todas las palabras/patrones definidos",
       confirm_delete_all_title: "Eliminar todas las palabras",
       confirm_delete_all_desc: "\xBFEst\xE1s seguro de que quieres eliminar todas tus palabras/patrones coloreados? \xA1No podr\xE1s deshacer esta acci\xF3n!",
@@ -480,6 +512,8 @@ var require_fr = __commonJS({
       tooltip_enable_for_file: "Activer pour ce fichier",
       replace_default_swatches: "Remplacer les nuanciers par d\xE9faut",
       replace_default_swatches_desc: "Si activ\xE9, seules vos couleurs personnalis\xE9es appara\xEEtront dans le s\xE9lecteur de couleur. Aucune couleur par d\xE9faut !",
+      enable_custom_swatches: "Activer les nuanciers personnalis\xE9s",
+      enable_custom_swatches_desc: "Si activ\xE9, vos nuanciers personnalis\xE9s appara\xEEtront dans le s\xE9lecteur de couleur.",
       use_swatch_names: "Utiliser les noms des nuanciers pour colorer le texte",
       use_swatch_names_desc: "Afficher une liste d\xE9roulante des noms de nuanciers \xE0 c\xF4t\xE9 des champs de saisie de mots/motifs",
       default_colors_header: "Couleurs par d\xE9faut",
@@ -563,6 +597,20 @@ var require_fr = __commonJS({
       sort_label_color: "Trier : Couleur",
       btn_add_new_word: "+ Ajouter un nouveau mot / motif color\xE9",
       btn_presets: "Pr\xE9r\xE9glages",
+      preset_all_headings: "Tous les titres (H1-H6)",
+      preset_dates_yyyy_mm_dd: "Dates (AAAA-MM-JJ)",
+      preset_times_am_pm: "Heures (AM/PM)",
+      preset_dates_yyyy_mmm_dd: "Dates (AAAA-MMM-JJ)",
+      preset_relative_dates: "Dates relatives",
+      preset_basic_urls: "URLs basiques",
+      preset_markdown_links: "Liens Markdown",
+      preset_domain_names: "Noms de domaine",
+      preset_email_addresses: "Adresses e\u2011mail",
+      preset_at_username: "@nom d\u2019utilisateur",
+      preset_currency: "Monnaie",
+      preset_measurements: "Mesures",
+      preset_phone_numbers: "Num\xE9ros de t\xE9l\xE9phone",
+      preset_all_texts: "Tout le texte",
       tooltip_delete_all_words: "Supprimer tous les mots/motifs d\xE9finis",
       confirm_delete_all_title: "Supprimer tous les mots",
       confirm_delete_all_desc: "\xCAtes-vous s\xFBr de vouloir supprimer tous vos mots/motifs color\xE9s ? Cette action est irr\xE9versible !",
@@ -693,6 +741,8 @@ var require_hi = __commonJS({
       tooltip_enable_for_file: "\u0907\u0938 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
       replace_default_swatches: "\u0921\u093F\u092B\u0949\u0932\u094D\u091F \u0938\u094D\u0935\u0948\u091A\u0947\u0938 \u092C\u0926\u0932\u0947\u0902",
       replace_default_swatches_desc: "\u092F\u0926\u093F \u092F\u0939 \u091A\u093E\u0932\u0942 \u0939\u0948, \u0924\u094B \u0915\u0947\u0935\u0932 \u0906\u092A\u0915\u0947 \u0915\u0938\u094D\u091F\u092E \u0930\u0902\u0917 \u0939\u0940 \u0915\u0932\u0930 \u092A\u093F\u0915\u0930 \u092E\u0947\u0902 \u0926\u093F\u0916\u0947\u0902\u0917\u0947\u0964 \u0915\u094B\u0908 \u0921\u093F\u092B\u0949\u0932\u094D\u091F \u0928\u0939\u0940\u0902!",
+      enable_custom_swatches: "\u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
+      enable_custom_swatches_desc: "\u092F\u0926\u093F \u092F\u0939 \u091A\u093E\u0932\u0942 \u0939\u0948, \u0924\u094B \u0906\u092A\u0915\u0947 \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938 \u0915\u0932\u0930 \u092A\u093F\u0915\u0930 \u092E\u0947\u0902 \u0926\u093F\u0916\u0947\u0902\u0917\u0947\u0964",
       use_swatch_names: "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u093E\u0908 \u0915\u0947 \u0932\u093F\u090F \u0938\u094D\u0935\u0948\u091A \u0928\u093E\u092E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0947\u0902",
       use_swatch_names_desc: "\u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0907\u0928\u092A\u0941\u091F\u094D\u0938 \u0915\u0947 \u092C\u0917\u0932 \u092E\u0947\u0902 \u0938\u094D\u0935\u0948\u091A \u0928\u093E\u092E\u094B\u0902 \u0915\u093E \u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u0926\u093F\u0916\u093E\u090F\u0901",
       default_colors_header: "\u0921\u093F\u092B\u0949\u0932\u094D\u091F \u0930\u0902\u0917",
@@ -776,6 +826,20 @@ var require_hi = __commonJS({
       sort_label_color: "\u0915\u094D\u0930\u092E: \u0930\u0902\u0917",
       btn_add_new_word: "+ \u0928\u092F\u093E \u0930\u0902\u0917\u093E \u0936\u092C\u094D\u0926 / \u092A\u0948\u091F\u0930\u094D\u0928 \u091C\u094B\u0921\u093C\u0947\u0902",
       btn_presets: "\u092A\u094D\u0930\u0940\u0938\u0947\u091F\u094D\u0938",
+      preset_all_headings: "\u0938\u092D\u0940 \u0939\u0947\u0921\u093F\u0902\u0917\u094D\u0938 (H1-H6)",
+      preset_dates_yyyy_mm_dd: "\u0924\u093F\u0925\u093F\u092F\u093E\u0901 (YYYY-MM-DD)",
+      preset_times_am_pm: "\u0938\u092E\u092F (AM/PM)",
+      preset_dates_yyyy_mmm_dd: "\u0924\u093F\u0925\u093F\u092F\u093E\u0901 (YYYY-MMM-DD)",
+      preset_relative_dates: "\u0938\u093E\u092A\u0947\u0915\u094D\u0937 \u0924\u093F\u0925\u093F\u092F\u093E\u0901",
+      preset_basic_urls: "\u092C\u0947\u0938\u093F\u0915 URL",
+      preset_markdown_links: "\u092E\u093E\u0930\u094D\u0915\u0921\u093E\u0909\u0928 \u0932\u093F\u0902\u0915",
+      preset_domain_names: "\u0921\u094B\u092E\u0947\u0928 \u0928\u093E\u092E",
+      preset_email_addresses: "\u0908\u092E\u0947\u0932 \u092A\u0924\u0947",
+      preset_at_username: "@\u0909\u092A\u092F\u094B\u0917\u0915\u0930\u094D\u0924\u093E \u0928\u093E\u092E",
+      preset_currency: "\u092E\u0941\u0926\u094D\u0930\u093E",
+      preset_measurements: "\u092E\u093E\u092A",
+      preset_phone_numbers: "\u092B\u094B\u0928 \u0928\u0902\u092C\u0930",
+      preset_all_texts: "\u0938\u092D\u0940 \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
       tooltip_delete_all_words: "\u092A\u0930\u093F\u092D\u093E\u0937\u093F\u0924 \u0938\u092D\u0940 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0939\u091F\u093E\u090F\u0901",
       confirm_delete_all_title: "\u0938\u092D\u0940 \u0936\u092C\u094D\u0926 \u0939\u091F\u093E\u090F\u0901",
       confirm_delete_all_desc: "\u0915\u094D\u092F\u093E \u0906\u092A \u0935\u093E\u0915\u0908 \u0905\u092A\u0928\u0947 \u0938\u092D\u0940 \u0930\u0902\u0917\u0947 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902? \u0906\u092A \u0907\u0938\u0947 \u092A\u0942\u0930\u094D\u0935\u0935\u0924 \u0928\u0939\u0940\u0902 \u0915\u0930 \u0938\u0915\u0924\u0947!",
@@ -906,6 +970,8 @@ var require_it = __commonJS({
       tooltip_enable_for_file: "Abilita per questo file",
       replace_default_swatches: "Sostituisci campioni predefiniti",
       replace_default_swatches_desc: "Se attivo, nel selettore colori appariranno solo i tuoi colori personalizzati. Nessuno predefinito!",
+      enable_custom_swatches: "Abilita campioni personalizzati",
+      enable_custom_swatches_desc: "Se attivo, i tuoi campioni personalizzati appariranno nel selettore colori.",
       use_swatch_names: "Usa nomi campioni per colorare il testo",
       use_swatch_names_desc: "Mostra un menu a tendina con i nomi dei campioni accanto ai campi di inserimento parole/pattern",
       default_colors_header: "Colori predefiniti",
@@ -989,6 +1055,20 @@ var require_it = __commonJS({
       sort_label_color: "Ordina: colore",
       btn_add_new_word: "+ Aggiungi nuova parola/pattern colorato",
       btn_presets: "Preset",
+      preset_all_headings: "Tutti i titoli (H1-H6)",
+      preset_dates_yyyy_mm_dd: "Date (AAAA-MM-GG)",
+      preset_times_am_pm: "Orari (AM/PM)",
+      preset_dates_yyyy_mmm_dd: "Date (AAAA-MMM-GG)",
+      preset_relative_dates: "Date relative",
+      preset_basic_urls: "URL di base",
+      preset_markdown_links: "Link Markdown",
+      preset_domain_names: "Nomi di dominio",
+      preset_email_addresses: "Indirizzi email",
+      preset_at_username: "@nome utente",
+      preset_currency: "Valuta",
+      preset_measurements: "Misurazioni",
+      preset_phone_numbers: "Numeri di telefono",
+      preset_all_texts: "Tutti i testi",
       tooltip_delete_all_words: "Elimina tutte le parole/pattern definiti",
       confirm_delete_all_title: "Elimina tutte le parole",
       confirm_delete_all_desc: "Sei sicuro di voler eliminare tutte le tue parole/pattern colorati? Non potrai annullare questa azione!",
@@ -1068,9 +1148,9 @@ var require_it = __commonJS({
   }
 });
 
-// src/i18n/bd.json
-var require_bd = __commonJS({
-  "src/i18n/bd.json"(exports2, module2) {
+// src/i18n/bn.json
+var require_bn = __commonJS({
+  "src/i18n/bn.json"(exports2, module2) {
     module2.exports = {
       __name: "\u09AC\u09BE\u0982\u09B2\u09BE",
       settings_title: "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u09C7\u099F\u09BF\u0982\u09B8",
@@ -1119,6 +1199,8 @@ var require_bd = __commonJS({
       tooltip_enable_for_file: "\u098F\u0987 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       replace_default_swatches: "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u09AA\u09CD\u09B0\u09A4\u09BF\u09B8\u09CD\u09A5\u09BE\u09AA\u09A8 \u0995\u09B0\u09C1\u09A8",
       replace_default_swatches_desc: "\u098F\u099F\u09BF \u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u0995\u09C7\u09AC\u09B2 \u0986\u09AA\u09A8\u09BE\u09B0 \u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B0\u0999\u0997\u09C1\u09B2\u09BF \u0995\u09BE\u09B2\u09BE\u09B0 \u09AA\u09BF\u0995\u09BE\u09B0\u09C7 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7\u0964 \u0995\u09CB\u09A8\u09CB \u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B0\u0999 \u09A8\u09AF\u09BC!",
+      enable_custom_swatches: "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
+      enable_custom_swatches_desc: "\u098F\u099F\u09BF \u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u0986\u09AA\u09A8\u09BE\u09B0 \u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u0995\u09BE\u09B2\u09BE\u09B0 \u09AA\u09BF\u0995\u09BE\u09B0\u09C7 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7\u0964",
       use_swatch_names: "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09BE\u09AF\u09BC\u09A8\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BE\u09AE \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8",
       use_swatch_names_desc: "\u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u0987\u09A8\u09AA\u09C1\u099F\u09C7\u09B0 \u09AA\u09BE\u09B6\u09C7 \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BE\u09AE\u09C7\u09B0 \u09A1\u09CD\u09B0\u09AA\u09A1\u09BE\u0989\u09A8 \u09A6\u09C7\u0996\u09BE\u09A8",
       default_colors_header: "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B0\u0999\u0997\u09C1\u09B2\u09BF",
@@ -1202,6 +1284,20 @@ var require_bd = __commonJS({
       sort_label_color: "\u09B8\u09B0\u09CD\u099F: \u09B0\u0999",
       btn_add_new_word: "+ \u09A8\u09A4\u09C1\u09A8 \u09B0\u0999 \u0995\u09B0\u09BE \u09B6\u09AC\u09CD\u09A6 / \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
       btn_presets: "\u09AA\u09CD\u09B0\u09BF\u09B8\u09C7\u099F\u0997\u09C1\u09B2\u09BF",
+      preset_all_headings: "\u09B8\u09AC \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE (H1-H6)",
+      preset_dates_yyyy_mm_dd: "\u09A4\u09BE\u09B0\u09BF\u0996 (YYYY-MM-DD)",
+      preset_times_am_pm: "\u09B8\u09AE\u09AF\u09BC (AM/PM)",
+      preset_dates_yyyy_mmm_dd: "\u09A4\u09BE\u09B0\u09BF\u0996 (YYYY-MMM-DD)",
+      preset_relative_dates: "\u0986\u09AA\u09C7\u0995\u09CD\u09B7\u09BF\u0995 \u09A4\u09BE\u09B0\u09BF\u0996",
+      preset_basic_urls: "\u09AC\u09C7\u09B8\u09BF\u0995 URL",
+      preset_markdown_links: "\u09AE\u09BE\u09B0\u09CD\u0995\u09A1\u09BE\u0989\u09A8 \u09B2\u09BF\u0982\u0995",
+      preset_domain_names: "\u09A1\u09CB\u09AE\u09C7\u0987\u09A8 \u09A8\u09BE\u09AE",
+      preset_email_addresses: "\u0987\u09AE\u09C7\u0987\u09B2 \u09A0\u09BF\u0995\u09BE\u09A8\u09BE",
+      preset_at_username: "@\u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0\u0995\u09BE\u09B0\u09C0\u09B0 \u09A8\u09BE\u09AE",
+      preset_currency: "\u09AE\u09C1\u09A6\u09CD\u09B0\u09BE",
+      preset_measurements: "\u09AA\u09B0\u09BF\u09AE\u09BE\u09AA",
+      preset_phone_numbers: "\u09AB\u09CB\u09A8 \u09A8\u09AE\u09CD\u09AC\u09B0",
+      preset_all_texts: "\u09B8\u09AC \u099F\u09C7\u0995\u09CD\u09B8\u099F",
       tooltip_delete_all_words: "\u09B8\u0982\u099C\u09CD\u099E\u09BE\u09AF\u09BC\u09BF\u09A4 \u09B8\u09AE\u09B8\u09CD\u09A4 \u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AE\u09C1\u099B\u09C1\u09A8",
       confirm_delete_all_title: "\u09B8\u09AE\u09B8\u09CD\u09A4 \u09B6\u09AC\u09CD\u09A6 \u09AE\u09C1\u099B\u09C1\u09A8",
       confirm_delete_all_desc: "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u09AF\u09C7 \u0986\u09AA\u09A8\u09BF \u0986\u09AA\u09A8\u09BE\u09B0 \u09B8\u09AE\u09B8\u09CD\u09A4 \u09B0\u0999 \u0995\u09B0\u09BE \u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8? \u0986\u09AA\u09A8\u09BF \u098F\u099F\u09BF \u09AA\u09C2\u09B0\u09CD\u09AC\u09BE\u09AC\u09B8\u09CD\u09A5\u09BE\u09AF\u09BC \u09AB\u09BF\u09B0\u09BF\u09AF\u09BC\u09C7 \u0986\u09A8\u09A4\u09C7 \u09AA\u09BE\u09B0\u09AC\u09C7\u09A8 \u09A8\u09BE!",
@@ -1289,14 +1385,14 @@ var require_i18n = __commonJS({
     var fr = require_fr();
     var hi = require_hi();
     var it = require_it();
-    var bd = require_bd();
+    var bn = require_bn();
     module2.exports = {
       en,
       es,
       fr,
       hi,
       it,
-      bd
+      bn
     };
   }
 });
@@ -1433,8 +1529,10 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       if (!raw && navigator && navigator.language) raw = navigator.language;
       const code = String(raw).toLowerCase().split("-")[0].split("_")[0];
+      const aliases = { bd: "bn" };
+      const resolved = aliases[code] || code;
       const dict = this._translations && typeof this._translations === "object" ? this._translations : typeof locales === "object" && locales ? locales : {};
-      if (dict && dict[code]) return code;
+      if (dict && dict[resolved]) return resolved;
       return "en";
     } catch (e) {
       return "en";
@@ -6259,21 +6357,22 @@ var PresetModal = class extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     const presets = [
-      { label: "All Headings (H1-H6)", pattern: "^\\s*#{1,6}\\s+.*$", flags: "m", examples: ["# Heading"] },
-      { label: "Dates (YYYY-MM-DD)", pattern: "\\b\\d{4}-\\d{2}-\\d{2}\\b", flags: "", examples: ["2009-01-19"] },
-      { label: "Times (AM/PM)", pattern: "\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b", flags: "i", examples: ["9:05pm"] },
-      { label: "Relative dates", pattern: "\\b(?:today|tomorrow|yesterday|next week|last week)\\b", flags: "i", examples: ["today, tomorrow"] },
-      { label: "Basic URLs", pattern: "\\bhttps?://\\S+\\b", flags: "", examples: ["https://example.com"] },
-      { label: "Markdown links", pattern: "\\[[^\\]]+\\]\\(https?://[^)]+\\)", flags: "", examples: ["[Link](https://example.com)"] },
-      { label: "Domain names", pattern: "\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b", flags: "", examples: ["example.com"] },
+      { label: this.plugin.t("preset_all_headings", "All Headings (H1-H6)"), pattern: "^\\s*#{1,6}\\s+.*$", flags: "m", examples: ["# Heading"] },
+      { label: this.plugin.t("preset_dates_yyyy_mm_dd", "Dates (YYYY-MM-DD)"), pattern: "\\b\\d{4}-\\d{2}-\\d{2}\\b", flags: "", examples: ["2009-01-19"] },
+      { label: this.plugin.t("preset_dates_yyyy_mmm_dd", "Dates (YYYY-MMM-DD)"), pattern: "\\b\\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{2}\\b", flags: "i", examples: ["2025-Jan-19"] },
+      { label: this.plugin.t("preset_times_am_pm", "Times (AM/PM)"), pattern: "\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b", flags: "i", examples: ["9:05pm"] },
+      { label: this.plugin.t("preset_relative_dates", "Relative dates"), pattern: "\\b(?:today|tomorrow|yesterday|next week|last week)\\b", flags: "i", examples: ["today, tomorrow"] },
+      { label: this.plugin.t("preset_basic_urls", "Basic URLs"), pattern: "\\bhttps?://\\S+\\b", flags: "", examples: ["https://example.com"] },
+      { label: this.plugin.t("preset_markdown_links", "Markdown links"), pattern: "\\[[^\\]]+\\]\\(https?://[^)]+\\)", flags: "", examples: ["[Link](https://example.com)"] },
+      { label: this.plugin.t("preset_domain_names", "Domain names"), pattern: "\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b", flags: "", examples: ["example.com"] },
       // { label: 'Status words', pattern: '\\b(?:TODO|DONE|WIP|INPROGRESS|BLOCKED|REVIEW|URGENT)\\b', flags: 'i', examples: ['TODO'] },
       // { label: 'Capitalized names', pattern: '\\b[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*\\b', flags: '', examples: ['John Doe'] },
-      { label: "Email addresses", pattern: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", flags: "", examples: ["name@example.com"] },
-      { label: "Username mentions", pattern: "@[a-zA-Z0-9_]+", flags: "", examples: ["@username"] },
-      { label: "Currency", pattern: "\\$\\d+(?:\\.\\d{2})?|\\b[\u20AC\xA3\xA5]\\d+(?:\\.\\d{2})?\\b", flags: "", examples: ["$29.99"] },
-      { label: "Measurements", pattern: "\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|\xB0C|\xB0F|lbs)\\b", flags: "", examples: ["25kg"] },
-      { label: "Phone numbers", pattern: "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b", flags: "", examples: ["123-456-7890"] },
-      { label: "All texts", pattern: ".+", flags: "", examples: ["This will target all texts."] }
+      { label: this.plugin.t("preset_email_addresses", "Email addresses"), pattern: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", flags: "", examples: ["name@example.com"] },
+      { label: this.plugin.t("preset_at_username", "@username"), pattern: "@[a-zA-Z0-9_]+", flags: "", examples: ["@username"] },
+      { label: this.plugin.t("preset_currency", "Currency"), pattern: "\\$\\d+(?:\\.\\d{2})?|\\b[\u20AC\xA3\xA5]\\d+(?:\\.\\d{2})?\\b", flags: "", examples: ["$29.99"] },
+      { label: this.plugin.t("preset_measurements", "Measurements"), pattern: "\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|\xB0C|\xB0F|lbs)\\b", flags: "", examples: ["25kg"] },
+      { label: this.plugin.t("preset_phone_numbers", "Phone numbers"), pattern: "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b", flags: "", examples: ["123-456-7890"] },
+      { label: this.plugin.t("preset_all_texts", "All texts"), pattern: ".+", flags: "", examples: ["This will target all texts."] }
     ];
     const list = contentEl.createDiv();
     presets.forEach((p) => {
