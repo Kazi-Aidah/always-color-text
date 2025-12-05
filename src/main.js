@@ -448,90 +448,9 @@ module.exports = class AlwaysColorText extends Plugin {
     }));
     
 
-    // --- Command palette thingy ---
+    // --- Command palette ---
     if (!this.settings.disableToggleModes.command) {
-      this.addCommand({
-        id: 'set-color-for-selection',
-        name: this.t('command_color_selected','Color Selected Text'),
-        editorCallback: (editor, view) => {
-          const word = editor.getSelection().trim();
-          if (!word) {
-            new Notice(this.t('notice_select_text_first','Please select some text first.'));
-            return;
-          }
-          new ColorPickerModal(this.app, this, async (color, result) => {
-            const sel = result || {};
-            const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
-            const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
-            const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === word && !e.isRegex);
-            if (idx !== -1) {
-              const entry = this.settings.wordEntries[idx];
-              if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
-              else if (tc) { entry.color = tc; entry.styleType = 'text'; entry.textColor = null; entry.backgroundColor = null; entry._savedTextColor = tc; }
-              else if (bc) { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
-              else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; entry._savedTextColor = color; }
-            } else {
-              if (tc && bc) {
-                this.settings.wordEntries.push({ pattern: word, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both', _savedTextColor: tc, _savedBackgroundColor: bc });
-              } else if (tc) {
-                this.settings.wordEntries.push({ pattern: word, color: tc, isRegex: false, flags: '', styleType: 'text', _savedTextColor: tc });
-              } else if (bc) {
-                this.settings.wordEntries.push({ pattern: word, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight', _savedBackgroundColor: bc });
-              } else if (color && this.isValidHexColor(color)) {
-                this.settings.wordEntries.push({ pattern: word, color: color, isRegex: false, flags: '', styleType: 'text', _savedTextColor: color });
-              }
-            }
-            await this.saveSettings();
-            this.compileWordEntries();
-            this.compileTextBgColoringEntries();
-            this.reconfigureEditorExtensions();
-            this.forceRefreshAllEditors();
-          }, 'text-and-background', word, false).open();
-        }
-      });
-
-      // --- Enable/Disable coloring for current document ---
-      this.addCommand({
-        id: 'toggle-coloring-for-current-document',
-        name: this.t('command_toggle_current','Enable/Disable coloring for current document'),
-        callback: async () => {
-          const md = this.app.workspace.getActiveFile();
-          if (!md) {
-            new Notice(this.t('notice_no_active_file','No active file to toggle coloring for.'));
-            return;
-          }
-          
-          if (this.settings.disabledFiles.includes(md.path)) {
-            // Re-enable coloring for this file
-            const index = this.settings.disabledFiles.indexOf(md.path);
-            if (index > -1) {
-              this.settings.disabledFiles.splice(index, 1);
-            }
-            await this.saveSettings();
-            new Notice(this.t('notice_coloring_enabled_for_path',`Coloring enabled for ${md.path}`,{path:md.path}));
-          } else {
-            // Disable coloring for this file
-            this.settings.disabledFiles.push(md.path);
-            await this.saveSettings();
-            new Notice(this.t('notice_coloring_disabled_for_path',`Coloring disabled for ${md.path}`,{path:md.path}));
-          }
-        }
-      });
-
-      // --- Enable/Disable Always Color Text globally ---
-      this.addCommand({
-        id: 'toggle-always-color-text',
-        name: this.t('command_toggle_global','Enable/Disable Always Color Text'),
-        callback: async () => {
-          this.settings.enabled = !this.settings.enabled;
-          await this.saveSettings();
-          new Notice(this.settings.enabled ? this.t('notice_global_enabled','Always Color Text Enabled') : this.t('notice_global_disabled','Always Color Text Disabled'));
-          this.reconfigureEditorExtensions();
-          this.forceRefreshAllEditors();
-          this.forceRefreshAllReadingViews();
-        }
-      });
-      this._commandsRegistered = true;
+      this.registerCommandPalette();
     }
 
     // --- Enable plugin features ---
@@ -542,6 +461,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
   registerCommandPalette() {
     try {
+      if (this.settings?.disableToggleModes?.command) return;
       if (this._commandsRegistered) return;
       this.addCommand({
         id: 'set-color-for-selection',
@@ -616,56 +536,27 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       });
       this.addCommand({
-        id: 'run-self-tests',
-        name: this.t('command_run_self_tests','Run Always Color Text self-tests'),
-        callback: async () => {
-          const results = [];
-          try {
-            const alpha = { pattern: 'alpha', color: '#123456', isRegex: false, flags: '', styleType: 'text' };
-            const beta = { pattern: 'beta', textColor: '#111111', backgroundColor: '#222222', isRegex: false, flags: '', styleType: 'both' };
-            const gamma = { pattern: 'gamma', textColor: 'currentColor', backgroundColor: '#333333', isRegex: false, flags: '', styleType: 'highlight' };
-            this.settings.wordEntries = this.settings.wordEntries.filter(e => !e || (e.pattern !== 'alpha' && e.pattern !== 'beta' && e.pattern !== 'gamma'));
-            this.settings.wordEntries.push(alpha, beta, gamma);
-            await this.saveSettings();
-            this.compileWordEntries();
-            this.compileTextBgColoringEntries();
-            // Reload settings twice to simulate cycles
-            await this.loadSettings();
-            await this.saveSettings();
-            await this.loadSettings();
-            // Validate initial persistence
-            const a = this.settings.wordEntries.find(e => e.pattern === 'alpha');
-            const b = this.settings.wordEntries.find(e => e.pattern === 'beta');
-            const g = this.settings.wordEntries.find(e => e.pattern === 'gamma');
-            results.push(a && a.styleType === 'text' && a.color === '#123456' ? 'A: OK' : 'A: FAIL');
-            results.push(b && b.styleType === 'both' && b.textColor === '#111111' && b.backgroundColor === '#222222' ? 'B: OK' : 'B: FAIL');
-            results.push(g && g.styleType === 'highlight' && g.backgroundColor === '#333333' && g.textColor === 'currentColor' ? 'C: OK' : 'C: FAIL');
-            // 4) Update from text to highlight
-            try {
-              a.backgroundColor = a.color; a.textColor = 'currentColor'; a.color = ''; a.styleType = 'highlight';
-            } catch (e) {}
-            // 5) Update from highlight to text
-            try {
-              g.color = g.backgroundColor; g.textColor = null; g.backgroundColor = null; g.styleType = 'text';
-            } catch (e) {}
-            await this.saveSettings();
-            await this.loadSettings();
-            const a2 = this.settings.wordEntries.find(e => e.pattern === 'alpha');
-            const g2 = this.settings.wordEntries.find(e => e.pattern === 'gamma');
-            results.push(a2 && a2.styleType === 'highlight' && a2.backgroundColor === '#123456' && a2.textColor === 'currentColor' && (!a2.color || a2.color === '') ? 'D: OK' : 'D: FAIL');
-            results.push(g2 && g2.styleType === 'text' && g2.color === '#333333' && !g2.backgroundColor ? 'E: OK' : 'E: FAIL');
-            const ok = results.every(r => r.includes('OK'));
-            new Notice(this.t(ok ? 'notice_self_tests_passed' : 'notice_self_tests_failed',`Self-tests ${ok ? 'passed' : 'failed'}: ${results.join(', ')}`,{details:results.join(', ')}));
-          } catch (e) {
-            new Notice(this.t('notice_self_tests_error','Self-tests error: ' + (e && e.message ? e.message : String(e))));
-          }
-        }
-      });
-      this.addCommand({
         id: 'show-latest-release-notes',
         name: this.t('command_show_release_notes','Show Latest Release Notes'),
         callback: async () => {
           try { new ChangelogModal(this.app, this).open(); } catch (e) { new Notice(this.t('notice_unable_open_changelog','Unable to open changelog modal.')); }
+        }
+      });
+      this.addCommand({
+        id: 'manage-colored-texts',
+        name: this.t('command_manage_colored_texts','Manage Colored Texts'),
+        callback: () => {
+          try {
+            this.app.setting.open();
+            const tabId = (this.manifest && this.manifest.id) || 'always-color-text';
+            try { this.app.setting.openTabById(tabId); } catch (e) {}
+            setTimeout(() => {
+              try {
+                const el = document.querySelector('#always-colored-texts-header');
+                if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } catch (_) {}
+            }, 100);
+          } catch (_) {}
         }
       });
       this._commandsRegistered = true;
@@ -734,10 +625,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (typeof pattern !== 'string') return '';
     let p = String(pattern).trim();
     p = this.decodeHtmlEntities(p);
-    if (p.length > 200) throw new Error('Pattern too long');
-    if (!isRegex) {
-      p = p.replace(/[<>"'`]/g, '');
-    }
+    if (isRegex && p.length > 200) throw new Error('Pattern too long');
     return p;
   }
 
@@ -1506,22 +1394,54 @@ module.exports = class AlwaysColorText extends Plugin {
     const d = new Date();
     const pad = n => String(n).padStart(2, '0');
     const fname = `always-color-text-export-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+    // Prefer vault write on mobile platforms where download APIs are unsupported
+    try {
+      const { Platform } = require('obsidian');
+      const isMobile = !!(Platform && (Platform.isMobileApp || Platform.isMobile));
+      if (isMobile) {
+        try {
+          if (typeof navigator !== 'undefined') {
+            const file = new File([json], fname, { type: 'application/json' });
+            const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+            if (canShare && navigator.share) {
+              await navigator.share({ files: [file], title: fname, text: 'Always Color Text export' });
+              return fname;
+            }
+          }
+        } catch (e) {}
+        return await this.exportSettingsToVault();
+      }
+      if (typeof window === 'undefined') {
+        return await this.exportSettingsToVault();
+      }
+    } catch (e) {}
+
     if (typeof window !== 'undefined' && window.showSaveFilePicker) {
-      const handle = await window.showSaveFilePicker({ suggestedName: fname, types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
-      const writable = await handle.createWritable();
-      await writable.write(json);
-      await writable.close();
-      return fname;
+      try {
+        const handle = await window.showSaveFilePicker({ suggestedName: fname, types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+        const writable = await handle.createWritable();
+        await writable.write(json);
+        await writable.close();
+        return fname;
+      } catch (e) {
+        // Fallback to vault write if picker fails (e.g., mobile browsers)
+        return await this.exportSettingsToVault();
+      }
     } else {
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fname;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => { try { document.body.removeChild(a); } catch (e) {} try { URL.revokeObjectURL(url); } catch (e) {} }, 0);
-      return fname;
+      try {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fname;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { try { document.body.removeChild(a); } catch (e) {} try { URL.revokeObjectURL(url); } catch (e) {} }, 0);
+        return fname;
+      } catch (e) {
+        // Final fallback: vault write
+        return await this.exportSettingsToVault();
+      }
     }
   }
 
@@ -1782,10 +1702,17 @@ module.exports = class AlwaysColorText extends Plugin {
   isWholeWordMatch(text, matchStart, matchEnd) {
     const leftChar = matchStart > 0 ? text[matchStart - 1] : '';
     const rightChar = matchEnd < text.length ? text[matchEnd] : '';
-    const isWordChar = (ch) => /\w/.test(ch) && ch !== '_' && ch !== '*';
+    const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === '-' || ch === "'";
     const leftOk = matchStart === 0 || !isWordChar(leftChar);
     const rightOk = matchEnd === text.length || !isWordChar(rightChar);
     return leftOk && rightOk;
+  }
+
+  isSentenceLikePattern(p) {
+    try {
+      const s = String(p || '');
+      return /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(s);
+    } catch (e) { return false; }
   }
 
     safeRegexTest(regex, text, timeout = 50) {
@@ -3372,6 +3299,51 @@ module.exports = class AlwaysColorText extends Plugin {
       textNodes.push(currentNode);
     }
 
+    try {
+      const longLiteralEntries = (entries || []).filter(e => e && !e.invalid && !e.isRegex && typeof e.pattern === 'string' && (e.pattern.length >= 30 || /[\s\.,;:!\?"'\(\)\[\]\{\}<>]/.test(e.pattern)));
+      if (longLiteralEntries.length > 0 && textNodes.length > 0) {
+        const decodedTexts = textNodes.map(n => this.decodeHtmlEntities(String(n.textContent || '')));
+        const offsets = [];
+        let acc = 0;
+        for (const t of decodedTexts) { offsets.push(acc); acc += t.length; }
+        const blockText = decodedTexts.join('');
+        const nodeMatchesMap = new Map();
+        for (const entry of longLiteralEntries) {
+          const patt = this.decodeHtmlEntities(String(entry.pattern || ''));
+          if (!patt) continue;
+          let pos = 0;
+          while ((pos = blockText.indexOf(patt, pos)) !== -1) {
+            const start = pos;
+            const end = pos + patt.length;
+            pos += patt.length;
+            let remainingStart = start;
+            let remainingEnd = end;
+            for (let ni = 0; ni < textNodes.length && remainingStart < remainingEnd; ni++) {
+              const nodeStart = offsets[ni];
+              const nodeEnd = nodeStart + decodedTexts[ni].length;
+              const overlapStart = Math.max(nodeStart, remainingStart);
+              const overlapEnd = Math.min(nodeEnd, remainingEnd);
+              if (overlapEnd > overlapStart) {
+                const localStart = overlapStart - nodeStart;
+                const localEnd = overlapEnd - nodeStart;
+                const arr = nodeMatchesMap.get(textNodes[ni]) || [];
+                arr.push({ start: localStart, end: localEnd, entry, folderEntry });
+                nodeMatchesMap.set(textNodes[ni], arr);
+              }
+              if (nodeEnd >= remainingEnd) break;
+            }
+          }
+        }
+        if (nodeMatchesMap.size > 0) {
+          for (const [n, m] of nodeMatchesMap.entries()) {
+            const textDec = this.decodeHtmlEntities(String(n.textContent || ''));
+            this.applySimpleHighlights(n, m, textDec);
+          }
+          try { const info = this._domRefs.get(block); if (info) info.matchCount = 1; } catch (e) {}
+        }
+      }
+    } catch (e) {}
+
     // Process each text node
     for (const node of textNodes) {
       let text = node.textContent;
@@ -3488,27 +3460,27 @@ module.exports = class AlwaysColorText extends Plugin {
             const matchStart = match.index;
             const matchEnd = match.index + matchedText.length;
             
-            // Respect partialMatch setting: if disabled, only accept whole-word matches
-            if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+            if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
               continue;
             }
               
-              // Extract full word and check blacklist
               let fullWordStart = matchStart;
               let fullWordEnd = matchEnd;
-              while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1]) && text[fullWordStart - 1] !== '_' && text[fullWordStart - 1] !== '*') {
-                fullWordStart--;
+              if (!this.isSentenceLikePattern(entry.pattern)) {
+                while (fullWordStart > 0 && ((/[A-Za-z0-9]/.test(text[fullWordStart - 1])) || text[fullWordStart - 1] === '-' || text[fullWordStart - 1] === "'")) {
+                  fullWordStart--;
+                }
+                while (fullWordEnd < text.length && ((/[A-Za-z0-9]/.test(text[fullWordEnd])) || text[fullWordEnd] === '-' || text[fullWordEnd] === "'")) {
+                  fullWordEnd++;
+                }
               }
-              while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd]) && text[fullWordEnd] !== '_' && text[fullWordEnd] !== '*') {
-                fullWordEnd++;
-              }
-              const fullWord = text.substring(fullWordStart, fullWordEnd);
+              const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : text.substring(fullWordStart, fullWordEnd);
               
               if (isBlacklisted(fullWord)) continue;
               
               // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
-              const colorStart = this.settings.partialMatch ? fullWordStart : matchStart;
-              const colorEnd = this.settings.partialMatch ? fullWordEnd : matchEnd;
+              const colorStart = this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) ? fullWordStart : matchStart;
+              const colorEnd = this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) ? fullWordEnd : matchEnd;
               
               matches.push({
                 start: colorStart,
@@ -3544,27 +3516,27 @@ module.exports = class AlwaysColorText extends Plugin {
             const matchStart = match.index;
             const matchEnd = match.index + matchedText.length;
             
-            // Respect partialMatch setting: if disabled, only accept whole-word matches
-            if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+            if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
               continue;
             }
             
-            // Extract full word and check blacklist
             let fullWordStart = matchStart;
             let fullWordEnd = matchEnd;
-            while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1]) && text[fullWordStart - 1] !== '_' && text[fullWordStart - 1] !== '*') {
-              fullWordStart--;
+            if (!this.isSentenceLikePattern(entry.pattern)) {
+              while (fullWordStart > 0 && ((/[A-Za-z0-9]/.test(text[fullWordStart - 1])) || text[fullWordStart - 1] === '-' || text[fullWordStart - 1] === "'")) {
+                fullWordStart--;
+              }
+              while (fullWordEnd < text.length && ((/[A-Za-z0-9]/.test(text[fullWordEnd])) || text[fullWordEnd] === '-' || text[fullWordEnd] === "'")) {
+                fullWordEnd++;
+              }
             }
-            while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd]) && text[fullWordEnd] !== '_' && text[fullWordEnd] !== '*') {
-              fullWordEnd++;
-            }
-            const fullWord = text.substring(fullWordStart, fullWordEnd);
+            const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : text.substring(fullWordStart, fullWordEnd);
             
             if (isBlacklisted(fullWord)) continue;
             
             // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
-            const colorStart = this.settings.partialMatch ? fullWordStart : matchStart;
-            const colorEnd = this.settings.partialMatch ? fullWordEnd : matchEnd;
+            const colorStart = this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) ? fullWordStart : matchStart;
+            const colorEnd = this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) ? fullWordEnd : matchEnd;
             
             matches.push({
               start: colorStart,
@@ -3610,8 +3582,7 @@ module.exports = class AlwaysColorText extends Plugin {
           const matchStart = match.index;
           const matchEnd = match.index + matchedText.length;
           
-          // NEW: If partialMatch is disabled, only accept whole-word matches
-          if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+          if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
             iterCount++;
             continue;
           }
@@ -3620,17 +3591,16 @@ module.exports = class AlwaysColorText extends Plugin {
           let fullWordStart = matchStart;
           let fullWordEnd = matchEnd;
           
-          // Expand left to find word boundary
-          while (fullWordStart > 0 && /\w/.test(text[fullWordStart - 1]) && text[fullWordStart - 1] !== '_' && text[fullWordStart - 1] !== '*') {
-            fullWordStart--;
+          if (!this.isSentenceLikePattern(entry.pattern)) {
+            while (fullWordStart > 0 && ((/[A-Za-z0-9]/.test(text[fullWordStart - 1])) || text[fullWordStart - 1] === '-' || text[fullWordStart - 1] === "'")) {
+              fullWordStart--;
+            }
+            while (fullWordEnd < text.length && ((/[A-Za-z0-9]/.test(text[fullWordEnd])) || text[fullWordEnd] === '-' || text[fullWordEnd] === "'")) {
+              fullWordEnd++;
+            }
           }
           
-          // Expand right to find word boundary
-          while (fullWordEnd < text.length && /\w/.test(text[fullWordEnd]) && text[fullWordEnd] !== '_' && text[fullWordEnd] !== '*') {
-            fullWordEnd++;
-          }
-          
-          const fullWord = text.substring(fullWordStart, fullWordEnd);
+          const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : text.substring(fullWordStart, fullWordEnd);
           
           // Check if the full word is blacklisted (supports patterns)
           if (this.isWordBlacklisted(fullWord)) continue;
@@ -4011,10 +3981,10 @@ module.exports = class AlwaysColorText extends Plugin {
       // Check global performance monitor per batch unless forced
       if (!forceProcess && this.performanceMonitor && this.performanceMonitor.isOverloaded && this.performanceMonitor.isOverloaded()) {
         debugWarn('CHUNK', `paused at block ${i} due to perf overload`);
-        // schedule continuation to avoid tight retry loops
+        const resumeOpts = Object.assign({}, options, { skipFirstN: i });
         setTimeout(() => {
           try {
-            this.processInChunks(element, entries, folderEntry, options);
+            this.processInChunks(element, entries, folderEntry, resumeOpts);
           } catch (e) { debugError('CHUNK', 'retry failed', e); }
         }, 300);
         blocks.length = 0; // Clear array to help GC
@@ -4410,13 +4380,11 @@ module.exports = class AlwaysColorText extends Plugin {
         const matchStart = match.index;
         const matchEnd = match.index + matchedText.length;
         
-        // Respect partialMatch setting: if disabled, only accept whole-word matches
-        if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+        if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
           continue;
         }
         
-        // Check blacklist
-        const fullWord = this.extractFullWord(text, matchStart, matchEnd);
+        const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : this.extractFullWord(text, matchStart, matchEnd);
         if (this.isWordBlacklisted(fullWord)) continue;
 
         const absStart = from + matchStart;
@@ -4432,14 +4400,14 @@ module.exports = class AlwaysColorText extends Plugin {
         let colorStart = matchStart;
         let colorEnd = matchEnd;
         
-        if (this.settings.partialMatch) {
+        if (this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern)) {
           // Find actual word boundaries
           colorStart = matchStart;
           colorEnd = matchEnd;
-          while (colorStart > 0 && /\w/.test(text[colorStart - 1])) {
+          while (colorStart > 0 && ((/[A-Za-z0-9]/.test(text[colorStart - 1])) || text[colorStart - 1] === '-' || text[colorStart - 1] === "'")) {
             colorStart--;
           }
-          while (colorEnd < text.length && /\w/.test(text[colorEnd])) {
+          while (colorEnd < text.length && ((/[A-Za-z0-9]/.test(text[colorEnd])) || text[colorEnd] === '-' || text[colorEnd] === "'")) {
             colorEnd++;
           }
         }
@@ -4502,14 +4470,12 @@ module.exports = class AlwaysColorText extends Plugin {
           if (inHeading) continue;
         }
         
-        // ALWAYS check for whole-word matches (the main loop only accepts exact pattern matches at word boundaries)
-        // The partialMatch flag is handled by a SEPARATE pass after this loop
-        if (!this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
+        if (!this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
           continue;
         }
         
         // Use helper to extract full word and check if blacklisted
-        const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
+        const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : this.extractFullWord(text, match.index, match.index + matchedText.length);
         if (this.isWordBlacklisted(fullWord)) continue;
         
         matches.push({
@@ -4794,13 +4760,12 @@ module.exports = class AlwaysColorText extends Plugin {
           const matchStart = match.index;
           const matchEnd = match.index + match[0].length;
           
-          // Respect partialMatch setting: if disabled, only accept whole-word matches
-          if (!this.settings.partialMatch && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+          if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
             try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
             continue;
           }
           
-          const fullWord = this.extractFullWord(text, matchStart, matchEnd);
+          const fullWord = this.isSentenceLikePattern(entry.pattern) ? match[0] : this.extractFullWord(text, matchStart, matchEnd);
           if (this.isWordBlacklisted(fullWord)) continue;
 
           if (hasHeadingBlacklist && headingRanges && headingRanges.length > 0) {
@@ -4815,14 +4780,14 @@ module.exports = class AlwaysColorText extends Plugin {
           let colorStart = matchStart;
           let colorEnd = matchEnd;
           
-          if (this.settings.partialMatch) {
+          if (this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern)) {
             // Find actual word boundaries
             colorStart = matchStart;
             colorEnd = matchEnd;
-            while (colorStart > 0 && /\w/.test(text[colorStart - 1])) {
+            while (colorStart > 0 && ((/[A-Za-z0-9]/.test(text[colorStart - 1])) || text[colorStart - 1] === '-' || text[colorStart - 1] === "'")) {
               colorStart--;
             }
-            while (colorEnd < text.length && /\w/.test(text[colorEnd])) {
+            while (colorEnd < text.length && ((/[A-Za-z0-9]/.test(text[colorEnd])) || text[colorEnd] === '-' || text[colorEnd] === "'")) {
               colorEnd++;
             }
           }
@@ -5075,14 +5040,12 @@ module.exports = class AlwaysColorText extends Plugin {
           if (inHeading) continue;
         }
         
-        // ALWAYS check for whole-word matches (the main loop only accepts exact pattern matches at word boundaries)
-        // The partialMatch flag is handled by a SEPARATE pass after this loop
-        if (!this.isWholeWordMatch(chunkText, match.index, match.index + matchedText.length)) {
+        if (!this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(chunkText, match.index, match.index + matchedText.length)) {
           continue;
         }
         
         // Use helper to extract full word and check if blacklisted
-        const fullWord = this.extractFullWord(chunkText, match.index, match.index + matchedText.length);
+        const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : this.extractFullWord(chunkText, match.index, match.index + matchedText.length);
         if (this.isWordBlacklisted(fullWord)) continue;
         
         matches.push({
@@ -7500,7 +7463,8 @@ class ColorSettingTab extends PluginSettingTab {
     this._refreshCustomSwatches();
 
     // --- Always Colored Texts / patterns ---
-    containerEl.createEl('h3', { text: this.plugin.t('always_colored_texts_header','Always Colored Texts') });
+    const headerEl = containerEl.createEl('h3', { text: this.plugin.t('always_colored_texts_header','Always Colored Texts') });
+    try { headerEl.id = 'always-colored-texts-header'; } catch (e) {}
     containerEl.createEl('p', { text: this.plugin.t('always_colored_texts_desc','Here\'s where you manage your word/patterns and their colors.') });
     new Setting(containerEl);
     const entriesSearchContainer = containerEl.createDiv();
