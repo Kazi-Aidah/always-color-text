@@ -127,7 +127,7 @@ That's it! Your language will be available to all users.
 
 ### Contributors
 - [@wanghong322](https://github.com/wanghong322) – Simplified Chinese Translation
-
+- [@Frumkin13](https://github.com/Frumkin13) – Russian Translation
 ---
 
 ## My personal favourite use cases,
