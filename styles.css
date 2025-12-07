@@ -290,3 +290,110 @@ select {
   }
 }
 
+/* ====== LIST AND CHECKBOX STYLING FOR READING MODE ====== */
+
+/* Style list markers (bullets/numbers) in reading mode */
+li.act-colored-list-item::marker {
+  color: var(--act-marker-color, inherit) !important;
+}
+
+/* Backup: Direct targeting of marker elements in Obsidian */
+li.act-colored-list-item .list-bullet,
+li.act-colored-list-item .list-number {
+  color: var(--act-marker-color, inherit) !important;
+}
+
+/* Markdown preview/reading view specific */
+.markdown-preview-view li.act-colored-list-item::marker {
+  color: var(--act-marker-color, inherit) !important;
+}
+
+.markdown-preview-view li.act-colored-list-item .list-bullet,
+.markdown-preview-view li.act-colored-list-item .list-number {
+  color: var(--act-marker-color, inherit) !important;
+}
+
+/* Checkbox styling in reading mode */
+li.act-colored-list-item input[type="checkbox"] {
+  accent-color: var(--act-marker-color, inherit);
+}
+
+/* Ensure colored text in list items inherits parent color */
+li.act-colored-list-item {
+  color: var(--act-marker-color, inherit);
+}
+
+/* Legacy marker styling for backward compatibility */
+li.act-color-marker::marker {
+  color: var(--act-color) !important;
+}
+
+.markdown-preview-view li.act-color-marker::marker {
+  color: var(--act-color) !important;
+}
+
+.markdown-preview-view li.act-color-marker > .list-bullet,
+.markdown-preview-view li.act-color-marker > .list-number {
+  color: var(--act-color) !important;
+}
+
+.markdown-preview-view li.act-color-marker input[type="checkbox"] {
+  accent-color: var(--act-color);
+}
+
+/* Preset Modal - Force width to override Obsidian defaults */
+.act-preset-modal {
+  --dialog-width: 1200px !important;
+  max-width: 1200px !important;
+  width: 800px !important;
+}
+
+.act-preset-modal .modal-content {
+  max-width: 1200px !important;
+  width: 800px !important;
+}
+
+.act-preset-modal .modal {
+  width: 800px !important;
+  max-width: 1200px !important;
+}
+
+.modal .act-preset-modal {
+  min-width: 800px !important;
+  width: 800px !important;
+  max-width: 1200px !important;
+}
+
+/* Regex Tester Modal - Prevent responsive wrapping of rows */
+.act-regex-row-expr,
+.act-regex-row-style {
+  display: flex !important;
+  gap: 12px !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+}
+
+.act-regex-row-expr input,
+.act-regex-row-style input,
+.act-regex-row-style select {
+  flex-shrink: 0 !important;
+  min-width: auto !important;
+}
+
+.act-regex-name {
+  min-width: 140px !important;
+}
+
+/* @media (min-width: 768px) {
+  .act-regex-name {
+    max-width: 125px !important;
+    width: 125px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .act-regex-name {
+    width: 1000px !important;
+  }
+} */
+

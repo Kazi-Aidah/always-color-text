@@ -41,6 +41,16 @@ Replace default swatches with your favorite colors for instant access!
 Color complex patterns like dates, currencies, or specific text structures:
 ![Regex examples showing dates and times](assets/time-example.png)
 
+**Built-in Regex Tester**
+Test patterns instantly before applying them! The Regex Tester lets you preview matches and fine-tune expressions right in Obsidian.
+![Regex Tester with Example](assets/regex-tester.png)
+
+**Ready-to-Use Presets**
+Jumpstart your coloring with curated pattern collections:
+- **Markdown Formatting** – Headings, lists, tasks, comments, and links
+- **Brackets** – Color content inside [square], {curly}, (round), \< angle >, and "double quote" brackets
+- **Other Patterns** – Dates, times, emails, @mentions, currencies, and measurements
+
 **Common patterns:**
 - `\b\d{4}-\d{2}-\d{2}\b` → Dates like 2024-01-19
 - `\bTODO|DONE|WIP\b` → Status words
@@ -49,8 +59,8 @@ Color complex patterns like dates, currencies, or specific text structures:
 
 **Quick tips:**
 - Enable "Use Regex" in your color entry settings
-- Test patterns at regex101.com first if unsure
-- Use **presets** for common patterns
+- Test patterns in the built-in **Regex Tester** before applying them
+- Apply **presets** for common patterns with one click
 
 ---
 
@@ -60,14 +70,20 @@ Color complex patterns like dates, currencies, or specific text structures:
 All colored texts appear in settings with search and multiple sort options.
 ![Plugin Settings Always Colored Texts](assets/always-colored-words.png)
 
-Switch styles seamlessly, changing from "Both" to "Highlight" and back retains your original colors.
-<!-- ![Color Style Dropdown](assets/color-style.png) -->
+Switch styles seamlessly, changing from "Both" to "Highlight" and back retains your original colors. Right-click any entry to **duplicate it** or **open in Regex Tester** for quick adjustments.
+![Right-click menu options for Always Colored Texts](assets/right-click-menu.png)
 
 ### File & Folder Control
 Set different color schemes for different projects. Use "Include" to color specific documents or "Exclude" to disable coloring in entire folders.
 ![File & Folder Coloring Rules](assets/file-folder-rules.png)
 
 **Note**: File-level rules override folder-level rules, giving you precise control.
+
+### Advanced Coloring Rules
+Take control of where colors appear with granular inclusion/exclusion:
+- **Exclude specific text** from coloring within single documents or entire folders
+- **Include colors only** in particular documents or folders
+- Perfect for project-specific schemes or temporary overrides!
 
 ---
 
@@ -103,8 +119,7 @@ Available in Obsidian Community Plugins. Check [Release Notes](https://github.co
 ### Questions or Suggestions?
 Create a new issue [here](https://github.com/Kazi-Aidah/always-color-text/issues) to report bugs or request new features!
 
-
-
+---
 
 ## Contributing Translations
 Want to add your language to Always Color Text?
@@ -128,6 +143,7 @@ That's it! Your language will be available to all users.
 ### Contributors
 - [@wanghong322](https://github.com/wanghong322) – Simplified Chinese Translation
 - [@Frumkin13](https://github.com/Frumkin13) – Russian Translation
+
 ---
 
 ## My personal favourite use cases,
@@ -142,5 +158,6 @@ requirements: Disable Regex Safety
 ![Brackets Example](assets/brackets-example.png)
 pattern: `\(([^)]*)\)`
 flag: g
+
 
 ![Tasks Example](assets/tasks-ss.png)

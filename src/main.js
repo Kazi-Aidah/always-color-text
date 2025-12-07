@@ -7,7 +7,8 @@ const {
   Notice,
   FuzzySuggestModal,
   debounce,
-  MarkdownRenderer
+  MarkdownRenderer,
+  Menu
 } = require('obsidian');
 
 // Moment is provided by Obsidian
@@ -37,7 +38,7 @@ const EDITOR_PERFORMANCE_CONSTANTS = {
   MAX_MATCHES_PER_PATTERN: 100,   // Max matches per pattern in chunks
   MAX_TOTAL_MATCHES: 3000         // Absolute limit for decorations
 };
-// Development mode flag - set to false for production
+// Development mode flag - set to true to enable debug logs
 const IS_DEVELOPMENT = false;
 
 // Helper function for conditional debug logging
@@ -58,6 +59,415 @@ const debugWarn = (tag, ...args) => {
     console.warn(`[${tag}]`, ...args);
   }
 };
+
+class RegexCache {
+  constructor(maxSize = 100) {
+    this.maxSize = maxSize;
+    this.map = new Map();
+    this.hits = 0;
+    this.misses = 0;
+    this.entryMap = new WeakMap();
+  }
+  _key(pattern, flags) {
+    return `${pattern}::${flags || ''}`;
+  }
+  getOrCreate(pattern, flags) {
+    const k = this._key(pattern, flags);
+    if (this.map.has(k)) {
+      const r = this.map.get(k);
+      this.map.delete(k);
+      this.map.set(k, r);
+      this.hits++;
+      return r;
+    }
+    let r;
+    try {
+      r = flags && flags !== '' ? new RegExp(pattern, flags) : new RegExp(pattern);
+    } catch (_) {
+      r = null;
+    }
+    this.misses++;
+    if (r) {
+      this.map.set(k, r);
+      if (this.map.size > this.maxSize) {
+        const oldestKey = this.map.keys().next().value;
+        this.map.delete(oldestKey);
+      }
+    }
+    return r;
+  }
+  associate(entry, regex) {
+    if (entry && regex) {
+      try { this.entryMap.set(entry, regex); } catch (_) {}
+    }
+  }
+  clear() {
+    this.map.clear();
+    this.hits = 0;
+    this.misses = 0;
+  }
+  stats() {
+    return { hits: this.hits, misses: this.misses, size: this.map.size };
+  }
+}
+
+class BloomFilter {
+  constructor(size = 2048) {
+    this.size = size;
+    this.bits = new Uint8Array(size);
+  }
+  reset() {
+    this.bits.fill(0);
+  }
+  _hashes(s) {
+    let h1 = 0, h2 = 0, h3 = 0;
+    for (let i = 0; i < s.length; i++) {
+      const c = s.charCodeAt(i);
+      h1 = ((h1 << 5) - h1 + c) >>> 0;
+      h2 = ((h2 << 7) ^ c) >>> 0;
+      h3 = ((h3 * 33) + c) >>> 0;
+    }
+    return [h1 % this.size, h2 % this.size, h3 % this.size];
+  }
+  _setToken(token) {
+    const idx = this._hashes(token);
+    for (const i of idx) this.bits[i] = 1;
+  }
+  addPattern(pattern, isRegex) {
+    if (!pattern) return;
+    const p = String(pattern).toLowerCase();
+    let base = p;
+    if (isRegex) {
+      const m = p.match(/[a-z0-9]{3,}/i);
+      base = m ? m[0].toLowerCase() : '';
+    }
+    if (!base || base.length < 3) return;
+    for (let i = 0; i <= base.length - 3; i++) {
+      const tok = base.slice(i, i + 3);
+      this._setToken(tok);
+    }
+  }
+  mightContain(text) {
+    if (!text) return false;
+    const t = String(text).toLowerCase();
+    const L = t.length;
+    if (L < 3) return false;
+    for (let i = 0; i <= L - 3; i++) {
+      const tok = t.slice(i, i + 3);
+      const [a, b, c] = this._hashes(tok);
+      if (this.bits[a] && this.bits[b] && this.bits[c]) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+class PatternMatcher {
+  constructor(settings, helpers) {
+    this.settings = settings || {};
+    this.helpers = helpers || {};
+    this.counters = { regexExecs: 0, matchesFound: 0 };
+  }
+  compilePattern(entry, cache) {
+    if (!entry || !entry.pattern) return entry;
+    const isRegex = !!entry.isRegex;
+    const rawFlags = String(entry.flags || '').replace(/[^gimsuy]/g, '');
+    let flags = rawFlags || '';
+    if (!flags.includes('g')) flags += 'g';
+    if (!this.settings.caseSensitive && !flags.includes('i')) flags += 'i';
+    try {
+      if (isRegex && this.settings.enableRegexSupport) {
+        entry.regex = cache ? cache.getOrCreate(entry.pattern, flags) : new RegExp(entry.pattern, flags);
+        const tf = flags.replace(/g/g, '');
+        entry.testRegex = cache ? cache.getOrCreate(entry.pattern, tf) : (tf === '' ? new RegExp(entry.pattern) : new RegExp(entry.pattern, tf));
+      } else {
+        const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(entry.pattern) : entry.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const lf = this.settings.caseSensitive ? 'g' : 'gi';
+        entry.regex = cache ? cache.getOrCreate(esc, lf) : new RegExp(esc, lf);
+        entry.testRegex = this.settings.caseSensitive ? (cache ? cache.getOrCreate(esc, '') : new RegExp(esc)) : (cache ? cache.getOrCreate(esc, 'i') : new RegExp(esc, 'i'));
+      }
+    } catch (_) {
+      entry.invalid = true;
+    }
+    return entry;
+  }
+  match(text, entries, folderEntry) {
+    const out = [];
+    const isSentence = (p) => this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(p) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(p || '');
+    const wholeWord = (t, s, e) => {
+      const lc = s > 0 ? t[s - 1] : '';
+      const rc = e < t.length ? t[e] : '';
+      const isW = (ch) => /[A-Za-z0-9]/.test(ch) || ch === '-' || ch === "'";
+      return (s === 0 || !isW(lc)) && (e === t.length || !isW(rc));
+    };
+    for (const entry of entries) {
+      if (!entry || entry.invalid) continue;
+      try {
+        if (entry.fastTest && typeof entry.fastTest === 'function') {
+          if (!entry.fastTest(text)) continue;
+        }
+      } catch (_) {}
+      const regex = entry.regex;
+      if (!regex) continue;
+      const matches = this.helpers.safeMatchLoop ? this.helpers.safeMatchLoop(regex, text) : (text.match(regex) || []).map(m => ({ 0: m, index: text.indexOf(m) }));
+      let iters = 0;
+      for (const m of matches) {
+        const matchedText = m[0];
+        const ms = m.index;
+        const me = m.index + matchedText.length;
+        if (!this.settings.partialMatch && !isSentence(entry.pattern) && !wholeWord(text, ms, me)) {
+          iters++;
+          continue;
+        }
+        let fws = ms;
+        let fwe = me;
+        if (!isSentence(entry.pattern)) {
+          while (fws > 0 && ((/[A-Za-z0-9]/.test(text[fws - 1])) || text[fws - 1] === '-' || text[fws - 1] === "'")) fws--;
+          while (fwe < text.length && ((/[A-Za-z0-9]/.test(text[fwe])) || text[fwe] === '-' || text[fwe] === "'")) fwe++;
+        }
+        const fullWord = isSentence(entry.pattern) ? matchedText : text.substring(fws, fwe);
+        const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+        const priority = (me - ms) + (entry.isTextBg ? -10 : 0);
+        out.push({ start: ms, end: me, color: useColor, word: matchedText, styleType: entry.styleType, textColor: entry.textColor, backgroundColor: entry.backgroundColor, priority });
+        iters++;
+      }
+      if (iters > 0) {
+        this.counters.regexExecs += iters;
+        this.counters.matchesFound += out.length;
+      }
+    }
+    if (out.length > 1) {
+      out.sort((a, b) => {
+        if (a.start !== b.start) return a.start - b.start;
+        const la = a.end - a.start;
+        const lb = b.end - b.start;
+        if (la !== lb) return lb - la;
+        return (b.priority || 0) - (a.priority || 0);
+      });
+      const no = [];
+      for (const m of out) {
+        let ov = false;
+        for (const s of no) { if (m.start < s.end && m.end > s.start) { ov = true; break; } }
+        if (!ov) no.push(m);
+      }
+      return no;
+    }
+    return out;
+  }
+}
+
+class SettingsIndex {
+  constructor(settings) {
+    this.settings = settings || {};
+    this.firstChar = new Map();
+    this.lengthRanges = new Map();
+    this.regexPrefixes = new Map();
+  }
+  rebuild(entries) {
+    this.firstChar.clear();
+    this.lengthRanges.clear();
+    this.regexPrefixes.clear();
+    for (const e of entries || []) {
+      if (!e || e.invalid || !e.pattern) continue;
+      const p = String(e.pattern);
+      if (!e.isRegex) {
+        const d = p[0] || '';
+        const bucket = this.firstChar.get(d) || [];
+        bucket.push(e);
+        this.firstChar.set(d, bucket);
+        const len = p.length;
+        const rangeKey = len < 5 ? 'lt5' : len < 10 ? 'lt10' : len < 20 ? 'lt20' : 'ge20';
+        const lr = this.lengthRanges.get(rangeKey) || [];
+        lr.push(e);
+        this.lengthRanges.set(rangeKey, lr);
+      } else {
+        const m = p.match(/[A-Za-z0-9]{3,}/);
+        if (m) {
+          const pref = m[0][0];
+          const list = this.regexPrefixes.get(pref) || [];
+          list.push(e);
+          this.regexPrefixes.set(pref, list);
+        }
+      }
+    }
+  }
+  query(text) {
+    if (!text) return [];
+    const t = String(text);
+    const set = new Set();
+    const d = t[0] || '';
+    const cands = this.firstChar.get(d) || [];
+    for (const e of cands) set.add(e);
+    const len = t.length;
+    const rk = len < 5 ? 'lt5' : len < 10 ? 'lt10' : len < 20 ? 'lt20' : 'ge20';
+    const lr = this.lengthRanges.get(rk) || [];
+    for (const e of lr) set.add(e);
+    if (t.length >= 1) {
+      const rp = this.regexPrefixes.get(t[0]) || [];
+      for (const e of rp) set.add(e);
+    }
+    return Array.from(set);
+  }
+}
+
+class PriorityQueue {
+  constructor() { this.a = []; }
+  push(item, pr) { this.a.push({ item, pr }); this.a.sort((x, y) => y.pr - x.pr); }
+  pop() { return this.a.length ? this.a.shift().item : null; }
+  size() { return this.a.length; }
+  clear() { this.a.length = 0; }
+}
+
+class SmartEventManager {
+  constructor() {
+    this.registry = [];
+    this.rafQueue = new Set();
+    this.pq = new PriorityQueue();
+    this.running = false;
+  }
+  add(el, event, handler, opts = {}) {
+    const priority = opts.priority || 0;
+    const debounceMs = typeof opts.debounceMs === 'number' ? opts.debounceMs : this._defaultDebounce(event, opts.viewType);
+    const useRaf = !!opts.useRaf;
+    let wrapped = handler;
+    if (debounceMs > 0) {
+      let t;
+      wrapped = (...args) => { clearTimeout(t); t = setTimeout(() => handler(...args), debounceMs); };
+    }
+    if (useRaf) {
+      const key = `${event}:${Math.random()}`;
+      const fn = (...args) => { this.rafQueue.add(() => handler(...args)); this._drainRaf(); };
+      wrapped = fn;
+    }
+    el.addEventListener(event, wrapped, opts);
+    this.registry.push({ el, event, wrapped, priority });
+    return wrapped;
+  }
+  remove(el, event, wrapped) {
+    try { el.removeEventListener(event, wrapped); } catch (_) {}
+    this.registry = this.registry.filter(r => r.el !== el || r.event !== event || r.wrapped !== wrapped);
+  }
+  _drainRaf() {
+    if (this.running) return;
+    this.running = true;
+    const run = () => {
+      const tasks = Array.from(this.rafQueue);
+      this.rafQueue.clear();
+      for (const fn of tasks) { try { fn(); } catch (_) {} }
+      if (this.rafQueue.size > 0) {
+        requestAnimationFrame(run);
+      } else {
+        this.running = false;
+      }
+    };
+    requestAnimationFrame(run);
+  }
+  _defaultDebounce(event, viewType) {
+    if (viewType === 'editor') {
+      if (event === 'scroll' || event === 'resize') return 50;
+      if (event === 'mousemove') return 25;
+      return 0;
+    }
+    if (event === 'scroll' || event === 'resize') return 100;
+    if (event === 'mousemove') return 50;
+    return 0;
+  }
+  clear() {
+    for (const r of this.registry) {
+      try { r.el.removeEventListener(r.event, r.wrapped); } catch (_) {}
+    }
+    this.registry = [];
+    this.rafQueue.clear();
+    this.pq.clear();
+  }
+}
+
+class CircuitBreaker {
+  constructor(threshold = 5, timeoutMs = 5000) {
+    this.threshold = threshold;
+    this.timeoutMs = timeoutMs;
+    this.failures = 0;
+    this.state = 'closed';
+    this.openedAt = 0;
+  }
+  canExecute() {
+    if (this.state === 'open') {
+      const now = Date.now();
+      if (now - this.openedAt > this.timeoutMs) {
+        this.state = 'half';
+        return true;
+      }
+      return false;
+    }
+    return true;
+  }
+  recordSuccess() { this.failures = 0; if (this.state !== 'closed') this.state = 'closed'; }
+  recordFailure() {
+    this.failures++;
+    if (this.failures >= this.threshold) { this.state = 'open'; this.openedAt = Date.now(); }
+  }
+}
+
+class ErrorRecovery {
+  constructor() { this.breakers = new Map(); }
+  getBreaker(key) {
+    const b = this.breakers.get(key) || new CircuitBreaker();
+    this.breakers.set(key, b);
+    return b;
+  }
+  wrap(key, fn, fallback) {
+    const br = this.getBreaker(key);
+    if (!br.canExecute()) { return typeof fallback === 'function' ? fallback() : null; }
+    try {
+      const res = fn();
+      br.recordSuccess();
+      return res;
+    } catch (_) {
+      br.recordFailure();
+      try { return typeof fallback === 'function' ? fallback() : null; } catch (_) { return null; }
+    }
+  }
+}
+
+class MemoryManager {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.interval = 2000;
+    this.timer = null;
+    this.spanPool = [];
+  }
+  start() {
+    if (this.timer) return;
+    this.timer = setInterval(() => { this.tick(); }, this.interval);
+  }
+  stop() { if (this.timer) { clearInterval(this.timer); this.timer = null; } }
+  setIntervalMs(ms) { this.interval = ms; if (this.timer) { this.stop(); this.start(); } }
+  tick() {
+    try {
+      if (performance && performance.memory) {
+        const usedMB = performance.memory.usedJSHeapSize / (1024 * 1024);
+        if (usedMB > 800) {
+          try { if (this.plugin._regexCache) this.plugin._regexCache.clear(); } catch (_) {}
+          try { if (this.plugin._bloomFilter) this.plugin._bloomFilter.reset(); } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  }
+  getSpan(text) {
+    let span = null;
+    if (this.spanPool.length) {
+      const wr = this.spanPool.pop();
+      const obj = wr && wr.deref ? wr.deref() : null;
+      if (obj) span = obj;
+    }
+    if (!span) span = document.createElement('span');
+    span.textContent = text || '';
+    return span;
+  }
+  returnSpan(span) { try { span.textContent = ''; this.spanPool.push(new WeakRef(span)); } catch (_) {} }
+  hintGC() { try { const arr = new Array(100000); for (let i = 0; i < arr.length; i++) arr[i] = i; setTimeout(() => { arr.length = 0; }, 0); } catch (_) {} }
+}
 
 module.exports = class AlwaysColorText extends Plugin {
   constructor(...args) {
@@ -115,6 +525,19 @@ module.exports = class AlwaysColorText extends Plugin {
     this._commandsRegistered = false;
     this._translations = (typeof locales === 'object' && locales) ? locales : {};
     this._externalTranslations = {};
+
+    this._regexCache = new RegexCache(100);
+    this._bloomFilter = new BloomFilter(2048);
+    this._patternMatcher = new PatternMatcher(this.settings, {
+      escapeRegex: (s) => this.escapeRegex(s),
+      isSentenceLikePattern: (p) => this.isSentenceLikePattern(p),
+      safeMatchLoop: (re, t) => this.safeMatchLoop(re, t)
+    });
+    this._settingsIndex = new SettingsIndex(this.settings);
+    this._eventManager = new SmartEventManager();
+    this._errorRecovery = new ErrorRecovery();
+    this._memoryManager = new MemoryManager(this);
+    try { this._memoryManager.start(); } catch (_) {}
   }
 
   t(key, fallback, params) {
@@ -559,6 +982,88 @@ module.exports = class AlwaysColorText extends Plugin {
           } catch (_) {}
         }
       });
+      // Add command for managing advanced rules
+      this.addCommand({
+        id: 'manage-advanced-rules',
+        name: this.t('command_manage_advanced_rules', 'Manage Advanced Rules'),
+        callback: () => {
+          try {
+            new ManageRulesModal(this.app, this).open();
+          } catch (e) {
+            new Notice(this.t('notice_error_opening_advanced_rules', 'Error opening advanced rules modal'));
+          }
+        }
+      });
+      // Add command for opening regex tester
+      this.addCommand({
+        id: 'open-regex-tester',
+        name: this.t('command_open_regex_tester', 'Add Regex (Open Regex Tester)'),
+        callback: () => {
+          try {
+          new RealTimeRegexTesterModal(this.app, this, async (entry) => {
+            if (!entry) return;
+            try { this.settingTab && (this.settingTab._suspendSorting = true); } catch (e) {}
+            if (!Array.isArray(this.settings.wordEntries)) this.settings.wordEntries = [];
+            const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === entry.pattern && e.isRegex);
+            if (idx !== -1) {
+              const existing = this.settings.wordEntries[idx];
+              existing.pattern = entry.pattern;
+              existing.color = entry.color;
+              existing.textColor = entry.textColor;
+              existing.backgroundColor = entry.backgroundColor;
+              existing.styleType = entry.styleType;
+              existing.flags = entry.flags;
+              existing.presetLabel = entry.presetLabel || existing.presetLabel || undefined;
+              existing.persistAtEnd = true;
+            } else {
+              entry.persistAtEnd = true;
+              this.settings.wordEntries.push(entry);
+            }
+            try { this.settingTab && entry && entry.uid && this.settingTab._newEntriesSet && this.settingTab._newEntriesSet.add(entry.uid); } catch (e) {}
+            await this.saveSettings();
+            this.compileWordEntries();
+            this.compileTextBgColoringEntries();
+            this.reconfigureEditorExtensions();
+            this.forceRefreshAllEditors();
+            this.forceRefreshAllReadingViews();
+          }).open();
+          } catch (e) {
+            new Notice(this.t('notice_error_opening_regex_tester', 'Error opening regex tester'));
+          }
+        }
+      });
+      // Add command for opening blacklist regex tester
+      this.addCommand({
+        id: 'open-blacklist-regex-tester',
+        name: this.t('command_open_blacklist_regex_tester', 'Add Blacklist Regex'),
+        callback: () => {
+          try {
+          new BlacklistRegexTesterModal(this.app, this, async (entry) => {
+            if (!entry) return;
+            try { this.settingTab && (this.settingTab._suspendSorting = true); } catch (e) {}
+            if (!Array.isArray(this.settings.blacklistEntries)) this.settings.blacklistEntries = [];
+            const idx = this.settings.blacklistEntries.findIndex(e => e && e.pattern === entry.pattern && e.isRegex);
+            if (idx !== -1) {
+              const existing = this.settings.blacklistEntries[idx];
+              existing.pattern = entry.pattern;
+              existing.flags = entry.flags;
+              existing.presetLabel = entry.presetLabel || existing.presetLabel || undefined;
+              existing.persistAtEnd = true;
+            } else {
+              entry.persistAtEnd = true;
+              this.settings.blacklistEntries.push(entry);
+            }
+            try { this.settingTab && entry && entry.uid && this.settingTab._blacklistNewSet && this.settingTab._blacklistNewSet.add(entry.uid); } catch (e) {}
+            await this.saveSettings();
+            this.reconfigureEditorExtensions();
+            this.forceRefreshAllEditors();
+            this.forceRefreshAllReadingViews();
+          }).open();
+          } catch (e) {
+            new Notice(this.t('notice_error_opening_blacklist_regex_tester', 'Error opening blacklist regex tester'));
+          }
+        }
+      });
       this._commandsRegistered = true;
     } catch (e) {}
   }
@@ -629,22 +1134,16 @@ module.exports = class AlwaysColorText extends Plugin {
     return p;
   }
 
-  // NEW METHOD: Decode HTML entities for reading mode compatibility
   decodeHtmlEntities(text) {
     if (!text || typeof text !== 'string') return text;
-    
+    text = text.replace(/&#(\d+);/g, (m, dec) => String.fromCharCode(dec));
+    text = text.replace(/&#x([0-9A-Fa-f]+);/g, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
     const entities = {
       '&amp;': '&',
-      '&lt;': '<', 
+      '&lt;': '<',
       '&gt;': '>',
       '&quot;': '"',
       '&#39;': "'",
-      '&#x27;': "'",
-      '&#x2F;': '/',
-      '&#x22;': '"',
-      '&#x3C;': '<',
-      '&#x3E;': '>',
-      '&#x26;': '&',
       '&nbsp;': ' ',
       '&copy;': '©',
       '&reg;': '®',
@@ -655,31 +1154,16 @@ module.exports = class AlwaysColorText extends Plugin {
       '&bull;': '•',
       '&check;': '✓',
       '&checkmark;': '✓',
-      '&#10003;': '✓',
-      '&#x2713;': '✓',
-      '&#10004;': '✔',
-      '&#x2714;': '✔',
       '&rarr;': '→',
-      '&rightarrow;': '→',
-      '&#8594;': '→',
-      '&#x2192;': '→',
+      '&rightarrow': '→',
       '&larr;': '←',
-      '&leftarrow;': '←',
-      '&#8592;': '←',
-      '&#x2190;': '←',
+      '&leftarrow': '←',
       '&uarr;': '↑',
-      '&uparrow;': '↑',
-      '&#8593;': '↑',
-      '&#x2191;': '↑',
+      '&uparrow': '↑',
       '&darr;': '↓',
-      '&downarrow;': '↓',
-      '&#8595;': '↓',
-      '&#x2193;': '↓'
+      '&downarrow': '↓'
     };
-    
-    return text.replace(/&[#a-zA-Z0-9]+;/g, match => {
-      return entities[match] || match;
-    });
+    return text.replace(/&[#a-zA-Z0-9]+;/g, m => entities[m] || m);
   }
 
   // NEW HELPER METHOD: Detect non-Roman characters
@@ -743,6 +1227,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // NEW METHOD: Process block with simple string matching
   processBlockWithSimplePatterns(block, simpleEntries, folderEntry, effectiveStyle) {
+    try { if (block && (block.classList?.contains('act-skip-coloring') || block.closest?.('.act-skip-coloring'))) return; } catch (_) {}
     const walker = document.createTreeWalker(
       block, 
       NodeFilter.SHOW_TEXT, 
@@ -752,6 +1237,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (node.parentElement?.closest('code, pre')) {
             return NodeFilter.FILTER_REJECT;
           }
+          try { if (node.parentElement?.closest('.act-skip-coloring')) return NodeFilter.FILTER_REJECT; } catch (_) {}
           return NodeFilter.FILTER_ACCEPT;
         }
       },
@@ -797,6 +1283,259 @@ module.exports = class AlwaysColorText extends Plugin {
         this.applySimpleHighlights(node, matches, text);
       }
     }
+  }
+
+
+  processMarkdownFormattingInReading(element, folderEntry = null) {
+    try {
+      try { debugLog('MARKDOWN_FORMAT', 'Processing markdown formatting'); } catch (_) {}
+      const weAll = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      let filePath = null;
+      try { filePath = this.app?.workspace?.getActiveFile()?.path || null; } catch (_) {}
+      const we = filePath ? this.filterEntriesByAdvancedRules(filePath, weAll) : weAll;
+      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      const taskCheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Checked)');
+      const taskUncheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Unchecked)');
+      const bulletEntry = we.find(e => e && e.presetLabel === 'Bullet Points');
+      const numberedEntry = we.find(e => e && e.presetLabel === 'Numbered Lists');
+      const hasTaskCheckedBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Task List (Checked)' && !!e.isRegex);
+      const hasTaskUncheckedBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Task List (Unchecked)' && !!e.isRegex);
+      const hasBulletBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Bullet Points' && !!e.isRegex);
+      const hasNumberedBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Numbered Lists' && !!e.isRegex);
+      if (!taskCheckedEntry && !taskUncheckedEntry && !bulletEntry && !numberedEntry) return;
+      let listItems = Array.from(element.querySelectorAll?.('li') || []);
+      if (element && element.nodeName === 'LI' && listItems.length === 0) listItems = [element];
+      try { debugLog('MARKDOWN_FORMAT', `Found ${listItems.length} list items (node=${element.nodeName})`); } catch (_) {}
+      for (const li of listItems) {
+        if (li.closest('code, pre')) continue;
+        // Extract actual content, stripping markdown prefixes
+        const contentText = this.extractListItemContent(li);
+        const contentBlacklisted = this.containsBlacklistedWord(contentText);
+        try {
+          debugLog('MARKDOWN_FORMAT', 'LI', {
+            innerHTML: (li.innerHTML || '').substring(0, 100),
+            textContent: (li.textContent || '').substring(0, 100),
+            hasCheckbox: !!li.querySelector('input[type="checkbox"]'),
+            parentTag: li.parentElement?.tagName
+          });
+        } catch (_) {}
+        const hasTaskAttr = li.getAttribute('data-task');
+        const checkbox = li.querySelector('input[type="checkbox"]');
+        const isTaskItem = hasTaskAttr !== null || checkbox !== null;
+        if (isTaskItem && (taskCheckedEntry || taskUncheckedEntry)) {
+          const isChecked = hasTaskAttr === 'x' || hasTaskAttr === 'X' || (checkbox && checkbox.checked);
+          const entry = isChecked ? taskCheckedEntry : taskUncheckedEntry;
+          const blocked = (isChecked && hasTaskCheckedBlacklist) || (!isChecked && hasTaskUncheckedBlacklist);
+          if (blocked) {
+            try {
+              li.classList.add('act-skip-coloring');
+              li.classList.remove('act-colored-list-item');
+              li.style.removeProperty('--act-marker-color');
+              li.style.color = '';
+              const highlights = li.querySelectorAll('span.always-color-text-highlight');
+              for (const ex of highlights) { const tn = document.createTextNode(ex.textContent); ex.replaceWith(tn); }
+            } catch (_) {}
+            continue;
+          }
+          if (entry) {
+            if (!contentBlacklisted) this._colorListItemContent(li, entry);
+            if (checkbox) this._styleCheckbox(checkbox, entry); else this._styleTaskMarker(li, entry);
+          }
+        } else if (!isTaskItem && (bulletEntry || numberedEntry)) {
+          const isOrdered = li.parentElement?.tagName === 'OL';
+          const entry = isOrdered ? numberedEntry : bulletEntry;
+          const blocked = (isOrdered && hasNumberedBlacklist) || (!isOrdered && hasBulletBlacklist);
+          if (blocked) {
+            try {
+              li.classList.add('act-skip-coloring');
+              li.classList.remove('act-colored-list-item');
+              li.style.removeProperty('--act-marker-color');
+              li.style.color = '';
+              const highlights = li.querySelectorAll('span.always-color-text-highlight');
+              for (const ex of highlights) { const tn = document.createTextNode(ex.textContent); ex.replaceWith(tn); }
+            } catch (_) {}
+            continue;
+          }
+          if (entry) {
+            if (!contentBlacklisted) this._colorListItemContent(li, entry);
+            this._styleListMarker(li, entry, isOrdered);
+          }
+        }
+      }
+      let paragraphs = Array.from(element.querySelectorAll?.('p') || []);
+      if (element && element.nodeName === 'P' && paragraphs.length === 0) paragraphs = [element];
+      for (const p of paragraphs) {
+        const checkbox = p.querySelector('input[type="checkbox"]');
+        if (!checkbox) continue;
+        const isChecked = checkbox.checked;
+        const entry = isChecked ? taskCheckedEntry : taskUncheckedEntry;
+        // Extract actual content, stripping checkbox prefix
+        const contentText = this.extractListItemContent(p);
+        const contentBlacklistedP = this.containsBlacklistedWord(contentText);
+        const blocked = (isChecked && hasTaskCheckedBlacklist) || (!isChecked && hasTaskUncheckedBlacklist);
+        if (blocked) {
+          try {
+            p.classList.add('act-skip-coloring');
+            p.classList.remove('act-colored-list-item');
+            p.style.removeProperty('--act-marker-color');
+            p.style.color = '';
+            const highlights = p.querySelectorAll('span.always-color-text-highlight');
+            for (const ex of highlights) { const tn = document.createTextNode(ex.textContent); ex.replaceWith(tn); }
+          } catch (_) {}
+          continue;
+        }
+        if (entry) {
+          this._styleCheckbox(checkbox, entry);
+          if (!contentBlacklistedP) this._colorListItemContent(p, entry);
+        }
+      }
+    } catch (e) {
+      try { debugError('MARKDOWN_FORMAT', 'Error processing markdown formatting', e); } catch (_) {}
+    }
+  }
+
+  // Helper: Style checkbox elements
+  _styleCheckbox(checkbox, entry) {
+    try {
+      // Determine color to use
+      const color = entry.color || entry.textColor || (entry.backgroundColor && entry.backgroundColor !== 'currentColor' ? entry.backgroundColor : null);
+      
+      if (color) {
+        // Modern approach: use accent-color (limited browser support)
+        checkbox.style.accentColor = color;
+      }
+    } catch (e) {}
+  }
+
+  // Helper: Style list markers (bullets/numbers)
+  _styleListMarker(li, entry, isOrdered) {
+    try {
+      const color = entry.color || entry.textColor || (entry.backgroundColor && entry.backgroundColor !== 'currentColor' ? entry.backgroundColor : null);
+      
+      if (color) {
+        // Method 1: Use CSS ::marker pseudo-element (modern browsers)
+        li.style.setProperty('--act-marker-color', color);
+        
+        // Method 2: Target Obsidian's specific markup
+        const marker = li.querySelector('.list-bullet, .list-number');
+        if (marker) {
+          marker.style.color = color;
+        }
+        
+        // Add class for CSS targeting
+        li.classList.add('act-colored-list-item');
+        
+        // Method 3: Inject CSS for the list item if not already done
+        if (!document.getElementById('act-list-marker-style')) {
+          const style = document.createElement('style');
+          style.id = 'act-list-marker-style';
+          style.textContent = `
+            .act-colored-list-item { position: relative; }
+            li.act-colored-list-item::marker { color: var(--act-marker-color, inherit) !important; }
+            li.act-colored-list-item .list-bullet,
+            li.act-colored-list-item .list-number { color: var(--act-marker-color, inherit) !important; }
+            .markdown-preview-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit) !important; }
+            .markdown-reading-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit) !important; }
+          `;
+          try { document.head.appendChild(style); } catch (e) {}
+        }
+      }
+    } catch (e) {}
+  }
+
+  _styleTaskMarker(li, entry) {
+    try {
+      const walker = document.createTreeWalker(
+        li,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            const t = node.textContent || '';
+            if (t.includes('[x]') || t.includes('[X]') || t.includes('[ ]')) return NodeFilter.FILTER_ACCEPT;
+            return NodeFilter.FILTER_REJECT;
+          }
+        },
+        false
+      );
+      let n;
+      while (n = walker.nextNode()) {
+        const color = entry.color || entry.textColor || (entry.backgroundColor && entry.backgroundColor !== 'currentColor' ? entry.backgroundColor : null);
+        if (!color) continue;
+        const span = document.createElement('span');
+        span.style.color = color;
+        span.textContent = n.textContent;
+        n.replaceWith(span);
+      }
+    } catch (e) {}
+  }
+
+  // Helper: Color list item content
+  _colorListItemContent(li, entry) {
+    try {
+      // Walk through text nodes and wrap them
+      const walker = document.createTreeWalker(
+        li,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            // Skip text nodes in code blocks or already processed
+            if (node.parentElement?.closest('code, pre, .always-color-text-highlight')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        },
+        false
+      );
+      
+      const nodes = [];
+      let node;
+      while (node = walker.nextNode()) {
+        if (node.textContent.trim()) {
+          nodes.push(node);
+        }
+      }
+      
+      // Process in reverse to avoid invalidating the walker
+      for (let i = nodes.length - 1; i >= 0; i--) {
+        this._wrapTextNodeWithColor(nodes[i], entry);
+      }
+    } catch (e) {}
+  }
+
+  // Helper: Wrap a single text node with color styling
+  _wrapTextNodeWithColor(textNode, entry) {
+    try {
+      console.time('wrapTextNodeWithColor');
+      try { if (textNode.parentElement?.closest('.act-skip-coloring')) { console.timeEnd('wrapTextNodeWithColor'); return; } } catch (_) {}
+      let text = textNode.textContent;
+      if (!text.trim()) { console.timeEnd('wrapTextNodeWithColor'); return; }
+      text = this.decodeHtmlEntities(text);
+      const span = document.createElement('span');
+      span.className = 'always-color-text-highlight';
+      span.textContent = text;
+      if (entry.backgroundColor) {
+        const textColor = entry.textColor || 'currentColor';
+        const bgColor = this.hexToRgba(entry.backgroundColor, this.settings.backgroundOpacity ?? 25);
+        if (textColor && textColor !== 'currentColor') {
+          span.style.color = textColor;
+        }
+        span.style.backgroundColor = bgColor;
+        span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+        span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+        if (this.settings.enableBoxDecorationBreak ?? true) {
+          span.style.boxDecorationBreak = 'clone';
+          span.style.WebkitBoxDecorationBreak = 'clone';
+        }
+      } else if (entry.color || entry.textColor) {
+        const color = entry.color || entry.textColor;
+        span.style.color = color;
+      }
+      const frag = document.createDocumentFragment();
+      frag.appendChild(span);
+      textNode.replaceWith(frag);
+      console.timeEnd('wrapTextNodeWithColor');
+    } catch (e) { debugError('WRAP_TEXT_NODE', 'Error wrapping text node', e); }
   }
 
   // NEW METHOD: Only use complex processing when absolutely necessary
@@ -886,6 +1625,8 @@ module.exports = class AlwaysColorText extends Plugin {
         this._dynamicHandlers = [];
       }
     } catch (e) {}
+    try { this._eventManager && this._eventManager.clear && this._eventManager.clear(); } catch (_) {}
+    try { this._memoryManager && this._memoryManager.stop && this._memoryManager.stop(); } catch (_) {}
     // Disable features (unregister processors/listeners) as final step
     this.disablePluginFeatures();
   }
@@ -1102,6 +1843,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // Use swatch names for coloring entries
       useSwatchNamesForText: false,
       colorPickerMode: 'both',
+      advancedRules: [],
       pathRules: [],
       // Allow disabling regex safety checks (dangerous)
       disableRegexSafety: false,
@@ -1769,26 +2511,34 @@ module.exports = class AlwaysColorText extends Plugin {
   // Create a lightweight fastTest function to reject texts that cannot contain the pattern
   createFastTester(pattern, isRegex, caseSensitive) {
     try {
-      if (!pattern) return () => true;
+      if (!pattern) return (text) => {
+        const bloom = this._bloomFilter;
+        if (bloom && !bloom.mightContain(text)) return false;
+        return true;
+      };
+      const bloom = this._bloomFilter;
+      const withBloom = (fn) => (text) => {
+        if (bloom && !bloom.mightContain(text)) return false;
+        return fn(text);
+      };
 
       // NON-ROMAN CHARACTERS - SIMPLE HANDLING
       if (this.containsNonRomanCharacters(pattern)) {
         if (caseSensitive) {
-          return (text) => typeof text === 'string' && text.includes(pattern);
+          return withBloom((text) => typeof text === 'string' && text.includes(pattern));
         } else {
-          // For non-Roman, case sensitivity often doesn't apply, but we'll respect the setting
           const lowerPattern = pattern.toLowerCase();
-          return (text) => typeof text === 'string' && text.toLowerCase().includes(lowerPattern);
+          return withBloom((text) => typeof text === 'string' && text.toLowerCase().includes(lowerPattern));
         }
       }
 
       // Literal patterns: simple substring check
       if (!isRegex) {
         if (caseSensitive) {
-          return (text) => typeof text === 'string' && text.includes(pattern);
+          return withBloom((text) => typeof text === 'string' && text.includes(pattern));
         } else {
           const lowerPattern = pattern.toLowerCase();
-          return (text) => typeof text === 'string' && text.toLowerCase().includes(lowerPattern);
+          return withBloom((text) => typeof text === 'string' && text.toLowerCase().includes(lowerPattern));
         }
       }
 
@@ -1796,13 +2546,13 @@ module.exports = class AlwaysColorText extends Plugin {
       try {
         // Quick checks for some punctuation-heavy patterns
         if (pattern.includes('$') || pattern.includes('€') || pattern.includes('£')) {
-          return (text) => typeof text === 'string' && (text.includes('$') || text.includes('€') || text.includes('£'));
+          return withBloom((text) => typeof text === 'string' && (text.includes('$') || text.includes('€') || text.includes('£')));
         }
         if (pattern.includes(':')) {
-          return (text) => typeof text === 'string' && text.includes(':');
+          return withBloom((text) => typeof text === 'string' && text.includes(':'));
         }
         if (pattern.includes('-')) {
-          return (text) => typeof text === 'string' && text.includes('-');
+          return withBloom((text) => typeof text === 'string' && text.includes('-'));
         }
 
         // Look for a reasonably long literal sequence inside the regex
@@ -1810,20 +2560,22 @@ module.exports = class AlwaysColorText extends Plugin {
         if (literalMatch) {
           const literal = literalMatch[0];
           if (caseSensitive) {
-            return (text) => typeof text === 'string' && text.includes(literal);
+            return withBloom((text) => typeof text === 'string' && text.includes(literal));
           } else {
             const lowerLiteral = literal.toLowerCase();
-            return (text) => typeof text === 'string' && text.toLowerCase().includes(lowerLiteral);
+            return withBloom((text) => typeof text === 'string' && text.toLowerCase().includes(lowerLiteral));
           }
         }
       } catch (e) {
         // Fall through to permissive test below
       }
     } catch (e) {
-      // If anything goes wrong, keep a permissive test to avoid false negatives
     }
-    // Default: permissive tester (rarely used)
-    return () => true;
+    return (text) => {
+      const bloom = this._bloomFilter;
+      if (bloom && !bloom.mightContain(text)) return false;
+      return true;
+    };
   }
 
   // --- Lightweight mode decision for very large documents ---
@@ -2228,7 +2980,9 @@ module.exports = class AlwaysColorText extends Plugin {
     const fp = this.normalizePath(filePath);
     const nm = String(name || '').trim();
     if (!nm) return { fileMatch: true, folderMatch: true };
-    const fileMatch = this._basename(fp) === nm;
+    const base = this._basename(fp);
+    const stem = base.replace(/\.[^/.]+$/, '');
+    const fileMatch = (base === nm) || (stem === nm);
     let folderMatch = false;
     const parents = this._parentFolders(fp);
     for (const folder of parents) {
@@ -2301,11 +3055,147 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     let included = false;
     let excluded = false;
+    // CRITICAL: File-level rules ALWAYS override folder-level rules
     if (fileInclude) { included = true; excluded = false; }
     else if (fileExclude) { included = false; excluded = true; }
     else if (folderInclude) { included = true; excluded = false; }
     else if (folderExclude) { included = false; excluded = true; }
-    return { included, excluded, hasIncludes };
+    // Return detailed info: whether this file has an explicit rule
+    const hasFileRule = fileInclude || fileExclude;
+    return { included, excluded, hasIncludes, hasFileRule };
+  }
+
+  // Advanced Rules: filter word entries based on file/folder path rules
+  // CLEAR RULE ENGINE: Apply your four rules in strict order
+  // Rule 1: Folder excluded? → No files in folder get colored
+  // Rule 2: File explicitly included in excluded folder? → File gets colored
+  // Rule 3: Text "only colors in" this file/folder? → Color only here
+  // Rule 4: Text "does not color in" this file/folder? → Don't color here
+  shouldColorText(filePath, textPattern) {
+    try {
+      if (!filePath || !textPattern) return true;
+      
+      const fp = this.normalizePath(filePath);
+      const pathRules = Array.isArray(this.settings.pathRules) ? this.settings.pathRules : [];
+      const advRules = Array.isArray(this.settings.advancedRules) ? this.settings.advancedRules : [];
+      const caseInsensitive = !this.settings.caseSensitive;
+      
+      // Helper: Check if text matches a rule pattern
+      const textMatches = (rule, pattern) => {
+        const ruleText = String(rule.text || '').trim();
+        if (!ruleText) return false;
+        
+        const patternStr = String(pattern).trim();
+        
+        // If rule is regex, compare as strings (both are regex patterns)
+        if (rule.isRegex) {
+          if (caseInsensitive) {
+            return ruleText.toLowerCase() === patternStr.toLowerCase();
+          } else {
+            return ruleText === patternStr;
+          }
+        }
+        
+        // For non-regex rules, do case-sensitive or insensitive comparison
+        if (caseInsensitive) {
+          return ruleText.toLowerCase() === patternStr.toLowerCase();
+        } else {
+          return ruleText === patternStr;
+        }
+      };
+      
+      // Helper: Check if path matches a rule path
+      const pathMatches = (rule) => {
+        const pathStr = String(rule.path || '').trim();
+        if (pathStr.length === 0) return true; // vault-wide
+        const dk = this.detectRuleKind(pathStr);
+        if (dk.kind === 'name') {
+          const { fileMatch, folderMatch } = this._matchesByName(fp, dk.name);
+          return fileMatch || folderMatch;
+        }
+        if (dk.kind === 'exact-file') return this._matchFile(dk.path, fp);
+        if (dk.kind === 'exact-folder') {
+          const parents = this._parentFolders(fp);
+          for (const p of parents) {
+            if (this.normalizePath(p) === this.normalizePath(dk.path)) return true;
+          }
+          return false;
+        }
+        if (dk.kind === 'regex') {
+          try {
+            const re = new RegExp(dk.pattern);
+            if (re.test(fp)) return true;
+            const parents = this._parentFolders(fp);
+            for (const p of parents) { if (re.test(p)) return true; }
+          } catch (e) { return false; }
+        }
+        return false;
+      };
+      
+      // RULE 1: Folder excluded? → No files in folder get colored
+      const pathEval = this.evaluatePathRules(filePath);
+      const isFolderExcluded = pathEval.excluded && !pathEval.hasFileRule;
+      
+      // RULE 2: File explicitly included in excluded folder? → File gets colored
+      const isFileExplicitlyIncluded = pathEval.hasFileRule && pathEval.included;
+      
+      // If folder is excluded, but file is explicitly included, allow coloring
+      if (isFolderExcluded && !isFileExplicitlyIncluded) {
+        debugLog('RULE_ENGINE', `Skipping: folder excluded for ${filePath}`);
+        return false;
+      }
+      
+      // RULE 3: Text "only colors in" this file/folder? → Color only here
+      const onlyIncludeRules = advRules.filter(r => r && r.mode === 'include' && textMatches(r, textPattern));
+      if (onlyIncludeRules.length > 0) {
+        // Text has "only colors in" rules - check if this file/folder matches any
+        const matchesIncludeRule = onlyIncludeRules.some(r => pathMatches(r));
+        if (!matchesIncludeRule) {
+          debugLog('RULE_ENGINE', `Skipping: text "${textPattern}" only colors elsewhere`);
+          return false;
+        }
+      }
+      
+      // RULE 4: Text "does not color in" this file/folder? → Don't color here
+      const excludeRules = advRules.filter(r => r && r.mode === 'exclude' && textMatches(r, textPattern));
+      if (excludeRules.length > 0) {
+        const matchesExcludeRule = excludeRules.some(r => pathMatches(r));
+        if (matchesExcludeRule) {
+          debugLog('RULE_ENGINE', `Skipping: text "${textPattern}" does not color here`);
+          return false;
+        }
+      }
+      
+      // No rules prevent coloring
+      debugLog('RULE_ENGINE', `Allowing: text "${textPattern}" in ${filePath}`);
+      return true;
+    } catch (e) {
+      debugError('RULE_ENGINE', 'Error in shouldColorText', e);
+      return true; // Default: allow coloring on error
+    }
+  }
+
+  // Filter entries based on the four rules using shouldColorText
+  filterEntriesByAdvancedRules(filePath, entries) {
+    try {
+      if (!filePath || !Array.isArray(entries) || entries.length === 0) return entries;
+      
+      const filtered = entries.filter(entry => {
+        if (!entry || !entry.pattern) return true;
+        return this.shouldColorText(filePath, entry.pattern);
+      });
+      
+      debugLog('ADV_RULES', {
+        filePath,
+        originalEntries: entries.length,
+        filteredEntries: filtered.length
+      });
+      
+      return filtered;
+    } catch (e) {
+      debugError('ADV_RULES', 'Error filtering entries', e);
+      return entries;
+    }
   }
 
   hasGlobalExclude() {
@@ -2424,6 +3314,8 @@ module.exports = class AlwaysColorText extends Plugin {
   compileWordEntries() {
     try {
   try { this._compiledWordEntries = []; this._cachedSortedEntries = null; this._cacheDirty = true; } catch (e) {}
+      try { this._regexCache && this._regexCache.clear(); } catch (_) {}
+      try { this._bloomFilter && this._bloomFilter.reset(); } catch (_) {}
       if (!Array.isArray(this.settings.wordEntries)) return;
       for (const e of this.settings.wordEntries) {
         if (!e) continue;
@@ -2500,20 +3392,20 @@ module.exports = class AlwaysColorText extends Plugin {
               continue;
             }
             // compile with combined flags
-            compiled.regex = new RegExp(pattern, flags);
-            // testRegex: same flags but without global to safely use .test()
+            compiled.regex = this._regexCache.getOrCreate(pattern, flags);
             const testFlags = flags.replace(/g/g, '');
-            compiled.testRegex = testFlags === '' ? new RegExp(pattern) : new RegExp(pattern, testFlags);
+            compiled.testRegex = this._regexCache.getOrCreate(pattern, testFlags);
           } else {
             // literal: escape pattern
             const esc = this.escapeRegex(pattern);
             const literalFlags = this.settings.caseSensitive ? 'g' : 'gi';
-            compiled.regex = new RegExp(esc, literalFlags);
-            compiled.testRegex = this.settings.caseSensitive ? new RegExp(esc) : new RegExp(esc, 'i');
+            compiled.regex = this._regexCache.getOrCreate(esc, literalFlags);
+            compiled.testRegex = this.settings.caseSensitive ? this._regexCache.getOrCreate(esc, '') : this._regexCache.getOrCreate(esc, 'i');
           }
         } catch (err) {
           compiled.invalid = true;
         }
+        try { this._bloomFilter && this._bloomFilter.addPattern(pattern, isRegex); } catch (_) {}
         // Build a cheap fastTest function to quickly reject impossible texts
         try {
           // Use minimal closure factory method to avoid large closures
@@ -2529,6 +3421,10 @@ module.exports = class AlwaysColorText extends Plugin {
       this._compiledWordEntries.sort((a, b) => b.specificity - a.specificity || b.pattern.length - a.pattern.length);
       // mark cached filtered/sorted entries dirty so callers rebuild lazily
       try { this._cacheDirty = true; this._cachedSortedEntries = null; } catch (e) {}
+      try {
+        const all = (Array.isArray(this._compiledWordEntries) ? this._compiledWordEntries : []).concat(Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : []);
+        this._settingsIndex && this._settingsIndex.rebuild(all);
+      } catch (_) {}
     } catch (err) {
       debugError('COMPILE', 'compileWordEntries failed', err);
       try { this._compiledWordEntries = []; this._cachedSortedEntries = null; this._cacheDirty = true; } catch (e) {}
@@ -2612,20 +3508,21 @@ module.exports = class AlwaysColorText extends Plugin {
                 this._compiledTextBgEntries.push(compiled);
                 continue;
               }
-              compiled.regex = new RegExp(pattern, flags);
+              compiled.regex = this._regexCache.getOrCreate(pattern, flags);
               const testFlags = flags.replace(/g/g, '');
-              compiled.testRegex = testFlags === '' ? new RegExp(pattern) : new RegExp(pattern, testFlags);
+              compiled.testRegex = this._regexCache.getOrCreate(pattern, testFlags);
             } else {
               const esc = this.escapeRegex(pattern);
-              compiled.regex = new RegExp(esc, flags);
+              compiled.regex = this._regexCache.getOrCreate(esc, flags);
               const testFlags = flags.replace(/g/g, '');
-              compiled.testRegex = testFlags === '' ? new RegExp(esc) : new RegExp(esc, testFlags);
+              compiled.testRegex = testFlags === '' ? this._regexCache.getOrCreate(esc, '') : this._regexCache.getOrCreate(esc, testFlags);
             }
             try {
               compiled.fastTest = this.createFastTester(pattern, isRegex, this.settings.caseSensitive);
             } catch (e) {
               compiled.fastTest = (text) => true;
             }
+            try { this._bloomFilter && this._bloomFilter.addPattern(pattern, isRegex); } catch (_) {}
             
             this._compiledTextBgEntries.push(compiled);
           } catch (err) {
@@ -2642,13 +3539,17 @@ module.exports = class AlwaysColorText extends Plugin {
       debugError('COMPILE_TEXTBG', 'compileTextBgColoringEntries failed', err);
       try { this._compiledTextBgEntries = []; } catch (e) {}
     }
+    try {
+      const all = (Array.isArray(this._compiledWordEntries) ? this._compiledWordEntries : []).concat(Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : []);
+      this._settingsIndex && this._settingsIndex.rebuild(all);
+    } catch (_) {}
   }
 
   
 
   // Apply Highlights in Reading View (Markdown Post Processor) - optional folderEntry may override match colors
   applyHighlights(el, folderEntry = null, options = {}) {
-    const entries = this.getSortedWordEntries();
+    const entries = (options && Array.isArray(options.entries)) ? options.entries : this.getSortedWordEntries();
     if (entries.length === 0) return;
     // Ensure element is attached to document (isConnected is more reliable than offsetParent)
     if (!el.isConnected) return;
@@ -2658,7 +3559,19 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // NEW METHOD: Apply highlights for simple patterns (ultra-fast version)
   applySimpleHighlights(textNode, matches, text) {
-    if (!matches || matches.length === 0) return;
+    console.time('applySimpleHighlights');
+    if (!matches || matches.length === 0) { console.timeEnd('applySimpleHighlights'); return; }
+    const decodedText = this.decodeHtmlEntities(text);
+    // Filter out matches that fall inside blacklisted contexts (e.g., @username)
+    try {
+      const filtered = [];
+      for (const m of matches) {
+        if (this.isContextBlacklisted(decodedText, m.start, m.end)) continue;
+        filtered.push(m);
+      }
+      matches = filtered;
+      if (matches.length === 0) { console.timeEnd('applySimpleHighlights'); return; }
+    } catch (_) {}
     
     // Sort matches by start position and remove overlaps
     matches.sort((a, b) => a.start - b.start);
@@ -2701,12 +3614,12 @@ module.exports = class AlwaysColorText extends Plugin {
     
     for (const m of nonOverlapping) {
       if (m.start > pos) {
-        frag.appendChild(document.createTextNode(text.slice(pos, m.start)));
+        frag.appendChild(document.createTextNode(decodedText.slice(pos, m.start)));
       }
       
       const span = document.createElement('span');
       span.className = 'always-color-text-highlight';
-      span.textContent = text.slice(m.start, m.end);
+      span.textContent = decodedText.slice(m.start, m.end);
       
       // Get the entry and determine the style type
       const entry = m.entry;
@@ -2755,11 +3668,12 @@ module.exports = class AlwaysColorText extends Plugin {
       pos = m.end;
     }
     
-    if (pos < text.length) {
-      frag.appendChild(document.createTextNode(text.slice(pos)));
+    if (pos < decodedText.length) {
+      frag.appendChild(document.createTextNode(decodedText.slice(pos)));
     }
     
     textNode.replaceWith(frag);
+    console.timeEnd('applySimpleHighlights');
   }
 
   // Process only the active file: immediate visible blocks then deferred idle processing
@@ -2768,31 +3682,29 @@ module.exports = class AlwaysColorText extends Plugin {
     const startTime = performance.now();
     debugLog('ACT', 'Processing active file', ctx.sourcePath.slice(-30));
     
-         // Force full reading-mode rendering (user explicitly opted in - bypass perf gates)
-         if (this.settings.forceFullRenderInReading) {
-         try {
-            debugWarn('ACT', 'forceFullRenderInReading enabled - forcing full processing');
-            const pr0 = this.evaluatePathRules(ctx.sourcePath);
-            if (pr0.excluded || (this.hasGlobalExclude() && pr0.hasIncludes && !pr0.included)) return;
-            // File-specific disable via settings
-            if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
-            // Frontmatter can override per-file disabling: always-color-text: false
-            if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
-             // Folder-specific rules
-             const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
-             // Force immediate full chunked processing with regular batch size to avoid UI lockup
-             this.processInChunks(el, this.getSortedWordEntries(), folderEntry, {
-               skipFirstN: 0,
-               batchSize: 30,  // Use regular batch size even when forced to yield periodically
-               clearExisting: true,
-               forceProcess: true,
-               maxMatches: Infinity
-             });
-           } catch (e) {
-             debugError('ACT', 'forceFullRenderInReading failed', e);
-           }
-           return;
-         }
+    // Force full reading-mode rendering (user explicitly opted in - bypass perf gates)
+    if (this.settings.forceFullRenderInReading) {
+      try {
+        debugWarn('ACT', 'forceFullRenderInReading enabled - forcing full processing');
+        const pr0 = this.evaluatePathRules(ctx.sourcePath);
+        const allowedEntriesForce = this.filterEntriesByAdvancedRules(ctx.sourcePath, this.getSortedWordEntries());
+        if ((pr0.excluded || (this.hasGlobalExclude() && pr0.hasIncludes && !pr0.included)) && allowedEntriesForce.length === 0) return;
+        if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
+        if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
+        const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
+        this.processInChunks(el, allowedEntriesForce, folderEntry, {
+          skipFirstN: 0,
+          batchSize: 30,
+          clearExisting: true,
+          forceProcess: true,
+          maxMatches: Infinity
+        });
+      } catch (e) {
+        debugError('ACT', 'forceFullRenderInReading failed', e);
+      }
+      return;
+    }
+    
     // Global performance gate
     try {
       if (this.performanceMonitor && this.performanceMonitor.isOverloaded && this.performanceMonitor.isOverloaded()) {
@@ -2812,12 +3724,28 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // File-specific disable via settings
     const pr = this.evaluatePathRules(ctx.sourcePath);
-    if (pr.excluded || (this.hasGlobalExclude() && pr.hasIncludes && !pr.included)) return;
     if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
     // Frontmatter can override per-file disabling: always-color-text: false
     if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
-    // Folder-specific rules
+    
+    // CRITICAL FIX: Get folder entry BEFORE filtering entries
     const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
+    
+    // Get ALL entries first
+    const allEntries = this.getSortedWordEntries();
+    
+    // Then filter by advanced rules
+    const allowedEntries = this.filterEntriesByAdvancedRules(ctx.sourcePath, allEntries);
+    
+    // Check if we should skip coloring entirely
+    const isExcludedByPathRules = pr.excluded || 
+      (this.hasGlobalExclude() && pr.hasIncludes && !pr.included);
+    
+    // If excluded by path rules AND no entries match advanced rules, return early
+    if (isExcludedByPathRules && allowedEntries.length === 0) {
+      debugLog('ACT', 'Skipping: excluded by path rules with no advanced rule exceptions');
+      return;
+    }
 
     // Respect user preference to disable reading/preview coloring
     if (this.settings.disableReadingModeColoring) {
@@ -2849,18 +3777,18 @@ module.exports = class AlwaysColorText extends Plugin {
         debugLog('ACT', 'Large doc detected -> using viewport-based rendering');
         // Setup an IntersectionObserver-based pipeline to process blocks as they enter view
         try {
-          this.setupViewportObserver(el, folderEntry || null, { clearExisting: true });
+          this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
         } catch (e) {
           debugError('ACT', 'setupViewportObserver failed', e);
           // fallback to immediate small-pass
-          this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true });
+          this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
         }
         return;
       }
 
     } catch (e) {}
 
-    const processNow = () => this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true });
+    const processNow = () => this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
 
     // Fast-path immediate pass for visible content
     const t0 = performance.now();
@@ -2883,12 +3811,12 @@ module.exports = class AlwaysColorText extends Plugin {
           debugLog('DEFERRED', `Start: ${label}, skipFirstN=${immediateBlocks}`);
           try {
             // Prefer chunked processing for large documents; force completion (bypass perf gate)
-            this.processInChunks(el, this.getSortedWordEntries(), folderEntry || null, { skipFirstN: immediateBlocks, batchSize: 30, clearExisting: true, forceProcess: true })
+            this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: immediateBlocks, batchSize: 30, clearExisting: true, forceProcess: true })
               .then(() => debugLog('DEFERRED', `Completed: ${label} in ${(performance.now() - t1).toFixed(1)}ms`))
               .catch(e => debugError('DEFERRED', 'processInChunks error', e));
           } catch (e) {
             debugError('DEFERRED', 'fallback applyHighlights due to error', e);
-            this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: true });
+            this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: true, entries: allowedEntries });
           }
         } catch (e) { debugError('ACT', 'deferred pass error', e); }
       };
@@ -2912,7 +3840,7 @@ module.exports = class AlwaysColorText extends Plugin {
       setTimeout(() => {
         try {
           const t3 = performance.now();
-          this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: false });
+          this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: false, entries: allowedEntries });
           debugLog('ACT', `deferred (fallback-final) in ${(performance.now() - t3).toFixed(1)}ms`);
         } catch (err) { debugError('ACT', 'fallback-final error', err); }
       }, 1500);
@@ -2925,16 +3853,18 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       debugLog('LARGE', 'Processing large document with optimized mode');
       // Process only visible/initial content first
+      const entries = this.filterEntriesByAdvancedRules(ctx.sourcePath, this.getSortedWordEntries());
       this.applyHighlights(el, folderEntry, {
         immediateBlocks: 50,
         skipFirstN: 0,
-        clearExisting: true
+        clearExisting: true,
+        entries
       });
 
       // Schedule the rest to run after a short delay in larger batches
       setTimeout(() => {
         try {
-          this.processInChunks(el, this.getSortedWordEntries(), folderEntry, {
+          this.processInChunks(el, entries, folderEntry, {
             batchSize: 30,
             clearExisting: false
           });
@@ -2969,6 +3899,8 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // NEW METHOD: Process single block with non-Roman text
   processNonRomanBlock(block, entries, folderEntry, opts = {}) {
+    console.time('processNonRomanBlock');
+    try { if (block && (block.classList?.contains('act-skip-coloring') || block.closest?.('.act-skip-coloring'))) { console.timeEnd('processNonRomanBlock'); return; } } catch (_) {}
     const clearExisting = opts.clearExisting !== false;
     const effectiveStyle = 'text';
     
@@ -3063,11 +3995,22 @@ module.exports = class AlwaysColorText extends Plugin {
         node.replaceWith(frag);
       }
     }
+    console.timeEnd('processNonRomanBlock');
   }
 
   // Efficient, non-recursive, DOM walker for reading mode
   _wrapMatchesRecursive(element, entries, folderEntry = null, options = {}) {
     debugLog('WRAP', `Starting with ${entries.length} entries`);
+    
+    // CRITICAL FIX: Apply file-specific advanced rules filtering if we have a file path
+    let filePath = null;
+    try { filePath = this.app?.workspace?.getActiveFile()?.path || null; } catch (_) {}
+    try {
+      if (filePath) {
+        entries = this.filterEntriesByAdvancedRules(filePath, entries || this.getSortedWordEntries());
+        debugLog('WRAP', `After advanced rules filtering: ${entries.length} entries`);
+      }
+    } catch (_) {}
     
     // EARLY BAILOUT FOR LARGE NON-ROMAN TEXTS
     try {
@@ -3083,6 +4026,11 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {
       // Continue with normal processing if check fails
     }
+
+    // PROCESS MARKDOWN FORMATTING IN READING MODE: Bullet Points, Numbered Lists, Tasks
+    try {
+      this.processMarkdownFormattingInReading(element, folderEntry);
+    } catch (e) {}
 
     // SEPARATE SIMPLE PATTERNS FOR OPTIMIZED PROCESSING
     const simpleEntries = entries.filter(entry => 
@@ -3222,7 +4170,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const effectiveStyle = 'text';
       // Call extracted per-block processor
       try { if ((qIndex % 100) === 0) debugLog('COLOR', `Processing block ${qIndex}`); } catch (e) {}
-      this._processBlock(block, entries, folderEntry, { clearExisting, effectiveStyle, immediateLimit, qIndex, skipFirstN, element, forceProcess: (options && options.forceProcess) || this.settings.forceFullRenderInReading, maxMatches: (options && options.maxMatches) || (this.settings.forceFullRenderInReading ? Infinity : undefined) });
+      this._errorRecovery.wrap('PROCESS_BLOCK', () => this._processBlock(block, entries, folderEntry, { clearExisting, effectiveStyle, immediateLimit, qIndex, skipFirstN, element, forceProcess: (options && options.forceProcess) || this.settings.forceFullRenderInReading, maxMatches: (options && options.maxMatches) || (this.settings.forceFullRenderInReading ? Infinity : undefined) }), () => null);
     }
     
     // Clear queue references to help GC
@@ -3246,6 +4194,11 @@ module.exports = class AlwaysColorText extends Plugin {
       effectiveStyle = 'text';
     }
     const immediateLimit = opts.immediateLimit || 0;
+    let filePath = null;
+    try { filePath = this.app?.workspace?.getActiveFile()?.path || null; } catch (_) {}
+    try {
+      if (filePath) entries = this.filterEntriesByAdvancedRules(filePath, entries || this.getSortedWordEntries());
+    } catch (_) {}
 
     // instrumentation: count this block being processed
     try { this._perfCounters.totalBlocksProcessed = (this._perfCounters.totalBlocksProcessed || 0) + 1; } catch (e) {}
@@ -3277,6 +4230,12 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     } catch (e) {}
 
+    try {
+      this.processMarkdownFormattingInReading(block, folderEntry);
+    } catch (e) {
+      try { debugError('MARKDOWN_FORMAT', 'per-block processing error', e); } catch (_) {}
+    }
+
     // Use TreeWalker to find text nodes at any depth, including inside formatting tags like <em>, <i>, <b>, <strong>
     const textNodes = [];
     const walker = document.createTreeWalker(
@@ -3288,6 +4247,11 @@ module.exports = class AlwaysColorText extends Plugin {
           if (node.parentElement?.closest('code, pre')) {
             return NodeFilter.FILTER_REJECT;
           }
+          try {
+            if (node.parentElement?.closest('.act-skip-coloring')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+          } catch (_) {}
           return NodeFilter.FILTER_ACCEPT;
         }
       },
@@ -3435,7 +4399,10 @@ module.exports = class AlwaysColorText extends Plugin {
   let matches = [];
 
       // FIRST: Process text+bg entries (they have priority) - with chunking for performance
-      const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+      let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+      try {
+        if (filePath) textBgEntries = this.filterEntriesByAdvancedRules(filePath, textBgEntries);
+      } catch (_) {}
       const TEXT_BG_CHUNK_SIZE = 10; // Process text+bg entries in chunks of 10 to avoid lag
       
       if (textBgEntries.length > TEXT_BG_CHUNK_SIZE) {
@@ -3553,68 +4520,20 @@ module.exports = class AlwaysColorText extends Plugin {
           }
       }
 
-      for (const entry of entries) {
-        if (!entry || entry.invalid) continue;
-        // mark that this entry was considered for a block
-        try { entry.blocksProcessed = (entry.blocksProcessed || 0) + 1; } catch (e) {}
-        // Fast pre-check to avoid running expensive regexes on text that can't match
-        try {
-          const skipFastTest = (opts && opts.forceProcess) || this.settings.forceFullRenderInReading;
-          if (entry.fastTest && typeof entry.fastTest === 'function' && !skipFastTest) {
-            const possible = entry.fastTest(text);
-            if (!possible) {
-              entry.avoidedExecs = (entry.avoidedExecs || 0) + 1;
-              this._perfCounters.avoidedRegexExecs = (this._perfCounters.avoidedRegexExecs || 0) + 1;
-              debugLog('BLOCK', `fastTest rejected: ${entry.pattern.slice(0, 20)}`);
-              continue;
-            }
-          } else if (entry.fastTest && skipFastTest) {
-            // Forced processing: bypass fastTest to ensure full scanning
-            try { entry.fastTestBypassed = (entry.fastTestBypassed || 0) + 1; } catch (e) {}
-          }
-        } catch (e) { debugError('BLOCK', 'fastTest error', e); }
-        const regex = entry.regex;
-        if (!regex) continue;
-        let iterCount = 0;
-        const _matches = this.safeMatchLoop(regex, text);
-        for (const match of _matches) {
-          const matchedText = match[0];
-          const matchStart = match.index;
-          const matchEnd = match.index + matchedText.length;
-          
-          if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
-            iterCount++;
-            continue;
-          }
-          
-          // Extract full word containing this match by expanding left and right to word boundaries
-          let fullWordStart = matchStart;
-          let fullWordEnd = matchEnd;
-          
-          if (!this.isSentenceLikePattern(entry.pattern)) {
-            while (fullWordStart > 0 && ((/[A-Za-z0-9]/.test(text[fullWordStart - 1])) || text[fullWordStart - 1] === '-' || text[fullWordStart - 1] === "'")) {
-              fullWordStart--;
-            }
-            while (fullWordEnd < text.length && ((/[A-Za-z0-9]/.test(text[fullWordEnd])) || text[fullWordEnd] === '-' || text[fullWordEnd] === "'")) {
-              fullWordEnd++;
-            }
-          }
-          
-          const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : text.substring(fullWordStart, fullWordEnd);
-          
-          // Check if the full word is blacklisted (supports patterns)
-          if (this.isWordBlacklisted(fullWord)) continue;
-          
+      {
+        const candidates = this._settingsIndex ? this._settingsIndex.query(text) : entries;
+        const pm = this._patternMatcher ? this._patternMatcher.match(text, candidates, folderEntry) : [];
+        for (const m of pm) {
           const overlappingTextBgIndices = [];
           for (let i = 0; i < matches.length; i++) {
             const tbMatch = matches[i];
             if (!tbMatch || !tbMatch.isTextBg) continue;
-            if (match.index < tbMatch.end && match.index + matchedText.length > tbMatch.start) {
+            if (m.start < tbMatch.end && m.end > tbMatch.start) {
               overlappingTextBgIndices.push(i);
             }
           }
           if (overlappingTextBgIndices.length > 0) {
-            const mLength = matchedText.length;
+            const mLength = m.end - m.start;
             const allShorter = overlappingTextBgIndices.every(i => {
               const s = matches[i];
               return (s.end - s.start) < mLength;
@@ -3626,40 +4545,9 @@ module.exports = class AlwaysColorText extends Plugin {
               matches.splice(overlappingTextBgIndices[i], 1);
             }
           }
-          
-          const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
-          matches.push({ 
-            start: match.index, 
-            end: match.index + matchedText.length, 
-            color: useColor, 
-            word: matchedText, 
-            highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, 
-            highlightBorderRadius: this.settings.highlightBorderRadius ?? 8,
-            styleType: entry.styleType,
-            textColor: entry.textColor,
-            backgroundColor: entry.backgroundColor
-          });
-          
-          // instrumentation
-          try { entry.matchesFound = (entry.matchesFound || 0) + 1; } catch (e) {}
-          try { this._perfCounters.totalMatchesFound = (this._perfCounters.totalMatchesFound || 0) + 1; } catch (e) {}
+          matches.push(m);
           if (matches.length > maxMatches) break;
-          iterCount++;
         }
-  if (matches.length > maxMatches) break;
-        if (iterCount > 0) {
-          try { entry.execs = (entry.execs || 0) + iterCount; } catch (e) {}
-          try { this._perfCounters.totalRegexExecs = (this._perfCounters.totalRegexExecs || 0) + iterCount; } catch (e) {}
-        }
-        // Log very hot patterns to help identify problematic entries (but avoid spamming)
-        try {
-          const HOT_ITERS_SINGLE = 100; // many iterations in a single block (lowered from 200)
-          const HOT_ITERS_TOTAL = 500; // many execs over time for this pattern (lowered from 1000)
-          if ((iterCount > HOT_ITERS_SINGLE || (entry.execs || 0) > HOT_ITERS_TOTAL) && !entry._hotLogged) {
-            debugWarn('BLOCK', `HOT: "${entry.pattern.slice(0, 30)}" iter=${iterCount} total=${entry.execs}`);
-            entry._hotLogged = true;
-          }
-        } catch (e) {}
       }
 
       // Resolve overlaps from main matching loop first (must run BEFORE Partial Match so longer matches win)
@@ -3992,12 +4880,12 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       
       try {
-        this._processBlock(blocks[i], entries, folderEntry, { 
+        this._errorRecovery.wrap('PROCESS_BLOCK', () => this._processBlock(blocks[i], entries, folderEntry, { 
           clearExisting: options.clearExisting !== false, 
           effectiveStyle: 'text',
           forceProcess: forceProcess || this.settings.forceFullRenderInReading,
           maxMatches: (options && typeof options.maxMatches !== 'undefined') ? options.maxMatches : (forceProcess || this.settings.forceFullRenderInReading ? Infinity : undefined)
-        });
+        }), () => null);
       } catch (e) { 
         debugError('CHUNK', 'block error', e); 
       }
@@ -4047,12 +4935,13 @@ module.exports = class AlwaysColorText extends Plugin {
         while (node = walker.nextNode()) {
           if (!node || !node.nodeName) continue;
           if (['CODE','PRE'].includes(node.nodeName)) continue;
+          try { if (node.closest('.act-skip-coloring') || node.classList.contains('act-skip-coloring')) continue; } catch (_) {}
           if (selectorTags.has(node.nodeName)) blocks.push(node);
         }
       } catch (e) {
         // fallback: querySelectorAll
         try {
-          const nodeList = rootEl.querySelectorAll('p, li, div, span, td, th, blockquote, h1, h2, h3, h4, h5, h6');
+          const nodeList = rootEl.querySelectorAll('p:not(.act-skip-coloring), li:not(.act-skip-coloring), div:not(.act-skip-coloring), span:not(.act-skip-coloring), td:not(.act-skip-coloring), th:not(.act-skip-coloring), blockquote:not(.act-skip-coloring), h1:not(.act-skip-coloring), h2:not(.act-skip-coloring), h3:not(.act-skip-coloring), h4:not(.act-skip-coloring), h5:not(.act-skip-coloring), h6:not(.act-skip-coloring)');
           for (const n of nodeList) blocks.push(n);
         } catch (err) {
           debugError('VIEWPORT', 'querySelectorAll fallback failed', err);
@@ -4070,25 +4959,47 @@ module.exports = class AlwaysColorText extends Plugin {
         threshold: options.threshold || 0.01
       };
 
+      const pq = new PriorityQueue();
+      let processing = false;
+      const processNext = () => {
+        if (processing) return;
+        processing = true;
+        const run = () => {
+          const blk = pq.pop();
+          if (!blk) { processing = false; return; }
+          try {
+            const es = (options && Array.isArray(options.entries)) ? options.entries : this.getSortedWordEntries();
+            this._errorRecovery.wrap('PROCESS_BLOCK', () => this._processBlock(blk, es, folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: 'text', forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)) }), () => null);
+          } catch (e) { debugError('VIEWPORT', '_processBlock failed', e); }
+          if (pq.size() > 0) {
+            setTimeout(run, 0);
+          } else {
+            processing = false;
+          }
+        };
+        setTimeout(run, 0);
+      };
       const io = new IntersectionObserver((entries) => {
         for (const ent of entries) {
           try {
+            const block = ent.target;
             if (ent.isIntersecting) {
-              const block = ent.target;
+              try { if (block.closest('.act-skip-coloring') || block.classList.contains('act-skip-coloring')) { io.unobserve(block); continue; } } catch (_) {}
               if (processed.has(block)) {
                 try { io.unobserve(block); } catch (e) {}
                 continue;
               }
-              // Mark processed before running to avoid races
               processed.add(block);
               try { io.unobserve(block); } catch (e) {}
-              // Process the block (clearExisting true to avoid conflicts)
-              try {
-                this._processBlock(block, this.getSortedWordEntries(), folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: 'text', forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)) });
-              } catch (e) { debugError('VIEWPORT', '_processBlock failed', e); }
+              const r = ent.intersectionRatio || 0;
+              const rect = block.getBoundingClientRect();
+              const dist = Math.abs(rect.top - 0) + Math.abs(rect.bottom - window.innerHeight);
+              const pr = r * 1000 - dist;
+              pq.push(block, pr);
             }
           } catch (e) { debugError('VIEWPORT', 'observer entry error', e); }
         }
+        processNext();
       }, observerOptions);
 
       // Observe each block
@@ -4106,28 +5017,50 @@ module.exports = class AlwaysColorText extends Plugin {
         debugError('VIEWPORT', 'Error storing observer', e); 
       }
 
-      // Prefetch: process first N visible blocks synchronously to reduce perceived delay
       try {
         const firstN = Number(options.immediateBlocks) || 10;
         let count = 0;
         for (const b of blocks) {
           if (count >= firstN) break;
           const rect = b.getBoundingClientRect();
-          // If block is near top of viewport, process now
           if (rect.top < (window.innerHeight + 400) && rect.bottom > -400) {
             if (!processed.has(b)) {
               processed.add(b);
               try { io.unobserve(b); } catch (e) {}
-              this._processBlock(b, this.getSortedWordEntries(), folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: 'text', forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)) });
+              try { if (b.closest('.act-skip-coloring') || b.classList.contains('act-skip-coloring')) { continue; } } catch (_) {}
+              pq.push(b, 1000);
             }
             count++;
           }
         }
-      } catch (e) {
-        debugError('VIEWPORT', 'Error prefetching visible blocks', e);
-      }
+        processNext();
+      } catch (e) { debugError('VIEWPORT', 'Error prefetching visible blocks', e); }
 
       debugLog('VIEWPORT', `observer set: ${blocks.length} blocks, immediate=${options.immediateBlocks || 10}`);
+      const debounce = (fn, ms) => { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); }; };
+      const onChange = debounce(() => { processNext(); }, 100);
+      const scrollH = this._eventManager.add(window, 'scroll', onChange, { passive: true, debounceMs: 100, useRaf: true, viewType: 'reading', priority: 1 });
+      const resizeH = this._eventManager.add(window, 'resize', onChange, { debounceMs: 100, useRaf: true, viewType: 'reading', priority: 1 });
+      const memCheck = () => {
+        try {
+          if (performance && performance.memory) {
+            const usedMB = performance.memory.usedJSHeapSize / (1024 * 1024);
+            if (usedMB > 1000) {
+              for (const b of blocks) {
+                const rect = b.getBoundingClientRect();
+                if (rect.bottom < -200 || rect.top > window.innerHeight + 200) {
+                  const highlights = b.querySelectorAll('span.always-color-text-highlight');
+                  for (const ex of highlights) {
+                    const tn = document.createTextNode(ex.textContent);
+                    ex.replaceWith(tn);
+                  }
+                }
+              }
+            }
+          }
+        } catch (_) {}
+      };
+      setInterval(memCheck, 2000);
     } catch (e) {
       debugError('VIEWPORT', 'setup failed', e);
     }
@@ -4215,7 +5148,7 @@ module.exports = class AlwaysColorText extends Plugin {
       buildDeco(view) {
         const builder = new RangeSetBuilder();
         
-        const entries = plugin.getSortedWordEntries();
+        let entries = plugin.getSortedWordEntries();
         const { from, to } = view.viewport;
         const text = view.state.doc.sliceString(from, to);
         
@@ -4223,23 +5156,29 @@ module.exports = class AlwaysColorText extends Plugin {
         if (!plugin.settings.enabled) return builder.finish();
         if (fileForView) {
           const prb = plugin.evaluatePathRules(fileForView.path);
-          if (prb.excluded || (plugin.hasGlobalExclude() && prb.hasIncludes && !prb.included)) return builder.finish();
           if (plugin.settings.disabledFiles.includes(fileForView.path)) return builder.finish();
           if (plugin.isFrontmatterColoringDisabled(fileForView.path)) return builder.finish();
+          let previewEntries = entries;
+          if (fileForView && fileForView.path) previewEntries = plugin.filterEntriesByAdvancedRules(fileForView.path, entries);
+          if ((prb.excluded || (plugin.hasGlobalExclude() && prb.hasIncludes && !prb.included)) && previewEntries.length === 0) return builder.finish();
+          entries = previewEntries;
         }
 
         const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
+        if (fileForView && fileForView.path) {
+          entries = plugin.filterEntriesByAdvancedRules(fileForView.path, entries);
+        }
         
         if (entries.length === 0) return builder.finish();
         
         // CHUNKED PROCESSING: Handle large pattern sets or large text with chunking
         if (entries.length > EDITOR_PERFORMANCE_CONSTANTS.MAX_PATTERNS_STANDARD || 
             text.length > EDITOR_PERFORMANCE_CONSTANTS.MAX_TEXT_LENGTH_STANDARD) {
-          return plugin.buildDecoChunked(view, builder, from, to, text, entries, folderEntry);
+          return plugin.buildDecoChunked(view, builder, from, to, text, entries, folderEntry, fileForView ? fileForView.path : null);
         }
         
         // Standard processing for small/medium cases
-        return plugin.buildDecoStandard(view, builder, from, to, text, entries, folderEntry);
+        return plugin.buildDecoStandard(view, builder, from, to, text, entries, folderEntry, fileForView ? fileForView.path : null);
       }
     }, {
       decorations: v => v.decorations
@@ -4264,17 +5203,48 @@ module.exports = class AlwaysColorText extends Plugin {
     return text.substring(fullWordStart, fullWordEnd);
   }
 
+  // NEW METHOD: Extract content from list item element, stripping markdown prefixes
+  extractListItemContent(liElement) {
+    try {
+      if (!liElement) return '';
+      const text = this.decodeHtmlEntities(String(liElement.textContent || ''));
+      if (!text) return '';
+      
+      // Remove checkbox prefix: [ ], [x], [X]
+      let content = text.replace(/^\s*\[[\s\xX]\]\s*/, '');
+      
+      // Remove task marker prefix (duplicate, for safety)
+      if (content === text) {
+        content = text.replace(/^\s*[\-\*]\s+\[[^\]]*\]\s+/, '');
+      }
+      
+      // Remove bullet prefix: -, *
+      if (content === text) {
+        content = text.replace(/^\s*[\-\*]\s+/, '');
+      }
+      
+      // Remove numbered list prefix: 1., 2., etc.
+      if (content === text) {
+        content = text.replace(/^\s*\d+\.\s+/, '');
+      }
+      
+      return content;
+    } catch (e) {
+      return '';
+    }
+  }
+
   // NEW METHOD: Check if word is blacklisted
   isWordBlacklisted(word) {
     try {
       const entries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
       const words = Array.isArray(this.settings.blacklistWords) ? this.settings.blacklistWords : [];
-      const w = this.settings.caseSensitive ? String(word) : String(word).toLowerCase();
+      const w = String(word);
 
       for (const bw of words) {
         if (!bw) continue;
-        const cmp = this.settings.caseSensitive ? String(bw) : String(bw).toLowerCase();
-        if (w === cmp) return true;
+        const re = this.settings.caseSensitive ? new RegExp(`\\b${this.escapeRegex(String(bw))}\\b`) : new RegExp(`\\b${this.escapeRegex(String(bw))}\\b`, 'i');
+        if (re.test(w)) return true;
       }
 
       // Check pattern-capable entries
@@ -4284,7 +5254,7 @@ module.exports = class AlwaysColorText extends Plugin {
           try {
             const flags = entry.flags || (this.settings.caseSensitive ? '' : 'i');
             const re = new RegExp(entry.pattern, flags);
-            if (re.test(word)) return true;
+            if (re.test(w)) return true;
           } catch (e) {}
         } else {
           const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0
@@ -4292,8 +5262,8 @@ module.exports = class AlwaysColorText extends Plugin {
             : [entry.pattern];
           for (const p of patterns) {
             if (!p) continue;
-            const cmp = this.settings.caseSensitive ? String(p) : String(p).toLowerCase();
-            if (w === cmp) return true;
+            const re2 = this.settings.caseSensitive ? new RegExp(`\\b${this.escapeRegex(String(p))}\\b`) : new RegExp(`\\b${this.escapeRegex(String(p))}\\b`, 'i');
+            if (re2.test(w)) return true;
           }
         }
       }
@@ -4301,8 +5271,123 @@ module.exports = class AlwaysColorText extends Plugin {
     return false;
   }
 
+  containsBlacklistedWord(text) {
+    try {
+      const entries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      const words = Array.isArray(this.settings.blacklistWords) ? this.settings.blacklistWords : [];
+      const t = String(text);
+      for (const bw of words) {
+        if (!bw) continue;
+        const re = this.settings.caseSensitive ? new RegExp(`\\b${this.escapeRegex(String(bw))}\\b`) : new RegExp(`\\b${this.escapeRegex(String(bw))}\\b`, 'i');
+        if (re.test(t)) return true;
+      }
+      for (const entry of entries) {
+        if (!entry) continue;
+        if (entry.isRegex && this.settings.enableRegexSupport) {
+          try {
+            const flags = entry.flags || (this.settings.caseSensitive ? '' : 'i');
+            const re = new RegExp(entry.pattern, flags);
+            if (re.test(t)) return true;
+          } catch (e) {}
+        } else {
+          const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
+          for (const p of patterns) {
+            if (!p) continue;
+            const re2 = this.settings.caseSensitive ? new RegExp(`\\b${this.escapeRegex(String(p))}\\b`) : new RegExp(`\\b${this.escapeRegex(String(p))}\\b`, 'i');
+            if (re2.test(t)) return true;
+          }
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  // NEW METHOD: Check if a full line is blacklisted by regex pattern (for markdown formatting)
+  isLineBlacklistedByRegex(line) {
+    try {
+      const entries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      const l = String(line);
+      for (const entry of entries) {
+        if (!entry || !entry.isRegex) continue;
+        try {
+          const flags = entry.flags || (this.settings.caseSensitive ? '' : 'i');
+          const re = new RegExp(entry.pattern, flags);
+          if (re.test(l)) return true;
+        } catch (e) {}
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  // NEW METHOD: Get all text ranges that are within blacklisted list items
+  getBlacklistedListItemRanges(text, baseOffset = 0) {
+    const ranges = [];
+    try {
+      let pos = 0;
+      while (pos <= text.length) {
+        const lineStart = pos;
+        const nextNL = text.indexOf('\n', pos);
+        const lineEnd = nextNL === -1 ? text.length : nextNL;
+        const line = text.substring(lineStart, lineEnd);
+        
+        // Check if this line is a list item that's blacklisted
+        if (this.isLineBlacklistedByRegex(line)) {
+          // This entire line's content should be excluded from coloring
+          ranges.push({
+            start: baseOffset + lineStart,
+            end: baseOffset + lineEnd
+          });
+        }
+        
+        if (nextNL === -1) break;
+        pos = nextNL + 1;
+      }
+    } catch (e) {}
+    return ranges;
+  }
+
+  // NEW METHOD: Check if a match position falls within blacklisted ranges
+  isMatchInBlacklistedRange(matchStart, matchEnd, blacklistedRanges) {
+    try {
+      for (const range of blacklistedRanges) {
+        // Check if match overlaps with blacklisted range
+        if (matchStart < range.end && matchEnd > range.start) {
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  // NEW METHOD: Context-aware blacklist check with prefix-aware tokens
+  isContextBlacklisted(text, matchStart, matchEnd) {
+    try {
+      const fullWord = this.extractFullWord(text, matchStart, matchEnd);
+      if (this.isWordBlacklisted(fullWord)) return true;
+      if (matchStart > 0) {
+        const prev = text[matchStart - 1];
+        if (prev && /[@#]/.test(prev)) {
+          const token = prev + fullWord;
+          if (this.isWordBlacklisted(token)) return true;
+        }
+      }
+      let ls = matchStart;
+      while (ls > 0 && text[ls - 1] !== '\n') ls--;
+      let le = matchEnd;
+      while (le < text.length && text[le] !== '\n') le++;
+      const line = text.substring(ls, le);
+      const mTaskChecked = /^\s*[\-\*]\s+\[[xX]\]\s+(.*)$/.exec(line);
+      const mTaskUnchecked = /^\s*[\-\*]\s+\[\s\]\s+(.*)$/.exec(line);
+      const mNumbered = /^\s*\d+\.\s+(.*)$/.exec(line);
+      const mBullet = /^\s*[\-\*]\s+(.*)$/.exec(line);
+      const content = (mTaskChecked && mTaskChecked[1]) || (mTaskUnchecked && mTaskUnchecked[1]) || (mNumbered && mNumbered[1]) || (mBullet && mBullet[1]) || null;
+      if (content && this.containsBlacklistedWord(content)) return true;
+    } catch (e) {}
+    return false;
+  }
+
   // NEW METHOD: Standard editor processing for small/medium pattern/text sizes
-  buildDecoStandard(view, builder, from, to, text, entries, folderEntry) {
+  buildDecoStandard(view, builder, from, to, text, entries, folderEntry, filePath = null) {
     const entries_copy = entries || this.getSortedWordEntries();
     let matches = [];
     let headingRanges = [];
@@ -4363,6 +5448,150 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     } catch (e) {}
 
+    // PROCESS MARKDOWN FORMATTING: Bullet Points, Numbered Lists, Tasks
+    try {
+      const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      
+      const taskCheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Checked)');
+      const taskUncheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Unchecked)');
+      const numberedEntry = we.find(e => e && e.presetLabel === 'Numbered Lists');
+      const bulletEntry = we.find(e => e && e.presetLabel === 'Bullet Points');
+      
+      const taskCheckedBlacklisted = !!blEntries.find(e => e && e.presetLabel === 'Task List (Checked)' && !!e.isRegex);
+      const taskUncheckedBlacklisted = !!blEntries.find(e => e && e.presetLabel === 'Task List (Unchecked)' && !!e.isRegex);
+      const numberedBlacklisted = !!blEntries.find(e => e && e.presetLabel === 'Numbered Lists' && !!e.isRegex);
+      const bulletBlacklisted = !!blEntries.find(e => e && e.presetLabel === 'Bullet Points' && !!e.isRegex);
+      
+      // Check if entries should be colored based on advanced rules
+      const taskCheckedAllowed = !filePath || this.shouldColorText(filePath, taskCheckedEntry ? taskCheckedEntry.pattern : null);
+      const taskUncheckedAllowed = !filePath || this.shouldColorText(filePath, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
+      const numberedAllowed = !filePath || this.shouldColorText(filePath, numberedEntry ? numberedEntry.pattern : null);
+      const bulletAllowed = !filePath || this.shouldColorText(filePath, bulletEntry ? bulletEntry.pattern : null);
+      
+      // Process each line and check patterns in priority order
+      let pos = 0;
+      while (pos <= text.length) {
+        const lineStart = pos;
+        const nextNL = text.indexOf('\n', pos);
+        const lineEnd = nextNL === -1 ? text.length : nextNL;
+        const line = text.substring(lineStart, lineEnd);
+        
+        // Check in priority order: most specific first
+        let matched = false;
+        
+        // Task checked
+        if (!matched && !taskCheckedBlacklisted && taskCheckedEntry && taskCheckedAllowed) {
+          const pattern = /^(\s*)([\-\*])(\s+)(\[[xX]\])(\s+)(.*)$/;
+          const mdMatch = pattern.exec(line);
+          if (mdMatch) {
+            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
+            const contentEnd = lineEnd;
+            const contentText = mdMatch[6] || '';
+            // Check both content blacklist AND line-level regex blacklist
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+              const start = from + contentStart;
+              const end = from + contentEnd;
+              if (taskCheckedEntry.backgroundColor) {
+                const tc = taskCheckedEntry.textColor || 'currentColor';
+                const bc = taskCheckedEntry.backgroundColor;
+                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = taskCheckedEntry.color || taskCheckedEntry.textColor;
+                if (c) matches.push({ start, end, color: c });
+              }
+              matched = true;
+            }
+          }
+        }
+        
+        // Task unchecked
+        if (!matched && !taskUncheckedBlacklisted && taskUncheckedEntry && taskUncheckedAllowed) {
+          const pattern = /^(\s*)([\-\*])(\s+)(\[\s\])(\s+)(.*)$/;
+          const mdMatch = pattern.exec(line);
+          if (mdMatch) {
+            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
+            const contentEnd = lineEnd;
+            const contentText = mdMatch[6] || '';
+            // Check both content blacklist AND line-level regex blacklist
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+              const start = from + contentStart;
+              const end = from + contentEnd;
+              if (taskUncheckedEntry.backgroundColor) {
+                const tc = taskUncheckedEntry.textColor || 'currentColor';
+                const bc = taskUncheckedEntry.backgroundColor;
+                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = taskUncheckedEntry.color || taskUncheckedEntry.textColor;
+                if (c) matches.push({ start, end, color: c });
+              }
+              matched = true;
+            }
+          }
+        }
+        
+        // Numbered lists
+        if (!matched && !numberedBlacklisted && numberedEntry && numberedAllowed) {
+          const pattern = /^(\s*)(\d+\.)(\s+)(.*)$/;
+          const mdMatch = pattern.exec(line);
+          if (mdMatch) {
+            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
+            const contentEnd = lineEnd;
+            const contentText = mdMatch[4] || '';
+            // Check both content blacklist AND line-level regex blacklist
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+              const start = from + contentStart;
+              const end = from + contentEnd;
+              if (numberedEntry.backgroundColor) {
+                const tc = numberedEntry.textColor || 'currentColor';
+                const bc = numberedEntry.backgroundColor;
+                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = numberedEntry.color || numberedEntry.textColor;
+                if (c) matches.push({ start, end, color: c });
+              }
+              matched = true;
+            }
+          }
+        }
+        
+        // Bullet points
+        if (!matched && !bulletBlacklisted && bulletEntry && bulletAllowed) {
+          const pattern = /^(\s*)([\-\*])(\s+)(.*)$/;
+          const mdMatch = pattern.exec(line);
+          if (mdMatch) {
+            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
+            const contentEnd = lineEnd;
+            const contentText = mdMatch[4] || '';
+            // Check both content blacklist AND line-level regex blacklist
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+              const start = from + contentStart;
+              const end = from + contentEnd;
+              if (bulletEntry.backgroundColor) {
+                const tc = bulletEntry.textColor || 'currentColor';
+                const bc = bulletEntry.backgroundColor;
+                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = bulletEntry.color || bulletEntry.textColor;
+                if (c) matches.push({ start, end, color: c });
+              }
+              matched = true;
+            }
+          }
+        }
+        
+        if (nextNL === -1) break;
+        pos = nextNL + 1;
+      }
+    } catch (e) {}
+
+    // Get all blacklisted list item ranges (so we can exclude individual word matches from being colored)
+    const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from);
+
     // FIRST: Process text+bg entries (they have priority and override other styling)
     const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
     for (const entry of textBgEntries) {
@@ -4384,11 +5613,14 @@ module.exports = class AlwaysColorText extends Plugin {
           continue;
         }
         
-        const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : this.extractFullWord(text, matchStart, matchEnd);
-        if (this.isWordBlacklisted(fullWord)) continue;
+        if (this.isContextBlacklisted(text, matchStart, matchEnd)) continue;
 
         const absStart = from + matchStart;
         const absEnd = from + matchEnd;
+        
+        // Skip if in blacklisted list item range
+        if (this.isMatchInBlacklistedRange(absStart, absEnd, blacklistedListRanges)) continue;
+        
         if (hasHeadingBlacklist && headingRanges && headingRanges.length > 0) {
           let inHeading = false;
           for (const hr of headingRanges) { if (absStart < hr.end && absEnd > hr.start) { inHeading = true; break; } }
@@ -4444,6 +5676,13 @@ module.exports = class AlwaysColorText extends Plugin {
         
         const matchStart = from + match.index;
         const matchEnd = from + match.index + matchedText.length;
+        
+        // Skip if in blacklisted list item range
+        if (this.isMatchInBlacklistedRange(matchStart, matchEnd, blacklistedListRanges)) {
+          try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+          continue;
+        }
+        
         const overlappingTextBgIndices = [];
         for (let i = 0; i < matches.length; i++) {
           const tbMatch = matches[i];
@@ -4475,8 +5714,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         
         // Use helper to extract full word and check if blacklisted
-        const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : this.extractFullWord(text, match.index, match.index + matchedText.length);
-        if (this.isWordBlacklisted(fullWord)) continue;
+        if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length)) continue;
         
         matches.push({
           start: from + match.index,
@@ -4511,6 +5749,10 @@ module.exports = class AlwaysColorText extends Plugin {
 
         const absWStart = from + wStart;
         const absWEnd = from + wEnd;
+        
+        // Skip if in blacklisted list item range
+        if (this.isMatchInBlacklistedRange(absWStart, absWEnd, blacklistedListRanges)) continue;
+        
         if (hasHeadingBlacklist && headingRanges && headingRanges.length > 0) {
           let inHeading = false;
           for (const hr of headingRanges) { if (absWStart < hr.end && absWEnd > hr.start) { inHeading = true; break; } }
@@ -4682,7 +5924,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Chunked editor processing for large pattern sets or large text
-  buildDecoChunked(view, builder, from, to, text, entries, folderEntry) {
+  buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath = null) {
     const CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
     const MAX_MATCHES = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
@@ -4742,6 +5984,150 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     } catch (e) {}
 
+    // PROCESS MARKDOWN FORMATTING: Bullet Points, Numbered Lists, Tasks
+    try {
+      const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      
+      const taskCheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Checked)');
+      const taskUncheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Unchecked)');
+      const numberedEntry = we.find(e => e && e.presetLabel === 'Numbered Lists');
+      const bulletEntry = we.find(e => e && e.presetLabel === 'Bullet Points');
+      
+      const taskCheckedBlacklisted = !!blEntries.find(e => e && e.presetLabel === 'Task List (Checked)' && !!e.isRegex);
+      const taskUncheckedBlacklisted = !!blEntries.find(e => e && e.presetLabel === 'Task List (Unchecked)' && !!e.isRegex);
+      const numberedBlacklisted = !!blEntries.find(e => e && e.presetLabel === 'Numbered Lists' && !!e.isRegex);
+      const bulletBlacklisted = !!blEntries.find(e => e && e.presetLabel === 'Bullet Points' && !!e.isRegex);
+      
+      // Check if entries should be colored based on advanced rules
+      const taskCheckedAllowed = !filePath || this.shouldColorText(filePath, taskCheckedEntry ? taskCheckedEntry.pattern : null);
+      const taskUncheckedAllowed = !filePath || this.shouldColorText(filePath, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
+      const numberedAllowed = !filePath || this.shouldColorText(filePath, numberedEntry ? numberedEntry.pattern : null);
+      const bulletAllowed = !filePath || this.shouldColorText(filePath, bulletEntry ? bulletEntry.pattern : null);
+      
+      // Process each line and check patterns in priority order
+      let pos = 0;
+      while (pos <= text.length) {
+        const lineStart = pos;
+        const nextNL = text.indexOf('\n', pos);
+        const lineEnd = nextNL === -1 ? text.length : nextNL;
+        const line = text.substring(lineStart, lineEnd);
+        
+        // Check in priority order: most specific first
+        let matched = false;
+        
+        // Task checked
+        if (!matched && !taskCheckedBlacklisted && taskCheckedEntry && taskCheckedAllowed) {
+          const pattern = /^(\s*)([\-\*])(\s+)(\[[xX]\])(\s+)(.*)$/;
+          const mdMatch = pattern.exec(line);
+          if (mdMatch) {
+            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
+            const contentEnd = lineEnd;
+            const contentText = mdMatch[6] || '';
+            // Check both content blacklist AND line-level regex blacklist
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+              const start = from + contentStart;
+              const end = from + contentEnd;
+              if (taskCheckedEntry.backgroundColor) {
+                const tc = taskCheckedEntry.textColor || 'currentColor';
+                const bc = taskCheckedEntry.backgroundColor;
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = taskCheckedEntry.color || taskCheckedEntry.textColor;
+                if (c) allMatches.push({ start, end, color: c });
+              }
+              matched = true;
+            }
+          }
+        }
+        
+        // Task unchecked
+        if (!matched && !taskUncheckedBlacklisted && taskUncheckedEntry) {
+          const pattern = /^(\s*)([\-\*])(\s+)(\[\s\])(\s+)(.*)$/;
+          const mdMatch = pattern.exec(line);
+          if (mdMatch) {
+            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
+            const contentEnd = lineEnd;
+            const contentText = mdMatch[6] || '';
+            // Check both content blacklist AND line-level regex blacklist
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+              const start = from + contentStart;
+              const end = from + contentEnd;
+              if (taskUncheckedEntry.backgroundColor) {
+                const tc = taskUncheckedEntry.textColor || 'currentColor';
+                const bc = taskUncheckedEntry.backgroundColor;
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = taskUncheckedEntry.color || taskUncheckedEntry.textColor;
+                if (c) allMatches.push({ start, end, color: c });
+              }
+              matched = true;
+            }
+          }
+        }
+        
+        // Numbered lists
+        if (!matched && !numberedBlacklisted && numberedEntry && numberedAllowed) {
+          const pattern = /^(\s*)(\d+\.)(\s+)(.*)$/;
+          const mdMatch = pattern.exec(line);
+          if (mdMatch) {
+            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
+            const contentEnd = lineEnd;
+            const contentText = mdMatch[4] || '';
+            // Check both content blacklist AND line-level regex blacklist
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+              const start = from + contentStart;
+              const end = from + contentEnd;
+              if (numberedEntry.backgroundColor) {
+                const tc = numberedEntry.textColor || 'currentColor';
+                const bc = numberedEntry.backgroundColor;
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = numberedEntry.color || numberedEntry.textColor;
+                if (c) allMatches.push({ start, end, color: c });
+              }
+              matched = true;
+            }
+          }
+        }
+        
+        // Bullet points
+        if (!matched && !bulletBlacklisted && bulletEntry && bulletAllowed) {
+          const pattern = /^(\s*)([\-\*])(\s+)(.*)$/;
+          const mdMatch = pattern.exec(line);
+          if (mdMatch) {
+            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
+            const contentEnd = lineEnd;
+            const contentText = mdMatch[4] || '';
+            // Check both content blacklist AND line-level regex blacklist
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+              const start = from + contentStart;
+              const end = from + contentEnd;
+              if (bulletEntry.backgroundColor) {
+                const tc = bulletEntry.textColor || 'currentColor';
+                const bc = bulletEntry.backgroundColor;
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+              } else {
+                const c = bulletEntry.color || bulletEntry.textColor;
+                if (c) allMatches.push({ start, end, color: c });
+              }
+              matched = true;
+            }
+          }
+        }
+        
+        if (nextNL === -1) break;
+        pos = nextNL + 1;
+      }
+    } catch (e) {}
+
+    // Get all blacklisted list item ranges (so we can exclude individual word matches from being colored)
+    const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from);
+
     // FIRST: Process text+bg entries (they have priority)
     const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
     if (textBgEntries.length > 0) {
@@ -4765,12 +6151,18 @@ module.exports = class AlwaysColorText extends Plugin {
             continue;
           }
           
-          const fullWord = this.isSentenceLikePattern(entry.pattern) ? match[0] : this.extractFullWord(text, matchStart, matchEnd);
-          if (this.isWordBlacklisted(fullWord)) continue;
+          if (this.isContextBlacklisted(text, matchStart, matchEnd)) continue;
+
+          const absStart = from + matchStart;
+          const absEnd = from + matchEnd;
+          
+          // Skip if in blacklisted list item range
+          if (this.isMatchInBlacklistedRange(absStart, absEnd, blacklistedListRanges)) {
+            try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+            continue;
+          }
 
           if (hasHeadingBlacklist && headingRanges && headingRanges.length > 0) {
-            const absStart = from + matchStart;
-            const absEnd = from + matchEnd;
             let inHeading = false;
             for (const hr of headingRanges) { if (absStart < hr.end && absEnd > hr.start) { inHeading = true; break; } }
             if (inHeading) continue;
@@ -4814,7 +6206,7 @@ module.exports = class AlwaysColorText extends Plugin {
       
       for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
         const chunk = entries.slice(i, i + CHUNK_SIZE);
-        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : []);
+        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges);
         allMatches = allMatches.concat(chunkMatches);
         
         // Log progress
@@ -4860,7 +6252,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Process a chunk of patterns
-  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = []) {
+  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = []) {
     const MAX_MATCHES_PER_PATTERN = EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     const matches = [];
     
@@ -4883,6 +6275,11 @@ module.exports = class AlwaysColorText extends Plugin {
         const matchedText = match[0];
         const matchStart = baseFrom + match.index;
         const matchEnd = baseFrom + match.index + matchedText.length;
+        
+        // Skip if in blacklisted list item range
+        if (this.isMatchInBlacklistedRange(matchStart, matchEnd, blacklistedListRanges)) {
+          continue;
+        }
         
         const overlappingTextBgIndices = [];
         for (let i = 0; i < existingMatches.length; i++) {
@@ -4915,9 +6312,8 @@ module.exports = class AlwaysColorText extends Plugin {
           continue;
         }
         
-        // Use helper to extract full word and check if blacklisted
-        const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
-        if (this.isWordBlacklisted(fullWord)) continue;
+        // Context-aware blacklist check
+        if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length)) continue;
         
         matches.push({
           start: matchStart,
@@ -4945,6 +6341,9 @@ module.exports = class AlwaysColorText extends Plugin {
         const wEnd = wStart + w.length;
         
         if (this.isWordBlacklisted(w)) continue;
+        
+        // Skip if in blacklisted list item range
+        if (this.isMatchInBlacklistedRange(baseFrom + wStart, baseFrom + wEnd, blacklistedListRanges)) continue;
         
         for (const entry of patternChunk) {
           if (!entry || entry.invalid) continue;
@@ -5045,8 +6444,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         
         // Use helper to extract full word and check if blacklisted
-        const fullWord = this.isSentenceLikePattern(entry.pattern) ? matchedText : this.extractFullWord(chunkText, match.index, match.index + matchedText.length);
-        if (this.isWordBlacklisted(fullWord)) continue;
+        if (this.isContextBlacklisted(chunkText, match.index, match.index + matchedText.length)) continue;
         
         matches.push({
           start: matchStart,
@@ -5319,34 +6717,181 @@ class PresetModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
+    // Add class to force styling via CSS
+    this.modalEl.addClass('act-preset-modal');
+    // Force wider modal - override Obsidian's default dialog width!!
+    try {
+      this.modalEl.style.maxWidth = '1200px !important';
+      this.modalEl.style.width = '1200px !important';
+    } catch (e) {}
+    contentEl.style.maxWidth = '1200px !important';
+    
     const presets = [
       { label: this.plugin.t('preset_all_headings','All Headings (H1-H6)'), pattern: '^\\s*#{1,6}\\s+.*$', flags: 'm', examples: ['# Heading'] },
+      { label: this.plugin.t('preset_bullet_points','Bullet Points'), pattern: '^\\s*[\\-\\*]\\s+.*$', flags: 'm', examples: ['- Bullet point'], group: 'markdown' },
+      { label: this.plugin.t('preset_numbered_lists','Numbered Lists'), pattern: '^\\s*\\d+\\.\\s+.*$', flags: 'm', examples: ['1. First item'], group: 'markdown' },
+      { label: this.plugin.t('preset_task_checked','Task List (Checked)'), pattern: '^\\s*[\\-\\*]\\s+\\[[xX]\\]\\s+.*$', flags: 'm', examples: ['- [x] Completed'], group: 'markdown' },
+      { label: this.plugin.t('preset_task_unchecked','Task List (Unchecked)'), pattern: '^\\s*[\\-\\*]\\s+\\[\\s\\]\\s+.*$', flags: 'm', examples: ['- [ ] Todo'], group: 'markdown' },
       { label: this.plugin.t('preset_dates_yyyy_mm_dd','Dates (YYYY-MM-DD)'), pattern: '\\b\\d{4}-\\d{2}-\\d{2}\\b', flags: '', examples: ['2009-01-19'] },
       { label: this.plugin.t('preset_dates_yyyy_mmm_dd','Dates (YYYY-MMM-DD)'), pattern: '\\b\\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{2}\\b', flags: 'i', examples: ['2025-Jan-19'] },
       { label: this.plugin.t('preset_times_am_pm','Times (AM/PM)'), pattern: '\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b', flags: 'i', examples: ['9:05pm'] },
       { label: this.plugin.t('preset_relative_dates','Relative dates'), pattern: '\\b(?:today|tomorrow|yesterday|next week|last week)\\b', flags: 'i', examples: ['today, tomorrow'] },
-      { label: this.plugin.t('preset_basic_urls','Basic URLs'), pattern: '\\bhttps?://\\S+\\b', flags: '', examples: ['https://example.com'] },
-      { label: this.plugin.t('preset_markdown_links','Markdown links'), pattern: '\\[[^\\]]+\\]\\(https?://[^)]+\\)', flags: '', examples: ['[Link](https://example.com)'] },
+      { label: this.plugin.t('preset_basic_urls','Basic URLs'), pattern: '\\bhttps?://\\S+\\b', flags: '', examples: ['https://example.com'], group: 'markdown' },
+      { label: this.plugin.t('preset_markdown_links','Markdown links'), pattern: '\\[[^\\]]+\\]\\(https?://[^)]+\\)', flags: '', examples: ['[Link](https://example.com)'], group: 'markdown' },
+      { label: this.plugin.t('preset_inline_comments','Comments (%%…%%)'), pattern: '%%[\\s\\S]*?%%', flags: 's', examples: ['%% comment %%'], group: 'markdown' },
       { label: this.plugin.t('preset_domain_names','Domain names'), pattern: '\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b', flags: '', examples: ['example.com'] },
-      // { label: 'Status words', pattern: '\\b(?:TODO|DONE|WIP|INPROGRESS|BLOCKED|REVIEW|URGENT)\\b', flags: 'i', examples: ['TODO'] },
-      // { label: 'Capitalized names', pattern: '\\b[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*\\b', flags: '', examples: ['John Doe'] },
       { label: this.plugin.t('preset_email_addresses','Email addresses'), pattern: '\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', flags: '', examples: ['name@example.com'] },
       { label: this.plugin.t('preset_at_username','@username'), pattern: '@[a-zA-Z0-9_]+', flags: '', examples: ['@username'] },
       { label: this.plugin.t('preset_currency','Currency'), pattern: '\\$\\d+(?:\\.\\d{2})?|\\b[€£¥]\\d+(?:\\.\\d{2})?\\b', flags: '', examples: ['$29.99'] },
       { label: this.plugin.t('preset_measurements','Measurements'), pattern: '\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|°C|°F|lbs)\\b', flags: '', examples: ['25kg'] },
       { label: this.plugin.t('preset_phone_numbers','Phone numbers'), pattern: '\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b', flags: '', examples: ['123-456-7890'] },
-      { label: this.plugin.t('preset_all_texts','All texts'), pattern: '.+', flags: '', examples: ['This will target all texts.'] }
+      { label: 'Parentheses ()', pattern: '\\(([^)]*)\\)', flags: 'g', examples: ['( text )'], group: 'brackets' },
+      { label: 'Square Brackets []', pattern: '\\[([^\\]]*)\\]', flags: 'g', examples: ['[ yes ]'], group: 'brackets', disableRegexSafety: true },
+      { label: 'Curly Braces {}', pattern: '\\{([^}]*)\\}', flags: 'g', examples: ['{ no }'], group: 'brackets' },
+      { label: 'Angle Brackets <>',  pattern: '<([^>]*)>', flags: 'g', examples: ['< text >'], group: 'brackets' },
+      { label: 'Colons :', pattern: ':([^:]*):',  flags: 'g', examples: [': text :'], group: 'brackets' },
+      { label: 'Double Quotes ""', pattern: '"[^"]*"', flags: '', examples: ['"text"'], group: 'brackets', disableRegexSafety: true },
+      { label: this.plugin.t('preset_all_texts','All texts'), pattern: '.+', flags: '', examples: ['This will target all texts.'], group: 'markdown' }
     ];
-    const list = contentEl.createDiv();
-    presets.forEach(p => {
-      const row = list.createDiv();
+    
+    // Separate presets into three groups
+    const markdownPresets = presets.filter(p => p.group === 'markdown' || [
+      this.plugin.t('preset_all_headings','All Headings (H1-H6)')
+    ].includes(p.label));
+    const bracketPresets = presets.filter(p => p.group === 'brackets');
+    const otherPresets = presets.filter(p => !markdownPresets.includes(p) && !bracketPresets.includes(p));
+    
+    // Create three-column container
+    const container = contentEl.createDiv();
+    container.style.display = 'grid';
+    container.style.gridTemplateColumns = '1fr 1fr 1fr';
+    container.style.gap = '12px';
+    container.style.maxWidth = '100%';
+    
+    // Add responsive styles
+    const mediaRule = `
+      @media (max-width: 1024px) { 
+        .preset-columns { grid-template-columns: 1fr 1fr !important; gap: 8px !important; } 
+      }
+      @media (max-width: 600px) { 
+        .preset-columns { grid-template-columns: 1fr !important; gap: 8px !important; } 
+      }
+    `;
+    const style = document.createElement('style');
+    style.textContent = mediaRule;
+    document.head.appendChild(style);
+    
+    container.className = 'preset-columns';
+    
+    // Left column: Markdown presets
+    const leftCol = container.createDiv();
+    const leftTitle = leftCol.createEl('h3', { text: 'Markdown Formatting' });
+    leftTitle.style.marginTop = '0';
+    leftTitle.style.marginBottom = '12px';
+    leftTitle.style.fontSize = '14px';
+    leftTitle.style.fontWeight = '600';
+    leftTitle.style.opacity = '0.8';
+    
+    const leftList = leftCol.createDiv();
+    markdownPresets.forEach(p => {
+      const row = leftList.createDiv();
       row.style.display = 'flex';
       row.style.alignItems = 'center';
       row.style.gap = '8px';
       row.style.marginBottom = '8px';
       const btn = row.createEl('button', { text: p.label });
-      const sample = row.createEl('span', { text: p.examples && p.examples[0] ? `(${p.examples[0]})` : '' });
+      btn.style.fontSize = '12px';
+      btn.style.padding = '6px 10px';
+      const infoDiv = row.createDiv();
+      infoDiv.style.flex = '1';
+      infoDiv.style.display = 'flex';
+      infoDiv.style.flexDirection = 'column';
+      infoDiv.style.gap = '2px';
+      const sample = infoDiv.createEl('span', { text: p.examples && p.examples[0] ? p.examples[0] : '' });
       sample.style.opacity = '0.7';
+      sample.style.fontSize = '11px';
+      if (p.disableRegexSafety) {
+        const badge = infoDiv.createEl('span', { text: 'Requires regex safety disabled' });
+        badge.style.opacity = '0.6';
+        badge.style.fontSize = '10px';
+        badge.style.color = 'var(--text-warning)';
+      }
+      const handler = () => { try { this.onChoose && this.onChoose(p); } finally { this.close(); } };
+      btn.addEventListener('click', handler);
+      this._listeners.push({ el: btn, h: handler });
+    });
+    
+    // Right column: Other presets
+    const rightCol = container.createDiv();
+    const rightTitle = rightCol.createEl('h3', { text: 'Other Patterns' });
+    rightTitle.style.marginTop = '0';
+    rightTitle.style.marginBottom = '12px';
+    rightTitle.style.fontSize = '14px';
+    rightTitle.style.fontWeight = '600';
+    rightTitle.style.opacity = '0.8';
+    
+    const rightList = rightCol.createDiv();
+    otherPresets.forEach(p => {
+      const row = rightList.createDiv();
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '8px';
+      row.style.marginBottom = '8px';
+      const btn = row.createEl('button', { text: p.label });
+      btn.style.fontSize = '12px';
+      btn.style.padding = '6px 10px';
+      const infoDiv = row.createDiv();
+      infoDiv.style.flex = '1';
+      infoDiv.style.display = 'flex';
+      infoDiv.style.flexDirection = 'column';
+      infoDiv.style.gap = '2px';
+      const sample = infoDiv.createEl('span', { text: p.examples && p.examples[0] ? p.examples[0] : '' });
+      sample.style.opacity = '0.7';
+      sample.style.fontSize = '11px';
+      if (p.disableRegexSafety) {
+        const badge = infoDiv.createEl('span', { text: 'Requires regex safety disabled' });
+        badge.style.opacity = '0.6';
+        badge.style.fontSize = '10px';
+        badge.style.color = 'var(--text-warning)';
+      }
+      const handler = () => { try { this.onChoose && this.onChoose(p); } finally { this.close(); } };
+      btn.addEventListener('click', handler);
+      this._listeners.push({ el: btn, h: handler });
+    });
+
+    // Middle column: Bracket presets
+    const middleCol = container.createDiv();
+    const middleTitle = middleCol.createEl('h3', { text: 'Brackets' });
+    middleTitle.style.marginTop = '0';
+    middleTitle.style.marginBottom = '12px';
+    middleTitle.style.fontSize = '14px';
+    middleTitle.style.fontWeight = '600';
+    middleTitle.style.opacity = '0.8';
+    
+    const middleList = middleCol.createDiv();
+    bracketPresets.forEach(p => {
+      const row = middleList.createDiv();
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '8px';
+      row.style.marginBottom = '8px';
+      const btn = row.createEl('button', { text: p.label });
+      btn.style.fontSize = '12px';
+      btn.style.padding = '6px 10px';
+      const infoDiv = row.createDiv();
+      infoDiv.style.flex = '1';
+      infoDiv.style.display = 'flex';
+      infoDiv.style.flexDirection = 'column';
+      infoDiv.style.gap = '2px';
+      const sample = infoDiv.createEl('span', { text: p.examples && p.examples[0] ? p.examples[0] : '' });
+      sample.style.opacity = '0.7';
+      sample.style.fontSize = '11px';
+      if (p.disableRegexSafety) {
+        const badge = infoDiv.createEl('span', { text: 'Requires regex safety disabled' });
+        badge.style.opacity = '0.6';
+        badge.style.fontSize = '10px';
+        badge.style.color = 'var(--text-warning)';
+      }
       const handler = () => { try { this.onChoose && this.onChoose(p); } finally { this.close(); } };
       btn.addEventListener('click', handler);
       this._listeners.push({ el: btn, h: handler });
@@ -5356,6 +6901,944 @@ class PresetModal extends Modal {
     this._listeners.forEach(x => { try { x.el.removeEventListener('click', x.h); } catch (e) {} });
     this._listeners = [];
     this.contentEl.empty();
+  }
+}
+
+// --- Regex Tester Modal ---
+class RegexTesterModal extends Modal {
+  constructor(app, plugin, onAdded) {
+    super(app);
+    this.plugin = plugin;
+    this.onAdded = onAdded;
+    this._handlers = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    try { this.modalEl.style.maxWidth = '720px'; this.modalEl.style.padding = '20px'; } catch (e) {}
+
+    const title = contentEl.createEl('h2', { text: this.plugin.t('regex_tester_header','Regex Tester') });
+    title.style.marginTop = '0';
+    title.style.marginBottom = '12px';
+    try { title.style.color = 'var(--color-accent)'; } catch (e) {}
+    try { title.addClass('act-regex-title'); } catch (e) {}
+
+    // Row: expression + flags
+    const rowExpr = contentEl.createDiv();
+    rowExpr.style.display = 'flex';
+    rowExpr.style.gap = '12px';
+    try { rowExpr.addClass('act-regex-row-expr'); } catch (e) {}
+
+    const exprInput = rowExpr.createEl('input', { type: 'text' });
+    exprInput.placeholder = this.plugin.t('regex_expression_placeholder','Put your Regex Expression here');
+    exprInput.style.flex = '1';
+    exprInput.style.padding = '10px 14px';
+    exprInput.style.borderRadius = 'var(--radius-m)';
+    exprInput.style.border = '1px solid var(--background-modifier-border)';
+    exprInput.style.background = 'var(--background-modifier-form-field)';
+    try { exprInput.addClass('act-regex-expr'); } catch (e) {}
+
+    const flagsInput = rowExpr.createEl('input', { type: 'text' });
+    flagsInput.placeholder = this.plugin.t('flags_placeholder','flags');
+    flagsInput.style.flex = '0 0 140px';
+    flagsInput.style.padding = '10px 14px';
+    flagsInput.style.borderRadius = 'var(--radius-m)';
+    flagsInput.style.border = '1px solid var(--background-modifier-border)';
+    flagsInput.style.background = 'var(--background-modifier-form-field)';
+    try { flagsInput.addClass('act-regex-flags'); } catch (e) {}
+
+    // Row: style dropdown + color pickers
+    const rowStyle = contentEl.createDiv();
+    rowStyle.style.display = 'flex';
+    rowStyle.style.gap = '12px';
+    rowStyle.style.marginTop = '12px';
+    try { rowStyle.addClass('act-regex-row-style'); } catch (e) {}
+
+    const styleSelect = rowStyle.createEl('select');
+    styleSelect.innerHTML = `<option value="text">${this.plugin.t('style_type_text','color')}</option><option value="highlight">${this.plugin.t('style_type_highlight','highlight')}</option><option value="both">${this.plugin.t('style_type_both','both')}</option>`;
+    styleSelect.value = 'both';
+    styleSelect.style.flex = '0 0 stretch';
+    styleSelect.style.padding = '';
+    styleSelect.style.borderRadius = 'var(--radius-m)';
+    styleSelect.style.border = '1px solid var(--background-modifier-border)';
+    styleSelect.style.background = 'var(--background-modifier-form-field)';
+    styleSelect.style.textAlign = 'center';
+    try { styleSelect.addClass('act-regex-style'); } catch (e) {}
+
+    const textColorInput = rowStyle.createEl('input', { type: 'color' });
+    textColorInput.value = '#58bc54';
+    textColorInput.style.width = '48px';
+    textColorInput.style.height = 'auto';
+    textColorInput.style.borderRadius = 'var(--radius-s)';
+    textColorInput.style.cursor = 'pointer';
+    try { textColorInput.addClass('act-regex-color-text'); } catch (e) {}
+
+    const bgColorInput = rowStyle.createEl('input', { type: 'color' });
+    bgColorInput.value = '#205613';
+    bgColorInput.style.width = '48px';
+    bgColorInput.style.height = 'auto';
+    bgColorInput.style.borderRadius = 'var(--radius-m)';
+    bgColorInput.style.cursor = 'pointer';
+    try { bgColorInput.addClass('act-regex-color-bg'); } catch (e) {}
+
+    const nameInput = rowStyle.createEl('input', { type: 'text' });
+    nameInput.placeholder = this.plugin.t('regex_name_placeholder','name your regex');
+    nameInput.style.padding = '10px 14px';
+    nameInput.style.borderRadius = 'var(--radius-m)';
+    nameInput.style.border = '1px solid var(--background-modifier-border)';
+    nameInput.style.background = 'var(--background-modifier-form-field)';
+    nameInput.style.width = 'stretch';
+    try { nameInput.addClass('act-regex-name'); } catch (e) {}
+
+    // Split layout: editor on left, preview on right
+    const splitContainer = contentEl.createDiv();
+    splitContainer.style.display = 'flex';
+    splitContainer.style.gap = '12px';
+    splitContainer.style.marginTop = '12px';
+    splitContainer.style.height = '300px';
+
+    // Left: CodeMirror editor for test input
+    const editorWrap = splitContainer.createDiv();
+    editorWrap.style.flex = '1';
+    editorWrap.style.border = '1px solid var(--background-modifier-border)';
+    editorWrap.style.borderRadius = 'var(--radius-m)';
+    editorWrap.style.overflow = 'hidden';
+    editorWrap.style.background = 'var(--background-modifier-form-field)';
+
+    // Right: Live preview panel
+    const previewWrap = splitContainer.createDiv();
+    previewWrap.style.flex = '1';
+    previewWrap.style.border = '1px solid var(--background-modifier-border)';
+    previewWrap.style.borderRadius = 'var(--radius-m)';
+    previewWrap.style.padding = '12px';
+    previewWrap.style.overflow = 'auto';
+    previewWrap.style.background = 'var(--background-modifier-form-field)';
+    previewWrap.style.whiteSpace = 'pre-wrap';
+    previewWrap.style.wordWrap = 'break-word';
+    previewWrap.style.fontFamily = 'monospace';
+    previewWrap.style.fontSize = 'var(--font-small)';
+    previewWrap.style.lineHeight = '1.5';
+
+    let cmEditor = null;
+    try {
+      const { EditorState } = require('@codemirror/state');
+      const { EditorView, basicSetup } = require('@codemirror/view');
+      cmEditor = new EditorView({
+        state: EditorState.create({
+          doc: this.plugin.t('regex_subject_placeholder','type your subject / test string here...'),
+          extensions: [basicSetup]
+        }),
+        parent: editorWrap
+      });
+    } catch (e) {
+      // Fallback to textarea if CodeMirror fails
+      const textarea = editorWrap.createEl('textarea');
+      textarea.placeholder = this.plugin.t('regex_subject_placeholder','type your subject / test string here...');
+      textarea.style.width = '100%';
+      textarea.style.height = '100%';
+      textarea.style.padding = '12px';
+      textarea.style.border = 'none';
+      textarea.style.outline = 'none';
+      textarea.style.background = 'transparent';
+      textarea.style.color = 'var(--text-normal)';
+      textarea.style.fontFamily = 'monospace';
+      textarea.style.resize = 'none';
+      cmEditor = { getValue: () => textarea.value, setValue: (v) => { textarea.value = v; } };
+    }
+
+    const sanitizeFlags = (f) => {
+      const s = String(f || '').toLowerCase().replace(/[^gimsuy]/g, '');
+      let out = '';
+      for (const ch of ['g','i','m','s','u','y']) { if (s.includes(ch)) out += ch; }
+      return out;
+    };
+
+    const renderPreview = () => {
+      const raw = cmEditor.getValue ? cmEditor.getValue() : cmEditor.state?.doc.toString() || '';
+      const patRaw = String(exprInput.value || '').trim();
+      status.textContent = '';
+      previewWrap.innerHTML = '';
+
+      // Always show raw text if no pattern
+      if (!patRaw) { 
+        const escaped = String(raw)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+        previewWrap.innerHTML = escaped;
+        return; 
+      }
+      
+      const pat = this.plugin.sanitizePattern(patRaw, true);
+      let flags = sanitizeFlags(flagsInput.value || '');
+      
+      if (!pat) { 
+        status.textContent = this.plugin.t('notice_invalid_regex','Invalid regular expression');
+        const escaped = String(raw)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+        previewWrap.innerHTML = escaped;
+        return; 
+      }
+      if (this.plugin.settings.enableRegexSupport === false) {
+        try { this.plugin.settings.enableRegexSupport = true; } catch (e) {}
+      }
+      if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) {
+        status.textContent = this.plugin.t('notice_pattern_too_complex','Pattern too complex');
+        const escaped = String(raw)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+        previewWrap.innerHTML = escaped;
+        return;
+      }
+      
+      // Force rendering even if there's an error
+      try {
+        const escapeHtml = (str) => {
+          return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+        };
+        
+        const f = flags.includes('g') ? flags : (flags + 'g');
+        const re = new RegExp(pat, f);
+        let lastIndex = 0;
+        let out = '';
+        const applyStyle = (txt) => {
+          const style = styleSelect.value;
+          const t = textColorInput.value;
+          const b = bgColorInput.value;
+          if (style === 'text') {
+            return `<span style="color:${t}">${txt}</span>`;
+          } else if (style === 'highlight') {
+            const rgba = this.plugin.hexToRgba(b, this.plugin.settings.backgroundOpacity ?? 25);
+            const radius = this.plugin.settings.highlightBorderRadius ?? 8;
+            const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
+            return `<span style="background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;">${txt}</span>`;
+          } else {
+            const rgba = this.plugin.hexToRgba(b, this.plugin.settings.backgroundOpacity ?? 25);
+            const radius = this.plugin.settings.highlightBorderRadius ?? 8;
+            const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
+            return `<span style="color:${t};background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;">${txt}</span>`;
+          }
+        };
+        for (const m of raw.matchAll(re)) {
+          const s = m.index ?? 0;
+          const e = s + (m[0] ? m[0].length : 0);
+          out += escapeHtml(raw.slice(lastIndex, s));
+          out += applyStyle(escapeHtml(raw.slice(s, e)));
+          lastIndex = e;
+        }
+        out += escapeHtml(raw.slice(lastIndex));
+        // Preserve line breaks
+        out = out.replace(/\n/g, '<br>');
+        previewWrap.innerHTML = out;
+        status.textContent = `${(raw.match(re) || []).length} match(es) found`;
+      } catch (err) {
+        status.textContent = this.plugin.t('notice_invalid_regex','Invalid regular expression') + ': ' + String(err.message || err);
+        const escaped = String(raw)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+        previewWrap.innerHTML = escaped;
+      }
+    };
+    
+    // Call renderPreview immediately on first load
+    renderPreview();
+    
+    // Instant rendering on all changes
+    const handlers = [
+      { el: exprInput, ev: 'input', fn: renderPreview },
+      { el: flagsInput, ev: 'input', fn: renderPreview },
+      { el: styleSelect, ev: 'change', fn: renderPreview },
+      { el: textColorInput, ev: 'input', fn: renderPreview },
+      { el: bgColorInput, ev: 'input', fn: renderPreview },
+    ];
+    handlers.forEach(h => { try { h.el.addEventListener(h.ev, h.fn); this._handlers.push(h); } catch (e) {} });
+    
+    // Add instant rendering for editor input with multiple methods
+    if (cmEditor && cmEditor.dom) {
+      try {
+        // Method 1: Direct input event
+        cmEditor.dom.addEventListener('input', renderPreview);
+        this._handlers.push({ el: cmEditor.dom, ev: 'input', fn: renderPreview });
+        
+        // Method 2: MutationObserver to catch all DOM changes
+        const observer = new MutationObserver(() => { renderPreview(); });
+        observer.observe(cmEditor.dom, { 
+          childList: true, 
+          subtree: true, 
+          characterData: true, 
+          characterDataOldValue: false 
+        });
+        this._handlers.push({ observer, fn: () => observer.disconnect() });
+      } catch (e) {}
+    }
+
+    const actionRow = contentEl.createDiv();
+    actionRow.style.display = 'flex';
+    actionRow.style.justifyContent = 'space-between';
+    actionRow.style.alignItems = 'center';
+    actionRow.style.gap = '8px';
+    actionRow.style.marginTop = '14px';
+
+    const status = actionRow.createDiv();
+    status.style.opacity = '0.8';
+    status.style.flex = '1';
+    try { status.addClass('act-regex-status'); } catch (e) {}
+
+    const addBtn = actionRow.createEl('button', { text: this.plugin.t('btn_add_regex','+ Add Regex') });
+    addBtn.addClass('mod-cta');
+    addBtn.style.padding = '10px 16px';
+    addBtn.style.borderRadius = 'var(--radius-m)';
+    addBtn.style.border = '2px solid var(--color-accent)';
+    addBtn.style.background = 'var(--interactive-accent)';
+    try { addBtn.addClass('act-regex-add'); } catch (e) {}
+    const addHandler = async () => {
+      const patRaw = String(exprInput.value || '').trim();
+      const pat = this.plugin.sanitizePattern(patRaw, true);
+      const label = String(nameInput.value || '').trim();
+      let flags = sanitizeFlags(flagsInput.value || '');
+      if (!pat) { new Notice(this.plugin.t('notice_empty_pattern','Pattern is empty')); return; }
+      if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) { new Notice(this.plugin.t('notice_pattern_too_complex','Pattern too complex')); return; }
+      try { this.plugin.settings.enableRegexSupport = true; } catch (e) {}
+      const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+      const style = styleSelect.value;
+      const entry = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || undefined, styleType: style };
+      if (style === 'text') {
+        entry.color = textColorInput.value || '';
+        entry.textColor = null;
+        entry.backgroundColor = null;
+      } else if (style === 'highlight') {
+        entry.color = '';
+        entry.textColor = 'currentColor';
+        entry.backgroundColor = bgColorInput.value || '';
+      } else {
+        entry.color = '';
+        entry.textColor = textColorInput.value || '';
+        entry.backgroundColor = bgColorInput.value || '';
+      }
+      this.plugin.settings.wordEntries.push(entry);
+      try { this.plugin.settingTab && (this.plugin.settingTab._suspendSorting = true); } catch (e) {}
+      try { this.plugin.settingTab && entry && entry.uid && this.plugin.settingTab._newEntriesSet && this.plugin.settingTab._newEntriesSet.add(entry.uid); } catch (e) {}
+      await this.plugin.saveSettings();
+      this.plugin.compileWordEntries();
+      this.plugin.compileTextBgColoringEntries();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this.plugin.forceRefreshAllReadingViews();
+      this.plugin.triggerActiveDocumentRerender();
+      try { this.onAdded && this.onAdded(entry); } catch (e) {}
+      new Notice(this.plugin.t('notice_added_regex','Regex added'));
+      this.close();
+    };
+    addBtn.addEventListener('click', addHandler);
+    this._handlers.push({ el: addBtn, ev: 'click', fn: addHandler });
+  }
+  onClose() {
+    try { 
+      this._handlers.forEach(h => { 
+        try { 
+          if (h.el && h.ev && h.fn) h.el.removeEventListener(h.ev, h.fn);
+          if (h.observer && h.fn) h.fn(); // Disconnect MutationObserver
+        } catch (e) {} 
+      }); 
+    } catch (e) {}
+    this._handlers = [];
+    try { this.contentEl.empty(); } catch (e) {}
+  }
+}
+
+class RealTimeRegexTesterModal extends Modal {
+  constructor(app, plugin, onAdded, advancedRuleEntry = null) {
+    super(app);
+    this.plugin = plugin;
+    this.onAdded = onAdded;
+    this._advancedRuleEntry = advancedRuleEntry;
+    this._editingEntry = null;
+    this._preFillPattern = '';
+    this._preFillFlags = '';
+    this._preFillName = '';
+    this._handlers = [];
+    this._rafId = null;
+    this._debounceId = null;
+    this._lastValidHTML = '';
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    try { this.modalEl.style.maxWidth = '820px'; this.modalEl.style.padding = '20px'; } catch (e) {}
+    const title = contentEl.createEl('h2', { text: this.plugin.t('regex_tester_header','Regex Tester') });
+    title.style.marginTop = '0';
+    title.style.marginBottom = '12px';
+    try { title.addClass('act-regex-title'); } catch (e) {}
+    const controlsRow = contentEl.createDiv();
+    controlsRow.style.display = 'flex';
+    controlsRow.style.gap = '12px';
+    const flagsRow = controlsRow.createDiv();
+    flagsRow.style.display = 'flex';
+    flagsRow.style.gap = '6px';
+    const flagNames = ['i','g','m','s','u','y'];
+    const flagButtons = {};
+    flagNames.forEach(f => {
+      const b = flagsRow.createEl('button', { text: f });
+      b.style.padding = '6px 10px';
+      b.style.borderRadius = 'var(--radius-m)';
+      b.style.border = '1px solid var(--background-modifier-border)';
+      b.style.background = 'var(--background-modifier-form-field)';
+      b.style.cursor = 'pointer';
+      flagButtons[f] = b;
+    });
+    const styleSelect = controlsRow.createEl('select');
+    styleSelect.innerHTML = `<option value="text">${this.plugin.t('style_type_text','color')}</option><option value="highlight">${this.plugin.t('style_type_highlight','highlight')}</option><option value="both">${this.plugin.t('style_type_both','both')}</option>`;
+    styleSelect.value = 'both';
+    styleSelect.style.border = '1px solid var(--background-modifier-border)';
+    styleSelect.style.borderRadius = 'var(--radius-m)';
+    styleSelect.style.background = 'var(--background-modifier-form-field)';
+    styleSelect.style.textAlign = 'center';
+    styleSelect.style.marginTop = '0';
+    const textColorInput = controlsRow.createEl('input', { type: 'color' });
+    textColorInput.value = '#87c760';
+    textColorInput.style.width = '48px';
+    const bgColorInput = controlsRow.createEl('input', { type: 'color' });
+    bgColorInput.value = '#1d5010';
+    bgColorInput.style.width = '48px';
+    const regexInput = contentEl.createEl('input', { type: 'text' });
+    regexInput.placeholder = this.plugin.t('regex_expression_placeholder', 'put your expression here');
+    regexInput.style.marginTop = '10px';
+    regexInput.style.width = '100%';
+    regexInput.style.padding = '10px 14px';
+    regexInput.style.borderRadius = 'var(--radius-s)';
+    regexInput.style.border = '1px solid var(--background-modifier-border)';
+    regexInput.style.background = 'var(--background-modifier-form-field)';
+    regexInput.style.fontFamily = 'var(--font-ui-medium)';
+    const subjectWrap = contentEl.createDiv();
+    subjectWrap.style.marginTop = '10px';
+    subjectWrap.style.border = '1px solid var(--background-modifier-border)';
+    subjectWrap.style.borderRadius = 'var(--radius-m)';
+    subjectWrap.style.overflow = 'hidden';
+    subjectWrap.style.background = 'var(--background-modifier-form-field)';
+    const testInput = subjectWrap.createEl('textarea');
+    testInput.placeholder = this.plugin.t('regex_subject_placeholder','type your subject / test string here...');
+    testInput.style.width = '100%';
+    testInput.style.height = '120px';
+    testInput.style.padding = '12px';
+    testInput.style.border = 'none';
+    testInput.style.outline = 'none';
+    testInput.style.background = 'transparent';
+    testInput.style.color = 'var(--text-normal)';
+    testInput.style.fontFamily = 'var(--font-ui-medium)';
+    testInput.style.resize = 'none';
+    const previewWrap = contentEl.createDiv();
+    previewWrap.style.marginTop = '10px';
+    previewWrap.style.border = '1px solid var(--background-modifier-border)';
+    previewWrap.style.borderRadius = 'var(--radius-m)';
+    previewWrap.style.padding = '12px';
+    previewWrap.style.background = 'var(--background-modifier-form-field)';
+    previewWrap.style.whiteSpace = 'pre-wrap';
+    previewWrap.style.wordWrap = 'break-word';
+    previewWrap.style.fontFamily = 'var(--font-ui-medium)';
+    previewWrap.style.fontSize = 'var(--font-small)';
+    previewWrap.style.lineHeight = '1.5';
+    const nameInput = contentEl.createEl('input', { type: 'text' });
+    nameInput.placeholder = this.plugin.t('regex_name_placeholder','name your regex');
+    nameInput.style.marginTop = '10px';
+    nameInput.style.width = '100%';
+    nameInput.style.padding = '10px 14px';
+    nameInput.style.borderRadius = 'var(--radius-m)';
+    nameInput.style.border = '1px solid var(--background-modifier-border)';
+    nameInput.style.background = 'var(--background-modifier-form-field)';
+    nameInput.style.boxSizing = 'border-box';
+    const statusRow = contentEl.createDiv();
+    statusRow.style.display = 'flex';
+    statusRow.style.justifyContent = 'space-between';
+    statusRow.style.alignItems = 'center';
+    statusRow.style.gap = '8px';
+    statusRow.style.marginTop = '14px';
+    const matchFooter = statusRow.createDiv();
+    matchFooter.style.opacity = '0.8';
+    matchFooter.style.flex = '1';
+    const addBtn = statusRow.createEl('button', { text: this._editingEntry ? this.plugin.t('btn_save_regex','Save Regex') : this.plugin.t('btn_add_regex','+ Add Regex') });
+    addBtn.addClass('mod-cta');
+    const infoWrap = contentEl.createDiv();
+    infoWrap.style.marginTop = '8px';
+    infoWrap.style.fontFamily = 'monospace';
+    infoWrap.style.fontSize = 'var(--font-small)';
+    const status = infoWrap.createDiv();
+    status.style.opacity = '0.8';
+    const sanitizeFlags = (f) => {
+      const s = String(f || '').toLowerCase().replace(/[^gimsuy]/g, '');
+      let out = '';
+      for (const ch of ['g','i','m','s','u','y']) { if (s.includes(ch)) out += ch; }
+      return out;
+    };
+    const escapeHtml = (str) => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const renderPreview = () => {
+      const raw = String(testInput.value || '');
+      const patRaw = String(regexInput.value || '').trim();
+      const flags = Object.keys(flagButtons).filter(k => flagButtons[k].dataset.on === '1').join('');
+      const f = flags.includes('g') ? flags : (flags + 'g');
+      if (!patRaw) {
+        status.textContent = '';
+        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g,'<br>');
+        matchFooter.textContent = '0 matches';
+        return;
+      }
+      const pat = this.plugin.sanitizePattern(patRaw, true);
+      if (!pat) {
+        status.textContent = '';
+        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g,'<br>');
+        matchFooter.textContent = '0 matches';
+        return;
+      }
+      if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) {
+        status.textContent = '';
+        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g,'<br>');
+        matchFooter.textContent = '0 matches';
+        return;
+      }
+      let re;
+      try { re = new RegExp(pat, f); } catch (e) {
+        status.textContent = '';
+        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g,'<br>');
+        matchFooter.textContent = '0 matches';
+        return;
+      }
+      let lastIndex = 0;
+      let out = '';
+      let count = 0;
+      const style = styleSelect.value;
+      const t = textColorInput.value;
+      const b = bgColorInput.value;
+      const rgba = this.plugin.hexToRgba(b, 75);
+      const radius = this.plugin.settings.highlightBorderRadius ?? 8;
+      const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
+      const matchStyle = style === 'text'
+        ? `color:${t};background:transparent;`
+        : (style === 'highlight'
+          ? `background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;color:var(--text-normal);`
+          : `color:${t};background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;`);
+      for (const m of raw.matchAll(re)) {
+        const s = m.index ?? 0;
+        const e = s + (m[0] ? m[0].length : 0);
+        out += escapeHtml(raw.slice(lastIndex, s));
+        out += `<mark style="${matchStyle}${style!=='text'?';border-left:1px solid rgba(127,127,127,.3);border-right:1px solid rgba(127,127,127,.3)':''}">${escapeHtml(raw.slice(s, e))}</mark>`;
+        lastIndex = e;
+        count++;
+      }
+      out += escapeHtml(raw.slice(lastIndex));
+      previewWrap.innerHTML = out.replace(/\n/g,'<br>');
+      matchFooter.textContent = `${count} match${count===1?'':'es'}`;
+      status.textContent = count>0 ? '' : raw;
+    };
+    const render = () => { if (this._rafId) cancelAnimationFrame(this._rafId); this._rafId = requestAnimationFrame(renderPreview); };
+    const renderDebounced = () => { if (this._debounceId) clearTimeout(this._debounceId); this._debounceId = setTimeout(() => { render(); }, 100); };
+    const updateFlagButtonUI = () => {
+      const active = Object.keys(flagButtons).filter(k => flagButtons[k].dataset.on === '1');
+      Object.keys(flagButtons).forEach(k => {
+        const on = flagButtons[k].dataset.on === '1';
+        flagButtons[k].style.background = on ? 'var(--interactive-accent)' : 'var(--background-modifier-form-field)';
+        flagButtons[k].style.color = on ? 'var(--text-on-accent)' : 'var(--text-normal)';
+      });
+    };
+    Object.keys(flagButtons).forEach(k => {
+      const btn = flagButtons[k];
+      const flagTooltips = { 'i': 'ignore case', 'g': 'global', 'm': 'multiline', 's': 'dotall', 'u': 'unicode', 'y': 'sticky' };
+      if (flagTooltips[k]) {
+        btn.setAttribute('title', flagTooltips[k]);
+      }
+      const fn = () => { btn.dataset.on = btn.dataset.on === '1' ? '0' : '1'; updateFlagButtonUI(); render(); };
+      btn.addEventListener('click', fn);
+      this._handlers.push({ el: btn, ev: 'click', fn });
+    });
+    updateFlagButtonUI();
+    // Pre-fill pattern and flags if provided
+    if (this._preFillPattern) {
+      regexInput.value = this._preFillPattern;
+    }
+    if (this._preFillFlags) {
+      const flags = String(this._preFillFlags || '').split('');
+      flags.forEach(f => { if (flagButtons[f]) { flagButtons[f].dataset.on = '1'; } });
+      updateFlagButtonUI();
+    }
+    if (this._preFillName) {
+      nameInput.value = this._preFillName;
+    }
+    const onInputImmediate = () => { render(); };
+    const onInputDebounced = () => { renderDebounced(); };
+    const styleChange = () => { render(); };
+    [textColorInput, bgColorInput, styleSelect].forEach(el => { const ev = el===styleSelect?'change':'input'; const fn = el===styleSelect?styleChange:onInputImmediate; el.addEventListener(ev, fn); this._handlers.push({ el, ev, fn }); });
+    testInput.addEventListener('input', onInputDebounced);
+    this._handlers.push({ el: testInput, ev: 'input', fn: onInputDebounced });
+    regexInput.addEventListener('input', onInputDebounced);
+    this._handlers.push({ el: regexInput, ev: 'input', fn: onInputDebounced });
+    render();
+    const addHandler = async () => {
+      const patRaw = String(regexInput.value || '').trim();
+      const pat = this.plugin.sanitizePattern(patRaw, true);
+      const label = String(nameInput.value || '').trim();
+      const flags = Object.keys(flagButtons).filter(k => flagButtons[k].dataset.on === '1').join('');
+      if (!pat) { new Notice(this.plugin.t('notice_empty_pattern','Pattern is empty')); return; }
+      if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) { new Notice(this.plugin.t('notice_pattern_too_complex','Pattern too complex')); return; }
+      try { this.plugin.settings.enableRegexSupport = true; } catch (e) {}
+      
+      // Handle advanced rules context
+      if (this._advancedRuleEntry) {
+        try {
+          this._advancedRuleEntry.text = pat;
+          this._advancedRuleEntry.flags = flags;
+          await this.plugin.saveSettings();
+          try { this.onAdded && this.onAdded(this._advancedRuleEntry); } catch (e) {}
+          new Notice(this.plugin.t('notice_rule_updated','Rule updated'));
+          this.close();
+          return;
+        } catch (e) {
+          debugError('REGEX_TESTER', 'advanced rule update error', e);
+        }
+      }
+      
+      // Handle editing existing word entry
+      if (this._editingEntry) {
+        try {
+          const style = styleSelect.value;
+          const updated = Object.assign({}, this._editingEntry, {
+            pattern: pat,
+            flags,
+            presetLabel: label || undefined,
+            styleType: style
+          });
+          if (style === 'text') { updated.color = textColorInput.value || ''; updated.textColor = null; updated.backgroundColor = null; }
+          else if (style === 'highlight') { updated.color = ''; updated.textColor = 'currentColor'; updated.backgroundColor = bgColorInput.value || ''; }
+          else { updated.color = ''; updated.textColor = textColorInput.value || ''; updated.backgroundColor = bgColorInput.value || ''; }
+          let idx = -1;
+          if (updated && updated.uid) idx = this.plugin.settings.wordEntries.findIndex(e => e && e.uid === updated.uid);
+          if (idx === -1) idx = this.plugin.settings.wordEntries.indexOf(this._editingEntry);
+          if (idx === -1) idx = this.plugin.settings.wordEntries.findIndex(e => e && e.isRegex && String(e.pattern) === String(this._editingEntry.pattern));
+          if (idx !== -1) this.plugin.settings.wordEntries[idx] = updated; else this.plugin.settings.wordEntries.push(updated);
+          this._editingEntry.pattern = updated.pattern;
+          this._editingEntry.flags = updated.flags;
+          this._editingEntry.presetLabel = updated.presetLabel;
+          this._editingEntry.styleType = updated.styleType;
+          this._editingEntry.color = updated.color;
+          this._editingEntry.textColor = updated.textColor;
+          this._editingEntry.backgroundColor = updated.backgroundColor;
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this.plugin.compileTextBgColoringEntries();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
+          this.plugin.triggerActiveDocumentRerender();
+          try { this.onAdded && this.onAdded(updated); } catch (e) {}
+          new Notice(this.plugin.t('notice_regex_updated','Regex updated'));
+          this.close();
+          return;
+        } catch (e) {
+          debugError('REGEX_TESTER', 'entry update error', e);
+        }
+      }
+      
+      // Default: add to word entries (colored texts)
+      const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+      const style = styleSelect.value;
+      const entry = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || undefined, styleType: style, persistAtEnd: true };
+      if (style === 'text') { entry.color = textColorInput.value || ''; entry.textColor = null; entry.backgroundColor = null; }
+      else if (style === 'highlight') { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bgColorInput.value || ''; }
+      else { entry.color = ''; entry.textColor = textColorInput.value || ''; entry.backgroundColor = bgColorInput.value || ''; }
+      this.plugin.settings.wordEntries.push(entry);
+      await this.plugin.saveSettings();
+      this.plugin.compileWordEntries();
+      this.plugin.compileTextBgColoringEntries();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this.plugin.forceRefreshAllReadingViews();
+      this.plugin.triggerActiveDocumentRerender();
+      try { this.onAdded && this.onAdded(entry); } catch (e) {}
+      new Notice(this.plugin.t('notice_added_regex','Regex added'));
+      this.close();
+    };
+    addBtn.addEventListener('click', addHandler);
+    this._handlers.push({ el: addBtn, ev: 'click', fn: addHandler });
+  }
+  onClose() {
+    try {
+      if (this._rafId) cancelAnimationFrame(this._rafId);
+      if (this._debounceId) clearTimeout(this._debounceId);
+      this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} });
+    } catch (e) {}
+    this._handlers = [];
+    try { this.contentEl.empty(); } catch (e) {}
+  }
+}
+
+class BlacklistRegexTesterModal extends Modal {
+  constructor(app, plugin, onAdded) {
+    super(app);
+    this.plugin = plugin;
+    this.onAdded = onAdded;
+    this._editingEntry = null;
+    this._handlers = [];
+    this._rafId = null;
+    this._debounceId = null;
+    this._preFillPattern = '';
+    this._preFillFlags = '';
+    this._preFillName = '';
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    try { this.modalEl.style.maxWidth = '820px'; this.modalEl.style.padding = '20px'; } catch (e) {}
+    const title = contentEl.createEl('h2', { text: this.plugin.t('regex_tester_header','Regex Tester') + ' - Blacklist' });
+    title.style.marginTop = '0';
+    title.style.marginBottom = '12px';
+    try { title.addClass('act-regex-title'); } catch (e) {}
+    const controlsRow = contentEl.createDiv();
+    controlsRow.style.display = 'flex';
+    controlsRow.style.gap = '12px';
+    const flagsRow = controlsRow.createDiv();
+    flagsRow.style.display = 'flex';
+    flagsRow.style.gap = '6px';
+    const flagNames = ['i','g','m','s','u','y'];
+    const flagButtons = {};
+    flagNames.forEach(f => {
+      const b = flagsRow.createEl('button', { text: f });
+      b.style.padding = '6px 10px';
+      b.style.borderRadius = 'var(--radius-m)';
+      b.style.border = '1px solid var(--background-modifier-border)';
+      b.style.background = 'var(--background-modifier-form-field)';
+      b.style.cursor = 'pointer';
+      flagButtons[f] = b;
+    });
+    const regexInput = contentEl.createEl('input', { type: 'text' });
+    regexInput.placeholder = this.plugin.t('regex_expression_placeholder', 'put your expression here');
+    regexInput.style.marginTop = '10px';
+    regexInput.style.width = '100%';
+    regexInput.style.padding = '10px 14px';
+    regexInput.style.borderRadius = 'var(--radius-m)';
+    regexInput.style.border = '1px solid var(--background-modifier-border)';
+    regexInput.style.background = 'var(--background-modifier-form-field)';
+    regexInput.style.fontFamily = 'var(--font-ui-medium)';
+    const subjectWrap = contentEl.createDiv();
+    subjectWrap.style.marginTop = '10px';
+    subjectWrap.style.border = '1px solid var(--background-modifier-border)';
+    subjectWrap.style.borderRadius = 'var(--radius-m)';
+    subjectWrap.style.overflow = 'hidden';
+    subjectWrap.style.background = 'var(--background-modifier-form-field)';
+    const testInput = subjectWrap.createEl('textarea');
+    testInput.placeholder = this.plugin.t('regex_subject_placeholder','type your subject / test string here...');
+    testInput.style.width = '100%';
+    testInput.style.height = '120px';
+    testInput.style.padding = '12px';
+    testInput.style.border = 'none';
+    testInput.style.outline = 'none';
+    testInput.style.background = 'transparent';
+    testInput.style.color = 'var(--text-normal)';
+    testInput.style.fontFamily = 'var(--font-ui-medium)';
+    testInput.style.resize = 'none';
+    const previewWrap = contentEl.createDiv();
+    previewWrap.style.marginTop = '10px';
+    previewWrap.style.border = '1px solid var(--background-modifier-border)';
+    previewWrap.style.borderRadius = 'var(--radius-m)';
+    previewWrap.style.padding = '12px';
+    previewWrap.style.background = 'var(--background-modifier-form-field)';
+    previewWrap.style.whiteSpace = 'pre-wrap';
+    previewWrap.style.wordWrap = 'break-word';
+    previewWrap.style.fontFamily = 'var(--font-ui-medium)';
+    previewWrap.style.fontSize = 'var(--font-small)';
+    previewWrap.style.lineHeight = '1.5';
+    const nameInput = contentEl.createEl('input', { type: 'text' });
+    nameInput.placeholder = this.plugin.t('regex_name_placeholder','name your regex');
+    nameInput.style.marginTop = '10px';
+    nameInput.style.width = '100%';
+    nameInput.style.padding = '10px 14px';
+    nameInput.style.borderRadius = 'var(--radius-m)';
+    nameInput.style.border = '1px solid var(--background-modifier-border)';
+    nameInput.style.background = 'var(--background-modifier-form-field)';
+    nameInput.style.boxSizing = 'border-box';
+    nameInput.style.fontFamily = 'var(--font-ui-medium)';
+    const statusRow = contentEl.createDiv();
+    statusRow.style.display = 'flex';
+    statusRow.style.justifyContent = 'space-between';
+    statusRow.style.alignItems = 'center';
+    statusRow.style.gap = '8px';
+    statusRow.style.marginTop = '14px';
+    const matchFooter = statusRow.createDiv();
+    matchFooter.style.opacity = '0.8';
+    matchFooter.style.flex = '1';
+    const addBtn = statusRow.createEl('button', { text: this._editingEntry ? this.plugin.t('btn_save_regex','Save Regex') : this.plugin.t('btn_add_regex','+ Add to Blacklist') });
+    addBtn.addClass('mod-cta');
+    const sanitizeFlags = (f) => {
+      const s = String(f || '').toLowerCase().replace(/[^gimsuy]/g, '');
+      let out = '';
+      for (const ch of ['g','i','m','s','u','y']) { if (s.includes(ch)) out += ch; }
+      return out;
+    };
+    const escapeHtml = (str) => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const renderPreview = () => {
+      const raw = String(testInput.value || '');
+      const patRaw = String(regexInput.value || '').trim();
+      const flags = Object.keys(flagButtons).filter(k => flagButtons[k].dataset.on === '1').join('');
+      const f = flags.includes('g') ? flags : (flags + 'g');
+      if (!patRaw) {
+        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g,'<br>');
+        matchFooter.textContent = '0 matches';
+        return;
+      }
+      const pat = this.plugin.sanitizePattern(patRaw, true);
+      if (!pat) {
+        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g,'<br>');
+        matchFooter.textContent = '0 matches';
+        return;
+      }
+      if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) {
+        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g,'<br>');
+        matchFooter.textContent = '0 matches';
+        return;
+      }
+      let re;
+      try { re = new RegExp(pat, f); } catch (e) {
+        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g,'<br>');
+        matchFooter.textContent = '0 matches';
+        return;
+      }
+      let lastIndex = 0;
+      let out = '';
+      let count = 0;
+      const matchStyle = 'background:rgba(255, 68, 68, 0.5);border-radius:4px;padding:0 4px;';
+      for (const m of raw.matchAll(re)) {
+        const s = m.index ?? 0;
+        const e = s + (m[0] ? m[0].length : 0);
+        out += escapeHtml(raw.slice(lastIndex, s));
+        out += `<mark style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</mark>`;
+        lastIndex = e;
+        count++;
+      }
+      out += escapeHtml(raw.slice(lastIndex));
+      previewWrap.innerHTML = out.replace(/\n/g,'<br>');
+      matchFooter.textContent = `${count} match${count===1?'':'es'}`;
+    };
+    const render = () => { if (this._rafId) cancelAnimationFrame(this._rafId); this._rafId = requestAnimationFrame(renderPreview); };
+    const renderDebounced = () => { if (this._debounceId) clearTimeout(this._debounceId); this._debounceId = setTimeout(() => { render(); }, 100); };
+    const updateFlagButtonUI = () => {
+      const active = Object.keys(flagButtons).filter(k => flagButtons[k].dataset.on === '1');
+      Object.keys(flagButtons).forEach(k => {
+        const on = flagButtons[k].dataset.on === '1';
+        flagButtons[k].style.background = on ? 'var(--interactive-accent)' : 'var(--background-modifier-form-field)';
+        flagButtons[k].style.color = on ? 'var(--text-on-accent)' : 'var(--text-normal)';
+      });
+    };
+    const flagTooltips = { 'i': 'ignore case', 'g': 'global', 'm': 'multiline', 's': 'dotall', 'u': 'unicode', 'y': 'sticky' };
+    Object.keys(flagButtons).forEach(k => {
+      const btn = flagButtons[k];
+      if (flagTooltips[k]) {
+        btn.setAttribute('title', flagTooltips[k]);
+      }
+      const fn = () => { btn.dataset.on = btn.dataset.on === '1' ? '0' : '1'; updateFlagButtonUI(); render(); };
+      btn.addEventListener('click', fn);
+      this._handlers.push({ el: btn, ev: 'click', fn });
+    });
+    updateFlagButtonUI();
+    // Pre-fill pattern and flags if provided
+    if (this._preFillPattern) {
+      regexInput.value = this._preFillPattern;
+    }
+    if (this._preFillFlags) {
+      const flags = String(this._preFillFlags || '').split('');
+      flags.forEach(f => { if (flagButtons[f]) { flagButtons[f].dataset.on = '1'; } });
+      updateFlagButtonUI();
+    }
+    if (this._preFillName) {
+      nameInput.value = this._preFillName;
+    }
+    const onInputImmediate = () => { render(); };
+    const onInputDebounced = () => { renderDebounced(); };
+    [regexInput, testInput].forEach(el => { const ev = el===regexInput?'input':'input'; const fn = onInputDebounced; el.addEventListener(ev, fn); this._handlers.push({ el, ev, fn }); });
+    render();
+    const addHandler = async () => {
+      const patRaw = String(regexInput.value || '').trim();
+      const pat = this.plugin.sanitizePattern(patRaw, true);
+      const label = String(nameInput.value || '').trim();
+      const flags = Object.keys(flagButtons).filter(k => flagButtons[k].dataset.on === '1').join('');
+      if (!pat) { new Notice(this.plugin.t('notice_empty_pattern','Pattern is empty')); return; }
+      if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) { new Notice(this.plugin.t('notice_pattern_too_complex','Pattern too complex')); return; }
+      try { this.plugin.settings.enableRegexSupport = true; } catch (e) {}
+      
+      // Handle advanced rules context
+      if (this._advancedRuleEntry) {
+        try {
+          this._advancedRuleEntry.text = pat;
+          this._advancedRuleEntry.flags = flags;
+          await this.plugin.saveSettings();
+          try { this.onAdded && this.onAdded(this._advancedRuleEntry); } catch (e) {}
+          new Notice(this.plugin.t('notice_rule_updated','Rule updated'));
+          this.close();
+          return;
+        } catch (e) {
+          debugError('REGEX_TESTER', 'advanced rule update error', e);
+        }
+      }
+      
+      // Handle editing existing blacklist entry
+      if (this._editingEntry) {
+        try {
+          const updated = Object.assign({}, this._editingEntry, {
+            pattern: pat,
+            flags,
+            presetLabel: label || undefined,
+            isRegex: true
+          });
+          let entryIdx = -1;
+          if (updated && updated.uid) entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.uid === updated.uid);
+          if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.indexOf(this._editingEntry);
+          if (entryIdx === -1) entryIdx = this.plugin.settings.blacklistEntries.findIndex(e => e && e.isRegex && String(e.pattern) === String(this._editingEntry.pattern));
+          if (entryIdx !== -1) this.plugin.settings.blacklistEntries[entryIdx] = updated; else this.plugin.settings.blacklistEntries.push(updated);
+          this._editingEntry.pattern = updated.pattern;
+          this._editingEntry.flags = updated.flags;
+          this._editingEntry.presetLabel = updated.presetLabel;
+          this._editingEntry.isRegex = updated.isRegex;
+          await this.plugin.saveSettings();
+          try { this.onAdded && this.onAdded(updated); } catch (e) {}
+          new Notice(this.plugin.t('notice_entry_updated','Entry updated'));
+          this.close();
+          return;
+        } catch (e) {
+          debugError('REGEX_TESTER', 'entry update error', e);
+        }
+      }
+      
+      // Default: add to blacklist
+      const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+      const entry = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || undefined, persistAtEnd: true };
+      if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
+      this.plugin.settings.blacklistEntries.push(entry);
+      try { this.plugin.settingTab && (this.plugin.settingTab._suspendSorting = true); } catch (e) {}
+      try { this.plugin.settingTab && entry && entry.uid && this.plugin.settingTab._blacklistNewSet && this.plugin.settingTab._blacklistNewSet.add(entry.uid); } catch (e) {}
+      await this.plugin.saveSettings();
+      try { this.onAdded && this.onAdded(entry); } catch (e) {}
+      new Notice(this.plugin.t('notice_added_to_blacklist','Pattern added to blacklist'));
+      this.close();
+    };
+    addBtn.addEventListener('click', addHandler);
+    this._handlers.push({ el: addBtn, ev: 'click', fn: addHandler });
+  }
+  onClose() {
+    try {
+      if (this._rafId) cancelAnimationFrame(this._rafId);
+      if (this._debounceId) clearTimeout(this._debounceId);
+      this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} });
+    } catch (e) {}
+    this._handlers = [];
+    try { this.contentEl.empty(); } catch (e) {}
   }
 }
 
@@ -5461,6 +7944,363 @@ class ChangelogModal extends Modal {
   }
 }
 
+class ManageRulesModal extends Modal {
+  constructor(app, plugin) {
+    super(app);
+    this.plugin = plugin;
+    this._handlers = [];
+    this._drag = { from: -1, to: -1 };
+    this._filter = { text: '', regex: false };
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    try { this.modalEl.style.maxWidth = '780px'; this.modalEl.style.padding = '20px'; } catch (e) {}
+    const title = contentEl.createEl('h2', { text: this.plugin.t('advanced_rules_modal_header','Advanced Rules') });
+    title.style.marginTop = '0';
+    title.style.marginBottom = '12px';
+
+    const addBtnFull = contentEl.createEl('button', { text: this.plugin.t('btn_add_file_folder_rule','+ Add file/folder rule') });
+    addBtnFull.addClass('mod-cta');
+    addBtnFull.style.width = '100%';
+    addBtnFull.style.marginBottom = '12px';
+    const addHandlerOpen = () => { try { new AddRuleModal(this.app, this.plugin, () => { renderList(); }).open(); } catch (e) {} };
+    addBtnFull.addEventListener('click', addHandlerOpen);
+    this._handlers.push({ el: addBtnFull, ev: 'click', fn: addHandlerOpen });
+
+    const searchRow = contentEl.createDiv();
+    try { searchRow.addClass('act-search-container'); } catch (e) { try { searchRow.classList.add('act-search-container'); } catch (_) {} }
+    searchRow.style.marginBottom = '12px';
+    const searchInput = searchRow.createEl('input', { type: 'text' });
+    try { searchInput.addClass('act-search-input'); } catch (e) { try { searchInput.classList.add('act-search-input'); } catch (_) {} }
+    searchInput.placeholder = this.plugin.t('search_file_folder_rules_placeholder','Search file/folder rules…');
+    searchInput.style.width = '100%';
+    searchInput.style.padding = '8px';
+    searchInput.style.border = '1px solid var(--background-modifier-border)';
+    searchInput.style.borderRadius = '6px';
+    const searchIcon = searchRow.createDiv();
+    try { searchIcon.addClass('act-search-icon'); } catch (e) { try { searchIcon.classList.add('act-search-icon'); } catch (_) {} }
+    const searchHandler = () => { this._filter.text = String(searchInput.value || '').trim(); renderList(); };
+    searchInput.addEventListener('input', searchHandler);
+    this._handlers.push({ el: searchInput, ev: 'input', fn: searchHandler });
+
+    const listWrap = contentEl.createDiv();
+    listWrap.style.borderRadius = '8px';
+    listWrap.style.padding = '8px';
+    listWrap.style.maxHeight = '50vh';
+    listWrap.style.overflow = 'auto';
+    const list = listWrap.createDiv();
+
+    const renderList = () => {
+      list.empty();
+      const rows = Array.isArray(this.plugin.settings.advancedRules) ? [...this.plugin.settings.advancedRules] : [];
+      const q = String(this._filter.text || '').trim().toLowerCase();
+      const filtered = q ? rows.filter(r => [String(r.text||''), String(r.path||'')].join(' ').toLowerCase().includes(q)) : rows;
+      filtered.forEach((entry, i) => {
+        const row = list.createDiv();
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '8px';
+        row.style.marginBottom = '8px';
+        row.style.border = '1px solid var(--background-modifier-border)';
+        row.style.borderRadius = '6px';
+        row.style.padding = '8px';
+        row.style.cursor = 'pointer';
+        row.setAttr('draggable','true');
+        const drag = row.createEl('span', { text: '≡' });
+        drag.style.cursor = 'grab';
+        drag.style.flex = '0 0 auto';
+        const textEl = row.createEl('span', { text: entry.text || '' });
+        textEl.style.flex = '1';
+        const modeText = entry.mode === 'exclude'
+          ? this.plugin.t('mode_does_not_color_in','does not color in')
+          : this.plugin.t('mode_only_colors_in','only colors in');
+        const pathText = entry.path || '(vault-wide)';
+        const modeEl = row.createEl('span', { text: `${modeText} ${pathText}` });
+        modeEl.style.flex = '1';
+        modeEl.style.fontSize = '0.9em';
+        modeEl.style.color = 'var(--text-muted)';
+
+        const clickToEdit = () => {
+          try {
+            const all = Array.isArray(this.plugin.settings.advancedRules) ? this.plugin.settings.advancedRules : [];
+            const originalIndex = all.indexOf(entry);
+            new AddRuleModal(this.app, this.plugin, () => { renderList(); }, entry, originalIndex).open();
+          } catch (e) {}
+        };
+        row.addEventListener('click', clickToEdit);
+        this._handlers.push({ el: row, ev: 'click', fn: clickToEdit });
+
+        const duplicateHandler = async () => {
+          try {
+            const dup = JSON.parse(JSON.stringify(entry));
+            if (!Array.isArray(this.plugin.settings.advancedRules)) this.plugin.settings.advancedRules = [];
+            this.plugin.settings.advancedRules.push(dup);
+            await this.plugin.saveSettings();
+            renderList();
+            new Notice(this.plugin.t('notice_entry_duplicated','Entry duplicated'));
+          } catch (e) {
+            debugError('MANAGE_RULES', 'duplicate entry error', e);
+          }
+        };
+
+        const openInRegexTesterHandler = async () => {
+          try {
+            if (!entry.isRegex) return;
+            const onAdded = () => {
+              try { renderList(); } catch (e) {}
+            };
+            const modal = new RealTimeRegexTesterModal(this.app, this.plugin, onAdded, entry);
+            // Set pre-fill values BEFORE opening
+            modal._preFillPattern = String(entry.text || '');
+            modal._preFillFlags = String(entry.flags || '');
+            debugLog('MANAGE_RULES', `Pre-filling regex tester: pattern="${modal._preFillPattern}", flags="${modal._preFillFlags}"`);
+            modal.open();
+          } catch (e) {
+            debugError('MANAGE_RULES', 'open in regex tester error', e);
+          }
+        };
+
+        const contextMenuHandler = (ev) => {
+          try {
+            ev && ev.preventDefault && ev.preventDefault();
+            if (ev && ev.stopPropagation) ev.stopPropagation();
+            const menu = new Menu(this.app);
+            menu.addItem((item) => {
+              item.setTitle('Duplicate Entry').setIcon('copy').onClick(duplicateHandler);
+            });
+            if (entry.isRegex) {
+              menu.addItem((item) => {
+                item.setTitle('Open in Regex Tester').setIcon('pencil').onClick(openInRegexTesterHandler);
+              });
+            }
+            menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+          } catch (e) {
+            debugError('MANAGE_RULES', 'context menu error', e);
+          }
+        };
+        row.addEventListener('contextmenu', contextMenuHandler);
+        this._handlers.push({ el: row, ev: 'contextmenu', fn: contextMenuHandler });
+
+        const dragStart = (ev) => { this._drag.from = i; ev.dataTransfer?.setData('text/plain',''); };
+        const dragOver = (ev) => { ev.preventDefault(); };
+        const drop = async (ev) => { ev.preventDefault(); const from = this._drag.from; const to = i; if (from === -1 || to === -1 || from === to) return; const arr = this.plugin.settings.advancedRules; if (!Array.isArray(arr)) return; const [item] = arr.splice(from,1); arr.splice(to,0,item); await this.plugin.saveSettings(); renderList(); };
+        row.addEventListener('dragstart', dragStart);
+        row.addEventListener('dragover', dragOver);
+        row.addEventListener('drop', drop);
+        this._handlers.push({ el: row, ev: 'dragstart', fn: dragStart });
+        this._handlers.push({ el: row, ev: 'dragover', fn: dragOver });
+        this._handlers.push({ el: row, ev: 'drop', fn: drop });
+      });
+      if (filtered.length === 0) {
+        const q = String(this._filter.text || '').trim();
+        list.createEl('p', { text: q ? this.plugin.t('no_rules_found','No rules found.') : this.plugin.t('no_rules_configured','No rules configured.') });
+      }
+    };
+    renderList();
+  }
+  onClose() {
+    try { this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} }); } catch (e) {}
+    this._handlers = [];
+    try { this.contentEl.empty(); } catch (e) {}
+  }
+}
+
+class AddRuleModal extends Modal {
+  constructor(app, plugin, onAdded, editRule = null, editIndex = -1) {
+    super(app);
+    this.plugin = plugin;
+    this.onAdded = onAdded;
+    this._editRule = editRule;
+    this._editIndex = editIndex;
+    this._handlers = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    try { this.modalEl.style.maxWidth = '600px'; this.modalEl.style.padding = '20px'; } catch (e) {}
+    const isEdit = (this._editRule && typeof this._editIndex === 'number' && this._editIndex >= 0);
+    const title = contentEl.createEl('h2', { text: isEdit ? this.plugin.t('edit_rule_header','Edit Rule') : this.plugin.t('add_rule_header','Add New Rule') });
+    title.style.marginTop = '0';
+    title.style.marginBottom = '12px';
+
+    const row1 = contentEl.createDiv();
+    row1.style.display = 'flex';
+    row1.style.gap = '8px';
+    const textInput = row1.createEl('input', { type: 'text' });
+    textInput.placeholder = this.plugin.t('text_or_regex_placeholder','text / regex input');
+    textInput.style.flex = '1';
+    textInput.style.padding = '8px';
+    textInput.style.border = '1px solid var(--background-modifier-border)';
+    textInput.style.borderRadius = '6px';
+    const flagsInput = row1.createEl('input', { type: 'text' });
+    flagsInput.placeholder = this.plugin.t('flags_placeholder','flags');
+    flagsInput.style.flex = '0 0 100px';
+    flagsInput.style.padding = '8px';
+    flagsInput.style.border = '1px solid var(--background-modifier-border)';
+    flagsInput.style.borderRadius = '6px';
+    const regexCheckbox = row1.createEl('input', { type: 'checkbox' });
+    regexCheckbox.style.flex = '0 0 auto';
+    regexCheckbox.style.cursor = 'pointer';
+    regexCheckbox.title = this.plugin.t('tooltip_use_regex','Use as regex pattern');
+    const regexLabel = row1.createEl('label');
+    regexLabel.appendChild(document.createTextNode(this.plugin.t('label_regex','Regex')));
+    regexLabel.style.flex = '0 0 auto';
+    regexLabel.style.cursor = 'pointer';
+    regexLabel.style.userSelect = 'none';
+    regexLabel.style.fontSize = '0.9em';
+    regexLabel.onclick = () => { regexCheckbox.checked = !regexCheckbox.checked; };
+    regexCheckbox.style.margin = '0';
+
+    const modeSel = contentEl.createEl('select');
+    modeSel.style.width = '100%';
+    modeSel.style.marginTop = '8px';
+    modeSel.style.padding = '8px';
+    modeSel.style.border = '1px solid var(--background-modifier-border)';
+    modeSel.style.borderRadius = '6px';
+    modeSel.innerHTML = `<option value="include">${this.plugin.t('text_rule_mode_include','only colors in (whitelist)')}</option><option value="exclude">${this.plugin.t('text_rule_mode_exclude','does not color in (blacklist)')}</option>`;
+
+    const pathInput = contentEl.createEl('input', { type: 'text' });
+    pathInput.placeholder = this.plugin.t('enter_path_or_pattern','Enter path or pattern');
+    pathInput.style.width = '100%';
+    pathInput.style.marginTop = '8px';
+    pathInput.style.padding = '8px';
+    pathInput.style.border = '1px solid var(--background-modifier-border)';
+    pathInput.style.borderRadius = '6px';
+    const buildSuggestions = () => {
+      const files = this.plugin.app.vault.getFiles();
+      const folders = new Set();
+      const filePaths = [];
+      files.forEach(f => {
+        const p = String(f.path).replace(/\\/g, '/');
+        filePaths.push(p);
+        const idx = p.lastIndexOf('/');
+        const folder = idx !== -1 ? p.slice(0, idx) : '';
+        if (folder) {
+          const parts = folder.split('/');
+          let acc = '';
+          parts.forEach(part => { acc = acc ? acc + '/' + part : part; folders.add(acc); });
+        }
+      });
+      return { files: filePaths.sort(), folders: Array.from(folders).sort() };
+    };
+    const sugg = buildSuggestions();
+    const updateDropdown = () => {
+      if (pathInput._actDropdown) {
+        const dd = pathInput._actDropdown;
+        if (pathInput._dropdownScrollListener) { document.removeEventListener('scroll', pathInput._dropdownScrollListener, true); pathInput._dropdownScrollListener = null; }
+        if (pathInput._dropdownClickListener) { document.removeEventListener('click', pathInput._dropdownClickListener); pathInput._dropdownClickListener = null; }
+        if (pathInput._dropdownKeyListener) { document.removeEventListener('keydown', pathInput._dropdownKeyListener); pathInput._dropdownKeyListener = null; }
+        dd.remove();
+        pathInput._actDropdown = null;
+      }
+      const val = String(pathInput.value || '').trim().toLowerCase();
+      const list = [];
+      sugg.folders.forEach(f => list.push({ t: 'folder', p: f }));
+      sugg.files.forEach(f => list.push({ t: 'file', p: f }));
+      const filtered = val ? list.filter(x => x.p.toLowerCase().includes(val)) : list;
+      if (filtered.length === 0) return;
+      const dd = document.createElement('div');
+      Object.assign(dd.style, { position: 'fixed', zIndex: 2000, background: 'var(--background-primary)', color: 'var(--text-normal)', border: '1px solid var(--background-modifier-border)', borderRadius: '6px', boxShadow: '0 6px 18px rgba(0,0,0,0.4)', maxHeight: '240px', overflowY: 'auto', padding: '6px 0', minWidth: Math.max(240, pathInput.offsetWidth) + 'px' });
+      let hi = -1;
+      filtered.forEach(item => {
+        const it = document.createElement('div');
+        it.textContent = item.p || '/';
+        Object.assign(it.style, { padding: '8px 12px', cursor: 'pointer', whiteSpace: 'nowrap' });
+        it.onmouseenter = () => { if (hi >= 0 && dd.children[hi]) dd.children[hi].style.background = 'transparent'; it.style.background = 'var(--background-secondary)'; hi = Array.from(dd.children).indexOf(it); };
+        it.onmouseleave = () => { it.style.background = 'transparent'; };
+        it.onclick = (e) => { e.stopPropagation(); pathInput.value = item.p + (item.t === 'folder' ? '/' : ''); const ev = new Event('change', { bubbles: true }); pathInput.dispatchEvent(ev); dd.remove(); pathInput._actDropdown = null; };
+        dd.appendChild(it);
+      });
+      document.body.appendChild(dd);
+      const pos = () => { const r = pathInput.getBoundingClientRect(); dd.style.left = r.left + 'px'; dd.style.top = (r.bottom + 6) + 'px'; dd.style.width = pathInput.offsetWidth + 'px'; };
+      pos();
+      pathInput._actDropdown = dd;
+      pathInput._dropdownScrollListener = pos;
+      pathInput._dropdownClickListener = (ev) => { if (ev.target === pathInput) return; if (!dd.contains(ev.target)) { dd.remove(); pathInput._actDropdown = null; document.removeEventListener('click', pathInput._dropdownClickListener); document.removeEventListener('scroll', pathInput._dropdownScrollListener, true); document.removeEventListener('keydown', pathInput._dropdownKeyListener); pathInput._dropdownClickListener = null; pathInput._dropdownScrollListener = null; pathInput._dropdownKeyListener = null; } };
+      pathInput._dropdownKeyListener = (ev) => { const items = Array.from(dd.children); if (items.length === 0) return; if (ev.key === 'ArrowDown') { ev.preventDefault(); hi = Math.min(hi + 1, items.length - 1); items.forEach(item => item.style.background = 'transparent'); if (hi >= 0) { items[hi].style.background = 'var(--background-secondary)'; items[hi].scrollIntoView({ block: 'nearest' }); } } else if (ev.key === 'ArrowUp') { ev.preventDefault(); hi = Math.max(hi - 1, -1); items.forEach(item => item.style.background = 'transparent'); if (hi >= 0) { items[hi].style.background = 'var(--background-secondary)'; items[hi].scrollIntoView({ block: 'nearest' }); } } else if (ev.key === 'Enter' && hi >= 0) { ev.preventDefault(); items[hi].click(); } else if (ev.key === 'Escape') { ev.preventDefault(); dd.remove(); pathInput._actDropdown = null; document.removeEventListener('keydown', pathInput._dropdownKeyListener); pathInput._dropdownKeyListener = null; } };
+      document.addEventListener('scroll', pos, true);
+      document.addEventListener('click', pathInput._dropdownClickListener);
+      document.addEventListener('keydown', pathInput._dropdownKeyListener);
+    };
+    const focusHandler = () => { updateDropdown(); };
+    const clickHandler = () => { updateDropdown(); };
+    const inputHandler = () => { updateDropdown(); };
+    pathInput.addEventListener('focus', focusHandler);
+    pathInput.addEventListener('click', clickHandler);
+    pathInput.addEventListener('input', inputHandler);
+    this._handlers.push({ el: pathInput, ev: 'focus', fn: focusHandler });
+    this._handlers.push({ el: pathInput, ev: 'click', fn: clickHandler });
+    this._handlers.push({ el: pathInput, ev: 'input', fn: inputHandler });
+
+    // Prefill if editing
+    if (isEdit) {
+      try {
+        textInput.value = String(this._editRule.text || '');
+        flagsInput.value = String(this._editRule.flags || '');
+        regexCheckbox.checked = !!this._editRule.isRegex;
+        modeSel.value = this._editRule.mode === 'exclude' ? 'exclude' : 'include';
+        pathInput.value = String(this._editRule.path || '');
+      } catch (e) {}
+    }
+
+    const actions = contentEl.createDiv();
+    actions.style.display = 'flex';
+    actions.style.justifyContent = 'space-between';
+    actions.style.alignItems = 'center';
+    actions.style.marginTop = '10px';
+    
+    // Delete button on the left (only show if editing)
+    let deleteBtn = null;
+    if (isEdit) {
+      deleteBtn = actions.createEl('button', { text: this.plugin.t('btn_delete_rule','Delete Rule') });
+      deleteBtn.classList.add('mod-warning');
+      deleteBtn.style.marginRight = 'auto';
+    }
+    
+    const addBtn = actions.createEl('button', { text: isEdit ? this.plugin.t('btn_save_rule','Save Rule') : this.plugin.t('btn_add_rule','+ Add Rule') });
+    addBtn.addClass('mod-cta');
+    const addHandler = async () => {
+      const text = String(textInput.value || '').trim();
+      const flagsRaw = String(flagsInput.value || '').trim();
+      const flags = flagsRaw.replace(/[^gimsuy]/g, '');
+      const path = String(pathInput.value || '').trim().replace(/\\/g, '/');
+      const mode = modeSel.value === 'exclude' ? 'exclude' : 'include';
+      const isRegex = regexCheckbox.checked;
+      if (!Array.isArray(this.plugin.settings.advancedRules)) this.plugin.settings.advancedRules = [];
+      const updated = { text, flags, isRegex, mode, path };
+      if (isEdit && this._editIndex >= 0) {
+        this.plugin.settings.advancedRules[this._editIndex] = updated;
+      } else {
+        this.plugin.settings.advancedRules.push(updated);
+      }
+      await this.plugin.saveSettings();
+      try { this.onAdded && this.onAdded(); } catch (e) {}
+      this.close();
+    };
+    addBtn.addEventListener('click', addHandler);
+    this._handlers.push({ el: addBtn, ev: 'click', fn: addHandler });
+    
+    // Delete handler
+    if (deleteBtn && isEdit && this._editIndex >= 0) {
+      const deleteHandler = async () => {
+        if (!Array.isArray(this.plugin.settings.advancedRules)) return;
+        this.plugin.settings.advancedRules.splice(this._editIndex, 1);
+        await this.plugin.saveSettings();
+        try { this.onAdded && this.onAdded(); } catch (e) {}
+        this.close();
+      };
+      deleteBtn.addEventListener('click', deleteHandler);
+      this._handlers.push({ el: deleteBtn, ev: 'click', fn: deleteHandler });
+    }
+  }
+  onClose() {
+    try { this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} }); } catch (e) {}
+    this._handlers = [];
+    try { this.contentEl.empty(); } catch (e) {}
+  }
+}
+
 
 // --- Color Setting Tab Class ---
 class ColorSettingTab extends PluginSettingTab {
@@ -5471,6 +8311,9 @@ class ColorSettingTab extends PluginSettingTab {
     this._lastRerender = 0;
     this._cleanupHandlers = [];
     this._entryRows = new Map();
+    this._suspendSorting = false;
+    this._newEntriesSet = new Set();
+    this._blacklistNewSet = new Set();
     // Dynamic handlers and cached suggestions for folder UI
     this._dynamicHandlers = [];
     this._cachedFolderSuggestions = null;
@@ -5517,15 +8360,22 @@ class ColorSettingTab extends PluginSettingTab {
       try { styleSelect.addClass('act-style-select'); } catch (e) { try { styleSelect.classList.add('act-style-select'); } catch (_) {} }
       styleSelect.innerHTML = `<option value="text">${this.plugin.t('style_type_text','color')}</option><option value="highlight">${this.plugin.t('style_type_highlight','highlight')}</option><option value="both">${this.plugin.t('style_type_both','both')}</option>`;
 
-      // ELEMENT 2: Word/pattern input
-      const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0) ? entry.groupedPatterns.join(', ') : entry.pattern;
-      if (entry.presetLabel) {
-        const badge = row.createEl('span', { text: entry.presetLabel });
-        badge.style.marginRight = '8px';
-        badge.style.opacity = '0.7';
+      // ELEMENT 2a: Regex name input (only for regex)
+      let nameInput = null;
+      if (entry.isRegex) {
+        nameInput = row.createEl('input', { type: 'text', value: String(entry.presetLabel || '') });
+        nameInput.style.flex = '0 0 60px';
+        nameInput.style.padding = '6px';
+        nameInput.style.borderRadius = '4px';
+        nameInput.style.border = '1px solid var(--background-modifier-border)';
+        nameInput.placeholder = this.plugin.t('regex_name_placeholder','name your regex');
+        try { nameInput.addClass('act-regex-name'); } catch (e) {}
       }
+      // ELEMENT 2b: Word/pattern input
+      const displayPatterns = (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0) ? entry.groupedPatterns.join(', ') : entry.pattern;
       const textInput = row.createEl('input', { type: 'text', value: displayPatterns });
       textInput.style.flex = '1';
+      textInput.style.minWidth = '100px';
       textInput.style.padding = '6px';
       textInput.style.borderRadius = '4px';
       textInput.style.border = '1px solid var(--background-modifier-border)';
@@ -5691,10 +8541,68 @@ class ColorSettingTab extends PluginSettingTab {
           this.plugin.forceRefreshAllEditors();
           this.plugin.forceRefreshAllReadingViews();
           this.plugin.triggerActiveDocumentRerender();
+          this._suspendSorting = this._wordsSortMode !== 'last-added';
           this._refreshEntries();
         } catch (error) {
           debugError('SETTINGS', 'Error saving word entry', error);
           new Notice(this.plugin.t('notice_error_saving_changes','Error saving changes. Please try again.'));
+        }
+      };
+
+      const duplicateHandler = async () => {
+        try {
+          const idx = resolveIdx();
+          if (idx === -1) return;
+          const orig = this.plugin.settings.wordEntries[idx];
+          const dup = Object.assign({}, orig);
+          try { dup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { dup.uid = Date.now(); }
+          this.plugin.settings.wordEntries.splice(idx + 1, 0, dup);
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this.plugin.compileTextBgColoringEntries();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
+          this._suspendSorting = this._wordsSortMode !== 'last-added';
+          this._refreshEntries();
+        } catch (e) {
+          debugError('SETTINGS', 'duplicate entry error', e);
+        }
+      };
+
+      const openInRegexTesterHandler = async () => {
+        try {
+          if (!entry.isRegex) return;
+          const onAdded = () => {
+            try { this._refreshEntries(); } catch (e) {}
+          };
+          const modal = new RealTimeRegexTesterModal(this.app, this.plugin, onAdded);
+          modal._editingEntry = entry;
+          if (entry.pattern) modal._preFillPattern = entry.pattern;
+          if (entry.flags) modal._preFillFlags = entry.flags;
+          if (entry.presetLabel) modal._preFillName = entry.presetLabel;
+          modal.open();
+        } catch (e) {
+          debugError('SETTINGS', 'open in regex tester error', e);
+        }
+      };
+
+      const contextMenuHandler = (ev) => {
+        try {
+          ev && ev.preventDefault && ev.preventDefault();
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          const menu = new Menu(this.app);
+          menu.addItem((item) => {
+            item.setTitle('Duplicate Entry').setIcon('copy').onClick(duplicateHandler);
+          });
+          if (entry.isRegex) {
+            menu.addItem((item) => {
+              item.setTitle('Open in Regex Tester').setIcon('pencil').onClick(openInRegexTesterHandler);
+            });
+          }
+          menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+        } catch (e) {
+          debugError('SETTINGS', 'context menu error', e);
         }
       };
       
@@ -5804,11 +8712,30 @@ class ColorSettingTab extends PluginSettingTab {
 
       textInput.addEventListener('change', textInputHandler);
       textInput.addEventListener('blur', textInputHandler);
+      row.addEventListener('contextmenu', contextMenuHandler);
       cp.addEventListener('input', cpHandler);
       cpBg.addEventListener('input', cpBgHandler);
       regexChk.addEventListener('change', regexChkHandler);
       flagsInput.addEventListener('change', flagsInputHandler);
       del.addEventListener('click', delHandler);
+
+      // Regex name change handler
+      const nameInputHandler = async () => {
+        if (!nameInput) return;
+        const idx = resolveIdx();
+        if (idx !== -1) {
+          const val = String(nameInput.value || '').trim();
+          this.plugin.settings.wordEntries[idx].presetLabel = val || undefined;
+          entry.presetLabel = val || undefined;
+          await this.plugin.saveSettings();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+        }
+      };
+      if (nameInput) {
+        nameInput.addEventListener('change', nameInputHandler);
+        nameInput.addEventListener('blur', nameInputHandler);
+      }
 
       const swatchSelectHandler = async () => {
         if (!swatchSelect) return;
@@ -5840,6 +8767,7 @@ class ColorSettingTab extends PluginSettingTab {
           cpBg.style.display = 'none';
           if (swatchSelect2) swatchSelect2.style.display = 'none';
           flagsInput.style.display = entry.isRegex ? '' : 'none';
+          if (nameInput) nameInput.style.display = entry.isRegex ? '' : 'none';
           try {
             // Synchronize picker values with entry fields
             const val = entry.color || (entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : (entry.backgroundColor || '')) || cp.value;
@@ -5851,6 +8779,7 @@ class ColorSettingTab extends PluginSettingTab {
           cpBg.style.display = '';
           if (swatchSelect2) swatchSelect2.style.display = '';
           flagsInput.style.display = entry.isRegex ? '' : 'none';
+          if (nameInput) nameInput.style.display = entry.isRegex ? '' : 'none';
           try {
             const val = entry.backgroundColor || (entry.color || (entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : '')) || cpBg.value;
             if (val && this.plugin.isValidHexColor(val)) cpBg.value = val;
@@ -5861,6 +8790,7 @@ class ColorSettingTab extends PluginSettingTab {
           cpBg.style.display = '';
           if (swatchSelect2) swatchSelect2.style.display = '';
           flagsInput.style.display = entry.isRegex ? '' : 'none';
+          if (nameInput) nameInput.style.display = entry.isRegex ? '' : 'none';
           try {
             const t = entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : (entry.color || '');
             const b = entry.backgroundColor || '';
@@ -5920,6 +8850,7 @@ class ColorSettingTab extends PluginSettingTab {
       const cleanup = () => {
         try { textInput.removeEventListener('change', textInputHandler); } catch (e) {}
         try { textInput.removeEventListener('blur', textInputHandler); } catch (e) {}
+        try { row.removeEventListener('contextmenu', contextMenuHandler); } catch (e) {}
         try { cp.removeEventListener('input', cpHandler); } catch (e) {}
         try { cpBg.removeEventListener('input', cpBgHandler); } catch (e) {}
         try { regexChk.removeEventListener('change', regexChkHandler); } catch (e) {}
@@ -5931,7 +8862,7 @@ class ColorSettingTab extends PluginSettingTab {
         try { row.remove(); } catch (e) {}
       };
 
-      this._entryRows.set(entry, { row, elements: { textInput, styleSelect, cp, cpBg, regexChk, flagsInput, del }, cleanup });
+      this._entryRows.set(entry, { row, elements: { nameInput, textInput, styleSelect, cp, cpBg, regexChk, flagsInput, del }, cleanup });
       this._cleanupHandlers.push(cleanup);
     } catch (e) { debugError('SETTINGS', '_createEntryRow error', e); }
   }
@@ -5978,26 +8909,35 @@ class ColorSettingTab extends PluginSettingTab {
           return text.includes(q);
         });
       }
+      // Apply sorting according to current mode
       if (this._blacklistSortMode === 'a-z') {
-        entries.sort((a, b) => {
-          const aPat = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
-          const bPat = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
-          const aEmpty = String(aPat).trim().length === 0;
-          const bEmpty = String(bPat).trim().length === 0;
-          if (aEmpty && !bEmpty) return 1;
-          if (!aEmpty && bEmpty) return -1;
-          return String(aPat).toLowerCase().localeCompare(String(bPat).toLowerCase());
-        });
+          entries.sort((a, b) => {
+            const aPat = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
+            const bPat = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
+            const aEmpty = String(aPat).trim().length === 0;
+            const bEmpty = String(bPat).trim().length === 0;
+            if (aEmpty && !bEmpty) return 1;
+            if (!aEmpty && bEmpty) return -1;
+            return String(aPat).toLowerCase().localeCompare(String(bPat).toLowerCase());
+          });
       } else if (this._blacklistSortMode === 'reverse-a-z') {
-        entries.sort((a, b) => {
-          const aPat = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
-          const bPat = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
-          const aEmpty = String(aPat).trim().length === 0;
-          const bEmpty = String(bPat).trim().length === 0;
-          if (aEmpty && !bEmpty) return 1;
-          if (!aEmpty && bEmpty) return -1;
-          return String(bPat).toLowerCase().localeCompare(String(aPat).toLowerCase());
-        });
+          entries.sort((a, b) => {
+            const aPat = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
+            const bPat = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
+            const aEmpty = String(aPat).trim().length === 0;
+            const bEmpty = String(bPat).trim().length === 0;
+            if (aEmpty && !bEmpty) return 1;
+            if (!aEmpty && bEmpty) return -1;
+            return String(bPat).toLowerCase().localeCompare(String(aPat).toLowerCase());
+          });
+      }
+      // Move flagged new entries to the end (preserving insertion order)
+      if (this._blacklistNewSet && this._blacklistNewSet.size > 0) {
+        const newList = [];
+        const baseOrder = Array.isArray(this.plugin.settings.blacklistEntries) ? [...this.plugin.settings.blacklistEntries] : [];
+        baseOrder.forEach(e => { if (e && e.uid && this._blacklistNewSet.has(e.uid)) newList.push(e); });
+        const oldList = entries.filter(e => !(e && e.uid && this._blacklistNewSet.has(e.uid)));
+        entries = [...oldList, ...newList];
       }
       entries.forEach((entry) => {
         const row = this._blacklistWordsContainer.createDiv();
@@ -6154,14 +9094,68 @@ class ColorSettingTab extends PluginSettingTab {
           this._refreshBlacklistWords();
         };
 
+        const duplicateHandler = async () => {
+          try {
+            let entryIdx = resolveBlacklistIndex();
+            if (entryIdx === -1) return;
+            const orig = this.plugin.settings.blacklistEntries[entryIdx];
+            const dup = Object.assign({}, orig);
+            try { dup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { dup.uid = Date.now(); }
+            this.plugin.settings.blacklistEntries.splice(entryIdx + 1, 0, dup);
+            await this.plugin.saveSettings();
+            this._suspendSorting = this._blacklistSortMode !== 'last-added';
+            this._refreshBlacklistWords();
+          } catch (e) {
+            debugError('SETTINGS', 'duplicate blacklist entry error', e);
+          }
+        };
+
+        const openInRegexTesterHandler = async () => {
+          try {
+            if (!entry.isRegex) return;
+            const onAdded = () => {
+              try { this._refreshBlacklistWords(); } catch (e) {}
+            };
+            const modal = new BlacklistRegexTesterModal(this.app, this.plugin, onAdded);
+            modal._editingEntry = entry;
+            if (entry.pattern) modal._preFillPattern = entry.pattern;
+            if (entry.flags) modal._preFillFlags = entry.flags;
+            if (entry.presetLabel) modal._preFillName = entry.presetLabel;
+            modal.open();
+          } catch (e) {
+            debugError('SETTINGS', 'open in regex tester error', e);
+          }
+        };
+
+        const contextMenuHandler = (ev) => {
+          try {
+            ev && ev.preventDefault && ev.preventDefault();
+            if (ev && ev.stopPropagation) ev.stopPropagation();
+            const menu = new Menu(this.app);
+            menu.addItem((item) => {
+              item.setTitle('Duplicate Entry').setIcon('copy').onClick(duplicateHandler);
+            });
+            if (entry.isRegex) {
+              menu.addItem((item) => {
+                item.setTitle('Open in Regex Tester').setIcon('pencil').onClick(openInRegexTesterHandler);
+              });
+            }
+            menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+          } catch (e) {
+            debugError('SETTINGS', 'context menu error', e);
+          }
+        };
+
         textInput.addEventListener('change', textInputHandler);
         textInput.addEventListener('blur', textInputHandler);
+        row.addEventListener('contextmenu', contextMenuHandler);
         regexChk.addEventListener('change', regexChkHandler);
         flagsInput.addEventListener('change', flagsInputHandler);
         del.addEventListener('click', delHandler);
         this._cleanupHandlers.push(() => {
           try { textInput.removeEventListener('change', textInputHandler); } catch (e) {}
           try { textInput.removeEventListener('blur', textInputHandler); } catch (e) {}
+          try { row.removeEventListener('contextmenu', contextMenuHandler); } catch (e) {}
           try { regexChk.removeEventListener('change', regexChkHandler); } catch (e) {}
           try { flagsInput.removeEventListener('change', flagsInputHandler); } catch (e) {}
           try { del.removeEventListener('click', delHandler); } catch (e) {}
@@ -6180,51 +9174,54 @@ class ColorSettingTab extends PluginSettingTab {
         const text = [String(r.path || ''), String(r.mode || ''), String(r.matchType || '')].join(' ').toLowerCase();
         return text.includes(q);
       }) : rows;
-      if (this._pathSortMode === 'a-z') {
-        filteredRows.sort((a, b) => {
-          const aPath = String(a.path || '');
-          const bPath = String(b.path || '');
-          const aEmpty = aPath.trim().length === 0;
-          const bEmpty = bPath.trim().length === 0;
-          if (aEmpty && !bEmpty) return 1;
-          if (!aEmpty && bEmpty) return -1;
-          return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
-        });
-      } else if (this._pathSortMode === 'reverse-a-z') {
-        filteredRows.sort((a, b) => {
-          const aPath = String(a.path || '');
-          const bPath = String(b.path || '');
-          const aEmpty = aPath.trim().length === 0;
-          const bEmpty = bPath.trim().length === 0;
-          if (aEmpty && !bEmpty) return 1;
-          if (!aEmpty && bEmpty) return -1;
-          return bPath.toLowerCase().localeCompare(aPath.toLowerCase());
-        });
-      } else if (this._pathSortMode === 'mode') {
-        const order = { 'exclude': 0, 'include': 1 };
-        filteredRows.sort((a, b) => {
-          const aPath = String(a.path || '');
-          const bPath = String(b.path || '');
-          const aEmpty = aPath.trim().length === 0;
-          const bEmpty = bPath.trim().length === 0;
-          if (aEmpty && !bEmpty) return 1;
-          if (!aEmpty && bEmpty) return -1;
-          const styleCmp = (order[String(a.mode || '')] ?? 1) - (order[String(b.mode || '')] ?? 1);
-          if (styleCmp !== 0) return styleCmp;
-          return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
-        });
-      } else if (this._pathSortMode === 'type') {
-        filteredRows.sort((a, b) => {
-          const aPath = String(a.path || '');
-          const bPath = String(b.path || '');
-          const aEmpty = aPath.trim().length === 0;
-          const bEmpty = bPath.trim().length === 0;
-          if (aEmpty && !bEmpty) return 1;
-          if (!aEmpty && bEmpty) return -1;
-          const typeCmp = (Boolean(a.isFolder) === Boolean(b.isFolder) ? 0 : (a.isFolder ? -1 : 1));
-          if (typeCmp !== 0) return typeCmp;
-          return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
-        });
+      // Skip sorting if suspension flag is set (new entry being added)
+      if (!this._suspendSorting) {
+        if (this._pathSortMode === 'a-z') {
+          filteredRows.sort((a, b) => {
+            const aPath = String(a.path || '');
+            const bPath = String(b.path || '');
+            const aEmpty = aPath.trim().length === 0;
+            const bEmpty = bPath.trim().length === 0;
+            if (aEmpty && !bEmpty) return 1;
+            if (!aEmpty && bEmpty) return -1;
+            return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
+          });
+        } else if (this._pathSortMode === 'reverse-a-z') {
+          filteredRows.sort((a, b) => {
+            const aPath = String(a.path || '');
+            const bPath = String(b.path || '');
+            const aEmpty = aPath.trim().length === 0;
+            const bEmpty = bPath.trim().length === 0;
+            if (aEmpty && !bEmpty) return 1;
+            if (!aEmpty && bEmpty) return -1;
+            return bPath.toLowerCase().localeCompare(aPath.toLowerCase());
+          });
+        } else if (this._pathSortMode === 'mode') {
+          const order = { 'exclude': 0, 'include': 1 };
+          filteredRows.sort((a, b) => {
+            const aPath = String(a.path || '');
+            const bPath = String(b.path || '');
+            const aEmpty = aPath.trim().length === 0;
+            const bEmpty = bPath.trim().length === 0;
+            if (aEmpty && !bEmpty) return 1;
+            if (!aEmpty && bEmpty) return -1;
+            const styleCmp = (order[String(a.mode || '')] ?? 1) - (order[String(b.mode || '')] ?? 1);
+            if (styleCmp !== 0) return styleCmp;
+            return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
+          });
+        } else if (this._pathSortMode === 'type') {
+          filteredRows.sort((a, b) => {
+            const aPath = String(a.path || '');
+            const bPath = String(b.path || '');
+            const aEmpty = aPath.trim().length === 0;
+            const bEmpty = bPath.trim().length === 0;
+            if (aEmpty && !bEmpty) return 1;
+            if (!aEmpty && bEmpty) return -1;
+            const typeCmp = (Boolean(a.isFolder) === Boolean(b.isFolder) ? 0 : (a.isFolder ? -1 : 1));
+            if (typeCmp !== 0) return typeCmp;
+            return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
+          });
+        }
       }
       const buildSuggestions = () => {
         const files = this.app.vault.getFiles();
@@ -6244,7 +9241,11 @@ class ColorSettingTab extends PluginSettingTab {
         return { files: filePaths.sort(), folders: Array.from(folders).sort() };
       };
       const sugg = buildSuggestions();
-      filteredRows.forEach((entry, i) => {
+      filteredRows.forEach((entry, filterIndex) => {
+        // Get the actual index in the original pathRules array
+        const actualIndex = rows.indexOf(entry);
+        if (actualIndex === -1) return; // Safety check
+        
         const row = this._pathRulesContainer.createDiv();
         row.style.display = 'flex';
         row.style.alignItems = 'center';
@@ -6257,7 +9258,7 @@ class ColorSettingTab extends PluginSettingTab {
       modeSel.style.border = '1px solid var(--background-modifier-border)';
       modeSel.style.background = 'var(--background-modifier-form-field)';
       modeSel.style.textAlign = 'center';
-      modeSel.innerHTML = `<option value="include">${this.plugin.t('path_rule_mode_include','include')}</option><option value="exclude">${this.plugin.t('path_rule_mode_exclude','exclude')}</option>`;
+      modeSel.innerHTML = `<option value="include">${this.plugin.t('path_rule_mode_include','Include')}</option><option value="exclude">${this.plugin.t('path_rule_mode_exclude','Exclude')}</option>`;
         modeSel.value = entry.mode === 'exclude' ? 'exclude' : 'include';
         const input = row.createEl('input', { type: 'text', value: entry.path || '' });
         input.placeholder = this.plugin.t('enter_path_or_pattern','Enter path or pattern');
@@ -6293,7 +9294,7 @@ class ColorSettingTab extends PluginSettingTab {
             Object.assign(it.style, { padding: '8px 12px', cursor: 'pointer', whiteSpace: 'nowrap' });
             it.onmouseenter = () => { if (hi >= 0 && dd.children[hi]) dd.children[hi].style.background = 'transparent'; it.style.background = 'var(--background-secondary)'; hi = Array.from(dd.children).indexOf(it); };
             it.onmouseleave = () => { it.style.background = 'transparent'; };
-            it.onclick = async (e) => { e.stopPropagation(); input.value = item.p; const ev = new Event('change', { bubbles: true }); input.dispatchEvent(ev); dd.remove(); input._actDropdown = null; };
+        it.onclick = async (e) => { e.stopPropagation(); input.value = item.p + (item.t === 'folder' ? '/' : ''); const ev = new Event('change', { bubbles: true }); input.dispatchEvent(ev); dd.remove(); input._actDropdown = null; };
             dd.appendChild(it);
           });
           document.body.appendChild(dd);
@@ -6310,22 +9311,29 @@ class ColorSettingTab extends PluginSettingTab {
         };
         const focusHandler = () => { updateDropdown(); };
         input.addEventListener('focus', focusHandler);
+        const clickHandler = () => { updateDropdown(); };
+        input.addEventListener('click', clickHandler);
         this._cleanupHandlers.push(() => input.removeEventListener('focus', focusHandler));
+        this._cleanupHandlers.push(() => input.removeEventListener('click', clickHandler));
         const inputHandler = () => { updateDropdown(); };
         input.addEventListener('input', inputHandler);
         this._cleanupHandlers.push(() => input.removeEventListener('input', inputHandler));
         const changeHandler = async () => {
-          const newPath = String(input.value || '').trim().replace(/\\\\/g, '/');
-          this.plugin.settings.pathRules[i].path = newPath;
+          let newPath = String(input.value || '').trim().replace(/\\\\/g, '/');
+          const isFolderSel = /\/$/.test(newPath) || (!/\.[a-zA-Z0-9]+$/.test(newPath) && newPath.includes('/'));
+          // Ensure trailing slash for folders so folder rules apply to all descendants
+          if (isFolderSel && !/\/$/.test(newPath)) newPath = newPath + '/';
+          this.plugin.settings.pathRules[actualIndex].path = newPath;
+          this.plugin.settings.pathRules[actualIndex].isFolder = isFolderSel;
           await this.plugin.saveSettings();
           this._refreshPathRules();
         };
         input.addEventListener('change', changeHandler);
         this._cleanupHandlers.push(() => input.removeEventListener('change', changeHandler));
-        const modeHandler = async () => { this.plugin.settings.pathRules[i].mode = modeSel.value; await this.plugin.saveSettings(); };
+        const modeHandler = async () => { this.plugin.settings.pathRules[actualIndex].mode = modeSel.value; await this.plugin.saveSettings(); this._refreshPathRules(); };
         modeSel.addEventListener('change', modeHandler);
         this._cleanupHandlers.push(() => modeSel.removeEventListener('change', modeHandler));
-        const delHandler = async () => { const idx = this.plugin.settings.pathRules.indexOf(entry); if (idx !== -1) { this.plugin.settings.pathRules.splice(idx, 1); await this.plugin.saveSettings(); } row.remove(); if (!this.plugin.settings.pathRules.length) { this._pathRulesContainer.createEl('p', { text: this.plugin.t('no_rules_configured','No rules configured.') }); } };
+        const delHandler = async () => { if (actualIndex !== -1 && this.plugin.settings.pathRules[actualIndex]) { this.plugin.settings.pathRules.splice(actualIndex, 1); await this.plugin.saveSettings(); this._refreshPathRules(); } };
         del.addEventListener('click', delHandler);
         this._cleanupHandlers.push(() => del.removeEventListener('click', delHandler));
       });
@@ -6553,84 +9561,60 @@ class ColorSettingTab extends PluginSettingTab {
     try {
       const listDiv = this.containerEl.querySelector('.color-words-list');
       if (!listDiv) return;
-      
-      // Clear existing rows first
+      const newIds = this._newEntriesSet || new Set();
+      const isNew = (e) => {
+        try { return (e && e.uid && newIds.has(e.uid)) || !!e.persistAtEnd; } catch (_) { return !!(e && e.persistAtEnd); }
+      };
+
       listDiv.empty();
-      
-      // Apply sorting based on current sort mode
+
       const entriesToDisplay = [...this.plugin.settings.wordEntries];
-      let entriesFiltered = entriesToDisplay;
       const q = String(this._entriesSearchQuery || '').trim().toLowerCase();
-      if (q) {
-        entriesFiltered = entriesToDisplay.filter(e => {
-          const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || '')];
-          const text = [
-            ...patterns.map(p => p.toLowerCase()),
-            String(e.presetLabel || '').toLowerCase(),
-            String(e.flags || '').toLowerCase(),
-            String(e.styleType || '').toLowerCase()
-          ].join(' ');
-          return text.includes(q);
-        });
-      }
-      
-      if (this._wordsSortMode === 'a-z') {
-        entriesFiltered.sort((a, b) => {
-          // Extract patterns for comparison
-          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) 
-            ? a.groupedPatterns[0] 
-            : (a.pattern || '');
-          
-          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) 
-            ? b.groupedPatterns[0] 
-            : (b.pattern || '');
-          
+      const filtered = q ? entriesToDisplay.filter(e => {
+        const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || '')];
+        const text = [
+          ...patterns.map(p => p.toLowerCase()),
+          String(e.presetLabel || '').toLowerCase(),
+          String(e.flags || '').toLowerCase(),
+          String(e.styleType || '').toLowerCase()
+        ].join(' ');
+        return text.includes(q);
+      }) : entriesToDisplay;
+
+      const newFiltered = filtered.filter(e => isNew(e));
+      let oldFiltered = filtered.filter(e => !isNew(e));
+
+      if (!this._suspendSorting && this._wordsSortMode === 'a-z') {
+        oldFiltered.sort((a, b) => {
+          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
+          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
           const aEmpty = String(patternA).trim().length === 0;
           const bEmpty = String(patternB).trim().length === 0;
           if (aEmpty && !bEmpty) return 1;
           if (!aEmpty && bEmpty) return -1;
-
-          // Check if patterns contain special characters (expressions)
           const aHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternA);
           const bHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternB);
-          
-          // Expressions first, then alphabetical
           if (aHasSpecialChars && !bHasSpecialChars) return -1;
           if (!aHasSpecialChars && bHasSpecialChars) return 1;
-          
-          // Both are same type, sort alphabetically
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
-      } else if (this._wordsSortMode === 'reverse-a-z') {
-        entriesFiltered.sort((a, b) => {
-          // Extract patterns for comparison
-          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) 
-            ? a.groupedPatterns[0] 
-            : (a.pattern || '');
-          
-          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) 
-            ? b.groupedPatterns[0] 
-            : (b.pattern || '');
-          
+      } else if (!this._suspendSorting && this._wordsSortMode === 'reverse-a-z') {
+        oldFiltered.sort((a, b) => {
+          const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
+          const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
           const aEmpty = String(patternA).trim().length === 0;
           const bEmpty = String(patternB).trim().length === 0;
           if (aEmpty && !bEmpty) return 1;
           if (!aEmpty && bEmpty) return -1;
-
-          // Check if patterns contain special characters (expressions)
           const aHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternA);
           const bHasSpecialChars = /[^a-zA-Z0-9\s]/.test(patternB);
-          
-          // Expressions first, then reverse alphabetical
           if (aHasSpecialChars && !bHasSpecialChars) return -1;
           if (!aHasSpecialChars && bHasSpecialChars) return 1;
-          
-          // Both are same type, sort reverse alphabetically (Z-A)
           return patternB.toLowerCase().localeCompare(patternA.toLowerCase());
         });
-      } else if (this._wordsSortMode === 'style-order') {
+      } else if (!this._suspendSorting && this._wordsSortMode === 'style-order') {
         const styleOrder = { 'text': 0, 'highlight': 1, 'both': 2 };
-        entriesFiltered.sort((a, b) => {
+        oldFiltered.sort((a, b) => {
           const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
           const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
           const aEmpty = String(patternA).trim().length === 0;
@@ -6642,8 +9626,8 @@ class ColorSettingTab extends PluginSettingTab {
           if (styleA !== styleB) return styleA - styleB;
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
-      } else if (this._wordsSortMode === 'color') {
-        entriesFiltered.sort((a, b) => {
+      } else if (!this._suspendSorting && this._wordsSortMode === 'color') {
+        oldFiltered.sort((a, b) => {
           const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
           const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
           const aEmpty = String(patternA).trim().length === 0;
@@ -6656,8 +9640,11 @@ class ColorSettingTab extends PluginSettingTab {
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
       }
-      // 'last-added' keeps original array order (newest at bottom)
-      
+
+      const baseOrder = [...this.plugin.settings.wordEntries];
+      const newInInsertionOrder = baseOrder.filter(e => isNew(e) && newFiltered.includes(e));
+      const entriesFiltered = [...oldFiltered, ...newInInsertionOrder];
+
       // Re-create all rows in the correct order
       entriesFiltered.forEach((entry) => {
         this._createEntryRow(entry, listDiv);
@@ -6787,6 +9774,21 @@ class ColorSettingTab extends PluginSettingTab {
       this._cachedFolderSuggestions = null;
       // Clear DOM content to drop references
       try { this.containerEl?.empty(); } catch (e) {}
+      // Reset suspend flag and re-refresh lists with proper sorting
+      this._suspendSorting = false;
+      try { this._newEntriesSet && this._newEntriesSet.clear(); } catch (e) {}
+      try { this._blacklistNewSet && this._blacklistNewSet.clear(); } catch (e) {}
+      try {
+        if (Array.isArray(this.plugin.settings.wordEntries)) {
+          this.plugin.settings.wordEntries.forEach(e => { if (e && e.persistAtEnd) delete e.persistAtEnd; });
+        }
+        if (Array.isArray(this.plugin.settings.blacklistEntries)) {
+          this.plugin.settings.blacklistEntries.forEach(e => { if (e && e.persistAtEnd) delete e.persistAtEnd; });
+        }
+      } catch (e) {}
+      // Re-sort all lists now that the tab is closed and suspend is cleared
+      try { this._refreshPathRules(); } catch (e) {}
+      try { this._refreshBlacklistWords(); } catch (e) {}
     } catch (e) { debugError('SETTINGS', 'onClose error', e); }
   }
 
@@ -6961,6 +9963,7 @@ class ColorSettingTab extends PluginSettingTab {
       .addToggle(t => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async v => {
         this.plugin.settings.enableRegexSupport = v;
         await this.plugin.saveSettings();
+        this._initializedSettingsUI = false;
         this.display();
       }));
     new Setting(containerEl)
@@ -7518,23 +10521,49 @@ class ColorSettingTab extends PluginSettingTab {
     sortBtn.addEventListener('click', sortBtnHandler);
     this._cleanupHandlers.push(() => sortBtn.removeEventListener('click', sortBtnHandler));
 
-    // Add button (right side, takes remaining space)
-    const addBtn = buttonRowDiv.createEl('button');
-    addBtn.textContent = this.plugin.t('btn_add_new_word','+ Add new colored word / pattern');
-    addBtn.style.cursor = 'pointer';
-    addBtn.style.flex = '1';
-    addBtn.addClass('mod-cta');
-      const addBtnHandler = async () => {
-        const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
-        this.plugin.settings.wordEntries.push({ pattern: '', color: '', isRegex: false, flags: '', groupedPatterns: null, styleType: 'text', uid });
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        this.plugin.forceRefreshAllReadingViews();
-        this._refreshEntries();
-      };
-    addBtn.addEventListener('click', addBtnHandler);
-    this._cleanupHandlers.push(() => addBtn.removeEventListener('click', addBtnHandler));
+    // Add Words button (right side)
+    const addWordsBtn = buttonRowDiv.createEl('button');
+    addWordsBtn.textContent = this.plugin.t('btn_add_words','+ Add Words');
+    addWordsBtn.style.cursor = 'pointer';
+    addWordsBtn.style.flex = '1';
+    addWordsBtn.addClass('mod-cta');
+    const addWordsHandler = async () => {
+      const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+      this.plugin.settings.wordEntries.push({ pattern: '', color: '', isRegex: false, flags: '', groupedPatterns: null, styleType: 'text', uid, persistAtEnd: true });
+      this._suspendSorting = true;
+      try { this._newEntriesSet && this._newEntriesSet.add(uid); } catch (e) {}
+      await this.plugin.saveSettings();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this.plugin.forceRefreshAllReadingViews();
+      this._refreshEntries();
+    };
+    addWordsBtn.addEventListener('click', addWordsHandler);
+    this._cleanupHandlers.push(() => addWordsBtn.removeEventListener('click', addWordsHandler));
+
+    // Add Regex button (beside Add Words)
+    const addRegexBtn = buttonRowDiv.createEl('button');
+    addRegexBtn.textContent = this.plugin.t('btn_add_regex','+ Add Regex');
+    addRegexBtn.style.cursor = 'pointer';
+    addRegexBtn.style.flex = '1';
+    addRegexBtn.addClass('mod-cta');
+    addRegexBtn.style.display = this.plugin.settings.enableRegexSupport ? '' : 'none';
+    const addRegexHandler = () => {
+      try {
+        this._suspendSorting = true;
+        const onAdded = (entry) => {
+          try {
+            if (entry && entry.uid) {
+              this._newEntriesSet && this._newEntriesSet.add(entry.uid);
+            }
+            this._refreshEntries();
+          } catch (e) {}
+        };
+        new RealTimeRegexTesterModal(this.app, this.plugin, onAdded).open();
+      } catch (e) {}
+    };
+    addRegexBtn.addEventListener('click', addRegexHandler);
+    this._cleanupHandlers.push(() => addRegexBtn.removeEventListener('click', addRegexHandler));
 
     const presetsBtn = buttonRowDiv.createEl('button');
     presetsBtn.textContent = this.plugin.t('btn_presets','Presets');
@@ -7548,21 +10577,22 @@ class ColorSettingTab extends PluginSettingTab {
             const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : null;
             const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
             if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
-            const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label };
-            try { entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { entry.uid = Date.now(); }
-            if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
-            else if (tc) { entry.color = tc; entry.styleType = 'text'; entry._savedTextColor = tc; }
-            else if (bc) { entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
-            else { entry.color = color; entry._savedTextColor = color; }
-            this.plugin.settings.wordEntries.push(entry);
-            await this.plugin.saveSettings();
-            this.plugin.compileWordEntries();
-            this.plugin.compileTextBgColoringEntries();
-            this.plugin.reconfigureEditorExtensions();
+        const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true };
+        try { entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { entry.uid = Date.now(); }
+        if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
+        else if (tc) { entry.color = tc; entry.styleType = 'text'; entry._savedTextColor = tc; }
+        else if (bc) { entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
+        else { entry.color = color; entry._savedTextColor = color; }
+        this.plugin.settings.wordEntries.push(entry);
+        this._suspendSorting = true;
+        try { this._newEntriesSet && entry && entry.uid && this._newEntriesSet.add(entry.uid); } catch (e) {}
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
             this.plugin.forceRefreshAllEditors();
             this.plugin.forceRefreshAllReadingViews();
-            this._initializedSettingsUI = false;
-            this.display();
+            this._refreshEntries();
           }, 'text-and-background', '', false).open();
         }).open();
       };
@@ -7638,20 +10668,44 @@ class ColorSettingTab extends PluginSettingTab {
     this._cleanupHandlers.push(() => blacklistSortBtn.removeEventListener('click', blacklistSortHandler));
 
     const blacklistAddBtn = blacklistButtonRowDiv.createEl('button');
-    blacklistAddBtn.textContent = this.plugin.t('btn_add_blacklist','+ Add blacklist word or pattern');
+    blacklistAddBtn.textContent = this.plugin.t('btn_add_blacklist_word','+ Add blacklist word');
     blacklistAddBtn.style.cursor = 'pointer';
     blacklistAddBtn.style.flex = '1';
     blacklistAddBtn.addClass('mod-cta');
-    const blacklistAddHandler = async () => {
-      const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
-      const newEntry = { pattern: '', isRegex: false, flags: '', groupedPatterns: null, uid };
-      if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
-      this.plugin.settings.blacklistEntries.push(newEntry);
-      await this.plugin.saveSettings();
-      this._refreshBlacklistWords();
-    };
+      const blacklistAddHandler = async () => {
+        const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+        const newEntry = { pattern: '', isRegex: false, flags: '', groupedPatterns: null, uid, persistAtEnd: true };
+        if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
+        this.plugin.settings.blacklistEntries.push(newEntry);
+        this._suspendSorting = true;
+        try { this._blacklistNewSet && this._blacklistNewSet.add(uid); } catch (e) {}
+        await this.plugin.saveSettings();
+        this._refreshBlacklistWords();
+      };
     blacklistAddBtn.addEventListener('click', blacklistAddHandler);
     this._cleanupHandlers.push(() => blacklistAddBtn.removeEventListener('click', blacklistAddHandler));
+
+    const blacklistAddRegexBtn = blacklistButtonRowDiv.createEl('button');
+    blacklistAddRegexBtn.textContent = this.plugin.t('btn_add_blacklist_regex','+ Add blacklist regex');
+    blacklistAddRegexBtn.style.cursor = 'pointer';
+    blacklistAddRegexBtn.style.flex = '1';
+    blacklistAddRegexBtn.addClass('mod-cta');
+    blacklistAddRegexBtn.style.display = this.plugin.settings.enableRegexSupport ? '' : 'none';
+    const blacklistAddRegexHandler = () => {
+      try {
+        const onAdded = (entry) => {
+          try {
+            if (entry && entry.uid) {
+              this._blacklistNewSet && this._blacklistNewSet.add(entry.uid);
+            }
+            this._refreshBlacklistWords();
+          } catch (e) {}
+        };
+        new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
+      } catch (e) {}
+    };
+    blacklistAddRegexBtn.addEventListener('click', blacklistAddRegexHandler);
+    this._cleanupHandlers.push(() => blacklistAddRegexBtn.removeEventListener('click', blacklistAddRegexHandler));
 
     const blacklistPresetsBtn = blacklistButtonRowDiv.createEl('button');
     blacklistPresetsBtn.textContent = this.plugin.t('btn_presets','Presets');
@@ -7660,9 +10714,12 @@ class ColorSettingTab extends PluginSettingTab {
     const blacklistPresetsHandler = () => {
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
-        const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label };
+        const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true };
+        try { newEntry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { newEntry.uid = Date.now(); }
         if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
         this.plugin.settings.blacklistEntries.push(newEntry);
+        this._suspendSorting = true;
+        try { this._blacklistNewSet && newEntry && newEntry.uid && this._blacklistNewSet.add(newEntry.uid); } catch (e) {}
         await this.plugin.saveSettings();
         this._refreshBlacklistWords();
       }).open();
@@ -7700,6 +10757,7 @@ class ColorSettingTab extends PluginSettingTab {
     try { prIcon.addClass('act-search-icon'); } catch (e) { try { prIcon.classList.add('act-search-icon'); } catch (_) {} }
     const prSearchHandler = () => { this._pathRulesSearchQuery = String(prSearch.value || '').trim().toLowerCase(); try { this._refreshPathRules(); } catch (e) {} };
     prSearch.addEventListener('input', prSearchHandler);
+    prSearch.addEventListener('click', prSearchHandler);
     this._cleanupHandlers.push(() => prSearch.removeEventListener('input', prSearchHandler));
 
     this._pathRulesContainer = containerEl.createDiv();
@@ -7728,7 +10786,7 @@ class ColorSettingTab extends PluginSettingTab {
     pathAddBtn.style.cursor = 'pointer';
     pathAddBtn.style.flex = '1';
     pathAddBtn.addClass('mod-cta');
-    const pathAddHandler = async () => { const newEntry = { path: '', mode: 'include', matchType: 'has-name' }; if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = []; this.plugin.settings.pathRules.push(newEntry); await this.plugin.saveSettings(); this._refreshPathRules(); };
+    const pathAddHandler = async () => { const newEntry = { path: '', mode: 'include', matchType: 'has-name' }; if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = []; this.plugin.settings.pathRules.push(newEntry); this._suspendSorting = true; await this.plugin.saveSettings(); this._refreshPathRules(); };
     pathAddBtn.addEventListener('click', pathAddHandler);
     this._cleanupHandlers.push(() => pathAddBtn.removeEventListener('click', pathAddHandler));
 
@@ -7754,6 +10812,21 @@ class ColorSettingTab extends PluginSettingTab {
     // Store reference to disabled files container for updating
     this._disabledFilesContainer = containerEl.createDiv();
     this._refreshDisabledFiles();
+    containerEl.createEl('hr');
+    const advRow = containerEl.createDiv();
+    advRow.style.display = 'flex';
+    advRow.style.alignItems = 'center';
+    advRow.style.justifyContent = 'space-between';
+    advRow.style.marginTop = '12px';
+    const advTitle = advRow.createEl('h2', { text: this.plugin.t('advanced_rules_header','Advanced Rules') });
+    advTitle.style.margin = '0';
+    const manageBtn = advRow.createEl('button', { text: this.plugin.t('advanced_rules_manage_button','manage advanced rules') });
+    manageBtn.addClass('mod-cta');
+    manageBtn.style.cursor = 'pointer';
+    const manageHandler = () => { try { new ManageRulesModal(this.app, this.plugin).open(); } catch (e) {} };
+    manageBtn.addEventListener('click', manageHandler);
+    this._cleanupHandlers.push(() => manageBtn.removeEventListener('click', manageHandler));
+    containerEl.createEl('hr');
     containerEl.createEl('h2', { text: this.plugin.t('data_export_import_header','Data Export/Import') });
     new Setting(containerEl)
       .setName(this.plugin.t('export_plugin_data','Export plugin data'))
@@ -8456,8 +11529,8 @@ class ColorPickerModal extends Modal {
       this._submitFn = async () => {
         await originalSubmit();
         if (this.plugin.settingTab) {
-          this.plugin.settingTab._initializedSettingsUI = false;
-          this.plugin.settingTab.display();
+          try { this.plugin.settingTab._suspendSorting = true; } catch (e) {}
+          try { this.plugin.settingTab._refreshEntries(); } catch (e) {}
         }
       };
     } catch (e) {}
