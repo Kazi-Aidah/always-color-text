@@ -10811,7 +10811,7 @@ class ColorSettingTab extends PluginSettingTab {
     // --- Always Colored Texts / patterns ---
     const headerEl = containerEl.createEl('h3', { text: this.plugin.t('always_colored_texts_header','Always Colored Texts') });
     try { headerEl.id = 'always-colored-texts-header'; } catch (e) {}
-    containerEl.createEl('p', { text: this.plugin.t('always_colored_texts_desc','Here\'s where you manage your word/patterns and their colors.') });
+    containerEl.createEl('p', { text: this.plugin.t('always_colored_texts_desc','Here\'s where you manage your word / patterns and their colors.') });
     new Setting(containerEl);
     const entriesSearchContainer = containerEl.createDiv();
     try { entriesSearchContainer.addClass('act-search-container'); } catch (e) { try { entriesSearchContainer.classList.add('act-search-container'); } catch (_) {} }
