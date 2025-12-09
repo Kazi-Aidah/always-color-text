@@ -8,7 +8,8 @@ const {
   FuzzySuggestModal,
   debounce,
   MarkdownRenderer,
-  Menu
+  Menu,
+  setIcon
 } = require('obsidian');
 
 // Moment is provided by Obsidian
@@ -1298,10 +1299,75 @@ module.exports = class AlwaysColorText extends Plugin {
       const taskUncheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Unchecked)');
       const bulletEntry = we.find(e => e && e.presetLabel === 'Bullet Points');
       const numberedEntry = we.find(e => e && e.presetLabel === 'Numbered Lists');
+      const codeblockEntry = we.find(e => e && e.presetLabel === 'Codeblocks');
       const hasTaskCheckedBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Task List (Checked)' && !!e.isRegex);
       const hasTaskUncheckedBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Task List (Unchecked)' && !!e.isRegex);
       const hasBulletBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Bullet Points' && !!e.isRegex);
       const hasNumberedBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Numbered Lists' && !!e.isRegex);
+      const hasCodeblockBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Codeblocks' && !!e.isRegex);
+      
+      // Handle codeblock coloring/blocking - find all elements that look like code containers
+      if (hasCodeblockBlacklist || codeblockEntry) {
+        // Strategy: Find all potential code block containers
+        // In Obsidian reading mode, codeblocks are in .markdown-rendered pre
+        const potentialCodeblocks = [];
+        
+        // Direct code/pre elements
+        element.querySelectorAll?.('pre, code').forEach(el => potentialCodeblocks.push(el));
+        
+        // Look for markdown-rendered pre blocks (Obsidian reading mode)
+        element.querySelectorAll?.('.markdown-rendered pre').forEach(el => {
+          if (!potentialCodeblocks.includes(el)) potentialCodeblocks.push(el);
+        });
+        
+        // Look for divs that contain the code block marker structure
+        // Obsidian often wraps code blocks in divs with language indicators
+        element.querySelectorAll?.('div').forEach(div => {
+          const text = div.textContent || '';
+          const classes = (div.className || '').toLowerCase();
+          
+          // Check if div looks like a code block by examining content or class
+          if ((classes.includes('code') || classes.includes('language-') || 
+              (div.querySelector('code') && div.children.length < 5)) && 
+              !potentialCodeblocks.includes(div)) {
+            potentialCodeblocks.push(div);
+          }
+        });
+        
+        // Check element itself if it matches code patterns
+        if (element && (element.nodeName === 'CODE' || element.nodeName === 'PRE' || 
+            (element.className && element.className.includes('language-')))) {
+          if (!potentialCodeblocks.includes(element)) potentialCodeblocks.push(element);
+        }
+        
+        // Process each potential codeblock
+        const processedElements = new Set();
+        for (const cb of potentialCodeblocks) {
+          if (processedElements.has(cb)) continue;
+          processedElements.add(cb);
+          
+          if (hasCodeblockBlacklist) {
+            // Remove all coloring from codeblock
+            try {
+              cb.classList.add('act-skip-coloring');
+              cb.style.color = '';
+              const highlights = cb.querySelectorAll('span.always-color-text-highlight');
+              for (const ex of highlights) { 
+                const tn = document.createTextNode(ex.textContent); 
+                ex.replaceWith(tn); 
+              }
+            } catch (_) {}
+          } else if (codeblockEntry) {
+            // Color the entire codeblock content
+            try {
+              this._colorCodeblockContent(cb, codeblockEntry);
+            } catch (e) { 
+              debugError('CODEBLOCK_COLOR', 'Failed to color codeblock', e); 
+            }
+          }
+        }
+      }
+      
       if (!taskCheckedEntry && !taskUncheckedEntry && !bulletEntry && !numberedEntry) return;
       let listItems = Array.from(element.querySelectorAll?.('li') || []);
       if (element && element.nodeName === 'LI' && listItems.length === 0) listItems = [element];
@@ -1506,10 +1572,10 @@ module.exports = class AlwaysColorText extends Plugin {
   // Helper: Wrap a single text node with color styling
   _wrapTextNodeWithColor(textNode, entry) {
     try {
-      console.time('wrapTextNodeWithColor');
-      try { if (textNode.parentElement?.closest('.act-skip-coloring')) { console.timeEnd('wrapTextNodeWithColor'); return; } } catch (_) {}
+      if (IS_DEVELOPMENT) console.time('wrapTextNodeWithColor');
+      try { if (textNode.parentElement?.closest('.act-skip-coloring')) { if (IS_DEVELOPMENT) console.timeEnd('wrapTextNodeWithColor'); return; } } catch (_) {}
       let text = textNode.textContent;
-      if (!text.trim()) { console.timeEnd('wrapTextNodeWithColor'); return; }
+      if (!text.trim()) { if (IS_DEVELOPMENT) console.timeEnd('wrapTextNodeWithColor'); return; }
       text = this.decodeHtmlEntities(text);
       const span = document.createElement('span');
       span.className = 'always-color-text-highlight';
@@ -1534,8 +1600,94 @@ module.exports = class AlwaysColorText extends Plugin {
       const frag = document.createDocumentFragment();
       frag.appendChild(span);
       textNode.replaceWith(frag);
-      console.timeEnd('wrapTextNodeWithColor');
+      if (IS_DEVELOPMENT) console.timeEnd('wrapTextNodeWithColor');
     } catch (e) { debugError('WRAP_TEXT_NODE', 'Error wrapping text node', e); }
+  }
+
+  // NEW METHOD: Color all content within a codeblock  
+  _colorCodeblockContent(codeblock, entry) {
+    try {
+      // Verify this is actually a codeblock-like element
+      const classes = (codeblock.className || '').toLowerCase();
+      const isCodeBlock = codeblock.nodeName === 'CODE' || codeblock.nodeName === 'PRE' ||
+                         classes.includes('code') || classes.includes('language-') ||
+                         codeblock.querySelector('code') ||
+                         codeblock.querySelector('pre');
+      
+      if (!isCodeBlock) {
+        return; // Not a code block, skip
+      }
+      
+      // Get the color/style settings
+      const color = entry.color || entry.textColor;
+      const bgColor = entry.backgroundColor;
+      const styleType = entry.styleType || 'text';
+      
+      // Find all text nodes in the codeblock
+      const walker = document.createTreeWalker(
+        codeblock,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            const text = node.textContent || '';
+            if (text.trim()) return NodeFilter.FILTER_ACCEPT;
+            return NodeFilter.FILTER_REJECT;
+          }
+        },
+        false
+      );
+      
+      const nodes = [];
+      let node;
+      while (node = walker.nextNode()) {
+        nodes.push(node);
+      }
+      
+      // Process text nodes in reverse to avoid invalidating walker
+      for (let i = nodes.length - 1; i >= 0; i--) {
+        const textNode = nodes[i];
+        const text = textNode.textContent;
+        if (!text.trim()) continue;
+        
+        // Create span with appropriate styling
+        const span = document.createElement('span');
+        span.className = 'always-color-text-highlight';
+        span.textContent = text;
+        
+        if (styleType === 'text' && color) {
+          span.style.color = color;
+        } else if (styleType === 'highlight' && bgColor) {
+          const rgba = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
+          span.style.backgroundColor = rgba;
+          span.style.paddingLeft = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+          span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+          span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+          if (this.settings.enableBoxDecorationBreak ?? true) {
+            span.style.boxDecorationBreak = 'clone';
+            span.style.WebkitBoxDecorationBreak = 'clone';
+          }
+        } else if (styleType === 'both') {
+          if (color) span.style.color = color;
+          if (bgColor) {
+            const rgba = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
+            span.style.backgroundColor = rgba;
+            span.style.paddingLeft = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+            if (this.settings.enableBoxDecorationBreak ?? true) {
+              span.style.boxDecorationBreak = 'clone';
+              span.style.WebkitBoxDecorationBreak = 'clone';
+            }
+          }
+        }
+        
+        textNode.replaceWith(span);
+      }
+      
+      debugLog('CODEBLOCK', `Colored codeblock with style: ${styleType}`);
+    } catch (e) { 
+      debugError('COLOR_CODEBLOCK', 'Error coloring codeblock content', e); 
+    }
   }
 
   // NEW METHOD: Only use complex processing when absolutely necessary
@@ -2036,6 +2188,14 @@ module.exports = class AlwaysColorText extends Plugin {
         this.settings.textBgColoringEntries = [];
       }
     } catch (e) {}
+
+    // Auto-enable regex support if any regex entries are present
+    if (Array.isArray(this.settings.wordEntries) && this.settings.wordEntries.some(e => e && e.isRegex)) {
+      this.settings.enableRegexSupport = true;
+    }
+    if (Array.isArray(this.settings.blacklistEntries) && this.settings.blacklistEntries.some(e => e && e.isRegex)) {
+      this.settings.enableRegexSupport = true;
+    }
 
     // compile word entries into fast runtime structures
     this.compileWordEntries();
@@ -3559,8 +3719,8 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // NEW METHOD: Apply highlights for simple patterns (ultra-fast version)
   applySimpleHighlights(textNode, matches, text) {
-    console.time('applySimpleHighlights');
-    if (!matches || matches.length === 0) { console.timeEnd('applySimpleHighlights'); return; }
+    if (IS_DEVELOPMENT) console.time('applySimpleHighlights');
+    if (!matches || matches.length === 0) { if (IS_DEVELOPMENT) console.timeEnd('applySimpleHighlights'); return; }
     const decodedText = this.decodeHtmlEntities(text);
     // Filter out matches that fall inside blacklisted contexts (e.g., @username)
     try {
@@ -3570,7 +3730,7 @@ module.exports = class AlwaysColorText extends Plugin {
         filtered.push(m);
       }
       matches = filtered;
-      if (matches.length === 0) { console.timeEnd('applySimpleHighlights'); return; }
+      if (matches.length === 0) { if (IS_DEVELOPMENT) console.timeEnd('applySimpleHighlights'); return; }
     } catch (_) {}
     
     // Sort matches by start position and remove overlaps
@@ -3673,7 +3833,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     
     textNode.replaceWith(frag);
-    console.timeEnd('applySimpleHighlights');
+    if (IS_DEVELOPMENT) console.timeEnd('applySimpleHighlights');
   }
 
   // Process only the active file: immediate visible blocks then deferred idle processing
@@ -3899,8 +4059,8 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // NEW METHOD: Process single block with non-Roman text
   processNonRomanBlock(block, entries, folderEntry, opts = {}) {
-    console.time('processNonRomanBlock');
-    try { if (block && (block.classList?.contains('act-skip-coloring') || block.closest?.('.act-skip-coloring'))) { console.timeEnd('processNonRomanBlock'); return; } } catch (_) {}
+    if (IS_DEVELOPMENT) console.time('processNonRomanBlock');
+    try { if (block && (block.classList?.contains('act-skip-coloring') || block.closest?.('.act-skip-coloring'))) { if (IS_DEVELOPMENT) console.timeEnd('processNonRomanBlock'); return; } } catch (_) {}
     const clearExisting = opts.clearExisting !== false;
     const effectiveStyle = 'text';
     
@@ -3995,7 +4155,7 @@ module.exports = class AlwaysColorText extends Plugin {
         node.replaceWith(frag);
       }
     }
-    console.timeEnd('processNonRomanBlock');
+    if (IS_DEVELOPMENT) console.timeEnd('processNonRomanBlock');
   }
 
   // Efficient, non-recursive, DOM walker for reading mode
@@ -5386,12 +5546,68 @@ module.exports = class AlwaysColorText extends Plugin {
     return false;
   }
 
+  // Helper: Check if a position is within a codeblock
+  isPositionInCodeblock(pos, text, from) {
+    try {
+      // Find all codeblock ranges
+      const codeblockPattern = /```[\s\S]*?```/g;
+      let match;
+      while ((match = codeblockPattern.exec(text)) !== null) {
+        const cbStart = from + match.index;
+        const cbEnd = from + match.index + match[0].length;
+        if (pos >= cbStart && pos <= cbEnd) return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
   // NEW METHOD: Standard editor processing for small/medium pattern/text sizes
   buildDecoStandard(view, builder, from, to, text, entries, folderEntry, filePath = null) {
     const entries_copy = entries || this.getSortedWordEntries();
     let matches = [];
     let headingRanges = [];
     let hasHeadingBlacklist = false;
+    let codeblockRanges = []; // Track codeblocks to exclude from coloring
+
+    try {
+      // DETECT CODEBLOCKS: Find all ``` ... ``` ranges to mark as protected
+      const codeblockPattern = /```[\s\S]*?```/g;
+      let cbMatch;
+      while ((cbMatch = codeblockPattern.exec(text)) !== null) {
+        const codeblockStart = from + cbMatch.index;
+        const codeblockEnd = from + cbMatch.index + cbMatch[0].length;
+        codeblockRanges.push({ start: codeblockStart, end: codeblockEnd });
+      }
+      
+      // Check for codeblock blacklist/whitelist entries
+      const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      const codeblockEntry = we.find(e => e && e.presetLabel === 'Codeblocks');
+      const hasCodeblockBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Codeblocks' && !!e.isRegex);
+      
+      // If codeblock is blacklisted, skip all codeblock content from coloring
+      // If codeblock entry exists, color all codeblock content
+      if (hasCodeblockBlacklist) {
+        // Skip all content inside codeblocks
+        for (const cbRange of codeblockRanges) {
+          matches.push({ start: cbRange.start, end: cbRange.end, skip: true });
+        }
+      } else if (codeblockEntry) {
+        // Color all content inside codeblocks
+        for (const cbMatch of text.matchAll(/```[\s\S]*?```/g)) {
+          const start = from + cbMatch.index;
+          const end = from + cbMatch.index + cbMatch[0].length;
+          if (codeblockEntry.backgroundColor) {
+            const tc = codeblockEntry.textColor || 'currentColor';
+            const bc = codeblockEntry.backgroundColor;
+            matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+          } else {
+            const c = codeblockEntry.color || codeblockEntry.textColor;
+            if (c) matches.push({ start, end, color: c });
+          }
+        }
+      }
+    } catch (e) {}
 
     try {
       const label = 'All Headings (H1-H6)';
@@ -5929,6 +6145,37 @@ module.exports = class AlwaysColorText extends Plugin {
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
     const MAX_MATCHES = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
+    
+    // Handle codeblocks first (same as in buildDecoStandard)
+    try {
+      const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      const codeblockEntry = we.find(e => e && e.presetLabel === 'Codeblocks');
+      const hasCodeblockBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Codeblocks' && !!e.isRegex);
+      
+      if (hasCodeblockBlacklist) {
+        // Skip all content inside codeblocks
+        for (const cbMatch of text.matchAll(/```[\s\S]*?```/g)) {
+          const start = from + cbMatch.index;
+          const end = from + cbMatch.index + cbMatch[0].length;
+          allMatches.push({ start, end, skip: true });
+        }
+      } else if (codeblockEntry) {
+        // Color all content inside codeblocks
+        for (const cbMatch of text.matchAll(/```[\s\S]*?```/g)) {
+          const start = from + cbMatch.index;
+          const end = from + cbMatch.index + cbMatch[0].length;
+          if (codeblockEntry.backgroundColor) {
+            const tc = codeblockEntry.textColor || 'currentColor';
+            const bc = codeblockEntry.backgroundColor;
+            allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+          } else {
+            const c = codeblockEntry.color || codeblockEntry.textColor;
+            if (c) allMatches.push({ start, end, color: c });
+          }
+        }
+      }
+    } catch (e) {}
 
     let headingRanges = [];
     let hasHeadingBlacklist = false;
@@ -6732,6 +6979,7 @@ class PresetModal extends Modal {
       { label: this.plugin.t('preset_numbered_lists','Numbered Lists'), pattern: '^\\s*\\d+\\.\\s+.*$', flags: 'm', examples: ['1. First item'], group: 'markdown' },
       { label: this.plugin.t('preset_task_checked','Task List (Checked)'), pattern: '^\\s*[\\-\\*]\\s+\\[[xX]\\]\\s+.*$', flags: 'm', examples: ['- [x] Completed'], group: 'markdown' },
       { label: this.plugin.t('preset_task_unchecked','Task List (Unchecked)'), pattern: '^\\s*[\\-\\*]\\s+\\[\\s\\]\\s+.*$', flags: 'm', examples: ['- [ ] Todo'], group: 'markdown' },
+      { label: this.plugin.t('preset_codeblocks','Codeblocks'), pattern: '```[\\s\\S]*?```', flags: '', examples: ['``` code ```'], group: 'markdown' },
       { label: this.plugin.t('preset_dates_yyyy_mm_dd','Dates (YYYY-MM-DD)'), pattern: '\\b\\d{4}-\\d{2}-\\d{2}\\b', flags: '', examples: ['2009-01-19'] },
       { label: this.plugin.t('preset_dates_yyyy_mmm_dd','Dates (YYYY-MMM-DD)'), pattern: '\\b\\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{2}\\b', flags: 'i', examples: ['2025-Jan-19'] },
       { label: this.plugin.t('preset_times_am_pm','Times (AM/PM)'), pattern: '\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b', flags: 'i', examples: ['9:05pm'] },
@@ -7269,6 +7517,9 @@ class RealTimeRegexTesterModal extends Modal {
     this._preFillPattern = '';
     this._preFillFlags = '';
     this._preFillName = '';
+    this._preFillStyleType = 'both';
+    this._preFillTextColor = '#87c760';
+    this._preFillBgColor = '#1d5010';
     this._handlers = [];
     this._rafId = null;
     this._debounceId = null;
@@ -7301,17 +7552,17 @@ class RealTimeRegexTesterModal extends Modal {
     });
     const styleSelect = controlsRow.createEl('select');
     styleSelect.innerHTML = `<option value="text">${this.plugin.t('style_type_text','color')}</option><option value="highlight">${this.plugin.t('style_type_highlight','highlight')}</option><option value="both">${this.plugin.t('style_type_both','both')}</option>`;
-    styleSelect.value = 'both';
+    styleSelect.value = this._preFillStyleType || 'both';
     styleSelect.style.border = '1px solid var(--background-modifier-border)';
     styleSelect.style.borderRadius = 'var(--radius-m)';
     styleSelect.style.background = 'var(--background-modifier-form-field)';
     styleSelect.style.textAlign = 'center';
     styleSelect.style.marginTop = '0';
     const textColorInput = controlsRow.createEl('input', { type: 'color' });
-    textColorInput.value = '#87c760';
+    textColorInput.value = this._preFillTextColor || '#87c760';
     textColorInput.style.width = '48px';
     const bgColorInput = controlsRow.createEl('input', { type: 'color' });
-    bgColorInput.value = '#1d5010';
+    bgColorInput.value = this._preFillBgColor || '#1d5010';
     bgColorInput.style.width = '48px';
     const regexInput = contentEl.createEl('input', { type: 'text' });
     regexInput.placeholder = this.plugin.t('regex_expression_placeholder', 'put your expression here');
@@ -7439,7 +7690,7 @@ class RealTimeRegexTesterModal extends Modal {
       out += escapeHtml(raw.slice(lastIndex));
       previewWrap.innerHTML = out.replace(/\n/g,'<br>');
       matchFooter.textContent = `${count} match${count===1?'':'es'}`;
-      status.textContent = count>0 ? '' : raw;
+      status.textContent = '';
     };
     const render = () => { if (this._rafId) cancelAnimationFrame(this._rafId); this._rafId = requestAnimationFrame(renderPreview); };
     const renderDebounced = () => { if (this._debounceId) clearTimeout(this._debounceId); this._debounceId = setTimeout(() => { render(); }, 100); };
@@ -7473,6 +7724,15 @@ class RealTimeRegexTesterModal extends Modal {
     }
     if (this._preFillName) {
       nameInput.value = this._preFillName;
+    }
+    if (this._preFillStyleType) {
+      styleSelect.value = this._preFillStyleType;
+    }
+    if (this._preFillTextColor) {
+      textColorInput.value = this._preFillTextColor;
+    }
+    if (this._preFillBgColor) {
+      bgColorInput.value = this._preFillBgColor;
     }
     const onInputImmediate = () => { render(); };
     const onInputDebounced = () => { renderDebounced(); };
@@ -7515,7 +7775,8 @@ class RealTimeRegexTesterModal extends Modal {
             pattern: pat,
             flags,
             presetLabel: label || undefined,
-            styleType: style
+            styleType: style,
+            isRegex: true
           });
           if (style === 'text') { updated.color = textColorInput.value || ''; updated.textColor = null; updated.backgroundColor = null; }
           else if (style === 'highlight') { updated.color = ''; updated.textColor = 'currentColor'; updated.backgroundColor = bgColorInput.value || ''; }
@@ -8581,6 +8842,10 @@ class ColorSettingTab extends PluginSettingTab {
           if (entry.pattern) modal._preFillPattern = entry.pattern;
           if (entry.flags) modal._preFillFlags = entry.flags;
           if (entry.presetLabel) modal._preFillName = entry.presetLabel;
+          if (entry.styleType) modal._preFillStyleType = entry.styleType;
+          if (entry.textColor) modal._preFillTextColor = entry.textColor;
+          if (entry.backgroundColor) modal._preFillBgColor = entry.backgroundColor;
+          if (entry.color) modal._preFillTextColor = entry.color;
           modal.open();
         } catch (e) {
           debugError('SETTINGS', 'open in regex tester error', e);
@@ -9485,6 +9750,23 @@ class ColorSettingTab extends PluginSettingTab {
         emptyMsg.style.opacity = '0.6';
         emptyMsg.style.fontSize = '12px';
       } else {
+        // Shared drag state for all swatches
+        let dragSource = null;
+        let dragStartOrder = null;
+        
+        // Create a function to save the reordered swatches
+        const saveDragReorder = async () => {
+          const swatchRows = Array.from(customSwatchesContent.querySelectorAll('div[data-swatch-index]'));
+          const newOrder = swatchRows.map(r => {
+            const idx = parseInt(r.getAttribute('data-swatch-index'), 10);
+            return this.plugin.settings.userCustomSwatches[idx];
+          });
+          this.plugin.settings.userCustomSwatches = newOrder;
+          this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map(s => s.color);
+          await this.plugin.saveSettings();
+          this._refreshCustomSwatches();
+        };
+        
         // Render editable custom swatches
         userCustomSwatches.forEach((sw, i) => {
           const row = customSwatchesContent.createDiv();
@@ -9492,6 +9774,23 @@ class ColorSettingTab extends PluginSettingTab {
           row.style.alignItems = 'center';
           row.style.gap = '8px';
           row.style.marginBottom = '8px';
+          row.setAttribute('data-swatch-index', i.toString());
+
+          // Drag handle - Obsidian menu icon, transparent background, no box-shadow
+          const dragHandle = row.createEl('button');
+          setIcon(dragHandle, 'menu');
+          dragHandle.setAttribute('draggable', 'true');
+          dragHandle.style.padding = '0';
+          dragHandle.style.border = 'none';
+          dragHandle.style.background = 'transparent';
+          dragHandle.style.boxShadow = 'none';
+          dragHandle.style.cursor = 'grab';
+          dragHandle.style.color = 'var(--text-muted)';
+          dragHandle.style.flexShrink = '0';
+          dragHandle.style.display = 'flex';
+          dragHandle.style.alignItems = 'center';
+          dragHandle.style.justifyContent = 'center';
+          dragHandle.setAttribute('aria-label', this.plugin.t('drag_to_reorder','Drag to reorder'));
 
           const nameInput = row.createEl('input', { type: 'text', value: sw && sw.name ? sw.name : `Swatch ${i + 1}` });
           nameInput.style.flex = '1';
@@ -9506,12 +9805,14 @@ class ColorSettingTab extends PluginSettingTab {
           colorPicker.style.border = 'none';
           colorPicker.style.borderRadius = '4px';
           colorPicker.style.cursor = 'pointer';
+          colorPicker.style.flexShrink = '0';
 
           const delBtn = row.createEl('button', { text: '✕' });
           delBtn.addClass('mod-warning');
           delBtn.style.padding = '4px 8px';
           delBtn.style.borderRadius = '4px';
           delBtn.style.cursor = 'pointer';
+          delBtn.style.flexShrink = '0';
 
           const nameHandler = async () => {
             const val = nameInput.value.trim();
@@ -9532,6 +9833,46 @@ class ColorSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
             this._refreshCustomSwatches();
           };
+
+          // Drag event handlers for reordering
+          const dragstartHandler = (e) => {
+            dragSource = row;
+            dragStartOrder = Array.from(customSwatchesContent.querySelectorAll('div[data-swatch-index]')).map(r => r.getAttribute('data-swatch-index'));
+            row.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', row.innerHTML);
+          };
+          const dragoverHandler = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (dragSource && dragSource !== row) {
+              const rect = row.getBoundingClientRect();
+              const midpoint = rect.top + rect.height / 2;
+              if (e.clientY < midpoint) {
+                row.parentNode.insertBefore(dragSource, row);
+              } else {
+                row.parentNode.insertBefore(dragSource, row.nextSibling);
+              }
+            }
+          };
+          const dragendHandler = async (e) => {
+            if (dragSource) dragSource.style.opacity = '1';
+            // Check if the order changed
+            if (dragSource && dragStartOrder) {
+              const currentOrder = Array.from(customSwatchesContent.querySelectorAll('div[data-swatch-index]')).map(r => r.getAttribute('data-swatch-index'));
+              const orderChanged = !dragStartOrder.every((val, idx) => val === currentOrder[idx]);
+              if (orderChanged) {
+                await saveDragReorder();
+              }
+            }
+            dragSource = null;
+            dragStartOrder = null;
+          };
+
+          // Only allow drag when using the handle
+          dragHandle.addEventListener('dragstart', dragstartHandler);
+          row.addEventListener('dragover', dragoverHandler);
+          dragHandle.addEventListener('dragend', dragendHandler);
 
           nameInput.addEventListener('change', nameHandler);
           colorPicker.addEventListener('input', colorHandler);

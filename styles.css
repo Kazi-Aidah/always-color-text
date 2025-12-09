@@ -10,6 +10,11 @@
   color: var(--highlight-color, inherit) !important;
 }
 
+/* Color .markdown-rendered code text when comment coloring is in use (reading view) */
+.markdown-rendered code {
+  color: var(--highlight-color, inherit) !important;
+}
+
 /* Settings button rows base layout */
 .entries-button-row,
 .blacklist-button-row,
