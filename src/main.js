@@ -2781,9 +2781,11 @@ module.exports = class AlwaysColorText extends Plugin {
   getSortedWordEntries() {
     // Return cached result when possible to avoid creating new arrays on every call
     if (!this._cachedSortedEntries || this._cacheDirty) {
-      const entries = Array.isArray(this._compiledWordEntries) ? this._compiledWordEntries : [];
+      const textEntries = Array.isArray(this._compiledWordEntries) ? this._compiledWordEntries : [];
+      const bgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+      const entries = textEntries.concat(bgEntries);
       const numWords = entries.length;
-      if (numWords > 200) {
+      if (numWords > 500) {
         debugWarn('GET_SORTED', `You have ${numWords} colored words/patterns! That's a lot and may impact performance.`);
       }
       // Filter out patterns that are blacklisted (supports regex/literals)
