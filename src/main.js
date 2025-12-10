@@ -40,7 +40,7 @@ const EDITOR_PERFORMANCE_CONSTANTS = {
   MAX_TOTAL_MATCHES: 3000         // Absolute limit for decorations
 };
 // Development mode flag - set to true to enable debug logs
-const IS_DEVELOPMENT = false;
+const IS_DEVELOPMENT = true;
 
 // Helper function for conditional debug logging
 const debugLog = (tag, ...args) => {
@@ -1216,7 +1216,14 @@ module.exports = class AlwaysColorText extends Plugin {
     const effectiveStyle = 'text';
     
     // Fast DOM collection - avoid TreeWalker overhead
-    const blocks = element.querySelectorAll?.(blockTags.join(', ')) || [];
+    // Use a universal selector to find ALL descendant elements and filter
+    const allElements = element.querySelectorAll?.('*') || [];
+    const blocks = [];
+    for (const el of allElements) {
+      if (blockTags.includes(el.nodeName) && !el.closest('code, pre')) {
+        blocks.push(el);
+      }
+    }
     
     for (const block of blocks) {
       // Skip code blocks and preformatted text
@@ -1796,6 +1803,11 @@ module.exports = class AlwaysColorText extends Plugin {
         if (!this.settings.enabled) return;
         if (!ctx || !ctx.sourcePath) return;
 
+        // Debug: log the element being processed
+        try {
+          debugLog('POST_PROC', `Processing element: ${el.className}, nodeName: ${el.nodeName}, hasCallout: ${el.querySelector('.callout') ? 'yes' : 'no'}`);
+        } catch (_) {}
+
         // Delegate to active-file-only processor which applies file/folder/frontmatter rules
         try {
           this.processActiveFileOnly(el, ctx);
@@ -1913,7 +1925,7 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!this._changelogCommandRegistered) {
         this.addCommand({
           id: 'show-latest-release-notes',
-          name: 'Show Latest Release Notes',
+          name: this.t('command_show_release_notes','Show Latest Release Notes'),
           callback: async () => { try { new ChangelogModal(this.app, this).open(); } catch (e) {} }
         });
         this._changelogCommandRegistered = true;
@@ -2039,7 +2051,7 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {}
     
     // Migrate user-added swatches from swatches array to userCustomSwatches
-    // (before 1.0.0, it used to add extra swatches directly to the swatches array)
+    // (before 1.0.0, it used to add extra swatches directly to the swatches array) boooooooooooooooooooooooo
     try {
       const defaultSwatches = [
         { name: 'Red', color: '#eb3b5a' },
@@ -2105,7 +2117,7 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {}
 
 
-    // --- Migrate wordColors -> wordEntries (backwards compatible) ---
+    // --- Migrate wordColors -> wordEntries (backwards compatible) --- yay
     if (!Array.isArray(this.settings.wordEntries) || this.settings.wordEntries.length === 0) {
       // If user already has wordEntries saved, keep them. Otherwise convert old map.
       const obj = this.settings.wordColors || {};
@@ -3841,6 +3853,13 @@ module.exports = class AlwaysColorText extends Plugin {
   // Process only the active file: immediate visible blocks then deferred idle processing
   processActiveFileOnly(el, ctx) {
     if (!el || !ctx || !ctx.sourcePath) return;
+    
+    // Ensure sourcePath is a string
+    if (typeof ctx.sourcePath !== 'string') {
+      debugWarn('ACT', `Invalid sourcePath type: ${typeof ctx.sourcePath}`);
+      return;
+    }
+    
     const startTime = performance.now();
     debugLog('ACT', 'Processing active file', ctx.sourcePath.slice(-30));
     
@@ -4294,27 +4313,30 @@ module.exports = class AlwaysColorText extends Plugin {
     const queue = [];
     const blockSet = new Set(blockTags);
     
-    // Walk through child nodes
-    for (const node of element.childNodes) {
-      if (node.nodeType === Node.ELEMENT_NODE && !['CODE', 'PRE'].includes(node.nodeName)) {
-        if (blockTags.includes(node.nodeName)) queue.push(node);
-        
-        // Use TreeWalker instead of querySelectorAll to avoid creating large arrays
-        const walker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, {
-          acceptNode(n) {
-            return blockSet.has(n.nodeName) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-          }
-        }, false);
-        
-        let currentNode;
-        while (currentNode = walker.nextNode()) {
-          queue.push(currentNode);
-        }
-      }
-    }
-    
+    // Ensure we process the element itself if it's a block
     if (element.nodeType === Node.ELEMENT_NODE && blockTags.includes(element.nodeName)) {
       queue.unshift(element);
+    }
+    
+    // Walk through ALL descendant elements to find blocks, including nested containers
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT, {
+      acceptNode(n) {
+        // Skip code and pre blocks entirely
+        if (['CODE', 'PRE'].includes(n.nodeName)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        // Accept block-level elements
+        if (blockSet.has(n.nodeName)) {
+          return NodeFilter.FILTER_ACCEPT;
+        }
+        // Skip non-block elements but continue descending to find nested blocks
+        return NodeFilter.FILTER_SKIP;
+      }
+    }, false);
+    
+    let currentNode;
+    while (currentNode = walker.nextNode()) {
+      queue.push(currentNode);
     }
     
     // Debug: report how many block-like elements were discovered and what will be skipped
@@ -6995,12 +7017,12 @@ class PresetModal extends Modal {
       { label: this.plugin.t('preset_currency','Currency'), pattern: '\\$\\d+(?:\\.\\d{2})?|\\b[€£¥]\\d+(?:\\.\\d{2})?\\b', flags: '', examples: ['$29.99'] },
       { label: this.plugin.t('preset_measurements','Measurements'), pattern: '\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|°C|°F|lbs)\\b', flags: '', examples: ['25kg'] },
       { label: this.plugin.t('preset_phone_numbers','Phone numbers'), pattern: '\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b', flags: '', examples: ['123-456-7890'] },
-      { label: 'Parentheses ()', pattern: '\\(([^)]*)\\)', flags: 'g', examples: ['( text )'], group: 'brackets' },
-      { label: 'Square Brackets []', pattern: '\\[([^\\]]*)\\]', flags: 'g', examples: ['[ yes ]'], group: 'brackets', disableRegexSafety: true },
-      { label: 'Curly Braces {}', pattern: '\\{([^}]*)\\}', flags: 'g', examples: ['{ no }'], group: 'brackets' },
-      { label: 'Angle Brackets <>',  pattern: '<([^>]*)>', flags: 'g', examples: ['< text >'], group: 'brackets' },
-      { label: 'Colons :', pattern: ':([^:]*):',  flags: 'g', examples: [': text :'], group: 'brackets' },
-      { label: 'Double Quotes ""', pattern: '"[^"]*"', flags: '', examples: ['"text"'], group: 'brackets', disableRegexSafety: true },
+      { label: this.plugin.t('preset_parentheses','Parentheses ()'), pattern: '\\(([^)]*)\\)', flags: 'g', examples: ['( text )'], group: 'brackets' },
+      { label: this.plugin.t('preset_square_brackets','Square Brackets []'), pattern: '\\[([^\\]]*)\\]', flags: 'g', examples: ['[ yes ]'], group: 'brackets', disableRegexSafety: true },
+      { label: this.plugin.t('preset_curly_braces','Curly Braces {}'), pattern: '\\{([^}]*)\\}', flags: 'g', examples: ['{ no }'], group: 'brackets' },
+      { label: this.plugin.t('preset_angle_brackets','Angle Brackets <>'), pattern: '<([^>]*)>', flags: 'g', examples: ['< text >'], group: 'brackets' },
+      { label: this.plugin.t('preset_colons','Colons :'), pattern: ':([^:]*):',  flags: 'g', examples: [': text :'], group: 'brackets' },
+      { label: this.plugin.t('preset_double_quotes','Double Quotes ""'), pattern: '"[^"]*"', flags: '', examples: ['"text"'], group: 'brackets', disableRegexSafety: true },
       { label: this.plugin.t('preset_all_texts','All texts'), pattern: '.+', flags: '', examples: ['This will target all texts.'], group: 'markdown' }
     ];
     
@@ -7035,7 +7057,7 @@ class PresetModal extends Modal {
     
     // Left column: Markdown presets
     const leftCol = container.createDiv();
-    const leftTitle = leftCol.createEl('h3', { text: 'Markdown Formatting' });
+    const leftTitle = leftCol.createEl('h3', { text: this.plugin.t('preset_group_markdown_formatting', 'Markdown Formatting') });
     leftTitle.style.marginTop = '0';
     leftTitle.style.marginBottom = '12px';
     leftTitle.style.fontSize = '14px';
@@ -7073,7 +7095,7 @@ class PresetModal extends Modal {
     
     // Right column: Other presets
     const rightCol = container.createDiv();
-    const rightTitle = rightCol.createEl('h3', { text: 'Other Patterns' });
+    const rightTitle = rightCol.createEl('h3', { text: this.plugin.t('preset_group_other_patterns', 'Other Patterns') });
     rightTitle.style.marginTop = '0';
     rightTitle.style.marginBottom = '12px';
     rightTitle.style.fontSize = '14px';
@@ -7111,7 +7133,7 @@ class PresetModal extends Modal {
 
     // Middle column: Bracket presets
     const middleCol = container.createDiv();
-    const middleTitle = middleCol.createEl('h3', { text: 'Brackets' });
+    const middleTitle = middleCol.createEl('h3', { text: this.plugin.t('preset_group_brackets', 'Brackets') });
     middleTitle.style.marginTop = '0';
     middleTitle.style.marginBottom = '12px';
     middleTitle.style.fontSize = '14px';
@@ -7861,7 +7883,7 @@ class BlacklistRegexTesterModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try { this.modalEl.style.maxWidth = '820px'; this.modalEl.style.padding = '20px'; } catch (e) {}
-    const title = contentEl.createEl('h2', { text: this.plugin.t('regex_tester_header','Regex Tester') + ' - Blacklist' });
+    const title = contentEl.createEl('h2', { text: this.plugin.t('regex_tester_blacklist','Regex tester - blacklist') });
     title.style.marginTop = '0';
     title.style.marginBottom = '12px';
     try { title.addClass('act-regex-title'); } catch (e) {}
@@ -8330,11 +8352,11 @@ class ManageRulesModal extends Modal {
             if (ev && ev.stopPropagation) ev.stopPropagation();
             const menu = new Menu(this.app);
             menu.addItem((item) => {
-              item.setTitle('Duplicate Entry').setIcon('copy').onClick(duplicateHandler);
+              item.setTitle(this.plugin.t('duplicate_entry','Duplicate Entry')).setIcon('copy').onClick(duplicateHandler);
             });
             if (entry.isRegex) {
               menu.addItem((item) => {
-                item.setTitle('Open in Regex Tester').setIcon('pencil').onClick(openInRegexTesterHandler);
+                item.setTitle(this.plugin.t('open_in_regex_tester','Open in Regex Tester')).setIcon('pencil').onClick(openInRegexTesterHandler);
               });
             }
             menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
@@ -8652,6 +8674,15 @@ class ColorSettingTab extends PluginSettingTab {
       regexChk.style.cursor = 'pointer';
       regexChk.style.flex = '0 0 auto';
 
+      const regexLabel = row.createEl('label');
+      regexLabel.appendChild(document.createTextNode(this.plugin.t('label_regex','Regex')));
+      regexLabel.style.flex = '0 0 auto';
+      regexLabel.style.cursor = 'pointer';
+      regexLabel.style.userSelect = 'none';
+      regexLabel.style.fontSize = '0.9em';
+      regexLabel.onclick = () => { regexChk.checked = !regexChk.checked; };
+      regexChk.style.margin = '0';
+
       const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
       flagsInput.placeholder = this.plugin.t('flags_placeholder','flags');
       flagsInput.style.width = '64px';
@@ -8860,11 +8891,11 @@ class ColorSettingTab extends PluginSettingTab {
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const menu = new Menu(this.app);
           menu.addItem((item) => {
-            item.setTitle('Duplicate Entry').setIcon('copy').onClick(duplicateHandler);
+            item.setTitle(this.plugin.t('duplicate_entry','Duplicate Entry')).setIcon('copy').onClick(duplicateHandler);
           });
           if (entry.isRegex) {
             menu.addItem((item) => {
-              item.setTitle('Open in Regex Tester').setIcon('pencil').onClick(openInRegexTesterHandler);
+              item.setTitle(this.plugin.t('open_in_regex_tester','Open in Regex Tester')).setIcon('pencil').onClick(openInRegexTesterHandler);
             });
           }
           menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
@@ -10843,11 +10874,11 @@ class ColorSettingTab extends PluginSettingTab {
     const sortBtn = buttonRowDiv.createEl('button');
     const sortModes = ['last-added', 'a-z', 'reverse-a-z', 'style-order', 'color'];
     const sortLabels = {
-      'last-added': 'Sort: Last Added',
-      'a-z': 'Sort: A-Z',
-      'reverse-a-z': 'Sort: Z-A',
-      'style-order': 'Sort: Style Order',
-      'color': 'Sort: Color'
+      'last-added': this.plugin.t('sort_label_last-added', 'Sort: Last Added'),
+      'a-z': this.plugin.t('sort_label_a-z', 'Sort: A-Z'),
+      'reverse-a-z': this.plugin.t('sort_label_reverse-a-z', 'Sort: Z-A'),
+      'style-order': this.plugin.t('sort_label_style-order', 'Sort: Style Order'),
+      'color': this.plugin.t('sort_label_color', 'Sort: Color')
     };
     sortBtn.textContent = this.plugin.t('sort_label_'+(this._wordsSortMode||'last-added'), sortLabels[this._wordsSortMode] || 'Sort: Last Added');
     sortBtn.style.cursor = 'pointer';
@@ -10995,7 +11026,11 @@ class ColorSettingTab extends PluginSettingTab {
 
     const blacklistSortBtn = blacklistButtonRowDiv.createEl('button');
     const blSortModes = ['last-added', 'a-z', 'reverse-a-z'];
-    const blSortLabels = { 'last-added': 'Sort: Last Added', 'a-z': 'Sort: A-Z', 'reverse-a-z': 'Sort: Z-A' };
+    const blSortLabels = {
+      'last-added': this.plugin.t('blacklist_sort_label_last-added', 'Sort: Last Added'),
+      'a-z': this.plugin.t('blacklist_sort_label_a-z', 'Sort: A-Z'),
+      'reverse-a-z': this.plugin.t('blacklist_sort_label_reverse-a-z', 'Sort: Z-A')
+    };
     blacklistSortBtn.textContent = blSortLabels[this._blacklistSortMode] || 'Sort: Last Added';
     blacklistSortBtn.style.cursor = 'pointer';
     blacklistSortBtn.style.flex = '0 0 auto';
@@ -11944,4 +11979,3 @@ class ConfirmationModal extends Modal {
   }
 }
 
-/* nosourcemap */

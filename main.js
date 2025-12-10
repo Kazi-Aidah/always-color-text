@@ -132,6 +132,9 @@ var require_en = __commonJS({
       "sort_label_reverse-a-z": "Sort: Z-A",
       "sort_label_style-order": "Sort: Style Order",
       sort_label_color: "Sort: Color",
+      "blacklist_sort_label_last-added": "Sort: Last Added",
+      "blacklist_sort_label_a-z": "Sort: A-Z",
+      "blacklist_sort_label_reverse-a-z": "Sort: Z-A",
       btn_add_new_word: "+ Add new colored word / pattern",
       btn_presets: "Presets",
       preset_all_headings: "All Headings (H1-H6)",
@@ -239,12 +242,36 @@ var require_en = __commonJS({
       command_open_blacklist_regex_tester: "Add Blacklist Regex",
       label_regex: "Regex",
       tooltip_use_regex: "Use as regex pattern",
+      drag_to_reorder: "Drag to reorder",
+      preset_codeblocks: "Codeblocks",
+      preset_inline_comments: "Comments (%%\u2026%%)",
+      notice_invalid_regex: "Invalid regular expression",
+      notice_empty_pattern: "Pattern is empty",
+      notice_added_regex: "Regex added",
+      btn_save_regex: "Save Regex",
+      notice_rule_updated: "Rule updated",
+      notice_regex_updated: "Regex updated",
+      notice_entry_updated: "Entry updated",
+      notice_entry_duplicated: "Entry duplicated",
+      no_rules_found: "No rules found.",
+      edit_rule_header: "Edit Rule",
+      add_rule_header: "Add New Rule",
+      advanced_rules_modal_header: "Advanced Rules",
       command_manage_colored_texts: "Manage Colored Texts",
       notice_error_opening_regex_tester: "Error opening regex tester",
       notice_error_opening_blacklist_regex_tester: "Error opening blacklist regex tester",
       notice_error_opening_advanced_rules: "Error opening advanced rules modal",
       advanced_rules_header: "Advanced Rules",
       advanced_rules_manage_button: "manage advanced rules",
+      preset_parentheses: "Parentheses ()",
+      preset_square_brackets: "Square Brackets []",
+      preset_curly_braces: "Curly Braces {}",
+      preset_angle_brackets: "Angle Brackets <>",
+      preset_colons: "Colons :",
+      preset_double_quotes: 'Double Quotes ""',
+      preset_group_markdown_formatting: "Markdown Formatting",
+      preset_group_other_patterns: "Other Patterns",
+      preset_group_brackets: "Brackets",
       regex_tester_header: "Regex Tester",
       regex_expression_placeholder: "Put your Regex Expression here",
       regex_subject_placeholder: "type your subject / test string here...",
@@ -402,9 +429,16 @@ var require_es = __commonJS({
       "sort_label_reverse-a-z": "Ordenar: Z-A",
       "sort_label_style-order": "Ordenar: Orden de Estilo",
       sort_label_color: "Ordenar: Color",
+      "blacklist_sort_label_last-added": "Ordenar: \xDAltimo A\xF1adido",
+      "blacklist_sort_label_a-z": "Ordenar: A-Z",
+      "blacklist_sort_label_reverse-a-z": "Ordenar: Z-A",
       btn_add_new_word: "+ A\xF1adir nueva palabra/patr\xF3n coloreado",
       btn_presets: "Ajustes predeterminados",
       preset_all_headings: "Todos los encabezados (H1-H6)",
+      preset_bullet_points: "Puntos de vi\xF1eta",
+      preset_numbered_lists: "Listas numeradas",
+      preset_task_checked: "Lista de tareas (marcada)",
+      preset_task_unchecked: "Lista de tareas (desmarcada)",
       preset_dates_yyyy_mm_dd: "Fechas (YYYY-MM-DD)",
       preset_times_am_pm: "Horas (AM/PM)",
       preset_dates_yyyy_mmm_dd: "Fechas (YYYY-MMM-DD)",
@@ -447,9 +481,11 @@ var require_es = __commonJS({
       path_rule_mode_exclude: "excluir",
       text_rule_mode_include: "solo colores en (lista blanca)",
       text_rule_mode_exclude: "no colorea en (lista negra)",
-      mode_only_colors_in: "solo colorea en",
-      mode_does_not_color_in: "no colorea en",
-      enter_path_or_pattern: "Introduce ruta o patr\xF3n",
+      mode_only_colors_in: "solo colores en",
+      mode_does_not_color_in: "no colores en",
+      label_text_include: "Lista Blanca",
+      label_text_exclude: "Lista Negra",
+      enter_path_or_pattern: "Ingrese ruta o patr\xF3n",
       btn_add_blacklist: "+ A\xF1adir palabra o patr\xF3n a la lista negra",
       tooltip_delete_all_blacklist: "Eliminar todas las palabras/patrones de la lista negra",
       confirm_delete_all_blacklist_title: "Eliminar todas las palabras de la lista negra",
@@ -501,13 +537,37 @@ var require_es = __commonJS({
       command_manage_advanced_rules: "Gestionar Reglas Avanzadas",
       command_open_regex_tester: "A\xF1adir Regex (Abrir Probador de Regex)",
       command_open_blacklist_regex_tester: "Agregar Expresi\xF3n Regular de Lista Negra",
-      label_regex: "Regex",
+      label_regex: "Expresi\xF3n regular",
       tooltip_use_regex: "Usar como patr\xF3n regex",
+      drag_to_reorder: "Arrastra para reordenar",
+      preset_codeblocks: "Bloques de c\xF3digo",
+      preset_inline_comments: "Comentarios (%%\u2026%%)",
+      notice_invalid_regex: "Expresi\xF3n regular inv\xE1lida",
+      notice_empty_pattern: "El patr\xF3n est\xE1 vac\xEDo",
+      notice_added_regex: "Expresi\xF3n regular a\xF1adida",
+      btn_save_regex: "Guardar Expresi\xF3n Regular",
+      notice_rule_updated: "Regla actualizada",
+      notice_regex_updated: "Expresi\xF3n regular actualizada",
+      notice_entry_updated: "Entrada actualizada",
+      notice_entry_duplicated: "Entrada duplicada",
+      no_rules_found: "No se encontraron reglas.",
+      edit_rule_header: "Editar Regla",
+      add_rule_header: "A\xF1adir Nueva Regla",
+      advanced_rules_modal_header: "Reglas Avanzadas",
       notice_error_opening_regex_tester: "Error al abrir el probador de regex",
       notice_error_opening_blacklist_regex_tester: "Error al abrir el probador de regex de lista negra",
       notice_error_opening_advanced_rules: "Error al abrir el modal de reglas avanzadas",
       advanced_rules_header: "Reglas Avanzadas",
       advanced_rules_manage_button: "gestionar reglas avanzadas",
+      preset_parentheses: "Par\xE9ntesis ()",
+      preset_square_brackets: "Corchetes []",
+      preset_curly_braces: "Llaves {}",
+      preset_angle_brackets: "\xC1ngulos <>",
+      preset_colons: "Dos puntos :",
+      preset_double_quotes: "Comillas dobles",
+      preset_group_markdown_formatting: "Formato Markdown",
+      preset_group_other_patterns: "Otros Patrones",
+      preset_group_brackets: "Corchetes",
       regex_tester_header: "Probador de Expresiones Regulares",
       regex_expression_placeholder: "Pon tu expresi\xF3n regex aqu\xED",
       regex_subject_placeholder: "escribe el texto a probar aqu\xED...",
@@ -665,9 +725,16 @@ var require_fr = __commonJS({
       "sort_label_reverse-a-z": "Trier : Z-A",
       "sort_label_style-order": "Trier : Ordre de style",
       sort_label_color: "Trier : Couleur",
+      "blacklist_sort_label_last-added": "Trier : Dernier ajout",
+      "blacklist_sort_label_a-z": "Trier : A-Z",
+      "blacklist_sort_label_reverse-a-z": "Trier : Z-A",
       btn_add_new_word: "+ Ajouter un nouveau mot / motif color\xE9",
       btn_presets: "Pr\xE9r\xE9glages",
       preset_all_headings: "Tous les titres (H1-H6)",
+      preset_bullet_points: "Listes \xE0 puces",
+      preset_numbered_lists: "Listes num\xE9rot\xE9es",
+      preset_task_checked: "Liste des t\xE2ches (coch\xE9e)",
+      preset_task_unchecked: "Liste des t\xE2ches (non coch\xE9e)",
       preset_dates_yyyy_mm_dd: "Dates (AAAA-MM-JJ)",
       preset_times_am_pm: "Heures (AM/PM)",
       preset_dates_yyyy_mmm_dd: "Dates (AAAA-MMM-JJ)",
@@ -712,6 +779,8 @@ var require_fr = __commonJS({
       text_rule_mode_exclude: "ne colore pas en (liste noire)",
       mode_only_colors_in: "ne colore que dans",
       mode_does_not_color_in: "ne colore pas dans",
+      label_text_include: "Liste Blanche",
+      label_text_exclude: "Liste Noire",
       enter_path_or_pattern: "Entrer un chemin ou un motif",
       btn_add_blacklist: "+ Ajouter un mot ou motif en liste noire",
       tooltip_delete_all_blacklist: "Supprimer tous les mots/motifs en liste noire",
@@ -766,11 +835,35 @@ var require_fr = __commonJS({
       command_open_blacklist_regex_tester: "Ajouter Regex \xE0 la Liste Noire",
       label_regex: "Expression r\xE9guli\xE8re",
       tooltip_use_regex: "Utiliser comme mod\xE8le d'expression r\xE9guli\xE8re",
+      drag_to_reorder: "Glisser pour r\xE9organiser",
+      preset_codeblocks: "Blocs de code",
+      preset_inline_comments: "Commentaires (%%\u2026%%)",
+      notice_invalid_regex: "Expression r\xE9guli\xE8re invalide",
+      notice_empty_pattern: "Le motif est vide",
+      notice_added_regex: "Expression r\xE9guli\xE8re ajout\xE9e",
+      btn_save_regex: "Enregistrer l'expression r\xE9guli\xE8re",
+      notice_rule_updated: "R\xE8gle mise \xE0 jour",
+      notice_regex_updated: "Expression r\xE9guli\xE8re mise \xE0 jour",
+      notice_entry_updated: "Entr\xE9e mise \xE0 jour",
+      notice_entry_duplicated: "Entr\xE9e dupliqu\xE9e",
+      no_rules_found: "Aucune r\xE8gle trouv\xE9e.",
+      edit_rule_header: "Modifier la r\xE8gle",
+      add_rule_header: "Ajouter une nouvelle r\xE8gle",
+      advanced_rules_modal_header: "R\xE8gles avanc\xE9es",
       notice_error_opening_regex_tester: "Erreur lors de l'ouverture du testeur regex",
       notice_error_opening_blacklist_regex_tester: "Erreur lors de l'ouverture du testeur regex de liste noire",
       notice_error_opening_advanced_rules: "Erreur lors de l'ouverture de la bo\xEEte de dialogue des r\xE8gles avanc\xE9es",
       advanced_rules_header: "R\xE8gles avanc\xE9es",
       advanced_rules_manage_button: "g\xE9rer les r\xE8gles avanc\xE9es",
+      preset_parentheses: "Parenth\xE8ses ()",
+      preset_square_brackets: "Crochets []",
+      preset_curly_braces: "Accolades {}",
+      preset_angle_brackets: "Chevrons <>",
+      preset_colons: "Deux-points :",
+      preset_double_quotes: "Guillemets doubles",
+      preset_group_markdown_formatting: "Formatage Markdown",
+      preset_group_other_patterns: "Autres Motifs",
+      preset_group_brackets: "Crochets",
       regex_tester_header: "Testeur d'expressions r\xE9guli\xE8res",
       regex_expression_placeholder: "Mettez votre expression regex ici",
       regex_subject_placeholder: "tapez votre texte \xE0 tester ici...",
@@ -928,9 +1021,16 @@ var require_hi = __commonJS({
       "sort_label_reverse-a-z": "\u0915\u094D\u0930\u092E: Z-A",
       "sort_label_style-order": "\u0915\u094D\u0930\u092E: \u0938\u094D\u091F\u093E\u0907\u0932 \u0911\u0930\u094D\u0921\u0930",
       sort_label_color: "\u0915\u094D\u0930\u092E: \u0930\u0902\u0917",
-      btn_add_new_word: "+ \u0928\u092F\u093E \u0930\u0902\u0917\u093E \u0936\u092C\u094D\u0926 / \u092A\u0948\u091F\u0930\u094D\u0928 \u091C\u094B\u0921\u093C\u0947\u0902",
+      "blacklist_sort_label_last-added": "\u0915\u094D\u0930\u092E: \u0905\u0902\u0924\u093F\u092E \u091C\u094B\u0921\u093C\u093E \u0939\u0941\u0906",
+      "blacklist_sort_label_a-z": "\u0915\u094D\u0930\u092E: A-Z",
+      "blacklist_sort_label_reverse-a-z": "\u0915\u094D\u0930\u092E: Z-A",
+      btn_add_new_word: "+ \u0928\u092F\u093E \u0930\u0902\u0917\u0940\u0928 \u0936\u092C\u094D\u0926 / \u092A\u0948\u091F\u0930\u094D\u0928 \u091C\u094B\u0921\u093C\u0947\u0902",
       btn_presets: "\u092A\u094D\u0930\u0940\u0938\u0947\u091F\u094D\u0938",
       preset_all_headings: "\u0938\u092D\u0940 \u0939\u0947\u0921\u093F\u0902\u0917\u094D\u0938 (H1-H6)",
+      preset_bullet_points: "\u092C\u0941\u0932\u0947\u091F \u092A\u0949\u0907\u0902\u091F\u094D\u0938",
+      preset_numbered_lists: "\u0938\u0902\u0916\u094D\u092F\u093E\u092F\u093F\u0924 \u0938\u0942\u091A\u093F\u092F\u093E\u0901",
+      preset_task_checked: "\u091F\u093E\u0938\u094D\u0915 \u0932\u093F\u0938\u094D\u091F (\u091A\u0947\u0915 \u0915\u093F\u092F\u093E \u0939\u0941\u0906)",
+      preset_task_unchecked: "\u091F\u093E\u0938\u094D\u0915 \u0932\u093F\u0938\u094D\u091F (\u0905\u0928\u091A\u0947\u0915 \u0915\u093F\u092F\u093E \u0939\u0941\u0906)",
       preset_dates_yyyy_mm_dd: "\u0924\u093F\u0925\u093F\u092F\u093E\u0901 (YYYY-MM-DD)",
       preset_times_am_pm: "\u0938\u092E\u092F (AM/PM)",
       preset_dates_yyyy_mmm_dd: "\u0924\u093F\u0925\u093F\u092F\u093E\u0901 (YYYY-MMM-DD)",
@@ -975,6 +1075,8 @@ var require_hi = __commonJS({
       text_rule_mode_exclude: "(\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F) \u092E\u0947\u0902 \u0930\u0902\u0917 \u0928 \u0915\u0930\u0947\u0902",
       mode_only_colors_in: "\u0915\u0947 \u092D\u0940\u0924\u0930 \u0939\u0940 \u0930\u0902\u0917 \u0915\u0930\u0924\u093E \u0939\u0948",
       mode_does_not_color_in: "\u0915\u0947 \u092D\u0940\u0924\u0930 \u0930\u0902\u0917 \u0928\u0939\u0940\u0902 \u0915\u0930\u0924\u093E",
+      label_text_include: "\u0935\u094D\u0939\u093E\u0907\u091F\u0932\u093F\u0938\u094D\u091F",
+      label_text_exclude: "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F",
       enter_path_or_pattern: "\u092A\u0925 \u092F\u093E \u092A\u0948\u091F\u0930\u094D\u0928 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902",
       btn_add_blacklist: "+ \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0936\u092C\u094D\u0926 \u092F\u093E \u092A\u0948\u091F\u0930\u094D\u0928 \u091C\u094B\u0921\u093C\u0947\u0902",
       tooltip_delete_all_blacklist: "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F\u0947\u0921 \u0938\u092D\u0940 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0939\u091F\u093E\u090F\u0901",
@@ -1027,13 +1129,37 @@ var require_hi = __commonJS({
       command_manage_advanced_rules: "\u0909\u0928\u094D\u0928\u0924 \u0928\u093F\u092F\u092E \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
       command_open_regex_tester: "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902 (\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091F\u0947\u0938\u094D\u091F\u0930 \u0916\u094B\u0932\u0947\u0902)",
       command_open_blacklist_regex_tester: "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u092E\u0947\u0902 \u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902",
-      label_regex: "Regex",
+      label_regex: "\u0930\u0947\u091C\u0947\u0915\u094D\u0938",
       tooltip_use_regex: "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u092A\u0948\u091F\u0930\u094D\u0928 \u0915\u0947 \u0930\u0942\u092A \u092E\u0947\u0902 \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0947\u0902",
+      drag_to_reorder: "\u092A\u0941\u0928\u0903 \u0935\u094D\u092F\u0935\u0938\u094D\u0925\u093F\u0924 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0916\u0940\u0902\u091A\u0947\u0902",
+      preset_codeblocks: "\u0915\u094B\u0921 \u092C\u094D\u0932\u0949\u0915",
+      preset_inline_comments: "\u091F\u093F\u092A\u094D\u092A\u0923\u093F\u092F\u093E\u0901 (%%\u2026%%)",
+      notice_invalid_regex: "\u0905\u092E\u093E\u0928\u094D\u092F \u0928\u093F\u092F\u092E\u093F\u0924 \u0905\u092D\u093F\u0935\u094D\u092F\u0915\u094D\u0924\u093F",
+      notice_empty_pattern: "\u092A\u0948\u091F\u0930\u094D\u0928 \u0916\u093E\u0932\u0940 \u0939\u0948",
+      notice_added_regex: "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u093E \u0917\u092F\u093E",
+      btn_save_regex: "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u0938\u0939\u0947\u091C\u0947\u0902",
+      notice_rule_updated: "\u0928\u093F\u092F\u092E \u0905\u092A\u0921\u0947\u091F \u0915\u093F\u092F\u093E \u0917\u092F\u093E",
+      notice_regex_updated: "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u0905\u092A\u0921\u0947\u091F \u0915\u093F\u092F\u093E \u0917\u092F\u093E",
+      notice_entry_updated: "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0905\u092A\u0921\u0947\u091F \u0915\u0940 \u0917\u0908",
+      notice_entry_duplicated: "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0921\u0941\u092A\u094D\u0932\u093F\u0915\u0947\u091F \u0915\u0940 \u0917\u0908",
+      no_rules_found: "\u0915\u094B\u0908 \u0928\u093F\u092F\u092E \u0928\u0939\u0940\u0902 \u092E\u093F\u0932\u093E\u0964",
+      edit_rule_header: "\u0928\u093F\u092F\u092E \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+      add_rule_header: "\u0928\u092F\u093E \u0928\u093F\u092F\u092E \u091C\u094B\u0921\u093C\u0947\u0902",
+      advanced_rules_modal_header: "\u0909\u0928\u094D\u0928\u0924 \u0928\u093F\u092F\u092E",
       notice_error_opening_regex_tester: "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091F\u0947\u0938\u094D\u091F\u0930 \u0916\u094B\u0932\u0928\u0947 \u092E\u0947\u0902 \u0924\u094D\u0930\u0941\u091F\u093F",
       notice_error_opening_blacklist_regex_tester: "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091F\u0947\u0938\u094D\u091F\u0930 \u0916\u094B\u0932\u0928\u0947 \u092E\u0947\u0902 \u0924\u094D\u0930\u0941\u091F\u093F",
       notice_error_opening_advanced_rules: "\u0909\u0928\u094D\u0928\u0924 \u0928\u093F\u092F\u092E \u092E\u0949\u0921\u0932 \u0916\u094B\u0932\u0928\u0947 \u092E\u0947\u0902 \u0924\u094D\u0930\u0941\u091F\u093F",
       advanced_rules_header: "\u0909\u0928\u094D\u0928\u0924 \u0928\u093F\u092F\u092E",
       advanced_rules_manage_button: "\u0909\u0928\u094D\u0928\u0924 \u0928\u093F\u092F\u092E\u094B\u0902 \u0915\u093E \u092A\u094D\u0930\u092C\u0902\u0927\u0928 \u0915\u0930\u0947\u0902",
+      preset_parentheses: "\u0915\u094B\u0937\u094D\u0920\u0915 ()",
+      preset_square_brackets: "\u0935\u0930\u094D\u0917 \u0915\u094B\u0937\u094D\u0920\u0915 []",
+      preset_curly_braces: "\u0918\u0941\u0902\u0918\u0930\u093E\u0932\u0947 \u092C\u094D\u0930\u0947\u0938\u0947\u0938 {}",
+      preset_angle_brackets: "\u0915\u094B\u0923 \u0915\u094B\u0937\u094D\u0920\u0915 <>",
+      preset_colons: "\u0915\u094B\u0932\u0928 :",
+      preset_double_quotes: "\u0921\u092C\u0932 \u0915\u094B\u091F\u094D\u0938",
+      preset_group_markdown_formatting: "\u092E\u093E\u0930\u094D\u0915\u0921\u093E\u0909\u0928 \u092B\u0949\u0930\u094D\u092E\u0947\u091F\u093F\u0902\u0917",
+      preset_group_other_patterns: "\u0905\u0928\u094D\u092F \u092A\u0948\u091F\u0930\u094D\u0928",
+      preset_group_brackets: "\u0915\u094B\u0937\u094D\u0920\u0915",
       regex_tester_header: "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091F\u0947\u0938\u094D\u091F\u0930",
       regex_expression_placeholder: "\u0905\u092A\u0928\u093E \u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u0935\u094D\u092F\u0902\u091C\u0928 \u092F\u0939\u093E\u0901 \u0921\u093E\u0932\u0947\u0902",
       regex_subject_placeholder: "\u092F\u0939\u093E\u0901 \u092A\u0930\u0940\u0915\u094D\u0937\u0923 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091F\u093E\u0907\u092A \u0915\u0930\u0947\u0902...",
@@ -1191,9 +1317,16 @@ var require_it = __commonJS({
       "sort_label_reverse-a-z": "Ordina: Z-A",
       "sort_label_style-order": "Ordina: ordine stile",
       sort_label_color: "Ordina: colore",
+      "blacklist_sort_label_last-added": "Ordina: ultimi aggiunti",
+      "blacklist_sort_label_a-z": "Ordina: A-Z",
+      "blacklist_sort_label_reverse-a-z": "Ordina: Z-A",
       btn_add_new_word: "+ Aggiungi nuova parola/pattern colorato",
       btn_presets: "Preset",
       preset_all_headings: "Tutti i titoli (H1-H6)",
+      preset_bullet_points: "Punti elenco",
+      preset_numbered_lists: "Elenchi numerati",
+      preset_task_checked: "Elenco attivit\xE0 (selezionato)",
+      preset_task_unchecked: "Elenco attivit\xE0 (non selezionato)",
       preset_dates_yyyy_mm_dd: "Date (AAAA-MM-GG)",
       preset_times_am_pm: "Orari (AM/PM)",
       preset_dates_yyyy_mmm_dd: "Date (AAAA-MMM-GG)",
@@ -1238,6 +1371,8 @@ var require_it = __commonJS({
       text_rule_mode_exclude: "non colorare in (blacklist)",
       mode_only_colors_in: "colora solo in",
       mode_does_not_color_in: "non colora in",
+      label_text_include: "Whitelist",
+      label_text_exclude: "Blacklist",
       enter_path_or_pattern: "Inserisci percorso o modello",
       btn_add_blacklist: "+ Aggiungi parola o pattern in blacklist",
       tooltip_delete_all_blacklist: "Elimina tutte le parole/pattern in blacklist",
@@ -1290,14 +1425,38 @@ var require_it = __commonJS({
       command_manage_advanced_rules: "Gestisci Regole Avanzate",
       command_open_regex_tester: "Aggiungi Regex (Apri Tester Regex)",
       command_open_blacklist_regex_tester: "Aggiungi Regex alla Lista Nera",
-      label_regex: "Regex",
+      label_regex: "Espressione regolare",
       tooltip_use_regex: "Usa come pattern regex",
+      drag_to_reorder: "Trascina per riordinare",
+      preset_codeblocks: "Blocchi di codice",
+      preset_inline_comments: "Commenti (%%\u2026%%)",
+      notice_invalid_regex: "Espressione regolare non valida",
+      notice_empty_pattern: "Il modello \xE8 vuoto",
+      notice_added_regex: "Espressione regolare aggiunta",
+      btn_save_regex: "Salva Espressione Regolare",
+      notice_rule_updated: "Regola aggiornata",
+      notice_regex_updated: "Espressione regolare aggiornata",
+      notice_entry_updated: "Voce aggiornata",
+      notice_entry_duplicated: "Voce duplicata",
+      no_rules_found: "Nessuna regola trovata.",
+      edit_rule_header: "Modifica Regola",
+      add_rule_header: "Aggiungi Nuova Regola",
+      advanced_rules_modal_header: "Regole avanzate",
       notice_error_opening_regex_tester: "Errore nell'apertura del tester regex",
       notice_error_opening_blacklist_regex_tester: "Errore nell'apertura del tester regex della lista nera",
       notice_error_opening_advanced_rules: "Errore nell'apertura della finestra delle regole avanzate",
       advanced_rules_header: "Regole avanzate",
       advanced_rules_manage_button: "gestisci regole avanzate",
-      regex_tester_header: "Tester di Espressioni Regolari",
+      preset_parentheses: "Parentesi ()",
+      preset_square_brackets: "Parentesi quadre []",
+      preset_curly_braces: "Parentesi graffe {}",
+      preset_angle_brackets: "Parentesi angolari <>",
+      preset_colons: "Due punti :",
+      preset_double_quotes: "Virgolette",
+      preset_group_markdown_formatting: "Formattazione Markdown",
+      preset_group_other_patterns: "Altri Pattern",
+      preset_group_brackets: "Parentesi",
+      regex_tester_header: "Tester di espressioni regolari",
       regex_expression_placeholder: "Inserisci la tua espressione regex qui",
       regex_subject_placeholder: "digita il testo da testare qui...",
       regex_name_placeholder: "dai un nome alla tua regex",
@@ -1454,9 +1613,16 @@ var require_bn = __commonJS({
       "sort_label_reverse-a-z": "\u09B8\u09B0\u09CD\u099F: Z-A",
       "sort_label_style-order": "\u09B8\u09B0\u09CD\u099F: \u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u0985\u09B0\u09CD\u09A1\u09BE\u09B0",
       sort_label_color: "\u09B8\u09B0\u09CD\u099F: \u09B0\u0999",
-      btn_add_new_word: "+ \u09A8\u09A4\u09C1\u09A8 \u09B0\u0999 \u0995\u09B0\u09BE \u09B6\u09AC\u09CD\u09A6 / \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
+      "blacklist_sort_label_last-added": "\u09B8\u09B0\u09CD\u099F: \u09B8\u09B0\u09CD\u09AC\u09B6\u09C7\u09B7 \u09AF\u09CB\u0997",
+      "blacklist_sort_label_a-z": "\u09B8\u09B0\u09CD\u099F: A-Z",
+      "blacklist_sort_label_reverse-a-z": "\u09B8\u09B0\u09CD\u099F: Z-A",
+      btn_add_new_word: "+ \u09A8\u09A4\u09C1\u09A8 \u09B0\u0999\u09BE\u09AF\u09BC\u09BF\u09A4 \u09B6\u09AC\u09CD\u09A6 / \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
       btn_presets: "\u09AA\u09CD\u09B0\u09BF\u09B8\u09C7\u099F\u0997\u09C1\u09B2\u09BF",
       preset_all_headings: "\u09B8\u09AC \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE (H1-H6)",
+      preset_bullet_points: "\u09AC\u09C1\u09B2\u09C7\u099F \u09AA\u09AF\u09BC\u09C7\u09A8\u09CD\u099F\u0997\u09C1\u09B2\u09BF",
+      preset_numbered_lists: "\u09B8\u0982\u0996\u09CD\u09AF\u09BE\u09AF\u09BC\u09BF\u09A4 \u09A4\u09BE\u09B2\u09BF\u0995\u09BE\u0997\u09C1\u09B2\u09BF",
+      preset_task_checked: "\u099F\u09BE\u09B8\u09CD\u0995 \u09B2\u09BF\u09B8\u09CD\u099F (\u099A\u09C7\u0995 \u0995\u09B0\u09BE)",
+      preset_task_unchecked: "\u099F\u09BE\u09B8\u09CD\u0995 \u09B2\u09BF\u09B8\u09CD\u099F (\u0985\u099A\u09C7\u0995 \u0995\u09B0\u09BE)",
       preset_dates_yyyy_mm_dd: "\u09A4\u09BE\u09B0\u09BF\u0996 (YYYY-MM-DD)",
       preset_times_am_pm: "\u09B8\u09AE\u09AF\u09BC (AM/PM)",
       preset_dates_yyyy_mmm_dd: "\u09A4\u09BE\u09B0\u09BF\u0996 (YYYY-MMM-DD)",
@@ -1501,6 +1667,8 @@ var require_bn = __commonJS({
       text_rule_mode_exclude: "(\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7) \u09B0\u0999 \u0995\u09B0\u09AC\u09C7\u09A8 \u09A8\u09BE",
       mode_only_colors_in: "\u09B6\u09C1\u09A7\u09C1 \u098F\u09B0 \u09AE\u09A7\u09CD\u09AF\u09C7 \u09B0\u0999 \u0995\u09B0\u09C7",
       mode_does_not_color_in: "\u098F\u09B0 \u09AE\u09A7\u09CD\u09AF\u09C7 \u09B0\u0999 \u0995\u09B0\u09C7 \u09A8\u09BE",
+      label_text_include: "\u09B9\u09CB\u09AF\u09BC\u09BE\u0987\u099F\u09B2\u09BF\u09B8\u09CD\u099F",
+      label_text_exclude: "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F",
       enter_path_or_pattern: "\u09AA\u09BE\u09A5 \u09AC\u09BE \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09B2\u09BF\u0996\u09C1\u09A8",
       btn_add_blacklist: "+ \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u09B6\u09AC\u09CD\u09A6 \u09AC\u09BE \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
       tooltip_delete_all_blacklist: "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0995\u09B0\u09BE \u09B8\u09AE\u09B8\u09CD\u09A4 \u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AE\u09C1\u099B\u09C1\u09A8",
@@ -1553,13 +1721,37 @@ var require_bn = __commonJS({
       command_manage_advanced_rules: "\u0989\u09A8\u09CD\u09A8\u09A4 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       command_open_regex_tester: "Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8 (Regex \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u0995 \u0996\u09C1\u09B2\u09C1\u09A8)",
       command_open_blacklist_regex_tester: "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7 Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
-      label_regex: "Regex",
+      label_regex: "\u09B0\u09C7\u099C\u09C7\u0995\u09CD\u09B8",
       tooltip_use_regex: "\u09B0\u09C7\u099C\u09C7\u0995\u09CD\u09B8 \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09B9\u09BF\u09B8\u09BE\u09AC\u09C7 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8",
+      drag_to_reorder: "\u09AA\u09C1\u09A8\u09B0\u09CD\u09AC\u09BF\u09A8\u09CD\u09AF\u09BE\u09B8\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u099F\u09C7\u09A8\u09C7 \u0986\u09A8\u09C1\u09A8",
+      preset_codeblocks: "\u0995\u09CB\u09A1\u09AC\u09CD\u09B2\u0995",
+      preset_inline_comments: "\u09AE\u09A8\u09CD\u09A4\u09AC\u09CD\u09AF (%%\u2026%%)",
+      notice_invalid_regex: "\u0985\u09AC\u09C8\u09A7 \u09A8\u09BF\u09AF\u09BC\u09AE\u09BF\u09A4 \u0985\u09AD\u09BF\u09AC\u09CD\u09AF\u0995\u09CD\u09A4\u09BF",
+      notice_empty_pattern: "\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u0996\u09BE\u09B2\u09BF",
+      notice_added_regex: "\u09B0\u09BF\u099C\u09C7\u0995\u09CD\u09B8 \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
+      btn_save_regex: "\u09B0\u09BF\u099C\u09C7\u0995\u09CD\u09B8 \u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09C1\u09A8",
+      notice_rule_updated: "\u09A8\u09BF\u09AF\u09BC\u09AE \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
+      notice_regex_updated: "\u09B0\u09BF\u099C\u09C7\u0995\u09CD\u09B8 \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
+      notice_entry_updated: "\u09AA\u09CD\u09B0\u09AC\u09BF\u09B7\u09CD\u099F\u09BF \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
+      notice_entry_duplicated: "\u09AA\u09CD\u09B0\u09AC\u09BF\u09B7\u09CD\u099F\u09BF \u09A1\u09C1\u09AA\u09CD\u09B2\u09BF\u0995\u09C7\u099F \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
+      no_rules_found: "\u0995\u09CB\u09A8\u09CB \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09BE\u0993\u09AF\u09BC\u09BE \u09AF\u09BE\u09AF\u09BC\u09A8\u09BF\u0964",
+      edit_rule_header: "\u09A8\u09BF\u09AF\u09BC\u09AE \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      add_rule_header: "\u09A8\u09A4\u09C1\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
+      advanced_rules_modal_header: "\u0989\u09A8\u09CD\u09A8\u09A4 \u09A8\u09BF\u09AF\u09BC\u09AE",
       notice_error_opening_regex_tester: "\u09B0\u09BF\u099C\u09C7\u0995\u09CD\u09B8 \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u0995 \u0996\u09C1\u09B2\u09A4\u09C7 \u09A4\u09CD\u09B0\u09C1\u099F\u09BF",
       notice_error_opening_blacklist_regex_tester: "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u09B0\u09BF\u099C\u09C7\u0995\u09CD\u09B8 \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u0995 \u0996\u09C1\u09B2\u09A4\u09C7 \u09A4\u09CD\u09B0\u09C1\u099F\u09BF",
       notice_error_opening_advanced_rules: "\u0989\u09A8\u09CD\u09A8\u09A4 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AE\u09CB\u09A1\u09BE\u09B2 \u0996\u09C1\u09B2\u09A4\u09C7 \u09A4\u09CD\u09B0\u09C1\u099F\u09BF",
       advanced_rules_header: "\u0989\u09A8\u09CD\u09A8\u09A4 \u09A8\u09BF\u09AF\u09BC\u09AE",
       advanced_rules_manage_button: "\u0989\u09A8\u09CD\u09A8\u09A4 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      preset_parentheses: "\u09AC\u09A8\u09CD\u09A7\u09A8\u09C0 ()",
+      preset_square_brackets: "\u09AC\u09B0\u09CD\u0997 \u09AC\u09A8\u09CD\u09A7\u09A8\u09C0 []",
+      preset_curly_braces: "\u0995\u09BE\u09B0\u09CD\u09B2\u09BF \u09AC\u09CD\u09B0\u09C7\u09B8\u09C7\u09B8 {}",
+      preset_angle_brackets: "\u0995\u09CB\u09A3 \u09AC\u09A8\u09CD\u09A7\u09A8\u09C0 <>",
+      preset_colons: "\u0995\u09CB\u09B2\u09A8 :",
+      preset_double_quotes: "\u09A1\u09BE\u09AC\u09B2 \u0995\u09CB\u099F",
+      preset_group_markdown_formatting: "\u09AE\u09BE\u09B0\u09CD\u0995\u09A1\u09BE\u0989\u09A8 \u09B8\u09CD\u0995\u09C3\u09AA\u09CD\u09A4",
+      preset_group_other_patterns: "\u0985\u09A8\u09CD\u09AF \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8",
+      preset_group_brackets: "\u09AC\u09A8\u09CD\u09A7\u09A8\u09C0",
       regex_tester_header: "\u09B0\u09BF\u099C\u09C7\u0995\u09CD\u09B8 \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u0995",
       regex_expression_placeholder: "\u0986\u09AA\u09A8\u09BE\u09B0 \u09B0\u09BF\u099C\u09C7\u0995\u09CD\u09B8 \u0985\u09AD\u09BF\u09AC\u09CD\u09AF\u0995\u09CD\u09A4\u09BF \u098F\u0996\u09BE\u09A8\u09C7 \u09B0\u09BE\u0996\u09C1\u09A8",
       regex_subject_placeholder: "\u098F\u0996\u09BE\u09A8\u09C7 \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u09BE \u0995\u09B0\u09BE\u09B0 \u09AC\u09BF\u09B7\u09AF\u09BC \u099F\u09BE\u0987\u09AA \u0995\u09B0\u09C1\u09A8...",
@@ -1716,9 +1908,16 @@ var require_ru = __commonJS({
       "sort_label_reverse-a-z": "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C: \u042F-\u0410",
       "sort_label_style-order": "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C: \u041F\u043E\u0440\u044F\u0434\u043E\u043A \u043E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u0438\u044F",
       sort_label_color: "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C: \u041F\u043E \u0446\u0432\u0435\u0442\u0443",
-      btn_add_new_word: "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043D\u043E\u0432\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u043C\u043E\u0435 \u0441\u043B\u043E\u0432\u043E / \u0448\u0430\u0431\u043B\u043E\u043D",
+      "blacklist_sort_label_last-added": "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C: \u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043D\u044B\u0435",
+      "blacklist_sort_label_a-z": "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C: \u0410-\u042F",
+      "blacklist_sort_label_reverse-a-z": "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C: \u042F-\u0410",
+      btn_add_new_word: "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043D\u043E\u0432\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u043E\u0435 \u0441\u043B\u043E\u0432\u043E / \u0448\u0430\u0431\u043B\u043E\u043D",
       btn_presets: "\u041F\u0440\u0435\u0441\u0435\u0442\u044B",
       preset_all_headings: "\u0412\u0441\u0435 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043A\u0438 (H1-H6)",
+      preset_bullet_points: "\u041C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
+      preset_numbered_lists: "\u041D\u0443\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
+      preset_task_checked: "\u0421\u043F\u0438\u0441\u043E\u043A \u0437\u0430\u0434\u0430\u0447 (\u043E\u0442\u043C\u0435\u0447\u0435\u043D\u043E)",
+      preset_task_unchecked: "\u0421\u043F\u0438\u0441\u043E\u043A \u0437\u0430\u0434\u0430\u0447 (\u043D\u0435 \u043E\u0442\u043C\u0435\u0447\u0435\u043D\u043E)",
       preset_dates_yyyy_mm_dd: "\u0414\u0430\u0442\u044B (YYYY-MM-DD)",
       preset_times_am_pm: "\u0412\u0440\u0435\u043C\u044F (AM/PM)",
       preset_dates_yyyy_mmm_dd: "\u0414\u0430\u0442\u044B (YYYY-MMM-DD)",
@@ -1761,8 +1960,10 @@ var require_ru = __commonJS({
       path_rule_mode_exclude: "\u0418\u0441\u043A\u043B\u044E\u0447\u0438\u0442\u044C",
       text_rule_mode_include: "\u043E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0442\u043E\u043B\u044C\u043A\u043E \u0432 (\u0441\u043F\u0438\u0441\u043E\u043A \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u0439)",
       text_rule_mode_exclude: "\u043D\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 (\u0447\u0435\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A)",
-      mode_only_colors_in: "\u0440\u0430\u0441\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0432",
-      mode_does_not_color_in: "\u043D\u0435 \u0440\u0430\u0441\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0432",
+      mode_only_colors_in: "\u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0432",
+      mode_does_not_color_in: "\u043D\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0432",
+      label_text_include: "\u0411\u0435\u043B\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
+      label_text_exclude: "\u0427\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       enter_path_or_pattern: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043F\u0443\u0442\u044C \u0438\u043B\u0438 \u0448\u0430\u0431\u043B\u043E\u043D",
       btn_add_blacklist: "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u043B\u043E\u0432\u043E \u0438\u043B\u0438 \u0448\u0430\u0431\u043B\u043E\u043D \u0432 \u0447\u0435\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       tooltip_delete_all_blacklist: "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0438\u0437 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 \u0432\u0441\u0435 \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u044B",
@@ -1778,7 +1979,7 @@ var require_ru = __commonJS({
       path_sort_label_type: "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C: \u0422\u0438\u043F",
       btn_add_file_folder_rule: "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043F\u0440\u0430\u0432\u0438\u043B\u043E \u0434\u043B\u044F \u0444\u0430\u0439\u043B\u0430/\u043F\u0430\u043F\u043A\u0438",
       disable_coloring_current_file: "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
-      disable_coloring_current_file_desc: "Adds an exclude rule for the active file under File & Folder Coloring Rules.",
+      disable_coloring_current_file_desc: "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u043F\u0440\u0430\u0432\u0438\u043B\u043E \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u0434\u043B\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430 \u0432 \u0440\u0430\u0437\u0434\u0435\u043B\u0435 \u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u044F \u043F\u0430\u043F\u043E\u043A \u0438 \u0444\u0430\u0439\u043B\u043E\u0432.",
       btn_disable_for_this_file: "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0434\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
       notice_no_active_file_to_disable: "\u041D\u0435\u0442 \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430, \u0434\u043B\u044F \u043A\u043E\u0442\u043E\u0440\u043E\u0433\u043E \u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435.",
       notice_already_disabled_for_path: "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0443\u0436\u0435 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u043E \u0434\u043B\u044F {path}",
@@ -1816,13 +2017,37 @@ var require_ru = __commonJS({
       command_manage_advanced_rules: "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u043D\u044B\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438",
       command_open_regex_tester: "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex (\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0442\u0435\u0441\u0442\u0435\u0440 Regex)",
       command_open_blacklist_regex_tester: "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex \u0432 \u0441\u043F\u0438\u0441\u043E\u043A \u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u043A\u0438",
-      label_regex: "Regex",
+      label_regex: "\u0420\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0435 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0435",
       tooltip_use_regex: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u043A\u0430\u043A \u0440\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0435 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0435",
+      drag_to_reorder: "\u041F\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u0435 \u0434\u043B\u044F \u043F\u0435\u0440\u0435\u0443\u043F\u043E\u0440\u044F\u0434\u043E\u0447\u0435\u043D\u0438\u044F",
+      preset_codeblocks: "\u0411\u043B\u043E\u043A\u0438 \u043A\u043E\u0434\u0430",
+      preset_inline_comments: "\u041A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0438 (%%\u2026%%)",
+      notice_invalid_regex: "\u041D\u0435\u0432\u0430\u043B\u0438\u0434\u043D\u043E\u0435 \u0440\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0435 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0435",
+      notice_empty_pattern: "\u041F\u0430\u0442\u0442\u0435\u0440\u043D \u043F\u0443\u0441\u0442",
+      notice_added_regex: "Regex \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D",
+      btn_save_regex: "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C Regex",
+      notice_rule_updated: "\u041F\u0440\u0430\u0432\u0438\u043B\u043E \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u043E",
+      notice_regex_updated: "Regex \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D",
+      notice_entry_updated: "\u0417\u0430\u043F\u0438\u0441\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0430",
+      notice_entry_duplicated: "\u0417\u0430\u043F\u0438\u0441\u044C \u0434\u0443\u0431\u043B\u0438\u0440\u043E\u0432\u0430\u043D\u0430",
+      no_rules_found: "\u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u044B.",
+      edit_rule_header: "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u0440\u0430\u0432\u0438\u043B\u043E",
+      add_rule_header: "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043D\u043E\u0432\u043E\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u043E",
+      advanced_rules_modal_header: "\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u043D\u044B\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430",
       notice_error_opening_regex_tester: "\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0442\u043A\u0440\u044B\u0442\u0438\u0438 \u0442\u0435\u0441\u0442\u0435\u0440\u0430 regex",
       notice_error_opening_blacklist_regex_tester: "\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0442\u043A\u0440\u044B\u0442\u0438\u0438 \u0442\u0435\u0441\u0442\u0435\u0440\u0430 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 regex",
       notice_error_opening_advanced_rules: "\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0442\u043A\u0440\u044B\u0442\u0438\u0438 \u043C\u043E\u0434\u0430\u043B\u044C\u043D\u043E\u0433\u043E \u043E\u043A\u043D\u0430 \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u043D\u044B\u0445 \u043F\u0440\u0430\u0432\u0438\u043B",
       advanced_rules_header: "\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u043D\u044B\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430",
       advanced_rules_manage_button: "\u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0442\u044C \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u043D\u044B\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438",
+      preset_parentheses: "\u0421\u043A\u043E\u0431\u043A\u0438 ()",
+      preset_square_brackets: "\u041A\u0432\u0430\u0434\u0440\u0430\u0442\u043D\u044B\u0435 \u0441\u043A\u043E\u0431\u043A\u0438 []",
+      preset_curly_braces: "\u0424\u0438\u0433\u0443\u0440\u043D\u044B\u0435 \u0441\u043A\u043E\u0431\u043A\u0438 {}",
+      preset_angle_brackets: "\u0423\u0433\u043B\u043E\u0432\u044B\u0435 \u0441\u043A\u043E\u0431\u043A\u0438 <>",
+      preset_colons: "\u0414\u0432\u043E\u0435\u0442\u043E\u0447\u0438\u0435 :",
+      preset_double_quotes: "\u0414\u0432\u043E\u0439\u043D\u044B\u0435 \u043A\u0430\u0432\u044B\u0447\u043A\u0438",
+      preset_group_markdown_formatting: "\u0424\u043E\u0440\u043C\u0430\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 Markdown",
+      preset_group_other_patterns: "\u0414\u0440\u0443\u0433\u0438\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u044B",
+      preset_group_brackets: "\u0421\u043A\u043E\u0431\u043A\u0438",
       regex_tester_header: "\u0422\u0435\u0441\u0442\u0435\u0440 \u0440\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u044B\u0445 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0439",
       regex_expression_placeholder: "\u041F\u043E\u043C\u0435\u0441\u0442\u0438\u0442\u0435 \u0432\u0430\u0448\u0435 \u0440\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0435 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0435 \u0437\u0434\u0435\u0441\u044C",
       regex_subject_placeholder: "\u043D\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0442\u0435\u0441\u0442\u043E\u0432\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 \u0437\u0434\u0435\u0441\u044C...",
@@ -1979,9 +2204,16 @@ var require_zh_cn = __commonJS({
       "sort_label_reverse-a-z": "\u6392\u5E8F\uFF1AZ-A",
       "sort_label_style-order": "\u6392\u5E8F\uFF1A\u6837\u5F0F\u987A\u5E8F",
       sort_label_color: "\u6392\u5E8F\uFF1A\u989C\u8272",
+      "blacklist_sort_label_last-added": "\u6392\u5E8F\uFF1A\u6700\u540E\u6DFB\u52A0",
+      "blacklist_sort_label_a-z": "\u6392\u5E8F\uFF1AA-Z",
+      "blacklist_sort_label_reverse-a-z": "\u6392\u5E8F\uFF1AZ-A",
       btn_add_new_word: "+ \u6DFB\u52A0\u65B0\u7684\u7740\u8272\u5355\u8BCD / \u6A21\u5F0F",
       btn_presets: "\u9884\u8BBE",
       preset_all_headings: "\u6240\u6709\u6807\u9898\uFF08H1-H6\uFF09",
+      preset_bullet_points: "\u9879\u76EE\u7B26\u53F7\u5217\u8868",
+      preset_numbered_lists: "\u6709\u5E8F\u5217\u8868",
+      preset_task_checked: "\u4EFB\u52A1\u5217\u8868\uFF08\u5DF2\u68C0\u67E5\uFF09",
+      preset_task_unchecked: "\u4EFB\u52A1\u5217\u8868\uFF08\u672A\u68C0\u67E5\uFF09",
       preset_dates_yyyy_mm_dd: "\u65E5\u671F\uFF08YYYY-MM-DD\uFF09",
       preset_dates_yyyy_mmm_dd: "\u65E5\u671F\uFF08YYYY-MMM-DD\uFF09",
       preset_times_am_pm: "\u65F6\u95F4\uFF08AM/PM\uFF09",
@@ -2026,6 +2258,8 @@ var require_zh_cn = __commonJS({
       text_rule_mode_exclude: "\u4E0D\u5728\uFF08\u9ED1\u540D\u5355\uFF09\u4E2D\u7740\u8272",
       mode_only_colors_in: "\u4EC5\u5728\u5176\u4E2D\u7740\u8272",
       mode_does_not_color_in: "\u4E0D\u5728\u5176\u4E2D\u7740\u8272",
+      label_text_include: "\u767D\u540D\u5355",
+      label_text_exclude: "\u9ED1\u540D\u5355",
       enter_path_or_pattern: "\u8F93\u5165\u8DEF\u5F84\u6216\u6A21\u5F0F",
       btn_add_blacklist: "+ \u6DFB\u52A0\u9ED1\u540D\u5355\u5355\u8BCD\u6216\u6A21\u5F0F",
       tooltip_delete_all_blacklist: "\u5220\u9664\u6240\u6709\u9ED1\u540D\u5355\u5355\u8BCD/\u6A21\u5F0F",
@@ -2081,11 +2315,35 @@ var require_zh_cn = __commonJS({
       command_open_blacklist_regex_tester: "\u6DFB\u52A0\u9ED1\u540D\u5355\u6B63\u5219\u8868\u8FBE\u5F0F",
       label_regex: "\u6B63\u5219\u8868\u8FBE\u5F0F",
       tooltip_use_regex: "\u4F5C\u4E3A\u6B63\u5219\u8868\u8FBE\u5F0F\u6A21\u5F0F\u4F7F\u7528",
+      drag_to_reorder: "\u62D6\u52A8\u4EE5\u91CD\u65B0\u6392\u5E8F",
+      preset_codeblocks: "\u4EE3\u7801\u5757",
+      preset_inline_comments: "\u6CE8\u91CA (%%\u2026%%)",
+      notice_invalid_regex: "\u65E0\u6548\u7684\u6B63\u5219\u8868\u8FBE\u5F0F",
+      notice_empty_pattern: "\u6A21\u5F0F\u4E3A\u7A7A",
+      notice_added_regex: "\u6B63\u5219\u8868\u8FBE\u5F0F\u5DF2\u6DFB\u52A0",
+      btn_save_regex: "\u4FDD\u5B58\u6B63\u5219\u8868\u8FBE\u5F0F",
+      notice_rule_updated: "\u89C4\u5219\u5DF2\u66F4\u65B0",
+      notice_regex_updated: "\u6B63\u5219\u8868\u8FBE\u5F0F\u5DF2\u66F4\u65B0",
+      notice_entry_updated: "\u6761\u76EE\u5DF2\u66F4\u65B0",
+      notice_entry_duplicated: "\u6761\u76EE\u5DF2\u91CD\u590D",
+      no_rules_found: "\u672A\u627E\u5230\u89C4\u5219\u3002",
+      edit_rule_header: "\u7F16\u8F91\u89C4\u5219",
+      add_rule_header: "\u6DFB\u52A0\u65B0\u89C4\u5219",
+      advanced_rules_modal_header: "\u9AD8\u7EA7\u89C4\u5219",
       notice_error_opening_regex_tester: "\u6253\u5F00\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\u51FA\u9519",
       notice_error_opening_blacklist_regex_tester: "\u6253\u5F00\u9ED1\u540D\u5355\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\u51FA\u9519",
       notice_error_opening_advanced_rules: "\u6253\u5F00\u9AD8\u7EA7\u89C4\u5219\u6A21\u6001\u6846\u51FA\u9519",
       advanced_rules_header: "\u9AD8\u7EA7\u89C4\u5219",
       advanced_rules_manage_button: "\u7BA1\u7406\u9AD8\u7EA7\u89C4\u5219",
+      preset_parentheses: "\u5706\u62EC\u53F7 ()",
+      preset_square_brackets: "\u65B9\u62EC\u53F7 []",
+      preset_curly_braces: "\u82B1\u62EC\u53F7 {}",
+      preset_angle_brackets: "\u5C16\u62EC\u53F7 <>",
+      preset_colons: "\u5192\u53F7 :",
+      preset_double_quotes: "\u53CC\u5F15\u53F7",
+      preset_group_markdown_formatting: "\u6807\u8BB0\u683C\u5F0F\u5316",
+      preset_group_other_patterns: "\u5176\u4ED6\u6A21\u5F0F",
+      preset_group_brackets: "\u62EC\u53F7",
       regex_tester_header: "\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668",
       regex_expression_placeholder: "\u5728\u6B64\u8F93\u5165\u60A8\u7684\u6B63\u5219\u8868\u8FBE\u5F0F",
       regex_subject_placeholder: "\u5728\u6B64\u8F93\u5165\u8981\u6D4B\u8BD5\u7684\u6587\u672C...",
@@ -3442,7 +3700,13 @@ module.exports = class AlwaysColorText extends Plugin {
     debugLog("SIMPLE", `Processing ${simpleEntries.length} simple patterns`);
     const blockTags = ["P", "LI", "DIV", "SPAN", "TD", "TH", "BLOCKQUOTE", "H1", "H2", "H3", "H4", "H5", "H6"];
     const effectiveStyle = "text";
-    const blocks = element.querySelectorAll?.(blockTags.join(", ")) || [];
+    const allElements = element.querySelectorAll?.("*") || [];
+    const blocks = [];
+    for (const el of allElements) {
+      if (blockTags.includes(el.nodeName) && !el.closest("code, pre")) {
+        blocks.push(el);
+      }
+    }
     for (const block of blocks) {
       if (block.closest("code, pre")) continue;
       this.processBlockWithSimplePatterns(block, simpleEntries, folderEntry, effectiveStyle);
@@ -4008,6 +4272,10 @@ module.exports = class AlwaysColorText extends Plugin {
         if (!this.settings.enabled) return;
         if (!ctx || !ctx.sourcePath) return;
         try {
+          debugLog("POST_PROC", `Processing element: ${el.className}, nodeName: ${el.nodeName}, hasCallout: ${el.querySelector(".callout") ? "yes" : "no"}`);
+        } catch (_) {
+        }
+        try {
           this.processActiveFileOnly(el, ctx);
         } catch (e) {
           debugWarn("ACT", "processActiveFileOnly failed", e);
@@ -4101,7 +4369,7 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!this._changelogCommandRegistered) {
         this.addCommand({
           id: "show-latest-release-notes",
-          name: "Show Latest Release Notes",
+          name: this.t("command_show_release_notes", "Show Latest Release Notes"),
           callback: async () => {
             try {
               new ChangelogModal(this.app, this).open();
@@ -5944,6 +6212,10 @@ module.exports = class AlwaysColorText extends Plugin {
   // Process only the active file: immediate visible blocks then deferred idle processing
   processActiveFileOnly(el, ctx) {
     if (!el || !ctx || !ctx.sourcePath) return;
+    if (typeof ctx.sourcePath !== "string") {
+      debugWarn("ACT", `Invalid sourcePath type: ${typeof ctx.sourcePath}`);
+      return;
+    }
     const startTime = performance.now();
     debugLog("ACT", "Processing active file", ctx.sourcePath.slice(-30));
     if (this.settings.forceFullRenderInReading) {
@@ -6321,22 +6593,23 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     const queue = [];
     const blockSet = new Set(blockTags);
-    for (const node of element.childNodes) {
-      if (node.nodeType === Node.ELEMENT_NODE && !["CODE", "PRE"].includes(node.nodeName)) {
-        if (blockTags.includes(node.nodeName)) queue.push(node);
-        const walker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, {
-          acceptNode(n) {
-            return blockSet.has(n.nodeName) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-          }
-        }, false);
-        let currentNode;
-        while (currentNode = walker.nextNode()) {
-          queue.push(currentNode);
-        }
-      }
-    }
     if (element.nodeType === Node.ELEMENT_NODE && blockTags.includes(element.nodeName)) {
       queue.unshift(element);
+    }
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT, {
+      acceptNode(n) {
+        if (["CODE", "PRE"].includes(n.nodeName)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (blockSet.has(n.nodeName)) {
+          return NodeFilter.FILTER_ACCEPT;
+        }
+        return NodeFilter.FILTER_SKIP;
+      }
+    }, false);
+    let currentNode;
+    while (currentNode = walker.nextNode()) {
+      queue.push(currentNode);
     }
     try {
       debugLog("COLOR", `Processing ${queue.length} blocks, skipping first ${skipFirstN}`);
@@ -7496,12 +7769,77 @@ module.exports = class AlwaysColorText extends Plugin {
     return false;
   }
   // NEW METHOD: Standard editor processing for small/medium pattern/text sizes
+  // Helper: Get the text content of a line without callout prefix
+  // Returns {originalStart, originalEnd, strippedStart, strippedEnd, stripped}
+  // or null if not in a callout
+  getCalloutLineInfo(absoluteStart, absoluteEnd, calloutLines, from) {
+    for (const cl of calloutLines) {
+      if (absoluteStart >= cl.start && absoluteStart < cl.end) {
+        const offsetInLine = absoluteStart - cl.start;
+        const strippedStart = cl.start - from + 2;
+        const relativeStart = offsetInLine - 2;
+        const relativeEnd = Math.min(absoluteEnd - cl.start - 2, cl.stripped.length);
+        return {
+          inCallout: true,
+          lineStart: cl.start,
+          lineEnd: cl.end,
+          originalStart: cl.originalStart,
+          originalEnd: cl.originalEnd,
+          strippedText: cl.stripped,
+          relativeStart: Math.max(0, relativeStart),
+          relativeEnd: Math.max(0, relativeEnd)
+        };
+      }
+    }
+    return null;
+  }
   buildDecoStandard(view, builder, from, to, text, entries, folderEntry, filePath = null) {
     const entries_copy = entries || this.getSortedWordEntries();
     let matches = [];
     let headingRanges = [];
     let hasHeadingBlacklist = false;
     let codeblockRanges = [];
+    let calloutLines = [];
+    try {
+      const calloutStartPattern = /^> \[![^\]]+\]/m;
+      let pos = 0;
+      while (pos < text.length) {
+        const lineStart = pos;
+        const nextNL = text.indexOf("\n", pos);
+        const lineEnd = nextNL === -1 ? text.length : nextNL;
+        const line = text.substring(lineStart, lineEnd);
+        if (calloutStartPattern.test(line)) {
+          let calloutPos = lineStart;
+          while (calloutPos < text.length) {
+            const cLineStart = calloutPos;
+            const cNextNL = text.indexOf("\n", calloutPos);
+            const cLineEnd = cNextNL === -1 ? text.length : cNextNL;
+            const cLine = text.substring(cLineStart, cLineEnd);
+            if (cLine.startsWith("> ")) {
+              calloutLines.push({
+                start: from + cLineStart,
+                end: from + cLineEnd,
+                originalStart: cLineStart,
+                originalEnd: cLineEnd,
+                stripped: cLine.substring(2),
+                // Remove "> " prefix
+                prefix: "> "
+              });
+              if (cNextNL === -1) {
+                calloutPos = text.length;
+              } else {
+                calloutPos = cNextNL + 1;
+              }
+            } else {
+              break;
+            }
+          }
+        }
+        if (nextNL === -1) break;
+        pos = nextNL + 1;
+      }
+    } catch (e) {
+    }
     try {
       const codeblockPattern = /```[\s\S]*?```/g;
       let cbMatch;
@@ -7768,6 +8106,48 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       if (matches.length > 3e3) break;
     }
+    if (calloutLines.length > 0) {
+      for (const calloutLine of calloutLines) {
+        const strippedText = calloutLine.stripped;
+        for (const entry of entries_copy) {
+          if (!entry || entry.invalid) continue;
+          const regex = entry.regex;
+          if (!regex) continue;
+          const lineMatches = this.safeMatchLoop(regex, strippedText);
+          for (const match of lineMatches) {
+            const matchedText = match[0];
+            const matchStartInStripped = match.index;
+            const matchEndInStripped = match.index + matchedText.length;
+            const matchStart = calloutLine.originalStart + matchStartInStripped;
+            const matchEnd = calloutLine.originalStart + matchEndInStripped;
+            const absStart = from + matchStart;
+            const absEnd = from + matchEnd;
+            let alreadyCovered = false;
+            for (const existing of matches) {
+              if (absStart < existing.end && absEnd > existing.start) {
+                alreadyCovered = true;
+                break;
+              }
+            }
+            if (alreadyCovered) continue;
+            if (this.containsBlacklistedWord(matchedText)) continue;
+            if (this.isLineBlacklistedByRegex(strippedText)) continue;
+            matches.push({
+              start: absStart,
+              end: absEnd,
+              textColor: entry.textColor,
+              backgroundColor: entry.backgroundColor,
+              isTextBg: true,
+              color: entry.color,
+              styleType: entry.styleType
+            });
+            if (matches.length > 3e3) break;
+          }
+          if (matches.length > 3e3) break;
+        }
+        if (matches.length > 3e3) break;
+      }
+    }
     for (const entry of entries_copy) {
       if (!entry || entry.invalid) continue;
       try {
@@ -8008,6 +8388,46 @@ module.exports = class AlwaysColorText extends Plugin {
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
     const MAX_MATCHES = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
+    let calloutLines = [];
+    try {
+      const calloutStartPattern = /^> \[![^\]]+\]/m;
+      let pos = 0;
+      while (pos < text.length) {
+        const lineStart = pos;
+        const nextNL = text.indexOf("\n", pos);
+        const lineEnd = nextNL === -1 ? text.length : nextNL;
+        const line = text.substring(lineStart, lineEnd);
+        if (calloutStartPattern.test(line)) {
+          let calloutPos = lineStart;
+          while (calloutPos < text.length) {
+            const cLineStart = calloutPos;
+            const cNextNL = text.indexOf("\n", calloutPos);
+            const cLineEnd = cNextNL === -1 ? text.length : cNextNL;
+            const cLine = text.substring(cLineStart, cLineEnd);
+            if (cLine.startsWith("> ")) {
+              calloutLines.push({
+                start: from + cLineStart,
+                end: from + cLineEnd,
+                originalStart: cLineStart,
+                originalEnd: cLineEnd,
+                stripped: cLine.substring(2),
+                prefix: "> "
+              });
+              if (cNextNL === -1) {
+                calloutPos = text.length;
+              } else {
+                calloutPos = cNextNL + 1;
+              }
+            } else {
+              break;
+            }
+          }
+        }
+        if (nextNL === -1) break;
+        pos = nextNL + 1;
+      }
+    } catch (e) {
+    }
     try {
       const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
@@ -8768,12 +9188,12 @@ var PresetModal = class extends Modal {
       { label: this.plugin.t("preset_currency", "Currency"), pattern: "\\$\\d+(?:\\.\\d{2})?|\\b[\u20AC\xA3\xA5]\\d+(?:\\.\\d{2})?\\b", flags: "", examples: ["$29.99"] },
       { label: this.plugin.t("preset_measurements", "Measurements"), pattern: "\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|\xB0C|\xB0F|lbs)\\b", flags: "", examples: ["25kg"] },
       { label: this.plugin.t("preset_phone_numbers", "Phone numbers"), pattern: "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b", flags: "", examples: ["123-456-7890"] },
-      { label: "Parentheses ()", pattern: "\\(([^)]*)\\)", flags: "g", examples: ["( text )"], group: "brackets" },
-      { label: "Square Brackets []", pattern: "\\[([^\\]]*)\\]", flags: "g", examples: ["[ yes ]"], group: "brackets", disableRegexSafety: true },
-      { label: "Curly Braces {}", pattern: "\\{([^}]*)\\}", flags: "g", examples: ["{ no }"], group: "brackets" },
-      { label: "Angle Brackets <>", pattern: "<([^>]*)>", flags: "g", examples: ["< text >"], group: "brackets" },
-      { label: "Colons :", pattern: ":([^:]*):", flags: "g", examples: [": text :"], group: "brackets" },
-      { label: 'Double Quotes ""', pattern: '"[^"]*"', flags: "", examples: ['"text"'], group: "brackets", disableRegexSafety: true },
+      { label: this.plugin.t("preset_parentheses", "Parentheses ()"), pattern: "\\(([^)]*)\\)", flags: "g", examples: ["( text )"], group: "brackets" },
+      { label: this.plugin.t("preset_square_brackets", "Square Brackets []"), pattern: "\\[([^\\]]*)\\]", flags: "g", examples: ["[ yes ]"], group: "brackets", disableRegexSafety: true },
+      { label: this.plugin.t("preset_curly_braces", "Curly Braces {}"), pattern: "\\{([^}]*)\\}", flags: "g", examples: ["{ no }"], group: "brackets" },
+      { label: this.plugin.t("preset_angle_brackets", "Angle Brackets <>"), pattern: "<([^>]*)>", flags: "g", examples: ["< text >"], group: "brackets" },
+      { label: this.plugin.t("preset_colons", "Colons :"), pattern: ":([^:]*):", flags: "g", examples: [": text :"], group: "brackets" },
+      { label: this.plugin.t("preset_double_quotes", 'Double Quotes ""'), pattern: '"[^"]*"', flags: "", examples: ['"text"'], group: "brackets", disableRegexSafety: true },
       { label: this.plugin.t("preset_all_texts", "All texts"), pattern: ".+", flags: "", examples: ["This will target all texts."], group: "markdown" }
     ];
     const markdownPresets = presets.filter((p) => p.group === "markdown" || [
@@ -8799,7 +9219,7 @@ var PresetModal = class extends Modal {
     document.head.appendChild(style);
     container.className = "preset-columns";
     const leftCol = container.createDiv();
-    const leftTitle = leftCol.createEl("h3", { text: "Markdown Formatting" });
+    const leftTitle = leftCol.createEl("h3", { text: this.plugin.t("preset_group_markdown_formatting", "Markdown Formatting") });
     leftTitle.style.marginTop = "0";
     leftTitle.style.marginBottom = "12px";
     leftTitle.style.fontSize = "14px";
@@ -8840,7 +9260,7 @@ var PresetModal = class extends Modal {
       this._listeners.push({ el: btn, h: handler });
     });
     const rightCol = container.createDiv();
-    const rightTitle = rightCol.createEl("h3", { text: "Other Patterns" });
+    const rightTitle = rightCol.createEl("h3", { text: this.plugin.t("preset_group_other_patterns", "Other Patterns") });
     rightTitle.style.marginTop = "0";
     rightTitle.style.marginBottom = "12px";
     rightTitle.style.fontSize = "14px";
@@ -8881,7 +9301,7 @@ var PresetModal = class extends Modal {
       this._listeners.push({ el: btn, h: handler });
     });
     const middleCol = container.createDiv();
-    const middleTitle = middleCol.createEl("h3", { text: "Brackets" });
+    const middleTitle = middleCol.createEl("h3", { text: this.plugin.t("preset_group_brackets", "Brackets") });
     middleTitle.style.marginTop = "0";
     middleTitle.style.marginBottom = "12px";
     middleTitle.style.fontSize = "14px";
@@ -9369,7 +9789,7 @@ var BlacklistRegexTesterModal = class extends Modal {
       this.modalEl.style.padding = "20px";
     } catch (e) {
     }
-    const title = contentEl.createEl("h2", { text: this.plugin.t("regex_tester_header", "Regex Tester") + " - Blacklist" });
+    const title = contentEl.createEl("h2", { text: this.plugin.t("regex_tester_blacklist", "Regex tester - blacklist") });
     title.style.marginTop = "0";
     title.style.marginBottom = "12px";
     try {
@@ -9938,11 +10358,11 @@ var ManageRulesModal = class extends Modal {
             if (ev && ev.stopPropagation) ev.stopPropagation();
             const menu = new Menu(this.app);
             menu.addItem((item) => {
-              item.setTitle("Duplicate Entry").setIcon("copy").onClick(duplicateHandler);
+              item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(duplicateHandler);
             });
             if (entry.isRegex) {
               menu.addItem((item) => {
-                item.setTitle("Open in Regex Tester").setIcon("pencil").onClick(openInRegexTesterHandler);
+                item.setTitle(this.plugin.t("open_in_regex_tester", "Open in Regex Tester")).setIcon("pencil").onClick(openInRegexTesterHandler);
               });
             }
             menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
@@ -10371,6 +10791,16 @@ var ColorSettingTab = class extends PluginSettingTab {
       regexChk.title = this.plugin.t("use_regex", "Use Regex");
       regexChk.style.cursor = "pointer";
       regexChk.style.flex = "0 0 auto";
+      const regexLabel = row.createEl("label");
+      regexLabel.appendChild(document.createTextNode(this.plugin.t("label_regex", "Regex")));
+      regexLabel.style.flex = "0 0 auto";
+      regexLabel.style.cursor = "pointer";
+      regexLabel.style.userSelect = "none";
+      regexLabel.style.fontSize = "0.9em";
+      regexLabel.onclick = () => {
+        regexChk.checked = !regexChk.checked;
+      };
+      regexChk.style.margin = "0";
       const flagsInput = row.createEl("input", { type: "text", value: entry.flags || "" });
       flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
       flagsInput.style.width = "64px";
@@ -10570,11 +11000,11 @@ var ColorSettingTab = class extends PluginSettingTab {
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const menu = new Menu(this.app);
           menu.addItem((item) => {
-            item.setTitle("Duplicate Entry").setIcon("copy").onClick(duplicateHandler);
+            item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(duplicateHandler);
           });
           if (entry.isRegex) {
             menu.addItem((item) => {
-              item.setTitle("Open in Regex Tester").setIcon("pencil").onClick(openInRegexTesterHandler);
+              item.setTitle(this.plugin.t("open_in_regex_tester", "Open in Regex Tester")).setIcon("pencil").onClick(openInRegexTesterHandler);
             });
           }
           menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
@@ -12537,11 +12967,11 @@ var ColorSettingTab = class extends PluginSettingTab {
     const sortBtn = buttonRowDiv.createEl("button");
     const sortModes = ["last-added", "a-z", "reverse-a-z", "style-order", "color"];
     const sortLabels = {
-      "last-added": "Sort: Last Added",
-      "a-z": "Sort: A-Z",
-      "reverse-a-z": "Sort: Z-A",
-      "style-order": "Sort: Style Order",
-      "color": "Sort: Color"
+      "last-added": this.plugin.t("sort_label_last-added", "Sort: Last Added"),
+      "a-z": this.plugin.t("sort_label_a-z", "Sort: A-Z"),
+      "reverse-a-z": this.plugin.t("sort_label_reverse-a-z", "Sort: Z-A"),
+      "style-order": this.plugin.t("sort_label_style-order", "Sort: Style Order"),
+      "color": this.plugin.t("sort_label_color", "Sort: Color")
     };
     sortBtn.textContent = this.plugin.t("sort_label_" + (this._wordsSortMode || "last-added"), sortLabels[this._wordsSortMode] || "Sort: Last Added");
     sortBtn.style.cursor = "pointer";
@@ -12732,7 +13162,11 @@ var ColorSettingTab = class extends PluginSettingTab {
     blacklistButtonRowDiv.addClass("blacklist-button-row");
     const blacklistSortBtn = blacklistButtonRowDiv.createEl("button");
     const blSortModes = ["last-added", "a-z", "reverse-a-z"];
-    const blSortLabels = { "last-added": "Sort: Last Added", "a-z": "Sort: A-Z", "reverse-a-z": "Sort: Z-A" };
+    const blSortLabels = {
+      "last-added": this.plugin.t("blacklist_sort_label_last-added", "Sort: Last Added"),
+      "a-z": this.plugin.t("blacklist_sort_label_a-z", "Sort: A-Z"),
+      "reverse-a-z": this.plugin.t("blacklist_sort_label_reverse-a-z", "Sort: Z-A")
+    };
     blacklistSortBtn.textContent = blSortLabels[this._blacklistSortMode] || "Sort: Last Added";
     blacklistSortBtn.style.cursor = "pointer";
     blacklistSortBtn.style.flex = "0 0 auto";
