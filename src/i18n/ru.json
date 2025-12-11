@@ -12,8 +12,7 @@
   "language_eu": "Баскский",
   "language_ru": "Русский",
   "language_auto": "Системный",
-  
-  // НАЙТИ МЕСТО 
+
   "header_plugin_name": "Always Color Text",
   "ribbon_title": "Always Color Text",
   "disabled_files_header": "Файлы с отключённым окрашиванием:",
@@ -26,16 +25,14 @@
   "label_text_include": "Белый список",
   "label_text_exclude": "Чёрный список",
   "enter_path_or_pattern": "Введите путь или шаблон",
-  
-  // СПИСОК ИЗМЕНЕНИЙ
+
   "changelog_view_on_github": "Посмотреть на GitHub",
   "changelog_loading": "Выпуски загружаются…",
   "changelog_no_info": "Информация о выпусках недоступна.",
   "changelog_release": "Выпуски",
   "changelog_no_notes": "Нет заметок",
-  "changelog_failed_to_load": "Не удалось загрузить заметки к выпускам."
-  
-  // Настройки Always Color Text
+  "changelog_failed_to_load": "Не удалось загрузить заметки к выпускам.",
+
   "enable_document_color": "Включить окрашивание документа",
   "color_in_reading_mode": "Цвета в режиме просмотра",
   "force_full_render_reading": "Принудительный полный рендеринг в режиме просмотра",
@@ -43,19 +40,17 @@
   "show_toggle_statusbar": "Показывать в строке состояния",
   "show_toggle_ribbon": "Показывать на вертикальной панели",
   "show_toggle_command": "Показывать в палитре команд",
-  
-  // НАСТРОЙКИ ОКРАШИВАНИЯ
+
   "coloring_settings_header": "Настройки окрашивания",
   "regex_support": "Поддержка Regex",
   "regex_support_desc": "Добавляет шаблонам поддержку регулярных выражений. Неверные регулярные выражения игнорируются для безопасности.",
   "disable_regex_safety": "Отключить безопасный Regex",
   "disable_regex_safety_desc": "Позволяет использовать сложные или потенциально опасные выражения. Могут вызывать проблемы с производительностью или зависания.",
   "case_sensitive": "Чувствительность к регистру",
-  "case_sensitive_desc": "При включении \"слово\" и \"Слово\" будут обрабатываться по-разному. При отключении будут окрашены одинаково.",
+  "case_sensitive_desc": "При включении «слово» и «Слово» будут обрабатываться по-разному. При отключении будут окрашены одинаково.",
   "partial_match": "Частичное совпадение",
-  "partial_match_desc": "При включении окрашивается всё слово, если внутри него найдено окрашенное (Например, \"что\" окрасит \"чтобы\").",
-  
-  // ОДНОКРАТНЫЕ ДЕЙСТВИЯ
+  "partial_match_desc": "При включении окрашивается всё слово, если внутри него найдено окрашенное (Например, «что» окрасит «чтобы»).",
+
   "one_time_actions_header": "Однократные действия",
   "setting_color_once": "Однократное окрашивание",
   "setting_color_once_desc": "Вставляет HTML-код для окрашивания подсвеченного текста. Окрашивание сохранится даже при отключении плагина. (Можно убрать, удалив вручную части кода)",
@@ -79,7 +74,6 @@
   "style_highlight_once": "Стиль однократной подсветки",
   "style_highlight_once_desc": "Используйте ваш стиль подсветки. Добавленный HTML/CSS-код может быть длинным.",
 
-  // СТИЛЬ РАМКИ
   "opt_border_full": "Полная рамка (все стороны)",
   "opt_border_top_bottom": "Сверху и снизу",
   "opt_border_left_right": "Слева и справа",
@@ -91,8 +85,7 @@
   "opt_border_bottom": "Только снизу",
   "opt_border_left": "Только слева",
   "opt_border_right": "Только справа",
-  
-  // ВНЕШНИЙ ВИД ГЛОБАЛЬНОЙ ПОДСВЕТКИ
+
   "global_highlight_appearance_header": "Внешний вид глобальной подсветки",
   "highlight_preview": "Предпросмотр подсветки",
   "highlight_preview_text": "Так будет выглядеть ваша подсветка!",
@@ -112,7 +105,6 @@
   "border_thickness": "Толщина рамки (px)",
   "border_thickness_desc": "Установите толщину рамки от 0-5 px (например, 1, 2.5, 5)",
 
-  // ПОЛЬЗОВАТЕЛЬСКИЕ ЦВЕТА
   "color_picker_layout": "Макет подбора цветов",
   "color_picker_layout_desc": "Выберите, какие варианты оформления отображать при выборе цветов для текста",
   "opt_both_text_left": "Оба: Текст слева, Подсветка справа",
@@ -129,10 +121,9 @@
   "custom_swatches_header": "Пользовательские цвета",
   "color_swatches_header": "Пользовательские цвета",
   "btn_add_color": "+ Добавить цвет",
-  "no_custom_swatches_yet": "Нет добавленных пользовательских цветов. Нажмите \"+ Добавить цвет\".",
+  "no_custom_swatches_yet": "Нет добавленных пользовательских цветов. Нажмите «+ Добавить цвет».",
   "select_swatch": "Выберите цвет…",
 
-  // ВСЕГДА ОКРАШИВАЕМЫЙ ТЕКСТ
   "always_colored_texts_header": "Всегда окрашиваемый текст",
   "always_colored_texts_desc": "Здесь вы можете настраивать ваши слова/шаблоны и их цвета.",
   "search_colored_words_placeholder": "Поиск окрашенных слов/шаблонов…",
@@ -153,7 +144,7 @@
   "word_pattern_placeholder_short": "Ключевое слово или шаблон, или слова через запятую",
   "use_regex": "Использовать Regex",
   "label_regex": "Regex",
-  "text_color_title": "Цвет текста"
+  "text_color_title": "Цвет текста",
   "tooltip_use_regex": "Использовать как регулярное выражение",
   "flags_placeholder": "Флаг",
   "btn_add_rule": "+ Добавить правило",
@@ -161,11 +152,10 @@
   "btn_save_regex": "Сохранить Regex",
   "btn_add_words": "+ Добавить слово",
   "btn_add_regex": "+ Добавить Regex",
-  
-  // ЧЁРНЫЙ СПИСОК
+
   "blacklist_words_header": "Чёрный список слов",
   "blacklist_words_desc": "Ключевые слова или шаблоны добавленные сюда НИКОГДА не будут окрашены, даже при частичном совпадении.",
-  "show_blacklist_menu": "Показывать \"Добавить в чёрный список\" в контекстном меню",
+  "show_blacklist_menu": "Показывать «Добавить в чёрный список» в контекстном меню",
   "show_blacklist_menu_desc": "В контекстном меню появляется возможность добавить слово в чёрный список, чтобы оно никогда не окрашивалось.",
   "search_blacklist_placeholder": "Поиск слов или шаблонов, добавленных в чёрный список…",
   "blacklist_sort_label_last-added": "Сортировать: Последние добавленные",
@@ -179,7 +169,6 @@
   "confirm_delete_all_blacklist_title": "Удаление всех слов из чёрного списка",
   "confirm_delete_all_blacklist_desc": "Вы уверены, что хотите удалить все записи из чёрного списка? Вы не сможете отменить это действие!",
 
-  // ФАЙЛЫ И ПАПКИ
   "file_folder_rules_header": "Правила окрашивания файлов и папок",
   "file_folder_rules_desc": "Управляйте окрашиванием с помощью совпадений по именам, точных путей или regex шаблонов. Оставьте пустое поле ввода с параметром исключение, чтобы отключить окрашивание по всему хранилищу.",
   "search_file_folder_rules_placeholder": "Поиск правил для файлов/папок…",
@@ -197,7 +186,6 @@
   "disable_coloring_current_file_desc": "Добавляет правило исключения для активного файла в разделе Правила окрашивания папок и файлов.",
   "btn_disable_for_this_file": "Отключить для этого файла",
 
-  // КОНФИГУРАТОР REGEX
   "regex_tester_header": "Конфигуратор регулярных выражений",
   "regex_tester_blacklist": "Конфигуратор regex - чёрный список",
   "regex_expression_placeholder": "Введите регулярное выражение",
@@ -216,8 +204,7 @@
   "matches": "совпадения",
   "matches_found": "найдено совпадений",
   "duplicate_entry": "дублированная запись",
-  
-  // РАСШИРЕННЫЕ ПРАВИЛА
+
   "advanced_rules_header": "Расширенные правила",
   "advanced_rules_manage_button": "Управление расширенными правилами",
   "advanced_rules_modal_header": "Расширенные правила",
@@ -226,7 +213,6 @@
   "text_rule_mode_include": "Окрашивать в (список разрешений)",
   "text_rule_mode_exclude": "Не окрашивать в (чёрный список)",
 
-  // ИМПОРТ/ЭКСПОРТ
   "data_export_import_header": "Экспорт/Импорт данных",
   "export_plugin_data": "Экспорт данных плагина",
   "export_plugin_data_desc": "Экспортируйте настройки, слова и шаблоны в файл JSON.",
@@ -237,18 +223,15 @@
   "import_plugin_data_desc": "Импорт настроек из JSON файла",
   "btn_import": "Импорт",
 
-  // МЕНЮ ФАЙЛА
   "file_menu_enable": "Включить окрашивание для этого файла",
   "file_menu_disable": "Отключить окрашивание для этого файла",
-  
-  // КОНТЕКСТНОЕ МЕНЮ
+
   "menu_color_once": "Окрасить однократно",
   "menu_highlight_once": "Подсветить однократно",
   "menu_always_color_text": "Always Color Text",
   "menu_remove_always_color_text": "Убрать Always Color Text",
   "menu_blacklist_word": "Добавить слово в чёрный список",
-  
-  // ПАЛИТРА КОМАНД
+
   "command_color_selected": "Окрасить подсвеченный текст",
   "command_toggle_current": "Включить/отключить окрашивание для текущего документа",
   "command_toggle_global": "Включить/отключить Always Color Text",
@@ -257,14 +240,13 @@
   "command_manage_advanced_rules": "Управление расширенными правилами",
   "command_open_regex_tester": "Добавить Regex (Открыть конфигуратор Regex)",
   "command_open_blacklist_regex_tester": "Добавить Regex в чёрный список",
-  
-  // УВЕДОМЛЕНИЯ
+
   "notice_enabled": "Always Color Text включён",
   "notice_disabled": "Always Color Text отключён",
-  "notice_blacklisted_cannot_color": "\"{word}\" находится в чёрном списке и не может быть окрашено.",
-  "notice_removed_always_color": "Окрашивание отключено для \"{word}\".",
-  "notice_added_to_blacklist": "\"{word}\" добавлено в чёрный список.",
-  "notice_already_blacklisted": "\"{word}\" уже находится в чёрном списке.",
+  "notice_blacklisted_cannot_color": "«{word}» находится в чёрном списке и не может быть окрашено.",
+  "notice_removed_always_color": "Окрашивание отключено для «{word}».",
+  "notice_added_to_blacklist": "«{word}» добавлено в чёрный список.",
+  "notice_already_blacklisted": "«{word}» уже находится в чёрном списке.",
   "notice_select_text_first": "Сначала выделите текст.",
   "notice_no_active_file": "Нет активного файла для включения окрашивания.",
   "notice_coloring_enabled_for_path": "Окрашивание включено для {path}",
@@ -293,8 +275,7 @@
   "notice_error_saving_changes": "Ошибка при сохранении изменений. Пожалуйста, попробуйте снова.",
   "notice_no_active_file_to_disable": "Нет активного файла, для которого можно отключить окрашивание.",
   "notice_already_disabled_for_path": "Окрашивание уже отключено для {path}",
-  
-  // ПРЕСЕТЫ
+
   "btn_presets": "Пресеты",
   "preset_all_headings": "Все заголовки (H1-H6)",
   "preset_bullet_points": "Маркированные списки",
@@ -324,5 +305,5 @@
   "preset_double_quotes": "Двойные кавычки",
   "preset_group_markdown_formatting": "Форматирование Markdown",
   "preset_group_other_patterns": "Другие шаблоны",
-  "preset_group_brackets": "Скобки",
-  }
+  "preset_group_brackets": "Скобки"
+}
