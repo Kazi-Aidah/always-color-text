@@ -402,3 +402,22 @@ li.act-color-marker::marker {
   }
 } */
 
+/* ====== CALLOUT STYLING FOR LIVE PREVIEW MODE ====== */
+/* CRITICAL: Callout text coloring must override all other rules */
+/* Use multiple selectors for maximum specificity */
+
+/* Callout styling: Use inline styles only, don't override with CSS */
+.callout .always-color-text-highlight,
+.callout-content .always-color-text-highlight,
+.callout-title .always-color-text-highlight,
+.callout p .always-color-text-highlight,
+.callout li .always-color-text-highlight,
+.callout span .always-color-text-highlight,
+.markdown-reading-view .callout .always-color-text-highlight,
+.markdown-preview-view .callout .always-color-text-highlight {
+  /* Allow inline styles to control color - do not use CSS color: inherit !important */
+  /* Inline styles applied by _applyCalloutHighlights will be used */
+  font-weight: inherit !important;
+  text-decoration: inherit !important;
+  opacity: 1 !important;
+}

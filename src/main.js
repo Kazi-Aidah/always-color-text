@@ -1220,6 +1220,10 @@ module.exports = class AlwaysColorText extends Plugin {
     const allElements = element.querySelectorAll?.('*') || [];
     const blocks = [];
     for (const el of allElements) {
+      // Skip callout containers - they are handled separately by processCalloutContainers
+      if (el.classList && (el.classList.contains('callout') || el.classList.contains('callout-content'))) {
+        continue;
+      }
       if (blockTags.includes(el.nodeName) && !el.closest('code, pre')) {
         blocks.push(el);
       }
@@ -1297,6 +1301,7 @@ module.exports = class AlwaysColorText extends Plugin {
   processMarkdownFormattingInReading(element, folderEntry = null) {
     try {
       try { debugLog('MARKDOWN_FORMAT', 'Processing markdown formatting'); } catch (_) {}
+      debugLog('MARKDOWN_FORMAT', `Element: ${element.nodeName}, class: ${element.className}, text: "${(element.textContent || '').slice(0, 50)}..."`);
       const weAll = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
       let filePath = null;
       try { filePath = this.app?.workspace?.getActiveFile()?.path || null; } catch (_) {}
@@ -1797,11 +1802,38 @@ module.exports = class AlwaysColorText extends Plugin {
       this.registerEditorExtension(this.extension);
       this.cmExtensionRegistered = true;
     }
+    
+    // Setup live preview callout coloring via MutationObserver
+    this.setupLivePreviewCalloutObserver();
 
     if (!this.markdownPostProcessorRegistered) {
       this._unregisterMarkdownPostProcessor = this.registerMarkdownPostProcessor((el, ctx) => {
-        if (!this.settings.enabled) return;
-        if (!ctx || !ctx.sourcePath) return;
+        debugLog('POST_PROC', `POST_PROC: el=${el ? 'present' : 'NULL'}, nodeName=${el?.nodeName}, className=${el?.className}`);
+        
+        if (!this.settings.enabled) {
+          debugLog('POST_PROC', 'Plugin disabled, skipping');
+          return;
+        }
+        
+        if (!el) {
+          debugLog('POST_PROC', 'Element is null/undefined, attempting fallback to active view...');
+          // Fallback: try to get the active reading view and process it
+          try {
+            const active = this.app.workspace.getActiveViewOfType(MarkdownView);
+            if (active && active.getMode && active.getMode() === 'preview') {
+              const root = (active.previewMode && active.previewMode.containerEl) || active.contentEl || active.containerEl;
+              if (root && active.file && active.file.path) {
+                debugLog('POST_PROC', 'Using active view root for processing');
+                this.processActiveFileOnly(root, { sourcePath: active.file.path });
+              }
+            }
+          } catch (e) {
+            debugWarn('POST_PROC', 'Fallback to active view failed', e);
+          }
+          return;
+        }
+        
+        if (!ctx) ctx = {};
 
         // Debug: log the element being processed
         try {
@@ -1824,8 +1856,11 @@ module.exports = class AlwaysColorText extends Plugin {
       this.activeLeafChangeListener = this.app.workspace.on('active-leaf-change', leaf => {
         if (leaf && leaf.view instanceof MarkdownView) {
           try {
+            const mode = leaf.view.getMode && leaf.view.getMode();
+            debugLog('LEAF_CHANGE', `Active leaf changed, mode: ${mode}`);
+            
             // Trigger rerender in preview mode or fallback to refresh all reading views
-            if (leaf.view.getMode && leaf.view.getMode() === 'preview') {
+            if (mode === 'preview') {
               try {
                 if (leaf.view.previewMode && typeof leaf.view.previewMode.rerender === 'function') {
                   leaf.view.previewMode.rerender(true);
@@ -1845,10 +1880,10 @@ module.exports = class AlwaysColorText extends Plugin {
                 try {
                   const active = this.app.workspace.getActiveViewOfType(MarkdownView);
                   if (active && active.getMode && active.getMode() === 'preview') {
-                    // Use previewMode.containerEl as fallback to contentEl/containerEl
                     const root = (active.previewMode && active.previewMode.containerEl) || active.contentEl || active.containerEl;
                     if (root && active.file && active.file.path) {
                       try {
+                        debugLog('LEAF_CHANGE', 'Direct processing of reading view after leaf change');
                         this.processActiveFileOnly(root, { sourcePath: active.file.path });
                       } catch (e) {
                         // swallow - best-effort
@@ -1905,6 +1940,12 @@ module.exports = class AlwaysColorText extends Plugin {
       this.cmExtensionRegistered = false;
       this.extension = null;
     }
+    
+    // Clean up live preview observer
+    if (this._currentLivePreviewObserver) {
+      this._currentLivePreviewObserver.disconnect();
+      this._currentLivePreviewObserver = null;
+    }
 
     if (this.markdownPostProcessorRegistered && this._unregisterMarkdownPostProcessor) {
       this._unregisterMarkdownPostProcessor();
@@ -1931,6 +1972,474 @@ module.exports = class AlwaysColorText extends Plugin {
         this._changelogCommandRegistered = true;
       }
     } catch (e) {}
+  }
+
+  // Setup MutationObserver to color callouts in live preview as they're rendered
+  setupLivePreviewCalloutObserver() {
+    // DISABLED: Live preview observer is not needed because the reading mode
+    // post-processor (processCalloutContainers) already handles callouts in both
+    // reading mode AND live preview. The observer was causing double-coloring
+    // and interference with the post-processor system.
+    debugLog('LIVE_PREVIEW', '[DISABLED] Live preview observer disabled - using post-processor instead');
+  }
+
+  // Setup observer for the currently active view
+  setupObserverForActiveView() {
+    try {
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (!activeView) {
+        debugLog('LIVE_PREVIEW', 'No active markdown view found');
+        return;
+      }
+      
+      debugLog('LIVE_PREVIEW', `Setting up observer for active view: ${activeView.file?.name || 'unknown'}`);
+      
+      // Get the preview container - try multiple selectors
+      let previewContainer = null;
+      
+      // Try 1: Direct preview mode container
+      if (activeView.previewMode?.containerEl) {
+        previewContainer = activeView.previewMode.containerEl;
+        debugLog('LIVE_PREVIEW', 'Found preview container via previewMode.containerEl');
+      }
+      
+      // Try 2: Inside containerEl
+      if (!previewContainer && activeView.containerEl) {
+        previewContainer = activeView.containerEl.querySelector('.markdown-preview-view, .markdown-rendered');
+        if (previewContainer) {
+          debugLog('LIVE_PREVIEW', 'Found preview container via querySelector in containerEl');
+        }
+      }
+      
+      // Try 3: contentEl itself
+      if (!previewContainer && activeView.contentEl) {
+        previewContainer = activeView.contentEl;
+        debugLog('LIVE_PREVIEW', 'Using contentEl as preview container');
+      }
+      
+      if (!previewContainer) {
+        debugLog('LIVE_PREVIEW', 'Could not find preview container, retrying in 100ms');
+        setTimeout(() => this.setupObserverForActiveView(), 100);
+        return;
+      }
+      
+      debugLog('LIVE_PREVIEW', `Preview container: ${previewContainer.nodeName}.${previewContainer.className}`);
+      debugLog('LIVE_PREVIEW', `Container children: ${previewContainer.children?.length || 0}, textContent length: ${previewContainer.textContent?.length || 0}`);
+      
+      // Log container structure for debugging
+      if (previewContainer.children?.length > 0) {
+        const firstFewChildren = Array.from(previewContainer.children).slice(0, 5).map(el => `${el.nodeName}.${el.className}`).join(', ');
+        debugLog('LIVE_PREVIEW', `First children: ${firstFewChildren}`);
+      }
+
+      // Function to scan and color callouts
+      const scanAndColorCallouts = () => {
+        // First, try to locate callouts by class (fast-path)
+        const existingCallouts = previewContainer.querySelectorAll?.('.callout, .callout-content') || [];
+        debugLog('LIVE_PREVIEW', `Found ${existingCallouts?.length || 0} existing callouts (by class)`);
+        for (const callout of (existingCallouts || [])) {
+          if (!callout.classList.contains('act-callout-colored')) {
+            debugLog('LIVE_PREVIEW', 'Coloring existing callout (by class)');
+            this.colorLivePreviewCallout(callout);
+          }
+        }
+
+        // Additionally, scan text nodes to find any matches that may be inside differently-structured callouts
+        try {
+          const filePath = this.app?.workspace?.getActiveFile()?.path || null;
+          const entries = filePath ? this.filterEntriesByAdvancedRules(filePath, this.getSortedWordEntries()) : this.getSortedWordEntries();
+          
+          // First, let's search the entire DOM for callouts to see where they actually are
+          const allCallouts = document.querySelectorAll?.('.callout');
+          if (allCallouts && allCallouts.length > 0) {
+            debugLog('LIVE_PREVIEW', `Found ${allCallouts.length} callouts in entire document!`);
+            for (const callout of allCallouts) {
+              // Check if this callout has lost its colored spans (Obsidian re-rendering)
+              // Even if marked as colored, if no colored spans exist, we need to re-color
+              const coloredSpans = callout.querySelectorAll('.always-color-text-highlight');
+              const hasColoredSpans = coloredSpans.length > 0;
+              const alreadyColored = callout.classList.contains('act-callout-colored');
+              
+              // Sample first span to check if it has inline color style
+              let firstSpanHasStyle = false;
+              let firstSpanColor = 'NO_STYLE';
+              if (coloredSpans.length > 0) {
+                const firstSpan = coloredSpans[0];
+                const styleAttr = firstSpan.getAttribute('style');
+                firstSpanHasStyle = !!styleAttr;
+                firstSpanColor = styleAttr ? styleAttr.substring(0, 50) : 'NO_ATTR';
+              }
+              
+              debugLog('LIVE_PREVIEW', `Callout: ${callout.className}, already-colored=${alreadyColored}, hasColoredSpans=${hasColoredSpans}, firstSpanStyle="${firstSpanColor}"`);
+              
+              // If marked colored but has no colored spans, it was cleared by Obsidian re-rendering
+              if (alreadyColored && !hasColoredSpans) {
+                debugLog('LIVE_PREVIEW', `Callout marked colored but NO colored spans found! Was cleared by re-rendering, will re-color.`);
+                callout.classList.remove('act-callout-colored');
+                this.colorLivePreviewCallout(callout);
+              } else if (!alreadyColored) {
+                debugLog('LIVE_PREVIEW', `Coloring callout found in document: ${callout.className}`);
+                const colorResult = this.colorLivePreviewCallout(callout);
+                debugLog('LIVE_PREVIEW', `colorLivePreviewCallout returned: ${colorResult}`);
+              } else {
+                debugLog('LIVE_PREVIEW', `Skipping callout (already colored with spans): ${callout.className}`);
+              }
+            }
+          } else {
+            debugLog('LIVE_PREVIEW', 'No callouts found in entire document');
+          }
+          
+          if (entries && entries.length > 0) {
+            const walker = document.createTreeWalker(previewContainer, NodeFilter.SHOW_TEXT, null, false);
+            let tn;
+            let nodesScanned = 0;
+            let matchesFound = 0;
+            while (tn = walker.nextNode()) {
+              nodesScanned++;
+              const txt = String(tn.textContent || '').trim();
+              if (!txt) continue;
+              const decoded = this.decodeHtmlEntities(txt);
+              for (const entry of entries) {
+                if (!entry || entry.invalid) continue;
+                const pat = this.decodeHtmlEntities(entry.pattern || '');
+                if (!pat) continue;
+                if (decoded.indexOf(pat) !== -1) {
+                  matchesFound++;
+                  // Find nearest ancestor that looks like a callout
+                  let ancestor = tn.parentElement;
+                  while (ancestor && !ancestor.classList?.contains('callout') && !ancestor.classList?.contains('callout-content') && ancestor !== previewContainer) {
+                    ancestor = ancestor.parentElement;
+                  }
+                  if (ancestor && ancestor !== previewContainer) {
+                    if (!ancestor.classList.contains('act-callout-colored')) {
+                      debugLog('LIVE_PREVIEW', `Found text match for pattern "${pat}" inside callout-like ancestor; coloring`);
+                      this.colorLivePreviewCallout(ancestor);
+                    }
+                  } else {
+                    debugLog('LIVE_PREVIEW', `Found match for pattern "${pat}" outside callout (node: ${tn.parentElement?.nodeName})`);
+                  }
+                  break; // stop checking other entries for this text node
+                }
+              }
+              if (nodesScanned > 5000) break; // safety
+            }
+            debugLog('LIVE_PREVIEW', `Scanned ${nodesScanned} text nodes in container, matchesFound=${matchesFound}`);
+          }
+        } catch (e) {
+          debugError('LIVE_PREVIEW', 'Error scanning preview text nodes', e);
+        }
+      };
+
+      // Scan immediately (in case content is already rendered)
+      scanAndColorCallouts();
+      
+      // Also scan after delays (to catch async-rendered content)
+      setTimeout(() => scanAndColorCallouts(), 100);
+      setTimeout(() => scanAndColorCallouts(), 300);
+      setTimeout(() => scanAndColorCallouts(), 600);
+      
+      // Disconnect old observer if it exists
+      if (this._currentLivePreviewObserver) {
+        this._currentLivePreviewObserver.disconnect();
+      }
+      
+      // Create observer that watches for new callouts AND re-colors callouts if their color is lost
+      const observer = new MutationObserver((mutations) => {
+        try {
+          // debugLog('LIVE_PREVIEW', `MutationObserver fired with ${mutations.length} mutations`);
+          for (const mutation of mutations) {
+            if (mutation.type === 'childList') {
+              // Check if any added nodes are or contain callouts
+              for (const node of mutation.addedNodes) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                  // Check if node itself is a callout
+                  if (node.classList?.contains('callout')) {
+                    if (!node.classList.contains('act-callout-colored')) {
+                      debugLog('LIVE_PREVIEW', 'Added node is a callout, coloring');
+                      this.colorLivePreviewCallout(node);
+                    }
+                  }
+                  
+                  // Check for callout children
+                  const callouts = node.querySelectorAll?.('.callout') || [];
+                  if (callouts.length > 0) {
+                    for (const callout of callouts) {
+                      if (!callout.classList.contains('act-callout-colored')) {
+                        debugLog('LIVE_PREVIEW', 'Coloring descendant callout');
+                        this.colorLivePreviewCallout(callout);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
+          // ALWAYS check if any existing callouts have lost their colors (due to re-rendering)
+          // and re-color them
+          const allCallouts = previewContainer.querySelectorAll?.('.callout') || [];
+          for (const callout of allCallouts) {
+            // Check if this callout needs re-coloring by looking for uncolored text
+            const textNodes = this._findUncoloredTextInCallout(callout);
+            if (textNodes.length > 0) {
+              debugLog('LIVE_PREVIEW', `Found ${textNodes.length} uncolored text nodes in callout, re-coloring`);
+              callout.classList.remove('act-callout-colored');
+              this.colorLivePreviewCallout(callout);
+            }
+          }
+        } catch (e) {
+          debugError('LIVE_PREVIEW', 'Error in MutationObserver callback', e);
+        }
+      });
+      
+      // Start observing - also watch characterData for text changes
+      observer.observe(previewContainer, {
+        childList: true,
+        subtree: true,
+        attributes: false,
+        characterData: true  // Watch text node changes
+      });
+      
+      debugLog('LIVE_PREVIEW', 'MutationObserver started successfully');
+      this._currentLivePreviewObserver = observer;
+    } catch (e) {
+      debugError('LIVE_PREVIEW', 'Error in setupObserverForActiveView', e);
+    }
+  }
+
+  // Helper: Find uncolored text nodes in a callout
+  _findUncoloredTextInCallout(callout) {
+    try {
+      const contentEl = callout.querySelector('.callout-content') || callout;
+      const walker = document.createTreeWalker(
+        contentEl,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            // Skip already colored nodes and code
+            if (node.parentElement?.classList?.contains('always-color-text-highlight')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            if (node.parentElement?.closest('code, pre')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        },
+        false
+      );
+      
+      const uncoloredNodes = [];
+      let node;
+      while (node = walker.nextNode()) {
+        if (node.textContent?.trim()) {
+          uncoloredNodes.push(node);
+        }
+      }
+      return uncoloredNodes;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Color a single callout element in live preview
+  colorLivePreviewCallout(calloutEl) {
+    try {
+      debugLog('LIVE_PREVIEW', `[colorLivePreviewCallout] START: el=${calloutEl?.nodeName}, className=${calloutEl?.className}`);
+      
+      if (!calloutEl) {
+        debugLog('LIVE_PREVIEW', `[colorLivePreviewCallout] calloutEl is null/undefined, returning`);
+        return 'FAIL_NULL_EL';
+      }
+      
+      if (calloutEl.classList.contains('act-callout-colored')) {
+        debugLog('LIVE_PREVIEW', `[colorLivePreviewCallout] Already colored, returning`);
+        return 'SKIP_ALREADY_COLORED';
+      }
+      
+      debugLog('LIVE_PREVIEW', `Coloring callout: ${calloutEl.className}`);
+      
+      const filePath = this.app?.workspace?.getActiveFile()?.path;
+      debugLog('LIVE_PREVIEW', `[colorLivePreviewCallout] filePath=${filePath}`);
+      
+      const entries = filePath 
+        ? this.filterEntriesByAdvancedRules(filePath, this.getSortedWordEntries())
+        : this.getSortedWordEntries();
+      
+      debugLog('LIVE_PREVIEW', `[colorLivePreviewCallout] entries.length=${entries.length}`);
+      
+      if (entries.length === 0) {
+        debugLog('LIVE_PREVIEW', `[colorLivePreviewCallout] No entries, marking colored and returning`);
+        calloutEl.classList.add('act-callout-colored');
+        return 'NO_ENTRIES';
+      }
+      
+      // Get content container
+      const contentEl = calloutEl.querySelector('.callout-content') || calloutEl;
+      debugLog('LIVE_PREVIEW', `[colorLivePreviewCallout] contentEl=${contentEl?.nodeName}, className=${contentEl?.className}`);
+      
+      // Use TreeWalker to find and color text nodes
+      const walker = document.createTreeWalker(
+        contentEl,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            // Skip text that's already inside a colored span (from CodeMirror or our previous coloring)
+            if (node.parentElement?.closest('code, pre')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            // Skip if parent is already a colored span
+            if (node.parentElement?.classList?.contains('always-color-text-highlight')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            // Skip if ANY ancestor is a colored span
+            let parent = node.parentElement;
+            while (parent && parent !== contentEl) {
+              if (parent.classList?.contains('always-color-text-highlight')) {
+                return NodeFilter.FILTER_REJECT;
+              }
+              parent = parent.parentElement;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        },
+        false
+      );
+      
+      const textNodes = [];
+      let node;
+      while (node = walker.nextNode()) {
+        if (node.textContent?.trim()) {
+          textNodes.push(node);
+        }
+      }
+      
+      debugLog('LIVE_PREVIEW', `Found ${textNodes.length} text nodes in callout`);
+      
+      // Color each text node
+      for (const textNode of textNodes) {
+        try {
+          let text = textNode.textContent;
+          if (!text?.trim()) continue;
+          
+          text = this.decodeHtmlEntities(text);
+          let matches = [];
+          
+          // Find all matches
+          for (const entry of entries) {
+            if (!entry || entry.invalid) continue;
+            
+            const pattern = this.decodeHtmlEntities(entry.pattern);
+            if (!pattern) continue;
+            
+            let pos = 0;
+            while ((pos = text.indexOf(pattern, pos)) !== -1) {
+              matches.push({
+                start: pos,
+                end: pos + pattern.length,
+                entry: entry
+              });
+              pos += pattern.length;
+              
+              if (matches.length > 50) break;
+            }
+            
+            if (matches.length > 50) break;
+          }
+          
+          // Apply colors
+          if (matches.length > 0) {
+            debugLog('LIVE_PREVIEW', `Applying ${matches.length} colors to text node`);
+            this.applyLivePreviewHighlights(textNode, matches, text);
+          }
+        } catch (e) {
+          debugError('LIVE_PREVIEW', 'Error processing text node', e);
+        }
+      }
+      
+      // Mark as colored
+      calloutEl.classList.add('act-callout-colored');
+      debugLog('LIVE_PREVIEW', 'Callout coloring complete');
+    } catch (e) {
+      debugError('LIVE_PREVIEW', 'Error coloring callout', e);
+    }
+  }
+
+  // Apply highlights to live preview text using direct color styling
+  applyLivePreviewHighlights(textNode, matches, text) {
+    try {
+      if (!matches || matches.length === 0) return;
+      
+      const decodedText = this.decodeHtmlEntities(text);
+      
+      // Remove overlaps
+      matches.sort((a, b) => a.start - b.start);
+      const nonOverlapping = [];
+      
+      for (const m of matches) {
+        let overlaps = false;
+        for (const existing of nonOverlapping) {
+          if (m.start < existing.end && m.end > existing.start) {
+            overlaps = true;
+            break;
+          }
+        }
+        if (!overlaps) {
+          nonOverlapping.push(m);
+        }
+      }
+      
+      // Build fragment with colored spans
+      const frag = document.createDocumentFragment();
+      let pos = 0;
+      
+      for (const m of nonOverlapping) {
+        if (m.start > pos) {
+          frag.appendChild(document.createTextNode(decodedText.slice(pos, m.start)));
+        }
+        
+        const span = document.createElement('span');
+        span.className = 'always-color-text-highlight already-colored';
+        span.textContent = decodedText.slice(m.start, m.end);
+        
+        const entry = m.entry;
+        const color = entry.color;
+        
+        // Apply color directly
+        if (entry.backgroundColor) {
+          const bgColor = this.hexToRgba(entry.backgroundColor, this.settings.backgroundOpacity ?? 25);
+          const textColor = entry.textColor || 'currentColor';
+          let styleStr = `background-color: ${bgColor} !important; padding: 0 ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important;`;
+          if (this.settings.enableBoxDecorationBreak ?? true) {
+            styleStr += ' box-decoration-break: clone; -webkit-box-decoration-break: clone;';
+          }
+          if (textColor && textColor !== 'currentColor') {
+            styleStr = `color: ${textColor} !important; --highlight-color: ${textColor} !important; ${styleStr}`;
+          }
+          span.setAttribute('style', styleStr);
+        } else if (color) {
+          // Set both inline style AND CSS variable to ensure color is visible
+          // The inline style has !important, and we also set the CSS variable
+          // that the CSS rules expect
+          span.style.color = color;
+          span.style.setProperty('--highlight-color', color, 'important');
+          span.setAttribute('style', `color: ${color} !important; --highlight-color: ${color} !important;`);
+          debugLog('LIVE_PREVIEW', `Applied color ${color} to: "${span.textContent.slice(0, 20)}", style=${span.getAttribute('style')}`);
+        }
+        
+        frag.appendChild(span);
+        pos = m.end;
+      }
+      
+      if (pos < decodedText.length) {
+        frag.appendChild(document.createTextNode(decodedText.slice(pos)));
+      }
+      
+      textNode.replaceWith(frag);
+      debugLog('LIVE_PREVIEW', 'Applied highlights to text node');
+    } catch (e) {
+      debugError('LIVE_PREVIEW', 'Error applying highlights', e);
+    }
   }
 
   // --- Load plugin settings from disk, with defaults ---
@@ -3354,6 +3863,13 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       if (!filePath || !Array.isArray(entries) || entries.length === 0) return entries;
       
+      // Log the caller via stack trace
+      const stack = new Error().stack;
+      const lines = stack.split('\n');
+      const caller = lines[2] ? lines[2].trim() : 'unknown';
+      debugLog('ADV_RULES_CALLER', `Called from: ${caller}`);
+
+      
       const filtered = entries.filter(entry => {
         if (!entry || !entry.pattern) return true;
         return this.shouldColorText(filePath, entry.pattern);
@@ -3735,6 +4251,9 @@ module.exports = class AlwaysColorText extends Plugin {
   applySimpleHighlights(textNode, matches, text) {
     if (IS_DEVELOPMENT) console.time('applySimpleHighlights');
     if (!matches || matches.length === 0) { if (IS_DEVELOPMENT) console.timeEnd('applySimpleHighlights'); return; }
+    
+    debugLog('SIMPLE_HIGHLIGHT', `applySimpleHighlights called with ${matches.length} matches for text: "${text.slice(0, 50)}..."`);
+    
     const decodedText = this.decodeHtmlEntities(text);
     // Filter out matches that fall inside blacklisted contexts (e.g., @username)
     try {
@@ -3852,27 +4371,40 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // Process only the active file: immediate visible blocks then deferred idle processing
   processActiveFileOnly(el, ctx) {
-    if (!el || !ctx || !ctx.sourcePath) return;
+    try {
+      debugLog('ACT', `=== processActiveFileOnly START: el=${el?.nodeName}/${el?.className}, ctx.sourcePath=${ctx?.sourcePath || 'none'} ===`);
+    } catch (_) {}
     
-    // Ensure sourcePath is a string
-    if (typeof ctx.sourcePath !== 'string') {
-      debugWarn('ACT', `Invalid sourcePath type: ${typeof ctx.sourcePath}`);
+    debugLog('ACT', '>>> ENTRY: processActiveFileOnly called <<<');
+    if (!el) {
+      debugLog('ACT', 'Element is null, returning early');
       return;
+    }
+    let sourcePath = null;
+    try {
+      sourcePath = (ctx && typeof ctx.sourcePath === 'string')
+        ? ctx.sourcePath
+        : (this.app?.workspace?.getActiveFile()?.path || null);
+    } catch (_) {}
+    if (!sourcePath) {
+      debugWarn('ACT', 'No sourcePath in context; using global entries without file-specific rules');
     }
     
     const startTime = performance.now();
-    debugLog('ACT', 'Processing active file', ctx.sourcePath.slice(-30));
+    try { if (sourcePath) debugLog('ACT', 'Processing active file', sourcePath.slice(-30)); } catch (_) {}
     
     // Force full reading-mode rendering (user explicitly opted in - bypass perf gates)
     if (this.settings.forceFullRenderInReading) {
       try {
         debugWarn('ACT', 'forceFullRenderInReading enabled - forcing full processing');
-        const pr0 = this.evaluatePathRules(ctx.sourcePath);
-        const allowedEntriesForce = this.filterEntriesByAdvancedRules(ctx.sourcePath, this.getSortedWordEntries());
+        const pr0 = sourcePath ? this.evaluatePathRules(sourcePath) : { excluded: false, hasIncludes: false, included: true };
+        const allowedEntriesForce = sourcePath
+          ? this.filterEntriesByAdvancedRules(sourcePath, this.getSortedWordEntries())
+          : this.getSortedWordEntries();
         if ((pr0.excluded || (this.hasGlobalExclude() && pr0.hasIncludes && !pr0.included)) && allowedEntriesForce.length === 0) return;
-        if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
-        if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
-        const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
+        if (sourcePath && this.settings.disabledFiles.includes(sourcePath)) return;
+        if (sourcePath && this.isFrontmatterColoringDisabled(sourcePath)) return;
+        const folderEntry = sourcePath ? this.getBestFolderEntry(sourcePath) : null;
         this.processInChunks(el, allowedEntriesForce, folderEntry, {
           skipFirstN: 0,
           batchSize: 30,
@@ -3904,19 +4436,19 @@ module.exports = class AlwaysColorText extends Plugin {
     // Avoid querying entire document to prevent skipping preview processing on busy pages
 
     // File-specific disable via settings
-    const pr = this.evaluatePathRules(ctx.sourcePath);
-    if (this.settings.disabledFiles.includes(ctx.sourcePath)) return;
+    const pr = sourcePath ? this.evaluatePathRules(sourcePath) : { excluded: false, hasIncludes: false, included: true };
+    if (sourcePath && this.settings.disabledFiles.includes(sourcePath)) return;
     // Frontmatter can override per-file disabling: always-color-text: false
-    if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
+    if (sourcePath && this.isFrontmatterColoringDisabled(sourcePath)) return;
     
     // CRITICAL FIX: Get folder entry BEFORE filtering entries
-    const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
+    const folderEntry = sourcePath ? this.getBestFolderEntry(sourcePath) : null;
     
     // Get ALL entries first
     const allEntries = this.getSortedWordEntries();
     
     // Then filter by advanced rules
-    const allowedEntries = this.filterEntriesByAdvancedRules(ctx.sourcePath, allEntries);
+    const allowedEntries = sourcePath ? this.filterEntriesByAdvancedRules(sourcePath, allEntries) : allEntries;
     
     // Check if we should skip coloring entirely
     const isExcludedByPathRules = pr.excluded || 
@@ -3969,7 +4501,20 @@ module.exports = class AlwaysColorText extends Plugin {
 
     } catch (e) {}
 
-    const processNow = () => this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
+    const processNow = () => {
+      try {
+        // CRITICAL: Process callouts FIRST before general highlighting
+        // This ensures callout-specific coloring takes precedence
+        debugLog('ACT', 'Processing callouts in immediate pass...');
+        this.processCalloutContainers(el, allowedEntries, folderEntry);
+        debugLog('ACT', 'Callouts processed in immediate pass');
+        
+        // THEN apply general highlighting (which will skip already-colored callouts)
+        this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
+      } catch (e) { 
+        debugError('ACT', 'applyHighlights immediate pass failed', e); 
+      }
+    };
 
     // Fast-path immediate pass for visible content
     const t0 = performance.now();
@@ -3978,6 +4523,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // Schedule deferred pass for remaining content in idle time, guarding callback to run at most once per root
     // We use requestIdleCallback with setTimeout fallback to ensure eventual completion
+    debugLog('ACT', 'Scheduling deferred pass for callout processing...');
     try {
       try { this._domRefs.set(el, Object.assign(this._domRefs.get(el) || {}, { deferredScheduled: true, deferredDone: false })); } catch (e) {}
 
@@ -3990,14 +4536,44 @@ module.exports = class AlwaysColorText extends Plugin {
           const t1 = performance.now();
           // More aggressive deferred processing: force chunked processing of remaining blocks
           debugLog('DEFERRED', `Start: ${label}, skipFirstN=${immediateBlocks}`);
+          debugLog('DEFERRED', `About to process callouts for element: ${el.nodeName} (${el.className})`);
           try {
             // Prefer chunked processing for large documents; force completion (bypass perf gate)
             this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: immediateBlocks, batchSize: 30, clearExisting: true, forceProcess: true })
-              .then(() => debugLog('DEFERRED', `Completed: ${label} in ${(performance.now() - t1).toFixed(1)}ms`))
-              .catch(e => debugError('DEFERRED', 'processInChunks error', e));
+              .then(() => {
+                debugLog('DEFERRED', `Completed: ${label} in ${(performance.now() - t1).toFixed(1)}ms`);
+                // CALLOUT FIX: Process callouts after main deferred pass completes
+                // This ensures callout DOM has fully rendered before we try to color it
+                debugLog('DEFERRED', 'Now calling processCalloutContainers after main pass...');
+                try {
+                  this.processCalloutContainers(el, allowedEntries, folderEntry);
+                  debugLog('DEFERRED', 'processCalloutContainers completed successfully');
+                } catch (e) {
+                  debugError('DEFERRED', 'callout processing failed', e);
+                }
+              })
+              .catch(e => {
+                debugError('DEFERRED', 'processInChunks error', e);
+                // Still try to process callouts even if main pass failed
+                debugLog('DEFERRED', 'processInChunks failed, attempting callout processing anyway...');
+                try {
+                  this.processCalloutContainers(el, allowedEntries, folderEntry);
+                  debugLog('DEFERRED', 'processCalloutContainers completed (after error)');
+                } catch (e2) {
+                  debugError('DEFERRED', 'callout processing failed after error', e2);
+                }
+              });
           } catch (e) {
             debugError('DEFERRED', 'fallback applyHighlights due to error', e);
             this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: true, entries: allowedEntries });
+            // Still try callout processing
+            debugLog('DEFERRED', 'Attempting callout processing after fallback...');
+            try {
+              this.processCalloutContainers(el, allowedEntries, folderEntry);
+              debugLog('DEFERRED', 'processCalloutContainers completed (after fallback)');
+            } catch (e2) {
+              debugError('DEFERRED', 'callout processing failed', e2);
+            }
           }
         } catch (e) { debugError('ACT', 'deferred pass error', e); }
       };
@@ -4027,6 +4603,334 @@ module.exports = class AlwaysColorText extends Plugin {
       }, 1500);
     }
     debugLog('ACT', `scheduled total: ${(performance.now() - startTime).toFixed(1)}ms`);
+  }
+
+  // CALLOUT FIX: Dedicated method to process callout containers after main DOM rendering
+  // This ensures callouts have time to render in live preview before we try to color them
+  // Uses the same direct color-styling approach as reading mode list items
+  processCalloutContainers(el, allowedEntries, folderEntry) {
+    try {
+      debugLog('CALLOUT_PROC', 'Starting callout container processing');
+      debugLog('CALLOUT_PROC', `Element: ${el.nodeName}, class: ${el.className}`);
+      debugLog('CALLOUT_PROC', `Element HTML sample: ${el.outerHTML?.slice(0, 150)}...`);
+      
+      // Query for callout-content containers - try multiple selectors to be thorough
+      const selector1 = '.callout .callout-content';
+      const selector2 = '.callout-content';
+      const selector3 = '.callout';
+      
+      const containers1 = Array.from(el.querySelectorAll?.(selector1) || []);
+      const containers2 = Array.from(el.querySelectorAll?.(selector2) || []);
+      const containers3 = Array.from(el.querySelectorAll?.(selector3) || []);
+      
+      debugLog('CALLOUT_PROC', `Selector "${selector1}" found: ${containers1.length}`);
+      debugLog('CALLOUT_PROC', `Selector "${selector2}" found: ${containers2.length}`);
+      debugLog('CALLOUT_PROC', `Selector "${selector3}" found: ${containers3.length}`);
+      
+      const calloutContainers = Array.from(el.querySelectorAll?.('.callout .callout-content, .callout-content') || []);
+      debugLog('CALLOUT_PROC', `Combined: Found ${calloutContainers.length} callout containers`);
+      
+      // Log details of found containers
+      for (let i = 0; i < calloutContainers.length; i++) {
+        const c = calloutContainers[i];
+        debugLog('CALLOUT_PROC', `Container ${i}: tag=${c.nodeName}, class=${c.className}, text="${(c.textContent || '').slice(0, 50)}..."`);
+      }
+      
+      // Also get callout titles
+      const calloutTitles = Array.from(el.querySelectorAll?.('.callout-title') || []);
+      debugLog('CALLOUT_PROC', `Found ${calloutTitles.length} callout titles`);
+      
+      for (let i = 0; i < calloutTitles.length; i++) {
+        const t = calloutTitles[i];
+        debugLog('CALLOUT_PROC', `Title ${i}: tag=${t.nodeName}, class=${t.className}, text="${(t.textContent || '').slice(0, 50)}..."`);
+      }
+      
+      // CRITICAL: Clear existing highlights before re-coloring
+      // This unwraps all already-colored spans so we can re-color them
+      debugLog('CALLOUT_PROC', 'Clearing existing highlights from callout containers...');
+      for (const container of calloutContainers) {
+        this._unwrapHighlights(container);
+      }
+      for (const title of calloutTitles) {
+        this._unwrapHighlights(title);
+      }
+      debugLog('CALLOUT_PROC', 'Existing highlights cleared');
+      
+      // Process callout content containers - FIRST call processMarkdownFormattingInReading like reading mode does
+      for (let idx = 0; idx < calloutContainers.length; idx++) {
+        const container = calloutContainers[idx];
+        try {
+          const textPreview = container.textContent?.slice(0, 40).replace(/\n/g, ' ') || '(empty)';
+          debugLog('CALLOUT_PROC', `[${idx}] Processing callout-content with text: "${textPreview}..."`);
+          
+          // CRITICAL: Call processMarkdownFormattingInReading FIRST (this is what reading mode does)
+          // This handles list items, tasks, etc. with proper coloring
+          try {
+            debugLog('CALLOUT_PROC', `[${idx}] Calling processMarkdownFormattingInReading on callout-content`);
+            this.processMarkdownFormattingInReading(container, folderEntry);
+            debugLog('CALLOUT_PROC', `[${idx}] processMarkdownFormattingInReading completed`);
+          } catch (e) {
+            debugError('CALLOUT_PROC', `[${idx}] processMarkdownFormattingInReading failed`, e);
+          }
+          
+          // THEN process remaining text content with direct coloring
+          debugLog('CALLOUT_PROC', `[${idx}] Calling _colorCalloutContent on callout-content`);
+          this._colorCalloutContent(container, allowedEntries, folderEntry);
+          debugLog('CALLOUT_PROC', `[${idx}] _colorCalloutContent completed`);
+        } catch (e) {
+          debugError('CALLOUT_PROC', `[${idx}] Failed to process callout container`, e);
+        }
+      }
+      
+      // Process callout titles
+      for (let idx = 0; idx < calloutTitles.length; idx++) {
+        const title = calloutTitles[idx];
+        try {
+          const titleText = title.textContent?.slice(0, 40) || '(empty)';
+          debugLog('CALLOUT_PROC', `[${idx}] Processing callout-title: "${titleText}..."`);
+          
+          // Call processMarkdownFormattingInReading on title too
+          try {
+            debugLog('CALLOUT_PROC', `[${idx}] Calling processMarkdownFormattingInReading on callout-title`);
+            this.processMarkdownFormattingInReading(title, folderEntry);
+            debugLog('CALLOUT_PROC', `[${idx}] processMarkdownFormattingInReading on title completed`);
+          } catch (e) {
+            debugError('CALLOUT_PROC', `[${idx}] processMarkdownFormattingInReading on title failed`, e);
+          }
+          
+          // Then process text content
+          debugLog('CALLOUT_PROC', `[${idx}] Calling _colorCalloutContent on callout-title`);
+          this._colorCalloutContent(title, allowedEntries, folderEntry);
+          debugLog('CALLOUT_PROC', `[${idx}] _colorCalloutContent on title completed`);
+        } catch (e) {
+          debugError('CALLOUT_PROC', `[${idx}] Failed to process callout title`, e);
+        }
+      }
+      
+      debugLog('CALLOUT_PROC', 'Callout container processing complete');
+    } catch (e) {
+      debugError('CALLOUT_PROC', 'processCalloutContainers failed', e);
+    }
+  }
+
+  // Helper: Color all content within a callout using direct style application
+  // This mirrors the reading mode approach for consistency
+  // Helper: Unwrap all highlighted spans to prepare for re-coloring
+  _unwrapHighlights(container) {
+    try {
+      const highlights = container.querySelectorAll('.always-color-text-highlight');
+      for (const span of highlights) {
+        // Replace span with its text content, unwrapping it
+        while (span.firstChild) {
+          span.parentElement.insertBefore(span.firstChild, span);
+        }
+        span.remove();
+      }
+    } catch (e) {
+      debugError('CALLOUT_PROC', 'Error unwrapping highlights', e);
+    }
+  }
+
+  _colorCalloutContent(container, entries, folderEntry) {
+    try {
+      debugLog('CALLOUT_COLOR', `Coloring callout content: ${(container.textContent || '').slice(0, 30)}...`);
+      debugLog('CALLOUT_COLOR', `Container class: ${container.className}, tag: ${container.nodeName}`);
+      debugLog('CALLOUT_COLOR', `Container HTML: ${container.outerHTML.slice(0, 100)}...`);
+      
+      // Walk through text nodes and apply color directly
+      const walker = document.createTreeWalker(
+        container,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            // Skip text nodes in code blocks or already processed
+            if (node.parentElement?.closest('code, pre, .always-color-text-highlight')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        },
+        false
+      );
+      
+      const nodes = [];
+      let node;
+      while (node = walker.nextNode()) {
+        if (node.textContent.trim()) {
+          nodes.push(node);
+        }
+      }
+      
+      debugLog('CALLOUT_COLOR', `Found ${nodes.length} text nodes in callout`);
+      
+      // Process each text node and match against entries
+      for (let nodeIdx = 0; nodeIdx < nodes.length; nodeIdx++) {
+        const textNode = nodes[nodeIdx];
+        try {
+          let text = textNode.textContent;
+          if (!text || !text.trim()) continue;
+          
+          debugLog('CALLOUT_COLOR', `Processing text node ${nodeIdx}: "${text.slice(0, 40)}..."`);
+          
+          text = this.decodeHtmlEntities(text);
+          const filePath = this.app?.workspace?.getActiveFile()?.path || null;
+          const allowedEntries = filePath 
+            ? this.filterEntriesByAdvancedRules(filePath, entries || this.getSortedWordEntries())
+            : (entries || this.getSortedWordEntries());
+          
+          debugLog('CALLOUT_COLOR', `Allowed entries for this node: ${allowedEntries.length}`);
+          
+          // Find all matches in this text node
+          let matches = [];
+          for (const entry of allowedEntries) {
+            if (!entry || entry.invalid) continue;
+            
+            // Simple string matching for now
+            const pattern = this.decodeHtmlEntities(entry.pattern);
+            if (!pattern) continue;
+            
+            let pos = 0;
+            const nodeMatches = [];
+            while ((pos = text.indexOf(pattern, pos)) !== -1) {
+              nodeMatches.push({
+                start: pos,
+                end: pos + pattern.length,
+                entry: entry,
+                folderEntry: folderEntry
+              });
+              debugLog('CALLOUT_COLOR', `Found match for "${pattern}" at position ${pos} in text: "${text.slice(pos, pos + pattern.length)}"`);
+              pos += pattern.length;
+              
+              if (nodeMatches.length > 50) break;
+            }
+            
+            matches = matches.concat(nodeMatches);
+            if (matches.length > 50) break;
+          }
+          
+          debugLog('CALLOUT_COLOR', `Total matches found in this node: ${matches.length}`);
+          
+          // Apply colors if we found matches
+          if (matches.length > 0) {
+            debugLog('CALLOUT_COLOR', `Applying ${matches.length} highlights to text node`);
+            this._applyCalloutHighlights(textNode, matches, text);
+          } else {
+            debugLog('CALLOUT_COLOR', `No matches found in this text node`);
+          }
+        } catch (e) {
+          debugError('CALLOUT_COLOR', 'Error processing text node', e);
+        }
+      }
+    } catch (e) {
+      debugError('CALLOUT_COLOR', 'Failed to color callout content', e);
+    }
+  }
+
+  // Helper: Apply colors to callout text using direct style (not CSS variables)
+  _applyCalloutHighlights(textNode, matches, text) {
+    try {
+      debugLog('CALLOUT_HIGHLIGHT', `Applying highlights to ${matches.length} matches`);
+      const decodedText = this.decodeHtmlEntities(text);
+      
+      // Sort matches and remove overlaps
+      matches.sort((a, b) => a.start - b.start);
+      const nonOverlapping = [];
+      
+      for (const m of matches) {
+        let overlaps = false;
+        for (const existing of nonOverlapping) {
+          if (m.start < existing.end && m.end > existing.start) {
+            overlaps = true;
+            break;
+          }
+        }
+        if (!overlaps) {
+          nonOverlapping.push(m);
+        }
+      }
+      
+      debugLog('CALLOUT_HIGHLIGHT', `Non-overlapping matches: ${nonOverlapping.length}`);
+      
+      // Build DOM fragment with highlights using DIRECT color styling
+      const frag = document.createDocumentFragment();
+      let pos = 0;
+      
+      for (let idx = 0; idx < nonOverlapping.length; idx++) {
+        const m = nonOverlapping[idx];
+        if (m.start > pos) {
+          frag.appendChild(document.createTextNode(decodedText.slice(pos, m.start)));
+        }
+        
+        const span = document.createElement('span');
+        span.className = 'always-color-text-highlight';
+        span.textContent = decodedText.slice(m.start, m.end);
+        
+        // Get the entry and apply color DIRECTLY (not via CSS variables)
+        const entry = m.entry;
+        const color = (m.folderEntry && m.folderEntry.defaultColor) ? m.folderEntry.defaultColor : entry.color;
+        
+        debugLog('CALLOUT_HIGHLIGHT', `Match ${idx}: text="${span.textContent}", color="${color}", styleType="${entry.styleType}"`);
+        
+        // Apply color directly to the span
+        if (entry.backgroundColor) {
+          // When we have a background, apply it with the color
+          const bgColor = this.hexToRgba(entry.backgroundColor, this.settings.backgroundOpacity ?? 25);
+          // Use entry.color if available, otherwise entry.textColor
+          // If neither, generate a contrasting color based on background
+          let textColor = entry.color || entry.textColor;
+          
+          debugLog('CALLOUT_HIGHLIGHT', `Before contrast check - textColor="${textColor}", entry.color="${entry.color}", entry.textColor="${entry.textColor}"`);
+          
+          if (!textColor || textColor === 'currentColor' || textColor === '') {
+            // Generate contrasting color based on background brightness
+            const bgHex = entry.backgroundColor;
+            const rgb = parseInt(bgHex.slice(1), 16);
+            const r = (rgb >> 16) & 0xff;
+            const g = (rgb >> 8) & 0xff;
+            const b = (rgb >> 0) & 0xff;
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            textColor = brightness > 128 ? '#000000' : '#FFFFFF';
+            debugLog('CALLOUT_HIGHLIGHT', `Generated contrasting color: ${textColor} for bg: ${bgHex} (brightness: ${brightness})`);
+          }
+          
+          debugLog('CALLOUT_HIGHLIGHT', `Final textColor to apply: "${textColor}"`);
+          
+          if (textColor && textColor !== 'currentColor') {
+            span.style.color = textColor;
+            debugLog('CALLOUT_HIGHLIGHT', `Applied text color: ${textColor}`);
+          } else {
+            debugLog('CALLOUT_HIGHLIGHT', `NOT applying text color (empty or currentColor)`);
+          }
+          
+          span.style.backgroundColor = bgColor;
+          span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+          span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+          if (this.settings.enableBoxDecorationBreak ?? true) {
+            span.style.boxDecorationBreak = 'clone';
+            span.style.WebkitBoxDecorationBreak = 'clone';
+          }
+          debugLog('CALLOUT_HIGHLIGHT', `Applied background: ${bgColor}`);
+        } else if (color) {
+          // DIRECT color application - no CSS variables, no background
+          span.style.color = color;
+          debugLog('CALLOUT_HIGHLIGHT', `Applied direct color: ${color} to span: ${span.outerHTML}`);
+        }
+        
+        frag.appendChild(span);
+        pos = m.end;
+      }
+      
+      if (pos < decodedText.length) {
+        frag.appendChild(document.createTextNode(decodedText.slice(pos)));
+      }
+      
+      debugLog('CALLOUT_HIGHLIGHT', `Replacing text node with fragment containing ${nonOverlapping.length} colored spans`);
+      debugLog('CALLOUT_HIGHLIGHT', `Fragment HTML: ${frag.textContent}`);
+      textNode.replaceWith(frag);
+      debugLog('CALLOUT_HIGHLIGHT', `Successfully replaced text node`);
+    } catch (e) {
+      debugError('CALLOUT_HIGHLIGHT', 'Error applying highlights', e);
+    }
   }
 
   // Progressive optimized processing for very large documents
@@ -4321,6 +5225,10 @@ module.exports = class AlwaysColorText extends Plugin {
     // Walk through ALL descendant elements to find blocks, including nested containers
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT, {
       acceptNode(n) {
+        // Skip callout containers entirely - they are handled separately by processCalloutContainers
+        if (n.classList && (n.classList.contains('callout') || n.classList.contains('callout-content'))) {
+          return NodeFilter.FILTER_REJECT;
+        }
         // Skip code and pre blocks entirely
         if (['CODE', 'PRE'].includes(n.nodeName)) {
           return NodeFilter.FILTER_REJECT;
@@ -8675,12 +9583,15 @@ class ColorSettingTab extends PluginSettingTab {
       regexChk.style.flex = '0 0 auto';
 
       const regexLabel = row.createEl('label');
-      regexLabel.appendChild(document.createTextNode(this.plugin.t('label_regex','Regex')));
+      // Keep the checkbox but hide the textual "Regex" label to reduce visual clutter
+      // The label still toggles the checkbox when clicked (accessible), but is not shown.
+      try { regexLabel.appendChild(document.createTextNode(this.plugin.t('label_regex','Regex'))); } catch (e) {}
       regexLabel.style.flex = '0 0 auto';
       regexLabel.style.cursor = 'pointer';
       regexLabel.style.userSelect = 'none';
       regexLabel.style.fontSize = '0.9em';
       regexLabel.onclick = () => { regexChk.checked = !regexChk.checked; };
+      try { regexLabel.style.display = 'none'; } catch (e) {}
       regexChk.style.margin = '0';
 
       const flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
