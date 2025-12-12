@@ -70,7 +70,8 @@
 /* Override Obsidian's link color variables for elements with our highlights */
 .cm-line .always-color-text-highlight,
 .cm-content .always-color-text-highlight,
-.markdown-preview-view .always-color-text-highlight {
+.markdown-preview-view .always-color-text-highlight,
+.markdown-reading-view .always-color-text-highlight {
   --link-color: var(--highlight-color, currentColor) !important;
   --link-external-color: var(--highlight-color, currentColor) !important;
   --link-unresolved-color: var(--highlight-color, currentColor) !important;

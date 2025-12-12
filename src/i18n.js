@@ -1,11 +1,11 @@
-const en = require('./i18n/en.json');
-const es = require('./i18n/es.json');
-const fr = require('./i18n/fr.json');
-const hi = require('./i18n/hi.json');
-const it = require('./i18n/it.json');
-const bn = require('./i18n/bn.json');
-const ru = require('./i18n/ru.json');
-const zh_cn = require('./i18n/zh_cn.json');
+const en = require('./i18n/en.js');
+const es = require('./i18n/es.js');
+const fr = require('./i18n/fr.js');
+const hi = require('./i18n/hi.js');
+const it = require('./i18n/it.js');
+const bn = require('./i18n/bn.js');
+const ru = require('./i18n/ru.js');
+const zh_cn = require('./i18n/zh_cn.js');
 
 module.exports = {
   en,
