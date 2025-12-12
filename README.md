@@ -124,11 +124,11 @@ Create a new issue [here](https://github.com/Kazi-Aidah/always-color-text/issues
 ## Contributing Translations
 Want to add your language to Always Color Text?
 
-1. Go to `src/i18n/` and copy `en.json`.
-2. Rename it to your language code (like `es.json`, `fr.json`).
+1. Go to `src/i18n/` and copy `en.js`.
+2. Rename it to your language code (like `es.js`, `fr.js`).
 3. Translate the values only, like this:
 
-```json
+```js
 {
     "notice_import_completed": "ইম্পোর্ট সম্পন্ন",
     "key": "translation"
