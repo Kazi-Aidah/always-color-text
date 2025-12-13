@@ -312,9 +312,9 @@ module.exports = {
   "label_regex": "রেজেক্স",
   
   // Advanced Rules
-  "advanced_rules_header": "উন্নত নিয়ম",
-  "advanced_rules_modal_header": "উন্নত নিয়ম",
-  "advanced_rules_manage_button": "উন্নত নিয়ম পরিচালনা করুন",
+  "advanced_rules_header": "নির্দিষ্ট অন্তর্ভুক্তি/বর্জন নিয়ম",
+  "advanced_rules_modal_header": "নির্দিষ্ট অন্তর্ভুক্তি/বর্জন নিয়ম",
+  "advanced_rules_manage_button": "নির্দিষ্ট অন্তর্ভুক্তি/বর্জন নিয়ম পরিচালনা করুন",
   "edit_rule_header": "নিয়ম সম্পাদনা করুন",
   "add_rule_header": "নতুন নিয়ম যোগ করুন",
   "btn_add_rule": "+ নিয়ম যোগ করুন",

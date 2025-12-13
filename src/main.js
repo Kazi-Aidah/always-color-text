@@ -2902,7 +2902,13 @@ module.exports = class AlwaysColorText extends Plugin {
     const payload = this.buildExportPayload();
     const d = new Date();
     const pad = n => String(n).padStart(2, '0');
-    const fname = `always-color-text-export-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+    let vaultName = 'vault';
+    try {
+      const n = this.app?.vault?.getName?.();
+      vaultName = String(n || 'vault').trim();
+    } catch (e) {}
+    const safeVault = vaultName.replace(/[^a-z0-9-_]+/gi, '_');
+    const fname = `always-color-text-export-${safeVault}-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
     const path = `.obsidian/plugins/always-color-text/${fname}`;
     await this.app.vault.adapter.write(path, JSON.stringify(payload, null, 2));
     return path;
@@ -2931,7 +2937,13 @@ module.exports = class AlwaysColorText extends Plugin {
     const json = JSON.stringify(payload, null, 2);
     const d = new Date();
     const pad = n => String(n).padStart(2, '0');
-    const fname = `always-color-text-export-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+    let vaultName = 'vault';
+    try {
+      const n = this.app?.vault?.getName?.();
+      vaultName = String(n || 'vault').trim();
+    } catch (e) {}
+    const safeVault = vaultName.replace(/[^a-z0-9-_]+/gi, '_');
+    const fname = `always-color-text-export-${safeVault}-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
     // Prefer vault write on mobile platforms where download APIs are unsupported
     try {
       const { Platform } = require('obsidian');
@@ -8604,6 +8616,23 @@ class RegexTesterModal extends Modal {
     bgColorInput.style.borderRadius = 'var(--radius-m)';
     bgColorInput.style.cursor = 'pointer';
     try { bgColorInput.addClass('act-regex-color-bg'); } catch (e) {}
+    const updatePickerVisibility = () => {
+      const v = styleSelect.value;
+      if (v === 'text') {
+        textColorInput.style.display = 'inline-block';
+        bgColorInput.style.display = 'none';
+      } else if (v === 'highlight') {
+        textColorInput.style.display = 'none';
+        bgColorInput.style.display = 'inline-block';
+      } else {
+        textColorInput.style.display = 'inline-block';
+        bgColorInput.style.display = 'inline-block';
+      }
+    };
+    updatePickerVisibility();
+    const visHandler = () => { updatePickerVisibility(); };
+    styleSelect.addEventListener('change', visHandler);
+    this._handlers.push({ el: styleSelect, ev: 'change', fn: visHandler });
 
     const nameInput = rowStyle.createEl('input', { type: 'text' });
     nameInput.placeholder = this.plugin.t('regex_name_placeholder','name your regex');
@@ -8838,7 +8867,7 @@ class RegexTesterModal extends Modal {
       try { this.plugin.settings.enableRegexSupport = true; } catch (e) {}
       const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
       const style = styleSelect.value;
-      const entry = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || undefined, styleType: style };
+      const entry = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || undefined, styleType: style, _savedTextColor: textColorInput.value || '', _savedBackgroundColor: bgColorInput.value || '' };
       if (style === 'text') {
         entry.color = textColorInput.value || '';
         entry.textColor = null;
@@ -8940,6 +8969,19 @@ class RealTimeRegexTesterModal extends Modal {
     const bgColorInput = controlsRow.createEl('input', { type: 'color' });
     bgColorInput.value = this._preFillBgColor || '#1d5010';
     bgColorInput.style.width = '48px';
+    const updatePickerVisibility = () => {
+      const v = styleSelect.value;
+      if (v === 'text') {
+        textColorInput.style.display = 'inline-block';
+        bgColorInput.style.display = 'none';
+      } else if (v === 'highlight') {
+        textColorInput.style.display = 'none';
+        bgColorInput.style.display = 'inline-block';
+      } else {
+        textColorInput.style.display = 'inline-block';
+        bgColorInput.style.display = 'inline-block';
+      }
+    };
     const regexInput = contentEl.createEl('input', { type: 'text' });
     regexInput.placeholder = this.plugin.t('regex_expression_placeholder', 'put your expression here');
     regexInput.style.marginTop = '10px';
@@ -9115,9 +9157,10 @@ class RealTimeRegexTesterModal extends Modal {
     if (this._preFillBgColor) {
       bgColorInput.value = this._preFillBgColor;
     }
+    updatePickerVisibility();
     const onInputImmediate = () => { render(); };
     const onInputDebounced = () => { renderDebounced(); };
-    const styleChange = () => { render(); };
+    const styleChange = () => { updatePickerVisibility(); render(); };
     [textColorInput, bgColorInput, styleSelect].forEach(el => { const ev = el===styleSelect?'change':'input'; const fn = el===styleSelect?styleChange:onInputImmediate; el.addEventListener(ev, fn); this._handlers.push({ el, ev, fn }); });
     testInput.addEventListener('input', onInputDebounced);
     this._handlers.push({ el: testInput, ev: 'input', fn: onInputDebounced });
@@ -9159,9 +9202,25 @@ class RealTimeRegexTesterModal extends Modal {
             styleType: style,
             isRegex: true
           });
-          if (style === 'text') { updated.color = textColorInput.value || ''; updated.textColor = null; updated.backgroundColor = null; }
-          else if (style === 'highlight') { updated.color = ''; updated.textColor = 'currentColor'; updated.backgroundColor = bgColorInput.value || ''; }
-          else { updated.color = ''; updated.textColor = textColorInput.value || ''; updated.backgroundColor = bgColorInput.value || ''; }
+          if (style === 'text') {
+            updated.color = textColorInput.value || '';
+            updated.textColor = null;
+            updated._savedTextColor = textColorInput.value || this._editingEntry._savedTextColor || updated.color || '';
+            updated._savedBackgroundColor = bgColorInput.value || this._editingEntry._savedBackgroundColor || '';
+            updated.backgroundColor = null;
+          } else if (style === 'highlight') {
+            updated.color = '';
+            updated.textColor = 'currentColor';
+            updated._savedTextColor = textColorInput.value || this._editingEntry._savedTextColor || '';
+            updated.backgroundColor = bgColorInput.value || '';
+            updated._savedBackgroundColor = bgColorInput.value || this._editingEntry._savedBackgroundColor || '';
+          } else {
+            updated.color = '';
+            updated.textColor = textColorInput.value || '';
+            updated.backgroundColor = bgColorInput.value || '';
+            updated._savedTextColor = textColorInput.value || this._editingEntry._savedTextColor || '';
+            updated._savedBackgroundColor = bgColorInput.value || this._editingEntry._savedBackgroundColor || '';
+          }
           let idx = -1;
           if (updated && updated.uid) idx = this.plugin.settings.wordEntries.findIndex(e => e && e.uid === updated.uid);
           if (idx === -1) idx = this.plugin.settings.wordEntries.indexOf(this._editingEntry);
@@ -9194,9 +9253,25 @@ class RealTimeRegexTesterModal extends Modal {
       const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
       const style = styleSelect.value;
       const entry = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || undefined, styleType: style, persistAtEnd: true };
-      if (style === 'text') { entry.color = textColorInput.value || ''; entry.textColor = null; entry.backgroundColor = null; }
-      else if (style === 'highlight') { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bgColorInput.value || ''; }
-      else { entry.color = ''; entry.textColor = textColorInput.value || ''; entry.backgroundColor = bgColorInput.value || ''; }
+      if (style === 'text') {
+        entry.color = textColorInput.value || '';
+        entry.textColor = null;
+        entry.backgroundColor = null;
+        entry._savedTextColor = textColorInput.value || '';
+        entry._savedBackgroundColor = bgColorInput.value || '';
+      } else if (style === 'highlight') {
+        entry.color = '';
+        entry.textColor = 'currentColor';
+        entry.backgroundColor = bgColorInput.value || '';
+        entry._savedTextColor = textColorInput.value || '';
+        entry._savedBackgroundColor = bgColorInput.value || '';
+      } else {
+        entry.color = '';
+        entry.textColor = textColorInput.value || '';
+        entry.backgroundColor = bgColorInput.value || '';
+        entry._savedTextColor = textColorInput.value || '';
+        entry._savedBackgroundColor = bgColorInput.value || '';
+      }
       this.plugin.settings.wordEntries.push(entry);
       await this.plugin.saveSettings();
       this.plugin.compileWordEntries();
@@ -9613,7 +9688,7 @@ class ManageRulesModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try { this.modalEl.style.maxWidth = '780px'; this.modalEl.style.padding = '20px'; } catch (e) {}
-    const title = contentEl.createEl('h2', { text: this.plugin.t('advanced_rules_modal_header','Advanced Rules') });
+    const title = contentEl.createEl('h2', { text: this.plugin.t('advanced_rules_modal_header','Specific Include/Exclude Rules') });
     title.style.marginTop = '0';
     title.style.marginBottom = '12px';
 
@@ -10243,7 +10318,7 @@ class ColorSettingTab extends PluginSettingTab {
       const openInRegexTesterHandler = async () => {
         try {
           if (!entry.isRegex) return;
-          const onAdded = () => {
+      const onAdded = () => {
             try { this._refreshEntries(); } catch (e) {}
           };
           const modal = new RealTimeRegexTesterModal(this.app, this.plugin, onAdded);
@@ -10252,9 +10327,11 @@ class ColorSettingTab extends PluginSettingTab {
           if (entry.flags) modal._preFillFlags = entry.flags;
           if (entry.presetLabel) modal._preFillName = entry.presetLabel;
           if (entry.styleType) modal._preFillStyleType = entry.styleType;
-          if (entry.textColor) modal._preFillTextColor = entry.textColor;
-          if (entry.backgroundColor) modal._preFillBgColor = entry.backgroundColor;
           if (entry.color) modal._preFillTextColor = entry.color;
+          else if (entry.textColor) modal._preFillTextColor = entry.textColor;
+          else if (entry._savedTextColor) modal._preFillTextColor = entry._savedTextColor;
+          if (entry.backgroundColor) modal._preFillBgColor = entry.backgroundColor;
+          else if (entry._savedBackgroundColor) modal._preFillBgColor = entry._savedBackgroundColor;
           modal.open();
         } catch (e) {
           debugError('SETTINGS', 'open in regex tester error', e);
@@ -10454,6 +10531,74 @@ class ColorSettingTab extends PluginSettingTab {
       row.addEventListener('contextmenu', contextMenuHandler);
       cp.addEventListener('input', cpHandler);
       cpBg.addEventListener('input', cpBgHandler);
+      const cpContextHandler = (ev) => {
+        try {
+          ev && ev.preventDefault && ev.preventDefault();
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          const idx = resolveIdx();
+          const preExisting = idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
+          const preFillText = preExisting && (preExisting.textColor && preExisting.textColor !== 'currentColor' ? preExisting.textColor : (this.plugin.isValidHexColor(preExisting.color) ? preExisting.color : null)) || cp.value;
+          const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+            const tc = (result && result.textColor) || color;
+            if (!tc || !this.plugin.isValidHexColor(tc)) return;
+            const i = resolveIdx();
+            if (i !== -1) {
+              const s = this.plugin.settings.wordEntries[i];
+              if (s.backgroundColor) {
+                s.textColor = tc;
+                s.color = '';
+                s.styleType = 'both';
+                s._savedTextColor = tc;
+              } else {
+                s.color = tc;
+                s.textColor = null;
+                s.backgroundColor = null;
+                s.styleType = 'text';
+                s._savedTextColor = tc;
+              }
+              await this.plugin.saveSettings();
+              cp.value = tc;
+              styleSelect.value = s.styleType || 'text';
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+            }
+          }, 'text', '', false);
+          try { modal._preFillTextColor = preFillText || cp.value; } catch (_) {}
+          try { modal.open(); } catch (_) {}
+        } catch (_) {}
+      };
+      const cpBgContextHandler = (ev) => {
+        try {
+          ev && ev.preventDefault && ev.preventDefault();
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          const idx = resolveIdx();
+          const preExisting = idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
+          const preFillBg = (preExisting && preExisting.backgroundColor) || cpBg.value;
+          const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+            const bc = (result && result.backgroundColor) || color;
+            if (!bc || !this.plugin.isValidHexColor(bc)) return;
+            const i = resolveIdx();
+            if (i !== -1) {
+              const s = this.plugin.settings.wordEntries[i];
+              s.backgroundColor = bc;
+              if (!s.textColor || s.textColor === 'currentColor') s.textColor = 'currentColor';
+              s.color = '';
+              const hasText = !!(s.textColor && s.textColor !== 'currentColor');
+              s.styleType = hasText ? 'both' : 'highlight';
+              s._savedBackgroundColor = bc;
+              await this.plugin.saveSettings();
+              cpBg.value = bc;
+              styleSelect.value = s.styleType || 'highlight';
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+            }
+          }, 'background', '', false);
+          try { modal._preFillBgColor = preFillBg || cpBg.value; } catch (_) {}
+          try { modal.open(); } catch (_) {}
+        } catch (_) {}
+      };
+      cp.addEventListener('contextmenu', cpContextHandler);
+      cpBg.addEventListener('contextmenu', cpBgContextHandler);
       regexChk.addEventListener('change', regexChkHandler);
       flagsInput.addEventListener('change', flagsInputHandler);
       del.addEventListener('click', delHandler);
@@ -10592,6 +10737,8 @@ class ColorSettingTab extends PluginSettingTab {
         try { row.removeEventListener('contextmenu', contextMenuHandler); } catch (e) {}
         try { cp.removeEventListener('input', cpHandler); } catch (e) {}
         try { cpBg.removeEventListener('input', cpBgHandler); } catch (e) {}
+        try { cp.removeEventListener('contextmenu', cpContextHandler); } catch (e) {}
+        try { cpBg.removeEventListener('contextmenu', cpBgContextHandler); } catch (e) {}
         try { regexChk.removeEventListener('change', regexChkHandler); } catch (e) {}
         try { flagsInput.removeEventListener('change', flagsInputHandler); } catch (e) {}
         try { del.removeEventListener('click', delHandler); } catch (e) {}
@@ -12295,7 +12442,7 @@ class ColorSettingTab extends PluginSettingTab {
     // --- Always Colored Texts / patterns ---
   const headerEl = containerEl.createEl('h3', { text: this.plugin.t('always_colored_texts_header','Always Colored Texts') });
   try { headerEl.id = 'always-colored-texts-header'; } catch (e) {}
-  try { headerEl.style.marginTop = '20px !important'; } catch (e) {}
+  try { headerEl.style.marginTop = '30px !important'; } catch (e) {}
   containerEl.createEl('p', { text: this.plugin.t('always_colored_texts_desc','Here\'s where you manage your word / patterns and their colors.') });
     new Setting(containerEl);
     const entriesSearchContainer = containerEl.createDiv();
@@ -12651,10 +12798,10 @@ class ColorSettingTab extends PluginSettingTab {
     advRow.style.justifyContent = 'space-between';
     advRow.style.marginTop = '12px';
     advRow.style.flexWrap = 'wrap';
-    const advTitle = advRow.createEl('h2', { text: this.plugin.t('advanced_rules_header','Advanced Rules') });
+    const advTitle = advRow.createEl('h2', { text: this.plugin.t('advanced_rules_header','Specific Include/Exclude Rules') });
     advTitle.style.margin = '0';
     advTitle.style.flex = '1 1 auto';
-    const manageBtn = advRow.createEl('button', { text: this.plugin.t('advanced_rules_manage_button','manage advanced rules') });
+    const manageBtn = advRow.createEl('button', { text: this.plugin.t('advanced_rules_manage_button','manage specific include/exclude rules') });
     manageBtn.addClass('mod-cta');
     manageBtn.style.flex = '0 0 auto';
     manageBtn.style.marginTop = '8px';

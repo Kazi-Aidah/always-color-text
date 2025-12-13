@@ -312,9 +312,9 @@ module.exports = {
   "label_regex": "正则表达式",
   
   // Advanced Rules
-  "advanced_rules_header": "高级规则",
-  "advanced_rules_modal_header": "高级规则",
-  "advanced_rules_manage_button": "管理高级规则",
+  "advanced_rules_header": "特定包含/排除规则",
+  "advanced_rules_modal_header": "特定包含/排除规则",
+  "advanced_rules_manage_button": "管理特定包含/排除规则",
   "edit_rule_header": "编辑规则",
   "add_rule_header": "添加新规则",
   "btn_add_rule": "+ 添加规则",

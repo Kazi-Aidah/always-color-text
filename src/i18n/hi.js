@@ -312,9 +312,9 @@ module.exports = {
   "label_regex": "रेजेक्स",
   
   // Advanced Rules
-  "advanced_rules_header": "उन्नत नियम",
-  "advanced_rules_modal_header": "उन्नत नियम",
-  "advanced_rules_manage_button": "उन्नत नियमों का प्रबंधन करें",
+  "advanced_rules_header": "विशिष्ट समावेशन/बहिष्करण नियम",
+  "advanced_rules_modal_header": "विशिष्ट समावेशन/बहिष्करण नियम",
+  "advanced_rules_manage_button": "विशिष्ट समावेशन/बहिष्करण नियम प्रबंधित करें",
   "edit_rule_header": "नियम संपादित करें",
   "add_rule_header": "नया नियम जोड़ें",
   "btn_add_rule": "+ नियम जोड़ें",

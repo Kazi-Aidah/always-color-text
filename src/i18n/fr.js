@@ -312,9 +312,9 @@ module.exports = {
   "label_regex": "Expression régulière",
   
   // Advanced Rules
-  "advanced_rules_header": "Règles avancées",
-  "advanced_rules_modal_header": "Règles avancées",
-  "advanced_rules_manage_button": "gérer les règles avancées",
+  "advanced_rules_header": "Règles spécifiques d’inclusion/exclusion",
+  "advanced_rules_modal_header": "Règles spécifiques d’inclusion/exclusion",
+  "advanced_rules_manage_button": "gérer les règles spécifiques d’inclusion/exclusion",
   "edit_rule_header": "Modifier la règle",
   "add_rule_header": "Ajouter une nouvelle règle",
   "btn_add_rule": "+ Ajouter une règle",

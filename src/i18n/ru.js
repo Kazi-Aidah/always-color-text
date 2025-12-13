@@ -311,9 +311,9 @@ module.exports = {
   "label_regex": "Regex",
   
   // Advanced Rules
-  "advanced_rules_header": "Расширенные правила",
-  "advanced_rules_modal_header": "Расширенные правила",
-  "advanced_rules_manage_button": "Управление расширенными правилами",
+  "advanced_rules_header": "Специфические правила включения/исключения",
+  "advanced_rules_modal_header": "Специфические правила включения/исключения",
+  "advanced_rules_manage_button": "Управление специфическими правилами включения/исключения",
   "edit_rule_header": "Редактировать правило",
   "add_rule_header": "Добавить новое правило",
   "btn_add_rule": "+ Добавить правило",

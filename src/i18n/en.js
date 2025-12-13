@@ -311,9 +311,9 @@ module.exports = {
   "label_regex": "Regex",
   
   // Advanced Rules
-  "advanced_rules_header": "Advanced Rules",
-  "advanced_rules_modal_header": "Advanced Rules",
-  "advanced_rules_manage_button": "manage advanced rules",
+  "advanced_rules_header": "Specific Include/Exclude Rules",
+  "advanced_rules_modal_header": "Specific Include/Exclude Rules",
+  "advanced_rules_manage_button": "manage specific include/exclude rules",
   "edit_rule_header": "Edit Rule",
   "add_rule_header": "Add New Rule",
   "btn_add_rule": "+ Add Rule",

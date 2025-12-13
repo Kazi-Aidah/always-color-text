@@ -298,9 +298,9 @@ var require_en = __commonJS({
       "enter_path_or_pattern": "Enter path or pattern",
       "label_regex": "Regex",
       // Advanced Rules
-      "advanced_rules_header": "Advanced Rules",
-      "advanced_rules_modal_header": "Advanced Rules",
-      "advanced_rules_manage_button": "manage advanced rules",
+      "advanced_rules_header": "Specific Include/Exclude Rules",
+      "advanced_rules_modal_header": "Specific Include/Exclude Rules",
+      "advanced_rules_manage_button": "manage specific include/exclude rules",
       "edit_rule_header": "Edit Rule",
       "add_rule_header": "Add New Rule",
       "btn_add_rule": "+ Add Rule",
@@ -631,9 +631,9 @@ var require_es = __commonJS({
       "enter_path_or_pattern": "Ingrese ruta o patr\xF3n",
       "label_regex": "Expresi\xF3n regular",
       // Advanced Rules
-      "advanced_rules_header": "Reglas Avanzadas",
-      "advanced_rules_modal_header": "Reglas Avanzadas",
-      "advanced_rules_manage_button": "gestionar reglas avanzadas",
+      "advanced_rules_header": "Reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
+      "advanced_rules_modal_header": "Reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
+      "advanced_rules_manage_button": "gestionar reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
       "edit_rule_header": "Editar Regla",
       "add_rule_header": "A\xF1adir Nueva Regla",
       "btn_add_rule": "+ A\xF1adir Regla",
@@ -964,9 +964,9 @@ var require_fr = __commonJS({
       "enter_path_or_pattern": "Entrer un chemin ou un motif",
       "label_regex": "Expression r\xE9guli\xE8re",
       // Advanced Rules
-      "advanced_rules_header": "R\xE8gles avanc\xE9es",
-      "advanced_rules_modal_header": "R\xE8gles avanc\xE9es",
-      "advanced_rules_manage_button": "g\xE9rer les r\xE8gles avanc\xE9es",
+      "advanced_rules_header": "R\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
+      "advanced_rules_modal_header": "R\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
+      "advanced_rules_manage_button": "g\xE9rer les r\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
       "edit_rule_header": "Modifier la r\xE8gle",
       "add_rule_header": "Ajouter une nouvelle r\xE8gle",
       "btn_add_rule": "+ Ajouter une r\xE8gle",
@@ -1297,9 +1297,9 @@ var require_hi = __commonJS({
       "enter_path_or_pattern": "\u092A\u0925 \u092F\u093E \u092A\u0948\u091F\u0930\u094D\u0928 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902",
       "label_regex": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938",
       // Advanced Rules
-      "advanced_rules_header": "\u0909\u0928\u094D\u0928\u0924 \u0928\u093F\u092F\u092E",
-      "advanced_rules_modal_header": "\u0909\u0928\u094D\u0928\u0924 \u0928\u093F\u092F\u092E",
-      "advanced_rules_manage_button": "\u0909\u0928\u094D\u0928\u0924 \u0928\u093F\u092F\u092E\u094B\u0902 \u0915\u093E \u092A\u094D\u0930\u092C\u0902\u0927\u0928 \u0915\u0930\u0947\u0902",
+      "advanced_rules_header": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E",
+      "advanced_rules_modal_header": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E",
+      "advanced_rules_manage_button": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
       "edit_rule_header": "\u0928\u093F\u092F\u092E \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
       "add_rule_header": "\u0928\u092F\u093E \u0928\u093F\u092F\u092E \u091C\u094B\u0921\u093C\u0947\u0902",
       "btn_add_rule": "+ \u0928\u093F\u092F\u092E \u091C\u094B\u0921\u093C\u0947\u0902",
@@ -1630,9 +1630,9 @@ var require_it = __commonJS({
       "enter_path_or_pattern": "Inserisci percorso o modello",
       "label_regex": "Espressione regolare",
       // Advanced Rules
-      "advanced_rules_header": "Regole avanzate",
-      "advanced_rules_modal_header": "Regole avanzate",
-      "advanced_rules_manage_button": "gestisci regole avanzate",
+      "advanced_rules_header": "Regole specifiche di inclusione/esclusione",
+      "advanced_rules_modal_header": "Regole specifiche di inclusione/esclusione",
+      "advanced_rules_manage_button": "gestisci regole specifiche di inclusione/esclusione",
       "edit_rule_header": "Modifica Regola",
       "add_rule_header": "Aggiungi Nuova Regola",
       "btn_add_rule": "+ Aggiungi regola",
@@ -1963,9 +1963,9 @@ var require_bn = __commonJS({
       "enter_path_or_pattern": "\u09AA\u09BE\u09A5 \u09AC\u09BE \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09B2\u09BF\u0996\u09C1\u09A8",
       "label_regex": "\u09B0\u09C7\u099C\u09C7\u0995\u09CD\u09B8",
       // Advanced Rules
-      "advanced_rules_header": "\u0989\u09A8\u09CD\u09A8\u09A4 \u09A8\u09BF\u09AF\u09BC\u09AE",
-      "advanced_rules_modal_header": "\u0989\u09A8\u09CD\u09A8\u09A4 \u09A8\u09BF\u09AF\u09BC\u09AE",
-      "advanced_rules_manage_button": "\u0989\u09A8\u09CD\u09A8\u09A4 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      "advanced_rules_header": "\u09A8\u09BF\u09B0\u09CD\u09A6\u09BF\u09B7\u09CD\u099F \u0985\u09A8\u09CD\u09A4\u09B0\u09CD\u09AD\u09C1\u0995\u09CD\u09A4\u09BF/\u09AC\u09B0\u09CD\u099C\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE",
+      "advanced_rules_modal_header": "\u09A8\u09BF\u09B0\u09CD\u09A6\u09BF\u09B7\u09CD\u099F \u0985\u09A8\u09CD\u09A4\u09B0\u09CD\u09AD\u09C1\u0995\u09CD\u09A4\u09BF/\u09AC\u09B0\u09CD\u099C\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE",
+      "advanced_rules_manage_button": "\u09A8\u09BF\u09B0\u09CD\u09A6\u09BF\u09B7\u09CD\u099F \u0985\u09A8\u09CD\u09A4\u09B0\u09CD\u09AD\u09C1\u0995\u09CD\u09A4\u09BF/\u09AC\u09B0\u09CD\u099C\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "edit_rule_header": "\u09A8\u09BF\u09AF\u09BC\u09AE \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "add_rule_header": "\u09A8\u09A4\u09C1\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
       "btn_add_rule": "+ \u09A8\u09BF\u09AF\u09BC\u09AE \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
@@ -2295,9 +2295,9 @@ var require_ru = __commonJS({
       "enter_path_or_pattern": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043F\u0443\u0442\u044C \u0438\u043B\u0438 \u0448\u0430\u0431\u043B\u043E\u043D",
       "label_regex": "Regex",
       // Advanced Rules
-      "advanced_rules_header": "\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u043D\u044B\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430",
-      "advanced_rules_modal_header": "\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u043D\u044B\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430",
-      "advanced_rules_manage_button": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u043D\u044B\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438",
+      "advanced_rules_header": "\u0421\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
+      "advanced_rules_modal_header": "\u0421\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
+      "advanced_rules_manage_button": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
       "edit_rule_header": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u0440\u0430\u0432\u0438\u043B\u043E",
       "add_rule_header": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043D\u043E\u0432\u043E\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u043E",
       "btn_add_rule": "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043F\u0440\u0430\u0432\u0438\u043B\u043E",
@@ -2628,9 +2628,9 @@ var require_zh_cn = __commonJS({
       "enter_path_or_pattern": "\u8F93\u5165\u8DEF\u5F84\u6216\u6A21\u5F0F",
       "label_regex": "\u6B63\u5219\u8868\u8FBE\u5F0F",
       // Advanced Rules
-      "advanced_rules_header": "\u9AD8\u7EA7\u89C4\u5219",
-      "advanced_rules_modal_header": "\u9AD8\u7EA7\u89C4\u5219",
-      "advanced_rules_manage_button": "\u7BA1\u7406\u9AD8\u7EA7\u89C4\u5219",
+      "advanced_rules_header": "\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
+      "advanced_rules_modal_header": "\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
+      "advanced_rules_manage_button": "\u7BA1\u7406\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
       "edit_rule_header": "\u7F16\u8F91\u89C4\u5219",
       "add_rule_header": "\u6DFB\u52A0\u65B0\u89C4\u5219",
       "btn_add_rule": "+ \u6DFB\u52A0\u89C4\u5219",
@@ -5741,7 +5741,14 @@ module.exports = class AlwaysColorText extends Plugin {
     const payload = this.buildExportPayload();
     const d = /* @__PURE__ */ new Date();
     const pad = (n) => String(n).padStart(2, "0");
-    const fname = `always-color-text-export-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+    let vaultName = "vault";
+    try {
+      const n = this.app?.vault?.getName?.();
+      vaultName = String(n || "vault").trim();
+    } catch (e) {
+    }
+    const safeVault = vaultName.replace(/[^a-z0-9-_]+/gi, "_");
+    const fname = `always-color-text-export-${safeVault}-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
     const path = `.obsidian/plugins/always-color-text/${fname}`;
     await this.app.vault.adapter.write(path, JSON.stringify(payload, null, 2));
     return path;
@@ -5774,7 +5781,14 @@ module.exports = class AlwaysColorText extends Plugin {
     const json = JSON.stringify(payload, null, 2);
     const d = /* @__PURE__ */ new Date();
     const pad = (n) => String(n).padStart(2, "0");
-    const fname = `always-color-text-export-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+    let vaultName = "vault";
+    try {
+      const n = this.app?.vault?.getName?.();
+      vaultName = String(n || "vault").trim();
+    } catch (e) {
+    }
+    const safeVault = vaultName.replace(/[^a-z0-9-_]+/gi, "_");
+    const fname = `always-color-text-export-${safeVault}-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
     try {
       const { Platform } = require("obsidian");
       const isMobile = !!(Platform && (Platform.isMobileApp || Platform.isMobile));
@@ -11141,6 +11155,19 @@ var RealTimeRegexTesterModal = class extends Modal {
     const bgColorInput = controlsRow.createEl("input", { type: "color" });
     bgColorInput.value = this._preFillBgColor || "#1d5010";
     bgColorInput.style.width = "48px";
+    const updatePickerVisibility = () => {
+      const v = styleSelect.value;
+      if (v === "text") {
+        textColorInput.style.display = "inline-block";
+        bgColorInput.style.display = "none";
+      } else if (v === "highlight") {
+        textColorInput.style.display = "none";
+        bgColorInput.style.display = "inline-block";
+      } else {
+        textColorInput.style.display = "inline-block";
+        bgColorInput.style.display = "inline-block";
+      }
+    };
     const regexInput = contentEl.createEl("input", { type: "text" });
     regexInput.placeholder = this.plugin.t("regex_expression_placeholder", "put your expression here");
     regexInput.style.marginTop = "10px";
@@ -11327,6 +11354,7 @@ var RealTimeRegexTesterModal = class extends Modal {
     if (this._preFillBgColor) {
       bgColorInput.value = this._preFillBgColor;
     }
+    updatePickerVisibility();
     const onInputImmediate = () => {
       render();
     };
@@ -11334,6 +11362,7 @@ var RealTimeRegexTesterModal = class extends Modal {
       renderDebounced();
     };
     const styleChange = () => {
+      updatePickerVisibility();
       render();
     };
     [textColorInput, bgColorInput, styleSelect].forEach((el) => {
@@ -11393,15 +11422,21 @@ var RealTimeRegexTesterModal = class extends Modal {
           if (style2 === "text") {
             updated.color = textColorInput.value || "";
             updated.textColor = null;
+            updated._savedTextColor = textColorInput.value || this._editingEntry._savedTextColor || updated.color || "";
+            updated._savedBackgroundColor = bgColorInput.value || this._editingEntry._savedBackgroundColor || "";
             updated.backgroundColor = null;
           } else if (style2 === "highlight") {
             updated.color = "";
             updated.textColor = "currentColor";
+            updated._savedTextColor = textColorInput.value || this._editingEntry._savedTextColor || "";
             updated.backgroundColor = bgColorInput.value || "";
+            updated._savedBackgroundColor = bgColorInput.value || this._editingEntry._savedBackgroundColor || "";
           } else {
             updated.color = "";
             updated.textColor = textColorInput.value || "";
             updated.backgroundColor = bgColorInput.value || "";
+            updated._savedTextColor = textColorInput.value || this._editingEntry._savedTextColor || "";
+            updated._savedBackgroundColor = bgColorInput.value || this._editingEntry._savedBackgroundColor || "";
           }
           let idx = -1;
           if (updated && updated.uid) idx = this.plugin.settings.wordEntries.findIndex((e) => e && e.uid === updated.uid);
@@ -11447,14 +11482,20 @@ var RealTimeRegexTesterModal = class extends Modal {
         entry.color = textColorInput.value || "";
         entry.textColor = null;
         entry.backgroundColor = null;
+        entry._savedTextColor = textColorInput.value || "";
+        entry._savedBackgroundColor = bgColorInput.value || "";
       } else if (style === "highlight") {
         entry.color = "";
         entry.textColor = "currentColor";
         entry.backgroundColor = bgColorInput.value || "";
+        entry._savedTextColor = textColorInput.value || "";
+        entry._savedBackgroundColor = bgColorInput.value || "";
       } else {
         entry.color = "";
         entry.textColor = textColorInput.value || "";
         entry.backgroundColor = bgColorInput.value || "";
+        entry._savedTextColor = textColorInput.value || "";
+        entry._savedBackgroundColor = bgColorInput.value || "";
       }
       this.plugin.settings.wordEntries.push(entry);
       await this.plugin.saveSettings();
@@ -11968,7 +12009,7 @@ var ManageRulesModal = class extends Modal {
       this.modalEl.style.padding = "20px";
     } catch (e) {
     }
-    const title = contentEl.createEl("h2", { text: this.plugin.t("advanced_rules_modal_header", "Advanced Rules") });
+    const title = contentEl.createEl("h2", { text: this.plugin.t("advanced_rules_modal_header", "Specific Include/Exclude Rules") });
     title.style.marginTop = "0";
     title.style.marginBottom = "12px";
     const addBtnFull = contentEl.createEl("button", { text: this.plugin.t("btn_add_file_folder_rule", "+ Add file/folder rule") });
@@ -12736,9 +12777,11 @@ var ColorSettingTab = class extends PluginSettingTab {
           if (entry.flags) modal._preFillFlags = entry.flags;
           if (entry.presetLabel) modal._preFillName = entry.presetLabel;
           if (entry.styleType) modal._preFillStyleType = entry.styleType;
-          if (entry.textColor) modal._preFillTextColor = entry.textColor;
-          if (entry.backgroundColor) modal._preFillBgColor = entry.backgroundColor;
           if (entry.color) modal._preFillTextColor = entry.color;
+          else if (entry.textColor) modal._preFillTextColor = entry.textColor;
+          else if (entry._savedTextColor) modal._preFillTextColor = entry._savedTextColor;
+          if (entry.backgroundColor) modal._preFillBgColor = entry.backgroundColor;
+          else if (entry._savedBackgroundColor) modal._preFillBgColor = entry._savedBackgroundColor;
           modal.open();
         } catch (e) {
           debugError("SETTINGS", "open in regex tester error", e);
@@ -12929,6 +12972,88 @@ var ColorSettingTab = class extends PluginSettingTab {
       row.addEventListener("contextmenu", contextMenuHandler);
       cp.addEventListener("input", cpHandler);
       cpBg.addEventListener("input", cpBgHandler);
+      const cpContextHandler = (ev) => {
+        try {
+          ev && ev.preventDefault && ev.preventDefault();
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          const idx = resolveIdx();
+          const preExisting = idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
+          const preFillText = preExisting && (preExisting.textColor && preExisting.textColor !== "currentColor" ? preExisting.textColor : this.plugin.isValidHexColor(preExisting.color) ? preExisting.color : null) || cp.value;
+          const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+            const tc = result && result.textColor || color;
+            if (!tc || !this.plugin.isValidHexColor(tc)) return;
+            const i = resolveIdx();
+            if (i !== -1) {
+              const s = this.plugin.settings.wordEntries[i];
+              if (s.backgroundColor) {
+                s.textColor = tc;
+                s.color = "";
+                s.styleType = "both";
+                s._savedTextColor = tc;
+              } else {
+                s.color = tc;
+                s.textColor = null;
+                s.backgroundColor = null;
+                s.styleType = "text";
+                s._savedTextColor = tc;
+              }
+              await this.plugin.saveSettings();
+              cp.value = tc;
+              styleSelect.value = s.styleType || "text";
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+            }
+          }, "text", "", false);
+          try {
+            modal._preFillTextColor = preFillText || cp.value;
+          } catch (_) {
+          }
+          try {
+            modal.open();
+          } catch (_) {
+          }
+        } catch (_) {
+        }
+      };
+      const cpBgContextHandler = (ev) => {
+        try {
+          ev && ev.preventDefault && ev.preventDefault();
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          const idx = resolveIdx();
+          const preExisting = idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
+          const preFillBg = preExisting && preExisting.backgroundColor || cpBg.value;
+          const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+            const bc = result && result.backgroundColor || color;
+            if (!bc || !this.plugin.isValidHexColor(bc)) return;
+            const i = resolveIdx();
+            if (i !== -1) {
+              const s = this.plugin.settings.wordEntries[i];
+              s.backgroundColor = bc;
+              if (!s.textColor || s.textColor === "currentColor") s.textColor = "currentColor";
+              s.color = "";
+              const hasText = !!(s.textColor && s.textColor !== "currentColor");
+              s.styleType = hasText ? "both" : "highlight";
+              s._savedBackgroundColor = bc;
+              await this.plugin.saveSettings();
+              cpBg.value = bc;
+              styleSelect.value = s.styleType || "highlight";
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+            }
+          }, "background", "", false);
+          try {
+            modal._preFillBgColor = preFillBg || cpBg.value;
+          } catch (_) {
+          }
+          try {
+            modal.open();
+          } catch (_) {
+          }
+        } catch (_) {
+        }
+      };
+      cp.addEventListener("contextmenu", cpContextHandler);
+      cpBg.addEventListener("contextmenu", cpBgContextHandler);
       regexChk.addEventListener("change", regexChkHandler);
       flagsInput.addEventListener("change", flagsInputHandler);
       del.addEventListener("click", delHandler);
@@ -13078,6 +13203,14 @@ var ColorSettingTab = class extends PluginSettingTab {
         }
         try {
           cpBg.removeEventListener("input", cpBgHandler);
+        } catch (e) {
+        }
+        try {
+          cp.removeEventListener("contextmenu", cpContextHandler);
+        } catch (e) {
+        }
+        try {
+          cpBg.removeEventListener("contextmenu", cpBgContextHandler);
         } catch (e) {
         }
         try {
@@ -14731,7 +14864,7 @@ var ColorSettingTab = class extends PluginSettingTab {
     } catch (e) {
     }
     try {
-      headerEl.style.marginTop = "20px !important";
+      headerEl.style.marginTop = "30px !important";
     } catch (e) {
     }
     containerEl.createEl("p", { text: this.plugin.t("always_colored_texts_desc", "Here's where you manage your word / patterns and their colors.") });
@@ -15207,10 +15340,10 @@ var ColorSettingTab = class extends PluginSettingTab {
     advRow.style.justifyContent = "space-between";
     advRow.style.marginTop = "12px";
     advRow.style.flexWrap = "wrap";
-    const advTitle = advRow.createEl("h2", { text: this.plugin.t("advanced_rules_header", "Advanced Rules") });
+    const advTitle = advRow.createEl("h2", { text: this.plugin.t("advanced_rules_header", "Specific Include/Exclude Rules") });
     advTitle.style.margin = "0";
     advTitle.style.flex = "1 1 auto";
-    const manageBtn = advRow.createEl("button", { text: this.plugin.t("advanced_rules_manage_button", "manage advanced rules") });
+    const manageBtn = advRow.createEl("button", { text: this.plugin.t("advanced_rules_manage_button", "manage specific include/exclude rules") });
     manageBtn.addClass("mod-cta");
     manageBtn.style.flex = "0 0 auto";
     manageBtn.style.marginTop = "8px";
