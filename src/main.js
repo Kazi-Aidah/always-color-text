@@ -8373,6 +8373,8 @@ class PresetModal extends Modal {
       { label: this.plugin.t('preset_angle_brackets','Angle Brackets <>'), pattern: '<([^>]*)>', flags: 'g', examples: ['< text >'], group: 'brackets' },
       { label: this.plugin.t('preset_colons','Colons :'), pattern: ':([^:]*):',  flags: 'g', examples: [': text :'], group: 'brackets' },
       { label: this.plugin.t('preset_double_quotes','Double Quotes ""'), pattern: '"[^"]*"', flags: '', examples: ['"text"'], group: 'brackets', disableRegexSafety: true },
+      { label: this.plugin.t('preset_single_quotes','Single Quotes \'\''), pattern: '\'[^\'\\r\\n]*\'', flags: '', examples: ['\'text\''], group: 'brackets', disableRegexSafety: true },
+      { label: this.plugin.t('preset_single_quotes_word_bounded','Single Quotes \'\' (word-bounded)'), pattern: '\'\\b[^\'\\r\\n]*\\b\'', flags: '', examples: ['\'word\''], group: 'brackets', disableRegexSafety: true },
       { label: this.plugin.t('preset_all_texts','All texts'), pattern: '.+', flags: '', examples: ['This will target all texts.'], group: 'markdown' }
     ];
     

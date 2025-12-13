@@ -269,6 +269,8 @@ module.exports = {
   "preset_angle_brackets": "Chevrons <>",
   "preset_colons": "Deux-points :",
   "preset_double_quotes": "Guillemets doubles",
+  "preset_single_quotes": "Guillemets simples",
+  "preset_single_quotes_word_bounded": "Guillemets simples (bornes de mot)",
   "preset_group_markdown_formatting": "Formatage Markdown",
   "preset_group_other_patterns": "Autres Motifs",
   "preset_group_brackets": "Crochets",

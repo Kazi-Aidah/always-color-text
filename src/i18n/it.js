@@ -269,6 +269,8 @@ module.exports = {
   "preset_angle_brackets": "Parentesi angolari <>",
   "preset_colons": "Due punti :",
   "preset_double_quotes": "Virgolette",
+  "preset_single_quotes": "Virgolette singole",
+  "preset_single_quotes_word_bounded": "Virgolette singole (delimitate da parola)",
   "preset_group_markdown_formatting": "Formattazione Markdown",
   "preset_group_other_patterns": "Altri Pattern",
   "preset_group_brackets": "Parentesi",

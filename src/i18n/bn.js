@@ -269,6 +269,8 @@ module.exports = {
   "preset_angle_brackets": "কোণ বন্ধনী <>",
   "preset_colons": "কোলন :",
   "preset_double_quotes": "ডাবল কোট",
+  "preset_single_quotes": "সিঙ্গেল কোটস",
+  "preset_single_quotes_word_bounded": "সিঙ্গেল কোটস (শব্দ-সীমিত)",
   "preset_group_markdown_formatting": "মার্কডাউন স্কৃপ্ত",
   "preset_group_other_patterns": "অন্য প্যাটার্ন",
   "preset_group_brackets": "বন্ধনী",

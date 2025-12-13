@@ -268,6 +268,8 @@ module.exports = {
   "preset_angle_brackets": "Angle Brackets <>",
   "preset_colons": "Colons :",
   "preset_double_quotes": "Double Quotes \"\"",
+  "preset_single_quotes": "Single Quotes ''",
+  "preset_single_quotes_word_bounded": "Single Quotes '' (word-bounded)",
   "preset_group_markdown_formatting": "Markdown Formatting",
   "preset_group_other_patterns": "Other Patterns",
   "preset_group_brackets": "Brackets",

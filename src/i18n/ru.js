@@ -268,6 +268,8 @@ module.exports = {
   "preset_angle_brackets": "Угловые скобки <>",
   "preset_colons": "Двоеточие :",
   "preset_double_quotes": "Двойные кавычки",
+  "preset_single_quotes": "Одинарные кавычки",
+  "preset_single_quotes_word_bounded": "Одинарные кавычки (границы слова)",
   "preset_group_markdown_formatting": "Форматирование Markdown",
   "preset_group_other_patterns": "Другие шаблоны",
   "preset_group_brackets": "Скобки",

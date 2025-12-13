@@ -269,6 +269,8 @@ module.exports = {
   "preset_angle_brackets": "尖括号 <>",
   "preset_colons": "冒号 :",
   "preset_double_quotes": "双引号",
+  "preset_single_quotes": "单引号",
+  "preset_single_quotes_word_bounded": "单引号（单词边界）",
   "preset_group_markdown_formatting": "标记格式化",
   "preset_group_other_patterns": "其他模式",
   "preset_group_brackets": "括号",

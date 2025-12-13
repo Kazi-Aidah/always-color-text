@@ -269,6 +269,8 @@ module.exports = {
   "preset_angle_brackets": "Ángulos <>",
   "preset_colons": "Dos puntos :",
   "preset_double_quotes": "Comillas dobles",
+  "preset_single_quotes": "Comillas simples",
+  "preset_single_quotes_word_bounded": "Comillas simples (límites de palabra)",
   "preset_group_markdown_formatting": "Formato Markdown",
   "preset_group_other_patterns": "Otros Patrones",
   "preset_group_brackets": "Corchetes",

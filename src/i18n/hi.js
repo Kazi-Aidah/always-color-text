@@ -269,6 +269,8 @@ module.exports = {
   "preset_angle_brackets": "कोण कोष्ठक <>",
   "preset_colons": "कोलन :",
   "preset_double_quotes": "डबल कोट्स",
+  "preset_single_quotes": "सिंगल कोट्स",
+  "preset_single_quotes_word_bounded": "सिंगल कोट्स (शब्द-सीमित)",
   "preset_group_markdown_formatting": "मार्कडाउन फॉर्मेटिंग",
   "preset_group_other_patterns": "अन्य पैटर्न",
   "preset_group_brackets": "कोष्ठक",
