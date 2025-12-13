@@ -152,7 +152,7 @@ pattern: `"[^"]*"`
 requirements: Disable Regex Safety
 
 ![Single Quote Example](assets/single-quote-example.png)
-pattern: `'[^']*'`
+pattern: `'[^'\r\n]*'`
 requirements: Disable Regex Safety
 
 ![Brackets Example](assets/brackets-example.png)
