@@ -349,9 +349,9 @@ li.act-color-marker::marker {
 
 /* Preset Modal - Force width to override Obsidian defaults */
 .act-preset-modal {
-  --dialog-width: 1200px !important;
-  max-width: 1200px !important;
-  width: 800px !important;
+    --dialog-width: 1200px !important;
+    max-width: 1200px !important;
+    width: 870px !important;
 }
 
 .act-preset-modal .modal-content {
@@ -403,3 +403,6 @@ li.act-color-marker::marker {
   }
 } */
 
+.always-colored-texts-header {
+    margin-top: 50px !important;
+}

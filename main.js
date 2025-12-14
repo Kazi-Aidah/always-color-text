@@ -56,7 +56,7 @@ var require_en = __commonJS({
       "command_color_selected": "Color Selected Text",
       "command_toggle_current": "Enable/Disable coloring for current document",
       "command_toggle_global": "Enable/Disable Always Color Text",
-      "command_manage_advanced_rules": "Manage Advanced Rules",
+      "command_manage_advanced_rules": "manage specific include/exclude rules",
       "command_open_regex_tester": "Add Regex (Open Regex Tester)",
       "command_open_blacklist_regex_tester": "Add Blacklist Regex",
       "command_manage_colored_texts": "Manage Colored Texts",
@@ -142,10 +142,12 @@ var require_en = __commonJS({
       "highlight_once_border_radius": "Highlight once border radius (px)",
       "reset_to_8": "Reset to 8",
       "highlight_horizontal_padding": "Highlight horizontal padding (px)",
+      "highlight_vertical_padding": "Highlight vertical padding (px)",
       "reset_to_4": "Reset to 4",
       "enable_border_highlight_once": "Enable Border for Highlight Once",
       "enable_border_highlight_once_desc": "Add a border to your inline highlight. The added HTML/CSS WILL be long.",
-      "highlight_once_border_style": "Highlight Once Border Style",
+      "highlight_once_border_style": "Highlight Once Border Sides",
+      "highlight_once_border_line_style": "Border Style",
       "opt_border_full": "Full border (all sides)",
       "opt_border_top_bottom": "Top & Bottom borders",
       "opt_border_left_right": "Left & Right borders",
@@ -171,24 +173,37 @@ var require_en = __commonJS({
       "highlight_border_radius": "Highlight border radius (px)",
       "highlight_border_radius_desc": "Set the border radius (in px) for rounded highlight corners",
       "highlight_horizontal_padding_desc": "Set the left and right padding (in px) for highlighted text",
+      "highlight_vertical_padding_desc": "Set the top and bottom padding (in px) for highlighted text",
       "rounded_corners_wrapping": "Rounded corners on line wrapping",
       "rounded_corners_wrapping_desc": "When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line.",
       "enable_highlight_border": "Enable Highlight Border",
       "enable_highlight_border_desc": "Add a border around highlights. The border will match the text or highlight color.",
-      "border_style": "Border Style",
+      "border_style": "Border Sides",
       "border_style_desc": "Choose which sides to apply the border",
+      "border_line_style": "Border Style",
+      "border_line_style_desc": "Choose the border line style",
       "border_opacity": "Border Opacity",
       "border_opacity_desc": "Set the opacity of the border (0-100%)",
       "border_thickness": "Border Thickness (px)",
       "border_thickness_desc": "Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)",
       "highlight_preview": "Highlight Preview",
       "highlight_preview_text": "This is how your highlight will look like!",
+      "opt_line_solid": "solid",
+      "opt_line_dashed": "dashed",
+      "opt_line_dotted": "dotted",
+      "opt_line_double": "double",
+      "opt_line_groove": "groove",
+      "opt_line_ridge": "ridge",
+      "opt_line_inset": "inset",
+      "opt_line_outset": "outset",
       // Color Swatches
       "color_swatches_header": "Color Swatches",
       "color_picker_layout": "Color Picker Layout",
       "color_picker_layout_desc": "Choose which color types to show when picking colors for text",
       "opt_both_text_left": "Both: Text left, Highlight right",
       "opt_both_bg_left": "Both: Highlight left, Text right",
+      "opt_both_text_top": "Both (vertical): Text above, Highlight below",
+      "opt_both_bg_top": "Both (vertical): Highlight above, Text below",
       "opt_text_only": "Text color only",
       "opt_background_only": "Highlight color only",
       "replace_default_swatches": "Replace default swatches",
@@ -197,6 +212,8 @@ var require_en = __commonJS({
       "enable_custom_swatches_desc": "If this is on, your custom swatches will show up in the color picker.",
       "use_swatch_names": "Use swatch names for coloring text",
       "use_swatch_names_desc": "Show a dropdown of swatch names next to word/pattern inputs",
+      "link_swatches_to_entries": "Link swatch updates to text colors",
+      "link_swatches_to_entries_desc": "When a custom swatch color changes, update all entries using that color",
       "default_colors_header": "Default Colors",
       "custom_swatches_header": "Custom Swatches",
       "btn_add_color": "+ Add color",
@@ -388,7 +405,7 @@ var require_es = __commonJS({
       "command_color_selected": "Colorear Texto Seleccionado",
       "command_toggle_current": "Activar/Desactivar coloreado para el documento actual",
       "command_toggle_global": "Activar/Desactivar Always Color Text",
-      "command_manage_advanced_rules": "Gestionar Reglas Avanzadas",
+      "command_manage_advanced_rules": "gestionar reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
       "command_open_regex_tester": "A\xF1adir Regex (Abrir Probador de Regex)",
       "command_open_blacklist_regex_tester": "Agregar Expresi\xF3n Regular de Lista Negra",
       "command_manage_colored_texts": "Gestionar Textos Coloreados",
@@ -475,10 +492,12 @@ var require_es = __commonJS({
       "highlight_once_border_radius": "Radio del borde para resaltado \xFAnico (px)",
       "reset_to_8": "Restablecer a 8",
       "highlight_horizontal_padding": "Relleno horizontal del resaltado (px)",
+      "highlight_vertical_padding": "Relleno vertical del resaltado (px)",
       "reset_to_4": "Restablecer a 4",
       "enable_border_highlight_once": "Activar Borde para Resaltar Una Vez",
       "enable_border_highlight_once_desc": "A\xF1ade un borde a tu resaltado en l\xEDnea. El HTML/CSS a\xF1adido SER\xC1 extenso.",
-      "highlight_once_border_style": "Estilo de Borde para Resaltar Una Vez",
+      "highlight_once_border_style": "Lados del borde para Resaltar Una Vez",
+      "highlight_once_border_line_style": "Estilo de borde",
       "opt_border_full": "Borde completo (todos los lados)",
       "opt_border_top_bottom": "Bordes superior e inferior",
       "opt_border_left_right": "Bordes izquierdo y derecho",
@@ -504,24 +523,37 @@ var require_es = __commonJS({
       "highlight_border_radius": "Radio del borde del resaltado (px)",
       "highlight_border_radius_desc": "Establece el radio del borde (en px) para esquinas redondeadas en el resaltado",
       "highlight_horizontal_padding_desc": "Establece el relleno izquierdo y derecho (en px) para el texto resaltado",
+      "highlight_vertical_padding_desc": "Establece el relleno superior e inferior (en px) para el texto resaltado",
       "rounded_corners_wrapping": "Esquinas redondeadas en ajuste de l\xEDnea",
       "rounded_corners_wrapping_desc": "Cuando est\xE1 habilitado, los resaltados mantendr\xE1n esquinas redondeadas incluso cuando el texto pase a otra l\xEDnea.",
       "enable_highlight_border": "Activar Borde del Resaltado",
       "enable_highlight_border_desc": "A\xF1ade un borde alrededor de los resaltados. El borde coincidir\xE1 con el color del texto o del resaltado.",
-      "border_style": "Estilo del Borde",
+      "border_style": "Lados del borde",
       "border_style_desc": "Elige en qu\xE9 lados aplicar el borde",
+      "border_line_style": "Estilo de borde",
+      "border_line_style_desc": "Elige el estilo de l\xEDnea del borde",
       "border_opacity": "Opacidad del Borde",
       "border_opacity_desc": "Establece la opacidad del borde (0-100%)",
       "border_thickness": "Grosor del Borde (px)",
       "border_thickness_desc": "Establece el grosor del borde de 0 a 5 p\xEDxeles (ej. 1, 2.5, 5)",
       "highlight_preview": "Vista Previa del Resaltado",
       "highlight_preview_text": "\xA1As\xED es como se ver\xE1 tu resaltado!",
+      "opt_line_solid": "solid",
+      "opt_line_dashed": "dashed",
+      "opt_line_dotted": "dotted",
+      "opt_line_double": "double",
+      "opt_line_groove": "groove",
+      "opt_line_ridge": "ridge",
+      "opt_line_inset": "inset",
+      "opt_line_outset": "outset",
       // Color Swatches
       "color_swatches_header": "Muestras de Color",
       "color_picker_layout": "Disposici\xF3n del Selector de Color",
       "color_picker_layout_desc": "Elige qu\xE9 tipos de color mostrar al seleccionar colores para el texto",
       "opt_both_text_left": "Ambos: texto a la izquierda, resaltado a la derecha",
       "opt_both_bg_left": "Ambos: resaltado a la izquierda, texto a la derecha",
+      "opt_both_text_top": "Ambos (vertical): texto arriba, resaltado abajo",
+      "opt_both_bg_top": "Ambos (vertical): resaltado arriba, texto abajo",
       "opt_text_only": "Solo color de texto",
       "opt_background_only": "Solo color de fondo",
       "replace_default_swatches": "Reemplazar muestras predeterminadas",
@@ -530,6 +562,8 @@ var require_es = __commonJS({
       "enable_custom_swatches_desc": "Si est\xE1 activo, tus muestras personalizadas aparecer\xE1n en el selector de color.",
       "use_swatch_names": "Usar nombres de muestras para colorear texto",
       "use_swatch_names_desc": "Muestra un desplegable de nombres de muestras junto a las entradas de palabra/patr\xF3n",
+      "link_swatches_to_entries": "Vincular actualizaciones de muestras a colores de texto",
+      "link_swatches_to_entries_desc": "Cuando cambia el color de una muestra personalizada, actualiza todas las entradas que usan ese color",
       "default_colors_header": "Colores Predeterminados",
       "custom_swatches_header": "Muestras Personalizadas",
       "btn_add_color": "+ A\xF1adir color",
@@ -721,7 +755,7 @@ var require_fr = __commonJS({
       "command_color_selected": "Colorer le texte s\xE9lectionn\xE9",
       "command_toggle_current": "Activer/D\xE9sactiver le coloriage pour le document actuel",
       "command_toggle_global": "Activer/D\xE9sactiver Always Color Text",
-      "command_manage_advanced_rules": "G\xE9rer les R\xE8gles Avanc\xE9es",
+      "command_manage_advanced_rules": "g\xE9rer les r\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
       "command_open_regex_tester": "Ajouter Regex (Ouvrir le Testeur Regex)",
       "command_open_blacklist_regex_tester": "Ajouter Regex \xE0 la Liste Noire",
       "command_manage_colored_texts": "G\xE9rer les textes color\xE9s",
@@ -805,13 +839,15 @@ var require_fr = __commonJS({
       "highlight_once_preview_text": "Voici \xE0 quoi ressemblera Surligner une fois !",
       // Highlight Once Settings
       "highlight_once_opacity": "Opacit\xE9 de Surligner une fois",
-      "highlight_once_border_radius": "Rayon de la bordure de Surligner une fois (px)",
+      "highlight_once_border_radius": "Rayon de bordure du surlignage unique (px)",
       "reset_to_8": "R\xE9initialiser \xE0 8",
       "highlight_horizontal_padding": "Marge horizontale du surlignage (px)",
+      "highlight_vertical_padding": "Marge verticale du surlignage (px)",
       "reset_to_4": "R\xE9initialiser \xE0 4",
-      "enable_border_highlight_once": "Activer la bordure pour Surligner une fois",
-      "enable_border_highlight_once_desc": "Ajoute une bordure \xE0 votre surlignage en ligne. Le code HTML/CSS ajout\xE9 sera LONG.",
-      "highlight_once_border_style": "Style de bordure de Surligner une fois",
+      "enable_border_highlight_once": "Activer la bordure pour le surlignage unique",
+      "enable_border_highlight_once_desc": "Ajoute une bordure \xE0 votre surlignage en ligne. Le HTML/CSS ajout\xE9 SERA long.",
+      "highlight_once_border_style": "C\xF4t\xE9s de la bordure du surlignage unique",
+      "highlight_once_border_line_style": "Style de bordure",
       "opt_border_full": "Bordure compl\xE8te (tous les c\xF4t\xE9s)",
       "opt_border_top_bottom": "Bordures Haut & Bas",
       "opt_border_left_right": "Bordures Gauche & Droite",
@@ -834,27 +870,40 @@ var require_fr = __commonJS({
       "global_highlight_appearance_header": "Apparence globale du surlignage color\xE9",
       "highlight_opacity": "Opacit\xE9 du surlignage",
       "highlight_opacity_desc": "D\xE9finit l'opacit\xE9 du surlignage (0-100%)",
-      "highlight_border_radius": "Rayon de la bordure du surlignage (px)",
-      "highlight_border_radius_desc": "D\xE9finit le rayon de la bordure (en px) pour les coins arrondis du surlignage",
+      "highlight_border_radius": "Rayon de bordure du surlignage (px)",
+      "highlight_border_radius_desc": "D\xE9finir le rayon de bordure (en px) pour des coins de surlignage arrondis",
       "highlight_horizontal_padding_desc": "D\xE9finit la marge gauche et droite (en px) pour le texte surlign\xE9",
+      "highlight_vertical_padding_desc": "D\xE9finit la marge sup\xE9rieure et inf\xE9rieure (en px) pour le texte surlign\xE9",
       "rounded_corners_wrapping": "Coins arrondis sur le retour \xE0 la ligne",
       "rounded_corners_wrapping_desc": "Quand activ\xE9, les surlignages auront des coins arrondis sur tous les c\xF4t\xE9s, m\xEAme quand le texte revient \xE0 la ligne.",
       "enable_highlight_border": "Activer la bordure du surlignage",
       "enable_highlight_border_desc": "Ajoute une bordure autour des surlignages. La bordure correspondra \xE0 la couleur du texte ou du surlignage.",
-      "border_style": "Style de bordure",
+      "border_style": "C\xF4t\xE9s de la bordure",
       "border_style_desc": "Choisissez les c\xF4t\xE9s sur lesquels appliquer la bordure",
+      "border_line_style": "Style de bordure",
+      "border_line_style_desc": "Choisissez le style de ligne de la bordure",
       "border_opacity": "Opacit\xE9 de la bordure",
       "border_opacity_desc": "D\xE9finit l'opacit\xE9 de la bordure (0-100%)",
       "border_thickness": "\xC9paisseur de la bordure (px)",
       "border_thickness_desc": "D\xE9finit l'\xE9paisseur de la bordure de 0 \xE0 5 pixels (ex: 1, 2.5, 5)",
       "highlight_preview": "Aper\xE7u du surlignage",
       "highlight_preview_text": "Voici \xE0 quoi ressemblera votre surlignage !",
+      "opt_line_solid": "solid",
+      "opt_line_dashed": "dashed",
+      "opt_line_dotted": "dotted",
+      "opt_line_double": "double",
+      "opt_line_groove": "groove",
+      "opt_line_ridge": "ridge",
+      "opt_line_inset": "inset",
+      "opt_line_outset": "outset",
       // Color Swatches
       "color_swatches_header": "Nuanciers de couleur",
       "color_picker_layout": "Disposition du s\xE9lecteur de couleur",
       "color_picker_layout_desc": "Choisissez les types de couleur \xE0 afficher lors de la s\xE9lection des couleurs pour le texte",
       "opt_both_text_left": "Les deux : Texte \xE0 gauche, Surlignage \xE0 droite",
       "opt_both_bg_left": "Les deux : Surlignage \xE0 gauche, Texte \xE0 droite",
+      "opt_both_text_top": "Les deux (vertical) : Texte au-dessus, Surlignage en dessous",
+      "opt_both_bg_top": "Les deux (vertical) : Surlignage au-dessus, Texte en dessous",
       "opt_text_only": "Couleur du texte seulement",
       "opt_background_only": "Couleur de surlignage seulement",
       "replace_default_swatches": "Remplacer les nuanciers par d\xE9faut",
@@ -863,6 +912,8 @@ var require_fr = __commonJS({
       "enable_custom_swatches_desc": "Si activ\xE9, vos nuanciers personnalis\xE9s appara\xEEtront dans le s\xE9lecteur de couleur.",
       "use_swatch_names": "Utiliser les noms des nuanciers pour colorer le texte",
       "use_swatch_names_desc": "Afficher une liste d\xE9roulante des noms de nuanciers \xE0 c\xF4t\xE9 des champs de saisie de mots/motifs",
+      "link_swatches_to_entries": "Lier les mises \xE0 jour des nuanciers aux couleurs du texte",
+      "link_swatches_to_entries_desc": "Quand la couleur d\u2019un nuancier personnalis\xE9 change, mettre \xE0 jour toutes les entr\xE9es utilisant cette couleur",
       "default_colors_header": "Couleurs par d\xE9faut",
       "custom_swatches_header": "Nuanciers personnalis\xE9s",
       "btn_add_color": "+ Ajouter une couleur",
@@ -1054,7 +1105,7 @@ var require_hi = __commonJS({
       "command_color_selected": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u0947\u0902",
       "command_toggle_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u091A\u093E\u0932\u0942/\u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "command_toggle_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942/\u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
-      "command_manage_advanced_rules": "\u0909\u0928\u094D\u0928\u0924 \u0928\u093F\u092F\u092E \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
+      "command_manage_advanced_rules": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
       "command_open_regex_tester": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902 (\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091F\u0947\u0938\u094D\u091F\u0930 \u0916\u094B\u0932\u0947\u0902)",
       "command_open_blacklist_regex_tester": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u092E\u0947\u0902 \u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902",
       "command_manage_colored_texts": "\u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
@@ -1138,13 +1189,15 @@ var require_hi = __commonJS({
       "highlight_once_preview_text": "\u0926\u0947\u0916\u0947\u0902 \u0915\u093F \u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0948\u0938\u093E \u0926\u093F\u0916\u0947\u0917\u093E!",
       // Highlight Once Settings
       "highlight_once_opacity": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0913\u092A\u0947\u0938\u093F\u091F\u0940",
-      "highlight_once_border_radius": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092C\u0949\u0930\u094D\u0921\u0930 \u0930\u0947\u0921\u093F\u092F\u0938 (px)",
-      "reset_to_8": "8 \u092A\u0930 \u0930\u0940\u0938\u0947\u091F \u0915\u0930\u0947\u0902",
+      "highlight_once_border_radius": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092C\u0949\u0930\u094D\u0921\u0930 \u0930\u0947\u0921\u093F\u092F\u0938 (px)",
+      "reset_to_8": "\u096E \u092A\u0930 \u0930\u0940\u0938\u0947\u091F \u0915\u0930\u0947\u0902",
       "highlight_horizontal_padding": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u094D\u0937\u0948\u0924\u093F\u091C \u092A\u0948\u0921\u093F\u0902\u0917 (px)",
-      "reset_to_4": "4 \u092A\u0930 \u0930\u0940\u0938\u0947\u091F \u0915\u0930\u0947\u0902",
-      "enable_border_highlight_once": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0947 \u0932\u093F\u090F \u092C\u0949\u0930\u094D\u0921\u0930 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
-      "enable_border_highlight_once_desc": "\u0905\u092A\u0928\u0947 \u0907\u0928\u0932\u093E\u0907\u0928 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092E\u0947\u0902 \u092C\u0949\u0930\u094D\u0921\u0930 \u091C\u094B\u0921\u093C\u0947\u0902\u0964 \u091C\u094B\u0921\u093C\u093E \u0917\u092F\u093E HTML/CSS \u0932\u0902\u092C\u093E \u0939\u094B\u0917\u093E\u0964",
-      "highlight_once_border_style": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092C\u0949\u0930\u094D\u0921\u0930 \u0938\u094D\u091F\u093E\u0907\u0932",
+      "highlight_vertical_padding": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0935\u0930\u094D\u091F\u093F\u0915\u0932 \u092A\u0948\u0921\u093F\u0902\u0917 (px)",
+      "reset_to_4": "\u096A \u092A\u0930 \u0930\u0940\u0938\u0947\u091F \u0915\u0930\u0947\u0902",
+      "enable_border_highlight_once": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0947 \u0932\u093F\u090F \u092C\u0949\u0930\u094D\u0921\u0930 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
+      "enable_border_highlight_once_desc": "\u0905\u092A\u0928\u0940 \u0907\u0928\u0932\u093E\u0907\u0928 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092E\u0947\u0902 \u092C\u0949\u0930\u094D\u0921\u0930 \u091C\u094B\u0921\u093C\u0947\u0902\u0964 \u091C\u094B\u0921\u093C\u093E \u0917\u092F\u093E HTML/CSS \u0932\u0902\u092C\u093E \u0939\u094B\u0917\u093E\u0964",
+      "highlight_once_border_style": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092C\u0949\u0930\u094D\u0921\u0930 \u0938\u093E\u0907\u0921\u094D\u0938",
+      "highlight_once_border_line_style": "\u092C\u0949\u0930\u094D\u0921\u0930 \u0938\u094D\u091F\u093E\u0907\u0932",
       "opt_border_full": "\u092A\u0942\u0930\u094D\u0923 \u092C\u0949\u0930\u094D\u0921\u0930 (\u0938\u092D\u0940 \u0913\u0930)",
       "opt_border_top_bottom": "\u090A\u092A\u0930 \u0914\u0930 \u0928\u0940\u091A\u0947 \u092C\u0949\u0930\u094D\u0921\u0930",
       "opt_border_left_right": "\u092C\u093E\u090F\u0901 \u0914\u0930 \u0926\u093E\u090F\u0901 \u092C\u0949\u0930\u094D\u0921\u0930",
@@ -1170,24 +1223,37 @@ var require_hi = __commonJS({
       "highlight_border_radius": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092C\u0949\u0930\u094D\u0921\u0930 \u0930\u0947\u0921\u093F\u092F\u0938 (px)",
       "highlight_border_radius_desc": "\u0917\u094B\u0932 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u094B\u0928\u094B\u0902 \u0915\u0947 \u0932\u093F\u090F \u092C\u0949\u0930\u094D\u0921\u0930 \u0930\u0947\u0921\u093F\u092F\u0938 \u0938\u0947\u091F \u0915\u0930\u0947\u0902 (px \u092E\u0947\u0902)",
       "highlight_horizontal_padding_desc": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u093F\u090F \u0917\u090F \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0947 \u0932\u093F\u090F \u092C\u093E\u090F\u0901 \u0914\u0930 \u0926\u093E\u090F\u0901 \u092A\u0948\u0921\u093F\u0902\u0917 \u0938\u0947\u091F \u0915\u0930\u0947\u0902 (px \u092E\u0947\u0902)",
+      "highlight_vertical_padding_desc": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u093F\u090F \u0917\u090F \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0947 \u0932\u093F\u090F \u090A\u092A\u0930 \u0914\u0930 \u0928\u0940\u091A\u0947 \u0915\u0940 \u092A\u0948\u0921\u093F\u0902\u0917 (px \u092E\u0947\u0902) \u0938\u0947\u091F \u0915\u0930\u0947\u0902",
       "rounded_corners_wrapping": "\u0932\u093E\u0907\u0928 \u0930\u0948\u092A\u093F\u0902\u0917 \u092A\u0930 \u0917\u094B\u0932 \u0915\u094B\u0928\u0947",
       "rounded_corners_wrapping_desc": "\u091C\u092C \u091A\u093E\u0932\u0942 \u0939\u094B, \u0939\u093E\u0907\u0932\u093E\u0907\u091F\u094D\u0938 \u0915\u0947 \u0938\u092D\u0940 \u0913\u0930 \u0917\u094B\u0932 \u0915\u094B\u0928\u0947 \u0939\u094B\u0902\u0917\u0947, \u092F\u0939\u093E\u0901 \u0924\u0915 \u0915\u093F \u091C\u092C \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0928\u0908 \u0932\u093E\u0907\u0928 \u092A\u0930 \u0930\u0948\u092A \u0939\u094B\u0924\u093E \u0939\u0948\u0964",
       "enable_highlight_border": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092C\u0949\u0930\u094D\u0921\u0930 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
       "enable_highlight_border_desc": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F\u094D\u0938 \u0915\u0947 \u091A\u093E\u0930\u094B\u0902 \u0913\u0930 \u092C\u0949\u0930\u094D\u0921\u0930 \u091C\u094B\u0921\u093C\u0947\u0902\u0964 \u092C\u0949\u0930\u094D\u0921\u0930 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092F\u093E \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0930\u0902\u0917 \u0938\u0947 \u092E\u0947\u0932 \u0916\u093E\u090F\u0917\u093E\u0964",
-      "border_style": "\u092C\u0949\u0930\u094D\u0921\u0930 \u0938\u094D\u091F\u093E\u0907\u0932",
+      "border_style": "\u092C\u0949\u0930\u094D\u0921\u0930 \u0938\u093E\u0907\u0921\u094D\u0938",
       "border_style_desc": "\u091A\u0941\u0928\u0947\u0902 \u0915\u093F \u092C\u0949\u0930\u094D\u0921\u0930 \u0915\u093F\u0928 \u0913\u0930 \u0932\u093E\u0917\u0942 \u0915\u0930\u0928\u093E \u0939\u0948",
+      "border_line_style": "\u092C\u0949\u0930\u094D\u0921\u0930 \u0938\u094D\u091F\u093E\u0907\u0932",
+      "border_line_style_desc": "\u092C\u0949\u0930\u094D\u0921\u0930 \u0932\u093E\u0907\u0928 \u0915\u093E \u0938\u094D\u091F\u093E\u0907\u0932 \u091A\u0941\u0928\u0947\u0902",
       "border_opacity": "\u092C\u0949\u0930\u094D\u0921\u0930 \u0913\u092A\u0947\u0938\u093F\u091F\u0940",
       "border_opacity_desc": "\u092C\u0949\u0930\u094D\u0921\u0930 \u0915\u0940 \u0913\u092A\u0947\u0938\u093F\u091F\u0940 \u0938\u0947\u091F \u0915\u0930\u0947\u0902 (0-100%)",
       "border_thickness": "\u092C\u0949\u0930\u094D\u0921\u0930 \u092E\u094B\u091F\u093E\u0908 (px)",
       "border_thickness_desc": "\u092C\u0949\u0930\u094D\u0921\u0930 \u092E\u094B\u091F\u093E\u0908 0-5 \u092A\u093F\u0915\u094D\u0938\u0947\u0932 \u0938\u0947 \u0938\u0947\u091F \u0915\u0930\u0947\u0902 (\u091C\u0948\u0938\u0947 1, 2.5, 5)",
       "highlight_preview": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092A\u094D\u0930\u0940\u0935\u094D\u092F\u0942",
       "highlight_preview_text": "\u0926\u0947\u0916\u0947\u0902 \u0915\u093F \u0906\u092A\u0915\u093E \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0948\u0938\u093E \u0926\u093F\u0916\u0947\u0917\u093E!",
+      "opt_line_solid": "solid",
+      "opt_line_dashed": "dashed",
+      "opt_line_dotted": "dotted",
+      "opt_line_double": "double",
+      "opt_line_groove": "groove",
+      "opt_line_ridge": "ridge",
+      "opt_line_inset": "inset",
+      "opt_line_outset": "outset",
       // Color Swatches
       "color_swatches_header": "\u0930\u0902\u0917 \u0938\u094D\u0935\u0948\u091A\u0947\u0938",
       "color_picker_layout": "\u0930\u0902\u0917 \u092A\u093F\u0915\u0930 \u0932\u0947\u0906\u0909\u091F",
       "color_picker_layout_desc": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917 \u091A\u0941\u0928\u0924\u0947 \u0938\u092E\u092F \u0915\u094C\u0928 \u0938\u0947 \u0930\u0902\u0917 \u092A\u094D\u0930\u0915\u093E\u0930 \u0926\u093F\u0916\u093E\u0928\u0947 \u0939\u0948\u0902 \u091A\u0941\u0928\u0947\u0902",
       "opt_both_text_left": "\u0926\u094B\u0928\u094B\u0902: \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u093E\u090F\u0901, \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0926\u093E\u090F\u0901",
       "opt_both_bg_left": "\u0926\u094B\u0928\u094B\u0902: \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092C\u093E\u090F\u0901, \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0926\u093E\u090F\u0901",
+      "opt_both_text_top": "\u0926\u094B\u0928\u094B\u0902 (\u0935\u0930\u094D\u091F\u093F\u0915\u0932): \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u090A\u092A\u0930, \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0928\u0940\u091A\u0947",
+      "opt_both_bg_top": "\u0926\u094B\u0928\u094B\u0902 (\u0935\u0930\u094D\u091F\u093F\u0915\u0932): \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u090A\u092A\u0930, \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0928\u0940\u091A\u0947",
       "opt_text_only": "\u0915\u0947\u0935\u0932 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917",
       "opt_background_only": "\u0915\u0947\u0935\u0932 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0930\u0902\u0917",
       "replace_default_swatches": "\u0921\u093F\u092B\u0949\u0932\u094D\u091F \u0938\u094D\u0935\u0948\u091A\u0947\u0938 \u092C\u0926\u0932\u0947\u0902",
@@ -1196,6 +1262,8 @@ var require_hi = __commonJS({
       "enable_custom_swatches_desc": "\u092F\u0926\u093F \u092F\u0939 \u091A\u093E\u0932\u0942 \u0939\u0948, \u0924\u094B \u0906\u092A\u0915\u0947 \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938 \u0915\u0932\u0930 \u092A\u093F\u0915\u0930 \u092E\u0947\u0902 \u0926\u093F\u0916\u0947\u0902\u0917\u0947\u0964",
       "use_swatch_names": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u093E\u0908 \u0915\u0947 \u0932\u093F\u090F \u0938\u094D\u0935\u0948\u091A \u0928\u093E\u092E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0947\u0902",
       "use_swatch_names_desc": "\u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0907\u0928\u092A\u0941\u091F\u094D\u0938 \u0915\u0947 \u092C\u0917\u0932 \u092E\u0947\u0902 \u0938\u094D\u0935\u0948\u091A \u0928\u093E\u092E\u094B\u0902 \u0915\u093E \u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u0926\u093F\u0916\u093E\u090F\u0901",
+      "link_swatches_to_entries": "\u0938\u094D\u0935\u0948\u091A \u0905\u092A\u0921\u0947\u091F\u094D\u0938 \u0915\u094B \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u094B\u0902 \u0938\u0947 \u0932\u093F\u0902\u0915 \u0915\u0930\u0947\u0902",
+      "link_swatches_to_entries_desc": "\u091C\u092C \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A \u0915\u093E \u0930\u0902\u0917 \u092C\u0926\u0932\u0924\u093E \u0939\u0948, \u0909\u0938 \u0930\u0902\u0917 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0928\u0947 \u0935\u093E\u0932\u0947 \u0938\u092D\u0940 \u090F\u0902\u091F\u094D\u0930\u0940\u091C\u093C \u0905\u092A\u0921\u0947\u091F \u0915\u0930\u0947\u0902",
       "default_colors_header": "\u0921\u093F\u092B\u0949\u0932\u094D\u091F \u0930\u0902\u0917",
       "custom_swatches_header": "\u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938",
       "btn_add_color": "+ \u0930\u0902\u0917 \u091C\u094B\u0921\u093C\u0947\u0902",
@@ -1387,7 +1455,7 @@ var require_it = __commonJS({
       "command_color_selected": "Colora testo selezionato",
       "command_toggle_current": "Abilita/Disabilita colorazione per il documento corrente",
       "command_toggle_global": "Abilita/Disabilita Always Color Text",
-      "command_manage_advanced_rules": "Gestisci Regole Avanzate",
+      "command_manage_advanced_rules": "gestisci regole specifiche di inclusione/esclusione",
       "command_open_regex_tester": "Aggiungi Regex (Apri Tester Regex)",
       "command_open_blacklist_regex_tester": "Aggiungi Regex alla Lista Nera",
       "command_manage_colored_texts": "Gestisci testi colorati",
@@ -1474,10 +1542,12 @@ var require_it = __commonJS({
       "highlight_once_border_radius": "Raggio bordo evidenziazione una volta (px)",
       "reset_to_8": "Reimposta a 8",
       "highlight_horizontal_padding": "Spaziatura orizzontale evidenziazione (px)",
+      "highlight_vertical_padding": "Spaziatura verticale evidenziazione (px)",
       "reset_to_4": "Reimposta a 4",
       "enable_border_highlight_once": "Abilita bordo per evidenziazione una volta",
       "enable_border_highlight_once_desc": "Aggiungi un bordo all'evidenziazione inline. L'HTML/CSS generato pu\xF2 essere lungo.",
-      "highlight_once_border_style": "Stile bordo evidenziazione una volta",
+      "highlight_once_border_style": "Lati del bordo per evidenziazione una volta",
+      "highlight_once_border_line_style": "Stile bordo",
       "opt_border_full": "Bordo completo (tutti i lati)",
       "opt_border_top_bottom": "Bordi superiore e inferiore",
       "opt_border_left_right": "Bordi sinistro e destro",
@@ -1503,24 +1573,37 @@ var require_it = __commonJS({
       "highlight_border_radius": "Raggio bordo evidenziazione (px)",
       "highlight_border_radius_desc": "Imposta il raggio del bordo (in px) per angoli arrotondati dell'evidenziazione",
       "highlight_horizontal_padding_desc": "Imposta la spaziatura sinistra e destra (in px) per il testo evidenziato",
+      "highlight_vertical_padding_desc": "Imposta la spaziatura superiore e inferiore (in px) per il testo evidenziato",
       "rounded_corners_wrapping": "Angoli arrotondati sull'a capo",
       "rounded_corners_wrapping_desc": "Se abilitato, le evidenziazioni avranno angoli arrotondati su tutti i lati, anche quando il testo va a capo.",
       "enable_highlight_border": "Abilita bordo evidenziazione",
       "enable_highlight_border_desc": "Aggiungi un bordo attorno alle evidenziazioni. Il bordo corrisponder\xE0 al colore del testo o dell'evidenziazione.",
-      "border_style": "Stile bordo",
+      "border_style": "Lati del bordo",
       "border_style_desc": "Scegli quali lati applicare il bordo",
+      "border_line_style": "Stile bordo",
+      "border_line_style_desc": "Scegli lo stile della linea del bordo",
       "border_opacity": "Opacit\xE0 bordo",
       "border_opacity_desc": "Imposta l'opacit\xE0 del bordo (0-100%)",
       "border_thickness": "Spessore bordo (px)",
       "border_thickness_desc": "Imposta lo spessore del bordo da 0-5 pixel (es. 1, 2.5, 5)",
       "highlight_preview": "Anteprima evidenziazione",
       "highlight_preview_text": "Ecco come apparir\xE0 la tua evidenziazione!",
+      "opt_line_solid": "solid",
+      "opt_line_dashed": "dashed",
+      "opt_line_dotted": "dotted",
+      "opt_line_double": "double",
+      "opt_line_groove": "groove",
+      "opt_line_ridge": "ridge",
+      "opt_line_inset": "inset",
+      "opt_line_outset": "outset",
       // Color Swatches
       "color_swatches_header": "Campioni colore",
       "color_picker_layout": "Layout selettore colore",
       "color_picker_layout_desc": "Scegli quali tipi di colore mostrare quando si selezionano colori per il testo",
       "opt_both_text_left": "Entrambi: Testo sinistra, Evidenziazione destra",
       "opt_both_bg_left": "Entrambi: Evidenziazione sinistra, Testo destra",
+      "opt_both_text_top": "Entrambi (verticale): Testo sopra, Evidenziazione sotto",
+      "opt_both_bg_top": "Entrambi (verticale): Evidenziazione sopra, Testo sotto",
       "opt_text_only": "Solo colore testo",
       "opt_background_only": "Solo colore evidenziazione",
       "replace_default_swatches": "Sostituisci campioni predefiniti",
@@ -1529,6 +1612,8 @@ var require_it = __commonJS({
       "enable_custom_swatches_desc": "Se attivo, i tuoi campioni personalizzati appariranno nel selettore colori.",
       "use_swatch_names": "Usa nomi campioni per colorare il testo",
       "use_swatch_names_desc": "Mostra un menu a tendina con i nomi dei campioni accanto ai campi di inserimento parole/pattern",
+      "link_swatches_to_entries": "Collega aggiornamenti dei campioni ai colori del testo",
+      "link_swatches_to_entries_desc": "Quando cambia il colore di un campione personalizzato, aggiorna tutte le voci che usano quel colore",
       "default_colors_header": "Colori predefiniti",
       "custom_swatches_header": "Campioni personalizzati",
       "btn_add_color": "+ Aggiungi colore",
@@ -1720,7 +1805,7 @@ var require_bn = __commonJS({
       "command_color_selected": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "command_toggle_current": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09B8\u0995\u09CD\u09B7\u09AE/\u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "command_toggle_global": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u0995\u09CD\u09B7\u09AE/\u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
-      "command_manage_advanced_rules": "\u0989\u09A8\u09CD\u09A8\u09A4 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      "command_manage_advanced_rules": "\u09A8\u09BF\u09B0\u09CD\u09A6\u09BF\u09B7\u09CD\u099F \u0985\u09A8\u09CD\u09A4\u09B0\u09CD\u09AD\u09C1\u0995\u09CD\u09A4\u09BF/\u09AC\u09B0\u09CD\u099C\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "command_open_regex_tester": "Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8 (Regex \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u0995 \u0996\u09C1\u09B2\u09C1\u09A8)",
       "command_open_blacklist_regex_tester": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7 Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
       "command_manage_colored_texts": "\u09B0\u0999\u09BE\u09AF\u09BC\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F\u0997\u09C1\u09B2\u09BF \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
@@ -1807,10 +1892,12 @@ var require_bn = __commonJS({
       "highlight_once_border_radius": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B0\u09C7\u09A1\u09BF\u09AF\u09BC\u09BE\u09B8 (px)",
       "reset_to_8": "\u09EE \u098F \u09B0\u09BF\u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
       "highlight_horizontal_padding": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B9\u09B0\u09BE\u0987\u099C\u09A8\u099F\u09BE\u09B2 \u09AA\u09CD\u09AF\u09BE\u09A1\u09BF\u0982 (px)",
+      "highlight_vertical_padding": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AD\u09BE\u09B0\u09CD\u099F\u09BF\u0995\u09BE\u09B2 \u09AA\u09CD\u09AF\u09BE\u09A1\u09BF\u0982 (px)",
       "reset_to_4": "\u09EA \u098F \u09B0\u09BF\u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
       "enable_border_highlight_once": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "enable_border_highlight_once_desc": "\u0986\u09AA\u09A8\u09BE\u09B0 \u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F\u09C7 \u098F\u0995\u099F\u09BF \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8\u0964 \u09AF\u09CB\u0997 \u0995\u09B0\u09BE HTML/CSS \u09A6\u09C0\u09B0\u09CD\u0998 \u09B9\u09AC\u09C7\u0964",
-      "highlight_once_border_style": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B8\u09CD\u099F\u09BE\u0987\u09B2",
+      "highlight_once_border_style": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B8\u09BE\u0987\u09A1\u09B8",
+      "highlight_once_border_line_style": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B8\u09CD\u099F\u09BE\u0987\u09B2",
       "opt_border_full": "\u09AA\u09C2\u09B0\u09CD\u09A3 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 (\u09B8\u09AC \u09A6\u09BF\u0995)",
       "opt_border_top_bottom": "\u0989\u09AA\u09B0 \u098F\u09AC\u0982 \u09A8\u09BF\u099A\u09C7\u09B0 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0",
       "opt_border_left_right": "\u09AC\u09BE\u09AE \u098F\u09AC\u0982 \u09A1\u09BE\u09A8 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0",
@@ -1834,26 +1921,39 @@ var require_bn = __commonJS({
       "highlight_opacity": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0985\u09B8\u09CD\u09AA\u09B7\u09CD\u099F\u09A4\u09BE",
       "highlight_opacity_desc": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F\u09C7\u09B0 \u0985\u09B8\u09CD\u09AA\u09B7\u09CD\u099F\u09A4\u09BE \u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8 (0-100%)",
       "highlight_border_radius": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B0\u09C7\u09A1\u09BF\u09AF\u09BC\u09BE\u09B8 (px)",
-      "highlight_border_radius_desc": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F\u09C7\u09B0 \u0997\u09CB\u09B2\u09BE\u0995\u09BE\u09B0 \u0995\u09CB\u09A3\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B0\u09C7\u09A1\u09BF\u09AF\u09BC\u09BE\u09B8 \u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8 (px \u098F)",
+      "highlight_border_radius_desc": "\u0997\u09CB\u09B2 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09CB\u09A3\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B0\u09C7\u09A1\u09BF\u09AF\u09BC\u09BE\u09B8 \u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8 (px \u098F)",
       "highlight_horizontal_padding_desc": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09BE \u099F\u09C7\u0995\u09CD\u09B8\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09AC\u09BE\u09AE \u098F\u09AC\u0982 \u09A1\u09BE\u09A8 \u09AA\u09CD\u09AF\u09BE\u09A1\u09BF\u0982 \u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8 (px \u098F)",
+      "highlight_vertical_padding_desc": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09BE \u099F\u09C7\u0995\u09CD\u09B8\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u0989\u09AA\u09B0\u09C7 \u098F\u09AC\u0982 \u09A8\u09BF\u099A\u09C7 \u09AA\u09CD\u09AF\u09BE\u09A1\u09BF\u0982 \u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8 (px \u098F)",
       "rounded_corners_wrapping": "\u09B2\u09BE\u0987\u09A8 \u09B0\u200D\u09CD\u09AF\u09BE\u09AA\u09BF\u0982\u09AF\u09BC\u09C7 \u0997\u09CB\u09B2\u09BE\u0995\u09BE\u09B0 \u0995\u09CB\u09A3",
       "rounded_corners_wrapping_desc": "\u09B8\u0995\u09CD\u09B7\u09AE \u09B9\u09B2\u09C7, \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F\u0997\u09C1\u09B2\u09BF\u09B0 \u09B8\u09AC \u09A6\u09BF\u0995\u09C7 \u0997\u09CB\u09B2\u09BE\u0995\u09BE\u09B0 \u0995\u09CB\u09A3 \u09A5\u09BE\u0995\u09AC\u09C7, \u098F\u09AE\u09A8\u0995\u09BF \u09AF\u0996\u09A8 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09A8\u09A4\u09C1\u09A8 \u09B2\u09BE\u0987\u09A8\u09C7 \u09B0\u200D\u09CD\u09AF\u09BE\u09AA \u09B9\u09AF\u09BC\u0964",
       "enable_highlight_border": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "enable_highlight_border_desc": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F\u09C7\u09B0 \u099A\u09BE\u09B0\u09AA\u09BE\u09B6\u09C7 \u098F\u0995\u099F\u09BF \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8\u0964 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0\u099F\u09BF \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09AC\u09BE \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B0\u0999\u09C7\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09AE\u09BF\u09B2\u09AC\u09C7\u0964",
-      "border_style": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B8\u09CD\u099F\u09BE\u0987\u09B2",
+      "border_style": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B8\u09BE\u0987\u09A1\u09B8",
       "border_style_desc": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u0995\u09B0\u09A4\u09C7 \u0995\u09CB\u09A8 \u09A6\u09BF\u0995\u0997\u09C1\u09B2\u09BF \u09AC\u09C7\u099B\u09C7 \u09A8\u09BF\u09A8",
+      "border_line_style": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B8\u09CD\u099F\u09BE\u0987\u09B2",
+      "border_line_style_desc": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0\u09C7\u09B0 \u09B2\u09BE\u0987\u09A8 \u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09AC\u09C7\u099B\u09C7 \u09A8\u09BF\u09A8",
       "border_opacity": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u0985\u09B8\u09CD\u09AA\u09B7\u09CD\u099F\u09A4\u09BE",
       "border_opacity_desc": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0\u09C7\u09B0 \u0985\u09B8\u09CD\u09AA\u09B7\u09CD\u099F\u09A4\u09BE \u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8 (0-100%)",
       "border_thickness": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09A5\u09BF\u0995\u09A8\u09C7\u09B8 (px)",
       "border_thickness_desc": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09A5\u09BF\u0995\u09A8\u09C7\u09B8 0-5 \u09AA\u09BF\u0995\u09CD\u09B8\u09C7\u09B2 \u09A5\u09C7\u0995\u09C7 \u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8 (\u09AF\u09C7\u09AE\u09A8 1, 2.5, 5)",
       "highlight_preview": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AA\u09CD\u09B0\u09BF\u09AD\u09BF\u0989",
       "highlight_preview_text": "\u0986\u09AA\u09A8\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09C7\u09AE\u09A8 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7 \u09A4\u09BE \u09A6\u09C7\u0996\u09C1\u09A8!",
+      "opt_line_solid": "solid",
+      "opt_line_dashed": "dashed",
+      "opt_line_dotted": "dotted",
+      "opt_line_double": "double",
+      "opt_line_groove": "groove",
+      "opt_line_ridge": "ridge",
+      "opt_line_inset": "inset",
+      "opt_line_outset": "outset",
       // Color Swatches
       "color_swatches_header": "\u09B0\u0999 \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF",
       "color_picker_layout": "\u09B0\u0999 \u09AA\u09BF\u0995\u09BE\u09B0 \u09B2\u09C7\u0986\u0989\u099F",
       "color_picker_layout_desc": "\u099F\u09C7\u0995\u09CD\u09B8\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999 \u09AA\u09BF\u0995 \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u0995\u09CB\u09A8 \u09B0\u0999 \u099F\u09BE\u0987\u09AA \u09A6\u09C7\u0996\u09BE\u09A4\u09C7 \u09B9\u09AC\u09C7 \u09A4\u09BE \u09AC\u09C7\u099B\u09C7 \u09A8\u09BF\u09A8",
       "opt_both_text_left": "\u0989\u09AD\u09AF\u09BC: \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09AC\u09BE\u09AE, \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09A1\u09BE\u09A8",
       "opt_both_bg_left": "\u0989\u09AD\u09AF\u09BC: \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AC\u09BE\u09AE, \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09A1\u09BE\u09A8",
+      "opt_both_text_top": "\u0989\u09AD\u09AF\u09BC (\u09AD\u09BE\u09B0\u09CD\u099F\u09BF\u0995\u09BE\u09B2): \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0989\u09AA\u09B0\u09C7, \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09A8\u09BF\u099A\u09C7",
+      "opt_both_bg_top": "\u0989\u09AD\u09AF\u09BC (\u09AD\u09BE\u09B0\u09CD\u099F\u09BF\u0995\u09BE\u09B2): \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0989\u09AA\u09B0\u09C7, \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09A8\u09BF\u099A\u09C7",
       "opt_text_only": "\u09B6\u09C1\u09A7\u09C1\u09AE\u09BE\u09A4\u09CD\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999",
       "opt_background_only": "\u09B6\u09C1\u09A7\u09C1\u09AE\u09BE\u09A4\u09CD\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B0\u0999",
       "replace_default_swatches": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u09AA\u09CD\u09B0\u09A4\u09BF\u09B8\u09CD\u09A5\u09BE\u09AA\u09A8 \u0995\u09B0\u09C1\u09A8",
@@ -1862,6 +1962,8 @@ var require_bn = __commonJS({
       "enable_custom_swatches_desc": "\u098F\u099F\u09BF \u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u0986\u09AA\u09A8\u09BE\u09B0 \u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u0995\u09BE\u09B2\u09BE\u09B0 \u09AA\u09BF\u0995\u09BE\u09B0\u09C7 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7\u0964",
       "use_swatch_names": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09BE\u09AF\u09BC\u09A8\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BE\u09AE \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8",
       "use_swatch_names_desc": "\u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u0987\u09A8\u09AA\u09C1\u099F\u09C7\u09B0 \u09AA\u09BE\u09B6\u09C7 \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BE\u09AE\u09C7\u09B0 \u09A1\u09CD\u09B0\u09AA\u09A1\u09BE\u0989\u09A8 \u09A6\u09C7\u0996\u09BE\u09A8",
+      "link_swatches_to_entries": "\u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u0986\u09AA\u09A1\u09C7\u099F\u0995\u09C7 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09C7\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09B2\u09BF\u0982\u0995 \u0995\u09B0\u09C1\u09A8",
+      "link_swatches_to_entries_desc": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u09C7\u09B0 \u09B0\u0999 \u09AA\u09B0\u09BF\u09AC\u09B0\u09CD\u09A4\u09A8 \u09B9\u09B2\u09C7, \u09B8\u09C7\u0987 \u09B0\u0999 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B8\u09AC \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
       "default_colors_header": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B0\u0999\u0997\u09C1\u09B2\u09BF",
       "custom_swatches_header": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF",
       "btn_add_color": "+ \u09B0\u0999 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
@@ -2053,7 +2155,7 @@ var require_ru = __commonJS({
       "command_color_selected": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u043F\u043E\u0434\u0441\u0432\u0435\u0447\u0435\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442",
       "command_toggle_current": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
       "command_toggle_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
-      "command_manage_advanced_rules": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u043D\u044B\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438",
+      "command_manage_advanced_rules": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
       "command_open_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex (\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043E\u0440 Regex)",
       "command_open_blacklist_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       "command_manage_colored_texts": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430\u043C\u0438",
@@ -2139,10 +2241,12 @@ var require_ru = __commonJS({
       "highlight_once_border_radius": "\u0420\u0430\u0434\u0438\u0443\u0441 \u0433\u0440\u0430\u043D\u0438\u0446\u044B (px)",
       "reset_to_8": "\u0421\u0431\u0440\u043E\u0441\u0438\u0442\u044C \u0434\u043E 8",
       "highlight_horizontal_padding": "\u0413\u043E\u0440\u0438\u0437\u043E\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u043E\u0442\u0441\u0442\u0443\u043F\u044B (px)",
+      "highlight_vertical_padding": "\u0412\u0435\u0440\u0442\u0438\u043A\u0430\u043B\u044C\u043D\u044B\u0435 \u043E\u0442\u0441\u0442\u0443\u043F\u044B (px)",
       "reset_to_4": "\u0421\u0431\u0440\u043E\u0441\u0438\u0442\u044C \u0434\u043E 4",
       "enable_border_highlight_once": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0440\u0430\u043C\u043A\u0443",
       "enable_border_highlight_once_desc": "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u0440\u0430\u043C\u043A\u0443 \u0434\u043B\u044F \u0432\u0430\u0448\u0435\u0439 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438. \u0414\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043D\u044B\u0439 HTML/CSS-\u043A\u043E\u0434 \u0431\u0443\u0434\u0435\u0442 \u0434\u043B\u0438\u043D\u043D\u044B\u043C.",
-      "highlight_once_border_style": "\u0421\u0442\u0438\u043B\u044C \u0440\u0430\u043C\u043A\u0438 \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E\u0439 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
+      "highlight_once_border_style": "\u0421\u0442\u043E\u0440\u043E\u043D\u044B \u0440\u0430\u043C\u043A\u0438 \u0434\u043B\u044F \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E\u0439 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
+      "highlight_once_border_line_style": "\u0421\u0442\u0438\u043B\u044C \u0440\u0430\u043C\u043A\u0438",
       "opt_border_full": "\u041F\u043E\u043B\u043D\u0430\u044F \u0440\u0430\u043C\u043A\u0430 (\u0432\u0441\u0435 \u0441\u0442\u043E\u0440\u043E\u043D\u044B)",
       "opt_border_top_bottom": "\u0421\u0432\u0435\u0440\u0445\u0443 \u0438 \u0441\u043D\u0438\u0437\u0443",
       "opt_border_left_right": "\u0421\u043B\u0435\u0432\u0430 \u0438 \u0441\u043F\u0440\u0430\u0432\u0430",
@@ -2168,24 +2272,37 @@ var require_ru = __commonJS({
       "highlight_border_radius": "\u0420\u0430\u0434\u0438\u0443\u0441 \u0440\u0430\u043C\u043A\u0438 (px)",
       "highlight_border_radius_desc": "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u0435 \u0440\u0430\u0434\u0438\u0443\u0441 \u0440\u0430\u043C\u043A\u0438 (\u0432 px) \u0434\u043B\u044F \u0441\u043A\u0440\u0443\u0433\u043B\u0435\u043D\u0438\u0439",
       "highlight_horizontal_padding_desc": "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u0435 \u043B\u0435\u0432\u044B\u0439 \u0438 \u043F\u0440\u0430\u0432\u044B\u0439 \u043E\u0442\u0441\u0442\u0443\u043F\u044B (\u0432 px)",
+      "highlight_vertical_padding_desc": "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u0435 \u0432\u0435\u0440\u0445\u043D\u0438\u0439 \u0438 \u043D\u0438\u0436\u043D\u0438\u0439 \u043E\u0442\u0441\u0442\u0443\u043F\u044B (\u0432 px)",
       "rounded_corners_wrapping": "\u0421\u043A\u0440\u0443\u0433\u043B\u0435\u043D\u043D\u044B\u0435 \u0443\u0433\u043B\u044B \u043F\u0440\u0438 \u043F\u0435\u0440\u0435\u043D\u043E\u0441\u0435",
       "rounded_corners_wrapping_desc": "\u041F\u0440\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0438 \u043F\u043E\u0434\u0441\u0432\u0435\u0447\u0435\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 \u0431\u0443\u0434\u0435\u0442 \u0438\u043C\u0435\u0442\u044C \u0441\u043A\u0440\u0443\u0433\u043B\u0435\u043D\u043D\u044B\u0435 \u0443\u0433\u043B\u044B \u0441\u043E \u0432\u0441\u0435\u0445 \u0441\u0442\u043E\u0440\u043E\u043D, \u0434\u0430\u0436\u0435 \u043A\u043E\u0433\u0434\u0430 \u0442\u0435\u043A\u0441\u0442 \u043F\u0435\u0440\u0435\u043D\u043E\u0441\u0438\u0442\u0441\u044F \u043D\u0430 \u043D\u043E\u0432\u0443\u044E \u0441\u0442\u0440\u043E\u043A\u0443.",
       "enable_highlight_border": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0440\u0430\u043C\u043A\u0443 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
       "enable_highlight_border_desc": "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u0440\u0430\u043C\u043A\u0443 \u0432\u043E\u043A\u0440\u0443\u0433 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438. \u0426\u0432\u0435\u0442 \u0440\u0430\u043C\u043A\u0438 \u0431\u0443\u0434\u0435\u0442 \u0441\u043E\u0432\u043F\u0430\u0434\u0430\u0442\u044C \u0441 \u0446\u0432\u0435\u0442\u043E\u043C \u0442\u0435\u043A\u0441\u0442\u0430 \u0438\u043B\u0438 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438.",
-      "border_style": "\u0421\u0442\u0438\u043B\u044C \u0440\u0430\u043C\u043A\u0438",
+      "border_style": "\u0421\u0442\u043E\u0440\u043E\u043D\u044B \u0440\u0430\u043C\u043A\u0438",
       "border_style_desc": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435, \u0441 \u043A\u0430\u043A\u043E\u0439 \u0441\u0442\u043E\u0440\u043E\u043D\u044B \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0440\u0430\u043C\u043A\u0443",
+      "border_line_style": "\u0421\u0442\u0438\u043B\u044C \u0440\u0430\u043C\u043A\u0438",
+      "border_line_style_desc": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0441\u0442\u0438\u043B\u044C \u043B\u0438\u043D\u0438\u0438 \u0440\u0430\u043C\u043A\u0438",
       "border_opacity": "\u041F\u0440\u043E\u0437\u0440\u0430\u0447\u043D\u043E\u0441\u0442\u044C \u0440\u0430\u043C\u043A\u0438",
       "border_opacity_desc": "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u0435 \u043F\u0440\u043E\u0437\u0440\u0430\u0447\u043D\u043E\u0441\u0442\u044C \u0440\u0430\u043C\u043A\u0438 (0-100%)",
       "border_thickness": "\u0422\u043E\u043B\u0449\u0438\u043D\u0430 \u0440\u0430\u043C\u043A\u0438 (px)",
       "border_thickness_desc": "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u0435 \u0442\u043E\u043B\u0449\u0438\u043D\u0443 \u0440\u0430\u043C\u043A\u0438 \u043E\u0442 0-5 px (\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, 1, 2.5, 5)",
       "highlight_preview": "\u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
       "highlight_preview_text": "\u0422\u0430\u043A \u0431\u0443\u0434\u0435\u0442 \u0432\u044B\u0433\u043B\u044F\u0434\u0435\u0442\u044C \u0432\u0430\u0448\u0430 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430!",
+      "opt_line_solid": "solid",
+      "opt_line_dashed": "dashed",
+      "opt_line_dotted": "dotted",
+      "opt_line_double": "double",
+      "opt_line_groove": "groove",
+      "opt_line_ridge": "ridge",
+      "opt_line_inset": "inset",
+      "opt_line_outset": "outset",
       // Color Swatches
       "color_swatches_header": "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u0446\u0432\u0435\u0442\u0430",
       "color_picker_layout": "\u041C\u0430\u043A\u0435\u0442 \u043F\u043E\u0434\u0431\u043E\u0440\u0430 \u0446\u0432\u0435\u0442\u043E\u0432",
       "color_picker_layout_desc": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435, \u043A\u0430\u043A\u0438\u0435 \u0432\u0430\u0440\u0438\u0430\u043D\u0442\u044B \u043E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u0438\u044F \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0442\u044C \u043F\u0440\u0438 \u0432\u044B\u0431\u043E\u0440\u0435 \u0446\u0432\u0435\u0442\u043E\u0432 \u0434\u043B\u044F \u0442\u0435\u043A\u0441\u0442\u0430",
       "opt_both_text_left": "\u041E\u0431\u0430: \u0422\u0435\u043A\u0441\u0442 \u0441\u043B\u0435\u0432\u0430, \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430 \u0441\u043F\u0440\u0430\u0432\u0430",
       "opt_both_bg_left": "\u041E\u0431\u0430: \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430 \u0441\u043B\u0435\u0432\u0430, \u0422\u0435\u043A\u0441\u0442 \u0441\u043F\u0440\u0430\u0432\u0430",
+      "opt_both_text_top": "\u041E\u0431\u0430 (\u0432\u0435\u0440\u0442\u0438\u043A\u0430\u043B\u044C\u043D\u043E): \u0422\u0435\u043A\u0441\u0442 \u0441\u0432\u0435\u0440\u0445\u0443, \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430 \u0441\u043D\u0438\u0437\u0443",
+      "opt_both_bg_top": "\u041E\u0431\u0430 (\u0432\u0435\u0440\u0442\u0438\u043A\u0430\u043B\u044C\u043D\u043E): \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430 \u0441\u0432\u0435\u0440\u0445\u0443, \u0422\u0435\u043A\u0441\u0442 \u0441\u043D\u0438\u0437\u0443",
       "opt_text_only": "\u0422\u043E\u043B\u044C\u043A\u043E \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435",
       "opt_background_only": "\u0422\u043E\u043B\u044C\u043A\u043E \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430",
       "replace_default_swatches": "\u0417\u0430\u043C\u0435\u043D\u0438\u0442\u044C \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0435 \u0446\u0432\u0435\u0442\u0430",
@@ -2194,6 +2311,8 @@ var require_ru = __commonJS({
       "enable_custom_swatches_desc": "\u041F\u0440\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0438 \u0432\u0430\u0448\u0438 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u0431\u0443\u0434\u0443\u0442 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0442\u044C\u0441\u044F \u0432 \u043F\u0430\u043B\u0438\u0442\u0440\u0435.",
       "use_swatch_names": "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u044F \u0446\u0432\u0435\u0442\u043E\u0432 \u043F\u0440\u0438 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0438",
       "use_swatch_names_desc": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0432\u044B\u043F\u0430\u0434\u0430\u044E\u0449\u0438\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0439 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0445 \u0446\u0432\u0435\u0442\u043E\u0432 \u0440\u044F\u0434\u043E\u043C \u0441 \u043F\u043E\u043B\u0435\u043C \u0432\u0432\u043E\u0434\u0430 \u0441\u043B\u043E\u0432/\u0448\u0430\u0431\u043B\u043E\u043D\u043E\u0432",
+      "link_swatches_to_entries": "\u0421\u0432\u044F\u0437\u044B\u0432\u0430\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u0441 \u0446\u0432\u0435\u0442\u0430\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430",
+      "link_swatches_to_entries_desc": "\u041F\u0440\u0438 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0438 \u0446\u0432\u0435\u0442\u0430 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u043E\u0439 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043E\u0431\u043D\u043E\u0432\u043B\u044F\u0442\u044C \u0432\u0441\u0435 \u0437\u0430\u043F\u0438\u0441\u0438, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044E\u0449\u0438\u0435 \u044D\u0442\u043E\u0442 \u0446\u0432\u0435\u0442",
       "default_colors_header": "\u0421\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0435 \u0446\u0432\u0435\u0442\u0430",
       "custom_swatches_header": "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u0446\u0432\u0435\u0442\u0430",
       "btn_add_color": "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0446\u0432\u0435\u0442",
@@ -2385,7 +2504,7 @@ var require_zh_cn = __commonJS({
       "command_color_selected": "\u7740\u8272\u9009\u4E2D\u6587\u5B57",
       "command_toggle_current": "\u542F\u7528/\u7981\u7528\u5F53\u524D\u6587\u6863\u7740\u8272",
       "command_toggle_global": "\u542F\u7528/\u7981\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
-      "command_manage_advanced_rules": "\u7BA1\u7406\u9AD8\u7EA7\u89C4\u5219",
+      "command_manage_advanced_rules": "\u7BA1\u7406\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
       "command_open_regex_tester": "\u6DFB\u52A0\u6B63\u5219\u8868\u8FBE\u5F0F\uFF08\u6253\u5F00\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\uFF09",
       "command_open_blacklist_regex_tester": "\u6DFB\u52A0\u9ED1\u540D\u5355\u6B63\u5219\u8868\u8FBE\u5F0F",
       "command_manage_colored_texts": "\u7BA1\u7406\u5DF2\u7740\u8272\u7684\u6587\u672C",
@@ -2472,10 +2591,12 @@ var require_zh_cn = __commonJS({
       "highlight_once_border_radius": "\u9AD8\u4EAE\u4E00\u6B21\u8FB9\u6846\u5706\u89D2 (px)",
       "reset_to_8": "\u91CD\u7F6E\u4E3A8",
       "highlight_horizontal_padding": "\u9AD8\u4EAE\u6C34\u5E73\u5185\u8FB9\u8DDD (px)",
+      "highlight_vertical_padding": "\u9AD8\u4EAE\u5782\u76F4\u5185\u8FB9\u8DDD (px)",
       "reset_to_4": "\u91CD\u7F6E\u4E3A4",
       "enable_border_highlight_once": "\u4E3A\u9AD8\u4EAE\u4E00\u6B21\u542F\u7528\u8FB9\u6846",
       "enable_border_highlight_once_desc": "\u4E3A\u5185\u8054\u9AD8\u4EAE\u6DFB\u52A0\u8FB9\u6846\u3002\u6DFB\u52A0\u7684HTML/CSS\u4F1A\u5F88\u957F\u3002",
-      "highlight_once_border_style": "\u9AD8\u4EAE\u4E00\u6B21\u8FB9\u6846\u6837\u5F0F",
+      "highlight_once_border_style": "\u9AD8\u4EAE\u4E00\u6B21\u8FB9\u6846\u8FB9",
+      "highlight_once_border_line_style": "\u8FB9\u6846\u6837\u5F0F",
       "opt_border_full": "\u5B8C\u6574\u8FB9\u6846\uFF08\u6240\u6709\u8FB9\uFF09",
       "opt_border_top_bottom": "\u4E0A\u4E0B\u8FB9\u6846",
       "opt_border_left_right": "\u5DE6\u53F3\u8FB9\u6846",
@@ -2501,24 +2622,37 @@ var require_zh_cn = __commonJS({
       "highlight_border_radius": "\u9AD8\u4EAE\u8FB9\u6846\u5706\u89D2 (px)",
       "highlight_border_radius_desc": "\u8BBE\u7F6E\u9AD8\u4EAE\u5706\u89D2\u7684\u8FB9\u6846\u534A\u5F84\uFF08\u4EE5px\u4E3A\u5355\u4F4D\uFF09",
       "highlight_horizontal_padding_desc": "\u8BBE\u7F6E\u9AD8\u4EAE\u6587\u5B57\u7684\u5DE6\u53F3\u5185\u8FB9\u8DDD\uFF08\u4EE5px\u4E3A\u5355\u4F4D\uFF09",
+      "highlight_vertical_padding_desc": "\u8BBE\u7F6E\u9AD8\u4EAE\u6587\u5B57\u7684\u4E0A\u4E0B\u5185\u8FB9\u8DDD\uFF08\u4EE5px\u4E3A\u5355\u4F4D\uFF09",
       "rounded_corners_wrapping": "\u6362\u884C\u65F6\u7684\u5706\u89D2",
       "rounded_corners_wrapping_desc": "\u542F\u7528\u65F6\uFF0C\u5373\u4F7F\u6587\u5B57\u6362\u884C\u5230\u65B0\u884C\uFF0C\u9AD8\u4EAE\u4E5F\u4F1A\u5728\u6240\u6709\u8FB9\u4E0A\u90FD\u6709\u5706\u89D2\u3002",
       "enable_highlight_border": "\u542F\u7528\u9AD8\u4EAE\u8FB9\u6846",
       "enable_highlight_border_desc": "\u5728\u9AD8\u4EAE\u5468\u56F4\u6DFB\u52A0\u8FB9\u6846\u3002\u8FB9\u6846\u5C06\u5339\u914D\u6587\u5B57\u6216\u9AD8\u4EAE\u989C\u8272\u3002",
-      "border_style": "\u8FB9\u6846\u6837\u5F0F",
+      "border_style": "\u8FB9\u6846\u8FB9",
       "border_style_desc": "\u9009\u62E9\u8981\u5E94\u7528\u8FB9\u6846\u7684\u8FB9",
+      "border_line_style": "\u8FB9\u6846\u6837\u5F0F",
+      "border_line_style_desc": "\u9009\u62E9\u8FB9\u6846\u7EBF\u6761\u6837\u5F0F",
       "border_opacity": "\u8FB9\u6846\u900F\u660E\u5EA6",
       "border_opacity_desc": "\u8BBE\u7F6E\u8FB9\u6846\u7684\u900F\u660E\u5EA6 (0-100%)",
       "border_thickness": "\u8FB9\u6846\u539A\u5EA6 (px)",
       "border_thickness_desc": "\u8BBE\u7F6E\u8FB9\u6846\u539A\u5EA6\u4ECE0-5\u50CF\u7D20\uFF08\u4F8B\u59821, 2.5, 5\uFF09",
       "highlight_preview": "\u9AD8\u4EAE\u9884\u89C8",
       "highlight_preview_text": "\u8FD9\u5C31\u662F\u60A8\u7684\u9AD8\u4EAE\u6548\u679C\uFF01",
+      "opt_line_solid": "\u5B9E\u7EBF",
+      "opt_line_dashed": "\u865A\u7EBF",
+      "opt_line_dotted": "\u70B9\u7EBF",
+      "opt_line_double": "\u53CC\u7EBF",
+      "opt_line_groove": "\u51F9\u69FD",
+      "opt_line_ridge": "\u51F8\u69FD",
+      "opt_line_inset": "\u5185\u51F9",
+      "opt_line_outset": "\u5916\u51F8",
       // Color Swatches
       "color_swatches_header": "\u989C\u8272\u8272\u677F",
       "color_picker_layout": "\u989C\u8272\u9009\u62E9\u5668\u5E03\u5C40",
       "color_picker_layout_desc": "\u9009\u62E9\u4E3A\u6587\u5B57\u9009\u62E9\u989C\u8272\u65F6\u663E\u793A\u7684\u989C\u8272\u7C7B\u578B",
       "opt_both_text_left": "\u4E24\u8005\uFF1A\u6587\u5B57\u5DE6\uFF0C\u9AD8\u4EAE\u53F3",
       "opt_both_bg_left": "\u4E24\u8005\uFF1A\u9AD8\u4EAE\u5DE6\uFF0C\u6587\u5B57\u53F3",
+      "opt_both_text_top": "\u4E24\u8005\uFF08\u5782\u76F4\uFF09\uFF1A\u6587\u5B57\u4E0A\uFF0C\u9AD8\u4EAE\u4E0B",
+      "opt_both_bg_top": "\u4E24\u8005\uFF08\u5782\u76F4\uFF09\uFF1A\u9AD8\u4EAE\u4E0A\uFF0C\u6587\u5B57\u4E0B",
       "opt_text_only": "\u4EC5\u6587\u5B57\u989C\u8272",
       "opt_background_only": "\u4EC5\u9AD8\u4EAE\u989C\u8272",
       "replace_default_swatches": "\u66FF\u6362\u9ED8\u8BA4\u8272\u677F",
@@ -2527,6 +2661,8 @@ var require_zh_cn = __commonJS({
       "enable_custom_swatches_desc": "\u5F00\u542F\u540E\uFF0C\u60A8\u7684\u81EA\u5B9A\u4E49\u8272\u677F\u4F1A\u5728\u989C\u8272\u9009\u62E9\u5668\u4E2D\u663E\u793A\u3002",
       "use_swatch_names": "\u4F7F\u7528\u8272\u677F\u540D\u79F0\u7740\u8272\u6587\u5B57",
       "use_swatch_names_desc": "\u5728\u5355\u8BCD/\u6A21\u5F0F\u8F93\u5165\u6846\u65C1\u663E\u793A\u8272\u677F\u540D\u79F0\u4E0B\u62C9\u83DC\u5355",
+      "link_swatches_to_entries": "\u5C06\u8272\u677F\u66F4\u65B0\u94FE\u63A5\u5230\u6587\u5B57\u989C\u8272",
+      "link_swatches_to_entries_desc": "\u5F53\u81EA\u5B9A\u4E49\u8272\u677F\u989C\u8272\u66F4\u6539\u65F6\uFF0C\u66F4\u65B0\u6240\u6709\u4F7F\u7528\u8BE5\u989C\u8272\u7684\u6761\u76EE",
       "default_colors_header": "\u9ED8\u8BA4\u989C\u8272",
       "custom_swatches_header": "\u81EA\u5B9A\u4E49\u8272\u677F",
       "btn_add_color": "+ \u6DFB\u52A0\u989C\u8272",
@@ -3300,6 +3436,11 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (_) {
       this._lpObservers = /* @__PURE__ */ new WeakMap();
     }
+    try {
+      this._readingModeIntervals = /* @__PURE__ */ new Map();
+    } catch (_) {
+      this._readingModeIntervals = /* @__PURE__ */ new Map();
+    }
   }
   applyDisabledNeutralizerStyles() {
     try {
@@ -3720,8 +3861,9 @@ module.exports = class AlwaysColorText extends Plugin {
                   const hexWithAlpha = this.hexToHexWithAlpha(bg, this.settings.quickHighlightOpacity ?? 25);
                   const radius = this.settings.quickHighlightBorderRadius ?? 8;
                   const pad = this.settings.quickHighlightHorizontalPadding ?? 4;
+                  const vpad = this.settings.quickHighlightVerticalPadding ?? 0;
                   const border = this.generateOnceBorderStyle(bg);
-                  style = `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${border}`;
+                  style = `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px; padding-top: ${vpad}px; padding-bottom: ${vpad}px;${border}`;
                 } else {
                   const rgba = this.hexToRgba(bg, 25);
                   style = `background-color: ${rgba};`;
@@ -4082,7 +4224,7 @@ module.exports = class AlwaysColorText extends Plugin {
       });
       addTrackedCommand({
         id: "manage-advanced-rules",
-        name: this.t("command_manage_advanced_rules", "Manage Advanced Rules"),
+        name: this.t("command_manage_advanced_rules", "manage specific include/exclude rules"),
         callback: () => {
           try {
             new ManageRulesModal(this.app, this).open();
@@ -4429,6 +4571,42 @@ module.exports = class AlwaysColorText extends Plugin {
           if (matches.length > 50) break;
         }
         if (matches.length > 50) break;
+      }
+      {
+        let vpInput;
+        new Setting(containerEl).setName(this.plugin.t("highlight_vertical_padding", "Highlight vertical padding (px)")).setDesc(this.plugin.t("highlight_vertical_padding_desc", "Set the top and bottom padding (in px) for highlighted text")).addText((text2) => {
+          vpInput = text2;
+          text2.setPlaceholder("e.g. 0, 1, 2").setValue(String(this.plugin.settings.highlightVerticalPadding ?? 0)).onChange(async (v) => {
+            let val = parseInt(v);
+            if (isNaN(val)) val = 0;
+            this.plugin.settings.highlightVerticalPadding = val;
+            await this.debouncedSaveSettings();
+            updatePreview();
+          });
+        }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_0", "Reset to 0")).onClick(async () => {
+          this.plugin.settings.highlightVerticalPadding = 0;
+          await this.debouncedSaveSettings();
+          if (vpInput) vpInput.setValue("0");
+          updatePreview();
+        }));
+      }
+      {
+        let vpInput;
+        new Setting(containerEl).setName(this.plugin.t("highlight_vertical_padding", "Highlight vertical padding (px)")).setDesc(this.plugin.t("highlight_vertical_padding_desc", "Set the top and bottom padding (in px) for highlighted text")).addText((text2) => {
+          vpInput = text2;
+          text2.setPlaceholder("e.g. 0, 1, 2").setValue(String(this.plugin.settings.highlightVerticalPadding ?? 0)).onChange(async (v) => {
+            let val = parseInt(v);
+            if (isNaN(val)) val = 0;
+            this.plugin.settings.highlightVerticalPadding = val;
+            await this.debouncedSaveSettings();
+            updatePreview();
+          });
+        }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_0", "Reset to 0")).onClick(async () => {
+          this.plugin.settings.highlightVerticalPadding = 0;
+          await this.debouncedSaveSettings();
+          if (vpInput) vpInput.setValue("0");
+          updatePreview();
+        }));
       }
       if (matches.length > 0) {
         this.applySimpleHighlights(node, matches, text);
@@ -4833,6 +5011,22 @@ module.exports = class AlwaysColorText extends Plugin {
               span.style.display = "inline-block";
             }
             span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+            try {
+              const vpad = this.settings.highlightVerticalPadding ?? 0;
+              span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+              span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+              if (vpad < 0) {
+                span.style.setProperty("margin-top", vpad + "px", "important");
+                span.style.setProperty("margin-bottom", vpad + "px", "important");
+              }
+            } catch (_) {
+              const vpad = this.settings.highlightVerticalPadding ?? 0;
+              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+              if (vpad < 0) {
+                span.style.marginTop = vpad + "px";
+                span.style.marginBottom = vpad + "px";
+              }
+            }
             span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + "px";
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = "clone";
@@ -4875,6 +5069,22 @@ module.exports = class AlwaysColorText extends Plugin {
               span.style.display = "inline-block";
             }
             span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+            try {
+              const vpad = this.settings.highlightVerticalPadding ?? 0;
+              span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+              span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+              if (vpad < 0) {
+                span.style.setProperty("margin-top", vpad + "px", "important");
+                span.style.setProperty("margin-bottom", vpad + "px", "important");
+              }
+            } catch (_) {
+              const vpad = this.settings.highlightVerticalPadding ?? 0;
+              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+              if (vpad < 0) {
+                span.style.marginTop = vpad + "px";
+                span.style.marginBottom = vpad + "px";
+              }
+            }
             span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + "px";
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = "clone";
@@ -4943,6 +5153,22 @@ module.exports = class AlwaysColorText extends Plugin {
             span.style.display = "inline-block";
           }
           span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+          try {
+            const vpad = this.settings.highlightVerticalPadding ?? 0;
+            span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+            span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+            if (vpad < 0) {
+              span.style.setProperty("margin-top", vpad + "px", "important");
+              span.style.setProperty("margin-bottom", vpad + "px", "important");
+            }
+          } catch (_) {
+            const vpad = this.settings.highlightVerticalPadding ?? 0;
+            span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+            if (vpad < 0) {
+              span.style.marginTop = vpad + "px";
+              span.style.marginBottom = vpad + "px";
+            }
+          }
           span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + "px";
           if (this.settings.enableBoxDecorationBreak ?? true) {
             span.style.boxDecorationBreak = "clone";
@@ -4986,6 +5212,22 @@ module.exports = class AlwaysColorText extends Plugin {
             span.style.display = "inline-block";
           }
           span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+          try {
+            const vpad = this.settings.highlightVerticalPadding ?? 0;
+            span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+            span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+            if (vpad < 0) {
+              span.style.setProperty("margin-top", vpad + "px", "important");
+              span.style.setProperty("margin-bottom", vpad + "px", "important");
+            }
+          } catch (_) {
+            const vpad = this.settings.highlightVerticalPadding ?? 0;
+            span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+            if (vpad < 0) {
+              span.style.marginTop = vpad + "px";
+              span.style.marginBottom = vpad + "px";
+            }
+          }
           span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + "px";
           if (this.settings.enableBoxDecorationBreak ?? true) {
             span.style.boxDecorationBreak = "clone";
@@ -5067,6 +5309,12 @@ module.exports = class AlwaysColorText extends Plugin {
           }
           span.style.paddingLeft = (this.settings.highlightHorizontalPadding ?? 4) + "px";
           span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+          try {
+            span.style.setProperty("padding-top", (this.settings.highlightVerticalPadding ?? 0) + "px", "important");
+            span.style.setProperty("padding-bottom", (this.settings.highlightVerticalPadding ?? 0) + "px", "important");
+          } catch (_) {
+            span.style.paddingTop = span.style.paddingBottom = (this.settings.highlightVerticalPadding ?? 0) + "px";
+          }
           span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + "px";
           if (this.settings.enableBoxDecorationBreak ?? true) {
             span.style.boxDecorationBreak = "clone";
@@ -5089,6 +5337,12 @@ module.exports = class AlwaysColorText extends Plugin {
             }
             span.style.paddingLeft = (this.settings.highlightHorizontalPadding ?? 4) + "px";
             span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+            try {
+              span.style.setProperty("padding-top", (this.settings.highlightVerticalPadding ?? 0) + "px", "important");
+              span.style.setProperty("padding-bottom", (this.settings.highlightVerticalPadding ?? 0) + "px", "important");
+            } catch (_) {
+              span.style.paddingTop = span.style.paddingBottom = (this.settings.highlightVerticalPadding ?? 0) + "px";
+            }
             span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + "px";
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = "clone";
@@ -5401,6 +5655,8 @@ module.exports = class AlwaysColorText extends Plugin {
       // px
       highlightHorizontalPadding: 4,
       // px
+      highlightVerticalPadding: 0,
+      // px
       enableBoxDecorationBreak: true,
       // Toggle for rounded corners on text wrapping
       enableBorderThickness: false,
@@ -5411,6 +5667,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // px (0-5)
       borderStyle: "full",
       // 'full', 'top', 'bottom', 'left', 'right', 'top-bottom', 'left-right', 'top-right', 'top-left', 'bottom-right', 'bottom-left'
+      borderLineStyle: "solid",
       disabledFiles: [],
       customSwatchesEnabled: false,
       replaceDefaultSwatches: false,
@@ -5459,6 +5716,7 @@ module.exports = class AlwaysColorText extends Plugin {
       enableTextBgMenu: true,
       // Use swatch names for coloring entries
       useSwatchNamesForText: false,
+      linkSwatchUpdatesToEntries: false,
       colorPickerMode: "both",
       advancedRules: [],
       pathRules: [],
@@ -5471,10 +5729,12 @@ module.exports = class AlwaysColorText extends Plugin {
       quickHighlightOpacity: 25,
       quickHighlightBorderRadius: 8,
       quickHighlightHorizontalPadding: 4,
+      quickHighlightVerticalPadding: 0,
       quickHighlightEnableBorder: false,
       quickHighlightBorderStyle: "full",
       quickHighlightBorderOpacity: 100,
       quickHighlightBorderThickness: 1,
+      quickHighlightBorderLineStyle: "solid",
       wordsSortMode: "last-added",
       blacklistSortMode: "last-added",
       pathSortMode: "last-added",
@@ -5899,6 +6159,7 @@ module.exports = class AlwaysColorText extends Plugin {
       s.quickHighlightOpacity = Math.max(0, Math.min(100, Number(s.quickHighlightOpacity ?? 25)));
       s.quickHighlightBorderRadius = Math.max(0, parseInt(s.quickHighlightBorderRadius ?? 8) || 0);
       s.quickHighlightHorizontalPadding = Math.max(0, parseInt(s.quickHighlightHorizontalPadding ?? 4) || 0);
+      s.quickHighlightVerticalPadding = Math.max(0, parseInt(s.quickHighlightVerticalPadding ?? 0) || 0);
       s.quickHighlightEnableBorder = !!s.quickHighlightEnableBorder;
       s.quickHighlightBorderStyle = String(s.quickHighlightBorderStyle || "full");
       s.quickHighlightBorderOpacity = Math.max(0, Math.min(100, Number(s.quickHighlightBorderOpacity ?? 100)));
@@ -5912,6 +6173,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const allowedPath = /* @__PURE__ */ new Set(["last-added", "a-z", "reverse-a-z", "mode", "type"]);
       if (!allowedPath.has(s.pathSortMode)) s.pathSortMode = "last-added";
       s.language = String(s.language || "en");
+      s.highlightVerticalPadding = Math.max(0, parseInt(s.highlightVerticalPadding ?? 0) || 0);
       this.settings = s;
     } catch (e) {
     }
@@ -6381,7 +6643,8 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     const borderColorRgba = this.hexToRgba(sourceColor, borderOpacity);
     const borderStyleType = this.settings.borderStyle ?? "full";
-    const borderCSS = `${borderThickness}px solid ${borderColorRgba}`;
+    const lineStyle = this.settings.borderLineStyle ?? "solid";
+    const borderCSS = `${borderThickness}px ${lineStyle} ${borderColorRgba}`;
     switch (borderStyleType) {
       case "bottom":
         element.style.borderBottom = borderCSS;
@@ -6441,7 +6704,8 @@ module.exports = class AlwaysColorText extends Plugin {
       borderColor = "rgba(0,0,0,1)";
     }
     const borderStyleType = this.settings.borderStyle ?? "full";
-    const borderCSS = `${borderThickness}px solid ${borderColor} !important;`;
+    const lineStyle = this.settings.borderLineStyle ?? "solid";
+    const borderCSS = `${borderThickness}px ${lineStyle} ${borderColor} !important;`;
     switch (borderStyleType) {
       case "bottom":
         return ` border-bottom: ${borderCSS}`;
@@ -6476,7 +6740,8 @@ module.exports = class AlwaysColorText extends Plugin {
       const opacity = this.settings.quickHighlightBorderOpacity ?? 100;
       const borderColor = this.hexToRgba(backgroundColor, opacity);
       const type = this.settings.quickHighlightBorderStyle ?? "full";
-      const css = `${thickness}px solid ${borderColor}`;
+      const lineStyle = this.settings.quickHighlightBorderLineStyle ?? "solid";
+      const css = `${thickness}px ${lineStyle} ${borderColor}`;
       switch (type) {
         case "bottom":
           return ` border-bottom: ${css};`;
@@ -7331,10 +7596,23 @@ module.exports = class AlwaysColorText extends Plugin {
           span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
         }
         try {
+          const vpad = this.settings.highlightVerticalPadding ?? 0;
           span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
           span.style.setProperty("padding-right", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
+          span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+          span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+          if (vpad < 0) {
+            span.style.setProperty("margin-top", vpad + "px", "important");
+            span.style.setProperty("margin-bottom", vpad + "px", "important");
+          }
         } catch (_) {
+          const vpad = this.settings.highlightVerticalPadding ?? 0;
           span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+          span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+          if (vpad < 0) {
+            span.style.marginTop = vpad + "px";
+            span.style.marginBottom = vpad + "px";
+          }
         }
         const br = (this.settings.highlightBorderRadius ?? 8) + "px";
         try {
@@ -7368,10 +7646,23 @@ module.exports = class AlwaysColorText extends Plugin {
             span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
           }
           try {
+            const vpad = this.settings.highlightVerticalPadding ?? 0;
             span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
             span.style.setProperty("padding-right", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
+            span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+            span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+            if (vpad < 0) {
+              span.style.setProperty("margin-top", vpad + "px", "important");
+              span.style.setProperty("margin-bottom", vpad + "px", "important");
+            }
           } catch (_) {
+            const vpad = this.settings.highlightVerticalPadding ?? 0;
             span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+            span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+            if (vpad < 0) {
+              span.style.marginTop = vpad + "px";
+              span.style.marginBottom = vpad + "px";
+            }
           }
           const br2 = (this.settings.highlightBorderRadius ?? 8) + "px";
           try {
@@ -7419,6 +7710,43 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     } catch (e) {
       debugError("READING_OBS", "Failed to set up observer", e);
+    }
+  }
+  // Cleanup reading mode observers and disconnect viewport observers
+  cleanupObserversForElement(el) {
+    try {
+      if (this._readingModeIntervals && this._readingModeIntervals instanceof Map) {
+        const intervals = this._readingModeIntervals.get(el);
+        if (Array.isArray(intervals)) {
+          for (const intervalId of intervals) {
+            try {
+              clearInterval(intervalId);
+            } catch (e) {
+            }
+          }
+        }
+        this._readingModeIntervals.delete(el);
+      }
+    } catch (e) {
+    }
+    if (!el) return;
+    try {
+      if (this._readingModeIntervals && this._readingModeIntervals.has(el)) {
+        const interval = this._readingModeIntervals.get(el);
+        if (interval) clearInterval(interval);
+        this._readingModeIntervals.delete(el);
+      }
+    } catch (e) {
+    }
+    try {
+      if (this._viewportObservers && this._viewportObservers.has(el)) {
+        const observer = this._viewportObservers.get(el);
+        if (observer && typeof observer.disconnect === "function") {
+          observer.disconnect();
+        }
+        this._viewportObservers.delete(el);
+      }
+    } catch (e) {
     }
   }
   // Process only the active file: immediate visible blocks then deferred idle processing
@@ -7703,8 +8031,11 @@ module.exports = class AlwaysColorText extends Plugin {
                 try {
                   span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
                   span.style.setProperty("padding-right", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
+                  span.style.setProperty("padding-top", (this.settings.highlightVerticalPadding ?? 0) + "px", "important");
+                  span.style.setProperty("padding-bottom", (this.settings.highlightVerticalPadding ?? 0) + "px", "important");
                 } catch (_) {
                   span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+                  span.style.paddingTop = span.style.paddingBottom = (this.settings.highlightVerticalPadding ?? 0) + "px";
                 }
                 const br = (this.settings.highlightBorderRadius ?? 8) + "px";
                 try {
@@ -7751,8 +8082,11 @@ module.exports = class AlwaysColorText extends Plugin {
               try {
                 span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
                 span.style.setProperty("padding-right", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
+                span.style.setProperty("padding-top", (this.settings.highlightVerticalPadding ?? 0) + "px", "important");
+                span.style.setProperty("padding-bottom", (this.settings.highlightVerticalPadding ?? 0) + "px", "important");
               } catch (_) {
                 span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+                span.style.paddingTop = span.style.paddingBottom = (this.settings.highlightVerticalPadding ?? 0) + "px";
               }
               const br2 = (this.settings.highlightBorderRadius ?? 8) + "px";
               try {
@@ -8693,15 +9027,33 @@ module.exports = class AlwaysColorText extends Plugin {
                 const bgColor = m.backgroundColor || m.color || (m.textColor && m.textColor !== "currentColor" ? m.textColor : null) || (folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : null);
                 span.style.background = "";
                 try {
+                  span.style.setProperty("display", "inline-block", "important");
+                } catch (_) {
+                  span.style.display = "inline-block";
+                }
+                try {
                   span.style.setProperty("background-color", this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25), "important");
                 } catch (_) {
                   span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
                 }
                 try {
+                  const vpad = this.settings.highlightVerticalPadding ?? 0;
                   span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
                   span.style.setProperty("padding-right", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
+                  span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+                  span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+                  if (vpad < 0) {
+                    span.style.setProperty("margin-top", vpad + "px", "important");
+                    span.style.setProperty("margin-bottom", vpad + "px", "important");
+                  }
                 } catch (_) {
+                  const vpad = this.settings.highlightVerticalPadding ?? 0;
                   span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+                  span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+                  if (vpad < 0) {
+                    span.style.marginTop = vpad + "px";
+                    span.style.marginBottom = vpad + "px";
+                  }
                 }
                 const br = (this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0 ? "0px" : (this.settings.highlightBorderRadius ?? 8) + "px";
                 try {
@@ -8742,10 +9094,23 @@ module.exports = class AlwaysColorText extends Plugin {
                   span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25);
                 }
                 try {
+                  const vpad = this.settings.highlightVerticalPadding ?? 0;
                   span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
                   span.style.setProperty("padding-right", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
+                  span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+                  span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+                  if (vpad < 0) {
+                    span.style.setProperty("margin-top", vpad + "px", "important");
+                    span.style.setProperty("margin-bottom", vpad + "px", "important");
+                  }
                 } catch (_) {
+                  const vpad = this.settings.highlightVerticalPadding ?? 0;
                   span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + "px";
+                  span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+                  if (vpad < 0) {
+                    span.style.marginTop = vpad + "px";
+                    span.style.marginBottom = vpad + "px";
+                  }
                 }
                 const br2 = (this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0 ? "0px" : (this.settings.highlightBorderRadius ?? 8) + "px";
                 try {
@@ -9219,7 +9584,13 @@ module.exports = class AlwaysColorText extends Plugin {
         } catch (_) {
         }
       };
-      setInterval(memCheck, 2e3);
+      const memCheckInterval = setInterval(memCheck, 2e3);
+      try {
+        if (!this._readingModeIntervals) this._readingModeIntervals = /* @__PURE__ */ new Map();
+        if (!this._readingModeIntervals.has(rootEl)) this._readingModeIntervals.set(rootEl, []);
+        this._readingModeIntervals.get(rootEl).push(memCheckInterval);
+      } catch (_) {
+      }
     } catch (e) {
       debugError("VIEWPORT", "setup failed", e);
     }
@@ -9259,7 +9630,11 @@ module.exports = class AlwaysColorText extends Plugin {
     const effectiveStyle = "text";
     if (effectiveStyle === "none") return builder.finish();
     for (const m of matches) {
-      const style = effectiveStyle === "text" ? `color: ${m.color} !important; --highlight-color: ${m.color};` : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0 ? 0 : this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+      const style = effectiveStyle === "text" ? `color: ${m.color} !important; --highlight-color: ${m.color};` : (() => {
+        const vPad = this.settings.highlightVerticalPadding ?? 0;
+        const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
+        return `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0 ? 0 : this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+      })();
       const deco = Decoration.mark({
         attributes: { style }
       });
@@ -10084,7 +10459,9 @@ module.exports = class AlwaysColorText extends Plugin {
         if (hideText && hideBg) continue;
         const borderStyle = this.generateBorderStyle(hideText ? null : m.textColor, hideBg ? null : m.backgroundColor);
         const textPart = hideText ? "" : `color: ${m.textColor} !important; --highlight-color: ${m.textColor}; `;
-        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+        const vPad = this.settings.highlightVerticalPadding ?? 0;
+        const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
+        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         const styleType2 = m.styleType || "text";
@@ -10095,7 +10472,9 @@ module.exports = class AlwaysColorText extends Plugin {
           if (this.settings.hideHighlights) continue;
           const bgColor = m.backgroundColor || m.color;
           const borderStyle = this.generateBorderStyle(null, bgColor);
-          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0 ? 0 : this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+          const vPadH = this.settings.highlightVerticalPadding ?? 0;
+          const vPadCssH = vPadH >= 0 ? `padding-top: ${vPadH}px !important; padding-bottom: ${vPadH}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadH}px !important; margin-bottom: ${vPadH}px !important;`;
+          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0 ? 0 : this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important; ${vPadCssH}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
         } else if (styleType2 === "both") {
           const textColor = m.textColor && m.textColor !== "currentColor" ? m.textColor : m.color || null;
           const bgColor = m.backgroundColor || m.color;
@@ -10104,7 +10483,9 @@ module.exports = class AlwaysColorText extends Plugin {
           if (hideText && hideBg) continue;
           const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor);
           const textPart = hideText ? "" : textColor ? `color: ${textColor} !important; --highlight-color: ${textColor}; ` : "";
-          const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+          const vPadB = this.settings.highlightVerticalPadding ?? 0;
+          const vPadCssB = vPadB >= 0 ? `padding-top: ${vPadB}px !important; padding-bottom: ${vPadB}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadB}px !important; margin-bottom: ${vPadB}px !important;`;
+          const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important; ${vPadCssB}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           if (this.settings.hideTextColors) continue;
@@ -10765,7 +11146,7 @@ module.exports = class AlwaysColorText extends Plugin {
         if (hideText && hideBg) continue;
         const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor);
         const textPart = hideText ? "" : `color: ${textColor} !important; `;
-        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-top: ${this.settings.highlightVerticalPadding ?? 0}px !important; padding-bottom: ${this.settings.highlightVerticalPadding ?? 0}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         if (effectiveStyle === "none") continue;
@@ -10777,14 +11158,23 @@ module.exports = class AlwaysColorText extends Plugin {
           const bgColor = m.backgroundColor || m.color;
           if (hideBg) continue;
           const borderStyle = this.generateBorderStyle(null, bgColor);
-          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0 ? 0 : this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+          style = (() => {
+            const vPad = this.settings.highlightVerticalPadding ?? 0;
+            const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
+            return `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0 ? 0 : this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+          })();
         } else if (styleType2 === "both") {
           const textColor = m.textColor && m.textColor !== "currentColor" ? m.textColor : m.color || null;
           const bgColor = m.backgroundColor || m.color;
           if (hideText && hideBg) continue;
           const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor);
           const textPart = hideText ? "" : textColor ? `color: ${textColor} !important; ` : "";
-          const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+          const bgPart = (() => {
+            if (hideBg) return "";
+            const vPad = this.settings.highlightVerticalPadding ?? 0;
+            const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
+            return `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${this.settings.highlightBorderRadius ?? 8}px !important; padding-left: ${this.settings.highlightHorizontalPadding ?? 4}px !important; padding-right: ${this.settings.highlightHorizontalPadding ?? 4}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+          })();
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           if (hideText) continue;
@@ -10806,6 +11196,22 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       try {
         this._compiledWordEntries = [];
+      } catch (e) {
+      }
+      try {
+        if (this._readingModeIntervals && this._readingModeIntervals instanceof Map) {
+          for (const intervals of this._readingModeIntervals.values()) {
+            if (Array.isArray(intervals)) {
+              for (const intervalId of intervals) {
+                try {
+                  clearInterval(intervalId);
+                } catch (e) {
+                }
+              }
+            }
+          }
+          this._readingModeIntervals.clear();
+        }
       } catch (e) {
       }
       try {
@@ -10861,6 +11267,7 @@ module.exports = class AlwaysColorText extends Plugin {
   clearHighlightsInRoot(rootEl) {
     try {
       if (!rootEl || !rootEl.isConnected) return;
+      this.cleanupObserversForElement(rootEl);
       const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_ELEMENT, {
         acceptNode(node) {
           return node.classList && node.classList.contains("always-color-text-highlight") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
@@ -11142,7 +11549,10 @@ var RealTimeRegexTesterModal = class extends Modal {
       flagButtons[f] = b;
     });
     const styleSelect = controlsRow.createEl("select");
-    styleSelect.innerHTML = `<option value="text">${this.plugin.t("style_type_text", "color")}</option><option value="highlight">${this.plugin.t("style_type_highlight", "highlight")}</option><option value="both">${this.plugin.t("style_type_both", "both")}</option>`;
+    ["text", "highlight", "both"].forEach((val) => {
+      const opt = styleSelect.createEl("option", { text: this.plugin.t("style_type_" + val, val === "text" ? "color" : val) });
+      opt.value = val;
+    });
     styleSelect.value = this._preFillStyleType || "both";
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
     styleSelect.style.borderRadius = "var(--radius-m)";
@@ -11155,6 +11565,51 @@ var RealTimeRegexTesterModal = class extends Modal {
     const bgColorInput = controlsRow.createEl("input", { type: "color" });
     bgColorInput.value = this._preFillBgColor || "#1d5010";
     bgColorInput.style.width = "48px";
+    const onTextPickerContext = (ev) => {
+      try {
+        ev.preventDefault();
+      } catch (e) {
+      }
+      try {
+        const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+          const sel = result || {};
+          const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : this.plugin.isValidHexColor(color) ? color : null;
+          if (tc) {
+            textColorInput.value = tc;
+            render();
+          }
+        }, "text");
+        modal._preFillTextColor = textColorInput.value;
+        modal.open();
+      } catch (e) {
+      }
+    };
+    const onBgPickerContext = (ev) => {
+      try {
+        ev.preventDefault();
+      } catch (e) {
+      }
+      try {
+        const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+          const sel = result || {};
+          const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : this.plugin.isValidHexColor(color) ? color : null;
+          if (bc) {
+            bgColorInput.value = bc;
+            render();
+          }
+        }, "background");
+        modal._preFillBgColor = bgColorInput.value;
+        modal.open();
+      } catch (e) {
+      }
+    };
+    try {
+      textColorInput.addEventListener("contextmenu", onTextPickerContext);
+      bgColorInput.addEventListener("contextmenu", onBgPickerContext);
+      this._handlers.push({ el: textColorInput, ev: "contextmenu", fn: onTextPickerContext });
+      this._handlers.push({ el: bgColorInput, ev: "contextmenu", fn: onBgPickerContext });
+    } catch (e) {
+    }
     const updatePickerVisibility = () => {
       const v = styleSelect.value;
       if (v === "text") {
@@ -11282,8 +11737,9 @@ var RealTimeRegexTesterModal = class extends Modal {
       const rgba = this.plugin.hexToRgba(b, this.plugin.settings.backgroundOpacity ?? 25);
       const radius = this.plugin.settings.highlightBorderRadius ?? 8;
       const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
+      const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
       const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, b) : this.plugin.generateBorderStyle(t, b);
-      const matchStyle = style === "text" ? `color:${t};background:transparent;` : style === "highlight" ? `background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;color:var(--text-normal);${borderStyle}` : `color:${t};background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;${borderStyle}`;
+      const matchStyle = style === "text" ? `color:${t};background:transparent;` : style === "highlight" ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}` : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
       for (const m of raw.matchAll(re)) {
         const s = m.index ?? 0;
         const e = s + (m[0] ? m[0].length : 0);
@@ -11519,17 +11975,21 @@ var RealTimeRegexTesterModal = class extends Modal {
     try {
       if (this._rafId) cancelAnimationFrame(this._rafId);
       if (this._debounceId) clearTimeout(this._debounceId);
-      this._handlers.forEach((h) => {
-        try {
-          h.el.removeEventListener(h.ev, h.fn);
-        } catch (e) {
-        }
-      });
+      if (this._handlers && Array.isArray(this._handlers)) {
+        this._handlers.forEach((h) => {
+          try {
+            if (h.el && h.ev && h.fn && typeof h.el.removeEventListener === "function") {
+              h.el.removeEventListener(h.ev, h.fn);
+            }
+          } catch (e) {
+          }
+        });
+      }
     } catch (e) {
     }
     this._handlers = [];
     try {
-      this.contentEl.empty();
+      this.contentEl?.empty();
     } catch (e) {
     }
   }
@@ -11848,17 +12308,21 @@ var BlacklistRegexTesterModal = class extends Modal {
     try {
       if (this._rafId) cancelAnimationFrame(this._rafId);
       if (this._debounceId) clearTimeout(this._debounceId);
-      this._handlers.forEach((h) => {
-        try {
-          h.el.removeEventListener(h.ev, h.fn);
-        } catch (e) {
-        }
-      });
+      if (this._handlers && Array.isArray(this._handlers)) {
+        this._handlers.forEach((h) => {
+          try {
+            if (h.el && h.ev && h.fn && typeof h.el.removeEventListener === "function") {
+              h.el.removeEventListener(h.ev, h.fn);
+            }
+          } catch (e) {
+          }
+        });
+      }
     } catch (e) {
     }
     this._handlers = [];
     try {
-      this.contentEl.empty();
+      this.contentEl?.empty();
     } catch (e) {
     }
   }
@@ -12267,7 +12731,10 @@ var AddRuleModal = class extends Modal {
     modeSel.style.padding = "8px";
     modeSel.style.border = "1px solid var(--background-modifier-border)";
     modeSel.style.borderRadius = "6px";
-    modeSel.innerHTML = `<option value="include">${this.plugin.t("text_rule_mode_include", "only colors in (whitelist)")}</option><option value="exclude">${this.plugin.t("text_rule_mode_exclude", "does not color in (blacklist)")}</option>`;
+    ["include", "exclude"].forEach((val) => {
+      const opt = modeSel.createEl("option", { text: this.plugin.t("text_rule_mode_" + val, val === "include" ? "only colors in (whitelist)" : "does not color in (blacklist)") });
+      opt.value = val;
+    });
     const pathInput = contentEl.createEl("input", { type: "text" });
     pathInput.placeholder = this.plugin.t("enter_path_or_pattern", "Enter path or pattern");
     pathInput.style.width = "100%";
@@ -13640,7 +14107,10 @@ var ColorSettingTab = class extends PluginSettingTab {
         modeSel.style.border = "1px solid var(--background-modifier-border)";
         modeSel.style.background = "var(--background-modifier-form-field)";
         modeSel.style.textAlign = "center";
-        modeSel.innerHTML = `<option value="include">${this.plugin.t("path_rule_mode_include", "Include")}</option><option value="exclude">${this.plugin.t("path_rule_mode_exclude", "Exclude")}</option>`;
+        ["include", "exclude"].forEach((val) => {
+          const opt = modeSel.createEl("option", { text: this.plugin.t("path_rule_mode_" + val, val === "include" ? "Include" : "Exclude") });
+          opt.value = val;
+        });
         modeSel.value = entry.mode === "exclude" ? "exclude" : "include";
         const input = row.createEl("input", { type: "text", value: entry.path || "" });
         input.placeholder = this.plugin.t("enter_path_or_pattern", "Enter path or pattern");
@@ -13846,6 +14316,10 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (e) {
         }
       }));
+      new Setting(this._customSwatchesContainer).setName(this.plugin.t("link_swatches_to_entries", "Link swatch updates to text colors")).setDesc(this.plugin.t("link_swatches_to_entries_desc", "When a custom swatch color changes, update all entries using that color")).addToggle((t) => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async (v) => {
+        this.plugin.settings.linkSwatchUpdatesToEntries = v;
+        await this.plugin.saveSettings();
+      }));
       if (typeof this._defaultColorsFolded === "undefined") {
         this._defaultColorsFolded = true;
       }
@@ -14006,9 +14480,43 @@ var ColorSettingTab = class extends PluginSettingTab {
           const colorHandler = async () => {
             const val = colorPicker.value;
             if (!this.plugin.isValidHexColor(val)) return;
+            const prev = this.plugin.settings.userCustomSwatches[i].color;
+            const swName = this.plugin.settings.userCustomSwatches[i].name || `Swatch ${i + 1}`;
             this.plugin.settings.userCustomSwatches[i].color = val;
             this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map((s) => s.color);
+            if (this.plugin.settings.linkSwatchUpdatesToEntries) {
+              const entries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+              entries.forEach((e) => {
+                try {
+                  if (e) {
+                    if (typeof e.color === "string" && e.color.toLowerCase() === String(prev || "").toLowerCase()) {
+                      e.color = val;
+                      e._savedTextColor = val;
+                    }
+                    if (typeof e.textColor === "string" && e.textColor !== "currentColor" && e.textColor.toLowerCase() === String(prev || "").toLowerCase()) {
+                      e.textColor = val;
+                      e._savedTextColor = val;
+                    }
+                    if (typeof e.backgroundColor === "string" && e.backgroundColor.toLowerCase() === String(prev || "").toLowerCase()) {
+                      e.backgroundColor = val;
+                      e._savedBackgroundColor = val;
+                    }
+                  }
+                } catch (_) {
+                }
+              });
+            }
             await this.plugin.saveSettings();
+            try {
+              this.plugin.compileWordEntries();
+              this.plugin.compileTextBgColoringEntries();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+              this.plugin.triggerActiveDocumentRerender();
+              this._refreshEntries();
+            } catch (_) {
+            }
           };
           const delHandler = async () => {
             this.plugin.settings.userCustomSwatches.splice(i, 1);
@@ -14088,11 +14596,29 @@ var ColorSettingTab = class extends PluginSettingTab {
       const q = String(this._entriesSearchQuery || "").trim().toLowerCase();
       const filtered = q ? entriesToDisplay.filter((e) => {
         const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || "")];
+        const swDefault = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
+        const swCustom = Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches : [];
+        const allSwatches = [...swDefault, ...swCustom];
+        const getSwatchName = (hex) => {
+          try {
+            if (!hex || !this.plugin.isValidHexColor(hex)) return "";
+            const m = allSwatches.find((sw) => sw && sw.color && String(sw.color).toLowerCase() === String(hex).toLowerCase());
+            return String(m && m.name ? m.name : "").toLowerCase();
+          } catch (_) {
+            return "";
+          }
+        };
+        const tHex = e && e.textColor && e.textColor !== "currentColor" ? e.textColor : this.plugin.isValidHexColor(e && e.color) ? e.color : "";
+        const bHex = this.plugin.isValidHexColor(e && e.backgroundColor) ? e.backgroundColor : "";
+        const tName = getSwatchName(tHex);
+        const bName = getSwatchName(bHex);
         const text = [
           ...patterns.map((p) => p.toLowerCase()),
           String(e.presetLabel || "").toLowerCase(),
           String(e.flags || "").toLowerCase(),
-          String(e.styleType || "").toLowerCase()
+          String(e.styleType || "").toLowerCase(),
+          tName,
+          bName
         ].join(" ");
         return text.includes(q);
       }) : entriesToDisplay;
@@ -14331,8 +14857,8 @@ var ColorSettingTab = class extends PluginSettingTab {
     }
   }
   display() {
-    const { containerEl } = this;
-    this.containerEl = containerEl;
+    const { containerEl: containerEl2 } = this;
+    this.containerEl = containerEl2;
     if (this._initializedSettingsUI) {
       try {
         this._refreshEntries();
@@ -14340,17 +14866,17 @@ var ColorSettingTab = class extends PluginSettingTab {
       }
       return;
     }
-    containerEl.empty();
+    containerEl2.empty();
     this.onClose();
     this._cleanupHandlers = [];
-    containerEl.createEl("h1", { text: this.plugin.t("settings_title", "Always Color Text Settings") });
-    new Setting(containerEl).setName(this.plugin.t("latest_release_notes_label", "Latest Release Notes")).setDesc(this.plugin.t("latest_release_notes_desc", "View the most recent plugin release notes")).addButton((btn) => btn.setButtonText(this.plugin.t("open_changelog_button", "Open Changelog")).onClick(() => {
+    containerEl2.createEl("h1", { text: this.plugin.t("settings_title", "Always Color Text Settings") });
+    new Setting(containerEl2).setName(this.plugin.t("latest_release_notes_label", "Latest Release Notes")).setDesc(this.plugin.t("latest_release_notes_desc", "View the most recent plugin release notes")).addButton((btn) => btn.setButtonText(this.plugin.t("open_changelog_button", "Open Changelog")).onClick(() => {
       try {
         new ChangelogModal(this.app, this.plugin).open();
       } catch (e) {
       }
     }));
-    new Setting(containerEl).setName(this.plugin.t("language_label", "Language")).setDesc(this.plugin.t("language_desc", "Select the language to be used in this plugin")).addDropdown((d) => {
+    new Setting(containerEl2).setName(this.plugin.t("language_label", "Language")).setDesc(this.plugin.t("language_desc", "Select the language to be used in this plugin")).addDropdown((d) => {
       const langs = this.plugin.getAvailableLanguages();
       const names = { auto: this.plugin.t("language_auto", "System Default"), en: "English", es: "Spanish", fr: "French", eu: "Basque", ru: "Russian" };
       try {
@@ -14371,11 +14897,11 @@ var ColorSettingTab = class extends PluginSettingTab {
       });
       return d;
     });
-    new Setting(containerEl).setName(this.plugin.t("enable_document_color", "Enable document color")).addToggle((t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("enable_document_color", "Enable document color")).addToggle((t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
       this.plugin.settings.enabled = v;
       await this.debouncedSaveSettings();
     }));
-    new Setting(containerEl).setName(this.plugin.t("color_in_reading_mode", "Color in reading mode")).addToggle((t) => t.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("color_in_reading_mode", "Color in reading mode")).addToggle((t) => t.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async (v) => {
       this.plugin.settings.disableReadingModeColoring = !v;
       await this.debouncedSaveSettings();
       try {
@@ -14418,7 +14944,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         debugError("SETTINGS", "disableReadingModeColoring handler failed", e);
       }
     }));
-    new Setting(containerEl).setName(this.plugin.t("force_full_render_reading", "Force full render in Reading mode")).setDesc(this.plugin.t("force_full_render_reading_desc", "When ON, reading-mode will attempt to color the entire document in one pass. May cause performance issues on large documents. Use with caution!")).addToggle((t) => t.setValue(this.plugin.settings.forceFullRenderInReading).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("force_full_render_reading", "Force full render in Reading mode")).setDesc(this.plugin.t("force_full_render_reading_desc", "When ON, reading-mode will attempt to color the entire document in one pass. May cause performance issues on large documents. Use with caution!")).addToggle((t) => t.setValue(this.plugin.settings.forceFullRenderInReading).onChange(async (v) => {
       this.plugin.settings.forceFullRenderInReading = v;
       await this.debouncedSaveSettings();
       try {
@@ -14427,7 +14953,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         debugError("SETTINGS", "forceFullRenderInReading handler failed", e);
       }
     }));
-    new Setting(containerEl).setName(this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
       this.plugin.settings.disableToggleModes.statusBar = !v;
       await this.plugin.saveSettings();
       try {
@@ -14452,7 +14978,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       } catch (e) {
       }
     }));
-    new Setting(containerEl).setName(this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
       this.plugin.settings.disableToggleModes.ribbon = !v;
       await this.plugin.saveSettings();
       try {
@@ -14477,7 +15003,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       } catch (e) {
       }
     }));
-    new Setting(containerEl).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.command).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.command).onChange(async (v) => {
       this.plugin.settings.disableToggleModes.command = !v;
       await this.plugin.saveSettings();
       try {
@@ -14500,14 +15026,14 @@ var ColorSettingTab = class extends PluginSettingTab {
       } catch (e) {
       }
     }));
-    containerEl.createEl("h3", { text: this.plugin.t("coloring_settings_header", "Coloring Settings") });
-    new Setting(containerEl).setName(this.plugin.t("regex_support", "Regex support")).setDesc(this.plugin.t("regex_support_desc", "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.")).addToggle((t) => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async (v) => {
+    containerEl2.createEl("h3", { text: this.plugin.t("coloring_settings_header", "Coloring Settings") });
+    new Setting(containerEl2).setName(this.plugin.t("regex_support", "Regex support")).setDesc(this.plugin.t("regex_support_desc", "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.")).addToggle((t) => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async (v) => {
       this.plugin.settings.enableRegexSupport = v;
       await this.plugin.saveSettings();
       this._initializedSettingsUI = false;
       this.display();
     }));
-    new Setting(containerEl).setName(this.plugin.t("disable_regex_safety", "Disable regex safety")).setDesc(this.plugin.t("disable_regex_safety_desc", "Allow complex or potentially dangerous expressions. May cause performance issues or freezes.")).addToggle((t) => t.setValue(this.plugin.settings.disableRegexSafety).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("disable_regex_safety", "Disable regex safety")).setDesc(this.plugin.t("disable_regex_safety_desc", "Allow complex or potentially dangerous expressions. May cause performance issues or freezes.")).addToggle((t) => t.setValue(this.plugin.settings.disableRegexSafety).onChange(async (v) => {
       this.plugin.settings.disableRegexSafety = v;
       await this.plugin.saveSettings();
       try {
@@ -14523,40 +15049,40 @@ var ColorSettingTab = class extends PluginSettingTab {
       } catch (e) {
       }
     }));
-    new Setting(containerEl).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(this.plugin.t("case_sensitive_desc", `If this is on, "word" and "Word" are treated as different. If it's off, they're colored the same.`)).addToggle((t) => t.setValue(this.plugin.settings.caseSensitive).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(this.plugin.t("case_sensitive_desc", `If this is on, "word" and "Word" are treated as different. If it's off, they're colored the same.`)).addToggle((t) => t.setValue(this.plugin.settings.caseSensitive).onChange(async (v) => {
       this.plugin.settings.caseSensitive = v;
       await this.debouncedSaveSettings();
     }));
-    new Setting(containerEl).setName(this.plugin.t("partial_match", "Partial match")).setDesc(this.plugin.t("partial_match_desc", 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')).addToggle((t) => t.setValue(this.plugin.settings.partialMatch).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("partial_match", "Partial match")).setDesc(this.plugin.t("partial_match_desc", 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')).addToggle((t) => t.setValue(this.plugin.settings.partialMatch).onChange(async (v) => {
       this.plugin.settings.partialMatch = v;
       await this.debouncedSaveSettings();
     }));
-    containerEl.createEl("h2", { text: this.plugin.t("one_time_actions_header", "One-Time Actions") });
-    new Setting(containerEl).setName(this.plugin.t("setting_color_once", "Color Once")).setDesc(this.plugin.t("setting_color_once_desc", "Inserts HTML inline for the selected text. This persists even if the plugin is turned off.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickColorOnce).onChange(async (v) => {
+    containerEl2.createEl("h2", { text: this.plugin.t("one_time_actions_header", "One-Time Actions") });
+    new Setting(containerEl2).setName(this.plugin.t("setting_color_once", "Color Once")).setDesc(this.plugin.t("setting_color_once_desc", "Inserts HTML inline for the selected text. This persists even if the plugin is turned off.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickColorOnce).onChange(async (v) => {
       this.plugin.settings.enableQuickColorOnce = v;
       await this.plugin.saveSettings();
     }));
-    new Setting(containerEl).setName(this.plugin.t("setting_highlight_once", "Highlight Once")).setDesc(this.plugin.t("setting_highlight_once_desc", "Inserts HTML inline with background styling. This persists even if the plugin is turned off.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickHighlightOnce).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("setting_highlight_once", "Highlight Once")).setDesc(this.plugin.t("setting_highlight_once_desc", "Inserts HTML inline with background styling. This persists even if the plugin is turned off.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickHighlightOnce).onChange(async (v) => {
       this.plugin.settings.enableQuickHighlightOnce = v;
       await this.plugin.saveSettings();
       this._initializedSettingsUI = false;
       this.display();
     }));
     if (this.plugin.settings.enableQuickHighlightOnce) {
-      new Setting(containerEl).setName(this.plugin.t("use_global_highlight_style", "Use Global Highlight Style for Highlight Once")).setDesc(this.plugin.t("use_global_highlight_style_desc", "Uses your global inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async (v) => {
+      new Setting(containerEl2).setName(this.plugin.t("use_global_highlight_style", "Use Global Highlight Style for Highlight Once")).setDesc(this.plugin.t("use_global_highlight_style_desc", "Uses your global inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async (v) => {
         this.plugin.settings.quickHighlightUseGlobalStyle = v;
         await this.plugin.saveSettings();
         this._initializedSettingsUI = false;
         this.display();
       }));
-      new Setting(containerEl).setName(this.plugin.t("style_highlight_once", "Style Highlight Once")).setDesc(this.plugin.t("style_highlight_once_desc", "Uses your custom inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightStyleEnable).onChange(async (v) => {
+      new Setting(containerEl2).setName(this.plugin.t("style_highlight_once", "Style Highlight Once")).setDesc(this.plugin.t("style_highlight_once_desc", "Uses your custom inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightStyleEnable).onChange(async (v) => {
         this.plugin.settings.quickHighlightStyleEnable = v;
         await this.plugin.saveSettings();
         this._initializedSettingsUI = false;
         this.display();
       }));
       if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
-        const previewSection2 = containerEl.createDiv();
+        const previewSection2 = containerEl2.createDiv();
         previewSection2.style.margin = "8px 0 12px 0";
         previewSection2.style.padding = "12px";
         previewSection2.style.borderRadius = "8px";
@@ -14575,9 +15101,24 @@ var ColorSettingTab = class extends PluginSettingTab {
           const hexWithAlpha = this.plugin.hexToHexWithAlpha(sampleColor, this.plugin.settings.quickHighlightOpacity ?? 25);
           const radius = this.plugin.settings.quickHighlightBorderRadius ?? 8;
           const pad = this.plugin.settings.quickHighlightHorizontalPadding ?? 4;
+          const vpad = this.plugin.settings.quickHighlightVerticalPadding ?? 0;
           previewText2.style.backgroundColor = hexWithAlpha;
           previewText2.style.borderRadius = radius + "px";
           previewText2.style.paddingLeft = previewText2.style.paddingRight = pad + "px";
+          try {
+            previewText2.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px");
+            previewText2.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px");
+            if (vpad < 0) {
+              previewText2.style.setProperty("margin-top", vpad + "px");
+              previewText2.style.setProperty("margin-bottom", vpad + "px");
+            }
+          } catch (e) {
+            previewText2.style.paddingTop = previewText2.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+            if (vpad < 0) {
+              previewText2.style.marginTop = vpad + "px";
+              previewText2.style.marginBottom = vpad + "px";
+            }
+          }
           previewText2.style.border = "";
           previewText2.style.borderTop = "";
           previewText2.style.borderBottom = "";
@@ -14593,7 +15134,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         this._updateQuickOncePreview = updateQuickOncePreview;
       }
       if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
-        new Setting(containerEl).setName(this.plugin.t("highlight_once_opacity", "Highlight once opacity")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.quickHighlightOpacity ?? 25).setDynamicTooltip().onChange(async (v) => {
+        new Setting(containerEl2).setName(this.plugin.t("highlight_once_opacity", "Highlight once opacity")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.quickHighlightOpacity ?? 25).setDynamicTooltip().onChange(async (v) => {
           this.plugin.settings.quickHighlightOpacity = v;
           await this.plugin.saveSettings();
           try {
@@ -14603,7 +15144,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         }));
         {
           let brInput;
-          new Setting(containerEl).setName(this.plugin.t("highlight_once_border_radius", "Highlight once border radius (px)")).addText((text) => {
+          new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_radius", "Highlight once border radius (px)")).addText((text) => {
             brInput = text;
             text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.quickHighlightBorderRadius ?? 8)).onChange(async (v) => {
               let val = parseInt(v);
@@ -14627,7 +15168,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         }
         {
           let hpInput;
-          new Setting(containerEl).setName(this.plugin.t("highlight_horizontal_padding", "Highlight horizontal padding (px)")).addText((text) => {
+          new Setting(containerEl2).setName(this.plugin.t("highlight_horizontal_padding", "Highlight horizontal padding (px)")).addText((text) => {
             hpInput = text;
             text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.quickHighlightHorizontalPadding ?? 4)).onChange(async (v) => {
               let val = parseInt(v);
@@ -14649,7 +15190,31 @@ var ColorSettingTab = class extends PluginSettingTab {
             }
           }));
         }
-        new Setting(containerEl).setName(this.plugin.t("enable_border_highlight_once", "Enable Border for Highlight Once")).setDesc(this.plugin.t("enable_border_highlight_once_desc", "Add a border to your inline highlight. The added HTML/CSS WILL be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightEnableBorder ?? false).onChange(async (v) => {
+        {
+          let vpInput;
+          new Setting(containerEl2).setName(this.plugin.t("highlight_vertical_padding", "Highlight vertical padding (px)")).addText((text) => {
+            vpInput = text;
+            text.setPlaceholder("e.g. 0, 1, 2").setValue(String(this.plugin.settings.quickHighlightVerticalPadding ?? 0)).onChange(async (v) => {
+              let val = parseInt(v);
+              if (isNaN(val)) val = 0;
+              this.plugin.settings.quickHighlightVerticalPadding = val;
+              await this.plugin.saveSettings();
+              try {
+                this._updateQuickOncePreview?.();
+              } catch (e) {
+              }
+            });
+          }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_0", "Reset to 0")).onClick(async () => {
+            this.plugin.settings.quickHighlightVerticalPadding = 0;
+            await this.plugin.saveSettings();
+            if (vpInput) vpInput.setValue("0");
+            try {
+              this._updateQuickOncePreview?.();
+            } catch (e) {
+            }
+          }));
+        }
+        new Setting(containerEl2).setName(this.plugin.t("enable_border_highlight_once", "Enable Border for Highlight Once")).setDesc(this.plugin.t("enable_border_highlight_once_desc", "Add a border to your inline highlight. The added HTML/CSS WILL be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightEnableBorder ?? false).onChange(async (v) => {
           this.plugin.settings.quickHighlightEnableBorder = v;
           await this.plugin.saveSettings();
           try {
@@ -14660,7 +15225,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           this.display();
         }));
         if (this.plugin.settings.quickHighlightEnableBorder) {
-          new Setting(containerEl).setName(this.plugin.t("highlight_once_border_style", "Highlight Once Border Style")).addDropdown((d) => {
+          new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_style", "Highlight Once Border Sides")).addDropdown((d) => {
             d.selectEl.style.width = "200px";
             return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.quickHighlightBorderStyle ?? "full").onChange(async (v) => {
               this.plugin.settings.quickHighlightBorderStyle = v;
@@ -14671,7 +15236,18 @@ var ColorSettingTab = class extends PluginSettingTab {
               }
             });
           });
-          new Setting(containerEl).setName(this.plugin.t("highlight_once_border_opacity", "Highlight Once Border Opacity")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.quickHighlightBorderOpacity ?? 100).setDynamicTooltip().onChange(async (v) => {
+          new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_line_style", "Border Style")).addDropdown((d) => {
+            d.selectEl.style.width = "200px";
+            return d.addOption("solid", this.plugin.t("opt_line_solid", "solid")).addOption("dashed", this.plugin.t("opt_line_dashed", "dashed")).addOption("dotted", this.plugin.t("opt_line_dotted", "dotted")).addOption("double", this.plugin.t("opt_line_double", "double")).addOption("groove", this.plugin.t("opt_line_groove", "groove")).addOption("ridge", this.plugin.t("opt_line_ridge", "ridge")).addOption("inset", this.plugin.t("opt_line_inset", "inset")).addOption("outset", this.plugin.t("opt_line_outset", "outset")).setValue(this.plugin.settings.quickHighlightBorderLineStyle ?? "solid").onChange(async (v) => {
+              this.plugin.settings.quickHighlightBorderLineStyle = v;
+              await this.plugin.saveSettings();
+              try {
+                this._updateQuickOncePreview?.();
+              } catch (e) {
+              }
+            });
+          });
+          new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_opacity", "Highlight Once Border Opacity")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.quickHighlightBorderOpacity ?? 100).setDynamicTooltip().onChange(async (v) => {
             this.plugin.settings.quickHighlightBorderOpacity = v;
             await this.plugin.saveSettings();
             try {
@@ -14681,7 +15257,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           }));
           {
             let btInput;
-            new Setting(containerEl).setName(this.plugin.t("highlight_once_border_thickness", "Highlight Once Border Thickness (px)")).addText((text) => {
+            new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_thickness", "Highlight Once Border Thickness (px)")).addText((text) => {
               btInput = text;
               text.setPlaceholder("e.g. 1, 2.5, 3.7").setValue(String(this.plugin.settings.quickHighlightBorderThickness ?? 1)).onChange(async (v) => {
                 let val = parseFloat(v);
@@ -14707,8 +15283,8 @@ var ColorSettingTab = class extends PluginSettingTab {
         }
       }
     }
-    containerEl.createEl("h3", { text: this.plugin.t("global_highlight_appearance_header", "Global Highlight Coloring Appearance") });
-    const previewSection = containerEl.createDiv();
+    containerEl2.createEl("h3", { text: this.plugin.t("global_highlight_appearance_header", "Global Highlight Coloring Appearance") });
+    const previewSection = containerEl2.createDiv();
     previewSection.style.marginBottom = "16px";
     previewSection.style.padding = "12px";
     previewSection.style.borderRadius = "8px";
@@ -14725,12 +15301,29 @@ var ColorSettingTab = class extends PluginSettingTab {
     previewText.style.maxWidth = "auto";
     previewText.style.wordWrap = "break-word";
     previewText.textContent = this.plugin.t("highlight_preview_text", "This is how your highlight will look like!");
-    const updatePreview = () => {
+    const updatePreview2 = () => {
       const color = "#01c8ff";
       const rgba = this.plugin.hexToRgba(color, this.plugin.settings.backgroundOpacity ?? 25);
       previewText.style.backgroundColor = rgba;
       previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
       previewText.style.paddingLeft = previewText.style.paddingRight = `${this.plugin.settings.highlightHorizontalPadding ?? 4}px`;
+      try {
+        const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+        previewText.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px");
+        previewText.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px");
+        if (vpad < 0) {
+          previewText.style.setProperty("margin-top", vpad + "px");
+          previewText.style.setProperty("margin-bottom", vpad + "px");
+        }
+      } catch (e) {
+        const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+        previewText.style.paddingTop = (vpad >= 0 ? vpad : 0) + "px";
+        previewText.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+        if (vpad < 0) {
+          previewText.style.marginTop = vpad + "px";
+          previewText.style.marginBottom = vpad + "px";
+        }
+      }
       previewText.style.border = "";
       previewText.style.borderTop = "";
       previewText.style.borderBottom = "";
@@ -14740,61 +15333,79 @@ var ColorSettingTab = class extends PluginSettingTab {
         this.plugin.applyBorderStyleToElement(previewText, null, color);
       }
     };
-    updatePreview();
-    new Setting(containerEl).setName(this.plugin.t("highlight_opacity", "Highlight opacity")).setDesc(this.plugin.t("highlight_opacity_desc", "Set the opacity of the highlight (0-100%)")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.backgroundOpacity ?? 25).setDynamicTooltip().onChange(async (v) => {
+    updatePreview2();
+    new Setting(containerEl2).setName(this.plugin.t("highlight_opacity", "Highlight opacity")).setDesc(this.plugin.t("highlight_opacity_desc", "Set the opacity of the highlight (0-100%)")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.backgroundOpacity ?? 25).setDynamicTooltip().onChange(async (v) => {
       this.plugin.settings.backgroundOpacity = v;
       await this.debouncedSaveSettings();
-      updatePreview();
+      updatePreview2();
     }));
     {
       let brInput;
-      new Setting(containerEl).setName(this.plugin.t("highlight_border_radius", "Highlight border radius (px)")).setDesc(this.plugin.t("highlight_border_radius_desc", "Set the border radius (in px) for rounded highlight corners")).addText((text) => {
+      new Setting(containerEl2).setName(this.plugin.t("highlight_border_radius", "Highlight border radius (px)")).setDesc(this.plugin.t("highlight_border_radius_desc", "Set the border radius (in px) for rounded highlight corners")).addText((text) => {
         brInput = text;
         text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.highlightBorderRadius ?? 8)).onChange(async (v) => {
           let val = parseInt(v);
           if (isNaN(val) || val < 0) val = 0;
           this.plugin.settings.highlightBorderRadius = val;
           await this.debouncedSaveSettings();
-          updatePreview();
+          updatePreview2();
         });
       }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_8", "Reset to 8")).onClick(async () => {
         this.plugin.settings.highlightBorderRadius = 8;
         await this.debouncedSaveSettings();
         if (brInput) brInput.setValue("8");
-        updatePreview();
+        updatePreview2();
       }));
     }
     {
       let hpInput;
-      new Setting(containerEl).setName(this.plugin.t("highlight_horizontal_padding", "Highlight horizontal padding (px)")).setDesc(this.plugin.t("highlight_horizontal_padding_desc", "Set the left and right padding (in px) for highlighted text")).addText((text) => {
+      new Setting(containerEl2).setName(this.plugin.t("highlight_horizontal_padding", "Highlight horizontal padding (px)")).setDesc(this.plugin.t("highlight_horizontal_padding_desc", "Set the left and right padding (in px) for highlighted text")).addText((text) => {
         hpInput = text;
         text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.highlightHorizontalPadding ?? 4)).onChange(async (v) => {
           let val = parseInt(v);
           if (isNaN(val) || val < 0) val = 0;
           this.plugin.settings.highlightHorizontalPadding = val;
           await this.debouncedSaveSettings();
-          updatePreview();
+          updatePreview2();
         });
       }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_4", "Reset to 4")).onClick(async () => {
         this.plugin.settings.highlightHorizontalPadding = 4;
         await this.debouncedSaveSettings();
         if (hpInput) hpInput.setValue("4");
-        updatePreview();
+        updatePreview2();
       }));
     }
-    new Setting(containerEl).setName(this.plugin.t("rounded_corners_wrapping", "Rounded corners on line wrapping")).setDesc(this.plugin.t("rounded_corners_wrapping_desc", "When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line.")).addToggle((t) => t.setValue(this.plugin.settings.enableBoxDecorationBreak ?? true).onChange(async (v) => {
+    {
+      let vpInput;
+      new Setting(containerEl2).setName(this.plugin.t("highlight_vertical_padding", "Highlight vertical padding (px)")).setDesc(this.plugin.t("highlight_vertical_padding_desc", "Set the top and bottom padding (in px) for highlighted text")).addText((text) => {
+        vpInput = text;
+        text.setPlaceholder("e.g. 0, 1, 2").setValue(String(this.plugin.settings.highlightVerticalPadding ?? 0)).onChange(async (v) => {
+          let val = parseInt(v);
+          if (isNaN(val) || val < 0) val = 0;
+          this.plugin.settings.highlightVerticalPadding = val;
+          await this.debouncedSaveSettings();
+          updatePreview2();
+        });
+      }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_0", "Reset to 0")).onClick(async () => {
+        this.plugin.settings.highlightVerticalPadding = 0;
+        await this.debouncedSaveSettings();
+        if (vpInput) vpInput.setValue("0");
+        updatePreview2();
+      }));
+    }
+    new Setting(containerEl2).setName(this.plugin.t("rounded_corners_wrapping", "Rounded corners on line wrapping")).setDesc(this.plugin.t("rounded_corners_wrapping_desc", "When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line.")).addToggle((t) => t.setValue(this.plugin.settings.enableBoxDecorationBreak ?? true).onChange(async (v) => {
       this.plugin.settings.enableBoxDecorationBreak = v;
       await this.debouncedSaveSettings();
     }));
-    new Setting(containerEl).setName(this.plugin.t("enable_highlight_border", "Enable Highlight Border")).setDesc(this.plugin.t("enable_highlight_border_desc", "Add a border around highlights. The border will match the text or highlight color.")).addToggle((t) => t.setValue(this.plugin.settings.enableBorderThickness ?? false).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("enable_highlight_border", "Enable Highlight Border")).setDesc(this.plugin.t("enable_highlight_border_desc", "Add a border around highlights. The border will match the text or highlight color.")).addToggle((t) => t.setValue(this.plugin.settings.enableBorderThickness ?? false).onChange(async (v) => {
       this.plugin.settings.enableBorderThickness = v;
       await this.plugin.saveSettings();
-      updatePreview();
+      updatePreview2();
       this._initializedSettingsUI = false;
       this.display();
     }));
     if (this.plugin.settings.enableBorderThickness) {
-      new Setting(containerEl).setName(this.plugin.t("border_style", "Border Style")).setDesc(this.plugin.t("border_style_desc", "Choose which sides to apply the border")).addDropdown((d) => {
+      new Setting(containerEl2).setName(this.plugin.t("border_style", "Border Sides")).setDesc(this.plugin.t("border_style_desc", "Choose which sides to apply the border")).addDropdown((d) => {
         d.selectEl.style.width = "200px";
         try {
           d.selectEl.style.textAlign = "center";
@@ -14803,17 +15414,29 @@ var ColorSettingTab = class extends PluginSettingTab {
         return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.borderStyle ?? "full").onChange(async (v) => {
           this.plugin.settings.borderStyle = v;
           await this.debouncedSaveSettings();
-          updatePreview();
+          updatePreview2();
         });
       });
-      new Setting(containerEl).setName(this.plugin.t("border_opacity", "Border Opacity")).setDesc(this.plugin.t("border_opacity_desc", "Set the opacity of the border (0-100%)")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.borderOpacity ?? 100).setDynamicTooltip().onChange(async (v) => {
+      new Setting(containerEl2).setName(this.plugin.t("border_line_style", "Border Style")).setDesc(this.plugin.t("border_line_style_desc", "Choose the border line style")).addDropdown((d) => {
+        d.selectEl.style.width = "200px";
+        try {
+          d.selectEl.style.textAlign = "center";
+        } catch (e) {
+        }
+        return d.addOption("solid", this.plugin.t("opt_line_solid", "solid")).addOption("dashed", this.plugin.t("opt_line_dashed", "dashed")).addOption("dotted", this.plugin.t("opt_line_dotted", "dotted")).addOption("double", this.plugin.t("opt_line_double", "double")).addOption("groove", this.plugin.t("opt_line_groove", "groove")).addOption("ridge", this.plugin.t("opt_line_ridge", "ridge")).addOption("inset", this.plugin.t("opt_line_inset", "inset")).addOption("outset", this.plugin.t("opt_line_outset", "outset")).setValue(this.plugin.settings.borderLineStyle ?? "solid").onChange(async (v) => {
+          this.plugin.settings.borderLineStyle = v;
+          await this.debouncedSaveSettings();
+          updatePreview2();
+        });
+      });
+      new Setting(containerEl2).setName(this.plugin.t("border_opacity", "Border Opacity")).setDesc(this.plugin.t("border_opacity_desc", "Set the opacity of the border (0-100%)")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.borderOpacity ?? 100).setDynamicTooltip().onChange(async (v) => {
         this.plugin.settings.borderOpacity = v;
         await this.debouncedSaveSettings();
-        updatePreview();
+        updatePreview2();
       }));
       {
         let btInput;
-        new Setting(containerEl).setName(this.plugin.t("border_thickness", "Border Thickness (px)")).setDesc(this.plugin.t("border_thickness_desc", "Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)")).addText((text) => {
+        new Setting(containerEl2).setName(this.plugin.t("border_thickness", "Border Thickness (px)")).setDesc(this.plugin.t("border_thickness_desc", "Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)")).addText((text) => {
           btInput = text;
           text.setPlaceholder("e.g. 1, 2.5, 3.7").setValue(String(this.plugin.settings.borderThickness ?? 1)).onChange(async (v) => {
             let val = parseFloat(v);
@@ -14821,20 +15444,22 @@ var ColorSettingTab = class extends PluginSettingTab {
             if (val > 5) val = 5;
             this.plugin.settings.borderThickness = val;
             await this.debouncedSaveSettings();
-            updatePreview();
+            updatePreview2();
           });
         }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_1", "Reset to 1")).onClick(async () => {
           this.plugin.settings.borderThickness = 1;
           await this.debouncedSaveSettings();
           if (btInput) btInput.setValue("1");
-          updatePreview();
+          updatePreview2();
         }));
       }
     }
-    containerEl.createEl("h2", { text: this.plugin.t("color_swatches_header", "Color Swatches") });
-    new Setting(containerEl).setName(this.plugin.t("color_picker_layout", "Color Picker Layout")).setDesc(this.plugin.t("color_picker_layout_desc", "Choose which color types to show when picking colors for text")).addDropdown((dd) => {
+    containerEl2.createEl("h2", { text: this.plugin.t("color_swatches_header", "Color Swatches") });
+    new Setting(containerEl2).setName(this.plugin.t("color_picker_layout", "Color Picker Layout")).setDesc(this.plugin.t("color_picker_layout_desc", "Choose which color types to show when picking colors for text")).addDropdown((dd) => {
       dd.addOption("both", this.plugin.t("opt_both_text_left", "Both: Text left, Highlight right"));
       dd.addOption("both-bg-left", this.plugin.t("opt_both_bg_left", "Both: Highlight left, Text right"));
+      dd.addOption("both-v-text-top", this.plugin.t("opt_both_text_top", "Both (vertical): Text above, Highlight below"));
+      dd.addOption("both-v-bg-top", this.plugin.t("opt_both_bg_top", "Both (vertical): Highlight above, Text below"));
       dd.addOption("text", this.plugin.t("opt_text_only", "Text color only"));
       dd.addOption("background", this.plugin.t("opt_background_only", "Highlight color only"));
       dd.setValue(this.plugin.settings.colorPickerMode || "both");
@@ -14851,25 +15476,25 @@ var ColorSettingTab = class extends PluginSettingTab {
         await this.plugin.saveSettings();
       });
     });
-    new Setting(containerEl).setName(this.plugin.t("enable_custom_swatches", "Enable custom swatches")).setDesc(this.plugin.t("enable_custom_swatches_desc", "Turn this on if you want to pick your own colors for the color picker.")).addToggle((t) => t.setValue(this.plugin.settings.customSwatchesEnabled).onChange(async (v) => {
+    new Setting(containerEl2).setName(this.plugin.t("enable_custom_swatches", "Enable custom swatches")).setDesc(this.plugin.t("enable_custom_swatches_desc", "Turn this on if you want to pick your own colors for the color picker.")).addToggle((t) => t.setValue(this.plugin.settings.customSwatchesEnabled).onChange(async (v) => {
       this.plugin.settings.customSwatchesEnabled = v;
       await this.plugin.saveSettings();
       this._refreshCustomSwatches();
     }));
-    this._customSwatchesContainer = containerEl.createDiv();
+    this._customSwatchesContainer = containerEl2.createDiv();
     this._refreshCustomSwatches();
-    const headerEl = containerEl.createEl("h3", { text: this.plugin.t("always_colored_texts_header", "Always Colored Texts") });
+    const headerEl = containerEl2.createEl("h3", { text: this.plugin.t("always_colored_texts_header", "Always Colored Texts") });
     try {
-      headerEl.id = "always-colored-texts-header";
+      headerEl.className = "always-colored-texts-header";
     } catch (e) {
     }
     try {
       headerEl.style.marginTop = "30px !important";
     } catch (e) {
     }
-    containerEl.createEl("p", { text: this.plugin.t("always_colored_texts_desc", "Here's where you manage your word / patterns and their colors.") });
-    new Setting(containerEl);
-    const entriesSearchContainer = containerEl.createDiv();
+    containerEl2.createEl("p", { text: this.plugin.t("always_colored_texts_desc", "Here's where you manage your word / patterns and their colors.") });
+    new Setting(containerEl2);
+    const entriesSearchContainer = containerEl2.createDiv();
     try {
       entriesSearchContainer.addClass("act-search-container");
     } catch (e) {
@@ -14912,13 +15537,13 @@ var ColorSettingTab = class extends PluginSettingTab {
     };
     entriesSearch.addEventListener("input", entriesSearchHandler);
     this._cleanupHandlers.push(() => entriesSearch.removeEventListener("input", entriesSearchHandler));
-    const listDiv = containerEl.createDiv();
+    const listDiv = containerEl2.createDiv();
     listDiv.addClass("color-words-list");
     try {
       this._refreshEntries();
     } catch (e) {
     }
-    const buttonRowDiv = containerEl.createDiv();
+    const buttonRowDiv = containerEl2.createDiv();
     buttonRowDiv.addClass("entries-button-row");
     const sortBtn = buttonRowDiv.createEl("button");
     const sortModes = ["last-added", "a-z", "reverse-a-z", "style-order", "color"];
@@ -15054,7 +15679,7 @@ var ColorSettingTab = class extends PluginSettingTab {
     };
     presetsBtn.addEventListener("click", presetsHandler);
     this._cleanupHandlers.push(() => presetsBtn.removeEventListener("click", presetsHandler));
-    new Setting(containerEl).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_words", "Delete all defined words/patterns")).onClick(async () => {
+    new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_words", "Delete all defined words/patterns")).onClick(async () => {
       new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_title", "Delete all words"), this.plugin.t("confirm_delete_all_desc", "Are you sure you want to delete all your colored words/patterns? You can't undo this!"), async () => {
         this.plugin.settings.wordEntries = [];
         await this.plugin.saveSettings();
@@ -15063,13 +15688,13 @@ var ColorSettingTab = class extends PluginSettingTab {
         this._refreshEntries();
       }).open();
     }));
-    containerEl.createEl("h2", { text: this.plugin.t("blacklist_words_header", "Blacklist words") });
-    containerEl.createEl("p", { text: this.plugin.t("blacklist_words_desc", "Keywords or patterns here will never be colored, even for partial matches.") });
-    new Setting(containerEl).setName(this.plugin.t("show_blacklist_menu", "Show Blacklist words in right-click menu")).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
+    containerEl2.createEl("h2", { text: this.plugin.t("blacklist_words_header", "Blacklist words") });
+    containerEl2.createEl("p", { text: this.plugin.t("blacklist_words_desc", "Keywords or patterns here will never be colored, even for partial matches.") });
+    new Setting(containerEl2).setName(this.plugin.t("show_blacklist_menu", "Show Blacklist words in right-click menu")).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
       this.plugin.settings.enableBlacklistMenu = v;
       await this.plugin.saveSettings();
     }));
-    const blSearchContainer = containerEl.createDiv();
+    const blSearchContainer = containerEl2.createDiv();
     try {
       blSearchContainer.addClass("act-search-container");
     } catch (e) {
@@ -15111,10 +15736,10 @@ var ColorSettingTab = class extends PluginSettingTab {
     };
     blSearch.addEventListener("input", blSearchHandler);
     this._cleanupHandlers.push(() => blSearch.removeEventListener("input", blSearchHandler));
-    this._blacklistWordsContainer = containerEl.createDiv();
+    this._blacklistWordsContainer = containerEl2.createDiv();
     this._blacklistWordsContainer.addClass("blacklist-words-list");
     this._refreshBlacklistWords();
-    const blacklistButtonRowDiv = containerEl.createDiv();
+    const blacklistButtonRowDiv = containerEl2.createDiv();
     blacklistButtonRowDiv.addClass("blacklist-button-row");
     const blacklistSortBtn = blacklistButtonRowDiv.createEl("button");
     const blSortModes = ["last-added", "a-z", "reverse-a-z"];
@@ -15215,16 +15840,16 @@ var ColorSettingTab = class extends PluginSettingTab {
     };
     blacklistPresetsBtn.addEventListener("click", blacklistPresetsHandler);
     this._cleanupHandlers.push(() => blacklistPresetsBtn.removeEventListener("click", blacklistPresetsHandler));
-    new Setting(containerEl).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_blacklist", "Delete all blacklisted words/patterns")).onClick(async () => {
+    new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_blacklist", "Delete all blacklisted words/patterns")).onClick(async () => {
       new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_blacklist_title", "Delete all blacklisted words"), this.plugin.t("confirm_delete_all_blacklist_desc", "Are you sure you want to delete all blacklist entries? You can't undo this!"), async () => {
         this.plugin.settings.blacklistEntries = [];
         await this.plugin.saveSettings();
         this._refreshBlacklistWords();
       }).open();
     }));
-    containerEl.createEl("h3", { text: this.plugin.t("file_folder_rules_header", "File & Folder Coloring Rules") });
-    containerEl.createEl("p", { text: this.plugin.t("file_folder_rules_desc", "Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.") });
-    const prSearchContainer = containerEl.createDiv();
+    containerEl2.createEl("h3", { text: this.plugin.t("file_folder_rules_header", "File & Folder Coloring Rules") });
+    containerEl2.createEl("p", { text: this.plugin.t("file_folder_rules_desc", "Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.") });
+    const prSearchContainer = containerEl2.createDiv();
     try {
       prSearchContainer.addClass("act-search-container");
     } catch (e) {
@@ -15267,10 +15892,10 @@ var ColorSettingTab = class extends PluginSettingTab {
     prSearch.addEventListener("input", prSearchHandler);
     prSearch.addEventListener("click", prSearchHandler);
     this._cleanupHandlers.push(() => prSearch.removeEventListener("input", prSearchHandler));
-    this._pathRulesContainer = containerEl.createDiv();
+    this._pathRulesContainer = containerEl2.createDiv();
     this._pathRulesContainer.addClass("path-rules-list");
     this._refreshPathRules();
-    const pathBtnRow = containerEl.createDiv();
+    const pathBtnRow = containerEl2.createDiv();
     pathBtnRow.addClass("path-button-row");
     const pathSortBtn = pathBtnRow.createEl("button");
     const pathSortModes = ["last-added", "a-z", "reverse-a-z", "mode", "type"];
@@ -15307,7 +15932,7 @@ var ColorSettingTab = class extends PluginSettingTab {
     };
     pathAddBtn.addEventListener("click", pathAddHandler);
     this._cleanupHandlers.push(() => pathAddBtn.removeEventListener("click", pathAddHandler));
-    new Setting(containerEl).setName(this.plugin.t("disable_coloring_current_file", "Disable coloring for current file")).setDesc(this.plugin.t("disable_coloring_current_file_desc", "Adds an exclude rule for the active file under File & Folder Coloring Rules.")).addButton((b) => b.setButtonText(this.plugin.t("btn_disable_for_this_file", "Disable for this file")).onClick(async () => {
+    new Setting(containerEl2).setName(this.plugin.t("disable_coloring_current_file", "Disable coloring for current file")).setDesc(this.plugin.t("disable_coloring_current_file_desc", "Adds an exclude rule for the active file under File & Folder Coloring Rules.")).addButton((b) => b.setButtonText(this.plugin.t("btn_disable_for_this_file", "Disable for this file")).onClick(async () => {
       const md = this.app.workspace.getActiveFile();
       if (!md) {
         new Notice(this.plugin.t("notice_no_active_file_to_disable", "No active file to disable coloring for."));
@@ -15331,10 +15956,10 @@ var ColorSettingTab = class extends PluginSettingTab {
       }
       new Notice(this.plugin.t("notice_coloring_disabled_for_path", `Coloring disabled for {path}`, { path: md.path }));
     }));
-    this._disabledFilesContainer = containerEl.createDiv();
+    this._disabledFilesContainer = containerEl2.createDiv();
     this._refreshDisabledFiles();
-    containerEl.createEl("hr");
-    const advRow = containerEl.createDiv();
+    containerEl2.createEl("hr");
+    const advRow = containerEl2.createDiv();
     advRow.style.display = "flex";
     advRow.style.alignItems = "center";
     advRow.style.justifyContent = "space-between";
@@ -15356,9 +15981,9 @@ var ColorSettingTab = class extends PluginSettingTab {
     };
     manageBtn.addEventListener("click", manageHandler);
     this._cleanupHandlers.push(() => manageBtn.removeEventListener("click", manageHandler));
-    containerEl.createEl("hr");
-    containerEl.createEl("h2", { text: this.plugin.t("data_export_import_header", "Data Export/Import") });
-    new Setting(containerEl).setName(this.plugin.t("export_plugin_data", "Export plugin data")).setDesc(this.plugin.t("export_plugin_data_desc", "Export settings, words, and rules to a JSON file.")).addButton((b) => b.setButtonText(this.plugin.t("btn_export", "Export")).onClick(async () => {
+    containerEl2.createEl("hr");
+    containerEl2.createEl("h2", { text: this.plugin.t("data_export_import_header", "Data Export/Import") });
+    new Setting(containerEl2).setName(this.plugin.t("export_plugin_data", "Export plugin data")).setDesc(this.plugin.t("export_plugin_data_desc", "Export settings, words, and rules to a JSON file.")).addButton((b) => b.setButtonText(this.plugin.t("btn_export", "Export")).onClick(async () => {
       try {
         const fname = await this.plugin.exportSettingsToPickedLocation();
         new Notice(this.plugin.t("notice_exported", `Exported: {fname}`, { fname }));
@@ -15366,7 +15991,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         new Notice(this.plugin.t("notice_export_failed", "Export failed"));
       }
     }));
-    new Setting(containerEl).setName(this.plugin.t("import_plugin_data", "Import plugin data")).setDesc(this.plugin.t("import_plugin_data_desc", "Import settings from a JSON file")).addButton((b) => b.setButtonText(this.plugin.t("btn_import", "Import")).onClick(() => {
+    new Setting(containerEl2).setName(this.plugin.t("import_plugin_data", "Import plugin data")).setDesc(this.plugin.t("import_plugin_data_desc", "Import settings from a JSON file")).addButton((b) => b.setButtonText(this.plugin.t("btn_import", "Import")).onClick(() => {
       const input = document.createElement("input");
       input.type = "file";
       input.accept = "application/json";
@@ -15459,16 +16084,28 @@ var ColorPickerModal = class extends Modal {
     this._eventListeners = [];
     const cpm = this.plugin.settings.colorPickerMode || "both";
     const forcedSingle = this.mode === "text" || this.mode === "background";
-    const isBoth = !forcedSingle && (cpm === "both" || cpm === "both-bg-left");
-    this.modalEl.style.maxWidth = isBoth ? "650px" : "480px";
+    const isBoth = !forcedSingle && (cpm === "both" || cpm === "both-bg-left" || cpm === "both-v-text-top" || cpm === "both-v-bg-top");
+    const isHorizontalBoth = !forcedSingle && (cpm === "both" || cpm === "both-bg-left");
+    const isVerticalBoth = !forcedSingle && (cpm === "both-v-text-top" || cpm === "both-v-bg-top");
+    this.modalEl.style.maxWidth = isHorizontalBoth ? "650px" : "480px";
     this.modalEl.style.width = "100%";
     this.modalEl.style.margin = "0";
     this.modalEl.style.padding = "0";
+    try {
+      this.modalEl.addClass("act-color-picker-modal");
+    } catch (e) {
+    }
     contentEl.style.padding = "24px";
     contentEl.style.boxSizing = "border-box";
     contentEl.style.display = "grid";
-    contentEl.style.gridTemplateColumns = isBoth ? "1fr 1fr" : "1fr";
-    contentEl.style.gap = "10px";
+    contentEl.style.gridTemplateColumns = isHorizontalBoth ? "1fr 1fr" : "1fr";
+    contentEl.style.columnGap = "10px";
+    contentEl.style.rowGap = "10px";
+    contentEl.style.alignItems = "stretch";
+    try {
+      contentEl.addClass("act-color-picker-content");
+    } catch (e) {
+    }
     const h2 = contentEl.createEl("h2", { text: this.plugin.t("pick_color_header", "Pick Color") });
     h2.style.marginTop = "0";
     h2.style.marginBottom = "16px";
@@ -15507,7 +16144,11 @@ var ColorPickerModal = class extends Modal {
     }
     const updateGridCols = () => {
       try {
-        contentEl.style.gridTemplateColumns = isBoth && window.innerWidth > 768 ? "1fr 1fr" : "1fr";
+        if (isHorizontalBoth && window.innerWidth > 768) {
+          contentEl.style.gridTemplateColumns = "1fr 1fr";
+        } else {
+          contentEl.style.gridTemplateColumns = "1fr";
+        }
       } catch (e) {
       }
     };
@@ -15567,7 +16208,8 @@ var ColorPickerModal = class extends Modal {
       col.style.borderRadius = "12px";
       col.style.padding = "12px";
       col.addClass("color-picker-panel");
-      col.style.marginBottom = "-23px";
+      col.style.marginBottom = "0";
+      col.style.height = "100%";
       const header = col.createDiv();
       header.style.display = "flex";
       header.style.alignItems = "center";
@@ -15624,9 +16266,16 @@ var ColorPickerModal = class extends Modal {
               const rgba = this.plugin.hexToRgba(val, this.plugin.settings.backgroundOpacity ?? 25);
               const radius = this.plugin.settings.highlightBorderRadius ?? 8;
               const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
+              const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
               preview.style.backgroundColor = rgba;
               preview.style.borderRadius = radius + "px";
               preview.style.paddingLeft = preview.style.paddingRight = pad + "px";
+              try {
+                preview.style.setProperty("padding-top", vpad + "px");
+                preview.style.setProperty("padding-bottom", vpad + "px");
+              } catch (e) {
+                preview.style.paddingTop = preview.style.paddingBottom = vpad + "px";
+              }
               if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
                 preview.style.boxDecorationBreak = "clone";
                 preview.style.WebkitBoxDecorationBreak = "clone";
@@ -15636,9 +16285,16 @@ var ColorPickerModal = class extends Modal {
               const hexWithAlpha = this.plugin.hexToHexWithAlpha(val, this.plugin.settings.quickHighlightOpacity ?? 25);
               const radius = this.plugin.settings.quickHighlightBorderRadius ?? 8;
               const pad = this.plugin.settings.quickHighlightHorizontalPadding ?? 4;
+              const vpad = this.plugin.settings.quickHighlightVerticalPadding ?? 0;
               preview.style.backgroundColor = hexWithAlpha;
               preview.style.borderRadius = radius + "px";
               preview.style.paddingLeft = preview.style.paddingRight = pad + "px";
+              try {
+                preview.style.setProperty("padding-top", vpad + "px");
+                preview.style.setProperty("padding-bottom", vpad + "px");
+              } catch (e) {
+                preview.style.paddingTop = preview.style.paddingBottom = vpad + "px";
+              }
               const borderCss = this.plugin.generateOnceBorderStyle(val);
               try {
                 preview.style.cssText += borderCss;
@@ -15649,12 +16305,19 @@ var ColorPickerModal = class extends Modal {
               preview.style.backgroundColor = rgba;
               preview.style.borderRadius = "";
               preview.style.paddingLeft = preview.style.paddingRight = "";
+              preview.style.paddingTop = preview.style.paddingBottom = "";
             }
           } else {
             const rgba = this.plugin.hexToRgba(val, this.plugin.settings.backgroundOpacity ?? 25);
             preview.style.backgroundColor = rgba;
             this.plugin.applyBorderStyleToElement(preview, null, val);
             preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + "px";
+            try {
+              preview.style.setProperty("padding-top", (this.plugin.settings.highlightVerticalPadding ?? 0) + "px");
+              preview.style.setProperty("padding-bottom", (this.plugin.settings.highlightVerticalPadding ?? 0) + "px");
+            } catch (e) {
+              preview.style.paddingTop = preview.style.paddingBottom = (this.plugin.settings.highlightVerticalPadding ?? 0) + "px";
+            }
             if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
               preview.style.borderRadius = "0px";
             } else {
@@ -15727,21 +16390,28 @@ var ColorPickerModal = class extends Modal {
       panelStates[type] = { hex, colorInput };
       return col;
     };
+    let lastPanelEl = null;
     if (this.mode === "text") {
-      buildPanel("Text Color", "text");
+      lastPanelEl = buildPanel("Text Color", "text");
     } else if (this.mode === "background") {
-      buildPanel("Highlight Color", "background");
+      lastPanelEl = buildPanel("Highlight Color", "background");
     } else {
       if (cpm === "text") {
-        buildPanel("Text Color", "text");
+        lastPanelEl = buildPanel("Text Color", "text");
       } else if (cpm === "background") {
+        lastPanelEl = buildPanel("Highlight Color", "background");
+      } else if (cpm === "both-v-bg-top") {
         buildPanel("Highlight Color", "background");
+        lastPanelEl = buildPanel("Text Color", "text");
+      } else if (cpm === "both-v-text-top") {
+        buildPanel("Text Color", "text");
+        lastPanelEl = buildPanel("Highlight Color", "background");
       } else if (cpm === "both-bg-left") {
         buildPanel("Highlight Color", "background");
-        buildPanel("Text Color", "text");
+        lastPanelEl = buildPanel("Text Color", "text");
       } else {
         buildPanel("Text Color", "text");
-        buildPanel("Highlight Color", "background");
+        lastPanelEl = buildPanel("Highlight Color", "background");
       }
     }
     const s = this._selectedText || "";
@@ -15806,6 +16476,14 @@ var ColorPickerModal = class extends Modal {
         break;
       }
     }
+    if (!initText && this._preFillTextColor && this.plugin.isValidHexColor(this._preFillTextColor)) {
+      initText = this._preFillTextColor;
+      existingStyle = existingStyle || "text";
+    }
+    if (!initBg && this._preFillBgColor && this.plugin.isValidHexColor(this._preFillBgColor)) {
+      initBg = this._preFillBgColor;
+      existingStyle = existingStyle || (initText ? "both" : "highlight");
+    }
     const tp = panelStates["text"];
     const bp = panelStates["background"];
     if (!existingStyle) {
@@ -15825,6 +16503,12 @@ var ColorPickerModal = class extends Modal {
       preview.style.backgroundColor = rgba;
       this.plugin.applyBorderStyleToElement(preview, initText, initBg);
       preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + "px";
+      try {
+        preview.style.setProperty("padding-top", (this.plugin.settings.highlightVerticalPadding ?? 0) + "px");
+        preview.style.setProperty("padding-bottom", (this.plugin.settings.highlightVerticalPadding ?? 0) + "px");
+      } catch (e) {
+        preview.style.paddingTop = preview.style.paddingBottom = (this.plugin.settings.highlightVerticalPadding ?? 0) + "px";
+      }
       if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
         preview.style.borderRadius = "0px";
       } else {
@@ -15842,7 +16526,7 @@ var ColorPickerModal = class extends Modal {
     actionRow.style.display = "flex";
     actionRow.style.justifyContent = "flex-end";
     actionRow.style.gap = "8px";
-    actionRow.style.marginTop = "16px";
+    actionRow.style.marginTop = "6px";
     actionRow.style.gridColumn = "1 / -1";
     const submitFn = async () => {
       const textPanel = panelStates["text"];

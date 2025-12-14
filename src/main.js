@@ -542,6 +542,7 @@ module.exports = class AlwaysColorText extends Plugin {
     this._memoryManager = new MemoryManager(this);
     try { this._memoryManager.start(); } catch (_) {}
     try { this._lpObservers = new WeakMap(); } catch (_) { this._lpObservers = new WeakMap(); }
+    try { this._readingModeIntervals = new Map(); } catch (_) { this._readingModeIntervals = new Map(); }
   }
 
   applyDisabledNeutralizerStyles() {
@@ -937,8 +938,9 @@ module.exports = class AlwaysColorText extends Plugin {
                     const hexWithAlpha = this.hexToHexWithAlpha(bg, this.settings.quickHighlightOpacity ?? 25);
                     const radius = this.settings.quickHighlightBorderRadius ?? 8;
                     const pad = this.settings.quickHighlightHorizontalPadding ?? 4;
+                    const vpad = this.settings.quickHighlightVerticalPadding ?? 0;
                     const border = this.generateOnceBorderStyle(bg);
-                    style = `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${border}`;
+                    style = `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px; padding-top: ${vpad}px; padding-bottom: ${vpad}px;${border}`;
                   } else {
                     const rgba = this.hexToRgba(bg, 25);
                     style = `background-color: ${rgba};`;
@@ -1245,7 +1247,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // Add command for managing advanced rules
       addTrackedCommand({
         id: 'manage-advanced-rules',
-        name: this.t('command_manage_advanced_rules', 'Manage Advanced Rules'),
+        name: this.t('command_manage_advanced_rules', 'manage specific include/exclude rules'),
         callback: () => {
           try {
             new ManageRulesModal(this.app, this).open();
@@ -1622,7 +1624,66 @@ module.exports = class AlwaysColorText extends Plugin {
         
         if (matches.length > 50) break;
       }
-      
+
+      // Vertical padding input (px)
+      {
+        let vpInput;
+        new Setting(containerEl)
+          .setName(this.plugin.t('highlight_vertical_padding','Highlight vertical padding (px)'))
+          .setDesc(this.plugin.t('highlight_vertical_padding_desc','Set the top and bottom padding (in px) for highlighted text'))
+          .addText(text => {
+            vpInput = text;
+            text
+              .setPlaceholder('e.g. 0, 1, 2')
+              .setValue(String(this.plugin.settings.highlightVerticalPadding ?? 0))
+              .onChange(async v => {
+                let val = parseInt(v);
+                if (isNaN(val)) val = 0;
+                this.plugin.settings.highlightVerticalPadding = val;
+                await this.debouncedSaveSettings();
+                updatePreview();
+              });
+          })
+          .addExtraButton(btn => btn
+            .setIcon('reset')
+            .setTooltip(this.plugin.t('reset_to_0','Reset to 0'))
+            .onClick(async () => {
+              this.plugin.settings.highlightVerticalPadding = 0;
+              await this.debouncedSaveSettings();
+              if (vpInput) vpInput.setValue('0');
+              updatePreview();
+            }));
+      }
+
+      {
+        let vpInput;
+        new Setting(containerEl)
+          .setName(this.plugin.t('highlight_vertical_padding','Highlight vertical padding (px)'))
+          .setDesc(this.plugin.t('highlight_vertical_padding_desc','Set the top and bottom padding (in px) for highlighted text'))
+          .addText(text => {
+            vpInput = text;
+            text
+              .setPlaceholder('e.g. 0, 1, 2')
+              .setValue(String(this.plugin.settings.highlightVerticalPadding ?? 0))
+              .onChange(async v => {
+                let val = parseInt(v);
+                if (isNaN(val)) val = 0;
+                this.plugin.settings.highlightVerticalPadding = val;
+                await this.debouncedSaveSettings();
+                updatePreview();
+              });
+          })
+          .addExtraButton(btn => btn
+            .setIcon('reset')
+            .setTooltip(this.plugin.t('reset_to_0','Reset to 0'))
+            .onClick(async () => {
+              this.plugin.settings.highlightVerticalPadding = 0;
+              await this.debouncedSaveSettings();
+              if (vpInput) vpInput.setValue('0');
+              updatePreview();
+            }));
+      }
+
       // Apply highlights if we found matches
       if (matches.length > 0) {
         this.applySimpleHighlights(node, matches, text);
@@ -2052,6 +2113,22 @@ module.exports = class AlwaysColorText extends Plugin {
             try { span.style.setProperty('background-color', bgColor, 'important'); } catch (_) { span.style.backgroundColor = bgColor; }
             try { span.style.setProperty('display', 'inline-block', 'important'); } catch (_) { span.style.display = 'inline-block'; }
             span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            try { 
+              const vpad = (this.settings.highlightVerticalPadding ?? 0);
+              span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+              span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+              if (vpad < 0) {
+                span.style.setProperty('margin-top', vpad + 'px', 'important');
+                span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+              }
+            } catch (_) { 
+              const vpad = (this.settings.highlightVerticalPadding ?? 0);
+              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px'; 
+              if (vpad < 0) {
+                span.style.marginTop = vpad + 'px';
+                span.style.marginBottom = vpad + 'px';
+              }
+            }
             span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = 'clone';
@@ -2074,6 +2151,22 @@ module.exports = class AlwaysColorText extends Plugin {
             try { span.style.setProperty('background-color', bgColor, 'important'); } catch (_) { span.style.backgroundColor = bgColor; }
             try { span.style.setProperty('display', 'inline-block', 'important'); } catch (_) { span.style.display = 'inline-block'; }
             span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            try { 
+              const vpad = (this.settings.highlightVerticalPadding ?? 0);
+              span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+              span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+              if (vpad < 0) {
+                span.style.setProperty('margin-top', vpad + 'px', 'important');
+                span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+              }
+            } catch (_) { 
+              const vpad = (this.settings.highlightVerticalPadding ?? 0);
+              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px'; 
+              if (vpad < 0) {
+                span.style.marginTop = vpad + 'px';
+                span.style.marginBottom = vpad + 'px';
+              }
+            }
             span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = 'clone';
@@ -2125,6 +2218,22 @@ module.exports = class AlwaysColorText extends Plugin {
             try { span.style.setProperty('background-color', bgColor, 'important'); } catch (_) { span.style.backgroundColor = bgColor; }
             try { span.style.setProperty('display', 'inline-block', 'important'); } catch (_) { span.style.display = 'inline-block'; }
             span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            try { 
+              const vpad = (this.settings.highlightVerticalPadding ?? 0);
+              span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+              span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+              if (vpad < 0) {
+                span.style.setProperty('margin-top', vpad + 'px', 'important');
+                span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+              }
+            } catch (_) { 
+              const vpad = (this.settings.highlightVerticalPadding ?? 0);
+              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+              if (vpad < 0) {
+                span.style.marginTop = vpad + 'px';
+                span.style.marginBottom = vpad + 'px';
+              }
+            }
             span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = 'clone';
@@ -2148,6 +2257,22 @@ module.exports = class AlwaysColorText extends Plugin {
           try { span.style.setProperty('background-color', bgColor, 'important'); } catch (_) { span.style.backgroundColor = bgColor; }
           try { span.style.setProperty('display', 'inline-block', 'important'); } catch (_) { span.style.display = 'inline-block'; }
           span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+          try { 
+            const vpad = (this.settings.highlightVerticalPadding ?? 0);
+            span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+            span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+            if (vpad < 0) {
+              span.style.setProperty('margin-top', vpad + 'px', 'important');
+              span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+            }
+          } catch (_) { 
+            const vpad = (this.settings.highlightVerticalPadding ?? 0);
+            span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+            if (vpad < 0) {
+              span.style.marginTop = vpad + 'px';
+              span.style.marginBottom = vpad + 'px';
+            }
+          }
           span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
           if (this.settings.enableBoxDecorationBreak ?? true) {
             span.style.boxDecorationBreak = 'clone';
@@ -2232,6 +2357,7 @@ module.exports = class AlwaysColorText extends Plugin {
           try { span.style.setProperty('background-color', rgba, 'important'); } catch (_) { span.style.backgroundColor = rgba; }
           span.style.paddingLeft = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
           span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+          try { span.style.setProperty('padding-top', (this.settings.highlightVerticalPadding ?? 0) + 'px', 'important'); span.style.setProperty('padding-bottom', (this.settings.highlightVerticalPadding ?? 0) + 'px', 'important'); } catch (_) { span.style.paddingTop = span.style.paddingBottom = (this.settings.highlightVerticalPadding ?? 0) + 'px'; }
           span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
           if (this.settings.enableBoxDecorationBreak ?? true) {
             span.style.boxDecorationBreak = 'clone';
@@ -2244,6 +2370,7 @@ module.exports = class AlwaysColorText extends Plugin {
             try { span.style.setProperty('background-color', rgba, 'important'); } catch (_) { span.style.backgroundColor = rgba; }
             span.style.paddingLeft = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
             span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            try { span.style.setProperty('padding-top', (this.settings.highlightVerticalPadding ?? 0) + 'px', 'important'); span.style.setProperty('padding-bottom', (this.settings.highlightVerticalPadding ?? 0) + 'px', 'important'); } catch (_) { span.style.paddingTop = span.style.paddingBottom = (this.settings.highlightVerticalPadding ?? 0) + 'px'; }
             span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = 'clone';
@@ -2546,11 +2673,13 @@ module.exports = class AlwaysColorText extends Plugin {
       backgroundOpacity: 35, // percent
       highlightBorderRadius: 4, // px
       highlightHorizontalPadding: 4, // px
+      highlightVerticalPadding: 0, // px
       enableBoxDecorationBreak: true, // Toggle for rounded corners on text wrapping
       enableBorderThickness: false, // Toggle for border on background highlights
       borderOpacity: 100, // percent (0-100)
       borderThickness: 2, // px (0-5)
       borderStyle: 'full', // 'full', 'top', 'bottom', 'left', 'right', 'top-bottom', 'left-right', 'top-right', 'top-left', 'bottom-right', 'bottom-left'
+      borderLineStyle: 'solid',
       disabledFiles: [],
       customSwatchesEnabled: false,
       replaceDefaultSwatches: false,
@@ -2601,6 +2730,7 @@ module.exports = class AlwaysColorText extends Plugin {
       enableTextBgMenu: true,
       // Use swatch names for coloring entries
       useSwatchNamesForText: false,
+      linkSwatchUpdatesToEntries: false,
       colorPickerMode: 'both',
       advancedRules: [],
       pathRules: [],
@@ -2613,10 +2743,12 @@ module.exports = class AlwaysColorText extends Plugin {
       quickHighlightOpacity: 25,
       quickHighlightBorderRadius: 8,
       quickHighlightHorizontalPadding: 4,
+      quickHighlightVerticalPadding: 0,
       quickHighlightEnableBorder: false,
       quickHighlightBorderStyle: 'full',
       quickHighlightBorderOpacity: 100,
       quickHighlightBorderThickness: 1,
+      quickHighlightBorderLineStyle: 'solid',
       wordsSortMode: 'last-added',
       blacklistSortMode: 'last-added',
       pathSortMode: 'last-added',
@@ -3048,6 +3180,7 @@ module.exports = class AlwaysColorText extends Plugin {
       s.quickHighlightOpacity = Math.max(0, Math.min(100, Number(s.quickHighlightOpacity ?? 25)));
       s.quickHighlightBorderRadius = Math.max(0, parseInt(s.quickHighlightBorderRadius ?? 8) || 0);
       s.quickHighlightHorizontalPadding = Math.max(0, parseInt(s.quickHighlightHorizontalPadding ?? 4) || 0);
+      s.quickHighlightVerticalPadding = Math.max(0, parseInt(s.quickHighlightVerticalPadding ?? 0) || 0);
       s.quickHighlightEnableBorder = !!s.quickHighlightEnableBorder;
       s.quickHighlightBorderStyle = String(s.quickHighlightBorderStyle || 'full');
       s.quickHighlightBorderOpacity = Math.max(0, Math.min(100, Number(s.quickHighlightBorderOpacity ?? 100)));
@@ -3061,6 +3194,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const allowedPath = new Set(['last-added', 'a-z', 'reverse-a-z', 'mode', 'type']);
       if (!allowedPath.has(s.pathSortMode)) s.pathSortMode = 'last-added';
       s.language = String(s.language || 'en');
+      s.highlightVerticalPadding = Math.max(0, parseInt(s.highlightVerticalPadding ?? 0) || 0);
       this.settings = s;
     } catch (e) {}
   }
@@ -3607,7 +3741,8 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     const borderColorRgba = this.hexToRgba(sourceColor, borderOpacity);
     const borderStyleType = this.settings.borderStyle ?? 'full';
-    const borderCSS = `${borderThickness}px solid ${borderColorRgba}`;
+    const lineStyle = this.settings.borderLineStyle ?? 'solid';
+    const borderCSS = `${borderThickness}px ${lineStyle} ${borderColorRgba}`;
     switch (borderStyleType) {
       case 'bottom':
         element.style.borderBottom = borderCSS;
@@ -3668,7 +3803,8 @@ module.exports = class AlwaysColorText extends Plugin {
       borderColor = 'rgba(0,0,0,1)';
     }
     const borderStyleType = this.settings.borderStyle ?? 'full';
-    const borderCSS = `${borderThickness}px solid ${borderColor} !important;`;
+    const lineStyle = this.settings.borderLineStyle ?? 'solid';
+    const borderCSS = `${borderThickness}px ${lineStyle} ${borderColor} !important;`;
     switch (borderStyleType) {
       case 'bottom':
         return ` border-bottom: ${borderCSS}`;
@@ -3704,7 +3840,8 @@ module.exports = class AlwaysColorText extends Plugin {
       const opacity = this.settings.quickHighlightBorderOpacity ?? 100;
       const borderColor = this.hexToRgba(backgroundColor, opacity);
       const type = this.settings.quickHighlightBorderStyle ?? 'full';
-      const css = `${thickness}px solid ${borderColor}`;
+      const lineStyle = this.settings.quickHighlightBorderLineStyle ?? 'solid';
+      const css = `${thickness}px ${lineStyle} ${borderColor}`;
       switch (type) {
         case 'bottom': return ` border-bottom: ${css};`;
         case 'top': return ` border-top: ${css};`;
@@ -4298,8 +4435,8 @@ module.exports = class AlwaysColorText extends Plugin {
           compiled.fastTest = (text) => true;
         }
         this._compiledWordEntries.push(compiled);
-        } // End of inner for loop for each pattern in groupedPatterns
-      } // End of outer for loop for each entry
+        }
+      }
       // sort by specificity (longer patterns first)
       this._compiledWordEntries.sort((a, b) => b.specificity - a.specificity || b.pattern.length - a.pattern.length);
       // mark cached filtered/sorted entries dirty so callers rebuild lazily
@@ -4542,7 +4679,25 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         const bgColor = (entry && entry.backgroundColor) ? entry.backgroundColor : ((entry && entry.color) ? entry.color : resolvedTextColor);
         try { span.style.setProperty('background-color', this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25); }
-        try { span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); } catch (_) { span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; }
+        try { 
+          const vpad = (this.settings.highlightVerticalPadding ?? 0);
+          span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+          span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+          span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+          span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+          if (vpad < 0) {
+            span.style.setProperty('margin-top', vpad + 'px', 'important');
+            span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+          }
+        } catch (_) { 
+          const vpad = (this.settings.highlightVerticalPadding ?? 0);
+          span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
+          span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+          if (vpad < 0) {
+            span.style.marginTop = vpad + 'px';
+            span.style.marginBottom = vpad + 'px';
+          }
+        }
         const br = (this.settings.highlightBorderRadius ?? 8) + 'px';
         try { span.style.setProperty('border-radius', br, 'important'); } catch (_) { span.style.borderRadius = br; }
         if (this.settings.enableBoxDecorationBreak ?? true) {
@@ -4559,7 +4714,25 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         if (!hideBg) {
           try { span.style.setProperty('background-color', this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25); }
-          try { span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); } catch (_) { span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; }
+          try { 
+            const vpad = (this.settings.highlightVerticalPadding ?? 0);
+            span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+            span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+            span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+            span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+            if (vpad < 0) {
+              span.style.setProperty('margin-top', vpad + 'px', 'important');
+              span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+            }
+          } catch (_) { 
+            const vpad = (this.settings.highlightVerticalPadding ?? 0);
+            span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
+            span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+            if (vpad < 0) {
+              span.style.marginTop = vpad + 'px';
+              span.style.marginBottom = vpad + 'px';
+            }
+          }
           const br2 = (this.settings.highlightBorderRadius ?? 8) + 'px';
           try { span.style.setProperty('border-radius', br2, 'important'); } catch (_) { span.style.borderRadius = br2; }
           if (this.settings.enableBoxDecorationBreak ?? true) {
@@ -4634,6 +4807,43 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {
       debugError('READING_OBS', 'Failed to set up observer', e);
     }
+  }
+
+  // Cleanup reading mode observers and disconnect viewport observers
+  cleanupObserversForElement(el) {
+    // Clear any reading mode intervals associated with this element
+    try {
+      if (this._readingModeIntervals && this._readingModeIntervals instanceof Map) {
+        const intervals = this._readingModeIntervals.get(el);
+        if (Array.isArray(intervals)) {
+          for (const intervalId of intervals) {
+            try { clearInterval(intervalId); } catch (e) {}
+          }
+        }
+        this._readingModeIntervals.delete(el);
+      }
+    } catch (e) {}
+    
+    if (!el) return;
+    try {
+      // Clear reading mode interval if exists
+      if (this._readingModeIntervals && this._readingModeIntervals.has(el)) {
+        const interval = this._readingModeIntervals.get(el);
+        if (interval) clearInterval(interval);
+        this._readingModeIntervals.delete(el);
+      }
+    } catch (e) {}
+    
+    try {
+      // Disconnect viewport observer if exists
+      if (this._viewportObservers && this._viewportObservers.has(el)) {
+        const observer = this._viewportObservers.get(el);
+        if (observer && typeof observer.disconnect === 'function') {
+          observer.disconnect();
+        }
+        this._viewportObservers.delete(el);
+      }
+    } catch (e) {}
   }
 
   // Process only the active file: immediate visible blocks then deferred idle processing
@@ -4953,7 +5163,15 @@ module.exports = class AlwaysColorText extends Plugin {
               const bg = m.backgroundColor || m.textColor;
               if (bg) {
                 try { span.style.setProperty('background-color', this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25); }
-                try { span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); } catch (_) { span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; }
+                try { 
+                  span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+                  span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+                  span.style.setProperty('padding-top', (this.settings.highlightVerticalPadding ?? 0) + 'px', 'important'); 
+                  span.style.setProperty('padding-bottom', (this.settings.highlightVerticalPadding ?? 0) + 'px', 'important'); 
+                } catch (_) { 
+                  span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
+                  span.style.paddingTop = span.style.paddingBottom = (this.settings.highlightVerticalPadding ?? 0) + 'px';
+                }
                 const br = (this.settings.highlightBorderRadius ?? 8) + 'px';
                 try { span.style.setProperty('border-radius', br, 'important'); } catch (_) { span.style.borderRadius = br; }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
@@ -4978,7 +5196,15 @@ module.exports = class AlwaysColorText extends Plugin {
             }
             if (!hideBg && bg) {
               try { span.style.setProperty('background-color', this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25); }
-              try { span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); } catch (_) { span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; }
+              try { 
+                span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+                span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+                span.style.setProperty('padding-top', (this.settings.highlightVerticalPadding ?? 0) + 'px', 'important'); 
+                span.style.setProperty('padding-bottom', (this.settings.highlightVerticalPadding ?? 0) + 'px', 'important'); 
+              } catch (_) { 
+                span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
+                span.style.paddingTop = span.style.paddingBottom = (this.settings.highlightVerticalPadding ?? 0) + 'px';
+              }
               const br2 = (this.settings.highlightBorderRadius ?? 8) + 'px';
               try { span.style.setProperty('border-radius', br2, 'important'); } catch (_) { span.style.borderRadius = br2; }
               if (this.settings.enableBoxDecorationBreak ?? true) {
@@ -5997,8 +6223,27 @@ module.exports = class AlwaysColorText extends Plugin {
               else {
                 const bgColor = m.backgroundColor || m.color || (m.textColor && m.textColor !== 'currentColor' ? m.textColor : null) || (folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : null);
                 span.style.background = '';
+                try { span.style.setProperty('display', 'inline-block', 'important'); } catch (_) { span.style.display = 'inline-block'; }
                 try { span.style.setProperty('background-color', this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25); }
-                try { span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); } catch (_) { span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; }
+                try { 
+                  const vpad = (this.settings.highlightVerticalPadding ?? 0);
+                  span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+                  span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+                  span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+                  span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+                  if (vpad < 0) {
+                    span.style.setProperty('margin-top', vpad + 'px', 'important');
+                    span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+                  }
+                } catch (_) { 
+                  const vpad = (this.settings.highlightVerticalPadding ?? 0);
+                  span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
+                  span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+                  if (vpad < 0) {
+                    span.style.marginTop = vpad + 'px';
+                    span.style.marginBottom = vpad + 'px';
+                  }
+                }
                 const br = ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? '0px' : ((this.settings.highlightBorderRadius ?? 8) + 'px');
                 try { span.style.setProperty('border-radius', br, 'important'); } catch (_) { span.style.borderRadius = br; }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
@@ -6020,7 +6265,25 @@ module.exports = class AlwaysColorText extends Plugin {
               if (!hideBg) {
                 span.style.background = '';
                 try { span.style.setProperty('background-color', this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25); }
-                try { span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); } catch (_) { span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; }
+                try { 
+                  const vpad = (this.settings.highlightVerticalPadding ?? 0);
+                  span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+                  span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+                  span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+                  span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+                  if (vpad < 0) {
+                    span.style.setProperty('margin-top', vpad + 'px', 'important');
+                    span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+                  }
+                } catch (_) { 
+                  const vpad = (this.settings.highlightVerticalPadding ?? 0);
+                  span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
+                  span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+                  if (vpad < 0) {
+                    span.style.marginTop = vpad + 'px';
+                    span.style.marginBottom = vpad + 'px';
+                  }
+                }
                 const br2 = ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? '0px' : ((this.settings.highlightBorderRadius ?? 8) + 'px');
                 try { span.style.setProperty('border-radius', br2, 'important'); } catch (_) { span.style.borderRadius = br2; }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
@@ -6450,7 +6713,12 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         } catch (_) {}
       };
-      setInterval(memCheck, 2000);
+      const memCheckInterval = setInterval(memCheck, 2000);
+      try {
+        if (!this._readingModeIntervals) this._readingModeIntervals = new Map();
+        if (!this._readingModeIntervals.has(rootEl)) this._readingModeIntervals.set(rootEl, []);
+        this._readingModeIntervals.get(rootEl).push(memCheckInterval);
+      } catch (_) {}
     } catch (e) {
       debugError('VIEWPORT', 'setup failed', e);
     }
@@ -6505,7 +6773,7 @@ module.exports = class AlwaysColorText extends Plugin {
     for (const m of matches) {
       const style = effectiveStyle === 'text'
         ? `color: ${m.color} !important; --highlight-color: ${m.color};`
-        : `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+        : (() => { const vPad = (this.settings.highlightVerticalPadding ?? 0); const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`; })();
       
       const deco = Decoration.mark({
         attributes: { style }
@@ -7440,7 +7708,11 @@ module.exports = class AlwaysColorText extends Plugin {
         if (hideText && hideBg) continue;
         const borderStyle = this.generateBorderStyle(hideText ? null : m.textColor, hideBg ? null : m.backgroundColor);
         const textPart = hideText ? '' : `color: ${m.textColor} !important; --highlight-color: ${m.textColor}; `;
-        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+        const vPad = (this.settings.highlightVerticalPadding ?? 0);
+        const vPadCss = vPad >= 0 
+          ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
+          : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
+        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         // Check the styleType to determine how to apply the color
@@ -7454,7 +7726,11 @@ module.exports = class AlwaysColorText extends Plugin {
           // Background highlight only
           const bgColor = m.backgroundColor || m.color;
           const borderStyle = this.generateBorderStyle(null, bgColor);
-          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
+          const vPadH = (this.settings.highlightVerticalPadding ?? 0);
+          const vPadCssH = vPadH >= 0 
+            ? `padding-top: ${vPadH}px !important; padding-bottom: ${vPadH}px !important;`
+            : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadH}px !important; margin-bottom: ${vPadH}px !important;`;
+          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCssH}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
         } else if (styleType === 'both') {
           // Both text and background color
           const textColor = (m.textColor && m.textColor !== 'currentColor') ? m.textColor : (m.color || null);
@@ -7464,7 +7740,11 @@ module.exports = class AlwaysColorText extends Plugin {
           if (hideText && hideBg) continue;
           const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor);
           const textPart = hideText ? '' : (textColor ? `color: ${textColor} !important; --highlight-color: ${textColor}; ` : '');
-          const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+          const vPadB = (this.settings.highlightVerticalPadding ?? 0);
+          const vPadCssB = vPadB >= 0 
+            ? `padding-top: ${vPadB}px !important; padding-bottom: ${vPadB}px !important;`
+            : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadB}px !important; margin-bottom: ${vPadB}px !important;`;
+          const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCssB}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           // Default to text color
@@ -8228,7 +8508,7 @@ module.exports = class AlwaysColorText extends Plugin {
         if (hideText && hideBg) continue;
         const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor);
         const textPart = hideText ? '' : `color: ${textColor} !important; `;
-        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-top: ${(this.settings.highlightVerticalPadding ?? 0)}px !important; padding-bottom: ${(this.settings.highlightVerticalPadding ?? 0)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         if (effectiveStyle === 'none') continue;
@@ -8240,14 +8520,14 @@ module.exports = class AlwaysColorText extends Plugin {
           const bgColor = m.backgroundColor || m.color;
           if (hideBg) continue;
           const borderStyle = this.generateBorderStyle(null, bgColor);
-          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
+          style = (() => { const vPad = (this.settings.highlightVerticalPadding ?? 0); const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`; })();
         } else if (styleType === 'both') {
           const textColor = (m.textColor && m.textColor !== 'currentColor') ? m.textColor : (m.color || null);
           const bgColor = m.backgroundColor || m.color;
           if (hideText && hideBg) continue;
           const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor);
           const textPart = hideText ? '' : (textColor ? `color: ${textColor} !important; ` : '');
-          const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+          const bgPart = (() => { if (hideBg) return ''; const vPad = (this.settings.highlightVerticalPadding ?? 0); const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`; })();
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           if (hideText) continue;
@@ -8267,6 +8547,20 @@ module.exports = class AlwaysColorText extends Plugin {
       // Clear caches
       try { this._cachedSortedEntries = null; this._cacheDirty = true; } catch (e) {}
       try { this._compiledWordEntries = []; } catch (e) {}
+
+      // Clear all reading mode intervals
+      try {
+        if (this._readingModeIntervals && this._readingModeIntervals instanceof Map) {
+          for (const intervals of this._readingModeIntervals.values()) {
+            if (Array.isArray(intervals)) {
+              for (const intervalId of intervals) {
+                try { clearInterval(intervalId); } catch (e) {}
+              }
+            }
+          }
+          this._readingModeIntervals.clear();
+        }
+      } catch (e) {}
 
       // Clear timers
       try {
@@ -8310,6 +8604,10 @@ module.exports = class AlwaysColorText extends Plugin {
   clearHighlightsInRoot(rootEl) {
     try {
       if (!rootEl || !rootEl.isConnected) return;
+      
+      // Cleanup associated observers before clearing highlights
+      this.cleanupObserversForElement(rootEl);
+      
       // Use TreeWalker to find highlight spans and unwrap them
       const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_ELEMENT, {
         acceptNode(node) {
@@ -8591,7 +8889,10 @@ class RegexTesterModal extends Modal {
     try { rowStyle.addClass('act-regex-row-style'); } catch (e) {}
 
     const styleSelect = rowStyle.createEl('select');
-    styleSelect.innerHTML = `<option value="text">${this.plugin.t('style_type_text','color')}</option><option value="highlight">${this.plugin.t('style_type_highlight','highlight')}</option><option value="both">${this.plugin.t('style_type_both','both')}</option>`;
+    ['text', 'highlight', 'both'].forEach(val => {
+      const opt = styleSelect.createEl('option', { text: this.plugin.t('style_type_' + val, val === 'text' ? 'color' : val) });
+      opt.value = val;
+    });
     styleSelect.value = 'both';
     styleSelect.style.flex = '0 0 stretch';
     styleSelect.style.padding = '';
@@ -8616,6 +8917,42 @@ class RegexTesterModal extends Modal {
     bgColorInput.style.borderRadius = 'var(--radius-m)';
     bgColorInput.style.cursor = 'pointer';
     try { bgColorInput.addClass('act-regex-color-bg'); } catch (e) {}
+    const onTextPickerContext = (ev) => {
+      try { ev.preventDefault(); } catch (e) {}
+      try {
+        const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+          const sel = result || {};
+          const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : (this.plugin.isValidHexColor(color) ? color : null);
+          if (tc) {
+            textColorInput.value = tc;
+            renderPreview();
+          }
+        }, 'text');
+        modal._preFillTextColor = textColorInput.value;
+        modal.open();
+      } catch (e) {}
+    };
+    const onBgPickerContext = (ev) => {
+      try { ev.preventDefault(); } catch (e) {}
+      try {
+        const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+          const sel = result || {};
+          const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : (this.plugin.isValidHexColor(color) ? color : null);
+          if (bc) {
+            bgColorInput.value = bc;
+            renderPreview();
+          }
+        }, 'background');
+        modal._preFillBgColor = bgColorInput.value;
+        modal.open();
+      } catch (e) {}
+    };
+    try {
+      textColorInput.addEventListener('contextmenu', onTextPickerContext);
+      bgColorInput.addEventListener('contextmenu', onBgPickerContext);
+      this._handlers.push({ el: textColorInput, ev: 'contextmenu', fn: onTextPickerContext });
+      this._handlers.push({ el: bgColorInput, ev: 'contextmenu', fn: onBgPickerContext });
+    } catch (e) {}
     const updatePickerVisibility = () => {
       const v = styleSelect.value;
       if (v === 'text') {
@@ -8775,12 +9112,20 @@ class RegexTesterModal extends Modal {
             const rgba = this.plugin.hexToRgba(b, this.plugin.settings.backgroundOpacity ?? 25);
             const radius = this.plugin.settings.highlightBorderRadius ?? 8;
             const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
-            return `<span style="background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;">${txt}</span>`;
+            const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+            const padCss = vpad >= 0 
+              ? `padding:${vpad}px ${pad}px;` 
+              : `padding:0px ${pad}px; margin:${vpad}px 0;`;
+            return `<span style="background:${rgba};border-radius:${radius}px;${padCss}">${txt}</span>`;
           } else {
             const rgba = this.plugin.hexToRgba(b, this.plugin.settings.backgroundOpacity ?? 25);
             const radius = this.plugin.settings.highlightBorderRadius ?? 8;
             const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
-            return `<span style="color:${t};background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;">${txt}</span>`;
+            const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+            const padCss = vpad >= 0 
+              ? `padding:${vpad}px ${pad}px;` 
+              : `padding:0px ${pad}px; margin:${vpad}px 0;`;
+            return `<span style="color:${t};background:${rgba};border-radius:${radius}px;${padCss}">${txt}</span>`;
           }
         };
         for (const m of raw.matchAll(re)) {
@@ -8899,16 +9244,22 @@ class RegexTesterModal extends Modal {
     this._handlers.push({ el: addBtn, ev: 'click', fn: addHandler });
   }
   onClose() {
-    try { 
-      this._handlers.forEach(h => { 
-        try { 
-          if (h.el && h.ev && h.fn) h.el.removeEventListener(h.ev, h.fn);
-          if (h.observer && h.fn) h.fn(); // Disconnect MutationObserver
-        } catch (e) {} 
-      }); 
+    try {
+      if (this._handlers && Array.isArray(this._handlers)) {
+        this._handlers.forEach(h => {
+          try {
+            if (h.el && h.ev && h.fn && typeof h.el.removeEventListener === 'function') {
+              h.el.removeEventListener(h.ev, h.fn);
+            }
+            if (h.observer && typeof h.fn === 'function') {
+              h.fn(); // Disconnect MutationObserver
+            }
+          } catch (e) {}
+        });
+      }
     } catch (e) {}
     this._handlers = [];
-    try { this.contentEl.empty(); } catch (e) {}
+    try { this.contentEl?.empty(); } catch (e) {}
   }
 }
 
@@ -8956,7 +9307,10 @@ class RealTimeRegexTesterModal extends Modal {
       flagButtons[f] = b;
     });
     const styleSelect = controlsRow.createEl('select');
-    styleSelect.innerHTML = `<option value="text">${this.plugin.t('style_type_text','color')}</option><option value="highlight">${this.plugin.t('style_type_highlight','highlight')}</option><option value="both">${this.plugin.t('style_type_both','both')}</option>`;
+    ['text', 'highlight', 'both'].forEach(val => {
+      const opt = styleSelect.createEl('option', { text: this.plugin.t('style_type_' + val, val === 'text' ? 'color' : val) });
+      opt.value = val;
+    });
     styleSelect.value = this._preFillStyleType || 'both';
     styleSelect.style.border = '1px solid var(--background-modifier-border)';
     styleSelect.style.borderRadius = 'var(--radius-m)';
@@ -8969,6 +9323,42 @@ class RealTimeRegexTesterModal extends Modal {
     const bgColorInput = controlsRow.createEl('input', { type: 'color' });
     bgColorInput.value = this._preFillBgColor || '#1d5010';
     bgColorInput.style.width = '48px';
+    const onTextPickerContext = (ev) => {
+      try { ev.preventDefault(); } catch (e) {}
+      try {
+        const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+          const sel = result || {};
+          const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : (this.plugin.isValidHexColor(color) ? color : null);
+          if (tc) {
+            textColorInput.value = tc;
+            render();
+          }
+        }, 'text');
+        modal._preFillTextColor = textColorInput.value;
+        modal.open();
+      } catch (e) {}
+    };
+    const onBgPickerContext = (ev) => {
+      try { ev.preventDefault(); } catch (e) {}
+      try {
+        const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+          const sel = result || {};
+          const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : (this.plugin.isValidHexColor(color) ? color : null);
+          if (bc) {
+            bgColorInput.value = bc;
+            render();
+          }
+        }, 'background');
+        modal._preFillBgColor = bgColorInput.value;
+        modal.open();
+      } catch (e) {}
+    };
+    try {
+      textColorInput.addEventListener('contextmenu', onTextPickerContext);
+      bgColorInput.addEventListener('contextmenu', onBgPickerContext);
+      this._handlers.push({ el: textColorInput, ev: 'contextmenu', fn: onTextPickerContext });
+      this._handlers.push({ el: bgColorInput, ev: 'contextmenu', fn: onBgPickerContext });
+    } catch (e) {}
     const updatePickerVisibility = () => {
       const v = styleSelect.value;
       if (v === 'text') {
@@ -9092,6 +9482,7 @@ class RealTimeRegexTesterModal extends Modal {
       const rgba = this.plugin.hexToRgba(b, this.plugin.settings.backgroundOpacity ?? 25);
       const radius = this.plugin.settings.highlightBorderRadius ?? 8;
       const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
+      const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
       const borderStyle = style === 'text'
         ? ''
         : (style === 'highlight'
@@ -9100,8 +9491,8 @@ class RealTimeRegexTesterModal extends Modal {
       const matchStyle = style === 'text'
         ? `color:${t};background:transparent;`
         : (style === 'highlight'
-          ? `background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;color:var(--text-normal);${borderStyle}`
-          : `color:${t};background:${rgba};border-radius:${radius}px;padding:0 ${pad}px;${borderStyle}`);
+          ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`
+          : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`);
       for (const m of raw.matchAll(re)) {
         const s = m.index ?? 0;
         const e = s + (m[0] ? m[0].length : 0);
@@ -9291,10 +9682,18 @@ class RealTimeRegexTesterModal extends Modal {
     try {
       if (this._rafId) cancelAnimationFrame(this._rafId);
       if (this._debounceId) clearTimeout(this._debounceId);
-      this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} });
+      if (this._handlers && Array.isArray(this._handlers)) {
+        this._handlers.forEach(h => {
+          try {
+            if (h.el && h.ev && h.fn && typeof h.el.removeEventListener === 'function') {
+              h.el.removeEventListener(h.ev, h.fn);
+            }
+          } catch (e) {}
+        });
+      }
     } catch (e) {}
     this._handlers = [];
-    try { this.contentEl.empty(); } catch (e) {}
+    try { this.contentEl?.empty(); } catch (e) {}
   }
 }
 
@@ -9552,10 +9951,18 @@ class BlacklistRegexTesterModal extends Modal {
     try {
       if (this._rafId) cancelAnimationFrame(this._rafId);
       if (this._debounceId) clearTimeout(this._debounceId);
-      this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} });
+      if (this._handlers && Array.isArray(this._handlers)) {
+        this._handlers.forEach(h => {
+          try {
+            if (h.el && h.ev && h.fn && typeof h.el.removeEventListener === 'function') {
+              h.el.removeEventListener(h.ev, h.fn);
+            }
+          } catch (e) {}
+        });
+      }
     } catch (e) {}
     this._handlers = [];
-    try { this.contentEl.empty(); } catch (e) {}
+    try { this.contentEl?.empty(); } catch (e) {}
   }
 }
 
@@ -9891,7 +10298,10 @@ class AddRuleModal extends Modal {
     modeSel.style.padding = '8px';
     modeSel.style.border = '1px solid var(--background-modifier-border)';
     modeSel.style.borderRadius = '6px';
-    modeSel.innerHTML = `<option value="include">${this.plugin.t('text_rule_mode_include','only colors in (whitelist)')}</option><option value="exclude">${this.plugin.t('text_rule_mode_exclude','does not color in (blacklist)')}</option>`;
+    ['include', 'exclude'].forEach(val => {
+      const opt = modeSel.createEl('option', { text: this.plugin.t('text_rule_mode_' + val, val === 'include' ? 'only colors in (whitelist)' : 'does not color in (blacklist)') });
+      opt.value = val;
+    });
 
     const pathInput = contentEl.createEl('input', { type: 'text' });
     pathInput.placeholder = this.plugin.t('enter_path_or_pattern','Enter path or pattern');
@@ -11144,7 +11554,10 @@ class ColorSettingTab extends PluginSettingTab {
       modeSel.style.border = '1px solid var(--background-modifier-border)';
       modeSel.style.background = 'var(--background-modifier-form-field)';
       modeSel.style.textAlign = 'center';
-      modeSel.innerHTML = `<option value="include">${this.plugin.t('path_rule_mode_include','Include')}</option><option value="exclude">${this.plugin.t('path_rule_mode_exclude','Exclude')}</option>`;
+      ['include', 'exclude'].forEach(val => {
+        const opt = modeSel.createEl('option', { text: this.plugin.t('path_rule_mode_' + val, val === 'include' ? 'Include' : 'Exclude') });
+        opt.value = val;
+      });
         modeSel.value = entry.mode === 'exclude' ? 'exclude' : 'include';
         const input = row.createEl('input', { type: 'text', value: entry.path || '' });
         input.placeholder = this.plugin.t('enter_path_or_pattern','Enter path or pattern');
@@ -11250,6 +11663,13 @@ class ColorSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
           this._initializedSettingsUI = false;
           try { this.display(); } catch (e) {}
+        }));
+      new Setting(this._customSwatchesContainer)
+        .setName(this.plugin.t('link_swatches_to_entries','Link swatch updates to text colors'))
+        .setDesc(this.plugin.t('link_swatches_to_entries_desc','When a custom swatch color changes, update all entries using that color'))
+        .addToggle(t => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async v => {
+          this.plugin.settings.linkSwatchUpdatesToEntries = v;
+          await this.plugin.saveSettings();
         }));
 
       // Determine fold states (initialize if not set)
@@ -11446,9 +11866,41 @@ class ColorSettingTab extends PluginSettingTab {
           const colorHandler = async () => {
             const val = colorPicker.value;
             if (!this.plugin.isValidHexColor(val)) return;
+            const prev = this.plugin.settings.userCustomSwatches[i].color;
+            const swName = this.plugin.settings.userCustomSwatches[i].name || `Swatch ${i + 1}`;
             this.plugin.settings.userCustomSwatches[i].color = val;
             this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map(s => s.color);
+            if (this.plugin.settings.linkSwatchUpdatesToEntries) {
+              const entries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+              entries.forEach(e => {
+                try {
+                  if (e) {
+                    if (typeof e.color === 'string' && e.color.toLowerCase() === String(prev || '').toLowerCase()) {
+                      e.color = val;
+                      e._savedTextColor = val;
+                    }
+                    if (typeof e.textColor === 'string' && e.textColor !== 'currentColor' && e.textColor.toLowerCase() === String(prev || '').toLowerCase()) {
+                      e.textColor = val;
+                      e._savedTextColor = val;
+                    }
+                    if (typeof e.backgroundColor === 'string' && e.backgroundColor.toLowerCase() === String(prev || '').toLowerCase()) {
+                      e.backgroundColor = val;
+                      e._savedBackgroundColor = val;
+                    }
+                  }
+                } catch (_) {}
+              });
+            }
             await this.plugin.saveSettings();
+            try {
+              this.plugin.compileWordEntries();
+              this.plugin.compileTextBgColoringEntries();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+              this.plugin.triggerActiveDocumentRerender();
+              this._refreshEntries();
+            } catch (_) {}
           };
           const delHandler = async () => {
             this.plugin.settings.userCustomSwatches.splice(i, 1);
@@ -11536,11 +11988,27 @@ class ColorSettingTab extends PluginSettingTab {
       const q = String(this._entriesSearchQuery || '').trim().toLowerCase();
       const filtered = q ? entriesToDisplay.filter(e => {
         const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || '')];
+        const swDefault = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
+        const swCustom = Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches : [];
+        const allSwatches = [...swDefault, ...swCustom];
+        const getSwatchName = (hex) => {
+          try {
+            if (!hex || !this.plugin.isValidHexColor(hex)) return '';
+            const m = allSwatches.find(sw => sw && sw.color && String(sw.color).toLowerCase() === String(hex).toLowerCase());
+            return String(m && m.name ? m.name : '').toLowerCase();
+          } catch (_) { return ''; }
+        };
+        const tHex = (e && e.textColor && e.textColor !== 'currentColor') ? e.textColor : (this.plugin.isValidHexColor(e && e.color) ? e.color : '');
+        const bHex = this.plugin.isValidHexColor(e && e.backgroundColor) ? e.backgroundColor : '';
+        const tName = getSwatchName(tHex);
+        const bName = getSwatchName(bHex);
         const text = [
           ...patterns.map(p => p.toLowerCase()),
           String(e.presetLabel || '').toLowerCase(),
           String(e.flags || '').toLowerCase(),
-          String(e.styleType || '').toLowerCase()
+          String(e.styleType || '').toLowerCase(),
+          tName,
+          bName
         ].join(' ');
         return text.includes(q);
       }) : entriesToDisplay;
@@ -12027,9 +12495,24 @@ class ColorSettingTab extends PluginSettingTab {
           const hexWithAlpha = this.plugin.hexToHexWithAlpha(sampleColor, this.plugin.settings.quickHighlightOpacity ?? 25);
           const radius = this.plugin.settings.quickHighlightBorderRadius ?? 8;
           const pad = this.plugin.settings.quickHighlightHorizontalPadding ?? 4;
+          const vpad = this.plugin.settings.quickHighlightVerticalPadding ?? 0;
           previewText.style.backgroundColor = hexWithAlpha;
           previewText.style.borderRadius = radius + 'px';
           previewText.style.paddingLeft = previewText.style.paddingRight = pad + 'px';
+           try { 
+             previewText.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px'); 
+             previewText.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px'); 
+             if (vpad < 0) {
+               previewText.style.setProperty('margin-top', vpad + 'px');
+               previewText.style.setProperty('margin-bottom', vpad + 'px');
+             }
+           } catch (e) { 
+             previewText.style.paddingTop = previewText.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px'; 
+             if (vpad < 0) {
+               previewText.style.marginTop = vpad + 'px';
+               previewText.style.marginBottom = vpad + 'px';
+             }
+           }
           // Clear borders before re-applying
           previewText.style.border = '';
           previewText.style.borderTop = '';
@@ -12114,6 +12597,34 @@ class ColorSettingTab extends PluginSettingTab {
                 }));
         }
 
+        {
+          let vpInput;
+          new Setting(containerEl)
+            .setName(this.plugin.t('highlight_vertical_padding','Highlight vertical padding (px)'))
+            .addText(text => {
+              vpInput = text;
+              text
+                .setPlaceholder('e.g. 0, 1, 2')
+                .setValue(String(this.plugin.settings.quickHighlightVerticalPadding ?? 0))
+                .onChange(async v => {
+                  let val = parseInt(v);
+                  if (isNaN(val)) val = 0;
+                  this.plugin.settings.quickHighlightVerticalPadding = val;
+                  await this.plugin.saveSettings();
+                  try { this._updateQuickOncePreview?.(); } catch (e) {}
+                });
+            })
+            .addExtraButton(btn => btn
+              .setIcon('reset')
+              .setTooltip(this.plugin.t('reset_to_0','Reset to 0'))
+              .onClick(async () => {
+                this.plugin.settings.quickHighlightVerticalPadding = 0;
+                await this.plugin.saveSettings();
+                if (vpInput) vpInput.setValue('0');
+                try { this._updateQuickOncePreview?.(); } catch (e) {}
+              }));
+        }
+
         new Setting(containerEl)
           .setName(this.plugin.t('enable_border_highlight_once','Enable Border for Highlight Once'))
           .setDesc(this.plugin.t('enable_border_highlight_once_desc','Add a border to your inline highlight. The added HTML/CSS WILL be long.'))
@@ -12129,7 +12640,7 @@ class ColorSettingTab extends PluginSettingTab {
 
         if (this.plugin.settings.quickHighlightEnableBorder) {
           new Setting(containerEl)
-            .setName(this.plugin.t('highlight_once_border_style','Highlight Once Border Style'))
+            .setName(this.plugin.t('highlight_once_border_style','Highlight Once Border Sides'))
             .addDropdown(d => {
               d.selectEl.style.width = '200px';
               return d
@@ -12146,6 +12657,23 @@ class ColorSettingTab extends PluginSettingTab {
                 .addOption('right', this.plugin.t('opt_border_right','Right border only'))
                 .setValue(this.plugin.settings.quickHighlightBorderStyle ?? 'full')
                 .onChange(async v => { this.plugin.settings.quickHighlightBorderStyle = v; await this.plugin.saveSettings(); try { this._updateQuickOncePreview?.(); } catch (e) {} });
+            });
+
+          new Setting(containerEl)
+            .setName(this.plugin.t('highlight_once_border_line_style','Border Style'))
+            .addDropdown(d => {
+              d.selectEl.style.width = '200px';
+              return d
+                .addOption('solid', this.plugin.t('opt_line_solid','solid'))
+                .addOption('dashed', this.plugin.t('opt_line_dashed','dashed'))
+                .addOption('dotted', this.plugin.t('opt_line_dotted','dotted'))
+                .addOption('double', this.plugin.t('opt_line_double','double'))
+                .addOption('groove', this.plugin.t('opt_line_groove','groove'))
+                .addOption('ridge', this.plugin.t('opt_line_ridge','ridge'))
+                .addOption('inset', this.plugin.t('opt_line_inset','inset'))
+                .addOption('outset', this.plugin.t('opt_line_outset','outset'))
+                .setValue(this.plugin.settings.quickHighlightBorderLineStyle ?? 'solid')
+                .onChange(async v => { this.plugin.settings.quickHighlightBorderLineStyle = v; await this.plugin.saveSettings(); try { this._updateQuickOncePreview?.(); } catch (e) {} });
             });
 
           new Setting(containerEl)
@@ -12218,6 +12746,23 @@ class ColorSettingTab extends PluginSettingTab {
         previewText.style.backgroundColor = rgba;
         previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
         previewText.style.paddingLeft = previewText.style.paddingRight = `${this.plugin.settings.highlightHorizontalPadding ?? 4}px`;
+        try { 
+          const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+          previewText.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px');
+          previewText.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px');
+          if (vpad < 0) {
+            previewText.style.setProperty('margin-top', vpad + 'px');
+            previewText.style.setProperty('margin-bottom', vpad + 'px');
+          }
+        } catch (e) {
+          const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+          previewText.style.paddingTop = (vpad >= 0 ? vpad : 0) + 'px';
+          previewText.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+          if (vpad < 0) {
+            previewText.style.marginTop = vpad + 'px';
+            previewText.style.marginBottom = vpad + 'px';
+          }
+        }
         
         // Clear all existing border styles first
         previewText.style.border = '';
@@ -12307,6 +12852,35 @@ class ColorSettingTab extends PluginSettingTab {
               }));
       }
 
+      {
+        let vpInput;
+        new Setting(containerEl)
+          .setName(this.plugin.t('highlight_vertical_padding','Highlight vertical padding (px)'))
+          .setDesc(this.plugin.t('highlight_vertical_padding_desc','Set the top and bottom padding (in px) for highlighted text'))
+          .addText(text => {
+            vpInput = text;
+            text
+              .setPlaceholder('e.g. 0, 1, 2')
+              .setValue(String(this.plugin.settings.highlightVerticalPadding ?? 0))
+              .onChange(async v => {
+                let val = parseInt(v);
+                if (isNaN(val) || val < 0) val = 0;
+                this.plugin.settings.highlightVerticalPadding = val;
+                await this.debouncedSaveSettings();
+                updatePreview();
+              });
+          })
+          .addExtraButton(btn => btn
+            .setIcon('reset')
+            .setTooltip(this.plugin.t('reset_to_0','Reset to 0'))
+            .onClick(async () => {
+              this.plugin.settings.highlightVerticalPadding = 0;
+              await this.debouncedSaveSettings();
+              if (vpInput) vpInput.setValue('0');
+              updatePreview();
+            }));
+      }
+
       // Toggle for box decoration break on line wrapping
       new Setting(containerEl)
         .setName(this.plugin.t('rounded_corners_wrapping','Rounded corners on line wrapping'))
@@ -12337,7 +12911,7 @@ class ColorSettingTab extends PluginSettingTab {
       if (this.plugin.settings.enableBorderThickness) {
         // Border Style dropdown
         new Setting(containerEl)
-          .setName(this.plugin.t('border_style','Border Style'))
+          .setName(this.plugin.t('border_style','Border Sides'))
           .setDesc(this.plugin.t('border_style_desc','Choose which sides to apply the border'))
           .addDropdown(d => {
             d.selectEl.style.width = '200px';
@@ -12357,6 +12931,29 @@ class ColorSettingTab extends PluginSettingTab {
               .setValue(this.plugin.settings.borderStyle ?? 'full')
               .onChange(async v => {
                 this.plugin.settings.borderStyle = v;
+                await this.debouncedSaveSettings();
+                updatePreview();
+              });
+          });
+
+        new Setting(containerEl)
+          .setName(this.plugin.t('border_line_style','Border Style'))
+          .setDesc(this.plugin.t('border_line_style_desc','Choose the border line style'))
+          .addDropdown(d => {
+            d.selectEl.style.width = '200px';
+            try { d.selectEl.style.textAlign = 'center'; } catch (e) {}
+            return d
+              .addOption('solid', this.plugin.t('opt_line_solid','solid'))
+              .addOption('dashed', this.plugin.t('opt_line_dashed','dashed'))
+              .addOption('dotted', this.plugin.t('opt_line_dotted','dotted'))
+              .addOption('double', this.plugin.t('opt_line_double','double'))
+              .addOption('groove', this.plugin.t('opt_line_groove','groove'))
+              .addOption('ridge', this.plugin.t('opt_line_ridge','ridge'))
+              .addOption('inset', this.plugin.t('opt_line_inset','inset'))
+              .addOption('outset', this.plugin.t('opt_line_outset','outset'))
+              .setValue(this.plugin.settings.borderLineStyle ?? 'solid')
+              .onChange(async v => {
+                this.plugin.settings.borderLineStyle = v;
                 await this.debouncedSaveSettings();
                 updatePreview();
               });
@@ -12418,6 +13015,8 @@ class ColorSettingTab extends PluginSettingTab {
       .addDropdown(dd => {
         dd.addOption('both', this.plugin.t('opt_both_text_left','Both: Text left, Highlight right'));
         dd.addOption('both-bg-left', this.plugin.t('opt_both_bg_left','Both: Highlight left, Text right'));
+        dd.addOption('both-v-text-top', this.plugin.t('opt_both_text_top','Both (vertical): Text above, Highlight below'));
+        dd.addOption('both-v-bg-top', this.plugin.t('opt_both_bg_top','Both (vertical): Highlight above, Text below'));
         dd.addOption('text', this.plugin.t('opt_text_only','Text color only'));
         dd.addOption('background', this.plugin.t('opt_background_only','Highlight color only'));
         dd.setValue(this.plugin.settings.colorPickerMode || 'both');
@@ -12441,7 +13040,7 @@ class ColorSettingTab extends PluginSettingTab {
 
     // --- Always Colored Texts / patterns ---
   const headerEl = containerEl.createEl('h3', { text: this.plugin.t('always_colored_texts_header','Always Colored Texts') });
-  try { headerEl.id = 'always-colored-texts-header'; } catch (e) {}
+  try { headerEl.className = 'always-colored-texts-header'; } catch (e) {}
   try { headerEl.style.marginTop = '30px !important'; } catch (e) {}
   containerEl.createEl('p', { text: this.plugin.t('always_colored_texts_desc','Here\'s where you manage your word / patterns and their colors.') });
     new Setting(containerEl);
@@ -12938,17 +13537,23 @@ class ColorPickerModal extends Modal {
     this._eventListeners = []; // Reset listeners
     const cpm = this.plugin.settings.colorPickerMode || 'both';
     const forcedSingle = (this.mode === 'text' || this.mode === 'background');
-    const isBoth = !forcedSingle && (cpm === 'both' || cpm === 'both-bg-left');
-    this.modalEl.style.maxWidth = (isBoth) ? '650px' : '480px';
+    const isBoth = !forcedSingle && (cpm === 'both' || cpm === 'both-bg-left' || cpm === 'both-v-text-top' || cpm === 'both-v-bg-top');
+    const isHorizontalBoth = !forcedSingle && (cpm === 'both' || cpm === 'both-bg-left');
+    const isVerticalBoth = !forcedSingle && (cpm === 'both-v-text-top' || cpm === 'both-v-bg-top');
+    this.modalEl.style.maxWidth = (isHorizontalBoth) ? '650px' : '480px';
     this.modalEl.style.width = '100%';
     this.modalEl.style.margin = '0';
     this.modalEl.style.padding = '0';
+    try { this.modalEl.addClass('act-color-picker-modal'); } catch (e) {}
 
     contentEl.style.padding = '24px';
     contentEl.style.boxSizing = 'border-box';
     contentEl.style.display = 'grid';
-    contentEl.style.gridTemplateColumns = isBoth ? '1fr 1fr' : '1fr';
-    contentEl.style.gap = '10px';
+    contentEl.style.gridTemplateColumns = isHorizontalBoth ? '1fr 1fr' : '1fr';
+    contentEl.style.columnGap = '10px'; // this
+    contentEl.style.rowGap = '10px'; // this this lookie
+    contentEl.style.alignItems = 'stretch';
+    try { contentEl.addClass('act-color-picker-content'); } catch (e) {}
 
     const h2 = contentEl.createEl('h2', { text: this.plugin.t('pick_color_header','Pick Color') });
     h2.style.marginTop = '0';
@@ -12995,7 +13600,11 @@ class ColorPickerModal extends Modal {
 
     const updateGridCols = () => {
       try {
-        contentEl.style.gridTemplateColumns = (isBoth && window.innerWidth > 768) ? '1fr 1fr' : '1fr';
+        if (isHorizontalBoth && window.innerWidth > 768) {
+          contentEl.style.gridTemplateColumns = '1fr 1fr';
+        } else {
+          contentEl.style.gridTemplateColumns = '1fr';
+        }
       } catch (e) {}
     };
     updateGridCols();
@@ -13056,7 +13665,8 @@ class ColorPickerModal extends Modal {
       col.style.borderRadius = '12px';
       col.style.padding = '12px';
       col.addClass('color-picker-panel');
-      col.style.marginBottom = '-23px';
+      col.style.marginBottom = '0';
+      col.style.height = '100%';
       // col.style.backgroundColor = 'var(--background-primary-alt)';
 
       const header = col.createDiv();
@@ -13120,9 +13730,11 @@ class ColorPickerModal extends Modal {
               const rgba = this.plugin.hexToRgba(val, this.plugin.settings.backgroundOpacity ?? 25);
               const radius = this.plugin.settings.highlightBorderRadius ?? 8;
               const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
+              const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
               preview.style.backgroundColor = rgba;
               preview.style.borderRadius = radius + 'px';
               preview.style.paddingLeft = preview.style.paddingRight = pad + 'px';
+              try { preview.style.setProperty('padding-top', vpad + 'px'); preview.style.setProperty('padding-bottom', vpad + 'px'); } catch (e) { preview.style.paddingTop = preview.style.paddingBottom = vpad + 'px'; }
               if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
                 preview.style.boxDecorationBreak = 'clone';
                 preview.style.WebkitBoxDecorationBreak = 'clone';
@@ -13132,9 +13744,11 @@ class ColorPickerModal extends Modal {
               const hexWithAlpha = this.plugin.hexToHexWithAlpha(val, this.plugin.settings.quickHighlightOpacity ?? 25);
               const radius = this.plugin.settings.quickHighlightBorderRadius ?? 8;
               const pad = this.plugin.settings.quickHighlightHorizontalPadding ?? 4;
+              const vpad = this.plugin.settings.quickHighlightVerticalPadding ?? 0;
               preview.style.backgroundColor = hexWithAlpha;
               preview.style.borderRadius = radius + 'px';
               preview.style.paddingLeft = preview.style.paddingRight = pad + 'px';
+              try { preview.style.setProperty('padding-top', vpad + 'px'); preview.style.setProperty('padding-bottom', vpad + 'px'); } catch (e) { preview.style.paddingTop = preview.style.paddingBottom = vpad + 'px'; }
               // Apply once-style border using generated CSS
               const borderCss = this.plugin.generateOnceBorderStyle(val);
               try { preview.style.cssText += borderCss; } catch (e) {}
@@ -13144,6 +13758,7 @@ class ColorPickerModal extends Modal {
               preview.style.backgroundColor = rgba;
               preview.style.borderRadius = '';
               preview.style.paddingLeft = preview.style.paddingRight = '';
+              preview.style.paddingTop = preview.style.paddingBottom = '';
             }
           } else {
             // Non-quick background preview uses global appearance settings
@@ -13151,6 +13766,7 @@ class ColorPickerModal extends Modal {
             preview.style.backgroundColor = rgba;
             this.plugin.applyBorderStyleToElement(preview, null, val);
             preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + 'px';
+            try { preview.style.setProperty('padding-top', (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'); preview.style.setProperty('padding-bottom', (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'); } catch (e) { preview.style.paddingTop = preview.style.paddingBottom = (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'; }
             if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
               preview.style.borderRadius = '0px';
             } else {
@@ -13228,23 +13844,31 @@ class ColorPickerModal extends Modal {
       return col;
     };
 
+    let lastPanelEl = null;
     if (this.mode === 'text') {
-      buildPanel('Text Color', 'text');
+      lastPanelEl = buildPanel('Text Color', 'text');
     } else if (this.mode === 'background') {
-      buildPanel('Highlight Color', 'background');
+      lastPanelEl = buildPanel('Highlight Color', 'background');
     } else {
       if (cpm === 'text') {
-        buildPanel('Text Color', 'text');
+        lastPanelEl = buildPanel('Text Color', 'text');
       } else if (cpm === 'background') {
+        lastPanelEl = buildPanel('Highlight Color', 'background');
+      } else if (cpm === 'both-v-bg-top') {
         buildPanel('Highlight Color', 'background');
+        lastPanelEl = buildPanel('Text Color', 'text');
+      } else if (cpm === 'both-v-text-top') {
+        buildPanel('Text Color', 'text');
+        lastPanelEl = buildPanel('Highlight Color', 'background');
       } else if (cpm === 'both-bg-left') {
         buildPanel('Highlight Color', 'background');
-        buildPanel('Text Color', 'text');
+        lastPanelEl = buildPanel('Text Color', 'text');
       } else {
         buildPanel('Text Color', 'text');
-        buildPanel('Highlight Color', 'background');
+        lastPanelEl = buildPanel('Highlight Color', 'background');
       }
     }
+    // Gap below panels is managed by a smaller margin-top on the action row, not per-panel margins
 
     const s = this._selectedText || '';
     let initText = null;
@@ -13286,6 +13910,16 @@ class ColorPickerModal extends Modal {
         break;
       }
     }
+    
+    // Check for prefill values set from context menu handlers
+    if (!initText && this._preFillTextColor && this.plugin.isValidHexColor(this._preFillTextColor)) {
+      initText = this._preFillTextColor;
+      existingStyle = existingStyle || 'text';
+    }
+    if (!initBg && this._preFillBgColor && this.plugin.isValidHexColor(this._preFillBgColor)) {
+      initBg = this._preFillBgColor;
+      existingStyle = existingStyle || (initText ? 'both' : 'highlight');
+    }
     const tp = panelStates['text'];
     const bp = panelStates['background'];
     // Initialize modal mode based on existing entry
@@ -13307,6 +13941,7 @@ class ColorPickerModal extends Modal {
       preview.style.backgroundColor = rgba;
       this.plugin.applyBorderStyleToElement(preview, initText, initBg);
       preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + 'px';
+      try { preview.style.setProperty('padding-top', (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'); preview.style.setProperty('padding-bottom', (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'); } catch (e) { preview.style.paddingTop = preview.style.paddingBottom = (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'; }
       if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
         preview.style.borderRadius = '0px';
       } else {
@@ -13325,7 +13960,7 @@ class ColorPickerModal extends Modal {
     actionRow.style.display = 'flex';
     actionRow.style.justifyContent = 'flex-end';
     actionRow.style.gap = '8px';
-    actionRow.style.marginTop = '16px';
+    actionRow.style.marginTop = '6px';
     actionRow.style.gridColumn = '1 / -1';
 
     const submitFn = async () => {
