@@ -370,6 +370,197 @@ li.act-color-marker::marker {
   max-width: 1200px !important;
 }
 
+/* Highlight Styling Modal - Force width via !important */
+.act-highlight-modal {
+  --dialog-width: 900px !important;
+  max-width: 900px !important;
+  width: 900px !important;
+}
+.act-highlight-modal .modal-content {
+  max-width: 900px !important;
+}
+.modal .act-highlight-modal {
+  min-width: 980px !important;
+  width: 1100px !important;
+  max-width: 1200px !important;
+}
+
+/* ====== EDIT ENTRY MODAL STYLING ====== */
+.act-edit-entry-row1 {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.act-edit-entry-textbox {
+  flex: 3;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-modifier-form-field);
+  padding: 0;
+  margin-bottom: 12px;
+}
+
+.act-edit-entry-textbox textarea {
+  width: 100%;
+  height: 40px;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-normal);
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.act-edit-entry-style-select {
+  min-width: 120px;
+  max-width: 140px !important;
+}
+
+.act-edit-entry-row2 {
+  display: flex;
+  gap: 16px;
+}
+
+.act-edit-entry-preview {
+  flex: 2.5 1 0%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: 10px;
+  background: var(--background-modifier-form-field);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  min-height: 40px;
+}
+
+.act-edit-entry-pickers {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.act-edit-entry-pickers input[type="color"] {
+  flex: 1;
+  height: 40px;
+}
+
+/* ====== HIGHLIGHT STYLING MODAL CSS ====== */
+.act-highlight-top-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.act-highlight-preview-wrap {
+  flex: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: 12px;
+  background: var(--background-modifier-form-field);
+}
+
+.act-highlight-style-col {
+  min-width: 100px;
+}
+
+.act-highlight-style-select {
+  width: 100%;
+  min-width: 140px !important;
+  max-width: 140px !important;
+}
+
+.act-highlight-picker-row {
+  display: flex;
+  gap: 8px;
+}
+
+.act-highlight-picker-row input[type="color"] {
+  flex: 1;
+  height: 50px;
+  min-width: 60px;
+}
+
+.act-highlight-pane-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.act-highlight-pane {
+  flex: 1;
+}
+
+.act-highlight-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.act-highlight-grid > div:nth-child(odd) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.act-highlight-grid > div:nth-child(even) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.act-highlight-input-small {
+  width: 60px !important;
+  max-width: 60px !important;
+}
+
+.act-highlight-reset-btn {
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.act-highlight-reset-btn:hover {
+  color: var(--text-normal);
+}
+
+/* Responsive layout for narrow screens (iPad width) */
+@media (max-width: 768px) {
+  .act-highlight-pane-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .act-highlight-pane {
+    width: 100%;
+  }
+  
+  .act-highlight-grid > div:nth-child(odd) {
+    flex: 0 0 auto;
+    max-width: none;
+  }
+}
+
 /* Regex Tester Modal - Prevent responsive wrapping of rows */
 .act-regex-row-expr,
 .act-regex-row-style {
@@ -405,4 +596,8 @@ li.act-color-marker::marker {
 
 .always-colored-texts-header {
     margin-top: 50px !important;
+}
+
+.prompt.act .suggestion-item.mod-complex.is-selected.act .suggestion-title span {
+    color: var(--text-normal) !important;
 }

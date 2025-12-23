@@ -13,7 +13,7 @@ Whether you're a writer tracking characters, a student highlighting key terms, o
 
 ## Color Anything, Exactly How You Want
 
-### Smart Color Picker
+### Unified Color Picker
 Color text, add highlights, or both, right from a simple modal. 
 ![color picker modal with both panels](assets/color-picker-modal.png)
 
@@ -32,10 +32,33 @@ Replace default swatches with your favorite colors for instant access!
 
 ## Smart Text Matching
 
-### Case Sensitivity & Partial Matching
-- **Case sensitive**: "art" colors only "art", not "Art" or "ART"
-- **Partial matching**: "art" colors "artist", "artisan", "cart"  
-- **Both enabled**: Matches case first, then colors whole word
+### Match Types
+Control *how* text is matched with flexible, per-entry options:
+
+- **Contains** – matches anywhere in the word or text
+- **Exact** – matches the full word only
+- **Starts with** – matches text that begins with the entry
+- **Ends with** – matches text that ends with the entry
+
+Each entry can use a different match type, giving you granular control over what gets colored or highlighted!
+
+### Per-Entry Configuration
+Customize each colored entry with dedicated controls via "Edit Entry Details":
+
+- **Case Sensitivity**  
+  When enabled, matches respect letter casing.  
+  `"art"` matches `"art"` but not `"Art"` or `"ART"`.
+
+- **Highlight Styling**  
+  Adjust borders, rounded corners, transparency, and more per entry. Customize the look of individual entries without affecting others.
+
+- **File & Folder Rules**  
+  Exclude specific folders or files from coloring, or limit coloring to particular locations. Perfect for project-specific overrides.
+
+- **Partial Match (entry creation behavior)**  
+  Controls the default match type when adding new entries:
+  - **Disabled** → entries are added as **Exact**
+  - **Enabled** → entries are added as **Contains**
 
 ### Advanced Pattern Matching with Regex
 Color complex patterns like dates, currencies, or specific text structures:
@@ -55,6 +78,7 @@ Jumpstart your coloring with curated pattern collections:
 - `\b\d{4}-\d{2}-\d{2}\b` → Dates like 2024-01-19
 - `\bTODO|DONE|WIP\b` → Status words
 - `\$\d+\.\d{2}` → Currency amounts
+
 ![Blue Dates Example](assets/blue-dates.png)
 
 **Quick tips:**
@@ -71,7 +95,35 @@ All colored texts appear in settings with search and multiple sort options.
 ![Plugin Settings Always Colored Texts](assets/always-colored-words.png)
 
 Switch styles seamlessly, changing from "Both" to "Highlight" and back retains your original colors. Right-click any entry to **duplicate it** or **open in Regex Tester** for quick adjustments.
+
 ![Right-click menu options for Always Colored Texts](assets/right-click-menu.png)
+
+### Entry Filtering (Limit Input)
+Use the **limit input** beside the search bar to instantly filter entries by type, match type, or count:
+
+**Count & Display:**
+- `0` (zero) → show all entries
+- `N` (number) → show only the last N entries
+
+**Filter by Type:**
+- `r` → regex entries only
+- `w` → word entries only
+- `c` → colored text entries
+- `h` → highlighted entries
+- `b` → text + highlight entries
+
+**Filter by Match Type:**
+- `e` → exact match-type entries
+- `sw` → starts-with match-type entries
+- `ew` → ends-with match-type entries
+
+Right-click any entry to manage it quickly:
+- **Edit Entry Details** – configure match type, case sensitivity, file/folder inclusion or exclusion rules, and per-entry highlight styling
+- **Duplicate Entry** – clone an entry with all its settings
+- **Add to Existing Entry** – merge new text into an existing colored entry
+- **Open in Regex Tester** – refine regex patterns instantly
+
+Switching styles (Text, Highlight, or Both) preserves your original colors.
 
 ### File & Folder Control
 Set different color schemes for different projects. Use "Include" to color specific documents or "Exclude" to disable coloring in entire folders.
@@ -84,6 +136,9 @@ Take control of where colors appear with granular inclusion/exclusion:
 - **Exclude specific text** from coloring within single documents or entire folders
 - **Include colors only** in particular documents or folders
 - Perfect for project-specific schemes or temporary overrides!
+
+Now can be found in the Edit Entry modal!
+![Include Exclude Rules in Edit Entry Modal](assets/)
 
 ---
 

@@ -1,4 +1,4 @@
-const {
+﻿const {
   Plugin,
   PluginSettingTab,
   Setting,
@@ -33,15 +33,15 @@ const locales = require('./i18n');
         
 // Performance tuning constants for editor decoration
 const EDITOR_PERFORMANCE_CONSTANTS = {
-  MAX_PATTERNS_STANDARD: 30,      // Use standard processing for <= 30 patterns
-  MAX_TEXT_LENGTH_STANDARD: 10000, // Use standard processing for <= 10k chars
-  PATTERN_CHUNK_SIZE: 20,         // Process 20 patterns per chunk  
-  TEXT_CHUNK_SIZE: 5000,          // Process 5k chars per chunk
-  MAX_MATCHES_PER_PATTERN: 100,   // Max matches per pattern in chunks
+  MAX_PATTERNS_STANDARD: 30,           // Use standard processing for <= 30 patterns
+  MAX_TEXT_LENGTH_STANDARD: 10000,    // Use standard processing for <= 10k chars
+  PATTERN_CHUNK_SIZE: 20,            // Process 20 patterns per chunk  
+  TEXT_CHUNK_SIZE: 5000,            // Process 5k chars per chunk
+  MAX_MATCHES_PER_PATTERN: 100,    // Max matches per pattern in chunks
   MAX_TOTAL_MATCHES: 3000         // Absolute limit for decorations
 };
-// Development mode flag - set to true to enable debug logs
-const IS_DEVELOPMENT = false;
+// Development mode flag
+const IS_DEVELOPMENT = true;
 
 // Helper function for conditional debug logging
 const debugLog = (tag, ...args) => {
@@ -84,6 +84,10 @@ class RegexCache {
     }
     let r;
     try {
+      // Validate regex pattern to prevent ReDoS attacks
+      if (pattern && typeof pattern === 'string' && pattern.length > 10000) {
+        return null; // Reject patterns longer than 10KB
+      }
       r = flags && flags !== '' ? new RegExp(pattern, flags) : new RegExp(pattern);
     } catch (_) {
       r = null;
@@ -110,6 +114,1255 @@ class RegexCache {
   }
   stats() {
     return { hits: this.hits, misses: this.misses, size: this.map.size };
+  }
+}
+
+class AddToExistingEntryModal extends FuzzySuggestModal {
+  constructor(app, plugin, selectedText, view) {
+    super(app);
+    this.plugin = plugin;
+    this.selectedText = String(selectedText || '').trim();
+    this.view = view;
+    this._isRightClick = false;
+    this._docCtx = null;
+    this._lastAddedEntryUid = null;
+    this.setPlaceholder(this.plugin.t('prompt_search_existing','Search existing entries…'));
+  }
+  onOpen() {
+    try {
+      const root = this.modalEl.querySelector('.prompt') || this.modalEl;
+      if (root) root.classList.add('act');
+      const pic = this.modalEl.querySelector('.prompt-input-container');
+      if (pic) pic.classList.add('act');
+      const pi = this.modalEl.querySelector('.prompt-input');
+      if (pi) pi.classList.add('act');
+      const pia = this.modalEl.querySelector('.prompt-input-cta');
+      if (pia) pia.classList.add('act');
+      const clr = this.modalEl.querySelector('.search-input-clear-button');
+      if (clr) clr.classList.add('act');
+      const pr = this.modalEl.querySelector('.prompt-results');
+      if (pr) pr.classList.add('act');
+      
+      // Ensure only one bottom action row exists
+      try {
+        const existingRow = this.modalEl.querySelector('#act-prompt-bottom-row');
+        if (existingRow) existingRow.remove();
+      } catch (_) {}
+      
+      // Add buttons below suggestions
+      const buttonRow = document.createElement('div');
+      buttonRow.id = 'act-prompt-bottom-row';
+      buttonRow.style.cssText = 'display: flex; gap: 8px; padding: 12px 8px; border-top: 1px solid var(--background-modifier-border); background: var(--background-secondary); align-items: center;';
+      
+      // Limit input on the left (copied from settings BlacklistRegexTesterModal)
+      const limitInput = document.createElement('input');
+      limitInput.type = 'text';
+      limitInput.value = '0';
+      limitInput.placeholder = this.plugin.t('limit_input_placeholder','limit');
+      limitInput.title = this.plugin.t('limit_input_tooltip','0=all; number=last N; sw=starts; ew=ends; e=exact');
+      limitInput.style.width = '64px';
+      limitInput.style.padding = '6px';
+      limitInput.style.border = '1px solid var(--background-modifier-border)';
+      limitInput.style.borderRadius = '6px';
+      limitInput.style.zIndex = '999';
+      limitInput.style.position = 'relative';
+      debugLog('LIMIT', 'Created limit input element');
+      
+      // Make input fully interactive
+      limitInput.addEventListener('mousedown', (e) => { 
+        debugLog('LIMIT', 'mousedown fired');
+        // Don't stop propagation on left-click, only on right-click to focus properly on searchbar
+        if (e.button === 2) {
+          e.stopPropagation();
+        }
+      }, false);
+      limitInput.addEventListener('mouseup', (e) => { 
+        debugLog('LIMIT', 'mouseup fired');
+        // Don't stop propagation - allow normal event flow
+      }, false);
+      limitInput.addEventListener('click', (e) => { 
+        debugLog('LIMIT', 'click fired, attempting focus');
+        // Don't stop propagation on click - allows other elements to get clicks
+        // Force focus
+        setTimeout(() => {
+          limitInput.focus();
+          debugLog('LIMIT', 'force focused input');
+        }, 0);
+      }, false);
+      limitInput.addEventListener('focus', (e) => { 
+        debugLog('LIMIT', 'focus fired');
+        // Don't stop propagation on focus
+      }, false);
+      limitInput.addEventListener('pointerdown', (e) => {
+        debugLog('LIMIT', 'pointerdown fired');
+        // Only stop propagation on right-click
+        if (e.button === 2) {
+          e.stopPropagation();
+        }
+      }, false);
+      limitInput.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        limitInput.select();
+        debugLog('LIMIT', 'dblclick fired, text selected');
+      }, false);
+      
+      // Store the original getItems and filter based on limit input
+      const originalGetItems = this.getItems.bind(this);
+      let allItems = [];
+      // Preserve previous addNewEntry to restore on close and avoid stacking wrappers
+      this._prevAddNewEntry = this.plugin.addNewEntry;
+      const originalAddNewEntry = this.plugin.addNewEntry.bind(this.plugin);
+      this.plugin.addNewEntry = async function(...args) {
+        // Call original and wait for it to complete
+        const result = await originalAddNewEntry(...args);
+        // Track the most recent entry's uid (last one in wordEntries array)
+        const we = this.settings.wordEntries || [];
+        if (we.length > 0) {
+          // Find the modal and update its tracking variable
+          const modalThis = this;
+          for (let i = 0; i < (this.openModals?.length || 0); i++) {
+            const m = this.openModals[i];
+            if (m instanceof AddToExistingEntryModal) {
+              m._lastAddedEntryUid = we[we.length - 1].uid;
+              debugLog('LIMIT', 'Tracked new entry uid in modal:', m._lastAddedEntryUid);
+              break;
+            }
+          }
+        }
+        return result;
+      };
+      this.getItems = () => {
+        debugLog('LIMIT', 'getItems called');
+        allItems = originalGetItems();
+        const raw = String(limitInput.value || '').trim().toLowerCase();
+        debugLog('LIMIT', 'raw limit value:', raw, 'allItems count:', allItems.length);
+        
+        // Debug: log first item structure to see what properties are available
+        if (allItems.length > 0 && raw === 'sw') {
+          const entry = allItems[0].entry;
+          debugLog('LIMIT', 'First item match props:', 'match:', entry?.match, 'matchMode:', entry?.matchMode, 'matchType:', entry?.matchType);
+        }
+        
+        // No filter
+        if (!raw || raw === '0') {
+          debugLog('LIMIT', 'no filter, returning all items:', allItems.length);
+          return allItems;
+        }
+        
+        // Parse tokens: split by spaces and/or commas
+        const parts = raw.split(/[\s,]+/).filter(Boolean);
+        debugLog('LIMIT', 'parsed parts:', parts);
+        
+        // Extract numeric limit from parts
+        const numPart = parts.find(p => /^\d+$/.test(p));
+        const limit = numPart ? parseInt(numPart, 10) : 0;
+        
+        // Extract filter tokens
+        const filterTokens = parts.filter(p => !/^\d+$/.test(p));
+        
+        // Check which style filters are active
+        const hasRegexFilter = filterTokens.includes('r');
+        const hasWordFilter = filterTokens.includes('w');
+        const hasHighlightFilter = filterTokens.includes('h');
+        const hasColorFilter = filterTokens.includes('c');
+        const hasBothFilter = filterTokens.includes('b');
+        
+        // Check which match mode filters are active (can have multiple now)
+        const hasStartsWith = filterTokens.includes('sw');
+        const hasEndsWith = filterTokens.includes('ew');
+        const hasExact = filterTokens.includes('e');
+        
+        // Separate last added entry from the rest
+        let lastAddedItem = null;
+        let filtered = allItems;
+        
+        if (this._lastAddedEntryUid) {
+          const lastIndex = allItems.findIndex(item => item.entry?.uid === this._lastAddedEntryUid);
+          if (lastIndex >= 0) {
+            lastAddedItem = allItems[lastIndex];
+            filtered = allItems.filter((_, idx) => idx !== lastIndex);
+            debugLog('LIMIT', 'Separated last added entry, remaining items:', filtered.length);
+          }
+        }
+        
+        // Apply style filters (only one can be active)
+        if (hasRegexFilter) {
+          filtered = filtered.filter(item => item.entry && item.entry.isRegex);
+          debugLog('LIMIT', 'regex filter: found', filtered.length, 'items');
+        } else if (hasWordFilter) {
+          filtered = filtered.filter(item => item.entry && !item.entry.isRegex);
+          debugLog('LIMIT', 'word filter: found', filtered.length, 'items');
+        } else if (hasHighlightFilter) {
+          filtered = filtered.filter(item => item.entry && !item.entry.isRegex && item.style === 'highlight');
+          debugLog('LIMIT', 'highlight filter: found', filtered.length, 'items');
+        } else if (hasColorFilter) {
+          filtered = filtered.filter(item => item.entry && !item.entry.isRegex && item.style === 'color');
+          debugLog('LIMIT', 'color filter: found', filtered.length, 'items');
+        } else if (hasBothFilter) {
+          filtered = filtered.filter(item => item.entry && !item.entry.isRegex && item.style === 'both');
+          debugLog('LIMIT', 'both filter: found', filtered.length, 'items');
+        }
+        
+        // Apply match mode filters - ANY active filter matches (OR logic)
+        if (hasStartsWith || hasEndsWith || hasExact) {
+          filtered = filtered.filter(item => {
+            const match = item.entry?.match || item.entry?.matchMode || item.entry?.matchType;
+            let matches = false;
+            if (hasStartsWith) matches = matches || (match === 'startswith');
+            if (hasEndsWith) matches = matches || (match === 'endswith');
+            if (hasExact) matches = matches || (match === 'exact');
+            return matches;
+          });
+          debugLog('LIMIT', 'match mode filter (sw:', hasStartsWith, 'ew:', hasEndsWith, 'e:', hasExact, '): found', filtered.length, 'items');
+        }
+        
+        // Apply numeric limit (last N items)
+        if (limit > 0) {
+          debugLog('LIMIT', 'filtering to last', limit, 'items');
+          filtered = filtered.slice(-limit);
+        }
+        
+        // Always prepend the last added entry to the results (it appears first)
+        if (lastAddedItem) {
+          filtered = [lastAddedItem, ...filtered];
+          debugLog('LIMIT', 'Prepended last added entry, total items:', filtered.length);
+        }
+        
+        return filtered;
+      };
+      
+      // Add listener to limit input that rerenders suggestions
+      limitInput.addEventListener('input', () => {
+        debugLog('LIMIT', 'input event fired, value:', limitInput.value);
+        debugLog('LIMIT', 'dispatching input event on searchbar');
+        // Trigger the suggestion list to rerender
+        this.inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      }, false);
+      
+      debugLog('LIMIT', 'appending limit input to button row');
+      buttonRow.appendChild(limitInput);
+      
+      // Spacer to push buttons to the right
+      const spacer = document.createElement('div');
+      spacer.style.flex = '1';
+      buttonRow.appendChild(spacer);
+      
+      // Add Word button (no flex)
+      const addWordBtn = document.createElement('button');
+      addWordBtn.textContent = this.plugin.t('btn_add_word', '+ Add Word');
+      addWordBtn.style.cssText = 'padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;';
+      addWordBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.stopImmediatePropagation(); }, true);
+      addWordBtn.addEventListener('click', (e) => { 
+        e.preventDefault();
+        e.stopPropagation(); 
+        e.stopImmediatePropagation();
+        // Open color picker for new word entry with selected text prefilled
+        const modal = new ColorPickerModal(this.app, this.plugin, async (color) => {
+          if (!color || !this.plugin.isValidHexColor(color)) return;
+          // Track the new entry's uid BEFORE calling addNewEntry
+          const currentLength = this.plugin.settings.wordEntries?.length || 0;
+          await this.plugin.addNewEntry(this.selectedText, color, false);
+          // After addNewEntry completes, the new entry is at the end
+          const we = this.plugin.settings.wordEntries || [];
+          if (we.length > currentLength) {
+            // New entry was added, store its uid for the filter to show it
+            this._lastAddedEntryUid = we[we.length - 1].uid;
+            debugLog('LIMIT', 'Set _lastAddedEntryUid for new entry:', this._lastAddedEntryUid);
+            // Trigger the suggestion list to rerender so the new entry appears
+            this.inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+        }, 'text', this.selectedText);
+        modal.open();
+      }, true);
+      buttonRow.appendChild(addWordBtn);
+      
+      // Add Regex button (only if regex support enabled)
+      if (this.plugin.settings.enableRegexSupport) {
+        const addRegexBtn = document.createElement('button');
+        addRegexBtn.textContent = this.plugin.t('btn_add_regex_short', '+ Add Regex');
+        addRegexBtn.style.cssText = 'padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;';
+        addRegexBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.stopImmediatePropagation(); }, true);
+        addRegexBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          new BlacklistRegexTesterModal(this.app, this.plugin, async (pattern, flags, name) => {
+            // Track the new entry's uid BEFORE calling addNewEntry
+            const currentLength = this.plugin.settings.wordEntries?.length || 0;
+            await this.plugin.addNewEntry(pattern, '#ff0000', true, flags, name);
+            // After addNewEntry completes, the new entry is at the end
+            const we = this.plugin.settings.wordEntries || [];
+            if (we.length > currentLength) {
+              // New entry was added, store its uid for the filter to show it
+              this._lastAddedEntryUid = we[we.length - 1].uid;
+              debugLog('LIMIT', 'Set _lastAddedEntryUid for new regex entry:', this._lastAddedEntryUid);
+              // Trigger the suggestion list to rerender so the new entry appears
+              this.inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+          }).open();
+        }, true);
+        buttonRow.appendChild(addRegexBtn);
+      }
+      
+      // Insert button row after prompt-results
+      const pr_el = this.modalEl.querySelector('.prompt-results');
+      if (pr_el && pr_el.parentNode) {
+        pr_el.parentNode.insertBefore(buttonRow, pr_el.nextSibling);
+      }
+      let style = document.getElementById('act-suggest-modal');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'act-suggest-modal';
+        style.textContent = `
+          .prompt.act .suggestion-item.mod-complex { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+          .prompt.act .suggestion-content { display: flex; align-items: center; gap: 6px; }
+          .prompt.act .suggestion-title { display: inline-flex; gap: 6px; }
+          .prompt.act .suggestion-title span { color: var(--text-normal); }
+          .prompt.act .suggestion-aux { display: inline-flex; align-items: center; }
+          .prompt.act kbd.suggestion-hotkey.act { opacity: 0.9; }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      // Intercept right-click events on suggestion items to prevent modal from closing
+      const suggestionsContainer = this.modalEl.querySelector('.prompt-results');
+      if (suggestionsContainer) {
+        // Track right-click state early in the event chain
+        const setRightClickFlag = (evt) => {
+          this._isRightClick = (evt && evt.button === 2);
+        };
+        const clearRightClickFlag = () => { this._isRightClick = false; };
+        
+        // Capture on the modal root to stop Obsidian editor menu early
+        const captureRightClick = (evt) => {
+          // Don't interfere with limit input
+          if (evt.target === limitInput || limitInput.contains(evt.target)) {
+            debugLog('LIMIT', 'mousedown/pointerdown on limit input, skipping capture');
+            return;
+          }
+          if (evt && evt.button === 2) {
+            setRightClickFlag(evt);
+            evt.preventDefault();
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            evt.returnValue = false;
+          }
+        };
+        const suppressContextMenu = (evt) => {
+          evt.preventDefault();
+          evt.stopPropagation();
+          evt.stopImmediatePropagation();
+          evt.returnValue = false;
+        };
+        this._modalCaptureHandlers = [
+          { el: this.modalEl, event: 'mousedown', handler: captureRightClick, opts: true },
+          { el: this.modalEl, event: 'pointerdown', handler: captureRightClick, opts: true },
+          { el: this.modalEl, event: 'mouseup', handler: captureRightClick, opts: true },
+          { el: this.modalEl, event: 'contextmenu', handler: suppressContextMenu, opts: true }
+        ];
+        this._modalClickSuppress = (evt) => {
+          // Don't suppress clicks on limit input or searchbar
+          if (evt.target === limitInput || limitInput.contains(evt.target)) {
+            debugLog('LIMIT', 'click on limit input, not suppressing');
+            return;
+          }
+          // Also allow searchbar to get clicks and force focus
+          if (evt.target === this.inputEl || this.inputEl.contains(evt.target)) {
+            debugLog('LIMIT', 'click on searchbar, forcing focus');
+            setTimeout(() => {
+              this.inputEl.focus();
+              debugLog('LIMIT', 'forced searchbar focus');
+            }, 0);
+            return;
+          }
+          if (this._isRightClick) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            evt.returnValue = false;
+            clearRightClickFlag();
+          }
+        };
+        this.modalEl.addEventListener('click', this._modalClickSuppress, true);
+        this._modalCaptureHandlers.forEach(h => { h.el.addEventListener(h.event, h.handler, h.opts); });
+        
+        suggestionsContainer.addEventListener('mousedown', (evt) => {
+          // Skip if clicking on limit input
+          if (evt.target === limitInput || limitInput.contains(evt.target)) {
+            debugLog('LIMIT', 'mousedown on limit input in suggestionsContainer handler, skipping');
+            return;
+          }
+          setRightClickFlag(evt);
+          if (evt.button === 2) { // Right-click
+            evt.preventDefault();
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            evt.returnValue = false;
+          }
+        }, true); // Use capture phase to intercept before other handlers
+        
+        suggestionsContainer.addEventListener('pointerdown', (evt) => {
+          setRightClickFlag(evt);
+          if (evt.button === 2) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            evt.returnValue = false;
+          }
+        }, true);
+        
+        suggestionsContainer.addEventListener('mouseup', (evt) => {
+          if (evt.button === 2) { // Right-click
+            evt.preventDefault();
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            evt.returnValue = false;
+          }
+          clearRightClickFlag();
+        }, true); // Use capture phase
+        
+        // Block click choosing when the last press was a right-click
+        suggestionsContainer.addEventListener('click', (evt) => {
+          if (this._isRightClick) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            evt.returnValue = false;
+            clearRightClickFlag();
+          }
+        }, true);
+        
+        // Prevent bubbling of contextmenu to base modal
+        suggestionsContainer.addEventListener('contextmenu', (evt) => {
+          evt.preventDefault();
+          evt.stopPropagation();
+          evt.stopImmediatePropagation();
+          evt.returnValue = false;
+        }, true);
+      }
+      
+      this._docCtx = (evt) => {
+        try {
+          if (this.modalEl && this.modalEl.contains(evt.target)) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            evt.returnValue = false;
+          }
+        } catch (_) {}
+      };
+      document.addEventListener('contextmenu', this._docCtx, true);
+      document.addEventListener('mousedown', this._docCtx, true);
+      document.addEventListener('pointerdown', this._docCtx, true);
+      this._docAux = (evt) => {
+        if (evt && evt.button === 2) {
+          evt.preventDefault();
+          evt.stopPropagation();
+          evt.stopImmediatePropagation();
+          evt.returnValue = false;
+        }
+      };
+      document.addEventListener('auxclick', this._docAux, true);
+      
+      // BRUTE FORCE: Listen for contextmenu (right-click) on suggestions
+      this._docRightClick = (evt) => {
+        debugLog('RIGHTCLICK', 'DOC-RIGHTCLICK - CONTEXTMENU FIRED!', evt.target);
+        
+        const target = evt.target;
+        debugLog('RIGHTCLICK', 'checking target:', { className: target.className, tagName: target.tagName });
+        
+        if (!target) return;
+        
+        // Check if the clicked element is within a suggestion item - try multiple selectors
+        let suggestionEl = target.closest('[class*="suggestion-item"]');
+        if (!suggestionEl) suggestionEl = target.closest('.suggestion-item');
+        if (!suggestionEl && target.classList && target.classList.contains('suggestion-item')) suggestionEl = target;
+        
+        debugLog('RIGHTCLICK', 'suggestionEl found:', !!suggestionEl, { suggestionEl });
+        
+        if (suggestionEl) {
+          debugLog('RIGHTCLICK', 'Checking if in modal...');
+          const inModal = this.modalEl && this.modalEl.contains(suggestionEl);
+          debugLog('RIGHTCLICK', 'inModal:', inModal);
+          
+          if (inModal) {
+            debugLog('RIGHTCLICK', '*** FOUND SUGGESTION IN MODAL, SHOWING MENU ***');
+            evt.preventDefault();
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            evt.returnValue = false;
+            
+            // Find the rendered item data
+            const items = this.getItems();
+            debugLog('RIGHTCLICK', 'Got items:', items.length);
+            
+            const allSuggestions = Array.from(this.modalEl.querySelectorAll('[class*="suggestion-item"]'));
+            debugLog('RIGHTCLICK', 'Found suggestion elements:', allSuggestions.length);
+            
+            const idx = allSuggestions.indexOf(suggestionEl);
+            debugLog('RIGHTCLICK', 'Item index:', idx);
+            
+            if (idx >= 0 && items[idx]) {
+              debugLog('RIGHTCLICK', 'Creating menu for:', items[idx].label);
+              const actualItem = items[idx];
+              
+              // Use setTimeout to ensure menu shows after event handling
+              setTimeout(() => {
+                const menu = new Menu();
+                debugLog('RIGHTCLICK', 'Menu created');
+                debugLog('RIGHTCLICK', 'actualItem:', JSON.stringify(actualItem, null, 2));
+                debugLog('RIGHTCLICK', 'actualItem.entry.isRegex:', actualItem.entry?.isRegex);
+                
+                // Edit entry
+                menu.addItem(item => {
+                  item.setTitle(this.plugin.t('edit_entry_header', 'Edit Entry'))
+                    .setIcon('pencil')
+                    .onClick(() => {
+                      debugLog('RIGHTCLICK', 'Edit entry clicked');
+                      this.close();
+                      try {
+                        this.plugin.settingTab.display();
+                        const searchInput = document.querySelector('.setting-item input[placeholder*="search"], .setting-search input');
+                        if (searchInput) {
+                          searchInput.value = actualItem.label;
+                          searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                      } catch (_) {}
+                    });
+                });
+                
+                // Open in Regex Tester (only for regex items)
+                if (actualItem.entry && actualItem.entry.isRegex) {
+                  menu.addItem(item => {
+                    item.setTitle(this.plugin.t('open_in_regex_tester', 'Open in Regex Tester'))
+                      .setIcon('code')
+                      .onClick(() => {
+                        const entry = actualItem.entry;
+                        const modal = new RealTimeRegexTesterModal(this.app, this.plugin, async (updatedEntry) => {
+                          // Entry has already been updated by the modal's save handler
+                        }, null);
+                        // Prefill the modal fields with the entry's current values
+                        modal._editingEntry = entry;
+                        modal._preFillPattern = entry.pattern || '';
+                        modal._preFillFlags = entry.flags || '';
+                        modal._preFillName = entry.presetLabel || '';
+                        modal._preFillStyleType = entry.styleType || 'both';
+                        modal._preFillTextColor = (entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : (this.plugin.isValidHexColor(entry.color) ? entry.color : '#87c760')) || '#87c760';
+                        modal._preFillBgColor = entry.backgroundColor || '#1d5010';
+                        // Store reference to parent modal so we can refresh it after save
+                        modal._parentModal = this;
+                        modal.open();
+                      });
+                  });
+                }
+                
+                // Delete entry
+                menu.addItem(item => {
+                  item.setTitle(this.plugin.t('context_delete_entry', 'Delete entry'))
+                    .setIcon('trash')
+                    .onClick(async () => {
+                      debugLog('RIGHTCLICK', 'Delete entry clicked');
+                      const entry = actualItem.entry;
+                      const entryUid = entry.uid;
+                      
+                      let foundIdx = -1;
+                      let foundArray = null;
+                      
+                      for (let i = 0; i < this.plugin.settings.wordEntries.length; i++) {
+                        if (this.plugin.settings.wordEntries[i].uid === entryUid) {
+                          foundIdx = i;
+                          foundArray = this.plugin.settings.wordEntries;
+                          break;
+                        }
+                      }
+                      
+                      if (foundIdx === -1) {
+                        for (let i = 0; i < this.plugin.settings.textBgColoringEntries.length; i++) {
+                          if (this.plugin.settings.textBgColoringEntries[i].uid === entryUid) {
+                            foundIdx = i;
+                            foundArray = this.plugin.settings.textBgColoringEntries;
+                            break;
+                          }
+                        }
+                      }
+                      
+                      if (foundIdx >= 0 && foundArray) {
+                        foundArray.splice(foundIdx, 1);
+                        await this.plugin.saveSettings();
+                        this.plugin.compileWordEntries();
+                        this.plugin.compileTextBgColoringEntries();
+                        try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+                        try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+                        this.refreshSuggestions();
+                        new Notice(`Entry "${actualItem.label}" deleted`);
+                      }
+                    });
+                });
+                
+                // Duplicate entry
+                menu.addItem(item => {
+                  item.setTitle(this.plugin.t('duplicate_entry', 'Duplicate Entry'))
+                    .setIcon('copy')
+                    .onClick(async () => {
+                      debugLog('RIGHTCLICK', 'Duplicate entry clicked');
+                      try {
+                        const entry = actualItem.entry;
+                        const dup = JSON.parse(JSON.stringify(entry));
+                        const targetArray = this.plugin.settings.wordEntries.includes(entry) 
+                          ? this.plugin.settings.wordEntries 
+                          : this.plugin.settings.textBgColoringEntries;
+                        targetArray.push(dup);
+                        await this.plugin.saveSettings();
+                        this.plugin.compileWordEntries();
+                        this.plugin.compileTextBgColoringEntries();
+                        try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+                        try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+                        this.refreshSuggestions();
+                        new Notice(this.plugin.t('notice_entry_duplicated', 'Entry duplicated'));
+                        this.close();
+                        new AddToExistingEntryModal(this.app, this.plugin, this.selectedText, this.view).open();
+                      } catch (e) {
+                        debugError('RIGHTCLICK', 'duplicate entry error', e);
+                      }
+                    });
+                });
+                
+                // Remove word from entry
+                const entry = actualItem.entry;
+                const matchesWord = () => {
+                  if (entry.isRegex) return false;
+                  const cmp = (a, b) => {
+                    if (this.plugin.settings.caseSensitive) return String(a) === String(b);
+                    return String(a).toLowerCase() === String(b).toLowerCase();
+                  };
+                  if (cmp(entry.pattern, this.selectedText)) return true;
+                  if (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.some(p => cmp(p, this.selectedText))) return true;
+                  return false;
+                };
+                
+                if (matchesWord()) {
+                  menu.addItem(item => {
+                    item.setTitle(this.plugin.t('context_remove_from_entry', 'Remove "{word}" from entry').replace('{word}', this.selectedText))
+                      .setIcon('minus')
+                      .onClick(async () => {
+                        debugLog('RIGHTCLICK', 'Remove word clicked');
+                        if (Array.isArray(entry.groupedPatterns)) {
+                          entry.groupedPatterns = entry.groupedPatterns.filter(p => {
+                            const cmp = this.plugin.settings.caseSensitive 
+                              ? String(p) === String(this.selectedText)
+                              : String(p).toLowerCase() === String(this.selectedText).toLowerCase();
+                            return !cmp;
+                          });
+                        } else {
+                          entry.pattern = '';
+                        }
+                        await this.plugin.saveSettings();
+                        this.plugin.compileWordEntries();
+                        this.plugin.compileTextBgColoringEntries();
+                        try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+                        try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+                        this.refreshSuggestions();
+                        new Notice(`"${this.selectedText}" removed from entry`);
+                      });
+                  });
+                }
+                
+                debugLog('RIGHTCLICK', 'Showing menu');
+                menu.showAtMouseEvent(evt);
+                menu.dom.style.zIndex = '2000';
+              }, 0);
+            }
+          }
+        }
+      };
+      debugLog('ATTACH', 'Attaching modalEl contextmenu listener for right-click');
+      if (this.modalEl) {
+        this.modalEl.addEventListener('contextmenu', this._docRightClick, true);
+      }
+      
+      // Trigger initial suggestion display without requiring user input
+      setTimeout(() => {
+        try {
+          this.updateSuggestions();
+        } catch (_) {}
+      }, 100);
+    } catch (_) {}
+  }
+  onClose() {
+    try {
+      // Remove all document-level listeners
+      if (this._docCtx) {
+        document.removeEventListener('contextmenu', this._docCtx, true);
+        document.removeEventListener('mousedown', this._docCtx, true);
+        document.removeEventListener('pointerdown', this._docCtx, true);
+        this._docCtx = null;
+      }
+      if (this._docAux) {
+        document.removeEventListener('auxclick', this._docAux, true);
+        this._docAux = null;
+      }
+      if (this._docRightClick && this.modalEl) {
+        this.modalEl.removeEventListener('contextmenu', this._docRightClick, true);
+        this._docRightClick = null;
+      }
+      // Remove bottom action row
+      try {
+        const existingRow = this.modalEl && this.modalEl.querySelector ? this.modalEl.querySelector('#act-prompt-bottom-row') : null;
+        if (existingRow) existingRow.remove();
+      } catch (_) {}
+      // Restore original addNewEntry
+      try {
+        if (this._prevAddNewEntry) {
+          this.plugin.addNewEntry = this._prevAddNewEntry;
+          this._prevAddNewEntry = null;
+        }
+      } catch (_) {}
+      // Remove modal capture handlers
+      if (this._modalCaptureHandlers && Array.isArray(this._modalCaptureHandlers)) {
+        this._modalCaptureHandlers.forEach(h => { 
+          try { h.el && h.el.removeEventListener && h.el.removeEventListener(h.event, h.handler, h.opts); } catch (_) {} 
+        });
+        this._modalCaptureHandlers = [];
+      }
+      if (this._modalClickSuppress && this.modalEl) {
+        this.modalEl.removeEventListener('click', this._modalClickSuppress, true);
+        this._modalClickSuppress = null;
+      }
+    } catch (_) {}
+    this._isRightClick = false;
+  }
+  getItems() {
+    const we = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+    const items = [];
+    const lastUid = this._lastAddedEntryUid;
+    
+    for (const e of we) {
+      if (!e) continue;
+      
+      // Ensure entry has a uid
+      if (!e.uid) {
+        try { e.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (_) { e.uid = Date.now(); }
+      }
+      
+      let label = '';
+      if (e.isRegex) {
+        const patRaw = String(e.pattern || '');
+        const patTrim = patRaw.trim();
+        if (!patTrim) {
+          // Include regex entries with empty patterns if they're the last added entry
+          if (e.uid !== lastUid) continue;
+          label = e.presetLabel ? String(e.presetLabel) : '[new regex]';
+        } else {
+          const name = e.presetLabel ? String(e.presetLabel) : 'regex';
+          label = `${name}: ${patTrim}`;
+        }
+      } else {
+        const patsArr = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || '').trim()];
+        const pats = patsArr.map(x => String(x || '').trim()).filter(x => x.length > 0);
+        if (pats.length === 0) {
+          // Include word entries with empty patterns if they're the last added entry
+          if (e.uid !== lastUid) continue;
+          label = '[new entry]';
+        } else {
+          label = pats.join(', ');
+        }
+      }
+      // Final validation: ensure label is not empty
+      label = String(label || '').trim();
+      if (!label) continue;
+      let st = 'color';
+      if (e.styleType === 'text') st = 'color';
+      else if (e.styleType === 'highlight') st = 'highlight';
+      else if (e.styleType === 'both') st = 'both';
+      else {
+        const hasBg = !!e.backgroundColor;
+        const hasText = (!!e.color && String(e.color).trim() !== '') || (!!e.textColor && e.textColor && e.textColor !== 'currentColor');
+        st = (hasBg && hasText) ? 'both' : (hasBg ? 'highlight' : 'color');
+      }
+      items.push({ entry: e, label, style: st });
+    }
+    // Sort items alphabetically by label (case-insensitive)
+    items.sort((a, b) => String(a.label).toLowerCase().localeCompare(String(b.label).toLowerCase()));
+    return items;
+  }
+  getItemText(item) {
+    return String(item.label || '');
+  }
+  refreshSuggestions() {
+    // Refresh the suggestions list by rebuilding from current items
+    try {
+      const currentItems = this.getItems();
+      this._updateSuggestions(currentItems);
+    } catch (e) {
+      debugLog('REFRESH', 'Error refreshing suggestions:', e);
+    }
+  }
+  renderSuggestion(item, el) {
+    // FuzzySuggestModal wraps items, so access the actual item via item.item
+    const actualItem = item.item || item;
+    try { el.empty(); } catch (_) { el.textContent = ''; }
+    try { el.classList.add('mod-complex'); } catch (_) {}
+    try { el.classList.add('act'); } catch (_) {}
+    const content = el.createDiv({ cls: 'suggestion-content act' });
+    const title = content.createDiv({ cls: 'suggestion-title act' });
+    title.createEl('span', { text: actualItem.label });
+    const aux = el.createDiv({ cls: 'suggestion-aux act' });
+    const textMap = { color: 'color', highlight: 'highlight', both: 'both' };
+    const k = aux.createEl('kbd', { text: textMap[actualItem.style] || 'color' });
+    try { k.classList.add('suggestion-hotkey'); } catch (_) {}
+    try { k.classList.add('act'); } catch (_) {}
+    
+    // Prevent onChooseItem from firing on right-click and keep modal open
+    el.addEventListener('mousedown', (evt) => {
+      if (evt.button === 2) { // 2 = right mouse button
+        // Don't prevent default for right-click - let contextmenu event fire
+        evt.stopPropagation();
+        evt.stopImmediatePropagation();
+        this._isRightClick = true;
+      }
+    });
+    
+    el.addEventListener('pointerdown', (evt) => {
+      if (evt.button === 2) {
+        debugLog('ELEMENT', 'pointerdown with button 2 detected');
+        // Don't prevent default for right-click - let contextmenu event fire
+        evt.stopPropagation();
+        evt.stopImmediatePropagation();
+        this._isRightClick = true;
+      }
+    });
+    
+    el.addEventListener('mouseup', (evt) => {
+      if (evt.button === 2) { // 2 = right mouse button
+        evt.stopPropagation();
+        evt.stopImmediatePropagation();
+        this._isRightClick = false;
+      }
+    });
+    
+    el.addEventListener('click', (evt) => {
+      if (this._isRightClick) {
+        evt.preventDefault();
+        evt.stopPropagation();
+        evt.stopImmediatePropagation();
+        this._isRightClick = false;
+      }
+    });
+    
+    // Add right-click context menu
+    el.addEventListener('contextmenu', (evt) => {
+      debugLog('ELEMENT', 'RENDER-CONTEXTMENU EVENT FIRED');
+      debugLog('ELEMENT', 'contextmenu event fired on element');
+      evt.preventDefault();
+      evt.stopPropagation();
+      evt.stopImmediatePropagation();
+      
+      debugLog('ELEMENT', 'showing menu for:', actualItem.label);
+      debugLog('ELEMENT', 'actualItem:', JSON.stringify(actualItem, null, 2));
+      debugLog('ELEMENT', 'actualItem.entry.isRegex:', actualItem.entry?.isRegex);
+      const menu = new Menu();
+      
+      // Edit entry
+      menu.addItem(item => {
+        item.setTitle(this.plugin.t('edit_entry_header', 'Edit Entry'))
+          .setIcon('pencil')
+          .onClick(() => {
+            // Open EditEntryModal without closing the prompt - keeps it interactive
+            let entry = actualItem.entry;
+            // Reload entry from settings by UID to ensure all properties (including custom styling) are present
+            if (entry && entry.uid) {
+              const reloadedEntry = this.plugin.settings.wordEntries.find(e => e && e.uid === entry.uid) ||
+                                   this.plugin.settings.textBgColoringEntries.find(e => e && e.uid === entry.uid);
+              if (reloadedEntry) {
+                entry = reloadedEntry;
+                debugLog('EDIT_ENTRY', `Reloaded entry ${entry.uid}: opacity=${entry.backgroundOpacity}, radius=${entry.highlightBorderRadius}`);
+              }
+            }
+            const modal = new EditEntryModal(this.app, this.plugin, entry, null, this);
+            modal.open();
+          });
+      });
+      
+      // Open in Regex Tester (only for regex items)
+      if (actualItem.entry && actualItem.entry.isRegex) {
+        menu.addItem(item => {
+          item.setTitle(this.plugin.t('open_in_regex_tester', 'Open in Regex Tester'))
+            .setIcon('code')
+            .onClick(() => {
+              const entry = actualItem.entry;
+              const modal = new RealTimeRegexTesterModal(this.app, this.plugin, async (updatedEntry) => {
+                // Entry has already been updated by the modal's save handler
+              }, null);
+              // Prefill the modal fields with the entry's current values
+              modal._editingEntry = entry;
+              modal._preFillPattern = entry.pattern || '';
+              modal._preFillFlags = entry.flags || '';
+              modal._preFillName = entry.presetLabel || '';
+              modal._preFillStyleType = entry.styleType || 'both';
+              modal._preFillTextColor = (entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : (this.plugin.isValidHexColor(entry.color) ? entry.color : '#87c760')) || '#87c760';
+              modal._preFillBgColor = entry.backgroundColor || '#1d5010';
+              // Store reference to parent modal so we can refresh it after save
+              modal._parentModal = this;
+              modal.open();
+            });
+        });
+      }
+      
+      // Delete entry
+      menu.addItem(item => {
+        item.setTitle(this.plugin.t('context_delete_entry', 'Delete entry'))
+          .setIcon('trash')
+          .onClick(async () => {
+            const entry = actualItem.entry;
+            const entryUid = entry.uid;
+            
+            // Find by uid for reliability
+            let foundIdx = -1;
+            let foundArray = null;
+            
+            for (let i = 0; i < this.plugin.settings.wordEntries.length; i++) {
+              if (this.plugin.settings.wordEntries[i].uid === entryUid) {
+                foundIdx = i;
+                foundArray = this.plugin.settings.wordEntries;
+                break;
+              }
+            }
+            
+            if (foundIdx === -1) {
+              for (let i = 0; i < this.plugin.settings.textBgColoringEntries.length; i++) {
+                if (this.plugin.settings.textBgColoringEntries[i].uid === entryUid) {
+                  foundIdx = i;
+                  foundArray = this.plugin.settings.textBgColoringEntries;
+                  break;
+                }
+              }
+            }
+            
+            if (foundIdx >= 0 && foundArray) {
+              foundArray.splice(foundIdx, 1);
+              await this.plugin.saveSettings();
+              this.plugin.compileWordEntries();
+              this.plugin.compileTextBgColoringEntries();
+              try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+              try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+              new Notice(`Entry "${actualItem.label}" deleted`);
+              this.close();
+            }
+          });
+      });
+      
+      // Remove word from entry (only if selected word matches an entry pattern)
+      const entry = actualItem.entry;
+      const matchesWord = () => {
+        if (entry.isRegex) return false;
+        const cmp = (a, b) => {
+          if (this.plugin.settings.caseSensitive) return String(a) === String(b);
+          return String(a).toLowerCase() === String(b).toLowerCase();
+        };
+        // Check if selectedText matches any pattern in this entry
+        if (cmp(entry.pattern, this.selectedText)) return true;
+        if (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.some(p => cmp(p, this.selectedText))) return true;
+        return false;
+      };
+      
+      if (matchesWord()) {
+        menu.addItem(item => {
+          item.setTitle(this.plugin.t('context_remove_from_entry', 'Remove "{word}" from entry').replace('{word}', this.selectedText))
+            .setIcon('minus')
+            .onClick(async () => {
+              if (Array.isArray(entry.groupedPatterns)) {
+                entry.groupedPatterns = entry.groupedPatterns.filter(p => {
+                  const cmp = this.plugin.settings.caseSensitive 
+                    ? String(p) === String(this.selectedText)
+                    : String(p).toLowerCase() === String(this.selectedText).toLowerCase();
+                  return !cmp;
+                });
+              } else {
+                entry.pattern = '';
+              }
+              await this.plugin.saveSettings();
+              this.plugin.compileWordEntries();
+              this.plugin.compileTextBgColoringEntries();
+              try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+              try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+              new Notice(`"${this.selectedText}" removed from entry`);
+              this.close();
+            });
+        });
+      }
+      
+      // Close any existing menu before showing new one
+      const existingMenus = document.querySelectorAll('.menu');
+      existingMenus.forEach(m => {
+        if (m !== menu.dom) m.remove();
+      });
+      
+      menu.showAtMouseEvent(evt);
+      menu.dom.style.zIndex = '2000';
+      
+      // Close menu when clicking elsewhere
+      const closeMenu = (e) => {
+        if (!menu.dom.contains(e.target) && e.target !== el) {
+          menu.dom.remove();
+          document.removeEventListener('click', closeMenu);
+        }
+      };
+      setTimeout(() => {
+        document.addEventListener('click', closeMenu);
+      }, 100);
+    }, true);
+    
+    // FALLBACK: pointerup with button 2 in case contextmenu doesn't fire
+    el.addEventListener('pointerup', (evt) => {
+      if (evt.button === 2) {
+        debugLog('ELEMENT', 'pointerup with button 2 - contextmenu fallback');
+        debugLog('ELEMENT', 'actualItem in pointerup:', JSON.stringify(actualItem, null, 2));
+        debugLog('ELEMENT', 'actualItem.entry.isRegex in pointerup:', actualItem.entry?.isRegex);
+        // Manually create and show the menu
+        evt.preventDefault();
+        evt.stopPropagation();
+        evt.stopImmediatePropagation();
+        
+        const menu = new Menu();
+        
+        // Edit entry
+        menu.addItem(item => {
+          item.setTitle(this.plugin.t('edit_entry_header', 'Edit Entry'))
+            .setIcon('pencil')
+            .onClick(() => {
+              // Open EditEntryModal without closing the prompt - keeps it interactive
+              const entry = actualItem.entry;
+              const modal = new EditEntryModal(this.app, this.plugin, entry, null, this);
+              modal.open();
+            });
+        });
+        
+        // Open in Regex Tester (only for regex items)
+        if (actualItem.entry && actualItem.entry.isRegex) {
+          menu.addItem(item => {
+            item.setTitle(this.plugin.t('open_in_regex_tester', 'Open in Regex Tester'))
+              .setIcon('code')
+              .onClick(() => {
+                const entry = actualItem.entry;
+                const modal = new RealTimeRegexTesterModal(this.app, this.plugin, async (updatedEntry) => {
+                  // Entry has already been updated by the modal's save handler
+                }, null);
+                // Prefill the modal fields with the entry's current values
+                modal._editingEntry = entry;
+                modal._preFillPattern = entry.pattern || '';
+                modal._preFillFlags = entry.flags || '';
+                modal._preFillName = entry.presetLabel || '';
+                modal._preFillStyleType = entry.styleType || 'both';
+                modal._preFillTextColor = (entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : (this.plugin.isValidHexColor(entry.color) ? entry.color : '#87c760')) || '#87c760';
+                modal._preFillBgColor = entry.backgroundColor || '#1d5010';
+                // Store reference to parent modal so we can refresh it after save
+                modal._parentModal = this;
+                modal.open();
+              });
+          });
+        }
+        
+        // Delete entry
+        menu.addItem(item => {
+          item.setTitle(this.plugin.t('context_delete_entry', 'Delete entry'))
+            .setIcon('trash')
+            .onClick(async () => {
+              const entry = actualItem.entry;
+              const entryUid = entry.uid;
+              
+              let foundIdx = -1;
+              let foundArray = null;
+              
+              for (let i = 0; i < this.plugin.settings.wordEntries.length; i++) {
+                if (this.plugin.settings.wordEntries[i].uid === entryUid) {
+                  foundIdx = i;
+                  foundArray = this.plugin.settings.wordEntries;
+                  break;
+                }
+              }
+              
+              if (foundIdx === -1) {
+                for (let i = 0; i < this.plugin.settings.textBgColoringEntries.length; i++) {
+                  if (this.plugin.settings.textBgColoringEntries[i].uid === entryUid) {
+                    foundIdx = i;
+                    foundArray = this.plugin.settings.textBgColoringEntries;
+                    break;
+                  }
+                }
+              }
+              
+              if (foundIdx >= 0 && foundArray) {
+                foundArray.splice(foundIdx, 1);
+                await this.plugin.saveSettings();
+                this.plugin.compileWordEntries();
+                this.plugin.compileTextBgColoringEntries();
+                try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+                try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+                new Notice(`Entry "${actualItem.label}" deleted`);
+                this.close();
+                new AddToExistingEntryModal(this.app, this.plugin, this.selectedText, this.view).open();
+              }
+            });
+        });
+        
+        // Duplicate entry
+        menu.addItem(item => {
+          item.setTitle(this.plugin.t('duplicate_entry', 'Duplicate Entry'))
+            .setIcon('copy')
+            .onClick(async () => {
+              try {
+                const entry = actualItem.entry;
+                const dup = JSON.parse(JSON.stringify(entry));
+                const targetArray = this.plugin.settings.wordEntries.includes(entry) 
+                  ? this.plugin.settings.wordEntries 
+                  : this.plugin.settings.textBgColoringEntries;
+                targetArray.push(dup);
+                await this.plugin.saveSettings();
+                this.plugin.compileWordEntries();
+                this.plugin.compileTextBgColoringEntries();
+                try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+                try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+                this.refreshSuggestions();
+                new Notice(this.plugin.t('notice_entry_duplicated', 'Entry duplicated'));
+                this.close();
+                new AddToExistingEntryModal(this.app, this.plugin, this.selectedText, this.view).open();
+              } catch (e) {
+                debugError('RIGHTCLICK', 'duplicate entry error', e);
+              }
+            });
+        });
+        
+        // Remove word
+        const entry = actualItem.entry;
+        const matchesWord = () => {
+          if (entry.isRegex) return false;
+          const cmp = (a, b) => {
+            if (this.plugin.settings.caseSensitive) return String(a) === String(b);
+            return String(a).toLowerCase() === String(b).toLowerCase();
+          };
+          if (cmp(entry.pattern, this.selectedText)) return true;
+          if (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.some(p => cmp(p, this.selectedText))) return true;
+          return false;
+        };
+        
+        if (matchesWord()) {
+          menu.addItem(item => {
+            item.setTitle(this.plugin.t('context_remove_from_entry', 'Remove "{word}" from entry').replace('{word}', this.selectedText))
+              .setIcon('minus')
+              .onClick(async () => {
+                if (Array.isArray(entry.groupedPatterns)) {
+                  entry.groupedPatterns = entry.groupedPatterns.filter(p => {
+                    const cmp = this.plugin.settings.caseSensitive 
+                      ? String(p) === String(this.selectedText)
+                      : String(p).toLowerCase() === String(this.selectedText).toLowerCase();
+                    return !cmp;
+                  });
+                } else {
+                  entry.pattern = '';
+                }
+                await this.plugin.saveSettings();
+                this.plugin.compileWordEntries();
+                this.plugin.compileTextBgColoringEntries();
+                try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+                try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+                this.refreshSuggestions();
+                new Notice(`"${this.selectedText}" removed from entry`);
+              });
+          });
+        }
+        
+        // Close any existing menu before showing new one
+        const existingMenus = document.querySelectorAll('.menu');
+        existingMenus.forEach(m => {
+          if (m !== menu.dom) m.remove();
+        });
+        
+        menu.showAtMouseEvent(evt);
+        menu.dom.style.zIndex = '2000';
+        
+        // Close menu when clicking elsewhere
+        const closeMenu = (e) => {
+          if (!menu.dom.contains(e.target) && e.target !== el) {
+            menu.dom.remove();
+            document.removeEventListener('click', closeMenu);
+          }
+        };
+        setTimeout(() => {
+          document.addEventListener('click', closeMenu);
+        }, 100);
+      }
+    });
+  }
+  onChooseItem(item, evt) {
+    // Prevent choosing on right-click
+    if (evt && evt.button === 2) return;
+    
+    // FuzzySuggestModal wraps items, so access the actual item via item.item
+    const actualItem = item.item || item;
+    const e = actualItem.entry;
+    const s = this.selectedText;
+    if (!s) return;
+    const cmp = (a, b) => {
+      if (this.plugin.settings.caseSensitive) return String(a) === String(b);
+      return String(a).toLowerCase() === String(b).toLowerCase();
+    };
+    const has = (arr, val) => Array.isArray(arr) && arr.some(p => cmp(p, val));
+    // If entry is a regex like \bword1|word2|...\w*\b, append the selected word to the alternation
+    if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+      try {
+        const pattern = String(e.pattern || '');
+        const flags = String(e.flags || '');
+        const regexStructure = /^\\b(.+?)\\w*\\b$/;
+        const m = pattern.match(regexStructure);
+        if (m) {
+          const core = m[1];
+          const parts = core.split('|').map(x => x.trim()).filter(x => x.length > 0);
+          const caseInsensitive = flags.includes('i') || !this.plugin.settings.caseSensitive;
+          const containsWord = parts.some(p => (caseInsensitive ? p.toLowerCase() === s.toLowerCase() : p === s));
+          if (containsWord) {
+            new Notice(this.plugin.t('notice_already_in_entry', `"${s}" already exists in entry`, { word: s }));
+            return;
+          }
+          const esc = this.plugin.helpers && this.plugin.helpers.escapeRegex
+            ? this.plugin.helpers.escapeRegex(s)
+            : s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const newCore = core + '|' + esc;
+          const newPattern = `\\b${newCore}\\w*\\b`;
+          e.pattern = newPattern;
+          e.groupedPatterns = null;
+          (async () => {
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.compileTextBgColoringEntries();
+            try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+            try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+            new Notice(this.plugin.t('notice_added_to_existing', `"${s}" added to existing entry`, { word: s }));
+          })();
+          return;
+        }
+      } catch (_) {}
+      // Fallback: if regex does not match expected structure, do not modify the regex; append to groupedPatterns as a separate literal
+    }
+    if (cmp(e.pattern || '', s) || has(e.groupedPatterns, s)) {
+      new Notice(this.plugin.t('notice_already_in_entry', `"${s}" already exists in entry`, { word: s }));
+      return;
+    }
+    if (!Array.isArray(e.groupedPatterns) || e.groupedPatterns.length === 0) {
+      e.groupedPatterns = [String(e.pattern || '').trim(), s];
+    } else {
+      e.groupedPatterns.push(s);
+    }
+    (async () => {
+      await this.plugin.saveSettings();
+      this.plugin.compileWordEntries();
+      this.plugin.compileTextBgColoringEntries();
+      try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+      try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+      new Notice(this.plugin.t('notice_added_to_existing', `"${s}" added to existing entry`, { word: s }));
+    })();
   }
 }
 
@@ -194,6 +1447,88 @@ class PatternMatcher {
     }
     return entry;
   }
+
+  isWordCharacter(char) {
+    return /[A-Za-z0-9]/.test(char) || char === '-' || char === "'";
+  }
+
+  extractFullWordAtPosition(text, start, end) {
+    let wordStart = start;
+    let wordEnd = end;
+    
+    // Expand left to word boundary
+    while (wordStart > 0 && this.isWordCharacter(text[wordStart - 1])) {
+      wordStart--;
+    }
+    
+    // Expand right to word boundary
+    while (wordEnd < text.length && this.isWordCharacter(text[wordEnd])) {
+      wordEnd++;
+    }
+    
+    return text.substring(wordStart, wordEnd);
+  }
+
+  matchSatisfiesType(text, start, end, entry) {
+    const matchType = String(entry?.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+    const pattern = entry?.pattern || '';
+    const isSentence = this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(pattern) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(pattern || '');
+    
+    // For sentence-like patterns, always match
+    if (isSentence) {
+      return true;
+    }
+    
+    // Extract the full word at the match position
+    const fullWord = this.extractFullWordAtPosition(text, start, end);
+    
+    switch(matchType) {
+      case 'exact':
+        // Exact match: pattern must exactly equal the full word
+        const exactMatch = this.settings.caseSensitive 
+          ? fullWord === pattern 
+          : fullWord.toLowerCase() === pattern.toLowerCase();
+        return exactMatch;
+        
+      case 'contains':
+        // Contains: pattern must be found anywhere within the full word
+        const containsMatch = this.settings.caseSensitive
+          ? fullWord.includes(pattern)
+          : fullWord.toLowerCase().includes(pattern.toLowerCase());
+        return containsMatch;
+        
+      case 'startswith':
+        try {
+          const flags = this.settings.caseSensitive ? '' : 'i';
+          const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const re = new RegExp(`^${esc}[A-Za-z]*$`, flags);
+          return re.test(fullWord);
+        } catch (_) {
+          const startsWithMatch = this.settings.caseSensitive
+            ? fullWord.startsWith(pattern)
+            : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
+          return startsWithMatch;
+        }
+        
+      case 'endswith':
+        try {
+          const flags = this.settings.caseSensitive ? '' : 'i';
+          const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          // Use word boundary: the pattern should be at the end followed by non-word characters
+          const re = new RegExp(`${esc}(?:[^A-Za-z0-9_]|$)`, flags);
+          return re.test(fullWord);
+        } catch (_) {
+          const endsWithMatch = this.settings.caseSensitive
+            ? fullWord.endsWith(pattern)
+            : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
+          return endsWithMatch;
+        }
+        
+      default:
+        return true;
+    }
+  }
+
   match(text, entries, folderEntry) {
     const out = [];
     const isSentence = (p) => this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(p) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(p || '');
@@ -218,7 +1553,7 @@ class PatternMatcher {
         const matchedText = m[0];
         const ms = m.index;
         const me = m.index + matchedText.length;
-        if (!this.settings.partialMatch && !isSentence(entry.pattern) && !wholeWord(text, ms, me)) {
+        if (!this.matchSatisfiesType(text, ms, me, entry)) {
           iters++;
           continue;
         }
@@ -228,10 +1563,40 @@ class PatternMatcher {
           while (fws > 0 && ((/[A-Za-z0-9]/.test(text[fws - 1])) || text[fws - 1] === '-' || text[fws - 1] === "'")) fws--;
           while (fwe < text.length && ((/[A-Za-z0-9]/.test(text[fwe])) || text[fwe] === '-' || text[fwe] === "'")) fwe++;
         }
-        const fullWord = isSentence(entry.pattern) ? matchedText : text.substring(fws, fwe);
-        const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+        const mtLower = String(entry && entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+        const useExpanded = !isSentence(entry.pattern) && (mtLower === 'contains' || mtLower === 'startswith' || mtLower === 'endswith');
+        const useStart = useExpanded ? fws : ms;
+        const useEnd = useExpanded ? fwe : me;
+        const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
         const priority = (me - ms) + (entry.isTextBg ? -10 : 0);
-        out.push({ start: ms, end: me, color: useColor, word: matchedText, styleType: entry.styleType, textColor: entry.textColor, backgroundColor: entry.backgroundColor, isTextBg: entry.isTextBg === true, priority });
+        
+        // DEBUG: Log match creation with entry details
+        if (entry.pattern === 'hello') {
+          debugLog('[MATCH_CREATE]', `Pattern: hello, has bgOpacity=${typeof entry.backgroundOpacity}, value=${entry.backgroundOpacity}, textColor=${entry.textColor}, bgColor=${entry.backgroundColor}`);
+        }
+        
+        out.push({ 
+          start: useStart, 
+          end: useEnd, 
+          color: useColor, 
+          word: matchedText, 
+          styleType: entry.styleType, 
+          textColor: entry.textColor, 
+          backgroundColor: entry.backgroundColor, 
+          isTextBg: entry.isTextBg === true, 
+          priority, 
+          entryRef: entry,
+          // Copy custom styling properties directly to match object for rendering
+          backgroundOpacity: entry.backgroundOpacity,
+          highlightBorderRadius: entry.highlightBorderRadius,
+          highlightHorizontalPadding: entry.highlightHorizontalPadding,
+          highlightVerticalPadding: entry.highlightVerticalPadding,
+          enableBorderThickness: entry.enableBorderThickness,
+          borderStyle: entry.borderStyle,
+          borderLineStyle: entry.borderLineStyle,
+          borderOpacity: entry.borderOpacity,
+          borderThickness: entry.borderThickness
+        });
         iters++;
       }
       if (iters > 0) {
@@ -241,10 +1606,13 @@ class PatternMatcher {
     }
     if (out.length > 1) {
       out.sort((a, b) => {
-        if (a.start !== b.start) return a.start - b.start;
+        // Prioritize by length first (longer matches win)
         const la = a.end - a.start;
         const lb = b.end - b.start;
         if (la !== lb) return lb - la;
+        // Then by start position (earlier wins)
+        if (a.start !== b.start) return a.start - b.start;
+        // Then by priority
         return (b.priority || 0) - (a.priority || 0);
       });
       const no = [];
@@ -451,7 +1819,8 @@ class MemoryManager {
         const usedMB = performance.memory.usedJSHeapSize / (1024 * 1024);
         if (usedMB > 800) {
           try { if (this.plugin._regexCache) this.plugin._regexCache.clear(); } catch (_) {}
-          try { if (this.plugin._bloomFilter) this.plugin._bloomFilter.reset(); } catch (_) {}
+          // DISABLED: Clearing bloom filter breaks fastTest because entries are not recompiled
+          // try { if (this.plugin._bloomFilter) this.plugin._bloomFilter.reset(); } catch (_) {}
         }
       }
     } catch (_) {}
@@ -513,7 +1882,8 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       this._domRefs = new WeakMap();
     } catch (e) {
-      this._domRefs = new WeakMap();
+      // If WeakMap not available, use null (won't happen in modern browsers)
+      this._domRefs = null;
     }
     
     try {
@@ -541,7 +1911,7 @@ module.exports = class AlwaysColorText extends Plugin {
     this._errorRecovery = new ErrorRecovery();
     this._memoryManager = new MemoryManager(this);
     try { this._memoryManager.start(); } catch (_) {}
-    try { this._lpObservers = new WeakMap(); } catch (_) { this._lpObservers = new WeakMap(); }
+    try { this._lpObservers = new WeakMap(); } catch (_) { this._lpObservers = null; }
     try { this._readingModeIntervals = new Map(); } catch (_) { this._readingModeIntervals = new Map(); }
   }
 
@@ -648,6 +2018,28 @@ module.exports = class AlwaysColorText extends Plugin {
   removeEnabledLivePreviewCalloutStyles() {
     try {
       const style = document.getElementById('act-livepreview-callout');
+      if (style) style.remove();
+    } catch (_) {}
+  }
+  applyEnabledLivePreviewTextColorStyles() {
+    try {
+      let style = document.getElementById('act-livepreview-textcolor');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'act-livepreview-textcolor';
+        style.textContent = `
+          .is-live-preview .cm-content .always-color-text-highlight,
+          .is-live-preview .cm-content .always-color-text-highlight * {
+            color: var(--highlight-color) !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    } catch (_) {}
+  }
+  removeEnabledLivePreviewTextColorStyles() {
+    try {
+      const style = document.getElementById('act-livepreview-textcolor');
       if (style) style.remove();
     } catch (_) {}
   }
@@ -779,6 +2171,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (this.settings.enabled) { 
       this.removeDisabledNeutralizerStyles(); 
       try { this.applyEnabledLivePreviewCalloutStyles(); } catch (_) {}
+      try { this.applyEnabledLivePreviewTextColorStyles(); } catch (_) {}
       try { this.applyEnabledReadingCalloutStyles(); } catch (_) {}
       if (this.settings.hideHighlights) {
         this.applyHideHighlightsNeutralizerStyles();
@@ -797,39 +2190,41 @@ module.exports = class AlwaysColorText extends Plugin {
       try { this.removeEnabledReadingCalloutStyles(); } catch (_) {}
     }
 
-    if (!this.settings.disableToggleModes.ribbon) {
-      this.ribbonIcon = this.addRibbonIcon('palette', this.t('ribbon_title','Always color text'), async () => {
-        this.settings.enabled = !this.settings.enabled;
-        await this.saveSettings();
-        this.updateStatusBar();
-        // Clear the callout cache when toggling via ribbon
-        this._lpCalloutCache = new WeakMap();
-        this.reconfigureEditorExtensions();
-        this.forceRefreshAllEditors();
-        this.forceRefreshAllReadingViews();
-        if (this.settings.enabled) new Notice(this.t('notice_enabled','Always color text enabled'));
-        else new Notice(this.t('notice_disabled','Always color text disabled'));
-        if (this.settings.enabled) { this.removeDisabledNeutralizerStyles(); } else { this.applyDisabledNeutralizerStyles(); }
-        if (!this.settings.enabled) {
-          try { this.clearAllHighlights(); } catch (_) {}
-        }
-        try {
-          if (this.settings.enabled) { 
-            this.applyEnabledLivePreviewCalloutStyles(); 
-            this.applyEnabledReadingCalloutStyles();
-            if (this.settings.hideHighlights) {
-              this.applyHideHighlightsNeutralizerStyles();
-            } else {
+      if (!this.settings.disableToggleModes.ribbon) {
+        this.ribbonIcon = this.addRibbonIcon('palette', this.t('ribbon_title','Always color text'), async () => {
+          this.settings.enabled = !this.settings.enabled;
+          await this.saveSettings();
+          this.updateStatusBar();
+          // Clear the callout cache when toggling via ribbon
+          this._lpCalloutCache = new WeakMap();
+          this.reconfigureEditorExtensions();
+          this.forceRefreshAllEditors();
+          this.forceRefreshAllReadingViews();
+          if (this.settings.enabled) new Notice(this.t('notice_enabled','Always color text enabled'));
+          else new Notice(this.t('notice_disabled','Always color text disabled'));
+          if (this.settings.enabled) { this.removeDisabledNeutralizerStyles(); } else { this.applyDisabledNeutralizerStyles(); }
+          if (!this.settings.enabled) {
+            try { this.clearAllHighlights(); } catch (_) {}
+          }
+          try {
+            if (this.settings.enabled) { 
+              this.applyEnabledLivePreviewCalloutStyles(); 
+              this.applyEnabledLivePreviewTextColorStyles();
+              this.applyEnabledReadingCalloutStyles();
+              if (this.settings.hideHighlights) {
+                this.applyHideHighlightsNeutralizerStyles();
+              } else {
+                this.removeHideHighlightsNeutralizerStyles();
+              }
+            }
+            else { 
+              this.removeEnabledLivePreviewCalloutStyles();
+              this.removeEnabledLivePreviewTextColorStyles();
+              this.removeEnabledReadingCalloutStyles();
               this.removeHideHighlightsNeutralizerStyles();
             }
-          }
-          else { 
-            this.removeEnabledLivePreviewCalloutStyles();
-            this.removeEnabledReadingCalloutStyles();
-            this.removeHideHighlightsNeutralizerStyles();
-          }
-          this.refreshAllLivePreviewCallouts();
-          this.forceReprocessLivePreviewCallouts();
+            this.refreshAllLivePreviewCallouts();
+            this.forceReprocessLivePreviewCallouts();
         } catch (_) {}
       });
     }
@@ -856,15 +2251,17 @@ module.exports = class AlwaysColorText extends Plugin {
         try {
           if (this.settings.enabled) { 
             this.applyEnabledLivePreviewCalloutStyles(); 
+            this.applyEnabledLivePreviewTextColorStyles();
             this.applyEnabledReadingCalloutStyles();
             if (this.settings.hideHighlights) {
               this.applyHideHighlightsNeutralizerStyles();
             } else {
               this.removeHideHighlightsNeutralizerStyles();
             }
-          }
+          } 
           else { 
             this.removeEnabledLivePreviewCalloutStyles();
+            this.removeEnabledLivePreviewTextColorStyles();
             this.removeEnabledReadingCalloutStyles();
             this.removeHideHighlightsNeutralizerStyles();
           }
@@ -952,6 +2349,20 @@ module.exports = class AlwaysColorText extends Plugin {
           });
         }
 
+        if (Array.isArray(this.settings.wordEntries) && this.settings.wordEntries.length > 0) {
+          menu.addItem(item => {
+            item.setTitle(this.t('command_add_to_existing_entry','add to existing entry'))
+              .setIcon('plus')
+              .onClick(() => {
+                try {
+                  new AddToExistingEntryModal(this.app, this, selectedText, view).open();
+                } catch (e) {
+                  new Notice(this.t('notice_error_opening_modal','Unable to open modal'));
+                }
+              });
+          });
+        }
+
         menu.addItem(item => {
           item.setTitle(this.t('menu_always_color_text','Always color text'))
             .setIcon('palette')
@@ -973,13 +2384,13 @@ module.exports = class AlwaysColorText extends Plugin {
                   else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; entry._savedTextColor = color; }
                 } else {
                   if (tc && bc) {
-                    this.settings.wordEntries.push({ pattern: selectedText, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both', _savedTextColor: tc, _savedBackgroundColor: bc });
+                    this.settings.wordEntries.push({ pattern: selectedText, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: tc, _savedBackgroundColor: bc });
                   } else if (tc) {
-                    this.settings.wordEntries.push({ pattern: selectedText, color: tc, isRegex: false, flags: '', styleType: 'text', _savedTextColor: tc });
+                    this.settings.wordEntries.push({ pattern: selectedText, color: tc, isRegex: false, flags: '', styleType: 'text', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: tc });
                   } else if (bc) {
-                    this.settings.wordEntries.push({ pattern: selectedText, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight', _savedBackgroundColor: bc });
+                    this.settings.wordEntries.push({ pattern: selectedText, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedBackgroundColor: bc });
                   } else if (color && this.isValidHexColor(color)) {
-                    this.settings.wordEntries.push({ pattern: selectedText, color: color, isRegex: false, flags: '', styleType: 'text', _savedTextColor: color });
+                    this.settings.wordEntries.push({ pattern: selectedText, color: color, isRegex: false, flags: '', styleType: 'text', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: color });
                   }
                 }
                 await this.saveSettings();
@@ -1149,13 +2560,13 @@ module.exports = class AlwaysColorText extends Plugin {
               else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; entry._savedTextColor = color; }
             } else {
               if (tc && bc) {
-                this.settings.wordEntries.push({ pattern: word, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both', _savedTextColor: tc, _savedBackgroundColor: bc });
+                this.settings.wordEntries.push({ pattern: word, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: tc, _savedBackgroundColor: bc });
               } else if (tc) {
-                this.settings.wordEntries.push({ pattern: word, color: tc, isRegex: false, flags: '', styleType: 'text', _savedTextColor: tc });
+                this.settings.wordEntries.push({ pattern: word, color: tc, isRegex: false, flags: '', styleType: 'text', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: tc });
               } else if (bc) {
-                this.settings.wordEntries.push({ pattern: word, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight', _savedBackgroundColor: bc });
+                this.settings.wordEntries.push({ pattern: word, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedBackgroundColor: bc });
               } else if (color && this.isValidHexColor(color)) {
-                this.settings.wordEntries.push({ pattern: word, color: color, isRegex: false, flags: '', styleType: 'text', _savedTextColor: color });
+                this.settings.wordEntries.push({ pattern: word, color: color, isRegex: false, flags: '', styleType: 'text', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: color });
               }
             }
             await this.saveSettings();
@@ -1164,6 +2575,18 @@ module.exports = class AlwaysColorText extends Plugin {
             this.reconfigureEditorExtensions();
             this.forceRefreshAllEditors();
           }, 'text-and-background', word, false).open();
+        }
+      });
+      addTrackedCommand({
+        id: 'add-to-existing-entry',
+        name: this.t('command_add_to_existing_entry','Add to Existing Entry'),
+        editorCallback: (editor, view) => {
+          const word = editor.getSelection().trim();
+          if (!word) {
+            new Notice(this.t('notice_select_text_first','Please select some text first.'));
+            return;
+          }
+          new AddToExistingEntryModal(this.app, this, word, view).open();
         }
       });
       addTrackedCommand({
@@ -1400,7 +2823,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // Re-register with new language
       this.registerCommandPalette();
     } catch (e) {
-      console.error('Error re-registering commands with new language:', e);
+      debugError('SETTINGS', 'Error re-registering commands with new language:', e);
     }
   }
 
@@ -2042,69 +3465,74 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!regex) { if (IS_DEVELOPMENT) console.timeEnd('wrapTextNodeWithColor'); return; }
       
       // Find all matches in the text
-      const matches = [];
+      const rawMatches = [];
       let match;
       const globalRegex = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : regex.flags + 'g');
       while ((match = globalRegex.exec(text)) !== null) {
-        matches.push({ index: match.index, length: match[0].length });
+        rawMatches.push({ index: match.index, length: match[0].length });
       }
       
-      // If no matches, don't color anything
-      if (matches.length === 0) { if (IS_DEVELOPMENT) console.timeEnd('wrapTextNodeWithColor'); return; }
+      if (rawMatches.length === 0) { if (IS_DEVELOPMENT) console.timeEnd('wrapTextNodeWithColor'); return; }
       
-      // Helper function to check if match is a whole word
-      const isWholeWord = (text, startIdx, endIdx) => {
-        const lc = startIdx > 0 ? text[startIdx - 1] : '';
-        const rc = endIdx < text.length ? text[endIdx] : '';
-        const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === '-' || ch === "'";
-        return (startIdx === 0 || !isWordChar(lc)) && (endIdx === text.length || !isWordChar(rc));
-      };
-      
-      // Helper to check if pattern is sentence-like
       const isSentencePattern = /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(entry.pattern || '');
+      const mtLower = String(entry && entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
       
-      // Filter matches based on partialMatch setting
-      const validMatches = [];
-      for (const m of matches) {
-        const matchStart = m.index;
-        const matchEnd = m.index + m.length;
+      // Build expanded ranges: expand all matches to full word boundaries for partial matches
+      let ranges = [];
+      for (const m of rawMatches) {
+        let matchStart = m.index;
+        let matchEnd = m.index + m.length;
         
-        // If partialMatch is off and pattern is not sentence-like, check whole word
-        if (!this.settings.partialMatch && !isSentencePattern && !isWholeWord(text, matchStart, matchEnd)) {
-          continue;
+        // Check if this match satisfies the match type requirement
+        if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry)) continue;
+        
+        let colorStart = matchStart;
+        let colorEnd = matchEnd;
+        
+        // For non-sentence patterns, expand to full word boundaries for all partial match types
+        if (!isSentencePattern && (mtLower === 'contains' || mtLower === 'startswith' || mtLower === 'endswith')) {
+          colorStart = this.findWordStart(text, matchStart);
+          colorEnd = this.findWordEnd(text, matchEnd);
         }
-        validMatches.push(m);
+        // For exact matches on non-sentence patterns, no expansion needed (already verified as whole word)
+        // For sentence patterns, use the match as-is
+        
+        ranges.push({ start: colorStart, end: colorEnd });
       }
       
-      // If no valid matches after filtering, don't color anything
-      if (validMatches.length === 0) { if (IS_DEVELOPMENT) console.timeEnd('wrapTextNodeWithColor'); return; }
+      if (ranges.length === 0) { if (IS_DEVELOPMENT) console.timeEnd('wrapTextNodeWithColor'); return; }
       
-      // Build fragment with colored and uncolored parts
+      // Resolve overlaps: prefer longer range first (by length), then earlier start position
+      ranges.sort((a, b) => {
+        const la = a.end - a.start, lb = b.end - b.start;
+        if (la !== lb) return lb - la;  // Prefer longer ranges first
+        return a.start - b.start;       // Then prefer earlier start position
+      });
+      const selected = [];
+      for (const r of ranges) {
+        let overlaps = false;
+        for (const s of selected) { if (r.start < s.end && r.end > s.start) { overlaps = true; break; } }
+        if (!overlaps) selected.push(r);
+      }
+      
       const frag = document.createDocumentFragment();
       let lastEnd = 0;
-      
-      for (const m of validMatches) {
-        const matchStart = m.index;
-        const matchEnd = m.index + m.length;
-        
-        // Add uncolored text before match
-        if (lastEnd < matchStart) {
-          frag.appendChild(document.createTextNode(text.substring(lastEnd, matchStart)));
-        }
-        
-        // Create colored span for matched text
+      for (const r of selected) {
+        if (lastEnd < r.start) frag.appendChild(document.createTextNode(text.substring(lastEnd, r.start)));
         const span = document.createElement('span');
         span.className = 'always-color-text-highlight';
-        span.textContent = text.substring(matchStart, matchEnd);
+        span.textContent = text.substring(r.start, r.end);
         
         const styleType = entry.styleType || 'text';
         const hideText = this.settings.hideTextColors === true;
         const hideBg = this.settings.hideHighlights === true;
         const textColor = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : null;
         const resolvedTextColor = textColor || entry.color || null;
+        
         if (styleType === 'text') {
           if (resolvedTextColor && !hideText) {
             try { span.style.setProperty('color', resolvedTextColor, 'important'); } catch (_) { span.style.color = resolvedTextColor; }
+            try { span.style.setProperty('--highlight-color', resolvedTextColor); } catch (_) { try { span.style['--highlight-color'] = resolvedTextColor; } catch (_) {} }
           }
         } else if (styleType === 'highlight') {
           if (!hideBg) {
@@ -2144,6 +3572,7 @@ module.exports = class AlwaysColorText extends Plugin {
         } else {
           if (resolvedTextColor && !hideText) {
             try { span.style.setProperty('color', resolvedTextColor, 'important'); } catch (_) { span.style.color = resolvedTextColor; }
+            try { span.style.setProperty('--highlight-color', resolvedTextColor); } catch (_) { try { span.style['--highlight-color'] = resolvedTextColor; } catch (_) {} }
           }
           if (!hideBg) {
             const base = entry.backgroundColor || entry.color || resolvedTextColor;
@@ -2182,14 +3611,9 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         
         frag.appendChild(span);
-        lastEnd = matchEnd;
+        lastEnd = r.end;
       }
-      
-      // Add any remaining uncolored text
-      if (lastEnd < text.length) {
-        frag.appendChild(document.createTextNode(text.substring(lastEnd)));
-      }
-      
+      if (lastEnd < text.length) frag.appendChild(document.createTextNode(text.substring(lastEnd)));
       textNode.replaceWith(frag);
       if (IS_DEVELOPMENT) console.timeEnd('wrapTextNodeWithColor');
     } catch (e) { debugError('WRAP_TEXT_NODE', 'Error wrapping text node', e); }
@@ -2199,18 +3623,82 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       let text = textNode.textContent;
       if (!text || !text.trim()) return;
-      const span = document.createElement('span');
-      span.className = 'always-color-text-highlight';
-      span.textContent = text;
-      const styleType = entry.styleType || 'text';
-      const hideText = this.settings.hideTextColors === true;
-      const hideBg = this.settings.hideHighlights === true;
-      const textColor = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : null;
-      const resolvedTextColor = textColor || entry.color || null;
-      if (styleType === 'text') {
-        if (resolvedTextColor && !hideText) {
-          try { span.style.setProperty('color', resolvedTextColor, 'important'); } catch (_) { span.style.color = resolvedTextColor; }
+      text = this.decodeHtmlEntities(text);
+      
+      // Get the regex from entry and find matches
+      const regex = entry.regex;
+      if (!regex) return;
+      
+      // Find all matches in the text
+      const rawMatches = [];
+      let match;
+      const globalRegex = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : regex.flags + 'g');
+      while ((match = globalRegex.exec(text)) !== null) {
+        rawMatches.push({ index: match.index, length: match[0].length });
+      }
+      
+      if (rawMatches.length === 0) return;
+      
+      const isSentencePattern = /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(entry.pattern || '');
+      const mtLower = String(entry && entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+      
+      // Build expanded ranges: expand all matches to full word boundaries for partial matches
+      let ranges = [];
+      for (const m of rawMatches) {
+        let matchStart = m.index;
+        let matchEnd = m.index + m.length;
+        
+        // Check if this match satisfies the match type requirement
+        if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry)) continue;
+        
+        let colorStart = matchStart;
+        let colorEnd = matchEnd;
+        
+        // For non-sentence patterns, expand to full word boundaries for all partial match types
+        if (!isSentencePattern && (mtLower === 'contains' || mtLower === 'startswith' || mtLower === 'endswith')) {
+          colorStart = this.findWordStart(text, matchStart);
+          colorEnd = this.findWordEnd(text, matchEnd);
         }
+        // For exact matches on non-sentence patterns, no expansion needed (already verified as whole word)
+        // For sentence patterns, use the match as-is
+        
+        ranges.push({ start: colorStart, end: colorEnd });
+      }
+      
+      if (ranges.length === 0) return;
+      
+      // Resolve overlaps: prefer longer range first (by length), then earlier start position
+      ranges.sort((a, b) => {
+        const la = a.end - a.start, lb = b.end - b.start;
+        if (la !== lb) return lb - la;  // Prefer longer ranges first
+        return a.start - b.start;       // Then prefer earlier start position
+      });
+      const selected = [];
+      for (const r of ranges) {
+        let overlaps = false;
+        for (const s of selected) { if (r.start < s.end && r.end > s.start) { overlaps = true; break; } }
+        if (!overlaps) selected.push(r);
+      }
+      
+      const frag = document.createDocumentFragment();
+      let lastEnd = 0;
+      for (const r of selected) {
+        if (lastEnd < r.start) frag.appendChild(document.createTextNode(text.substring(lastEnd, r.start)));
+        const span = document.createElement('span');
+        span.className = 'always-color-text-highlight';
+        span.textContent = text.substring(r.start, r.end);
+        
+        const styleType = entry.styleType || 'text';
+        const hideText = this.settings.hideTextColors === true;
+        const hideBg = this.settings.hideHighlights === true;
+        const textColor = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : null;
+        const resolvedTextColor = textColor || entry.color || null;
+        
+        if (styleType === 'text') {
+          if (resolvedTextColor && !hideText) {
+            try { span.style.setProperty('color', resolvedTextColor, 'important'); } catch (_) { span.style.color = resolvedTextColor; }
+            try { span.style.setProperty('--highlight-color', resolvedTextColor); } catch (_) { try { span.style['--highlight-color'] = resolvedTextColor; } catch (_) {} }
+          }
         } else if (styleType === 'highlight') {
           if (!hideBg) {
             const base = entry.backgroundColor || entry.color || resolvedTextColor;
@@ -2228,7 +3716,7 @@ module.exports = class AlwaysColorText extends Plugin {
               }
             } catch (_) { 
               const vpad = (this.settings.highlightVerticalPadding ?? 0);
-              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px'; 
               if (vpad < 0) {
                 span.style.marginTop = vpad + 'px';
                 span.style.marginBottom = vpad + 'px';
@@ -2248,37 +3736,38 @@ module.exports = class AlwaysColorText extends Plugin {
             span.style.borderRadius = '';
           }
         } else {
-        if (resolvedTextColor && !hideText) {
-          try { span.style.setProperty('color', resolvedTextColor, 'important'); } catch (_) { span.style.color = resolvedTextColor; }
-        }
-        if (!hideBg) {
-          const base = entry.backgroundColor || entry.color || resolvedTextColor;
-          const bgColor = this.hexToRgba(base, this.settings.backgroundOpacity ?? 25);
-          try { span.style.setProperty('background-color', bgColor, 'important'); } catch (_) { span.style.backgroundColor = bgColor; }
-          try { span.style.setProperty('display', 'inline-block', 'important'); } catch (_) { span.style.display = 'inline-block'; }
-          span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
-          try { 
-            const vpad = (this.settings.highlightVerticalPadding ?? 0);
-            span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
-            span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
-            if (vpad < 0) {
-              span.style.setProperty('margin-top', vpad + 'px', 'important');
-              span.style.setProperty('margin-bottom', vpad + 'px', 'important');
-            }
-          } catch (_) { 
-            const vpad = (this.settings.highlightVerticalPadding ?? 0);
-            span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
-            if (vpad < 0) {
-              span.style.marginTop = vpad + 'px';
-              span.style.marginBottom = vpad + 'px';
-            }
+          if (resolvedTextColor && !hideText) {
+            try { span.style.setProperty('color', resolvedTextColor, 'important'); } catch (_) { span.style.color = resolvedTextColor; }
+            try { span.style.setProperty('--highlight-color', resolvedTextColor); } catch (_) { try { span.style['--highlight-color'] = resolvedTextColor; } catch (_) {} }
           }
-          span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
-          if (this.settings.enableBoxDecorationBreak ?? true) {
-            span.style.boxDecorationBreak = 'clone';
-            span.style.WebkitBoxDecorationBreak = 'clone';
-          }
-          this.applyBorderStyleToElement(span, hideText ? null : resolvedTextColor, base);
+          if (!hideBg) {
+            const base = entry.backgroundColor || entry.color || resolvedTextColor;
+            const bgColor = this.hexToRgba(base, this.settings.backgroundOpacity ?? 25);
+            try { span.style.setProperty('background-color', bgColor, 'important'); } catch (_) { span.style.backgroundColor = bgColor; }
+            try { span.style.setProperty('display', 'inline-block', 'important'); } catch (_) { span.style.display = 'inline-block'; }
+            span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
+            try { 
+              const vpad = (this.settings.highlightVerticalPadding ?? 0);
+              span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+              span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+              if (vpad < 0) {
+                span.style.setProperty('margin-top', vpad + 'px', 'important');
+                span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+              }
+            } catch (_) { 
+              const vpad = (this.settings.highlightVerticalPadding ?? 0);
+              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px'; 
+              if (vpad < 0) {
+                span.style.marginTop = vpad + 'px';
+                span.style.marginBottom = vpad + 'px';
+              }
+            }
+            span.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+            if (this.settings.enableBoxDecorationBreak ?? true) {
+              span.style.boxDecorationBreak = 'clone';
+              span.style.WebkitBoxDecorationBreak = 'clone';
+            }
+            this.applyBorderStyleToElement(span, hideText ? null : resolvedTextColor, base);
           } else {
             try { span.style.setProperty('background-color', 'transparent', 'important'); } catch (_) { span.style.backgroundColor = 'transparent'; }
             try { span.style.setProperty('display', 'inline', 'important'); } catch (_) { span.style.display = 'inline'; }
@@ -2287,7 +3776,12 @@ module.exports = class AlwaysColorText extends Plugin {
             span.style.borderRadius = '';
           }
         }
-      textNode.replaceWith(span);
+        
+        frag.appendChild(span);
+        lastEnd = r.end;
+      }
+      if (lastEnd < text.length) frag.appendChild(document.createTextNode(text.substring(lastEnd)));
+      textNode.replaceWith(frag);
     } catch (e) {}
   }
 
@@ -2663,6 +4157,18 @@ module.exports = class AlwaysColorText extends Plugin {
     if (!Array.isArray(loadedData.blacklistEntries)) loadedData.blacklistEntries = [];
     if (!Array.isArray(loadedData.pathRules)) loadedData.pathRules = [];
     
+    // DEBUG: Log what was loaded from disk for entries with custom properties
+    try {
+      const weWithCustom = (loadedData.wordEntries || []).filter(e => e && (typeof e.backgroundOpacity === 'number' || typeof e.highlightBorderRadius === 'number'));
+      if (weWithCustom.length > 0) {
+        debugLog('[LOAD_FROM_DISK_WE]', `Found ${weWithCustom.length} entries with custom: ${weWithCustom.slice(0, 3).map(e => `${e.pattern}(op=${e.backgroundOpacity}, rad=${e.highlightBorderRadius})`).join(', ')}`);
+      }
+      const tbgWithCustom = (loadedData.textBgColoringEntries || []).filter(e => e && (typeof e.backgroundOpacity === 'number' || typeof e.highlightBorderRadius === 'number'));
+      if (tbgWithCustom.length > 0) {
+        debugLog('[LOAD_FROM_DISK_TBG]', `Found ${tbgWithCustom.length} tbg entries with custom: ${tbgWithCustom.slice(0, 3).map(e => `${e.pattern}(op=${e.backgroundOpacity}, rad=${e.highlightBorderRadius})`).join(', ')}`);
+      }
+    } catch (e) {}
+    
     this.settings = Object.assign({
       // legacy: wordColors map. New model below: wordEntries array
       wordColors: {},
@@ -2716,7 +4222,7 @@ module.exports = class AlwaysColorText extends Plugin {
       blacklistWords: [],
       // New: pattern-capable blacklist entries
       blacklistEntries: [],
-      enableBlacklistMenu: false,
+      enableBlacklistMenu: true,
       symbolWordColoring: false,
       // Enable/disable regex support in the settings UI/runtime
       enableRegexSupport: false,
@@ -2755,8 +4261,29 @@ module.exports = class AlwaysColorText extends Plugin {
       language: 'en',
       customSwatchesFolded: false, // Persist custom swatches folded state
       readingModeHighlightFilter: null, // null: show all, 'highlight': show only highlights, 'text': show only text colors
+      entriesSearchLimit: 0,
+      blacklistSearchLimit: 0,
+      pathSearchLimit: 0,
     }, loadedData);
+    
     try { this.sanitizeSettings(); } catch (e) {}
+    
+    // DEBUG: Check if custom properties survived sanitizeSettings
+    try {
+      const weAfterSanitize = (this.settings.wordEntries || []).filter(e => e && (typeof e.backgroundOpacity === 'number' || typeof e.highlightBorderRadius === 'number'));
+      if (weAfterSanitize.length > 0) {
+        debugLog('[AFTER_SANITIZE_WE]', `Found ${weAfterSanitize.length} entries with custom: ${weAfterSanitize.slice(0, 3).map(e => `${e.pattern}(op=${e.backgroundOpacity}, rad=${e.highlightBorderRadius})`).join(', ')}`);
+      } else {
+        debugLog('[AFTER_SANITIZE_WE]', `NO entries with custom properties found after sanitize`);
+      }
+      const tbgAfterSanitize = (this.settings.textBgColoringEntries || []).filter(e => e && (typeof e.backgroundOpacity === 'number' || typeof e.highlightBorderRadius === 'number'));
+      if (tbgAfterSanitize.length > 0) {
+        debugLog('[AFTER_SANITIZE_TBG]', `Found ${tbgAfterSanitize.length} entries with custom: ${tbgAfterSanitize.slice(0, 3).map(e => `${e.pattern}(op=${e.backgroundOpacity}, rad=${e.highlightBorderRadius})`).join(', ')}`);
+      } else {
+        debugLog('[AFTER_SANITIZE_TBG]', `NO TBG entries with custom properties found after sanitize`);
+      }
+    } catch (e) {}
+    
     // Migrate legacy customSwatches (array of hex strings) into userCustomSwatches
     try {
       if (Array.isArray(this.settings.customSwatches) && this.settings.customSwatches.length > 0) {
@@ -2886,7 +4413,19 @@ module.exports = class AlwaysColorText extends Plugin {
           isRegex: !!e.isRegex,
           flags: e.flags || '',
           groupedPatterns: e.groupedPatterns || null,
-          presetLabel: e.presetLabel || undefined
+          matchType: (typeof e.matchType === 'string' && new Set(['exact','contains','startswith','endswith']).has(e.matchType.toLowerCase())) ? e.matchType.toLowerCase() : (this.settings.partialMatch ? 'contains' : 'exact'),
+          presetLabel: e.presetLabel || undefined,
+          // PRESERVE custom styling properties from original entry
+          backgroundOpacity: e.backgroundOpacity,
+          highlightBorderRadius: e.highlightBorderRadius,
+          highlightHorizontalPadding: e.highlightHorizontalPadding,
+          highlightVerticalPadding: e.highlightVerticalPadding,
+          enableBorderThickness: e.enableBorderThickness,
+          borderStyle: e.borderStyle,
+          borderLineStyle: e.borderLineStyle,
+          borderOpacity: e.borderOpacity,
+          borderThickness: e.borderThickness,
+          uid: e.uid  // Also preserve UID
         };
       }).filter(x => x && String(x.pattern).trim() !== '');
     }
@@ -2895,6 +4434,7 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       const tbg = Array.isArray(this.settings.textBgColoringEntries) ? this.settings.textBgColoringEntries : [];
       if (tbg.length > 0) {
+        debugLog('[MIGRATE_TBG]', `Starting migration of ${tbg.length} TBG entries into wordEntries. wordEntries before: ${this.settings.wordEntries.length}`);
         for (const e of tbg) {
           if (!e) continue;
           const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || '').trim()];
@@ -2917,16 +4457,56 @@ module.exports = class AlwaysColorText extends Plugin {
               we.isRegex = isRegex;
               we.flags = flags;
               we.groupedPatterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : we.groupedPatterns || null;
+              // Preserve custom styling properties from source textBgColoringEntries entry
+              if (typeof e.backgroundOpacity === 'number') we.backgroundOpacity = e.backgroundOpacity;
+              if (typeof e.highlightBorderRadius === 'number') we.highlightBorderRadius = e.highlightBorderRadius;
+              if (typeof e.highlightHorizontalPadding === 'number') we.highlightHorizontalPadding = e.highlightHorizontalPadding;
+              if (typeof e.highlightVerticalPadding === 'number') we.highlightVerticalPadding = e.highlightVerticalPadding;
+              if (typeof e.enableBorderThickness === 'boolean') we.enableBorderThickness = e.enableBorderThickness;
+              if (typeof e.borderStyle === 'string') we.borderStyle = e.borderStyle;
+              if (typeof e.borderLineStyle === 'string') we.borderLineStyle = e.borderLineStyle;
+              if (typeof e.borderOpacity === 'number') we.borderOpacity = e.borderOpacity;
+              if (typeof e.borderThickness === 'number') we.borderThickness = e.borderThickness;
               merged = true;
               break;
             }
           }
           if (!merged) {
             const styleType = (textColor && textColor !== 'currentColor') ? (backgroundColor ? 'both' : 'text') : (backgroundColor ? 'highlight' : 'text');
-            this.settings.wordEntries.push({ pattern: patterns[0], color: styleType === 'text' ? (textColor || '') : '', isRegex, flags, groupedPatterns: Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : null, textColor: (styleType !== 'text' ? textColor : null), backgroundColor, styleType });
+            const newEntry = { 
+              pattern: patterns[0], 
+              color: styleType === 'text' ? (textColor || '') : '', 
+              isRegex, 
+              flags, 
+              groupedPatterns: Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : null, 
+              textColor: (styleType !== 'text' ? textColor : null), 
+              backgroundColor, 
+              styleType, 
+              matchType: this.settings.partialMatch ? 'contains' : 'exact'
+            };
+            // Preserve custom styling properties when creating new entry from textBgColoringEntries
+            if (typeof e.backgroundOpacity === 'number') newEntry.backgroundOpacity = e.backgroundOpacity;
+            if (typeof e.highlightBorderRadius === 'number') newEntry.highlightBorderRadius = e.highlightBorderRadius;
+            if (typeof e.highlightHorizontalPadding === 'number') newEntry.highlightHorizontalPadding = e.highlightHorizontalPadding;
+            if (typeof e.highlightVerticalPadding === 'number') newEntry.highlightVerticalPadding = e.highlightVerticalPadding;
+            if (typeof e.enableBorderThickness === 'boolean') newEntry.enableBorderThickness = e.enableBorderThickness;
+            if (typeof e.borderStyle === 'string') newEntry.borderStyle = e.borderStyle;
+            if (typeof e.borderLineStyle === 'string') newEntry.borderLineStyle = e.borderLineStyle;
+            if (typeof e.borderOpacity === 'number') newEntry.borderOpacity = e.borderOpacity;
+            if (typeof e.borderThickness === 'number') newEntry.borderThickness = e.borderThickness;
+            this.settings.wordEntries.push(newEntry);
           }
         }
         this.settings.textBgColoringEntries = [];
+        debugLog('[MIGRATE_TBG]', `Migration complete. wordEntries after: ${this.settings.wordEntries.length}`);
+      }
+    } catch (e) {}
+
+    // DEBUG: Check if properties still in wordEntries before compile
+    try {
+      const weBeforeCompile = (this.settings.wordEntries || []).filter(e => e && (typeof e.backgroundOpacity === 'number' || typeof e.highlightBorderRadius === 'number'));
+      if (weBeforeCompile.length > 0) {
+        debugLog('[BEFORE_COMPILE_WE]', `Found ${weBeforeCompile.length} entries with custom: ${weBeforeCompile.slice(0, 3).map(e => `${e.pattern}(op=${e.backgroundOpacity}, rad=${e.highlightBorderRadius})`).join(', ')}`);
       }
     } catch (e) {}
 
@@ -3148,8 +4728,32 @@ module.exports = class AlwaysColorText extends Plugin {
         x.flags = String(x.flags || '').replace(/[^gimsuy]/g, '');
         x.isRegex = !!x.isRegex;
         x.styleType = x.styleType || (x.backgroundColor ? (x.textColor && x.textColor !== 'currentColor' ? 'both' : 'highlight') : (x.color ? 'text' : 'text'));
+        const rawMt = String(x.matchType || '').trim();
+        const mtLower = rawMt.toLowerCase();
+        const normalized = (mtLower === 'startswith' || rawMt === 'startsWith' || mtLower === 'starts with')
+          ? 'startswith'
+          : (mtLower === 'endswith' || rawMt === 'endsWith' || mtLower === 'ends with')
+          ? 'endswith'
+          : (mtLower === 'exact')
+          ? 'exact'
+          : (mtLower === 'contains')
+          ? 'contains'
+          : (this.settings.partialMatch ? 'contains' : 'exact');
+        x.matchType = normalized;
         x._savedTextColor = x._savedTextColor && this.isValidHexColor(x._savedTextColor) ? x._savedTextColor : (this.isValidHexColor(x.color) ? x.color : null);
         x._savedBackgroundColor = x._savedBackgroundColor && this.isValidHexColor(x._savedBackgroundColor) ? x._savedBackgroundColor : (this.isValidHexColor(x.backgroundColor) ? x.backgroundColor : null);
+        
+        // PRESERVE custom styling properties (per-entry highlight customization)
+        x.backgroundOpacity = typeof e.backgroundOpacity === 'number' ? e.backgroundOpacity : undefined;
+        x.highlightBorderRadius = typeof e.highlightBorderRadius === 'number' ? e.highlightBorderRadius : undefined;
+        x.highlightHorizontalPadding = typeof e.highlightHorizontalPadding === 'number' ? e.highlightHorizontalPadding : undefined;
+        x.highlightVerticalPadding = typeof e.highlightVerticalPadding === 'number' ? e.highlightVerticalPadding : undefined;
+        x.enableBorderThickness = typeof e.enableBorderThickness === 'boolean' ? e.enableBorderThickness : undefined;
+        x.borderStyle = typeof e.borderStyle === 'string' ? e.borderStyle : undefined;
+        x.borderLineStyle = typeof e.borderLineStyle === 'string' ? e.borderLineStyle : undefined;
+        x.borderOpacity = typeof e.borderOpacity === 'number' ? e.borderOpacity : undefined;
+        x.borderThickness = typeof e.borderThickness === 'number' ? e.borderThickness : undefined;
+        
         return x;
       });
       s.blacklistEntries = s.blacklistEntries.map(e => {
@@ -3165,6 +4769,35 @@ module.exports = class AlwaysColorText extends Plugin {
         x.isRegex = !!x.isRegex;
         return x;
       });
+      // Also sanitize and preserve custom properties for textBgColoringEntries
+      if (Array.isArray(s.textBgColoringEntries)) {
+        s.textBgColoringEntries = s.textBgColoringEntries.map(e => {
+          const x = Object.assign({}, e || {});
+          x.pattern = String(x.pattern || '');
+          if (Array.isArray(x.groupedPatterns)) {
+            x.groupedPatterns = x.groupedPatterns.map(p => String(p || '')).filter(p => (p || '').length > 0);
+            if (x.groupedPatterns.length === 0) x.groupedPatterns = null;
+          } else {
+            x.groupedPatterns = null;
+          }
+          x.textColor = x.textColor && x.textColor !== 'currentColor' && this.isValidHexColor(x.textColor) ? x.textColor : (x.textColor === 'currentColor' ? 'currentColor' : null);
+          x.backgroundColor = this.isValidHexColor(x.backgroundColor) ? x.backgroundColor : null;
+          x.flags = String(x.flags || '').replace(/[^gimsuy]/g, '');
+          x.isRegex = !!x.isRegex;
+          x.styleType = x.styleType || (x.backgroundColor ? (x.textColor && x.textColor !== 'currentColor' ? 'both' : 'highlight') : 'text');
+          // PRESERVE custom styling properties for textBgColoringEntries too
+          x.backgroundOpacity = typeof e.backgroundOpacity === 'number' ? e.backgroundOpacity : undefined;
+          x.highlightBorderRadius = typeof e.highlightBorderRadius === 'number' ? e.highlightBorderRadius : undefined;
+          x.highlightHorizontalPadding = typeof e.highlightHorizontalPadding === 'number' ? e.highlightHorizontalPadding : undefined;
+          x.highlightVerticalPadding = typeof e.highlightVerticalPadding === 'number' ? e.highlightVerticalPadding : undefined;
+          x.enableBorderThickness = typeof e.enableBorderThickness === 'boolean' ? e.enableBorderThickness : undefined;
+          x.borderStyle = typeof e.borderStyle === 'string' ? e.borderStyle : undefined;
+          x.borderLineStyle = typeof e.borderLineStyle === 'string' ? e.borderLineStyle : undefined;
+          x.borderOpacity = typeof e.borderOpacity === 'number' ? e.borderOpacity : undefined;
+          x.borderThickness = typeof e.borderThickness === 'number' ? e.borderThickness : undefined;
+          return x;
+        });
+      }
       s.pathRules = s.pathRules.map(r => {
         const x = Object.assign({}, r || {});
         x.path = String(x.path || '');
@@ -3195,6 +4828,9 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!allowedPath.has(s.pathSortMode)) s.pathSortMode = 'last-added';
       s.language = String(s.language || 'en');
       s.highlightVerticalPadding = Math.max(0, parseInt(s.highlightVerticalPadding ?? 0) || 0);
+      s.entriesSearchLimit = Math.max(0, parseInt(s.entriesSearchLimit ?? 0) || 0);
+      s.blacklistSearchLimit = Math.max(0, parseInt(s.blacklistSearchLimit ?? 0) || 0);
+      s.pathSearchLimit = Math.max(0, parseInt(s.pathSearchLimit ?? 0) || 0);
       this.settings = s;
     } catch (e) {}
   }
@@ -3218,13 +4854,66 @@ module.exports = class AlwaysColorText extends Plugin {
         color: col, 
         isRegex: false, 
         flags: '', 
-        styleType: 'text', // EXPLICITLY SET TO TEXT
-        textColor: null, // Ensure no textColor
-        backgroundColor: null // Ensure no backgroundColor
+        styleType: 'text', 
+        textColor: null, 
+        backgroundColor: null,
+        matchType: this.settings.partialMatch ? 'contains' : 'exact'
       });
     }
     await this.saveSettings();
     this.reconfigureEditorExtensions();
+  }
+
+  // Add a new entry (word or regex)
+  async addNewEntry(pattern, color, isRegex, flags = '', name = '') {
+    try {
+      // Input validation for security and sanity
+      const patternStr = String(pattern || '').trim();
+      if (!patternStr) {
+        debugWarn('ADD_ENTRY', 'Pattern is empty');
+        return;
+      }
+      if (patternStr.length > 10000) {
+        debugWarn('ADD_ENTRY', 'Pattern exceeds max length (10KB)');
+        return;
+      }
+      
+      // Validate regex if applicable
+      if (isRegex) {
+        const flagsStr = String(flags || '').replace(/[^gimsuy]/g, '');
+        try {
+          new RegExp(patternStr, flagsStr);
+        } catch (regexErr) {
+          debugWarn('ADD_ENTRY', 'Invalid regex pattern', regexErr);
+          return;
+        }
+      }
+      
+      const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+      const entry = {
+        uid,
+        pattern: patternStr,
+        color: String(color || '#000000'),
+        isRegex: !!isRegex,
+        flags: String(flags || '').replace(/[^gimsuy]/g, ''),
+        styleType: 'text',
+        textColor: null,
+        backgroundColor: null,
+        matchType: !isRegex ? (this.settings.partialMatch ? 'contains' : 'exact') : 'regex',
+        presetLabel: name ? String(name) : undefined,
+        persistAtEnd: true,
+        groupedPatterns: null,
+        isCaseSensitive: this.settings.caseSensitive
+      };
+      this.settings.wordEntries.push(entry);
+      await this.saveSettings();
+      this.compileWordEntries();
+      this.compileTextBgColoringEntries();
+      try { this.reconfigureEditorExtensions(); } catch (_) {}
+      try { this.settingTab && this.settingTab._newEntriesSet && this.settingTab._newEntriesSet.add(uid); } catch (_) {}
+    } catch (e) {
+      debugError('ADD_ENTRY', 'addNewEntry failed', e);
+    }
   }
 
   // --- FORCE REFRESH all open Markdown editors ---
@@ -3427,6 +5116,144 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) { return false; }
   }
 
+  _isWordStart(text, idx) {
+    const leftChar = idx > 0 ? text[idx - 1] : '';
+    const currChar = idx < text.length ? text[idx] : '';
+    const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === '-' || ch === "'";
+    return (idx === 0 || !isWordChar(leftChar)) && isWordChar(currChar);
+  }
+
+  _isWordEnd(text, idx) {
+    const rightChar = idx < text.length ? text[idx] : '';
+    const leftChar = idx > 0 ? text[idx - 1] : '';
+    const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === '-' || ch === "'";
+    return (idx === text.length || !isWordChar(rightChar)) && isWordChar(leftChar);
+  }
+
+  _isWordChar(ch) {
+    return /[A-Za-z0-9]/.test(ch) || ch === '-' || ch === "'";
+  }
+
+  findWordStart(text, position) {
+    let start = position;
+    while (start > 0 && this._isWordChar(text[start - 1])) {
+      start--;
+    }
+    return start;
+  }
+
+  findWordEnd(text, position) {
+    let end = position;
+    while (end < text.length && this._isWordChar(text[end])) {
+      end++;
+    }
+    return end;
+  }
+
+  _extractWordAtPosition(text, start, end) {
+    let ws = start;
+    let we = end;
+    while (ws > 0 && this._isWordChar(text[ws - 1])) ws--;
+    while (we < text.length && this._isWordChar(text[we])) we++;
+    return text.substring(ws, we);
+  }
+
+  _isPatternAtWordStart(text, start, end, pattern) {
+    const word = this._extractWordAtPosition(text, start, end);
+    if (typeof pattern !== 'string') pattern = String(pattern || '');
+    if (!pattern) return false;
+    const a = this.settings.caseSensitive ? word : word.toLowerCase();
+    const b = this.settings.caseSensitive ? pattern : pattern.toLowerCase();
+    return a.startsWith(b);
+  }
+
+  _isPatternAtWordEnd(text, start, end, pattern) {
+    const word = this._extractWordAtPosition(text, start, end);
+    if (typeof pattern !== 'string') pattern = String(pattern || '');
+    if (!pattern) return false;
+    const a = this.settings.caseSensitive ? word : word.toLowerCase();
+    const b = this.settings.caseSensitive ? pattern : pattern.toLowerCase();
+    return a.endsWith(b);
+  }
+
+  // Helper: Extract full word at given position
+  extractFullWordAtPosition(text, start, end) {
+    let wordStart = start;
+    let wordEnd = end;
+    
+    // Expand left to word boundary
+    while (wordStart > 0 && this._isWordChar(text[wordStart - 1])) {
+      wordStart--;
+    }
+    
+    // Expand right to word boundary
+    while (wordEnd < text.length && this._isWordChar(text[wordEnd])) {
+      wordEnd++;
+    }
+    
+    return text.substring(wordStart, wordEnd);
+  }
+
+  matchSatisfiesType(text, start, end, entry) {
+    try {
+      const matchType = String(entry?.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+      const pattern = entry?.pattern || '';
+      
+      // For sentence-like patterns (containing spaces/punctuation), always match
+      if (this.isSentenceLikePattern(pattern)) {
+        return true;
+      }
+      
+      // Extract the full word at the match position
+      const fullWord = this.extractFullWordAtPosition(text, start, end);
+      
+      switch(matchType) {
+        case 'exact':
+          // Exact match: pattern must exactly equal the full word
+          const exactMatch = this.settings.caseSensitive 
+            ? fullWord === pattern 
+            : fullWord.toLowerCase() === pattern.toLowerCase();
+          return exactMatch;
+          
+        case 'contains':
+          // Contains: pattern must be found anywhere within the full word
+          const containsMatch = this.settings.caseSensitive
+            ? fullWord.includes(pattern)
+            : fullWord.toLowerCase().includes(pattern.toLowerCase());
+          return containsMatch;
+          
+        case 'startswith':
+          // StartsWith: use anchored regex on letters only
+          try {
+            const flags = this.settings.caseSensitive ? '' : 'i';
+            const re = new RegExp(`^${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}[A-Za-z]*$`, flags);
+            return re.test(fullWord);
+          } catch (_) {
+            const startsWithMatch = this.settings.caseSensitive
+              ? fullWord.startsWith(pattern)
+              : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
+            return startsWithMatch;
+          }
+          
+        case 'endswith':
+          // EndsWith: use anchored regex on letters only
+          try {
+            const flags = this.settings.caseSensitive ? '' : 'i';
+            const re = new RegExp(`^[A-Za-z]*${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}$`, flags);
+            return re.test(fullWord);
+          } catch (_) {
+            const endsWithMatch = this.settings.caseSensitive
+              ? fullWord.endsWith(pattern)
+              : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
+            return endsWithMatch;
+          }
+          
+        default:
+          return true;
+      }
+    } catch (_) { return true; }
+  }
+
     safeRegexTest(regex, text, timeout = 50) {
     // BAIL OUT EARLY FOR NON-ROMAN TEXT
     if (this.containsNonRomanCharacters(text)) {
@@ -3457,6 +5284,7 @@ module.exports = class AlwaysColorText extends Plugin {
   // --- Safe Regex Matching Loop with Protection ---
   safeMatchLoop(regex, text) {
     const matches = [];
+    try { if (regex) regex.lastIndex = 0; } catch (e) {}
     let lastIndex = 0;
     let safetyCounter = 0;
     const maxIterations = 1000; // Hard limit on iterations
@@ -3719,9 +5547,12 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
-  // Helper: Apply border style to a span element based on settings
-  applyBorderStyleToElement(element, textColor, backgroundColor) {
-    if (this.settings.hideHighlights === true || !this.settings.enableBorderThickness) {
+  // Helper: Apply border style to a span element based on settings or entry overrides
+  applyBorderStyleToElement(element, textColor, backgroundColor, entry = null) {
+    const enable = entry && typeof entry.enableBorderThickness !== 'undefined'
+      ? !!entry.enableBorderThickness
+      : !!this.settings.enableBorderThickness;
+    if (this.settings.hideHighlights === true || !enable) {
       element.style.border = '';
       element.style.borderTop = '';
       element.style.borderRight = '';
@@ -3729,8 +5560,12 @@ module.exports = class AlwaysColorText extends Plugin {
       element.style.borderLeft = '';
       return;
     }
-    const borderThickness = this.settings.borderThickness ?? 1;
-    const borderOpacity = this.settings.borderOpacity ?? 100;
+    const borderThickness = (entry && typeof entry.borderThickness === 'number')
+      ? entry.borderThickness
+      : (this.settings.borderThickness ?? 1);
+    const borderOpacity = (entry && typeof entry.borderOpacity === 'number')
+      ? entry.borderOpacity
+      : (this.settings.borderOpacity ?? 100);
     let sourceColor = null;
     if (textColor && textColor !== 'currentColor' && this.isValidHexColor(textColor)) {
       sourceColor = textColor;
@@ -3740,8 +5575,12 @@ module.exports = class AlwaysColorText extends Plugin {
       sourceColor = '#000000';
     }
     const borderColorRgba = this.hexToRgba(sourceColor, borderOpacity);
-    const borderStyleType = this.settings.borderStyle ?? 'full';
-    const lineStyle = this.settings.borderLineStyle ?? 'solid';
+    const borderStyleType = (entry && typeof entry.borderStyle === 'string')
+      ? entry.borderStyle
+      : (this.settings.borderStyle ?? 'full');
+    const lineStyle = (entry && typeof entry.borderLineStyle === 'string')
+      ? entry.borderLineStyle
+      : (this.settings.borderLineStyle ?? 'solid');
     const borderCSS = `${borderThickness}px ${lineStyle} ${borderColorRgba}`;
     switch (borderStyleType) {
       case 'bottom':
@@ -3789,11 +5628,19 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // Helper: Generate border CSS string based on settings (border always uses text color)
   generateBorderStyle(textColor, backgroundColor) {
-    if (this.settings.hideHighlights === true || !this.settings.enableBorderThickness) {
+    const entry = arguments.length > 2 ? arguments[2] : null;
+    const enable = entry && typeof entry.enableBorderThickness !== 'undefined'
+      ? !!entry.enableBorderThickness
+      : !!this.settings.enableBorderThickness;
+    if (this.settings.hideHighlights === true || !enable) {
       return '';
     }
-    const borderThickness = this.settings.borderThickness ?? 1;
-    const borderOpacity = this.settings.borderOpacity ?? 100;
+    const borderThickness = (entry && typeof entry.borderThickness === 'number')
+      ? entry.borderThickness
+      : (this.settings.borderThickness ?? 1);
+    const borderOpacity = (entry && typeof entry.borderOpacity === 'number')
+      ? entry.borderOpacity
+      : (this.settings.borderOpacity ?? 100);
     let borderColor;
     if (textColor && textColor !== 'currentColor' && this.isValidHexColor(textColor)) {
       borderColor = this.hexToRgba(textColor, borderOpacity);
@@ -3802,8 +5649,12 @@ module.exports = class AlwaysColorText extends Plugin {
     } else {
       borderColor = 'rgba(0,0,0,1)';
     }
-    const borderStyleType = this.settings.borderStyle ?? 'full';
-    const lineStyle = this.settings.borderLineStyle ?? 'solid';
+    const borderStyleType = (entry && typeof entry.borderStyle === 'string')
+      ? entry.borderStyle
+      : (this.settings.borderStyle ?? 'full');
+    const lineStyle = (entry && typeof entry.borderLineStyle === 'string')
+      ? entry.borderLineStyle
+      : (this.settings.borderLineStyle ?? 'solid');
     const borderCSS = `${borderThickness}px ${lineStyle} ${borderColor} !important;`;
     switch (borderStyleType) {
       case 'bottom':
@@ -3830,6 +5681,21 @@ module.exports = class AlwaysColorText extends Plugin {
       default:
         return ` border: ${borderCSS}`;
     }
+  }
+  getHighlightParams(entry) {
+    const result = {
+      opacity: (entry && typeof entry.backgroundOpacity === 'number') ? entry.backgroundOpacity : (this.settings.backgroundOpacity ?? 25),
+      radius: (entry && typeof entry.highlightBorderRadius === 'number') ? entry.highlightBorderRadius : (this.settings.highlightBorderRadius ?? 8),
+      hPad: (entry && typeof entry.highlightHorizontalPadding === 'number') ? entry.highlightHorizontalPadding : (this.settings.highlightHorizontalPadding ?? 4),
+      vPad: (entry && typeof entry.highlightVerticalPadding === 'number') ? entry.highlightVerticalPadding : (this.settings.highlightVerticalPadding ?? 0),
+      enableBorder: (entry && typeof entry.enableBorderThickness !== 'undefined') ? !!entry.enableBorderThickness : !!this.settings.enableBorderThickness,
+      borderStyle: (entry && typeof entry.borderStyle === 'string') ? entry.borderStyle : (this.settings.borderStyle ?? 'full'),
+      borderLineStyle: (entry && typeof entry.borderLineStyle === 'string') ? entry.borderLineStyle : (this.settings.borderLineStyle ?? 'solid'),
+      borderOpacity: (entry && typeof entry.borderOpacity === 'number') ? entry.borderOpacity : (this.settings.borderOpacity ?? 100),
+      borderThickness: (entry && typeof entry.borderThickness === 'number') ? entry.borderThickness : (this.settings.borderThickness ?? 1),
+    };
+    
+    return result;
   }
 
   generateOnceBorderStyle(backgroundColor) {
@@ -4096,6 +5962,15 @@ module.exports = class AlwaysColorText extends Plugin {
       const advRules = Array.isArray(this.settings.advancedRules) ? this.settings.advancedRules : [];
       const caseInsensitive = !this.settings.caseSensitive;
       
+      // DEBUG: Log when checking "belmo"
+      if (String(textPattern).includes('belmo')) {
+        debugLog('RULE_CHECK_BELMO', `Checking pattern "${textPattern}" in file "${filePath}"`);
+        debugLog('RULE_CHECK_BELMO', `advRules count: ${advRules.length}`);
+        advRules.forEach((r, i) => {
+          debugLog('RULE_CHECK_BELMO', `Rule ${i}: text="${r.text}" mode="${r.mode}" path="${r.path}"`);
+        });
+      }
+      
       // Helper: Check if text matches a rule pattern
       const textMatches = (rule, pattern) => {
         const ruleText = String(rule.text || '').trim();
@@ -4166,6 +6041,16 @@ module.exports = class AlwaysColorText extends Plugin {
       if (onlyIncludeRules.length > 0) {
         // Text has "only colors in" rules - check if this file/folder matches any
         const matchesIncludeRule = onlyIncludeRules.some(r => pathMatches(r));
+        
+        // DEBUG: Log when checking "belmo"
+        if (String(textPattern).includes('belmo')) {
+          debugLog('RULE_CHECK_BELMO', `Found ${onlyIncludeRules.length} "only color in" rules`);
+          onlyIncludeRules.forEach((r, i) => {
+            const matches = pathMatches(r);
+            debugLog('RULE_CHECK_BELMO', `Include rule ${i}: path="${r.path}" matches=${matches}`);
+          });
+        }
+        
         if (!matchesIncludeRule) {
           debugLog('RULE_ENGINE', `Skipping: text "${textPattern}" only colors elsewhere`);
           return false;
@@ -4176,6 +6061,17 @@ module.exports = class AlwaysColorText extends Plugin {
       const excludeRules = advRules.filter(r => r && r.mode === 'exclude' && textMatches(r, textPattern));
       if (excludeRules.length > 0) {
         const matchesExcludeRule = excludeRules.some(r => pathMatches(r));
+        
+        // DEBUG: Log when checking "belmo"
+        if (String(textPattern).includes('belmo')) {
+          debugLog('RULE_CHECK_BELMO', `Found ${excludeRules.length} "does not color in" rules`);
+          excludeRules.forEach((r, i) => {
+            const matches = pathMatches(r);
+            debugLog('RULE_CHECK_BELMO', `Exclude rule ${i}: path="${r.path}" matches=${matches}`);
+          });
+          debugLog('RULE_CHECK_BELMO', `matchesExcludeRule=${matchesExcludeRule} -> returning ${!matchesExcludeRule}`);
+        }
+        
         if (matchesExcludeRule) {
           debugLog('RULE_ENGINE', `Skipping: text "${textPattern}" does not color here`);
           return false;
@@ -4201,15 +6097,8 @@ module.exports = class AlwaysColorText extends Plugin {
         return this.shouldColorText(filePath, entry.pattern);
       });
       
-      debugLog('ADV_RULES', {
-        filePath,
-        originalEntries: entries.length,
-        filteredEntries: filtered.length
-      });
-      
       return filtered;
     } catch (e) {
-      debugError('ADV_RULES', 'Error filtering entries', e);
       return entries;
     }
   }
@@ -4333,6 +6222,7 @@ module.exports = class AlwaysColorText extends Plugin {
       try { this._regexCache && this._regexCache.clear(); } catch (_) {}
       try { this._bloomFilter && this._bloomFilter.reset(); } catch (_) {}
       if (!Array.isArray(this.settings.wordEntries)) return;
+      
       for (const e of this.settings.wordEntries) {
         if (!e) continue;
         if (e && e.backgroundColor) {
@@ -4382,6 +6272,7 @@ module.exports = class AlwaysColorText extends Plugin {
           textColor: e.textColor || e.color || color,
           backgroundColor: e.backgroundColor || null,
           styleType: e.styleType || 'text',
+          matchType: e.matchType || (this.settings.partialMatch ? 'contains' : 'exact'),
           isRegex,
           flags,
           regex: null,
@@ -4389,6 +6280,17 @@ module.exports = class AlwaysColorText extends Plugin {
           invalid: false,
           specificity: pattern.replace(/\*/g, '').length,
           presetLabel: e.presetLabel || undefined, // Preserve presetLabel from original entry
+          entryRef: e, // Keep reference to original entry for highlight styling parameters
+          // Copy custom styling properties directly to compiled entry as well
+          backgroundOpacity: e.backgroundOpacity,
+          highlightBorderRadius: e.highlightBorderRadius,
+          highlightHorizontalPadding: e.highlightHorizontalPadding,
+          highlightVerticalPadding: e.highlightVerticalPadding,
+          enableBorderThickness: e.enableBorderThickness,
+          borderStyle: e.borderStyle,
+          borderLineStyle: e.borderLineStyle,
+          borderOpacity: e.borderOpacity,
+          borderThickness: e.borderThickness,
           // instrumentation counters
           execs: 0,
           avoidedExecs: 0,
@@ -4418,9 +6320,21 @@ module.exports = class AlwaysColorText extends Plugin {
           } else {
             // literal: escape pattern
             const esc = this.escapeRegex(pattern);
+            
+            // For startswith/endswith on non-sentence patterns, add word boundaries
+            const matchTypeLower = String(compiled.matchType || 'exact').toLowerCase();
+            const isSentence = this.isSentenceLikePattern(pattern);
+            let finalPattern = esc;
+            
+            if (!isSentence && matchTypeLower === 'startswith') {
+              finalPattern = '\\b' + esc;
+            } else if (!isSentence && matchTypeLower === 'endswith') {
+              finalPattern = esc + '\\b';
+            }
+            
             const literalFlags = this.settings.caseSensitive ? 'g' : 'gi';
-            compiled.regex = this._regexCache.getOrCreate(esc, literalFlags);
-            compiled.testRegex = this.settings.caseSensitive ? this._regexCache.getOrCreate(esc, '') : this._regexCache.getOrCreate(esc, 'i');
+            compiled.regex = this._regexCache.getOrCreate(finalPattern, literalFlags);
+            compiled.testRegex = this.settings.caseSensitive ? this._regexCache.getOrCreate(finalPattern, '') : this._regexCache.getOrCreate(finalPattern, 'i');
           }
         } catch (err) {
           compiled.invalid = true;
@@ -4435,6 +6349,12 @@ module.exports = class AlwaysColorText extends Plugin {
           compiled.fastTest = (text) => true;
         }
         this._compiledWordEntries.push(compiled);
+        
+        // DEBUG: Log if this is the hello entry to verify custom properties made it to compiled
+        if (compiled.pattern === 'hello' && typeof compiled.backgroundOpacity === 'number') {
+          debugLog('[COMPILED_ENTRY_CHECK]', `Compiled entry 'hello': opacity=${compiled.backgroundOpacity}, radius=${compiled.highlightBorderRadius}, entryRef.opacity=${compiled.entryRef?.backgroundOpacity}`);
+        }
+        
         }
       }
       // sort by specificity (longer patterns first)
@@ -4456,8 +6376,17 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       try { this._compiledTextBgEntries = []; } catch (e) {}
       const source = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      
+      // DEBUG: Log the source array at the very start
+      debugLog('[TBG_COMPILE_START]', `Starting with ${source.length} source entries from wordEntries`);
+      
       for (const e of source) {
         if (!e || !e.backgroundColor) continue;
+        
+        // DEBUG: Log source entry properties before compilation
+        if (e.pattern === 'hello') {
+          debugLog('[TBG_SOURCE_ENTRY]', `Source entry 'hello': opacity=${e.backgroundOpacity}, radius=${e.highlightBorderRadius}, bg=${e.backgroundColor}`);
+        }
         
         // Support comma-separated grouped patterns: compile each pattern separately with same colors
         const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0
@@ -4485,13 +6414,15 @@ module.exports = class AlwaysColorText extends Plugin {
               pattern, 
               textColor, 
               backgroundColor, 
+              matchType: e.matchType || (this.settings.partialMatch ? 'contains' : 'exact'),
               isRegex, 
               flags: '', 
               regex: null, 
               testRegex: null, 
               invalid: true, 
               specificity: 0,
-              isTextBg: true 
+              isTextBg: true,
+              entryRef: e
             };
             this._compiledTextBgEntries.push(compiled);
             try {
@@ -4510,6 +6441,7 @@ module.exports = class AlwaysColorText extends Plugin {
             textColor,
             backgroundColor,
             styleType: e.styleType || 'both',
+            matchType: e.matchType || (this.settings.partialMatch ? 'contains' : 'exact'),
             isRegex,
             flags,
             regex: null,
@@ -4517,7 +6449,18 @@ module.exports = class AlwaysColorText extends Plugin {
             invalid: false,
             specificity: pattern.replace(/\*/g, '').length,
             isTextBg: true, // Mark as text+bg entry
-            presetLabel: e.presetLabel || undefined // Preserve presetLabel from original entry
+            presetLabel: e.presetLabel || undefined, // Preserve presetLabel from original entry
+            entryRef: e, // Keep reference to original entry for highlight styling parameters
+            // Copy custom styling properties directly to compiled entry as well
+            backgroundOpacity: e.backgroundOpacity,
+            highlightBorderRadius: e.highlightBorderRadius,
+            highlightHorizontalPadding: e.highlightHorizontalPadding,
+            highlightVerticalPadding: e.highlightVerticalPadding,
+            enableBorderThickness: e.enableBorderThickness,
+            borderStyle: e.borderStyle,
+            borderLineStyle: e.borderLineStyle,
+            borderOpacity: e.borderOpacity,
+            borderThickness: e.borderThickness
           };
           
           try {
@@ -4535,9 +6478,21 @@ module.exports = class AlwaysColorText extends Plugin {
               compiled.testRegex = this._regexCache.getOrCreate(pattern, testFlags);
             } else {
               const esc = this.escapeRegex(pattern);
-              compiled.regex = this._regexCache.getOrCreate(esc, flags);
+              
+              // For startswith/endswith on non-sentence patterns, add word boundaries
+              const matchTypeLower = String(compiled.matchType || 'exact').toLowerCase();
+              const isSentence = this.isSentenceLikePattern(pattern);
+              let finalPattern = esc;
+              
+              if (!isSentence && matchTypeLower === 'startswith') {
+                finalPattern = '\\b' + esc;
+              } else if (!isSentence && matchTypeLower === 'endswith') {
+                finalPattern = esc + '\\b';
+              }
+              
+              compiled.regex = this._regexCache.getOrCreate(finalPattern, flags);
               const testFlags = flags.replace(/g/g, '');
-              compiled.testRegex = testFlags === '' ? this._regexCache.getOrCreate(esc, '') : this._regexCache.getOrCreate(esc, testFlags);
+              compiled.testRegex = testFlags === '' ? this._regexCache.getOrCreate(finalPattern, '') : this._regexCache.getOrCreate(finalPattern, testFlags);
             }
             try {
               compiled.fastTest = this.createFastTester(pattern, isRegex, this.settings.caseSensitive);
@@ -4547,6 +6502,12 @@ module.exports = class AlwaysColorText extends Plugin {
             try { this._bloomFilter && this._bloomFilter.addPattern(pattern, isRegex); } catch (_) {}
             
             this._compiledTextBgEntries.push(compiled);
+            
+            // DEBUG: Log if this is the hello entry to verify custom properties made it to compiled
+            if (compiled.pattern === 'hello' && typeof compiled.backgroundOpacity === 'number') {
+              debugLog('[COMPILED_TBG_ENTRY_CHECK]', `Compiled TBG entry 'hello': opacity=${compiled.backgroundOpacity}, radius=${compiled.highlightBorderRadius}, entryRef.opacity=${compiled.entryRef?.backgroundOpacity}`);
+            }
+            
           } catch (err) {
             compiled.invalid = true;
             compiled.regex = null;
@@ -4557,6 +6518,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       }
       this._compiledTextBgEntries.sort((a, b) => b.specificity - a.specificity);
+      
     } catch (err) {
       debugError('COMPILE_TEXTBG', 'compileTextBgColoringEntries failed', err);
       try { this._compiledTextBgEntries = []; } catch (e) {}
@@ -4649,8 +6611,22 @@ module.exports = class AlwaysColorText extends Plugin {
       span.textContent = decodedText.slice(m.start, m.end);
       
       // Get the entry and determine the style type
-      const entry = m.entry;
+      // IMPORTANT: Use entryRef if available (has full entry with custom styling), otherwise fall back to entry
+      const entry = m.entryRef || m.entry;
       const styleType = entry && entry.styleType ? entry.styleType : 'text';
+      
+      // DEBUG: Log per-entry styling in reading mode with detailed entry inspection
+      if (entry && entry.pattern) {
+        debugLog('[READING_ENTRY_STYLE]', `Pattern: ${entry.pattern}, styleType: ${styleType}, textColor: ${entry.textColor}, bgColor: ${entry.backgroundColor}, hasCustomBgOpacity: ${entry.backgroundOpacity !== undefined}`);
+        
+        // Check if entry has custom styling properties - this is the critical check
+        const hasOpacity = typeof entry.backgroundOpacity === 'number';
+        const hasRadius = typeof entry.highlightBorderRadius === 'number';
+        const hasPadding = typeof entry.highlightHorizontalPadding === 'number';
+        if (hasOpacity || hasRadius || hasPadding) {
+          debugLog('[ENTRY_CUSTOM_CHECK]', `Pattern: ${entry.pattern} has custom props: opacity=${hasOpacity}, radius=${hasRadius}, padding=${hasPadding}`);
+        }
+      }
       
       // Determine text color with robust fallback
       const folderDefault = (m.folderEntry && m.folderEntry.defaultColor) ? m.folderEntry.defaultColor : null;
@@ -4677,34 +6653,39 @@ module.exports = class AlwaysColorText extends Plugin {
           pos = m.end;
           continue;
         }
-        const bgColor = (entry && entry.backgroundColor) ? entry.backgroundColor : ((entry && entry.color) ? entry.color : resolvedTextColor);
-        try { span.style.setProperty('background-color', this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25); }
-        try { 
-          const vpad = (this.settings.highlightVerticalPadding ?? 0);
-          span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
-          span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
-          span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
-          span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+        const params = this.getHighlightParams(entry);
+        const bgBase = (entry && entry.backgroundColor) ? entry.backgroundColor : ((entry && entry.color) ? entry.color : resolvedTextColor);
+        const bgRgba = this.hexToRgba(bgBase, params.opacity);
+        try { span.style.setProperty('background-color', bgRgba, 'important'); } catch (_) { span.style.backgroundColor = bgRgba; }
+        try {
+          const vpad = params.vPad;
+          span.style.setProperty('padding-left', (params.hPad) + 'px', 'important');
+          span.style.setProperty('padding-right', (params.hPad) + 'px', 'important');
+          span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+          span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important');
           if (vpad < 0) {
             span.style.setProperty('margin-top', vpad + 'px', 'important');
             span.style.setProperty('margin-bottom', vpad + 'px', 'important');
           }
-        } catch (_) { 
-          const vpad = (this.settings.highlightVerticalPadding ?? 0);
-          span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
+        } catch (_) {
+          const vpad = params.vPad;
+          span.style.paddingLeft = span.style.paddingRight = (params.hPad) + 'px';
           span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
           if (vpad < 0) {
             span.style.marginTop = vpad + 'px';
             span.style.marginBottom = vpad + 'px';
           }
         }
-        const br = (this.settings.highlightBorderRadius ?? 8) + 'px';
+        const br = ((params.hPad > 0 && params.radius === 0 ? 0 : params.radius)) + 'px';
         try { span.style.setProperty('border-radius', br, 'important'); } catch (_) { span.style.borderRadius = br; }
         if (this.settings.enableBoxDecorationBreak ?? true) {
           span.style.boxDecorationBreak = 'clone';
           span.style.WebkitBoxDecorationBreak = 'clone';
         }
-        this.applyBorderStyleToElement(span, null, bgColor);
+        try {
+          const borderCss = this.generateBorderStyle(null, bgBase, entry);
+          if (borderCss) { span.style.cssText += borderCss; }
+        } catch (_) {}
       } else if (styleType === 'both') {
         const textColor = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : null;
         const bgColor = (entry && entry.backgroundColor) ? entry.backgroundColor : ((entry && entry.color) ? entry.color : resolvedTextColor);
@@ -4713,11 +6694,13 @@ module.exports = class AlwaysColorText extends Plugin {
           try { span.style.setProperty('--highlight-color', textColor); } catch (e) {}
         }
         if (!hideBg) {
-          try { span.style.setProperty('background-color', this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25); }
+          const params = this.getHighlightParams(entry);
+          const bgRgba = this.hexToRgba(bgColor, params.opacity);
+          try { span.style.setProperty('background-color', bgRgba, 'important'); } catch (_) { span.style.backgroundColor = bgRgba; }
           try { 
-            const vpad = (this.settings.highlightVerticalPadding ?? 0);
-            span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
-            span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
+            const vpad = params.vPad;
+            span.style.setProperty('padding-left', (params.hPad) + 'px', 'important'); 
+            span.style.setProperty('padding-right', (params.hPad) + 'px', 'important'); 
             span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
             span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
             if (vpad < 0) {
@@ -4725,15 +6708,15 @@ module.exports = class AlwaysColorText extends Plugin {
               span.style.setProperty('margin-bottom', vpad + 'px', 'important');
             }
           } catch (_) { 
-            const vpad = (this.settings.highlightVerticalPadding ?? 0);
-            span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
+            const vpad = params.vPad;
+            span.style.paddingLeft = span.style.paddingRight = (params.hPad) + 'px'; 
             span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
             if (vpad < 0) {
               span.style.marginTop = vpad + 'px';
               span.style.marginBottom = vpad + 'px';
             }
           }
-          const br2 = (this.settings.highlightBorderRadius ?? 8) + 'px';
+          const br2 = ((params.hPad > 0 && params.radius === 0 ? 0 : params.radius)) + 'px';
           try { span.style.setProperty('border-radius', br2, 'important'); } catch (_) { span.style.borderRadius = br2; }
           if (this.settings.enableBoxDecorationBreak ?? true) {
             span.style.boxDecorationBreak = 'clone';
@@ -4745,7 +6728,10 @@ module.exports = class AlwaysColorText extends Plugin {
           span.style.border = '';
           span.style.borderRadius = '';
         }
-        this.applyBorderStyleToElement(span, hideText ? null : textColor, hideBg ? null : bgColor);
+        try {
+          const borderCss = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, entry);
+          if (borderCss) { span.style.cssText += borderCss; }
+        } catch (_) {}
       }
       
       frag.appendChild(span);
@@ -4950,20 +6936,36 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {}
 
     const immediateBlocks = 20;
+    const isReadingRoot = (() => {
+      try {
+        if (!el) return false;
+        if (el.classList && (el.classList.contains('markdown-reading-view') || el.classList.contains('markdown-preview-view'))) return true;
+        if (el.closest && el.closest('.markdown-reading-view, .markdown-preview-view')) return true;
+        return false;
+      } catch (_) { return false; }
+    })();
 
     // If this is a very large document, prefer viewport-based incremental rendering
     try {
       if (this.shouldUseLightweightMode && this.shouldUseLightweightMode(el.textContent ? el.textContent.length : 0)) {
         debugLog('ACT', 'Large doc detected -> using viewport-based rendering');
-        // Setup an IntersectionObserver-based pipeline to process blocks as they enter view
-        try {
-          this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
-        } catch (e) {
-          debugError('ACT', 'setupViewportObserver failed', e);
-          // fallback to immediate small-pass
-          this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
+        if (isReadingRoot) {
+          try {
+            this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: 0, batchSize: 30, clearExisting: true, forceProcess: true, maxMatches: Infinity });
+          } catch (e) {
+            debugError('ACT', 'processInChunks immediate failed', e);
+            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
+          }
+          return;
+        } else {
+          try {
+            this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
+          } catch (e) {
+            debugError('ACT', 'setupViewportObserver failed', e);
+            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
+          }
+          return;
         }
-        return;
       }
 
     } catch (e) {}
@@ -5001,7 +7003,13 @@ module.exports = class AlwaysColorText extends Plugin {
         } catch (e) { debugError('ACT', 'deferred pass error', e); }
       };
 
-      if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+      if (isReadingRoot) {
+        try {
+          runDeferred('reading-immediate');
+        } catch (e) {
+          debugError('DEFERRED', 'reading immediate failed', e);
+        }
+      } else if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
         try {
           window.requestIdleCallback(() => runDeferred('idleCallback'), { timeout: 2000 });
         } catch (e) {
@@ -5013,8 +7021,9 @@ module.exports = class AlwaysColorText extends Plugin {
         setTimeout(() => runDeferred('setTimeout-fallback'), 1200);
       }
 
-      // Extra safety: ensure deferred runs even if idle callback never fires (e.g. user navigates)
-      setTimeout(() => runDeferred('safety-timeout'), 3000);
+      if (!isReadingRoot) {
+        setTimeout(() => runDeferred('safety-timeout'), 3000);
+      }
     } catch (e) {
       // As a last resort, attempt a simple timeout run
       setTimeout(() => {
@@ -5507,67 +7516,19 @@ module.exports = class AlwaysColorText extends Plugin {
       textNodes.push(currentNode);
     }
 
-    // LITERAL PATTERN FAST PATH - PROCESS LITERAL PATTERNS FIRST
+    // LITERAL PATTERN FAST PATH - COLLECT MATCHES (DON'T APPLY YET)
+    // Collect literal matches to be resolved together with text+bg matches for proper priority
+    const literalMatches = [];
     try {
-      let literalEntries = (entries || []).filter(e => e && !e.invalid && !e.isRegex && !e.isTextBg && typeof e.pattern === 'string');
-      // When partialMatch is enabled, skip text-only entries here so
-      // they can be handled by the dedicated partial-match section
-      if (this.settings.partialMatch) {
-        literalEntries = literalEntries.filter(e => e && e.styleType && e.styleType !== 'text');
-      }
-      if (literalEntries.length > 0 && textNodes.length > 0) {
-        const decodedTexts = textNodes.map(n => this.decodeHtmlEntities(String(n.textContent || '')));
-        const offsets = [];
-        let acc = 0;
-        for (const t of decodedTexts) { offsets.push(acc); acc += t.length; }
-        const blockText = decodedTexts.join('');
-        const blockSearch = this.settings.caseSensitive ? blockText : blockText.toLowerCase();
-        const nodeMatchesMap = new Map();
-        for (const entry of literalEntries) {
-          const rawPatt = String(entry.pattern || '');
-          const patt = this.decodeHtmlEntities(rawPatt);
-          if (!patt) continue;
-          const pattSearch = this.settings.caseSensitive ? patt : patt.toLowerCase();
-          let pos = 0;
-          while ((pos = blockSearch.indexOf(pattSearch, pos)) !== -1) {
-            const start = pos;
-            const end = pos + pattSearch.length;
-            pos += pattSearch.length;
-            // Respect whole-word matching when partialMatch is disabled and pattern is not sentence-like
-            if (!this.settings.partialMatch && !this.isSentenceLikePattern(rawPatt) && !this.isWholeWordMatch(blockText, start, end)) {
-              continue;
-            }
-            // Skip blacklisted words
-            const fullWord = blockText.substring(start, end);
-            if (this.isWordBlacklisted(fullWord)) continue;
-            let remainingStart = start;
-            let remainingEnd = end;
-            for (let ni = 0; ni < decodedTexts.length && remainingStart < remainingEnd; ni++) {
-              const nodeStart = offsets[ni];
-              const nodeEnd = nodeStart + decodedTexts[ni].length;
-              const overlapStart = Math.max(nodeStart, remainingStart);
-              const overlapEnd = Math.min(nodeEnd, remainingEnd);
-              if (overlapEnd > overlapStart) {
-                const localStart = overlapStart - nodeStart;
-                const localEnd = overlapEnd - nodeStart;
-                const arr = nodeMatchesMap.get(textNodes[ni]) || [];
-                arr.push({ start: localStart, end: localEnd, entry, folderEntry });
-                nodeMatchesMap.set(textNodes[ni], arr);
-              }
-              if (nodeEnd >= remainingEnd) break;
-            }
-          }
-        }
-        if (nodeMatchesMap.size > 0) {
-          for (const [n, m] of nodeMatchesMap.entries()) {
-            const textDec = this.decodeHtmlEntities(String(n.textContent || ''));
-            this.applySimpleHighlights(n, m, textDec);
-          }
-          try { const info = this._domRefs.get(block); if (info) info.matchCount = 1; } catch (e) {}
-        }
+      // Process only text-only entries here; text+bg entries have their own processing loop below
+      let literalEntries = (entries || []).filter(e => e && !e.invalid && !e.isRegex && typeof e.pattern === 'string' && !e.isTextBg);
+      if (literalEntries.length > 0) {
+        // We'll collect literal matches during per-node processing, not at block level
+        // Store entries for later use in the per-node loop
+        try { this._literalEntriesToProcess = literalEntries; } catch (e) {}
       }
     } catch (e) {
-      debugLog('LITERAL_PATH', `Error in literal processing: ${e.message}`);
+      debugLog('LITERAL_PATH', `Error setting up literal entries: ${e.message}`);
     }
     
     // REFRESH text nodes after literal path modified them
@@ -5672,32 +7633,44 @@ module.exports = class AlwaysColorText extends Plugin {
                 wrapper.style.color = headingEntry.textColor;
                 try { wrapper.style.setProperty('--highlight-color', headingEntry.textColor); } catch (e) {}
                 wrapper.style.background = '';
-                wrapper.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, this.settings.backgroundOpacity ?? 25);
-                wrapper.style.paddingLeft = wrapper.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
-                if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
-                  wrapper.style.borderRadius = '0px';
-                } else {
-                  wrapper.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+                {
+                  const params = this.getHighlightParams(headingEntry);
+                  wrapper.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, params.opacity);
+                  const vpad = params.vPad;
+                  wrapper.style.paddingLeft = wrapper.style.paddingRight = (params.hPad) + 'px';
+                  wrapper.style.paddingTop = wrapper.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+                  if (vpad < 0) {
+                    wrapper.style.marginTop = vpad + 'px';
+                    wrapper.style.marginBottom = vpad + 'px';
+                  }
+                  const br = ((params.hPad > 0 && params.radius === 0 ? 0 : params.radius)) + 'px';
+                  wrapper.style.borderRadius = br;
                 }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   wrapper.style.boxDecorationBreak = 'clone';
                   wrapper.style.WebkitBoxDecorationBreak = 'clone';
                 }
-                this.applyBorderStyleToElement(wrapper, headingEntry.textColor, headingEntry.backgroundColor);
+                this.applyBorderStyleToElement(wrapper, headingEntry.textColor, headingEntry.backgroundColor, headingEntry);
               } else {
                 wrapper.style.background = '';
-                wrapper.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, this.settings.backgroundOpacity ?? 25);
-                wrapper.style.paddingLeft = wrapper.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px';
-                if ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) {
-                  wrapper.style.borderRadius = '0px';
-                } else {
-                  wrapper.style.borderRadius = (this.settings.highlightBorderRadius ?? 8) + 'px';
+                {
+                  const params = this.getHighlightParams(headingEntry);
+                  wrapper.style.backgroundColor = this.hexToRgba(headingEntry.backgroundColor, params.opacity);
+                  const vpad = params.vPad;
+                  wrapper.style.paddingLeft = wrapper.style.paddingRight = (params.hPad) + 'px';
+                  wrapper.style.paddingTop = wrapper.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+                  if (vpad < 0) {
+                    wrapper.style.marginTop = vpad + 'px';
+                    wrapper.style.marginBottom = vpad + 'px';
+                  }
+                  const br = ((params.hPad > 0 && params.radius === 0 ? 0 : params.radius)) + 'px';
+                  wrapper.style.borderRadius = br;
                 }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   wrapper.style.boxDecorationBreak = 'clone';
                   wrapper.style.WebkitBoxDecorationBreak = 'clone';
                 }
-                this.applyBorderStyleToElement(wrapper, null, headingEntry.backgroundColor);
+                this.applyBorderStyleToElement(wrapper, null, headingEntry.backgroundColor, headingEntry);
               }
               const children = Array.from(headingEl.childNodes);
               children.forEach(ch => wrapper.appendChild(ch));
@@ -5768,9 +7741,7 @@ module.exports = class AlwaysColorText extends Plugin {
             const matchStart = match.index;
             const matchEnd = match.index + matchedText.length;
             
-            if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
-              continue;
-            }
+            if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry)) continue;
               
               let fullWordStart = matchStart;
               let fullWordEnd = matchEnd;
@@ -5786,10 +7757,13 @@ module.exports = class AlwaysColorText extends Plugin {
               
               if (isBlacklisted(fullWord)) continue;
               
-              // For text+bg entries in the initial regex pass, always use the matched portion only.
-              // Partial match expansion is handled separately in the dedicated partial match section below.
-              const colorStart = matchStart;
-              const colorEnd = matchEnd;
+              const mtLower = String(entry && entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+              let colorStart = matchStart;
+              let colorEnd = matchEnd;
+              if (!this.isSentenceLikePattern(entry.pattern) && (mtLower === 'contains' || mtLower === 'startswith' || mtLower === 'endswith')) {
+                colorStart = fullWordStart;
+                colorEnd = fullWordEnd;
+              }
               
               matches.push({
                 start: colorStart,
@@ -5797,7 +7771,8 @@ module.exports = class AlwaysColorText extends Plugin {
                 textColor: entry.textColor,
                 backgroundColor: entry.backgroundColor,
                 isTextBg: true,
-                entryLabel: entry.presetLabel || entry.pattern.substring(0, 20)
+                entryLabel: entry.presetLabel || entry.pattern.substring(0, 20),
+                entryRef: entry
               });
               try { debugLog('TEXTBG_MATCH_ADDED', `entry="${entry.presetLabel || entry.pattern.substring(0, 20)}", text="${text.substring(colorStart, colorEnd)}", position=${colorStart}-${colorEnd}`); } catch (_) {}
               
@@ -5827,9 +7802,7 @@ module.exports = class AlwaysColorText extends Plugin {
             const matchStart = match.index;
             const matchEnd = match.index + matchedText.length;
             
-            if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
-              continue;
-            }
+            if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry)) continue;
             
             let fullWordStart = matchStart;
             let fullWordEnd = matchEnd;
@@ -5845,10 +7818,13 @@ module.exports = class AlwaysColorText extends Plugin {
             
             if (isBlacklisted(fullWord)) continue;
             
-            // For text+bg entries in the initial regex pass, always use the matched portion only.
-            // Partial match expansion is handled separately in the dedicated partial match section below.
-            const colorStart = matchStart;
-            const colorEnd = matchEnd;
+            const mtLower = String(entry && entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+            let colorStart = matchStart;
+            let colorEnd = matchEnd;
+            if (!this.isSentenceLikePattern(entry.pattern) && (mtLower === 'contains' || mtLower === 'startswith' || mtLower === 'endswith')) {
+              colorStart = fullWordStart;
+              colorEnd = fullWordEnd;
+            }
             
             matches.push({
               start: colorStart,
@@ -5856,7 +7832,8 @@ module.exports = class AlwaysColorText extends Plugin {
               textColor: entry.textColor,
               backgroundColor: entry.backgroundColor,
               isTextBg: true,
-              entryLabel: entry.presetLabel || entry.pattern.substring(0, 20)
+              entryLabel: entry.presetLabel || entry.pattern.substring(0, 20),
+              entryRef: entry
             });
             try { debugLog('TEXTBG_MATCH_ADDED', `entry="${entry.presetLabel || entry.pattern.substring(0, 20)}", text="${text.substring(colorStart, colorEnd)}", position=${colorStart}-${colorEnd}`); } catch (_) {}
             
@@ -5871,17 +7848,19 @@ module.exports = class AlwaysColorText extends Plugin {
       {
         // Filter out text+bg entries from simple pattern matching (they're already handled above)
         // This prevents creating duplicate spans for entries with styleType: "both"
-        // ALSO: When partialMatch is enabled, exclude text-only entries since they'll be handled by the dedicated partial match section
+        // ALSO: Exclude text-only partial match entries (contains, startsWith, endsWith) since they're handled by the dedicated partial match section below
         let textOnlyEntries = entries.filter(e => !e || !e.isTextBg);
-        if (this.settings.partialMatch) {
-          // Exclude text-color-only entries (styleType 'text') from main pattern matching when partial match is enabled
-          // They will be handled exclusively by the dedicated partial match section
-          // Keep only entries where styleType is NOT 'text' (i.e., keep 'highlight' and 'both' which were already processed or will be)
-          textOnlyEntries = textOnlyEntries.filter(e => !e || e.styleType !== 'text');
-        }
+        // Exclude entries with partial match types based on actual matchType (with defaults)
+        textOnlyEntries = textOnlyEntries.filter(e => {
+          if (!e || e.isTextBg || !(!e.styleType || e.styleType === 'text')) return true; // Keep non-matching entries
+          const actualMatchType = String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+          return !['contains','startswith', 'endswith'].includes(actualMatchType); // EXCLUDE partial matches
+        });
         try { const tbCount = entries.filter(e => e && e.isTextBg).length; const toCount = textOnlyEntries.length; debugLog('PATTERN_MATCH_FILTER', `Total entries=${entries.length}, TextBg=${tbCount}, TextOnly=${toCount}, partialMatch=${this.settings.partialMatch}`); } catch (_) {}
         const candidates = textOnlyEntries;
+        try { debugLog('REGEX_MATCH_INPUT', `text="${text.substring(0, 100)}${text.length > 100 ? '...' : ''}", length=${text.length}, candidatesCount=${candidates.length}`); } catch (_) {}
         const pm = this._patternMatcher ? this._patternMatcher.match(text, candidates, folderEntry) : [];
+        try { debugLog('REGEX_MATCH_RESULT', `found=${pm.length} matches from PatternMatcher`); } catch (_) {}
         for (const m of pm) {
           const overlappingTextBgIndices = [];
           for (let i = 0; i < matches.length; i++) {
@@ -5914,10 +7893,13 @@ module.exports = class AlwaysColorText extends Plugin {
         debugLog('OVERLAP', `Before resolution: ${matches.length} matches found`);
         
         matches.sort((a, b) => {
-          if (a.start !== b.start) return a.start - b.start;
+          // Prioritize by length first (longer matches win)
           const lenA = (a.end - a.start);
           const lenB = (b.end - b.start);
           if (lenA !== lenB) return lenB - lenA;
+          // Then by start position (earlier wins)
+          if (a.start !== b.start) return a.start - b.start;
+          // Then by style (text+bg before text-only)
           const aHasText = a.isTextBg ? !!(a.textColor && a.textColor !== 'currentColor') : !!a.color;
           const bHasText = b.isTextBg ? !!(b.textColor && b.textColor !== 'currentColor') : !!b.color;
           if (aHasText && !bHasText) return -1;
@@ -5948,8 +7930,8 @@ module.exports = class AlwaysColorText extends Plugin {
       }
 
       // --- Partial Match coloring for text+bg entries ---
-      if (this.settings.partialMatch && textBgEntries.length > 0) {
-        const wordRegex = /\S+/g;
+      if (textBgEntries.some(e => ['contains','startswith','endswith'].includes(String(e.matchType || '').toLowerCase()))) {
+        const wordRegex = /[A-Za-z0-9'\-]+/g;
         let match;
         while ((match = wordRegex.exec(text))) {
           const w = match[0];
@@ -5958,13 +7940,20 @@ module.exports = class AlwaysColorText extends Plugin {
           if (isBlacklisted(w)) continue;
           
           // Check text & background entries for partial matches
-          for (const entry of textBgEntries) {
+          for (const entry of textBgEntries.filter(e => ['contains','startswith','endswith'].includes(String(e.matchType || '').toLowerCase()))) {
             if (!entry || entry.invalid) continue;
             if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
             if (isBlacklisted(entry.pattern)) continue;
             
-            const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
-            if (testRe.test(w)) {
+            const mt = String(entry.matchType || '').toLowerCase();
+            const cs = this.settings.caseSensitive;
+            const word = cs ? w : w.toLowerCase();
+            const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
+            const ok = mt === 'contains' ? (word.includes(pat))
+                      : mt === 'startswith' ? (word.startsWith(pat))
+                      : mt === 'endswith' ? (word.endsWith(pat))
+                      : false;
+            if (ok) {
               // Check if this partial match overlaps with any existing match
               let overlapsWithExisting = false;
               for (const existingMatch of matches) {
@@ -5982,7 +7971,8 @@ module.exports = class AlwaysColorText extends Plugin {
                   textColor: entry.textColor,
                   backgroundColor: entry.backgroundColor,
                   isTextBg: true,
-                  styleType: 'both'
+                  styleType: 'both',
+                  entryRef: entry
                 });
               } else {
                 // Remove smaller overlapping matches and add the full word instead
@@ -5993,7 +7983,8 @@ module.exports = class AlwaysColorText extends Plugin {
                   textColor: entry.textColor,
                   backgroundColor: entry.backgroundColor,
                   isTextBg: true,
-                  styleType: 'both'
+                  styleType: 'both',
+                  entryRef: entry
                 });
               }
               break;
@@ -6007,10 +7998,10 @@ module.exports = class AlwaysColorText extends Plugin {
 
       // --- Partial Match coloring --- (respect already-resolved matches)
       // Only process text-only entries (styleType === 'text') in this section
-      if (this.settings.partialMatch) {
-        const textOnlyEntries = entries.filter(e => e && !e.invalid && (!e.styleType || e.styleType === 'text') && !e.isTextBg);
+      {
+        const textOnlyEntries = entries.filter(e => e && !e.invalid && ((!e.styleType || e.styleType === 'text')) && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || '').toLowerCase()));
         if (textOnlyEntries.length > 0) {
-          const wordRegex = /\S+/g;
+          const wordRegex = /[A-Za-z0-9'\-]+/g;
           let match;
           while ((match = wordRegex.exec(text))) {
             const w = match[0];
@@ -6021,22 +8012,20 @@ module.exports = class AlwaysColorText extends Plugin {
               if (!entry || entry.invalid) continue;
               if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
               if (isBlacklisted(entry.pattern)) continue;
-              const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
-              if (testRe.test(w)) {
-                // For text-only coloring, expand to full word boundaries
-                let matchStart = start;
-                let matchEnd = end;
-                
-                if (!this.isSentenceLikePattern(entry.pattern)) {
-                  // Expand backward to find the start of the full word
-                  while (matchStart > 0 && ((/[A-Za-z0-9]/.test(text[matchStart - 1])) || text[matchStart - 1] === '-' || text[matchStart - 1] === "'")) {
-                    matchStart--;
-                  }
-                  // Expand forward to find the end of the full word
-                  while (matchEnd < text.length && ((/[A-Za-z0-9]/.test(text[matchEnd])) || text[matchEnd] === '-' || text[matchEnd] === "'")) {
-                    matchEnd++;
-                  }
-                }
+              // Use same default logic as PatternMatcher to determine actual matchType
+              const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+              const cs = this.settings.caseSensitive;
+              const word = cs ? w : w.toLowerCase();
+              const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
+              const ok = mt === 'contains' ? (word.includes(pat))
+                        : mt === 'startswith' ? (word.startsWith(pat))
+                        : mt === 'endswith' ? (word.endsWith(pat))
+                        : false;
+              if (ok) {
+                // wordRegex already found the complete word, so start/end are word boundaries
+                // No need to expand further
+                const matchStart = start;
+                const matchEnd = end;
                 
                 // Check if this partial match overlaps with any existing match
                 let overlapsWithExisting = false;
@@ -6048,12 +8037,12 @@ module.exports = class AlwaysColorText extends Plugin {
                 }
                 // Add partial match if no overlap with existing, or replace if replacing smaller overlaps
                 if (!overlapsWithExisting) {
-                  const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+                  const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
                   matches.push({ start: matchStart, end: matchEnd, color: useColor, styleType: 'text', word: w, entry: entry, folderEntry: folderEntry });
                 } else {
                   // Remove smaller overlapping matches and add the full word instead
                   matches = matches.filter(m => !(m.start >= matchStart && m.end <= matchEnd && (m.end - m.start) < (matchEnd - matchStart)));
-                  const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+                  const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
                   matches.push({ start: matchStart, end: matchEnd, color: useColor, styleType: 'text', word: w, entry: entry, folderEntry: folderEntry });
                 }
                 break;
@@ -6063,6 +8052,52 @@ module.exports = class AlwaysColorText extends Plugin {
             try { if (typeof wordRegex.lastIndex === 'number' && wordRegex.lastIndex === match.index) wordRegex.lastIndex++; } catch (e) {}
           }
         }
+      }
+
+      // --- Add literal pattern matches to the main matches array ---
+      // Collect literal matches per-node (not at block level) to ensure proper positioning
+      try {
+        const literalEntries = this._literalEntriesToProcess || [];
+        const textSearch = this.settings.caseSensitive ? text : text.toLowerCase();
+        for (const entry of literalEntries) {
+          const rawPatt = String(entry.pattern || '');
+          const patt = this.decodeHtmlEntities(rawPatt);
+          if (!patt) continue;
+          const pattSearch = this.settings.caseSensitive ? patt : patt.toLowerCase();
+          let pos = 0;
+          while ((pos = textSearch.indexOf(pattSearch, pos)) !== -1) {
+            const start = pos;
+            const end = pos + pattSearch.length;
+            pos += pattSearch.length;
+            if (!this.matchSatisfiesType(text, start, end, entry)) continue;
+            const mtLower = String(entry && entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+            let expandedStart = start;
+            let expandedEnd = end;
+            if (!this.isSentenceLikePattern(entry.pattern) && (mtLower === 'contains' || mtLower === 'startswith' || mtLower === 'endswith')) {
+              while (expandedStart > 0 && ((/[A-Za-z0-9]/.test(text[expandedStart - 1])) || text[expandedStart - 1] === '-' || text[expandedStart - 1] === "'")) {
+                expandedStart--;
+              }
+              while (expandedEnd < text.length && ((/[A-Za-z0-9]/.test(text[expandedEnd])) || text[expandedEnd] === '-' || text[expandedEnd] === "'")) {
+                expandedEnd++;
+              }
+            }
+            const fullWord = this.isSentenceLikePattern(entry.pattern) ? text.substring(start, end) : text.substring(expandedStart, expandedEnd);
+            if (isBlacklisted(fullWord)) continue;
+            
+            const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
+            matches.push({
+              start: expandedStart,
+              end: expandedEnd,
+              color: useColor,
+              styleType: entry.styleType || 'text',
+              word: entry.pattern,
+              entry: entry,
+              folderEntry: folderEntry
+            });
+          }
+        }
+      } catch (e) {
+        debugLog('LITERAL_MATCH_ADDITION', `Error adding literal matches: ${e.message}`);
       }
 
       // --- Symbol-Word Coloring ---
@@ -6075,10 +8110,36 @@ module.exports = class AlwaysColorText extends Plugin {
           for (const match of _matches) {
             // Check if entry is text+bg (has both colors) or regular (single color)
             if (entry.isTextBg && entry.backgroundColor) {
-              matches.push({ start: match.index, end: match.index + match[0].length, textColor: entry.textColor, backgroundColor: entry.backgroundColor, isTextBg: true, styleType: 'both', word: match[0] });
+              matches.push({ 
+                start: match.index, 
+                end: match.index + match[0].length, 
+                textColor: entry.textColor, 
+                backgroundColor: entry.backgroundColor, 
+                isTextBg: true, 
+                styleType: 'both', 
+                word: match[0], 
+                entryRef: entry,
+                // Copy custom styling properties
+                backgroundOpacity: entry.backgroundOpacity,
+                highlightBorderRadius: entry.highlightBorderRadius,
+                highlightHorizontalPadding: entry.highlightHorizontalPadding,
+                highlightVerticalPadding: entry.highlightVerticalPadding,
+                enableBorderThickness: entry.enableBorderThickness,
+                borderStyle: entry.borderStyle,
+                borderLineStyle: entry.borderLineStyle,
+                borderOpacity: entry.borderOpacity,
+                borderThickness: entry.borderThickness
+              });
             } else {
-              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
-              matches.push({ start: match.index, end: match.index + match[0].length, color: useColor, word: match[0], highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 });
+              const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
+              matches.push({ 
+                start: match.index, 
+                end: match.index + match[0].length, 
+                color: useColor, 
+                word: match[0], 
+                highlightHorizontalPadding: this.settings.highlightHorizontalPadding ?? 4, 
+                highlightBorderRadius: this.settings.highlightBorderRadius ?? 8 
+              });
             }
           }
         }
@@ -6099,9 +8160,28 @@ module.exports = class AlwaysColorText extends Plugin {
               if (testRe.test(w)) {
                 // Check if entry is text+bg (has both colors) or regular (single color)
                 if (symEntry.isTextBg && symEntry.backgroundColor) {
-                  matches.push({ start, end, textColor: symEntry.textColor, backgroundColor: symEntry.backgroundColor, isTextBg: true, styleType: 'both', word: w });
+                  matches.push({ 
+                    start, 
+                    end, 
+                    textColor: symEntry.textColor, 
+                    backgroundColor: symEntry.backgroundColor, 
+                    isTextBg: true, 
+                    styleType: 'both', 
+                    word: w, 
+                    entryRef: symEntry,
+                    // Copy custom styling properties
+                    backgroundOpacity: symEntry.backgroundOpacity,
+                    highlightBorderRadius: symEntry.highlightBorderRadius,
+                    highlightHorizontalPadding: symEntry.highlightHorizontalPadding,
+                    highlightVerticalPadding: symEntry.highlightVerticalPadding,
+                    enableBorderThickness: symEntry.enableBorderThickness,
+                    borderStyle: symEntry.borderStyle,
+                    borderLineStyle: symEntry.borderLineStyle,
+                    borderOpacity: symEntry.borderOpacity,
+                    borderThickness: symEntry.borderThickness
+                  });
                 } else {
-                  const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : symEntry.color;
+                  const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((symEntry.textColor && symEntry.textColor !== 'currentColor') ? symEntry.textColor : symEntry.color);
                   matches.push({ start, end, color: useColor, word: w });
                 }
                 break;
@@ -6117,10 +8197,13 @@ module.exports = class AlwaysColorText extends Plugin {
       // (main loop overlaps are already resolved above)
       if (matches.length > 1) {
         matches.sort((a, b) => {
-          if (a.start !== b.start) return a.start - b.start;
+          // Prioritize by length first (longer matches win)
           const lenA = (a.end - a.start);
           const lenB = (b.end - b.start);
           if (lenA !== lenB) return lenB - lenA;
+          // Then by start position (earlier wins)
+          if (a.start !== b.start) return a.start - b.start;
+          // Then by style (text+bg before text-only)
           const aHasText = a.isTextBg ? !!(a.textColor && a.textColor !== 'currentColor') : !!a.color;
           const bHasText = b.isTextBg ? !!(b.textColor && b.textColor !== 'currentColor') : !!b.color;
           if (aHasText && !bHasText) return -1;
@@ -6224,33 +8307,38 @@ module.exports = class AlwaysColorText extends Plugin {
                 const bgColor = m.backgroundColor || m.color || (m.textColor && m.textColor !== 'currentColor' ? m.textColor : null) || (folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : null);
                 span.style.background = '';
                 try { span.style.setProperty('display', 'inline-block', 'important'); } catch (_) { span.style.display = 'inline-block'; }
-                try { span.style.setProperty('background-color', this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25); }
-                try { 
-                  const vpad = (this.settings.highlightVerticalPadding ?? 0);
-                  span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
-                  span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
-                  span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
-                  span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
-                  if (vpad < 0) {
-                    span.style.setProperty('margin-top', vpad + 'px', 'important');
-                    span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+                {
+                  const entryRef = m.entryRef || m.entry || null;
+                  const params = this.getHighlightParams(entryRef);
+                  try { span.style.setProperty('background-color', this.hexToRgba(bgColor, params.opacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, params.opacity ?? 25); }
+                  try { 
+                    const vpad = params.vPad;
+                    span.style.setProperty('padding-left', (params.hPad) + 'px', 'important'); 
+                    span.style.setProperty('padding-right', (params.hPad) + 'px', 'important'); 
+                    span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+                    span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+                    if (vpad < 0) {
+                      span.style.setProperty('margin-top', vpad + 'px', 'important');
+                      span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+                    }
+                  } catch (_) { 
+                    const vpad = params.vPad;
+                    span.style.paddingLeft = span.style.paddingRight = (params.hPad) + 'px'; 
+                    span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+                    if (vpad < 0) {
+                      span.style.marginTop = vpad + 'px';
+                      span.style.marginBottom = vpad + 'px';
+                    }
                   }
-                } catch (_) { 
-                  const vpad = (this.settings.highlightVerticalPadding ?? 0);
-                  span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
-                  span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
-                  if (vpad < 0) {
-                    span.style.marginTop = vpad + 'px';
-                    span.style.marginBottom = vpad + 'px';
-                  }
+                  const br = ((params.hPad > 0 && params.radius === 0 ? 0 : params.radius)) + 'px';
+                  try { span.style.setProperty('border-radius', br, 'important'); } catch (_) { span.style.borderRadius = br; }
+                  const borderCss = this.generateBorderStyle(null, bgColor, entryRef);
+                  if (borderCss) { span.style.cssText += borderCss; }
                 }
-                const br = ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? '0px' : ((this.settings.highlightBorderRadius ?? 8) + 'px');
-                try { span.style.setProperty('border-radius', br, 'important'); } catch (_) { span.style.borderRadius = br; }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   span.style.boxDecorationBreak = 'clone';
                   span.style.WebkitBoxDecorationBreak = 'clone';
                 }
-                this.applyBorderStyleToElement(span, null, bgColor);
                 try { debugLog('READING_HIGHLIGHT', `applied bg=${bgColor || 'none'}`); } catch (_) {}
               }
             } else if (styleType === 'both') {
@@ -6264,28 +8352,34 @@ module.exports = class AlwaysColorText extends Plugin {
               }
               if (!hideBg) {
                 span.style.background = '';
-                try { span.style.setProperty('background-color', this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25); }
-                try { 
-                  const vpad = (this.settings.highlightVerticalPadding ?? 0);
-                  span.style.setProperty('padding-left', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
-                  span.style.setProperty('padding-right', (this.settings.highlightHorizontalPadding ?? 4) + 'px', 'important'); 
-                  span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
-                  span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
-                  if (vpad < 0) {
-                    span.style.setProperty('margin-top', vpad + 'px', 'important');
-                    span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+                {
+                  const entryRef = m.entryRef || m.entry || null;
+                  const params = this.getHighlightParams(entryRef);
+                  try { span.style.setProperty('background-color', this.hexToRgba(bgColor, params.opacity ?? 25), 'important'); } catch (_) { span.style.backgroundColor = this.hexToRgba(bgColor, params.opacity ?? 25); }
+                  try { 
+                    const vpad = params.vPad;
+                    span.style.setProperty('padding-left', (params.hPad) + 'px', 'important'); 
+                    span.style.setProperty('padding-right', (params.hPad) + 'px', 'important'); 
+                    span.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+                    span.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important'); 
+                    if (vpad < 0) {
+                      span.style.setProperty('margin-top', vpad + 'px', 'important');
+                      span.style.setProperty('margin-bottom', vpad + 'px', 'important');
+                    }
+                  } catch (_) { 
+                    const vpad = params.vPad;
+                    span.style.paddingLeft = span.style.paddingRight = (params.hPad) + 'px'; 
+                    span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
+                    if (vpad < 0) {
+                      span.style.marginTop = vpad + 'px';
+                      span.style.marginBottom = vpad + 'px';
+                    }
                   }
-                } catch (_) { 
-                  const vpad = (this.settings.highlightVerticalPadding ?? 0);
-                  span.style.paddingLeft = span.style.paddingRight = (this.settings.highlightHorizontalPadding ?? 4) + 'px'; 
-                  span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + 'px';
-                  if (vpad < 0) {
-                    span.style.marginTop = vpad + 'px';
-                    span.style.marginBottom = vpad + 'px';
-                  }
+                  const br2 = ((params.hPad > 0 && params.radius === 0 ? 0 : params.radius)) + 'px';
+                  try { span.style.setProperty('border-radius', br2, 'important'); } catch (_) { span.style.borderRadius = br2; }
+                  const borderCss = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, entryRef);
+                  if (borderCss) { span.style.cssText += borderCss; }
                 }
-                const br2 = ((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? '0px' : ((this.settings.highlightBorderRadius ?? 8) + 'px');
-                try { span.style.setProperty('border-radius', br2, 'important'); } catch (_) { span.style.borderRadius = br2; }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   span.style.boxDecorationBreak = 'clone';
                   span.style.WebkitBoxDecorationBreak = 'clone';
@@ -6297,7 +8391,10 @@ module.exports = class AlwaysColorText extends Plugin {
                 frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
                 shouldAppendSpan = false;
               }
-              this.applyBorderStyleToElement(span, hideText ? null : textColor, hideBg ? null : bgColor);
+              {
+                const entryRef = m.entryRef || m.entry || null;
+                this.applyBorderStyleToElement(span, hideText ? null : textColor, hideBg ? null : bgColor, entryRef);
+              }
             }
             if (shouldAppendSpan) {
               frag.appendChild(span);
@@ -6771,9 +8868,24 @@ module.exports = class AlwaysColorText extends Plugin {
     if (effectiveStyle === 'none') return builder.finish();
     
     for (const m of matches) {
-      const style = effectiveStyle === 'text'
-        ? `color: ${m.color} !important; --highlight-color: ${m.color};`
-        : (() => { const vPad = (this.settings.highlightVerticalPadding ?? 0); const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background: none !important; background-color: ${this.hexToRgba(m.color, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`; })();
+      let style;
+      if (effectiveStyle === 'text') {
+        style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
+      } else {
+        // Use per-entry properties if available, otherwise fall back to global settings
+        const hPad = (typeof m.highlightHorizontalPadding === 'number') ? m.highlightHorizontalPadding : (this.settings.highlightHorizontalPadding ?? 4);
+        const vPad = (typeof m.highlightVerticalPadding === 'number') ? m.highlightVerticalPadding : (this.settings.highlightVerticalPadding ?? 0);
+        const radius = (typeof m.highlightBorderRadius === 'number') ? m.highlightBorderRadius : (this.settings.highlightBorderRadius ?? 8);
+        const opacity = (typeof m.backgroundOpacity === 'number') ? m.backgroundOpacity : (this.settings.backgroundOpacity ?? 25);
+        
+        const vPadCss = vPad >= 0 
+          ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` 
+          : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
+        const br = ((hPad > 0 && radius === 0) ? 0 : radius);
+        const boxDecoBreak = (this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : '';
+        
+        style = `background: none !important; background-color: ${this.hexToRgba(m.color, opacity)} !important; border-radius: ${br}px !important; padding-left: ${hPad}px !important; padding-right: ${hPad}px !important; ${vPadCss}${boxDecoBreak}`;
+      }
       
       const deco = Decoration.mark({
         attributes: { style }
@@ -7104,7 +9216,8 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       
       // Check for codeblock blacklist/whitelist entries
-      const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      // Use the filtered entries parameter, not unfiltered wordEntries
+      const we = entries;
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
       const codeblockEntry = we.find(e => e && e.presetLabel === 'Codeblocks');
       const hasCodeblockBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Codeblocks' && !!e.isRegex);
@@ -7154,7 +9267,8 @@ module.exports = class AlwaysColorText extends Plugin {
         posScan = nextNLScan + 1;
       }
       if (!hasHeadingBlacklist) {
-        const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+        // Use the filtered entries parameter, not unfiltered wordEntries
+        const we = entries;
         const headingEntry = we.find(e => e && e.presetLabel === label);
         if (headingEntry) {
           let pos = 0;
@@ -7190,7 +9304,8 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // PROCESS MARKDOWN FORMATTING: Bullet Points, Numbered Lists, Tasks
     try {
-      const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      // Use the filtered entries (already filtered by filterEntriesByAdvancedRules), not unfiltered wordEntries
+      const we = entries;
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
       
       const taskCheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Checked)');
@@ -7333,7 +9448,14 @@ module.exports = class AlwaysColorText extends Plugin {
     const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from);
 
     // FIRST: Process text+bg entries (they have priority and override other styling)
-    const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+    // Filter text+bg entries by file rules just like regular entries
+    let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+    if (filePath) {
+      textBgEntries = textBgEntries.filter(entry => {
+        if (!entry || !entry.pattern) return true;
+        return this.shouldColorText(filePath, entry.pattern);
+      });
+    }
     for (const entry of textBgEntries) {
       if (!entry || entry.invalid) continue;
       try {
@@ -7349,9 +9471,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const matchStart = match.index;
         const matchEnd = match.index + matchedText.length;
         
-        if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
-          continue;
-        }
+        if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry)) continue;
         
         if (this.isContextBlacklisted(text, matchStart, matchEnd)) continue;
 
@@ -7367,12 +9487,13 @@ module.exports = class AlwaysColorText extends Plugin {
           if (inHeading) continue;
         }
         
-        // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
+        // For 'contains' matchType, color the ENTIRE full word, not just the matched part
         const fullWordStart = this.extractFullWord(text, matchStart, matchEnd);
         let colorStart = matchStart;
         let colorEnd = matchEnd;
         
-        if (this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern)) {
+        { const mt = String(entry.matchType || '').toLowerCase();
+        if ((mt === 'contains' || mt === 'startswith' || mt === 'endswith') && !this.isSentenceLikePattern(entry.pattern)) {
           // Find actual word boundaries
           colorStart = matchStart;
           colorEnd = matchEnd;
@@ -7382,7 +9503,29 @@ module.exports = class AlwaysColorText extends Plugin {
           while (colorEnd < text.length && ((/[A-Za-z0-9]/.test(text[colorEnd])) || text[colorEnd] === '-' || text[colorEnd] === "'")) {
             colorEnd++;
           }
-        }
+          
+          // Validate that the expanded full word satisfies the match type strictly
+          const fullWord = text.substring(colorStart, colorEnd);
+          const cs = this.settings.caseSensitive;
+          const patRaw = String(entry.pattern || '');
+          const pat = cs ? patRaw : patRaw.toLowerCase();
+          const word = cs ? fullWord : fullWord.toLowerCase();
+          let satisfies = false;
+          
+          if (mt === 'contains') {
+            satisfies = word.includes(pat);
+          } else if (mt === 'startswith') {
+            satisfies = word.startsWith(pat);
+          } else if (mt === 'endswith') {
+            satisfies = word.endsWith(pat);
+          }
+          
+          // If expanded word doesn't satisfy the match type, use original match range
+          if (!satisfies) {
+            colorStart = matchStart;
+            colorEnd = matchEnd;
+          }
+        } }
         
         matches.push({
           start: from + colorStart,
@@ -7399,8 +9542,24 @@ module.exports = class AlwaysColorText extends Plugin {
     }
 
     // SECOND: Process regular entries, but skip areas covered by text+bg entries
+    // NOTE: Text-only entries with no explicit matchType (using default 'contains' from partialMatch setting) are processed separately in the "Partial Match coloring" section below
     for (const entry of entries_copy) {
       if (!entry || entry.invalid) continue;
+      
+      // Skip text-only entries without explicit matchType that use the default 'contains' - they're handled in the partial match section
+      const isTextOnly = !entry.isTextBg && (!entry.styleType || entry.styleType === 'text');
+      // Only skip if NO explicit matchType is set (using setting default), partialMatch is enabled,
+      // AND the pattern is not sentence-like (i.e., does not include punctuation/whitespace).
+      const hasExplicitMatchType = entry.matchType && String(entry.matchType).toLowerCase() !== 'exact';
+      const shouldSkipToPartialSection = isTextOnly && !hasExplicitMatchType && this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern);
+      
+      if (shouldSkipToPartialSection) {
+        debugLog('MAIN_LOOP_SKIP_PARTIAL', `pattern="${entry.pattern}" matchType="${entry.matchType}" (undefined means using setting default) isTextOnly=${isTextOnly}`);
+        continue;
+      }
+      
+      const actualMatchType = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+      debugLog('MAIN_LOOP_PROCESS', `pattern="${entry.pattern}" isTextOnly=${isTextOnly} matchType="${entry.matchType}" actualMatchType="${actualMatchType}"`);
       try {
         if (entry.fastTest && typeof entry.fastTest === 'function') {
           const fastTestResult = entry.fastTest(text);
@@ -7480,17 +9639,86 @@ module.exports = class AlwaysColorText extends Plugin {
           if (inHeading) continue;
         }
         
-        if (!this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
+        { const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+        if (!this.isSentenceLikePattern(entry.pattern) && mt === 'exact' && !this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
           continue;
-        }
+        } }
         
         // Use helper to extract full word and check if blacklisted
         if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length)) continue;
         
+        const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+        let colorStart = match.index;
+        let colorEnd = match.index + matchedText.length;
+        
+        // For partial match types on non-sentence patterns, ALWAYS expand to full word first
+        if ((mt === 'contains' || mt === 'startswith' || mt === 'endswith') && !this.isSentenceLikePattern(entry.pattern)) {
+          while (colorStart > 0 && ((/[A-Za-z0-9]/.test(text[colorStart - 1])) || text[colorStart - 1] === '-' || text[colorStart - 1] === "'")) colorStart--;
+          while (colorEnd < text.length && ((/[A-Za-z0-9]/.test(text[colorEnd])) || text[colorEnd] === '-' || text[colorEnd] === "'")) colorEnd++;
+        }
+        
+        // Validate that the expanded full word satisfies the partial match type
+        if ((mt === 'contains' || mt === 'startswith' || mt === 'endswith') && !this.isSentenceLikePattern(entry.pattern)) {
+          const fullWord = text.substring(colorStart, colorEnd);
+          const cs = this.settings.caseSensitive;
+          const patRaw = String(entry.pattern || '');
+          const pat = cs ? patRaw : patRaw.toLowerCase();
+          const word = cs ? fullWord : fullWord.toLowerCase();
+          let ok = false;
+          
+          if (mt === 'contains') {
+            ok = word.includes(pat);
+          } else if (mt === 'startswith') {
+            // For startswith, the full word must start with the pattern
+            ok = word.startsWith(pat);
+          } else if (mt === 'endswith') {
+            // For endswith, the full word must end with the pattern
+            ok = word.endsWith(pat);
+          }
+          
+          if (!ok) {
+            // Full word does not satisfy the rule, skip this match entirely
+            try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+            continue;
+          }
+        } else if (mt === 'contains' || mt === 'startswith' || mt === 'endswith') {
+          // For sentence-like patterns, do the old validation
+          const fullWord = text.substring(colorStart, colorEnd);
+          const cs = this.settings.caseSensitive;
+          const patRaw = String(entry.pattern || '');
+          const pat = cs ? patRaw : patRaw.toLowerCase();
+          const word = cs ? fullWord : fullWord.toLowerCase();
+          let ok = false;
+          if (mt === 'contains') {
+            ok = word.includes(pat);
+          } else if (mt === 'startswith') {
+            try {
+              const flags = cs ? '' : 'i';
+              const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(patRaw) : patRaw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const re = new RegExp(`^${esc}[A-Za-z]*$`, flags);
+              ok = re.test(fullWord);
+            } catch (_) {
+              ok = word.startsWith(pat);
+            }
+          } else if (mt === 'endswith') {
+            try {
+              const flags = cs ? '' : 'i';
+              const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(patRaw) : patRaw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const re = new RegExp(`^[A-Za-z]*${esc}$`, flags);
+              ok = re.test(fullWord);
+            } catch (_) {
+              ok = word.endsWith(pat);
+            }
+          }
+          if (!ok) {
+            try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
+            continue;
+          }
+        }
         matches.push({
-          start: from + match.index,
-          end: from + match.index + matchedText.length,
-          color: entry.color,
+          start: from + colorStart,
+          end: from + colorEnd,
+          color: (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color,
           styleType: entry.styleType,
           textColor: entry.textColor,
           backgroundColor: entry.backgroundColor
@@ -7508,12 +9736,31 @@ module.exports = class AlwaysColorText extends Plugin {
     }
 
     // --- Partial Match coloring (for editor, matching reading mode behavior) ---
-    if (this.settings.partialMatch && matches.length < 3000) {
-      const textOnlyEntries = entries_copy.filter(e => e && !e.invalid && (!e.styleType || e.styleType === 'text') && !e.isTextBg);
+    const checkPartialMatch = (e) => {
+      if (!e || e.invalid || !(!e.styleType || e.styleType === 'text') || e.isTextBg) return false;
+      // Only include entries without explicit matchType (using the setting default)
+      // Entries with explicit 'startswith' or 'endswith' should go through main loop
+      if (e.matchType && String(e.matchType).toLowerCase() !== 'contains' && String(e.matchType).toLowerCase() !== 'exact') {
+        return false;  // Skip entries with explicit startswith/endswith
+      }
+      // Do not include sentence-like patterns in partial match; handle them in main loop
+      try {
+        if (this.isSentenceLikePattern(e.pattern)) return false;
+      } catch (_) {}
+      const actualMatchType = String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+      return actualMatchType === 'contains';  // Only 'contains' goes here (whether explicit or default)
+    };
+    debugLog('PARTIAL_MATCH_SECTION_ENTRY', `entries_copy.length=${entries_copy.length}, some matches partial=${entries_copy.some(checkPartialMatch)}, matches.length=${matches.length}`);
+    if (entries_copy.some(checkPartialMatch) && matches.length < 3000) {
+      const textOnlyEntries = entries_copy.filter(checkPartialMatch);
+      debugLog('PARTIAL_MATCH_RUNNING', `textOnlyEntries.length=${textOnlyEntries.length}, text="${text.substring(0, 100)}", partialMatch setting=${this.settings.partialMatch}`);
+      textOnlyEntries.forEach((e, idx) => debugLog('PARTIAL_ENTRY_DETAIL', `[${idx}] pattern="${e.pattern}" matchType="${e.matchType}" styleType="${e.styleType}"`));
       if (textOnlyEntries.length > 0) {
-        const wordRegex = /\S+/g;
+        const wordRegex = /[A-Za-z0-9'\-]+/g;
         let match;
+        let wordMatchCount = 0;
         while ((match = wordRegex.exec(text))) {
+          wordMatchCount++;
           const w = match[0];
           const wStart = match.index;
           const wEnd = wStart + w.length;
@@ -7538,9 +9785,20 @@ module.exports = class AlwaysColorText extends Plugin {
             if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
             if (this.isWordBlacklisted(entry.pattern)) continue;
             
-            const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
-            if (testRe.test(w)) {
-              // For text-only coloring, expand to full word boundaries
+            // This section only handles 'contains' matchType
+            const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+            const cs = this.settings.caseSensitive;
+            const word = cs ? w : w.toLowerCase();
+            const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
+            
+            // Only 'contains' should reach here (startswith/endswith handled in main loop)
+            let ok = false;
+            if (mt === 'contains') {
+              ok = word.includes(pat);
+            }
+            
+            if (w === 'should' || w === 'colored') debugLog('PARTIAL_WORD_CHECK', `w="${w}" entry.pattern="${entry.pattern}" mt="${mt}" word="${word}" pat="${pat}" ok=${ok}`);
+            if (ok) {              // For text-only coloring, expand to full word boundaries
               let expandedWStart = wStart;
               let expandedWEnd = wEnd;
               
@@ -7555,6 +9813,8 @@ module.exports = class AlwaysColorText extends Plugin {
                 }
               }
               
+              debugLog('PARTIAL_EXPANSION', `pattern="${entry.pattern}" word="${w}" wStart=${wStart} wEnd=${wEnd} expanded=${expandedWStart}-${expandedWEnd} (${text.substring(expandedWStart, expandedWEnd)})`);
+              
               // Check if this partial match overlaps with any existing match (convert existing to text-relative for comparison)
               let overlapsWithExisting = false;
               for (const existingMatch of matches) {
@@ -7568,13 +9828,14 @@ module.exports = class AlwaysColorText extends Plugin {
               
               // Add partial match if no overlap with existing, or replace if replacing smaller overlaps
               if (!overlapsWithExisting) {
-                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
+                debugLog('PARTIAL_MATCH_ADDED', `pattern="${entry.pattern}" word="${w}" final_range=${from + expandedWStart}-${from + expandedWEnd}`);
                 matches.push({ start: from + expandedWStart, end: from + expandedWEnd, color: useColor, styleType: 'text' });
                 if (matches.length > 3000) break;
               } else {
                 // Remove smaller overlapping matches and add the full word instead
                 matches = matches.filter(m => !(m.start >= (from + expandedWStart) && m.end <= (from + expandedWEnd) && (m.end - m.start) < (expandedWEnd - expandedWStart)));
-                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
                 matches.push({ start: from + expandedWStart, end: from + expandedWEnd, color: useColor, styleType: 'text' });
                 if (matches.length > 3000) break;
               }
@@ -7706,13 +9967,14 @@ module.exports = class AlwaysColorText extends Plugin {
         const hideText = this.settings.hideTextColors === true;
         const hideBg = this.settings.hideHighlights === true;
         if (hideText && hideBg) continue;
-        const borderStyle = this.generateBorderStyle(hideText ? null : m.textColor, hideBg ? null : m.backgroundColor);
+        const params = this.getHighlightParams(m.entryRef);
+        const borderStyle = this.generateBorderStyle(hideText ? null : m.textColor, hideBg ? null : m.backgroundColor, m.entryRef);
         const textPart = hideText ? '' : `color: ${m.textColor} !important; --highlight-color: ${m.textColor}; `;
-        const vPad = (this.settings.highlightVerticalPadding ?? 0);
+        const vPad = params.vPad;
         const vPadCss = vPad >= 0 
           ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
           : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(m.backgroundColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(m.backgroundColor, params.opacity)} !important; border-radius: ${(params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         // Check the styleType to determine how to apply the color
@@ -7725,12 +9987,13 @@ module.exports = class AlwaysColorText extends Plugin {
           if (this.settings.hideHighlights) continue;
           // Background highlight only
           const bgColor = m.backgroundColor || m.color;
-          const borderStyle = this.generateBorderStyle(null, bgColor);
-          const vPadH = (this.settings.highlightVerticalPadding ?? 0);
+          const params = this.getHighlightParams(m.entryRef);
+          const borderStyle = this.generateBorderStyle(null, bgColor, m.entryRef);
+          const vPadH = params.vPad;
           const vPadCssH = vPadH >= 0 
             ? `padding-top: ${vPadH}px !important; padding-bottom: ${vPadH}px !important;`
             : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadH}px !important; margin-bottom: ${vPadH}px !important;`;
-          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCssH}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
+          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.hPad > 0 && params.radius === 0 ? 0 : params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCssH}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
         } else if (styleType === 'both') {
           // Both text and background color
           const textColor = (m.textColor && m.textColor !== 'currentColor') ? m.textColor : (m.color || null);
@@ -7738,13 +10001,14 @@ module.exports = class AlwaysColorText extends Plugin {
           const hideText = this.settings.hideTextColors === true;
           const hideBg = this.settings.hideHighlights === true;
           if (hideText && hideBg) continue;
-          const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor);
+          const params = this.getHighlightParams(m.entryRef);
+          const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef);
           const textPart = hideText ? '' : (textColor ? `color: ${textColor} !important; --highlight-color: ${textColor}; ` : '');
-          const vPadB = (this.settings.highlightVerticalPadding ?? 0);
+          const vPadB = params.vPad;
           const vPadCssB = vPadB >= 0 
             ? `padding-top: ${vPadB}px !important; padding-bottom: ${vPadB}px !important;`
             : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadB}px !important; margin-bottom: ${vPadB}px !important;`;
-          const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCssB}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+          const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCssB}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           // Default to text color
@@ -7778,7 +10042,8 @@ module.exports = class AlwaysColorText extends Plugin {
     
     // Handle codeblocks first (same as in buildDecoStandard)
     try {
-      const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      // Use the filtered entries (already filtered by filterEntriesByAdvancedRules), not the unfiltered wordEntries
+      const we = entries;
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
       const codeblockEntry = we.find(e => e && e.presetLabel === 'Codeblocks');
       const hasCodeblockBlacklist = !!blEntries.find(e => e && e.presetLabel === 'Codeblocks' && !!e.isRegex);
@@ -7798,10 +10063,10 @@ module.exports = class AlwaysColorText extends Plugin {
           if (codeblockEntry.backgroundColor) {
             const tc = codeblockEntry.textColor || 'currentColor';
             const bc = codeblockEntry.backgroundColor;
-            allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+            allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: codeblockEntry });
           } else {
             const c = codeblockEntry.color || codeblockEntry.textColor;
-            if (c) allMatches.push({ start, end, color: c });
+            if (c) allMatches.push({ start, end, color: c, entryRef: codeblockEntry });
           }
         }
       }
@@ -7848,10 +10113,10 @@ module.exports = class AlwaysColorText extends Plugin {
               if (headingEntry.backgroundColor) {
                 const tc = headingEntry.textColor || 'currentColor';
                 const bc = headingEntry.backgroundColor;
-                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: headingEntry });
               } else {
                 const c = headingEntry.color || headingEntry.textColor;
-                if (c) allMatches.push({ start, end, color: c });
+                if (c) allMatches.push({ start, end, color: c, entryRef: headingEntry });
               }
             }
             if (nextNL === -1) break;
@@ -7863,7 +10128,8 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // PROCESS MARKDOWN FORMATTING: Bullet Points, Numbered Lists, Tasks
     try {
-      const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      // Use the filtered entries (already filtered by filterEntriesByAdvancedRules), not unfiltered wordEntries
+      const we = entries;
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
       
       const taskCheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Checked)');
@@ -7909,10 +10175,10 @@ module.exports = class AlwaysColorText extends Plugin {
               if (taskCheckedEntry.backgroundColor) {
                 const tc = taskCheckedEntry.textColor || 'currentColor';
                 const bc = taskCheckedEntry.backgroundColor;
-                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: taskCheckedEntry });
               } else {
                 const c = taskCheckedEntry.color || taskCheckedEntry.textColor;
-                if (c) allMatches.push({ start, end, color: c });
+                if (c) allMatches.push({ start, end, color: c, entryRef: taskCheckedEntry });
               }
               matched = true;
             }
@@ -7935,10 +10201,10 @@ module.exports = class AlwaysColorText extends Plugin {
               if (taskUncheckedEntry.backgroundColor) {
                 const tc = taskUncheckedEntry.textColor || 'currentColor';
                 const bc = taskUncheckedEntry.backgroundColor;
-                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: taskUncheckedEntry });
               } else {
                 const c = taskUncheckedEntry.color || taskUncheckedEntry.textColor;
-                if (c) allMatches.push({ start, end, color: c });
+                if (c) allMatches.push({ start, end, color: c, entryRef: taskUncheckedEntry });
               }
               matched = true;
             }
@@ -7961,10 +10227,10 @@ module.exports = class AlwaysColorText extends Plugin {
               if (numberedEntry.backgroundColor) {
                 const tc = numberedEntry.textColor || 'currentColor';
                 const bc = numberedEntry.backgroundColor;
-                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: numberedEntry });
               } else {
                 const c = numberedEntry.color || numberedEntry.textColor;
-                if (c) allMatches.push({ start, end, color: c });
+                if (c) allMatches.push({ start, end, color: c, entryRef: numberedEntry });
               }
               matched = true;
             }
@@ -7987,10 +10253,10 @@ module.exports = class AlwaysColorText extends Plugin {
               if (bulletEntry.backgroundColor) {
                 const tc = bulletEntry.textColor || 'currentColor';
                 const bc = bulletEntry.backgroundColor;
-                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: bulletEntry });
               } else {
                 const c = bulletEntry.color || bulletEntry.textColor;
-                if (c) allMatches.push({ start, end, color: c });
+                if (c) allMatches.push({ start, end, color: c, entryRef: bulletEntry });
               }
               matched = true;
             }
@@ -8006,7 +10272,14 @@ module.exports = class AlwaysColorText extends Plugin {
     const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from);
 
     // FIRST: Process text+bg entries (they have priority)
-    const textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+    // Filter text+bg entries by file rules just like regular entries
+    let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+    if (filePath) {
+      textBgEntries = textBgEntries.filter(entry => {
+        if (!entry || !entry.pattern) return true;
+        return this.shouldColorText(filePath, entry.pattern);
+      });
+    }
     if (textBgEntries.length > 0) {
       for (const entry of textBgEntries) {
         if (!entry || entry.invalid) continue;
@@ -8023,7 +10296,7 @@ module.exports = class AlwaysColorText extends Plugin {
           const matchStart = match.index;
           const matchEnd = match.index + match[0].length;
           
-          if (!this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(text, matchStart, matchEnd)) {
+          if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry)) {
             try { if (typeof regex.lastIndex === 'number' && regex.lastIndex === match.index) regex.lastIndex++; } catch (e) {}
             continue;
           }
@@ -8045,11 +10318,12 @@ module.exports = class AlwaysColorText extends Plugin {
             if (inHeading) continue;
           }
           
-          // When partialMatch is enabled, color the ENTIRE full word, not just the matched part
+          // For 'contains' matchType, color the ENTIRE full word, not just the matched part
           let colorStart = matchStart;
           let colorEnd = matchEnd;
           
-          if (this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern)) {
+          { const mt = String(entry.matchType || '').toLowerCase();
+          if ((mt === 'contains' || mt === 'startswith' || mt === 'endswith') && !this.isSentenceLikePattern(entry.pattern)) {
             // Find actual word boundaries
             colorStart = matchStart;
             colorEnd = matchEnd;
@@ -8059,14 +10333,15 @@ module.exports = class AlwaysColorText extends Plugin {
             while (colorEnd < text.length && ((/[A-Za-z0-9]/.test(text[colorEnd])) || text[colorEnd] === '-' || text[colorEnd] === "'")) {
               colorEnd++;
             }
-          }
+          } }
           
           allMatches.push({
             start: from + colorStart,
             end: from + colorEnd,
             textColor: entry.textColor,
             backgroundColor: entry.backgroundColor,
-            isTextBg: true
+            isTextBg: true,
+            entryRef: entry
           });
           
           if (allMatches.length > MAX_MATCHES) break;
@@ -8079,21 +10354,19 @@ module.exports = class AlwaysColorText extends Plugin {
     // SECOND: Process regular patterns, avoiding text+bg matches
     // Strategy 1: If too many patterns, process patterns in chunks
     if (entries.length > CHUNK_SIZE) {
-      debugLog('EDITOR', `Processing ${entries.length} patterns in chunks (chunk size: ${CHUNK_SIZE})`);
+      debugLog('PATTERN_PROCESSING', `Starting pattern processing for ${entries.length} patterns`);
+      // Editor chunking logs removed - too verbose
       
       for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
         const chunk = entries.slice(i, i + CHUNK_SIZE);
         const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges);
         allMatches = allMatches.concat(chunkMatches);
         
-        // Log progress
-        const chunkNum = Math.floor(i / CHUNK_SIZE) + 1;
-        const totalChunks = Math.ceil(entries.length / CHUNK_SIZE);
-        debugLog('EDITOR', `Chunk ${chunkNum}/${totalChunks}: ${chunkMatches.length} matches`);
+        // Chunk processing logs removed - too verbose
         
         // Hard limit to prevent excessive decorations
         if (allMatches.length > MAX_MATCHES) {
-          debugLog('EDITOR', `Reached match limit (${allMatches.length}), stopping early`);
+          // Match limit reached - stopped early
           break;
         }
       }
@@ -8110,19 +10383,19 @@ module.exports = class AlwaysColorText extends Plugin {
         const chunkText = text.slice(pos, chunkEnd);
         const chunkFrom = from + pos;
         
-        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : []);
+        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges);
         allMatches = allMatches.concat(chunkMatches);
         
-        debugLog('EDITOR', `Text chunk ${chunkNum}/${totalChunks}: ${chunkMatches.length} matches`);
+        // Text chunk processing logs removed - too verbose
         
         if (allMatches.length > MAX_MATCHES) {
-          debugLog('EDITOR', `Reached match limit (${allMatches.length}), stopping early`);
+          // Match limit reached during text chunk processing
           break;
         }
       }
     }
 
-    debugLog('EDITOR', `Processing complete: ${allMatches.length} total matches`);
+    // Pattern processing completed
 
     // Apply decorations from collected matches
     return this.applyDecorationsFromMatches(builder, allMatches, folderEntry);
@@ -8135,6 +10408,11 @@ module.exports = class AlwaysColorText extends Plugin {
     
     for (const entry of patternChunk) {
       if (!entry || entry.invalid) continue;
+      
+      // SKIP partial match entries (contains/startswith/endswith) - they're handled by the partial match loop below
+      // This prevents them from being processed twice: once as regex matches and once as word matches
+      const isPartialEntry = !entry.isTextBg && (!entry.styleType || entry.styleType === 'text') && ['contains','startswith','endswith'].includes(String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern);
+      if (isPartialEntry) continue;
       
       // Fast pre-check
       if (entry.fastTest && !entry.fastTest(text)) continue;
@@ -8185,9 +10463,10 @@ module.exports = class AlwaysColorText extends Plugin {
         
         // ALWAYS check for whole-word matches (the main loop only accepts exact pattern matches at word boundaries)
         // The partialMatch flag is handled by a SEPARATE pass after this loop
-        if (!this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
+        { const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+        if (mt === 'exact' && !this.isWholeWordMatch(text, match.index, match.index + matchedText.length)) {
           continue;
-        }
+        } }
         
         // Context-aware blacklist check
         if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length)) continue;
@@ -8195,10 +10474,11 @@ module.exports = class AlwaysColorText extends Plugin {
         matches.push({
           start: matchStart,
           end: matchEnd,
-          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color,
+          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color),
           styleType: entry.styleType,
           textColor: entry.textColor,
-          backgroundColor: entry.backgroundColor
+          backgroundColor: entry.backgroundColor,
+          entryRef: entry
         });
         
         matchCount++;
@@ -8209,32 +10489,54 @@ module.exports = class AlwaysColorText extends Plugin {
     }
 
     // --- Partial Match coloring for pattern chunks ---
-    if (this.settings.partialMatch && matches.length < 200) {
-      const wordRegex = /\S+/g;
-      let match;
-      while ((match = wordRegex.exec(text))) {
-        const w = match[0];
-        const wStart = match.index;
-        const wEnd = wStart + w.length;
-        
-        if (this.isWordBlacklisted(w)) continue;
-        
-        // Skip if in blacklisted list item range
-        if (this.isMatchInBlacklistedRange(baseFrom + wStart, baseFrom + wEnd, blacklistedListRanges)) continue;
-        
-        for (const entry of patternChunk) {
-          if (!entry || entry.invalid) continue;
-          if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
-          if (this.isWordBlacklisted(entry.pattern)) continue;
+      const hasPartialEntries = patternChunk.some(e => e && !e.invalid && ((!e.styleType || e.styleType === 'text')) && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
+      if (hasPartialEntries && matches.length < 200) {
+        const wordRegex = /[A-Za-z0-9'\-]+/g;
+        let match;
+        while ((match = wordRegex.exec(text))) {
+          const w = match[0];
+          const wStart = match.index;
+          const wEnd = wStart + w.length;
           
-          const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
-          if (testRe.test(w)) {
-            // For text-only coloring (styleType === 'text'), expand to full word boundaries when partial match is enabled
-            let expandedWStart = wStart;
-            let expandedWEnd = wEnd;
+          // Skip if in blacklisted list item range
+          if (this.isMatchInBlacklistedRange(baseFrom + wStart, baseFrom + wEnd, blacklistedListRanges)) continue;
+          
+          for (const entry of patternChunk.filter(e => e && !e.invalid && ((!e.styleType || e.styleType === 'text')) && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(e.pattern))) {
+            if (!entry || entry.invalid) continue;
+            if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+            if (this.isWordBlacklisted(entry.pattern)) continue;
             
-            const entryStyleType = entry && entry.styleType ? entry.styleType : 'text';
-            if (entryStyleType === 'text' && !this.isSentenceLikePattern(entry.pattern)) {
+            const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+            const cs = this.settings.caseSensitive;
+            const word = cs ? w : w.toLowerCase();
+            const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
+            let ok = false;
+            if (mt === 'contains') {
+              ok = word.includes(pat);
+            } else if (mt === 'startswith') {
+              try {
+                const flags = cs ? '' : 'i';
+                const re = new RegExp(`^${this.escapeRegex(pat)}[A-Za-z]*$`, flags);
+                ok = re.test(word);
+              } catch (_) {
+                ok = word.startsWith(pat);
+              }
+            } else if (mt === 'endswith') {
+              try {
+                const flags = cs ? '' : 'i';
+                const re = new RegExp(`^[A-Za-z]*${this.escapeRegex(pat)}$`, flags);
+                ok = re.test(word);
+              } catch (_) {
+                ok = word.endsWith(pat);
+              }
+            }
+            if (ok) {
+              // For partial matches, always expand to full word boundaries when partial match is enabled
+              let expandedWStart = wStart;
+              let expandedWEnd = wEnd;
+            
+            // Expand to full word boundaries for all style types
+            if (!this.isSentenceLikePattern(entry.pattern)) {
               // Expand backward to find the start of the full word
               while (expandedWStart > 0 && ((/[A-Za-z0-9]/.test(text[expandedWStart - 1])) || text[expandedWStart - 1] === '-' || text[expandedWStart - 1] === "'")) {
                 expandedWStart--;
@@ -8264,7 +10566,7 @@ module.exports = class AlwaysColorText extends Plugin {
               matches.push({
                 start: baseFrom + expandedWStart,
                 end: baseFrom + expandedWEnd,
-                color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color,
+                color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color),
                 styleType: entry.styleType,
                 textColor: entry.textColor,
                 backgroundColor: entry.backgroundColor
@@ -8284,11 +10586,18 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Process a chunk of text
-  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = []) {
+  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = []) {
     const matches = [];
     
     for (const entry of entries) {
       if (!entry || entry.invalid) continue;
+      
+      // Skip text-only entries with partial match types - they're handled in the partial match section below
+      const isTextOnly = !entry.isTextBg && (!entry.styleType || entry.styleType === 'text');
+      // Use same default logic as PatternMatcher to determine actual matchType
+      const actualMatchType = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+      const isPartialMatch = ['contains', 'startswith', 'endswith'].includes(actualMatchType);
+      if (isTextOnly && isPartialMatch) continue;
       
       // Fast pre-check on chunk text
       if (entry.fastTest && !entry.fastTest(chunkText)) continue;
@@ -8306,6 +10615,10 @@ module.exports = class AlwaysColorText extends Plugin {
         const matchedText = match[0];
         const matchStart = chunkFrom + match.index;
         const matchEnd = chunkFrom + match.index + matchedText.length;
+        
+        if (this.isMatchInBlacklistedRange(matchStart, matchEnd, blacklistedListRanges)) {
+          continue;
+        }
         
         const overlappingTextBgIndices2 = [];
         for (let i = 0; i < existingMatches.length; i++) {
@@ -8332,9 +10645,10 @@ module.exports = class AlwaysColorText extends Plugin {
           if (inHeading) continue;
         }
         
-        if (!this.isSentenceLikePattern(entry.pattern) && !this.isWholeWordMatch(chunkText, match.index, match.index + matchedText.length)) {
+        { const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+        if (!this.isSentenceLikePattern(entry.pattern) && mt === 'exact' && !this.isWholeWordMatch(chunkText, match.index, match.index + matchedText.length)) {
           continue;
-        }
+        } }
         
         // Use helper to extract full word and check if blacklisted
         if (this.isContextBlacklisted(chunkText, match.index, match.index + matchedText.length)) continue;
@@ -8342,10 +10656,11 @@ module.exports = class AlwaysColorText extends Plugin {
         matches.push({
           start: matchStart,
           end: matchEnd,
-          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color,
+          color: (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color),
           styleType: entry.styleType,
           textColor: entry.textColor,
-          backgroundColor: entry.backgroundColor
+          backgroundColor: entry.backgroundColor,
+          entryRef: entry
         });
         
         matchCount++;
@@ -8356,10 +10671,10 @@ module.exports = class AlwaysColorText extends Plugin {
     }
 
     // --- Partial Match coloring for chunked processing ---
-    if (this.settings.partialMatch && matches.length < 100) {
-      const textOnlyEntries = entries.filter(e => e && !e.invalid && (!e.styleType || e.styleType === 'text') && !e.isTextBg);
+    if (matches.length < 100) {
+      const textOnlyEntries = entries.filter(e => e && !e.invalid && (!e.styleType || e.styleType === 'text') && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
       if (textOnlyEntries.length > 0) {
-        const wordRegex = /\S+/g;
+        const wordRegex = /[A-Za-z0-9'\-]+/g;
         let match;
         while ((match = wordRegex.exec(chunkText))) {
           const w = match[0];
@@ -8367,14 +10682,38 @@ module.exports = class AlwaysColorText extends Plugin {
           const wEnd = wStart + w.length;
           
           if (this.isWordBlacklisted(w)) continue;
+          if (this.isMatchInBlacklistedRange(chunkFrom + wStart, chunkFrom + wEnd, blacklistedListRanges)) continue;
           
           for (const entry of textOnlyEntries) {
             if (!entry || entry.invalid) continue;
             if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
             if (this.isWordBlacklisted(entry.pattern)) continue;
             
-            const testRe = entry.testRegex || (this.settings.caseSensitive ? new RegExp(this.escapeRegex(entry.pattern)) : new RegExp(this.escapeRegex(entry.pattern), 'i'));
-            if (testRe.test(w)) {
+            const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+            const cs = this.settings.caseSensitive;
+            const word = cs ? w : w.toLowerCase();
+            const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
+            let ok = false;
+            if (mt === 'contains') {
+              ok = word.includes(pat);
+            } else if (mt === 'startswith') {
+              try {
+                const flags = cs ? '' : 'i';
+                const re = new RegExp(`^${this.escapeRegex(pat)}[A-Za-z]*$`, flags);
+                ok = re.test(word);
+              } catch (_) {
+                ok = word.startsWith(pat);
+              }
+            } else if (mt === 'endswith') {
+              try {
+                const flags = cs ? '' : 'i';
+                const re = new RegExp(`^[A-Za-z]*${this.escapeRegex(pat)}$`, flags);
+                ok = re.test(word);
+              } catch (_) {
+                ok = word.endsWith(pat);
+              }
+            }
+            if (ok) {
               // For text-only coloring, expand to full word boundaries
               let expandedWStart = wStart;
               let expandedWEnd = wEnd;
@@ -8406,12 +10745,13 @@ module.exports = class AlwaysColorText extends Plugin {
               }
               
               if (!overlapsWithExisting) {
-                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
                 matches.push({
                   start: chunkFrom + expandedWStart,
                   end: chunkFrom + expandedWEnd,
                   color: useColor,
-                  styleType: 'text'
+                  styleType: 'text',
+                  entryRef: entry
                 });
                 if (matches.length > 100) break;
               } else {
@@ -8422,12 +10762,13 @@ module.exports = class AlwaysColorText extends Plugin {
                     matches.splice(i, 1);
                   }
                 }
-                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : entry.color;
+                const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
                 matches.push({
                   start: chunkFrom + expandedWStart,
                   end: chunkFrom + expandedWEnd,
                   color: useColor,
-                  styleType: 'text'
+                  styleType: 'text',
+                  entryRef: entry
                 });
                 if (matches.length > 100) break;
               }
@@ -8498,6 +10839,23 @@ module.exports = class AlwaysColorText extends Plugin {
     // Apply decorations
     const effectiveStyle = 'text';
 
+    if (limited.some(m => m.isTextBg)) {
+      const fullTextBg = limited.filter(m => m.isTextBg);
+      const filtered = [];
+      for (const m of limited) {
+        if (!m.isTextBg) {
+          let overlapsTextBg = false;
+          for (const f of fullTextBg) {
+            if (m.start < f.end && m.end > f.start) { overlapsTextBg = true; break; }
+          }
+          if (overlapsTextBg) continue;
+        }
+        filtered.push(m);
+      }
+      limited.length = 0;
+      for (const m of filtered) limited.push(m);
+    }
+
     for (const m of limited) {
       let style;
       const hideText = this.settings.hideTextColors === true;
@@ -8506,32 +10864,35 @@ module.exports = class AlwaysColorText extends Plugin {
         const textColor = m.textColor;
         const bgColor = m.backgroundColor;
         if (hideText && hideBg) continue;
-        const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor);
+        const params = this.getHighlightParams(m.entryRef);
+        const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef);
         const textPart = hideText ? '' : `color: ${textColor} !important; `;
-        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-top: ${(this.settings.highlightVerticalPadding ?? 0)}px !important; padding-bottom: ${(this.settings.highlightVerticalPadding ?? 0)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; padding-top: ${(params.vPad)}px !important; padding-bottom: ${(params.vPad)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         if (effectiveStyle === 'none') continue;
         const styleType = m.styleType || 'text';
         if (styleType === 'text') {
           if (hideText) continue;
-          style = `color: ${m.color} !important;`;
+          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         } else if (styleType === 'highlight') {
           const bgColor = m.backgroundColor || m.color;
           if (hideBg) continue;
-          const borderStyle = this.generateBorderStyle(null, bgColor);
-          style = (() => { const vPad = (this.settings.highlightVerticalPadding ?? 0); const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background: none !important; background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(((this.settings.highlightHorizontalPadding ?? 4) > 0 && (this.settings.highlightBorderRadius ?? 8) === 0) ? 0 : (this.settings.highlightBorderRadius ?? 8))}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`; })();
+          const params = this.getHighlightParams(m.entryRef);
+          const borderStyle = this.generateBorderStyle(null, bgColor, m.entryRef);
+          style = (() => { const vPad = params.vPad; const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background: none !important; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.hPad > 0 && params.radius === 0 ? 0 : params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`; })();
         } else if (styleType === 'both') {
           const textColor = (m.textColor && m.textColor !== 'currentColor') ? m.textColor : (m.color || null);
           const bgColor = m.backgroundColor || m.color;
           if (hideText && hideBg) continue;
-          const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor);
-          const textPart = hideText ? '' : (textColor ? `color: ${textColor} !important; ` : '');
-          const bgPart = (() => { if (hideBg) return ''; const vPad = (this.settings.highlightVerticalPadding ?? 0); const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background-color: ${this.hexToRgba(bgColor, this.settings.backgroundOpacity ?? 25)} !important; border-radius: ${(this.settings.highlightBorderRadius ?? 8)}px !important; padding-left: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; padding-right: ${(this.settings.highlightHorizontalPadding ?? 4)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`; })();
+          const params = this.getHighlightParams(m.entryRef);
+          const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef);
+          const textPart = hideText ? '' : (textColor ? `color: ${textColor} !important; --highlight-color: ${textColor}; ` : '');
+          const bgPart = (() => { if (hideBg) return ''; const vPad = params.vPad; const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`; })();
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           if (hideText) continue;
-          style = `color: ${m.color} !important;`;
+          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         }
       }
       const deco = Decoration.mark({ attributes: { style, class: 'always-color-text-highlight' } });
@@ -8546,6 +10907,7 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       // Clear caches
       try { this._cachedSortedEntries = null; this._cacheDirty = true; } catch (e) {}
+      try { if (this._regexCache) this._regexCache.clear(); } catch (e) {}
       try { this._compiledWordEntries = []; } catch (e) {}
 
       // Clear all reading mode intervals
@@ -8592,6 +10954,9 @@ module.exports = class AlwaysColorText extends Plugin {
           try { this._viewportObservers.clear(); } catch (e) {}
         }
       } catch (e) {}
+
+      // Clear event manager
+      try { if (this._eventManager && typeof this._eventManager.clear === 'function') this._eventManager.clear(); } catch (e) {}
 
       // Hint GC if available (may not be in renderer)
       try { if (typeof global !== 'undefined' && typeof global.gc === 'function') global.gc(); } catch (e) {}
@@ -9226,7 +11591,7 @@ class RegexTesterModal extends Modal {
         entry.textColor = textColorInput.value || '';
         entry.backgroundColor = bgColorInput.value || '';
       }
-      this.plugin.settings.wordEntries.push(entry);
+      this.plugin.settings.wordEntries.push(Object.assign({ matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact' }, entry));
       try { this.plugin.settingTab && (this.plugin.settingTab._suspendSorting = true); } catch (e) {}
       try { this.plugin.settingTab && entry && entry.uid && this.plugin.settingTab._newEntriesSet && this.plugin.settingTab._newEntriesSet.add(entry.uid); } catch (e) {}
       await this.plugin.saveSettings();
@@ -9513,7 +11878,7 @@ class RealTimeRegexTesterModal extends Modal {
       Object.keys(flagButtons).forEach(k => {
         const on = flagButtons[k].dataset.on === '1';
         flagButtons[k].style.background = on ? 'var(--interactive-accent)' : 'var(--background-modifier-form-field)';
-        flagButtons[k].style.color = on ? 'var(--text-on-accent)' : 'var(--text-normal)';
+        flagButtons[k].style.color = on ? 'var(--text-normal)' : 'var(--text-normal)';
       });
     };
     Object.keys(flagButtons).forEach(k => {
@@ -9616,7 +11981,7 @@ class RealTimeRegexTesterModal extends Modal {
           if (updated && updated.uid) idx = this.plugin.settings.wordEntries.findIndex(e => e && e.uid === updated.uid);
           if (idx === -1) idx = this.plugin.settings.wordEntries.indexOf(this._editingEntry);
           if (idx === -1) idx = this.plugin.settings.wordEntries.findIndex(e => e && e.isRegex && String(e.pattern) === String(this._editingEntry.pattern));
-          if (idx !== -1) this.plugin.settings.wordEntries[idx] = updated; else this.plugin.settings.wordEntries.push(updated);
+          if (idx !== -1) this.plugin.settings.wordEntries[idx] = updated; else this.plugin.settings.wordEntries.push(Object.assign({ matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact' }, updated));
           this._editingEntry.pattern = updated.pattern;
           this._editingEntry.flags = updated.flags;
           this._editingEntry.presetLabel = updated.presetLabel;
@@ -9624,6 +11989,8 @@ class RealTimeRegexTesterModal extends Modal {
           this._editingEntry.color = updated.color;
           this._editingEntry.textColor = updated.textColor;
           this._editingEntry.backgroundColor = updated.backgroundColor;
+          this._editingEntry._savedTextColor = updated._savedTextColor;
+          this._editingEntry._savedBackgroundColor = updated._savedBackgroundColor;
           await this.plugin.saveSettings();
           this.plugin.compileWordEntries();
           this.plugin.compileTextBgColoringEntries();
@@ -9633,6 +12000,7 @@ class RealTimeRegexTesterModal extends Modal {
           this.plugin.triggerActiveDocumentRerender();
           try { this.onAdded && this.onAdded(updated); } catch (e) {}
           new Notice(this.plugin.t('notice_regex_updated','Regex updated'));
+          try { const pm = this._parentModal; if (pm) { try { pm.close(); } catch (_) {} setTimeout(() => { try { pm.open(); } catch (_) {} }, 50); } } catch (_) {}
           this.close();
           return;
         } catch (e) {
@@ -9663,7 +12031,7 @@ class RealTimeRegexTesterModal extends Modal {
         entry._savedTextColor = textColorInput.value || '';
         entry._savedBackgroundColor = bgColorInput.value || '';
       }
-      this.plugin.settings.wordEntries.push(entry);
+      this.plugin.settings.wordEntries.push(Object.assign({ matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact' }, entry));
       await this.plugin.saveSettings();
       this.plugin.compileWordEntries();
       this.plugin.compileTextBgColoringEntries();
@@ -9673,6 +12041,7 @@ class RealTimeRegexTesterModal extends Modal {
       this.plugin.triggerActiveDocumentRerender();
       try { this.onAdded && this.onAdded(entry); } catch (e) {}
       new Notice(this.plugin.t('notice_added_regex','Regex added'));
+      try { const pm = this._parentModal; if (pm) { try { pm.close(); } catch (_) {} setTimeout(() => { try { pm.open(); } catch (_) {} }, 50); } } catch (_) {}
       this.close();
     };
     addBtn.addEventListener('click', addHandler);
@@ -9694,6 +12063,992 @@ class RealTimeRegexTesterModal extends Modal {
     } catch (e) {}
     this._handlers = [];
     try { this.contentEl?.empty(); } catch (e) {}
+  }
+}
+
+class HighlightStylingModal extends Modal {
+  constructor(app, plugin, entry = null, parentEditEntryModal = null) {
+    super(app);
+    this.plugin = plugin;
+    this.entry = entry;
+    this.parentEditEntryModal = parentEditEntryModal;
+    this._handlers = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    try { this.modalEl.addClass('act-highlight-modal'); this.modalEl.style.maxWidth = '900px !important'; this.modalEl.style.width = '900px !important'; this.modalEl.style.padding = '20px'; contentEl.style.maxWidth = '900px !important'; } catch (e) {}
+    const title = contentEl.createEl('h2', { text: this.plugin.t('highlight_styling_header','Edit Highlight Styling') });
+    title.style.marginTop = '0';
+    title.style.marginBottom = '12px';
+    const topRow = contentEl.createDiv();
+    topRow.addClass('act-highlight-top-row');
+    const previewWrap = topRow.createDiv();
+    previewWrap.addClass('act-highlight-preview-wrap');
+    const words = previewWrap.createDiv();
+    words.style.textAlign = 'center';
+    words.style.opacity = '0.8';
+    words.textContent = this.entry ? (this.entry.isRegex ? String(this.entry.pattern || '') : ((Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0) ? this.entry.groupedPatterns.join(', ') : String(this.entry.pattern || ''))) : '';
+    const styleCol = topRow.createDiv();
+    styleCol.addClass('act-highlight-style-col');
+    const styleSelect = styleCol.createEl('select');
+    styleSelect.addClass('act-highlight-style-select');
+    ['text','highlight','both'].forEach(val => { const opt = styleSelect.createEl('option', { text: this.plugin.t('style_type_' + val, val === 'text' ? 'color' : val) }); opt.value = val; });
+    styleSelect.style.border = '1px solid var(--background-modifier-border)';
+    styleSelect.style.borderRadius = 'var(--radius-m)';
+    styleSelect.style.background = 'var(--background-modifier-form-field)';
+    styleSelect.style.textAlign = 'center';
+    styleSelect.value = (this.entry && this.entry.styleType) ? this.entry.styleType : 'both';
+    const pickerRow = styleCol.createDiv();
+    pickerRow.addClass('act-highlight-picker-row');
+    const tColor = pickerRow.createEl('input', { type: 'color' });
+    const bColor = pickerRow.createEl('input', { type: 'color' });
+    tColor.value = (this.entry && (this.entry.textColor && this.entry.textColor !== 'currentColor' ? this.entry.textColor : (this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : '#ffffff'))) || '#ffffff';
+    bColor.value = (this.entry && this.entry.backgroundColor) ? this.entry.backgroundColor : '#000000';
+    const paneRow = contentEl.createDiv();
+    paneRow.addClass('act-highlight-pane-row');
+    const hlWrap = paneRow.createDiv();
+    hlWrap.addClass('act-highlight-pane');
+    const borderWrap = paneRow.createDiv();
+    borderWrap.addClass('act-highlight-pane');
+    const section1Title = hlWrap.createEl('h3', { text: this.plugin.t('section_highlight_styling','Highlight Styling') });
+    const grid = hlWrap.createDiv();
+    grid.addClass('act-highlight-grid');
+    const makeSliderRow = (label, min, max, value, onChange, onReset) => {
+      const left = grid.createDiv();
+      const lab = left.createDiv();
+      lab.textContent = label;
+      const right = grid.createDiv();
+      const slider = right.createEl('input', { type: 'range' });
+      slider.min = String(min); slider.max = String(max); slider.value = String(value);
+      const resetBtn = right.createEl('button');
+      resetBtn.addClass('act-highlight-reset-btn');
+      try { setIcon(resetBtn, 'reset'); } catch (e) {}
+      const handler = () => { onChange(Number(slider.value)); renderPreview(); };
+      slider.addEventListener('input', handler);
+      this._handlers.push({ el: slider, ev: 'input', fn: handler });
+      const resetHandler = () => { onReset(slider); renderPreview(); };
+      resetBtn.addEventListener('click', resetHandler);
+      this._handlers.push({ el: resetBtn, ev: 'click', fn: resetHandler });
+      return slider;
+    };
+    const initOpacity = (this.entry && typeof this.entry.backgroundOpacity === 'number') ? this.entry.backgroundOpacity : Number(this.plugin.settings.backgroundOpacity ?? 35);
+    const opacitySlider = makeSliderRow(this.plugin.t('label_highlight_opacity','Highlight Opacity'), 0, 100, initOpacity, (v) => { if (this.entry) this.entry.backgroundOpacity = v; }, (sliderEl) => { if (this.entry) { this.entry.backgroundOpacity = undefined; } sliderEl.value = String(this.plugin.settings.backgroundOpacity ?? 35); });
+    opacitySlider.setAttribute('data-act-opacity-slider', 'true');
+    const radiusInputLeft = grid.createDiv();
+    radiusInputLeft.textContent = this.plugin.t('label_highlight_radius','Highlight Border Radius');
+    const radiusInputRight = grid.createDiv();
+    const initRadius = (this.entry && typeof this.entry.highlightBorderRadius === 'number') ? this.entry.highlightBorderRadius : (this.plugin.settings.highlightBorderRadius ?? 4);
+    const radiusInput = radiusInputRight.createEl('input', { type: 'number', value: String(initRadius) });
+    radiusInput.addClass('act-highlight-input-small');
+    radiusInput.setAttribute('data-act-radius-input', 'true');
+    radiusInput.addEventListener('change', () => { if (this.entry) this.entry.highlightBorderRadius = Number(radiusInput.value || 0); renderPreview(); });
+    const radiusReset = radiusInputRight.createEl('button');
+    radiusReset.addClass('act-highlight-reset-btn');
+    try { setIcon(radiusReset, 'reset'); } catch (e) {}
+    radiusReset.addEventListener('click', () => { if (this.entry) this.entry.highlightBorderRadius = undefined; radiusInput.value = String(this.plugin.settings.highlightBorderRadius ?? 4); renderPreview(); });
+    this._handlers.push({ el: radiusInput, ev: 'change', fn: () => {} });
+    const hPadLeft = grid.createDiv(); hPadLeft.textContent = this.plugin.t('label_horizontal_padding','Horizontal Padding');
+    const initHPad = (this.entry && typeof this.entry.highlightHorizontalPadding === 'number') ? this.entry.highlightHorizontalPadding : (this.plugin.settings.highlightHorizontalPadding ?? 4);
+    const hPadRight = grid.createDiv(); const hPadInput = hPadRight.createEl('input', { type: 'number', value: String(initHPad) });
+    hPadInput.addClass('act-highlight-input-small');
+    hPadInput.setAttribute('data-act-hpad-input', 'true');
+    hPadInput.addEventListener('change', () => { if (this.entry) this.entry.highlightHorizontalPadding = Number(hPadInput.value || 0); renderPreview(); });
+    const hPadReset = hPadRight.createEl('button');
+    hPadReset.addClass('act-highlight-reset-btn');
+    try { setIcon(hPadReset, 'reset'); } catch (e) {}
+    hPadReset.addEventListener('click', () => { if (this.entry) this.entry.highlightHorizontalPadding = undefined; hPadInput.value = String(this.plugin.settings.highlightHorizontalPadding ?? 4); renderPreview(); });
+    const vPadLeft = grid.createDiv(); vPadLeft.textContent = this.plugin.t('label_vertical_padding','Vertical Padding');
+    const initVPad = (this.entry && typeof this.entry.highlightVerticalPadding === 'number') ? this.entry.highlightVerticalPadding : (this.plugin.settings.highlightVerticalPadding ?? 0);
+    const vPadRight = grid.createDiv(); const vPadInput = vPadRight.createEl('input', { type: 'number', value: String(initVPad) });
+    vPadInput.addClass('act-highlight-input-small');
+    vPadInput.setAttribute('data-act-vpad-input', 'true');
+    vPadInput.addEventListener('change', () => { if (this.entry) this.entry.highlightVerticalPadding = Number(vPadInput.value || 0); renderPreview(); });
+    const vPadReset = vPadRight.createEl('button');
+    vPadReset.addClass('act-highlight-reset-btn');
+    try { setIcon(vPadReset, 'reset'); } catch (e) {}
+    vPadReset.addEventListener('click', () => { if (this.entry) this.entry.highlightVerticalPadding = undefined; vPadInput.value = String(this.plugin.settings.highlightVerticalPadding ?? 0); renderPreview(); });
+    const section2Title = borderWrap.createEl('h3', { text: this.plugin.t('section_highlight_border_styling','Highlight Border Styling') });
+    const grid2Title = borderWrap.createEl('h3', { text: this.plugin.t('section_highlight_border_styling','Highlight Border Styling') });
+    const grid2 = borderWrap.createDiv();
+    grid2.addClass('act-highlight-grid');
+    const enableLeft = grid2.createDiv(); enableLeft.textContent = this.plugin.t('label_enable_border','Enable Border');
+    const enableRight = grid2.createDiv(); const enableChk = enableRight.createEl('input', { type: 'checkbox' });
+    enableChk.setAttribute('data-act-border-enable', 'true');
+    enableChk.checked = (this.entry && typeof this.entry.enableBorderThickness !== 'undefined') ? !!this.entry.enableBorderThickness : !!this.plugin.settings.enableBorderThickness;
+    enableChk.addEventListener('change', () => { if (this.entry) this.entry.enableBorderThickness = !!enableChk.checked; renderPreview(); });
+    const sidesLeft = grid2.createDiv(); sidesLeft.textContent = this.plugin.t('label_border_sides','Border Sides');
+    const sidesRight = grid2.createDiv(); const sidesSel = sidesRight.createEl('select');
+    sidesSel.setAttribute('data-act-border-sides', 'true');
+    [
+      ['full', this.plugin.t('opt_border_full','Full Border (All Sides)')],
+      ['top-bottom', this.plugin.t('opt_border_top_bottom','Top & Bottom')],
+      ['left-right', this.plugin.t('opt_border_left_right','Left & Right')],
+      ['top-right', this.plugin.t('opt_border_top_right','Top & Right')],
+      ['top-left', this.plugin.t('opt_border_top_left','Top & Left')],
+      ['bottom-right', this.plugin.t('opt_border_bottom_right','Bottom & Right')],
+      ['bottom-left', this.plugin.t('opt_border_bottom_left','Bottom & Left')],
+      ['top', this.plugin.t('opt_border_top','Top Only')],
+      ['bottom', this.plugin.t('opt_border_bottom','Bottom Only')],
+      ['left', this.plugin.t('opt_border_left','Left Only')],
+      ['right', this.plugin.t('opt_border_right','Right Only')],
+    ].forEach(([value, label]) => { const o = sidesSel.createEl('option', { text: label }); o.value = value; });
+    sidesSel.value = (this.entry && this.entry.borderStyle) ? this.entry.borderStyle : (this.plugin.settings.borderStyle ?? 'full');
+    sidesSel.addEventListener('change', () => { if (this.entry) this.entry.borderStyle = sidesSel.value; renderPreview(); });
+    const sidesReset = sidesRight.createEl('button');
+    sidesReset.addClass('act-highlight-reset-btn');
+    try { setIcon(sidesReset, 'reset'); } catch (e) {}
+    sidesReset.addEventListener('click', () => { if (this.entry) this.entry.borderStyle = undefined; sidesSel.value = (this.plugin.settings.borderStyle ?? 'full'); renderPreview(); });
+    const styleLeft = grid2.createDiv(); styleLeft.textContent = this.plugin.t('label_border_style','Border Style');
+    const styleRight = grid2.createDiv(); const lineSel = styleRight.createEl('select');
+    lineSel.setAttribute('data-act-border-line', 'true');
+    [
+      ['solid', this.plugin.t('opt_line_solid','Solid')],
+      ['dashed', this.plugin.t('opt_line_dashed','Dashed')],
+      ['dotted', this.plugin.t('opt_line_dotted','Dotted')],
+      ['double', this.plugin.t('opt_line_double','Double')],
+      ['groove', this.plugin.t('opt_line_groove','Groove')],
+      ['ridge', this.plugin.t('opt_line_ridge','Ridge')],
+      ['inset', this.plugin.t('opt_line_inset','Inset')],
+      ['outset', this.plugin.t('opt_line_outset','Outset')],
+    ].forEach(([value, label]) => { const o = lineSel.createEl('option', { text: label }); o.value = value; });
+    lineSel.value = (this.entry && this.entry.borderLineStyle) ? this.entry.borderLineStyle : (this.plugin.settings.borderLineStyle ?? 'solid');
+    lineSel.addEventListener('change', () => { if (this.entry) this.entry.borderLineStyle = lineSel.value; renderPreview(); });
+    const styleReset = styleRight.createEl('button');
+    styleReset.addClass('act-highlight-reset-btn');
+    try { setIcon(styleReset, 'reset'); } catch (e) {}
+    styleReset.addEventListener('click', () => { if (this.entry) this.entry.borderLineStyle = undefined; lineSel.value = (this.plugin.settings.borderLineStyle ?? 'solid'); renderPreview(); });
+    const bOpLeft = grid2.createDiv(); bOpLeft.textContent = this.plugin.t('label_border_opacity','Border Opacity');
+    const bOpRight = grid2.createDiv(); const bOpSlider = bOpRight.createEl('input', { type: 'range' });
+    bOpSlider.setAttribute('data-act-border-opacity', 'true');
+    bOpSlider.min = '0'; bOpSlider.max = '100'; bOpSlider.value = String((this.entry && typeof this.entry.borderOpacity === 'number') ? this.entry.borderOpacity : (this.plugin.settings.borderOpacity ?? 100));
+    bOpSlider.addEventListener('input', () => { if (this.entry) this.entry.borderOpacity = Number(bOpSlider.value || 0); renderPreview(); });
+    const bOpReset = bOpRight.createEl('button');
+    bOpReset.addClass('act-highlight-reset-btn');
+    try { setIcon(bOpReset, 'reset'); } catch (e) {}
+    bOpReset.addEventListener('click', () => { if (this.entry) this.entry.borderOpacity = undefined; bOpSlider.value = String(this.plugin.settings.borderOpacity ?? 100); renderPreview(); });
+    const thickLeft = grid2.createDiv(); thickLeft.textContent = this.plugin.t('label_border_thickness','Border Thickness');
+    const thickRight = grid2.createDiv(); const thickInput = thickRight.createEl('input', { type: 'number', value: String((this.entry && typeof this.entry.borderThickness === 'number') ? this.entry.borderThickness : (this.plugin.settings.borderThickness ?? 1)) });
+    thickInput.addClass('act-highlight-input-small');
+    thickInput.setAttribute('data-act-border-thickness', 'true');
+    thickInput.addEventListener('change', () => { if (this.entry) this.entry.borderThickness = Number(thickInput.value || 0); renderPreview(); });
+    const thickReset = thickRight.createEl('button');
+    thickReset.addClass('act-highlight-reset-btn');
+    try { setIcon(thickReset, 'reset'); } catch (e) {}
+    thickReset.addEventListener('click', () => { if (this.entry) this.entry.borderThickness = undefined; thickInput.value = String(this.plugin.settings.borderThickness ?? 1); renderPreview(); });
+    const renderPreview = () => {
+      const style = styleSelect.value;
+      const t = tColor.value;
+      const b = bColor.value;
+      const p = this.plugin.getHighlightParams(this.entry);
+      const rgba = this.plugin.hexToRgba(b, p.opacity ?? 25);
+      const radius = p.radius ?? 8;
+      const pad = p.hPad ?? 4;
+      const vpad = p.vPad ?? 0;
+      const borderStyle = style === 'text' ? '' : (style === 'highlight' ? this.plugin.generateBorderStyle(null, b, this.entry) : this.plugin.generateBorderStyle(t, b, this.entry));
+      const matchStyle = style === 'text'
+        ? `color:${t};background:transparent;`
+        : (style === 'highlight'
+          ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`
+          : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`);
+      const txt = words.textContent || '';
+      previewWrap.innerHTML = `<mark style="${matchStyle}">${txt}</mark>`;
+    };
+    const updatePickerVisibility = () => {
+      const style = styleSelect.value;
+      if (style === 'text') {
+        tColor.style.display = 'inline-block';
+        bColor.style.display = 'none';
+      } else if (style === 'highlight') {
+        tColor.style.display = 'none';
+        bColor.style.display = 'inline-block';
+      } else {
+        tColor.style.display = 'inline-block';
+        bColor.style.display = 'inline-block';
+      }
+    };
+    const styleChange = () => { updatePickerVisibility(); renderPreview(); };
+    styleSelect.addEventListener('change', styleChange);
+    tColor.addEventListener('input', styleChange);
+    bColor.addEventListener('input', styleChange);
+    this._handlers.push({ el: styleSelect, ev: 'change', fn: styleChange });
+    this._handlers.push({ el: tColor, ev: 'input', fn: styleChange });
+    this._handlers.push({ el: bColor, ev: 'input', fn: styleChange });
+    updatePickerVisibility();
+    renderPreview();
+    const actions = contentEl.createDiv();
+    actions.style.display = 'flex';
+    actions.style.justifyContent = 'space-between';
+    actions.style.marginTop = '12px';
+    const resetAllBtn = actions.createEl('button', { text: this.plugin.t('btn_reset_all','Reset Highlight Style') });
+    const resetAllHandler = () => {
+      if (this.entry) {
+        this.entry.backgroundOpacity = undefined;
+        this.entry.highlightBorderRadius = undefined;
+        this.entry.highlightHorizontalPadding = undefined;
+        this.entry.highlightVerticalPadding = undefined;
+        this.entry.enableBorderThickness = undefined;
+        this.entry.borderStyle = undefined;
+        this.entry.borderLineStyle = undefined;
+        this.entry.borderOpacity = undefined;
+        this.entry.borderThickness = undefined;
+      }
+      try {
+        opacitySlider.value = String(this.plugin.settings.backgroundOpacity ?? 35);
+        radiusInput.value = String(this.plugin.settings.highlightBorderRadius ?? 4);
+        hPadInput.value = String(this.plugin.settings.highlightHorizontalPadding ?? 4);
+        vPadInput.value = String(this.plugin.settings.highlightVerticalPadding ?? 0);
+      } catch (_) {}
+      renderPreview();
+      try { window.dispatchEvent(new CustomEvent('act-style-updated')); } catch (_) {}
+    };
+    resetAllBtn.addEventListener('click', resetAllHandler);
+    this._handlers.push({ el: resetAllBtn, ev: 'click', fn: resetAllHandler });
+    
+    // Add right-click handlers for color pickers (after renderPreview is defined)
+    const setupHighlightColorPickerRightClick = (colorInput) => {
+      colorInput.addEventListener('contextmenu', (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        const currentColor = colorInput.value || '#000000';
+        new ColorPickerModal(this.app, this.plugin, (color, result) => {
+          const tc = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null;
+          const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
+          // Determine which color to use
+          const selectedColor = (bc && this.plugin.isValidHexColor(bc)) ? bc : (tc && this.plugin.isValidHexColor(tc)) ? tc : (color && this.plugin.isValidHexColor(color)) ? color : currentColor;
+          if (selectedColor && this.plugin.isValidHexColor(selectedColor)) {
+            colorInput.value = selectedColor;
+            renderPreview();
+          }
+        }, 'single', currentColor, false).open();
+      });
+    };
+    setupHighlightColorPickerRightClick(tColor);
+    setupHighlightColorPickerRightClick(bColor);
+    
+    // Add real-time syncing to this.entry when colors change
+    tColor.addEventListener('input', () => {
+      // Sync to entry based on current style
+      const style = styleSelect.value;
+      if (this.entry) {
+        if (style === 'text') {
+          this.entry.color = tColor.value || '';
+        } else if (style === 'both') {
+          this.entry.textColor = tColor.value || '';
+        }
+      }
+      renderPreview();
+    });
+    
+    bColor.addEventListener('input', () => {
+      // Sync to entry based on current style
+      const style = styleSelect.value;
+      if (this.entry) {
+        if (style === 'highlight') {
+          this.entry.backgroundColor = bColor.value || '';
+        } else if (style === 'both') {
+          this.entry.backgroundColor = bColor.value || '';
+        }
+      }
+      renderPreview();
+    });
+    
+    // Sync style changes to entry
+    styleSelect.addEventListener('change', () => {
+      if (this.entry) {
+        const st = styleSelect.value;
+        this.entry.styleType = st;
+        if (st === 'text') {
+          this.entry.color = tColor.value || '';
+          this.entry.textColor = null;
+          this.entry.backgroundColor = null;
+        } else if (st === 'highlight') {
+          this.entry.color = '';
+          this.entry.textColor = 'currentColor';
+          this.entry.backgroundColor = bColor.value || '';
+        } else {
+          this.entry.color = '';
+          this.entry.textColor = tColor.value || '';
+          this.entry.backgroundColor = bColor.value || '';
+        }
+      }
+      renderPreview();
+    });
+    
+    const saveBtn = actions.createEl('button', { text: this.plugin.t('btn_save_style','Save Style') });
+    saveBtn.addClass('mod-cta');
+    const saveHandler = async () => {
+      if (this.entry) {
+        // Persist style type and picker choices into entry
+        const st = styleSelect.value;
+        this.entry.styleType = st;
+        if (st === 'text') {
+          this.entry.color = tColor.value || '';
+          this.entry.textColor = null;
+          this.entry.backgroundColor = null;
+        } else if (st === 'highlight') {
+          this.entry.color = '';
+          this.entry.textColor = 'currentColor';
+          this.entry.backgroundColor = bColor.value || '';
+        } else {
+          this.entry.color = '';
+          this.entry.textColor = tColor.value || '';
+          this.entry.backgroundColor = bColor.value || '';
+        }
+        // Save highlight styling parameters - READ DIRECTLY FROM SLIDER ELEMENTS
+        const rawOpacity = opacitySlider.value ? Number(opacitySlider.value) : (this.plugin.settings.backgroundOpacity ?? 35);
+        const rawRadius = radiusInput.value ? Number(radiusInput.value) : (this.plugin.settings.highlightBorderRadius ?? 4);
+        const rawHPad = hPadInput.value ? Number(hPadInput.value) : (this.plugin.settings.highlightHorizontalPadding ?? 4);
+        const rawVPad = vPadInput.value ? Number(vPadInput.value) : (this.plugin.settings.highlightVerticalPadding ?? 0);
+        const rawBOpacity = bOpSlider.value ? Number(bOpSlider.value) : (this.plugin.settings.borderOpacity ?? 100);
+        const rawBThickness = thickInput.value ? Number(thickInput.value) : (this.plugin.settings.borderThickness ?? 1);
+        
+        this.entry.backgroundOpacity = rawOpacity;
+        this.entry.highlightBorderRadius = rawRadius;
+        this.entry.highlightHorizontalPadding = rawHPad;
+        this.entry.highlightVerticalPadding = rawVPad;
+        this.entry.enableBorderThickness = !!enableChk.checked;
+        this.entry.borderStyle = sidesSel.value || (this.plugin.settings.borderStyle ?? 'full');
+        this.entry.borderLineStyle = lineSel.value || (this.plugin.settings.borderLineStyle ?? 'solid');
+        this.entry.borderOpacity = rawBOpacity;
+        this.entry.borderThickness = rawBThickness;
+        
+        // Find and update entry in the settings array using uid
+        const entryUid = this.entry.uid;
+        let foundArray = null;
+        let foundIdx = -1;
+        
+        for (let i = 0; i < this.plugin.settings.wordEntries.length; i++) {
+          if (this.plugin.settings.wordEntries[i].uid === entryUid) {
+            foundArray = this.plugin.settings.wordEntries;
+            foundIdx = i;
+            break;
+          }
+        }
+        
+        if (foundIdx === -1) {
+          for (let i = 0; i < this.plugin.settings.textBgColoringEntries.length; i++) {
+            if (this.plugin.settings.textBgColoringEntries[i].uid === entryUid) {
+              foundArray = this.plugin.settings.textBgColoringEntries;
+              foundIdx = i;
+              break;
+            }
+          }
+        }
+        
+        if (foundArray && foundIdx !== -1) {
+          // Explicitly set all properties on the array entry
+          foundArray[foundIdx].styleType = this.entry.styleType;
+          foundArray[foundIdx].color = this.entry.color;
+          foundArray[foundIdx].textColor = this.entry.textColor;
+          foundArray[foundIdx].backgroundColor = this.entry.backgroundColor;
+          foundArray[foundIdx].backgroundOpacity = this.entry.backgroundOpacity;
+          foundArray[foundIdx].highlightBorderRadius = this.entry.highlightBorderRadius;
+          foundArray[foundIdx].highlightHorizontalPadding = this.entry.highlightHorizontalPadding;
+          foundArray[foundIdx].highlightVerticalPadding = this.entry.highlightVerticalPadding;
+          foundArray[foundIdx].enableBorderThickness = this.entry.enableBorderThickness;
+          foundArray[foundIdx].borderStyle = this.entry.borderStyle;
+          foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
+          foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
+          foundArray[foundIdx].borderThickness = this.entry.borderThickness;
+          
+          // Log exactly what we're saving to the array
+          debugLog('[SAVE_DEBUG]', `Entry at [${foundIdx}] in ${foundArray === this.plugin.settings.wordEntries ? 'wordEntries' : 'textBgColoringEntries'}: ${JSON.stringify({pattern: foundArray[foundIdx].pattern, opacity: foundArray[foundIdx].backgroundOpacity, radius: foundArray[foundIdx].highlightBorderRadius, hPad: foundArray[foundIdx].highlightHorizontalPadding})}`);
+        }
+        
+        await this.plugin.saveSettings();
+        
+        // After save, verify what's in memory
+        if (foundArray && foundIdx !== -1) {
+          debugLog('[AFTER_SAVE]', `Memory check: entry still has opacity=${foundArray[foundIdx].backgroundOpacity}, radius=${foundArray[foundIdx].highlightBorderRadius}`);
+        }
+        
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        this.plugin.triggerActiveDocumentRerender();
+        try { window.dispatchEvent(new CustomEvent('act-style-updated')); } catch (_) {}
+      }
+      
+      // Update parent EditEntryModal's color inputs with the new values
+      if (this.parentEditEntryModal) {
+        try {
+          // Find the color inputs in parent modal by looking for input[type="color"]
+          const parentInputs = this.parentEditEntryModal.modalEl?.querySelectorAll('input[type="color"]');
+          if (parentInputs && parentInputs.length >= 2) {
+            const textColorInput = parentInputs[0];
+            const bgColorInput = parentInputs[1];
+            
+            // Update based on current style
+            const st = this.entry?.styleType || 'both';
+            if (st === 'text' || st === 'both') {
+              const textColor = (this.entry?.textColor && this.entry.textColor !== 'currentColor' ? this.entry.textColor : this.entry?.color) || textColorInput.value;
+              if (this.plugin.isValidHexColor(textColor)) {
+                textColorInput.value = textColor;
+              }
+            }
+            if (st === 'highlight' || st === 'both') {
+              const bgColor = this.entry?.backgroundColor || bgColorInput.value;
+              if (this.plugin.isValidHexColor(bgColor)) {
+                bgColorInput.value = bgColor;
+              }
+            }
+          }
+          
+          // Refresh the preview in parent modal
+          if (typeof this.parentEditEntryModal._refreshPreview === 'function') {
+            this.parentEditEntryModal._refreshPreview();
+          }
+        } catch (e) {}
+      }
+      
+      this.close();
+    };
+    saveBtn.addEventListener('click', saveHandler);
+    this._handlers.push({ el: saveBtn, ev: 'click', fn: saveHandler });
+  }
+  onClose() {
+    try { this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} }); } catch (e) {}
+    this._handlers = [];
+    try { this.contentEl.empty(); } catch (e) {}
+  }
+}
+
+class EditEntryModal extends Modal {
+  constructor(app, plugin, entry, onSaved, parentModal) {
+    super(app);
+    this.plugin = plugin;
+    this.entry = entry;
+    this.parentModal = parentModal;
+    // Ensure entry has a uid for finding it later
+    if (this.entry && !this.entry.uid) {
+      try { this.entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (_) { this.entry.uid = Date.now(); }
+    }
+    this.onSaved = onSaved;
+    this._handlers = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    try { this.modalEl.style.maxWidth = '900px'; this.modalEl.style.padding = '20px'; } catch (e) {}
+    const title = contentEl.createEl('h2', { text: this.plugin.t('edit_entry_header','Edit Entry') });
+    title.style.marginTop = '0';
+    title.style.marginBottom = '12px';
+    // Row 1: input + style select
+    const row1 = contentEl.createDiv();
+    row1.addClass('act-edit-entry-row1');
+    const box = row1.createDiv();
+    box.addClass('act-edit-entry-textbox');
+    box.style.border = '1px solid var(--background-modifier-border)';
+    box.style.borderRadius = 'var(--radius-m)';
+    box.style.background = 'var(--background-modifier-form-field)';
+    const textInput = box.createEl('textarea');
+    textInput.style.width = '100%';
+    textInput.style.height = '40px';
+    textInput.style.resize = 'none';
+    textInput.style.border = 'none';
+    textInput.style.outline = 'none';
+    textInput.style.background = 'transparent';
+    textInput.style.color = 'var(--text-normal)';
+    textInput.style.padding = '6px';
+    textInput.style.boxSizing = 'border-box';
+    const styleSelect = row1.createEl('select');
+    styleSelect.addClass('act-edit-entry-style-select');
+    ['text', 'highlight', 'both'].forEach(val => { const opt = styleSelect.createEl('option', { text: this.plugin.t('style_type_' + val, val === 'text' ? 'color' : val) }); opt.value = val; });
+    styleSelect.style.border = '1px solid var(--background-modifier-border)';
+    styleSelect.style.borderRadius = 'var(--radius-m)';
+    styleSelect.style.background = 'var(--background-modifier-form-field)';
+    styleSelect.style.textAlign = 'center';
+    // Row 2: preview + color pickers
+    const row2 = contentEl.createDiv();
+    row2.addClass('act-edit-entry-row2');
+    const preview = row2.createDiv();
+    preview.addClass('act-edit-entry-preview');
+    preview.style.flex = '3';
+    preview.style.border = '1px dashed var(--background-modifier-border)';
+    preview.style.borderRadius = 'var(--radius-s)';
+    preview.style.padding = '10px';
+    preview.style.background = 'var(--background-modifier-form-field)';
+    preview.style.whiteSpace = 'pre-wrap';
+    preview.style.wordWrap = 'break-word';
+    const pickerRow = row2.createDiv();
+    pickerRow.addClass('act-edit-entry-pickers');
+    const textColorInput = pickerRow.createEl('input', { type: 'color' });
+    const bgColorInput = pickerRow.createEl('input', { type: 'color' });
+    
+    // Add right-click handlers for color pickers to open ColorPickerModal
+    const setupColorPickerRightClick = (colorInput, onColorSelected) => {
+      colorInput.addEventListener('contextmenu', (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        const currentColor = colorInput.value || '#000000';
+        new ColorPickerModal(this.app, this.plugin, (color, result) => {
+          const tc = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null;
+          const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
+          // Determine which color to use
+          const selectedColor = (bc && this.plugin.isValidHexColor(bc)) ? bc : (tc && this.plugin.isValidHexColor(tc)) ? tc : (color && this.plugin.isValidHexColor(color)) ? color : currentColor;
+          if (selectedColor && this.plugin.isValidHexColor(selectedColor)) {
+            colorInput.value = selectedColor;
+            onColorSelected(selectedColor);
+          }
+        }, 'single', currentColor, false).open();
+      });
+    };
+    
+    setupColorPickerRightClick(textColorInput, () => { renderPreview(); });
+    setupColorPickerRightClick(bgColorInput, () => { renderPreview(); });
+    
+    // Add real-time syncing to this.entry when colors change
+    textColorInput.addEventListener('input', () => {
+      // Sync to entry based on current style
+      const style = styleSelect.value;
+      if (style === 'text') {
+        this.entry.color = textColorInput.value || '';
+      } else if (style === 'both') {
+        this.entry.textColor = textColorInput.value || '';
+      }
+      renderPreview();
+    });
+    
+    bgColorInput.addEventListener('input', () => {
+      // Sync to entry based on current style
+      const style = styleSelect.value;
+      if (style === 'highlight') {
+        this.entry.backgroundColor = bgColorInput.value || '';
+      } else if (style === 'both') {
+        this.entry.backgroundColor = bgColorInput.value || '';
+      }
+      renderPreview();
+    });
+    
+    // Row 3: match/case/edit highlight
+    const controls = contentEl.createDiv();
+    controls.style.display = 'flex';
+    controls.style.gap = '8px';
+    controls.style.marginTop = '12px';
+    const matchSelect = controls.createEl('select');
+    matchSelect.style.flex = '0.5 0 auto';
+    matchSelect.style.minWidth = '140px';
+    matchSelect.style.border = '1px solid var(--background-modifier-border)';
+    matchSelect.style.borderRadius = 'var(--radius-m)';
+    matchSelect.style.background = 'var(--background-modifier-form-field)';
+    matchSelect.innerHTML = `<option value="exact">${this.plugin.t('match_option_exact','exact')}</option><option value="contains">${this.plugin.t('match_option_contains','contains')}</option><option value="startsWith">${this.plugin.t('match_option_starts_with','starts with')}</option><option value="endsWith">${this.plugin.t('match_option_ends_with','ends with')}</option>`;
+    const caseSel = controls.createEl('select');
+    caseSel.style.flex = '0.5 0 auto';
+    caseSel.style.minWidth = '160px';
+    caseSel.style.border = '1px solid var(--background-modifier-border)';
+    caseSel.style.borderRadius = 'var(--radius-m)';
+    caseSel.style.background = 'var(--background-modifier-form-field)';
+    caseSel.innerHTML = `<option value="case">${this.plugin.t('opt_case_sensitive','is case sensitive')}</option><option value="nocase">${this.plugin.t('opt_not_case_sensitive','not case sensitive')}</option>`;
+    const hlBtn = controls.createEl('button', { text: this.plugin.t('edit_highlight_styling_btn','Edit Highlight Styling') });
+    hlBtn.style.flex = '0 0 auto';
+    const rulesHeader = contentEl.createEl('h3', { text: this.plugin.t('inclusion_exclusion_header','Inclusion / Exclusion Rules') });
+    const rulesContainer = contentEl.createDiv();
+    rulesContainer.style.marginTop = '8px';
+    const addRuleBtn = contentEl.createEl('button', { text: this.plugin.t('btn_add_rule','+ Add Rule') });
+    addRuleBtn.addClass('mod-cta');
+    addRuleBtn.style.marginTop = '6px';
+    let initialStyle = (this.entry && this.entry.styleType) ? this.entry.styleType : null;
+    if (!initialStyle) {
+      const hasText = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== 'currentColor') || this.entry.color));
+      const hasBg = !!(this.entry && this.entry.backgroundColor);
+      initialStyle = hasText && hasBg ? 'both' : (hasBg ? 'highlight' : 'text');
+    }
+    styleSelect.value = initialStyle || 'text';
+    const initTextColor = (this.entry && (this.entry.textColor && this.entry.textColor !== 'currentColor' ? this.entry.textColor : (this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : ''))) || textColorInput.value || '#000000';
+    const initBgColor = (this.entry && (this.entry.backgroundColor || '')) || bgColorInput.value || '#000000';
+    textColorInput.value = this.plugin.isValidHexColor(initTextColor) ? initTextColor : '#000000';
+    if (initBgColor) bgColorInput.value = this.plugin.isValidHexColor(initBgColor) ? initBgColor : '#000000';
+    const isRegex = !!this.entry.isRegex;
+    if (isRegex) {
+      textInput.value = this.entry.pattern || '';
+      matchSelect.style.display = 'none';
+    } else {
+      const patterns = (Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0) ? this.entry.groupedPatterns : [String(this.entry.pattern || '')];
+      textInput.value = patterns.map(p => String(p).trim()).join(', ');
+      let defaultMatch = (typeof this.entry.matchType === 'string' && this.entry.matchType) ? this.entry.matchType.toLowerCase() : (this.plugin.settings.partialMatch ? 'contains' : 'exact');
+      if (defaultMatch === 'startswith' || defaultMatch === 'starts with') defaultMatch = 'startswith';
+      if (defaultMatch === 'endswith' || defaultMatch === 'ends with') defaultMatch = 'endswith';
+      matchSelect.value = defaultMatch === 'startswith' ? 'startsWith' : (defaultMatch === 'endswith' ? 'endsWith' : defaultMatch);
+    }
+    caseSel.value = this.plugin.settings.caseSensitive ? 'case' : 'nocase';
+    const renderPreview = () => {
+      const raw = String(textInput.value || '');
+      const style = styleSelect.value;
+      const t = textColorInput.value;
+      const b = bgColorInput.value;
+      const p = this.plugin.getHighlightParams(this.entry);
+      const rgba = this.plugin.hexToRgba(b, p.opacity ?? 25);
+      const radius = p.radius ?? 8;
+      const pad = p.hPad ?? 4;
+      const vpad = p.vPad ?? 0;
+      const borderStyle = style === 'text' ? '' : (style === 'highlight' ? this.plugin.generateBorderStyle(null, b, this.entry) : this.plugin.generateBorderStyle(t, b, this.entry));
+      const s = style === 'text' ? `color:${t};background:transparent;` : (style === 'highlight' ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}` : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`);
+      
+      // Split by commas to handle grouped words - each word gets its own span
+      const escapeHtml = (str) => str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      if (!raw) {
+        preview.innerHTML = '';
+      } else {
+        const words = raw.split(',').map(w => w.trim()).filter(Boolean);
+        if (words.length > 1) {
+          // Multiple words (grouped) - create separate spans for each
+          const spans = words.map(word => `<mark style="${s}">${escapeHtml(word)}</mark>`).join(', ');
+          preview.innerHTML = spans;
+        } else {
+          // Single word or pattern - one span for all
+          preview.innerHTML = `<mark style="${s}">${escapeHtml(raw)}</mark>`;
+        }
+      }
+    };
+    const updatePickerVisibility = () => {
+      const v = styleSelect.value;
+      if (v === 'text') {
+        textColorInput.style.display = 'inline-block';
+        bgColorInput.style.display = 'none';
+        pickerRow.style.flexDirection = 'row';
+      } else if (v === 'highlight') {
+        textColorInput.style.display = 'none';
+        bgColorInput.style.display = 'inline-block';
+        pickerRow.style.flexDirection = 'row';
+      } else {
+        textColorInput.style.display = 'inline-block';
+        bgColorInput.style.display = 'inline-block';
+        pickerRow.style.flexDirection = 'row';
+      }
+      hlBtn.style.display = v === 'text' ? 'none' : '';
+    };
+    const onInputImmediate = () => { renderPreview(); };
+    const styleChange = async () => {
+      const nextStyle = styleSelect.value;
+      const curr = this.entry;
+      if (nextStyle === 'text') {
+        curr._savedTextColor = textColorInput.value || curr._savedTextColor || curr.color || '';
+        curr._savedBackgroundColor = bgColorInput.value || curr._savedBackgroundColor || '';
+        curr.color = textColorInput.value || curr.color || '';
+        curr.textColor = null;
+        curr.backgroundColor = null;
+      } else if (nextStyle === 'highlight') {
+        curr._savedTextColor = textColorInput.value || curr._savedTextColor || '';
+        curr._savedBackgroundColor = bgColorInput.value || curr._savedBackgroundColor || '';
+        curr.backgroundColor = bgColorInput.value || curr.backgroundColor || '';
+        curr.textColor = 'currentColor';
+        curr.color = '';
+      } else {
+        curr.textColor = textColorInput.value || '';
+        curr.backgroundColor = bgColorInput.value || '';
+        curr.color = '';
+        curr._savedTextColor = textColorInput.value || curr._savedTextColor || '';
+        curr._savedBackgroundColor = bgColorInput.value || curr._savedBackgroundColor || '';
+      }
+      curr.styleType = nextStyle;
+      updatePickerVisibility();
+      renderPreview();
+    };
+    [textColorInput, bgColorInput].forEach(el => { const fn = onInputImmediate; el.addEventListener('input', fn); this._handlers.push({ el, ev: 'input', fn }); });
+    textInput.addEventListener('input', onInputImmediate);
+    this._handlers.push({ el: textInput, ev: 'input', fn: onInputImmediate });
+    styleSelect.addEventListener('change', styleChange);
+    this._handlers.push({ el: styleSelect, ev: 'change', fn: styleChange });
+    const hlFn = () => { new HighlightStylingModal(this.app, this.plugin, this.entry, this).open(); };
+    hlBtn.addEventListener('click', hlFn);
+    this._handlers.push({ el: hlBtn, ev: 'click', fn: hlFn });
+    try {
+      const styleUpdateHandler = () => { renderPreview(); };
+      window.addEventListener('act-style-updated', styleUpdateHandler);
+      this._handlers.push({ el: window, ev: 'act-style-updated', fn: styleUpdateHandler });
+    } catch (e) {}
+    const caseFn = async () => {
+      const v = caseSel.value;
+      this.plugin.settings.caseSensitive = v === 'case';
+      await this.plugin.saveSettings();
+    };
+    caseSel.addEventListener('change', caseFn);
+    this._handlers.push({ el: caseSel, ev: 'change', fn: caseFn });
+    const matchFn = async () => {
+      if (isRegex) return;
+      let value = matchSelect.value;
+      if (value === 'startsWith') value = 'startswith';
+      if (value === 'endsWith') value = 'endswith';
+      this.entry.matchType = value;
+      const idx = this.plugin.settings.wordEntries.indexOf(this.entry);
+      if (idx !== -1) this.plugin.settings.wordEntries[idx].matchType = value;
+      await this.plugin.saveSettings();
+      this.plugin.compileWordEntries();
+      this.plugin.compileTextBgColoringEntries();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this.plugin.forceRefreshAllReadingViews();
+      this.plugin.triggerActiveDocumentRerender();
+    };
+    matchSelect.addEventListener('change', matchFn);
+    this._handlers.push({ el: matchSelect, ev: 'change', fn: matchFn });
+    const buildSuggestions = () => {
+      const files = this.plugin.app.vault.getFiles();
+      const folders = new Set();
+      const filePaths = [];
+      files.forEach(f => {
+        const p = String(f.path).replace(/\\/g, '/');
+        filePaths.push(p);
+        const idx = p.lastIndexOf('/');
+        const folder = idx !== -1 ? p.slice(0, idx) : '';
+        if (folder) {
+          const parts = folder.split('/');
+          let acc = '';
+          parts.forEach(part => { acc = acc ? acc + '/' + part : part; folders.add(acc); });
+        }
+      });
+      return { files: filePaths.sort(), folders: Array.from(folders).sort() };
+    };
+    const sugg = buildSuggestions();
+    const renderRules = () => {
+      rulesContainer.empty();
+      const rules = Array.isArray(this.plugin.settings.advancedRules) ? this.plugin.settings.advancedRules : [];
+      const caseInsensitive = !this.plugin.settings.caseSensitive;
+      const entryKey = String(isRegex ? (this.entry.pattern || '') : (this.entry.pattern || ''));
+      const matchesEntry = (r) => {
+        const rt = String(r.text || '').trim();
+        if (!rt) return false;
+        if (isRegex) {
+          if (!r.isRegex) return false;
+          return caseInsensitive ? rt.toLowerCase() === entryKey.toLowerCase() : rt === entryKey;
+        }
+        if (r.isRegex) return false;
+        return caseInsensitive ? rt.toLowerCase() === entryKey.toLowerCase() : rt === entryKey;
+      };
+      const filtered = rules.filter(matchesEntry);
+      filtered.forEach((r) => {
+        const row = rulesContainer.createDiv();
+        row.style.display = 'flex';
+        row.style.gap = '8px';
+        row.style.alignItems = 'center';
+        row.style.marginBottom = '8px';
+        const modeSel = row.createEl('select');
+        const optIn = modeSel.createEl('option', { text: this.plugin.t('text_rule_mode_include','only colors in') });
+        optIn.value = 'include';
+        const optEx = modeSel.createEl('option', { text: this.plugin.t('text_rule_mode_exclude','does not color in') });
+        optEx.value = 'exclude';
+        modeSel.value = r.mode === 'exclude' ? 'exclude' : 'include';
+        modeSel.style.minWidth = '160px';
+        modeSel.style.border = '1px solid var(--background-modifier-border)';
+        modeSel.style.borderRadius = 'var(--radius-m)';
+        modeSel.style.background = 'var(--background-modifier-form-field)';
+        const pathInput = row.createEl('input', { type: 'text', value: String(r.path || '') });
+        pathInput.style.flex = '1';
+        pathInput.style.padding = '6px';
+        pathInput.style.border = '1px solid var(--background-modifier-border)';
+        pathInput.style.borderRadius = 'var(--radius-m)';
+        const delBtn = row.createEl('button', { text: '✕' });
+        delBtn.addClass('mod-warning');
+        const modeHandler = async () => { r.mode = modeSel.value; await this.plugin.saveSettings(); };
+        modeSel.addEventListener('change', modeHandler);
+        const updateDropdown = () => {
+          if (pathInput._actDropdown) {
+            const dd = pathInput._actDropdown;
+            if (pathInput._dropdownScrollListener) { document.removeEventListener('scroll', pathInput._dropdownScrollListener, true); pathInput._dropdownScrollListener = null; }
+            if (pathInput._dropdownClickListener) { document.removeEventListener('click', pathInput._dropdownClickListener); pathInput._dropdownClickListener = null; }
+            if (pathInput._dropdownKeyListener) { document.removeEventListener('keydown', pathInput._dropdownKeyListener); pathInput._dropdownKeyListener = null; }
+            dd.remove();
+            pathInput._actDropdown = null;
+          }
+          const val = String(pathInput.value || '').trim().toLowerCase();
+          const list = [];
+          sugg.folders.forEach(f => list.push({ t: 'folder', p: f }));
+          sugg.files.forEach(f => list.push({ t: 'file', p: f }));
+          const filteredList = val ? list.filter(x => x.p.toLowerCase().includes(val)) : list;
+          if (filteredList.length === 0) return;
+          const dd = document.createElement('div');
+          Object.assign(dd.style, { position: 'fixed', zIndex: 2000, background: 'var(--background-primary)', color: 'var(--text-normal)', border: '1px solid var(--background-modifier-border)', borderRadius: '6px', boxShadow: '0 6px 18px rgba(0,0,0,0.4)', maxHeight: '240px', overflowY: 'auto', padding: '6px 0', minWidth: Math.max(240, pathInput.offsetWidth) + 'px' });
+          let hi = -1;
+          filteredList.forEach(item => {
+            const it = document.createElement('div');
+            it.textContent = item.p || '/';
+            Object.assign(it.style, { padding: '8px 12px', cursor: 'pointer', whiteSpace: 'nowrap' });
+            it.onmouseenter = () => { if (hi >= 0 && dd.children[hi]) dd.children[hi].style.background = 'transparent'; it.style.background = 'var(--background-secondary)'; hi = Array.from(dd.children).indexOf(it); };
+            it.onmouseleave = () => { it.style.background = 'transparent'; };
+            it.onclick = (e) => { e.stopPropagation(); pathInput.value = item.p + (item.t === 'folder' ? '/' : ''); const ev = new Event('change', { bubbles: true }); pathInput.dispatchEvent(ev); dd.remove(); pathInput._actDropdown = null; };
+            dd.appendChild(it);
+          });
+          document.body.appendChild(dd);
+          const pos = () => { const rct = pathInput.getBoundingClientRect(); dd.style.left = rct.left + 'px'; dd.style.top = (rct.bottom + 6) + 'px'; dd.style.width = pathInput.offsetWidth + 'px'; };
+          pos();
+          pathInput._actDropdown = dd;
+          pathInput._dropdownScrollListener = pos;
+          pathInput._dropdownClickListener = (ev) => { if (ev.target === pathInput) return; if (!dd.contains(ev.target)) { dd.remove(); pathInput._actDropdown = null; document.removeEventListener('click', pathInput._dropdownClickListener); document.removeEventListener('scroll', pathInput._dropdownScrollListener, true); document.removeEventListener('keydown', pathInput._dropdownKeyListener); pathInput._dropdownClickListener = null; pathInput._dropdownScrollListener = null; pathInput._dropdownKeyListener = null; } };
+          pathInput._dropdownKeyListener = (ev) => { const items = Array.from(dd.children); if (items.length === 0) return; if (ev.key === 'ArrowDown') { ev.preventDefault(); hi = Math.min(hi + 1, items.length - 1); items.forEach(item => item.style.background = 'transparent'); if (hi >= 0) { items[hi].style.background = 'var(--background-secondary)'; items[hi].scrollIntoView({ block: 'nearest' }); } } else if (ev.key === 'ArrowUp') { ev.preventDefault(); hi = Math.max(hi - 1, -1); items.forEach(item => item.style.background = 'transparent'); if (hi >= 0) { items[hi].style.background = 'var(--background-secondary)'; items[hi].scrollIntoView({ block: 'nearest' }); } } else if (ev.key === 'Enter' && hi >= 0) { ev.preventDefault(); items[hi].click(); } else if (ev.key === 'Escape') { ev.preventDefault(); dd.remove(); pathInput._actDropdown = null; document.removeEventListener('keydown', pathInput._dropdownKeyListener); pathInput._dropdownKeyListener = null; } };
+          document.addEventListener('scroll', pos, true);
+          document.addEventListener('click', pathInput._dropdownClickListener);
+          document.addEventListener('keydown', pathInput._dropdownKeyListener);
+        };
+        const pathHandler = async () => { r.path = String(pathInput.value || ''); await this.plugin.saveSettings(); };
+        pathInput.addEventListener('focus', updateDropdown);
+        pathInput.addEventListener('click', updateDropdown);
+        pathInput.addEventListener('input', updateDropdown);
+        pathInput.addEventListener('change', pathHandler);
+        const delHandler = async () => {
+          const idx = this.plugin.settings.advancedRules.indexOf(r);
+          if (idx !== -1) this.plugin.settings.advancedRules.splice(idx, 1);
+          await this.plugin.saveSettings();
+          renderRules();
+        };
+        delBtn.addEventListener('click', delHandler);
+      });
+      if (filtered.length === 0) {
+        // no output
+      }
+    };
+    const addRuleFn = async () => {
+      if (!Array.isArray(this.plugin.settings.advancedRules)) this.plugin.settings.advancedRules = [];
+      const text = isRegex ? String(this.entry.pattern || '') : String(this.entry.pattern || '');
+      const flags = String(this.entry.flags || '');
+      const isR = !!this.entry.isRegex;
+      this.plugin.settings.advancedRules.push({ text, flags, isRegex: isR, mode: 'include', path: '' });
+      await this.plugin.saveSettings();
+      renderRules();
+    };
+    addRuleBtn.addEventListener('click', addRuleFn);
+    this._handlers.push({ el: addRuleBtn, ev: 'click', fn: addRuleFn });
+    renderRules();
+    updatePickerVisibility();
+    renderPreview();
+    const saveRow = contentEl.createDiv();
+    saveRow.style.display = 'flex';
+    saveRow.style.justifyContent = 'flex-end';
+    saveRow.style.marginTop = '14px';
+    const saveBtn = saveRow.createEl('button', { text: this.plugin.t('btn_save_entry','Save Entry') });
+    saveBtn.addClass('mod-cta');
+    const saveHandler = async () => {
+      // Collect current UI values from EditEntryModal
+      const st = styleSelect.value;
+      let matchTypeVal = isRegex ? 'regex' : matchSelect.value;
+      if (matchTypeVal === 'startsWith') matchTypeVal = 'startswith';
+      if (matchTypeVal === 'endsWith') matchTypeVal = 'endswith';
+      const caseSensitiveVal = caseSel.value === 'case';
+      const textColorVal = textColorInput.value || '';
+      const bgColorVal = bgColorInput.value || '';
+      const patternVal = String(textInput.value || '').trim();
+      
+      // Update global settings
+      this.plugin.settings.caseSensitive = caseSensitiveVal;
+      
+      // Find entry by uid - more reliable than reference comparison
+      const entryUid = this.entry.uid;
+      let foundEntry = null;
+      let foundIdx = -1;
+      let foundArray = null;
+      
+      // Search in wordEntries
+      for (let i = 0; i < this.plugin.settings.wordEntries.length; i++) {
+        if (this.plugin.settings.wordEntries[i].uid === entryUid) {
+          foundEntry = this.plugin.settings.wordEntries[i];
+          foundIdx = i;
+          foundArray = this.plugin.settings.wordEntries;
+          break;
+        }
+      }
+      
+      // If not found in wordEntries, search in textBgColoringEntries
+      if (!foundEntry) {
+        for (let i = 0; i < this.plugin.settings.textBgColoringEntries.length; i++) {
+          if (this.plugin.settings.textBgColoringEntries[i].uid === entryUid) {
+            foundEntry = this.plugin.settings.textBgColoringEntries[i];
+            foundIdx = i;
+            foundArray = this.plugin.settings.textBgColoringEntries;
+            break;
+          }
+        }
+      }
+      
+      // Update the entry if found
+      if (foundEntry && foundIdx !== -1 && foundArray) {
+        // Handle pattern changes
+        if (!isRegex) {
+          if (!patternVal) {
+            foundArray.splice(foundIdx, 1);
+          } else {
+            const parts = patternVal.split(',').map(p => String(p).trim()).filter(p => p.length > 0);
+            foundArray[foundIdx].pattern = parts[0];
+            foundArray[foundIdx].groupedPatterns = parts.length > 1 ? parts : null;
+          }
+        }
+        
+        // Save entry properties
+        foundArray[foundIdx].matchType = matchTypeVal;
+        foundArray[foundIdx].styleType = st;
+        
+        // Save color values based on style type
+        if (st === 'text') {
+          foundArray[foundIdx].color = textColorVal;
+          foundArray[foundIdx].textColor = null;
+          foundArray[foundIdx].backgroundColor = null;
+        } else if (st === 'highlight') {
+          foundArray[foundIdx].color = '';
+          foundArray[foundIdx].textColor = 'currentColor';
+          foundArray[foundIdx].backgroundColor = bgColorVal;
+        } else {
+          foundArray[foundIdx].color = '';
+          foundArray[foundIdx].textColor = textColorVal;
+          foundArray[foundIdx].backgroundColor = bgColorVal;
+        }
+        
+        // Preserve entry-specific highlight styling parameters from BOTH this.entry and foundEntry
+        // Merge them to preserve any changes made in HighlightStylingModal
+        if (typeof this.entry.backgroundOpacity === 'number') foundArray[foundIdx].backgroundOpacity = this.entry.backgroundOpacity;
+        if (typeof this.entry.highlightBorderRadius === 'number') foundArray[foundIdx].highlightBorderRadius = this.entry.highlightBorderRadius;
+        if (typeof this.entry.highlightHorizontalPadding === 'number') foundArray[foundIdx].highlightHorizontalPadding = this.entry.highlightHorizontalPadding;
+        if (typeof this.entry.highlightVerticalPadding === 'number') foundArray[foundIdx].highlightVerticalPadding = this.entry.highlightVerticalPadding;
+        if (typeof this.entry.enableBorderThickness === 'boolean') foundArray[foundIdx].enableBorderThickness = this.entry.enableBorderThickness;
+        if (this.entry.borderStyle) foundArray[foundIdx].borderStyle = this.entry.borderStyle;
+        if (this.entry.borderLineStyle) foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
+        if (typeof this.entry.borderOpacity === 'number') foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
+        if (typeof this.entry.borderThickness === 'number') foundArray[foundIdx].borderThickness = this.entry.borderThickness;
+        
+        // Also preserve any that were already in foundEntry (in case HighlightStylingModal saved them)
+        if (typeof foundEntry.backgroundOpacity === 'number' && typeof foundArray[foundIdx].backgroundOpacity === 'undefined') foundArray[foundIdx].backgroundOpacity = foundEntry.backgroundOpacity;
+        if (typeof foundEntry.highlightBorderRadius === 'number' && typeof foundArray[foundIdx].highlightBorderRadius === 'undefined') foundArray[foundIdx].highlightBorderRadius = foundEntry.highlightBorderRadius;
+        if (typeof foundEntry.highlightHorizontalPadding === 'number' && typeof foundArray[foundIdx].highlightHorizontalPadding === 'undefined') foundArray[foundIdx].highlightHorizontalPadding = foundEntry.highlightHorizontalPadding;
+        if (typeof foundEntry.highlightVerticalPadding === 'number' && typeof foundArray[foundIdx].highlightVerticalPadding === 'undefined') foundArray[foundIdx].highlightVerticalPadding = foundEntry.highlightVerticalPadding;
+        if (typeof foundEntry.enableBorderThickness === 'boolean' && typeof foundArray[foundIdx].enableBorderThickness === 'undefined') foundArray[foundIdx].enableBorderThickness = foundEntry.enableBorderThickness;
+        if (foundEntry.borderStyle && !foundArray[foundIdx].borderStyle) foundArray[foundIdx].borderStyle = foundEntry.borderStyle;
+        if (foundEntry.borderLineStyle && !foundArray[foundIdx].borderLineStyle) foundArray[foundIdx].borderLineStyle = foundEntry.borderLineStyle;
+        if (typeof foundEntry.borderOpacity === 'number' && typeof foundArray[foundIdx].borderOpacity === 'undefined') foundArray[foundIdx].borderOpacity = foundEntry.borderOpacity;
+        if (typeof foundEntry.borderThickness === 'number' && typeof foundArray[foundIdx].borderThickness === 'undefined') foundArray[foundIdx].borderThickness = foundEntry.borderThickness;
+        
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        this.plugin.triggerActiveDocumentRerender();
+        try { this.onSaved && this.onSaved(this.entry); } catch (e) {}
+        
+        // Close and reopen parent modal to refresh suggestions display
+        if (this.parentModal) {
+          try {
+            this.parentModal.close();
+            // Reopen with fresh suggestions
+            setTimeout(() => {
+              try { new AddToExistingEntryModal(this.app, this.plugin, this.parentModal.selectedText, this.parentModal.view).open(); } catch (e) {}
+            }, 100);
+          } catch (e) {}
+        }
+      }
+      
+      this.close();
+    };
+    saveBtn.addEventListener('click', saveHandler);
+    this._handlers.push({ el: saveBtn, ev: 'click', fn: saveHandler });
+    
+    // Store references to functions for external access
+    this._refreshPreview = renderPreview;
+  }
+  onClose() {
+    try { this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} }); } catch (e) {}
+    this._handlers = [];
+    try { this.contentEl.empty(); } catch (e) {}
   }
 }
 
@@ -9850,7 +13205,7 @@ class BlacklistRegexTesterModal extends Modal {
       Object.keys(flagButtons).forEach(k => {
         const on = flagButtons[k].dataset.on === '1';
         flagButtons[k].style.background = on ? 'var(--interactive-accent)' : 'var(--background-modifier-form-field)';
-        flagButtons[k].style.color = on ? 'var(--text-on-accent)' : 'var(--text-normal)';
+        flagButtons[k].style.color = on ? 'var(--text-normal)' : 'var(--text-normal)';
       });
     };
     const flagTooltips = { 'i': 'ignore case', 'g': 'global', 'm': 'multiline', 's': 'dotall', 'u': 'unicode', 'y': 'sticky' };
@@ -10089,7 +13444,7 @@ class ManageRulesModal extends Modal {
     this.plugin = plugin;
     this._handlers = [];
     this._drag = { from: -1, to: -1 };
-    this._filter = { text: '', regex: false };
+    this._filter = { text: '', regex: false, limit: 0, match: 'contains' };
   }
   onOpen() {
     const { contentEl } = this;
@@ -10110,10 +13465,13 @@ class ManageRulesModal extends Modal {
     const searchRow = contentEl.createDiv();
     try { searchRow.addClass('act-search-container'); } catch (e) { try { searchRow.classList.add('act-search-container'); } catch (_) {} }
     searchRow.style.marginBottom = '12px';
+    searchRow.style.display = 'flex';
+    searchRow.style.alignItems = 'center';
+    searchRow.style.gap = '8px';
     const searchInput = searchRow.createEl('input', { type: 'text' });
     try { searchInput.addClass('act-search-input'); } catch (e) { try { searchInput.classList.add('act-search-input'); } catch (_) {} }
     searchInput.placeholder = this.plugin.t('search_file_folder_rules_placeholder','Search file/folder rules…');
-    searchInput.style.width = '100%';
+    searchInput.style.flex = '1 1 auto';
     searchInput.style.padding = '8px';
     searchInput.style.border = '1px solid var(--background-modifier-border)';
     searchInput.style.borderRadius = '6px';
@@ -10122,6 +13480,31 @@ class ManageRulesModal extends Modal {
     const searchHandler = () => { this._filter.text = String(searchInput.value || '').trim(); renderList(); };
     searchInput.addEventListener('input', searchHandler);
     this._handlers.push({ el: searchInput, ev: 'input', fn: searchHandler });
+
+    const limitInput = searchRow.createEl('input', { type: 'text' });
+    limitInput.value = '0';
+    limitInput.placeholder = this.plugin.t('limit_input_placeholder','limit');
+    limitInput.title = this.plugin.t('limit_input_tooltip','0=all; number=last N; sw=starts; ew=ends; e=exact');
+    limitInput.style.width = '64px';
+    limitInput.style.padding = '6px';
+    limitInput.style.border = '1px solid var(--background-modifier-border)';
+    limitInput.style.borderRadius = '6px';
+    const limitHandler = () => {
+      const raw = String(limitInput.value || '').trim().toLowerCase();
+      const num = parseInt(raw, 10);
+      if (!raw || raw === '0' || isNaN(num)) {
+        this._filter.limit = (!isNaN(num) && num >= 0) ? num : 0;
+      } else {
+        this._filter.limit = (!isNaN(num) && num >= 0) ? num : 0;
+      }
+      this._filter.match = 'contains';
+      if (raw === 'sw') this._filter.match = 'starts';
+      else if (raw === 'ew') this._filter.match = 'ends';
+      else if (raw === 'e') this._filter.match = 'exact';
+      renderList();
+    };
+    limitInput.addEventListener('input', limitHandler);
+    this._handlers.push({ el: limitInput, ev: 'input', fn: limitHandler });
 
     const listWrap = contentEl.createDiv();
     listWrap.style.borderRadius = '8px';
@@ -10134,8 +13517,15 @@ class ManageRulesModal extends Modal {
       list.empty();
       const rows = Array.isArray(this.plugin.settings.advancedRules) ? [...this.plugin.settings.advancedRules] : [];
       const q = String(this._filter.text || '').trim().toLowerCase();
-      const filtered = q ? rows.filter(r => [String(r.text||''), String(r.path||'')].join(' ').toLowerCase().includes(q)) : rows;
-      filtered.forEach((entry, i) => {
+      const filtered = q ? rows.filter(r => {
+        const text = [String(r.text||''), String(r.path||'')].join(' ').toLowerCase();
+        if (this._filter.match === 'starts') return text.startsWith(q);
+        if (this._filter.match === 'ends') return text.endsWith(q);
+        if (this._filter.match === 'exact') return text === q;
+        return text.includes(q);
+      }) : rows;
+      const limited = (this._filter.limit && this._filter.limit > 0) ? filtered.slice(-this._filter.limit) : filtered;
+      limited.forEach((entry, i) => {
         const row = list.createDiv();
         row.style.display = 'flex';
         row.style.alignItems = 'center';
@@ -10253,6 +13643,9 @@ class AddRuleModal extends Modal {
     this._editRule = editRule;
     this._editIndex = editIndex;
     this._handlers = [];
+    this._preFillText = '';
+    this._preFillFlags = '';
+    this._preFillIsRegex = false;
   }
   onOpen() {
     const { contentEl } = this;
@@ -10385,6 +13778,12 @@ class AddRuleModal extends Modal {
         modeSel.value = this._editRule.mode === 'exclude' ? 'exclude' : 'include';
         pathInput.value = String(this._editRule.path || '');
       } catch (e) {}
+    } else {
+      try {
+        if (this._preFillText) textInput.value = String(this._preFillText || '');
+        if (this._preFillFlags) flagsInput.value = String(this._preFillFlags || '');
+        if (typeof this._preFillIsRegex === 'boolean') regexCheckbox.checked = !!this._preFillIsRegex;
+      } catch (e) {}
     }
 
     const actions = contentEl.createDiv();
@@ -10476,6 +13875,26 @@ class ColorSettingTab extends PluginSettingTab {
     this._customSwatchesFolded = (this.plugin.settings && typeof this.plugin.settings.customSwatchesFolded !== 'undefined') ? !!this.plugin.settings.customSwatchesFolded : false;
     // Filter mode for word entries (null, 'highlight', 'text')
     this._filterMode = null;
+    // Optional matchType filters for entries list - support multiple with OR logic
+    this._entriesMatchTypeStartsWith = false;
+    this._entriesMatchTypeEndsWith = false;
+    this._entriesMatchTypeExact = false;
+    // Optional regex/word-only filters
+    this._entriesWordsOnly = false;
+    this._blacklistRegexOnly = false;
+    this._blacklistWordsOnly = false;
+    // Optional path mode-only filter ('include' | 'exclude')
+    this._pathModeOnly = null;
+    // Limit and match/filter tokens for search bars
+    this._entriesLimit = Number(this.plugin.settings?.entriesSearchLimit ?? 0) || 0;
+    this._entriesRegexOnly = false;
+    this._entriesSearchMatch = 'contains';
+    this._blacklistLimit = Number(this.plugin.settings?.blacklistSearchLimit ?? 0) || 0;
+    this._blacklistSearchMatchStarts = false;
+    this._blacklistSearchMatchEnds = false;
+    this._blacklistSearchMatchExact = false;
+    this._pathLimit = Number(this.plugin.settings?.pathSearchLimit ?? 0) || 0;
+    this._pathSearchMatch = 'contains';
   }
 
   // Create a settings row for a single entry and track cleanup
@@ -10504,6 +13923,21 @@ class ColorSettingTab extends PluginSettingTab {
       styleSelect.style.textAlign = 'center';
       try { styleSelect.addClass('act-style-select'); } catch (e) { try { styleSelect.classList.add('act-style-select'); } catch (_) {} }
       styleSelect.innerHTML = `<option value="text">${this.plugin.t('style_type_text','color')}</option><option value="highlight">${this.plugin.t('style_type_highlight','highlight')}</option><option value="both">${this.plugin.t('style_type_both','both')}</option>`;
+
+      // ELEMENT 1b: Match selector (exact/contains/starts/ends)
+      const matchSelect = row.createEl('select');
+      matchSelect.style.padding = '6px';
+      matchSelect.style.borderRadius = '4px';
+      matchSelect.style.border = '1px solid var(--background-modifier-border)';
+      matchSelect.style.background = 'var(--background-modifier-form-field)';
+      matchSelect.style.color = 'var(--text-normal)';
+      matchSelect.style.flex = '0 0 auto';
+      matchSelect.style.maxWidth = '120px';
+      matchSelect.style.width = 'stretch';
+      matchSelect.style.minWidth = '100px';
+      matchSelect.style.textAlign = 'center';
+      try { matchSelect.addClass('act-match-select'); } catch (e) { try { matchSelect.classList.add('act-match-select'); } catch (_) {} }
+      matchSelect.innerHTML = `<option value="exact">${this.plugin.t('match_option_exact','exact')}</option><option value="contains">${this.plugin.t('match_option_contains','contains')}</option><option value="startsWith">${this.plugin.t('match_option_starts_with','starts with')}</option><option value="endsWith">${this.plugin.t('match_option_ends_with','ends with')}</option>`;
 
       // ELEMENT 2a: Regex name input (only for regex)
       let nameInput = null;
@@ -10635,6 +14069,19 @@ class ColorSettingTab extends PluginSettingTab {
       // Set flags input visibility based on current style and regex state
       flagsInput.style.display = entry.isRegex ? '' : 'none';
 
+      // Initialize matchSelect value with entry.matchType or default based on partialMatch
+      try {
+        let defaultMatch = (typeof entry.matchType === 'string' && entry.matchType) ? entry.matchType.toLowerCase() : (this.plugin.settings.partialMatch ? 'contains' : 'exact');
+        // Normalize to lowercase for internal storage: startswith, endswith
+        if (defaultMatch === 'startswith' || defaultMatch === 'starts with') defaultMatch = 'startswith';
+        if (defaultMatch === 'endswith' || defaultMatch === 'ends with') defaultMatch = 'endswith';
+        // Convert to camelCase for dropdown options (exact, contains, startsWith, endsWith)
+        const dropdownValue = defaultMatch === 'startswith' ? 'startsWith' : (defaultMatch === 'endswith' ? 'endsWith' : defaultMatch);
+        matchSelect.value = dropdownValue;
+        entry.matchType = defaultMatch;
+        // MATCH_SELECT_INIT log removed - too verbose
+      } catch (e) {}
+
       const updateInputDisplay = () => {
         // Update the input field to show the current state from entry
         if (entry.isRegex) {
@@ -10696,7 +14143,7 @@ class ColorSettingTab extends PluginSettingTab {
           this.plugin.forceRefreshAllEditors();
           this.plugin.forceRefreshAllReadingViews();
           this.plugin.triggerActiveDocumentRerender();
-          this._suspendSorting = this._wordsSortMode !== 'last-added';
+          this._suspendSorting = this._wordsSortMode === 'last-added';
           this._refreshEntries();
         } catch (error) {
           debugError('SETTINGS', 'Error saving word entry', error);
@@ -10718,7 +14165,7 @@ class ColorSettingTab extends PluginSettingTab {
           this.plugin.reconfigureEditorExtensions();
           this.plugin.forceRefreshAllEditors();
           this.plugin.forceRefreshAllReadingViews();
-          this._suspendSorting = this._wordsSortMode !== 'last-added';
+          this._suspendSorting = this._wordsSortMode === 'last-added';
           this._refreshEntries();
         } catch (e) {
           debugError('SETTINGS', 'duplicate entry error', e);
@@ -10806,6 +14253,12 @@ class ColorSettingTab extends PluginSettingTab {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const menu = new Menu(this.app);
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t('edit_entry_details','Edit Entry Details')).setIcon('pencil').onClick(() => {
+              const modal = new EditEntryModal(this.app, this.plugin, entry, () => { try { this._refreshEntries(); } catch (e) {} });
+              modal.open();
+            });
+          });
           menu.addItem((item) => {
             item.setTitle(this.plugin.t('duplicate_entry','Duplicate Entry')).setIcon('copy').onClick(duplicateHandler);
           });
@@ -11055,6 +14508,7 @@ class ColorSettingTab extends PluginSettingTab {
 
       const updateVisibility = () => {
         const style = styleSelect.value;
+        matchSelect.style.display = entry.isRegex ? 'none' : '';
         if (style === 'text') {
           cp.style.display = '';
           if (swatchSelect) swatchSelect.style.display = '';
@@ -11141,6 +14595,29 @@ class ColorSettingTab extends PluginSettingTab {
       };
       styleSelect.addEventListener('change', styleChangeHandler);
 
+      const matchChangeHandler = async () => {
+        const idx = resolveIdx();
+        if (idx !== -1) {
+          // Store as lowercase internally: startswith, endswith
+          let value = matchSelect.value;
+          if (value === 'startsWith') value = 'startswith';
+          if (value === 'endsWith') value = 'endswith';
+          this.plugin.settings.wordEntries[idx].matchType = value;
+          entry.matchType = value;
+          try { debugLog('MATCH_CHANGE_SAVE', `idx=${idx}, dropdown="${matchSelect.value}", stored="${value}", pattern="${entry.pattern.substring(0, 20)}"`); } catch (_) {}
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this.plugin.compileTextBgColoringEntries();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
+          this._refreshEntries();
+        }
+      };
+      matchSelect.addEventListener('change', matchChangeHandler);
+      // Also listen to input to catch programmatic value changes
+      matchSelect.addEventListener('input', matchChangeHandler);
+
       const cleanup = () => {
         try { textInput.removeEventListener('change', textInputHandler); } catch (e) {}
         try { textInput.removeEventListener('blur', textInputHandler); } catch (e) {}
@@ -11155,10 +14632,11 @@ class ColorSettingTab extends PluginSettingTab {
         try { if (swatchSelect) swatchSelect.removeEventListener('change', swatchSelectHandler); } catch (e) {}
         try { if (swatchSelect2) swatchSelect2.removeEventListener('change', swatchSelect2Handler); } catch (e) {}
         try { styleSelect.removeEventListener('change', styleChangeHandler); } catch (e) {}
+        try { matchSelect.removeEventListener('change', matchChangeHandler); } catch (e) {}
         try { row.remove(); } catch (e) {}
       };
 
-      this._entryRows.set(entry, { row, elements: { nameInput, textInput, styleSelect, cp, cpBg, regexChk, flagsInput, del }, cleanup });
+      this._entryRows.set(entry, { row, elements: { nameInput, textInput, styleSelect, matchSelect, cp, cpBg, regexChk, flagsInput, del }, cleanup });
       this._cleanupHandlers.push(cleanup);
     } catch (e) { debugError('SETTINGS', '_createEntryRow error', e); }
   }
@@ -11202,8 +14680,23 @@ class ColorSettingTab extends PluginSettingTab {
             String(e.presetLabel || '').toLowerCase(),
             String(e.flags || '').toLowerCase()
           ].join(' ');
-          return text.includes(q);
+          const hay = text;
+          // Check if any match mode filter is active - use OR logic
+          if (this._blacklistSearchMatchStarts || this._blacklistSearchMatchEnds || this._blacklistSearchMatchExact) {
+            let matches = false;
+            if (this._blacklistSearchMatchStarts) matches = matches || hay.startsWith(q);
+            if (this._blacklistSearchMatchEnds) matches = matches || hay.endsWith(q);
+            if (this._blacklistSearchMatchExact) matches = matches || (hay === q);
+            return matches;
+          }
+          return hay.includes(q);
         });
+      }
+      // Apply regex/word-only filter from limit tokens
+      if (this._blacklistRegexOnly) {
+        entries = entries.filter(e => !!e.isRegex);
+      } else if (this._blacklistWordsOnly) {
+        entries = entries.filter(e => !e.isRegex);
       }
       // Apply sorting according to current mode
       if (this._blacklistSortMode === 'a-z') {
@@ -11235,7 +14728,12 @@ class ColorSettingTab extends PluginSettingTab {
         const oldList = entries.filter(e => !(e && e.uid && this._blacklistNewSet.has(e.uid)));
         entries = [...oldList, ...newList];
       }
-      entries.forEach((entry) => {
+      // Separate entries with persistAtEnd flag to display them at the end without filtering
+      const persistAtEndEntries = entries.filter(e => e && e.persistAtEnd === true);
+      const regularEntries = entries.filter(e => !e || e.persistAtEnd !== true);
+      const limitedRegularEntries = (this._blacklistLimit && this._blacklistLimit > 0) ? regularEntries.slice(-this._blacklistLimit) : regularEntries;
+      const limitedEntries = [...limitedRegularEntries, ...persistAtEndEntries];
+      limitedEntries.forEach((entry) => {
         const row = this._blacklistWordsContainer.createDiv();
         row.style.display = 'flex';
         row.style.alignItems = 'center';
@@ -11397,14 +14895,14 @@ class ColorSettingTab extends PluginSettingTab {
             const orig = this.plugin.settings.blacklistEntries[entryIdx];
             const dup = Object.assign({}, orig);
             try { dup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { dup.uid = Date.now(); }
-            this.plugin.settings.blacklistEntries.splice(entryIdx + 1, 0, dup);
-            await this.plugin.saveSettings();
-            this._suspendSorting = this._blacklistSortMode !== 'last-added';
-            this._refreshBlacklistWords();
-          } catch (e) {
-            debugError('SETTINGS', 'duplicate blacklist entry error', e);
-          }
-        };
+          this.plugin.settings.blacklistEntries.splice(entryIdx + 1, 0, dup);
+          await this.plugin.saveSettings();
+          this._suspendSorting = this._blacklistSortMode === 'last-added';
+          this._refreshBlacklistWords();
+        } catch (e) {
+          debugError('SETTINGS', 'duplicate blacklist entry error', e);
+        }
+      };
 
         const openInRegexTesterHandler = async () => {
           try {
@@ -11466,10 +14964,19 @@ class ColorSettingTab extends PluginSettingTab {
       this._pathRulesContainer.empty();
       const rows = Array.isArray(this.plugin.settings.pathRules) ? [...this.plugin.settings.pathRules] : [];
       const q = String(this._pathRulesSearchQuery || '').trim().toLowerCase();
-      const filteredRows = q ? rows.filter(r => {
+      let filteredRows = q ? rows.filter(r => {
         const text = [String(r.path || ''), String(r.mode || ''), String(r.matchType || '')].join(' ').toLowerCase();
-        return text.includes(q);
+        const hay = text;
+        if (this._pathSearchMatch === 'starts') return hay.startsWith(q);
+        if (this._pathSearchMatch === 'ends') return hay.endsWith(q);
+        if (this._pathSearchMatch === 'exact') return hay === q;
+        return hay.includes(q);
       }) : rows;
+      if (this._pathModeOnly === 'include') {
+        filteredRows = filteredRows.filter(r => String(r.mode || '') === 'include');
+      } else if (this._pathModeOnly === 'exclude') {
+        filteredRows = filteredRows.filter(r => String(r.mode || '') === 'exclude');
+      }
       // Skip sorting if suspension flag is set (new entry being added)
       if (!this._suspendSorting) {
         if (this._pathSortMode === 'a-z') {
@@ -11537,7 +15044,8 @@ class ColorSettingTab extends PluginSettingTab {
         return { files: filePaths.sort(), folders: Array.from(folders).sort() };
       };
       const sugg = buildSuggestions();
-      filteredRows.forEach((entry, filterIndex) => {
+      const limitedRows = (this._pathLimit && this._pathLimit > 0) ? filteredRows.slice(-this._pathLimit) : filteredRows;
+      limitedRows.forEach((entry, filterIndex) => {
         // Get the actual index in the original pathRules array
         const actualIndex = rows.indexOf(entry);
         if (actualIndex === -1) return; // Safety check
@@ -11985,8 +15493,12 @@ class ColorSettingTab extends PluginSettingTab {
       listDiv.empty();
 
       const entriesToDisplay = [...this.plugin.settings.wordEntries];
+      // Separate persistAtEnd entries early - they bypass all filters
+      const persistAtEndEntriesRaw = entriesToDisplay.filter(e => e && e.persistAtEnd === true);
+      const regularEntriesToFilter = entriesToDisplay.filter(e => !e || e.persistAtEnd !== true);
+      
       const q = String(this._entriesSearchQuery || '').trim().toLowerCase();
-      const filtered = q ? entriesToDisplay.filter(e => {
+      const filtered = q ? regularEntriesToFilter.filter(e => {
         const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || '')];
         const swDefault = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
         const swCustom = Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches : [];
@@ -12010,22 +15522,41 @@ class ColorSettingTab extends PluginSettingTab {
           tName,
           bName
         ].join(' ');
+        if (this._entriesSearchMatch === 'starts') return text.startsWith(q);
+        if (this._entriesSearchMatch === 'ends') return text.endsWith(q);
+        if (this._entriesSearchMatch === 'exact') return text === q;
         return text.includes(q);
-      }) : entriesToDisplay;
+      }) : regularEntriesToFilter;
 
       // Apply filter mode if set
       let finalFiltered = filtered;
       if (this._filterMode === 'highlight') {
-        finalFiltered = filtered.filter(e => e.styleType === 'highlight' || e.styleType === 'both');
+        finalFiltered = filtered.filter(e => e.styleType === 'highlight');
       } else if (this._filterMode === 'text') {
-        finalFiltered = filtered.filter(e => e.styleType === 'text' || e.styleType === 'both');
+        finalFiltered = filtered.filter(e => e.styleType === 'text');
+      } else if (this._filterMode === 'both') {
+        finalFiltered = filtered.filter(e => e.styleType === 'both');
+      }
+      // Apply matchType-only filter if requested via limit tokens (sw/ew) - use OR logic
+      if (this._entriesMatchTypeStartsWith || this._entriesMatchTypeEndsWith || this._entriesMatchTypeExact) {
+        finalFiltered = finalFiltered.filter(e => {
+          const mt = String(e.matchType || '').toLowerCase();
+          let matches = false;
+          if (this._entriesMatchTypeStartsWith) matches = matches || (mt === 'startswith');
+          if (this._entriesMatchTypeEndsWith) matches = matches || (mt === 'endswith');
+          if (this._entriesMatchTypeExact) matches = matches || (mt === 'exact');
+          return matches;
+        });
+      }
+      if (this._entriesRegexOnly) {
+        finalFiltered = finalFiltered.filter(e => !!e.isRegex);
+      }
+      if (this._entriesWordsOnly) {
+        finalFiltered = finalFiltered.filter(e => !e.isRegex);
       }
 
-      const newFiltered = finalFiltered.filter(e => isNew(e));
-      let oldFiltered = finalFiltered.filter(e => !isNew(e));
-
       if (!this._suspendSorting && this._wordsSortMode === 'a-z') {
-        oldFiltered.sort((a, b) => {
+        finalFiltered.sort((a, b) => {
           const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
           const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
           const aEmpty = String(patternA).trim().length === 0;
@@ -12039,7 +15570,7 @@ class ColorSettingTab extends PluginSettingTab {
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
       } else if (!this._suspendSorting && this._wordsSortMode === 'reverse-a-z') {
-        oldFiltered.sort((a, b) => {
+        finalFiltered.sort((a, b) => {
           const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
           const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
           const aEmpty = String(patternA).trim().length === 0;
@@ -12054,7 +15585,7 @@ class ColorSettingTab extends PluginSettingTab {
         });
       } else if (!this._suspendSorting && this._wordsSortMode === 'style-order') {
         const styleOrder = { 'text': 0, 'highlight': 1, 'both': 2 };
-        oldFiltered.sort((a, b) => {
+        finalFiltered.sort((a, b) => {
           const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
           const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
           const aEmpty = String(patternA).trim().length === 0;
@@ -12067,7 +15598,7 @@ class ColorSettingTab extends PluginSettingTab {
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
       } else if (!this._suspendSorting && this._wordsSortMode === 'color') {
-        oldFiltered.sort((a, b) => {
+        finalFiltered.sort((a, b) => {
           const patternA = (Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0) ? a.groupedPatterns[0] : (a.pattern || '');
           const patternB = (Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0) ? b.groupedPatterns[0] : (b.pattern || '');
           const aEmpty = String(patternA).trim().length === 0;
@@ -12081,12 +15612,22 @@ class ColorSettingTab extends PluginSettingTab {
         });
       }
 
-      const baseOrder = [...this.plugin.settings.wordEntries];
-      const newInInsertionOrder = baseOrder.filter(e => isNew(e) && newFiltered.includes(e));
-      const entriesFiltered = [...oldFiltered, ...newInInsertionOrder];
+      let entriesFiltered;
+      if (this._suspendSorting || this._wordsSortMode === 'last-added') {
+        const baseOrder = [...this.plugin.settings.wordEntries];
+        const newFiltered = finalFiltered.filter(e => isNew(e));
+        const oldFiltered = finalFiltered.filter(e => !isNew(e));
+        const newInInsertionOrder = baseOrder.filter(e => isNew(e) && newFiltered.includes(e));
+        entriesFiltered = [...oldFiltered, ...newInInsertionOrder];
+      } else {
+        entriesFiltered = finalFiltered;
+      }
 
       // Re-create all rows in the correct order
-      entriesFiltered.forEach((entry) => {
+      // Separate entries with persistAtEnd flag to display them at the end without any filtering applied
+      const limitedRegularEntries = (this._entriesLimit && this._entriesLimit > 0) ? entriesFiltered.slice(-this._entriesLimit) : entriesFiltered;
+      const limitedEntries = [...limitedRegularEntries, ...persistAtEndEntriesRaw];
+      limitedEntries.forEach((entry) => {
         this._createEntryRow(entry, listDiv);
       });
       
@@ -12664,14 +16205,14 @@ class ColorSettingTab extends PluginSettingTab {
             .addDropdown(d => {
               d.selectEl.style.width = '200px';
               return d
-                .addOption('solid', this.plugin.t('opt_line_solid','solid'))
-                .addOption('dashed', this.plugin.t('opt_line_dashed','dashed'))
-                .addOption('dotted', this.plugin.t('opt_line_dotted','dotted'))
-                .addOption('double', this.plugin.t('opt_line_double','double'))
-                .addOption('groove', this.plugin.t('opt_line_groove','groove'))
-                .addOption('ridge', this.plugin.t('opt_line_ridge','ridge'))
-                .addOption('inset', this.plugin.t('opt_line_inset','inset'))
-                .addOption('outset', this.plugin.t('opt_line_outset','outset'))
+                .addOption('solid', this.plugin.t('opt_line_solid','Solid'))
+                .addOption('dashed', this.plugin.t('opt_line_dashed','Dashed'))
+                .addOption('dotted', this.plugin.t('opt_line_dotted','Dotted'))
+                .addOption('double', this.plugin.t('opt_line_double','Double'))
+                .addOption('groove', this.plugin.t('opt_line_groove','Groove'))
+                .addOption('ridge', this.plugin.t('opt_line_ridge','Ridge'))
+                .addOption('inset', this.plugin.t('opt_line_inset','Inset'))
+                .addOption('outset', this.plugin.t('opt_line_outset','Outset'))
                 .setValue(this.plugin.settings.quickHighlightBorderLineStyle ?? 'solid')
                 .onChange(async v => { this.plugin.settings.quickHighlightBorderLineStyle = v; await this.plugin.saveSettings(); try { this._updateQuickOncePreview?.(); } catch (e) {} });
             });
@@ -12943,14 +16484,14 @@ class ColorSettingTab extends PluginSettingTab {
             d.selectEl.style.width = '200px';
             try { d.selectEl.style.textAlign = 'center'; } catch (e) {}
             return d
-              .addOption('solid', this.plugin.t('opt_line_solid','solid'))
-              .addOption('dashed', this.plugin.t('opt_line_dashed','dashed'))
-              .addOption('dotted', this.plugin.t('opt_line_dotted','dotted'))
-              .addOption('double', this.plugin.t('opt_line_double','double'))
-              .addOption('groove', this.plugin.t('opt_line_groove','groove'))
-              .addOption('ridge', this.plugin.t('opt_line_ridge','ridge'))
-              .addOption('inset', this.plugin.t('opt_line_inset','inset'))
-              .addOption('outset', this.plugin.t('opt_line_outset','outset'))
+              .addOption('solid', this.plugin.t('opt_line_solid','Solid'))
+              .addOption('dashed', this.plugin.t('opt_line_dashed','Dashed'))
+              .addOption('dotted', this.plugin.t('opt_line_dotted','Dotted'))
+              .addOption('double', this.plugin.t('opt_line_double','Double'))
+              .addOption('groove', this.plugin.t('opt_line_groove','Groove'))
+              .addOption('ridge', this.plugin.t('opt_line_ridge','Ridge'))
+              .addOption('inset', this.plugin.t('opt_line_inset','Inset'))
+              .addOption('outset', this.plugin.t('opt_line_outset','Outset'))
               .setValue(this.plugin.settings.borderLineStyle ?? 'solid')
               .onChange(async v => {
                 this.plugin.settings.borderLineStyle = v;
@@ -13048,10 +16589,13 @@ class ColorSettingTab extends PluginSettingTab {
     try { entriesSearchContainer.addClass('act-search-container'); } catch (e) { try { entriesSearchContainer.classList.add('act-search-container'); } catch (_) {} }
     entriesSearchContainer.style.margin = '8px 0';
     entriesSearchContainer.style.marginTop = '-10px';
+    entriesSearchContainer.style.display = 'flex';
+    entriesSearchContainer.style.alignItems = 'center';
+    entriesSearchContainer.style.gap = '8px';
     const entriesSearch = entriesSearchContainer.createEl('input', { type: 'text' });
     try { entriesSearch.addClass('act-search-input'); } catch (e) { try { entriesSearch.classList.add('act-search-input'); } catch (_) {} }
     entriesSearch.placeholder = this.plugin.t('search_colored_words_placeholder','Search colored words/patterns…');
-    entriesSearch.style.width = '100%';
+    entriesSearch.style.flex = '1 1 auto';
     entriesSearch.style.padding = '6px';
     entriesSearch.style.border = '1px solid var(--background-modifier-border)';
     entriesSearch.style.borderRadius = '4px';
@@ -13060,6 +16604,44 @@ class ColorSettingTab extends PluginSettingTab {
     const entriesSearchHandler = () => { this._entriesSearchQuery = String(entriesSearch.value || '').trim().toLowerCase(); try { this._refreshEntries(); } catch (e) {} };
     entriesSearch.addEventListener('input', entriesSearchHandler);
     this._cleanupHandlers.push(() => entriesSearch.removeEventListener('input', entriesSearchHandler));
+
+    // Limit/filter input beside search
+    const entriesLimitInput = entriesSearchContainer.createEl('input', { type: 'text' });
+    entriesLimitInput.value = String(this.plugin.settings?.entriesSearchLimit ?? 0);
+    entriesLimitInput.placeholder = this.plugin.t('limit_input_placeholder','limit');
+    entriesLimitInput.title = this.plugin.t('limit_input_tooltip','0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact');
+    entriesLimitInput.style.width = '64px';
+    entriesLimitInput.style.padding = '6px';
+    entriesLimitInput.style.border = '1px solid var(--background-modifier-border)';
+    entriesLimitInput.style.borderRadius = '4px';
+    const entriesLimitHandler = () => {
+      const raw = String(entriesLimitInput.value || '').trim().toLowerCase();
+      const parts = raw.split(/\s+/).filter(Boolean);
+      const numPart = parts.find(p => /^\d+$/.test(p));
+      const num = numPart ? parseInt(numPart, 10) : NaN;
+      this._entriesLimit = (!isNaN(num) && num >= 0) ? num : 0;
+      try { this.plugin.settings.entriesSearchLimit = this._entriesLimit; this.debouncedSaveSettings(); } catch (e) {}
+      this._entriesRegexOnly = false;
+      this._entriesWordsOnly = false;
+      this._filterMode = null;
+      this._entriesSearchMatch = 'contains';
+      this._entriesMatchTypeStartsWith = false;
+      this._entriesMatchTypeEndsWith = false;
+      this._entriesMatchTypeExact = false;
+      for (const tok of parts) {
+        if (tok === 'r') this._entriesRegexOnly = true;
+        else if (tok === 'w') this._entriesWordsOnly = true;
+        else if (tok === 'h') this._filterMode = 'highlight';
+        else if (tok === 'c') this._filterMode = 'text';
+        else if (tok === 'b') this._filterMode = 'both';
+        else if (tok === 'sw') this._entriesMatchTypeStartsWith = true;
+        else if (tok === 'ew') this._entriesMatchTypeEndsWith = true;
+        else if (tok === 'e') this._entriesMatchTypeExact = true;
+      }
+      try { this._refreshEntries(); } catch (e) {}
+    };
+    entriesLimitInput.addEventListener('input', entriesLimitHandler);
+    this._cleanupHandlers.push(() => entriesLimitInput.removeEventListener('input', entriesLimitHandler));
 
     const listDiv = containerEl.createDiv();
     listDiv.addClass('color-words-list');
@@ -13083,15 +16665,16 @@ class ColorSettingTab extends PluginSettingTab {
     sortBtn.textContent = this.plugin.t('sort_label_'+(this._wordsSortMode||'last-added'), sortLabels[this._wordsSortMode] || 'Sort: Last Added');
     sortBtn.style.cursor = 'pointer';
     sortBtn.style.flex = '0 0 auto';
-    const sortBtnHandler = async () => {
-      // Cycle through sort modes
-      const currentIndex = sortModes.indexOf(this._wordsSortMode);
-      const nextIndex = (currentIndex + 1) % sortModes.length;
-      this._wordsSortMode = sortModes[nextIndex];
-      sortBtn.textContent = sortLabels[this._wordsSortMode];
-      try { this.plugin.settings.wordsSortMode = this._wordsSortMode; await this.plugin.saveSettings(); } catch (e) {}
-      this._refreshEntries();
-    };
+      const sortBtnHandler = async () => {
+        // Cycle through sort modes
+        const currentIndex = sortModes.indexOf(this._wordsSortMode);
+        const nextIndex = (currentIndex + 1) % sortModes.length;
+        this._wordsSortMode = sortModes[nextIndex];
+        sortBtn.textContent = sortLabels[this._wordsSortMode];
+        try { this.plugin.settings.wordsSortMode = this._wordsSortMode; await this.plugin.saveSettings(); } catch (e) {}
+        this._suspendSorting = false;
+        this._refreshEntries();
+      };
     sortBtn.addEventListener('click', sortBtnHandler);
     this._cleanupHandlers.push(() => sortBtn.removeEventListener('click', sortBtnHandler));
 
@@ -13103,8 +16686,8 @@ class ColorSettingTab extends PluginSettingTab {
     addWordsBtn.addClass('mod-cta');
     const addWordsHandler = async () => {
       const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
-      this.plugin.settings.wordEntries.push({ pattern: '', color: '', isRegex: false, flags: '', groupedPatterns: null, styleType: 'text', uid, persistAtEnd: true });
-      this._suspendSorting = true;
+      this.plugin.settings.wordEntries.push({ pattern: '', color: '', isRegex: false, flags: '', groupedPatterns: null, styleType: 'text', uid, persistAtEnd: true, matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact' });
+      this._suspendSorting = this._wordsSortMode === 'last-added';
       try { this._newEntriesSet && this._newEntriesSet.add(uid); } catch (e) {}
       await this.plugin.saveSettings();
       this.plugin.reconfigureEditorExtensions();
@@ -13121,10 +16704,10 @@ class ColorSettingTab extends PluginSettingTab {
     addRegexBtn.style.cursor = 'pointer';
     addRegexBtn.style.flex = '1';
     addRegexBtn.addClass('mod-cta');
-    addRegexBtn.style.display = this.plugin.settings.enableRegexSupport ? '' : 'none';
-    const addRegexHandler = () => {
-      try {
-        this._suspendSorting = true;
+      addRegexBtn.style.display = this.plugin.settings.enableRegexSupport ? '' : 'none';
+      const addRegexHandler = () => {
+        try {
+        this._suspendSorting = this._wordsSortMode === 'last-added';
         const onAdded = (entry) => {
           try {
             if (entry && entry.uid) {
@@ -13135,7 +16718,7 @@ class ColorSettingTab extends PluginSettingTab {
         };
         new RealTimeRegexTesterModal(this.app, this.plugin, onAdded).open();
       } catch (e) {}
-    };
+      };
     addRegexBtn.addEventListener('click', addRegexHandler);
     this._cleanupHandlers.push(() => addRegexBtn.removeEventListener('click', addRegexHandler));
 
@@ -13151,14 +16734,14 @@ class ColorSettingTab extends PluginSettingTab {
             const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : null;
             const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
             if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
-        const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true };
+        const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true, matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact' };
         try { entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { entry.uid = Date.now(); }
         if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
         else if (tc) { entry.color = tc; entry.styleType = 'text'; entry._savedTextColor = tc; }
         else if (bc) { entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
         else { entry.color = color; entry._savedTextColor = color; }
         this.plugin.settings.wordEntries.push(entry);
-        this._suspendSorting = true;
+        this._suspendSorting = this._wordsSortMode === 'last-added';
         try { this._newEntriesSet && entry && entry.uid && this._newEntriesSet.add(entry.uid); } catch (e) {}
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -13203,10 +16786,13 @@ class ColorSettingTab extends PluginSettingTab {
     const blSearchContainer = containerEl.createDiv();
     try { blSearchContainer.addClass('act-search-container'); } catch (e) { try { blSearchContainer.classList.add('act-search-container'); } catch (_) {} }
     blSearchContainer.style.margin = '8px 0';
+    blSearchContainer.style.display = 'flex';
+    blSearchContainer.style.alignItems = 'center';
+    blSearchContainer.style.gap = '8px';
     const blSearch = blSearchContainer.createEl('input', { type: 'text' });
     try { blSearch.addClass('act-search-input'); } catch (e) { try { blSearch.classList.add('act-search-input'); } catch (_) {} }
     blSearch.placeholder = this.plugin.t('search_blacklist_placeholder','Search blacklisted words or patterns…');
-    blSearch.style.width = '100%';
+    blSearch.style.flex = '1 1 auto';
     blSearch.style.padding = '6px';
     blSearch.style.border = '1px solid var(--background-modifier-border)';
     blSearch.style.borderRadius = '4px';
@@ -13215,6 +16801,39 @@ class ColorSettingTab extends PluginSettingTab {
     const blSearchHandler = () => { this._blacklistSearchQuery = String(blSearch.value || '').trim().toLowerCase(); try { this._refreshBlacklistWords(); } catch (e) {} };
     blSearch.addEventListener('input', blSearchHandler);
     this._cleanupHandlers.push(() => blSearch.removeEventListener('input', blSearchHandler));
+
+    // Limit/filter input for blacklist
+    const blLimitInput = blSearchContainer.createEl('input', { type: 'text' });
+    blLimitInput.value = String(this.plugin.settings?.blacklistSearchLimit ?? 0);
+    blLimitInput.placeholder = this.plugin.t('limit_input_placeholder','limit');
+    blLimitInput.title = this.plugin.t('limit_input_tooltip','0=all; number=last N; r=regex; w=words; sw=starts; ew=ends; e=exact');
+    blLimitInput.style.width = '64px';
+    blLimitInput.style.padding = '6px';
+    blLimitInput.style.border = '1px solid var(--background-modifier-border)';
+    blLimitInput.style.borderRadius = '4px';
+    const blLimitHandler = () => {
+      const raw = String(blLimitInput.value || '').trim().toLowerCase();
+      const parts = raw.split(/\s+/).filter(Boolean);
+      const numPart = parts.find(p => /^\d+$/.test(p));
+      const num = numPart ? parseInt(numPart, 10) : NaN;
+      this._blacklistLimit = (!isNaN(num) && num >= 0) ? num : 0;
+      this._blacklistRegexOnly = false;
+      this._blacklistWordsOnly = false;
+      this._blacklistSearchMatchStarts = false;
+      this._blacklistSearchMatchEnds = false;
+      this._blacklistSearchMatchExact = false;
+      for (const tok of parts) {
+        if (tok === 'r') this._blacklistRegexOnly = true;
+        else if (tok === 'w') this._blacklistWordsOnly = true;
+        else if (tok === 'sw') this._blacklistSearchMatchStarts = true;
+        else if (tok === 'ew') this._blacklistSearchMatchEnds = true;
+        else if (tok === 'e') this._blacklistSearchMatchExact = true;
+      }
+      try { this.plugin.settings.blacklistSearchLimit = this._blacklistLimit; this.debouncedSaveSettings(); } catch (e) {} 
+      try { this._refreshBlacklistWords(); } catch (e) {}
+    };
+    blLimitInput.addEventListener('input', blLimitHandler);
+    this._cleanupHandlers.push(() => blLimitInput.removeEventListener('input', blLimitHandler));
 
     // Store reference to blacklist words container for updating
     this._blacklistWordsContainer = containerEl.createDiv();
@@ -13252,14 +16871,14 @@ class ColorSettingTab extends PluginSettingTab {
     blacklistAddBtn.addClass('mod-cta');
       const blacklistAddHandler = async () => {
         const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
-        const newEntry = { pattern: '', isRegex: false, flags: '', groupedPatterns: null, uid, persistAtEnd: true };
-        if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
-        this.plugin.settings.blacklistEntries.push(newEntry);
-        this._suspendSorting = true;
-        try { this._blacklistNewSet && this._blacklistNewSet.add(uid); } catch (e) {}
-        await this.plugin.saveSettings();
-        this._refreshBlacklistWords();
-      };
+      const newEntry = { pattern: '', isRegex: false, flags: '', groupedPatterns: null, uid, persistAtEnd: true };
+      if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
+      this.plugin.settings.blacklistEntries.push(newEntry);
+      this._suspendSorting = this._blacklistSortMode === 'last-added';
+      try { this._blacklistNewSet && this._blacklistNewSet.add(uid); } catch (e) {}
+      await this.plugin.saveSettings();
+      this._refreshBlacklistWords();
+    };
     blacklistAddBtn.addEventListener('click', blacklistAddHandler);
     this._cleanupHandlers.push(() => blacklistAddBtn.removeEventListener('click', blacklistAddHandler));
 
@@ -13292,14 +16911,14 @@ class ColorSettingTab extends PluginSettingTab {
     const blacklistPresetsHandler = () => {
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
-        const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true };
-        try { newEntry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { newEntry.uid = Date.now(); }
-        if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
-        this.plugin.settings.blacklistEntries.push(newEntry);
-        this._suspendSorting = true;
-        try { this._blacklistNewSet && newEntry && newEntry.uid && this._blacklistNewSet.add(newEntry.uid); } catch (e) {}
-        await this.plugin.saveSettings();
-        this._refreshBlacklistWords();
+      const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true };
+      try { newEntry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { newEntry.uid = Date.now(); }
+      if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
+      this.plugin.settings.blacklistEntries.push(newEntry);
+      this._suspendSorting = this._blacklistSortMode === 'last-added';
+      try { this._blacklistNewSet && newEntry && newEntry.uid && this._blacklistNewSet.add(newEntry.uid); } catch (e) {}
+      await this.plugin.saveSettings();
+      this._refreshBlacklistWords();
       }).open();
     };
     blacklistPresetsBtn.addEventListener('click', blacklistPresetsHandler);
@@ -13324,10 +16943,13 @@ class ColorSettingTab extends PluginSettingTab {
     const prSearchContainer = containerEl.createDiv();
     try { prSearchContainer.addClass('act-search-container'); } catch (e) { try { prSearchContainer.classList.add('act-search-container'); } catch (_) {} }
     prSearchContainer.style.margin = '8px 0';
+    prSearchContainer.style.display = 'flex';
+    prSearchContainer.style.alignItems = 'center';
+    prSearchContainer.style.gap = '8px';
     const prSearch = prSearchContainer.createEl('input', { type: 'text' });
     try { prSearch.addClass('act-search-input'); } catch (e) { try { prSearch.classList.add('act-search-input'); } catch (_) {} }
     prSearch.placeholder = this.plugin.t('search_file_folder_rules_placeholder','Search file/folder rules…');
-    prSearch.style.width = '100%';
+    prSearch.style.flex = '1 1 auto';
     prSearch.style.padding = '6px';
     prSearch.style.border = '1px solid var(--background-modifier-border)';
     prSearch.style.borderRadius = '4px';
@@ -13337,6 +16959,38 @@ class ColorSettingTab extends PluginSettingTab {
     prSearch.addEventListener('input', prSearchHandler);
     prSearch.addEventListener('click', prSearchHandler);
     this._cleanupHandlers.push(() => prSearch.removeEventListener('input', prSearchHandler));
+
+    // Limit/filter input for path rules
+    const prLimitInput = prSearchContainer.createEl('input', { type: 'text' });
+    prLimitInput.value = String(this.plugin.settings?.pathSearchLimit ?? 0);
+    prLimitInput.placeholder = this.plugin.t('limit_input_placeholder','limit');
+    prLimitInput.title = this.plugin.t('limit_input_tooltip','0=all; number=last N; in=include; ex=exclude; sw=starts; ew=ends; e=exact');
+    prLimitInput.style.width = '64px';
+    prLimitInput.style.padding = '6px';
+    prLimitInput.style.border = '1px solid var(--background-modifier-border)';
+    prLimitInput.style.borderRadius = '4px';
+    const prLimitHandler = () => {
+      const raw = String(prLimitInput.value || '').trim().toLowerCase();
+      const parts = raw.split(/\s+/).filter(Boolean);
+      const numPart = parts.find(p => /^\d+$/.test(p));
+      const num = numPart ? parseInt(numPart, 10) : NaN;
+      this._pathLimit = (!isNaN(num) && num >= 0) ? num : 0;
+      this._pathModeOnly = null;
+      for (const tok of parts) {
+        if (tok === 'in') this._pathModeOnly = 'include';
+        else if (tok === 'ex') this._pathModeOnly = 'exclude';
+      }
+      try { this.plugin.settings.pathSearchLimit = this._pathLimit; this.debouncedSaveSettings(); } catch (e) {}
+      this._pathSearchMatch = 'contains';
+      for (const tok of parts) {
+        if (tok === 'sw') this._pathSearchMatch = 'starts';
+        else if (tok === 'ew') this._pathSearchMatch = 'ends';
+        else if (tok === 'e') this._pathSearchMatch = 'exact';
+      }
+      try { this._refreshPathRules(); } catch (e) {}
+    };
+    prLimitInput.addEventListener('input', prLimitHandler);
+    this._cleanupHandlers.push(() => prLimitInput.removeEventListener('input', prLimitHandler));
 
     this._pathRulesContainer = containerEl.createDiv();
     this._pathRulesContainer.addClass('path-rules-list');
@@ -13355,6 +17009,7 @@ class ColorSettingTab extends PluginSettingTab {
       this._pathSortMode = pathSortModes[ni];
       pathSortBtn.textContent = this.plugin.t('path_sort_label_'+(this._pathSortMode||'last-added'), pathSortLabels[this._pathSortMode] || 'Sort: Last Added');
       try { this.plugin.settings.pathSortMode = this._pathSortMode; await this.plugin.saveSettings(); } catch (e) {}
+      this._suspendSorting = false;
       this._refreshPathRules();
     };
     pathSortBtn.addEventListener('click', pathSortHandler);
@@ -13364,7 +17019,7 @@ class ColorSettingTab extends PluginSettingTab {
     pathAddBtn.style.cursor = 'pointer';
     pathAddBtn.style.flex = '1';
     pathAddBtn.addClass('mod-cta');
-    const pathAddHandler = async () => { const newEntry = { path: '', mode: 'include', matchType: 'has-name' }; if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = []; this.plugin.settings.pathRules.push(newEntry); this._suspendSorting = true; await this.plugin.saveSettings(); this._refreshPathRules(); };
+    const pathAddHandler = async () => { const newEntry = { path: '', mode: 'include', matchType: 'has-name' }; if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = []; this.plugin.settings.pathRules.push(newEntry); this._suspendSorting = this._pathSortMode === 'last-added'; await this.plugin.saveSettings(); this._refreshPathRules(); };
     pathAddBtn.addEventListener('click', pathAddHandler);
     this._cleanupHandlers.push(() => pathAddBtn.removeEventListener('click', pathAddHandler));
 
@@ -13676,7 +17331,7 @@ class ColorPickerModal extends Modal {
       const label = header.createEl('div', { text: titleText });
       label.style.opacity = '0.9';
 
-      const resetBtn = header.createEl('button', { text: 'Reset' });
+      const resetBtn = header.createEl('button', { text: this.plugin.t('btn_reset', 'Reset') });
       resetBtn.style.marginLeft = 'auto';
       resetBtn.style.fontSize = '12px';
       resetBtn.style.padding = '4px 8px';
@@ -13846,26 +17501,26 @@ class ColorPickerModal extends Modal {
 
     let lastPanelEl = null;
     if (this.mode === 'text') {
-      lastPanelEl = buildPanel('Text Color', 'text');
+      lastPanelEl = buildPanel(this.plugin.t('text_color_title','Text Color'), 'text');
     } else if (this.mode === 'background') {
-      lastPanelEl = buildPanel('Highlight Color', 'background');
+      lastPanelEl = buildPanel(this.plugin.t('highlight_color_title','Highlight Color'), 'background');
     } else {
       if (cpm === 'text') {
-        lastPanelEl = buildPanel('Text Color', 'text');
+        lastPanelEl = buildPanel(this.plugin.t('text_color_title','Text Color'), 'text');
       } else if (cpm === 'background') {
-        lastPanelEl = buildPanel('Highlight Color', 'background');
+        lastPanelEl = buildPanel(this.plugin.t('highlight_color_title','Highlight Color'), 'background');
       } else if (cpm === 'both-v-bg-top') {
-        buildPanel('Highlight Color', 'background');
-        lastPanelEl = buildPanel('Text Color', 'text');
+        buildPanel(this.plugin.t('highlight_color_title','Highlight Color'), 'background');
+        lastPanelEl = buildPanel(this.plugin.t('text_color_title','Text Color'), 'text');
       } else if (cpm === 'both-v-text-top') {
-        buildPanel('Text Color', 'text');
-        lastPanelEl = buildPanel('Highlight Color', 'background');
+        buildPanel(this.plugin.t('text_color_title','Text Color'), 'text');
+        lastPanelEl = buildPanel(this.plugin.t('highlight_color_title','Highlight Color'), 'background');
       } else if (cpm === 'both-bg-left') {
-        buildPanel('Highlight Color', 'background');
-        lastPanelEl = buildPanel('Text Color', 'text');
+        buildPanel(this.plugin.t('highlight_color_title','Highlight Color'), 'background');
+        lastPanelEl = buildPanel(this.plugin.t('text_color_title','Text Color'), 'text');
       } else {
-        buildPanel('Text Color', 'text');
-        lastPanelEl = buildPanel('Highlight Color', 'background');
+        buildPanel(this.plugin.t('text_color_title','Text Color'), 'text');
+        lastPanelEl = buildPanel(this.plugin.t('highlight_color_title','Highlight Color'), 'background');
       }
     }
     // Gap below panels is managed by a smaller margin-top on the action row, not per-panel margins
@@ -14040,7 +17695,8 @@ class ColorPickerModal extends Modal {
                 backgroundColor: bgColor, 
                 isRegex: false, 
                 flags: '', 
-                styleType: 'both' // EXPLICITLY SET TO BOTH
+                styleType: 'both', // EXPLICITLY SET TO BOTH
+                matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact'
               };
               if (!Array.isArray(this.plugin.settings.wordEntries)) this.plugin.settings.wordEntries = [];
               this.plugin.settings.wordEntries.push(newEntry);
@@ -14125,7 +17781,8 @@ class ColorPickerModal extends Modal {
                 backgroundColor: bgColor, 
                 isRegex: false, 
                 flags: '', 
-                styleType: 'highlight' // EXPLICITLY SET TO HIGHLIGHT
+                styleType: 'highlight', // EXPLICITLY SET TO HIGHLIGHT
+                matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact'
               };
               if (!Array.isArray(this.plugin.settings.wordEntries)) this.plugin.settings.wordEntries = [];
               this.plugin.settings.wordEntries.push(newEntry);
@@ -14218,3 +17875,4 @@ class ConfirmationModal extends Modal {
     this.contentEl.empty();
   }
 }
+
