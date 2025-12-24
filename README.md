@@ -1,3 +1,4 @@
+
 ![Obsidian Downloads](https://img.shields.io/badge/dynamic/json?logo=obsidian&style=for-the-badge&label=downloads&labelColor=26233a&color=483699&query=%24%5B%22always-color-text%22%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json) ![Stars](https://img.shields.io/github/stars/Kazi-Aidah/always-color-text?style=for-the-badge&color=c4a7e7&labelColor=26233a) ![Version](https://img.shields.io/github/manifest-json/v/Kazi-Aidah/always-color-text?style=for-the-badge&color=9ccfd8&labelColor=26233a) ![Last update](https://img.shields.io/github/last-commit/Kazi-Aidah/always-color-text?style=for-the-badge&color=9fc387&labelColor=26233a)
 # Always Color Text
 Color & highlight keywords, status words, dates, names, ***anything***! Once assigned, colors appear automatically throughout your vault in both Live Preview and Reading view.
@@ -40,10 +41,8 @@ Control *how* text is matched with flexible, per-entry options:
 - **Starts with** – matches text that begins with the entry
 - **Ends with** – matches text that ends with the entry
 
-Each entry can use a different match type, giving you granular control over what gets colored or highlighted!
-
 ### Per-Entry Configuration
-Customize each colored entry with dedicated controls via "Edit Entry Details":
+Customize the styling and rules for each colored entry via "Edit Entry Details":
 
 - **Case Sensitivity**  
   When enabled, matches respect letter casing.  
@@ -51,17 +50,19 @@ Customize each colored entry with dedicated controls via "Edit Entry Details":
 
 - **Highlight Styling**  
   Adjust borders, rounded corners, transparency, and more per entry. Customize the look of individual entries without affecting others.
+  ![Edit Highlight Styling Modal](assets/edit-highlight-styling-modal.png)
 
-- **File & Folder Rules**  
-  Exclude specific folders or files from coloring, or limit coloring to particular locations. Perfect for project-specific overrides.
+- **Inclusion / Exclusion Rules**  
+  Exclude specific folders or files from coloring, or limit coloring to particular locations.
+  ![Edit Entry Modal with Paths](assets/edit-entry-modal-w-paths.png)
 
-- **Partial Match (entry creation behavior)**  
-  Controls the default match type when adding new entries:
-  - **Disabled** → entries are added as **Exact**
-  - **Enabled** → entries are added as **Contains**
+<!-- - **Partial Match**  
+  This setting controls the default match type when creating new entries:
+  - **Disabled** → new entries are added as **Exact** matches
+  - **Enabled** → new entries are added as **Contains** matches -->
 
 ### Advanced Pattern Matching with Regex
-Color complex patterns like dates, currencies, or specific text structures:
+Color complex patterns like dates, currencies, or specific text structures automatically:
 ![Regex examples showing dates and times](assets/time-example.png)
 
 **Built-in Regex Tester**
@@ -71,7 +72,7 @@ Test patterns instantly before applying them! The Regex Tester lets you preview 
 **Ready-to-Use Presets**
 Jumpstart your coloring with curated pattern collections:
 - **Markdown Formatting** – Headings, lists, tasks, comments, and links
-- **Brackets** – Color content inside [square], {curly}, (round), \< angle >, and "double quote" brackets
+- **Brackets** – Color content inside [square], {curly}, (round), \<angle>, and "double quote" brackets
 - **Other Patterns** – Dates, times, emails, @mentions, currencies, and measurements
 
 **Common patterns:**
@@ -92,14 +93,18 @@ Jumpstart your coloring with curated pattern collections:
 
 ### Centralized Word Management
 All colored texts appear in settings with search and multiple sort options.
-![Plugin Settings Always Colored Texts](assets/always-colored-words.png)
+![Plugin Settings Always Colored Texts](assets/always-colored-texts.png)
+Tip: Right-click on any color picker to bring the Color Picker Modal.
 
-Switch styles seamlessly, changing from "Both" to "Highlight" and back retains your original colors. Right-click any entry to **duplicate it** or **open in Regex Tester** for quick adjustments.
-
-![Right-click menu options for Always Colored Texts](assets/right-click-menu.png)
+Switch styles seamlessly, changing from "Both" to "Highlight" and back retains your original colors. Right-click any entry to **edit it**, **duplicate it** or **open in Regex Tester** for quick adjustments.
 
 ### Entry Filtering (Limit Input)
-Use the **limit input** beside the search bar to instantly filter entries by type, match type, or count:
+Use the **limit input** beside the search bar (also available in the "Add to Existing Entry" modal) to instantly filter entries by type, match type, or count.
+
+![Limit Input Example 1](assets/limit-input-1.png)
+![Limit Input Example 2](assets/limit-input-2.png)
+
+**Available limit filters:**
 
 **Count & Display:**
 - `0` (zero) → show all entries
@@ -110,35 +115,22 @@ Use the **limit input** beside the search bar to instantly filter entries by typ
 - `w` → word entries only
 - `c` → colored text entries
 - `h` → highlighted entries
-- `b` → text + highlight entries
+- `b` → both, text + highlight entries
 
 **Filter by Match Type:**
 - `e` → exact match-type entries
 - `sw` → starts-with match-type entries
 - `ew` → ends-with match-type entries
 
-Right-click any entry to manage it quickly:
-- **Edit Entry Details** – configure match type, case sensitivity, file/folder inclusion or exclusion rules, and per-entry highlight styling
-- **Duplicate Entry** – clone an entry with all its settings
-- **Add to Existing Entry** – merge new text into an existing colored entry
-- **Open in Regex Tester** – refine regex patterns instantly
-
-Switching styles (Text, Highlight, or Both) preserves your original colors.
+### Add to Existing Entry
+Right-click any entry and choose "Add to Existing Entry" to add the selected text to that entry:
+![Add to Existing Entry Modal](assets/add-to-existing-entry.png)
 
 ### File & Folder Control
-Set different color schemes for different projects. Use "Include" to color specific documents or "Exclude" to disable coloring in entire folders.
+Use "Include" to color specific documents or "Exclude" to disable coloring in entire folders.
 ![File & Folder Coloring Rules](assets/file-folder-rules.png)
 
-**Note**: File-level rules override folder-level rules, giving you precise control.
-
-### Advanced Coloring Rules
-Take control of where colors appear with granular inclusion/exclusion:
-- **Exclude specific text** from coloring within single documents or entire folders
-- **Include colors only** in particular documents or folders
-- Perfect for project-specific schemes or temporary overrides!
-
-Now can be found in the Edit Entry modal!
-![Include Exclude Rules in Edit Entry Modal](assets/)
+**Note**: File-level rules override folder-level rules.
 
 ---
 
@@ -169,10 +161,9 @@ For best results in Reading mode, enable **"Force full render"** in settings. Th
 ## Installation
 Available in Obsidian Community Plugins. Check [Release Notes](https://github.com/Kazi-Aidah/always-color-text/releases) for updates and new features.
 
-**Known issue**: Colored text inside links may render without your set color in Live Preview mode due to Obsidian's rendering engine.
-
 ### Questions or Suggestions?
-Create a new issue [here](https://github.com/Kazi-Aidah/always-color-text/issues) to report bugs or request new features!
+Create a new issue [here](https://github.com/Kazi-Aidah/always-color-text/issues) to report bugs or request new features! I love seeing new issues for me to fix \\(≧ᗜ≦)/ and this plugin wouldn't have advanced so far without the feedback from users!!
+
 
 ---
 
@@ -189,6 +180,7 @@ Want to add your language to Always Color Text?
     "key": "translation"
 }
 ```
+
 4. Go to `src/i18n.js` and add your language code to the list of supported languages.
 
 5. Submit a pull request with your translation file in `src/i18n/`.
@@ -199,20 +191,4 @@ That's it! Your language will be available to all users.
 - [@wanghong322](https://github.com/wanghong322) – Simplified Chinese Translation
 - [@Frumkin13](https://github.com/Frumkin13) – Russian Translation
 
----
-
-## My personal favourite use cases,
-![Double Quotes Example](assets/double-quotes-example.png)
-pattern: `"[^"]*"`
-requirements: Disable Regex Safety
-
-![Single Quote Example](assets/single-quote-example.png)
-pattern: `'[^'\r\n]*'`
-requirements: Disable Regex Safety
-
-![Brackets Example](assets/brackets-example.png)
-pattern: `\(([^)]*)\)`
-flag: g
-
-
-![Tasks Example](assets/tasks-ss.png)
+Thanks a lot to them for taking the time to translate Always Color Text!

@@ -41,7 +41,7 @@ const EDITOR_PERFORMANCE_CONSTANTS = {
   MAX_TOTAL_MATCHES: 3000         // Absolute limit for decorations
 };
 // Development mode flag
-const IS_DEVELOPMENT = true;
+const IS_DEVELOPMENT = false;
 
 // Helper function for conditional debug logging
 const debugLog = (tag, ...args) => {
@@ -152,7 +152,7 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
       // Add buttons below suggestions
       const buttonRow = document.createElement('div');
       buttonRow.id = 'act-prompt-bottom-row';
-      buttonRow.style.cssText = 'display: flex; gap: 8px; padding: 12px 8px; border-top: 1px solid var(--background-modifier-border); background: var(--background-secondary); align-items: center;';
+      buttonRow.classList.add('act-prompt-bottom-row');
       
       // Limit input on the left (copied from settings BlacklistRegexTesterModal)
       const limitInput = document.createElement('input');
@@ -160,14 +160,8 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
       limitInput.value = '0';
       limitInput.placeholder = this.plugin.t('limit_input_placeholder','limit');
       limitInput.title = this.plugin.t('limit_input_tooltip','0=all; number=last N; sw=starts; ew=ends; e=exact');
-      limitInput.style.width = '64px';
-      limitInput.style.padding = '6px';
-      limitInput.style.border = '1px solid var(--background-modifier-border)';
-      limitInput.style.borderRadius = '6px';
-      limitInput.style.zIndex = '999';
-      limitInput.style.position = 'relative';
+      limitInput.classList.add('act-limit-input');
       debugLog('LIMIT', 'Created limit input element');
-      
       // Make input fully interactive
       limitInput.addEventListener('mousedown', (e) => { 
         debugLog('LIMIT', 'mousedown fired');
@@ -345,13 +339,13 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
       
       // Spacer to push buttons to the right
       const spacer = document.createElement('div');
-      spacer.style.flex = '1';
+      spacer.classList.add('act-flex-spacer');
       buttonRow.appendChild(spacer);
       
       // Add Word button (no flex)
       const addWordBtn = document.createElement('button');
       addWordBtn.textContent = this.plugin.t('btn_add_word', '+ Add Word');
-      addWordBtn.style.cssText = 'padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;';
+      addWordBtn.classList.add('act-modal-action-btn');
       addWordBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.stopImmediatePropagation(); }, true);
       addWordBtn.addEventListener('click', (e) => { 
         e.preventDefault();
@@ -382,7 +376,7 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
       if (this.plugin.settings.enableRegexSupport) {
         const addRegexBtn = document.createElement('button');
         addRegexBtn.textContent = this.plugin.t('btn_add_regex_short', '+ Add Regex');
-        addRegexBtn.style.cssText = 'padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;';
+        addRegexBtn.classList.add('act-modal-action-btn');
         addRegexBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.stopImmediatePropagation(); }, true);
         addRegexBtn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -772,7 +766,7 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
                 
                 debugLog('RIGHTCLICK', 'Showing menu');
                 menu.showAtMouseEvent(evt);
-                menu.dom.style.zIndex = '2000';
+                menu.dom.classList.add('act-menu-elevated');
               }, 0);
             }
           }
@@ -1101,7 +1095,7 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
       });
       
       menu.showAtMouseEvent(evt);
-      menu.dom.style.zIndex = '2000';
+      menu.dom.classList.add('act-menu-elevated');
       
       // Close menu when clicking elsewhere
       const closeMenu = (e) => {
@@ -1281,7 +1275,7 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
         });
         
         menu.showAtMouseEvent(evt);
-        menu.dom.style.zIndex = '2000';
+        menu.dom.classList.add('act-menu-elevated');
         
         // Close menu when clicking elsewhere
         const closeMenu = (e) => {
@@ -1310,13 +1304,15 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
       return String(a).toLowerCase() === String(b).toLowerCase();
     };
     const has = (arr, val) => Array.isArray(arr) && arr.some(p => cmp(p, val));
-    // If entry is a regex like \bword1|word2|...\w*\b, append the selected word to the alternation
+    // If entry is a regex, try to append the selected word to the alternation intelligently
     if (e.isRegex && this.plugin.settings.enableRegexSupport) {
       try {
         const pattern = String(e.pattern || '');
         const flags = String(e.flags || '');
-        const regexStructure = /^\\b(.+?)\\w*\\b$/;
-        const m = pattern.match(regexStructure);
+        
+        // First try: match the specific structure \b(...)\w*\b
+        const regexStructure = /^\\b\((.+?)\)\\w\*\\b$/;
+        let m = pattern.match(regexStructure);
         if (m) {
           const core = m[1];
           const parts = core.split('|').map(x => x.trim()).filter(x => x.length > 0);
@@ -1330,7 +1326,56 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
             ? this.plugin.helpers.escapeRegex(s)
             : s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const newCore = core + '|' + esc;
-          const newPattern = `\\b${newCore}\\w*\\b`;
+          const newPattern = `\\b(${newCore})\\w*\\b`;
+          e.pattern = newPattern;
+          e.groupedPatterns = null;
+          (async () => {
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.compileTextBgColoringEntries();
+            try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+            try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+            new Notice(this.plugin.t('notice_added_to_existing', `"${s}" added to existing entry`, { word: s }));
+          })();
+          return;
+        }
+        
+        // Second try: match single word pattern \bword\w*\b and convert to alternation
+        const singleWordStructure = /^\\b([^\\|()]+)\\w\*\\b$/;
+        m = pattern.match(singleWordStructure);
+        if (m) {
+          const word = m[1];
+          const caseInsensitive = flags.includes('i') || !this.plugin.settings.caseSensitive;
+          const cmp = caseInsensitive 
+            ? word.toLowerCase() === s.toLowerCase()
+            : word === s;
+          if (cmp) {
+            new Notice(this.plugin.t('notice_already_in_entry', `"${s}" already exists in entry`, { word: s }));
+            return;
+          }
+          const esc = this.plugin.helpers && this.plugin.helpers.escapeRegex
+            ? this.plugin.helpers.escapeRegex(s)
+            : s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const newPattern = `\\b(${word}|${esc})\\w*\\b`;
+          e.pattern = newPattern;
+          e.groupedPatterns = null;
+          (async () => {
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.compileTextBgColoringEntries();
+            try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+            try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
+            new Notice(this.plugin.t('notice_added_to_existing', `"${s}" added to existing entry`, { word: s }));
+          })();
+          return;
+        }
+        
+        // Third try: for any regex containing |, append to it intelligently
+        if (pattern.includes('|')) {
+          const esc = this.plugin.helpers && this.plugin.helpers.escapeRegex
+            ? this.plugin.helpers.escapeRegex(s)
+            : s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const newPattern = pattern + '|' + esc;
           e.pattern = newPattern;
           e.groupedPatterns = null;
           (async () => {
@@ -1344,7 +1389,7 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
           return;
         }
       } catch (_) {}
-      // Fallback: if regex does not match expected structure, do not modify the regex; append to groupedPatterns as a separate literal
+      // Fallback: if regex does not contain alternation, append to groupedPatterns as a separate literal
     }
     if (cmp(e.pattern || '', s) || has(e.groupedPatterns, s)) {
       new Notice(this.plugin.t('notice_already_in_entry', `"${s}" already exists in entry`, { word: s }));
@@ -2160,6 +2205,8 @@ module.exports = class AlwaysColorText extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    // Migrate old global advancedRules to per-entry rules on first load
+    try { this.migrateAdvancedRulesToPerEntry(); await this.saveSettings(); } catch (_) {}
     try { await this.loadExternalTranslations(); } catch (_) {}
     try {
       this.settingTab = new ColorSettingTab(this.app, this);
@@ -2665,18 +2712,6 @@ module.exports = class AlwaysColorText extends Plugin {
               } catch (_) {}
             }, 100);
           } catch (_) {}
-        }
-      });
-      // Add command for managing advanced rules
-      addTrackedCommand({
-        id: 'manage-advanced-rules',
-        name: this.t('command_manage_advanced_rules', 'manage specific include/exclude rules'),
-        callback: () => {
-          try {
-            new ManageRulesModal(this.app, this).open();
-          } catch (e) {
-            new Notice(this.t('notice_error_opening_advanced_rules', 'Error opening advanced rules modal'));
-          }
         }
       });
       // Add command for opening regex tester
@@ -4264,6 +4299,7 @@ module.exports = class AlwaysColorText extends Plugin {
       entriesSearchLimit: 0,
       blacklistSearchLimit: 0,
       pathSearchLimit: 0,
+      showColoringReasonOnHover: false, // Show tooltip on hover explaining why text is colored
     }, loadedData);
     
     try { this.sanitizeSettings(); } catch (e) {}
@@ -4641,7 +4677,14 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   buildExportPayload() {
-    return { plugin: 'always-color-text', version: (this.manifest && this.manifest.version) || '', settings: this.settings };
+    return { 
+      plugin: 'always-color-text', 
+      version: (this.manifest && this.manifest.version) || '', 
+      settings: this.settings,
+      // Note: Each entry in settings.wordEntries includes per-entry highlight style settings:
+      // - styleType: 'text' | 'highlight' | 'both'
+      // - backgroundOpacity, highlightBorderRadius, highlightHorizontalPadding, etc. (individual entry customizations)
+    };
   }
 
   async exportSettingsToPickedLocation() {
@@ -4903,7 +4946,9 @@ module.exports = class AlwaysColorText extends Plugin {
         presetLabel: name ? String(name) : undefined,
         persistAtEnd: true,
         groupedPatterns: null,
-        isCaseSensitive: this.settings.caseSensitive
+        isCaseSensitive: this.settings.caseSensitive,
+        inclusionRules: [],
+        exclusionRules: []
       };
       this.settings.wordEntries.push(entry);
       await this.saveSettings();
@@ -4913,6 +4958,78 @@ module.exports = class AlwaysColorText extends Plugin {
       try { this.settingTab && this.settingTab._newEntriesSet && this.settingTab._newEntriesSet.add(uid); } catch (_) {}
     } catch (e) {
       debugError('ADD_ENTRY', 'addNewEntry failed', e);
+    }
+  }
+
+  // --- MIGRATION: Convert global advancedRules to per-entry rules ---
+  migrateAdvancedRulesToPerEntry() {
+    try {
+      const advRules = Array.isArray(this.settings.advancedRules) ? this.settings.advancedRules : [];
+      if (advRules.length === 0) return; // Nothing to migrate
+      
+      const wordEntries = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      const caseInsensitive = !this.settings.caseSensitive;
+      
+      // Process each global rule
+      advRules.forEach(rule => {
+        if (!rule || !rule.text) return;
+        
+        const ruleText = String(rule.text || '').trim();
+        const ruleMode = rule.mode === 'exclude' ? 'exclude' : 'include';
+        const rulePath = String(rule.path || '').trim();
+        const ruleIsRegex = !!rule.isRegex;
+        const ruleFlags = String(rule.flags || '').replace(/[^gimsuy]/g, '');
+        
+        // Find matching entry (case-sensitive or insensitive based on settings)
+        const matchingEntry = wordEntries.find(entry => {
+          if (!entry || !entry.pattern) return false;
+          const entryPattern = String(entry.pattern || '').trim();
+          
+          if (caseInsensitive) {
+            return ruleText.toLowerCase() === entryPattern.toLowerCase();
+          } else {
+            return ruleText === entryPattern;
+          }
+        });
+        
+        // If matching entry found, add rule to it
+        if (matchingEntry) {
+          // Initialize arrays if they don't exist
+          if (!Array.isArray(matchingEntry.inclusionRules)) matchingEntry.inclusionRules = [];
+          if (!Array.isArray(matchingEntry.exclusionRules)) matchingEntry.exclusionRules = [];
+          
+          const newRule = {
+            path: rulePath,
+            isRegex: ruleIsRegex,
+            flags: ruleFlags
+          };
+          
+          if (ruleMode === 'include') {
+            // Only add if not already present
+            if (!matchingEntry.inclusionRules.some(r => r.path === rulePath && r.isRegex === ruleIsRegex)) {
+              matchingEntry.inclusionRules.push(newRule);
+            }
+          } else {
+            // Only add if not already present
+            if (!matchingEntry.exclusionRules.some(r => r.path === rulePath && r.isRegex === ruleIsRegex)) {
+              matchingEntry.exclusionRules.push(newRule);
+            }
+          }
+        }
+      });
+      
+      // Clear the old global advancedRules
+      this.settings.advancedRules = [];
+      
+      // Ensure all entries have the new properties
+      wordEntries.forEach(entry => {
+        if (!Array.isArray(entry.inclusionRules)) entry.inclusionRules = [];
+        if (!Array.isArray(entry.exclusionRules)) entry.exclusionRules = [];
+      });
+      
+      debugLog('MIGRATION', `Migrated ${advRules.length} global rules to per-entry rules`);
+    } catch (e) {
+      debugError('MIGRATION', 'Error migrating advancedRules', e);
     }
   }
 
@@ -5698,6 +5815,30 @@ module.exports = class AlwaysColorText extends Plugin {
     return result;
   }
 
+  // Helper: Generate tooltip text explaining why text is colored
+  getColoringReasonTooltip(match) {
+    try {
+      if (!match || !match.entry) return '';
+      const entry = match.entry;
+      const pattern = entry.pattern || '';
+      const matchType = (entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
+      
+      if (matchType === 'exact') {
+        return `matches exactly "${pattern}"`;
+      } else if (matchType === 'contains') {
+        return `contains "${pattern}"`;
+      } else if (matchType === 'startswith' || matchType === 'starts with') {
+        return `starts with "${pattern}"`;
+      } else if (matchType === 'endswith' || matchType === 'ends with') {
+        return `ends with "${pattern}"`;
+      }
+      
+      return `matches "${pattern}"`;
+    } catch (e) {
+      return '';
+    }
+  }
+
   generateOnceBorderStyle(backgroundColor) {
     try {
       if (this.settings.hideHighlights === true) return '';
@@ -5953,7 +6094,7 @@ module.exports = class AlwaysColorText extends Plugin {
   // Rule 2: File explicitly included in excluded folder? → File gets colored
   // Rule 3: Text "only colors in" this file/folder? → Color only here
   // Rule 4: Text "does not color in" this file/folder? → Don't color here
-  shouldColorText(filePath, textPattern) {
+  shouldColorText(filePath, textPattern, entry = null) {
     try {
       if (!filePath || !textPattern) return true;
       
@@ -6036,7 +6177,41 @@ module.exports = class AlwaysColorText extends Plugin {
         return false;
       }
       
-      // RULE 3: Text "only colors in" this file/folder? → Color only here
+      // Check per-entry rules if entry is provided
+      if (entry && typeof entry === 'object') {
+        // RULE 3: Entry "only colors in" specific files/folders? → Color only there
+        const entryInclusionRules = Array.isArray(entry.inclusionRules) ? entry.inclusionRules : [];
+        if (entryInclusionRules.length > 0) {
+          const matchesInclusionRule = entryInclusionRules.some(r => {
+            if (!r || !r.path) return false;
+            return pathMatches(r);
+          });
+          
+          if (!matchesInclusionRule) {
+            debugLog('RULE_ENGINE', `Skipping: entry "${textPattern}" only colors in specific paths`);
+            return false;
+          }
+        }
+        
+        // RULE 4: Entry "does not color in" specific files/folders? → Don't color there
+        const entryExclusionRules = Array.isArray(entry.exclusionRules) ? entry.exclusionRules : [];
+        if (entryExclusionRules.length > 0) {
+          const matchesExclusionRule = entryExclusionRules.some(r => {
+            if (!r || !r.path) return false;
+            return pathMatches(r);
+          });
+          
+          if (matchesExclusionRule) {
+            debugLog('RULE_ENGINE', `Skipping: entry "${textPattern}" does not color here`);
+            return false;
+          }
+        }
+        
+        // No per-entry rules prevent coloring
+        return true;
+      }
+      
+      // RULE 3: Text "only colors in" this file/folder? → Color only here (legacy global rules)
       const onlyIncludeRules = advRules.filter(r => r && r.mode === 'include' && textMatches(r, textPattern));
       if (onlyIncludeRules.length > 0) {
         // Text has "only colors in" rules - check if this file/folder matches any
@@ -6057,7 +6232,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       }
       
-      // RULE 4: Text "does not color in" this file/folder? → Don't color here
+      // RULE 4: Text "does not color in" this file/folder? → Don't color here (legacy global rules)
       const excludeRules = advRules.filter(r => r && r.mode === 'exclude' && textMatches(r, textPattern));
       if (excludeRules.length > 0) {
         const matchesExcludeRule = excludeRules.some(r => pathMatches(r));
@@ -6094,7 +6269,7 @@ module.exports = class AlwaysColorText extends Plugin {
       
       const filtered = entries.filter(entry => {
         if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern);
+        return this.shouldColorText(filePath, entry.pattern, entry);
       });
       
       return filtered;
@@ -6544,6 +6719,7 @@ module.exports = class AlwaysColorText extends Plugin {
   // NEW METHOD: Apply highlights for simple patterns (ultra-fast version)
   applySimpleHighlights(textNode, matches, text) {
     if (IS_DEVELOPMENT) console.time('applySimpleHighlights');
+    debugLog('TOOLTIP_DEBUG', `applySimpleHighlights called. showColoringReasonOnHover=${this.settings.showColoringReasonOnHover}, matches=${matches?.length || 0}`);
     if (!matches || matches.length === 0) { if (IS_DEVELOPMENT) console.timeEnd('applySimpleHighlights'); return; }
     // Guard: if this text node is already within a highlight span, skip to avoid nested spans
     try { if (textNode.parentElement?.closest('.always-color-text-highlight')) { if (IS_DEVELOPMENT) console.timeEnd('applySimpleHighlights'); return; } } catch (_) {}
@@ -6609,6 +6785,16 @@ module.exports = class AlwaysColorText extends Plugin {
       const span = document.createElement('span');
       span.className = 'always-color-text-highlight';
       span.textContent = decodedText.slice(m.start, m.end);
+      
+      // Add tooltip for hover explanation if enabled
+      if (this.settings.showColoringReasonOnHover && m.entry) {
+        const tooltip = this.getColoringReasonTooltip(m);
+        debugLog('TOOLTIP_DEBUG', `Setting tooltip for "${span.textContent}": "${tooltip}", entry=${m.entry?.pattern}`);
+        span.title = tooltip;
+        debugLog('TOOLTIP_DEBUG', `span.title is now: "${span.title}"`);
+      } else {
+        debugLog('TOOLTIP_DEBUG', `NOT setting tooltip. showColoringReasonOnHover=${this.settings.showColoringReasonOnHover}, m.entry=${m.entry ? 'yes' : 'no'}`);
+      }
       
       // Get the entry and determine the style type
       // IMPORTANT: Use entryRef if available (has full entry with custom styling), otherwise fall back to entry
@@ -8888,7 +9074,10 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       
       const deco = Decoration.mark({
-        attributes: { style }
+        attributes: { 
+          style,
+          title: (this.settings.showColoringReasonOnHover && m.color) ? `matches "${m.entry?.pattern || ''}"` : ''
+        }
       });
       builder.add(m.start, m.end, deco);
     }
@@ -10016,7 +10205,13 @@ module.exports = class AlwaysColorText extends Plugin {
           style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         }
       }
-      const deco = Decoration.mark({ attributes: { style, class: 'always-color-text-highlight' } });
+      const deco = Decoration.mark({ 
+        attributes: { 
+          style, 
+          class: 'always-color-text-highlight',
+          title: (this.settings.showColoringReasonOnHover && m.entry) ? this.getColoringReasonTooltip(m) : ''
+        } 
+      });
       builder.add(m.start, m.end, deco);
       
       // DEBUG: Log decoration applications for @username and timepm patterns
@@ -10895,7 +11090,13 @@ module.exports = class AlwaysColorText extends Plugin {
           style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         }
       }
-      const deco = Decoration.mark({ attributes: { style, class: 'always-color-text-highlight' } });
+      const deco = Decoration.mark({ 
+        attributes: { 
+          style, 
+          class: 'always-color-text-highlight',
+          title: (this.settings.showColoringReasonOnHover && m.entry) ? this.getColoringReasonTooltip(m) : ''
+        } 
+      });
       builder.add(m.start, m.end, deco);
     }
 
@@ -11877,8 +12078,11 @@ class RealTimeRegexTesterModal extends Modal {
       const active = Object.keys(flagButtons).filter(k => flagButtons[k].dataset.on === '1');
       Object.keys(flagButtons).forEach(k => {
         const on = flagButtons[k].dataset.on === '1';
-        flagButtons[k].style.background = on ? 'var(--interactive-accent)' : 'var(--background-modifier-form-field)';
-        flagButtons[k].style.color = on ? 'var(--text-normal)' : 'var(--text-normal)';
+        if (on) {
+          flagButtons[k].addClass('mod-cta');
+        } else {
+          flagButtons[k].removeClass('mod-cta');
+        }
       });
     };
     Object.keys(flagButtons).forEach(k => {
@@ -12077,7 +12281,7 @@ class HighlightStylingModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    try { this.modalEl.addClass('act-highlight-modal'); this.modalEl.style.maxWidth = '900px !important'; this.modalEl.style.width = '900px !important'; this.modalEl.style.padding = '20px'; contentEl.style.maxWidth = '900px !important'; } catch (e) {}
+    try { this.modalEl.addClass('act-highlight-styling-modal'); this.modalEl.addClass('act-highlight-modal'); this.modalEl.style.maxWidth = '900px !important'; this.modalEl.style.width = '900px !important'; this.modalEl.style.padding = '20px'; contentEl.style.maxWidth = '900px !important'; } catch (e) {}
     const title = contentEl.createEl('h2', { text: this.plugin.t('highlight_styling_header','Edit Highlight Styling') });
     title.style.marginTop = '0';
     title.style.marginBottom = '12px';
@@ -12105,6 +12309,23 @@ class HighlightStylingModal extends Modal {
     const bColor = pickerRow.createEl('input', { type: 'color' });
     tColor.value = (this.entry && (this.entry.textColor && this.entry.textColor !== 'currentColor' ? this.entry.textColor : (this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : '#ffffff'))) || '#ffffff';
     bColor.value = (this.entry && this.entry.backgroundColor) ? this.entry.backgroundColor : '#000000';
+    
+    // Listen for color changes from parent EditEntryModal and update in real-time
+    const syncColorsFromParent = (evt) => {
+      try {
+        if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
+          // Colors changed in parent EditEntryModal, sync our inputs immediately
+          const initTextColor = (this.entry && (this.entry.textColor && this.entry.textColor !== 'currentColor' ? this.entry.textColor : (this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : ''))) || tColor.value || '#ffffff';
+          const initBgColor = (this.entry && (this.entry.backgroundColor || '')) || bColor.value || '#000000';
+          if (this.plugin.isValidHexColor(initTextColor)) tColor.value = initTextColor;
+          if (this.plugin.isValidHexColor(initBgColor)) bColor.value = initBgColor;
+          // Don't trigger renderPreview here to avoid loops
+        }
+      } catch (_) {}
+    };
+    window.addEventListener('act-colors-changed', syncColorsFromParent);
+    this._handlers.push({ el: window, ev: 'act-colors-changed', fn: syncColorsFromParent });
+    
     const paneRow = contentEl.createDiv();
     paneRow.addClass('act-highlight-pane-row');
     const hlWrap = paneRow.createDiv();
@@ -12168,7 +12389,6 @@ class HighlightStylingModal extends Modal {
     vPadReset.addClass('act-highlight-reset-btn');
     try { setIcon(vPadReset, 'reset'); } catch (e) {}
     vPadReset.addEventListener('click', () => { if (this.entry) this.entry.highlightVerticalPadding = undefined; vPadInput.value = String(this.plugin.settings.highlightVerticalPadding ?? 0); renderPreview(); });
-    const section2Title = borderWrap.createEl('h3', { text: this.plugin.t('section_highlight_border_styling','Highlight Border Styling') });
     const grid2Title = borderWrap.createEl('h3', { text: this.plugin.t('section_highlight_border_styling','Highlight Border Styling') });
     const grid2 = borderWrap.createDiv();
     grid2.addClass('act-highlight-grid');
@@ -12337,6 +12557,8 @@ class HighlightStylingModal extends Modal {
           this.entry.textColor = tColor.value || '';
         }
       }
+      // Dispatch event for parent modal to sync
+      try { window.dispatchEvent(new CustomEvent('act-colors-changed', { detail: { entry: this.entry } })); } catch (_) {}
       renderPreview();
     });
     
@@ -12350,8 +12572,26 @@ class HighlightStylingModal extends Modal {
           this.entry.backgroundColor = bColor.value || '';
         }
       }
+      // Dispatch event for parent modal to sync
+      try { window.dispatchEvent(new CustomEvent('act-colors-changed', { detail: { entry: this.entry } })); } catch (_) {}
       renderPreview();
     });
+    
+    // Listen for color changes from EditEntryModal and update our inputs
+    const colorSyncHandler = (evt) => {
+      try {
+        if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
+          // Colors changed in parent modal, sync our inputs
+          const initTextColor = (this.entry && (this.entry.textColor && this.entry.textColor !== 'currentColor' ? this.entry.textColor : (this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : '#ffffff'))) || '#ffffff';
+          const initBgColor = (this.entry && this.entry.backgroundColor) ? this.entry.backgroundColor : '#000000';
+          if (this.plugin.isValidHexColor(initTextColor)) tColor.value = initTextColor;
+          if (this.plugin.isValidHexColor(initBgColor)) bColor.value = initBgColor;
+          renderPreview();
+        }
+      } catch (_) {}
+    };
+    window.addEventListener('act-colors-changed', colorSyncHandler);
+    this._handlers.push({ el: window, ev: 'act-colors-changed', fn: colorSyncHandler });
     
     // Sync style changes to entry
     styleSelect.addEventListener('change', () => {
@@ -12532,12 +12772,28 @@ class EditEntryModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    try { this.modalEl.style.maxWidth = '900px'; this.modalEl.style.padding = '20px'; } catch (e) {}
+    try { this.modalEl.addClass('act-edit-entry-modal'); this.modalEl.style.maxWidth = '900px'; this.modalEl.style.padding = '20px'; } catch (e) {}
     const title = contentEl.createEl('h2', { text: this.plugin.t('edit_entry_header','Edit Entry') });
     title.style.marginTop = '0';
     title.style.marginBottom = '12px';
-    // Row 1: input + style select
-    const row1 = contentEl.createDiv();
+    
+    // Main layout: two columns (left: input/preview, right: controls)
+    const mainContainer = contentEl.createDiv();
+    mainContainer.style.display = 'flex';
+    mainContainer.style.gap = '8px';
+    mainContainer.style.width = '100%';
+    mainContainer.style.boxSizing = 'border-box';
+    
+    // Left column: text input + preview
+    const leftColumn = mainContainer.createDiv();
+    leftColumn.addClass('act-edit-entry-left-column');
+    leftColumn.style.flex = '1';
+    leftColumn.style.minWidth = '0';
+    leftColumn.style.display = 'flex';
+    leftColumn.style.flexDirection = 'column';
+    
+    // Row 1: input
+    const row1 = leftColumn.createDiv();
     row1.addClass('act-edit-entry-row1');
     const box = row1.createDiv();
     box.addClass('act-edit-entry-textbox');
@@ -12554,27 +12810,46 @@ class EditEntryModal extends Modal {
     textInput.style.color = 'var(--text-normal)';
     textInput.style.padding = '6px';
     textInput.style.boxSizing = 'border-box';
-    const styleSelect = row1.createEl('select');
+    
+    // Row 2: preview
+    const row2 = leftColumn.createDiv();
+    row2.addClass('act-edit-entry-row2');
+    const preview = row2.createDiv();
+    preview.addClass('act-edit-entry-preview');
+    preview.style.flex = '1';
+    preview.style.border = '1px dashed var(--background-modifier-border)';
+    preview.style.borderRadius = 'var(--radius-m)';
+    preview.style.padding = '10px';
+    preview.style.background = 'var(--background-modifier-form-field)';
+    preview.style.whiteSpace = 'pre-wrap';
+    preview.style.wordWrap = 'break-word';
+    preview.style.minHeight = '60px';
+    
+    // Right column: controls
+    const rightColumn = mainContainer.createDiv();
+    rightColumn.addClass('act-edit-entry-right-column');
+    rightColumn.style.flex = '0 0 auto';
+    rightColumn.style.display = 'flex';
+    rightColumn.style.flexDirection = 'column';
+    rightColumn.style.gap = '8px';
+    
+    const styleSelect = rightColumn.createEl('select');
     styleSelect.addClass('act-edit-entry-style-select');
+    styleSelect.style.minWidth = '140px';
     ['text', 'highlight', 'both'].forEach(val => { const opt = styleSelect.createEl('option', { text: this.plugin.t('style_type_' + val, val === 'text' ? 'color' : val) }); opt.value = val; });
     styleSelect.style.border = '1px solid var(--background-modifier-border)';
     styleSelect.style.borderRadius = 'var(--radius-m)';
     styleSelect.style.background = 'var(--background-modifier-form-field)';
     styleSelect.style.textAlign = 'center';
-    // Row 2: preview + color pickers
-    const row2 = contentEl.createDiv();
-    row2.addClass('act-edit-entry-row2');
-    const preview = row2.createDiv();
-    preview.addClass('act-edit-entry-preview');
-    preview.style.flex = '3';
-    preview.style.border = '1px dashed var(--background-modifier-border)';
-    preview.style.borderRadius = 'var(--radius-s)';
-    preview.style.padding = '10px';
-    preview.style.background = 'var(--background-modifier-form-field)';
-    preview.style.whiteSpace = 'pre-wrap';
-    preview.style.wordWrap = 'break-word';
-    const pickerRow = row2.createDiv();
+    styleSelect.style.flex = '1 0%';
+    
+    const pickerRow = rightColumn.createDiv();
     pickerRow.addClass('act-edit-entry-pickers');
+    pickerRow.style.flex = '0';
+    pickerRow.style.display = 'flex';
+    pickerRow.style.gap = '8px';
+    pickerRow.style.alignItems = 'center';
+    pickerRow.style.justifyContent = 'center';
     const textColorInput = pickerRow.createEl('input', { type: 'color' });
     const bgColorInput = pickerRow.createEl('input', { type: 'color' });
     
@@ -12609,6 +12884,8 @@ class EditEntryModal extends Modal {
       } else if (style === 'both') {
         this.entry.textColor = textColorInput.value || '';
       }
+      // Dispatch event for child modal (HighlightStylingModal) to sync
+      try { window.dispatchEvent(new CustomEvent('act-colors-changed', { detail: { entry: this.entry } })); } catch (_) {}
       renderPreview();
     });
     
@@ -12620,12 +12897,32 @@ class EditEntryModal extends Modal {
       } else if (style === 'both') {
         this.entry.backgroundColor = bgColorInput.value || '';
       }
+      // Dispatch event for child modal (HighlightStylingModal) to sync
+      try { window.dispatchEvent(new CustomEvent('act-colors-changed', { detail: { entry: this.entry } })); } catch (_) {}
       renderPreview();
     });
     
+    // Listen for color changes from HighlightStylingModal and update our inputs
+    const colorSyncHandler = (evt) => {
+      try {
+        if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
+          // Colors changed in child modal, sync our inputs
+          const initTextColor = (this.entry && (this.entry.textColor && this.entry.textColor !== 'currentColor' ? this.entry.textColor : (this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : ''))) || textColorInput.value || '#000000';
+          const initBgColor = (this.entry && (this.entry.backgroundColor || '')) || bgColorInput.value || '#000000';
+          if (this.plugin.isValidHexColor(initTextColor)) textColorInput.value = initTextColor;
+          if (this.plugin.isValidHexColor(initBgColor)) bgColorInput.value = initBgColor;
+          renderPreview();
+        }
+      } catch (_) {}
+    };
+    window.addEventListener('act-colors-changed', colorSyncHandler);
+    this._handlers.push({ el: window, ev: 'act-colors-changed', fn: colorSyncHandler });
+    
     // Row 3: match/case/edit highlight
     const controls = contentEl.createDiv();
+    controls.addClass('act-edit-entry-controls');
     controls.style.display = 'flex';
+    controls.style.flexWrap = 'wrap';
     controls.style.gap = '8px';
     controls.style.marginTop = '12px';
     const matchSelect = controls.createEl('select');
@@ -12634,6 +12931,7 @@ class EditEntryModal extends Modal {
     matchSelect.style.border = '1px solid var(--background-modifier-border)';
     matchSelect.style.borderRadius = 'var(--radius-m)';
     matchSelect.style.background = 'var(--background-modifier-form-field)';
+    matchSelect.style.textAlign = 'center';
     matchSelect.innerHTML = `<option value="exact">${this.plugin.t('match_option_exact','exact')}</option><option value="contains">${this.plugin.t('match_option_contains','contains')}</option><option value="startsWith">${this.plugin.t('match_option_starts_with','starts with')}</option><option value="endsWith">${this.plugin.t('match_option_ends_with','ends with')}</option>`;
     const caseSel = controls.createEl('select');
     caseSel.style.flex = '0.5 0 auto';
@@ -12641,6 +12939,7 @@ class EditEntryModal extends Modal {
     caseSel.style.border = '1px solid var(--background-modifier-border)';
     caseSel.style.borderRadius = 'var(--radius-m)';
     caseSel.style.background = 'var(--background-modifier-form-field)';
+    caseSel.style.textAlign = 'center';
     caseSel.innerHTML = `<option value="case">${this.plugin.t('opt_case_sensitive','is case sensitive')}</option><option value="nocase">${this.plugin.t('opt_not_case_sensitive','not case sensitive')}</option>`;
     const hlBtn = controls.createEl('button', { text: this.plugin.t('edit_highlight_styling_btn','Edit Highlight Styling') });
     hlBtn.style.flex = '0 0 auto';
@@ -12826,11 +13125,12 @@ class EditEntryModal extends Modal {
         row.style.alignItems = 'center';
         row.style.marginBottom = '8px';
         const modeSel = row.createEl('select');
-        const optIn = modeSel.createEl('option', { text: this.plugin.t('text_rule_mode_include','only colors in') });
+        const optIn = modeSel.createEl('option', { text: this.plugin.t('mode_only_colors_in','only colors in') });
         optIn.value = 'include';
-        const optEx = modeSel.createEl('option', { text: this.plugin.t('text_rule_mode_exclude','does not color in') });
+        const optEx = modeSel.createEl('option', { text: this.plugin.t('mode_does_not_color_in','does not color in') });
         optEx.value = 'exclude';
         modeSel.value = r.mode === 'exclude' ? 'exclude' : 'include';
+        modeSel.style.textAlign = 'center';
         modeSel.style.minWidth = '160px';
         modeSel.style.border = '1px solid var(--background-modifier-border)';
         modeSel.style.borderRadius = 'var(--radius-m)';
@@ -13204,8 +13504,11 @@ class BlacklistRegexTesterModal extends Modal {
       const active = Object.keys(flagButtons).filter(k => flagButtons[k].dataset.on === '1');
       Object.keys(flagButtons).forEach(k => {
         const on = flagButtons[k].dataset.on === '1';
-        flagButtons[k].style.background = on ? 'var(--interactive-accent)' : 'var(--background-modifier-form-field)';
-        flagButtons[k].style.color = on ? 'var(--text-normal)' : 'var(--text-normal)';
+        if (on) {
+          flagButtons[k].addClass('mod-cta');
+        } else {
+          flagButtons[k].removeClass('mod-cta');
+        }
       });
     };
     const flagTooltips = { 'i': 'ignore case', 'g': 'global', 'm': 'multiline', 's': 'dotall', 'u': 'unicode', 'y': 'sticky' };
@@ -13434,411 +13737,6 @@ class ChangelogModal extends Modal {
       }
     } catch (e) {}
     this._mdComp = null;
-    try { this.contentEl.empty(); } catch (e) {}
-  }
-}
-
-class ManageRulesModal extends Modal {
-  constructor(app, plugin) {
-    super(app);
-    this.plugin = plugin;
-    this._handlers = [];
-    this._drag = { from: -1, to: -1 };
-    this._filter = { text: '', regex: false, limit: 0, match: 'contains' };
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    try { this.modalEl.style.maxWidth = '780px'; this.modalEl.style.padding = '20px'; } catch (e) {}
-    const title = contentEl.createEl('h2', { text: this.plugin.t('advanced_rules_modal_header','Specific Include/Exclude Rules') });
-    title.style.marginTop = '0';
-    title.style.marginBottom = '12px';
-
-    const addBtnFull = contentEl.createEl('button', { text: this.plugin.t('btn_add_file_folder_rule','+ Add file/folder rule') });
-    addBtnFull.addClass('mod-cta');
-    addBtnFull.style.width = '100%';
-    addBtnFull.style.marginBottom = '12px';
-    const addHandlerOpen = () => { try { new AddRuleModal(this.app, this.plugin, () => { renderList(); }).open(); } catch (e) {} };
-    addBtnFull.addEventListener('click', addHandlerOpen);
-    this._handlers.push({ el: addBtnFull, ev: 'click', fn: addHandlerOpen });
-
-    const searchRow = contentEl.createDiv();
-    try { searchRow.addClass('act-search-container'); } catch (e) { try { searchRow.classList.add('act-search-container'); } catch (_) {} }
-    searchRow.style.marginBottom = '12px';
-    searchRow.style.display = 'flex';
-    searchRow.style.alignItems = 'center';
-    searchRow.style.gap = '8px';
-    const searchInput = searchRow.createEl('input', { type: 'text' });
-    try { searchInput.addClass('act-search-input'); } catch (e) { try { searchInput.classList.add('act-search-input'); } catch (_) {} }
-    searchInput.placeholder = this.plugin.t('search_file_folder_rules_placeholder','Search file/folder rules…');
-    searchInput.style.flex = '1 1 auto';
-    searchInput.style.padding = '8px';
-    searchInput.style.border = '1px solid var(--background-modifier-border)';
-    searchInput.style.borderRadius = '6px';
-    const searchIcon = searchRow.createDiv();
-    try { searchIcon.addClass('act-search-icon'); } catch (e) { try { searchIcon.classList.add('act-search-icon'); } catch (_) {} }
-    const searchHandler = () => { this._filter.text = String(searchInput.value || '').trim(); renderList(); };
-    searchInput.addEventListener('input', searchHandler);
-    this._handlers.push({ el: searchInput, ev: 'input', fn: searchHandler });
-
-    const limitInput = searchRow.createEl('input', { type: 'text' });
-    limitInput.value = '0';
-    limitInput.placeholder = this.plugin.t('limit_input_placeholder','limit');
-    limitInput.title = this.plugin.t('limit_input_tooltip','0=all; number=last N; sw=starts; ew=ends; e=exact');
-    limitInput.style.width = '64px';
-    limitInput.style.padding = '6px';
-    limitInput.style.border = '1px solid var(--background-modifier-border)';
-    limitInput.style.borderRadius = '6px';
-    const limitHandler = () => {
-      const raw = String(limitInput.value || '').trim().toLowerCase();
-      const num = parseInt(raw, 10);
-      if (!raw || raw === '0' || isNaN(num)) {
-        this._filter.limit = (!isNaN(num) && num >= 0) ? num : 0;
-      } else {
-        this._filter.limit = (!isNaN(num) && num >= 0) ? num : 0;
-      }
-      this._filter.match = 'contains';
-      if (raw === 'sw') this._filter.match = 'starts';
-      else if (raw === 'ew') this._filter.match = 'ends';
-      else if (raw === 'e') this._filter.match = 'exact';
-      renderList();
-    };
-    limitInput.addEventListener('input', limitHandler);
-    this._handlers.push({ el: limitInput, ev: 'input', fn: limitHandler });
-
-    const listWrap = contentEl.createDiv();
-    listWrap.style.borderRadius = '8px';
-    listWrap.style.padding = '8px';
-    listWrap.style.maxHeight = '50vh';
-    listWrap.style.overflow = 'auto';
-    const list = listWrap.createDiv();
-
-    const renderList = () => {
-      list.empty();
-      const rows = Array.isArray(this.plugin.settings.advancedRules) ? [...this.plugin.settings.advancedRules] : [];
-      const q = String(this._filter.text || '').trim().toLowerCase();
-      const filtered = q ? rows.filter(r => {
-        const text = [String(r.text||''), String(r.path||'')].join(' ').toLowerCase();
-        if (this._filter.match === 'starts') return text.startsWith(q);
-        if (this._filter.match === 'ends') return text.endsWith(q);
-        if (this._filter.match === 'exact') return text === q;
-        return text.includes(q);
-      }) : rows;
-      const limited = (this._filter.limit && this._filter.limit > 0) ? filtered.slice(-this._filter.limit) : filtered;
-      limited.forEach((entry, i) => {
-        const row = list.createDiv();
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '8px';
-        row.style.marginBottom = '8px';
-        row.style.border = '1px solid var(--background-modifier-border)';
-        row.style.borderRadius = '6px';
-        row.style.padding = '8px';
-        row.style.cursor = 'pointer';
-        row.setAttr('draggable','true');
-        const drag = row.createEl('span', { text: '≡' });
-        drag.style.cursor = 'grab';
-        drag.style.flex = '0 0 auto';
-        const textEl = row.createEl('span', { text: entry.text || '' });
-        textEl.style.flex = '1';
-        const modeText = entry.mode === 'exclude'
-          ? this.plugin.t('mode_does_not_color_in','does not color in')
-          : this.plugin.t('mode_only_colors_in','only colors in');
-        const pathText = entry.path || '(vault-wide)';
-        const modeEl = row.createEl('span', { text: `${modeText} ${pathText}` });
-        modeEl.style.flex = '1';
-        modeEl.style.fontSize = '0.9em';
-        modeEl.style.color = 'var(--text-muted)';
-
-        const clickToEdit = () => {
-          try {
-            const all = Array.isArray(this.plugin.settings.advancedRules) ? this.plugin.settings.advancedRules : [];
-            const originalIndex = all.indexOf(entry);
-            new AddRuleModal(this.app, this.plugin, () => { renderList(); }, entry, originalIndex).open();
-          } catch (e) {}
-        };
-        row.addEventListener('click', clickToEdit);
-        this._handlers.push({ el: row, ev: 'click', fn: clickToEdit });
-
-        const duplicateHandler = async () => {
-          try {
-            const dup = JSON.parse(JSON.stringify(entry));
-            if (!Array.isArray(this.plugin.settings.advancedRules)) this.plugin.settings.advancedRules = [];
-            this.plugin.settings.advancedRules.push(dup);
-            await this.plugin.saveSettings();
-            renderList();
-            new Notice(this.plugin.t('notice_entry_duplicated','Entry duplicated'));
-          } catch (e) {
-            debugError('MANAGE_RULES', 'duplicate entry error', e);
-          }
-        };
-
-        const openInRegexTesterHandler = async () => {
-          try {
-            if (!entry.isRegex) return;
-            const onAdded = () => {
-              try { renderList(); } catch (e) {}
-            };
-            const modal = new RealTimeRegexTesterModal(this.app, this.plugin, onAdded, entry);
-            // Set pre-fill values BEFORE opening
-            modal._preFillPattern = String(entry.text || '');
-            modal._preFillFlags = String(entry.flags || '');
-            debugLog('MANAGE_RULES', `Pre-filling regex tester: pattern="${modal._preFillPattern}", flags="${modal._preFillFlags}"`);
-            modal.open();
-          } catch (e) {
-            debugError('MANAGE_RULES', 'open in regex tester error', e);
-          }
-        };
-
-        const contextMenuHandler = (ev) => {
-          try {
-            ev && ev.preventDefault && ev.preventDefault();
-            if (ev && ev.stopPropagation) ev.stopPropagation();
-            const menu = new Menu(this.app);
-            menu.addItem((item) => {
-              item.setTitle(this.plugin.t('duplicate_entry','Duplicate Entry')).setIcon('copy').onClick(duplicateHandler);
-            });
-            if (entry.isRegex) {
-              menu.addItem((item) => {
-                item.setTitle(this.plugin.t('open_in_regex_tester','Open in Regex Tester')).setIcon('pencil').onClick(openInRegexTesterHandler);
-              });
-            }
-            menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
-          } catch (e) {
-            debugError('MANAGE_RULES', 'context menu error', e);
-          }
-        };
-        row.addEventListener('contextmenu', contextMenuHandler);
-        this._handlers.push({ el: row, ev: 'contextmenu', fn: contextMenuHandler });
-
-        const dragStart = (ev) => { this._drag.from = i; ev.dataTransfer?.setData('text/plain',''); };
-        const dragOver = (ev) => { ev.preventDefault(); };
-        const drop = async (ev) => { ev.preventDefault(); const from = this._drag.from; const to = i; if (from === -1 || to === -1 || from === to) return; const arr = this.plugin.settings.advancedRules; if (!Array.isArray(arr)) return; const [item] = arr.splice(from,1); arr.splice(to,0,item); await this.plugin.saveSettings(); renderList(); };
-        row.addEventListener('dragstart', dragStart);
-        row.addEventListener('dragover', dragOver);
-        row.addEventListener('drop', drop);
-        this._handlers.push({ el: row, ev: 'dragstart', fn: dragStart });
-        this._handlers.push({ el: row, ev: 'dragover', fn: dragOver });
-        this._handlers.push({ el: row, ev: 'drop', fn: drop });
-      });
-      if (filtered.length === 0) {
-        const q = String(this._filter.text || '').trim();
-        list.createEl('p', { text: q ? this.plugin.t('no_rules_found','No rules found.') : this.plugin.t('no_rules_configured','No rules configured.') });
-      }
-    };
-    renderList();
-  }
-  onClose() {
-    try { this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} }); } catch (e) {}
-    this._handlers = [];
-    try { this.contentEl.empty(); } catch (e) {}
-  }
-}
-
-class AddRuleModal extends Modal {
-  constructor(app, plugin, onAdded, editRule = null, editIndex = -1) {
-    super(app);
-    this.plugin = plugin;
-    this.onAdded = onAdded;
-    this._editRule = editRule;
-    this._editIndex = editIndex;
-    this._handlers = [];
-    this._preFillText = '';
-    this._preFillFlags = '';
-    this._preFillIsRegex = false;
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    try { this.modalEl.style.maxWidth = '600px'; this.modalEl.style.padding = '20px'; } catch (e) {}
-    const isEdit = (this._editRule && typeof this._editIndex === 'number' && this._editIndex >= 0);
-    const title = contentEl.createEl('h2', { text: isEdit ? this.plugin.t('edit_rule_header','Edit Rule') : this.plugin.t('add_rule_header','Add New Rule') });
-    title.style.marginTop = '0';
-    title.style.marginBottom = '12px';
-
-    const row1 = contentEl.createDiv();
-    row1.style.display = 'flex';
-    row1.style.gap = '8px';
-    const textInput = row1.createEl('input', { type: 'text' });
-    textInput.placeholder = this.plugin.t('text_or_regex_placeholder','text / regex input');
-    textInput.style.flex = '1';
-    textInput.style.padding = '8px';
-    textInput.style.border = '1px solid var(--background-modifier-border)';
-    textInput.style.borderRadius = '6px';
-    const flagsInput = row1.createEl('input', { type: 'text' });
-    flagsInput.placeholder = this.plugin.t('flags_placeholder','flags');
-    flagsInput.style.flex = '0 0 100px';
-    flagsInput.style.padding = '8px';
-    flagsInput.style.border = '1px solid var(--background-modifier-border)';
-    flagsInput.style.borderRadius = '6px';
-    const regexCheckbox = row1.createEl('input', { type: 'checkbox' });
-    regexCheckbox.style.flex = '0 0 auto';
-    regexCheckbox.style.cursor = 'pointer';
-    regexCheckbox.title = this.plugin.t('tooltip_use_regex','Use as regex pattern');
-    const regexLabel = row1.createEl('label');
-    regexLabel.appendChild(document.createTextNode(this.plugin.t('label_regex','Regex')));
-    regexLabel.style.flex = '0 0 auto';
-    regexLabel.style.cursor = 'pointer';
-    regexLabel.style.userSelect = 'none';
-    regexLabel.style.fontSize = '0.9em';
-    regexLabel.style.display = 'none';
-    regexLabel.onclick = () => { regexCheckbox.checked = !regexCheckbox.checked; };
-    regexCheckbox.style.margin = '0';
-
-    const modeSel = contentEl.createEl('select');
-    modeSel.style.width = '100%';
-    modeSel.style.marginTop = '8px';
-    modeSel.style.padding = '8px';
-    modeSel.style.border = '1px solid var(--background-modifier-border)';
-    modeSel.style.borderRadius = '6px';
-    ['include', 'exclude'].forEach(val => {
-      const opt = modeSel.createEl('option', { text: this.plugin.t('text_rule_mode_' + val, val === 'include' ? 'only colors in (whitelist)' : 'does not color in (blacklist)') });
-      opt.value = val;
-    });
-
-    const pathInput = contentEl.createEl('input', { type: 'text' });
-    pathInput.placeholder = this.plugin.t('enter_path_or_pattern','Enter path or pattern');
-    pathInput.style.width = '100%';
-    pathInput.style.marginTop = '8px';
-    pathInput.style.padding = '8px';
-    pathInput.style.border = '1px solid var(--background-modifier-border)';
-    pathInput.style.borderRadius = '6px';
-    const buildSuggestions = () => {
-      const files = this.plugin.app.vault.getFiles();
-      const folders = new Set();
-      const filePaths = [];
-      files.forEach(f => {
-        const p = String(f.path).replace(/\\/g, '/');
-        filePaths.push(p);
-        const idx = p.lastIndexOf('/');
-        const folder = idx !== -1 ? p.slice(0, idx) : '';
-        if (folder) {
-          const parts = folder.split('/');
-          let acc = '';
-          parts.forEach(part => { acc = acc ? acc + '/' + part : part; folders.add(acc); });
-        }
-      });
-      return { files: filePaths.sort(), folders: Array.from(folders).sort() };
-    };
-    const sugg = buildSuggestions();
-    const updateDropdown = () => {
-      if (pathInput._actDropdown) {
-        const dd = pathInput._actDropdown;
-        if (pathInput._dropdownScrollListener) { document.removeEventListener('scroll', pathInput._dropdownScrollListener, true); pathInput._dropdownScrollListener = null; }
-        if (pathInput._dropdownClickListener) { document.removeEventListener('click', pathInput._dropdownClickListener); pathInput._dropdownClickListener = null; }
-        if (pathInput._dropdownKeyListener) { document.removeEventListener('keydown', pathInput._dropdownKeyListener); pathInput._dropdownKeyListener = null; }
-        dd.remove();
-        pathInput._actDropdown = null;
-      }
-      const val = String(pathInput.value || '').trim().toLowerCase();
-      const list = [];
-      sugg.folders.forEach(f => list.push({ t: 'folder', p: f }));
-      sugg.files.forEach(f => list.push({ t: 'file', p: f }));
-      const filtered = val ? list.filter(x => x.p.toLowerCase().includes(val)) : list;
-      if (filtered.length === 0) return;
-      const dd = document.createElement('div');
-      Object.assign(dd.style, { position: 'fixed', zIndex: 2000, background: 'var(--background-primary)', color: 'var(--text-normal)', border: '1px solid var(--background-modifier-border)', borderRadius: '6px', boxShadow: '0 6px 18px rgba(0,0,0,0.4)', maxHeight: '240px', overflowY: 'auto', padding: '6px 0', minWidth: Math.max(240, pathInput.offsetWidth) + 'px' });
-      let hi = -1;
-      filtered.forEach(item => {
-        const it = document.createElement('div');
-        it.textContent = item.p || '/';
-        Object.assign(it.style, { padding: '8px 12px', cursor: 'pointer', whiteSpace: 'nowrap' });
-        it.onmouseenter = () => { if (hi >= 0 && dd.children[hi]) dd.children[hi].style.background = 'transparent'; it.style.background = 'var(--background-secondary)'; hi = Array.from(dd.children).indexOf(it); };
-        it.onmouseleave = () => { it.style.background = 'transparent'; };
-        it.onclick = (e) => { e.stopPropagation(); pathInput.value = item.p + (item.t === 'folder' ? '/' : ''); const ev = new Event('change', { bubbles: true }); pathInput.dispatchEvent(ev); dd.remove(); pathInput._actDropdown = null; };
-        dd.appendChild(it);
-      });
-      document.body.appendChild(dd);
-      const pos = () => { const r = pathInput.getBoundingClientRect(); dd.style.left = r.left + 'px'; dd.style.top = (r.bottom + 6) + 'px'; dd.style.width = pathInput.offsetWidth + 'px'; };
-      pos();
-      pathInput._actDropdown = dd;
-      pathInput._dropdownScrollListener = pos;
-      pathInput._dropdownClickListener = (ev) => { if (ev.target === pathInput) return; if (!dd.contains(ev.target)) { dd.remove(); pathInput._actDropdown = null; document.removeEventListener('click', pathInput._dropdownClickListener); document.removeEventListener('scroll', pathInput._dropdownScrollListener, true); document.removeEventListener('keydown', pathInput._dropdownKeyListener); pathInput._dropdownClickListener = null; pathInput._dropdownScrollListener = null; pathInput._dropdownKeyListener = null; } };
-      pathInput._dropdownKeyListener = (ev) => { const items = Array.from(dd.children); if (items.length === 0) return; if (ev.key === 'ArrowDown') { ev.preventDefault(); hi = Math.min(hi + 1, items.length - 1); items.forEach(item => item.style.background = 'transparent'); if (hi >= 0) { items[hi].style.background = 'var(--background-secondary)'; items[hi].scrollIntoView({ block: 'nearest' }); } } else if (ev.key === 'ArrowUp') { ev.preventDefault(); hi = Math.max(hi - 1, -1); items.forEach(item => item.style.background = 'transparent'); if (hi >= 0) { items[hi].style.background = 'var(--background-secondary)'; items[hi].scrollIntoView({ block: 'nearest' }); } } else if (ev.key === 'Enter' && hi >= 0) { ev.preventDefault(); items[hi].click(); } else if (ev.key === 'Escape') { ev.preventDefault(); dd.remove(); pathInput._actDropdown = null; document.removeEventListener('keydown', pathInput._dropdownKeyListener); pathInput._dropdownKeyListener = null; } };
-      document.addEventListener('scroll', pos, true);
-      document.addEventListener('click', pathInput._dropdownClickListener);
-      document.addEventListener('keydown', pathInput._dropdownKeyListener);
-    };
-    const focusHandler = () => { updateDropdown(); };
-    const clickHandler = () => { updateDropdown(); };
-    const inputHandler = () => { updateDropdown(); };
-    pathInput.addEventListener('focus', focusHandler);
-    pathInput.addEventListener('click', clickHandler);
-    pathInput.addEventListener('input', inputHandler);
-    this._handlers.push({ el: pathInput, ev: 'focus', fn: focusHandler });
-    this._handlers.push({ el: pathInput, ev: 'click', fn: clickHandler });
-    this._handlers.push({ el: pathInput, ev: 'input', fn: inputHandler });
-
-    // Prefill if editing
-    if (isEdit) {
-      try {
-        textInput.value = String(this._editRule.text || '');
-        flagsInput.value = String(this._editRule.flags || '');
-        regexCheckbox.checked = !!this._editRule.isRegex;
-        modeSel.value = this._editRule.mode === 'exclude' ? 'exclude' : 'include';
-        pathInput.value = String(this._editRule.path || '');
-      } catch (e) {}
-    } else {
-      try {
-        if (this._preFillText) textInput.value = String(this._preFillText || '');
-        if (this._preFillFlags) flagsInput.value = String(this._preFillFlags || '');
-        if (typeof this._preFillIsRegex === 'boolean') regexCheckbox.checked = !!this._preFillIsRegex;
-      } catch (e) {}
-    }
-
-    const actions = contentEl.createDiv();
-    actions.style.display = 'flex';
-    actions.style.justifyContent = 'space-between';
-    actions.style.alignItems = 'center';
-    actions.style.marginTop = '10px';
-    
-    // Delete button on the left (only show if editing)
-    let deleteBtn = null;
-    if (isEdit) {
-      deleteBtn = actions.createEl('button', { text: this.plugin.t('btn_delete_rule','Delete Rule') });
-      deleteBtn.classList.add('mod-warning');
-      deleteBtn.style.marginRight = 'auto';
-    }
-    
-    const addBtn = actions.createEl('button', { text: isEdit ? this.plugin.t('btn_save_rule','Save Rule') : this.plugin.t('btn_add_rule','+ Add Rule') });
-    addBtn.addClass('mod-cta');
-    const addHandler = async () => {
-      const text = String(textInput.value || '').trim();
-      const flagsRaw = String(flagsInput.value || '').trim();
-      const flags = flagsRaw.replace(/[^gimsuy]/g, '');
-      const path = String(pathInput.value || '').trim().replace(/\\/g, '/');
-      const mode = modeSel.value === 'exclude' ? 'exclude' : 'include';
-      const isRegex = regexCheckbox.checked;
-      if (!Array.isArray(this.plugin.settings.advancedRules)) this.plugin.settings.advancedRules = [];
-      const updated = { text, flags, isRegex, mode, path };
-      if (isEdit && this._editIndex >= 0) {
-        this.plugin.settings.advancedRules[this._editIndex] = updated;
-      } else {
-        this.plugin.settings.advancedRules.push(updated);
-      }
-      await this.plugin.saveSettings();
-      try { this.onAdded && this.onAdded(); } catch (e) {}
-      this.close();
-    };
-    addBtn.addEventListener('click', addHandler);
-    this._handlers.push({ el: addBtn, ev: 'click', fn: addHandler });
-    
-    // Delete handler
-    if (deleteBtn && isEdit && this._editIndex >= 0) {
-      const deleteHandler = async () => {
-        if (!Array.isArray(this.plugin.settings.advancedRules)) return;
-        this.plugin.settings.advancedRules.splice(this._editIndex, 1);
-        await this.plugin.saveSettings();
-        try { this.onAdded && this.onAdded(); } catch (e) {}
-        this.close();
-      };
-      deleteBtn.addEventListener('click', deleteHandler);
-      this._handlers.push({ el: deleteBtn, ev: 'click', fn: deleteHandler });
-    }
-  }
-  onClose() {
-    try { this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} }); } catch (e) {}
-    this._handlers = [];
     try { this.contentEl.empty(); } catch (e) {}
   }
 }
@@ -15939,6 +15837,19 @@ class ColorSettingTab extends PluginSettingTab {
           } catch (e) {}
         }));
 
+    // new Setting(containerEl)
+    //   .setName(this.plugin.t('show_coloring_reason_on_hover','Show coloring reason on hover'))
+    //   .setDesc(this.plugin.t('show_coloring_reason_on_hover_desc','Hover over colored text to see why it\'s colored (e.g., "contains \'act\'" or "starts with \'red\'")'))
+    //   .addToggle(t => t
+    //     .setValue(this.plugin.settings.showColoringReasonOnHover)
+    //     .onChange(async v => {
+    //       this.plugin.settings.showColoringReasonOnHover = v;
+    //       await this.plugin.saveSettings();
+    //       try { this.plugin.reconfigureEditorExtensions(); } catch (e) {}
+    //       try { this.plugin.forceRefreshAllEditors(); } catch (e) {}
+    //       try { this.plugin.forceRefreshAllReadingViews(); } catch (e) {}
+    //     }));
+
     containerEl.createEl('h3', { text: this.plugin.t('coloring_settings_header','Coloring Settings') });
     new Setting(containerEl)
       .setName(this.plugin.t('regex_support','Regex support'))
@@ -17045,24 +16956,6 @@ class ColorSettingTab extends PluginSettingTab {
     // Store reference to disabled files container for updating
     this._disabledFilesContainer = containerEl.createDiv();
     this._refreshDisabledFiles();
-    containerEl.createEl('hr');
-    const advRow = containerEl.createDiv();
-    advRow.style.display = 'flex';
-    advRow.style.alignItems = 'center';
-    advRow.style.justifyContent = 'space-between';
-    advRow.style.marginTop = '12px';
-    advRow.style.flexWrap = 'wrap';
-    const advTitle = advRow.createEl('h2', { text: this.plugin.t('advanced_rules_header','Specific Include/Exclude Rules') });
-    advTitle.style.margin = '0';
-    advTitle.style.flex = '1 1 auto';
-    const manageBtn = advRow.createEl('button', { text: this.plugin.t('advanced_rules_manage_button','manage specific include/exclude rules') });
-    manageBtn.addClass('mod-cta');
-    manageBtn.style.flex = '0 0 auto';
-    manageBtn.style.marginTop = '8px';
-    manageBtn.style.cursor = 'pointer';
-    const manageHandler = () => { try { new ManageRulesModal(this.app, this.plugin).open(); } catch (e) {} };
-    manageBtn.addEventListener('click', manageHandler);
-    this._cleanupHandlers.push(() => manageBtn.removeEventListener('click', manageHandler));
     containerEl.createEl('hr');
     containerEl.createEl('h2', { text: this.plugin.t('data_export_import_header','Data Export/Import') });
     new Setting(containerEl)

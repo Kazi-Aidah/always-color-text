@@ -601,3 +601,59 @@ li.act-color-marker::marker {
 .prompt.act .suggestion-item.mod-complex.is-selected.act .suggestion-title span {
     color: var(--text-normal) !important;
 }
+/* Modal action row for Always Color Text */
+.act-prompt-bottom-row {
+  display: flex;
+  gap: 8px;
+  padding: 12px 8px;
+  border-top: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  align-items: center;
+}
+
+/* Limit input field in modal */
+.act-limit-input {
+  width: 64px;
+  padding: 6px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  z-index: 999;
+  position: relative;
+}
+
+/* Modal action buttons */
+.act-modal-action-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Spacer for flex layout */
+.act-flex-spacer {
+  flex: 1;
+}
+
+/* Menu z-index elevation */
+.act-menu-elevated {
+  z-index: 2000;
+}
+/* Limit input fields in settings tabs */
+.act-settings-limit-input {
+  width: 64px;
+  padding: 6px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+.act-edit-entry-style-select {
+  flex: 1 0% !important;
+}
+
+/* Flag button styling for regex testers */
+button.mod-cta {
+  background-color: var(--interactive-accent) !important;
+  color: var(--text-on-accent) !important;
+}
