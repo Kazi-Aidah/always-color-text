@@ -121,6 +121,7 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
   constructor(app, plugin, selectedText, view) {
     super(app);
     this.plugin = plugin;
+    this._activeTab = 'general';
     this.selectedText = String(selectedText || '').trim();
     this.view = view;
     this._isRightClick = false;
@@ -4189,6 +4190,7 @@ module.exports = class AlwaysColorText extends Plugin {
     const loadedData = await this.loadData() || {};
     // Validate that critical arrays exist before assignment
     if (!Array.isArray(loadedData.wordEntries)) loadedData.wordEntries = [];
+    if (!Array.isArray(loadedData.wordEntryGroups)) loadedData.wordEntryGroups = [];
     if (!Array.isArray(loadedData.blacklistEntries)) loadedData.blacklistEntries = [];
     if (!Array.isArray(loadedData.pathRules)) loadedData.pathRules = [];
     
@@ -4208,6 +4210,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // legacy: wordColors map. New model below: wordEntries array
       wordColors: {},
       wordEntries: [],
+      wordEntryGroups: [],
       caseSensitive: false,
       enabled: true,
       highlightStyle: 'text',
@@ -6397,8 +6400,18 @@ module.exports = class AlwaysColorText extends Plugin {
       try { this._regexCache && this._regexCache.clear(); } catch (_) {}
       try { this._bloomFilter && this._bloomFilter.reset(); } catch (_) {}
       if (!Array.isArray(this.settings.wordEntries)) return;
+
+      // Combine main entries with entries from active groups
+      let allEntries = [...(this.settings.wordEntries || [])];
+      if (Array.isArray(this.settings.wordEntryGroups)) {
+        this.settings.wordEntryGroups.forEach(group => {
+          if (group && group.active && Array.isArray(group.entries)) {
+            allEntries = allEntries.concat(group.entries);
+          }
+        });
+      }
       
-      for (const e of this.settings.wordEntries) {
+      for (const e of allEntries) {
         if (!e) continue;
         if (e && e.backgroundColor) {
           // Skip background/text+bg entries here; they are compiled via compileTextBgColoringEntries
@@ -6550,7 +6563,16 @@ module.exports = class AlwaysColorText extends Plugin {
   compileTextBgColoringEntries() {
     try {
       try { this._compiledTextBgEntries = []; } catch (e) {}
-      const source = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      
+      // Combine main entries with entries from active groups
+      let source = [...(Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [])];
+      if (Array.isArray(this.settings.wordEntryGroups)) {
+        this.settings.wordEntryGroups.forEach(group => {
+          if (group && group.active && Array.isArray(group.entries)) {
+            source = source.concat(group.entries);
+          }
+        });
+      }
       
       // DEBUG: Log the source array at the very start
       debugLog('[TBG_COMPILE_START]', `Starting with ${source.length} source entries from wordEntries`);
@@ -11494,7 +11516,7 @@ class RegexTesterModal extends Modal {
             textColorInput.value = tc;
             renderPreview();
           }
-        }, 'text');
+        }, 'text', regexInput.value || '');
         modal._preFillTextColor = textColorInput.value;
         modal.open();
       } catch (e) {}
@@ -11509,7 +11531,7 @@ class RegexTesterModal extends Modal {
             bgColorInput.value = bc;
             renderPreview();
           }
-        }, 'background');
+        }, 'background', regexInput.value || '');
         modal._preFillBgColor = bgColorInput.value;
         modal.open();
       } catch (e) {}
@@ -11831,11 +11853,12 @@ class RegexTesterModal extends Modal {
 }
 
 class RealTimeRegexTesterModal extends Modal {
-  constructor(app, plugin, onAdded, advancedRuleEntry = null) {
+  constructor(app, plugin, onAdded, advancedRuleEntry = null, skipWordEntriesPush = false) {
     super(app);
     this.plugin = plugin;
     this.onAdded = onAdded;
     this._advancedRuleEntry = advancedRuleEntry;
+    this._skipWordEntriesPush = skipWordEntriesPush;
     this._editingEntry = null;
     this._preFillPattern = '';
     this._preFillFlags = '';
@@ -11900,7 +11923,7 @@ class RealTimeRegexTesterModal extends Modal {
             textColorInput.value = tc;
             render();
           }
-        }, 'text');
+        }, 'text', regexInput.value || '');
         modal._preFillTextColor = textColorInput.value;
         modal.open();
       } catch (e) {}
@@ -11915,7 +11938,7 @@ class RealTimeRegexTesterModal extends Modal {
             bgColorInput.value = bc;
             render();
           }
-        }, 'background');
+        }, 'background', regexInput.value || '');
         modal._preFillBgColor = bgColorInput.value;
         modal.open();
       } catch (e) {}
@@ -12213,10 +12236,43 @@ class RealTimeRegexTesterModal extends Modal {
         }
       }
       
-      // Default: add to word entries (colored texts)
-      const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+      // Default: add to word entries (colored texts) - but skip if skipWordEntriesPush flag is set
+      if (!this._skipWordEntriesPush) {
+        const uid = (() => { try { return Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { return Date.now(); } })();
+        const style = styleSelect.value;
+        const entry = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || undefined, styleType: style, persistAtEnd: true };
+        if (style === 'text') {
+          entry.color = textColorInput.value || '';
+          entry.textColor = null;
+          entry.backgroundColor = null;
+          entry._savedTextColor = textColorInput.value || '';
+          entry._savedBackgroundColor = bgColorInput.value || '';
+        } else if (style === 'highlight') {
+          entry.color = '';
+          entry.textColor = 'currentColor';
+          entry.backgroundColor = bgColorInput.value || '';
+          entry._savedTextColor = textColorInput.value || '';
+          entry._savedBackgroundColor = bgColorInput.value || '';
+        } else {
+          entry.color = '';
+          entry.textColor = textColorInput.value || '';
+          entry.backgroundColor = bgColorInput.value || '';
+          entry._savedTextColor = textColorInput.value || '';
+          entry._savedBackgroundColor = bgColorInput.value || '';
+        }
+        this.plugin.settings.wordEntries.push(Object.assign({ matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact' }, entry));
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        this.plugin.triggerActiveDocumentRerender();
+      }
+      
+      // Always call the onAdded callback with the entry object
       const style = styleSelect.value;
-      const entry = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || undefined, styleType: style, persistAtEnd: true };
+      const entry = { isRegex: true, pattern: pat, flags, presetLabel: label || undefined, styleType: style };
       if (style === 'text') {
         entry.color = textColorInput.value || '';
         entry.textColor = null;
@@ -12236,14 +12292,6 @@ class RealTimeRegexTesterModal extends Modal {
         entry._savedTextColor = textColorInput.value || '';
         entry._savedBackgroundColor = bgColorInput.value || '';
       }
-      this.plugin.settings.wordEntries.push(Object.assign({ matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact' }, entry));
-      await this.plugin.saveSettings();
-      this.plugin.compileWordEntries();
-      this.plugin.compileTextBgColoringEntries();
-      this.plugin.reconfigureEditorExtensions();
-      this.plugin.forceRefreshAllEditors();
-      this.plugin.forceRefreshAllReadingViews();
-      this.plugin.triggerActiveDocumentRerender();
       try { this.onAdded && this.onAdded(entry); } catch (e) {}
       new Notice(this.plugin.t('notice_added_regex','Regex added'));
       try { const pm = this._parentModal; if (pm) { try { pm.close(); } catch (_) {} setTimeout(() => { try { pm.open(); } catch (_) {} }, 50); } } catch (_) {}
@@ -12769,6 +12817,7 @@ class EditEntryModal extends Modal {
     }
     this.onSaved = onSaved;
     this._handlers = [];
+    this._dropdownCleanups = []; // Track dropdown cleanup functions
   }
   onOpen() {
     const { contentEl } = this;
@@ -12860,6 +12909,11 @@ class EditEntryModal extends Modal {
         evt.preventDefault();
         evt.stopPropagation();
         const currentColor = colorInput.value || '#000000';
+        const displayText = (this.entry && this.entry.isRegex)
+          ? (this.entry.pattern || '')
+          : ((Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0)
+              ? this.entry.groupedPatterns.map(p => String(p).trim()).join(', ')
+              : (this.entry && this.entry.pattern ? String(this.entry.pattern) : ''));
         new ColorPickerModal(this.app, this.plugin, (color, result) => {
           const tc = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null;
           const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
@@ -12869,7 +12923,7 @@ class EditEntryModal extends Modal {
             colorInput.value = selectedColor;
             onColorSelected(selectedColor);
           }
-        }, 'single', currentColor, false).open();
+        }, 'single', displayText, false).open();
       });
     };
     
@@ -13182,6 +13236,17 @@ class EditEntryModal extends Modal {
           document.addEventListener('scroll', pos, true);
           document.addEventListener('click', pathInput._dropdownClickListener);
           document.addEventListener('keydown', pathInput._dropdownKeyListener);
+          // Track cleanup for onClose
+          this._dropdownCleanups.push(() => {
+            if (pathInput._actDropdown) {
+              const dd = pathInput._actDropdown;
+              if (pathInput._dropdownScrollListener) document.removeEventListener('scroll', pathInput._dropdownScrollListener, true);
+              if (pathInput._dropdownClickListener) document.removeEventListener('click', pathInput._dropdownClickListener);
+              if (pathInput._dropdownKeyListener) document.removeEventListener('keydown', pathInput._dropdownKeyListener);
+              dd.remove();
+              pathInput._actDropdown = null;
+            }
+          });
         };
         const pathHandler = async () => { r.path = String(pathInput.value || ''); await this.plugin.saveSettings(); };
         pathInput.addEventListener('focus', updateDropdown);
@@ -13262,7 +13327,7 @@ class EditEntryModal extends Modal {
         }
       }
       
-      // Update the entry if found
+      // Update entry in global settings if found there
       if (foundEntry && foundIdx !== -1 && foundArray) {
         // Handle pattern changes
         if (!isRegex) {
@@ -13336,6 +13401,49 @@ class EditEntryModal extends Modal {
             }, 100);
           } catch (e) {}
         }
+      } else if (this.parentModal) {
+        // Entry not found in global settings - likely editing from a group modal
+        // Update the entry object directly (it's passed by reference)
+        if (!isRegex) {
+          if (patternVal) {
+            const parts = patternVal.split(',').map(p => String(p).trim()).filter(p => p.length > 0);
+            this.entry.pattern = parts[0];
+            this.entry.groupedPatterns = parts.length > 1 ? parts : null;
+          }
+        }
+        
+        // Save entry properties
+        this.entry.matchType = matchTypeVal;
+        this.entry.styleType = st;
+        
+        // Save color values based on style type
+        if (st === 'text') {
+          this.entry.color = textColorVal;
+          this.entry.textColor = null;
+          this.entry.backgroundColor = null;
+        } else if (st === 'highlight') {
+          this.entry.color = '';
+          this.entry.textColor = 'currentColor';
+          this.entry.backgroundColor = bgColorVal;
+        } else {
+          this.entry.color = '';
+          this.entry.textColor = textColorVal;
+          this.entry.backgroundColor = bgColorVal;
+        }
+        
+        // Preserve highlight styling parameters
+        if (typeof this.entry.backgroundOpacity === 'number') {} // already set
+        if (typeof this.entry.highlightBorderRadius === 'number') {} // already set
+        if (typeof this.entry.highlightHorizontalPadding === 'number') {} // already set
+        if (typeof this.entry.highlightVerticalPadding === 'number') {} // already set
+        if (typeof this.entry.enableBorderThickness === 'boolean') {} // already set
+        if (this.entry.borderStyle) {} // already set
+        if (this.entry.borderLineStyle) {} // already set
+        if (typeof this.entry.borderOpacity === 'number') {} // already set
+        if (typeof this.entry.borderThickness === 'number') {} // already set
+        
+        // Call the onSaved callback to refresh parent modal
+        try { this.onSaved && this.onSaved(this.entry); } catch (e) {}
       }
       
       this.close();
@@ -13348,7 +13456,9 @@ class EditEntryModal extends Modal {
   }
   onClose() {
     try { this._handlers.forEach(h => { try { h.el.removeEventListener(h.ev, h.fn); } catch (e) {} }); } catch (e) {}
+    try { this._dropdownCleanups.forEach(cleanup => { try { cleanup(); } catch (e) {} }); } catch (e) {}
     this._handlers = [];
+    this._dropdownCleanups = [];
     try { this.contentEl.empty(); } catch (e) {}
   }
 }
@@ -13701,6 +13811,7 @@ class ChangelogModal extends Modal {
             dateEl.style.opacity = '0.8';
             dateEl.style.fontSize = '0.9em';
             dateEl.style.marginTop = '-4px';
+            dateEl.style.marginBottom = '16px';
           }
         } catch (_) {}
         const notes = body.createEl('div');
@@ -13743,11 +13854,684 @@ class ChangelogModal extends Modal {
 }
 
 
+class EditWordGroupModal extends Modal {
+  constructor(app, plugin, group, onSave, onDelete) {
+    super(app);
+    this.plugin = plugin;
+    this.group = JSON.parse(JSON.stringify(group));
+    if (!Array.isArray(this.group.entries)) this.group.entries = [];
+    this.onSave = onSave;
+    this.onDelete = onDelete;
+    this._searchQuery = '';
+    this._limit = 0; // 0 = show all
+    this._limitRegexOnly = false;
+    this._limitWordsOnly = false;
+    this._limitStyle = null; // 'text' | 'highlight' | 'both' | null
+    this._limitMatchStarts = false;
+    this._limitMatchEnds = false;
+    this._limitMatchExact = false;
+    this._listDiv = null;
+    this._cleanupHandlers = [];
+    this._sortMode = 'last-added';
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    
+    // Style the modal
+    this.modalEl.style.width = '1000px';
+    this.modalEl.style.maxWidth = '95vw';
+    try { this.modalEl.addClass('act-edit-word-group-modal'); } catch (e) { try { this.modalEl.classList.add('act-edit-word-group-modal'); } catch (_) {} }
+
+    // HEADING
+    const heading = contentEl.createEl('h2', { text: this.plugin.t('edit_word_group_modal_title', 'Edit Word Group') });
+    heading.style.marginTop = '0';
+    heading.style.marginBottom = '15px';
+
+    // TOP ROW: Active/Inactive & Group Name
+    const topRow = contentEl.createDiv();
+    topRow.style.display = 'flex';
+    topRow.style.alignItems = 'center';
+    topRow.style.gap = '10px';
+    topRow.style.marginBottom = '15px';
+
+    const activeSelect = topRow.createEl('select');
+    activeSelect.style.padding = '6px';
+    activeSelect.style.borderRadius = '4px';
+    activeSelect.style.border = '1px solid var(--background-modifier-border)';
+    activeSelect.style.textAlign = 'center';
+    const optActive = activeSelect.createEl('option', { text: this.plugin.t('group_active_label', 'Active'), value: 'true' });
+    const optInactive = activeSelect.createEl('option', { text: this.plugin.t('group_inactive_label', 'Inactive'), value: 'false' });
+    activeSelect.value = String(!!this.group.active);
+    const activeSelectHandler = () => { this.group.active = activeSelect.value === 'true'; };
+    activeSelect.addEventListener('change', activeSelectHandler);
+    this._cleanupHandlers.push(() => activeSelect.removeEventListener('change', activeSelectHandler));
+
+    const nameInput = topRow.createEl('input', { type: 'text', value: this.group.name || '' });
+    nameInput.style.flex = '1';
+    nameInput.style.padding = '6px';
+    nameInput.style.borderRadius = '4px';
+    nameInput.style.border = '1px solid var(--background-modifier-border)';
+    nameInput.placeholder = this.plugin.t('group_name_placeholder', 'Name your group');
+    const nameInputHandler = () => { this.group.name = nameInput.value; };
+    nameInput.addEventListener('input', nameInputHandler);
+    this._cleanupHandlers.push(() => nameInput.removeEventListener('input', nameInputHandler));
+
+    // contentEl.createEl('hr');
+
+    // SEARCH BAR & LIMIT INPUT ROW
+    const searchRow = contentEl.createDiv();
+    try { searchRow.addClass('act-search-container'); } catch (e) { try { searchRow.classList.add('act-search-container'); } catch (_) {} }
+    searchRow.style.display = 'flex';
+    searchRow.style.alignItems = 'center';
+    searchRow.style.gap = '8px';
+    searchRow.style.margin = '8px 0';
+    
+    const searchInput = searchRow.createEl('input', { type: 'text' });
+    searchInput.placeholder = this.plugin.t('search_colored_words_placeholder','Search colored words/patterns…');
+    try { searchInput.addClass('act-search-input'); } catch (e) { try { searchInput.classList.add('act-search-input'); } catch (_) {} }
+    searchInput.style.flex = '1 1 auto';
+    searchInput.style.padding = '6px';
+    searchInput.style.border = '1px solid var(--background-modifier-border)';
+    searchInput.style.borderRadius = '4px';
+    searchInput.value = this._searchQuery;
+    const searchHandler = () => { this._searchQuery = String(searchInput.value || '').trim().toLowerCase(); this._refreshGroupEntries(); };
+    searchInput.addEventListener('input', searchHandler);
+    this._cleanupHandlers.push(() => searchInput.removeEventListener('input', searchHandler));
+    
+    const searchIcon = searchRow.createDiv();
+    try { searchIcon.addClass('act-search-icon'); } catch (e) { try { searchIcon.classList.add('act-search-icon'); } catch (_) {} }
+
+    const limitInput = searchRow.createEl('input', { type: 'text' });
+    limitInput.value = String(this._limit);
+    limitInput.placeholder = this.plugin.t('limit_input_placeholder','limit');
+    limitInput.title = this.plugin.t('limit_input_tooltip','0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact');
+    limitInput.style.width = '80px';
+    limitInput.style.padding = '6px';
+    limitInput.style.border = '1px solid var(--background-modifier-border)';
+    limitInput.style.borderRadius = '4px';
+    const limitHandler = () => {
+      const raw = String(limitInput.value || '').trim().toLowerCase();
+      const parts = raw.split(/\s+/).filter(Boolean);
+      const numPart = parts.find(p => /^\d+$/.test(p));
+      const num = numPart ? parseInt(numPart, 10) : NaN;
+      this._limit = (!isNaN(num) && num >= 0) ? num : 0;
+      this._limitRegexOnly = false;
+      this._limitWordsOnly = false;
+      this._limitStyle = null;
+      this._limitMatchStarts = false;
+      this._limitMatchEnds = false;
+      this._limitMatchExact = false;
+      for (const tok of parts) {
+        if (tok === 'r') this._limitRegexOnly = true;
+        else if (tok === 'w') this._limitWordsOnly = true;
+        else if (tok === 'h') this._limitStyle = 'highlight';
+        else if (tok === 'c') this._limitStyle = 'text';
+        else if (tok === 'b') this._limitStyle = 'both';
+        else if (tok === 'sw') this._limitMatchStarts = true;
+        else if (tok === 'ew') this._limitMatchEnds = true;
+        else if (tok === 'e') this._limitMatchExact = true;
+      }
+      this._refreshGroupEntries();
+    };
+    limitInput.addEventListener('input', limitHandler);
+    this._cleanupHandlers.push(() => limitInput.removeEventListener('input', limitHandler));
+
+    const hrBelowSearch = contentEl.createEl('hr');
+    hrBelowSearch.style.marginTop = '6px';
+    hrBelowSearch.style.marginBottom = '6px';
+    hrBelowSearch.style.border = '0px';
+    try { hrBelowSearch.addClass('act-edit-word-group-hr'); } catch (e) { try { hrBelowSearch.classList.add('act-edit-word-group-hr'); } catch (_) {} }
+
+    // ENTRIES LIST CONTAINER
+    this._listDiv = contentEl.createDiv();
+    this._listDiv.addClass('color-words-list');
+    this._listDiv.style.minHeight = '200px';
+    this._listDiv.style.maxHeight = '350px';
+    this._listDiv.style.overflowY = 'auto';
+    this._listDiv.style.marginBottom = '15px';
+    this._listDiv.style.borderRadius = '4px';
+    this._listDiv.style.backgroundColor = 'var(--background-primary)';
+    this._refreshGroupEntries();
+
+    // BUTTON ROW: Sort | Add Word | Add Regex | Presets
+    const buttonRow = contentEl.createDiv();
+    buttonRow.style.display = 'flex';
+    buttonRow.style.gap = '10px';
+    buttonRow.style.marginBottom = '15px';
+    buttonRow.style.alignItems = 'center';
+
+    const sortModes = ['last-added', 'a-z', 'reverse-a-z', 'style-order', 'color'];
+    const sortLabels = {
+      'last-added': this.plugin.t('sort_label_last-added', 'Sort: Last Added'),
+      'a-z': this.plugin.t('sort_label_a-z', 'Sort: A-Z'),
+      'reverse-a-z': this.plugin.t('sort_label_reverse-a-z', 'Sort: Z-A'),
+      'style-order': this.plugin.t('sort_label_style-order', 'Sort: Style Order'),
+      'color': this.plugin.t('sort_label_color', 'Sort: Color')
+    };
+
+    const sortBtn = buttonRow.createEl('button');
+    sortBtn.textContent = sortLabels[this._sortMode] || 'Sort: Last Added';
+    sortBtn.style.cursor = 'pointer';
+    sortBtn.style.padding = '6px 12px';
+    sortBtn.style.borderRadius = '4px';
+    const sortBtnHandler = () => {
+      const currentIndex = sortModes.indexOf(this._sortMode);
+      const nextIndex = (currentIndex + 1) % sortModes.length;
+      this._sortMode = sortModes[nextIndex];
+      sortBtn.textContent = sortLabels[this._sortMode];
+      this._refreshGroupEntries();
+    };
+    sortBtn.addEventListener('click', sortBtnHandler);
+    this._cleanupHandlers.push(() => sortBtn.removeEventListener('click', sortBtnHandler));
+
+    const addWordsBtn = buttonRow.createEl('button');
+    addWordsBtn.textContent = this.plugin.t('btn_add_words','+ Add Words');
+    addWordsBtn.style.cursor = 'pointer';
+    addWordsBtn.style.padding = '6px 12px';
+    addWordsBtn.style.borderRadius = '4px';
+    addWordsBtn.style.flex = '1';
+    addWordsBtn.addClass('mod-cta');
+    const addWordsHandler = () => {
+      this.group.entries.push({ pattern: '', color: '', isRegex: false, flags: '', styleType: 'text', matchType: 'contains' });
+      this._sortMode = 'last-added';
+      this._refreshGroupEntries();
+      setTimeout(() => { this._listDiv.scrollTop = this._listDiv.scrollHeight; }, 50);
+    };
+    addWordsBtn.addEventListener('click', addWordsHandler);
+    this._cleanupHandlers.push(() => addWordsBtn.removeEventListener('click', addWordsHandler));
+
+    const addRegexBtn = buttonRow.createEl('button');
+    addRegexBtn.textContent = this.plugin.t('btn_add_regex','+ Add Regex');
+    addRegexBtn.style.cursor = 'pointer';
+    addRegexBtn.style.padding = '6px 12px';
+    addRegexBtn.style.borderRadius = '4px';
+    addRegexBtn.style.flex = '1';
+    addRegexBtn.addClass('mod-cta');
+    const addRegexHandler = () => {
+      this._sortMode = 'last-added';
+      const onAdded = (entry) => {
+        if (entry) {
+          this.group.entries.push(entry);
+        }
+        this._refreshGroupEntries();
+      };
+      new RealTimeRegexTesterModal(this.app, this.plugin, onAdded, null, true).open();
+    };
+    addRegexBtn.addEventListener('click', addRegexHandler);
+    this._cleanupHandlers.push(() => addRegexBtn.removeEventListener('click', addRegexHandler));
+
+    const presetsBtn = buttonRow.createEl('button');
+    presetsBtn.textContent = this.plugin.t('btn_presets','Presets');
+    presetsBtn.style.cursor = 'pointer';
+    presetsBtn.style.padding = '6px 12px';
+    presetsBtn.style.borderRadius = '4px';
+    const presetsHandler = () => {
+      new PresetModal(this.app, this.plugin, async (preset) => {
+        if (!preset) return;
+        new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+          const sel = result || {};
+          const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : null;
+          const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+          if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
+          const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', styleType: 'text', matchType: 'contains' };
+          if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
+          else if (tc) { entry.color = tc; entry.styleType = 'text'; entry._savedTextColor = tc; }
+          else if (bc) { entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
+          else { entry.color = color; entry._savedTextColor = color; }
+          this.group.entries.push(entry);
+          this._sortMode = 'last-added';
+          this._refreshGroupEntries();
+        }, 'text-and-background', '', false).open();
+      }).open();
+    };
+    presetsBtn.addEventListener('click', presetsHandler);
+    this._cleanupHandlers.push(() => presetsBtn.removeEventListener('click', presetsHandler));
+
+    // FOOTER: Delete & Save buttons
+    const footer = contentEl.createDiv();
+    footer.style.display = 'flex';
+    footer.style.justifyContent = 'space-between';
+    footer.style.alignItems = 'center';
+    footer.style.marginTop = '15px';
+    footer.style.paddingTop = '15px';
+    footer.style.borderTop = '1px solid var(--background-modifier-border)';
+
+    const btnDelete = footer.createEl('button', { text: this.plugin.t('btn_delete_group', 'Delete Group') });
+    btnDelete.addClass('mod-warning');
+    btnDelete.style.cursor = 'pointer';
+    btnDelete.style.padding = '8px 16px';
+    const deleteHandler = () => {
+      new ConfirmationModal(this.app, this.plugin.t('confirm_delete_group_title', 'Delete Group'), this.plugin.t('confirm_delete_group_desc', 'Are you sure you want to delete this group?'), async () => {
+        this.close();
+        this.onDelete(this.group);
+      }).open();
+    };
+    btnDelete.addEventListener('click', deleteHandler);
+    this._cleanupHandlers.push(() => btnDelete.removeEventListener('click', deleteHandler));
+
+    const btnSave = footer.createEl('button', { text: this.plugin.t('btn_save_group', 'Save Group') });
+    btnSave.addClass('mod-cta');
+    btnSave.style.cursor = 'pointer';
+    btnSave.style.padding = '8px 16px';
+    const saveHandler = () => {
+      // Ensure all entries have required fields before saving
+      this.group.entries.forEach(entry => {
+        if (!entry.hasOwnProperty('pattern')) entry.pattern = '';
+        if (!entry.hasOwnProperty('color')) entry.color = '';
+        if (!entry.hasOwnProperty('isRegex')) entry.isRegex = false;
+        if (!entry.hasOwnProperty('flags')) entry.flags = '';
+        if (!entry.hasOwnProperty('styleType')) entry.styleType = 'text';
+        if (!entry.hasOwnProperty('matchType')) entry.matchType = 'contains';
+        if (!entry.hasOwnProperty('textColor')) entry.textColor = null;
+        if (!entry.hasOwnProperty('backgroundColor')) entry.backgroundColor = null;
+      });
+      this.onSave(this.group);
+      this.close();
+    };
+    btnSave.addEventListener('click', saveHandler);
+    this._cleanupHandlers.push(() => btnSave.removeEventListener('click', saveHandler));
+  }
+
+  _refreshGroupEntries() {
+    if (!this._listDiv) return;
+    this._listDiv.empty();
+
+    // Filter entries
+    let entries = [...this.group.entries];
+    if (this._searchQuery) {
+      const q = this._searchQuery.toLowerCase();
+      entries = entries.filter(e => {
+        const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || '')];
+        const text = [
+          ...patterns.map(p => p.toLowerCase()),
+          String(e.presetLabel || '').toLowerCase(),
+          String(e.flags || '').toLowerCase(),
+          String(e.styleType || '').toLowerCase()
+        ].join(' ');
+        if (this._limitMatchExact) return text === q;
+        if (this._limitMatchStarts) return text.startsWith(q);
+        if (this._limitMatchEnds) return text.endsWith(q);
+        return text.includes(q);
+      });
+    }
+    if (this._limitStyle === 'highlight') {
+      entries = entries.filter(e => (e.styleType || 'text') === 'highlight');
+    } else if (this._limitStyle === 'text') {
+      entries = entries.filter(e => (e.styleType || 'text') === 'text');
+    } else if (this._limitStyle === 'both') {
+      entries = entries.filter(e => (e.styleType || 'text') === 'both');
+    }
+    if (this._limitRegexOnly) {
+      entries = entries.filter(e => !!e.isRegex);
+    } else if (this._limitWordsOnly) {
+      entries = entries.filter(e => !e.isRegex);
+    }
+
+    // Sort entries
+    if (this._sortMode === 'a-z') {
+      entries.sort((a, b) => {
+        const patternA = (a.pattern || '');
+        const patternB = (b.pattern || '');
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+      });
+    } else if (this._sortMode === 'reverse-a-z') {
+      entries.sort((a, b) => {
+        const patternA = (a.pattern || '');
+        const patternB = (b.pattern || '');
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        return patternB.toLowerCase().localeCompare(patternA.toLowerCase());
+      });
+    } else if (this._sortMode === 'style-order') {
+      const styleOrder = { 'text': 0, 'highlight': 1, 'both': 2 };
+      entries.sort((a, b) => {
+        const patternA = (a.pattern || '');
+        const patternB = (b.pattern || '');
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        const styleA = styleOrder[a.styleType] ?? 0;
+        const styleB = styleOrder[b.styleType] ?? 0;
+        if (styleA !== styleB) return styleA - styleB;
+        return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+      });
+    } else if (this._sortMode === 'color') {
+      entries.sort((a, b) => {
+        const patternA = (a.pattern || '');
+        const patternB = (b.pattern || '');
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        const colorA = (a.backgroundColor || a.textColor || a.color || '').toLowerCase();
+        const colorB = (b.backgroundColor || b.textColor || b.color || '').toLowerCase();
+        if (colorA !== colorB) return colorA.localeCompare(colorB);
+        return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+      });
+    }
+
+    // Limit entries
+    const visibleEntries = (this._limit && this._limit > 0) ? entries.slice(-this._limit) : entries;
+
+    if (visibleEntries.length === 0) {
+      this._listDiv.createDiv({ text: this.plugin.t('no_entries_found', 'No entries found.') }).style.color = 'var(--text-muted)';
+      return;
+    }
+
+    // Create entry rows - EXACT ORDER: colorstyle | matchtype | input | flags | regex checkbox | text color | bg color | X
+    visibleEntries.forEach((entry) => {
+      const row = this._listDiv.createDiv();
+      try { row.addClass('act-entry-row'); } catch (e) { try { row.classList.add('act-entry-row'); } catch (_) {} }
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '8px';
+      row.style.borderRadius = '4px';
+
+      // 1. STYLE SELECT (Text/Highlight/Both) - default should be "color" which is "text"
+      const styleSelect = row.createEl('select');
+      styleSelect.style.padding = '6px';
+      styleSelect.style.borderRadius = '4px';
+      styleSelect.style.border = '1px solid var(--background-modifier-border)';
+      styleSelect.style.textAlign = 'center';
+      ['text', 'highlight', 'both'].forEach(val => {
+        const opt = styleSelect.createEl('option', { text: this.plugin.t('style_type_' + val, val === 'text' ? 'color' : val) });
+        opt.value = val;
+      });
+      styleSelect.value = entry.styleType || 'text';
+      const styleSelectHandler = () => {
+        entry.styleType = styleSelect.value;
+        this._refreshGroupEntries();
+      };
+      styleSelect.addEventListener('change', styleSelectHandler);
+
+      // 2. MATCH TYPE SELECT
+      const matchSelect = row.createEl('select');
+      matchSelect.style.padding = '6px';
+      matchSelect.style.borderRadius = '4px';
+      matchSelect.style.border = '1px solid var(--background-modifier-border)';
+      matchSelect.style.textAlign = 'center';
+      matchSelect.innerHTML = `<option value="exact">${this.plugin.t('match_option_exact','Exact')}</option><option value="contains">${this.plugin.t('match_option_contains','Contains')}</option><option value="startswith">${this.plugin.t('match_option_starts_with','Starts with')}</option><option value="endswith">${this.plugin.t('match_option_ends_with','Ends with')}</option>`;
+      matchSelect.value = entry.matchType || 'contains';
+      const matchSelectHandler = () => { entry.matchType = matchSelect.value; };
+      matchSelect.addEventListener('change', matchSelectHandler);
+      
+      // Update visibility based on regex status
+      const updateVisibility = () => {
+        matchSelect.style.display = entry.isRegex ? 'none' : '';
+      };
+      updateVisibility();
+
+      // 3. PATTERN INPUT (with same placeholder as Always Colored Texts)
+      const patternInput = row.createEl('input', { type: 'text', value: entry.pattern || '' });
+      patternInput.style.flex = '1';
+      patternInput.style.padding = '6px';
+      patternInput.style.borderRadius = '4px';
+      patternInput.style.border = '1px solid var(--background-modifier-border)';
+      patternInput.placeholder = this.plugin.t('word_pattern_placeholder_long','pattern, word or comma-separated words (e.g. hello, world, foo)');
+      const patternHandler = () => { entry.pattern = patternInput.value; };
+      patternInput.addEventListener('change', patternHandler);
+      patternInput.addEventListener('blur', patternHandler);
+
+      // 4. FLAGS INPUT (only if regex) - comes before regex checkbox
+      let flagsInput = null;
+      if (entry.isRegex) {
+        flagsInput = row.createEl('input', { type: 'text', value: entry.flags || '' });
+        flagsInput.style.width = '50px';
+        flagsInput.style.padding = '6px';
+        flagsInput.style.borderRadius = '4px';
+        flagsInput.style.border = '1px solid var(--background-modifier-border)';
+        flagsInput.placeholder = 'flags';
+        flagsInput.title = 'e.g., i, g, m';
+        const flagsHandler = () => { entry.flags = flagsInput.value || ''; };
+        flagsInput.addEventListener('change', flagsHandler);
+      }
+
+      // 5. REGEX CHECKBOX (NO LABEL)
+      const regexChk = row.createEl('input', { type: 'checkbox' });
+      regexChk.checked = !!entry.isRegex;
+      regexChk.title = this.plugin.t('use_regex','Use Regex');
+      const regexChkHandler = () => { 
+        entry.isRegex = regexChk.checked; 
+        updateVisibility();
+        this._refreshGroupEntries();
+      };
+      regexChk.addEventListener('change', regexChkHandler);
+
+      // 6. TEXT COLOR PICKER (if text or both)
+      let cp = null;
+      if (entry.styleType === 'text' || entry.styleType === 'both') {
+        cp = row.createEl('input', { type: 'color' });
+        cp.style.width = '40px';
+        cp.style.height = '40px';
+        cp.style.padding = '0';
+        cp.style.border = 'none';
+        cp.style.cursor = 'pointer';
+        cp.style.borderRadius = '4px';
+        const textColor = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : (entry.color || '#000000');
+        cp.value = textColor;
+        const cpHandler = () => {
+          const newColor = cp.value;
+          if (!this.plugin.isValidHexColor(newColor)) return;
+          if (entry.backgroundColor) {
+            entry.textColor = newColor;
+            entry.color = '';
+            entry.styleType = 'both';
+            entry._savedTextColor = newColor;
+          } else {
+            entry.color = newColor;
+            entry.textColor = null;
+            entry.backgroundColor = null;
+            entry.styleType = 'text';
+            entry._savedTextColor = newColor;
+          }
+          styleSelect.value = entry.styleType;
+        };
+        cp.addEventListener('input', cpHandler);
+        cp.title = 'Text color';
+        
+        // RIGHT-CLICK CONTEXT MENU FOR TEXT COLOR PICKER
+        const cpContextHandler = (ev) => {
+          try {
+            ev && ev.preventDefault && ev.preventDefault();
+            if (ev && ev.stopPropagation) ev.stopPropagation();
+            const preFillText = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : (this.plugin.isValidHexColor(entry.color) ? entry.color : cp.value);
+            const displayText = entry.isRegex ? (entry.pattern || '') : ((Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0) ? entry.groupedPatterns.join(', ') : (entry.pattern || ''));
+            const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+              const tc = (result && result.textColor) || color;
+              if (!tc || !this.plugin.isValidHexColor(tc)) return;
+              const currentStyle = entry.styleType || 'text';
+              if (currentStyle === 'both') {
+                entry.textColor = tc;
+                entry.color = '';
+                entry._savedTextColor = tc;
+              } else {
+                entry.color = tc;
+                entry.textColor = null;
+                entry.backgroundColor = null;
+                entry._savedTextColor = tc;
+              }
+              cp.value = tc;
+              this._refreshGroupEntries();
+            }, 'text', displayText, false);
+            try { modal._preFillTextColor = preFillText; } catch (_) {}
+            try { modal.open(); } catch (_) {}
+          } catch (e) {}
+        };
+        cp.addEventListener('contextmenu', cpContextHandler);
+      }
+
+      // 7. HIGHLIGHT COLOR PICKER (if highlight or both)
+      let cpBg = null;
+      if (entry.styleType === 'highlight' || entry.styleType === 'both') {
+        cpBg = row.createEl('input', { type: 'color' });
+        cpBg.style.width = '40px';
+        cpBg.style.height = '40px';
+        cpBg.style.padding = '0';
+        cpBg.style.border = 'none';
+        cpBg.style.cursor = 'pointer';
+        cpBg.style.borderRadius = '4px';
+        const bgColor = entry.backgroundColor || entry._savedBackgroundColor || '#000000';
+        cpBg.value = bgColor;
+        const cpBgHandler = () => {
+          const newColor = cpBg.value;
+          if (!this.plugin.isValidHexColor(newColor)) return;
+          entry.backgroundColor = newColor;
+          if (!entry.textColor || entry.textColor === 'currentColor') {
+            entry.textColor = 'currentColor';
+          }
+          entry.color = '';
+          const hasText = !!(entry.textColor && entry.textColor !== 'currentColor');
+          const hasBg = !!entry.backgroundColor;
+          if (hasText && hasBg) {
+            entry.styleType = 'both';
+          } else if (hasBg) {
+            entry.styleType = 'highlight';
+          } else {
+            entry.styleType = 'text';
+          }
+          entry._savedBackgroundColor = newColor;
+          styleSelect.value = entry.styleType;
+        };
+        cpBg.addEventListener('input', cpBgHandler);
+        cpBg.title = 'Highlight color';
+        
+        // RIGHT-CLICK CONTEXT MENU FOR HIGHLIGHT COLOR PICKER
+        const cpBgContextHandler = (ev) => {
+          try {
+            ev && ev.preventDefault && ev.preventDefault();
+            if (ev && ev.stopPropagation) ev.stopPropagation();
+            const preFillBg = entry.backgroundColor || entry._savedBackgroundColor || cpBg.value;
+            const displayText = entry.isRegex ? (entry.pattern || '') : ((Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0) ? entry.groupedPatterns.join(', ') : (entry.pattern || ''));
+            const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+              const bc = (result && result.backgroundColor) || color;
+              if (!bc || !this.plugin.isValidHexColor(bc)) return;
+              entry.backgroundColor = bc;
+              if (!entry.textColor || entry.textColor === 'currentColor') {
+                entry.textColor = 'currentColor';
+              }
+              entry.color = '';
+              entry._savedBackgroundColor = bc;
+              cpBg.value = bc;
+              this._refreshGroupEntries();
+            }, 'background', displayText, false);
+            try { modal._preFillBgColor = preFillBg; } catch (_) {}
+            try { modal.open(); } catch (_) {}
+          } catch (e) {}
+        };
+        cpBg.addEventListener('contextmenu', cpBgContextHandler);
+      }
+
+      // 8. DELETE BUTTON (X)
+      const btnDel = row.createEl('button', { text: '✕' });
+      btnDel.addClass('mod-warning');
+      btnDel.style.cursor = 'pointer';
+      btnDel.style.padding = '6px 10px';
+      const delHandler = () => {
+        const idx = this.group.entries.indexOf(entry);
+        if (idx > -1) {
+          this.group.entries.splice(idx, 1);
+          this._refreshGroupEntries();
+        }
+      };
+      btnDel.addEventListener('click', delHandler);
+
+      // RIGHT-CLICK CONTEXT MENU ON ROW
+      const contextMenuHandler = (ev) => {
+        try {
+          ev && ev.preventDefault && ev.preventDefault();
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          const menu = new Menu(this.app);
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t('edit_entry_details','Edit Entry Details')).setIcon('pencil').onClick(() => {
+              const modal = new EditEntryModal(this.app, this.plugin, entry, () => { try { this._refreshGroupEntries(); } catch (e) {} }, this);
+              modal.open();
+            });
+          });
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t('duplicate_entry', 'Duplicate Entry')).setIcon('copy').onClick(() => {
+              const dup = JSON.parse(JSON.stringify(entry));
+              this.group.entries.push(dup);
+              this._sortMode = 'last-added';
+              this._refreshGroupEntries();
+            });
+          });
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t('reset_text_color', 'Reset Text Color')).setIcon('text').onClick(() => {
+              entry.textColor = null;
+              entry.color = '';
+              if (entry.backgroundColor) {
+                entry.styleType = 'highlight';
+              } else {
+                entry.styleType = 'text';
+              }
+              this._refreshGroupEntries();
+            });
+          });
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t('reset_highlight', 'Reset Highlight')).setIcon('rectangle-horizontal').onClick(() => {
+              entry.backgroundColor = null;
+              if (entry.textColor || entry.color) {
+                entry.styleType = 'text';
+              } else {
+                entry.styleType = 'text';
+              }
+              this._refreshGroupEntries();
+            });
+          });
+          if (entry.isRegex) {
+            menu.addItem((item) => {
+              item.setTitle(this.plugin.t('open_in_regex_tester', 'Open in Regex Tester')).setIcon('pencil').onClick(() => {
+                const modal = new RealTimeRegexTesterModal(this.app, this.plugin, (updatedEntry) => {
+                  if (updatedEntry) {
+                    Object.assign(entry, updatedEntry);
+                    this._refreshGroupEntries();
+                  }
+                });
+                modal.open();
+              });
+            });
+          }
+          menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+        } catch (e) {
+          debugError('MODAL', 'context menu error', e);
+        }
+      };
+      row.addEventListener('contextmenu', contextMenuHandler);
+    });
+  }
+  
+  onClose() {
+    try {
+      // Auto-save the group on close to prevent accidental data loss
+      this.onSave(this.group);
+    } catch (e) {
+      debugError('MODAL', 'auto-save error on close', e);
+    }
+    try {
+      this._cleanupHandlers.forEach(cleanup => {
+        try { cleanup(); } catch (e) {}
+      });
+      this._cleanupHandlers = [];
+      this.contentEl.empty();
+    } catch (e) {}
+  }
+}
+
 // --- Color Setting Tab Class ---
 class ColorSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
+    this._activeTab = 'general';
     this.debouncedSaveSettings = debounce(this.plugin.saveSettings.bind(this.plugin), 800);
     this._lastRerender = 0;
     this._cleanupHandlers = [];
@@ -13803,6 +14587,7 @@ class ColorSettingTab extends PluginSettingTab {
         try { entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { entry.uid = Date.now(); }
       }
       const row = listDiv.createDiv();
+      try { row.addClass('act-entry-row'); } catch (e) { try { row.classList.add('act-entry-row'); } catch (_) {} }
       row.style.display = 'flex';
       row.style.alignItems = 'center';
       row.style.gap = '8px';
@@ -14300,6 +15085,11 @@ class ColorSettingTab extends PluginSettingTab {
           const idx = resolveIdx();
           const preExisting = idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
           const preFillText = preExisting && (preExisting.textColor && preExisting.textColor !== 'currentColor' ? preExisting.textColor : (this.plugin.isValidHexColor(preExisting.color) ? preExisting.color : null)) || cp.value;
+          const displayText = (preExisting && preExisting.isRegex)
+            ? (preExisting.pattern || '')
+            : ((Array.isArray(preExisting?.groupedPatterns) && preExisting.groupedPatterns.length > 0)
+                ? preExisting.groupedPatterns.map(p => String(p).trim()).join(', ')
+                : (preExisting && preExisting.pattern ? String(preExisting.pattern) : ''));
           const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
             const tc = (result && result.textColor) || color;
             if (!tc || !this.plugin.isValidHexColor(tc)) return;
@@ -14324,7 +15114,7 @@ class ColorSettingTab extends PluginSettingTab {
               this.plugin.reconfigureEditorExtensions();
               this.plugin.forceRefreshAllEditors();
             }
-          }, 'text', '', false);
+          }, 'text', displayText, false);
           try { modal._preFillTextColor = preFillText || cp.value; } catch (_) {}
           try { modal.open(); } catch (_) {}
         } catch (_) {}
@@ -14336,6 +15126,11 @@ class ColorSettingTab extends PluginSettingTab {
           const idx = resolveIdx();
           const preExisting = idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
           const preFillBg = (preExisting && preExisting.backgroundColor) || cpBg.value;
+          const displayText = (preExisting && preExisting.isRegex)
+            ? (preExisting.pattern || '')
+            : ((Array.isArray(preExisting?.groupedPatterns) && preExisting.groupedPatterns.length > 0)
+                ? preExisting.groupedPatterns.map(p => String(p).trim()).join(', ')
+                : (preExisting && preExisting.pattern ? String(preExisting.pattern) : ''));
           const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
             const bc = (result && result.backgroundColor) || color;
             if (!bc || !this.plugin.isValidHexColor(bc)) return;
@@ -14354,7 +15149,7 @@ class ColorSettingTab extends PluginSettingTab {
               this.plugin.reconfigureEditorExtensions();
               this.plugin.forceRefreshAllEditors();
             }
-          }, 'background', '', false);
+          }, 'background', displayText, false);
           try { modal._preFillBgColor = preFillBg || cpBg.value; } catch (_) {}
           try { modal.open(); } catch (_) {}
         } catch (_) {}
@@ -14547,7 +15342,8 @@ class ColorSettingTab extends PluginSettingTab {
       
       if (this.plugin.settings.disabledFiles.length > 0) {
         const h4 = this._disabledFilesContainer.createEl('h5', { text: this.plugin.t('disabled_files_header','Files with coloring disabled:') });
-        h4.style.margin = '-10px 0 8px 0';
+        h4.style.margin = '20px 0 8px 0';
+        h4.style.marginTop = '20px';
         this.plugin.settings.disabledFiles.forEach(filePath => {
           new Setting(this._disabledFilesContainer)
             .setName(filePath)
@@ -15550,6 +16346,101 @@ class ColorSettingTab extends PluginSettingTab {
     }
   }
 
+  _refreshGroups() {
+    try {
+      const container = this.containerEl.querySelector('.act-groups-container');
+      if (!container) return;
+      container.empty();
+      const allGroups = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+      const q = String(this._groupSearch || '').toLowerCase().trim();
+      const groups = q ? allGroups.filter(g => {
+        const matchesName = String(g?.name || '').toLowerCase().includes(q);
+        const matchesActive = q === 'active' && g?.active;
+        const matchesInactive = q === 'inactive' && !g?.active;
+        return matchesName || matchesActive || matchesInactive;
+      }) : allGroups;
+      groups.forEach((group, index) => {
+        const row = container.createDiv();
+        try { row.addClass('act-group-row'); } catch (e) { try { row.classList.add('act-group-row'); } catch (_) {} }
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '10px';
+        row.style.marginBottom = '10px';
+        row.style.padding = '10px';
+        row.style.border = '1px solid var(--background-modifier-border)';
+        row.style.borderRadius = '6px';
+        row.style.backgroundColor = 'var(--background-primary)';
+
+        const activeSelect = row.createEl('select');
+        try { activeSelect.addClass('dropdown'); } catch (e) {}
+        activeSelect.createEl('option', { text: this.plugin.t('group_active_label', 'Active'), value: 'true' });
+        activeSelect.createEl('option', { text: this.plugin.t('group_inactive_label', 'Inactive'), value: 'false' });
+        if (!group.uid) { try { group.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (_) {} }
+        activeSelect.value = String(!!group.active);
+        const activeHandler = async () => {
+          group.active = activeSelect.value === 'true';
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
+        };
+        activeSelect.onchange = activeHandler;
+
+        const nameInput = row.createEl('input', { type: 'text', value: group.name || '' });
+        nameInput.style.flex = '1';
+        nameInput.placeholder = this.plugin.t('group_name_placeholder', 'Name your group');
+        const nameHandler = async () => { group.name = nameInput.value; await this.plugin.saveSettings(); };
+        nameInput.onchange = nameHandler;
+
+        const btnDuplicate = row.createEl('div');
+        btnDuplicate.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        btnDuplicate.style.cursor = 'pointer';
+        btnDuplicate.style.color = 'var(--text-muted)';
+        btnDuplicate.title = this.plugin.t('tooltip_duplicate_group','Duplicate Group');
+        btnDuplicate.style.display = 'flex';
+        btnDuplicate.style.alignItems = 'center';
+        btnDuplicate.onclick = async () => {
+          const newGroup = JSON.parse(JSON.stringify(group));
+          newGroup.name = (newGroup.name || '') + ' (Copy)';
+          this.plugin.settings.wordEntryGroups.push(newGroup);
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this._refreshGroups();
+        };
+
+        const btnEdit = row.createEl('div');
+        btnEdit.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>';
+        btnEdit.style.cursor = 'pointer';
+        btnEdit.style.color = 'var(--text-muted)';
+        btnEdit.title = this.plugin.t('tooltip_edit_group_settings','Edit Group Settings');
+        btnEdit.style.display = 'flex';
+        btnEdit.style.alignItems = 'center';
+        btnEdit.onclick = () => {
+          const latestGroup = this.plugin.settings.wordEntryGroups.find(g => g && g.uid === group.uid) || group;
+          new EditWordGroupModal(this.app, this.plugin, latestGroup, async (updatedGroup) => {
+            const idx = this.plugin.settings.wordEntryGroups.findIndex(g => g && g.uid === updatedGroup.uid);
+            if (idx !== -1) this.plugin.settings.wordEntryGroups[idx] = updatedGroup;
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this._refreshGroups();
+          }, async (groupToDelete) => {
+            const actualIndex = this.plugin.settings.wordEntryGroups.findIndex(g => g && g.uid === groupToDelete.uid);
+            if (actualIndex !== -1) this.plugin.settings.wordEntryGroups.splice(actualIndex, 1);
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this._refreshGroups();
+          }).open();
+        };
+      });
+    } catch (e) {}
+  }
   // Clean up event listeners to prevent leaks
   onClose() {
     try {
@@ -15678,7 +16569,11 @@ class ColorSettingTab extends PluginSettingTab {
     this.containerEl = containerEl;
     // If we've already created the static UI once, only refresh dynamic sections
     if (this._initializedSettingsUI) {
-      try { this._refreshEntries(); } catch (e) {}
+      try { 
+        if (this._activeTab === 'always-color-texts') { this._refreshEntries(); this._refreshGroups(); }
+        if (this._activeTab === 'blacklist') this._refreshBlacklistWords();
+        if (this._activeTab === 'file-folder-rules') { this._refreshPathRules(); this._refreshDisabledFiles(); }
+      } catch (e) {}
       return;
     }
     // First-time render: build full UI
@@ -15688,10 +16583,60 @@ class ColorSettingTab extends PluginSettingTab {
     this._cleanupHandlers = [];
 
     containerEl.createEl('h1', { text: this.plugin.t('settings_title','Always Color Text Settings') });
-    new Setting(containerEl)
+
+    // --- TABS ---
+    const tabContainer = containerEl.createDiv();
+    tabContainer.addClass('act-tabs-container');
+    tabContainer.style.display = 'flex';
+    tabContainer.style.flexWrap = 'wrap';
+    tabContainer.style.gap = '10px';
+    tabContainer.style.marginBottom = '20px';
+    tabContainer.style.borderBottom = '1px solid var(--background-modifier-border)';
+    tabContainer.style.paddingBottom = '10px';
+    
+    const tabs = [
+      { id: 'general', label: this.plugin.t('settings_tab_general','General') },
+      { id: 'always-color-texts', label: this.plugin.t('settings_tab_colored_texts','Colored Texts') },
+      { id: 'blacklist', label: this.plugin.t('settings_tab_blacklists','Blacklists') },
+      { id: 'file-folder-rules', label: this.plugin.t('settings_tab_file_folder_rules','File / Folder Rules') },
+      { id: 'data', label: this.plugin.t('settings_tab_data','Data') }
+    ];
+    
+    tabs.forEach(tab => {
+      const btn = tabContainer.createEl('button', { text: tab.label });
+      btn.addClass('act-tab-button');
+      btn.style.flex = '1 1 auto';
+      btn.style.cursor = 'pointer';
+      btn.style.border = 'none';
+      btn.style.background = 'transparent';
+      btn.style.boxShadow = 'none';
+      btn.style.borderRadius = '4px';
+      btn.style.padding = '8px 16px';
+      
+      if (this._activeTab === tab.id) {
+        btn.addClass('mod-cta');
+        btn.addClass('act-tab-active');
+        btn.style.fontWeight = 'bold';
+      } else {
+         btn.style.color = 'var(--text-muted)';
+      }
+
+      btn.onclick = () => {
+        this._activeTab = tab.id;
+        this._initializedSettingsUI = false;
+        this.display();
+      };
+    });
+
+    if (this._activeTab === 'general') {
+    const releaseNotesSettingEl = new Setting(containerEl)
       .setName(this.plugin.t('latest_release_notes_label','Latest Release Notes'))
       .setDesc(this.plugin.t('latest_release_notes_desc','View the most recent plugin release notes'))
       .addButton(btn => btn.setButtonText(this.plugin.t('open_changelog_button','Open Changelog')).onClick(() => { try { new ChangelogModal(this.app, this.plugin).open(); } catch (e) {} }));
+    try { 
+      releaseNotesSettingEl.settingEl.style.borderTop = 'none';
+      releaseNotesSettingEl.settingEl.style.marginTop = '-18px'; 
+    } catch (e) {}
 
     new Setting(containerEl)
       .setName(this.plugin.t('language_label','Language'))
@@ -16491,8 +17436,10 @@ class ColorSettingTab extends PluginSettingTab {
     this._customSwatchesContainer = containerEl.createDiv();
     this._refreshCustomSwatches();
 
+    }
+    if (this._activeTab === 'always-color-texts') {
     // --- Always Colored Texts / patterns ---
-  const headerEl = containerEl.createEl('h3', { text: this.plugin.t('always_colored_texts_header','Always Colored Texts') });
+    const headerEl = containerEl.createEl('h3', { text: this.plugin.t('colored_texts_header','Colored Texts') });
   try { headerEl.className = 'always-colored-texts-header'; } catch (e) {}
   try { headerEl.style.marginTop = '30px !important'; } catch (e) {}
   containerEl.createEl('p', { text: this.plugin.t('always_colored_texts_desc','Here\'s where you manage your word / patterns and their colors.') });
@@ -16681,7 +17628,103 @@ class ColorSettingTab extends PluginSettingTab {
             this._refreshEntries();
           }).open();
         }));
+
+    // --- Grouped Entries ---
+    containerEl.createEl('h3', { text: this.plugin.t('grouped_entries_header', 'Grouped Entries') });
+    // containerEl.createEl('p', { text: this.plugin.t('grouped_entries_desc','Manage your word groups. Use search to filter by name.') });
+    const groupSearchContainer = containerEl.createDiv();
+    try { groupSearchContainer.addClass('act-search-container'); } catch (e) { try { groupSearchContainer.classList.add('act-search-container'); } catch (_) {} }
+    groupSearchContainer.style.margin = '8px 0';
+    groupSearchContainer.style.display = 'flex';
+    groupSearchContainer.style.alignItems = 'center';
+    groupSearchContainer.style.gap = '8px';
+    const groupSearch = groupSearchContainer.createEl('input', { type: 'text' });
+    try { groupSearch.addClass('act-search-input'); } catch (e) { try { groupSearch.classList.add('act-search-input'); } catch (_) {} }
+    groupSearch.placeholder = this.plugin.t('search_groups_placeholder','Search groups…');
+    groupSearch.style.flex = '1 1 auto';
+    groupSearch.style.padding = '6px';
+    groupSearch.style.border = '1px solid var(--background-modifier-border)';
+    groupSearch.style.borderRadius = '4px';
+    groupSearch.addEventListener('input', () => {
+      this._groupSearch = groupSearch.value || '';
+      this._refreshGroups();
+    });
+    const groupIcon = groupSearchContainer.createDiv();
+    try { groupIcon.addClass('act-search-icon'); } catch (e) { try { groupIcon.classList.add('act-search-icon'); } catch (_) {} }
+
+    const groupsContainer = containerEl.createDiv();
+    groupsContainer.addClass('act-groups-container');
+    this._refreshGroups();
+
+    const groupsActionsRow = containerEl.createDiv();
+    groupsActionsRow.style.display = 'flex';
+    groupsActionsRow.style.alignItems = 'center';
+    groupsActionsRow.style.gap = '8px';
+    groupsActionsRow.style.marginTop = '10px';
+    const btnCreateGroup = groupsActionsRow.createEl('button', { text: this.plugin.t('btn_create_new_group', '+ Create New Group') });
+    btnCreateGroup.addClass('mod-cta');
+    btnCreateGroup.onclick = async () => {
+        if (!this.plugin.settings.wordEntryGroups) this.plugin.settings.wordEntryGroups = [];
+        const newGroup = {
+            active: true,
+            name: '',
+            entries: []
+        };
+        try { newGroup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (_) {}
+        this.plugin.settings.wordEntryGroups.push(newGroup);
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        try {
+          new EditWordGroupModal(this.app, this.plugin, newGroup, async (updatedGroup) => {
+              const idx = this.plugin.settings.wordEntryGroups.findIndex(g => g && g.uid === newGroup.uid);
+              if (idx !== -1) {
+                this.plugin.settings.wordEntryGroups[idx] = updatedGroup;
+              }
+              await this.plugin.saveSettings();
+              this.plugin.compileWordEntries();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+              this._refreshGroups();
+          }, async (groupToDelete) => {
+              const actualIndex = this.plugin.settings.wordEntryGroups.findIndex(g => g && g.uid === groupToDelete.uid);
+              if (actualIndex !== -1) {
+                this.plugin.settings.wordEntryGroups.splice(actualIndex, 1);
+              }
+              await this.plugin.saveSettings();
+              this.plugin.compileWordEntries();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+              this._refreshGroups();
+          }).open();
+        } catch (_) {
+          this._refreshGroups();
+        }
+    };
+    const deleteGroupsIcon = groupsActionsRow.createDiv();
+    deleteGroupsIcon.title = this.plugin.t('tooltip_delete_all_groups','Delete all Word Groups');
+    deleteGroupsIcon.style.cursor = 'pointer';
+    deleteGroupsIcon.style.color = 'var(--text-muted)';
+    deleteGroupsIcon.style.display = 'flex';
+    deleteGroupsIcon.style.alignItems = 'center';
+    deleteGroupsIcon.style.marginLeft = 'auto';
+    deleteGroupsIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+    deleteGroupsIcon.onclick = async () => {
+      new ConfirmationModal(this.app, this.plugin.t('confirm_delete_all_groups_title','Delete All Word Groups'), this.plugin.t('confirm_delete_all_groups_desc','Are you sure you want to delete ALL word groups? This cannot be undone!'), async () => {
+        try {
+          this.plugin.settings.wordEntryGroups = [];
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this.plugin.reconfigureEditorExtensions();
+          this._refreshGroups();
+        } catch (e) {}
+      }).open();
+    };
+    // groupsContainer and button rendered above
         
+    }
+    if (this._activeTab === 'blacklist') {
     // Blacklist words
     containerEl.createEl('h2', { text: this.plugin.t('blacklist_words_header','Blacklist words') });
     containerEl.createEl('p', { text: this.plugin.t('blacklist_words_desc','Keywords or patterns here will never be colored, even for partial matches.') });
@@ -16849,6 +17892,8 @@ class ColorSettingTab extends PluginSettingTab {
         }));
     
     
+    }
+    if (this._activeTab === 'file-folder-rules') {
     containerEl.createEl('h3', { text: this.plugin.t('file_folder_rules_header','File & Folder Coloring Rules') });
     containerEl.createEl('p', { text: this.plugin.t('file_folder_rules_desc','Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.') });
     // Search bar for Path rules
@@ -16957,7 +18002,9 @@ class ColorSettingTab extends PluginSettingTab {
     // Store reference to disabled files container for updating
     this._disabledFilesContainer = containerEl.createDiv();
     this._refreshDisabledFiles();
-    containerEl.createEl('hr');
+    }
+    if (this._activeTab === 'data') {
+
     containerEl.createEl('h2', { text: this.plugin.t('data_export_import_header','Data Export/Import') });
     new Setting(containerEl)
       .setName(this.plugin.t('export_plugin_data','Export plugin data'))
@@ -16996,6 +18043,7 @@ class ColorSettingTab extends PluginSettingTab {
         input.click();
       }));
     
+    }
   }
 
   // Method to focus and/or create a text & background coloring entry with pre-filled text
@@ -17124,7 +18172,8 @@ class ColorPickerModal extends Modal {
     // previewWrap.style.backgroundColor = 'var(--background-primary-alt)';
 
     const preview = previewWrap.createDiv();
-    preview.textContent = this._selectedText || this.plugin.t('selected_text_preview','Selected Text');
+    const displayText = String(this._selectedText || this._preFillPattern || this._preFillName || '').trim();
+    preview.textContent = displayText ? displayText : this.plugin.t('selected_text_preview','Selected Text');
     preview.style.display = 'inline-block';
     preview.style.borderRadius = '8px';
     // preview.style.padding = '6px 12px';

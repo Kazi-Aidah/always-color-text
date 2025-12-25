@@ -52,6 +52,12 @@ var require_en = __commonJS({
       "drag_to_reorder": "Drag to reorder",
       "reset_text_color": "Reset Text Color",
       "reset_highlight": "Reset Highlight",
+      "tooltip_duplicate_group": "Duplicate Group",
+      "tooltip_edit_group_settings": "Edit Group Settings",
+      "tooltip_delete_all_groups": "Delete all Word Groups",
+      "grouped_entries_desc": "Manage word groups. Search filters by group name.",
+      "search_groups_placeholder": "Search groups\u2026",
+      "no_entries_found": "No entries found.",
       // Commands
       "command_color_selected": "Color Selected Text",
       "command_toggle_current": "Enable/Disable coloring for current document",
@@ -227,16 +233,33 @@ var require_en = __commonJS({
       "select_swatch": "Select Swatch...",
       "highlight_color_title": "Highlight Color",
       "select_highlight_swatch": "Select Highlight Swatch...",
+      "settings_tab_general": "General",
+      "settings_tab_colored_texts": "Colored Texts",
+      "settings_tab_blacklists": "Blacklists",
+      "settings_tab_file_folder_rules": "File / Folder Rules",
+      "settings_tab_data": "Data",
       // Always Colored Texts
-      "always_colored_texts_header": "Always Colored Texts",
+      "colored_texts_header": "Colored Texts",
       "always_colored_texts_desc": "This is where you manage your words/patterns and their colors.",
-      "search_colored_words_placeholder": "Search colored words or patterns\u2026",
+      "grouped_entries_header": "Grouped Entries",
+      "btn_create_new_group": "+ Create New Group",
+      "edit_word_group_modal_title": "Edit Word Group",
+      "group_name_placeholder": "Name your group",
+      "btn_save_group": "Save Group",
+      "btn_delete_group": "Delete Group",
+      "group_active_label": "Active",
+      "group_inactive_label": "Inactive",
+      "confirm_delete_group_title": "Delete Group",
+      "confirm_delete_group_desc": "Are you sure you want to delete this group? This cannot be undone.",
+      "confirm_delete_all_groups_title": "Delete All Word Groups",
+      "confirm_delete_all_groups_desc": "Are you sure you want to delete ALL word groups? This cannot be undone!",
+      "search_colored_words_placeholder": "Search colored words or patterns...",
+      "btn_add_new_word": "+ Add New Word",
       "sort_label_last-added": "Sort: Last Added",
       "sort_label_a-z": "Sort: A-Z",
       "sort_label_reverse-a-z": "Sort: Z-A",
       "sort_label_style-order": "Sort: Style Order",
       "sort_label_color": "Sort: Color",
-      "btn_add_new_word": "+ Add new colored word / pattern",
       "style_type_text": "Color",
       "style_type_highlight": "Highlight",
       "style_type_both": "Both",
@@ -318,7 +341,7 @@ var require_en = __commonJS({
       "preset_example_single_quotes_word": "'word'",
       "preset_example_all_text": "This will target all texts.",
       // Blacklist Settings
-      "blacklist_words_header": "Blacklist Words",
+      "blacklist_words_header": "Blacklists",
       "blacklist_words_desc": "Keywords or patterns here will never be colored, even for partial matches.",
       "search_blacklist_placeholder": "Search blacklisted words or patterns\u2026",
       "blacklist_sort_label_last-added": "Sort: Last Added",
@@ -526,6 +549,8 @@ var require_es = __commonJS({
       "confirm_delete_all_desc": "\xBFEst\xE1s seguro de que quieres eliminar TODAS las palabras/patrones coloreados? \xA1Esto no se puede deshacer!",
       "confirm_delete_all_blacklist_title": "Eliminar todas las palabras de la lista negra",
       "confirm_delete_all_blacklist_desc": "\xBFEst\xE1s seguro de que quieres eliminar TODAS las entradas de la lista negra? \xA1Esto no se puede deshacer!",
+      "confirm_delete_all_groups_title": "Eliminar todos los grupos de palabras",
+      "confirm_delete_all_groups_desc": "\xBFEst\xE1s seguro de que quieres eliminar TODOS los grupos de palabras? \xA1Esto no se puede deshacer!",
       "restart_required_title": "Reinicio necesario",
       "restart_required_desc": "Desactivar la alternancia en la paleta de comandos requiere reiniciar Obsidian para eliminar completamente el comando de la paleta. \xBFReiniciar ahora?",
       // Basic Settings
@@ -643,9 +668,27 @@ var require_es = __commonJS({
       "select_swatch": "Seleccionar Muestra...",
       "highlight_color_title": "Color del Resaltado",
       "select_highlight_swatch": "Seleccionar Muestra de Resaltado...",
+      "settings_tab_general": "General",
+      "settings_tab_colored_texts": "Textos Coloreados",
+      "settings_tab_blacklists": "Listas Negras",
+      "settings_tab_file_folder_rules": "Reglas de Archivo / Carpeta",
+      "settings_tab_data": "Datos",
       // Always Colored Texts
-      "always_colored_texts_header": "Textos Siempre Coloreados",
+      "colored_texts_header": "Textos Coloreados",
       "always_colored_texts_desc": "Aqu\xED es donde gestionas tus palabras/patrones y sus colores.",
+      "grouped_entries_header": "Entradas Agrupadas",
+      "grouped_entries_desc": "Gestiona grupos de palabras. La b\xFAsqueda filtra por nombre.",
+      "search_groups_placeholder": "Buscar grupos\u2026",
+      "edit_word_group_modal_title": "Editar Grupo de Palabras",
+      "btn_save_group": "Guardar Grupo",
+      "btn_delete_group": "Eliminar Grupo",
+      "group_active_label": "Activo",
+      "group_inactive_label": "Inactivo",
+      "tooltip_duplicate_group": "Duplicar Grupo",
+      "tooltip_edit_group_settings": "Editar configuraci\xF3n del grupo",
+      "tooltip_delete_all_groups": "Eliminar todos los grupos de palabras",
+      "btn_create_new_group": "+ Crear nuevo grupo",
+      "no_entries_found": "No se encontraron entradas.",
       "search_colored_words_placeholder": "Buscar palabras o patrones coloreados\u2026",
       "sort_label_last-added": "Ordenar: \xDAltimo A\xF1adido",
       "sort_label_a-z": "Ordenar: A-Z",
@@ -941,7 +984,9 @@ var require_fr = __commonJS({
       "confirm_delete_all_title": "Supprimer tous les mots",
       "confirm_delete_all_desc": "\xCAtes-vous s\xFBr de vouloir supprimer TOUS les mots/motifs color\xE9s ? Cela ne peut pas \xEAtre annul\xE9 !",
       "confirm_delete_all_blacklist_title": "Supprimer tous les mots de la liste noire",
-      "confirm_delete_all_blacklist_desc": "\xCAtes-vous s\xFBr de vouloir supprimer TOUTES les entr\xE9es de la liste noire ? Cela ne peut pas \xEAtre annul\xE9 !",
+      "confirm_delete_all_blacklist_desc": "\xCAtes-vous s\xFBr de vouloir supprimer TOUTES les entr\xE9es de la liste noire ? Cette action ne peut pas \xEAtre annul\xE9e !",
+      "confirm_delete_all_groups_title": "Supprimer tous les groupes de mots",
+      "confirm_delete_all_groups_desc": "\xCAtes-vous s\xFBr de vouloir supprimer TOUS les groupes de mots ? Cette action ne peut pas \xEAtre annul\xE9e !",
       "restart_required_title": "Red\xE9marrage requis",
       "restart_required_desc": "D\xE9sactiver l'activation dans la palette de commandes n\xE9cessite un red\xE9marrage d'Obsidian pour supprimer compl\xE8tement la commande de la palette. Red\xE9marrer maintenant ?",
       // Basic Settings
@@ -1059,9 +1104,27 @@ var require_fr = __commonJS({
       "select_swatch": "S\xE9lectionner un nuancier...",
       "highlight_color_title": "Couleur de surbrillance",
       "select_highlight_swatch": "S\xE9lectionner un nuancier de surbrillance...",
+      "settings_tab_general": "G\xE9n\xE9ral",
+      "settings_tab_colored_texts": "Textes color\xE9s",
+      "settings_tab_blacklists": "Listes noires",
+      "settings_tab_file_folder_rules": "R\xE8gles Fichier / Dossier",
+      "settings_tab_data": "Donn\xE9es",
       // Always Colored Texts
-      "always_colored_texts_header": "Textes toujours color\xE9s",
+      "colored_texts_header": "Textes color\xE9s",
       "always_colored_texts_desc": "C'est ici que vous g\xE9rez vos mots/motifs et leurs couleurs.",
+      "grouped_entries_header": "Entr\xE9es group\xE9es",
+      "grouped_entries_desc": "G\xE9rez des groupes de mots. La recherche filtre par nom.",
+      "search_groups_placeholder": "Rechercher des groupes\u2026",
+      "edit_word_group_modal_title": "Modifier le groupe de mots",
+      "btn_save_group": "Enregistrer le groupe",
+      "btn_delete_group": "Supprimer le groupe",
+      "group_active_label": "Actif",
+      "group_inactive_label": "Inactif",
+      "tooltip_duplicate_group": "Dupliquer le groupe",
+      "tooltip_edit_group_settings": "Modifier les param\xE8tres du groupe",
+      "tooltip_delete_all_groups": "Supprimer tous les groupes de mots",
+      "btn_create_new_group": "+ Cr\xE9er un nouveau groupe",
+      "no_entries_found": "Aucune entr\xE9e trouv\xE9e.",
       "search_colored_words_placeholder": "Rechercher des mots ou motifs color\xE9s\u2026",
       "sort_label_last-added": "Trier : Dernier ajout",
       "sort_label_a-z": "Trier : A-Z",
@@ -1358,6 +1421,8 @@ var require_hi = __commonJS({
       "confirm_delete_all_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0935\u093E\u0915\u0908 \u0905\u092A\u0928\u0947 \u0938\u092D\u0940 \u0930\u0902\u0917\u0947 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902? \u0906\u092A \u0907\u0938\u0947 \u092A\u0942\u0930\u094D\u0935\u0935\u0924 \u0928\u0939\u0940\u0902 \u0915\u0930 \u0938\u0915\u0924\u0947!",
       "confirm_delete_all_blacklist_title": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F\u0947\u0921 \u0938\u092D\u0940 \u0936\u092C\u094D\u0926 \u0939\u091F\u093E\u090F\u0901",
       "confirm_delete_all_blacklist_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0935\u093E\u0915\u0908 \u0938\u092D\u0940 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u090F\u0902\u091F\u094D\u0930\u0940\u091C\u093C \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902? \u0906\u092A \u0907\u0938\u0947 \u092A\u0942\u0930\u094D\u0935\u0935\u0924 \u0928\u0939\u0940\u0902 \u0915\u0930 \u0938\u0915\u0924\u0947!",
+      "confirm_delete_all_groups_title": "\u0938\u092D\u0940 \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0939\u091F\u093E\u090F\u0902",
+      "confirm_delete_all_groups_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0935\u093E\u0915\u0908 \u0938\u092D\u0940 \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902? \u0906\u092A \u0907\u0938\u0947 \u092A\u0942\u0930\u094D\u0935\u0935\u0924 \u0928\u0939\u0940\u0902 \u0915\u0930 \u0938\u0915\u0924\u0947!",
       "restart_required_title": "\u0930\u0940\u0938\u094D\u091F\u093E\u0930\u094D\u091F \u0906\u0935\u0936\u094D\u092F\u0915",
       "restart_required_desc": "\u0915\u092E\u093E\u0902\u0921 \u092A\u0948\u0932\u0947\u091F \u091F\u0949\u0917\u0932 \u092C\u0902\u0926 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u092A\u0948\u0932\u0947\u091F \u0938\u0947 \u0915\u092E\u093E\u0902\u0921\u094D\u0938 \u0915\u094B \u092A\u0942\u0930\u0940 \u0924\u0930\u0939 \u0939\u091F\u093E\u0928\u0947 \u0939\u0947\u0924\u0941 \u0911\u092C\u094D\u0938\u0940\u0921\u093F\u092F\u0928 \u0915\u094B \u0930\u0940\u0938\u094D\u091F\u093E\u0930\u094D\u091F \u0915\u0930\u0928\u093E \u0906\u0935\u0936\u094D\u092F\u0915 \u0939\u0948\u0964 \u0905\u092D\u0940 \u0930\u0940\u0938\u094D\u091F\u093E\u0930\u094D\u091F \u0915\u0930\u0947\u0902?",
       // Basic Settings
@@ -1475,9 +1540,28 @@ var require_hi = __commonJS({
       "select_swatch": "\u0938\u094D\u0935\u0948\u091A \u091A\u0941\u0928\u0947\u0902\u2026",
       "highlight_color_title": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0930\u0902\u0917",
       "select_highlight_swatch": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0938\u094D\u0935\u0948\u091A \u091A\u0941\u0928\u0947\u0902\u2026",
+      "settings_tab_general": "\u0938\u093E\u092E\u093E\u0928\u094D\u092F",
+      "settings_tab_colored_texts": "\u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
+      "settings_tab_blacklists": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F",
+      "settings_tab_file_folder_rules": "\u092B\u093C\u093E\u0907\u0932 / \u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u0928\u093F\u092F\u092E",
+      "settings_tab_data": "\u0921\u0947\u091F\u093E",
       // Always Colored Texts
       "always_colored_texts_header": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0947 \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
-      "always_colored_texts_desc": "\u092F\u0939\u093E\u0901 \u0906\u092A \u0905\u092A\u0928\u0947 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0914\u0930 \u0909\u0928\u0915\u0947 \u0930\u0902\u0917\u094B\u0902 \u0915\u093E \u092A\u094D\u0930\u092C\u0902\u0927\u0928 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902\u0964",
+      "always_colored_texts_desc": "\u092F\u0939\u093E\u0901 \u0906\u092A \u0905\u092A\u0928\u0947 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0914\u0930 \u0909\u0928\u0915\u0947 \u0930\u0902\u0917 \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902\u0964",
+      "colored_texts_header": "\u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
+      "grouped_entries_header": "\u0938\u092E\u0942\u0939\u093F\u0924 \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F\u092F\u093E\u0901",
+      "grouped_entries_desc": "\u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939\u094B\u0902 \u0915\u094B \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902\u0964 \u0916\u094B\u091C \u0928\u093E\u092E \u0915\u0947 \u0905\u0928\u0941\u0938\u093E\u0930 \u092B\u093C\u093F\u0932\u094D\u091F\u0930 \u0915\u0930\u0924\u0940 \u0939\u0948\u0964",
+      "search_groups_placeholder": "\u0938\u092E\u0942\u0939 \u0916\u094B\u091C\u0947\u0902\u2026",
+      "edit_word_group_modal_title": "\u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+      "btn_save_group": "\u0938\u092E\u0942\u0939 \u0938\u0939\u0947\u091C\u0947\u0902",
+      "btn_delete_group": "\u0938\u092E\u0942\u0939 \u0939\u091F\u093E\u090F\u0901",
+      "group_active_label": "\u0938\u0915\u094D\u0930\u093F\u092F",
+      "group_inactive_label": "\u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F",
+      "tooltip_duplicate_group": "\u0938\u092E\u0942\u0939 \u0921\u0941\u092A\u094D\u0932\u093F\u0915\u0947\u091F \u0915\u0930\u0947\u0902",
+      "tooltip_edit_group_settings": "\u0938\u092E\u0942\u0939 \u0938\u0947\u091F\u093F\u0902\u0917\u094D\u0938 \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+      "tooltip_delete_all_groups": "\u0938\u092D\u0940 \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0939\u091F\u093E\u090F\u0902",
+      "btn_create_new_group": "+ \u0928\u092F\u093E \u0938\u092E\u0942\u0939 \u092C\u0928\u093E\u090F\u0901",
+      "no_entries_found": "\u0915\u094B\u0908 \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F\u092F\u093E\u0901 \u0928\u0939\u0940\u0902 \u092E\u093F\u0932\u0940\u0902\u0964",
       "search_colored_words_placeholder": "\u0930\u0902\u0917\u0947 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0916\u094B\u091C\u0947\u0902\u2026",
       "sort_label_last-added": "\u0915\u094D\u0930\u092E: \u0905\u0902\u0924\u093F\u092E \u091C\u094B\u0921\u093C\u093E \u0939\u0941\u0906",
       "sort_label_a-z": "\u0915\u094D\u0930\u092E: A-Z",
@@ -1773,7 +1857,9 @@ var require_it = __commonJS({
       "confirm_delete_all_title": "Elimina tutte le parole",
       "confirm_delete_all_desc": "Sei sicuro di voler eliminare tutte le tue parole/pattern colorati? Non potrai annullare questa azione!",
       "confirm_delete_all_blacklist_title": "Elimina tutte le parole in blacklist",
-      "confirm_delete_all_blacklist_desc": "Sei sicuro di voler eliminare tutte le voci della blacklist? Non potrai annullare questa azione!",
+      "confirm_delete_all_blacklist_desc": "Sei sicuro di voler eliminare TUTTE le voci della blacklist? Non potrai annullare questa azione!",
+      "confirm_delete_all_groups_title": "Elimina tutti i gruppi di parole",
+      "confirm_delete_all_groups_desc": "Sei sicuro di voler eliminare TUTTI i gruppi di parole? Non potrai annullare questa azione!",
       "restart_required_title": "Riavvio richiesto",
       "restart_required_desc": "Disabilitare il toggle della palette comandi richiede il riavvio di Obsidian per rimuovere completamente i comandi dalla palette. Riavviare ora?",
       // Basic Settings
@@ -1891,9 +1977,28 @@ var require_it = __commonJS({
       "select_swatch": "Seleziona campione\u2026",
       "highlight_color_title": "Colore evidenziazione",
       "select_highlight_swatch": "Seleziona campione evidenziazione\u2026",
+      "settings_tab_general": "Generale",
+      "settings_tab_colored_texts": "Testi colorati",
+      "settings_tab_blacklists": "Liste nere",
+      "settings_tab_file_folder_rules": "Regole File / Cartella",
+      "settings_tab_data": "Dati",
       // Always Colored Texts
       "always_colored_texts_header": "Testi sempre colorati",
       "always_colored_texts_desc": "Qui gestisci le tue parole/pattern e i loro colori.",
+      "colored_texts_header": "Testi colorati",
+      "grouped_entries_header": "Voci raggruppate",
+      "grouped_entries_desc": "Gestisci gruppi di parole. La ricerca filtra per nome.",
+      "search_groups_placeholder": "Cerca gruppi\u2026",
+      "edit_word_group_modal_title": "Modifica gruppo di parole",
+      "btn_save_group": "Salva gruppo",
+      "btn_delete_group": "Elimina gruppo",
+      "group_active_label": "Attivo",
+      "group_inactive_label": "Inattivo",
+      "tooltip_duplicate_group": "Duplica gruppo",
+      "tooltip_edit_group_settings": "Modifica impostazioni del gruppo",
+      "tooltip_delete_all_groups": "Elimina tutti i gruppi di parole",
+      "btn_create_new_group": "+ Crea nuovo gruppo",
+      "no_entries_found": "Nessuna voce trovata.",
       "search_colored_words_placeholder": "Cerca parole/pattern colorati\u2026",
       "sort_label_last-added": "Ordina: ultimi aggiunti",
       "sort_label_a-z": "Ordina: A-Z",
@@ -2190,6 +2295,8 @@ var require_bn = __commonJS({
       "confirm_delete_all_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u09AF\u09C7 \u0986\u09AA\u09A8\u09BF \u0986\u09AA\u09A8\u09BE\u09B0 \u09B8\u09AE\u09B8\u09CD\u09A4 \u09B0\u0999 \u0995\u09B0\u09BE \u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8? \u0986\u09AA\u09A8\u09BF \u098F\u099F\u09BF \u09AA\u09C2\u09B0\u09CD\u09AC\u09BE\u09AC\u09B8\u09CD\u09A5\u09BE\u09AF\u09BC \u09AB\u09BF\u09B0\u09BF\u09AF\u09BC\u09C7 \u0986\u09A8\u09A4\u09C7 \u09AA\u09BE\u09B0\u09AC\u09C7\u09A8 \u09A8\u09BE!",
       "confirm_delete_all_blacklist_title": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0995\u09B0\u09BE \u09B8\u09AE\u09B8\u09CD\u09A4 \u09B6\u09AC\u09CD\u09A6 \u09AE\u09C1\u099B\u09C1\u09A8",
       "confirm_delete_all_blacklist_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u09AF\u09C7 \u0986\u09AA\u09A8\u09BF \u09B8\u09AE\u09B8\u09CD\u09A4 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8? \u0986\u09AA\u09A8\u09BF \u098F\u099F\u09BF \u09AA\u09C2\u09B0\u09CD\u09AC\u09BE\u09AC\u09B8\u09CD\u09A5\u09BE\u09AF\u09BC \u09AB\u09BF\u09B0\u09BF\u09AF\u09BC\u09C7 \u0986\u09A8\u09A4\u09C7 \u09AA\u09BE\u09B0\u09AC\u09C7\u09A8 \u09A8\u09BE!",
+      "confirm_delete_all_groups_title": "\u09B8\u09AC \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09C1\u09A8",
+      "confirm_delete_all_groups_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u09AF\u09C7 \u0986\u09AA\u09A8\u09BF \u09B8\u09AC \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8? \u0986\u09AA\u09A8\u09BF \u098F\u099F\u09BF \u09AA\u09C2\u09B0\u09CD\u09AC\u09BE\u09AC\u09B8\u09CD\u09A5\u09BE\u09AF\u09BC \u09AB\u09BF\u09B0\u09BF\u09AF\u09BC\u09C7 \u0986\u09A8\u09A4\u09C7 \u09AA\u09BE\u09B0\u09AC\u09C7\u09A8 \u09A8\u09BE!",
       "restart_required_title": "\u09B0\u09BF\u09B8\u09CD\u099F\u09BE\u09B0\u09CD\u099F \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u099C\u09A8",
       "restart_required_desc": "\u0995\u09AE\u09BE\u09A8\u09CD\u09A1 \u09AA\u09CD\u09AF\u09BE\u09B2\u09C7\u099F \u099F\u0997\u09B2 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09A4\u09C7 \u09AA\u09CD\u09AF\u09BE\u09B2\u09C7\u099F \u09A5\u09C7\u0995\u09C7 \u0995\u09AE\u09BE\u09A8\u09CD\u09A1\u0997\u09C1\u09B2\u09BF \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3\u09AD\u09BE\u09AC\u09C7 \u09B8\u09B0\u09BE\u09A8\u09CB\u09B0 \u099C\u09A8\u09CD\u09AF \u0985\u09AC\u09B8\u09BF\u09A1\u09BF\u09AF\u09BC\u09BE\u09A8 \u09B0\u09BF\u09B8\u09CD\u099F\u09BE\u09B0\u09CD\u099F \u0995\u09B0\u09A4\u09C7 \u09B9\u09AC\u09C7\u0964 \u098F\u0996\u09A8\u0987 \u09B0\u09BF\u09B8\u09CD\u099F\u09BE\u09B0\u09CD\u099F \u0995\u09B0\u09AC\u09C7\u09A8?",
       // Basic Settings
@@ -2307,9 +2414,28 @@ var require_bn = __commonJS({
       "select_swatch": "\u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8\u2026",
       "highlight_color_title": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F\u09C7\u09B0 \u09B0\u0999",
       "select_highlight_swatch": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8\u2026",
+      "settings_tab_general": "\u09B8\u09BE\u09A7\u09BE\u09B0\u09A3",
+      "settings_tab_colored_texts": "\u09B0\u0999\u09BE\u09AF\u09BC\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F",
+      "settings_tab_blacklists": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F",
+      "settings_tab_file_folder_rules": "\u09AB\u09BE\u0987\u09B2 / \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0 \u09A8\u09BF\u09AF\u09BC\u09AE",
+      "settings_tab_data": "\u09A1\u09C7\u099F\u09BE",
       // Always Colored Texts
       "always_colored_texts_header": "\u09B8\u09B0\u09CD\u09AC\u09A6\u09BE \u09B0\u0999 \u0995\u09B0\u09BE \u099F\u09C7\u0995\u09CD\u09B8\u099F\u0997\u09C1\u09B2\u09BF",
       "always_colored_texts_desc": "\u098F\u0996\u09BE\u09A8\u09C7\u0987 \u0986\u09AA\u09A8\u09BF \u0986\u09AA\u09A8\u09BE\u09B0 \u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u098F\u09AC\u0982 \u09A4\u09BE\u09A6\u09C7\u09B0 \u09B0\u0999\u0997\u09C1\u09B2\u09BF \u09AE\u09CD\u09AF\u09BE\u09A8\u09C7\u099C \u0995\u09B0\u09C7\u09A8\u0964",
+      "colored_texts_header": "\u09B0\u0999\u09BE\u09AF\u09BC\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F",
+      "grouped_entries_header": "\u0997\u09CD\u09B0\u09C1\u09AA \u0995\u09B0\u09BE \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF",
+      "grouped_entries_desc": "\u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA\u0997\u09C1\u09B2\u09BF\u0995\u09C7 \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8\u0964 \u0985\u09A8\u09C1\u09B8\u09A8\u09CD\u09A7\u09BE\u09A8 \u09A8\u09BE\u09AE \u09A6\u09CD\u09AC\u09BE\u09B0\u09BE \u09AB\u09BF\u09B2\u09CD\u099F\u09BE\u09B0 \u0995\u09B0\u09C7\u0964",
+      "search_groups_placeholder": "\u0997\u09CD\u09B0\u09C1\u09AA \u0985\u09A8\u09C1\u09B8\u09A8\u09CD\u09A7\u09BE\u09A8 \u0995\u09B0\u09C1\u09A8\u2026",
+      "edit_word_group_modal_title": "\u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE",
+      "btn_save_group": "\u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09C1\u09A8",
+      "btn_delete_group": "\u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09C1\u09A8",
+      "group_active_label": "\u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
+      "group_inactive_label": "\u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
+      "tooltip_duplicate_group": "\u0997\u09CD\u09B0\u09C1\u09AA \u09A1\u09C1\u09AA\u09CD\u09B2\u09BF\u0995\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
+      "tooltip_edit_group_settings": "\u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u09C7\u099F\u09BF\u0982\u09B8 \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      "tooltip_delete_all_groups": "\u09B8\u09AC \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09C1\u09A8",
+      "btn_create_new_group": "+ \u09A8\u09A4\u09C1\u09A8 \u0997\u09CD\u09B0\u09C1\u09AA \u09A4\u09C8\u09B0\u09BF \u0995\u09B0\u09C1\u09A8",
+      "no_entries_found": "\u0995\u09CB\u09A8\u09CB \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09AA\u09BE\u0993\u09AF\u09BC\u09BE \u09AF\u09BE\u09AF\u09BC\u09A8\u09BF\u0964",
       "search_colored_words_placeholder": "\u09B0\u0999 \u0995\u09B0\u09BE \u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u0985\u09A8\u09C1\u09B8\u09A8\u09CD\u09A7\u09BE\u09A8 \u0995\u09B0\u09C1\u09A8\u2026",
       "sort_label_last-added": "\u09B8\u09B0\u09CD\u099F: \u09B8\u09B0\u09CD\u09AC\u09B6\u09C7\u09B7 \u09AF\u09CB\u0997",
       "sort_label_a-z": "\u09B8\u09B0\u09CD\u099F: A-Z",
@@ -2606,6 +2732,8 @@ var require_ru = __commonJS({
       "confirm_delete_all_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u044B? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E!",
       "confirm_delete_all_blacklist_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u043B\u043E\u0432\u0430 \u0438\u0437 \u0447\u0451\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430",
       "confirm_delete_all_blacklist_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u044B \u0438\u0437 \u0447\u0451\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E!",
+      "confirm_delete_all_groups_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432",
+      "confirm_delete_all_groups_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E!",
       "restart_required_title": "\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430",
       "restart_required_desc": "\u0414\u043B\u044F \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0438\u0437 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043A\u043E\u043C\u0430\u043D\u0434 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 Obsidian. \u041F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0441\u0435\u0439\u0447\u0430\u0441?",
       // Basic Settings
@@ -2723,9 +2851,28 @@ var require_ru = __commonJS({
       "select_swatch": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0430\u043B\u0438\u0442\u0440\u0443...",
       "highlight_color_title": "\u0426\u0432\u0435\u0442 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
       "select_highlight_swatch": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0430\u043B\u0438\u0442\u0440\u0443 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438...",
+      "settings_tab_general": "\u041E\u0431\u0449\u0438\u0435",
+      "settings_tab_colored_texts": "\u041E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u0435 \u0442\u0435\u043A\u0441\u0442\u044B",
+      "settings_tab_blacklists": "\u0427\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
+      "settings_tab_file_folder_rules": "\u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u0444\u0430\u0439\u043B\u043E\u0432 / \u043F\u0430\u043F\u043E\u043A",
+      "settings_tab_data": "\u0414\u0430\u043D\u043D\u044B\u0435",
       // Always Colored Texts
       "always_colored_texts_header": "\u0412\u0441\u0435\u0433\u0434\u0430 \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u0435 \u0442\u0435\u043A\u0441\u0442\u044B",
       "always_colored_texts_desc": "\u0417\u0434\u0435\u0441\u044C \u0432\u044B \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442\u0435 \u0432\u0430\u0448\u0438\u043C\u0438 \u0441\u043B\u043E\u0432\u0430\u043C\u0438/\u0448\u0430\u0431\u043B\u043E\u043D\u0430\u043C\u0438 \u0438 \u0438\u0445 \u0446\u0432\u0435\u0442\u0430\u043C\u0438.",
+      "colored_texts_header": "\u041E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u0435 \u0442\u0435\u043A\u0441\u0442\u044B",
+      "grouped_entries_header": "\u0413\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u043F\u0438\u0441\u0438",
+      "grouped_entries_desc": "\u0423\u043F\u0440\u0430\u0432\u043B\u044F\u0439\u0442\u0435 \u0433\u0440\u0443\u043F\u043F\u0430\u043C\u0438 \u0441\u043B\u043E\u0432. \u041F\u043E\u0438\u0441\u043A \u0444\u0438\u043B\u044C\u0442\u0440\u0443\u0435\u0442 \u043F\u043E \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u044E.",
+      "search_groups_placeholder": "\u041F\u043E\u0438\u0441\u043A \u0433\u0440\u0443\u043F\u043F\u2026",
+      "edit_word_group_modal_title": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0441\u043B\u043E\u0432",
+      "btn_save_group": "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443",
+      "btn_delete_group": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443",
+      "group_active_label": "\u0410\u043A\u0442\u0438\u0432\u043D\u044B\u0439",
+      "group_inactive_label": "\u041D\u0435\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0439",
+      "tooltip_duplicate_group": "\u0414\u0443\u0431\u043B\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443",
+      "tooltip_edit_group_settings": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0433\u0440\u0443\u043F\u043F\u044B",
+      "tooltip_delete_all_groups": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432",
+      "btn_create_new_group": "+ \u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u0443\u044E \u0433\u0440\u0443\u043F\u043F\u0443",
+      "no_entries_found": "\u0417\u0430\u043F\u0438\u0441\u0438 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u044B.",
       "search_colored_words_placeholder": "\u041F\u043E\u0438\u0441\u043A \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u0445 \u0441\u043B\u043E\u0432 \u0438\u043B\u0438 \u0448\u0430\u0431\u043B\u043E\u043D\u043E\u0432\u2026",
       "sort_label_last-added": "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C: \u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043D\u044B\u0435",
       "sort_label_a-z": "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C: \u0410-\u042F",
@@ -3022,6 +3169,8 @@ var require_zh_cn = __commonJS({
       "confirm_delete_all_desc": "\u60A8\u786E\u5B9A\u8981\u5220\u9664\u6240\u6709\u5DF2\u7740\u8272\u7684\u5355\u8BCD/\u6A21\u5F0F\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\uFF01",
       "confirm_delete_all_blacklist_title": "\u5220\u9664\u6240\u6709\u9ED1\u540D\u5355\u5355\u8BCD",
       "confirm_delete_all_blacklist_desc": "\u60A8\u786E\u5B9A\u8981\u5220\u9664\u6240\u6709\u9ED1\u540D\u5355\u6761\u76EE\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\uFF01",
+      "confirm_delete_all_groups_title": "\u5220\u9664\u6240\u6709\u8BCD\u7EC4",
+      "confirm_delete_all_groups_desc": "\u60A8\u786E\u5B9A\u8981\u5220\u9664\u6240\u6709\u8BCD\u7EC4\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\uFF01",
       "restart_required_title": "\u9700\u8981\u91CD\u542F",
       "restart_required_desc": "\u7981\u7528\u547D\u4EE4\u9762\u677F\u4E2D\u7684\u6FC0\u6D3B\u9700\u8981\u91CD\u542F Obsidian \u624D\u80FD\u4ECE\u547D\u4EE4\u9762\u677F\u4E2D\u5B8C\u5168\u79FB\u9664\u8BE5\u547D\u4EE4\u3002\u73B0\u5728\u91CD\u542F\u5417\uFF1F",
       // Basic Settings
@@ -3139,9 +3288,28 @@ var require_zh_cn = __commonJS({
       "select_swatch": "\u9009\u62E9\u8272\u677F...",
       "highlight_color_title": "\u9AD8\u4EAE\u989C\u8272",
       "select_highlight_swatch": "\u9009\u62E9\u9AD8\u4EAE\u8272\u677F...",
+      "settings_tab_general": "\u5E38\u89C4",
+      "settings_tab_colored_texts": "\u7740\u8272\u6587\u672C",
+      "settings_tab_blacklists": "\u9ED1\u540D\u5355",
+      "settings_tab_file_folder_rules": "\u6587\u4EF6 / \u6587\u4EF6\u5939 \u89C4\u5219",
+      "settings_tab_data": "\u6570\u636E",
       // Always Colored Texts
       "always_colored_texts_header": "\u59CB\u7EC8\u7740\u8272\u6587\u672C",
       "always_colored_texts_desc": "\u5728\u8FD9\u91CC\u7BA1\u7406\u60A8\u7684\u5355\u8BCD/\u6A21\u5F0F\u53CA\u5176\u989C\u8272\u3002",
+      "colored_texts_header": "\u7740\u8272\u6587\u672C",
+      "grouped_entries_header": "\u5206\u7EC4\u6761\u76EE",
+      "grouped_entries_desc": "\u7BA1\u7406\u8BCD\u7EC4\u3002\u641C\u7D22\u6309\u540D\u79F0\u7B5B\u9009\u3002",
+      "search_groups_placeholder": "\u641C\u7D22\u5206\u7EC4\u2026",
+      "edit_word_group_modal_title": "\u7F16\u8F91\u8BCD\u7EC4",
+      "btn_save_group": "\u4FDD\u5B58\u7EC4",
+      "btn_delete_group": "\u5220\u9664\u7EC4",
+      "group_active_label": "\u542F\u7528",
+      "group_inactive_label": "\u505C\u7528",
+      "tooltip_duplicate_group": "\u590D\u5236\u7EC4",
+      "tooltip_edit_group_settings": "\u7F16\u8F91\u7EC4\u8BBE\u7F6E",
+      "tooltip_delete_all_groups": "\u5220\u9664\u6240\u6709\u8BCD\u7EC4",
+      "btn_create_new_group": "+ \u521B\u5EFA\u65B0\u7EC4",
+      "no_entries_found": "\u672A\u627E\u5230\u4EFB\u4F55\u6761\u76EE\u3002",
       "search_colored_words_placeholder": "\u641C\u7D22\u7740\u8272\u5355\u8BCD\u6216\u6A21\u5F0F\u2026",
       "sort_label_last-added": "\u6392\u5E8F\uFF1A\u6700\u540E\u6DFB\u52A0",
       "sort_label_a-z": "\u6392\u5E8F\uFF1AA-Z",
@@ -3475,6 +3643,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
   constructor(app, plugin, selectedText, view) {
     super(app);
     this.plugin = plugin;
+    this._activeTab = "general";
     this.selectedText = String(selectedText || "").trim();
     this.view = view;
     this._isRightClick = false;
@@ -7547,6 +7716,7 @@ module.exports = class AlwaysColorText extends Plugin {
   async loadSettings() {
     const loadedData = await this.loadData() || {};
     if (!Array.isArray(loadedData.wordEntries)) loadedData.wordEntries = [];
+    if (!Array.isArray(loadedData.wordEntryGroups)) loadedData.wordEntryGroups = [];
     if (!Array.isArray(loadedData.blacklistEntries)) loadedData.blacklistEntries = [];
     if (!Array.isArray(loadedData.pathRules)) loadedData.pathRules = [];
     try {
@@ -7564,6 +7734,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // legacy: wordColors map. New model below: wordEntries array
       wordColors: {},
       wordEntries: [],
+      wordEntryGroups: [],
       caseSensitive: false,
       enabled: true,
       highlightStyle: "text",
@@ -9587,7 +9758,15 @@ module.exports = class AlwaysColorText extends Plugin {
       } catch (_) {
       }
       if (!Array.isArray(this.settings.wordEntries)) return;
-      for (const e of this.settings.wordEntries) {
+      let allEntries = [...this.settings.wordEntries || []];
+      if (Array.isArray(this.settings.wordEntryGroups)) {
+        this.settings.wordEntryGroups.forEach((group) => {
+          if (group && group.active && Array.isArray(group.entries)) {
+            allEntries = allEntries.concat(group.entries);
+          }
+        });
+      }
+      for (const e of allEntries) {
         if (!e) continue;
         if (e && e.backgroundColor) {
           continue;
@@ -9729,7 +9908,14 @@ module.exports = class AlwaysColorText extends Plugin {
         this._compiledTextBgEntries = [];
       } catch (e) {
       }
-      const source = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      let source = [...Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : []];
+      if (Array.isArray(this.settings.wordEntryGroups)) {
+        this.settings.wordEntryGroups.forEach((group) => {
+          if (group && group.active && Array.isArray(group.entries)) {
+            source = source.concat(group.entries);
+          }
+        });
+      }
       debugLog("[TBG_COMPILE_START]", `Starting with ${source.length} source entries from wordEntries`);
       for (const e of source) {
         if (!e || !e.backgroundColor) continue;
@@ -14289,11 +14475,12 @@ var PresetModal = class extends Modal {
   }
 };
 var RealTimeRegexTesterModal = class extends Modal {
-  constructor(app, plugin, onAdded, advancedRuleEntry = null) {
+  constructor(app, plugin, onAdded, advancedRuleEntry = null, skipWordEntriesPush = false) {
     super(app);
     this.plugin = plugin;
     this.onAdded = onAdded;
     this._advancedRuleEntry = advancedRuleEntry;
+    this._skipWordEntriesPush = skipWordEntriesPush;
     this._editingEntry = null;
     this._preFillPattern = "";
     this._preFillFlags = "";
@@ -14368,7 +14555,7 @@ var RealTimeRegexTesterModal = class extends Modal {
             textColorInput.value = tc;
             render();
           }
-        }, "text");
+        }, "text", regexInput2.value || "");
         modal._preFillTextColor = textColorInput.value;
         modal.open();
       } catch (e) {
@@ -14387,7 +14574,7 @@ var RealTimeRegexTesterModal = class extends Modal {
             bgColorInput.value = bc;
             render();
           }
-        }, "background");
+        }, "background", regexInput2.value || "");
         modal._preFillBgColor = bgColorInput.value;
         modal.open();
       } catch (e) {
@@ -14413,15 +14600,15 @@ var RealTimeRegexTesterModal = class extends Modal {
         bgColorInput.style.display = "inline-block";
       }
     };
-    const regexInput = contentEl.createEl("input", { type: "text" });
-    regexInput.placeholder = this.plugin.t("regex_expression_placeholder", "put your expression here");
-    regexInput.style.marginTop = "10px";
-    regexInput.style.width = "100%";
-    regexInput.style.padding = "10px 14px";
-    regexInput.style.borderRadius = "var(--radius-s)";
-    regexInput.style.border = "1px solid var(--background-modifier-border)";
-    regexInput.style.background = "var(--background-modifier-form-field)";
-    regexInput.style.fontFamily = "var(--font-ui-medium)";
+    const regexInput2 = contentEl.createEl("input", { type: "text" });
+    regexInput2.placeholder = this.plugin.t("regex_expression_placeholder", "put your expression here");
+    regexInput2.style.marginTop = "10px";
+    regexInput2.style.width = "100%";
+    regexInput2.style.padding = "10px 14px";
+    regexInput2.style.borderRadius = "var(--radius-s)";
+    regexInput2.style.border = "1px solid var(--background-modifier-border)";
+    regexInput2.style.background = "var(--background-modifier-form-field)";
+    regexInput2.style.fontFamily = "var(--font-ui-medium)";
     const subjectWrap = contentEl.createDiv();
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
@@ -14487,7 +14674,7 @@ var RealTimeRegexTesterModal = class extends Modal {
     const escapeHtml = (str) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const renderPreview = () => {
       const raw = String(testInput.value || "");
-      const patRaw = String(regexInput.value || "").trim();
+      const patRaw = String(regexInput2.value || "").trim();
       const flags = Object.keys(flagButtons).filter((k) => flagButtons[k].dataset.on === "1").join("");
       const f = flags.includes("g") ? flags : flags + "g";
       if (!patRaw) {
@@ -14580,7 +14767,7 @@ var RealTimeRegexTesterModal = class extends Modal {
     });
     updateFlagButtonUI();
     if (this._preFillPattern) {
-      regexInput.value = this._preFillPattern;
+      regexInput2.value = this._preFillPattern;
     }
     if (this._preFillFlags) {
       const flags = String(this._preFillFlags || "").split("");
@@ -14622,11 +14809,11 @@ var RealTimeRegexTesterModal = class extends Modal {
     });
     testInput.addEventListener("input", onInputDebounced);
     this._handlers.push({ el: testInput, ev: "input", fn: onInputDebounced });
-    regexInput.addEventListener("input", onInputDebounced);
-    this._handlers.push({ el: regexInput, ev: "input", fn: onInputDebounced });
+    regexInput2.addEventListener("input", onInputDebounced);
+    this._handlers.push({ el: regexInput2, ev: "input", fn: onInputDebounced });
     render();
     const addHandler = async () => {
-      const patRaw = String(regexInput.value || "").trim();
+      const patRaw = String(regexInput2.value || "").trim();
       const pat = this.plugin.sanitizePattern(patRaw, true);
       const label = String(nameInput.value || "").trim();
       const flags = Object.keys(flagButtons).filter((k) => flagButtons[k].dataset.on === "1").join("");
@@ -14736,15 +14923,46 @@ var RealTimeRegexTesterModal = class extends Modal {
           debugError("REGEX_TESTER", "entry update error", e);
         }
       }
-      const uid = (() => {
-        try {
-          return Date.now().toString(36) + Math.random().toString(36).slice(2);
-        } catch (e) {
-          return Date.now();
+      if (!this._skipWordEntriesPush) {
+        const uid = (() => {
+          try {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2);
+          } catch (e) {
+            return Date.now();
+          }
+        })();
+        const style2 = styleSelect.value;
+        const entry2 = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || void 0, styleType: style2, persistAtEnd: true };
+        if (style2 === "text") {
+          entry2.color = textColorInput.value || "";
+          entry2.textColor = null;
+          entry2.backgroundColor = null;
+          entry2._savedTextColor = textColorInput.value || "";
+          entry2._savedBackgroundColor = bgColorInput.value || "";
+        } else if (style2 === "highlight") {
+          entry2.color = "";
+          entry2.textColor = "currentColor";
+          entry2.backgroundColor = bgColorInput.value || "";
+          entry2._savedTextColor = textColorInput.value || "";
+          entry2._savedBackgroundColor = bgColorInput.value || "";
+        } else {
+          entry2.color = "";
+          entry2.textColor = textColorInput.value || "";
+          entry2.backgroundColor = bgColorInput.value || "";
+          entry2._savedTextColor = textColorInput.value || "";
+          entry2._savedBackgroundColor = bgColorInput.value || "";
         }
-      })();
+        this.plugin.settings.wordEntries.push(Object.assign({ matchType: this.plugin.settings.partialMatch ? "contains" : "exact" }, entry2));
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        this.plugin.triggerActiveDocumentRerender();
+      }
       const style = styleSelect.value;
-      const entry = { uid, isRegex: true, pattern: pat, flags, presetLabel: label || void 0, styleType: style, persistAtEnd: true };
+      const entry = { isRegex: true, pattern: pat, flags, presetLabel: label || void 0, styleType: style };
       if (style === "text") {
         entry.color = textColorInput.value || "";
         entry.textColor = null;
@@ -14764,14 +14982,6 @@ var RealTimeRegexTesterModal = class extends Modal {
         entry._savedTextColor = textColorInput.value || "";
         entry._savedBackgroundColor = bgColorInput.value || "";
       }
-      this.plugin.settings.wordEntries.push(Object.assign({ matchType: this.plugin.settings.partialMatch ? "contains" : "exact" }, entry));
-      await this.plugin.saveSettings();
-      this.plugin.compileWordEntries();
-      this.plugin.compileTextBgColoringEntries();
-      this.plugin.reconfigureEditorExtensions();
-      this.plugin.forceRefreshAllEditors();
-      this.plugin.forceRefreshAllReadingViews();
-      this.plugin.triggerActiveDocumentRerender();
       try {
         this.onAdded && this.onAdded(entry);
       } catch (e) {
@@ -15428,6 +15638,7 @@ var EditEntryModal = class extends Modal {
     }
     this.onSaved = onSaved;
     this._handlers = [];
+    this._dropdownCleanups = [];
   }
   onOpen() {
     const { contentEl } = this;
@@ -15513,6 +15724,7 @@ var EditEntryModal = class extends Modal {
         evt.preventDefault();
         evt.stopPropagation();
         const currentColor = colorInput.value || "#000000";
+        const displayText = this.entry && this.entry.isRegex ? this.entry.pattern || "" : Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0 ? this.entry.groupedPatterns.map((p) => String(p).trim()).join(", ") : this.entry && this.entry.pattern ? String(this.entry.pattern) : "";
         new ColorPickerModal(this.app, this.plugin, (color, result) => {
           const tc = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null;
           const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
@@ -15521,7 +15733,7 @@ var EditEntryModal = class extends Modal {
             colorInput.value = selectedColor;
             onColorSelected(selectedColor);
           }
-        }, "single", currentColor, false).open();
+        }, "single", displayText, false).open();
       });
     };
     setupColorPickerRightClick(textColorInput, () => {
@@ -15913,6 +16125,16 @@ var EditEntryModal = class extends Modal {
           document.addEventListener("scroll", pos, true);
           document.addEventListener("click", pathInput._dropdownClickListener);
           document.addEventListener("keydown", pathInput._dropdownKeyListener);
+          this._dropdownCleanups.push(() => {
+            if (pathInput._actDropdown) {
+              const dd2 = pathInput._actDropdown;
+              if (pathInput._dropdownScrollListener) document.removeEventListener("scroll", pathInput._dropdownScrollListener, true);
+              if (pathInput._dropdownClickListener) document.removeEventListener("click", pathInput._dropdownClickListener);
+              if (pathInput._dropdownKeyListener) document.removeEventListener("keydown", pathInput._dropdownKeyListener);
+              dd2.remove();
+              pathInput._actDropdown = null;
+            }
+          });
         };
         const pathHandler = async () => {
           r.path = String(pathInput.value || "");
@@ -16051,6 +16273,51 @@ var EditEntryModal = class extends Modal {
           } catch (e) {
           }
         }
+      } else if (this.parentModal) {
+        if (!isRegex) {
+          if (patternVal) {
+            const parts = patternVal.split(",").map((p) => String(p).trim()).filter((p) => p.length > 0);
+            this.entry.pattern = parts[0];
+            this.entry.groupedPatterns = parts.length > 1 ? parts : null;
+          }
+        }
+        this.entry.matchType = matchTypeVal;
+        this.entry.styleType = st;
+        if (st === "text") {
+          this.entry.color = textColorVal;
+          this.entry.textColor = null;
+          this.entry.backgroundColor = null;
+        } else if (st === "highlight") {
+          this.entry.color = "";
+          this.entry.textColor = "currentColor";
+          this.entry.backgroundColor = bgColorVal;
+        } else {
+          this.entry.color = "";
+          this.entry.textColor = textColorVal;
+          this.entry.backgroundColor = bgColorVal;
+        }
+        if (typeof this.entry.backgroundOpacity === "number") {
+        }
+        if (typeof this.entry.highlightBorderRadius === "number") {
+        }
+        if (typeof this.entry.highlightHorizontalPadding === "number") {
+        }
+        if (typeof this.entry.highlightVerticalPadding === "number") {
+        }
+        if (typeof this.entry.enableBorderThickness === "boolean") {
+        }
+        if (this.entry.borderStyle) {
+        }
+        if (this.entry.borderLineStyle) {
+        }
+        if (typeof this.entry.borderOpacity === "number") {
+        }
+        if (typeof this.entry.borderThickness === "number") {
+        }
+        try {
+          this.onSaved && this.onSaved(this.entry);
+        } catch (e) {
+        }
       }
       this.close();
     };
@@ -16068,7 +16335,17 @@ var EditEntryModal = class extends Modal {
       });
     } catch (e) {
     }
+    try {
+      this._dropdownCleanups.forEach((cleanup) => {
+        try {
+          cleanup();
+        } catch (e) {
+        }
+      });
+    } catch (e) {
+    }
     this._handlers = [];
+    this._dropdownCleanups = [];
     try {
       this.contentEl.empty();
     } catch (e) {
@@ -16120,15 +16397,15 @@ var BlacklistRegexTesterModal = class extends Modal {
       b.style.cursor = "pointer";
       flagButtons[f] = b;
     });
-    const regexInput = contentEl.createEl("input", { type: "text" });
-    regexInput.placeholder = this.plugin.t("regex_expression_placeholder", "put your expression here");
-    regexInput.style.marginTop = "10px";
-    regexInput.style.width = "100%";
-    regexInput.style.padding = "10px 14px";
-    regexInput.style.borderRadius = "var(--radius-m)";
-    regexInput.style.border = "1px solid var(--background-modifier-border)";
-    regexInput.style.background = "var(--background-modifier-form-field)";
-    regexInput.style.fontFamily = "var(--font-ui-medium)";
+    const regexInput2 = contentEl.createEl("input", { type: "text" });
+    regexInput2.placeholder = this.plugin.t("regex_expression_placeholder", "put your expression here");
+    regexInput2.style.marginTop = "10px";
+    regexInput2.style.width = "100%";
+    regexInput2.style.padding = "10px 14px";
+    regexInput2.style.borderRadius = "var(--radius-m)";
+    regexInput2.style.border = "1px solid var(--background-modifier-border)";
+    regexInput2.style.background = "var(--background-modifier-form-field)";
+    regexInput2.style.fontFamily = "var(--font-ui-medium)";
     const subjectWrap = contentEl.createDiv();
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
@@ -16189,7 +16466,7 @@ var BlacklistRegexTesterModal = class extends Modal {
     const escapeHtml = (str) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const renderPreview = () => {
       const raw = String(testInput.value || "");
-      const patRaw = String(regexInput.value || "").trim();
+      const patRaw = String(regexInput2.value || "").trim();
       const flags = Object.keys(flagButtons).filter((k) => flagButtons[k].dataset.on === "1").join("");
       const f = flags.includes("g") ? flags : flags + "g";
       if (!patRaw) {
@@ -16269,7 +16546,7 @@ var BlacklistRegexTesterModal = class extends Modal {
     });
     updateFlagButtonUI();
     if (this._preFillPattern) {
-      regexInput.value = this._preFillPattern;
+      regexInput2.value = this._preFillPattern;
     }
     if (this._preFillFlags) {
       const flags = String(this._preFillFlags || "").split("");
@@ -16289,15 +16566,15 @@ var BlacklistRegexTesterModal = class extends Modal {
     const onInputDebounced = () => {
       renderDebounced();
     };
-    [regexInput, testInput].forEach((el) => {
-      const ev = el === regexInput ? "input" : "input";
+    [regexInput2, testInput].forEach((el) => {
+      const ev = el === regexInput2 ? "input" : "input";
       const fn = onInputDebounced;
       el.addEventListener(ev, fn);
       this._handlers.push({ el, ev, fn });
     });
     render();
     const addHandler = async () => {
-      const patRaw = String(regexInput.value || "").trim();
+      const patRaw = String(regexInput2.value || "").trim();
       const pat = this.plugin.sanitizePattern(patRaw, true);
       const label = String(nameInput.value || "").trim();
       const flags = Object.keys(flagButtons).filter((k) => flagButtons[k].dataset.on === "1").join("");
@@ -16484,6 +16761,7 @@ var ChangelogModal = class extends Modal {
             dateEl.style.opacity = "0.8";
             dateEl.style.fontSize = "0.9em";
             dateEl.style.marginTop = "-4px";
+            dateEl.style.marginBottom = "16px";
           }
         } catch (_) {
         }
@@ -16541,10 +16819,712 @@ var ChangelogModal = class extends Modal {
     }
   }
 };
+var EditWordGroupModal = class extends Modal {
+  constructor(app, plugin, group, onSave, onDelete) {
+    super(app);
+    this.plugin = plugin;
+    this.group = JSON.parse(JSON.stringify(group));
+    if (!Array.isArray(this.group.entries)) this.group.entries = [];
+    this.onSave = onSave;
+    this.onDelete = onDelete;
+    this._searchQuery = "";
+    this._limit = 0;
+    this._limitRegexOnly = false;
+    this._limitWordsOnly = false;
+    this._limitStyle = null;
+    this._limitMatchStarts = false;
+    this._limitMatchEnds = false;
+    this._limitMatchExact = false;
+    this._listDiv = null;
+    this._cleanupHandlers = [];
+    this._sortMode = "last-added";
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this.modalEl.style.width = "1000px";
+    this.modalEl.style.maxWidth = "95vw";
+    try {
+      this.modalEl.addClass("act-edit-word-group-modal");
+    } catch (e) {
+      try {
+        this.modalEl.classList.add("act-edit-word-group-modal");
+      } catch (_) {
+      }
+    }
+    const heading = contentEl.createEl("h2", { text: this.plugin.t("edit_word_group_modal_title", "Edit Word Group") });
+    heading.style.marginTop = "0";
+    heading.style.marginBottom = "15px";
+    const topRow = contentEl.createDiv();
+    topRow.style.display = "flex";
+    topRow.style.alignItems = "center";
+    topRow.style.gap = "10px";
+    topRow.style.marginBottom = "15px";
+    const activeSelect = topRow.createEl("select");
+    activeSelect.style.padding = "6px";
+    activeSelect.style.borderRadius = "4px";
+    activeSelect.style.border = "1px solid var(--background-modifier-border)";
+    activeSelect.style.textAlign = "center";
+    const optActive = activeSelect.createEl("option", { text: this.plugin.t("group_active_label", "Active"), value: "true" });
+    const optInactive = activeSelect.createEl("option", { text: this.plugin.t("group_inactive_label", "Inactive"), value: "false" });
+    activeSelect.value = String(!!this.group.active);
+    const activeSelectHandler = () => {
+      this.group.active = activeSelect.value === "true";
+    };
+    activeSelect.addEventListener("change", activeSelectHandler);
+    this._cleanupHandlers.push(() => activeSelect.removeEventListener("change", activeSelectHandler));
+    const nameInput = topRow.createEl("input", { type: "text", value: this.group.name || "" });
+    nameInput.style.flex = "1";
+    nameInput.style.padding = "6px";
+    nameInput.style.borderRadius = "4px";
+    nameInput.style.border = "1px solid var(--background-modifier-border)";
+    nameInput.placeholder = this.plugin.t("group_name_placeholder", "Name your group");
+    const nameInputHandler = () => {
+      this.group.name = nameInput.value;
+    };
+    nameInput.addEventListener("input", nameInputHandler);
+    this._cleanupHandlers.push(() => nameInput.removeEventListener("input", nameInputHandler));
+    const searchRow = contentEl.createDiv();
+    try {
+      searchRow.addClass("act-search-container");
+    } catch (e) {
+      try {
+        searchRow.classList.add("act-search-container");
+      } catch (_) {
+      }
+    }
+    searchRow.style.display = "flex";
+    searchRow.style.alignItems = "center";
+    searchRow.style.gap = "8px";
+    searchRow.style.margin = "8px 0";
+    const searchInput = searchRow.createEl("input", { type: "text" });
+    searchInput.placeholder = this.plugin.t("search_colored_words_placeholder", "Search colored words/patterns\u2026");
+    try {
+      searchInput.addClass("act-search-input");
+    } catch (e) {
+      try {
+        searchInput.classList.add("act-search-input");
+      } catch (_) {
+      }
+    }
+    searchInput.style.flex = "1 1 auto";
+    searchInput.style.padding = "6px";
+    searchInput.style.border = "1px solid var(--background-modifier-border)";
+    searchInput.style.borderRadius = "4px";
+    searchInput.value = this._searchQuery;
+    const searchHandler = () => {
+      this._searchQuery = String(searchInput.value || "").trim().toLowerCase();
+      this._refreshGroupEntries();
+    };
+    searchInput.addEventListener("input", searchHandler);
+    this._cleanupHandlers.push(() => searchInput.removeEventListener("input", searchHandler));
+    const searchIcon = searchRow.createDiv();
+    try {
+      searchIcon.addClass("act-search-icon");
+    } catch (e) {
+      try {
+        searchIcon.classList.add("act-search-icon");
+      } catch (_) {
+      }
+    }
+    const limitInput = searchRow.createEl("input", { type: "text" });
+    limitInput.value = String(this._limit);
+    limitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
+    limitInput.title = this.plugin.t("limit_input_tooltip", "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact");
+    limitInput.style.width = "80px";
+    limitInput.style.padding = "6px";
+    limitInput.style.border = "1px solid var(--background-modifier-border)";
+    limitInput.style.borderRadius = "4px";
+    const limitHandler = () => {
+      const raw = String(limitInput.value || "").trim().toLowerCase();
+      const parts = raw.split(/\s+/).filter(Boolean);
+      const numPart = parts.find((p) => /^\d+$/.test(p));
+      const num = numPart ? parseInt(numPart, 10) : NaN;
+      this._limit = !isNaN(num) && num >= 0 ? num : 0;
+      this._limitRegexOnly = false;
+      this._limitWordsOnly = false;
+      this._limitStyle = null;
+      this._limitMatchStarts = false;
+      this._limitMatchEnds = false;
+      this._limitMatchExact = false;
+      for (const tok of parts) {
+        if (tok === "r") this._limitRegexOnly = true;
+        else if (tok === "w") this._limitWordsOnly = true;
+        else if (tok === "h") this._limitStyle = "highlight";
+        else if (tok === "c") this._limitStyle = "text";
+        else if (tok === "b") this._limitStyle = "both";
+        else if (tok === "sw") this._limitMatchStarts = true;
+        else if (tok === "ew") this._limitMatchEnds = true;
+        else if (tok === "e") this._limitMatchExact = true;
+      }
+      this._refreshGroupEntries();
+    };
+    limitInput.addEventListener("input", limitHandler);
+    this._cleanupHandlers.push(() => limitInput.removeEventListener("input", limitHandler));
+    const hrBelowSearch = contentEl.createEl("hr");
+    hrBelowSearch.style.marginTop = "6px";
+    hrBelowSearch.style.marginBottom = "6px";
+    hrBelowSearch.style.border = "0px";
+    try {
+      hrBelowSearch.addClass("act-edit-word-group-hr");
+    } catch (e) {
+      try {
+        hrBelowSearch.classList.add("act-edit-word-group-hr");
+      } catch (_) {
+      }
+    }
+    this._listDiv = contentEl.createDiv();
+    this._listDiv.addClass("color-words-list");
+    this._listDiv.style.minHeight = "200px";
+    this._listDiv.style.maxHeight = "350px";
+    this._listDiv.style.overflowY = "auto";
+    this._listDiv.style.marginBottom = "15px";
+    this._listDiv.style.borderRadius = "4px";
+    this._listDiv.style.backgroundColor = "var(--background-primary)";
+    this._refreshGroupEntries();
+    const buttonRow = contentEl.createDiv();
+    buttonRow.style.display = "flex";
+    buttonRow.style.gap = "10px";
+    buttonRow.style.marginBottom = "15px";
+    buttonRow.style.alignItems = "center";
+    const sortModes = ["last-added", "a-z", "reverse-a-z", "style-order", "color"];
+    const sortLabels = {
+      "last-added": this.plugin.t("sort_label_last-added", "Sort: Last Added"),
+      "a-z": this.plugin.t("sort_label_a-z", "Sort: A-Z"),
+      "reverse-a-z": this.plugin.t("sort_label_reverse-a-z", "Sort: Z-A"),
+      "style-order": this.plugin.t("sort_label_style-order", "Sort: Style Order"),
+      "color": this.plugin.t("sort_label_color", "Sort: Color")
+    };
+    const sortBtn = buttonRow.createEl("button");
+    sortBtn.textContent = sortLabels[this._sortMode] || "Sort: Last Added";
+    sortBtn.style.cursor = "pointer";
+    sortBtn.style.padding = "6px 12px";
+    sortBtn.style.borderRadius = "4px";
+    const sortBtnHandler = () => {
+      const currentIndex = sortModes.indexOf(this._sortMode);
+      const nextIndex = (currentIndex + 1) % sortModes.length;
+      this._sortMode = sortModes[nextIndex];
+      sortBtn.textContent = sortLabels[this._sortMode];
+      this._refreshGroupEntries();
+    };
+    sortBtn.addEventListener("click", sortBtnHandler);
+    this._cleanupHandlers.push(() => sortBtn.removeEventListener("click", sortBtnHandler));
+    const addWordsBtn = buttonRow.createEl("button");
+    addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
+    addWordsBtn.style.cursor = "pointer";
+    addWordsBtn.style.padding = "6px 12px";
+    addWordsBtn.style.borderRadius = "4px";
+    addWordsBtn.style.flex = "1";
+    addWordsBtn.addClass("mod-cta");
+    const addWordsHandler = () => {
+      this.group.entries.push({ pattern: "", color: "", isRegex: false, flags: "", styleType: "text", matchType: "contains" });
+      this._sortMode = "last-added";
+      this._refreshGroupEntries();
+      setTimeout(() => {
+        this._listDiv.scrollTop = this._listDiv.scrollHeight;
+      }, 50);
+    };
+    addWordsBtn.addEventListener("click", addWordsHandler);
+    this._cleanupHandlers.push(() => addWordsBtn.removeEventListener("click", addWordsHandler));
+    const addRegexBtn = buttonRow.createEl("button");
+    addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
+    addRegexBtn.style.cursor = "pointer";
+    addRegexBtn.style.padding = "6px 12px";
+    addRegexBtn.style.borderRadius = "4px";
+    addRegexBtn.style.flex = "1";
+    addRegexBtn.addClass("mod-cta");
+    const addRegexHandler = () => {
+      this._sortMode = "last-added";
+      const onAdded = (entry) => {
+        if (entry) {
+          this.group.entries.push(entry);
+        }
+        this._refreshGroupEntries();
+      };
+      new RealTimeRegexTesterModal(this.app, this.plugin, onAdded, null, true).open();
+    };
+    addRegexBtn.addEventListener("click", addRegexHandler);
+    this._cleanupHandlers.push(() => addRegexBtn.removeEventListener("click", addRegexHandler));
+    const presetsBtn = buttonRow.createEl("button");
+    presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
+    presetsBtn.style.cursor = "pointer";
+    presetsBtn.style.padding = "6px 12px";
+    presetsBtn.style.borderRadius = "4px";
+    const presetsHandler = () => {
+      new PresetModal(this.app, this.plugin, async (preset) => {
+        if (!preset) return;
+        new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+          const sel = result || {};
+          const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : null;
+          const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+          if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
+          const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", styleType: "text", matchType: "contains" };
+          if (tc && bc) {
+            entry.textColor = tc;
+            entry.backgroundColor = bc;
+            entry.color = "";
+            entry.styleType = "both";
+            entry._savedTextColor = tc;
+            entry._savedBackgroundColor = bc;
+          } else if (tc) {
+            entry.color = tc;
+            entry.styleType = "text";
+            entry._savedTextColor = tc;
+          } else if (bc) {
+            entry.textColor = "currentColor";
+            entry.backgroundColor = bc;
+            entry.color = "";
+            entry.styleType = "highlight";
+            entry._savedBackgroundColor = bc;
+          } else {
+            entry.color = color;
+            entry._savedTextColor = color;
+          }
+          this.group.entries.push(entry);
+          this._sortMode = "last-added";
+          this._refreshGroupEntries();
+        }, "text-and-background", "", false).open();
+      }).open();
+    };
+    presetsBtn.addEventListener("click", presetsHandler);
+    this._cleanupHandlers.push(() => presetsBtn.removeEventListener("click", presetsHandler));
+    const footer = contentEl.createDiv();
+    footer.style.display = "flex";
+    footer.style.justifyContent = "space-between";
+    footer.style.alignItems = "center";
+    footer.style.marginTop = "15px";
+    footer.style.paddingTop = "15px";
+    footer.style.borderTop = "1px solid var(--background-modifier-border)";
+    const btnDelete = footer.createEl("button", { text: this.plugin.t("btn_delete_group", "Delete Group") });
+    btnDelete.addClass("mod-warning");
+    btnDelete.style.cursor = "pointer";
+    btnDelete.style.padding = "8px 16px";
+    const deleteHandler = () => {
+      new ConfirmationModal(this.app, this.plugin.t("confirm_delete_group_title", "Delete Group"), this.plugin.t("confirm_delete_group_desc", "Are you sure you want to delete this group?"), async () => {
+        this.close();
+        this.onDelete(this.group);
+      }).open();
+    };
+    btnDelete.addEventListener("click", deleteHandler);
+    this._cleanupHandlers.push(() => btnDelete.removeEventListener("click", deleteHandler));
+    const btnSave = footer.createEl("button", { text: this.plugin.t("btn_save_group", "Save Group") });
+    btnSave.addClass("mod-cta");
+    btnSave.style.cursor = "pointer";
+    btnSave.style.padding = "8px 16px";
+    const saveHandler = () => {
+      this.group.entries.forEach((entry) => {
+        if (!entry.hasOwnProperty("pattern")) entry.pattern = "";
+        if (!entry.hasOwnProperty("color")) entry.color = "";
+        if (!entry.hasOwnProperty("isRegex")) entry.isRegex = false;
+        if (!entry.hasOwnProperty("flags")) entry.flags = "";
+        if (!entry.hasOwnProperty("styleType")) entry.styleType = "text";
+        if (!entry.hasOwnProperty("matchType")) entry.matchType = "contains";
+        if (!entry.hasOwnProperty("textColor")) entry.textColor = null;
+        if (!entry.hasOwnProperty("backgroundColor")) entry.backgroundColor = null;
+      });
+      this.onSave(this.group);
+      this.close();
+    };
+    btnSave.addEventListener("click", saveHandler);
+    this._cleanupHandlers.push(() => btnSave.removeEventListener("click", saveHandler));
+  }
+  _refreshGroupEntries() {
+    if (!this._listDiv) return;
+    this._listDiv.empty();
+    let entries = [...this.group.entries];
+    if (this._searchQuery) {
+      const q = this._searchQuery.toLowerCase();
+      entries = entries.filter((e) => {
+        const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || "")];
+        const text = [
+          ...patterns.map((p) => p.toLowerCase()),
+          String(e.presetLabel || "").toLowerCase(),
+          String(e.flags || "").toLowerCase(),
+          String(e.styleType || "").toLowerCase()
+        ].join(" ");
+        if (this._limitMatchExact) return text === q;
+        if (this._limitMatchStarts) return text.startsWith(q);
+        if (this._limitMatchEnds) return text.endsWith(q);
+        return text.includes(q);
+      });
+    }
+    if (this._limitStyle === "highlight") {
+      entries = entries.filter((e) => (e.styleType || "text") === "highlight");
+    } else if (this._limitStyle === "text") {
+      entries = entries.filter((e) => (e.styleType || "text") === "text");
+    } else if (this._limitStyle === "both") {
+      entries = entries.filter((e) => (e.styleType || "text") === "both");
+    }
+    if (this._limitRegexOnly) {
+      entries = entries.filter((e) => !!e.isRegex);
+    } else if (this._limitWordsOnly) {
+      entries = entries.filter((e) => !e.isRegex);
+    }
+    if (this._sortMode === "a-z") {
+      entries.sort((a, b) => {
+        const patternA = a.pattern || "";
+        const patternB = b.pattern || "";
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+      });
+    } else if (this._sortMode === "reverse-a-z") {
+      entries.sort((a, b) => {
+        const patternA = a.pattern || "";
+        const patternB = b.pattern || "";
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        return patternB.toLowerCase().localeCompare(patternA.toLowerCase());
+      });
+    } else if (this._sortMode === "style-order") {
+      const styleOrder = { "text": 0, "highlight": 1, "both": 2 };
+      entries.sort((a, b) => {
+        const patternA = a.pattern || "";
+        const patternB = b.pattern || "";
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        const styleA = styleOrder[a.styleType] ?? 0;
+        const styleB = styleOrder[b.styleType] ?? 0;
+        if (styleA !== styleB) return styleA - styleB;
+        return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+      });
+    } else if (this._sortMode === "color") {
+      entries.sort((a, b) => {
+        const patternA = a.pattern || "";
+        const patternB = b.pattern || "";
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        const colorA = (a.backgroundColor || a.textColor || a.color || "").toLowerCase();
+        const colorB = (b.backgroundColor || b.textColor || b.color || "").toLowerCase();
+        if (colorA !== colorB) return colorA.localeCompare(colorB);
+        return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+      });
+    }
+    const visibleEntries = this._limit && this._limit > 0 ? entries.slice(-this._limit) : entries;
+    if (visibleEntries.length === 0) {
+      this._listDiv.createDiv({ text: this.plugin.t("no_entries_found", "No entries found.") }).style.color = "var(--text-muted)";
+      return;
+    }
+    visibleEntries.forEach((entry) => {
+      const row = this._listDiv.createDiv();
+      try {
+        row.addClass("act-entry-row");
+      } catch (e) {
+        try {
+          row.classList.add("act-entry-row");
+        } catch (_) {
+        }
+      }
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.borderRadius = "4px";
+      const styleSelect = row.createEl("select");
+      styleSelect.style.padding = "6px";
+      styleSelect.style.borderRadius = "4px";
+      styleSelect.style.border = "1px solid var(--background-modifier-border)";
+      styleSelect.style.textAlign = "center";
+      ["text", "highlight", "both"].forEach((val) => {
+        const opt = styleSelect.createEl("option", { text: this.plugin.t("style_type_" + val, val === "text" ? "color" : val) });
+        opt.value = val;
+      });
+      styleSelect.value = entry.styleType || "text";
+      const styleSelectHandler = () => {
+        entry.styleType = styleSelect.value;
+        this._refreshGroupEntries();
+      };
+      styleSelect.addEventListener("change", styleSelectHandler);
+      const matchSelect = row.createEl("select");
+      matchSelect.style.padding = "6px";
+      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.border = "1px solid var(--background-modifier-border)";
+      matchSelect.style.textAlign = "center";
+      matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "Exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "Contains")}</option><option value="startswith">${this.plugin.t("match_option_starts_with", "Starts with")}</option><option value="endswith">${this.plugin.t("match_option_ends_with", "Ends with")}</option>`;
+      matchSelect.value = entry.matchType || "contains";
+      const matchSelectHandler = () => {
+        entry.matchType = matchSelect.value;
+      };
+      matchSelect.addEventListener("change", matchSelectHandler);
+      const updateVisibility = () => {
+        matchSelect.style.display = entry.isRegex ? "none" : "";
+      };
+      updateVisibility();
+      const patternInput = row.createEl("input", { type: "text", value: entry.pattern || "" });
+      patternInput.style.flex = "1";
+      patternInput.style.padding = "6px";
+      patternInput.style.borderRadius = "4px";
+      patternInput.style.border = "1px solid var(--background-modifier-border)";
+      patternInput.placeholder = this.plugin.t("word_pattern_placeholder_long", "pattern, word or comma-separated words (e.g. hello, world, foo)");
+      const patternHandler = () => {
+        entry.pattern = patternInput.value;
+      };
+      patternInput.addEventListener("change", patternHandler);
+      patternInput.addEventListener("blur", patternHandler);
+      let flagsInput = null;
+      if (entry.isRegex) {
+        flagsInput = row.createEl("input", { type: "text", value: entry.flags || "" });
+        flagsInput.style.width = "50px";
+        flagsInput.style.padding = "6px";
+        flagsInput.style.borderRadius = "4px";
+        flagsInput.style.border = "1px solid var(--background-modifier-border)";
+        flagsInput.placeholder = "flags";
+        flagsInput.title = "e.g., i, g, m";
+        const flagsHandler = () => {
+          entry.flags = flagsInput.value || "";
+        };
+        flagsInput.addEventListener("change", flagsHandler);
+      }
+      const regexChk = row.createEl("input", { type: "checkbox" });
+      regexChk.checked = !!entry.isRegex;
+      regexChk.title = this.plugin.t("use_regex", "Use Regex");
+      const regexChkHandler = () => {
+        entry.isRegex = regexChk.checked;
+        updateVisibility();
+        this._refreshGroupEntries();
+      };
+      regexChk.addEventListener("change", regexChkHandler);
+      let cp = null;
+      if (entry.styleType === "text" || entry.styleType === "both") {
+        cp = row.createEl("input", { type: "color" });
+        cp.style.width = "40px";
+        cp.style.height = "40px";
+        cp.style.padding = "0";
+        cp.style.border = "none";
+        cp.style.cursor = "pointer";
+        cp.style.borderRadius = "4px";
+        const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || "#000000";
+        cp.value = textColor;
+        const cpHandler = () => {
+          const newColor = cp.value;
+          if (!this.plugin.isValidHexColor(newColor)) return;
+          if (entry.backgroundColor) {
+            entry.textColor = newColor;
+            entry.color = "";
+            entry.styleType = "both";
+            entry._savedTextColor = newColor;
+          } else {
+            entry.color = newColor;
+            entry.textColor = null;
+            entry.backgroundColor = null;
+            entry.styleType = "text";
+            entry._savedTextColor = newColor;
+          }
+          styleSelect.value = entry.styleType;
+        };
+        cp.addEventListener("input", cpHandler);
+        cp.title = "Text color";
+        const cpContextHandler = (ev) => {
+          try {
+            ev && ev.preventDefault && ev.preventDefault();
+            if (ev && ev.stopPropagation) ev.stopPropagation();
+            const preFillText = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : this.plugin.isValidHexColor(entry.color) ? entry.color : cp.value;
+            const displayText = entry.isRegex ? entry.pattern || "" : Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns.join(", ") : entry.pattern || "";
+            const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+              const tc = result && result.textColor || color;
+              if (!tc || !this.plugin.isValidHexColor(tc)) return;
+              const currentStyle = entry.styleType || "text";
+              if (currentStyle === "both") {
+                entry.textColor = tc;
+                entry.color = "";
+                entry._savedTextColor = tc;
+              } else {
+                entry.color = tc;
+                entry.textColor = null;
+                entry.backgroundColor = null;
+                entry._savedTextColor = tc;
+              }
+              cp.value = tc;
+              this._refreshGroupEntries();
+            }, "text", displayText, false);
+            try {
+              modal._preFillTextColor = preFillText;
+            } catch (_) {
+            }
+            try {
+              modal.open();
+            } catch (_) {
+            }
+          } catch (e) {
+          }
+        };
+        cp.addEventListener("contextmenu", cpContextHandler);
+      }
+      let cpBg = null;
+      if (entry.styleType === "highlight" || entry.styleType === "both") {
+        cpBg = row.createEl("input", { type: "color" });
+        cpBg.style.width = "40px";
+        cpBg.style.height = "40px";
+        cpBg.style.padding = "0";
+        cpBg.style.border = "none";
+        cpBg.style.cursor = "pointer";
+        cpBg.style.borderRadius = "4px";
+        const bgColor = entry.backgroundColor || entry._savedBackgroundColor || "#000000";
+        cpBg.value = bgColor;
+        const cpBgHandler = () => {
+          const newColor = cpBg.value;
+          if (!this.plugin.isValidHexColor(newColor)) return;
+          entry.backgroundColor = newColor;
+          if (!entry.textColor || entry.textColor === "currentColor") {
+            entry.textColor = "currentColor";
+          }
+          entry.color = "";
+          const hasText = !!(entry.textColor && entry.textColor !== "currentColor");
+          const hasBg = !!entry.backgroundColor;
+          if (hasText && hasBg) {
+            entry.styleType = "both";
+          } else if (hasBg) {
+            entry.styleType = "highlight";
+          } else {
+            entry.styleType = "text";
+          }
+          entry._savedBackgroundColor = newColor;
+          styleSelect.value = entry.styleType;
+        };
+        cpBg.addEventListener("input", cpBgHandler);
+        cpBg.title = "Highlight color";
+        const cpBgContextHandler = (ev) => {
+          try {
+            ev && ev.preventDefault && ev.preventDefault();
+            if (ev && ev.stopPropagation) ev.stopPropagation();
+            const preFillBg = entry.backgroundColor || entry._savedBackgroundColor || cpBg.value;
+            const displayText = entry.isRegex ? entry.pattern || "" : Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns.join(", ") : entry.pattern || "";
+            const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+              const bc = result && result.backgroundColor || color;
+              if (!bc || !this.plugin.isValidHexColor(bc)) return;
+              entry.backgroundColor = bc;
+              if (!entry.textColor || entry.textColor === "currentColor") {
+                entry.textColor = "currentColor";
+              }
+              entry.color = "";
+              entry._savedBackgroundColor = bc;
+              cpBg.value = bc;
+              this._refreshGroupEntries();
+            }, "background", displayText, false);
+            try {
+              modal._preFillBgColor = preFillBg;
+            } catch (_) {
+            }
+            try {
+              modal.open();
+            } catch (_) {
+            }
+          } catch (e) {
+          }
+        };
+        cpBg.addEventListener("contextmenu", cpBgContextHandler);
+      }
+      const btnDel = row.createEl("button", { text: "\u2715" });
+      btnDel.addClass("mod-warning");
+      btnDel.style.cursor = "pointer";
+      btnDel.style.padding = "6px 10px";
+      const delHandler = () => {
+        const idx = this.group.entries.indexOf(entry);
+        if (idx > -1) {
+          this.group.entries.splice(idx, 1);
+          this._refreshGroupEntries();
+        }
+      };
+      btnDel.addEventListener("click", delHandler);
+      const contextMenuHandler = (ev) => {
+        try {
+          ev && ev.preventDefault && ev.preventDefault();
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          const menu = new Menu(this.app);
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t("edit_entry_details", "Edit Entry Details")).setIcon("pencil").onClick(() => {
+              const modal = new EditEntryModal(this.app, this.plugin, entry, () => {
+                try {
+                  this._refreshGroupEntries();
+                } catch (e) {
+                }
+              }, this);
+              modal.open();
+            });
+          });
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(() => {
+              const dup = JSON.parse(JSON.stringify(entry));
+              this.group.entries.push(dup);
+              this._sortMode = "last-added";
+              this._refreshGroupEntries();
+            });
+          });
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t("reset_text_color", "Reset Text Color")).setIcon("text").onClick(() => {
+              entry.textColor = null;
+              entry.color = "";
+              if (entry.backgroundColor) {
+                entry.styleType = "highlight";
+              } else {
+                entry.styleType = "text";
+              }
+              this._refreshGroupEntries();
+            });
+          });
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t("reset_highlight", "Reset Highlight")).setIcon("rectangle-horizontal").onClick(() => {
+              entry.backgroundColor = null;
+              if (entry.textColor || entry.color) {
+                entry.styleType = "text";
+              } else {
+                entry.styleType = "text";
+              }
+              this._refreshGroupEntries();
+            });
+          });
+          if (entry.isRegex) {
+            menu.addItem((item) => {
+              item.setTitle(this.plugin.t("open_in_regex_tester", "Open in Regex Tester")).setIcon("pencil").onClick(() => {
+                const modal = new RealTimeRegexTesterModal(this.app, this.plugin, (updatedEntry) => {
+                  if (updatedEntry) {
+                    Object.assign(entry, updatedEntry);
+                    this._refreshGroupEntries();
+                  }
+                });
+                modal.open();
+              });
+            });
+          }
+          menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+        } catch (e) {
+          debugError("MODAL", "context menu error", e);
+        }
+      };
+      row.addEventListener("contextmenu", contextMenuHandler);
+    });
+  }
+  onClose() {
+    try {
+      this.onSave(this.group);
+    } catch (e) {
+      debugError("MODAL", "auto-save error on close", e);
+    }
+    try {
+      this._cleanupHandlers.forEach((cleanup) => {
+        try {
+          cleanup();
+        } catch (e) {
+        }
+      });
+      this._cleanupHandlers = [];
+      this.contentEl.empty();
+    } catch (e) {
+    }
+  }
+};
 var ColorSettingTab = class extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
+    this._activeTab = "general";
     this.debouncedSaveSettings = debounce(this.plugin.saveSettings.bind(this.plugin), 800);
     this._lastRerender = 0;
     this._cleanupHandlers = [];
@@ -16593,6 +17573,14 @@ var ColorSettingTab = class extends PluginSettingTab {
         }
       }
       const row = listDiv.createDiv();
+      try {
+        row.addClass("act-entry-row");
+      } catch (e) {
+        try {
+          row.classList.add("act-entry-row");
+        } catch (_) {
+        }
+      }
       row.style.display = "flex";
       row.style.alignItems = "center";
       row.style.gap = "8px";
@@ -17081,6 +18069,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           const idx = resolveIdx();
           const preExisting = idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
           const preFillText = preExisting && (preExisting.textColor && preExisting.textColor !== "currentColor" ? preExisting.textColor : this.plugin.isValidHexColor(preExisting.color) ? preExisting.color : null) || cp.value;
+          const displayText = preExisting && preExisting.isRegex ? preExisting.pattern || "" : Array.isArray(preExisting?.groupedPatterns) && preExisting.groupedPatterns.length > 0 ? preExisting.groupedPatterns.map((p) => String(p).trim()).join(", ") : preExisting && preExisting.pattern ? String(preExisting.pattern) : "";
           const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
             const tc = result && result.textColor || color;
             if (!tc || !this.plugin.isValidHexColor(tc)) return;
@@ -17105,7 +18094,7 @@ var ColorSettingTab = class extends PluginSettingTab {
               this.plugin.reconfigureEditorExtensions();
               this.plugin.forceRefreshAllEditors();
             }
-          }, "text", "", false);
+          }, "text", displayText, false);
           try {
             modal._preFillTextColor = preFillText || cp.value;
           } catch (_) {
@@ -17124,6 +18113,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           const idx = resolveIdx();
           const preExisting = idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
           const preFillBg = preExisting && preExisting.backgroundColor || cpBg.value;
+          const displayText = preExisting && preExisting.isRegex ? preExisting.pattern || "" : Array.isArray(preExisting?.groupedPatterns) && preExisting.groupedPatterns.length > 0 ? preExisting.groupedPatterns.map((p) => String(p).trim()).join(", ") : preExisting && preExisting.pattern ? String(preExisting.pattern) : "";
           const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
             const bc = result && result.backgroundColor || color;
             if (!bc || !this.plugin.isValidHexColor(bc)) return;
@@ -17142,7 +18132,7 @@ var ColorSettingTab = class extends PluginSettingTab {
               this.plugin.reconfigureEditorExtensions();
               this.plugin.forceRefreshAllEditors();
             }
-          }, "background", "", false);
+          }, "background", displayText, false);
           try {
             modal._preFillBgColor = preFillBg || cpBg.value;
           } catch (_) {
@@ -17384,7 +18374,8 @@ var ColorSettingTab = class extends PluginSettingTab {
       this._disabledFilesContainer.empty();
       if (this.plugin.settings.disabledFiles.length > 0) {
         const h4 = this._disabledFilesContainer.createEl("h5", { text: this.plugin.t("disabled_files_header", "Files with coloring disabled:") });
-        h4.style.margin = "-10px 0 8px 0";
+        h4.style.margin = "20px 0 8px 0";
+        h4.style.marginTop = "20px";
         this.plugin.settings.disabledFiles.forEach((filePath) => {
           new Setting(this._disabledFilesContainer).setName(filePath).addExtraButton((btn) => btn.setIcon("x").setTooltip(this.plugin.t("tooltip_enable_for_file", "Enable for this file")).onClick(async () => {
             const index = this.plugin.settings.disabledFiles.indexOf(filePath);
@@ -18424,6 +19415,116 @@ var ColorSettingTab = class extends PluginSettingTab {
       debugError("SETTINGS", "_refreshEntries error", e);
     }
   }
+  _refreshGroups() {
+    try {
+      const container = this.containerEl.querySelector(".act-groups-container");
+      if (!container) return;
+      container.empty();
+      const allGroups = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+      const q = String(this._groupSearch || "").toLowerCase().trim();
+      const groups = q ? allGroups.filter((g) => {
+        const matchesName = String(g?.name || "").toLowerCase().includes(q);
+        const matchesActive = q === "active" && g?.active;
+        const matchesInactive = q === "inactive" && !g?.active;
+        return matchesName || matchesActive || matchesInactive;
+      }) : allGroups;
+      groups.forEach((group, index) => {
+        const row = container.createDiv();
+        try {
+          row.addClass("act-group-row");
+        } catch (e) {
+          try {
+            row.classList.add("act-group-row");
+          } catch (_) {
+          }
+        }
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.gap = "10px";
+        row.style.marginBottom = "10px";
+        row.style.padding = "10px";
+        row.style.border = "1px solid var(--background-modifier-border)";
+        row.style.borderRadius = "6px";
+        row.style.backgroundColor = "var(--background-primary)";
+        const activeSelect = row.createEl("select");
+        try {
+          activeSelect.addClass("dropdown");
+        } catch (e) {
+        }
+        activeSelect.createEl("option", { text: this.plugin.t("group_active_label", "Active"), value: "true" });
+        activeSelect.createEl("option", { text: this.plugin.t("group_inactive_label", "Inactive"), value: "false" });
+        if (!group.uid) {
+          try {
+            group.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+          } catch (_) {
+          }
+        }
+        activeSelect.value = String(!!group.active);
+        const activeHandler = async () => {
+          group.active = activeSelect.value === "true";
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
+        };
+        activeSelect.onchange = activeHandler;
+        const nameInput = row.createEl("input", { type: "text", value: group.name || "" });
+        nameInput.style.flex = "1";
+        nameInput.placeholder = this.plugin.t("group_name_placeholder", "Name your group");
+        const nameHandler = async () => {
+          group.name = nameInput.value;
+          await this.plugin.saveSettings();
+        };
+        nameInput.onchange = nameHandler;
+        const btnDuplicate = row.createEl("div");
+        btnDuplicate.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        btnDuplicate.style.cursor = "pointer";
+        btnDuplicate.style.color = "var(--text-muted)";
+        btnDuplicate.title = this.plugin.t("tooltip_duplicate_group", "Duplicate Group");
+        btnDuplicate.style.display = "flex";
+        btnDuplicate.style.alignItems = "center";
+        btnDuplicate.onclick = async () => {
+          const newGroup = JSON.parse(JSON.stringify(group));
+          newGroup.name = (newGroup.name || "") + " (Copy)";
+          this.plugin.settings.wordEntryGroups.push(newGroup);
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this._refreshGroups();
+        };
+        const btnEdit = row.createEl("div");
+        btnEdit.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>';
+        btnEdit.style.cursor = "pointer";
+        btnEdit.style.color = "var(--text-muted)";
+        btnEdit.title = this.plugin.t("tooltip_edit_group_settings", "Edit Group Settings");
+        btnEdit.style.display = "flex";
+        btnEdit.style.alignItems = "center";
+        btnEdit.onclick = () => {
+          const latestGroup = this.plugin.settings.wordEntryGroups.find((g) => g && g.uid === group.uid) || group;
+          new EditWordGroupModal(this.app, this.plugin, latestGroup, async (updatedGroup) => {
+            const idx = this.plugin.settings.wordEntryGroups.findIndex((g) => g && g.uid === updatedGroup.uid);
+            if (idx !== -1) this.plugin.settings.wordEntryGroups[idx] = updatedGroup;
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this._refreshGroups();
+          }, async (groupToDelete) => {
+            const actualIndex = this.plugin.settings.wordEntryGroups.findIndex((g) => g && g.uid === groupToDelete.uid);
+            if (actualIndex !== -1) this.plugin.settings.wordEntryGroups.splice(actualIndex, 1);
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this._refreshGroups();
+          }).open();
+        };
+      });
+    } catch (e) {
+    }
+  }
   // Clean up event listeners to prevent leaks
   onClose() {
     try {
@@ -18581,7 +19682,15 @@ var ColorSettingTab = class extends PluginSettingTab {
     this.containerEl = containerEl2;
     if (this._initializedSettingsUI) {
       try {
-        this._refreshEntries();
+        if (this._activeTab === "always-color-texts") {
+          this._refreshEntries();
+          this._refreshGroups();
+        }
+        if (this._activeTab === "blacklist") this._refreshBlacklistWords();
+        if (this._activeTab === "file-folder-rules") {
+          this._refreshPathRules();
+          this._refreshDisabledFiles();
+        }
       } catch (e) {
       }
       return;
@@ -18590,385 +19699,316 @@ var ColorSettingTab = class extends PluginSettingTab {
     this.onClose();
     this._cleanupHandlers = [];
     containerEl2.createEl("h1", { text: this.plugin.t("settings_title", "Always Color Text Settings") });
-    new Setting(containerEl2).setName(this.plugin.t("latest_release_notes_label", "Latest Release Notes")).setDesc(this.plugin.t("latest_release_notes_desc", "View the most recent plugin release notes")).addButton((btn) => btn.setButtonText(this.plugin.t("open_changelog_button", "Open Changelog")).onClick(() => {
-      try {
-        new ChangelogModal(this.app, this.plugin).open();
-      } catch (e) {
+    const tabContainer = containerEl2.createDiv();
+    tabContainer.addClass("act-tabs-container");
+    tabContainer.style.display = "flex";
+    tabContainer.style.flexWrap = "wrap";
+    tabContainer.style.gap = "10px";
+    tabContainer.style.marginBottom = "20px";
+    tabContainer.style.borderBottom = "1px solid var(--background-modifier-border)";
+    tabContainer.style.paddingBottom = "10px";
+    const tabs = [
+      { id: "general", label: this.plugin.t("settings_tab_general", "General") },
+      { id: "always-color-texts", label: this.plugin.t("settings_tab_colored_texts", "Colored Texts") },
+      { id: "blacklist", label: this.plugin.t("settings_tab_blacklists", "Blacklists") },
+      { id: "file-folder-rules", label: this.plugin.t("settings_tab_file_folder_rules", "File / Folder Rules") },
+      { id: "data", label: this.plugin.t("settings_tab_data", "Data") }
+    ];
+    tabs.forEach((tab) => {
+      const btn = tabContainer.createEl("button", { text: tab.label });
+      btn.addClass("act-tab-button");
+      btn.style.flex = "1 1 auto";
+      btn.style.cursor = "pointer";
+      btn.style.border = "none";
+      btn.style.background = "transparent";
+      btn.style.boxShadow = "none";
+      btn.style.borderRadius = "4px";
+      btn.style.padding = "8px 16px";
+      if (this._activeTab === tab.id) {
+        btn.addClass("mod-cta");
+        btn.addClass("act-tab-active");
+        btn.style.fontWeight = "bold";
+      } else {
+        btn.style.color = "var(--text-muted)";
       }
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("language_label", "Language")).setDesc(this.plugin.t("language_desc", "Select the language to be used in this plugin")).addDropdown((d) => {
-      const langs = this.plugin.getAvailableLanguages();
-      const names = { auto: this.plugin.t("language_auto", "System Default"), en: "English", es: "Spanish", fr: "French", eu: "Basque", ru: "Russian" };
-      try {
-        d.selectEl.style.textAlign = "center";
-      } catch (e) {
-      }
-      langs.forEach((code) => {
-        const dict = this.plugin._translations && this.plugin._translations[code] || {};
-        const display = String(dict.__name || names[code] || code.toUpperCase());
-        d.addOption(code, display);
-      });
-      d.setValue(this.plugin.settings.language || "en").onChange(async (v) => {
-        this.plugin.settings.language = v;
-        await this.plugin.saveSettings();
+      btn.onclick = () => {
+        this._activeTab = tab.id;
         this._initializedSettingsUI = false;
-        this.plugin.reregisterCommandsWithLanguage();
         this.display();
-      });
-      return d;
+      };
     });
-    new Setting(containerEl2).setName(this.plugin.t("enable_document_color", "Enable document color")).addToggle((t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
-      this.plugin.settings.enabled = v;
-      await this.debouncedSaveSettings();
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("color_in_reading_mode", "Color in reading mode")).addToggle((t) => t.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async (v) => {
-      this.plugin.settings.disableReadingModeColoring = !v;
-      await this.debouncedSaveSettings();
+    if (this._activeTab === "general") {
+      const releaseNotesSettingEl = new Setting(containerEl2).setName(this.plugin.t("latest_release_notes_label", "Latest Release Notes")).setDesc(this.plugin.t("latest_release_notes_desc", "View the most recent plugin release notes")).addButton((btn) => btn.setButtonText(this.plugin.t("open_changelog_button", "Open Changelog")).onClick(() => {
+        try {
+          new ChangelogModal(this.app, this.plugin).open();
+        } catch (e) {
+        }
+      }));
       try {
-        if (!v) {
-          this.plugin.app.workspace.iterateAllLeaves((leaf) => {
-            if (leaf.view instanceof MarkdownView && leaf.view.getMode && leaf.view.getMode() === "preview") {
-              try {
-                const root = leaf.view.previewMode && leaf.view.previewMode.containerEl || leaf.view.contentEl || leaf.view.containerEl;
-                if (root) {
-                  try {
-                    this.plugin.clearHighlightsInRoot(root);
-                  } catch (e) {
-                  }
-                  try {
-                    const obs = this.plugin._viewportObservers && this.plugin._viewportObservers.get && this.plugin._viewportObservers.get(root);
-                    if (obs && typeof obs.disconnect === "function") {
-                      try {
-                        obs.disconnect();
-                      } catch (e) {
-                      }
-                      try {
-                        this.plugin._viewportObservers.delete(root);
-                      } catch (e) {
-                      }
+        releaseNotesSettingEl.settingEl.style.borderTop = "none";
+        releaseNotesSettingEl.settingEl.style.marginTop = "-18px";
+      } catch (e) {
+      }
+      new Setting(containerEl2).setName(this.plugin.t("language_label", "Language")).setDesc(this.plugin.t("language_desc", "Select the language to be used in this plugin")).addDropdown((d) => {
+        const langs = this.plugin.getAvailableLanguages();
+        const names = { auto: this.plugin.t("language_auto", "System Default"), en: "English", es: "Spanish", fr: "French", eu: "Basque", ru: "Russian" };
+        try {
+          d.selectEl.style.textAlign = "center";
+        } catch (e) {
+        }
+        langs.forEach((code) => {
+          const dict = this.plugin._translations && this.plugin._translations[code] || {};
+          const display = String(dict.__name || names[code] || code.toUpperCase());
+          d.addOption(code, display);
+        });
+        d.setValue(this.plugin.settings.language || "en").onChange(async (v) => {
+          this.plugin.settings.language = v;
+          await this.plugin.saveSettings();
+          this._initializedSettingsUI = false;
+          this.plugin.reregisterCommandsWithLanguage();
+          this.display();
+        });
+        return d;
+      });
+      new Setting(containerEl2).setName(this.plugin.t("enable_document_color", "Enable document color")).addToggle((t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
+        this.plugin.settings.enabled = v;
+        await this.debouncedSaveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("color_in_reading_mode", "Color in reading mode")).addToggle((t) => t.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async (v) => {
+        this.plugin.settings.disableReadingModeColoring = !v;
+        await this.debouncedSaveSettings();
+        try {
+          if (!v) {
+            this.plugin.app.workspace.iterateAllLeaves((leaf) => {
+              if (leaf.view instanceof MarkdownView && leaf.view.getMode && leaf.view.getMode() === "preview") {
+                try {
+                  const root = leaf.view.previewMode && leaf.view.previewMode.containerEl || leaf.view.contentEl || leaf.view.containerEl;
+                  if (root) {
+                    try {
+                      this.plugin.clearHighlightsInRoot(root);
+                    } catch (e) {
                     }
-                  } catch (e) {
+                    try {
+                      const obs = this.plugin._viewportObservers && this.plugin._viewportObservers.get && this.plugin._viewportObservers.get(root);
+                      if (obs && typeof obs.disconnect === "function") {
+                        try {
+                          obs.disconnect();
+                        } catch (e) {
+                        }
+                        try {
+                          this.plugin._viewportObservers.delete(root);
+                        } catch (e) {
+                        }
+                      }
+                    } catch (e) {
+                    }
                   }
+                } catch (e) {
                 }
-              } catch (e) {
               }
+            });
+          } else {
+            try {
+              this.plugin.forceRefreshAllReadingViews();
+            } catch (e) {
             }
-          });
-        } else {
-          try {
-            this.plugin.forceRefreshAllReadingViews();
-          } catch (e) {
           }
+        } catch (e) {
+          debugError("SETTINGS", "disableReadingModeColoring handler failed", e);
         }
-      } catch (e) {
-        debugError("SETTINGS", "disableReadingModeColoring handler failed", e);
-      }
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("force_full_render_reading", "Force full render in Reading mode")).setDesc(this.plugin.t("force_full_render_reading_desc", "When ON, reading-mode will attempt to color the entire document in one pass. May cause performance issues on large documents. Use with caution!")).addToggle((t) => t.setValue(this.plugin.settings.forceFullRenderInReading).onChange(async (v) => {
-      this.plugin.settings.forceFullRenderInReading = v;
-      await this.debouncedSaveSettings();
-      try {
-        this.plugin.forceRefreshAllReadingViews();
-      } catch (e) {
-        debugError("SETTINGS", "forceFullRenderInReading handler failed", e);
-      }
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
-      this.plugin.settings.disableToggleModes.statusBar = !v;
-      await this.plugin.saveSettings();
-      try {
-        if (v && !this.plugin.statusBar) {
-          this.plugin.statusBar = this.plugin.addStatusBarItem();
-          this.plugin.updateStatusBar();
-          this.plugin.statusBar.onclick = () => {
-            this.plugin.settings.enabled = !this.plugin.settings.enabled;
-            this.plugin.saveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("force_full_render_reading", "Force full render in Reading mode")).setDesc(this.plugin.t("force_full_render_reading_desc", "When ON, reading-mode will attempt to color the entire document in one pass. May cause performance issues on large documents. Use with caution!")).addToggle((t) => t.setValue(this.plugin.settings.forceFullRenderInReading).onChange(async (v) => {
+        this.plugin.settings.forceFullRenderInReading = v;
+        await this.debouncedSaveSettings();
+        try {
+          this.plugin.forceRefreshAllReadingViews();
+        } catch (e) {
+          debugError("SETTINGS", "forceFullRenderInReading handler failed", e);
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
+        this.plugin.settings.disableToggleModes.statusBar = !v;
+        await this.plugin.saveSettings();
+        try {
+          if (v && !this.plugin.statusBar) {
+            this.plugin.statusBar = this.plugin.addStatusBarItem();
             this.plugin.updateStatusBar();
-            this.plugin.reconfigureEditorExtensions();
-            this.plugin.forceRefreshAllEditors();
-            this.plugin.forceRefreshAllReadingViews();
-          };
-        } else if (!v && this.plugin.statusBar) {
-          try {
-            this.plugin.statusBar.remove();
-          } catch (e) {
-          }
-          this.plugin.statusBar = null;
-        }
-      } catch (e) {
-      }
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
-      this.plugin.settings.disableToggleModes.ribbon = !v;
-      await this.plugin.saveSettings();
-      try {
-        if (v && !this.ribbonIcon) {
-          this.ribbonIcon = this.addRibbonIcon("palette", this.t("ribbon_title", "Always color text"), async () => {
-            this.settings.enabled = !this.settings.enabled;
-            await this.saveSettings();
-            this.updateStatusBar();
-            this.reconfigureEditorExtensions();
-            this.forceRefreshAllEditors();
-            this.forceRefreshAllReadingViews();
-            if (this.settings.enabled) new Notice(this.t("notice_enabled", "Always color text enabled"));
-            else new Notice(this.t("notice_disabled", "Always color text disabled"));
-          });
-        } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
-          try {
-            this.ribbonIcon.remove();
-          } catch (e) {
-          }
-          this.ribbonIcon = null;
-        }
-      } catch (e) {
-      }
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.command).onChange(async (v) => {
-      this.plugin.settings.disableToggleModes.command = !v;
-      await this.plugin.saveSettings();
-      try {
-        if (v) {
-          if (!this.plugin._commandsRegistered) {
+            this.plugin.statusBar.onclick = () => {
+              this.plugin.settings.enabled = !this.plugin.settings.enabled;
+              this.plugin.saveSettings();
+              this.plugin.updateStatusBar();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+            };
+          } else if (!v && this.plugin.statusBar) {
             try {
-              this.plugin.registerCommandPalette?.();
+              this.plugin.statusBar.remove();
             } catch (e) {
             }
-            this.plugin._commandsRegistered = true;
+            this.plugin.statusBar = null;
           }
-        } else {
-          new ConfirmationModal(this.app, this.plugin.t("restart_required_title", "Restart required"), this.plugin.t("restart_required_desc", "Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?"), () => {
+        } catch (e) {
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
+        this.plugin.settings.disableToggleModes.ribbon = !v;
+        await this.plugin.saveSettings();
+        try {
+          if (v && !this.ribbonIcon) {
+            this.ribbonIcon = this.addRibbonIcon("palette", this.t("ribbon_title", "Always color text"), async () => {
+              this.settings.enabled = !this.settings.enabled;
+              await this.saveSettings();
+              this.updateStatusBar();
+              this.reconfigureEditorExtensions();
+              this.forceRefreshAllEditors();
+              this.forceRefreshAllReadingViews();
+              if (this.settings.enabled) new Notice(this.t("notice_enabled", "Always color text enabled"));
+              else new Notice(this.t("notice_disabled", "Always color text disabled"));
+            });
+          } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
             try {
-              location.reload();
+              this.ribbonIcon.remove();
             } catch (e) {
             }
-          }).open();
+            this.ribbonIcon = null;
+          }
+        } catch (e) {
         }
-      } catch (e) {
-      }
-    }));
-    containerEl2.createEl("h3", { text: this.plugin.t("coloring_settings_header", "Coloring Settings") });
-    new Setting(containerEl2).setName(this.plugin.t("regex_support", "Regex support")).setDesc(this.plugin.t("regex_support_desc", "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.")).addToggle((t) => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async (v) => {
-      this.plugin.settings.enableRegexSupport = v;
-      await this.plugin.saveSettings();
-      this._initializedSettingsUI = false;
-      this.display();
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("disable_regex_safety", "Disable regex safety")).setDesc(this.plugin.t("disable_regex_safety_desc", "Allow complex or potentially dangerous expressions. May cause performance issues or freezes.")).addToggle((t) => t.setValue(this.plugin.settings.disableRegexSafety).onChange(async (v) => {
-      this.plugin.settings.disableRegexSafety = v;
-      await this.plugin.saveSettings();
-      try {
-        this.plugin.reconfigureEditorExtensions();
-      } catch (e) {
-      }
-      try {
-        this.plugin.forceRefreshAllEditors();
-      } catch (e) {
-      }
-      try {
-        this.plugin.forceRefreshAllReadingViews();
-      } catch (e) {
-      }
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(this.plugin.t("case_sensitive_desc", `If this is on, "word" and "Word" are treated as different. If it's off, they're colored the same.`)).addToggle((t) => t.setValue(this.plugin.settings.caseSensitive).onChange(async (v) => {
-      this.plugin.settings.caseSensitive = v;
-      await this.debouncedSaveSettings();
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("partial_match", "Partial match")).setDesc(this.plugin.t("partial_match_desc", 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')).addToggle((t) => t.setValue(this.plugin.settings.partialMatch).onChange(async (v) => {
-      this.plugin.settings.partialMatch = v;
-      await this.debouncedSaveSettings();
-    }));
-    containerEl2.createEl("h2", { text: this.plugin.t("one_time_actions_header", "One-Time Actions") });
-    new Setting(containerEl2).setName(this.plugin.t("setting_color_once", "Color Once")).setDesc(this.plugin.t("setting_color_once_desc", "Inserts HTML inline for the selected text. This persists even if the plugin is turned off.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickColorOnce).onChange(async (v) => {
-      this.plugin.settings.enableQuickColorOnce = v;
-      await this.plugin.saveSettings();
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("setting_highlight_once", "Highlight Once")).setDesc(this.plugin.t("setting_highlight_once_desc", "Inserts HTML inline with background styling. This persists even if the plugin is turned off.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickHighlightOnce).onChange(async (v) => {
-      this.plugin.settings.enableQuickHighlightOnce = v;
-      await this.plugin.saveSettings();
-      this._initializedSettingsUI = false;
-      this.display();
-    }));
-    if (this.plugin.settings.enableQuickHighlightOnce) {
-      new Setting(containerEl2).setName(this.plugin.t("use_global_highlight_style", "Use Global Highlight Style for Highlight Once")).setDesc(this.plugin.t("use_global_highlight_style_desc", "Uses your global inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async (v) => {
-        this.plugin.settings.quickHighlightUseGlobalStyle = v;
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.command).onChange(async (v) => {
+        this.plugin.settings.disableToggleModes.command = !v;
+        await this.plugin.saveSettings();
+        try {
+          if (v) {
+            if (!this.plugin._commandsRegistered) {
+              try {
+                this.plugin.registerCommandPalette?.();
+              } catch (e) {
+              }
+              this.plugin._commandsRegistered = true;
+            }
+          } else {
+            new ConfirmationModal(this.app, this.plugin.t("restart_required_title", "Restart required"), this.plugin.t("restart_required_desc", "Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?"), () => {
+              try {
+                location.reload();
+              } catch (e) {
+              }
+            }).open();
+          }
+        } catch (e) {
+        }
+      }));
+      containerEl2.createEl("h3", { text: this.plugin.t("coloring_settings_header", "Coloring Settings") });
+      new Setting(containerEl2).setName(this.plugin.t("regex_support", "Regex support")).setDesc(this.plugin.t("regex_support_desc", "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.")).addToggle((t) => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async (v) => {
+        this.plugin.settings.enableRegexSupport = v;
         await this.plugin.saveSettings();
         this._initializedSettingsUI = false;
         this.display();
       }));
-      new Setting(containerEl2).setName(this.plugin.t("style_highlight_once", "Style Highlight Once")).setDesc(this.plugin.t("style_highlight_once_desc", "Uses your custom inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightStyleEnable).onChange(async (v) => {
-        this.plugin.settings.quickHighlightStyleEnable = v;
+      new Setting(containerEl2).setName(this.plugin.t("disable_regex_safety", "Disable regex safety")).setDesc(this.plugin.t("disable_regex_safety_desc", "Allow complex or potentially dangerous expressions. May cause performance issues or freezes.")).addToggle((t) => t.setValue(this.plugin.settings.disableRegexSafety).onChange(async (v) => {
+        this.plugin.settings.disableRegexSafety = v;
+        await this.plugin.saveSettings();
+        try {
+          this.plugin.reconfigureEditorExtensions();
+        } catch (e) {
+        }
+        try {
+          this.plugin.forceRefreshAllEditors();
+        } catch (e) {
+        }
+        try {
+          this.plugin.forceRefreshAllReadingViews();
+        } catch (e) {
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(this.plugin.t("case_sensitive_desc", `If this is on, "word" and "Word" are treated as different. If it's off, they're colored the same.`)).addToggle((t) => t.setValue(this.plugin.settings.caseSensitive).onChange(async (v) => {
+        this.plugin.settings.caseSensitive = v;
+        await this.debouncedSaveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("partial_match", "Partial match")).setDesc(this.plugin.t("partial_match_desc", 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')).addToggle((t) => t.setValue(this.plugin.settings.partialMatch).onChange(async (v) => {
+        this.plugin.settings.partialMatch = v;
+        await this.debouncedSaveSettings();
+      }));
+      containerEl2.createEl("h2", { text: this.plugin.t("one_time_actions_header", "One-Time Actions") });
+      new Setting(containerEl2).setName(this.plugin.t("setting_color_once", "Color Once")).setDesc(this.plugin.t("setting_color_once_desc", "Inserts HTML inline for the selected text. This persists even if the plugin is turned off.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickColorOnce).onChange(async (v) => {
+        this.plugin.settings.enableQuickColorOnce = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("setting_highlight_once", "Highlight Once")).setDesc(this.plugin.t("setting_highlight_once_desc", "Inserts HTML inline with background styling. This persists even if the plugin is turned off.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickHighlightOnce).onChange(async (v) => {
+        this.plugin.settings.enableQuickHighlightOnce = v;
         await this.plugin.saveSettings();
         this._initializedSettingsUI = false;
         this.display();
       }));
-      if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
-        const previewSection2 = containerEl2.createDiv();
-        previewSection2.style.margin = "8px 0 12px 0";
-        previewSection2.style.padding = "12px";
-        previewSection2.style.borderRadius = "8px";
-        previewSection2.style.border = "1px solid var(--background-modifier-border)";
-        previewSection2.style.backgroundColor = "var(--background-secondary)";
-        const previewLabel2 = previewSection2.createEl("div");
-        previewLabel2.style.marginBottom = "8px";
-        previewLabel2.style.fontWeight = "600";
-        previewLabel2.style.fontSize = "14px";
-        previewLabel2.textContent = this.plugin.t("highlight_once_preview", "Highlight Once Preview");
-        const previewText2 = previewSection2.createEl("div");
-        previewText2.textContent = this.plugin.t("highlight_once_preview_text", "This is how Highlight Once will look like!");
-        previewText2.style.display = "inline-block";
-        const updateQuickOncePreview = () => {
-          const sampleColor = "#fa8231";
-          const hexWithAlpha = this.plugin.hexToHexWithAlpha(sampleColor, this.plugin.settings.quickHighlightOpacity ?? 25);
-          const radius = this.plugin.settings.quickHighlightBorderRadius ?? 8;
-          const pad = this.plugin.settings.quickHighlightHorizontalPadding ?? 4;
-          const vpad = this.plugin.settings.quickHighlightVerticalPadding ?? 0;
-          previewText2.style.backgroundColor = hexWithAlpha;
-          previewText2.style.borderRadius = radius + "px";
-          previewText2.style.paddingLeft = previewText2.style.paddingRight = pad + "px";
-          try {
-            previewText2.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px");
-            previewText2.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px");
-            if (vpad < 0) {
-              previewText2.style.setProperty("margin-top", vpad + "px");
-              previewText2.style.setProperty("margin-bottom", vpad + "px");
-            }
-          } catch (e) {
-            previewText2.style.paddingTop = previewText2.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
-            if (vpad < 0) {
-              previewText2.style.marginTop = vpad + "px";
-              previewText2.style.marginBottom = vpad + "px";
-            }
-          }
-          previewText2.style.border = "";
-          previewText2.style.borderTop = "";
-          previewText2.style.borderBottom = "";
-          previewText2.style.borderLeft = "";
-          previewText2.style.borderRight = "";
-          const borderCss = this.plugin.generateOnceBorderStyle(sampleColor);
-          try {
-            previewText2.style.cssText += borderCss;
-          } catch (e) {
-          }
-        };
-        updateQuickOncePreview();
-        this._updateQuickOncePreview = updateQuickOncePreview;
-      }
-      if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
-        new Setting(containerEl2).setName(this.plugin.t("highlight_once_opacity", "Highlight once opacity")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.quickHighlightOpacity ?? 25).setDynamicTooltip().onChange(async (v) => {
-          this.plugin.settings.quickHighlightOpacity = v;
+      if (this.plugin.settings.enableQuickHighlightOnce) {
+        new Setting(containerEl2).setName(this.plugin.t("use_global_highlight_style", "Use Global Highlight Style for Highlight Once")).setDesc(this.plugin.t("use_global_highlight_style_desc", "Uses your global inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async (v) => {
+          this.plugin.settings.quickHighlightUseGlobalStyle = v;
           await this.plugin.saveSettings();
-          try {
-            this._updateQuickOncePreview?.();
-          } catch (e) {
-          }
-        }));
-        {
-          let brInput;
-          new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_radius", "Highlight once border radius (px)")).addText((text) => {
-            brInput = text;
-            text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.quickHighlightBorderRadius ?? 8)).onChange(async (v) => {
-              let val = parseInt(v);
-              if (isNaN(val) || val < 0) val = 0;
-              this.plugin.settings.quickHighlightBorderRadius = val;
-              await this.plugin.saveSettings();
-              try {
-                this._updateQuickOncePreview?.();
-              } catch (e) {
-              }
-            });
-          }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_8", "Reset to 8")).onClick(async () => {
-            this.plugin.settings.quickHighlightBorderRadius = 8;
-            await this.plugin.saveSettings();
-            if (brInput) brInput.setValue("8");
-            try {
-              this._updateQuickOncePreview?.();
-            } catch (e) {
-            }
-          }));
-        }
-        {
-          let hpInput;
-          new Setting(containerEl2).setName(this.plugin.t("highlight_horizontal_padding", "Highlight horizontal padding (px)")).addText((text) => {
-            hpInput = text;
-            text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.quickHighlightHorizontalPadding ?? 4)).onChange(async (v) => {
-              let val = parseInt(v);
-              if (isNaN(val) || val < 0) val = 0;
-              this.plugin.settings.quickHighlightHorizontalPadding = val;
-              await this.plugin.saveSettings();
-              try {
-                this._updateQuickOncePreview?.();
-              } catch (e) {
-              }
-            });
-          }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_4", "Reset to 4")).onClick(async () => {
-            this.plugin.settings.quickHighlightHorizontalPadding = 4;
-            await this.plugin.saveSettings();
-            if (hpInput) hpInput.setValue("4");
-            try {
-              this._updateQuickOncePreview?.();
-            } catch (e) {
-            }
-          }));
-        }
-        {
-          let vpInput;
-          new Setting(containerEl2).setName(this.plugin.t("highlight_vertical_padding", "Highlight vertical padding (px)")).addText((text) => {
-            vpInput = text;
-            text.setPlaceholder("e.g. 0, 1, 2").setValue(String(this.plugin.settings.quickHighlightVerticalPadding ?? 0)).onChange(async (v) => {
-              let val = parseInt(v);
-              if (isNaN(val)) val = 0;
-              this.plugin.settings.quickHighlightVerticalPadding = val;
-              await this.plugin.saveSettings();
-              try {
-                this._updateQuickOncePreview?.();
-              } catch (e) {
-              }
-            });
-          }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_0", "Reset to 0")).onClick(async () => {
-            this.plugin.settings.quickHighlightVerticalPadding = 0;
-            await this.plugin.saveSettings();
-            if (vpInput) vpInput.setValue("0");
-            try {
-              this._updateQuickOncePreview?.();
-            } catch (e) {
-            }
-          }));
-        }
-        new Setting(containerEl2).setName(this.plugin.t("enable_border_highlight_once", "Enable Border for Highlight Once")).setDesc(this.plugin.t("enable_border_highlight_once_desc", "Add a border to your inline highlight. The added HTML/CSS WILL be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightEnableBorder ?? false).onChange(async (v) => {
-          this.plugin.settings.quickHighlightEnableBorder = v;
-          await this.plugin.saveSettings();
-          try {
-            this._updateQuickOncePreview?.();
-          } catch (e) {
-          }
           this._initializedSettingsUI = false;
           this.display();
         }));
-        if (this.plugin.settings.quickHighlightEnableBorder) {
-          new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_style", "Highlight Once Border Sides")).addDropdown((d) => {
-            d.selectEl.style.width = "200px";
-            return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.quickHighlightBorderStyle ?? "full").onChange(async (v) => {
-              this.plugin.settings.quickHighlightBorderStyle = v;
-              await this.plugin.saveSettings();
-              try {
-                this._updateQuickOncePreview?.();
-              } catch (e) {
+        new Setting(containerEl2).setName(this.plugin.t("style_highlight_once", "Style Highlight Once")).setDesc(this.plugin.t("style_highlight_once_desc", "Uses your custom inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightStyleEnable).onChange(async (v) => {
+          this.plugin.settings.quickHighlightStyleEnable = v;
+          await this.plugin.saveSettings();
+          this._initializedSettingsUI = false;
+          this.display();
+        }));
+        if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
+          const previewSection2 = containerEl2.createDiv();
+          previewSection2.style.margin = "8px 0 12px 0";
+          previewSection2.style.padding = "12px";
+          previewSection2.style.borderRadius = "8px";
+          previewSection2.style.border = "1px solid var(--background-modifier-border)";
+          previewSection2.style.backgroundColor = "var(--background-secondary)";
+          const previewLabel2 = previewSection2.createEl("div");
+          previewLabel2.style.marginBottom = "8px";
+          previewLabel2.style.fontWeight = "600";
+          previewLabel2.style.fontSize = "14px";
+          previewLabel2.textContent = this.plugin.t("highlight_once_preview", "Highlight Once Preview");
+          const previewText2 = previewSection2.createEl("div");
+          previewText2.textContent = this.plugin.t("highlight_once_preview_text", "This is how Highlight Once will look like!");
+          previewText2.style.display = "inline-block";
+          const updateQuickOncePreview = () => {
+            const sampleColor = "#fa8231";
+            const hexWithAlpha = this.plugin.hexToHexWithAlpha(sampleColor, this.plugin.settings.quickHighlightOpacity ?? 25);
+            const radius = this.plugin.settings.quickHighlightBorderRadius ?? 8;
+            const pad = this.plugin.settings.quickHighlightHorizontalPadding ?? 4;
+            const vpad = this.plugin.settings.quickHighlightVerticalPadding ?? 0;
+            previewText2.style.backgroundColor = hexWithAlpha;
+            previewText2.style.borderRadius = radius + "px";
+            previewText2.style.paddingLeft = previewText2.style.paddingRight = pad + "px";
+            try {
+              previewText2.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px");
+              previewText2.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px");
+              if (vpad < 0) {
+                previewText2.style.setProperty("margin-top", vpad + "px");
+                previewText2.style.setProperty("margin-bottom", vpad + "px");
               }
-            });
-          });
-          new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_line_style", "Border Style")).addDropdown((d) => {
-            d.selectEl.style.width = "200px";
-            return d.addOption("solid", this.plugin.t("opt_line_solid", "Solid")).addOption("dashed", this.plugin.t("opt_line_dashed", "Dashed")).addOption("dotted", this.plugin.t("opt_line_dotted", "Dotted")).addOption("double", this.plugin.t("opt_line_double", "Double")).addOption("groove", this.plugin.t("opt_line_groove", "Groove")).addOption("ridge", this.plugin.t("opt_line_ridge", "Ridge")).addOption("inset", this.plugin.t("opt_line_inset", "Inset")).addOption("outset", this.plugin.t("opt_line_outset", "Outset")).setValue(this.plugin.settings.quickHighlightBorderLineStyle ?? "solid").onChange(async (v) => {
-              this.plugin.settings.quickHighlightBorderLineStyle = v;
-              await this.plugin.saveSettings();
-              try {
-                this._updateQuickOncePreview?.();
-              } catch (e) {
+            } catch (e) {
+              previewText2.style.paddingTop = previewText2.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+              if (vpad < 0) {
+                previewText2.style.marginTop = vpad + "px";
+                previewText2.style.marginBottom = vpad + "px";
               }
-            });
-          });
-          new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_opacity", "Highlight Once Border Opacity")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.quickHighlightBorderOpacity ?? 100).setDynamicTooltip().onChange(async (v) => {
-            this.plugin.settings.quickHighlightBorderOpacity = v;
+            }
+            previewText2.style.border = "";
+            previewText2.style.borderTop = "";
+            previewText2.style.borderBottom = "";
+            previewText2.style.borderLeft = "";
+            previewText2.style.borderRight = "";
+            const borderCss = this.plugin.generateOnceBorderStyle(sampleColor);
+            try {
+              previewText2.style.cssText += borderCss;
+            } catch (e) {
+            }
+          };
+          updateQuickOncePreview();
+          this._updateQuickOncePreview = updateQuickOncePreview;
+        }
+        if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
+          new Setting(containerEl2).setName(this.plugin.t("highlight_once_opacity", "Highlight once opacity")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.quickHighlightOpacity ?? 25).setDynamicTooltip().onChange(async (v) => {
+            this.plugin.settings.quickHighlightOpacity = v;
             await this.plugin.saveSettings();
             try {
               this._updateQuickOncePreview?.();
@@ -18976,869 +20016,1103 @@ var ColorSettingTab = class extends PluginSettingTab {
             }
           }));
           {
-            let btInput;
-            new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_thickness", "Highlight Once Border Thickness (px)")).addText((text) => {
-              btInput = text;
-              text.setPlaceholder("e.g. 1, 2.5, 3.7").setValue(String(this.plugin.settings.quickHighlightBorderThickness ?? 1)).onChange(async (v) => {
-                let val = parseFloat(v);
+            let brInput;
+            new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_radius", "Highlight once border radius (px)")).addText((text) => {
+              brInput = text;
+              text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.quickHighlightBorderRadius ?? 8)).onChange(async (v) => {
+                let val = parseInt(v);
                 if (isNaN(val) || val < 0) val = 0;
-                if (val > 5) val = 5;
-                this.plugin.settings.quickHighlightBorderThickness = val;
+                this.plugin.settings.quickHighlightBorderRadius = val;
                 await this.plugin.saveSettings();
                 try {
                   this._updateQuickOncePreview?.();
                 } catch (e) {
                 }
               });
-            }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_1", "Reset to 1")).onClick(async () => {
-              this.plugin.settings.quickHighlightBorderThickness = 1;
+            }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_8", "Reset to 8")).onClick(async () => {
+              this.plugin.settings.quickHighlightBorderRadius = 8;
               await this.plugin.saveSettings();
-              if (btInput) btInput.setValue("1");
+              if (brInput) brInput.setValue("8");
               try {
                 this._updateQuickOncePreview?.();
               } catch (e) {
               }
             }));
           }
+          {
+            let hpInput;
+            new Setting(containerEl2).setName(this.plugin.t("highlight_horizontal_padding", "Highlight horizontal padding (px)")).addText((text) => {
+              hpInput = text;
+              text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.quickHighlightHorizontalPadding ?? 4)).onChange(async (v) => {
+                let val = parseInt(v);
+                if (isNaN(val) || val < 0) val = 0;
+                this.plugin.settings.quickHighlightHorizontalPadding = val;
+                await this.plugin.saveSettings();
+                try {
+                  this._updateQuickOncePreview?.();
+                } catch (e) {
+                }
+              });
+            }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_4", "Reset to 4")).onClick(async () => {
+              this.plugin.settings.quickHighlightHorizontalPadding = 4;
+              await this.plugin.saveSettings();
+              if (hpInput) hpInput.setValue("4");
+              try {
+                this._updateQuickOncePreview?.();
+              } catch (e) {
+              }
+            }));
+          }
+          {
+            let vpInput;
+            new Setting(containerEl2).setName(this.plugin.t("highlight_vertical_padding", "Highlight vertical padding (px)")).addText((text) => {
+              vpInput = text;
+              text.setPlaceholder("e.g. 0, 1, 2").setValue(String(this.plugin.settings.quickHighlightVerticalPadding ?? 0)).onChange(async (v) => {
+                let val = parseInt(v);
+                if (isNaN(val)) val = 0;
+                this.plugin.settings.quickHighlightVerticalPadding = val;
+                await this.plugin.saveSettings();
+                try {
+                  this._updateQuickOncePreview?.();
+                } catch (e) {
+                }
+              });
+            }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_0", "Reset to 0")).onClick(async () => {
+              this.plugin.settings.quickHighlightVerticalPadding = 0;
+              await this.plugin.saveSettings();
+              if (vpInput) vpInput.setValue("0");
+              try {
+                this._updateQuickOncePreview?.();
+              } catch (e) {
+              }
+            }));
+          }
+          new Setting(containerEl2).setName(this.plugin.t("enable_border_highlight_once", "Enable Border for Highlight Once")).setDesc(this.plugin.t("enable_border_highlight_once_desc", "Add a border to your inline highlight. The added HTML/CSS WILL be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightEnableBorder ?? false).onChange(async (v) => {
+            this.plugin.settings.quickHighlightEnableBorder = v;
+            await this.plugin.saveSettings();
+            try {
+              this._updateQuickOncePreview?.();
+            } catch (e) {
+            }
+            this._initializedSettingsUI = false;
+            this.display();
+          }));
+          if (this.plugin.settings.quickHighlightEnableBorder) {
+            new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_style", "Highlight Once Border Sides")).addDropdown((d) => {
+              d.selectEl.style.width = "200px";
+              return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.quickHighlightBorderStyle ?? "full").onChange(async (v) => {
+                this.plugin.settings.quickHighlightBorderStyle = v;
+                await this.plugin.saveSettings();
+                try {
+                  this._updateQuickOncePreview?.();
+                } catch (e) {
+                }
+              });
+            });
+            new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_line_style", "Border Style")).addDropdown((d) => {
+              d.selectEl.style.width = "200px";
+              return d.addOption("solid", this.plugin.t("opt_line_solid", "Solid")).addOption("dashed", this.plugin.t("opt_line_dashed", "Dashed")).addOption("dotted", this.plugin.t("opt_line_dotted", "Dotted")).addOption("double", this.plugin.t("opt_line_double", "Double")).addOption("groove", this.plugin.t("opt_line_groove", "Groove")).addOption("ridge", this.plugin.t("opt_line_ridge", "Ridge")).addOption("inset", this.plugin.t("opt_line_inset", "Inset")).addOption("outset", this.plugin.t("opt_line_outset", "Outset")).setValue(this.plugin.settings.quickHighlightBorderLineStyle ?? "solid").onChange(async (v) => {
+                this.plugin.settings.quickHighlightBorderLineStyle = v;
+                await this.plugin.saveSettings();
+                try {
+                  this._updateQuickOncePreview?.();
+                } catch (e) {
+                }
+              });
+            });
+            new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_opacity", "Highlight Once Border Opacity")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.quickHighlightBorderOpacity ?? 100).setDynamicTooltip().onChange(async (v) => {
+              this.plugin.settings.quickHighlightBorderOpacity = v;
+              await this.plugin.saveSettings();
+              try {
+                this._updateQuickOncePreview?.();
+              } catch (e) {
+              }
+            }));
+            {
+              let btInput;
+              new Setting(containerEl2).setName(this.plugin.t("highlight_once_border_thickness", "Highlight Once Border Thickness (px)")).addText((text) => {
+                btInput = text;
+                text.setPlaceholder("e.g. 1, 2.5, 3.7").setValue(String(this.plugin.settings.quickHighlightBorderThickness ?? 1)).onChange(async (v) => {
+                  let val = parseFloat(v);
+                  if (isNaN(val) || val < 0) val = 0;
+                  if (val > 5) val = 5;
+                  this.plugin.settings.quickHighlightBorderThickness = val;
+                  await this.plugin.saveSettings();
+                  try {
+                    this._updateQuickOncePreview?.();
+                  } catch (e) {
+                  }
+                });
+              }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_1", "Reset to 1")).onClick(async () => {
+                this.plugin.settings.quickHighlightBorderThickness = 1;
+                await this.plugin.saveSettings();
+                if (btInput) btInput.setValue("1");
+                try {
+                  this._updateQuickOncePreview?.();
+                } catch (e) {
+                }
+              }));
+            }
+          }
         }
       }
-    }
-    containerEl2.createEl("h3", { text: this.plugin.t("global_highlight_appearance_header", "Global Highlight Coloring Appearance") });
-    const previewSection = containerEl2.createDiv();
-    previewSection.style.marginBottom = "16px";
-    previewSection.style.padding = "12px";
-    previewSection.style.borderRadius = "8px";
-    previewSection.style.border = "1px solid var(--background-modifier-border)";
-    previewSection.style.backgroundColor = "var(--background-secondary)";
-    const previewLabel = previewSection.createEl("div");
-    previewLabel.style.marginBottom = "8px";
-    previewLabel.style.fontWeight = "600";
-    previewLabel.style.fontSize = "14px";
-    previewLabel.textContent = this.plugin.t("highlight_preview", "Highlight Preview");
-    const previewText = previewSection.createEl("div");
-    previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
-    previewText.style.display = "inline-block";
-    previewText.style.maxWidth = "auto";
-    previewText.style.wordWrap = "break-word";
-    previewText.textContent = this.plugin.t("highlight_preview_text", "This is how your highlight will look like!");
-    const updatePreview2 = () => {
-      const color = "#01c8ff";
-      const rgba = this.plugin.hexToRgba(color, this.plugin.settings.backgroundOpacity ?? 25);
-      previewText.style.backgroundColor = rgba;
+      containerEl2.createEl("h3", { text: this.plugin.t("global_highlight_appearance_header", "Global Highlight Coloring Appearance") });
+      const previewSection = containerEl2.createDiv();
+      previewSection.style.marginBottom = "16px";
+      previewSection.style.padding = "12px";
+      previewSection.style.borderRadius = "8px";
+      previewSection.style.border = "1px solid var(--background-modifier-border)";
+      previewSection.style.backgroundColor = "var(--background-secondary)";
+      const previewLabel = previewSection.createEl("div");
+      previewLabel.style.marginBottom = "8px";
+      previewLabel.style.fontWeight = "600";
+      previewLabel.style.fontSize = "14px";
+      previewLabel.textContent = this.plugin.t("highlight_preview", "Highlight Preview");
+      const previewText = previewSection.createEl("div");
       previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
-      previewText.style.paddingLeft = previewText.style.paddingRight = `${this.plugin.settings.highlightHorizontalPadding ?? 4}px`;
-      try {
-        const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
-        previewText.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px");
-        previewText.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px");
-        if (vpad < 0) {
-          previewText.style.setProperty("margin-top", vpad + "px");
-          previewText.style.setProperty("margin-bottom", vpad + "px");
-        }
-      } catch (e) {
-        const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
-        previewText.style.paddingTop = (vpad >= 0 ? vpad : 0) + "px";
-        previewText.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
-        if (vpad < 0) {
-          previewText.style.marginTop = vpad + "px";
-          previewText.style.marginBottom = vpad + "px";
-        }
-      }
-      previewText.style.border = "";
-      previewText.style.borderTop = "";
-      previewText.style.borderBottom = "";
-      previewText.style.borderLeft = "";
-      previewText.style.borderRight = "";
-      if (this.plugin.settings.enableBorderThickness) {
-        this.plugin.applyBorderStyleToElement(previewText, null, color);
-      }
-    };
-    updatePreview2();
-    new Setting(containerEl2).setName(this.plugin.t("highlight_opacity", "Highlight opacity")).setDesc(this.plugin.t("highlight_opacity_desc", "Set the opacity of the highlight (0-100%)")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.backgroundOpacity ?? 25).setDynamicTooltip().onChange(async (v) => {
-      this.plugin.settings.backgroundOpacity = v;
-      await this.debouncedSaveSettings();
-      updatePreview2();
-    }));
-    {
-      let brInput;
-      new Setting(containerEl2).setName(this.plugin.t("highlight_border_radius", "Highlight border radius (px)")).setDesc(this.plugin.t("highlight_border_radius_desc", "Set the border radius (in px) for rounded highlight corners")).addText((text) => {
-        brInput = text;
-        text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.highlightBorderRadius ?? 8)).onChange(async (v) => {
-          let val = parseInt(v);
-          if (isNaN(val) || val < 0) val = 0;
-          this.plugin.settings.highlightBorderRadius = val;
-          await this.debouncedSaveSettings();
-          updatePreview2();
-        });
-      }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_8", "Reset to 8")).onClick(async () => {
-        this.plugin.settings.highlightBorderRadius = 8;
-        await this.debouncedSaveSettings();
-        if (brInput) brInput.setValue("8");
-        updatePreview2();
-      }));
-    }
-    {
-      let hpInput;
-      new Setting(containerEl2).setName(this.plugin.t("highlight_horizontal_padding", "Highlight horizontal padding (px)")).setDesc(this.plugin.t("highlight_horizontal_padding_desc", "Set the left and right padding (in px) for highlighted text")).addText((text) => {
-        hpInput = text;
-        text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.highlightHorizontalPadding ?? 4)).onChange(async (v) => {
-          let val = parseInt(v);
-          if (isNaN(val) || val < 0) val = 0;
-          this.plugin.settings.highlightHorizontalPadding = val;
-          await this.debouncedSaveSettings();
-          updatePreview2();
-        });
-      }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_4", "Reset to 4")).onClick(async () => {
-        this.plugin.settings.highlightHorizontalPadding = 4;
-        await this.debouncedSaveSettings();
-        if (hpInput) hpInput.setValue("4");
-        updatePreview2();
-      }));
-    }
-    {
-      let vpInput;
-      new Setting(containerEl2).setName(this.plugin.t("highlight_vertical_padding", "Highlight vertical padding (px)")).setDesc(this.plugin.t("highlight_vertical_padding_desc", "Set the top and bottom padding (in px) for highlighted text")).addText((text) => {
-        vpInput = text;
-        text.setPlaceholder("e.g. 0, 1, 2").setValue(String(this.plugin.settings.highlightVerticalPadding ?? 0)).onChange(async (v) => {
-          let val = parseInt(v);
-          if (isNaN(val) || val < 0) val = 0;
-          this.plugin.settings.highlightVerticalPadding = val;
-          await this.debouncedSaveSettings();
-          updatePreview2();
-        });
-      }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_0", "Reset to 0")).onClick(async () => {
-        this.plugin.settings.highlightVerticalPadding = 0;
-        await this.debouncedSaveSettings();
-        if (vpInput) vpInput.setValue("0");
-        updatePreview2();
-      }));
-    }
-    new Setting(containerEl2).setName(this.plugin.t("rounded_corners_wrapping", "Rounded corners on line wrapping")).setDesc(this.plugin.t("rounded_corners_wrapping_desc", "When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line.")).addToggle((t) => t.setValue(this.plugin.settings.enableBoxDecorationBreak ?? true).onChange(async (v) => {
-      this.plugin.settings.enableBoxDecorationBreak = v;
-      await this.debouncedSaveSettings();
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("enable_highlight_border", "Enable Highlight Border")).setDesc(this.plugin.t("enable_highlight_border_desc", "Add a border around highlights. The border will match the text or highlight color.")).addToggle((t) => t.setValue(this.plugin.settings.enableBorderThickness ?? false).onChange(async (v) => {
-      this.plugin.settings.enableBorderThickness = v;
-      await this.plugin.saveSettings();
-      updatePreview2();
-      this._initializedSettingsUI = false;
-      this.display();
-    }));
-    if (this.plugin.settings.enableBorderThickness) {
-      new Setting(containerEl2).setName(this.plugin.t("border_style", "Border Sides")).setDesc(this.plugin.t("border_style_desc", "Choose which sides to apply the border")).addDropdown((d) => {
-        d.selectEl.style.width = "200px";
+      previewText.style.display = "inline-block";
+      previewText.style.maxWidth = "auto";
+      previewText.style.wordWrap = "break-word";
+      previewText.textContent = this.plugin.t("highlight_preview_text", "This is how your highlight will look like!");
+      const updatePreview2 = () => {
+        const color = "#01c8ff";
+        const rgba = this.plugin.hexToRgba(color, this.plugin.settings.backgroundOpacity ?? 25);
+        previewText.style.backgroundColor = rgba;
+        previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
+        previewText.style.paddingLeft = previewText.style.paddingRight = `${this.plugin.settings.highlightHorizontalPadding ?? 4}px`;
         try {
-          d.selectEl.style.textAlign = "center";
+          const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+          previewText.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px");
+          previewText.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px");
+          if (vpad < 0) {
+            previewText.style.setProperty("margin-top", vpad + "px");
+            previewText.style.setProperty("margin-bottom", vpad + "px");
+          }
         } catch (e) {
+          const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+          previewText.style.paddingTop = (vpad >= 0 ? vpad : 0) + "px";
+          previewText.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+          if (vpad < 0) {
+            previewText.style.marginTop = vpad + "px";
+            previewText.style.marginBottom = vpad + "px";
+          }
         }
-        return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.borderStyle ?? "full").onChange(async (v) => {
-          this.plugin.settings.borderStyle = v;
-          await this.debouncedSaveSettings();
-          updatePreview2();
-        });
-      });
-      new Setting(containerEl2).setName(this.plugin.t("border_line_style", "Border Style")).setDesc(this.plugin.t("border_line_style_desc", "Choose the border line style")).addDropdown((d) => {
-        d.selectEl.style.width = "200px";
-        try {
-          d.selectEl.style.textAlign = "center";
-        } catch (e) {
+        previewText.style.border = "";
+        previewText.style.borderTop = "";
+        previewText.style.borderBottom = "";
+        previewText.style.borderLeft = "";
+        previewText.style.borderRight = "";
+        if (this.plugin.settings.enableBorderThickness) {
+          this.plugin.applyBorderStyleToElement(previewText, null, color);
         }
-        return d.addOption("solid", this.plugin.t("opt_line_solid", "Solid")).addOption("dashed", this.plugin.t("opt_line_dashed", "Dashed")).addOption("dotted", this.plugin.t("opt_line_dotted", "Dotted")).addOption("double", this.plugin.t("opt_line_double", "Double")).addOption("groove", this.plugin.t("opt_line_groove", "Groove")).addOption("ridge", this.plugin.t("opt_line_ridge", "Ridge")).addOption("inset", this.plugin.t("opt_line_inset", "Inset")).addOption("outset", this.plugin.t("opt_line_outset", "Outset")).setValue(this.plugin.settings.borderLineStyle ?? "solid").onChange(async (v) => {
-          this.plugin.settings.borderLineStyle = v;
-          await this.debouncedSaveSettings();
-          updatePreview2();
-        });
-      });
-      new Setting(containerEl2).setName(this.plugin.t("border_opacity", "Border Opacity")).setDesc(this.plugin.t("border_opacity_desc", "Set the opacity of the border (0-100%)")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.borderOpacity ?? 100).setDynamicTooltip().onChange(async (v) => {
-        this.plugin.settings.borderOpacity = v;
+      };
+      updatePreview2();
+      new Setting(containerEl2).setName(this.plugin.t("highlight_opacity", "Highlight opacity")).setDesc(this.plugin.t("highlight_opacity_desc", "Set the opacity of the highlight (0-100%)")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.backgroundOpacity ?? 25).setDynamicTooltip().onChange(async (v) => {
+        this.plugin.settings.backgroundOpacity = v;
         await this.debouncedSaveSettings();
         updatePreview2();
       }));
       {
-        let btInput;
-        new Setting(containerEl2).setName(this.plugin.t("border_thickness", "Border Thickness (px)")).setDesc(this.plugin.t("border_thickness_desc", "Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)")).addText((text) => {
-          btInput = text;
-          text.setPlaceholder("e.g. 1, 2.5, 3.7").setValue(String(this.plugin.settings.borderThickness ?? 1)).onChange(async (v) => {
-            let val = parseFloat(v);
+        let brInput;
+        new Setting(containerEl2).setName(this.plugin.t("highlight_border_radius", "Highlight border radius (px)")).setDesc(this.plugin.t("highlight_border_radius_desc", "Set the border radius (in px) for rounded highlight corners")).addText((text) => {
+          brInput = text;
+          text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.highlightBorderRadius ?? 8)).onChange(async (v) => {
+            let val = parseInt(v);
             if (isNaN(val) || val < 0) val = 0;
-            if (val > 5) val = 5;
-            this.plugin.settings.borderThickness = val;
+            this.plugin.settings.highlightBorderRadius = val;
             await this.debouncedSaveSettings();
             updatePreview2();
           });
-        }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_1", "Reset to 1")).onClick(async () => {
-          this.plugin.settings.borderThickness = 1;
+        }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_8", "Reset to 8")).onClick(async () => {
+          this.plugin.settings.highlightBorderRadius = 8;
           await this.debouncedSaveSettings();
-          if (btInput) btInput.setValue("1");
+          if (brInput) brInput.setValue("8");
           updatePreview2();
         }));
       }
-    }
-    containerEl2.createEl("h2", { text: this.plugin.t("color_swatches_header", "Color Swatches") });
-    new Setting(containerEl2).setName(this.plugin.t("color_picker_layout", "Color Picker Layout")).setDesc(this.plugin.t("color_picker_layout_desc", "Choose which color types to show when picking colors for text")).addDropdown((dd) => {
-      dd.addOption("both", this.plugin.t("opt_both_text_left", "Both: Text left, Highlight right"));
-      dd.addOption("both-bg-left", this.plugin.t("opt_both_bg_left", "Both: Highlight left, Text right"));
-      dd.addOption("both-v-text-top", this.plugin.t("opt_both_text_top", "Both (vertical): Text above, Highlight below"));
-      dd.addOption("both-v-bg-top", this.plugin.t("opt_both_bg_top", "Both (vertical): Highlight above, Text below"));
-      dd.addOption("text", this.plugin.t("opt_text_only", "Text color only"));
-      dd.addOption("background", this.plugin.t("opt_background_only", "Highlight color only"));
-      dd.setValue(this.plugin.settings.colorPickerMode || "both");
-      try {
-        dd.selectEl.style.minWidth = "230px";
-      } catch (e) {
+      {
+        let hpInput;
+        new Setting(containerEl2).setName(this.plugin.t("highlight_horizontal_padding", "Highlight horizontal padding (px)")).setDesc(this.plugin.t("highlight_horizontal_padding_desc", "Set the left and right padding (in px) for highlighted text")).addText((text) => {
+          hpInput = text;
+          text.setPlaceholder("e.g. 0, 4, 8").setValue(String(this.plugin.settings.highlightHorizontalPadding ?? 4)).onChange(async (v) => {
+            let val = parseInt(v);
+            if (isNaN(val) || val < 0) val = 0;
+            this.plugin.settings.highlightHorizontalPadding = val;
+            await this.debouncedSaveSettings();
+            updatePreview2();
+          });
+        }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_4", "Reset to 4")).onClick(async () => {
+          this.plugin.settings.highlightHorizontalPadding = 4;
+          await this.debouncedSaveSettings();
+          if (hpInput) hpInput.setValue("4");
+          updatePreview2();
+        }));
       }
-      try {
-        dd.selectEl.style.textAlign = "center";
-      } catch (e) {
+      {
+        let vpInput;
+        new Setting(containerEl2).setName(this.plugin.t("highlight_vertical_padding", "Highlight vertical padding (px)")).setDesc(this.plugin.t("highlight_vertical_padding_desc", "Set the top and bottom padding (in px) for highlighted text")).addText((text) => {
+          vpInput = text;
+          text.setPlaceholder("e.g. 0, 1, 2").setValue(String(this.plugin.settings.highlightVerticalPadding ?? 0)).onChange(async (v) => {
+            let val = parseInt(v);
+            if (isNaN(val) || val < 0) val = 0;
+            this.plugin.settings.highlightVerticalPadding = val;
+            await this.debouncedSaveSettings();
+            updatePreview2();
+          });
+        }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_0", "Reset to 0")).onClick(async () => {
+          this.plugin.settings.highlightVerticalPadding = 0;
+          await this.debouncedSaveSettings();
+          if (vpInput) vpInput.setValue("0");
+          updatePreview2();
+        }));
       }
-      dd.onChange(async (v) => {
-        this.plugin.settings.colorPickerMode = v;
+      new Setting(containerEl2).setName(this.plugin.t("rounded_corners_wrapping", "Rounded corners on line wrapping")).setDesc(this.plugin.t("rounded_corners_wrapping_desc", "When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line.")).addToggle((t) => t.setValue(this.plugin.settings.enableBoxDecorationBreak ?? true).onChange(async (v) => {
+        this.plugin.settings.enableBoxDecorationBreak = v;
+        await this.debouncedSaveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("enable_highlight_border", "Enable Highlight Border")).setDesc(this.plugin.t("enable_highlight_border_desc", "Add a border around highlights. The border will match the text or highlight color.")).addToggle((t) => t.setValue(this.plugin.settings.enableBorderThickness ?? false).onChange(async (v) => {
+        this.plugin.settings.enableBorderThickness = v;
         await this.plugin.saveSettings();
-      });
-    });
-    new Setting(containerEl2).setName(this.plugin.t("enable_custom_swatches", "Enable custom swatches")).setDesc(this.plugin.t("enable_custom_swatches_desc", "Turn this on if you want to pick your own colors for the color picker.")).addToggle((t) => t.setValue(this.plugin.settings.customSwatchesEnabled).onChange(async (v) => {
-      this.plugin.settings.customSwatchesEnabled = v;
-      await this.plugin.saveSettings();
-      this._refreshCustomSwatches();
-    }));
-    this._customSwatchesContainer = containerEl2.createDiv();
-    this._refreshCustomSwatches();
-    const headerEl = containerEl2.createEl("h3", { text: this.plugin.t("always_colored_texts_header", "Always Colored Texts") });
-    try {
-      headerEl.className = "always-colored-texts-header";
-    } catch (e) {
-    }
-    try {
-      headerEl.style.marginTop = "30px !important";
-    } catch (e) {
-    }
-    containerEl2.createEl("p", { text: this.plugin.t("always_colored_texts_desc", "Here's where you manage your word / patterns and their colors.") });
-    new Setting(containerEl2);
-    const entriesSearchContainer = containerEl2.createDiv();
-    try {
-      entriesSearchContainer.addClass("act-search-container");
-    } catch (e) {
-      try {
-        entriesSearchContainer.classList.add("act-search-container");
-      } catch (_) {
-      }
-    }
-    entriesSearchContainer.style.margin = "8px 0";
-    entriesSearchContainer.style.marginTop = "-10px";
-    entriesSearchContainer.style.display = "flex";
-    entriesSearchContainer.style.alignItems = "center";
-    entriesSearchContainer.style.gap = "8px";
-    const entriesSearch = entriesSearchContainer.createEl("input", { type: "text" });
-    try {
-      entriesSearch.addClass("act-search-input");
-    } catch (e) {
-      try {
-        entriesSearch.classList.add("act-search-input");
-      } catch (_) {
-      }
-    }
-    entriesSearch.placeholder = this.plugin.t("search_colored_words_placeholder", "Search colored words/patterns\u2026");
-    entriesSearch.style.flex = "1 1 auto";
-    entriesSearch.style.padding = "6px";
-    entriesSearch.style.border = "1px solid var(--background-modifier-border)";
-    entriesSearch.style.borderRadius = "4px";
-    const entriesIcon = entriesSearchContainer.createDiv();
-    try {
-      entriesIcon.addClass("act-search-icon");
-    } catch (e) {
-      try {
-        entriesIcon.classList.add("act-search-icon");
-      } catch (_) {
-      }
-    }
-    const entriesSearchHandler = () => {
-      this._entriesSearchQuery = String(entriesSearch.value || "").trim().toLowerCase();
-      try {
-        this._refreshEntries();
-      } catch (e) {
-      }
-    };
-    entriesSearch.addEventListener("input", entriesSearchHandler);
-    this._cleanupHandlers.push(() => entriesSearch.removeEventListener("input", entriesSearchHandler));
-    const entriesLimitInput = entriesSearchContainer.createEl("input", { type: "text" });
-    entriesLimitInput.value = String(this.plugin.settings?.entriesSearchLimit ?? 0);
-    entriesLimitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
-    entriesLimitInput.title = this.plugin.t("limit_input_tooltip", "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact");
-    entriesLimitInput.style.width = "64px";
-    entriesLimitInput.style.padding = "6px";
-    entriesLimitInput.style.border = "1px solid var(--background-modifier-border)";
-    entriesLimitInput.style.borderRadius = "4px";
-    const entriesLimitHandler = () => {
-      const raw = String(entriesLimitInput.value || "").trim().toLowerCase();
-      const parts = raw.split(/\s+/).filter(Boolean);
-      const numPart = parts.find((p) => /^\d+$/.test(p));
-      const num = numPart ? parseInt(numPart, 10) : NaN;
-      this._entriesLimit = !isNaN(num) && num >= 0 ? num : 0;
-      try {
-        this.plugin.settings.entriesSearchLimit = this._entriesLimit;
-        this.debouncedSaveSettings();
-      } catch (e) {
-      }
-      this._entriesRegexOnly = false;
-      this._entriesWordsOnly = false;
-      this._filterMode = null;
-      this._entriesSearchMatch = "contains";
-      this._entriesMatchTypeStartsWith = false;
-      this._entriesMatchTypeEndsWith = false;
-      this._entriesMatchTypeExact = false;
-      for (const tok of parts) {
-        if (tok === "r") this._entriesRegexOnly = true;
-        else if (tok === "w") this._entriesWordsOnly = true;
-        else if (tok === "h") this._filterMode = "highlight";
-        else if (tok === "c") this._filterMode = "text";
-        else if (tok === "b") this._filterMode = "both";
-        else if (tok === "sw") this._entriesMatchTypeStartsWith = true;
-        else if (tok === "ew") this._entriesMatchTypeEndsWith = true;
-        else if (tok === "e") this._entriesMatchTypeExact = true;
-      }
-      try {
-        this._refreshEntries();
-      } catch (e) {
-      }
-    };
-    entriesLimitInput.addEventListener("input", entriesLimitHandler);
-    this._cleanupHandlers.push(() => entriesLimitInput.removeEventListener("input", entriesLimitHandler));
-    const listDiv = containerEl2.createDiv();
-    listDiv.addClass("color-words-list");
-    try {
-      this._refreshEntries();
-    } catch (e) {
-    }
-    const buttonRowDiv = containerEl2.createDiv();
-    buttonRowDiv.addClass("entries-button-row");
-    const sortBtn = buttonRowDiv.createEl("button");
-    const sortModes = ["last-added", "a-z", "reverse-a-z", "style-order", "color"];
-    const sortLabels = {
-      "last-added": this.plugin.t("sort_label_last-added", "Sort: Last Added"),
-      "a-z": this.plugin.t("sort_label_a-z", "Sort: A-Z"),
-      "reverse-a-z": this.plugin.t("sort_label_reverse-a-z", "Sort: Z-A"),
-      "style-order": this.plugin.t("sort_label_style-order", "Sort: Style Order"),
-      "color": this.plugin.t("sort_label_color", "Sort: Color")
-    };
-    sortBtn.textContent = this.plugin.t("sort_label_" + (this._wordsSortMode || "last-added"), sortLabels[this._wordsSortMode] || "Sort: Last Added");
-    sortBtn.style.cursor = "pointer";
-    sortBtn.style.flex = "0 0 auto";
-    const sortBtnHandler = async () => {
-      const currentIndex = sortModes.indexOf(this._wordsSortMode);
-      const nextIndex = (currentIndex + 1) % sortModes.length;
-      this._wordsSortMode = sortModes[nextIndex];
-      sortBtn.textContent = sortLabels[this._wordsSortMode];
-      try {
-        this.plugin.settings.wordsSortMode = this._wordsSortMode;
-        await this.plugin.saveSettings();
-      } catch (e) {
-      }
-      this._suspendSorting = false;
-      this._refreshEntries();
-    };
-    sortBtn.addEventListener("click", sortBtnHandler);
-    this._cleanupHandlers.push(() => sortBtn.removeEventListener("click", sortBtnHandler));
-    const addWordsBtn = buttonRowDiv.createEl("button");
-    addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
-    addWordsBtn.style.cursor = "pointer";
-    addWordsBtn.style.flex = "1";
-    addWordsBtn.addClass("mod-cta");
-    const addWordsHandler = async () => {
-      const uid = (() => {
-        try {
-          return Date.now().toString(36) + Math.random().toString(36).slice(2);
-        } catch (e) {
-          return Date.now();
+        updatePreview2();
+        this._initializedSettingsUI = false;
+        this.display();
+      }));
+      if (this.plugin.settings.enableBorderThickness) {
+        new Setting(containerEl2).setName(this.plugin.t("border_style", "Border Sides")).setDesc(this.plugin.t("border_style_desc", "Choose which sides to apply the border")).addDropdown((d) => {
+          d.selectEl.style.width = "200px";
+          try {
+            d.selectEl.style.textAlign = "center";
+          } catch (e) {
+          }
+          return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.borderStyle ?? "full").onChange(async (v) => {
+            this.plugin.settings.borderStyle = v;
+            await this.debouncedSaveSettings();
+            updatePreview2();
+          });
+        });
+        new Setting(containerEl2).setName(this.plugin.t("border_line_style", "Border Style")).setDesc(this.plugin.t("border_line_style_desc", "Choose the border line style")).addDropdown((d) => {
+          d.selectEl.style.width = "200px";
+          try {
+            d.selectEl.style.textAlign = "center";
+          } catch (e) {
+          }
+          return d.addOption("solid", this.plugin.t("opt_line_solid", "Solid")).addOption("dashed", this.plugin.t("opt_line_dashed", "Dashed")).addOption("dotted", this.plugin.t("opt_line_dotted", "Dotted")).addOption("double", this.plugin.t("opt_line_double", "Double")).addOption("groove", this.plugin.t("opt_line_groove", "Groove")).addOption("ridge", this.plugin.t("opt_line_ridge", "Ridge")).addOption("inset", this.plugin.t("opt_line_inset", "Inset")).addOption("outset", this.plugin.t("opt_line_outset", "Outset")).setValue(this.plugin.settings.borderLineStyle ?? "solid").onChange(async (v) => {
+            this.plugin.settings.borderLineStyle = v;
+            await this.debouncedSaveSettings();
+            updatePreview2();
+          });
+        });
+        new Setting(containerEl2).setName(this.plugin.t("border_opacity", "Border Opacity")).setDesc(this.plugin.t("border_opacity_desc", "Set the opacity of the border (0-100%)")).addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.borderOpacity ?? 100).setDynamicTooltip().onChange(async (v) => {
+          this.plugin.settings.borderOpacity = v;
+          await this.debouncedSaveSettings();
+          updatePreview2();
+        }));
+        {
+          let btInput;
+          new Setting(containerEl2).setName(this.plugin.t("border_thickness", "Border Thickness (px)")).setDesc(this.plugin.t("border_thickness_desc", "Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)")).addText((text) => {
+            btInput = text;
+            text.setPlaceholder("e.g. 1, 2.5, 3.7").setValue(String(this.plugin.settings.borderThickness ?? 1)).onChange(async (v) => {
+              let val = parseFloat(v);
+              if (isNaN(val) || val < 0) val = 0;
+              if (val > 5) val = 5;
+              this.plugin.settings.borderThickness = val;
+              await this.debouncedSaveSettings();
+              updatePreview2();
+            });
+          }).addExtraButton((btn) => btn.setIcon("reset").setTooltip(this.plugin.t("reset_to_1", "Reset to 1")).onClick(async () => {
+            this.plugin.settings.borderThickness = 1;
+            await this.debouncedSaveSettings();
+            if (btInput) btInput.setValue("1");
+            updatePreview2();
+          }));
         }
-      })();
-      this.plugin.settings.wordEntries.push({ pattern: "", color: "", isRegex: false, flags: "", groupedPatterns: null, styleType: "text", uid, persistAtEnd: true, matchType: this.plugin.settings.partialMatch ? "contains" : "exact" });
-      this._suspendSorting = this._wordsSortMode === "last-added";
-      try {
-        this._newEntriesSet && this._newEntriesSet.add(uid);
-      } catch (e) {
       }
-      await this.plugin.saveSettings();
-      this.plugin.reconfigureEditorExtensions();
-      this.plugin.forceRefreshAllEditors();
-      this.plugin.forceRefreshAllReadingViews();
-      this._refreshEntries();
-    };
-    addWordsBtn.addEventListener("click", addWordsHandler);
-    this._cleanupHandlers.push(() => addWordsBtn.removeEventListener("click", addWordsHandler));
-    const addRegexBtn = buttonRowDiv.createEl("button");
-    addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
-    addRegexBtn.style.cursor = "pointer";
-    addRegexBtn.style.flex = "1";
-    addRegexBtn.addClass("mod-cta");
-    addRegexBtn.style.display = this.plugin.settings.enableRegexSupport ? "" : "none";
-    const addRegexHandler = () => {
-      try {
-        this._suspendSorting = this._wordsSortMode === "last-added";
-        const onAdded = (entry) => {
-          try {
-            if (entry && entry.uid) {
-              this._newEntriesSet && this._newEntriesSet.add(entry.uid);
-            }
-            this._refreshEntries();
-          } catch (e) {
-          }
-        };
-        new RealTimeRegexTesterModal(this.app, this.plugin, onAdded).open();
-      } catch (e) {
-      }
-    };
-    addRegexBtn.addEventListener("click", addRegexHandler);
-    this._cleanupHandlers.push(() => addRegexBtn.removeEventListener("click", addRegexHandler));
-    const presetsBtn = buttonRowDiv.createEl("button");
-    presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
-    presetsBtn.style.cursor = "pointer";
-    presetsBtn.style.flex = "0 0 auto";
-    const presetsHandler = () => {
-      new PresetModal(this.app, this.plugin, async (preset) => {
-        if (!preset) return;
-        new ColorPickerModal(this.app, this.plugin, async (color, result) => {
-          const sel = result || {};
-          const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : null;
-          const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
-          if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
-          const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true, matchType: this.plugin.settings.partialMatch ? "contains" : "exact" };
-          try {
-            entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
-          } catch (e) {
-            entry.uid = Date.now();
-          }
-          if (tc && bc) {
-            entry.textColor = tc;
-            entry.backgroundColor = bc;
-            entry.color = "";
-            entry.styleType = "both";
-            entry._savedTextColor = tc;
-            entry._savedBackgroundColor = bc;
-          } else if (tc) {
-            entry.color = tc;
-            entry.styleType = "text";
-            entry._savedTextColor = tc;
-          } else if (bc) {
-            entry.textColor = "currentColor";
-            entry.backgroundColor = bc;
-            entry.color = "";
-            entry.styleType = "highlight";
-            entry._savedBackgroundColor = bc;
-          } else {
-            entry.color = color;
-            entry._savedTextColor = color;
-          }
-          this.plugin.settings.wordEntries.push(entry);
-          this._suspendSorting = this._wordsSortMode === "last-added";
-          try {
-            this._newEntriesSet && entry && entry.uid && this._newEntriesSet.add(entry.uid);
-          } catch (e) {
-          }
+      containerEl2.createEl("h2", { text: this.plugin.t("color_swatches_header", "Color Swatches") });
+      new Setting(containerEl2).setName(this.plugin.t("color_picker_layout", "Color Picker Layout")).setDesc(this.plugin.t("color_picker_layout_desc", "Choose which color types to show when picking colors for text")).addDropdown((dd) => {
+        dd.addOption("both", this.plugin.t("opt_both_text_left", "Both: Text left, Highlight right"));
+        dd.addOption("both-bg-left", this.plugin.t("opt_both_bg_left", "Both: Highlight left, Text right"));
+        dd.addOption("both-v-text-top", this.plugin.t("opt_both_text_top", "Both (vertical): Text above, Highlight below"));
+        dd.addOption("both-v-bg-top", this.plugin.t("opt_both_bg_top", "Both (vertical): Highlight above, Text below"));
+        dd.addOption("text", this.plugin.t("opt_text_only", "Text color only"));
+        dd.addOption("background", this.plugin.t("opt_background_only", "Highlight color only"));
+        dd.setValue(this.plugin.settings.colorPickerMode || "both");
+        try {
+          dd.selectEl.style.minWidth = "230px";
+        } catch (e) {
+        }
+        try {
+          dd.selectEl.style.textAlign = "center";
+        } catch (e) {
+        }
+        dd.onChange(async (v) => {
+          this.plugin.settings.colorPickerMode = v;
           await this.plugin.saveSettings();
-          this.plugin.compileWordEntries();
-          this.plugin.compileTextBgColoringEntries();
-          this.plugin.reconfigureEditorExtensions();
-          this.plugin.forceRefreshAllEditors();
-          this.plugin.forceRefreshAllReadingViews();
+        });
+      });
+      new Setting(containerEl2).setName(this.plugin.t("enable_custom_swatches", "Enable custom swatches")).setDesc(this.plugin.t("enable_custom_swatches_desc", "Turn this on if you want to pick your own colors for the color picker.")).addToggle((t) => t.setValue(this.plugin.settings.customSwatchesEnabled).onChange(async (v) => {
+        this.plugin.settings.customSwatchesEnabled = v;
+        await this.plugin.saveSettings();
+        this._refreshCustomSwatches();
+      }));
+      this._customSwatchesContainer = containerEl2.createDiv();
+      this._refreshCustomSwatches();
+    }
+    if (this._activeTab === "always-color-texts") {
+      const headerEl = containerEl2.createEl("h3", { text: this.plugin.t("colored_texts_header", "Colored Texts") });
+      try {
+        headerEl.className = "always-colored-texts-header";
+      } catch (e) {
+      }
+      try {
+        headerEl.style.marginTop = "30px !important";
+      } catch (e) {
+      }
+      containerEl2.createEl("p", { text: this.plugin.t("always_colored_texts_desc", "Here's where you manage your word / patterns and their colors.") });
+      new Setting(containerEl2);
+      const entriesSearchContainer = containerEl2.createDiv();
+      try {
+        entriesSearchContainer.addClass("act-search-container");
+      } catch (e) {
+        try {
+          entriesSearchContainer.classList.add("act-search-container");
+        } catch (_) {
+        }
+      }
+      entriesSearchContainer.style.margin = "8px 0";
+      entriesSearchContainer.style.marginTop = "-10px";
+      entriesSearchContainer.style.display = "flex";
+      entriesSearchContainer.style.alignItems = "center";
+      entriesSearchContainer.style.gap = "8px";
+      const entriesSearch = entriesSearchContainer.createEl("input", { type: "text" });
+      try {
+        entriesSearch.addClass("act-search-input");
+      } catch (e) {
+        try {
+          entriesSearch.classList.add("act-search-input");
+        } catch (_) {
+        }
+      }
+      entriesSearch.placeholder = this.plugin.t("search_colored_words_placeholder", "Search colored words/patterns\u2026");
+      entriesSearch.style.flex = "1 1 auto";
+      entriesSearch.style.padding = "6px";
+      entriesSearch.style.border = "1px solid var(--background-modifier-border)";
+      entriesSearch.style.borderRadius = "4px";
+      const entriesIcon = entriesSearchContainer.createDiv();
+      try {
+        entriesIcon.addClass("act-search-icon");
+      } catch (e) {
+        try {
+          entriesIcon.classList.add("act-search-icon");
+        } catch (_) {
+        }
+      }
+      const entriesSearchHandler = () => {
+        this._entriesSearchQuery = String(entriesSearch.value || "").trim().toLowerCase();
+        try {
           this._refreshEntries();
-        }, "text-and-background", "", false).open();
-      }).open();
-    };
-    presetsBtn.addEventListener("click", presetsHandler);
-    this._cleanupHandlers.push(() => presetsBtn.removeEventListener("click", presetsHandler));
-    new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_words", "Delete all defined words/patterns")).onClick(async () => {
-      new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_title", "Delete all words"), this.plugin.t("confirm_delete_all_desc", "Are you sure you want to delete all your colored words/patterns? You can't undo this!"), async () => {
-        this.plugin.settings.wordEntries = [];
+        } catch (e) {
+        }
+      };
+      entriesSearch.addEventListener("input", entriesSearchHandler);
+      this._cleanupHandlers.push(() => entriesSearch.removeEventListener("input", entriesSearchHandler));
+      const entriesLimitInput = entriesSearchContainer.createEl("input", { type: "text" });
+      entriesLimitInput.value = String(this.plugin.settings?.entriesSearchLimit ?? 0);
+      entriesLimitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
+      entriesLimitInput.title = this.plugin.t("limit_input_tooltip", "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact");
+      entriesLimitInput.style.width = "64px";
+      entriesLimitInput.style.padding = "6px";
+      entriesLimitInput.style.border = "1px solid var(--background-modifier-border)";
+      entriesLimitInput.style.borderRadius = "4px";
+      const entriesLimitHandler = () => {
+        const raw = String(entriesLimitInput.value || "").trim().toLowerCase();
+        const parts = raw.split(/\s+/).filter(Boolean);
+        const numPart = parts.find((p) => /^\d+$/.test(p));
+        const num = numPart ? parseInt(numPart, 10) : NaN;
+        this._entriesLimit = !isNaN(num) && num >= 0 ? num : 0;
+        try {
+          this.plugin.settings.entriesSearchLimit = this._entriesLimit;
+          this.debouncedSaveSettings();
+        } catch (e) {
+        }
+        this._entriesRegexOnly = false;
+        this._entriesWordsOnly = false;
+        this._filterMode = null;
+        this._entriesSearchMatch = "contains";
+        this._entriesMatchTypeStartsWith = false;
+        this._entriesMatchTypeEndsWith = false;
+        this._entriesMatchTypeExact = false;
+        for (const tok of parts) {
+          if (tok === "r") this._entriesRegexOnly = true;
+          else if (tok === "w") this._entriesWordsOnly = true;
+          else if (tok === "h") this._filterMode = "highlight";
+          else if (tok === "c") this._filterMode = "text";
+          else if (tok === "b") this._filterMode = "both";
+          else if (tok === "sw") this._entriesMatchTypeStartsWith = true;
+          else if (tok === "ew") this._entriesMatchTypeEndsWith = true;
+          else if (tok === "e") this._entriesMatchTypeExact = true;
+        }
+        try {
+          this._refreshEntries();
+        } catch (e) {
+        }
+      };
+      entriesLimitInput.addEventListener("input", entriesLimitHandler);
+      this._cleanupHandlers.push(() => entriesLimitInput.removeEventListener("input", entriesLimitHandler));
+      const listDiv = containerEl2.createDiv();
+      listDiv.addClass("color-words-list");
+      try {
+        this._refreshEntries();
+      } catch (e) {
+      }
+      const buttonRowDiv = containerEl2.createDiv();
+      buttonRowDiv.addClass("entries-button-row");
+      const sortBtn = buttonRowDiv.createEl("button");
+      const sortModes = ["last-added", "a-z", "reverse-a-z", "style-order", "color"];
+      const sortLabels = {
+        "last-added": this.plugin.t("sort_label_last-added", "Sort: Last Added"),
+        "a-z": this.plugin.t("sort_label_a-z", "Sort: A-Z"),
+        "reverse-a-z": this.plugin.t("sort_label_reverse-a-z", "Sort: Z-A"),
+        "style-order": this.plugin.t("sort_label_style-order", "Sort: Style Order"),
+        "color": this.plugin.t("sort_label_color", "Sort: Color")
+      };
+      sortBtn.textContent = this.plugin.t("sort_label_" + (this._wordsSortMode || "last-added"), sortLabels[this._wordsSortMode] || "Sort: Last Added");
+      sortBtn.style.cursor = "pointer";
+      sortBtn.style.flex = "0 0 auto";
+      const sortBtnHandler = async () => {
+        const currentIndex = sortModes.indexOf(this._wordsSortMode);
+        const nextIndex = (currentIndex + 1) % sortModes.length;
+        this._wordsSortMode = sortModes[nextIndex];
+        sortBtn.textContent = sortLabels[this._wordsSortMode];
+        try {
+          this.plugin.settings.wordsSortMode = this._wordsSortMode;
+          await this.plugin.saveSettings();
+        } catch (e) {
+        }
+        this._suspendSorting = false;
+        this._refreshEntries();
+      };
+      sortBtn.addEventListener("click", sortBtnHandler);
+      this._cleanupHandlers.push(() => sortBtn.removeEventListener("click", sortBtnHandler));
+      const addWordsBtn = buttonRowDiv.createEl("button");
+      addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
+      addWordsBtn.style.cursor = "pointer";
+      addWordsBtn.style.flex = "1";
+      addWordsBtn.addClass("mod-cta");
+      const addWordsHandler = async () => {
+        const uid = (() => {
+          try {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2);
+          } catch (e) {
+            return Date.now();
+          }
+        })();
+        this.plugin.settings.wordEntries.push({ pattern: "", color: "", isRegex: false, flags: "", groupedPatterns: null, styleType: "text", uid, persistAtEnd: true, matchType: this.plugin.settings.partialMatch ? "contains" : "exact" });
+        this._suspendSorting = this._wordsSortMode === "last-added";
+        try {
+          this._newEntriesSet && this._newEntriesSet.add(uid);
+        } catch (e) {
+        }
         await this.plugin.saveSettings();
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
         this._refreshEntries();
-      }).open();
-    }));
-    containerEl2.createEl("h2", { text: this.plugin.t("blacklist_words_header", "Blacklist words") });
-    containerEl2.createEl("p", { text: this.plugin.t("blacklist_words_desc", "Keywords or patterns here will never be colored, even for partial matches.") });
-    new Setting(containerEl2).setName(this.plugin.t("show_blacklist_menu", "Show Blacklist words in right-click menu")).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
-      this.plugin.settings.enableBlacklistMenu = v;
-      await this.plugin.saveSettings();
-    }));
-    const blSearchContainer = containerEl2.createDiv();
-    try {
-      blSearchContainer.addClass("act-search-container");
-    } catch (e) {
-      try {
-        blSearchContainer.classList.add("act-search-container");
-      } catch (_) {
-      }
-    }
-    blSearchContainer.style.margin = "8px 0";
-    blSearchContainer.style.display = "flex";
-    blSearchContainer.style.alignItems = "center";
-    blSearchContainer.style.gap = "8px";
-    const blSearch = blSearchContainer.createEl("input", { type: "text" });
-    try {
-      blSearch.addClass("act-search-input");
-    } catch (e) {
-      try {
-        blSearch.classList.add("act-search-input");
-      } catch (_) {
-      }
-    }
-    blSearch.placeholder = this.plugin.t("search_blacklist_placeholder", "Search blacklisted words or patterns\u2026");
-    blSearch.style.flex = "1 1 auto";
-    blSearch.style.padding = "6px";
-    blSearch.style.border = "1px solid var(--background-modifier-border)";
-    blSearch.style.borderRadius = "4px";
-    const blIcon = blSearchContainer.createDiv();
-    try {
-      blIcon.addClass("act-search-icon");
-    } catch (e) {
-      try {
-        blIcon.classList.add("act-search-icon");
-      } catch (_) {
-      }
-    }
-    const blSearchHandler = () => {
-      this._blacklistSearchQuery = String(blSearch.value || "").trim().toLowerCase();
-      try {
-        this._refreshBlacklistWords();
-      } catch (e) {
-      }
-    };
-    blSearch.addEventListener("input", blSearchHandler);
-    this._cleanupHandlers.push(() => blSearch.removeEventListener("input", blSearchHandler));
-    const blLimitInput = blSearchContainer.createEl("input", { type: "text" });
-    blLimitInput.value = String(this.plugin.settings?.blacklistSearchLimit ?? 0);
-    blLimitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
-    blLimitInput.title = this.plugin.t("limit_input_tooltip", "0=all; number=last N; r=regex; w=words; sw=starts; ew=ends; e=exact");
-    blLimitInput.style.width = "64px";
-    blLimitInput.style.padding = "6px";
-    blLimitInput.style.border = "1px solid var(--background-modifier-border)";
-    blLimitInput.style.borderRadius = "4px";
-    const blLimitHandler = () => {
-      const raw = String(blLimitInput.value || "").trim().toLowerCase();
-      const parts = raw.split(/\s+/).filter(Boolean);
-      const numPart = parts.find((p) => /^\d+$/.test(p));
-      const num = numPart ? parseInt(numPart, 10) : NaN;
-      this._blacklistLimit = !isNaN(num) && num >= 0 ? num : 0;
-      this._blacklistRegexOnly = false;
-      this._blacklistWordsOnly = false;
-      this._blacklistSearchMatchStarts = false;
-      this._blacklistSearchMatchEnds = false;
-      this._blacklistSearchMatchExact = false;
-      for (const tok of parts) {
-        if (tok === "r") this._blacklistRegexOnly = true;
-        else if (tok === "w") this._blacklistWordsOnly = true;
-        else if (tok === "sw") this._blacklistSearchMatchStarts = true;
-        else if (tok === "ew") this._blacklistSearchMatchEnds = true;
-        else if (tok === "e") this._blacklistSearchMatchExact = true;
-      }
-      try {
-        this.plugin.settings.blacklistSearchLimit = this._blacklistLimit;
-        this.debouncedSaveSettings();
-      } catch (e) {
-      }
-      try {
-        this._refreshBlacklistWords();
-      } catch (e) {
-      }
-    };
-    blLimitInput.addEventListener("input", blLimitHandler);
-    this._cleanupHandlers.push(() => blLimitInput.removeEventListener("input", blLimitHandler));
-    this._blacklistWordsContainer = containerEl2.createDiv();
-    this._blacklistWordsContainer.addClass("blacklist-words-list");
-    this._refreshBlacklistWords();
-    const blacklistButtonRowDiv = containerEl2.createDiv();
-    blacklistButtonRowDiv.addClass("blacklist-button-row");
-    const blacklistSortBtn = blacklistButtonRowDiv.createEl("button");
-    const blSortModes = ["last-added", "a-z", "reverse-a-z"];
-    const blSortLabels = {
-      "last-added": this.plugin.t("blacklist_sort_label_last-added", "Sort: Last Added"),
-      "a-z": this.plugin.t("blacklist_sort_label_a-z", "Sort: A-Z"),
-      "reverse-a-z": this.plugin.t("blacklist_sort_label_reverse-a-z", "Sort: Z-A")
-    };
-    blacklistSortBtn.textContent = blSortLabels[this._blacklistSortMode] || "Sort: Last Added";
-    blacklistSortBtn.style.cursor = "pointer";
-    blacklistSortBtn.style.flex = "0 0 auto";
-    const blacklistSortHandler = async () => {
-      const i = blSortModes.indexOf(this._blacklistSortMode);
-      const ni = (i + 1) % blSortModes.length;
-      this._blacklistSortMode = blSortModes[ni];
-      blacklistSortBtn.textContent = blSortLabels[this._blacklistSortMode];
-      try {
-        this.plugin.settings.blacklistSortMode = this._blacklistSortMode;
-        await this.plugin.saveSettings();
-      } catch (e) {
-      }
-      this._refreshBlacklistWords();
-    };
-    blacklistSortBtn.addEventListener("click", blacklistSortHandler);
-    this._cleanupHandlers.push(() => blacklistSortBtn.removeEventListener("click", blacklistSortHandler));
-    const blacklistAddBtn = blacklistButtonRowDiv.createEl("button");
-    blacklistAddBtn.textContent = this.plugin.t("btn_add_blacklist_word", "+ Add blacklist word");
-    blacklistAddBtn.style.cursor = "pointer";
-    blacklistAddBtn.style.flex = "1";
-    blacklistAddBtn.addClass("mod-cta");
-    const blacklistAddHandler = async () => {
-      const uid = (() => {
+      };
+      addWordsBtn.addEventListener("click", addWordsHandler);
+      this._cleanupHandlers.push(() => addWordsBtn.removeEventListener("click", addWordsHandler));
+      const addRegexBtn = buttonRowDiv.createEl("button");
+      addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
+      addRegexBtn.style.cursor = "pointer";
+      addRegexBtn.style.flex = "1";
+      addRegexBtn.addClass("mod-cta");
+      addRegexBtn.style.display = this.plugin.settings.enableRegexSupport ? "" : "none";
+      const addRegexHandler = () => {
         try {
-          return Date.now().toString(36) + Math.random().toString(36).slice(2);
-        } catch (e) {
-          return Date.now();
-        }
-      })();
-      const newEntry = { pattern: "", isRegex: false, flags: "", groupedPatterns: null, uid, persistAtEnd: true };
-      if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
-      this.plugin.settings.blacklistEntries.push(newEntry);
-      this._suspendSorting = this._blacklistSortMode === "last-added";
-      try {
-        this._blacklistNewSet && this._blacklistNewSet.add(uid);
-      } catch (e) {
-      }
-      await this.plugin.saveSettings();
-      this._refreshBlacklistWords();
-    };
-    blacklistAddBtn.addEventListener("click", blacklistAddHandler);
-    this._cleanupHandlers.push(() => blacklistAddBtn.removeEventListener("click", blacklistAddHandler));
-    const blacklistAddRegexBtn = blacklistButtonRowDiv.createEl("button");
-    blacklistAddRegexBtn.textContent = this.plugin.t("btn_add_blacklist_regex", "+ Add blacklist regex");
-    blacklistAddRegexBtn.style.cursor = "pointer";
-    blacklistAddRegexBtn.style.flex = "1";
-    blacklistAddRegexBtn.addClass("mod-cta");
-    blacklistAddRegexBtn.style.display = this.plugin.settings.enableRegexSupport ? "" : "none";
-    const blacklistAddRegexHandler = () => {
-      try {
-        const onAdded = (entry) => {
-          try {
-            if (entry && entry.uid) {
-              this._blacklistNewSet && this._blacklistNewSet.add(entry.uid);
+          this._suspendSorting = this._wordsSortMode === "last-added";
+          const onAdded = (entry) => {
+            try {
+              if (entry && entry.uid) {
+                this._newEntriesSet && this._newEntriesSet.add(entry.uid);
+              }
+              this._refreshEntries();
+            } catch (e) {
             }
-            this._refreshBlacklistWords();
+          };
+          new RealTimeRegexTesterModal(this.app, this.plugin, onAdded).open();
+        } catch (e) {
+        }
+      };
+      addRegexBtn.addEventListener("click", addRegexHandler);
+      this._cleanupHandlers.push(() => addRegexBtn.removeEventListener("click", addRegexHandler));
+      const presetsBtn = buttonRowDiv.createEl("button");
+      presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
+      presetsBtn.style.cursor = "pointer";
+      presetsBtn.style.flex = "0 0 auto";
+      const presetsHandler = () => {
+        new PresetModal(this.app, this.plugin, async (preset) => {
+          if (!preset) return;
+          new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+            const sel = result || {};
+            const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : null;
+            const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+            if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
+            const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true, matchType: this.plugin.settings.partialMatch ? "contains" : "exact" };
+            try {
+              entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+            } catch (e) {
+              entry.uid = Date.now();
+            }
+            if (tc && bc) {
+              entry.textColor = tc;
+              entry.backgroundColor = bc;
+              entry.color = "";
+              entry.styleType = "both";
+              entry._savedTextColor = tc;
+              entry._savedBackgroundColor = bc;
+            } else if (tc) {
+              entry.color = tc;
+              entry.styleType = "text";
+              entry._savedTextColor = tc;
+            } else if (bc) {
+              entry.textColor = "currentColor";
+              entry.backgroundColor = bc;
+              entry.color = "";
+              entry.styleType = "highlight";
+              entry._savedBackgroundColor = bc;
+            } else {
+              entry.color = color;
+              entry._savedTextColor = color;
+            }
+            this.plugin.settings.wordEntries.push(entry);
+            this._suspendSorting = this._wordsSortMode === "last-added";
+            try {
+              this._newEntriesSet && entry && entry.uid && this._newEntriesSet.add(entry.uid);
+            } catch (e) {
+            }
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.compileTextBgColoringEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this._refreshEntries();
+          }, "text-and-background", "", false).open();
+        }).open();
+      };
+      presetsBtn.addEventListener("click", presetsHandler);
+      this._cleanupHandlers.push(() => presetsBtn.removeEventListener("click", presetsHandler));
+      new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_words", "Delete all defined words/patterns")).onClick(async () => {
+        new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_title", "Delete all words"), this.plugin.t("confirm_delete_all_desc", "Are you sure you want to delete all your colored words/patterns? You can't undo this!"), async () => {
+          this.plugin.settings.wordEntries = [];
+          await this.plugin.saveSettings();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this._refreshEntries();
+        }).open();
+      }));
+      containerEl2.createEl("h3", { text: this.plugin.t("grouped_entries_header", "Grouped Entries") });
+      const groupSearchContainer = containerEl2.createDiv();
+      try {
+        groupSearchContainer.addClass("act-search-container");
+      } catch (e) {
+        try {
+          groupSearchContainer.classList.add("act-search-container");
+        } catch (_) {
+        }
+      }
+      groupSearchContainer.style.margin = "8px 0";
+      groupSearchContainer.style.display = "flex";
+      groupSearchContainer.style.alignItems = "center";
+      groupSearchContainer.style.gap = "8px";
+      const groupSearch = groupSearchContainer.createEl("input", { type: "text" });
+      try {
+        groupSearch.addClass("act-search-input");
+      } catch (e) {
+        try {
+          groupSearch.classList.add("act-search-input");
+        } catch (_) {
+        }
+      }
+      groupSearch.placeholder = this.plugin.t("search_groups_placeholder", "Search groups\u2026");
+      groupSearch.style.flex = "1 1 auto";
+      groupSearch.style.padding = "6px";
+      groupSearch.style.border = "1px solid var(--background-modifier-border)";
+      groupSearch.style.borderRadius = "4px";
+      groupSearch.addEventListener("input", () => {
+        this._groupSearch = groupSearch.value || "";
+        this._refreshGroups();
+      });
+      const groupIcon = groupSearchContainer.createDiv();
+      try {
+        groupIcon.addClass("act-search-icon");
+      } catch (e) {
+        try {
+          groupIcon.classList.add("act-search-icon");
+        } catch (_) {
+        }
+      }
+      const groupsContainer = containerEl2.createDiv();
+      groupsContainer.addClass("act-groups-container");
+      this._refreshGroups();
+      const groupsActionsRow = containerEl2.createDiv();
+      groupsActionsRow.style.display = "flex";
+      groupsActionsRow.style.alignItems = "center";
+      groupsActionsRow.style.gap = "8px";
+      groupsActionsRow.style.marginTop = "10px";
+      const btnCreateGroup = groupsActionsRow.createEl("button", { text: this.plugin.t("btn_create_new_group", "+ Create New Group") });
+      btnCreateGroup.addClass("mod-cta");
+      btnCreateGroup.onclick = async () => {
+        if (!this.plugin.settings.wordEntryGroups) this.plugin.settings.wordEntryGroups = [];
+        const newGroup = {
+          active: true,
+          name: "",
+          entries: []
+        };
+        try {
+          newGroup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        } catch (_) {
+        }
+        this.plugin.settings.wordEntryGroups.push(newGroup);
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        try {
+          new EditWordGroupModal(this.app, this.plugin, newGroup, async (updatedGroup) => {
+            const idx = this.plugin.settings.wordEntryGroups.findIndex((g) => g && g.uid === newGroup.uid);
+            if (idx !== -1) {
+              this.plugin.settings.wordEntryGroups[idx] = updatedGroup;
+            }
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this._refreshGroups();
+          }, async (groupToDelete) => {
+            const actualIndex = this.plugin.settings.wordEntryGroups.findIndex((g) => g && g.uid === groupToDelete.uid);
+            if (actualIndex !== -1) {
+              this.plugin.settings.wordEntryGroups.splice(actualIndex, 1);
+            }
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this._refreshGroups();
+          }).open();
+        } catch (_) {
+          this._refreshGroups();
+        }
+      };
+      const deleteGroupsIcon = groupsActionsRow.createDiv();
+      deleteGroupsIcon.title = this.plugin.t("tooltip_delete_all_groups", "Delete all Word Groups");
+      deleteGroupsIcon.style.cursor = "pointer";
+      deleteGroupsIcon.style.color = "var(--text-muted)";
+      deleteGroupsIcon.style.display = "flex";
+      deleteGroupsIcon.style.alignItems = "center";
+      deleteGroupsIcon.style.marginLeft = "auto";
+      deleteGroupsIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+      deleteGroupsIcon.onclick = async () => {
+        new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_groups_title", "Delete All Word Groups"), this.plugin.t("confirm_delete_all_groups_desc", "Are you sure you want to delete ALL word groups? This cannot be undone!"), async () => {
+          try {
+            this.plugin.settings.wordEntryGroups = [];
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this._refreshGroups();
           } catch (e) {
           }
-        };
-        new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
+        }).open();
+      };
+    }
+    if (this._activeTab === "blacklist") {
+      containerEl2.createEl("h2", { text: this.plugin.t("blacklist_words_header", "Blacklist words") });
+      containerEl2.createEl("p", { text: this.plugin.t("blacklist_words_desc", "Keywords or patterns here will never be colored, even for partial matches.") });
+      new Setting(containerEl2).setName(this.plugin.t("show_blacklist_menu", "Show Blacklist words in right-click menu")).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
+        this.plugin.settings.enableBlacklistMenu = v;
+        await this.plugin.saveSettings();
+      }));
+      const blSearchContainer = containerEl2.createDiv();
+      try {
+        blSearchContainer.addClass("act-search-container");
       } catch (e) {
-      }
-    };
-    blacklistAddRegexBtn.addEventListener("click", blacklistAddRegexHandler);
-    this._cleanupHandlers.push(() => blacklistAddRegexBtn.removeEventListener("click", blacklistAddRegexHandler));
-    const blacklistPresetsBtn = blacklistButtonRowDiv.createEl("button");
-    blacklistPresetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
-    blacklistPresetsBtn.style.cursor = "pointer";
-    blacklistPresetsBtn.style.flex = "0 0 auto";
-    const blacklistPresetsHandler = () => {
-      new PresetModal(this.app, this.plugin, async (preset) => {
-        if (!preset) return;
-        const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true };
         try {
-          newEntry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
-        } catch (e) {
-          newEntry.uid = Date.now();
+          blSearchContainer.classList.add("act-search-container");
+        } catch (_) {
         }
+      }
+      blSearchContainer.style.margin = "8px 0";
+      blSearchContainer.style.display = "flex";
+      blSearchContainer.style.alignItems = "center";
+      blSearchContainer.style.gap = "8px";
+      const blSearch = blSearchContainer.createEl("input", { type: "text" });
+      try {
+        blSearch.addClass("act-search-input");
+      } catch (e) {
+        try {
+          blSearch.classList.add("act-search-input");
+        } catch (_) {
+        }
+      }
+      blSearch.placeholder = this.plugin.t("search_blacklist_placeholder", "Search blacklisted words or patterns\u2026");
+      blSearch.style.flex = "1 1 auto";
+      blSearch.style.padding = "6px";
+      blSearch.style.border = "1px solid var(--background-modifier-border)";
+      blSearch.style.borderRadius = "4px";
+      const blIcon = blSearchContainer.createDiv();
+      try {
+        blIcon.addClass("act-search-icon");
+      } catch (e) {
+        try {
+          blIcon.classList.add("act-search-icon");
+        } catch (_) {
+        }
+      }
+      const blSearchHandler = () => {
+        this._blacklistSearchQuery = String(blSearch.value || "").trim().toLowerCase();
+        try {
+          this._refreshBlacklistWords();
+        } catch (e) {
+        }
+      };
+      blSearch.addEventListener("input", blSearchHandler);
+      this._cleanupHandlers.push(() => blSearch.removeEventListener("input", blSearchHandler));
+      const blLimitInput = blSearchContainer.createEl("input", { type: "text" });
+      blLimitInput.value = String(this.plugin.settings?.blacklistSearchLimit ?? 0);
+      blLimitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
+      blLimitInput.title = this.plugin.t("limit_input_tooltip", "0=all; number=last N; r=regex; w=words; sw=starts; ew=ends; e=exact");
+      blLimitInput.style.width = "64px";
+      blLimitInput.style.padding = "6px";
+      blLimitInput.style.border = "1px solid var(--background-modifier-border)";
+      blLimitInput.style.borderRadius = "4px";
+      const blLimitHandler = () => {
+        const raw = String(blLimitInput.value || "").trim().toLowerCase();
+        const parts = raw.split(/\s+/).filter(Boolean);
+        const numPart = parts.find((p) => /^\d+$/.test(p));
+        const num = numPart ? parseInt(numPart, 10) : NaN;
+        this._blacklistLimit = !isNaN(num) && num >= 0 ? num : 0;
+        this._blacklistRegexOnly = false;
+        this._blacklistWordsOnly = false;
+        this._blacklistSearchMatchStarts = false;
+        this._blacklistSearchMatchEnds = false;
+        this._blacklistSearchMatchExact = false;
+        for (const tok of parts) {
+          if (tok === "r") this._blacklistRegexOnly = true;
+          else if (tok === "w") this._blacklistWordsOnly = true;
+          else if (tok === "sw") this._blacklistSearchMatchStarts = true;
+          else if (tok === "ew") this._blacklistSearchMatchEnds = true;
+          else if (tok === "e") this._blacklistSearchMatchExact = true;
+        }
+        try {
+          this.plugin.settings.blacklistSearchLimit = this._blacklistLimit;
+          this.debouncedSaveSettings();
+        } catch (e) {
+        }
+        try {
+          this._refreshBlacklistWords();
+        } catch (e) {
+        }
+      };
+      blLimitInput.addEventListener("input", blLimitHandler);
+      this._cleanupHandlers.push(() => blLimitInput.removeEventListener("input", blLimitHandler));
+      this._blacklistWordsContainer = containerEl2.createDiv();
+      this._blacklistWordsContainer.addClass("blacklist-words-list");
+      this._refreshBlacklistWords();
+      const blacklistButtonRowDiv = containerEl2.createDiv();
+      blacklistButtonRowDiv.addClass("blacklist-button-row");
+      const blacklistSortBtn = blacklistButtonRowDiv.createEl("button");
+      const blSortModes = ["last-added", "a-z", "reverse-a-z"];
+      const blSortLabels = {
+        "last-added": this.plugin.t("blacklist_sort_label_last-added", "Sort: Last Added"),
+        "a-z": this.plugin.t("blacklist_sort_label_a-z", "Sort: A-Z"),
+        "reverse-a-z": this.plugin.t("blacklist_sort_label_reverse-a-z", "Sort: Z-A")
+      };
+      blacklistSortBtn.textContent = blSortLabels[this._blacklistSortMode] || "Sort: Last Added";
+      blacklistSortBtn.style.cursor = "pointer";
+      blacklistSortBtn.style.flex = "0 0 auto";
+      const blacklistSortHandler = async () => {
+        const i = blSortModes.indexOf(this._blacklistSortMode);
+        const ni = (i + 1) % blSortModes.length;
+        this._blacklistSortMode = blSortModes[ni];
+        blacklistSortBtn.textContent = blSortLabels[this._blacklistSortMode];
+        try {
+          this.plugin.settings.blacklistSortMode = this._blacklistSortMode;
+          await this.plugin.saveSettings();
+        } catch (e) {
+        }
+        this._refreshBlacklistWords();
+      };
+      blacklistSortBtn.addEventListener("click", blacklistSortHandler);
+      this._cleanupHandlers.push(() => blacklistSortBtn.removeEventListener("click", blacklistSortHandler));
+      const blacklistAddBtn = blacklistButtonRowDiv.createEl("button");
+      blacklistAddBtn.textContent = this.plugin.t("btn_add_blacklist_word", "+ Add blacklist word");
+      blacklistAddBtn.style.cursor = "pointer";
+      blacklistAddBtn.style.flex = "1";
+      blacklistAddBtn.addClass("mod-cta");
+      const blacklistAddHandler = async () => {
+        const uid = (() => {
+          try {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2);
+          } catch (e) {
+            return Date.now();
+          }
+        })();
+        const newEntry = { pattern: "", isRegex: false, flags: "", groupedPatterns: null, uid, persistAtEnd: true };
         if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
         this.plugin.settings.blacklistEntries.push(newEntry);
         this._suspendSorting = this._blacklistSortMode === "last-added";
         try {
-          this._blacklistNewSet && newEntry && newEntry.uid && this._blacklistNewSet.add(newEntry.uid);
+          this._blacklistNewSet && this._blacklistNewSet.add(uid);
         } catch (e) {
         }
         await this.plugin.saveSettings();
         this._refreshBlacklistWords();
-      }).open();
-    };
-    blacklistPresetsBtn.addEventListener("click", blacklistPresetsHandler);
-    this._cleanupHandlers.push(() => blacklistPresetsBtn.removeEventListener("click", blacklistPresetsHandler));
-    new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_blacklist", "Delete all blacklisted words/patterns")).onClick(async () => {
-      new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_blacklist_title", "Delete all blacklisted words"), this.plugin.t("confirm_delete_all_blacklist_desc", "Are you sure you want to delete all blacklist entries? You can't undo this!"), async () => {
-        this.plugin.settings.blacklistEntries = [];
-        await this.plugin.saveSettings();
-        this._refreshBlacklistWords();
-      }).open();
-    }));
-    containerEl2.createEl("h3", { text: this.plugin.t("file_folder_rules_header", "File & Folder Coloring Rules") });
-    containerEl2.createEl("p", { text: this.plugin.t("file_folder_rules_desc", "Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.") });
-    const prSearchContainer = containerEl2.createDiv();
-    try {
-      prSearchContainer.addClass("act-search-container");
-    } catch (e) {
-      try {
-        prSearchContainer.classList.add("act-search-container");
-      } catch (_) {
-      }
-    }
-    prSearchContainer.style.margin = "8px 0";
-    prSearchContainer.style.display = "flex";
-    prSearchContainer.style.alignItems = "center";
-    prSearchContainer.style.gap = "8px";
-    const prSearch = prSearchContainer.createEl("input", { type: "text" });
-    try {
-      prSearch.addClass("act-search-input");
-    } catch (e) {
-      try {
-        prSearch.classList.add("act-search-input");
-      } catch (_) {
-      }
-    }
-    prSearch.placeholder = this.plugin.t("search_file_folder_rules_placeholder", "Search file/folder rules\u2026");
-    prSearch.style.flex = "1 1 auto";
-    prSearch.style.padding = "6px";
-    prSearch.style.border = "1px solid var(--background-modifier-border)";
-    prSearch.style.borderRadius = "4px";
-    const prIcon = prSearchContainer.createDiv();
-    try {
-      prIcon.addClass("act-search-icon");
-    } catch (e) {
-      try {
-        prIcon.classList.add("act-search-icon");
-      } catch (_) {
-      }
-    }
-    const prSearchHandler = () => {
-      this._pathRulesSearchQuery = String(prSearch.value || "").trim().toLowerCase();
-      try {
-        this._refreshPathRules();
-      } catch (e) {
-      }
-    };
-    prSearch.addEventListener("input", prSearchHandler);
-    prSearch.addEventListener("click", prSearchHandler);
-    this._cleanupHandlers.push(() => prSearch.removeEventListener("input", prSearchHandler));
-    const prLimitInput = prSearchContainer.createEl("input", { type: "text" });
-    prLimitInput.value = String(this.plugin.settings?.pathSearchLimit ?? 0);
-    prLimitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
-    prLimitInput.title = this.plugin.t("limit_input_tooltip", "0=all; number=last N; in=include; ex=exclude; sw=starts; ew=ends; e=exact");
-    prLimitInput.style.width = "64px";
-    prLimitInput.style.padding = "6px";
-    prLimitInput.style.border = "1px solid var(--background-modifier-border)";
-    prLimitInput.style.borderRadius = "4px";
-    const prLimitHandler = () => {
-      const raw = String(prLimitInput.value || "").trim().toLowerCase();
-      const parts = raw.split(/\s+/).filter(Boolean);
-      const numPart = parts.find((p) => /^\d+$/.test(p));
-      const num = numPart ? parseInt(numPart, 10) : NaN;
-      this._pathLimit = !isNaN(num) && num >= 0 ? num : 0;
-      this._pathModeOnly = null;
-      for (const tok of parts) {
-        if (tok === "in") this._pathModeOnly = "include";
-        else if (tok === "ex") this._pathModeOnly = "exclude";
-      }
-      try {
-        this.plugin.settings.pathSearchLimit = this._pathLimit;
-        this.debouncedSaveSettings();
-      } catch (e) {
-      }
-      this._pathSearchMatch = "contains";
-      for (const tok of parts) {
-        if (tok === "sw") this._pathSearchMatch = "starts";
-        else if (tok === "ew") this._pathSearchMatch = "ends";
-        else if (tok === "e") this._pathSearchMatch = "exact";
-      }
-      try {
-        this._refreshPathRules();
-      } catch (e) {
-      }
-    };
-    prLimitInput.addEventListener("input", prLimitHandler);
-    this._cleanupHandlers.push(() => prLimitInput.removeEventListener("input", prLimitHandler));
-    this._pathRulesContainer = containerEl2.createDiv();
-    this._pathRulesContainer.addClass("path-rules-list");
-    this._refreshPathRules();
-    const pathBtnRow = containerEl2.createDiv();
-    pathBtnRow.addClass("path-button-row");
-    const pathSortBtn = pathBtnRow.createEl("button");
-    const pathSortModes = ["last-added", "a-z", "reverse-a-z", "mode", "type"];
-    const pathSortLabels = { "last-added": "Sort: Last Added", "a-z": "Sort: A-Z", "reverse-a-z": "Sort: Z-A", "mode": "Sort: Mode", "type": "Sort: Type" };
-    pathSortBtn.textContent = this.plugin.t("path_sort_label_" + (this._pathSortMode || "last-added"), pathSortLabels[this._pathSortMode] || "Sort: Last Added");
-    pathSortBtn.style.cursor = "pointer";
-    pathSortBtn.style.flex = "0 0 auto";
-    const pathSortHandler = async () => {
-      const i = pathSortModes.indexOf(this._pathSortMode);
-      const ni = (i + 1) % pathSortModes.length;
-      this._pathSortMode = pathSortModes[ni];
-      pathSortBtn.textContent = this.plugin.t("path_sort_label_" + (this._pathSortMode || "last-added"), pathSortLabels[this._pathSortMode] || "Sort: Last Added");
-      try {
-        this.plugin.settings.pathSortMode = this._pathSortMode;
-        await this.plugin.saveSettings();
-      } catch (e) {
-      }
-      this._suspendSorting = false;
-      this._refreshPathRules();
-    };
-    pathSortBtn.addEventListener("click", pathSortHandler);
-    this._cleanupHandlers.push(() => pathSortBtn.removeEventListener("click", pathSortHandler));
-    const pathAddBtn = pathBtnRow.createEl("button");
-    pathAddBtn.textContent = this.plugin.t("btn_add_file_folder_rule", "+ Add file/folder rule");
-    pathAddBtn.style.cursor = "pointer";
-    pathAddBtn.style.flex = "1";
-    pathAddBtn.addClass("mod-cta");
-    const pathAddHandler = async () => {
-      const newEntry = { path: "", mode: "include", matchType: "has-name" };
-      if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = [];
-      this.plugin.settings.pathRules.push(newEntry);
-      this._suspendSorting = this._pathSortMode === "last-added";
-      await this.plugin.saveSettings();
-      this._refreshPathRules();
-    };
-    pathAddBtn.addEventListener("click", pathAddHandler);
-    this._cleanupHandlers.push(() => pathAddBtn.removeEventListener("click", pathAddHandler));
-    new Setting(containerEl2).setName(this.plugin.t("disable_coloring_current_file", "Disable coloring for current file")).setDesc(this.plugin.t("disable_coloring_current_file_desc", "Adds an exclude rule for the active file under File & Folder Coloring Rules.")).addButton((b) => b.setButtonText(this.plugin.t("btn_disable_for_this_file", "Disable for this file")).onClick(async () => {
-      const md = this.app.workspace.getActiveFile();
-      if (!md) {
-        new Notice(this.plugin.t("notice_no_active_file_to_disable", "No active file to disable coloring for."));
-        return;
-      }
-      const p = String(md.path || "");
-      if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = [];
-      const np = this.plugin.normalizePath(p);
-      const exists = this.plugin.settings.pathRules.some((r) => r && r.mode === "exclude" && !r.isFolder && this.plugin.normalizePath(String(r.path || "")) === np);
-      if (exists) {
-        new Notice(this.plugin.t("notice_already_disabled_for_path", `Coloring is already disabled for {path}`, { path: md.path }));
-        return;
-      }
-      this.plugin.settings.pathRules.push({ path: p, mode: "exclude", isFolder: false });
-      await this.plugin.saveSettings();
-      this._refreshPathRules();
-      this._initializedSettingsUI = false;
-      try {
-        this.display();
-      } catch (e) {
-      }
-      new Notice(this.plugin.t("notice_coloring_disabled_for_path", `Coloring disabled for {path}`, { path: md.path }));
-    }));
-    this._disabledFilesContainer = containerEl2.createDiv();
-    this._refreshDisabledFiles();
-    containerEl2.createEl("hr");
-    containerEl2.createEl("h2", { text: this.plugin.t("data_export_import_header", "Data Export/Import") });
-    new Setting(containerEl2).setName(this.plugin.t("export_plugin_data", "Export plugin data")).setDesc(this.plugin.t("export_plugin_data_desc", "Export settings, words, and rules to a JSON file.")).addButton((b) => b.setButtonText(this.plugin.t("btn_export", "Export")).onClick(async () => {
-      try {
-        const fname = await this.plugin.exportSettingsToPickedLocation();
-        new Notice(this.plugin.t("notice_exported", `Exported: {fname}`, { fname }));
-      } catch (e) {
-        new Notice(this.plugin.t("notice_export_failed", "Export failed"));
-      }
-    }));
-    new Setting(containerEl2).setName(this.plugin.t("import_plugin_data", "Import plugin data")).setDesc(this.plugin.t("import_plugin_data_desc", "Import settings from a JSON file")).addButton((b) => b.setButtonText(this.plugin.t("btn_import", "Import")).onClick(() => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "application/json";
-      input.addEventListener("change", () => {
-        const file = input.files && input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async () => {
+      };
+      blacklistAddBtn.addEventListener("click", blacklistAddHandler);
+      this._cleanupHandlers.push(() => blacklistAddBtn.removeEventListener("click", blacklistAddHandler));
+      const blacklistAddRegexBtn = blacklistButtonRowDiv.createEl("button");
+      blacklistAddRegexBtn.textContent = this.plugin.t("btn_add_blacklist_regex", "+ Add blacklist regex");
+      blacklistAddRegexBtn.style.cursor = "pointer";
+      blacklistAddRegexBtn.style.flex = "1";
+      blacklistAddRegexBtn.addClass("mod-cta");
+      blacklistAddRegexBtn.style.display = this.plugin.settings.enableRegexSupport ? "" : "none";
+      const blacklistAddRegexHandler = () => {
+        try {
+          const onAdded = (entry) => {
+            try {
+              if (entry && entry.uid) {
+                this._blacklistNewSet && this._blacklistNewSet.add(entry.uid);
+              }
+              this._refreshBlacklistWords();
+            } catch (e) {
+            }
+          };
+          new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
+        } catch (e) {
+        }
+      };
+      blacklistAddRegexBtn.addEventListener("click", blacklistAddRegexHandler);
+      this._cleanupHandlers.push(() => blacklistAddRegexBtn.removeEventListener("click", blacklistAddRegexHandler));
+      const blacklistPresetsBtn = blacklistButtonRowDiv.createEl("button");
+      blacklistPresetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
+      blacklistPresetsBtn.style.cursor = "pointer";
+      blacklistPresetsBtn.style.flex = "0 0 auto";
+      const blacklistPresetsHandler = () => {
+        new PresetModal(this.app, this.plugin, async (preset) => {
+          if (!preset) return;
+          const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true };
           try {
-            await this.plugin.importSettingsFromJson(String(reader.result || ""));
-            this._initializedSettingsUI = false;
-            this.display();
-            new Notice(this.plugin.t("notice_import_completed", "Import completed"));
+            newEntry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
           } catch (e) {
-            new Notice(this.plugin.t("notice_import_failed", "Import failed"));
+            newEntry.uid = Date.now();
           }
-        };
-        reader.readAsText(file);
-      });
-      input.click();
-    }));
+          if (!Array.isArray(this.plugin.settings.blacklistEntries)) this.plugin.settings.blacklistEntries = [];
+          this.plugin.settings.blacklistEntries.push(newEntry);
+          this._suspendSorting = this._blacklistSortMode === "last-added";
+          try {
+            this._blacklistNewSet && newEntry && newEntry.uid && this._blacklistNewSet.add(newEntry.uid);
+          } catch (e) {
+          }
+          await this.plugin.saveSettings();
+          this._refreshBlacklistWords();
+        }).open();
+      };
+      blacklistPresetsBtn.addEventListener("click", blacklistPresetsHandler);
+      this._cleanupHandlers.push(() => blacklistPresetsBtn.removeEventListener("click", blacklistPresetsHandler));
+      new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_blacklist", "Delete all blacklisted words/patterns")).onClick(async () => {
+        new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_blacklist_title", "Delete all blacklisted words"), this.plugin.t("confirm_delete_all_blacklist_desc", "Are you sure you want to delete all blacklist entries? You can't undo this!"), async () => {
+          this.plugin.settings.blacklistEntries = [];
+          await this.plugin.saveSettings();
+          this._refreshBlacklistWords();
+        }).open();
+      }));
+    }
+    if (this._activeTab === "file-folder-rules") {
+      containerEl2.createEl("h3", { text: this.plugin.t("file_folder_rules_header", "File & Folder Coloring Rules") });
+      containerEl2.createEl("p", { text: this.plugin.t("file_folder_rules_desc", "Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.") });
+      const prSearchContainer = containerEl2.createDiv();
+      try {
+        prSearchContainer.addClass("act-search-container");
+      } catch (e) {
+        try {
+          prSearchContainer.classList.add("act-search-container");
+        } catch (_) {
+        }
+      }
+      prSearchContainer.style.margin = "8px 0";
+      prSearchContainer.style.display = "flex";
+      prSearchContainer.style.alignItems = "center";
+      prSearchContainer.style.gap = "8px";
+      const prSearch = prSearchContainer.createEl("input", { type: "text" });
+      try {
+        prSearch.addClass("act-search-input");
+      } catch (e) {
+        try {
+          prSearch.classList.add("act-search-input");
+        } catch (_) {
+        }
+      }
+      prSearch.placeholder = this.plugin.t("search_file_folder_rules_placeholder", "Search file/folder rules\u2026");
+      prSearch.style.flex = "1 1 auto";
+      prSearch.style.padding = "6px";
+      prSearch.style.border = "1px solid var(--background-modifier-border)";
+      prSearch.style.borderRadius = "4px";
+      const prIcon = prSearchContainer.createDiv();
+      try {
+        prIcon.addClass("act-search-icon");
+      } catch (e) {
+        try {
+          prIcon.classList.add("act-search-icon");
+        } catch (_) {
+        }
+      }
+      const prSearchHandler = () => {
+        this._pathRulesSearchQuery = String(prSearch.value || "").trim().toLowerCase();
+        try {
+          this._refreshPathRules();
+        } catch (e) {
+        }
+      };
+      prSearch.addEventListener("input", prSearchHandler);
+      prSearch.addEventListener("click", prSearchHandler);
+      this._cleanupHandlers.push(() => prSearch.removeEventListener("input", prSearchHandler));
+      const prLimitInput = prSearchContainer.createEl("input", { type: "text" });
+      prLimitInput.value = String(this.plugin.settings?.pathSearchLimit ?? 0);
+      prLimitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
+      prLimitInput.title = this.plugin.t("limit_input_tooltip", "0=all; number=last N; in=include; ex=exclude; sw=starts; ew=ends; e=exact");
+      prLimitInput.style.width = "64px";
+      prLimitInput.style.padding = "6px";
+      prLimitInput.style.border = "1px solid var(--background-modifier-border)";
+      prLimitInput.style.borderRadius = "4px";
+      const prLimitHandler = () => {
+        const raw = String(prLimitInput.value || "").trim().toLowerCase();
+        const parts = raw.split(/\s+/).filter(Boolean);
+        const numPart = parts.find((p) => /^\d+$/.test(p));
+        const num = numPart ? parseInt(numPart, 10) : NaN;
+        this._pathLimit = !isNaN(num) && num >= 0 ? num : 0;
+        this._pathModeOnly = null;
+        for (const tok of parts) {
+          if (tok === "in") this._pathModeOnly = "include";
+          else if (tok === "ex") this._pathModeOnly = "exclude";
+        }
+        try {
+          this.plugin.settings.pathSearchLimit = this._pathLimit;
+          this.debouncedSaveSettings();
+        } catch (e) {
+        }
+        this._pathSearchMatch = "contains";
+        for (const tok of parts) {
+          if (tok === "sw") this._pathSearchMatch = "starts";
+          else if (tok === "ew") this._pathSearchMatch = "ends";
+          else if (tok === "e") this._pathSearchMatch = "exact";
+        }
+        try {
+          this._refreshPathRules();
+        } catch (e) {
+        }
+      };
+      prLimitInput.addEventListener("input", prLimitHandler);
+      this._cleanupHandlers.push(() => prLimitInput.removeEventListener("input", prLimitHandler));
+      this._pathRulesContainer = containerEl2.createDiv();
+      this._pathRulesContainer.addClass("path-rules-list");
+      this._refreshPathRules();
+      const pathBtnRow = containerEl2.createDiv();
+      pathBtnRow.addClass("path-button-row");
+      const pathSortBtn = pathBtnRow.createEl("button");
+      const pathSortModes = ["last-added", "a-z", "reverse-a-z", "mode", "type"];
+      const pathSortLabels = { "last-added": "Sort: Last Added", "a-z": "Sort: A-Z", "reverse-a-z": "Sort: Z-A", "mode": "Sort: Mode", "type": "Sort: Type" };
+      pathSortBtn.textContent = this.plugin.t("path_sort_label_" + (this._pathSortMode || "last-added"), pathSortLabels[this._pathSortMode] || "Sort: Last Added");
+      pathSortBtn.style.cursor = "pointer";
+      pathSortBtn.style.flex = "0 0 auto";
+      const pathSortHandler = async () => {
+        const i = pathSortModes.indexOf(this._pathSortMode);
+        const ni = (i + 1) % pathSortModes.length;
+        this._pathSortMode = pathSortModes[ni];
+        pathSortBtn.textContent = this.plugin.t("path_sort_label_" + (this._pathSortMode || "last-added"), pathSortLabels[this._pathSortMode] || "Sort: Last Added");
+        try {
+          this.plugin.settings.pathSortMode = this._pathSortMode;
+          await this.plugin.saveSettings();
+        } catch (e) {
+        }
+        this._suspendSorting = false;
+        this._refreshPathRules();
+      };
+      pathSortBtn.addEventListener("click", pathSortHandler);
+      this._cleanupHandlers.push(() => pathSortBtn.removeEventListener("click", pathSortHandler));
+      const pathAddBtn = pathBtnRow.createEl("button");
+      pathAddBtn.textContent = this.plugin.t("btn_add_file_folder_rule", "+ Add file/folder rule");
+      pathAddBtn.style.cursor = "pointer";
+      pathAddBtn.style.flex = "1";
+      pathAddBtn.addClass("mod-cta");
+      const pathAddHandler = async () => {
+        const newEntry = { path: "", mode: "include", matchType: "has-name" };
+        if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = [];
+        this.plugin.settings.pathRules.push(newEntry);
+        this._suspendSorting = this._pathSortMode === "last-added";
+        await this.plugin.saveSettings();
+        this._refreshPathRules();
+      };
+      pathAddBtn.addEventListener("click", pathAddHandler);
+      this._cleanupHandlers.push(() => pathAddBtn.removeEventListener("click", pathAddHandler));
+      new Setting(containerEl2).setName(this.plugin.t("disable_coloring_current_file", "Disable coloring for current file")).setDesc(this.plugin.t("disable_coloring_current_file_desc", "Adds an exclude rule for the active file under File & Folder Coloring Rules.")).addButton((b) => b.setButtonText(this.plugin.t("btn_disable_for_this_file", "Disable for this file")).onClick(async () => {
+        const md = this.app.workspace.getActiveFile();
+        if (!md) {
+          new Notice(this.plugin.t("notice_no_active_file_to_disable", "No active file to disable coloring for."));
+          return;
+        }
+        const p = String(md.path || "");
+        if (!Array.isArray(this.plugin.settings.pathRules)) this.plugin.settings.pathRules = [];
+        const np = this.plugin.normalizePath(p);
+        const exists = this.plugin.settings.pathRules.some((r) => r && r.mode === "exclude" && !r.isFolder && this.plugin.normalizePath(String(r.path || "")) === np);
+        if (exists) {
+          new Notice(this.plugin.t("notice_already_disabled_for_path", `Coloring is already disabled for {path}`, { path: md.path }));
+          return;
+        }
+        this.plugin.settings.pathRules.push({ path: p, mode: "exclude", isFolder: false });
+        await this.plugin.saveSettings();
+        this._refreshPathRules();
+        this._initializedSettingsUI = false;
+        try {
+          this.display();
+        } catch (e) {
+        }
+        new Notice(this.plugin.t("notice_coloring_disabled_for_path", `Coloring disabled for {path}`, { path: md.path }));
+      }));
+      this._disabledFilesContainer = containerEl2.createDiv();
+      this._refreshDisabledFiles();
+    }
+    if (this._activeTab === "data") {
+      containerEl2.createEl("h2", { text: this.plugin.t("data_export_import_header", "Data Export/Import") });
+      new Setting(containerEl2).setName(this.plugin.t("export_plugin_data", "Export plugin data")).setDesc(this.plugin.t("export_plugin_data_desc", "Export settings, words, and rules to a JSON file.")).addButton((b) => b.setButtonText(this.plugin.t("btn_export", "Export")).onClick(async () => {
+        try {
+          const fname = await this.plugin.exportSettingsToPickedLocation();
+          new Notice(this.plugin.t("notice_exported", `Exported: {fname}`, { fname }));
+        } catch (e) {
+          new Notice(this.plugin.t("notice_export_failed", "Export failed"));
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("import_plugin_data", "Import plugin data")).setDesc(this.plugin.t("import_plugin_data_desc", "Import settings from a JSON file")).addButton((b) => b.setButtonText(this.plugin.t("btn_import", "Import")).onClick(() => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "application/json";
+        input.addEventListener("change", () => {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              await this.plugin.importSettingsFromJson(String(reader.result || ""));
+              this._initializedSettingsUI = false;
+              this.display();
+              new Notice(this.plugin.t("notice_import_completed", "Import completed"));
+            } catch (e) {
+              new Notice(this.plugin.t("notice_import_failed", "Import failed"));
+            }
+          };
+          reader.readAsText(file);
+        });
+        input.click();
+      }));
+    }
   }
   // Method to focus and/or create a text & background coloring entry with pre-filled text
   async focusTextBgEntry(selectedText) {
@@ -19948,7 +21222,8 @@ var ColorPickerModal = class extends Modal {
     previewWrap.style.justifyContent = "center";
     previewWrap.style.gridColumn = "1 / -1";
     const preview = previewWrap.createDiv();
-    preview.textContent = this._selectedText || this.plugin.t("selected_text_preview", "Selected Text");
+    const displayText = String(this._selectedText || this._preFillPattern || this._preFillName || "").trim();
+    preview.textContent = displayText ? displayText : this.plugin.t("selected_text_preview", "Selected Text");
     preview.style.display = "inline-block";
     preview.style.borderRadius = "8px";
     preview.style.fontWeight = "600";
