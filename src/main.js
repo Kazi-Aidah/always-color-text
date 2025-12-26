@@ -1656,6 +1656,9 @@ class PatternMatcher {
         const la = a.end - a.start;
         const lb = b.end - b.start;
         if (la !== lb) return lb - la;
+        const ar = a.entryRef && !!a.entryRef.isRegex;
+        const br = b.entryRef && !!b.entryRef.isRegex;
+        if (ar !== br) return ar ? 1 : -1;
         // Then by start position (earlier wins)
         if (a.start !== b.start) return a.start - b.start;
         // Then by priority
@@ -2479,6 +2482,7 @@ module.exports = class AlwaysColorText extends Plugin {
             item.setTitle(this.t('menu_remove_always_color_text','Remove Always Color Text'))
               .setIcon('eraser')
               .onClick(async () => {
+                const hasManual = hasLiteralEntry || hasGroupedEntry || hasTextBgEntry;
                 if (hasGroupedEntry) {
                   const entryWithGroup = this.settings.wordEntries.find(e => e && !e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText)));
                   if (entryWithGroup) {
@@ -2497,7 +2501,7 @@ module.exports = class AlwaysColorText extends Plugin {
                 if (hasLiteralEntry) {
                   this.settings.wordEntries = this.settings.wordEntries.filter(e => !(e && patternMatches(e.pattern, selectedText) && !e.isRegex));
                 }
-                if (hasRegexEntry) {
+                if (hasRegexEntry && !hasManual) {
                   const idxToRemove = this.settings.wordEntries.findIndex(e => e && e.isRegex && (() => { try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; } })());
                   if (idxToRemove !== -1) {
                     this.settings.wordEntries.splice(idxToRemove, 1);
@@ -2517,9 +2521,11 @@ module.exports = class AlwaysColorText extends Plugin {
                     }
                   }
                   this.settings.wordEntries = entries.filter(e => !(e && e.backgroundColor && !e.isRegex && patternMatches(e.pattern || '', selectedText)));
-                  const ridx = this.settings.wordEntries.findIndex(e => e && e.backgroundColor && e.isRegex && (() => { try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; } })());
-                  if (ridx !== -1) {
-                    this.settings.wordEntries.splice(ridx, 1);
+                  if (!hasManual) {
+                    const ridx = this.settings.wordEntries.findIndex(e => e && e.backgroundColor && e.isRegex && (() => { try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; } })());
+                    if (ridx !== -1) {
+                      this.settings.wordEntries.splice(ridx, 1);
+                    }
                   }
                 }
                 await this.saveSettings();
@@ -9743,7 +9749,8 @@ module.exports = class AlwaysColorText extends Plugin {
           end: from + colorEnd,
           textColor: entry.textColor,
           backgroundColor: entry.backgroundColor,
-          isTextBg: true
+          isTextBg: true,
+          entryRef: entry
         });
         
         if (matches.length > 3000) break;
@@ -9932,7 +9939,8 @@ module.exports = class AlwaysColorText extends Plugin {
           color: (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color,
           styleType: entry.styleType,
           textColor: entry.textColor,
-          backgroundColor: entry.backgroundColor
+          backgroundColor: entry.backgroundColor,
+          entryRef: entry
         });
         
         if (matches.length > 3000) break;
@@ -10041,13 +10049,13 @@ module.exports = class AlwaysColorText extends Plugin {
               if (!overlapsWithExisting) {
                 const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
                 debugLog('PARTIAL_MATCH_ADDED', `pattern="${entry.pattern}" word="${w}" final_range=${from + expandedWStart}-${from + expandedWEnd}`);
-                matches.push({ start: from + expandedWStart, end: from + expandedWEnd, color: useColor, styleType: 'text' });
+                matches.push({ start: from + expandedWStart, end: from + expandedWEnd, color: useColor, styleType: 'text', entryRef: entry });
                 if (matches.length > 3000) break;
               } else {
                 // Remove smaller overlapping matches and add the full word instead
                 matches = matches.filter(m => !(m.start >= (from + expandedWStart) && m.end <= (from + expandedWEnd) && (m.end - m.start) < (expandedWEnd - expandedWStart)));
                 const useColor = (folderEntry && folderEntry.defaultColor) ? folderEntry.defaultColor : ((entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color);
-                matches.push({ start: from + expandedWStart, end: from + expandedWEnd, color: useColor, styleType: 'text' });
+                matches.push({ start: from + expandedWStart, end: from + expandedWEnd, color: useColor, styleType: 'text', entryRef: entry });
                 if (matches.length > 3000) break;
               }
               break;
@@ -10083,6 +10091,9 @@ module.exports = class AlwaysColorText extends Plugin {
         const lenA = (a.end - a.start);
         const lenB = (b.end - b.start);
         if (lenA !== lenB) return lenB - lenA;
+        const ar = a.entryRef && !!a.entryRef.isRegex;
+        const br = b.entryRef && !!b.entryRef.isRegex;
+        if (ar !== br) return ar ? 1 : -1;
         if (a.isTextBg && !b.isTextBg) return -1;
         if (!a.isTextBg && b.isTextBg) return 1;
         return 0;
@@ -11006,7 +11017,12 @@ module.exports = class AlwaysColorText extends Plugin {
   applyDecorationsFromMatches(builder, matches, folderEntry) {
     const all = matches.slice().sort((a, b) => {
       if (a.start !== b.start) return a.start - b.start;
-      return (b.end - b.start) - (a.end - a.start);
+      const lenDiff = (b.end - b.start) - (a.end - a.start);
+      if (lenDiff !== 0) return lenDiff;
+      const ar = a.entryRef && !!a.entryRef.isRegex;
+      const br = b.entryRef && !!b.entryRef.isRegex;
+      if (ar !== br) return ar ? 1 : -1;
+      return 0;
     });
     const selected = [];
     for (const m of all) {
@@ -18479,36 +18495,46 @@ class ColorPickerModal extends Modal {
     const eq = (a, b) => (caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
     const wordEntries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
     for (const e of wordEntries) {
-      if (!e) continue;
-      if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+      if (!e || e.isRegex) continue;
+      if (eq(e.pattern || '', s) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
+      if (this.plugin.settings.partialMatch) {
+        const a = caseSensitive ? String(s) : String(s).toLowerCase();
+        const b = caseSensitive ? String(e.pattern || '') : String(e.pattern || '').toLowerCase();
+        if (b && a.includes(b) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
+      }
+      if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
+    }
+    if (!initText) {
+      for (const e of wordEntries) {
+        if (!e || !e.isRegex || !this.plugin.settings.enableRegexSupport) continue;
         try {
           const re = new RegExp(e.pattern, e.flags || '');
           if (re.test(s) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
         } catch (err) {}
-      } else {
-        if (eq(e.pattern || '', s) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
-        if (this.plugin.settings.partialMatch) {
-          const a = caseSensitive ? String(s) : String(s).toLowerCase();
-          const b = caseSensitive ? String(e.pattern || '') : String(e.pattern || '').toLowerCase();
-          if (b && a.includes(b) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
-        }
-        if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
       }
     }
     const tbgEntries = (Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : []).filter(e => e && e.backgroundColor);
     for (const e of tbgEntries) {
-      if (!e) continue;
-      let match = false;
-      if (e.isRegex && this.plugin.settings.enableRegexSupport) {
-        try { const re = new RegExp(e.pattern, e.flags || ''); match = re.test(s); } catch (err) { match = false; }
-      } else {
-        match = eq(e.pattern || '', s) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)));
-      }
+      if (!e || e.isRegex) continue;
+      let match = eq(e.pattern || '', s) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)));
       if (match) {
         if (e.textColor && e.textColor !== 'currentColor') initText = e.textColor;
         if (e.backgroundColor) initBg = e.backgroundColor;
         existingStyle = e.styleType || ((e.textColor && e.textColor !== 'currentColor') && e.backgroundColor ? 'both' : (e.backgroundColor ? 'highlight' : 'text'));
         break;
+      }
+    }
+    if (!initBg && !initText) {
+      for (const e of tbgEntries) {
+        if (!e || !e.isRegex || !this.plugin.settings.enableRegexSupport) continue;
+        let match = false;
+        try { const re = new RegExp(e.pattern, e.flags || ''); match = re.test(s); } catch (err) { match = false; }
+        if (match) {
+          if (e.textColor && e.textColor !== 'currentColor') initText = e.textColor;
+          if (e.backgroundColor) initBg = e.backgroundColor;
+          existingStyle = e.styleType || ((e.textColor && e.textColor !== 'currentColor') && e.backgroundColor ? 'both' : (e.backgroundColor ? 'highlight' : 'text'));
+          break;
+        }
       }
     }
     
