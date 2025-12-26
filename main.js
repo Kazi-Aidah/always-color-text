@@ -15071,7 +15071,7 @@ var HighlightStylingModal = class extends Modal {
       opt.value = val;
     });
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "var(--radius-m)";
+    styleSelect.style.borderRadius = "4px";
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.textAlign = "center";
     styleSelect.value = this.entry && this.entry.styleType ? this.entry.styleType : "both";
@@ -15668,7 +15668,7 @@ var EditEntryModal = class extends Modal {
     const box = row1.createDiv();
     box.addClass("act-edit-entry-textbox");
     box.style.border = "1px solid var(--background-modifier-border)";
-    box.style.borderRadius = "var(--radius-m)";
+    box.style.borderRadius = "4px";
     box.style.background = "var(--background-modifier-form-field)";
     const textInput = box.createEl("textarea");
     textInput.style.width = "100%";
@@ -15686,7 +15686,7 @@ var EditEntryModal = class extends Modal {
     preview.addClass("act-edit-entry-preview");
     preview.style.flex = "1";
     preview.style.border = "1px dashed var(--background-modifier-border)";
-    preview.style.borderRadius = "var(--radius-m)";
+    preview.style.borderRadius = "4px";
     preview.style.padding = "10px";
     preview.style.background = "var(--background-modifier-form-field)";
     preview.style.whiteSpace = "pre-wrap";
@@ -15706,7 +15706,7 @@ var EditEntryModal = class extends Modal {
       opt.value = val;
     });
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "var(--radius-m)";
+    styleSelect.style.borderRadius = "4px";
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.textAlign = "center";
     styleSelect.style.flex = "1 0%";
@@ -15792,7 +15792,7 @@ var EditEntryModal = class extends Modal {
     matchSelect.style.flex = "0.5 0 auto";
     matchSelect.style.minWidth = "140px";
     matchSelect.style.border = "1px solid var(--background-modifier-border)";
-    matchSelect.style.borderRadius = "var(--radius-m)";
+    matchSelect.style.borderRadius = "4px";
     matchSelect.style.background = "var(--background-modifier-form-field)";
     matchSelect.style.textAlign = "center";
     matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
@@ -15800,7 +15800,7 @@ var EditEntryModal = class extends Modal {
     caseSel.style.flex = "0.5 0 auto";
     caseSel.style.minWidth = "160px";
     caseSel.style.border = "1px solid var(--background-modifier-border)";
-    caseSel.style.borderRadius = "var(--radius-m)";
+    caseSel.style.borderRadius = "4px";
     caseSel.style.background = "var(--background-modifier-form-field)";
     caseSel.style.textAlign = "center";
     caseSel.innerHTML = `<option value="case">${this.plugin.t("opt_case_sensitive", "is case sensitive")}</option><option value="nocase">${this.plugin.t("opt_not_case_sensitive", "not case sensitive")}</option>`;
