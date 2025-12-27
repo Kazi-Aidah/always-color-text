@@ -137,6 +137,12 @@ a .always-color-text-highlight,
 
 .cm-editor .cm-hmd-internal-link.always-color-text-highlight {
   color: var(--highlight-color, currentColor) !important;
+}
+
+/* Canvas embeds: ensure highlights render inside canvas nodes */
+.canvas-node .markdown-embed-content .always-color-text-highlight {
+  color: var(--highlight-color, currentColor) !important;
+  background-color: var(--highlight-background, transparent) !important;
   text-decoration: inherit !important;
   --text-normal: var(--highlight-color, currentColor) !important;
 }
@@ -662,4 +668,17 @@ button.mod-cta {
 .act-delete-groups-setting {
   border-top: 0 !important;
   padding: 0 !important;
+}
+
+.act-group-row {
+  border-radius: calc(var(--button-radius) + 4px) !important;
+}
+
+.act-edit-entry-group-select {
+  min-width: 140px !important;
+  width: 140px !important;
+}
+
+.act-edit-entry-style-select {
+  min-width: 140px !important;
 }

@@ -14,6 +14,7 @@ module.exports = {
   "language_eu": "Basque",
   "language_ru": "Pусский",
   "language_auto": "System Default",
+  "default": "Default",
   
   // Release Notes
   "latest_release_notes_label": "Latest Release Notes",
@@ -40,6 +41,10 @@ module.exports = {
   "show_toggle_command": "Show Toggle in Commands",
   "show_blacklist_menu": "Show Blacklist Word in Context Menu",
   "show_blacklist_menu_desc": "Add a context menu item to blacklist selected text.",
+  "show_add_to_existing_entry_menu": "Show Add to Existing Entry in Right-Click Menu",
+  "show_add_to_existing_entry_menu_desc": "Add a context menu item to add selected text to an existing entry.",
+  "hide_inactive_groups_in_dropdowns": "Hide Inactive Groups in Dropdowns",
+  "hide_inactive_groups_in_dropdowns_desc": "Hide inactive word groups when displaying group lists in dropdowns.",
   "tooltip_enable_for_file": "Enable for this file",
   "tooltip_delete_all_words": "Delete all defined words/patterns",
   "tooltip_delete_all_blacklist": "Delete all blacklisted words/patterns",

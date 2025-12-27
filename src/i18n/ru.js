@@ -14,6 +14,7 @@ module.exports = {
   "language_eu": "Баскский",
   "language_ru": "Русский",
   "language_auto": "Системный",
+  "default": "По умолчанию",
   
   // Release Notes
   "latest_release_notes_label": "Последние заметки к выпуску",
@@ -40,6 +41,10 @@ module.exports = {
   "show_toggle_command": "Показывать в палитре команд",
   "show_blacklist_menu": "Показывать «Добавить в чёрный список» в контекстном меню",
   "show_blacklist_menu_desc": "В контекстном меню появляется возможность добавить слово в чёрный список, чтобы оно никогда не окрашивалось.",
+  "show_add_to_existing_entry_menu": "Показывать «Добавить в существующую запись» в контекстном меню",
+  "show_add_to_existing_entry_menu_desc": "В контекстном меню добавляется возможность добавить выбранный текст в существующую запись.",
+  "hide_inactive_groups_in_dropdowns": "Скрывать неактивные группы в раскрывающихся списках",
+  "hide_inactive_groups_in_dropdowns_desc": "Скрывает неактивные группы слов при отображении списков групп в раскрывающихся меню.",
   "tooltip_enable_for_file": "Включить для этого файла",
   "tooltip_delete_all_words": "Удалить все слова/шаблоны",
   "tooltip_delete_all_blacklist": "Удалить из чёрного списка все слова/шаблоны",

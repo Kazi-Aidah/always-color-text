@@ -14,6 +14,7 @@ module.exports = {
   "language_eu": "বাস্ক",
   "language_ru": "রাশিয়ান",
   "language_auto": "সিস্টেম ডিফল্ট",
+  "default": "ডিফল্ট",
   
   // Release Notes
   "latest_release_notes_label": "সর্বশেষ রিলিজ নোটস",
@@ -40,6 +41,10 @@ module.exports = {
   "show_toggle_command": "কমান্ডে টগল দেখান",
   "show_blacklist_menu": "রাইট-ক্লিক মেনুতে ব্ল্যাকলিস্ট শব্দগুলি দেখান",
   "show_blacklist_menu_desc": "রঙায়ন থেকে নির্বাচিত টেক্সট ব্ল্যাকলিস্ট করার জন্য একটি রাইট-ক্লিক মেনু আইটেম যোগ করে।",
+  "show_add_to_existing_entry_menu": "রাইট-ক্লিক মেনুতে বিদ্যমান এন্ট্রিতে যোগ করুন দেখান",
+  "show_add_to_existing_entry_menu_desc": "নির্বাচিত টেক্সট একটি বিদ্যমান এন্ট্রিতে যোগ করার জন্য একটি রাইট-ক্লিক মেনু আইটেম যোগ করে।",
+  "hide_inactive_groups_in_dropdowns": "ডপডাউনে নিষ্ক্রিয় গ্রুপগুলি লুকান",
+  "hide_inactive_groups_in_dropdowns_desc": "ডপডাউনে গ্রুপ তালিকা প্রদর্শনের সময় নিষ্ক্রিয় শব্দ গ্রুপগুলি লুকায়।",
   "tooltip_enable_for_file": "এই ফাইলের জন্য সক্ষম করুন",
   "tooltip_delete_all_words": "সংজ্ঞায়িত সমস্ত শব্দ/প্যাটার্ন মুছুন",
   "tooltip_delete_all_blacklist": "ব্ল্যাকলিস্ট করা সমস্ত শব্দ/প্যাটার্ন মুছুন",

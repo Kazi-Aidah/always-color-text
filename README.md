@@ -156,6 +156,10 @@ For best results in Reading mode, enable **"Force full render"** in settings. Th
 
 ![Use case examples](https://github.com/user-attachments/assets/e16e3121-2c14-43fe-b022-9e442d031f25)
 
+![Coloring Symbols](assets/symbol-cool.png)
+Note: Coloring symbols affect word coloring, not just the symbol itself.
+Using symbols like `+` may trigger bullets so color `\+` instead.
+
 ---
 
 ## Installation

@@ -353,19 +353,24 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
         e.stopPropagation(); 
         e.stopImmediatePropagation();
         // Open color picker for new word entry with selected text prefilled
-        const modal = new ColorPickerModal(this.app, this.plugin, async (color) => {
-          if (!color || !this.plugin.isValidHexColor(color)) return;
-          // Track the new entry's uid BEFORE calling addNewEntry
-          const currentLength = this.plugin.settings.wordEntries?.length || 0;
-          await this.plugin.addNewEntry(this.selectedText, color, false);
-          // After addNewEntry completes, the new entry is at the end
-          const we = this.plugin.settings.wordEntries || [];
-          if (we.length > currentLength) {
-            // New entry was added, store its uid for the filter to show it
-            this._lastAddedEntryUid = we[we.length - 1].uid;
-            debugLog('LIMIT', 'Set _lastAddedEntryUid for new entry:', this._lastAddedEntryUid);
-            // Trigger the suggestion list to rerender so the new entry appears
-            this.inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+        const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+          const selColor = color && this.plugin.isValidHexColor(color) ? color : (result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null);
+          if (!selColor) return;
+          const selGroupUid = result && result.selectedGroupUid ? result.selectedGroupUid : null;
+          const matchType = (result && result.matchType) ? result.matchType : (this.plugin.settings.partialMatch ? 'contains' : 'exact');
+          const word = this.selectedText;
+          if (selGroupUid) {
+            const group = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups.find(g => g && g.uid === selGroupUid) : null;
+            if (group) {
+              if (!Array.isArray(group.entries)) group.entries = [];
+              group.entries.push({ pattern: word, color: selColor, isRegex: false, flags: '', styleType: 'text', matchType });
+              await this.plugin.saveSettings();
+              this.plugin.compileWordEntries();
+            } else {
+              await this.plugin.addNewEntry(word, selColor, false);
+            }
+          } else {
+            await this.plugin.addNewEntry(word, selColor, false);
           }
           try { this.plugin.refreshEditor(this.view, true); } catch (_) {}
         }, 'text', this.selectedText);
@@ -2233,6 +2238,8 @@ module.exports = class AlwaysColorText extends Plugin {
       // Process callouts after a short delay to ensure DOM is ready
       setTimeout(() => {
         try { this.refreshAllLivePreviewCallouts(); } catch (_) {}
+        try { this.refreshAllLivePreviewTables(); } catch (_) {}
+        try { this.refreshAllBasesViews(); } catch (_) {}
         try { this.forceRefreshAllReadingViews(); } catch (_) {}
       }, 250);
     } else { 
@@ -2276,6 +2283,10 @@ module.exports = class AlwaysColorText extends Plugin {
             }
             this.refreshAllLivePreviewCallouts();
             this.forceReprocessLivePreviewCallouts();
+            this.refreshAllLivePreviewTables();
+            this.forceReprocessLivePreviewTables();
+            this.refreshAllBasesViews();
+            this.forceReprocessBasesViews();
         } catch (_) {}
       });
     }
@@ -2318,6 +2329,10 @@ module.exports = class AlwaysColorText extends Plugin {
           }
           this.refreshAllLivePreviewCallouts();
           this.forceReprocessLivePreviewCallouts();
+          this.refreshAllLivePreviewTables();
+          this.forceReprocessLivePreviewTables();
+          this.refreshAllBasesViews();
+          this.forceReprocessBasesViews();
         } catch (_) {}
       };
     } else {
@@ -2400,7 +2415,7 @@ module.exports = class AlwaysColorText extends Plugin {
           });
         }
 
-        if (Array.isArray(this.settings.wordEntries) && this.settings.wordEntries.length > 0) {
+        if (this.settings.enableAddToExistingMenu && Array.isArray(this.settings.wordEntries) && this.settings.wordEntries.length > 0) {
           menu.addItem(item => {
             item.setTitle(this.t('command_add_to_existing_entry','add to existing entry'))
               .setIcon('plus')
@@ -2426,23 +2441,39 @@ module.exports = class AlwaysColorText extends Plugin {
                 const sel = result || {};
                 const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
                 const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
-                const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === selectedText && !e.isRegex);
-                if (idx !== -1) {
-                  const entry = this.settings.wordEntries[idx];
-                  if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
-                  else if (tc) { entry.color = tc; entry.styleType = 'text'; entry.textColor = null; entry.backgroundColor = null; entry._savedTextColor = tc; }
-                  else if (bc) { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
-                  else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; entry._savedTextColor = color; }
-                } else {
-                  if (tc && bc) {
-                    this.settings.wordEntries.push({ pattern: selectedText, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: tc, _savedBackgroundColor: bc });
-                  } else if (tc) {
-                    this.settings.wordEntries.push({ pattern: selectedText, color: tc, isRegex: false, flags: '', styleType: 'text', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: tc });
-                  } else if (bc) {
-                    this.settings.wordEntries.push({ pattern: selectedText, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedBackgroundColor: bc });
-                  } else if (color && this.isValidHexColor(color)) {
-                    this.settings.wordEntries.push({ pattern: selectedText, color: color, isRegex: false, flags: '', styleType: 'text', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: color });
+                const selGroupUid = sel.selectedGroupUid || null;
+                const matchType = sel.matchType || (this.settings.partialMatch ? 'contains' : 'exact');
+                const applyToArr = (arr) => {
+                  const idx = arr.findIndex(e => e && e.pattern === selectedText && !e.isRegex);
+                  if (idx !== -1) {
+                    const entry = arr[idx];
+                    if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
+                    else if (tc) { entry.color = tc; entry.styleType = 'text'; entry.textColor = null; entry.backgroundColor = null; entry._savedTextColor = tc; }
+                    else if (bc) { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
+                    else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; entry._savedTextColor = color; }
+                    if (!entry.isRegex) entry.matchType = matchType;
+                  } else {
+                    if (tc && bc) {
+                      arr.push({ pattern: selectedText, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both', matchType, _savedTextColor: tc, _savedBackgroundColor: bc });
+                    } else if (tc) {
+                      arr.push({ pattern: selectedText, color: tc, isRegex: false, flags: '', styleType: 'text', matchType, _savedTextColor: tc });
+                    } else if (bc) {
+                      arr.push({ pattern: selectedText, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight', matchType, _savedBackgroundColor: bc });
+                    } else if (color && this.isValidHexColor(color)) {
+                      arr.push({ pattern: selectedText, color: color, isRegex: false, flags: '', styleType: 'text', matchType, _savedTextColor: color });
+                    }
                   }
+                };
+                if (selGroupUid) {
+                  const group = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups.find(g => g && g.uid === selGroupUid) : null;
+                  if (group) {
+                    if (!Array.isArray(group.entries)) group.entries = [];
+                    applyToArr(group.entries);
+                  } else {
+                    applyToArr(this.settings.wordEntries);
+                  }
+                } else {
+                  applyToArr(this.settings.wordEntries);
                 }
                 await this.saveSettings();
                 this.compileWordEntries();
@@ -2453,80 +2484,98 @@ module.exports = class AlwaysColorText extends Plugin {
             });
         });
         
-        // Remove always text color (checks new wordEntries model)
-        // Helper function to compare patterns with case-sensitivity setting
-        const patternMatches = (pattern, text) => {
-          if (this.settings.caseSensitive) {
-            return pattern === text;
-          } else {
-            return pattern.toLowerCase() === text.toLowerCase();
-          }
+        const caseSensitive = !!this.settings.caseSensitive;
+        const norm = (s) => caseSensitive ? String(s) : String(s).toLowerCase();
+        const a = norm(selectedText);
+        const wordEntries = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+        const groupsList = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : [];
+        const matchTypeVal = (mt) => {
+          const v = String(mt || '').toLowerCase();
+          if (v === 'startswith' || v === 'starts with') return 'startswith';
+          if (v === 'endswith' || v === 'ends with') return 'endswith';
+          if (v === 'contains') return 'contains';
+          return 'exact';
         };
-        
-        const hasRegexEntry = this.settings.enableRegexSupport && this.settings.wordEntries.some(e => e && e.isRegex && (() => { try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; } })());
-        const hasLiteralEntry = this.settings.wordEntries.some(e => e && patternMatches(e.pattern, selectedText) && !e.isRegex);
-        const hasGroupedEntry = this.settings.wordEntries.some(e => e && !e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText)));
-        const hasTextBgEntry = (Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : []).some(e => {
-          if (!e || !e.backgroundColor) return false;
-          if (e.isRegex && this.settings.enableRegexSupport) {
-            try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; }
-          } else {
-            const literal = patternMatches(e.pattern || '', selectedText);
-            const grouped = Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText));
-            return literal || grouped;
+        const matchPattern = (p, mt) => {
+          const b = norm(p || '');
+          const m = matchTypeVal(mt);
+          if (m === 'startswith') return a.startsWith(b);
+          if (m === 'endswith') return a.endsWith(b);
+          if (m === 'contains') return a.includes(b);
+          return a === b;
+        };
+        const findManualMatch = () => {
+          for (let i = 0; i < wordEntries.length; i++) {
+            const e = wordEntries[i];
+            if (!e || e.isRegex) continue;
+            if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0) {
+              for (const p of e.groupedPatterns) {
+                if (matchPattern(p, e.matchType)) {
+                  return { container: wordEntries, index: i, entry: e, kind: 'grouped', matchedPattern: p };
+                }
+              }
+            } else if (matchPattern(e.pattern || '', e.matchType)) {
+              return { container: wordEntries, index: i, entry: e, kind: 'literal', matchedPattern: e.pattern || '' };
+            }
           }
-        });
-        
-        if (hasLiteralEntry || hasGroupedEntry || hasRegexEntry || hasTextBgEntry) {
+          for (const g of groupsList) {
+            if (!g || !Array.isArray(g.entries)) continue;
+            for (let j = 0; j < g.entries.length; j++) {
+              const e = g.entries[j];
+              if (!e || e.isRegex) continue;
+              if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0) {
+                for (const p of e.groupedPatterns) {
+                  if (matchPattern(p, e.matchType)) {
+                    return { container: g.entries, index: j, entry: e, kind: 'grouped', matchedPattern: p };
+                  }
+                }
+              } else if (matchPattern(e.pattern || '', e.matchType)) {
+                return { container: g.entries, index: j, entry: e, kind: 'literal', matchedPattern: e.pattern || '' };
+              }
+            }
+          }
+          return null;
+        };
+        const findRegexMatch = () => {
+          if (!this.settings.enableRegexSupport) return null;
+          for (let i = 0; i < wordEntries.length; i++) {
+            const e = wordEntries[i];
+            if (!e || !e.isRegex) continue;
+            try { const re = new RegExp(e.pattern, e.flags || (caseSensitive ? '' : 'i')); if (re.test(selectedText)) return { container: wordEntries, index: i, entry: e, kind: 'regex' }; } catch (_) {}
+          }
+          for (const g of groupsList) {
+            if (!g || !Array.isArray(g.entries)) continue;
+            for (let j = 0; j < g.entries.length; j++) {
+              const e = g.entries[j];
+              if (!e || !e.isRegex) continue;
+              try { const re = new RegExp(e.pattern, e.flags || (caseSensitive ? '' : 'i')); if (re.test(selectedText)) return { container: g.entries, index: j, entry: e, kind: 'regex' }; } catch (_) {}
+            }
+          }
+          return null;
+        };
+        const manualMatch = findManualMatch();
+        const regexMatch = manualMatch ? null : findRegexMatch();
+        if (manualMatch || regexMatch) {
           menu.addItem(item => {
             item.setTitle(this.t('menu_remove_always_color_text','Remove Always Color Text'))
               .setIcon('eraser')
               .onClick(async () => {
-                const hasManual = hasLiteralEntry || hasGroupedEntry || hasTextBgEntry;
-                if (hasGroupedEntry) {
-                  const entryWithGroup = this.settings.wordEntries.find(e => e && !e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText)));
-                  if (entryWithGroup) {
-                    const idx = this.settings.wordEntries.indexOf(entryWithGroup);
-                    if (idx !== -1) {
-                      entryWithGroup.groupedPatterns = entryWithGroup.groupedPatterns.filter(p => !patternMatches(p, selectedText));
-                      if (entryWithGroup.groupedPatterns.length === 1) {
-                        entryWithGroup.pattern = entryWithGroup.groupedPatterns[0];
-                        entryWithGroup.groupedPatterns = null;
-                      } else if (entryWithGroup.groupedPatterns.length === 0) {
-                        this.settings.wordEntries.splice(idx, 1);
-                      }
+                if (manualMatch) {
+                  const { container, index, entry, kind, matchedPattern } = manualMatch;
+                  if (kind === 'grouped' && Array.isArray(entry.groupedPatterns)) {
+                    entry.groupedPatterns = entry.groupedPatterns.filter(p => !(norm(p) === norm(matchedPattern)));
+                    if (entry.groupedPatterns.length === 1) {
+                      entry.pattern = entry.groupedPatterns[0];
+                      entry.groupedPatterns = null;
+                    } else if (entry.groupedPatterns.length === 0) {
+                      container.splice(index, 1);
                     }
+                  } else {
+                    container.splice(index, 1);
                   }
-                }
-                if (hasLiteralEntry) {
-                  this.settings.wordEntries = this.settings.wordEntries.filter(e => !(e && patternMatches(e.pattern, selectedText) && !e.isRegex));
-                }
-                if (hasRegexEntry && !hasManual) {
-                  const idxToRemove = this.settings.wordEntries.findIndex(e => e && e.isRegex && (() => { try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; } })());
-                  if (idxToRemove !== -1) {
-                    this.settings.wordEntries.splice(idxToRemove, 1);
-                  }
-                }
-                if (hasTextBgEntry) {
-                  const entries = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
-                  const matchedGrouped = entries.find(e => e && e.backgroundColor && !e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => patternMatches(p, selectedText)));
-                  if (matchedGrouped) {
-                    const idx = entries.indexOf(matchedGrouped);
-                    matchedGrouped.groupedPatterns = matchedGrouped.groupedPatterns.filter(p => !patternMatches(p, selectedText));
-                    if (matchedGrouped.groupedPatterns.length === 1) {
-                      matchedGrouped.pattern = matchedGrouped.groupedPatterns[0];
-                      matchedGrouped.groupedPatterns = null;
-                    } else if (matchedGrouped.groupedPatterns.length === 0) {
-                      entries.splice(idx, 1);
-                    }
-                  }
-                  this.settings.wordEntries = entries.filter(e => !(e && e.backgroundColor && !e.isRegex && patternMatches(e.pattern || '', selectedText)));
-                  if (!hasManual) {
-                    const ridx = this.settings.wordEntries.findIndex(e => e && e.backgroundColor && e.isRegex && (() => { try { const re = new RegExp(e.pattern, e.flags || (this.settings.caseSensitive ? '' : 'i')); return re.test(selectedText); } catch (err) { return false; } })());
-                    if (ridx !== -1) {
-                      this.settings.wordEntries.splice(ridx, 1);
-                    }
-                  }
+                } else if (regexMatch) {
+                  const { container, index } = regexMatch;
+                  container.splice(index, 1);
                 }
                 await this.saveSettings();
                 this.refreshEditor(view, true);
@@ -2605,23 +2654,39 @@ module.exports = class AlwaysColorText extends Plugin {
             const sel = result || {};
             const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
             const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
-            const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === word && !e.isRegex);
-            if (idx !== -1) {
-              const entry = this.settings.wordEntries[idx];
-              if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
-              else if (tc) { entry.color = tc; entry.styleType = 'text'; entry.textColor = null; entry.backgroundColor = null; entry._savedTextColor = tc; }
-              else if (bc) { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
-              else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; entry._savedTextColor = color; }
-            } else {
-              if (tc && bc) {
-                this.settings.wordEntries.push({ pattern: word, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: tc, _savedBackgroundColor: bc });
-              } else if (tc) {
-                this.settings.wordEntries.push({ pattern: word, color: tc, isRegex: false, flags: '', styleType: 'text', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: tc });
-              } else if (bc) {
-                this.settings.wordEntries.push({ pattern: word, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedBackgroundColor: bc });
-              } else if (color && this.isValidHexColor(color)) {
-                this.settings.wordEntries.push({ pattern: word, color: color, isRegex: false, flags: '', styleType: 'text', matchType: this.settings.partialMatch ? 'contains' : 'exact', _savedTextColor: color });
+            const selGroupUid = sel.selectedGroupUid || null;
+            const matchType = sel.matchType || (this.settings.partialMatch ? 'contains' : 'exact');
+            const applyToArr = (arr) => {
+              const idx = arr.findIndex(e => e && e.pattern === word && !e.isRegex);
+              if (idx !== -1) {
+                const entry = arr[idx];
+                if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
+                else if (tc) { entry.color = tc; entry.styleType = 'text'; entry.textColor = null; entry.backgroundColor = null; entry._savedTextColor = tc; }
+                else if (bc) { entry.color = ''; entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
+                else if (color && this.isValidHexColor(color)) { entry.color = color; entry.styleType = 'text'; entry._savedTextColor = color; }
+                if (!entry.isRegex) entry.matchType = matchType;
+              } else {
+                if (tc && bc) {
+                  arr.push({ pattern: word, color: '', textColor: tc, backgroundColor: bc, isRegex: false, flags: '', styleType: 'both', matchType, _savedTextColor: tc, _savedBackgroundColor: bc });
+                } else if (tc) {
+                  arr.push({ pattern: word, color: tc, isRegex: false, flags: '', styleType: 'text', matchType, _savedTextColor: tc });
+                } else if (bc) {
+                  arr.push({ pattern: word, color: '', textColor: 'currentColor', backgroundColor: bc, isRegex: false, flags: '', styleType: 'highlight', matchType, _savedBackgroundColor: bc });
+                } else if (color && this.isValidHexColor(color)) {
+                  arr.push({ pattern: word, color: color, isRegex: false, flags: '', styleType: 'text', matchType, _savedTextColor: color });
+                }
               }
+            };
+            if (selGroupUid) {
+              const group = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups.find(g => g && g.uid === selGroupUid) : null;
+              if (group) {
+                if (!Array.isArray(group.entries)) group.entries = [];
+                applyToArr(group.entries);
+              } else {
+                applyToArr(this.settings.wordEntries);
+              }
+            } else {
+              applyToArr(this.settings.wordEntries);
             }
             await this.saveSettings();
             this.compileWordEntries();
@@ -2812,6 +2877,10 @@ module.exports = class AlwaysColorText extends Plugin {
             this.forceRefreshAllReadingViews();
             try { this.refreshAllLivePreviewCallouts(); } catch (_) {}
             try { this.forceReprocessLivePreviewCallouts(); } catch (_) {}
+            try { this.refreshAllLivePreviewTables(); } catch (_) {}
+            try { this.forceReprocessLivePreviewTables(); } catch (_) {}
+            try { this.refreshAllBasesViews(); } catch (_) {}
+            try { this.forceReprocessBasesViews(); } catch (_) {}
             const msg = this.settings.hideTextColors ? this.t('notice_text_colors_hidden','Text colors hidden') : this.t('notice_text_colors_visible','Text colors visible');
             new Notice(msg);
           } catch (_) {}
@@ -2845,6 +2914,10 @@ module.exports = class AlwaysColorText extends Plugin {
             this.forceRefreshAllReadingViews();
             try { this.refreshAllLivePreviewCallouts(); } catch (_) {}
             try { this.forceReprocessLivePreviewCallouts(); } catch (_) {}
+            try { this.refreshAllLivePreviewTables(); } catch (_) {}
+            try { this.forceReprocessLivePreviewTables(); } catch (_) {}
+            try { this.refreshAllBasesViews(); } catch (_) {}
+            try { this.forceReprocessBasesViews(); } catch (_) {}
             const msg = this.settings.hideHighlights ? this.t('notice_highlights_hidden','Highlights hidden') : this.t('notice_highlights_visible','Highlights visible');
             new Notice(msg);
           } catch (_) {}
@@ -4067,6 +4140,77 @@ module.exports = class AlwaysColorText extends Plugin {
       this.markdownPostProcessorRegistered = true;
     }
 
+    try {
+      if (!this._canvasObserver) {
+        this._canvasDebounceTimers = new WeakMap();
+        const resolveEmbedSourcePath = (embedEl) => {
+          try {
+            const host = embedEl.closest('[data-path]') || embedEl.querySelector('[data-path]');
+            if (host && host.dataset && typeof host.dataset.path === 'string' && host.dataset.path.length > 0) {
+              return host.dataset.path;
+            }
+          } catch (_) {}
+          try {
+            const link = embedEl.closest('.markdown-embed')?.querySelector('.internal-link, a[href]');
+            if (link && link.getAttribute) {
+              const href = link.getAttribute('href') || '';
+              if (href && !href.startsWith('http')) return href;
+            }
+          } catch (_) {}
+          try {
+            return this.app?.workspace?.getActiveFile()?.path || null;
+          } catch (_) { return null; }
+        };
+        const scheduleCanvasProcess = (embedEl) => {
+          if (!embedEl) return;
+          const prev = this._canvasDebounceTimers.get(embedEl);
+          if (prev) {
+            try { clearTimeout(prev); } catch (_) {}
+          }
+          const sp = resolveEmbedSourcePath(embedEl);
+          if (!sp) return;
+          const timer = setTimeout(() => {
+            try {
+              this.processActiveFileOnly(embedEl, { sourcePath: sp });
+            } catch (e) {
+              debugWarn('CANVAS', 'Failed to process canvas embed', e);
+            }
+          }, 80);
+          try { this._canvasDebounceTimers.set(embedEl, timer); } catch (_) {}
+        };
+        try {
+          const existingEmbeds = document.querySelectorAll('.canvas-node .markdown-embed-content');
+          existingEmbeds.forEach((el) => scheduleCanvasProcess(el));
+        } catch (_) {}
+        this._canvasObserver = new MutationObserver((mutations) => {
+          try {
+            for (const m of mutations) {
+              if (m.type === 'childList') {
+                const added = Array.from(m.addedNodes || []).filter(n => n.nodeType === Node.ELEMENT_NODE);
+                for (const node of added) {
+                  try {
+                    if (node.classList && node.classList.contains('markdown-embed-content') && node.closest('.canvas-node')) {
+                      scheduleCanvasProcess(node);
+                    }
+                    const embeds = node.querySelectorAll ? node.querySelectorAll('.canvas-node .markdown-embed-content') : [];
+                    embeds.forEach((el) => scheduleCanvasProcess(el));
+                  } catch (_) {}
+                }
+              } else if (m.type === 'attributes' || m.type === 'characterData') {
+                try {
+                  const el = m.target && m.target.closest ? m.target.closest('.canvas-node .markdown-embed-content') : null;
+                  if (el) scheduleCanvasProcess(el);
+                } catch (_) {}
+              }
+            }
+          } catch (e) {
+            debugWarn('CANVAS', 'Mutation observer error', e);
+          }
+        });
+        try { this._canvasObserver.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true }); } catch (_) {}
+      }
+    } catch (e) { debugWarn('CANVAS', 'Failed to initialize canvas observer', e); }
+
     if (!this.activeLeafChangeListenerRegistered) {
       this.activeLeafChangeListener = this.app.workspace.on('active-leaf-change', leaf => {
         if (leaf && leaf.view instanceof MarkdownView) {
@@ -4114,6 +4258,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   // Clear cache to force re-processing on file change
                   this._lpCalloutCache = new WeakMap();
                   this._processLivePreviewCallouts(view);
+                  this._processLivePreviewTables(view);
                 }
               } catch (e) {}
             }
@@ -4169,6 +4314,25 @@ module.exports = class AlwaysColorText extends Plugin {
       this.markdownPostProcessorRegistered = false;
       this._unregisterMarkdownPostProcessor = null;
     }
+
+    try {
+      if (this._canvasObserver) {
+        try { this._canvasObserver.disconnect(); } catch (_) {}
+        this._canvasObserver = null;
+      }
+      try {
+        if (this._canvasDebounceTimers) {
+          const embeds = document.querySelectorAll('.canvas-node .markdown-embed-content');
+          embeds.forEach((el) => {
+            try {
+              const t = this._canvasDebounceTimers.get(el);
+              if (t) clearTimeout(t);
+            } catch (_) {}
+          });
+          this._canvasDebounceTimers = new WeakMap();
+        }
+      } catch (_) {}
+    } catch (_) {}
 
     if (this.activeLeafChangeListenerRegistered && this.activeLeafChangeListener) {
       this.app.workspace.off('active-leaf-change', this.activeLeafChangeListener);
@@ -4262,11 +4426,13 @@ module.exports = class AlwaysColorText extends Plugin {
       },
       enableAlwaysHighlight: false,
       enableAlwaysColor: true,
-      partialMatch: false,
+      partialMatch: true,
       blacklistWords: [],
       // New: pattern-capable blacklist entries
       blacklistEntries: [],
       enableBlacklistMenu: true,
+      enableAddToExistingMenu: true,
+      hideInactiveGroupsInDropdowns: true,
       symbolWordColoring: false,
       // Enable/disable regex support in the settings UI/runtime
       enableRegexSupport: false,
@@ -4449,7 +4615,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const finalColor = (styleType === 'both' || styleType === 'highlight') ? '' : (hasValidColor ? color : '');
         const finalText = hasValidText ? textColor : (styleType === 'highlight' ? 'currentColor' : null);
         const finalBg = hasValidBg ? backgroundColor : null;
-        return {
+        const mapped = {
           pattern: e.pattern || e.word || '',
           color: finalColor,
           textColor: finalText,
@@ -4472,6 +4638,35 @@ module.exports = class AlwaysColorText extends Plugin {
           borderThickness: e.borderThickness,
           uid: e.uid  // Also preserve UID
         };
+        // Preserve per-entry inclusion/exclusion rules on load
+        try {
+          if (Array.isArray(e.inclusionRules)) {
+            mapped.inclusionRules = e.inclusionRules
+              .map(r => ({
+                path: String((r && r.path) || ''),
+                isRegex: !!(r && r.isRegex),
+                flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+              }))
+              .filter(r => r.path.length > 0);
+          } else {
+            mapped.inclusionRules = [];
+          }
+          if (Array.isArray(e.exclusionRules)) {
+            mapped.exclusionRules = e.exclusionRules
+              .map(r => ({
+                path: String((r && r.path) || ''),
+                isRegex: !!(r && r.isRegex),
+                flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+              }))
+              .filter(r => r.path.length > 0);
+          } else {
+            mapped.exclusionRules = [];
+          }
+        } catch (_) {
+          mapped.inclusionRules = Array.isArray(mapped.inclusionRules) ? mapped.inclusionRules : [];
+          mapped.exclusionRules = Array.isArray(mapped.exclusionRules) ? mapped.exclusionRules : [];
+        }
+        return mapped;
       }).filter(x => x && String(x.pattern).trim() !== '');
     }
 
@@ -4512,6 +4707,34 @@ module.exports = class AlwaysColorText extends Plugin {
               if (typeof e.borderLineStyle === 'string') we.borderLineStyle = e.borderLineStyle;
               if (typeof e.borderOpacity === 'number') we.borderOpacity = e.borderOpacity;
               if (typeof e.borderThickness === 'number') we.borderThickness = e.borderThickness;
+              // Preserve per-entry inclusion/exclusion rules
+              try {
+                if (Array.isArray(e.inclusionRules)) {
+                  we.inclusionRules = e.inclusionRules
+                    .map(r => ({
+                      path: String((r && r.path) || ''),
+                      isRegex: !!(r && r.isRegex),
+                      flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+                    }))
+                    .filter(r => r.path.length > 0);
+                } else if (!Array.isArray(we.inclusionRules)) {
+                  we.inclusionRules = [];
+                }
+                if (Array.isArray(e.exclusionRules)) {
+                  we.exclusionRules = e.exclusionRules
+                    .map(r => ({
+                      path: String((r && r.path) || ''),
+                      isRegex: !!(r && r.isRegex),
+                      flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+                    }))
+                    .filter(r => r.path.length > 0);
+                } else if (!Array.isArray(we.exclusionRules)) {
+                  we.exclusionRules = [];
+                }
+              } catch (_) {
+                if (!Array.isArray(we.inclusionRules)) we.inclusionRules = [];
+                if (!Array.isArray(we.exclusionRules)) we.exclusionRules = [];
+              }
               merged = true;
               break;
             }
@@ -4539,6 +4762,34 @@ module.exports = class AlwaysColorText extends Plugin {
             if (typeof e.borderLineStyle === 'string') newEntry.borderLineStyle = e.borderLineStyle;
             if (typeof e.borderOpacity === 'number') newEntry.borderOpacity = e.borderOpacity;
             if (typeof e.borderThickness === 'number') newEntry.borderThickness = e.borderThickness;
+            // Preserve per-entry inclusion/exclusion rules when creating from textBgColoringEntries
+            try {
+              if (Array.isArray(e.inclusionRules)) {
+                newEntry.inclusionRules = e.inclusionRules
+                  .map(r => ({
+                    path: String((r && r.path) || ''),
+                    isRegex: !!(r && r.isRegex),
+                    flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+                  }))
+                  .filter(r => r.path.length > 0);
+              } else {
+                newEntry.inclusionRules = [];
+              }
+              if (Array.isArray(e.exclusionRules)) {
+                newEntry.exclusionRules = e.exclusionRules
+                  .map(r => ({
+                    path: String((r && r.path) || ''),
+                    isRegex: !!(r && r.isRegex),
+                    flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+                  }))
+                  .filter(r => r.path.length > 0);
+              } else {
+                newEntry.exclusionRules = [];
+              }
+            } catch (_) {
+              newEntry.inclusionRules = Array.isArray(newEntry.inclusionRules) ? newEntry.inclusionRules : [];
+              newEntry.exclusionRules = Array.isArray(newEntry.exclusionRules) ? newEntry.exclusionRules : [];
+            }
             this.settings.wordEntries.push(newEntry);
           }
         }
@@ -4794,6 +5045,29 @@ module.exports = class AlwaysColorText extends Plugin {
         x.matchType = normalized;
         x._savedTextColor = x._savedTextColor && this.isValidHexColor(x._savedTextColor) ? x._savedTextColor : (this.isValidHexColor(x.color) ? x.color : null);
         x._savedBackgroundColor = x._savedBackgroundColor && this.isValidHexColor(x._savedBackgroundColor) ? x._savedBackgroundColor : (this.isValidHexColor(x.backgroundColor) ? x.backgroundColor : null);
+        // Preserve per-entry path rules
+        if (Array.isArray(e.inclusionRules)) {
+          x.inclusionRules = e.inclusionRules
+            .map(r => ({
+              path: String((r && r.path) || ''),
+              isRegex: !!(r && r.isRegex),
+              flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+            }))
+            .filter(r => r.path.length > 0);
+        } else {
+          x.inclusionRules = [];
+        }
+        if (Array.isArray(e.exclusionRules)) {
+          x.exclusionRules = e.exclusionRules
+            .map(r => ({
+              path: String((r && r.path) || ''),
+              isRegex: !!(r && r.isRegex),
+              flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+            }))
+            .filter(r => r.path.length > 0);
+        } else {
+          x.exclusionRules = [];
+        }
         
         // PRESERVE custom styling properties (per-entry highlight customization)
         x.backgroundOpacity = typeof e.backgroundOpacity === 'number' ? e.backgroundOpacity : undefined;
@@ -4837,6 +5111,29 @@ module.exports = class AlwaysColorText extends Plugin {
           x.flags = String(x.flags || '').replace(/[^gimsuy]/g, '');
           x.isRegex = !!x.isRegex;
           x.styleType = x.styleType || (x.backgroundColor ? (x.textColor && x.textColor !== 'currentColor' ? 'both' : 'highlight') : 'text');
+          // Preserve per-entry path rules for text+bg entries too
+          if (Array.isArray(e.inclusionRules)) {
+            x.inclusionRules = e.inclusionRules
+              .map(r => ({
+                path: String((r && r.path) || ''),
+                isRegex: !!(r && r.isRegex),
+                flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+              }))
+              .filter(r => r.path.length > 0);
+          } else {
+            x.inclusionRules = [];
+          }
+          if (Array.isArray(e.exclusionRules)) {
+            x.exclusionRules = e.exclusionRules
+              .map(r => ({
+                path: String((r && r.path) || ''),
+                isRegex: !!(r && r.isRegex),
+                flags: String((r && r.flags) || '').replace(/[^gimsuy]/g, '')
+              }))
+              .filter(r => r.path.length > 0);
+          } else {
+            x.exclusionRules = [];
+          }
           // PRESERVE custom styling properties for textBgColoringEntries too
           x.backgroundOpacity = typeof e.backgroundOpacity === 'number' ? e.backgroundOpacity : undefined;
           x.highlightBorderRadius = typeof e.highlightBorderRadius === 'number' ? e.highlightBorderRadius : undefined;
@@ -5241,6 +5538,12 @@ module.exports = class AlwaysColorText extends Plugin {
       return /[\s,\.;:!\?"'\(\)\[\]\{\}<>@#]/.test(s);
     } catch (e) { return false; }
   }
+  isLatinWordPattern(p) {
+    try {
+      const s = String(p || '');
+      return /^[A-Za-z0-9'\-]+$/.test(s);
+    } catch (e) { return false; }
+  }
 
   _isWordStart(text, idx) {
     const leftChar = idx > 0 ? text[idx - 1] : '';
@@ -5618,6 +5921,14 @@ module.exports = class AlwaysColorText extends Plugin {
           return e;
         }).filter(Boolean);
       }
+      // Sort by specificity and pattern length (prioritize longer words)
+      filtered.sort((a, b) => {
+        const sa = typeof a.specificity === 'number' ? a.specificity : (String(a.pattern || '').replace(/\*/g, '').length);
+        const sb = typeof b.specificity === 'number' ? b.specificity : (String(b.pattern || '').replace(/\*/g, '').length);
+        const specDiff = sb - sa;
+        if (specDiff !== 0) return specDiff;
+        return String(b.pattern || '').length - String(a.pattern || '').length;
+      });
       // Cache and clear dirty flag
       this._cachedSortedEntries = filtered;
       this._cacheDirty = false;
@@ -6186,80 +6497,64 @@ module.exports = class AlwaysColorText extends Plugin {
         return false;
       }
       
-      // Check per-entry rules if entry is provided
-      if (entry && typeof entry === 'object') {
-        // RULE 3: Entry "only colors in" specific files/folders? → Color only there
-        const entryInclusionRules = Array.isArray(entry.inclusionRules) ? entry.inclusionRules : [];
-        if (entryInclusionRules.length > 0) {
-          const matchesInclusionRule = entryInclusionRules.some(r => {
-            if (!r || !r.path) return false;
-            return pathMatches(r);
-          });
-          
-          if (!matchesInclusionRule) {
-            debugLog('RULE_ENGINE', `Skipping: entry "${textPattern}" only colors in specific paths`);
-            return false;
-          }
+      const matchType = (rule) => {
+        const pathStr = String(rule.path || '').trim();
+        if (pathStr.length === 0) return 'vault';
+        const dk = this.detectRuleKind(pathStr);
+        if (dk.kind === 'name') {
+          const { fileMatch, folderMatch } = this._matchesByName(fp, dk.name);
+          if (fileMatch) return 'file';
+          if (folderMatch) return 'folder';
+          return null;
         }
-        
-        // RULE 4: Entry "does not color in" specific files/folders? → Don't color there
-        const entryExclusionRules = Array.isArray(entry.exclusionRules) ? entry.exclusionRules : [];
-        if (entryExclusionRules.length > 0) {
-          const matchesExclusionRule = entryExclusionRules.some(r => {
-            if (!r || !r.path) return false;
-            return pathMatches(r);
-          });
-          
-          if (matchesExclusionRule) {
-            debugLog('RULE_ENGINE', `Skipping: entry "${textPattern}" does not color here`);
-            return false;
+        if (dk.kind === 'exact-file') return this._matchFile(dk.path, fp) ? 'file' : null;
+        if (dk.kind === 'exact-folder') {
+          const parents = this._parentFolders(fp);
+          for (const p of parents) {
+            if (this.normalizePath(p) === this.normalizePath(dk.path)) return 'folder';
           }
+          return null;
         }
-        
-        // No per-entry rules prevent coloring
-        return true;
+        if (dk.kind === 'regex') {
+          try {
+            const re = new RegExp(dk.pattern);
+            if (re.test(fp)) return 'file';
+            const parents = this._parentFolders(fp);
+            for (const p of parents) { if (re.test(p)) return 'folder'; }
+          } catch (e) { return null; }
+        }
+        return null;
+      };
+      
+      const perEntryInclude = entry && Array.isArray(entry.inclusionRules) ? entry.inclusionRules : [];
+      const perEntryExclude = entry && Array.isArray(entry.exclusionRules) ? entry.exclusionRules : [];
+      const globalInclude = advRules.filter(r => r && r.mode === 'include' && textMatches(r, textPattern)).map(r => ({ path: r.path, isRegex: r.isRegex, flags: r.flags }));
+      const globalExclude = advRules.filter(r => r && r.mode === 'exclude' && textMatches(r, textPattern)).map(r => ({ path: r.path, isRegex: r.isRegex, flags: r.flags }));
+      
+      const includeRules = [...perEntryInclude, ...globalInclude];
+      const excludeRules = [...perEntryExclude, ...globalExclude];
+      
+      const includeMatches = includeRules.map(r => matchType(r)).filter(t => t);
+      const hasIncludeRules = includeRules.length > 0;
+      const includeMatched = includeMatches.length > 0;
+      const hasFileInclude = includeMatches.includes('file');
+      
+      if (hasIncludeRules && !includeMatched) {
+        debugLog('RULE_ENGINE', `Skipping: text "${textPattern}" only colors elsewhere`);
+        return false;
       }
       
-      // RULE 3: Text "only colors in" this file/folder? → Color only here (legacy global rules)
-      const onlyIncludeRules = advRules.filter(r => r && r.mode === 'include' && textMatches(r, textPattern));
-      if (onlyIncludeRules.length > 0) {
-        // Text has "only colors in" rules - check if this file/folder matches any
-        const matchesIncludeRule = onlyIncludeRules.some(r => pathMatches(r));
-        
-        // DEBUG: Log when checking "belmo"
-        if (String(textPattern).includes('belmo')) {
-          debugLog('RULE_CHECK_BELMO', `Found ${onlyIncludeRules.length} "only color in" rules`);
-          onlyIncludeRules.forEach((r, i) => {
-            const matches = pathMatches(r);
-            debugLog('RULE_CHECK_BELMO', `Include rule ${i}: path="${r.path}" matches=${matches}`);
-          });
-        }
-        
-        if (!matchesIncludeRule) {
-          debugLog('RULE_ENGINE', `Skipping: text "${textPattern}" only colors elsewhere`);
-          return false;
-        }
-      }
+      const excludeMatches = excludeRules.map(r => matchType(r)).filter(t => t);
+      const hasFileExclude = excludeMatches.includes('file');
+      const hasFolderOrVaultExclude = excludeMatches.includes('folder') || excludeMatches.includes('vault');
       
-      // RULE 4: Text "does not color in" this file/folder? → Don't color here (legacy global rules)
-      const excludeRules = advRules.filter(r => r && r.mode === 'exclude' && textMatches(r, textPattern));
-      if (excludeRules.length > 0) {
-        const matchesExcludeRule = excludeRules.some(r => pathMatches(r));
-        
-        // DEBUG: Log when checking "belmo"
-        if (String(textPattern).includes('belmo')) {
-          debugLog('RULE_CHECK_BELMO', `Found ${excludeRules.length} "does not color in" rules`);
-          excludeRules.forEach((r, i) => {
-            const matches = pathMatches(r);
-            debugLog('RULE_CHECK_BELMO', `Exclude rule ${i}: path="${r.path}" matches=${matches}`);
-          });
-          debugLog('RULE_CHECK_BELMO', `matchesExcludeRule=${matchesExcludeRule} -> returning ${!matchesExcludeRule}`);
-        }
-        
-        if (matchesExcludeRule) {
-          debugLog('RULE_ENGINE', `Skipping: text "${textPattern}" does not color here`);
-          return false;
-        }
+      if (hasFileExclude) {
+        debugLog('RULE_ENGINE', `Skipping: text "${textPattern}" does not color in this file`);
+        return false;
+      }
+      if (hasFolderOrVaultExclude && !hasFileInclude) {
+        debugLog('RULE_ENGINE', `Skipping: text "${textPattern}" does not color here due to folder/vault rule`);
+        return false;
       }
       
       // No rules prevent coloring
@@ -6475,6 +6770,9 @@ module.exports = class AlwaysColorText extends Plugin {
           specificity: pattern.replace(/\*/g, '').length,
           presetLabel: e.presetLabel || undefined, // Preserve presetLabel from original entry
           entryRef: e, // Keep reference to original entry for highlight styling parameters
+          // Copy per-entry include/exclude rules so filtering still works after reload
+          inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
+          exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
           // Copy custom styling properties directly to compiled entry as well
           backgroundOpacity: e.backgroundOpacity,
           highlightBorderRadius: e.highlightBorderRadius,
@@ -6654,6 +6952,9 @@ module.exports = class AlwaysColorText extends Plugin {
             isTextBg: true, // Mark as text+bg entry
             presetLabel: e.presetLabel || undefined, // Preserve presetLabel from original entry
             entryRef: e, // Keep reference to original entry for highlight styling parameters
+            // Copy per-entry include/exclude rules so filtering still works after reload
+            inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
+            exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
             // Copy custom styling properties directly to compiled entry as well
             backgroundOpacity: e.backgroundOpacity,
             highlightBorderRadius: e.highlightBorderRadius,
@@ -7809,6 +8110,10 @@ module.exports = class AlwaysColorText extends Plugin {
           if (node.parentElement?.closest('code, pre')) {
             return NodeFilter.FILTER_REJECT;
           }
+          // CRITICAL FIX: Skip text nodes that are already inside highlight spans to prevent double-processing
+          if (node.parentElement?.closest('.always-color-text-highlight')) {
+            return NodeFilter.FILTER_REJECT;
+          }
           try {
             if (node.parentElement?.closest('.act-skip-coloring')) {
               return NodeFilter.FILTER_REJECT;
@@ -8759,6 +9064,172 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) { try { debugError('LP_CALLOUT', 'Failed coloring live preview callouts', e); } catch (_) {} }
   }
 
+  _processLivePreviewTables(view) {
+    try {
+      const now = Date.now();
+      if (this._lpTablesLastRun && (now - this._lpTablesLastRun) < 200) return;
+      this._lpTablesLastRun = now;
+      const root = view && view.dom ? view.dom : null;
+      if (!root) return;
+      const isLP = root.closest && root.closest('.is-live-preview');
+      if (!isLP) return;
+      const cells = root.querySelectorAll('.cm-content table td, .cm-content table th');
+      if (!cells || cells.length === 0) return;
+
+      const fileForView = view.file || this.app.workspace.getActiveFile();
+      const filePath = fileForView ? fileForView.path : null;
+      const docDisabled = !!(filePath && this.settings.disabledFiles && this.settings.disabledFiles.includes(filePath));
+      const fmDisabled = !!(filePath && this.isFrontmatterColoringDisabled && this.isFrontmatterColoringDisabled(filePath));
+      if (!this.settings.enabled || docDisabled || fmDisabled) {
+        for (const cell of cells) {
+          try {
+            const highlights = cell.querySelectorAll('.always-color-text-highlight');
+            for (const hl of highlights) {
+              const textNode = document.createTextNode(hl.textContent);
+              hl.replaceWith(textNode);
+            }
+          } catch (_) {}
+        }
+        return;
+      }
+
+      const allEntries = this.getSortedWordEntries();
+      const entries = filePath ? this.filterEntriesByAdvancedRules(filePath, allEntries) : allEntries;
+      const folderEntry = filePath ? this.getBestFolderEntry(filePath) : null;
+      if (!this._lpTableCache) this._lpTableCache = new WeakMap();
+
+      for (const cell of cells) {
+        try {
+          const hasContent = cell.textContent && cell.textContent.trim().length > 0;
+          if (!hasContent) continue;
+          const sig = [
+            (cell.textContent ? cell.textContent.length : 0),
+            (cell.childElementCount || 0),
+            (this.settings.enabled ? 1 : 0),
+            (this.settings.hideTextColors ? 1 : 0),
+            (this.settings.hideHighlights ? 1 : 0),
+            (docDisabled ? 1 : 0),
+            (fmDisabled ? 1 : 0)
+          ].join(':');
+          const prev = this._lpTableCache.get(cell);
+          if (prev === sig) continue;
+          this._lpTableCache.set(cell, sig);
+          this.processInChunks(cell, entries, folderEntry, {
+            clearExisting: true,
+            batchSize: 10,
+            forceProcess: true,
+            maxMatches: Infinity
+          });
+        } catch (_) {}
+      }
+    } catch (e) { try { debugError('LP_TABLES', 'Failed coloring live preview tables', e); } catch (_) {} }
+  }
+
+  refreshAllLivePreviewTables() {
+    try {
+      this._lpTableCache = new WeakMap();
+      try { this._lpTablesLastRun = 0; } catch (_) {}
+      this.app.workspace.iterateAllLeaves(leaf => {
+        try {
+          if (!(leaf.view instanceof MarkdownView)) return;
+          if (leaf.view.getMode && leaf.view.getMode() !== 'source') return;
+          const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
+          if (view) {
+            const root = view && view.dom ? view.dom : null;
+            if (root) {
+              try {
+                const cells = root.querySelectorAll('.cm-content table td, .cm-content table th');
+                for (const cell of cells) {
+                  const highlights = cell.querySelectorAll('.always-color-text-highlight');
+                  for (const hl of highlights) {
+                    const textNode = document.createTextNode(hl.textContent);
+                    hl.replaceWith(textNode);
+                  }
+                }
+              } catch (e) {}
+            }
+            if (this.settings.enabled) {
+              this._processLivePreviewTables(view);
+              try { this._attachLivePreviewTableObserver(view); } catch (_) {}
+              setTimeout(() => { try { this._processLivePreviewTables(view); } catch (_) {} }, 250);
+            }
+          }
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
+  forceReprocessLivePreviewTables() {
+    const runPass = (delay) => {
+      setTimeout(() => {
+        try { this._lpTablesLastRun = 0; } catch (_) {}
+        try { this._lpTableCache = new WeakMap(); } catch (_) {}
+        try {
+          this.app.workspace.iterateAllLeaves(leaf => {
+            try {
+              if (!(leaf.view instanceof MarkdownView)) return;
+              if (leaf.view.getMode && leaf.view.getMode() !== 'source') return;
+              const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
+              if (view) {
+                try { this._attachLivePreviewTableObserver(view); } catch (_) {}
+                try { this.refreshEditor(leaf.view, true); } catch (_) {}
+                try { this._processLivePreviewTables(view); } catch (_) {}
+              }
+            } catch (_) {}
+          });
+        } catch (_) {}
+      }, delay);
+    };
+    runPass(0);
+    runPass(60);
+    runPass(260);
+    runPass(800);
+  }
+
+  _attachLivePreviewTableObserver(view) {
+    try {
+      const root = view && view.dom ? view.dom : null;
+      if (!root) return;
+      if (!this._lpTableObservers) this._lpTableObservers = new Map();
+      const existing = this._lpTableObservers && this._lpTableObservers.get ? this._lpTableObservers.get(root) : null;
+      if (existing) return;
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          try {
+            if (m.type === 'childList') {
+              for (const node of m.addedNodes || []) {
+                if (node && node.nodeType === 1) {
+                  const el = node;
+                  if ((el.classList && (el.classList.contains('cm-content'))) || (el.querySelector && el.querySelector('.cm-content table'))) {
+                    this._processLivePreviewTables(view);
+                    return;
+                  }
+                }
+              }
+            } else if (m.type === 'characterData' || m.type === 'attributes') {
+              this._processLivePreviewTables(view);
+              return;
+            }
+          } catch (_) {}
+        }
+      });
+      observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true });
+      try { this._lpTableObservers.set(root, observer); } catch (_) {}
+    } catch (_) {}
+  }
+
+  _detachLivePreviewTableObserver(view) {
+    try {
+      const root = view && view.dom ? view.dom : null;
+      if (!root) return;
+      const existing = this._lpTableObservers && this._lpTableObservers.get ? this._lpTableObservers.get(root) : null;
+      if (existing && existing.disconnect) {
+        try { existing.disconnect(); } catch (_) {}
+        try { this._lpTableObservers.delete(root); } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
   refreshAllLivePreviewCallouts() {
     try {
       // Clear the callout cache to force re-evaluation of all cached signatures
@@ -8766,6 +9237,10 @@ module.exports = class AlwaysColorText extends Plugin {
       // the cache signatures are re-computed and callouts are re-processed
       this._lpCalloutCache = new WeakMap();
       try { this._lpLastRun = 0; } catch (_) {}
+      try { this._lpTableCache = new WeakMap(); } catch (_) {}
+      try { this._lpTablesLastRun = 0; } catch (_) {}
+      try { this._basesCache = new WeakMap(); } catch (_) {}
+      try { this._basesLastRun = 0; } catch (_) {}
       
       this.app.workspace.iterateAllLeaves(leaf => {
         try {
@@ -8786,13 +9261,26 @@ module.exports = class AlwaysColorText extends Plugin {
                     hl.replaceWith(textNode);
                   }
                 }
+                const cells = root.querySelectorAll('.cm-content table td, .cm-content table th');
+                for (const cell of cells) {
+                  const highlights = cell.querySelectorAll('.always-color-text-highlight');
+                  for (const hl of highlights) {
+                    const textNode = document.createTextNode(hl.textContent);
+                    hl.replaceWith(textNode);
+                  }
+                }
               } catch (e) {}
             }
             // Now reprocess if enabled
             if (this.settings.enabled) {
               this._processLivePreviewCallouts(view);
+              this._processLivePreviewTables(view);
+              this._processBasesViews();
               try { this._attachLivePreviewCalloutObserver(view); } catch (_) {}
+              try { this._attachLivePreviewTableObserver(view); } catch (_) {}
               setTimeout(() => { try { this._processLivePreviewCallouts(view); } catch (_) {} }, 250);
+              setTimeout(() => { try { this._processLivePreviewTables(view); } catch (_) {} }, 250);
+              setTimeout(() => { try { this._processBasesViews(); } catch (_) {} }, 250);
             }
           }
         } catch (_) {}
@@ -8805,6 +9293,10 @@ module.exports = class AlwaysColorText extends Plugin {
       setTimeout(() => {
         try { this._lpLastRun = 0; } catch (_) {}
         try { this._lpCalloutCache = new WeakMap(); } catch (_) {}
+        try { this._lpTablesLastRun = 0; } catch (_) {}
+        try { this._lpTableCache = new WeakMap(); } catch (_) {}
+        try { this._basesLastRun = 0; } catch (_) {}
+        try { this._basesCache = new WeakMap(); } catch (_) {}
         try {
           this.app.workspace.iterateAllLeaves(leaf => {
             try {
@@ -8815,10 +9307,138 @@ module.exports = class AlwaysColorText extends Plugin {
                 try { this._attachLivePreviewCalloutObserver(view); } catch (_) {}
                 try { this.refreshEditor(leaf.view, true); } catch (_) {}
                 try { this._processLivePreviewCallouts(view); } catch (_) {}
+                try { this._attachLivePreviewTableObserver(view); } catch (_) {}
+                try { this._processLivePreviewTables(view); } catch (_) {}
+                try { this._processBasesViews(); } catch (_) {}
               }
             } catch (_) {}
           });
         } catch (_) {}
+      }, delay);
+    };
+    runPass(0);
+    runPass(60);
+    runPass(260);
+    runPass(800);
+  }
+
+  _processBasesViews() {
+    try {
+      const now = Date.now();
+      if (this._basesLastRun && (now - this._basesLastRun) < 200) return;
+      this._basesLastRun = now;
+      const roots = Array.from(document.querySelectorAll('.bases-view'));
+      if (!roots || roots.length === 0) return;
+      const fileForView = this.app.workspace.getActiveFile();
+      const filePath = fileForView ? fileForView.path : null;
+      const docDisabled = !!(filePath && this.settings.disabledFiles && this.settings.disabledFiles.includes(filePath));
+      const fmDisabled = !!(filePath && this.isFrontmatterColoringDisabled && this.isFrontmatterColoringDisabled(filePath));
+      const allEntries = this.getSortedWordEntries();
+      const entries = filePath ? this.filterEntriesByAdvancedRules(filePath, allEntries) : allEntries;
+      const folderEntry = filePath ? this.getBestFolderEntry(filePath) : null;
+      if (!this._basesCache) this._basesCache = new WeakMap();
+      for (const root of roots) {
+        const targets = root.querySelectorAll('.bases-table-cell, .metadata-input-longtext, .multi-select-pill-content, .multi-select-input');
+        if (!targets || targets.length === 0) continue;
+        if (!this.settings.enabled || docDisabled || fmDisabled) {
+          for (const el of targets) {
+            try {
+              const highlights = el.querySelectorAll('.always-color-text-highlight');
+              for (const hl of highlights) {
+                const textNode = document.createTextNode(hl.textContent);
+                hl.replaceWith(textNode);
+              }
+            } catch (_) {}
+          }
+          continue;
+        }
+        for (const el of targets) {
+          try {
+            const hasContent = el.textContent && el.textContent.trim().length > 0;
+            if (!hasContent) continue;
+            const sig = [
+              (el.textContent ? el.textContent.length : 0),
+              (el.childElementCount || 0),
+              (this.settings.enabled ? 1 : 0),
+              (this.settings.hideTextColors ? 1 : 0),
+              (this.settings.hideHighlights ? 1 : 0),
+              (docDisabled ? 1 : 0),
+              (fmDisabled ? 1 : 0)
+            ].join(':');
+            const prev = this._basesCache.get(el);
+            if (prev === sig) continue;
+            this._basesCache.set(el, sig);
+            this.processInChunks(el, entries, folderEntry, {
+              clearExisting: true,
+              batchSize: 10,
+              forceProcess: true,
+              maxMatches: Infinity
+            });
+          } catch (_) {}
+        }
+      }
+      try { this._attachBasesObserver(); } catch (_) {}
+    } catch (e) {}
+  }
+
+  _attachBasesObserver() {
+    try {
+      if (!this._basesObservers) this._basesObservers = new Map();
+      const key = document.body || document;
+      if (this._basesObservers.get(key)) return;
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          try {
+            if (m.type === 'childList' || m.type === 'characterData' || m.type === 'attributes') {
+              const added = Array.from(m.addedNodes || []);
+              if (added.some(n => n.nodeType === 1 && (n.classList?.contains('bases-view') || n.querySelector?.('.bases-view')))) {
+                this._processBasesViews();
+                return;
+              }
+              const t = m.target;
+              if (t && t.closest && t.closest('.bases-view')) {
+                this._processBasesViews();
+                return;
+              }
+            }
+          } catch (_) {}
+        }
+      });
+      observer.observe(document.body || document, { childList: true, subtree: true, characterData: true, attributes: true });
+      this._basesObservers.set(key, observer);
+    } catch (_) {}
+  }
+
+  refreshAllBasesViews() {
+    try {
+      this._basesCache = new WeakMap();
+      try { this._basesLastRun = 0; } catch (_) {}
+      const roots = Array.from(document.querySelectorAll('.bases-view'));
+      for (const root of roots) {
+        try {
+          const targets = root.querySelectorAll('.bases-table-cell, .metadata-input-longtext, .multi-select-pill-content, .multi-select-input');
+          for (const el of targets) {
+            const highlights = el.querySelectorAll('.always-color-text-highlight');
+            for (const hl of highlights) {
+              const textNode = document.createTextNode(hl.textContent);
+              hl.replaceWith(textNode);
+            }
+          }
+        } catch (_) {}
+      }
+      if (this.settings.enabled) {
+        this._processBasesViews();
+        setTimeout(() => { try { this._processBasesViews(); } catch (_) {} }, 250);
+      }
+    } catch (_) {}
+  }
+
+  forceReprocessBasesViews() {
+    const runPass = (delay) => {
+      setTimeout(() => {
+        try { this._basesLastRun = 0; } catch (_) {}
+        try { this._basesCache = new WeakMap(); } catch (_) {}
+        try { this._processBasesViews(); } catch (_) {}
       }, delay);
     };
     runPass(0);
@@ -9122,7 +9742,9 @@ module.exports = class AlwaysColorText extends Plugin {
         this.decorations = this.buildDeco(view);
         this.lastFilePath = view.file ? view.file.path : null;
         try { if (plugin.settings.enabled) plugin._processLivePreviewCallouts(view); } catch (_) {}
+        try { if (plugin.settings.enabled) plugin._processLivePreviewTables(view); } catch (_) {}
         try { if (plugin.settings.enabled) plugin._attachLivePreviewCalloutObserver(view); } catch (_) {}
+        try { if (plugin.settings.enabled) plugin._attachLivePreviewTableObserver(view); } catch (_) {}
       }
       update(update) {
         // Get current active file to detect folder changes
@@ -9134,10 +9756,12 @@ module.exports = class AlwaysColorText extends Plugin {
         if (update.docChanged || update.viewportChanged || fileChanged) {
           this.decorations = this.buildDeco(update.view);
           try { if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view); } catch (_) {}
+          try { if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view); } catch (_) {}
         }
       }
       destroy() {
         try { plugin._detachLivePreviewCalloutObserver(this.view); } catch (_) {}
+        try { plugin._detachLivePreviewTableObserver(this.view); } catch (_) {}
       }
       buildDeco(view) {
         const builder = new RangeSetBuilder();
@@ -9670,7 +10294,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (filePath) {
       textBgEntries = textBgEntries.filter(entry => {
         if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern);
+        return this.shouldColorText(filePath, entry.pattern, entry);
       });
     }
     for (const entry of textBgEntries) {
@@ -9769,7 +10393,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // Only skip if NO explicit matchType is set (using setting default), partialMatch is enabled,
       // AND the pattern is not sentence-like (i.e., does not include punctuation/whitespace).
       const hasExplicitMatchType = entry.matchType && String(entry.matchType).toLowerCase() !== 'exact';
-      const shouldSkipToPartialSection = isTextOnly && !hasExplicitMatchType && this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern);
+      const shouldSkipToPartialSection = isTextOnly && !hasExplicitMatchType && this.settings.partialMatch && !this.isSentenceLikePattern(entry.pattern) && this.isLatinWordPattern(entry.pattern);
       
       if (shouldSkipToPartialSection) {
         debugLog('MAIN_LOOP_SKIP_PARTIAL', `pattern="${entry.pattern}" matchType="${entry.matchType}" (undefined means using setting default) isTextOnly=${isTextOnly}`);
@@ -9965,6 +10589,7 @@ module.exports = class AlwaysColorText extends Plugin {
       // Do not include sentence-like patterns in partial match; handle them in main loop
       try {
         if (this.isSentenceLikePattern(e.pattern)) return false;
+        if (!this.isLatinWordPattern(e.pattern)) return false;
       } catch (_) {}
       const actualMatchType = String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
       return actualMatchType === 'contains';  // Only 'contains' goes here (whether explicit or default)
@@ -10505,7 +11130,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (filePath) {
       textBgEntries = textBgEntries.filter(entry => {
         if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern);
+        return this.shouldColorText(filePath, entry.pattern, entry);
       });
     }
     if (textBgEntries.length > 0) {
@@ -10639,7 +11264,7 @@ module.exports = class AlwaysColorText extends Plugin {
       
       // SKIP partial match entries (contains/startswith/endswith) - they're handled by the partial match loop below
       // This prevents them from being processed twice: once as regex matches and once as word matches
-      const isPartialEntry = !entry.isTextBg && (!entry.styleType || entry.styleType === 'text') && ['contains','startswith','endswith'].includes(String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern);
+    const isPartialEntry = !entry.isTextBg && (!entry.styleType || entry.styleType === 'text') && ['contains','startswith','endswith'].includes(String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern) && this.isLatinWordPattern(entry.pattern);
       if (isPartialEntry) continue;
       
       // Fast pre-check
@@ -10717,7 +11342,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
 
     // --- Partial Match coloring for pattern chunks ---
-      const hasPartialEntries = patternChunk.some(e => e && !e.invalid && ((!e.styleType || e.styleType === 'text')) && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
+      const hasPartialEntries = patternChunk.some(e => e && !e.invalid && ((!e.styleType || e.styleType === 'text')) && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
       if (hasPartialEntries && matches.length < 200) {
         const wordRegex = /[A-Za-z0-9'\-]+/g;
         let match;
@@ -10729,7 +11354,7 @@ module.exports = class AlwaysColorText extends Plugin {
           // Skip if in blacklisted list item range
           if (this.isMatchInBlacklistedRange(baseFrom + wStart, baseFrom + wEnd, blacklistedListRanges)) continue;
           
-          for (const entry of patternChunk.filter(e => e && !e.invalid && ((!e.styleType || e.styleType === 'text')) && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(e.pattern))) {
+          for (const entry of patternChunk.filter(e => e && !e.invalid && ((!e.styleType || e.styleType === 'text')) && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern))) {
             if (!entry || entry.invalid) continue;
             if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
             if (this.isWordBlacklisted(entry.pattern)) continue;
@@ -10900,7 +11525,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
     // --- Partial Match coloring for chunked processing ---
     if (matches.length < 100) {
-      const textOnlyEntries = entries.filter(e => e && !e.invalid && (!e.styleType || e.styleType === 'text') && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
+      const textOnlyEntries = entries.filter(e => e && !e.invalid && (!e.styleType || e.styleType === 'text') && !e.isTextBg && ['contains','startswith','endswith'].includes(String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
       if (textOnlyEntries.length > 0) {
         const wordRegex = /[A-Za-z0-9'\-]+/g;
         let match;
@@ -11533,6 +12158,7 @@ class RegexTesterModal extends Modal {
             renderPreview();
           }
         }, 'text', regexInput.value || '');
+        modal._hideHeaderControls = true;
         modal._preFillTextColor = textColorInput.value;
         modal.open();
       } catch (e) {}
@@ -11548,6 +12174,7 @@ class RegexTesterModal extends Modal {
             renderPreview();
           }
         }, 'background', regexInput.value || '');
+        modal._hideHeaderControls = true;
         modal._preFillBgColor = bgColorInput.value;
         modal.open();
       } catch (e) {}
@@ -11940,6 +12567,7 @@ class RealTimeRegexTesterModal extends Modal {
             render();
           }
         }, 'text', regexInput.value || '');
+        modal._hideHeaderControls = true;
         modal._preFillTextColor = textColorInput.value;
         modal.open();
       } catch (e) {}
@@ -11955,6 +12583,7 @@ class RealTimeRegexTesterModal extends Modal {
             render();
           }
         }, 'background', regexInput.value || '');
+        modal._hideHeaderControls = true;
         modal._preFillBgColor = bgColorInput.value;
         modal.open();
       } catch (e) {}
@@ -12097,8 +12726,8 @@ class RealTimeRegexTesterModal extends Modal {
       const matchStyle = style === 'text'
         ? `color:${t};background:transparent;`
         : (style === 'highlight'
-          ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`
-          : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`);
+          ? `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`
+          : `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`);
       for (const m of raw.matchAll(re)) {
         const s = m.index ?? 0;
         const e = s + (m[0] ? m[0].length : 0);
@@ -12341,6 +12970,7 @@ class HighlightStylingModal extends Modal {
     this.plugin = plugin;
     this.entry = entry;
     this.parentEditEntryModal = parentEditEntryModal;
+    this._resetAllApplied = false;
     this._handlers = [];
   }
   onOpen() {
@@ -12537,7 +13167,15 @@ class HighlightStylingModal extends Modal {
           ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`
           : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`);
       const txt = words.textContent || '';
-      previewWrap.innerHTML = `<mark style="${matchStyle}">${txt}</mark>`;
+      try {
+        while (previewWrap.firstChild) previewWrap.removeChild(previewWrap.firstChild);
+        const div = document.createElement('div');
+        div.setAttribute('style', matchStyle);
+        div.textContent = txt;
+        previewWrap.appendChild(div);
+      } catch (_) {
+        previewWrap.innerHTML = `<div style="${matchStyle}">${txt}</div>`;
+      }
     };
     const updatePickerVisibility = () => {
       const style = styleSelect.value;
@@ -12578,11 +13216,17 @@ class HighlightStylingModal extends Modal {
         this.entry.borderOpacity = undefined;
         this.entry.borderThickness = undefined;
       }
+      this._resetAllApplied = true;
       try {
         opacitySlider.value = String(this.plugin.settings.backgroundOpacity ?? 35);
         radiusInput.value = String(this.plugin.settings.highlightBorderRadius ?? 4);
         hPadInput.value = String(this.plugin.settings.highlightHorizontalPadding ?? 4);
         vPadInput.value = String(this.plugin.settings.highlightVerticalPadding ?? 0);
+        enableChk.checked = !!this.plugin.settings.enableBorderThickness;
+        sidesSel.value = (this.plugin.settings.borderStyle ?? 'full');
+        lineSel.value = (this.plugin.settings.borderLineStyle ?? 'solid');
+        bOpSlider.value = String(this.plugin.settings.borderOpacity ?? 100);
+        thickInput.value = String(this.plugin.settings.borderThickness ?? 1);
       } catch (_) {}
       renderPreview();
       try { window.dispatchEvent(new CustomEvent('act-style-updated')); } catch (_) {}
@@ -12700,23 +13344,35 @@ class HighlightStylingModal extends Modal {
           this.entry.textColor = tColor.value || '';
           this.entry.backgroundColor = bColor.value || '';
         }
-        // Save highlight styling parameters - READ DIRECTLY FROM SLIDER ELEMENTS
-        const rawOpacity = opacitySlider.value ? Number(opacitySlider.value) : (this.plugin.settings.backgroundOpacity ?? 35);
-        const rawRadius = radiusInput.value ? Number(radiusInput.value) : (this.plugin.settings.highlightBorderRadius ?? 4);
-        const rawHPad = hPadInput.value ? Number(hPadInput.value) : (this.plugin.settings.highlightHorizontalPadding ?? 4);
-        const rawVPad = vPadInput.value ? Number(vPadInput.value) : (this.plugin.settings.highlightVerticalPadding ?? 0);
-        const rawBOpacity = bOpSlider.value ? Number(bOpSlider.value) : (this.plugin.settings.borderOpacity ?? 100);
-        const rawBThickness = thickInput.value ? Number(thickInput.value) : (this.plugin.settings.borderThickness ?? 1);
-        
-        this.entry.backgroundOpacity = rawOpacity;
-        this.entry.highlightBorderRadius = rawRadius;
-        this.entry.highlightHorizontalPadding = rawHPad;
-        this.entry.highlightVerticalPadding = rawVPad;
-        this.entry.enableBorderThickness = !!enableChk.checked;
-        this.entry.borderStyle = sidesSel.value || (this.plugin.settings.borderStyle ?? 'full');
-        this.entry.borderLineStyle = lineSel.value || (this.plugin.settings.borderLineStyle ?? 'solid');
-        this.entry.borderOpacity = rawBOpacity;
-        this.entry.borderThickness = rawBThickness;
+        // Save highlight styling parameters
+        if (this._resetAllApplied) {
+          this.entry.backgroundOpacity = undefined;
+          this.entry.highlightBorderRadius = undefined;
+          this.entry.highlightHorizontalPadding = undefined;
+          this.entry.highlightVerticalPadding = undefined;
+          this.entry.enableBorderThickness = undefined;
+          this.entry.borderStyle = undefined;
+          this.entry.borderLineStyle = undefined;
+          this.entry.borderOpacity = undefined;
+          this.entry.borderThickness = undefined;
+        } else {
+          const rawOpacity = opacitySlider.value ? Number(opacitySlider.value) : (this.plugin.settings.backgroundOpacity ?? 35);
+          const rawRadius = radiusInput.value ? Number(radiusInput.value) : (this.plugin.settings.highlightBorderRadius ?? 4);
+          const rawHPad = hPadInput.value ? Number(hPadInput.value) : (this.plugin.settings.highlightHorizontalPadding ?? 4);
+          const rawVPad = vPadInput.value ? Number(vPadInput.value) : (this.plugin.settings.highlightVerticalPadding ?? 0);
+          const rawBOpacity = bOpSlider.value ? Number(bOpSlider.value) : (this.plugin.settings.borderOpacity ?? 100);
+          const rawBThickness = thickInput.value ? Number(thickInput.value) : (this.plugin.settings.borderThickness ?? 1);
+          
+          this.entry.backgroundOpacity = rawOpacity;
+          this.entry.highlightBorderRadius = rawRadius;
+          this.entry.highlightHorizontalPadding = rawHPad;
+          this.entry.highlightVerticalPadding = rawVPad;
+          this.entry.enableBorderThickness = !!enableChk.checked;
+          this.entry.borderStyle = sidesSel.value || (this.plugin.settings.borderStyle ?? 'full');
+          this.entry.borderLineStyle = lineSel.value || (this.plugin.settings.borderLineStyle ?? 'solid');
+          this.entry.borderOpacity = rawBOpacity;
+          this.entry.borderThickness = rawBThickness;
+        }
         
         // Find and update entry in the settings array using uid
         const entryUid = this.entry.uid;
@@ -12822,11 +13478,12 @@ class HighlightStylingModal extends Modal {
 }
 
 class EditEntryModal extends Modal {
-  constructor(app, plugin, entry, onSaved, parentModal) {
+  constructor(app, plugin, entry, onSaved, parentModal, fromPickColorModal = false) {
     super(app);
     this.plugin = plugin;
     this.entry = entry;
     this.parentModal = parentModal;
+    this.fromPickColorModal = !!fromPickColorModal;
     // Ensure entry has a uid for finding it later
     if (this.entry && !this.entry.uid) {
       try { this.entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (_) { this.entry.uid = Date.now(); }
@@ -12898,6 +13555,77 @@ class EditEntryModal extends Modal {
     rightColumn.style.display = 'flex';
     rightColumn.style.flexDirection = 'column';
     rightColumn.style.gap = '8px';
+    
+    const groupSelect = rightColumn.createEl('select');
+    groupSelect.addClass('act-edit-entry-group-select');
+    groupSelect.style.minWidth = '140px';
+    groupSelect.style.border = '1px solid var(--background-modifier-border)';
+    groupSelect.style.borderRadius = '4px';
+    groupSelect.style.background = 'var(--background-modifier-form-field)';
+    groupSelect.style.textAlign = 'center';
+    const defaultOpt = groupSelect.createEl('option', { text: this.plugin.t('default') });
+    defaultOpt.value = '';
+    const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+    groupsList.forEach(g => {
+      const name = (g && g.name && String(g.name).trim().length > 0) ? g.name : '(unnamed group)';
+      const opt = groupSelect.createEl('option', { text: name });
+      opt.value = g.uid || '';
+    });
+    let currentGroupUid = null;
+    try {
+      const inDefault = Array.isArray(this.plugin.settings.wordEntries) && this.plugin.settings.wordEntries.indexOf(this.entry) !== -1;
+      if (!inDefault && Array.isArray(groupsList)) {
+        for (const g of groupsList) {
+          if (g && Array.isArray(g.entries) && g.entries.indexOf(this.entry) !== -1) {
+            currentGroupUid = g.uid || null;
+            break;
+          }
+        }
+      }
+    } catch (e) {}
+    groupSelect.value = currentGroupUid || '';
+    if (!currentGroupUid && this.fromPickColorModal && this.entry && this.entry._preselectedGroupUid) {
+      groupSelect.value = this.entry._preselectedGroupUid || '';
+    }
+    const groupChangeHandler = async () => {
+      const toUid = groupSelect.value || '';
+      const fromUid = currentGroupUid || '';
+      if (toUid === fromUid) return;
+      let sourceArr = null;
+      if (fromUid === '') {
+        sourceArr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : (this.plugin.settings.wordEntries = []);
+      } else {
+        const srcGroup = groupsList.find(g => g && g.uid === fromUid);
+        sourceArr = srcGroup && Array.isArray(srcGroup.entries) ? srcGroup.entries : null;
+      }
+      let targetArr = null;
+      if (toUid === '') {
+        targetArr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : (this.plugin.settings.wordEntries = []);
+      } else {
+        const tgtGroup = groupsList.find(g => g && g.uid === toUid);
+        if (tgtGroup) {
+          targetArr = Array.isArray(tgtGroup.entries) ? tgtGroup.entries : (tgtGroup.entries = []);
+        }
+      }
+      if (!sourceArr || !targetArr) return;
+      const idx = sourceArr.indexOf(this.entry);
+      if (idx !== -1) {
+        const moved = sourceArr.splice(idx, 1)[0];
+        if (targetArr.indexOf(moved) === -1) {
+          targetArr.push(moved);
+        }
+        currentGroupUid = toUid || '';
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        this.plugin.triggerActiveDocumentRerender();
+      }
+    };
+    groupSelect.addEventListener('change', groupChangeHandler);
+    this._handlers.push({ el: groupSelect, ev: 'change', fn: groupChangeHandler });
     
     const styleSelect = rightColumn.createEl('select');
     styleSelect.addClass('act-edit-entry-style-select');
@@ -13032,14 +13760,35 @@ class EditEntryModal extends Modal {
     textColorInput.value = this.plugin.isValidHexColor(initTextColor) ? initTextColor : '#000000';
     if (initBgColor) bgColorInput.value = this.plugin.isValidHexColor(initBgColor) ? initBgColor : '#000000';
     const isRegex = !!this.entry.isRegex;
-    if (isRegex) {
-      textInput.value = this.entry.pattern || '';
-      matchSelect.style.display = 'none';
-    } else {
-      const patterns = (Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0) ? this.entry.groupedPatterns : [String(this.entry.pattern || '')];
-      textInput.value = patterns.map(p => String(p).trim()).join(', ');
-      let defaultMatch = (typeof this.entry.matchType === 'string' && this.entry.matchType) ? this.entry.matchType.toLowerCase() : (this.plugin.settings.partialMatch ? 'contains' : 'exact');
-      if (defaultMatch === 'startswith' || defaultMatch === 'starts with') defaultMatch = 'startswith';
+      if (isRegex) {
+        textInput.value = this.entry.pattern || '';
+        matchSelect.style.display = 'none';
+        caseSel.style.display = 'none';
+        const openRegexBtn = controls.createEl('button', { text: this.plugin.t('open_in_regex_tester','Open in Regex Tester') });
+        openRegexBtn.style.flex = '0 0 auto';
+        const openRegexHandler = () => {
+          try {
+            const entry = this.entry;
+            const modal = new RealTimeRegexTesterModal(this.app, this.plugin, async (updatedEntry) => {
+              try { this.onSaved && this.onSaved(updatedEntry); } catch (_) {}
+            }, null);
+            modal._editingEntry = entry;
+            modal._preFillPattern = entry.pattern || '';
+            modal._preFillFlags = entry.flags || '';
+            modal._preFillName = entry.presetLabel || '';
+            modal._preFillStyleType = entry.styleType || 'both';
+            modal._preFillTextColor = (entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : (this.plugin.isValidHexColor(entry.color) ? entry.color : '#87c760')) || '#87c760';
+            modal._preFillBgColor = entry.backgroundColor || '#1d5010';
+            modal.open();
+          } catch (e) {}
+        };
+        openRegexBtn.addEventListener('click', openRegexHandler);
+        this._handlers.push({ el: openRegexBtn, ev: 'click', fn: openRegexHandler });
+      } else {
+        const patterns = (Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0) ? this.entry.groupedPatterns : [String(this.entry.pattern || '')];
+        textInput.value = patterns.map(p => String(p).trim()).join(', ');
+        let defaultMatch = (typeof this.entry.matchType === 'string' && this.entry.matchType) ? this.entry.matchType.toLowerCase() : (this.plugin.settings.partialMatch ? 'contains' : 'exact');
+        if (defaultMatch === 'startswith' || defaultMatch === 'starts with') defaultMatch = 'startswith';
       if (defaultMatch === 'endswith' || defaultMatch === 'ends with') defaultMatch = 'endswith';
       matchSelect.value = defaultMatch === 'startswith' ? 'startsWith' : (defaultMatch === 'endswith' ? 'endsWith' : defaultMatch);
     }
@@ -13055,22 +13804,24 @@ class EditEntryModal extends Modal {
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
       const borderStyle = style === 'text' ? '' : (style === 'highlight' ? this.plugin.generateBorderStyle(null, b, this.entry) : this.plugin.generateBorderStyle(t, b, this.entry));
-      const s = style === 'text' ? `color:${t};background:transparent;` : (style === 'highlight' ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}` : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`);
-      
-      // Split by commas to handle grouped words - each word gets its own span
+      const sText = `color:${t};background:transparent;`;
+      const sHighlight = `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`;
+      const sBoth = `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
+      const styleStr = style === 'text' ? sText : (style === 'highlight' ? sHighlight : sBoth);
       const escapeHtml = (str) => str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      if (!raw) {
-        preview.innerHTML = '';
+      while (preview.firstChild) preview.removeChild(preview.firstChild);
+      if (!raw) return;
+      const words = raw.split(',').map(w => w.trim()).filter(Boolean);
+      const makeDiv = (text) => {
+        const div = document.createElement('div');
+        div.setAttribute('style', styleStr);
+        div.textContent = escapeHtml(text);
+        return div;
+      };
+      if (words.length > 1) {
+        words.forEach(w => preview.appendChild(makeDiv(w)));
       } else {
-        const words = raw.split(',').map(w => w.trim()).filter(Boolean);
-        if (words.length > 1) {
-          // Multiple words (grouped) - create separate spans for each
-          const spans = words.map(word => `<mark style="${s}">${escapeHtml(word)}</mark>`).join(', ');
-          preview.innerHTML = spans;
-        } else {
-          // Single word or pattern - one span for all
-          preview.innerHTML = `<mark style="${s}">${escapeHtml(raw)}</mark>`;
-        }
+        preview.appendChild(makeDiv(raw));
       }
     };
     const updatePickerVisibility = () => {
@@ -13175,21 +13926,13 @@ class EditEntryModal extends Modal {
     const sugg = buildSuggestions();
     const renderRules = () => {
       rulesContainer.empty();
-      const rules = Array.isArray(this.plugin.settings.advancedRules) ? this.plugin.settings.advancedRules : [];
-      const caseInsensitive = !this.plugin.settings.caseSensitive;
-      const entryKey = String(isRegex ? (this.entry.pattern || '') : (this.entry.pattern || ''));
-      const matchesEntry = (r) => {
-        const rt = String(r.text || '').trim();
-        if (!rt) return false;
-        if (isRegex) {
-          if (!r.isRegex) return false;
-          return caseInsensitive ? rt.toLowerCase() === entryKey.toLowerCase() : rt === entryKey;
-        }
-        if (r.isRegex) return false;
-        return caseInsensitive ? rt.toLowerCase() === entryKey.toLowerCase() : rt === entryKey;
-      };
-      const filtered = rules.filter(matchesEntry);
-      filtered.forEach((r) => {
+      const inc = Array.isArray(this.entry.inclusionRules) ? this.entry.inclusionRules : [];
+      const exc = Array.isArray(this.entry.exclusionRules) ? this.entry.exclusionRules : [];
+      const combined = [
+        ...inc.map((r, idx) => ({ ...r, _mode: 'include', _idx: idx })),
+        ...exc.map((r, idx) => ({ ...r, _mode: 'exclude', _idx: idx }))
+      ];
+      combined.forEach((r) => {
         const row = rulesContainer.createDiv();
         row.style.display = 'flex';
         row.style.gap = '8px';
@@ -13200,7 +13943,7 @@ class EditEntryModal extends Modal {
         optIn.value = 'include';
         const optEx = modeSel.createEl('option', { text: this.plugin.t('mode_does_not_color_in','does not color in') });
         optEx.value = 'exclude';
-        modeSel.value = r.mode === 'exclude' ? 'exclude' : 'include';
+        modeSel.value = r._mode === 'exclude' ? 'exclude' : 'include';
         modeSel.style.textAlign = 'center';
         modeSel.style.minWidth = '160px';
         modeSel.style.border = '1px solid var(--background-modifier-border)';
@@ -13213,7 +13956,27 @@ class EditEntryModal extends Modal {
         pathInput.style.borderRadius = 'var(--radius-m)';
         const delBtn = row.createEl('button', { text: '✕' });
         delBtn.addClass('mod-warning');
-        const modeHandler = async () => { r.mode = modeSel.value; await this.plugin.saveSettings(); };
+        const modeHandler = async () => {
+          const currMode = r._mode;
+          const nextMode = modeSel.value === 'exclude' ? 'exclude' : 'include';
+          if (currMode === nextMode) return;
+          // Remove from current array and add to target array
+          try {
+            if (currMode === 'include') {
+              const idx = inc.indexOf(inc[r._idx]);
+              if (idx > -1) inc.splice(idx, 1);
+              exc.push({ path: String(r.path || ''), isRegex: !!r.isRegex, flags: String(r.flags || '').replace(/[^gimsuy]/g, '') });
+            } else {
+              const idx = exc.indexOf(exc[r._idx]);
+              if (idx > -1) exc.splice(idx, 1);
+              inc.push({ path: String(r.path || ''), isRegex: !!r.isRegex, flags: String(r.flags || '').replace(/[^gimsuy]/g, '') });
+            }
+            this.entry.inclusionRules = inc;
+            this.entry.exclusionRules = exc;
+            await this.plugin.saveSettings();
+            renderRules();
+          } catch (e) {}
+        };
         modeSel.addEventListener('change', modeHandler);
         const updateDropdown = () => {
           if (pathInput._actDropdown) {
@@ -13264,31 +14027,49 @@ class EditEntryModal extends Modal {
             }
           });
         };
-        const pathHandler = async () => { r.path = String(pathInput.value || ''); await this.plugin.saveSettings(); };
+        const pathHandler = async () => {
+          const newPath = String(pathInput.value || '');
+          try {
+            if (r._mode === 'include') {
+              inc[r._idx].path = newPath;
+            } else {
+              exc[r._idx].path = newPath;
+            }
+            this.entry.inclusionRules = inc;
+            this.entry.exclusionRules = exc;
+            await this.plugin.saveSettings();
+          } catch (e) {}
+        };
         pathInput.addEventListener('focus', updateDropdown);
         pathInput.addEventListener('click', updateDropdown);
         pathInput.addEventListener('input', updateDropdown);
         pathInput.addEventListener('change', pathHandler);
         const delHandler = async () => {
-          const idx = this.plugin.settings.advancedRules.indexOf(r);
-          if (idx !== -1) this.plugin.settings.advancedRules.splice(idx, 1);
-          await this.plugin.saveSettings();
-          renderRules();
+          try {
+            if (r._mode === 'include') {
+              if (inc[r._idx]) inc.splice(r._idx, 1);
+            } else {
+              if (exc[r._idx]) exc.splice(r._idx, 1);
+            }
+            this.entry.inclusionRules = inc;
+            this.entry.exclusionRules = exc;
+            await this.plugin.saveSettings();
+            renderRules();
+          } catch (e) {}
         };
         delBtn.addEventListener('click', delHandler);
       });
-      if (filtered.length === 0) {
+      if (combined.length === 0) {
         // no output
       }
     };
     const addRuleFn = async () => {
-      if (!Array.isArray(this.plugin.settings.advancedRules)) this.plugin.settings.advancedRules = [];
-      const text = isRegex ? String(this.entry.pattern || '') : String(this.entry.pattern || '');
-      const flags = String(this.entry.flags || '');
-      const isR = !!this.entry.isRegex;
-      this.plugin.settings.advancedRules.push({ text, flags, isRegex: isR, mode: 'include', path: '' });
-      await this.plugin.saveSettings();
-      renderRules();
+      try {
+        if (!Array.isArray(this.entry.inclusionRules)) this.entry.inclusionRules = [];
+        this.entry.inclusionRules.push({ path: '', isRegex: false, flags: '' });
+        await this.plugin.saveSettings();
+        renderRules();
+      } catch (e) {}
     };
     addRuleBtn.addEventListener('click', addRuleFn);
     this._handlers.push({ el: addRuleBtn, ev: 'click', fn: addRuleFn });
@@ -13312,6 +14093,23 @@ class EditEntryModal extends Modal {
       const bgColorVal = bgColorInput.value || '';
       const patternVal = String(textInput.value || '').trim();
       
+      // Check if this is a new entry from pick modal and if anything was actually changed
+      if (this.entry._isNewFromPickModal && this.entry._originalState) {
+        const originalState = this.entry._originalState;
+        const hasChanges = 
+          patternVal !== originalState.pattern ||
+          st !== originalState.styleType ||
+          textColorVal !== originalState.color ||
+          bgColorVal !== originalState.backgroundColor ||
+          matchTypeVal !== originalState.matchType;
+        
+        // If no changes were made, just close the modal without saving
+        if (!hasChanges) {
+          this.close();
+          return;
+        }
+      }
+      
       // Update global settings
       this.plugin.settings.caseSensitive = caseSensitiveVal;
       
@@ -13331,7 +14129,21 @@ class EditEntryModal extends Modal {
         }
       }
       
-      // If not found in wordEntries, search in textBgColoringEntries
+      // If not found in wordEntries, search in wordEntryGroups
+      if (!foundEntry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+        for (const g of this.plugin.settings.wordEntryGroups) {
+          if (!g || !Array.isArray(g.entries)) continue;
+          const j = g.entries.findIndex(e => e && e.uid === entryUid);
+          if (j !== -1) {
+            foundEntry = g.entries[j];
+            foundIdx = j;
+            foundArray = g.entries;
+            break;
+          }
+        }
+      }
+      
+      // If not found in wordEntries or groups, search in textBgColoringEntries
       if (!foundEntry) {
         for (let i = 0; i < this.plugin.settings.textBgColoringEntries.length; i++) {
           if (this.plugin.settings.textBgColoringEntries[i].uid === entryUid) {
@@ -13375,8 +14187,7 @@ class EditEntryModal extends Modal {
           foundArray[foundIdx].backgroundColor = bgColorVal;
         }
         
-        // Preserve entry-specific highlight styling parameters from BOTH this.entry and foundEntry
-        // Merge them to preserve any changes made in HighlightStylingModal
+        // Preserve entry-specific highlight styling parameters from this.entry only
         if (typeof this.entry.backgroundOpacity === 'number') foundArray[foundIdx].backgroundOpacity = this.entry.backgroundOpacity;
         if (typeof this.entry.highlightBorderRadius === 'number') foundArray[foundIdx].highlightBorderRadius = this.entry.highlightBorderRadius;
         if (typeof this.entry.highlightHorizontalPadding === 'number') foundArray[foundIdx].highlightHorizontalPadding = this.entry.highlightHorizontalPadding;
@@ -13386,17 +14197,7 @@ class EditEntryModal extends Modal {
         if (this.entry.borderLineStyle) foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
         if (typeof this.entry.borderOpacity === 'number') foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
         if (typeof this.entry.borderThickness === 'number') foundArray[foundIdx].borderThickness = this.entry.borderThickness;
-        
-        // Also preserve any that were already in foundEntry (in case HighlightStylingModal saved them)
-        if (typeof foundEntry.backgroundOpacity === 'number' && typeof foundArray[foundIdx].backgroundOpacity === 'undefined') foundArray[foundIdx].backgroundOpacity = foundEntry.backgroundOpacity;
-        if (typeof foundEntry.highlightBorderRadius === 'number' && typeof foundArray[foundIdx].highlightBorderRadius === 'undefined') foundArray[foundIdx].highlightBorderRadius = foundEntry.highlightBorderRadius;
-        if (typeof foundEntry.highlightHorizontalPadding === 'number' && typeof foundArray[foundIdx].highlightHorizontalPadding === 'undefined') foundArray[foundIdx].highlightHorizontalPadding = foundEntry.highlightHorizontalPadding;
-        if (typeof foundEntry.highlightVerticalPadding === 'number' && typeof foundArray[foundIdx].highlightVerticalPadding === 'undefined') foundArray[foundIdx].highlightVerticalPadding = foundEntry.highlightVerticalPadding;
-        if (typeof foundEntry.enableBorderThickness === 'boolean' && typeof foundArray[foundIdx].enableBorderThickness === 'undefined') foundArray[foundIdx].enableBorderThickness = foundEntry.enableBorderThickness;
-        if (foundEntry.borderStyle && !foundArray[foundIdx].borderStyle) foundArray[foundIdx].borderStyle = foundEntry.borderStyle;
-        if (foundEntry.borderLineStyle && !foundArray[foundIdx].borderLineStyle) foundArray[foundIdx].borderLineStyle = foundEntry.borderLineStyle;
-        if (typeof foundEntry.borderOpacity === 'number' && typeof foundArray[foundIdx].borderOpacity === 'undefined') foundArray[foundIdx].borderOpacity = foundEntry.borderOpacity;
-        if (typeof foundEntry.borderThickness === 'number' && typeof foundArray[foundIdx].borderThickness === 'undefined') foundArray[foundIdx].borderThickness = foundEntry.borderThickness;
+        // Leave undefined values as-is to inherit global defaults
         
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -13407,19 +14208,79 @@ class EditEntryModal extends Modal {
         this.plugin.triggerActiveDocumentRerender();
         try { this.onSaved && this.onSaved(this.entry); } catch (e) {}
         
-        // Close and reopen parent modal to refresh suggestions display
+        // Close parent modal; reopen only when appropriate
         if (this.parentModal) {
           try {
             this.parentModal.close();
-            // Reopen with fresh suggestions
-            setTimeout(() => {
-              try { new AddToExistingEntryModal(this.app, this.plugin, this.parentModal.selectedText, this.parentModal.view).open(); } catch (e) {}
-            }, 100);
+            if (!this.fromPickColorModal && (this.parentModal instanceof AddToExistingEntryModal)) {
+              setTimeout(() => {
+                try { new AddToExistingEntryModal(this.app, this.plugin, this.parentModal.selectedText, this.parentModal.view).open(); } catch (e) {}
+              }, 100);
+            }
           } catch (e) {}
         }
       } else if (this.parentModal) {
-        // Entry not found in global settings - likely editing from a group modal
-        // Update the entry object directly (it's passed by reference)
+        // Entry not found in global settings - likely a new entry from pick modal
+        // Add it to wordEntries
+        if (!patternVal) {
+          this.close();
+          return;
+        }
+        
+        const newEntry = {
+          pattern: patternVal.split(',')[0],
+          groupedPatterns: patternVal.split(',').length > 1 ? patternVal.split(',').map(p => String(p).trim()).filter(p => p.length > 0) : null,
+          color: st === 'text' ? textColorVal : '',
+          textColor: st === 'both' ? textColorVal : (st === 'highlight' ? 'currentColor' : null),
+          backgroundColor: (st === 'highlight' || st === 'both') ? bgColorVal : null,
+          isRegex: false,
+          flags: '',
+          styleType: st,
+          matchType: matchTypeVal,
+          uid: this.entry.uid
+        };
+        
+        // Copy over any styling properties
+        if (typeof this.entry.backgroundOpacity === 'number') newEntry.backgroundOpacity = this.entry.backgroundOpacity;
+        if (typeof this.entry.highlightBorderRadius === 'number') newEntry.highlightBorderRadius = this.entry.highlightBorderRadius;
+        if (typeof this.entry.highlightHorizontalPadding === 'number') newEntry.highlightHorizontalPadding = this.entry.highlightHorizontalPadding;
+        if (typeof this.entry.highlightVerticalPadding === 'number') newEntry.highlightVerticalPadding = this.entry.highlightVerticalPadding;
+        if (typeof this.entry.enableBorderThickness === 'boolean') newEntry.enableBorderThickness = this.entry.enableBorderThickness;
+        if (this.entry.borderStyle) newEntry.borderStyle = this.entry.borderStyle;
+        if (this.entry.borderLineStyle) newEntry.borderLineStyle = this.entry.borderLineStyle;
+        if (typeof this.entry.borderOpacity === 'number') newEntry.borderOpacity = this.entry.borderOpacity;
+        if (typeof this.entry.borderThickness === 'number') newEntry.borderThickness = this.entry.borderThickness;
+        
+        const toGroupUid = groupSelect.value || '';
+        if (toGroupUid) {
+          const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+          const tgtGroup = groupsList.find(g => g && g.uid === toGroupUid);
+          if (tgtGroup) {
+            if (!Array.isArray(tgtGroup.entries)) tgtGroup.entries = [];
+            tgtGroup.entries.push(newEntry);
+          } else {
+            this.plugin.settings.wordEntries.push(newEntry);
+          }
+        } else {
+          this.plugin.settings.wordEntries.push(newEntry);
+        }
+        this.plugin.settings.caseSensitive = caseSensitiveVal;
+        
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        this.plugin.triggerActiveDocumentRerender();
+        try { this.onSaved && this.onSaved(newEntry); } catch (e) {}
+        
+        // Close parent modal
+        if (this.parentModal) {
+          try { this.parentModal.close(); } catch (e) {}
+        }
+      } else {
+        // Fallback: update this.entry directly
         if (!isRegex) {
           if (patternVal) {
             const parts = patternVal.split(',').map(p => String(p).trim()).filter(p => p.length > 0);
@@ -13428,11 +14289,9 @@ class EditEntryModal extends Modal {
           }
         }
         
-        // Save entry properties
         this.entry.matchType = matchTypeVal;
         this.entry.styleType = st;
         
-        // Save color values based on style type
         if (st === 'text') {
           this.entry.color = textColorVal;
           this.entry.textColor = null;
@@ -13447,18 +14306,6 @@ class EditEntryModal extends Modal {
           this.entry.backgroundColor = bgColorVal;
         }
         
-        // Preserve highlight styling parameters
-        if (typeof this.entry.backgroundOpacity === 'number') {} // already set
-        if (typeof this.entry.highlightBorderRadius === 'number') {} // already set
-        if (typeof this.entry.highlightHorizontalPadding === 'number') {} // already set
-        if (typeof this.entry.highlightVerticalPadding === 'number') {} // already set
-        if (typeof this.entry.enableBorderThickness === 'boolean') {} // already set
-        if (this.entry.borderStyle) {} // already set
-        if (this.entry.borderLineStyle) {} // already set
-        if (typeof this.entry.borderOpacity === 'number') {} // already set
-        if (typeof this.entry.borderThickness === 'number') {} // already set
-        
-        // Call the onSaved callback to refresh parent modal
         try { this.onSaved && this.onSaved(this.entry); } catch (e) {}
       }
       
@@ -16068,6 +16915,21 @@ class ColorSettingTab extends PluginSettingTab {
           colorPicker.style.borderRadius = '4px';
           colorPicker.style.cursor = 'pointer';
           colorPicker.style.flexShrink = '0';
+          const colorPickerContextHandler = (ev) => {
+            try {
+              ev.preventDefault();
+              ev.stopPropagation();
+              const modal = new ColorPickerModal(this.app, this.plugin, async (color) => {
+                if (color && this.plugin.isValidHexColor(color)) {
+                  colorPicker.value = color;
+                  await colorHandler();
+                }
+              }, 'text', sw && sw.name ? sw.name : '');
+              modal._hideHeaderControls = true;
+              modal._preFillTextColor = colorPicker.value;
+              modal.open();
+            } catch (_) {}
+          };
 
           const delBtn = row.createEl('button', { text: '✕' });
           delBtn.addClass('mod-warning');
@@ -16170,6 +17032,7 @@ class ColorSettingTab extends PluginSettingTab {
 
           nameInput.addEventListener('change', nameHandler);
           colorPicker.addEventListener('input', colorHandler);
+          colorPicker.addEventListener('contextmenu', colorPickerContextHandler);
           delBtn.addEventListener('click', delHandler);
         });
       }
@@ -16798,6 +17661,14 @@ class ColorSettingTab extends PluginSettingTab {
             }
           } catch (e) {}
         }));
+
+    new Setting(containerEl)
+      .setName(this.plugin.t('show_add_to_existing_menu','Show "Add to existing entry" in right-click menu'))
+      .setDesc(this.plugin.t('show_add_to_existing_menu_desc','Adds a right-click menu item to add selected text to an existing entry.'))
+      .addToggle(t => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async v => {
+        this.plugin.settings.enableAddToExistingMenu = v;
+        await this.plugin.saveSettings();
+      }));
 
     // new Setting(containerEl)
     //   .setName(this.plugin.t('show_coloring_reason_on_hover','Show coloring reason on hover'))
@@ -17648,6 +18519,15 @@ class ColorSettingTab extends PluginSettingTab {
     // --- Grouped Entries ---
     containerEl.createEl('h3', { text: this.plugin.t('grouped_entries_header', 'Grouped Entries') });
     // containerEl.createEl('p', { text: this.plugin.t('grouped_entries_desc','Manage your word groups. Use search to filter by name.') });
+    new Setting(containerEl)
+      .setName(this.plugin.t('hide_inactive_groups_dropdown','Hide inactive groups in dropdowns'))
+      .setDesc(this.plugin.t('hide_inactive_groups_dropdown_desc','When enabled, only active word groups will appear in group dropdowns.'))
+      .addToggle(t => t
+        .setValue(!!this.plugin.settings.hideInactiveGroupsInDropdowns)
+        .onChange(async v => {
+          this.plugin.settings.hideInactiveGroupsInDropdowns = !!v;
+          await this.plugin.saveSettings();
+        }));
     const groupSearchContainer = containerEl.createDiv();
     try { groupSearchContainer.addClass('act-search-container'); } catch (e) { try { groupSearchContainer.classList.add('act-search-container'); } catch (_) {} }
     groupSearchContainer.style.margin = '8px 0';
@@ -18151,6 +19031,7 @@ class ColorPickerModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     this._eventListeners = []; // Reset listeners
+    this._hasUserChanges = false;
     const cpm = this.plugin.settings.colorPickerMode || 'both';
     const forcedSingle = (this.mode === 'text' || this.mode === 'background');
     const isBoth = !forcedSingle && (cpm === 'both' || cpm === 'both-bg-left' || cpm === 'both-v-text-top' || cpm === 'both-v-bg-top');
@@ -18171,10 +19052,72 @@ class ColorPickerModal extends Modal {
     contentEl.style.alignItems = 'stretch';
     try { contentEl.addClass('act-color-picker-content'); } catch (e) {}
 
-    const h2 = contentEl.createEl('h2', { text: this.plugin.t('pick_color_header','Pick Color') });
+    const headerRow = contentEl.createDiv();
+    headerRow.style.display = 'flex';
+    headerRow.style.alignItems = 'center';
+    headerRow.style.gap = '8px';
+    headerRow.style.gridColumn = '1 / -1';
+    headerRow.style.marginBottom = '16px';
+    try { headerRow.addClass('act-modal-header-controls'); } catch (e) { try { headerRow.classList.add('act-modal-header-controls'); } catch (_) {} }
+    const h2 = headerRow.createEl('h2', { text: this.plugin.t('pick_color_header','Pick Color') });
     h2.style.marginTop = '0';
-    h2.style.marginBottom = '16px';
-    h2.style.gridColumn = '1 / -1';
+    h2.style.marginBottom = '0px';
+    h2.style.flex = '1 1 auto';
+    const hideControls = !!this._hideHeaderControls;
+    const groupsRaw = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+    const groups = (this.plugin.settings.hideInactiveGroupsInDropdowns ? groupsRaw.filter(g => g && g.active) : groupsRaw);
+      if (!hideControls && groups.length > 0) {
+      const groupSelect = headerRow.createEl('select');
+      groupSelect.style.padding = '6px';
+      groupSelect.style.borderRadius = '4px';
+      groupSelect.style.border = '1px solid var(--background-modifier-border)';
+      groupSelect.style.textAlign = 'center';
+      groupSelect.style.maxWidth = '120px';
+      try { groupSelect.style.setProperty('max-width','120px','important'); groupSelect.style.setProperty('width','120px','important'); groupSelect.style.setProperty('min-width','120px','important'); } catch (e) {}
+      groupSelect.style.flex = '0 0 auto';
+      groupSelect.style.marginLeft = 'auto';
+      groupSelect.createEl('option', { text: this.plugin.t('default','Default'), value: '' });
+      groups.forEach(g => { groupSelect.createEl('option', { text: String(g?.name || 'Unnamed Group'), value: String(g?.uid || '') }); });
+      groupSelect.value = '';
+      const groupChange = () => { this._selectedGroupUid = groupSelect.value || null; this._hasUserChanges = true; };
+      groupSelect.addEventListener('change', groupChange);
+      this._eventListeners.push({ el: groupSelect, event: 'change', handler: groupChange });
+      this._groupSelect = groupSelect;
+    }
+      if (!hideControls) {
+        const matchSelect = headerRow.createEl('select');
+        matchSelect.style.padding = '6px';
+        matchSelect.style.borderRadius = '4px';
+        matchSelect.style.border = '1px solid var(--background-modifier-border)';
+        matchSelect.style.textAlign = 'center';
+      matchSelect.style.maxWidth = '100px';
+      try { matchSelect.style.setProperty('max-width','100px','important'); matchSelect.style.setProperty('width','100px','important'); matchSelect.style.setProperty('min-width','100px','important'); } catch (e) {}
+      matchSelect.style.flex = '0 0 auto';
+        matchSelect.innerHTML = `<option value="exact">${this.plugin.t('match_option_exact','Exact')}</option><option value="contains">${this.plugin.t('match_option_contains','Contains')}</option><option value="startswith">${this.plugin.t('match_option_starts_with','Starts with')}</option><option value="endswith">${this.plugin.t('match_option_ends_with','Ends with')}</option>`;
+        this._matchType = this.plugin.settings.partialMatch ? 'contains' : 'exact';
+        matchSelect.value = this._matchType;
+        const mtHandler = () => { this._matchType = matchSelect.value; this._hasUserChanges = true; };
+      matchSelect.addEventListener('change', mtHandler);
+      this._eventListeners.push({ el: matchSelect, event: 'change', handler: mtHandler });
+      this._matchSelect = matchSelect;
+    }
+    
+    let editBtn = null;
+    if (!hideControls) {
+      editBtn = headerRow.createEl('button');
+      try { setIcon(editBtn, 'edit-3'); } catch (e) {}
+      editBtn.title = this.plugin.t('edit_entry_header','Edit Entry');
+      editBtn.style.flex = '0 0 auto';
+      editBtn.style.display = 'flex';
+      editBtn.style.alignItems = 'center';
+      editBtn.style.justifyContent = 'center';
+      editBtn.style.padding = '6px';
+      editBtn.style.borderRadius = '4px';
+      editBtn.style.border = '1px solid var(--background-modifier-border)';
+      editBtn.style.background = 'var(--background-modifier-form-field)';
+      editBtn.style.cursor = 'pointer';
+      editBtn.disabled = true;
+    }
 
     this.selectedTextColor = null;
     this.selectedBgColor = null;
@@ -18333,6 +19276,7 @@ class ColorPickerModal extends Modal {
           this.selectedTextColor = val;
           preview.style.color = val;
           try { preview.style.setProperty('--highlight-color', val); } catch (e) {}
+          this._hasUserChanges = true;
         } else {
           this.selectedBgColor = val;
           // Clear any existing border styles first
@@ -18377,23 +19321,23 @@ class ColorPickerModal extends Modal {
               preview.style.paddingLeft = preview.style.paddingRight = '';
               preview.style.paddingTop = preview.style.paddingBottom = '';
             }
-          } else {
-            // Non-quick background preview uses global appearance settings
-            const rgba = this.plugin.hexToRgba(val, this.plugin.settings.backgroundOpacity ?? 25);
-            preview.style.backgroundColor = rgba;
-            this.plugin.applyBorderStyleToElement(preview, null, val);
-            preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + 'px';
-            try { preview.style.setProperty('padding-top', (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'); preview.style.setProperty('padding-bottom', (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'); } catch (e) { preview.style.paddingTop = preview.style.paddingBottom = (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'; }
-            if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
-              preview.style.borderRadius = '0px';
-            } else {
-              preview.style.borderRadius = (this.plugin.settings.highlightBorderRadius ?? 8) + 'px';
-            }
-            if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
-              preview.style.boxDecorationBreak = 'clone';
-              preview.style.WebkitBoxDecorationBreak = 'clone';
-            }
+        } else {
+          const op = (matchedEntry && typeof matchedEntry.backgroundOpacity === 'number') ? matchedEntry.backgroundOpacity : (this.plugin.settings.backgroundOpacity ?? 25);
+          const rgba = this.plugin.hexToRgba(val, op);
+          preview.style.backgroundColor = rgba;
+          this.plugin.applyBorderStyleToElement(preview, null, val, matchedEntry);
+          const hPad = (matchedEntry && typeof matchedEntry.highlightHorizontalPadding === 'number') ? matchedEntry.highlightHorizontalPadding : (this.plugin.settings.highlightHorizontalPadding ?? 4);
+          const vPad = (matchedEntry && typeof matchedEntry.highlightVerticalPadding === 'number') ? matchedEntry.highlightVerticalPadding : (this.plugin.settings.highlightVerticalPadding ?? 0);
+          const radius = (matchedEntry && typeof matchedEntry.highlightBorderRadius === 'number') ? matchedEntry.highlightBorderRadius : (this.plugin.settings.highlightBorderRadius ?? 8);
+          preview.style.paddingLeft = preview.style.paddingRight = hPad + 'px';
+          try { preview.style.setProperty('padding-top', vPad + 'px'); preview.style.setProperty('padding-bottom', vPad + 'px'); } catch (e) { preview.style.paddingTop = preview.style.paddingBottom = vPad + 'px'; }
+          preview.style.borderRadius = radius + 'px';
+          if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
+            preview.style.boxDecorationBreak = 'clone';
+            preview.style.WebkitBoxDecorationBreak = 'clone';
           }
+          this._hasUserChanges = true;
+        }
         }
         hex.value = val;
         colorInput.value = val;
@@ -18436,6 +19380,7 @@ class ColorPickerModal extends Modal {
         }
         hex.value = '';
         colorInput.value = '#000000';
+        this._hasUserChanges = true;
       };
       resetBtn.addEventListener('click', resetHandler);
       this._eventListeners.push({ el: resetBtn, event: 'click', handler: resetHandler });
@@ -18491,51 +19436,250 @@ class ColorPickerModal extends Modal {
     let initText = null;
     let initBg = null;
     let existingStyle = null;
+    let matchedEntry = null;
+    let matchedGroupUid = null;
+    let matchedMatchType = null;
     const caseSensitive = !!this.plugin.settings.caseSensitive;
     const eq = (a, b) => (caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
-    const wordEntries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
-    for (const e of wordEntries) {
-      if (!e || e.isRegex) continue;
-      if (eq(e.pattern || '', s) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
-      if (this.plugin.settings.partialMatch) {
-        const a = caseSensitive ? String(s) : String(s).toLowerCase();
-        const b = caseSensitive ? String(e.pattern || '') : String(e.pattern || '').toLowerCase();
-        if (b && a.includes(b) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
-      }
-      if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
+    let allEntries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries.map(e => Object.assign({}, e, { _groupUid: null })) : [];
+    if (Array.isArray(this.plugin.settings.wordEntryGroups)) {
+      this.plugin.settings.wordEntryGroups.forEach(g => {
+        if (g && g.active && Array.isArray(g.entries)) {
+          g.entries.forEach(e => { allEntries.push(Object.assign({}, e, { _groupUid: g.uid })); });
+        }
+      });
     }
-    if (!initText) {
-      for (const e of wordEntries) {
-        if (!e || !e.isRegex || !this.plugin.settings.enableRegexSupport) continue;
-        try {
-          const re = new RegExp(e.pattern, e.flags || '');
-          if (re.test(s) && e.color) { initText = e.color; existingStyle = existingStyle || 'text'; break; }
-        } catch (err) {}
-      }
-    }
-    const tbgEntries = (Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : []).filter(e => e && e.backgroundColor);
-    for (const e of tbgEntries) {
+    for (const e of allEntries) {
       if (!e || e.isRegex) continue;
-      let match = eq(e.pattern || '', s) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)));
-      if (match) {
-        if (e.textColor && e.textColor !== 'currentColor') initText = e.textColor;
-        if (e.backgroundColor) initBg = e.backgroundColor;
+      const entryMatchType = (e.matchType || '').toLowerCase();
+      const a = caseSensitive ? String(s) : String(s).toLowerCase();
+      const b = caseSensitive ? String(e.pattern || '') : String(e.pattern || '').toLowerCase();
+      
+      let matches = false;
+      // Check if selected text matches based on the entry's matchType
+      if (entryMatchType === 'exact') {
+        matches = eq(e.pattern || '', s) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)));
+      } else if (entryMatchType === 'startswith') {
+        matches = b && a.startsWith(b);
+      } else if (entryMatchType === 'endswith') {
+        matches = b && a.endsWith(b);
+      } else if (entryMatchType === 'contains') {
+        matches = b && a.includes(b);
+      } else {
+        // Fallback to entry's literal match or use global partialMatch setting
+        const literalMatch = eq(e.pattern || '', s) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, s)));
+        if (!literalMatch && this.plugin.settings.partialMatch && !e.isRegex) {
+          matches = b && a.includes(b);
+        } else if (!literalMatch && !this.plugin.settings.partialMatch) {
+          matches = false;
+        } else {
+          matches = literalMatch;
+        }
+      }
+      
+      if (!matches) continue;
+      
+      if (e.backgroundColor) {
+        if (e.textColor && e.textColor !== 'currentColor' && this.plugin.isValidHexColor(e.textColor)) initText = e.textColor;
+        if (this.plugin.isValidHexColor(e.backgroundColor)) initBg = e.backgroundColor;
         existingStyle = e.styleType || ((e.textColor && e.textColor !== 'currentColor') && e.backgroundColor ? 'both' : (e.backgroundColor ? 'highlight' : 'text'));
+        matchedGroupUid = e._groupUid || null;
+        matchedMatchType = e.matchType || matchedMatchType;
+        matchedEntry = e;
+        break;
+      } else if (e.color && this.plugin.isValidHexColor(e.color)) {
+        initText = e.color;
+        existingStyle = existingStyle || 'text';
+        matchedGroupUid = e._groupUid || null;
+        matchedMatchType = e.matchType || matchedMatchType;
+        matchedEntry = e;
         break;
       }
     }
-    if (!initBg && !initText) {
-      for (const e of tbgEntries) {
-        if (!e || !e.isRegex || !this.plugin.settings.enableRegexSupport) continue;
-        let match = false;
-        try { const re = new RegExp(e.pattern, e.flags || ''); match = re.test(s); } catch (err) { match = false; }
-        if (match) {
-          if (e.textColor && e.textColor !== 'currentColor') initText = e.textColor;
-          if (e.backgroundColor) initBg = e.backgroundColor;
-          existingStyle = e.styleType || ((e.textColor && e.textColor !== 'currentColor') && e.backgroundColor ? 'both' : (e.backgroundColor ? 'highlight' : 'text'));
-          break;
-        }
+    if (!initText && this.plugin.settings.enableRegexSupport) {
+      for (const e of allEntries) {
+        if (!e || !e.isRegex) continue;
+        try {
+          const re = new RegExp(e.pattern, e.flags || '');
+          if (re.test(s)) {
+            if (e.backgroundColor) {
+              if (e.textColor && e.textColor !== 'currentColor' && this.plugin.isValidHexColor(e.textColor)) initText = e.textColor;
+              if (this.plugin.isValidHexColor(e.backgroundColor)) initBg = e.backgroundColor;
+              existingStyle = e.styleType || ((e.textColor && e.textColor !== 'currentColor') && e.backgroundColor ? 'both' : (e.backgroundColor ? 'highlight' : 'text'));
+            } else if (e.color && this.plugin.isValidHexColor(e.color)) {
+              initText = e.color;
+              existingStyle = existingStyle || 'text';
+            }
+            matchedGroupUid = e._groupUid || null;
+            matchedMatchType = e.matchType || matchedMatchType;
+            matchedEntry = e;
+            break;
+          }
+        } catch (err) {}
       }
+    }
+    this._selectedGroupUid = matchedGroupUid || null;
+    if (this._groupSelect) { this._groupSelect.value = this._selectedGroupUid || ''; }
+    if (this._matchSelect) {
+      this._matchType = matchedMatchType || (this.plugin.settings.partialMatch ? 'contains' : 'exact');
+      this._matchSelect.value = this._matchType;
+    }
+    if (editBtn) {
+      // Resolve original entry reference from settings arrays (not a clone)
+      let originalEntry = null;
+      if (matchedEntry) {
+        try {
+          const word = this._selectedText || '';
+          const caseSensitive2 = !!this.plugin.settings.caseSensitive;
+          const eq2 = (a, b) => (caseSensitive2 ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
+          if (matchedGroupUid) {
+            const group = (Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : []).find(g => g && g.uid === matchedGroupUid);
+            if (group && Array.isArray(group.entries)) {
+              // Prefer exact/grouped match; fallback to regex if needed
+              originalEntry = group.entries.find(e => {
+                if (!e) return false;
+                if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                  try { const re = new RegExp(e.pattern, e.flags || ''); return re.test(word); } catch (_) { return false; }
+                }
+                return eq2(e.pattern || '', word) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq2(p, word)));
+              }) || null;
+            }
+          } else {
+            const arr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+            originalEntry = arr.find(e => {
+              if (!e) return false;
+              if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                try { const re = new RegExp(e.pattern, e.flags || ''); return re.test(word); } catch (_) { return false; }
+              }
+              return eq2(e.pattern || '', word) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq2(p, word)));
+            }) || null;
+          }
+        } catch (_) { originalEntry = null; }
+      }
+      editBtn.disabled = false;
+      const editHandler = () => {
+        try {
+          let entryToEdit = originalEntry;
+          // If no entry was matched, create a new entry prefilled with selected text
+          if (!entryToEdit) {
+            const ts = this.selectedTextColor;
+            const bs = this.selectedBgColor;
+            const textSelected = ts && this.plugin.isValidHexColor(ts);
+            const bgSelected = bs && this.plugin.isValidHexColor(bs);
+            const mt = this._matchType || (this.plugin.settings.partialMatch ? 'contains' : 'exact');
+            if (textSelected && bgSelected) {
+              entryToEdit = {
+                pattern: this._selectedText || '',
+                color: '',
+                textColor: ts,
+                backgroundColor: bs,
+                isRegex: false,
+                flags: '',
+                styleType: 'both',
+                matchType: mt,
+                uid: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                _isNewFromPickModal: true,
+                _preselectedGroupUid: this._selectedGroupUid || null,
+                _originalState: {
+                  pattern: this._selectedText || '',
+                  color: '',
+                  textColor: ts,
+                  backgroundColor: bs,
+                  isRegex: false,
+                  flags: '',
+                  styleType: 'both',
+                  matchType: mt
+                }
+              };
+            } else if (textSelected) {
+              entryToEdit = {
+                pattern: this._selectedText || '',
+                color: ts,
+                textColor: null,
+                backgroundColor: null,
+                isRegex: false,
+                flags: '',
+                styleType: 'text',
+                matchType: mt,
+                uid: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                _isNewFromPickModal: true,
+                _preselectedGroupUid: this._selectedGroupUid || null,
+                _originalState: {
+                  pattern: this._selectedText || '',
+                  color: ts,
+                  textColor: null,
+                  backgroundColor: null,
+                  isRegex: false,
+                  flags: '',
+                  styleType: 'text',
+                  matchType: mt
+                }
+              };
+            } else if (bgSelected) {
+              entryToEdit = {
+                pattern: this._selectedText || '',
+                color: '',
+                textColor: 'currentColor',
+                backgroundColor: bs,
+                isRegex: false,
+                flags: '',
+                styleType: 'highlight',
+                matchType: mt,
+                uid: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                _isNewFromPickModal: true,
+                _preselectedGroupUid: this._selectedGroupUid || null,
+                _originalState: {
+                  pattern: this._selectedText || '',
+                  color: '',
+                  textColor: 'currentColor',
+                  backgroundColor: bs,
+                  isRegex: false,
+                  flags: '',
+                  styleType: 'highlight',
+                  matchType: mt
+                }
+              };
+            } else {
+              entryToEdit = {
+                pattern: this._selectedText || '',
+                color: '',
+                textColor: null,
+                backgroundColor: null,
+                isRegex: false,
+                flags: '',
+                styleType: 'text',
+                matchType: mt,
+                uid: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                _isNewFromPickModal: true,
+                _preselectedGroupUid: this._selectedGroupUid || null,
+                _originalState: {
+                  pattern: this._selectedText || '',
+                  color: '',
+                  textColor: null,
+                  backgroundColor: null,
+                  isRegex: false,
+                  flags: '',
+                  styleType: 'text',
+                  matchType: mt
+                }
+              };
+            }
+          }
+          const onSaved = async () => {
+            try {
+              await this.plugin.saveSettings();
+              this.plugin.compileWordEntries();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+              this.plugin.triggerActiveDocumentRerender();
+            } catch (_) {}
+          };
+          new EditEntryModal(this.app, this.plugin, entryToEdit, onSaved, this, true).open();
+        } catch (_) {}
+      };
+      editBtn.addEventListener('click', editHandler);
+      this._eventListeners.push({ el: editBtn, event: 'click', handler: editHandler });
     }
     
     // Check for prefill values set from context menu handlers
@@ -18561,18 +19705,22 @@ class ColorPickerModal extends Modal {
       preview.style.color = initText;
       tp.hex.value = initText;
       tp.colorInput.value = initText;
-      if (this.mode === 'text' || this.mode === 'text-and-background') this.selectedTextColor = initText;
+      // prefill does not count as a change; do not set selectedTextColor
     }
     if (initBg && bp && this.mode !== 'text') {
-      const rgba = this.plugin.hexToRgba(initBg, this.plugin.settings.backgroundOpacity ?? 25);
+      const op = (matchedEntry && typeof matchedEntry.backgroundOpacity === 'number') ? matchedEntry.backgroundOpacity : (this.plugin.settings.backgroundOpacity ?? 25);
+      const rgba = this.plugin.hexToRgba(initBg, op);
       preview.style.backgroundColor = rgba;
-      this.plugin.applyBorderStyleToElement(preview, initText, initBg);
-      preview.style.paddingLeft = preview.style.paddingRight = (this.plugin.settings.highlightHorizontalPadding ?? 4) + 'px';
-      try { preview.style.setProperty('padding-top', (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'); preview.style.setProperty('padding-bottom', (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'); } catch (e) { preview.style.paddingTop = preview.style.paddingBottom = (this.plugin.settings.highlightVerticalPadding ?? 0) + 'px'; }
-      if ((this.plugin.settings.highlightHorizontalPadding ?? 4) > 0 && (this.plugin.settings.highlightBorderRadius ?? 8) === 0) {
+      this.plugin.applyBorderStyleToElement(preview, initText, initBg, matchedEntry);
+      const hPad = (matchedEntry && typeof matchedEntry.highlightHorizontalPadding === 'number') ? matchedEntry.highlightHorizontalPadding : (this.plugin.settings.highlightHorizontalPadding ?? 4);
+      const vPad = (matchedEntry && typeof matchedEntry.highlightVerticalPadding === 'number') ? matchedEntry.highlightVerticalPadding : (this.plugin.settings.highlightVerticalPadding ?? 0);
+      const radius = (matchedEntry && typeof matchedEntry.highlightBorderRadius === 'number') ? matchedEntry.highlightBorderRadius : (this.plugin.settings.highlightBorderRadius ?? 8);
+      preview.style.paddingLeft = preview.style.paddingRight = hPad + 'px';
+      try { preview.style.setProperty('padding-top', vPad + 'px'); preview.style.setProperty('padding-bottom', vPad + 'px'); } catch (e) { preview.style.paddingTop = preview.style.paddingBottom = vPad + 'px'; }
+      if (hPad > 0 && radius === 0) {
         preview.style.borderRadius = '0px';
       } else {
-        preview.style.borderRadius = (this.plugin.settings.highlightBorderRadius ?? 8) + 'px';
+        preview.style.borderRadius = radius + 'px';
       }
       if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
         preview.style.boxDecorationBreak = 'clone';
@@ -18580,7 +19728,7 @@ class ColorPickerModal extends Modal {
       }
       bp.hex.value = initBg;
       bp.colorInput.value = initBg;
-      if (this.mode === 'background' || this.mode === 'text-and-background') this.selectedBgColor = initBg;
+      // prefill does not count as a change; do not set selectedBgColor
     }
     // Also update the mode handling to properly detect text-and-background
     const actionRow = contentEl.createDiv();
@@ -18599,15 +19747,66 @@ class ColorPickerModal extends Modal {
         const textSelected = !!(textColor && this.plugin.isValidHexColor(textColor));
         const bgSelected = !!(bgColor && this.plugin.isValidHexColor(bgColor));
         debugLog('MODAL', 'submit', { word: this._selectedText, textSelected, bgSelected, textColor, bgColor });
+        const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+        const selectedGroup = groupsList.find(g => g && g.uid === this._selectedGroupUid);
+        const targetArr = selectedGroup ? (Array.isArray(selectedGroup.entries) ? selectedGroup.entries : (selectedGroup.entries = [])) : (Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : (this.plugin.settings.wordEntries = []));
+        
+        // Replacement behavior for group reassignment:
+        // If the matched entry belongs to a different group than the newly selected one,
+        // move it (remove from the original container and add to the new container) before updating colors.
+        try {
+          const fromGroupUid = matchedGroupUid || null;
+          const toGroupUid = this._selectedGroupUid || null;
+          if (matchedEntry && fromGroupUid !== toGroupUid) {
+            const word = this._selectedText || '';
+            const caseSensitive = !!this.plugin.settings.caseSensitive;
+            const eq = (a, b) => (caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
+            let sourceArr = null;
+            if (fromGroupUid) {
+              const srcGroup = groupsList.find(g => g && g.uid === fromGroupUid);
+              sourceArr = srcGroup && Array.isArray(srcGroup.entries) ? srcGroup.entries : null;
+            } else {
+              sourceArr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : null;
+            }
+            if (sourceArr) {
+              let srcIdx = -1;
+              for (let i = 0; i < sourceArr.length; i++) {
+                const e = sourceArr[i];
+                if (!e) continue;
+                let match = false;
+                if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                  try { const re = new RegExp(e.pattern, e.flags || ''); match = re.test(word); } catch (_) { match = false; }
+                } else {
+                  match = eq(e.pattern || '', word) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, word)));
+                }
+                if (match) { srcIdx = i; break; }
+              }
+              if (srcIdx !== -1) {
+                const moved = sourceArr.splice(srcIdx, 1)[0];
+                // Push the moved entry into targetArr if not already present there
+                const existsInTarget = targetArr.some(e => {
+                  if (!e) return false;
+                  if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                    try { const re = new RegExp(e.pattern, e.flags || ''); return re.test(word); } catch (_) { return false; }
+                  }
+                  return eq(e.pattern || '', word) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, word)));
+                });
+                if (!existsInTarget) {
+                  targetArr.push(moved);
+                }
+                matchedGroupUid = toGroupUid;
+              }
+            }
+          }
+        } catch (_) {}
         
         // If both colors are empty/reset, remove the entry
         if (!textSelected && !bgSelected) {
           const word = this._selectedText || '';
           const caseSensitive = !!this.plugin.settings.caseSensitive;
           const eq = (a, b) => (caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
-          const arr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
-          for (let i = arr.length - 1; i >= 0; i--) {
-            const e = arr[i];
+          for (let i = targetArr.length - 1; i >= 0; i--) {
+            const e = targetArr[i];
             if (!e) continue;
             let match = false;
             if (e.isRegex && this.plugin.settings.enableRegexSupport) {
@@ -18616,8 +19815,9 @@ class ColorPickerModal extends Modal {
               match = eq(e.pattern || '', word) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, word)));
             }
             if (match) {
-              arr.splice(i, 1);
+              targetArr.splice(i, 1);
               await this.plugin.saveSettings();
+              if (selectedGroup) { this.plugin.compileWordEntries(); }
               this.plugin.reconfigureEditorExtensions();
               this.plugin.forceRefreshAllEditors();
               break;
@@ -18629,7 +19829,7 @@ class ColorPickerModal extends Modal {
         const word = this._selectedText || '';
         try {
           if (typeof this.callback === 'function') {
-            try { this.callback(textSelected ? textColor : (bgSelected ? bgColor : null), { textColor: textSelected ? textColor : null, backgroundColor: bgSelected ? bgColor : null, word }); } catch (e) {}
+            try { this.callback(textSelected ? textColor : (bgSelected ? bgColor : null), { textColor: textSelected ? textColor : null, backgroundColor: bgSelected ? bgColor : null, word, selectedGroupUid: this._selectedGroupUid || null, matchType: this._matchType || (this.plugin.settings.partialMatch ? 'contains' : 'exact') }); } catch (e) {}
             return;
           }
           const caseSensitive = !!this.plugin.settings.caseSensitive;
@@ -18639,9 +19839,8 @@ class ColorPickerModal extends Modal {
           // FIXED LOGIC: Clear logic for each case
           if (textSelected && bgSelected) {
             // BOTH: text color + background color
-            const arr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
-            for (let i = 0; i < arr.length; i++) {
-              const e = arr[i];
+            for (let i = 0; i < targetArr.length; i++) {
+              const e = targetArr[i];
               if (!e) continue;
               let match = false;
               if (e.isRegex && this.plugin.settings.enableRegexSupport) {
@@ -18662,25 +19861,23 @@ class ColorPickerModal extends Modal {
             if (!updated) {
               const newEntry = { 
                 pattern: word, 
-                color: '', // No plain color
+                color: '', 
                 textColor: textColor, 
                 backgroundColor: bgColor, 
                 isRegex: false, 
                 flags: '', 
-                styleType: 'both', // EXPLICITLY SET TO BOTH
-                matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact'
+                styleType: 'both', 
+                matchType: this._matchType || (this.plugin.settings.partialMatch ? 'contains' : 'exact')
               };
-              if (!Array.isArray(this.plugin.settings.wordEntries)) this.plugin.settings.wordEntries = [];
-              this.plugin.settings.wordEntries.push(newEntry);
+              targetArr.push(newEntry);
               debugLog('MODAL', 'create both', newEntry);
             }
             await this.plugin.saveSettings();
-            this.plugin.compileTextBgColoringEntries();
+            if (selectedGroup) { this.plugin.compileWordEntries(); } else { this.plugin.compileTextBgColoringEntries(); }
           } else if (textSelected) {
             // TEXT ONLY: text color only
-            const arr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
-            for (let i = 0; i < arr.length; i++) {
-              const e = arr[i];
+            for (let i = 0; i < targetArr.length; i++) {
+              const e = targetArr[i];
               if (!e) continue;
               if (e.isRegex && this.plugin.settings.enableRegexSupport) {
                 try { const re = new RegExp(e.pattern, e.flags || ''); if (re.test(word)) { 
@@ -18689,6 +19886,7 @@ class ColorPickerModal extends Modal {
                   e.backgroundColor = null; // Clear background field
                   e.styleType = 'text'; // EXPLICITLY SET TO TEXT
                   updated = true; 
+                  if (!e.isRegex) e.matchType = this._matchType || e.matchType || (this.plugin.settings.partialMatch ? 'contains' : 'exact');
                   break; 
                 } } catch (err) {}
               } else {
@@ -18698,6 +19896,7 @@ class ColorPickerModal extends Modal {
                   e.backgroundColor = null; // Clear background field
                   e.styleType = 'text'; // EXPLICITLY SET TO TEXT
                   updated = true; 
+                  if (!e.isRegex) e.matchType = this._matchType || e.matchType || (this.plugin.settings.partialMatch ? 'contains' : 'exact');
                   break; 
                 }
                 if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(p => eq(p, word))) { 
@@ -18706,20 +19905,25 @@ class ColorPickerModal extends Modal {
                   e.backgroundColor = null; // Clear background field
                   e.styleType = 'text'; // EXPLICITLY SET TO TEXT
                   updated = true; 
+                  if (!e.isRegex) e.matchType = this._matchType || e.matchType || (this.plugin.settings.partialMatch ? 'contains' : 'exact');
                   break; 
                 }
               }
             }
             if (!updated) {
-              // Use saveEntry for text-only which should create a text-style entry
-              await this.plugin.saveEntry(word, textColor);
-              // Ensure the new entry has the correct styleType
-              const newEntry = this.plugin.settings.wordEntries.find(e => e && e.pattern === word && !e.isRegex);
-              if (newEntry) {
-                newEntry.styleType = 'text'; // EXPLICITLY SET TO TEXT
+              if (selectedGroup) {
+                const newEntry = { pattern: word, color: textColor, isRegex: false, flags: '', styleType: 'text', matchType: this._matchType || (this.plugin.settings.partialMatch ? 'contains' : 'exact') };
+                targetArr.push(newEntry);
+                await this.plugin.saveSettings();
+                this.plugin.compileWordEntries();
+              } else {
+                await this.plugin.saveEntry(word, textColor);
+                const ne = this.plugin.settings.wordEntries.find(e => e && e.pattern === word && !e.isRegex);
+                if (ne) { ne.styleType = 'text'; }
               }
             } else {
               await this.plugin.saveSettings();
+              if (selectedGroup) { this.plugin.compileWordEntries(); }
             }
             debugLog('MODAL', 'text-only', { word, textColor });
           } else if (bgSelected) {
@@ -18748,20 +19952,19 @@ class ColorPickerModal extends Modal {
             if (!updated) {
               const newEntry = { 
                 pattern: word, 
-                color: '', // No plain color
+                color: '', 
                 textColor: 'currentColor', 
                 backgroundColor: bgColor, 
                 isRegex: false, 
                 flags: '', 
-                styleType: 'highlight', // EXPLICITLY SET TO HIGHLIGHT
-                matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact'
+                styleType: 'highlight', 
+                matchType: this._matchType || (this.plugin.settings.partialMatch ? 'contains' : 'exact')
               };
-              if (!Array.isArray(this.plugin.settings.wordEntries)) this.plugin.settings.wordEntries = [];
-              this.plugin.settings.wordEntries.push(newEntry);
+              targetArr.push(newEntry);
               debugLog('MODAL', 'create highlight', newEntry);
             }
             await this.plugin.saveSettings();
-            this.plugin.compileTextBgColoringEntries();
+            if (selectedGroup) { this.plugin.compileWordEntries(); } else { this.plugin.compileTextBgColoringEntries(); }
           }
           this.plugin.reconfigureEditorExtensions();
           this.plugin.forceRefreshAllEditors();
@@ -18785,7 +19988,7 @@ class ColorPickerModal extends Modal {
 
   onClose() {
     // Properly clean up all event listeners before emptying
-    try { if (typeof this._submitFn === 'function') this._submitFn(); } catch (e) {}
+    try { if (this._hasUserChanges && typeof this._submitFn === 'function') this._submitFn(); } catch (e) {}
     this._eventListeners.forEach(({ el, event, handler }) => {
       el.removeEventListener(event, handler);
     });

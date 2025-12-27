@@ -14,6 +14,7 @@ module.exports = {
   "language_eu": "Basque",
   "language_ru": "Russe",
   "language_auto": "Par défaut du système",
+  "default": "Par défaut",
   
   // Release Notes
   "latest_release_notes_label": "Notes de version les plus récentes",
@@ -40,6 +41,10 @@ module.exports = {
   "show_toggle_command": "Afficher l'activation dans les commandes",
   "show_blacklist_menu": "Afficher les mots en liste noire dans le menu clic-droit",
   "show_blacklist_menu_desc": "Ajoute un élément au menu clic-droit pour mettre le texte sélectionné en liste noire pour le coloriage.",
+  "show_add_to_existing_entry_menu": "Afficher Ajouter à une entrée existante dans le menu clic-droit",
+  "show_add_to_existing_entry_menu_desc": "Ajoute un élément au menu clic-droit pour ajouter le texte sélectionné à une entrée existante.",
+  "hide_inactive_groups_in_dropdowns": "Masquer les groupes inactifs dans les listes déroulantes",
+  "hide_inactive_groups_in_dropdowns_desc": "Masque les groupes de mots inactifs lors de l'affichage des listes de groupes dans les listes déroulantes.",
   "tooltip_enable_for_file": "Activer pour ce fichier",
   "tooltip_delete_all_words": "Supprimer tous les mots/motifs définis",
   "tooltip_delete_all_blacklist": "Supprimer tous les mots/motifs en liste noire",

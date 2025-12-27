@@ -14,6 +14,7 @@ module.exports = {
   "language_eu": "Euskera",
   "language_ru": "Ruso",
   "language_auto": "Predeterminado del Sistema",
+  "default": "Predeterminado",
   
   // Release Notes
   "latest_release_notes_label": "Notas de la Última Versión",
@@ -40,6 +41,10 @@ module.exports = {
   "show_toggle_command": "Mostrar Alternador en comandos",
   "show_blacklist_menu": "Mostrar lista negra en el menú contextual",
   "show_blacklist_menu_desc": "Añade un elemento al menú contextual para añadir el texto seleccionado a la lista negra del coloreado.",
+  "show_add_to_existing_entry_menu": "Mostrar Añadir a entrada existente en el menú del botón derecho",
+  "show_add_to_existing_entry_menu_desc": "Añade un elemento al menú contextual para añadir el texto seleccionado a una entrada existente.",
+  "hide_inactive_groups_in_dropdowns": "Ocultar grupos inactivos en los menús desplegables",
+  "hide_inactive_groups_in_dropdowns_desc": "Oculta los grupos de palabras inactivos al mostrar listas de grupos en los menús desplegables.",
   "tooltip_enable_for_file": "Activar para este archivo",
   "tooltip_delete_all_words": "Eliminar todas las palabras/patrones definidos",
   "tooltip_delete_all_blacklist": "Eliminar todas las palabras/patrones de la lista negra",

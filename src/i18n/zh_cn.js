@@ -14,6 +14,7 @@ module.exports = {
   "language_eu": "巴斯克语",
   "language_ru": "俄语",
   "language_auto": "系统默认",
+  "default": "默认",
   
   // Release Notes
   "latest_release_notes_label": "最新发布说明",
@@ -40,6 +41,10 @@ module.exports = {
   "show_toggle_command": "在命令中显示切换",
   "show_blacklist_menu": "在右键菜单中显示黑名单单词",
   "show_blacklist_menu_desc": "添加右键菜单项，将选中的文字加入着色黑名单。",
+  "show_add_to_existing_entry_menu": "在右键菜单中显示添加到现有条目",
+  "show_add_to_existing_entry_menu_desc": "添加右键菜单项，将选中的文字添加到现有条目。",
+  "hide_inactive_groups_in_dropdowns": "在下拉菜单中隐藏不活跃的组",
+  "hide_inactive_groups_in_dropdowns_desc": "在下拉菜单中显示组列表时隐藏不活跃的单词组。",
   "tooltip_enable_for_file": "为此文件启用",
   "tooltip_delete_all_words": "删除所有已定义的单词/模式",
   "tooltip_delete_all_blacklist": "删除所有黑名单单词/模式",

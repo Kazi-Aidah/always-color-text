@@ -14,6 +14,7 @@ module.exports = {
   "language_eu": "Basco",
   "language_ru": "Russo",
   "language_auto": "Predefinito di sistema",
+  "default": "Predefinito",
   
   // Release Notes
   "latest_release_notes_label": "Note di rilascio più recenti",
@@ -40,6 +41,10 @@ module.exports = {
   "show_toggle_command": "Mostra toggle nei comandi",
   "show_blacklist_menu": "Mostra parole in blacklist nel menu tasto destro",
   "show_blacklist_menu_desc": "Aggiunge una voce nel menu tasto destro per mettere in blacklist il testo selezionato dalla colorazione.",
+  "show_add_to_existing_entry_menu": "Mostra Aggiungi a voce esistente nel menu tasto destro",
+  "show_add_to_existing_entry_menu_desc": "Aggiunge una voce nel menu tasto destro per aggiungere il testo selezionato a una voce esistente.",
+  "hide_inactive_groups_in_dropdowns": "Nascondi gruppi inattivi nei menu a discesa",
+  "hide_inactive_groups_in_dropdowns_desc": "Nasconde i gruppi di parole inattivi quando si visualizzano gli elenchi di gruppi nei menu a discesa.",
   "tooltip_enable_for_file": "Abilita per questo file",
   "tooltip_delete_all_words": "Elimina tutte le parole/pattern definiti",
   "tooltip_delete_all_blacklist": "Elimina tutte le parole/pattern in blacklist",
