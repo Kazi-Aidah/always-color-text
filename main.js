@@ -12405,10 +12405,25 @@ module.exports = class AlwaysColorText extends Plugin {
       const entries = filePath ? this.filterEntriesByAdvancedRules(filePath, allEntries) : allEntries;
       const folderEntry = filePath ? this.getBestFolderEntry(filePath) : null;
       if (!this._lpTableCache) this._lpTableCache = /* @__PURE__ */ new WeakMap();
+      let caretAnchor = null, caretFocus = null;
+      try {
+        const sel = window.getSelection && window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          caretAnchor = sel.anchorNode || null;
+          caretFocus = sel.focusNode || null;
+        }
+      } catch (_) {
+      }
       for (const cell of cells) {
         try {
           const hasContent = cell.textContent && cell.textContent.trim().length > 0;
           if (!hasContent) continue;
+          try {
+            if (caretAnchor && cell.contains(caretAnchor) || caretFocus && cell.contains(caretFocus)) {
+              continue;
+            }
+          } catch (_) {
+          }
           const sig = [
             cell.textContent ? cell.textContent.length : 0,
             cell.childElementCount || 0,
