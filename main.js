@@ -4851,9 +4851,11 @@ var BloomFilter = class {
   constructor(size = 2048) {
     this.size = size;
     this.bits = new Uint8Array(size);
+    this._singleChars = "";
   }
   reset() {
     this.bits.fill(0);
+    this._singleChars = "";
   }
   _hashes(s) {
     let h1 = 0, h2 = 0, h3 = 0;
@@ -4874,25 +4876,47 @@ var BloomFilter = class {
     const p = String(pattern).toLowerCase();
     let base = p;
     if (isRegex) {
-      const m = p.match(/[a-z0-9]{3,}/i);
+      const m = p.match(/[a-z0-9\u4e00-\u9fa5]{1,}/i);
       base = m ? m[0].toLowerCase() : "";
     }
-    if (!base || base.length < 3) return;
-    for (let i = 0; i <= base.length - 3; i++) {
-      const tok = base.slice(i, i + 3);
-      this._setToken(tok);
+    if (!base) return;
+    if (base.length === 1) {
+      if (!this._singleChars.includes(base)) {
+        this._singleChars += base;
+      }
+      return;
+    }
+    if (base.length < 3) {
+      this._setToken(base);
+    } else {
+      for (let i = 0; i <= base.length - 3; i++) {
+        const tok = base.slice(i, i + 3);
+        this._setToken(tok);
+      }
     }
   }
   mightContain(text) {
     if (!text) return false;
     const t = String(text).toLowerCase();
+    if (this._singleChars) {
+      for (let i = 0; i < this._singleChars.length; i++) {
+        if (t.includes(this._singleChars[i])) {
+          return true;
+        }
+      }
+    }
     const L = t.length;
-    if (L < 3) return false;
-    for (let i = 0; i <= L - 3; i++) {
-      const tok = t.slice(i, i + 3);
-      const [a, b, c] = this._hashes(tok);
-      if (this.bits[a] && this.bits[b] && this.bits[c]) {
-        return true;
+    if (L < 2) return false;
+    for (let i = 0; i < L; i++) {
+      if (i <= L - 3) {
+        const tok3 = t.slice(i, i + 3);
+        const [a3, b3, c3] = this._hashes(tok3);
+        if (this.bits[a3] && this.bits[b3] && this.bits[c3]) return true;
+      }
+      if (i <= L - 2) {
+        const tok2 = t.slice(i, i + 2);
+        const [a2, b2, c2] = this._hashes(tok2);
+        if (this.bits[a2] && this.bits[b2] && this.bits[c2]) return true;
       }
     }
     return false;
