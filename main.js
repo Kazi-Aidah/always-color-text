@@ -419,6 +419,8 @@ var require_en = __commonJS({
       "edit_entry_header": "Edit Entry",
       "opt_case_sensitive": "is case sensitive",
       "opt_not_case_sensitive": "not case sensitive",
+      "opt_case_all": "Case Sensitivity (All)",
+      "opt_match_all": "Match Type (All)",
       "edit_highlight_styling_btn": "Edit Highlight Styling",
       "inclusion_exclusion_header": "Inclusion / Exclusion Rules",
       "btn_save_entry": "Save Entry",
@@ -860,6 +862,8 @@ var require_es = __commonJS({
       "edit_entry_header": "Editar Entrada",
       "opt_case_sensitive": "es sensible a may\xFAsculas",
       "opt_not_case_sensitive": "no sensible a may\xFAsculas",
+      "opt_case_all": "Sensibilidad a may\xFAsculas (Todo)",
+      "opt_match_all": "Tipo de coincidencia (Todo)",
       "edit_highlight_styling_btn": "Editar Estilo de Resaltado",
       "inclusion_exclusion_header": "Reglas de Inclusi\xF3n / Exclusi\xF3n",
       "btn_save_entry": "Guardar Entrada",
@@ -1301,6 +1305,8 @@ var require_fr = __commonJS({
       "edit_entry_header": "Modifier l'entr\xE9e",
       "opt_case_sensitive": "est sensible \xE0 la casse",
       "opt_not_case_sensitive": "non sensible \xE0 la casse",
+      "opt_case_all": "Sensibilit\xE9 \xE0 la casse (Tous)",
+      "opt_match_all": "Type de correspondance (Tous)",
       "edit_highlight_styling_btn": "Modifier le style de surbrillance",
       "inclusion_exclusion_header": "R\xE8gles d'inclusion / exclusion",
       "btn_save_entry": "Enregistrer l'entr\xE9e",
@@ -1743,6 +1749,8 @@ var require_hi = __commonJS({
       "edit_entry_header": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
       "opt_case_sensitive": "\u0915\u0947\u0938 \u0938\u0947\u0902\u0938\u093F\u091F\u093F\u0935 \u0939\u0948",
       "opt_not_case_sensitive": "\u0915\u0947\u0938 \u0938\u0947\u0902\u0938\u093F\u091F\u093F\u0935 \u0928\u0939\u0940\u0902 \u0939\u0948",
+      "opt_case_all": "\u0915\u0947\u0938 \u0938\u0947\u0902\u0938\u093F\u091F\u093F\u0935\u093F\u091F\u0940 (\u0938\u092D\u0940)",
+      "opt_match_all": "\u092E\u093F\u0932\u093E\u0928 \u092A\u094D\u0930\u0915\u093E\u0930 (\u0938\u092D\u0940)",
       "edit_highlight_styling_btn": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0938\u094D\u091F\u093E\u0907\u0932\u093F\u0902\u0917 \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
       "inclusion_exclusion_header": "\u0938\u092E\u093E\u0935\u0947\u0936\u0928 / \u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E",
       "btn_save_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0938\u0939\u0947\u091C\u0947\u0902",
@@ -2185,6 +2193,8 @@ var require_it = __commonJS({
       "edit_entry_header": "Modifica voce",
       "opt_case_sensitive": "distingue maiuscole/minuscole",
       "opt_not_case_sensitive": "non distingue maiuscole/minuscole",
+      "opt_case_all": "Distingui maiuscole/minuscole (Tutti)",
+      "opt_match_all": "Tipo di corrispondenza (Tutti)",
       "edit_highlight_styling_btn": "Modifica stile evidenziazione",
       "inclusion_exclusion_header": "Regole di inclusione / esclusione",
       "btn_save_entry": "Salva voce",
@@ -2627,6 +2637,8 @@ var require_bn = __commonJS({
       "edit_entry_header": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "opt_case_sensitive": "\u0995\u09C7\u09B8 \u09B8\u09C7\u09A8\u09CD\u09B8\u09BF\u099F\u09BF\u09AD",
       "opt_not_case_sensitive": "\u0995\u09C7\u09B8 \u09B8\u09C7\u09A8\u09CD\u09B8\u09BF\u099F\u09BF\u09AD \u09A8\u09AF\u09BC",
+      "opt_case_all": "\u0995\u09C7\u09B8 \u09B8\u09C7\u09A8\u09CD\u09B8\u09BF\u099F\u09BF\u09AD\u09BF\u099F\u09BF (\u09B8\u09AC)",
+      "opt_match_all": "\u09AE\u09CD\u09AF\u09BE\u099A \u099F\u09BE\u0987\u09AA (\u09B8\u09AC)",
       "edit_highlight_styling_btn": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u09BF\u0982 \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "inclusion_exclusion_header": "\u0985\u09A8\u09CD\u09A4\u09B0\u09CD\u09AD\u09C1\u0995\u09CD\u09A4\u09BF / \u09AC\u09B0\u09CD\u099C\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE",
       "btn_save_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09C1\u09A8",
@@ -3069,6 +3081,8 @@ var require_ru = __commonJS({
       "edit_entry_header": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
       "opt_case_sensitive": "\u0447\u0443\u0432\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u0435\u043D \u043A \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0443",
       "opt_not_case_sensitive": "\u043D\u0435 \u0447\u0443\u0432\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u0435\u043D \u043A \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0443",
+      "opt_case_all": "\u0427\u0443\u0432\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u044C \u043A \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0443 (\u0412\u0441\u0435)",
+      "opt_match_all": "\u0422\u0438\u043F \u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u044F (\u0412\u0441\u0435)",
       "edit_highlight_styling_btn": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0442\u0438\u043B\u044C \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
       "inclusion_exclusion_header": "\u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F / \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
       "btn_save_entry": "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
@@ -3511,6 +3525,8 @@ var require_zh_cn = __commonJS({
       "edit_entry_header": "\u7F16\u8F91\u6761\u76EE",
       "opt_case_sensitive": "\u533A\u5206\u5927\u5C0F\u5199",
       "opt_not_case_sensitive": "\u4E0D\u533A\u5206\u5927\u5C0F\u5199",
+      "opt_case_all": "\u533A\u5206\u5927\u5C0F\u5199\uFF08\u5168\u90E8\uFF09",
+      "opt_match_all": "\u5339\u914D\u7C7B\u578B\uFF08\u5168\u90E8\uFF09",
       "edit_highlight_styling_btn": "\u7F16\u8F91\u9AD8\u4EAE\u6837\u5F0F",
       "inclusion_exclusion_header": "\u5305\u542B / \u6392\u9664\u89C4\u5219",
       "btn_save_entry": "\u4FDD\u5B58\u6761\u76EE",
@@ -4906,7 +4922,7 @@ var BloomFilter = class {
       }
     }
     const L = t.length;
-    if (L < 2) return false;
+    if (L < 2) return true;
     for (let i = 0; i < L; i++) {
       if (i <= L - 3) {
         const tok3 = t.slice(i, i + 3);
@@ -4934,7 +4950,8 @@ var PatternMatcher = class {
     const rawFlags = String(entry.flags || "").replace(/[^gimsuy]/g, "");
     let flags = rawFlags || "";
     if (!flags.includes("g")) flags += "g";
-    if (!this.settings.caseSensitive && !flags.includes("i")) flags += "i";
+    const effectiveCS = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
+    if (!effectiveCS && !flags.includes("i")) flags += "i";
     try {
       if (isRegex && this.settings.enableRegexSupport) {
         entry.regex = cache ? cache.getOrCreate(entry.pattern, flags) : new RegExp(entry.pattern, flags);
@@ -4942,9 +4959,9 @@ var PatternMatcher = class {
         entry.testRegex = cache ? cache.getOrCreate(entry.pattern, tf) : tf === "" ? new RegExp(entry.pattern) : new RegExp(entry.pattern, tf);
       } else {
         const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(entry.pattern) : entry.pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const lf = this.settings.caseSensitive ? "g" : "gi";
+        const lf = effectiveCS ? "g" : "gi";
         entry.regex = cache ? cache.getOrCreate(esc, lf) : new RegExp(esc, lf);
-        entry.testRegex = this.settings.caseSensitive ? cache ? cache.getOrCreate(esc, "") : new RegExp(esc) : cache ? cache.getOrCreate(esc, "i") : new RegExp(esc, "i");
+        entry.testRegex = effectiveCS ? cache ? cache.getOrCreate(esc, "") : new RegExp(esc) : cache ? cache.getOrCreate(esc, "i") : new RegExp(esc, "i");
       }
     } catch (_) {
       entry.invalid = true;
@@ -4969,35 +4986,36 @@ var PatternMatcher = class {
     const matchType = String(entry?.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
     const pattern = entry?.pattern || "";
     const isSentence = this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(pattern) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(pattern || "");
+    const cs = typeof entry?._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry?.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
     if (isSentence) {
       return true;
     }
-    const fullWord = this.extractFullWordAtPosition(text, start, end);
+    const fullWord = pattern && pattern.length <= 2 ? text.substring(start, end) : this.extractFullWordAtPosition(text, start, end);
     switch (matchType) {
       case "exact":
-        const exactMatch = this.settings.caseSensitive ? fullWord === pattern : fullWord.toLowerCase() === pattern.toLowerCase();
+        const exactMatch = cs ? fullWord === pattern : fullWord.toLowerCase() === pattern.toLowerCase();
         return exactMatch;
       case "contains":
-        const containsMatch = this.settings.caseSensitive ? fullWord.includes(pattern) : fullWord.toLowerCase().includes(pattern.toLowerCase());
+        const containsMatch = cs ? fullWord.includes(pattern) : fullWord.toLowerCase().includes(pattern.toLowerCase());
         return containsMatch;
       case "startswith":
         try {
-          const flags = this.settings.caseSensitive ? "" : "i";
+          const flags = cs ? "" : "i";
           const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           const re = new RegExp(`^${esc}[A-Za-z]*$`, flags);
           return re.test(fullWord);
         } catch (_) {
-          const startsWithMatch = this.settings.caseSensitive ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
+          const startsWithMatch = cs ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
           return startsWithMatch;
         }
       case "endswith":
         try {
-          const flags = this.settings.caseSensitive ? "" : "i";
+          const flags = cs ? "" : "i";
           const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           const re = new RegExp(`${esc}(?:[^A-Za-z0-9_]|$)`, flags);
           return re.test(fullWord);
         } catch (_) {
-          const endsWithMatch = this.settings.caseSensitive ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
+          const endsWithMatch = cs ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
           return endsWithMatch;
         }
       default:
@@ -8839,7 +8857,6 @@ module.exports = class AlwaysColorText extends Plugin {
         presetLabel: name ? String(name) : void 0,
         persistAtEnd: true,
         groupedPatterns: null,
-        isCaseSensitive: this.settings.caseSensitive,
         inclusionRules: [],
         exclusionRules: []
       };
@@ -10162,7 +10179,15 @@ module.exports = class AlwaysColorText extends Plugin {
       if (Array.isArray(this.settings.wordEntryGroups)) {
         this.settings.wordEntryGroups.forEach((group) => {
           if (group && group.active && Array.isArray(group.entries)) {
-            allEntries = allEntries.concat(group.entries);
+            const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
+            const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
+            const mapped = group.entries.map((e) => {
+              const copy = Object.assign({}, e);
+              if (groupMatch) copy.matchType = groupMatch;
+              if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+              return copy;
+            });
+            allEntries = allEntries.concat(mapped);
           }
         });
       }
@@ -10194,7 +10219,8 @@ module.exports = class AlwaysColorText extends Plugin {
           const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
           let flags = rawFlags || "";
           if (!flags.includes("g")) flags += "g";
-          if (!this.settings.caseSensitive && !flags.includes("i")) flags += "i";
+          const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : this.settings.caseSensitive;
+          if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
           const compiled = {
             pattern,
             color,
@@ -10212,6 +10238,7 @@ module.exports = class AlwaysColorText extends Plugin {
             // Preserve presetLabel from original entry
             entryRef: e,
             // Keep reference to original entry for highlight styling parameters
+            caseSensitive: effectiveCaseSensitive,
             // Copy per-entry include/exclude rules so filtering still works after reload
             inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
             exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
@@ -10260,10 +10287,12 @@ module.exports = class AlwaysColorText extends Plugin {
                 finalPattern = "\\b" + esc;
               } else if (!isSentence && matchTypeLower === "endswith") {
                 finalPattern = esc + "\\b";
+              } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
+                finalPattern = "\\b" + esc + "\\b";
               }
-              const literalFlags = this.settings.caseSensitive ? "g" : "gi";
+              const literalFlags = effectiveCaseSensitive ? "g" : "gi";
               compiled.regex = this._regexCache.getOrCreate(finalPattern, literalFlags);
-              compiled.testRegex = this.settings.caseSensitive ? this._regexCache.getOrCreate(finalPattern, "") : this._regexCache.getOrCreate(finalPattern, "i");
+              compiled.testRegex = effectiveCaseSensitive ? this._regexCache.getOrCreate(finalPattern, "") : this._regexCache.getOrCreate(finalPattern, "i");
             }
           } catch (err) {
             compiled.invalid = true;
@@ -10273,7 +10302,7 @@ module.exports = class AlwaysColorText extends Plugin {
           } catch (_) {
           }
           try {
-            compiled.fastTest = this.createFastTester(pattern, compiled.isRegex, this.settings.caseSensitive);
+            compiled.fastTest = this.createFastTester(pattern, compiled.isRegex, effectiveCaseSensitive);
           } catch (e2) {
             compiled.fastTest = (text) => true;
           }
@@ -10315,7 +10344,15 @@ module.exports = class AlwaysColorText extends Plugin {
       if (Array.isArray(this.settings.wordEntryGroups)) {
         this.settings.wordEntryGroups.forEach((group) => {
           if (group && group.active && Array.isArray(group.entries)) {
-            source = source.concat(group.entries);
+            const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
+            const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
+            const mapped = group.entries.map((e) => {
+              const copy = Object.assign({}, e);
+              if (groupMatch) copy.matchType = groupMatch;
+              if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+              return copy;
+            });
+            source = source.concat(mapped);
           }
         });
       }
@@ -10364,7 +10401,8 @@ module.exports = class AlwaysColorText extends Plugin {
           const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
           let flags = rawFlags || "";
           if (!flags.includes("g")) flags += "g";
-          if (!this.settings.caseSensitive && !flags.includes("i")) flags += "i";
+          const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : this.settings.caseSensitive;
+          if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
           const compiled = {
             pattern,
             textColor,
@@ -10383,6 +10421,7 @@ module.exports = class AlwaysColorText extends Plugin {
             // Preserve presetLabel from original entry
             entryRef: e,
             // Keep reference to original entry for highlight styling parameters
+            caseSensitive: effectiveCaseSensitive,
             // Copy per-entry include/exclude rules so filtering still works after reload
             inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
             exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
@@ -10420,13 +10459,15 @@ module.exports = class AlwaysColorText extends Plugin {
                 finalPattern = "\\b" + esc;
               } else if (!isSentence && matchTypeLower === "endswith") {
                 finalPattern = esc + "\\b";
+              } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
+                finalPattern = "\\b" + esc + "\\b";
               }
-              compiled.regex = this._regexCache.getOrCreate(finalPattern, flags);
-              const testFlags = flags.replace(/g/g, "");
-              compiled.testRegex = testFlags === "" ? this._regexCache.getOrCreate(finalPattern, "") : this._regexCache.getOrCreate(finalPattern, testFlags);
+              const literalFlags = effectiveCaseSensitive ? "g" : "gi";
+              compiled.regex = this._regexCache.getOrCreate(finalPattern, literalFlags);
+              compiled.testRegex = effectiveCaseSensitive ? this._regexCache.getOrCreate(finalPattern, "") : this._regexCache.getOrCreate(finalPattern, "i");
             }
             try {
-              compiled.fastTest = this.createFastTester(pattern, isRegex, this.settings.caseSensitive);
+              compiled.fastTest = this.createFastTester(pattern, isRegex, effectiveCaseSensitive);
             } catch (e2) {
               compiled.fastTest = (text) => true;
             }
@@ -11818,7 +11859,7 @@ module.exports = class AlwaysColorText extends Plugin {
             if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
             if (isBlacklisted(entry.pattern)) continue;
             const mt = String(entry.matchType || "").toLowerCase();
-            const cs = this.settings.caseSensitive;
+            const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
             const word = cs ? w : w.toLowerCase();
             const pat = cs ? String(entry.pattern || "") : String(entry.pattern || "").toLowerCase();
             const ok = mt === "contains" ? word.includes(pat) : mt === "startswith" ? word.startsWith(pat) : mt === "endswith" ? word.endsWith(pat) : false;
@@ -11876,7 +11917,7 @@ module.exports = class AlwaysColorText extends Plugin {
               if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
               if (isBlacklisted(entry.pattern)) continue;
               const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
-              const cs = this.settings.caseSensitive;
+              const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
               const word = cs ? w : w.toLowerCase();
               const pat = cs ? String(entry.pattern || "") : String(entry.pattern || "").toLowerCase();
               const ok = mt === "contains" ? word.includes(pat) : mt === "startswith" ? word.startsWith(pat) : mt === "endswith" ? word.endsWith(pat) : false;
@@ -11910,12 +11951,13 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       try {
         const literalEntries = this._literalEntriesToProcess || [];
-        const textSearch = this.settings.caseSensitive ? text : text.toLowerCase();
         for (const entry of literalEntries) {
           const rawPatt = String(entry.pattern || "");
           const patt = this.decodeHtmlEntities(rawPatt);
           if (!patt) continue;
-          const pattSearch = this.settings.caseSensitive ? patt : patt.toLowerCase();
+          const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
+          const textSearch = cs ? text : text.toLowerCase();
+          const pattSearch = cs ? patt : patt.toLowerCase();
           let pos = 0;
           while ((pos = textSearch.indexOf(pattSearch, pos)) !== -1) {
             const start = pos;
@@ -13783,7 +13825,7 @@ module.exports = class AlwaysColorText extends Plugin {
               colorEnd++;
             }
             const fullWord = text.substring(colorStart, colorEnd);
-            const cs = this.settings.caseSensitive;
+            const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
             const patRaw = String(entry.pattern || "");
             const pat = cs ? patRaw : patRaw.toLowerCase();
             const word = cs ? fullWord : fullWord.toLowerCase();
@@ -13914,7 +13956,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         if ((mt === "contains" || mt === "startswith" || mt === "endswith") && !this.isSentenceLikePattern(entry.pattern)) {
           const fullWord = text.substring(colorStart, colorEnd);
-          const cs = this.settings.caseSensitive;
+          const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
           const patRaw = String(entry.pattern || "");
           const pat = cs ? patRaw : patRaw.toLowerCase();
           const word = cs ? fullWord : fullWord.toLowerCase();
@@ -13935,7 +13977,7 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         } else if (mt === "contains" || mt === "startswith" || mt === "endswith") {
           const fullWord = text.substring(colorStart, colorEnd);
-          const cs = this.settings.caseSensitive;
+          const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
           const patRaw = String(entry.pattern || "");
           const pat = cs ? patRaw : patRaw.toLowerCase();
           const word = cs ? fullWord : fullWord.toLowerCase();
@@ -14038,7 +14080,7 @@ module.exports = class AlwaysColorText extends Plugin {
             if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
             if (this.isWordBlacklisted(entry.pattern)) continue;
             const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
-            const cs = this.settings.caseSensitive;
+            const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
             const word = cs ? w : w.toLowerCase();
             const pat = cs ? String(entry.pattern || "") : String(entry.pattern || "").toLowerCase();
             let ok = false;
@@ -14653,7 +14695,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
           if (this.isWordBlacklisted(entry.pattern)) continue;
           const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
-          const cs = this.settings.caseSensitive;
+          const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
           const word = cs ? w : w.toLowerCase();
           const pat = cs ? String(entry.pattern || "") : String(entry.pattern || "").toLowerCase();
           let ok = false;
@@ -14813,7 +14855,7 @@ module.exports = class AlwaysColorText extends Plugin {
             if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
             if (this.isWordBlacklisted(entry.pattern)) continue;
             const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
-            const cs = this.settings.caseSensitive;
+            const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
             const word = cs ? w : w.toLowerCase();
             const pat = cs ? String(entry.pattern || "") : String(entry.pattern || "").toLowerCase();
             let ok = false;
@@ -17972,6 +18014,43 @@ var EditWordGroupModal = class extends Modal {
     };
     nameInput.addEventListener("input", nameInputHandler);
     this._cleanupHandlers.push(() => nameInput.removeEventListener("input", nameInputHandler));
+    const caseSelect = topRow.createEl("select");
+    caseSelect.style.padding = "6px";
+    caseSelect.style.borderRadius = "4px";
+    caseSelect.style.border = "1px solid var(--background-modifier-border)";
+    caseSelect.style.textAlign = "center";
+    caseSelect.style.maxWidth = "140px";
+    caseSelect.style.minWidth = "120px";
+    caseSelect.createEl("option", { text: this.plugin.t("opt_case_all", "Case Sensitivity (All)"), value: "per-entry" });
+    caseSelect.createEl("option", { text: this.plugin.t("opt_case_sensitive", "is case sensitive"), value: "true" });
+    caseSelect.createEl("option", { text: this.plugin.t("opt_not_case_sensitive", "not case sensitive"), value: "false" });
+    caseSelect.value = typeof this.group.caseSensitiveOverride === "boolean" ? this.group.caseSensitiveOverride ? "true" : "false" : "per-entry";
+    const caseSelectHandler = () => {
+      const v = caseSelect.value;
+      if (v === "per-entry") this.group.caseSensitiveOverride = null;
+      else this.group.caseSensitiveOverride = v === "true";
+    };
+    caseSelect.addEventListener("change", caseSelectHandler);
+    this._cleanupHandlers.push(() => caseSelect.removeEventListener("change", caseSelectHandler));
+    const matchTypeSelect = topRow.createEl("select");
+    matchTypeSelect.style.padding = "6px";
+    matchTypeSelect.style.borderRadius = "4px";
+    matchTypeSelect.style.border = "1px solid var(--background-modifier-border)";
+    matchTypeSelect.style.textAlign = "center";
+    matchTypeSelect.style.maxWidth = "180px";
+    matchTypeSelect.style.minWidth = "160px";
+    matchTypeSelect.createEl("option", { text: this.plugin.t("opt_match_all", "Match Type (All)"), value: "per-entry" });
+    matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_contains", "Contains"), value: "contains" });
+    matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_exact", "Exact"), value: "exact" });
+    matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_starts_with", "Starts With"), value: "startswith" });
+    matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_ends_with", "Ends With"), value: "endswith" });
+    matchTypeSelect.value = this.group.matchTypeOverride ? String(this.group.matchTypeOverride) : "per-entry";
+    const matchTypeHandler = () => {
+      const v = matchTypeSelect.value;
+      this.group.matchTypeOverride = v === "per-entry" ? null : v;
+    };
+    matchTypeSelect.addEventListener("change", matchTypeHandler);
+    this._cleanupHandlers.push(() => matchTypeSelect.removeEventListener("change", matchTypeHandler));
     const searchRow = contentEl.createDiv();
     try {
       searchRow.addClass("act-search-container");
@@ -18320,6 +18399,8 @@ var EditWordGroupModal = class extends Modal {
       styleSelect.style.borderRadius = "4px";
       styleSelect.style.border = "1px solid var(--background-modifier-border)";
       styleSelect.style.textAlign = "center";
+      styleSelect.style.maxWidth = "90px";
+      styleSelect.style.minWidth = "70px";
       ["text", "highlight", "both"].forEach((val) => {
         const opt = styleSelect.createEl("option", { text: this.plugin.t("style_type_" + val, val === "text" ? "color" : val) });
         opt.value = val;
@@ -18335,6 +18416,8 @@ var EditWordGroupModal = class extends Modal {
       matchSelect.style.borderRadius = "4px";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.textAlign = "center";
+      matchSelect.style.maxWidth = "110px";
+      matchSelect.style.minWidth = "90px";
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "Exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "Contains")}</option><option value="startswith">${this.plugin.t("match_option_starts_with", "Starts with")}</option><option value="endswith">${this.plugin.t("match_option_ends_with", "Ends with")}</option>`;
       matchSelect.value = entry.matchType || "contains";
       const matchSelectHandler = () => {

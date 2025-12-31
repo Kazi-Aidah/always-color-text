@@ -436,6 +436,8 @@ module.exports = {
   "edit_entry_header": "এন্ট্রি সম্পাদনা করুন",
   "opt_case_sensitive": "কেস সেন্সিটিভ",
   "opt_not_case_sensitive": "কেস সেন্সিটিভ নয়",
+  "opt_case_all": "কেস সেন্সিটিভিটি (সব)",
+  "opt_match_all": "ম্যাচ টাইপ (সব)",
   "edit_highlight_styling_btn": "হাইলাইট স্টাইলিং সম্পাদনা করুন",
   "inclusion_exclusion_header": "অন্তর্ভুক্তি / বর্জন নিয়ম",
   "btn_save_entry": "এন্ট্রি সংরক্ষণ করুন",

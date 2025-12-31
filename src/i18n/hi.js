@@ -436,6 +436,8 @@ module.exports = {
   "edit_entry_header": "प्रविष्टि संपादित करें",
   "opt_case_sensitive": "केस सेंसिटिव है",
   "opt_not_case_sensitive": "केस सेंसिटिव नहीं है",
+  "opt_case_all": "केस सेंसिटिविटी (सभी)",
+  "opt_match_all": "मिलान प्रकार (सभी)",
   "edit_highlight_styling_btn": "हाइलाइट स्टाइलिंग संपादित करें",
   "inclusion_exclusion_header": "समावेशन / बहिष्करण नियम",
   "btn_save_entry": "प्रविष्टि सहेजें",

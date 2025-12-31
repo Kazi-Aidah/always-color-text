@@ -1,4 +1,4 @@
-const {
+﻿const {
   Plugin,
   PluginSettingTab,
   Setting,
@@ -1476,7 +1476,7 @@ class BloomFilter {
       }
     }
     const L = t.length;
-    if (L < 2) return false;
+    if (L < 2) return true;
     for (let i = 0; i < L; i++) {
       if (i <= L - 3) {
         const tok3 = t.slice(i, i + 3);
@@ -1505,7 +1505,12 @@ class PatternMatcher {
     const rawFlags = String(entry.flags || '').replace(/[^gimsuy]/g, '');
     let flags = rawFlags || '';
     if (!flags.includes('g')) flags += 'g';
-    if (!this.settings.caseSensitive && !flags.includes('i')) flags += 'i';
+    const effectiveCS = (typeof entry._caseSensitiveOverride === 'boolean')
+      ? entry._caseSensitiveOverride
+      : (typeof entry.caseSensitive === 'boolean')
+      ? entry.caseSensitive
+      : this.settings.caseSensitive;
+    if (!effectiveCS && !flags.includes('i')) flags += 'i';
     try {
       if (isRegex && this.settings.enableRegexSupport) {
         entry.regex = cache ? cache.getOrCreate(entry.pattern, flags) : new RegExp(entry.pattern, flags);
@@ -1513,9 +1518,9 @@ class PatternMatcher {
         entry.testRegex = cache ? cache.getOrCreate(entry.pattern, tf) : (tf === '' ? new RegExp(entry.pattern) : new RegExp(entry.pattern, tf));
       } else {
         const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(entry.pattern) : entry.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const lf = this.settings.caseSensitive ? 'g' : 'gi';
+        const lf = effectiveCS ? 'g' : 'gi';
         entry.regex = cache ? cache.getOrCreate(esc, lf) : new RegExp(esc, lf);
-        entry.testRegex = this.settings.caseSensitive ? (cache ? cache.getOrCreate(esc, '') : new RegExp(esc)) : (cache ? cache.getOrCreate(esc, 'i') : new RegExp(esc, 'i'));
+        entry.testRegex = effectiveCS ? (cache ? cache.getOrCreate(esc, '') : new RegExp(esc)) : (cache ? cache.getOrCreate(esc, 'i') : new RegExp(esc, 'i'));
       }
     } catch (_) {
       entry.invalid = true;
@@ -1548,6 +1553,11 @@ class PatternMatcher {
     const matchType = String(entry?.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
     const pattern = entry?.pattern || '';
     const isSentence = this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(pattern) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(pattern || '');
+    const cs = (typeof entry?._caseSensitiveOverride === 'boolean') 
+      ? entry._caseSensitiveOverride 
+      : (typeof entry?.caseSensitive === 'boolean') 
+      ? entry.caseSensitive 
+      : this.settings.caseSensitive;
     
     // For sentence-like patterns, always match
     if (isSentence) {
@@ -1555,31 +1565,33 @@ class PatternMatcher {
     }
     
     // Extract the full word at the match position
-    const fullWord = this.extractFullWordAtPosition(text, start, end);
+    const fullWord = (pattern && pattern.length <= 2)
+      ? text.substring(start, end)
+      : this.extractFullWordAtPosition(text, start, end);
     
     switch(matchType) {
       case 'exact':
         // Exact match: pattern must exactly equal the full word
-        const exactMatch = this.settings.caseSensitive 
+        const exactMatch = cs 
           ? fullWord === pattern 
           : fullWord.toLowerCase() === pattern.toLowerCase();
         return exactMatch;
         
       case 'contains':
         // Contains: pattern must be found anywhere within the full word
-        const containsMatch = this.settings.caseSensitive
+        const containsMatch = cs
           ? fullWord.includes(pattern)
           : fullWord.toLowerCase().includes(pattern.toLowerCase());
         return containsMatch;
         
       case 'startswith':
         try {
-          const flags = this.settings.caseSensitive ? '' : 'i';
+          const flags = cs ? '' : 'i';
           const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const re = new RegExp(`^${esc}[A-Za-z]*$`, flags);
           return re.test(fullWord);
         } catch (_) {
-          const startsWithMatch = this.settings.caseSensitive
+          const startsWithMatch = cs
             ? fullWord.startsWith(pattern)
             : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
           return startsWithMatch;
@@ -1587,13 +1599,13 @@ class PatternMatcher {
         
       case 'endswith':
         try {
-          const flags = this.settings.caseSensitive ? '' : 'i';
+          const flags = cs ? '' : 'i';
           const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           // Use word boundary: the pattern should be at the end followed by non-word characters
           const re = new RegExp(`${esc}(?:[^A-Za-z0-9_]|$)`, flags);
           return re.test(fullWord);
         } catch (_) {
-          const endsWithMatch = this.settings.caseSensitive
+          const endsWithMatch = cs
             ? fullWord.endsWith(pattern)
             : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
           return endsWithMatch;
@@ -5276,7 +5288,6 @@ module.exports = class AlwaysColorText extends Plugin {
         presetLabel: name ? String(name) : undefined,
         persistAtEnd: true,
         groupedPatterns: null,
-        isCaseSensitive: this.settings.caseSensitive,
         inclusionRules: [],
         exclusionRules: []
       };
@@ -6731,7 +6742,15 @@ module.exports = class AlwaysColorText extends Plugin {
       if (Array.isArray(this.settings.wordEntryGroups)) {
         this.settings.wordEntryGroups.forEach(group => {
           if (group && group.active && Array.isArray(group.entries)) {
-            allEntries = allEntries.concat(group.entries);
+            const groupCase = (typeof group.caseSensitiveOverride === 'boolean') ? group.caseSensitiveOverride : undefined;
+            const groupMatch = (typeof group.matchTypeOverride === 'string' && group.matchTypeOverride) ? group.matchTypeOverride : undefined;
+            const mapped = group.entries.map(e => {
+              const copy = Object.assign({}, e);
+              if (groupMatch) copy.matchType = groupMatch;
+              if (groupCase !== undefined) copy._caseSensitiveOverride = groupCase;
+              return copy;
+            });
+            allEntries = allEntries.concat(mapped);
           }
         });
       }
@@ -6777,7 +6796,12 @@ module.exports = class AlwaysColorText extends Plugin {
         // base flags (without g for testRegex)
         let flags = rawFlags || '';
         if (!flags.includes('g')) flags += 'g';
-        if (!this.settings.caseSensitive && !flags.includes('i')) flags += 'i';
+        const effectiveCaseSensitive = (typeof e._caseSensitiveOverride === 'boolean')
+          ? e._caseSensitiveOverride
+          : (typeof e.caseSensitive === 'boolean')
+          ? e.caseSensitive
+          : this.settings.caseSensitive;
+        if (!effectiveCaseSensitive && !flags.includes('i')) flags += 'i';
 
         const compiled = {
           pattern,
@@ -6794,6 +6818,7 @@ module.exports = class AlwaysColorText extends Plugin {
           specificity: pattern.replace(/\*/g, '').length,
           presetLabel: e.presetLabel || undefined, // Preserve presetLabel from original entry
           entryRef: e, // Keep reference to original entry for highlight styling parameters
+          caseSensitive: effectiveCaseSensitive,
           // Copy per-entry include/exclude rules so filtering still works after reload
           inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
           exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
@@ -6846,11 +6871,13 @@ module.exports = class AlwaysColorText extends Plugin {
               finalPattern = '\\b' + esc;
             } else if (!isSentence && matchTypeLower === 'endswith') {
               finalPattern = esc + '\\b';
+            } else if (!isSentence && matchTypeLower === 'exact' && String(pattern).length === 1) {
+              finalPattern = '\\b' + esc + '\\b';
             }
             
-            const literalFlags = this.settings.caseSensitive ? 'g' : 'gi';
+            const literalFlags = effectiveCaseSensitive ? 'g' : 'gi';
             compiled.regex = this._regexCache.getOrCreate(finalPattern, literalFlags);
-            compiled.testRegex = this.settings.caseSensitive ? this._regexCache.getOrCreate(finalPattern, '') : this._regexCache.getOrCreate(finalPattern, 'i');
+            compiled.testRegex = effectiveCaseSensitive ? this._regexCache.getOrCreate(finalPattern, '') : this._regexCache.getOrCreate(finalPattern, 'i');
           }
         } catch (err) {
           compiled.invalid = true;
@@ -6859,7 +6886,7 @@ module.exports = class AlwaysColorText extends Plugin {
         // Build a cheap fastTest function to quickly reject impossible texts
         try {
           // Use minimal closure factory method to avoid large closures
-          compiled.fastTest = this.createFastTester(pattern, compiled.isRegex, this.settings.caseSensitive);
+          compiled.fastTest = this.createFastTester(pattern, compiled.isRegex, effectiveCaseSensitive);
           // Invalid patterns get permissive test (no filtering)
         } catch (e) {
           compiled.fastTest = (text) => true;
@@ -6897,7 +6924,15 @@ module.exports = class AlwaysColorText extends Plugin {
       if (Array.isArray(this.settings.wordEntryGroups)) {
         this.settings.wordEntryGroups.forEach(group => {
           if (group && group.active && Array.isArray(group.entries)) {
-            source = source.concat(group.entries);
+            const groupCase = (typeof group.caseSensitiveOverride === 'boolean') ? group.caseSensitiveOverride : undefined;
+            const groupMatch = (typeof group.matchTypeOverride === 'string' && group.matchTypeOverride) ? group.matchTypeOverride : undefined;
+            const mapped = group.entries.map(e => {
+              const copy = Object.assign({}, e);
+              if (groupMatch) copy.matchType = groupMatch;
+              if (groupCase !== undefined) copy._caseSensitiveOverride = groupCase;
+              return copy;
+            });
+            source = source.concat(mapped);
           }
         });
       }
@@ -6959,7 +6994,12 @@ module.exports = class AlwaysColorText extends Plugin {
           const rawFlags = String(e.flags || '').replace(/[^gimsuy]/g, '');
           let flags = rawFlags || '';
           if (!flags.includes('g')) flags += 'g';
-          if (!this.settings.caseSensitive && !flags.includes('i')) flags += 'i';
+          const effectiveCaseSensitive = (typeof e._caseSensitiveOverride === 'boolean')
+            ? e._caseSensitiveOverride
+            : (typeof e.caseSensitive === 'boolean')
+            ? e.caseSensitive
+            : this.settings.caseSensitive;
+          if (!effectiveCaseSensitive && !flags.includes('i')) flags += 'i';
           
           const compiled = {
             pattern,
@@ -6976,6 +7016,7 @@ module.exports = class AlwaysColorText extends Plugin {
             isTextBg: true, // Mark as text+bg entry
             presetLabel: e.presetLabel || undefined, // Preserve presetLabel from original entry
             entryRef: e, // Keep reference to original entry for highlight styling parameters
+            caseSensitive: effectiveCaseSensitive,
             // Copy per-entry include/exclude rules so filtering still works after reload
             inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
             exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
@@ -7016,14 +7057,16 @@ module.exports = class AlwaysColorText extends Plugin {
                 finalPattern = '\\b' + esc;
               } else if (!isSentence && matchTypeLower === 'endswith') {
                 finalPattern = esc + '\\b';
+              } else if (!isSentence && matchTypeLower === 'exact' && String(pattern).length === 1) {
+                finalPattern = '\\b' + esc + '\\b';
               }
               
-              compiled.regex = this._regexCache.getOrCreate(finalPattern, flags);
-              const testFlags = flags.replace(/g/g, '');
-              compiled.testRegex = testFlags === '' ? this._regexCache.getOrCreate(finalPattern, '') : this._regexCache.getOrCreate(finalPattern, testFlags);
+              const literalFlags = effectiveCaseSensitive ? 'g' : 'gi';
+              compiled.regex = this._regexCache.getOrCreate(finalPattern, literalFlags);
+              compiled.testRegex = effectiveCaseSensitive ? this._regexCache.getOrCreate(finalPattern, '') : this._regexCache.getOrCreate(finalPattern, 'i');
             }
             try {
-              compiled.fastTest = this.createFastTester(pattern, isRegex, this.settings.caseSensitive);
+              compiled.fastTest = this.createFastTester(pattern, isRegex, effectiveCaseSensitive);
             } catch (e) {
               compiled.fastTest = (text) => true;
             }
@@ -8489,7 +8532,11 @@ module.exports = class AlwaysColorText extends Plugin {
             if (isBlacklisted(entry.pattern)) continue;
             
             const mt = String(entry.matchType || '').toLowerCase();
-            const cs = this.settings.caseSensitive;
+            const cs = (typeof entry._caseSensitiveOverride === 'boolean')
+              ? entry._caseSensitiveOverride
+              : (typeof entry.caseSensitive === 'boolean')
+              ? entry.caseSensitive
+              : this.settings.caseSensitive;
             const word = cs ? w : w.toLowerCase();
             const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
             const ok = mt === 'contains' ? (word.includes(pat))
@@ -8557,7 +8604,11 @@ module.exports = class AlwaysColorText extends Plugin {
               if (isBlacklisted(entry.pattern)) continue;
               // Use same default logic as PatternMatcher to determine actual matchType
               const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
-              const cs = this.settings.caseSensitive;
+              const cs = (typeof entry._caseSensitiveOverride === 'boolean')
+                ? entry._caseSensitiveOverride
+                : (typeof entry.caseSensitive === 'boolean')
+                ? entry.caseSensitive
+                : this.settings.caseSensitive;
               const word = cs ? w : w.toLowerCase();
               const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
               const ok = mt === 'contains' ? (word.includes(pat))
@@ -8601,12 +8652,17 @@ module.exports = class AlwaysColorText extends Plugin {
       // Collect literal matches per-node (not at block level) to ensure proper positioning
       try {
         const literalEntries = this._literalEntriesToProcess || [];
-        const textSearch = this.settings.caseSensitive ? text : text.toLowerCase();
         for (const entry of literalEntries) {
           const rawPatt = String(entry.pattern || '');
           const patt = this.decodeHtmlEntities(rawPatt);
           if (!patt) continue;
-          const pattSearch = this.settings.caseSensitive ? patt : patt.toLowerCase();
+          const cs = (typeof entry._caseSensitiveOverride === 'boolean')
+            ? entry._caseSensitiveOverride
+            : (typeof entry.caseSensitive === 'boolean')
+            ? entry.caseSensitive
+            : this.settings.caseSensitive;
+          const textSearch = cs ? text : text.toLowerCase();
+          const pattSearch = cs ? patt : patt.toLowerCase();
           let pos = 0;
           while ((pos = textSearch.indexOf(pattSearch, pos)) !== -1) {
             const start = pos;
@@ -10387,7 +10443,11 @@ module.exports = class AlwaysColorText extends Plugin {
           
           // Validate that the expanded full word satisfies the match type strictly
           const fullWord = text.substring(colorStart, colorEnd);
-          const cs = this.settings.caseSensitive;
+          const cs = (typeof entry._caseSensitiveOverride === 'boolean')
+            ? entry._caseSensitiveOverride
+            : (typeof entry.caseSensitive === 'boolean')
+            ? entry.caseSensitive
+            : this.settings.caseSensitive;
           const patRaw = String(entry.pattern || '');
           const pat = cs ? patRaw : patRaw.toLowerCase();
           const word = cs ? fullWord : fullWord.toLowerCase();
@@ -10542,7 +10602,11 @@ module.exports = class AlwaysColorText extends Plugin {
         // Validate that the expanded full word satisfies the partial match type
         if ((mt === 'contains' || mt === 'startswith' || mt === 'endswith') && !this.isSentenceLikePattern(entry.pattern)) {
           const fullWord = text.substring(colorStart, colorEnd);
-          const cs = this.settings.caseSensitive;
+          const cs = (typeof entry._caseSensitiveOverride === 'boolean')
+            ? entry._caseSensitiveOverride
+            : (typeof entry.caseSensitive === 'boolean')
+            ? entry.caseSensitive
+            : this.settings.caseSensitive;
           const patRaw = String(entry.pattern || '');
           const pat = cs ? patRaw : patRaw.toLowerCase();
           const word = cs ? fullWord : fullWord.toLowerCase();
@@ -10566,7 +10630,11 @@ module.exports = class AlwaysColorText extends Plugin {
         } else if (mt === 'contains' || mt === 'startswith' || mt === 'endswith') {
           // For sentence-like patterns, do the old validation
           const fullWord = text.substring(colorStart, colorEnd);
-          const cs = this.settings.caseSensitive;
+          const cs = (typeof entry._caseSensitiveOverride === 'boolean')
+            ? entry._caseSensitiveOverride
+            : (typeof entry.caseSensitive === 'boolean')
+            ? entry.caseSensitive
+            : this.settings.caseSensitive;
           const patRaw = String(entry.pattern || '');
           const pat = cs ? patRaw : patRaw.toLowerCase();
           const word = cs ? fullWord : fullWord.toLowerCase();
@@ -10671,7 +10739,11 @@ module.exports = class AlwaysColorText extends Plugin {
             
             // This section only handles 'contains' matchType
             const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
-            const cs = this.settings.caseSensitive;
+            const cs = (typeof entry._caseSensitiveOverride === 'boolean')
+              ? entry._caseSensitiveOverride
+              : (typeof entry.caseSensitive === 'boolean')
+              ? entry.caseSensitive
+              : this.settings.caseSensitive;
             const word = cs ? w : w.toLowerCase();
             const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
             
@@ -11400,7 +11472,11 @@ module.exports = class AlwaysColorText extends Plugin {
             if (this.isWordBlacklisted(entry.pattern)) continue;
             
             const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
-            const cs = this.settings.caseSensitive;
+            const cs = (typeof entry._caseSensitiveOverride === 'boolean')
+              ? entry._caseSensitiveOverride
+              : (typeof entry.caseSensitive === 'boolean')
+              ? entry.caseSensitive
+              : this.settings.caseSensitive;
             const word = cs ? w : w.toLowerCase();
             const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
             let ok = false;
@@ -11583,7 +11659,11 @@ module.exports = class AlwaysColorText extends Plugin {
             if (this.isWordBlacklisted(entry.pattern)) continue;
             
             const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
-            const cs = this.settings.caseSensitive;
+            const cs = (typeof entry._caseSensitiveOverride === 'boolean')
+              ? entry._caseSensitiveOverride
+              : (typeof entry.caseSensitive === 'boolean')
+              ? entry.caseSensitive
+              : this.settings.caseSensitive;
             const word = cs ? w : w.toLowerCase();
             const pat = cs ? String(entry.pattern || '') : String(entry.pattern || '').toLowerCase();
             let ok = false;
@@ -14821,6 +14901,45 @@ class EditWordGroupModal extends Modal {
     nameInput.addEventListener('input', nameInputHandler);
     this._cleanupHandlers.push(() => nameInput.removeEventListener('input', nameInputHandler));
 
+    const caseSelect = topRow.createEl('select');
+    caseSelect.style.padding = '6px';
+    caseSelect.style.borderRadius = '4px';
+    caseSelect.style.border = '1px solid var(--background-modifier-border)';
+    caseSelect.style.textAlign = 'center';
+    caseSelect.style.maxWidth = '140px';
+    caseSelect.style.minWidth = '120px';
+    caseSelect.createEl('option', { text: this.plugin.t('opt_case_all','Case Sensitivity (All)'), value: 'per-entry' });
+    caseSelect.createEl('option', { text: this.plugin.t('opt_case_sensitive','is case sensitive'), value: 'true' });
+    caseSelect.createEl('option', { text: this.plugin.t('opt_not_case_sensitive','not case sensitive'), value: 'false' });
+    caseSelect.value = (typeof this.group.caseSensitiveOverride === 'boolean') ? (this.group.caseSensitiveOverride ? 'true' : 'false') : 'per-entry';
+    const caseSelectHandler = () => {
+      const v = caseSelect.value;
+      if (v === 'per-entry') this.group.caseSensitiveOverride = null;
+      else this.group.caseSensitiveOverride = (v === 'true');
+    };
+    caseSelect.addEventListener('change', caseSelectHandler);
+    this._cleanupHandlers.push(() => caseSelect.removeEventListener('change', caseSelectHandler));
+
+    const matchTypeSelect = topRow.createEl('select');
+    matchTypeSelect.style.padding = '6px';
+    matchTypeSelect.style.borderRadius = '4px';
+    matchTypeSelect.style.border = '1px solid var(--background-modifier-border)';
+    matchTypeSelect.style.textAlign = 'center';
+    matchTypeSelect.style.maxWidth = '180px';
+    matchTypeSelect.style.minWidth = '160px';
+    matchTypeSelect.createEl('option', { text: this.plugin.t('opt_match_all','Match Type (All)'), value: 'per-entry' });
+    matchTypeSelect.createEl('option', { text: this.plugin.t('match_option_contains','Contains'), value: 'contains' });
+    matchTypeSelect.createEl('option', { text: this.plugin.t('match_option_exact','Exact'), value: 'exact' });
+    matchTypeSelect.createEl('option', { text: this.plugin.t('match_option_starts_with','Starts With'), value: 'startswith' });
+    matchTypeSelect.createEl('option', { text: this.plugin.t('match_option_ends_with','Ends With'), value: 'endswith' });
+    matchTypeSelect.value = this.group.matchTypeOverride ? String(this.group.matchTypeOverride) : 'per-entry';
+    const matchTypeHandler = () => {
+      const v = matchTypeSelect.value;
+      this.group.matchTypeOverride = (v === 'per-entry') ? null : v;
+    };
+    matchTypeSelect.addEventListener('change', matchTypeHandler);
+    this._cleanupHandlers.push(() => matchTypeSelect.removeEventListener('change', matchTypeHandler));
+
     // contentEl.createEl('hr');
 
     // SEARCH BAR & LIMIT INPUT ROW
@@ -15145,6 +15264,9 @@ class EditWordGroupModal extends Modal {
       styleSelect.style.borderRadius = '4px';
       styleSelect.style.border = '1px solid var(--background-modifier-border)';
       styleSelect.style.textAlign = 'center';
+      // removed transparent background styling per request
+      styleSelect.style.maxWidth = '90px';
+      styleSelect.style.minWidth = '70px';
       ['text', 'highlight', 'both'].forEach(val => {
         const opt = styleSelect.createEl('option', { text: this.plugin.t('style_type_' + val, val === 'text' ? 'color' : val) });
         opt.value = val;
@@ -15162,6 +15284,9 @@ class EditWordGroupModal extends Modal {
       matchSelect.style.borderRadius = '4px';
       matchSelect.style.border = '1px solid var(--background-modifier-border)';
       matchSelect.style.textAlign = 'center';
+      // removed transparent background styling per request
+      matchSelect.style.maxWidth = '110px';
+      matchSelect.style.minWidth = '90px';
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t('match_option_exact','Exact')}</option><option value="contains">${this.plugin.t('match_option_contains','Contains')}</option><option value="startswith">${this.plugin.t('match_option_starts_with','Starts with')}</option><option value="endswith">${this.plugin.t('match_option_ends_with','Ends with')}</option>`;
       matchSelect.value = entry.matchType || 'contains';
       const matchSelectHandler = () => { entry.matchType = matchSelect.value; };

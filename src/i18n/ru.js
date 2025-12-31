@@ -436,6 +436,8 @@ module.exports = {
   "edit_entry_header": "Редактировать запись",
   "opt_case_sensitive": "чувствителен к регистру",
   "opt_not_case_sensitive": "не чувствителен к регистру",
+  "opt_case_all": "Чувствительность к регистру (Все)",
+  "opt_match_all": "Тип совпадения (Все)",
   "edit_highlight_styling_btn": "Редактировать стиль подсветки",
   "inclusion_exclusion_header": "Правила включения / исключения",
   "btn_save_entry": "Сохранить запись",

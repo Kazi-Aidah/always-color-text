@@ -436,6 +436,8 @@ module.exports = {
   "edit_entry_header": "编辑条目",
   "opt_case_sensitive": "区分大小写",
   "opt_not_case_sensitive": "不区分大小写",
+  "opt_case_all": "区分大小写（全部）",
+  "opt_match_all": "匹配类型（全部）",
   "edit_highlight_styling_btn": "编辑高亮样式",
   "inclusion_exclusion_header": "包含 / 排除规则",
   "btn_save_entry": "保存条目",

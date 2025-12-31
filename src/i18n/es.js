@@ -435,6 +435,8 @@ module.exports = {
   "edit_entry_header": "Editar Entrada",
   "opt_case_sensitive": "es sensible a mayúsculas",
   "opt_not_case_sensitive": "no sensible a mayúsculas",
+  "opt_case_all": "Sensibilidad a mayúsculas (Todo)",
+  "opt_match_all": "Tipo de coincidencia (Todo)",
   "edit_highlight_styling_btn": "Editar Estilo de Resaltado",
   "inclusion_exclusion_header": "Reglas de Inclusión / Exclusión",
   "btn_save_entry": "Guardar Entrada",

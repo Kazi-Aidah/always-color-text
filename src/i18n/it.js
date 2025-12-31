@@ -436,6 +436,8 @@ module.exports = {
   "edit_entry_header": "Modifica voce",
   "opt_case_sensitive": "distingue maiuscole/minuscole",
   "opt_not_case_sensitive": "non distingue maiuscole/minuscole",
+  "opt_case_all": "Distingui maiuscole/minuscole (Tutti)",
+  "opt_match_all": "Tipo di corrispondenza (Tutti)",
   "edit_highlight_styling_btn": "Modifica stile evidenziazione",
   "inclusion_exclusion_header": "Regole di inclusione / esclusione",
   "btn_save_entry": "Salva voce",

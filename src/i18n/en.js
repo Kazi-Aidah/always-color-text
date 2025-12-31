@@ -438,6 +438,8 @@ module.exports = {
   "edit_entry_header": "Edit Entry",
   "opt_case_sensitive": "is case sensitive",
   "opt_not_case_sensitive": "not case sensitive",
+  "opt_case_all": "Case Sensitivity (All)",
+  "opt_match_all": "Match Type (All)",
   "edit_highlight_styling_btn": "Edit Highlight Styling",
   "inclusion_exclusion_header": "Inclusion / Exclusion Rules",
   "btn_save_entry": "Save Entry",

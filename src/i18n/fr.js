@@ -435,6 +435,8 @@ module.exports = {
   "edit_entry_header": "Modifier l'entrée",
   "opt_case_sensitive": "est sensible à la casse",
   "opt_not_case_sensitive": "non sensible à la casse",
+  "opt_case_all": "Sensibilité à la casse (Tous)",
+  "opt_match_all": "Type de correspondance (Tous)",
   "edit_highlight_styling_btn": "Modifier le style de surbrillance",
   "inclusion_exclusion_header": "Règles d'inclusion / exclusion",
   "btn_save_entry": "Enregistrer l'entrée",
