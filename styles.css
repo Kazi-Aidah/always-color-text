@@ -182,6 +182,18 @@ a .always-color-text-highlight,
   flex-shrink: 0;
 }
 
+.color-words-list input[type="checkbox"]:checked:after,
+.text-bg-coloring-list input[type="checkbox"]:checked:after,
+.blacklist-words-list input[type="checkbox"]:checked:after {
+    content: "";
+    top: 0px;
+    position: absolute;
+    width: var(--checkbox-size);
+    height: var(--checkbox-size);
+    display: block;
+    background-color: var(--checkbox-marker-color);
+}
+
 .color-words-list input[type="text"],
 .text-bg-coloring-list input[type="text"],
 .blacklist-words-list input[type="text"],
