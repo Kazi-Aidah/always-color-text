@@ -187,6 +187,8 @@ a .always-color-text-highlight,
 .blacklist-words-list input[type="checkbox"]:checked:after {
     content: "";
     top: 0px;
+    left: 0px;
+    right: 0px;
     position: absolute;
     width: var(--checkbox-size);
     height: var(--checkbox-size);
@@ -239,7 +241,6 @@ a .always-color-text-highlight,
   padding: 6px 8px;
   border-radius: 4px;
   border: 1px solid var(--background-modifier-border);
-  background-color: var(--background-secondary);
   color: var(--text-normal);
   height: auto;
   line-height: 1.5;
