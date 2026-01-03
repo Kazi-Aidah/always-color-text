@@ -44,10 +44,13 @@ var require_en = __commonJS({
       "show_toggle_statusbar": "Show Toggle in Status Bar",
       "show_toggle_ribbon": "Show Toggle Icon in Ribbon",
       "show_toggle_command": "Show Toggle in Commands",
-      "show_blacklist_menu": "Show Blacklist Word in Context Menu",
-      "show_blacklist_menu_desc": "Add a context menu item to blacklist selected text.",
-      "show_add_to_existing_entry_menu": "Show Add to Existing Entry in Right-Click Menu",
-      "show_add_to_existing_entry_menu_desc": "Add a context menu item to add selected text to an existing entry.",
+      "menu_options_header": "Menu Options",
+      "show_blacklist_menu": 'Show "Blacklist Word" in right-click menu',
+      "show_blacklist_menu_desc": "Adds a right-click menu item to blacklist selected text from coloring.",
+      "show_add_to_existing_menu": 'Show "Add to Existing Entry" in right-click menu',
+      "show_add_to_existing_menu_desc": "Adds a right-click menu item to add selected text to an existing entry.",
+      "show_always_color_text_menu": 'Show "Always Color Text" in right-click menu',
+      "show_always_color_text_menu_desc": "Adds a right-click menu item to color selected text.",
       "hide_inactive_groups_in_dropdowns": "Hide Inactive Groups in Dropdowns",
       "hide_inactive_groups_in_dropdowns_desc": "Hide inactive word groups when displaying group lists in dropdowns.",
       "tooltip_enable_for_file": "Enable for this file",
@@ -490,10 +493,13 @@ var require_es = __commonJS({
       "show_toggle_statusbar": "Mostrar Alternador en Barra de Estado",
       "show_toggle_ribbon": "Mostrar icono de alternancia en la cinta",
       "show_toggle_command": "Mostrar Alternador en comandos",
-      "show_blacklist_menu": "Mostrar lista negra en el men\xFA contextual",
+      "menu_options_header": "Opciones de Men\xFA",
+      "show_blacklist_menu": 'Mostrar "Palabra en Lista Negra" en el men\xFA contextual',
       "show_blacklist_menu_desc": "A\xF1ade un elemento al men\xFA contextual para a\xF1adir el texto seleccionado a la lista negra del coloreado.",
-      "show_add_to_existing_entry_menu": "Mostrar A\xF1adir a entrada existente en el men\xFA del bot\xF3n derecho",
-      "show_add_to_existing_entry_menu_desc": "A\xF1ade un elemento al men\xFA contextual para a\xF1adir el texto seleccionado a una entrada existente.",
+      "show_add_to_existing_menu": 'Mostrar "A\xF1adir a Entrada Existente" en el men\xFA contextual',
+      "show_add_to_existing_menu_desc": "A\xF1ade un elemento al men\xFA contextual para a\xF1adir el texto seleccionado a una entrada existente.",
+      "show_always_color_text_menu": 'Mostrar "Always Color Text" en el men\xFA contextual',
+      "show_always_color_text_menu_desc": "A\xF1ade un elemento al men\xFA contextual para colorear el texto seleccionado.",
       "hide_inactive_groups_in_dropdowns": "Ocultar grupos inactivos en los men\xFAs desplegables",
       "hide_inactive_groups_in_dropdowns_desc": "Oculta los grupos de palabras inactivos al mostrar listas de grupos en los men\xFAs desplegables.",
       "tooltip_enable_for_file": "Activar para este archivo",
@@ -933,10 +939,13 @@ var require_fr = __commonJS({
       "show_toggle_statusbar": "Afficher le bouton d'activation dans la barre d'\xE9tat",
       "show_toggle_ribbon": "Afficher l'ic\xF4ne d'activation dans le ruban",
       "show_toggle_command": "Afficher l'activation dans les commandes",
-      "show_blacklist_menu": "Afficher les mots en liste noire dans le menu clic-droit",
+      "menu_options_header": "Options du menu",
+      "show_blacklist_menu": 'Afficher "Mot en liste noire" dans le menu clic-droit',
       "show_blacklist_menu_desc": "Ajoute un \xE9l\xE9ment au menu clic-droit pour mettre le texte s\xE9lectionn\xE9 en liste noire pour le coloriage.",
-      "show_add_to_existing_entry_menu": "Afficher Ajouter \xE0 une entr\xE9e existante dans le menu clic-droit",
-      "show_add_to_existing_entry_menu_desc": "Ajoute un \xE9l\xE9ment au menu clic-droit pour ajouter le texte s\xE9lectionn\xE9 \xE0 une entr\xE9e existante.",
+      "show_add_to_existing_menu": 'Afficher "Ajouter \xE0 une entr\xE9e existante" dans le menu clic-droit',
+      "show_add_to_existing_menu_desc": "Ajoute un \xE9l\xE9ment au menu clic-droit pour ajouter le texte s\xE9lectionn\xE9 \xE0 une entr\xE9e existante.",
+      "show_always_color_text_menu": 'Afficher "Always Color Text" dans le menu clic-droit',
+      "show_always_color_text_menu_desc": "Ajoute un \xE9l\xE9ment au menu clic-droit pour colorer le texte s\xE9lectionn\xE9.",
       "hide_inactive_groups_in_dropdowns": "Masquer les groupes inactifs dans les listes d\xE9roulantes",
       "hide_inactive_groups_in_dropdowns_desc": "Masque les groupes de mots inactifs lors de l'affichage des listes de groupes dans les listes d\xE9roulantes.",
       "tooltip_enable_for_file": "Activer pour ce fichier",
@@ -1376,10 +1385,13 @@ var require_hi = __commonJS({
       "show_toggle_statusbar": "\u0938\u094D\u091F\u0947\u091F\u0938 \u092C\u093E\u0930 \u092E\u0947\u0902 \u091F\u0949\u0917\u0932 \u0926\u093F\u0916\u093E\u090F\u0901",
       "show_toggle_ribbon": "\u0930\u093F\u092C\u0928 \u092E\u0947\u0902 \u091F\u0949\u0917\u0932 \u0906\u0907\u0915\u0928 \u0926\u093F\u0916\u093E\u090F\u0901",
       "show_toggle_command": "\u0915\u092E\u093E\u0902\u0921 \u092E\u0947\u0902 \u091F\u0949\u0917\u0932 \u0926\u093F\u0916\u093E\u090F\u0901",
-      "show_blacklist_menu": "\u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u092E\u0947\u0902 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0936\u092C\u094D\u0926 \u0926\u093F\u0916\u093E\u090F\u0901",
+      "menu_options_header": "\u092E\u0947\u0928\u0942 \u0935\u093F\u0915\u0932\u094D\u092A",
+      "show_blacklist_menu": '\u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u092E\u0947\u0902 "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0936\u092C\u094D\u0926" \u0926\u093F\u0916\u093E\u090F\u0901',
       "show_blacklist_menu_desc": "\u0930\u0902\u0917\u093E\u0908 \u0938\u0947 \u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u0906\u0907\u091F\u092E \u091C\u094B\u0921\u093C\u0924\u093E \u0939\u0948\u0964",
-      "show_add_to_existing_entry_menu": "\u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u092E\u0947\u0902 \u092E\u094C\u091C\u0942\u0926\u093E \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u092E\u0947\u0902 \u091C\u094B\u0921\u093C\u0947\u0902 \u0926\u093F\u0916\u093E\u090F\u0901",
-      "show_add_to_existing_entry_menu_desc": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0915\u093F\u0938\u0940 \u092E\u094C\u091C\u0942\u0926\u093E \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u092E\u0947\u0902 \u091C\u094B\u0921\u093C\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u0906\u0907\u091F\u092E \u091C\u094B\u0921\u093C\u0924\u093E \u0939\u0948\u0964",
+      "show_add_to_existing_menu": '\u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u092E\u0947\u0902 "\u092E\u094C\u091C\u0942\u0926\u093E \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u092E\u0947\u0902 \u091C\u094B\u0921\u093C\u0947\u0902" \u0926\u093F\u0916\u093E\u090F\u0901',
+      "show_add_to_existing_menu_desc": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0915\u093F\u0938\u0940 \u092E\u094C\u091C\u0942\u0926\u093E \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u092E\u0947\u0902 \u091C\u094B\u0921\u093C\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u0906\u0907\u091F\u092E \u091C\u094B\u0921\u093C\u0924\u093E \u0939\u0948\u0964",
+      "show_always_color_text_menu": '\u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u092E\u0947\u0902 "Always Color Text" \u0926\u093F\u0916\u093E\u090F\u0901',
+      "show_always_color_text_menu_desc": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0930\u0902\u0917\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u0906\u0907\u091F\u092E \u091C\u094B\u0921\u093C\u0924\u093E \u0939\u0948\u0964",
       "hide_inactive_groups_in_dropdowns": "\u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u092E\u0947\u0902 \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0938\u092E\u0942\u0939 \u091B\u0941\u092A\u093E\u090F\u0901",
       "hide_inactive_groups_in_dropdowns_desc": "\u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u092E\u0947\u0902 \u0938\u092E\u0942\u0939 \u0938\u0942\u091A\u0940 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u093F\u0924 \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939\u094B\u0902 \u0915\u094B \u091B\u0941\u092A\u093E\u0924\u093E \u0939\u0948\u0964",
       "tooltip_enable_for_file": "\u0907\u0938 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
@@ -1820,10 +1832,13 @@ var require_it = __commonJS({
       "show_toggle_statusbar": "Mostra toggle nella barra di stato",
       "show_toggle_ribbon": "Mostra icona toggle nel ribbon",
       "show_toggle_command": "Mostra toggle nei comandi",
-      "show_blacklist_menu": "Mostra parole in blacklist nel menu tasto destro",
+      "menu_options_header": "Opzioni menu",
+      "show_blacklist_menu": 'Mostra "Parola in blacklist" nel menu tasto destro',
       "show_blacklist_menu_desc": "Aggiunge una voce nel menu tasto destro per mettere in blacklist il testo selezionato dalla colorazione.",
-      "show_add_to_existing_entry_menu": "Mostra Aggiungi a voce esistente nel menu tasto destro",
-      "show_add_to_existing_entry_menu_desc": "Aggiunge una voce nel menu tasto destro per aggiungere il testo selezionato a una voce esistente.",
+      "show_add_to_existing_menu": 'Mostra "Aggiungi a voce esistente" nel menu tasto destro',
+      "show_add_to_existing_menu_desc": "Aggiunge una voce nel menu tasto destro per aggiungere il testo selezionato a una voce esistente.",
+      "show_always_color_text_menu": 'Mostra "Always Color Text" nel menu tasto destro',
+      "show_always_color_text_menu_desc": "Aggiunge una voce nel menu tasto destro per colorare il testo selezionato.",
       "hide_inactive_groups_in_dropdowns": "Nascondi gruppi inattivi nei menu a discesa",
       "hide_inactive_groups_in_dropdowns_desc": "Nasconde i gruppi di parole inattivi quando si visualizzano gli elenchi di gruppi nei menu a discesa.",
       "tooltip_enable_for_file": "Abilita per questo file",
@@ -2264,10 +2279,13 @@ var require_bn = __commonJS({
       "show_toggle_statusbar": "\u09B8\u09CD\u099F\u09CD\u09AF\u09BE\u099F\u09BE\u09B8 \u09AC\u09BE\u09B0\u09C7 \u099F\u0997\u09B2 \u09A6\u09C7\u0996\u09BE\u09A8",
       "show_toggle_ribbon": "\u09B0\u09BF\u09AC\u09A8\u09C7 \u099F\u0997\u09B2 \u0986\u0987\u0995\u09A8 \u09A6\u09C7\u0996\u09BE\u09A8",
       "show_toggle_command": "\u0995\u09AE\u09BE\u09A8\u09CD\u09A1\u09C7 \u099F\u0997\u09B2 \u09A6\u09C7\u0996\u09BE\u09A8",
-      "show_blacklist_menu": "\u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1\u09A4\u09C7 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u09B6\u09AC\u09CD\u09A6\u0997\u09C1\u09B2\u09BF \u09A6\u09C7\u0996\u09BE\u09A8",
+      "menu_options_header": "\u09AE\u09C7\u09A8\u09C1 \u0985\u09AA\u09B6\u09A8",
+      "show_blacklist_menu": '\u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1\u09A4\u09C7 "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u09B6\u09AC\u09CD\u09A6" \u09A6\u09C7\u0996\u09BE\u09A8',
       "show_blacklist_menu_desc": "\u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09A5\u09C7\u0995\u09C7 \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0995\u09B0\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u098F\u0995\u099F\u09BF \u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1 \u0986\u0987\u099F\u09C7\u09AE \u09AF\u09CB\u0997 \u0995\u09B0\u09C7\u0964",
-      "show_add_to_existing_entry_menu": "\u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1\u09A4\u09C7 \u09AC\u09BF\u09A6\u09CD\u09AF\u09AE\u09BE\u09A8 \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF\u09A4\u09C7 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8 \u09A6\u09C7\u0996\u09BE\u09A8",
-      "show_add_to_existing_entry_menu_desc": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u098F\u0995\u099F\u09BF \u09AC\u09BF\u09A6\u09CD\u09AF\u09AE\u09BE\u09A8 \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF\u09A4\u09C7 \u09AF\u09CB\u0997 \u0995\u09B0\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u098F\u0995\u099F\u09BF \u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1 \u0986\u0987\u099F\u09C7\u09AE \u09AF\u09CB\u0997 \u0995\u09B0\u09C7\u0964",
+      "show_add_to_existing_menu": '\u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1\u09A4\u09C7 "\u09AC\u09BF\u09A6\u09CD\u09AF\u09AE\u09BE\u09A8 \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF\u09A4\u09C7 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8" \u09A6\u09C7\u0996\u09BE\u09A8',
+      "show_add_to_existing_menu_desc": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u098F\u0995\u099F\u09BF \u09AC\u09BF\u09A6\u09CD\u09AF\u09AE\u09BE\u09A8 \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF\u09A4\u09C7 \u09AF\u09CB\u0997 \u0995\u09B0\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u098F\u0995\u099F\u09BF \u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1 \u0986\u0987\u099F\u09C7\u09AE \u09AF\u09CB\u0997 \u0995\u09B0\u09C7\u0964",
+      "show_always_color_text_menu": '\u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1\u09A4\u09C7 "Always Color Text" \u09A6\u09C7\u0996\u09BE\u09A8',
+      "show_always_color_text_menu_desc": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u098F\u0995\u099F\u09BF \u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1 \u0986\u0987\u099F\u09C7\u09AE \u09AF\u09CB\u0997 \u0995\u09B0\u09C7\u0964",
       "hide_inactive_groups_in_dropdowns": "\u09A1\u09AA\u09A1\u09BE\u0989\u09A8\u09C7 \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0997\u09CD\u09B0\u09C1\u09AA\u0997\u09C1\u09B2\u09BF \u09B2\u09C1\u0995\u09BE\u09A8",
       "hide_inactive_groups_in_dropdowns_desc": "\u09A1\u09AA\u09A1\u09BE\u0989\u09A8\u09C7 \u0997\u09CD\u09B0\u09C1\u09AA \u09A4\u09BE\u09B2\u09BF\u0995\u09BE \u09AA\u09CD\u09B0\u09A6\u09B0\u09CD\u09B6\u09A8\u09C7\u09B0 \u09B8\u09AE\u09AF\u09BC \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA\u0997\u09C1\u09B2\u09BF \u09B2\u09C1\u0995\u09BE\u09AF\u09BC\u0964",
       "tooltip_enable_for_file": "\u098F\u0987 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
@@ -2708,10 +2726,13 @@ var require_ru = __commonJS({
       "show_toggle_statusbar": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0432 \u0441\u0442\u0440\u043E\u043A\u0435 \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u044F",
       "show_toggle_ribbon": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u043D\u0430 \u0432\u0435\u0440\u0442\u0438\u043A\u0430\u043B\u044C\u043D\u043E\u0439 \u043F\u0430\u043D\u0435\u043B\u0438",
       "show_toggle_command": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0432 \u043F\u0430\u043B\u0438\u0442\u0440\u0435 \u043A\u043E\u043C\u0430\u043D\u0434",
-      "show_blacklist_menu": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \xAB\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A\xBB \u0432 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E",
+      "menu_options_header": "\u041E\u043F\u0446\u0438\u0438 \u043C\u0435\u043D\u044E",
+      "show_blacklist_menu": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \xAB\u0421\u043B\u043E\u0432\u043E \u0432 \u0447\u0451\u0440\u043D\u043E\u043C \u0441\u043F\u0438\u0441\u043A\u0435\xBB \u0432 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E",
       "show_blacklist_menu_desc": "\u0412 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E \u043F\u043E\u044F\u0432\u043B\u044F\u0435\u0442\u0441\u044F \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u043B\u043E\u0432\u043E \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A, \u0447\u0442\u043E\u0431\u044B \u043E\u043D\u043E \u043D\u0438\u043A\u043E\u0433\u0434\u0430 \u043D\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043B\u043E\u0441\u044C.",
-      "show_add_to_existing_entry_menu": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \xAB\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0432 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0443\u044E \u0437\u0430\u043F\u0438\u0441\u044C\xBB \u0432 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E",
-      "show_add_to_existing_entry_menu_desc": "\u0412 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442\u0441\u044F \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 \u0432 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0443\u044E \u0437\u0430\u043F\u0438\u0441\u044C.",
+      "show_add_to_existing_menu": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \xAB\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0432 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0443\u044E \u0437\u0430\u043F\u0438\u0441\u044C\xBB \u0432 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E",
+      "show_add_to_existing_menu_desc": "\u0412 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442\u0441\u044F \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 \u0432 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0443\u044E \u0437\u0430\u043F\u0438\u0441\u044C.",
+      "show_always_color_text_menu": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \xABAlways Color Text\xBB \u0432 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E",
+      "show_always_color_text_menu_desc": "\u0412 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E \u043F\u043E\u044F\u0432\u043B\u044F\u0435\u0442\u0441\u044F \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442.",
       "hide_inactive_groups_in_dropdowns": "\u0421\u043A\u0440\u044B\u0432\u0430\u0442\u044C \u043D\u0435\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0432 \u0440\u0430\u0441\u043A\u0440\u044B\u0432\u0430\u044E\u0449\u0438\u0445\u0441\u044F \u0441\u043F\u0438\u0441\u043A\u0430\u0445",
       "hide_inactive_groups_in_dropdowns_desc": "\u0421\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u043D\u0435\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432 \u043F\u0440\u0438 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0438 \u0441\u043F\u0438\u0441\u043A\u043E\u0432 \u0433\u0440\u0443\u043F\u043F \u0432 \u0440\u0430\u0441\u043A\u0440\u044B\u0432\u0430\u044E\u0449\u0438\u0445\u0441\u044F \u043C\u0435\u043D\u044E.",
       "tooltip_enable_for_file": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0434\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
@@ -3152,10 +3173,13 @@ var require_zh_cn = __commonJS({
       "show_toggle_statusbar": "\u5728\u72B6\u6001\u680F\u663E\u793A\u5207\u6362\u6309\u94AE",
       "show_toggle_ribbon": "\u5728\u529F\u80FD\u533A\u663E\u793A\u5207\u6362\u56FE\u6807",
       "show_toggle_command": "\u5728\u547D\u4EE4\u4E2D\u663E\u793A\u5207\u6362",
-      "show_blacklist_menu": "\u5728\u53F3\u952E\u83DC\u5355\u4E2D\u663E\u793A\u9ED1\u540D\u5355\u5355\u8BCD",
+      "menu_options_header": "\u83DC\u5355\u9009\u9879",
+      "show_blacklist_menu": "\u5728\u53F3\u952E\u83DC\u5355\u4E2D\u663E\u793A\u201C\u9ED1\u540D\u5355\u5355\u8BCD\u201D",
       "show_blacklist_menu_desc": "\u6DFB\u52A0\u53F3\u952E\u83DC\u5355\u9879\uFF0C\u5C06\u9009\u4E2D\u7684\u6587\u5B57\u52A0\u5165\u7740\u8272\u9ED1\u540D\u5355\u3002",
-      "show_add_to_existing_entry_menu": "\u5728\u53F3\u952E\u83DC\u5355\u4E2D\u663E\u793A\u6DFB\u52A0\u5230\u73B0\u6709\u6761\u76EE",
-      "show_add_to_existing_entry_menu_desc": "\u6DFB\u52A0\u53F3\u952E\u83DC\u5355\u9879\uFF0C\u5C06\u9009\u4E2D\u7684\u6587\u5B57\u6DFB\u52A0\u5230\u73B0\u6709\u6761\u76EE\u3002",
+      "show_add_to_existing_menu": "\u5728\u53F3\u952E\u83DC\u5355\u4E2D\u663E\u793A\u201C\u6DFB\u52A0\u5230\u73B0\u6709\u6761\u76EE\u201D",
+      "show_add_to_existing_menu_desc": "\u6DFB\u52A0\u53F3\u952E\u83DC\u5355\u9879\uFF0C\u5C06\u9009\u4E2D\u7684\u6587\u5B57\u6DFB\u52A0\u5230\u73B0\u6709\u6761\u76EE\u3002",
+      "show_always_color_text_menu": "\u5728\u53F3\u952E\u83DC\u5355\u4E2D\u663E\u793A\u201C\u6587\u5B57\u81EA\u52A8\u7740\u8272\u201D",
+      "show_always_color_text_menu_desc": "\u6DFB\u52A0\u53F3\u952E\u83DC\u5355\u9879\uFF0C\u4E3A\u9009\u4E2D\u7684\u6587\u5B57\u7740\u8272\u3002",
       "hide_inactive_groups_in_dropdowns": "\u5728\u4E0B\u62C9\u83DC\u5355\u4E2D\u9690\u85CF\u4E0D\u6D3B\u8DC3\u7684\u7EC4",
       "hide_inactive_groups_in_dropdowns_desc": "\u5728\u4E0B\u62C9\u83DC\u5355\u4E2D\u663E\u793A\u7EC4\u5217\u8868\u65F6\u9690\u85CF\u4E0D\u6D3B\u8DC3\u7684\u5355\u8BCD\u7EC4\u3002",
       "tooltip_enable_for_file": "\u4E3A\u6B64\u6587\u4EF6\u542F\u7528",
@@ -5968,78 +5992,80 @@ module.exports = class AlwaysColorText extends Plugin {
             });
           });
         }
-        menu.addItem((item) => {
-          item.setTitle(this.t("menu_always_color_text", "Always color text")).setIcon("palette").onClick(() => {
-            if (this.isWordBlacklisted(selectedText)) {
-              new Notice(this.t("notice_blacklisted_cannot_color", `"${selectedText}" is blacklisted and cannot be colored.`, { word: selectedText }));
-              return;
-            }
-            new ColorPickerModal(this.app, this, async (color, result) => {
-              const sel = result || {};
-              const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
-              const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
-              const selGroupUid = sel.selectedGroupUid || null;
-              const matchType = sel.matchType || (this.settings.partialMatch ? "contains" : "exact");
-              const applyToArr = (arr) => {
-                const idx = arr.findIndex((e) => e && e.pattern === selectedText && !e.isRegex);
-                if (idx !== -1) {
-                  const entry = arr[idx];
-                  if (tc && bc) {
-                    entry.textColor = tc;
-                    entry.backgroundColor = bc;
-                    entry.color = "";
-                    entry.styleType = "both";
-                    entry._savedTextColor = tc;
-                    entry._savedBackgroundColor = bc;
-                  } else if (tc) {
-                    entry.color = tc;
-                    entry.styleType = "text";
-                    entry.textColor = null;
-                    entry.backgroundColor = null;
-                    entry._savedTextColor = tc;
-                  } else if (bc) {
-                    entry.color = "";
-                    entry.textColor = "currentColor";
-                    entry.backgroundColor = bc;
-                    entry.styleType = "highlight";
-                    entry._savedBackgroundColor = bc;
-                  } else if (color && this.isValidHexColor(color)) {
-                    entry.color = color;
-                    entry.styleType = "text";
-                    entry._savedTextColor = color;
+        if (this.settings.enableAlwaysColorTextMenu) {
+          menu.addItem((item) => {
+            item.setTitle(this.t("menu_always_color_text", "Always color text")).setIcon("palette").onClick(() => {
+              if (this.isWordBlacklisted(selectedText)) {
+                new Notice(this.t("notice_blacklisted_cannot_color", `"${selectedText}" is blacklisted and cannot be colored.`, { word: selectedText }));
+                return;
+              }
+              new ColorPickerModal(this.app, this, async (color, result) => {
+                const sel = result || {};
+                const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
+                const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+                const selGroupUid = sel.selectedGroupUid || null;
+                const matchType = sel.matchType || (this.settings.partialMatch ? "contains" : "exact");
+                const applyToArr = (arr) => {
+                  const idx = arr.findIndex((e) => e && e.pattern === selectedText && !e.isRegex);
+                  if (idx !== -1) {
+                    const entry = arr[idx];
+                    if (tc && bc) {
+                      entry.textColor = tc;
+                      entry.backgroundColor = bc;
+                      entry.color = "";
+                      entry.styleType = "both";
+                      entry._savedTextColor = tc;
+                      entry._savedBackgroundColor = bc;
+                    } else if (tc) {
+                      entry.color = tc;
+                      entry.styleType = "text";
+                      entry.textColor = null;
+                      entry.backgroundColor = null;
+                      entry._savedTextColor = tc;
+                    } else if (bc) {
+                      entry.color = "";
+                      entry.textColor = "currentColor";
+                      entry.backgroundColor = bc;
+                      entry.styleType = "highlight";
+                      entry._savedBackgroundColor = bc;
+                    } else if (color && this.isValidHexColor(color)) {
+                      entry.color = color;
+                      entry.styleType = "text";
+                      entry._savedTextColor = color;
+                    }
+                    if (!entry.isRegex) entry.matchType = matchType;
+                  } else {
+                    if (tc && bc) {
+                      arr.push({ pattern: selectedText, color: "", textColor: tc, backgroundColor: bc, isRegex: false, flags: "", styleType: "both", matchType, _savedTextColor: tc, _savedBackgroundColor: bc });
+                    } else if (tc) {
+                      arr.push({ pattern: selectedText, color: tc, isRegex: false, flags: "", styleType: "text", matchType, _savedTextColor: tc });
+                    } else if (bc) {
+                      arr.push({ pattern: selectedText, color: "", textColor: "currentColor", backgroundColor: bc, isRegex: false, flags: "", styleType: "highlight", matchType, _savedBackgroundColor: bc });
+                    } else if (color && this.isValidHexColor(color)) {
+                      arr.push({ pattern: selectedText, color, isRegex: false, flags: "", styleType: "text", matchType, _savedTextColor: color });
+                    }
                   }
-                  if (!entry.isRegex) entry.matchType = matchType;
-                } else {
-                  if (tc && bc) {
-                    arr.push({ pattern: selectedText, color: "", textColor: tc, backgroundColor: bc, isRegex: false, flags: "", styleType: "both", matchType, _savedTextColor: tc, _savedBackgroundColor: bc });
-                  } else if (tc) {
-                    arr.push({ pattern: selectedText, color: tc, isRegex: false, flags: "", styleType: "text", matchType, _savedTextColor: tc });
-                  } else if (bc) {
-                    arr.push({ pattern: selectedText, color: "", textColor: "currentColor", backgroundColor: bc, isRegex: false, flags: "", styleType: "highlight", matchType, _savedBackgroundColor: bc });
-                  } else if (color && this.isValidHexColor(color)) {
-                    arr.push({ pattern: selectedText, color, isRegex: false, flags: "", styleType: "text", matchType, _savedTextColor: color });
+                };
+                if (selGroupUid) {
+                  const group = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups.find((g) => g && g.uid === selGroupUid) : null;
+                  if (group) {
+                    if (!Array.isArray(group.entries)) group.entries = [];
+                    applyToArr(group.entries);
+                  } else {
+                    applyToArr(this.settings.wordEntries);
                   }
-                }
-              };
-              if (selGroupUid) {
-                const group = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups.find((g) => g && g.uid === selGroupUid) : null;
-                if (group) {
-                  if (!Array.isArray(group.entries)) group.entries = [];
-                  applyToArr(group.entries);
                 } else {
                   applyToArr(this.settings.wordEntries);
                 }
-              } else {
-                applyToArr(this.settings.wordEntries);
-              }
-              await this.saveSettings();
-              this.compileWordEntries();
-              this.compileTextBgColoringEntries();
-              this.reconfigureEditorExtensions();
-              this.refreshEditor(view, true);
-            }, "text-and-background", selectedText, false).open();
+                await this.saveSettings();
+                this.compileWordEntries();
+                this.compileTextBgColoringEntries();
+                this.reconfigureEditorExtensions();
+                this.refreshEditor(view, true);
+              }, "text-and-background", selectedText, false).open();
+            });
           });
-        });
+        }
         const caseSensitive = !!this.settings.caseSensitive;
         const norm = (s) => caseSensitive ? String(s) : String(s).toLowerCase();
         const a = norm(selectedText);
@@ -7919,6 +7945,7 @@ module.exports = class AlwaysColorText extends Plugin {
       this.registerEvent(this.activeLeafChangeListener);
       this.activeLeafChangeListenerRegistered = true;
     }
+    this.setupSearchObserver();
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
         const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -7988,6 +8015,7 @@ module.exports = class AlwaysColorText extends Plugin {
       this.activeLeafChangeListenerRegistered = false;
       this.activeLeafChangeListener = null;
     }
+    this.teardownSearchObserver();
     this.refreshActiveEditor(true);
     try {
       if (!this._changelogCommandRegistered) {
@@ -8004,6 +8032,306 @@ module.exports = class AlwaysColorText extends Plugin {
         this._changelogCommandRegistered = true;
       }
     } catch (e) {
+    }
+  }
+  // --- Search Results Support ---
+  setupSearchObserver() {
+    try {
+      if (this._searchObserversMap) return;
+      this._searchObserversMap = /* @__PURE__ */ new Map();
+      const processSearchLeaf = (leaf) => {
+        try {
+          const container = leaf.view.containerEl;
+          if (!container) return;
+          const results = container.querySelectorAll(".search-result-file-match");
+          if (results.length === 0) return;
+          const sourcePath = "search-results";
+          const folderEntry = this.getBestFolderEntry(sourcePath);
+          const allEntries = this.getSortedWordEntries();
+          const allowedEntries = this.filterEntriesByAdvancedRules(sourcePath, allEntries);
+          if (allowedEntries.length === 0) return;
+          for (const result of results) {
+            try {
+              this._processSearchResultBlock(result, allowedEntries, folderEntry);
+            } catch (err) {
+            }
+          }
+        } catch (e) {
+          debugWarn("SEARCH", "Failed to process search leaf", e);
+        }
+      };
+      const attachObserver = (leaf) => {
+        if (this._searchObserversMap.has(leaf)) return;
+        const container = leaf.view.containerEl;
+        if (!container) return;
+        const observer = new MutationObserver((mutations) => {
+          let shouldUpdate = false;
+          for (const m of mutations) {
+            let isOurChange = false;
+            if (m.type === "childList") {
+              for (const node of m.addedNodes) {
+                if (node.nodeType === 1 && node.classList.contains("always-color-text-highlight")) {
+                  isOurChange = true;
+                  break;
+                }
+              }
+            }
+            if (!isOurChange) {
+              shouldUpdate = true;
+              break;
+            }
+          }
+          if (shouldUpdate) {
+            if (leaf._actSearchDebounce) clearTimeout(leaf._actSearchDebounce);
+            leaf._actSearchDebounce = setTimeout(() => processSearchLeaf(leaf), 60);
+          }
+        });
+        observer.observe(container, { childList: true, subtree: true });
+        this._searchObserversMap.set(leaf, observer);
+        processSearchLeaf(leaf);
+      };
+      this.app.workspace.getLeavesOfType("search").forEach(attachObserver);
+      this.registerEvent(this.app.workspace.on("layout-change", () => {
+        const leaves = this.app.workspace.getLeavesOfType("search");
+        leaves.forEach(attachObserver);
+        for (const [leaf, obs] of this._searchObserversMap.entries()) {
+          if (!leaves.includes(leaf)) {
+            obs.disconnect();
+            this._searchObserversMap.delete(leaf);
+          }
+        }
+      }));
+    } catch (e) {
+      debugError("SEARCH", "Failed to setup search observer", e);
+    }
+  }
+  _processSearchResultBlock(block, entries, folderEntry) {
+    try {
+      const textNodes = [];
+      const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          if (node.parentElement?.closest(".always-color-text-highlight")) return NodeFilter.FILTER_REJECT;
+          if (node.parentElement?.closest("code, pre")) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }, false);
+      let n;
+      while (n = walker.nextNode()) {
+        const isMatch = !!(n.parentElement && n.parentElement.closest(".search-result-file-matched-text"));
+        textNodes.push({ node: n, text: n.textContent || "", isMatch });
+      }
+      if (textNodes.length === 0) return;
+      const combined = textNodes.map((s) => s.text).join("");
+      if (!combined) return;
+      const regexEntries = (entries || []).filter((e) => e && !e.invalid && e.isRegex);
+      try {
+        for (const entry of regexEntries) {
+          if (!entry.regex && this._patternMatcher) this._patternMatcher.compilePattern(entry);
+        }
+      } catch (_) {
+      }
+      let matches = [];
+      const textBgEntries = (entries || []).filter((e) => e && e.isTextBg === true);
+      for (const entry of textBgEntries) {
+        const re = entry.regex;
+        if (!re) continue;
+        const mlist = this.safeMatchLoop(re, combined);
+        for (const m of mlist) {
+          const s = m.index;
+          const e = m.index + m[0].length;
+          if (!this.matchSatisfiesType(combined, s, e, entry)) continue;
+          matches.push({ start: s, end: e, textColor: entry.textColor, backgroundColor: entry.backgroundColor, isTextBg: true, entryRef: entry });
+        }
+      }
+      const textOnlyCandidates = (entries || []).filter((e) => e && !e.isTextBg);
+      const pm = this._patternMatcher ? this._patternMatcher.match(combined, textOnlyCandidates, folderEntry) : [];
+      for (const m of pm) matches.push(m);
+      if (matches.length === 0) return;
+      matches.sort((a, b) => {
+        const la = a.end - a.start;
+        const lb = b.end - b.start;
+        if (la !== lb) return lb - la;
+        if (a.start !== b.start) return a.start - b.start;
+        const aT = a.isTextBg ? !!(a.textColor && a.textColor !== "currentColor") : !!a.color;
+        const bT = b.isTextBg ? !!(b.textColor && b.textColor !== "currentColor") : !!b.color;
+        if (aT && !bT) return -1;
+        if (!aT && bT) return 1;
+        if (a.isTextBg && !b.isTextBg) return -1;
+        if (!a.isTextBg && b.isTextBg) return 1;
+        return 0;
+      });
+      const nonOverlap = [];
+      for (const m of matches) {
+        let ok = true;
+        for (const s of nonOverlap) {
+          if (m.start < s.end && m.end > s.start) {
+            ok = false;
+            break;
+          }
+        }
+        if (ok) nonOverlap.push(m);
+      }
+      matches = nonOverlap.sort((a, b) => a.start - b.start);
+      const segBounds = [];
+      let acc = 0;
+      for (const seg of textNodes) {
+        const start = acc;
+        const end = acc + seg.text.length;
+        segBounds.push({ start, end, seg });
+        acc = end;
+      }
+      const appendRange = (frag2, rStart, rEnd) => {
+        if (rEnd <= rStart) return;
+        let pos2 = rStart;
+        for (const b of segBounds) {
+          if (b.end <= pos2) continue;
+          if (b.start >= rEnd) break;
+          const s = Math.max(b.start, pos2);
+          const e = Math.min(b.end, rEnd);
+          const slice = b.seg.text.slice(s - b.start, e - b.start);
+          if (b.seg.isMatch) {
+            const span = document.createElement("span");
+            span.className = "search-result-file-matched-text";
+            span.textContent = slice;
+            frag2.appendChild(span);
+          } else {
+            frag2.appendChild(document.createTextNode(slice));
+          }
+          pos2 = e;
+        }
+      };
+      const frag = document.createDocumentFragment();
+      let pos = 0;
+      for (const m of matches) {
+        if (m.start > pos) appendRange(frag, pos, m.start);
+        const span = document.createElement("span");
+        span.className = "always-color-text-highlight";
+        const styleType2 = m.isTextBg ? "both" : m.styleType || "text";
+        const hideText = this.settings.hideTextColors === true;
+        const hideBg = this.settings.hideHighlights === true;
+        if (styleType2 === "text") {
+          const color = m.color || (m.textColor && m.textColor !== "currentColor" ? m.textColor : null);
+          if (!hideText && color) {
+            try {
+              span.style.setProperty("color", color, "important");
+            } catch (_) {
+              span.style.color = color;
+            }
+            try {
+              span.style.setProperty("--highlight-color", color);
+            } catch (_) {
+            }
+          }
+        } else if (styleType2 === "highlight") {
+          if (!hideBg) {
+            const bgColor = m.backgroundColor || m.color || (m.textColor && m.textColor !== "currentColor" ? m.textColor : null) || (folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : null);
+            span.style.background = "";
+            const params = this.getHighlightParams(m.entryRef || m.entry || null);
+            try {
+              span.style.setProperty("background-color", this.hexToRgba(bgColor, params.opacity ?? 25), "important");
+            } catch (_) {
+              span.style.backgroundColor = this.hexToRgba(bgColor, params.opacity ?? 25);
+            }
+            const vpad = params.vPad;
+            try {
+              span.style.setProperty("padding-left", params.hPad + "px", "important");
+              span.style.setProperty("padding-right", params.hPad + "px", "important");
+              span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+              span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+            } catch (_) {
+              span.style.paddingLeft = span.style.paddingRight = params.hPad + "px";
+              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+            }
+            const br = (params.hPad > 0 && params.radius === 0 ? 0 : params.radius) + "px";
+            try {
+              span.style.setProperty("border-radius", br, "important");
+            } catch (_) {
+              span.style.borderRadius = br;
+            }
+            const borderCss = this.generateBorderStyle(null, bgColor, m.entryRef || m.entry || null);
+            if (borderCss) {
+              span.style.cssText += borderCss;
+            }
+            if (this.settings.enableBoxDecorationBreak ?? true) {
+              span.style.boxDecorationBreak = "clone";
+              span.style.WebkitBoxDecorationBreak = "clone";
+            }
+          }
+        } else {
+          const textColor = m.textColor && m.textColor !== "currentColor" ? m.textColor : m.color || null;
+          const bgColor = m.backgroundColor || m.color || (folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : null);
+          if (!hideText && textColor) {
+            try {
+              span.style.setProperty("color", textColor, "important");
+            } catch (_) {
+              span.style.color = textColor;
+            }
+            try {
+              span.style.setProperty("--highlight-color", textColor);
+            } catch (_) {
+            }
+          }
+          if (!hideBg) {
+            span.style.background = "";
+            const params = this.getHighlightParams(m.entryRef || m.entry || null);
+            try {
+              span.style.setProperty("background-color", this.hexToRgba(bgColor, params.opacity ?? 25), "important");
+            } catch (_) {
+              span.style.backgroundColor = this.hexToRgba(bgColor, params.opacity ?? 25);
+            }
+            const vpad = params.vPad;
+            try {
+              span.style.setProperty("padding-left", params.hPad + "px", "important");
+              span.style.setProperty("padding-right", params.hPad + "px", "important");
+              span.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+              span.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+            } catch (_) {
+              span.style.paddingLeft = span.style.paddingRight = params.hPad + "px";
+              span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+            }
+            const br2 = (params.hPad > 0 && params.radius === 0 ? 0 : params.radius) + "px";
+            try {
+              span.style.setProperty("border-radius", br2, "important");
+            } catch (_) {
+              span.style.borderRadius = br2;
+            }
+            const borderCss2 = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef || m.entry || null);
+            if (borderCss2) {
+              span.style.cssText += borderCss2;
+            }
+            if (this.settings.enableBoxDecorationBreak ?? true) {
+              span.style.boxDecorationBreak = "clone";
+              span.style.WebkitBoxDecorationBreak = "clone";
+            }
+            this.applyBorderStyleToElement(span, hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef || m.entry || null);
+          }
+        }
+        const innerFrag = document.createDocumentFragment();
+        appendRange(innerFrag, m.start, m.end);
+        span.appendChild(innerFrag);
+        frag.appendChild(span);
+        pos = m.end;
+      }
+      if (pos < combined.length) appendRange(frag, pos, combined.length);
+      while (block.firstChild) block.removeChild(block.firstChild);
+      block.appendChild(frag);
+    } catch (e) {
+      try {
+        debugError("SEARCH", "process block error", e);
+      } catch (_) {
+      }
+    }
+  }
+  teardownSearchObserver() {
+    try {
+      if (this._searchObserversMap) {
+        for (const obs of this._searchObserversMap.values()) {
+          obs.disconnect();
+        }
+        this._searchObserversMap.clear();
+        this._searchObserversMap = null;
+      }
+    } catch (_) {
     }
   }
   // --- Load plugin settings from disk, with defaults ---
@@ -8087,6 +8415,7 @@ module.exports = class AlwaysColorText extends Plugin {
       blacklistEntries: [],
       enableBlacklistMenu: true,
       enableAddToExistingMenu: true,
+      enableAlwaysColorTextMenu: true,
       hideInactiveGroupsInDropdowns: true,
       symbolWordColoring: false,
       // Enable/disable regex support in the settings UI/runtime
@@ -21087,8 +21416,17 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (e) {
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("show_add_to_existing_menu", 'Show "Add to existing entry" in right-click menu')).setDesc(this.plugin.t("show_add_to_existing_menu_desc", "Adds a right-click menu item to add selected text to an existing entry.")).addToggle((t) => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async (v) => {
+      containerEl2.createEl("h2", { text: this.plugin.t("menu_options_header", "Menu Options") });
+      new Setting(containerEl2).setName(this.plugin.t("show_add_to_existing_menu", 'Show "Add to Existing Entry" in right-click menu')).setDesc(this.plugin.t("show_add_to_existing_menu_desc", "Adds a right-click menu item to add selected text to an existing entry.")).addToggle((t) => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async (v) => {
         this.plugin.settings.enableAddToExistingMenu = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_always_color_text_menu", 'Show "Always Color Text" in right-click menu')).setDesc(this.plugin.t("show_always_color_text_menu_desc", "Adds a right-click menu item to color selected text.")).addToggle((t) => t.setValue(this.plugin.settings.enableAlwaysColorTextMenu).onChange(async (v) => {
+        this.plugin.settings.enableAlwaysColorTextMenu = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_blacklist_menu", 'Show "Blacklist Word" in right-click menu')).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
+        this.plugin.settings.enableBlacklistMenu = v;
         await this.plugin.saveSettings();
       }));
       containerEl2.createEl("h3", { text: this.plugin.t("coloring_settings_header", "Coloring Settings") });
@@ -21916,10 +22254,6 @@ var ColorSettingTab = class extends PluginSettingTab {
     if (this._activeTab === "blacklist") {
       containerEl2.createEl("h2", { text: this.plugin.t("blacklist_words_header", "Blacklist words") });
       containerEl2.createEl("p", { text: this.plugin.t("blacklist_words_desc", "Keywords or patterns here will never be colored, even for partial matches.") });
-      new Setting(containerEl2).setName(this.plugin.t("show_blacklist_menu", "Show Blacklist words in right-click menu")).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
-        this.plugin.settings.enableBlacklistMenu = v;
-        await this.plugin.saveSettings();
-      }));
       const blSearchContainer = containerEl2.createDiv();
       try {
         blSearchContainer.addClass("act-search-container");

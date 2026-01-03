@@ -158,7 +158,7 @@ For best results in Reading mode, enable **"Force full render"** in settings. Th
 
 ![Coloring Symbols](assets/symbol-cool.png)
 Note: Coloring symbols affect word coloring, not just the symbol itself.
-Using symbols like `+` may trigger bullets so color `\+` instead.
+Using symbols like `+` may trigger bullets so color `\+` instead.1
 
 ---
 
