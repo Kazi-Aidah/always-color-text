@@ -15,6 +15,51 @@
   color: var(--highlight-color, inherit) !important;
 }
 
+/* Support for highlight preset (==...==) - affects both mark elements and .cm-highlight in live preview */
+.always-color-text-highlight-marks {
+  /* Affects mark elements in reading mode and .cm-highlight in live preview */
+  background-color: var(--highlight-background, transparent) !important;
+  color: var(--highlight-color, currentColor) !important;
+}
+
+mark.always-color-text-highlight-marks {
+  background-color: var(--highlight-background, transparent) !important;
+  color: var(--highlight-color, currentColor) !important;
+}
+
+.cm-highlight.always-color-text-highlight-marks {
+  background-color: var(--highlight-background, transparent) !important;
+  color: var(--highlight-color, currentColor) !important;
+}
+
+/* Override native mark styling in reading mode - force custom colors via inline styles in JavaScript */
+.markdown-rendered mark {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Hide cm-highlight background in live preview to show only inner styled span */
+.cm-highlight {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+.cm-s-obsidian span.cm-highlight {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Force highlight color through nested spans */
+.cm-highlight .always-color-text-highlight-marks {
+  background-color: var(--highlight-background, transparent) !important;
+  color: var(--highlight-color, currentColor) !important;
+}
+
+mark .always-color-text-highlight-marks {
+  background-color: var(--highlight-background, transparent) !important;
+  color: var(--highlight-color, currentColor) !important;
+}
+
 /* Settings button rows base layout */
 .entries-button-row,
 .blacklist-button-row,
@@ -238,7 +283,7 @@ a .always-color-text-highlight,
 .text-bg-coloring-list select,
 .blacklist-words-list select,
 .always-color-list select {
-  padding: 6px 8px;
+  padding: 6px 8px !important;
   border-radius: 4px;
   border: 1px solid var(--background-modifier-border);
   color: var(--text-normal);
@@ -246,6 +291,10 @@ a .always-color-text-highlight,
   line-height: 1.5;
   min-width: 140px;
   flex: 0 0 auto;
+}
+
+select {
+  padding: 6px 8px !important;
 }
 
 /* Fix flex alignment for row items */
@@ -493,6 +542,7 @@ li.act-color-marker::marker {
   width: 100%;
   min-width: 140px !important;
   max-width: 140px !important;
+  padding: 6px 8px !important;
 }
 
 .act-highlight-picker-row {
@@ -682,7 +732,7 @@ button.mod-cta {
 }
 
 .act-group-row {
-  border-radius: calc(var(--button-radius) + 4px) !important;
+  border-radius: var(--button-radius) !important;
 }
 
 .act-edit-entry-group-select {
@@ -692,4 +742,40 @@ button.mod-cta {
 
 .act-edit-entry-style-select {
   min-width: 140px !important;
+}
+
+.act-color-dots {
+   gap: 0px !important;
+   padding: 6px 0px;
+}
+
+/* Drag and Drop Reordering */
+.drag-reorder-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background-color: var(--background-primary);
+  border-radius: 4px;
+}
+
+/* Highlight preset support for reading/live preview */
+.markdown-rendered .always-color-text-highlight mark {
+  color: var(--highlight-color, currentColor) !important;
+  background-color: var(--highlight-background, transparent) !important;
+}
+.cm-editor .always-color-text-highlight .cm-highlight {
+  color: var(--highlight-color, currentColor) !important;
+  background-color: var(--highlight-background, transparent) !important;
+}
+
+/* Fix comments preset coloring */
+.cm-editor .always-color-text-highlight .cm-comment {
+  color: var(--highlight-color, currentColor) !important;
+}
+
+.drag-ghost-hidden {
+  opacity: 0 !important;
+  pointer-events: none;
 }

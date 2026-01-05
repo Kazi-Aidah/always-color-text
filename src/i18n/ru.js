@@ -464,7 +464,18 @@ module.exports = {
   "label_border_style": "Стиль рамки",
   "label_border_opacity": "Прозрачность рамки",
   "label_border_thickness": "Толщина рамки",
-  "btn_save_style": "Сохранить стиль"
+  "btn_save_style": "Сохранить стиль",
+  
+  // Quick Colors / Styles
+  "quick_colors_header": "Быстрые цвета",
+  "quick_colors_desc": "Позволяет быстро выделять или окрашивать текст, показывая цвета в контекстном меню. Если Быстрые цвета отключены, будут использоваться цвета стилей из Быстрых стилей.",
+  "quick_colors_apply_mode_label": "Окрашивание текста будет применяться как",
+  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_html": "Inline HTML",
+  "quick_styles_header": "Быстрые стили",
+  "quick_styles_desc": "Определите именованные стили для применения цвета текста и выделения. Если Быстрые цвета отключены, будут использоваться цвета стилей здесь.",
+  "btn_add_style": "+ Добавить стиль",
+  "quick_styles_menu_option": "Быстрые стили"
 };
 
 // Thanks @Frumkin13 for the translation <3

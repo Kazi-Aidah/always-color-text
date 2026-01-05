@@ -463,5 +463,16 @@ module.exports = {
   "label_border_style": "Style de bordure",
   "label_border_opacity": "Opacité de la bordure",
   "label_border_thickness": "Épaisseur de la bordure",
-  "btn_save_style": "Enregistrer le style"
+  "btn_save_style": "Enregistrer le style",
+  
+  // Quick Colors / Styles
+  "quick_colors_header": "Couleurs Rapides",
+  "quick_colors_desc": "Permet de surligner ou colorer rapidement du texte en affichant des couleurs dans le menu contextuel. Si Couleurs Rapides est désactivé, les couleurs par style dans Styles Rapides seront utilisées.",
+  "quick_colors_apply_mode_label": "La coloration du texte s'appliquera comme",
+  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_html": "HTML en ligne",
+  "quick_styles_header": "Styles Rapides",
+  "quick_styles_desc": "Définir des styles nommés pour appliquer la couleur du texte et les surlignages. Si Couleurs Rapides est désactivé, les couleurs par style ici seront utilisées.",
+  "btn_add_style": "+ Ajouter un style",
+  "quick_styles_menu_option": "Styles Rapides"
 };

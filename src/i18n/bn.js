@@ -464,5 +464,16 @@ module.exports = {
   "label_border_style": "বর্ডারের স্টাইল",
   "label_border_opacity": "বর্ডারের অপাসিটি",
   "label_border_thickness": "বর্ডারের পুরুত্ব",
-  "btn_save_style": "স্টাইল সংরক্ষণ করুন"
+  "btn_save_style": "স্টাইল সংরক্ষণ করুন",
+  
+  // Quick Colors / Styles
+  "quick_colors_header": "দ্রুত রং",
+  "quick_colors_desc": "ডান-ক্লিক মেনুতে রং প্রদর্শন করে দ্রুত টেক্সট হাইলাইট বা রঙ করার অনুমতি দেয়। যদি দ্রুত রং বন্ধ থাকে, তবে দ্রুত স্টাইলগুলিতে প্রতি-স্টাইল রং ব্যবহার করা হবে।",
+  "quick_colors_apply_mode_label": "টেক্সট রঙায়ন এইভাবে প্রয়োগ হবে",
+  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_html": "ইনলাইন HTML",
+  "quick_styles_header": "দ্রুত স্টাইল",
+  "quick_styles_desc": "টেক্সট রঙ এবং হাইলাইট প্রয়োগ করার জন্য নামযুক্ত স্টাইল সংজ্ঞায়িত করুন। যদি দ্রুত রং বন্ধ থাকে, তবে এখানে প্রতি-স্টাইল রং ব্যবহার করা হবে।",
+  "btn_add_style": "+ স্টাইল যোগ করুন",
+  "quick_styles_menu_option": "দ্রুত স্টাইল"
 };

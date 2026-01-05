@@ -466,5 +466,16 @@ module.exports = {
   "label_border_style": "Border Style",
   "label_border_opacity": "Border Opacity",
   "label_border_thickness": "Border Thickness",
-  "btn_save_style": "Save Style"
+  "btn_save_style": "Save Style",
+  
+  // Quick Colors / Styles
+  "quick_colors_header": "Quick Colors",
+  "quick_colors_desc": "Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used.",
+  "quick_colors_apply_mode_label": "The text coloring will apply as",
+  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_html": "Inline HTML",
+  "quick_styles_header": "Quick Styles",
+  "quick_styles_desc": "Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used.",
+  "btn_add_style": "+ Add Style",
+  "quick_styles_menu_option": "Quick Styles"
 };

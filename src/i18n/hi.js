@@ -464,5 +464,16 @@ module.exports = {
   "label_border_style": "बॉर्डर शैली",
   "label_border_opacity": "बॉर्डर अपारदर्शिता",
   "label_border_thickness": "बॉर्डर मोटाई",
-  "btn_save_style": "स्टाइल सहेजें"
+  "btn_save_style": "स्टाइल सहेजें",
+  
+  // Quick Colors / Styles
+  "quick_colors_header": "त्वरित रंग",
+  "quick_colors_desc": "राइट-क्लिक मेनू में रंग दिखाकर टेक्स्ट को जल्दी से हाइलाइट या रंगने की अनुमति देता है। यदि त्वरित रंग बंद हैं, तो त्वरित शैलियों में प्रति-शैली रंगों का उपयोग किया जाएगा।",
+  "quick_colors_apply_mode_label": "टेक्स्ट रंगाई इस रूप में लागू होगी",
+  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_html": "इनलाइन HTML",
+  "quick_styles_header": "त्वरित शैलियाँ",
+  "quick_styles_desc": "टेक्स्ट रंग और हाइलाइट लागू करने के लिए नामित शैलियाँ परिभाषित करें। यदि त्वरित रंग बंद हैं, तो यहां प्रति-शैली रंगों का उपयोग किया जाएगा।",
+  "btn_add_style": "+ शैली जोड़ें",
+  "quick_styles_menu_option": "त्वरित शैलियाँ"
 };

@@ -464,5 +464,16 @@ module.exports = {
   "label_border_style": "边框样式",
   "label_border_opacity": "边框不透明度",
   "label_border_thickness": "边框厚度",
-  "btn_save_style": "保存样式"
+  "btn_save_style": "保存样式",
+  
+  // Quick Colors / Styles
+  "quick_colors_header": "快速颜色",
+  "quick_colors_desc": "允许通过在右键菜单中显示颜色来快速高亮或着色文本。如果关闭快速颜色，将使用快速样式中的每种样式颜色。",
+  "quick_colors_apply_mode_label": "文本着色将应用为",
+  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_html": "内联 HTML",
+  "quick_styles_header": "快速样式",
+  "quick_styles_desc": "定义用于应用文本颜色和高亮显示的命名样式。如果关闭快速颜色，将使用此处的每种样式颜色。",
+  "btn_add_style": "+ 添加样式",
+  "quick_styles_menu_option": "快速样式"
 };

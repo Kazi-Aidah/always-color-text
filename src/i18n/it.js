@@ -464,5 +464,16 @@ module.exports = {
   "label_border_style": "Stile bordo",
   "label_border_opacity": "Opacità bordo",
   "label_border_thickness": "Spessore bordo",
-  "btn_save_style": "Salva stile"
+  "btn_save_style": "Salva stile",
+  
+  // Quick Colors / Styles
+  "quick_colors_header": "Colori Rapidi",
+  "quick_colors_desc": "Consente di evidenziare o colorare rapidamente il testo mostrando i colori nel menu contestuale. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile in Stili Rapidi.",
+  "quick_colors_apply_mode_label": "La colorazione del testo verrà applicata come",
+  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_html": "HTML in linea",
+  "quick_styles_header": "Stili Rapidi",
+  "quick_styles_desc": "Definisci stili con nome per applicare colore del testo ed evidenziazioni. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile qui.",
+  "btn_add_style": "+ Aggiungi Stile",
+  "quick_styles_menu_option": "Stili Rapidi"
 };

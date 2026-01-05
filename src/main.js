@@ -30,6 +30,7 @@ try {
 }
 
 const locales = require('./i18n');
+const { show_toggle_command } = require('./i18n/fr');
         
 // Performance tuning constants for editor decoration
 const EDITOR_PERFORMANCE_CONSTANTS = {
@@ -41,7 +42,7 @@ const EDITOR_PERFORMANCE_CONSTANTS = {
   MAX_TOTAL_MATCHES: 3000         // Absolute limit for decorations
 };
 // Development mode flag
-const IS_DEVELOPMENT = false;
+const IS_DEVELOPMENT = true;
 
 // Helper function for conditional debug logging
 const debugLog = (tag, ...args) => {
@@ -2250,6 +2251,13 @@ module.exports = class AlwaysColorText extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    // Initialize Quick Colors/Styles settings if missing
+    if (typeof this.settings.quickColorsEnabled === 'undefined') this.settings.quickColorsEnabled = false;
+    if (!this.settings.quickColorsApplyMode) this.settings.quickColorsApplyMode = 'html';
+    if (!Array.isArray(this.settings.quickColors)) this.settings.quickColors = [];
+    if (!Array.isArray(this.settings.quickStyles)) this.settings.quickStyles = [];
+    if (typeof this.settings.quickStylesEnabled === 'undefined') this.settings.quickStylesEnabled = true;
+    
     // Migrate old global advancedRules to per-entry rules on first load
     try { this.migrateAdvancedRulesToPerEntry(); await this.saveSettings(); } catch (_) {}
     try { await this.loadExternalTranslations(); } catch (_) {}
@@ -2522,6 +2530,210 @@ module.exports = class AlwaysColorText extends Plugin {
           });
         }
         
+        // Quick Colors / Styles menu behavior
+        const stylesArr = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
+        // Reset active color selection for this context menu
+        this._lastSelectedQuickColor = null;
+        const openStylesSubmenu = (anchorEvent) => {
+          if (!this.settings.quickStylesEnabled) return;
+          // Remove any previously open submenu to prevent duplicates
+          if (this._openQuickStylesSubmenu) {
+            try { this._openQuickStylesSubmenu.hide(); } catch (_) {}
+            this._openQuickStylesSubmenu = null;
+          }
+          const sub = new Menu();
+          stylesArr.forEach(style => {
+            sub.addItem(subItem => {
+              const frag = document.createDocumentFragment();
+              const wrapper = document.createElement('div');
+              wrapper.style.display = 'flex';
+              wrapper.style.alignItems = 'center';
+              wrapper.style.gap = '8px';
+              const nameEl = document.createElement('div');
+              nameEl.textContent = style.name || 'Style';
+              // When a color dot is active, override style colors with the active dot
+              const active = this._lastSelectedQuickColor || null;
+              const styleType = style && style.styleType ? style.styleType : 'both';
+              const tc = active && (styleType === 'text' || styleType === 'both') && active.textColor ? active.textColor : (style.textColor || style.color || null);
+              const bc = active && (styleType === 'highlight' || styleType === 'both') && active.backgroundColor ? active.backgroundColor : (style.backgroundColor || null);
+              const params = this.getHighlightParams(style);
+              const borderCss = this.generateBorderStyle(tc, bc, style);
+              let styleStr = '';
+              if (tc) styleStr += `color:${tc};`;
+              if (bc) {
+                try {
+                  const hexWithAlpha = this.hexToHexWithAlpha(bc, params.opacity ?? 25);
+                  styleStr += `background-color:${hexWithAlpha};`;
+                } catch (_) {
+                  styleStr += `background-color:${bc};`;
+                }
+              }
+              styleStr += `border-radius:${(params.radius ?? 8)}px; padding:${(params.vPad ?? 0)}px ${(params.hPad ?? 4)}px;${borderCss}`;
+              nameEl.setAttr('style', styleStr);
+              wrapper.appendChild(nameEl);
+              frag.appendChild(wrapper);
+              subItem.setTitle(frag);
+              subItem.onClick(async () => {
+                // Close the submenu
+                try { sub.hide(); } catch(_) {}
+                this._openQuickStylesSubmenu = null;
+                // Apply the quick style with the selected pair colors
+                await this._applyQuickStyleToSelection(style, this._lastSelectedQuickColor || null, selectedText, editor, view, (this.settings.quickColorsApplyMode !== 'act') && !(style && (style.groupUid || style.matchType)));
+              });
+            });
+          });
+          sub.showAtMouseEvent(anchorEvent);
+          this._openQuickStylesSubmenu = sub;
+        };
+        if (this.settings.quickColorsEnabled && Array.isArray(this.settings.quickColors) && this.settings.quickColors.length > 0) {
+          menu.addItem(item => {
+            const titleEl = document.createElement('div');
+            titleEl.className = 'menu-item tappable has-submenu';
+            titleEl.classList.add('act-color-dots');
+            const iconLeft = document.createElement('div');
+            iconLeft.className = 'menu-item-icon';
+            const titleText = document.createElement('div');
+            titleText.className = 'menu-item-title';
+            // Build dots row (background colors only)
+            const dotsContainer = document.createElement('div');
+            dotsContainer.classList.add('act-color-dots-container');
+            dotsContainer.style.display = 'flex';
+            dotsContainer.style.flexWrap = 'wrap';
+            dotsContainer.style.gap = '6px';
+            dotsContainer.style.padding = '4px 0';
+            dotsContainer.style.width = '100%';
+            dotsContainer.style.alignItems = 'center';
+            let activeDotEl = null;
+            this.settings.quickColors.forEach(pair => {
+              if (pair && pair.backgroundColor && this.isValidHexColor(pair.backgroundColor)) {
+                const dotB = document.createElement('div');
+                dotB.classList.add('act-color-dot','act-color-dot-bg','has-submenu');
+                dotB.style.width = '20px';
+                dotB.style.height = '20px';
+                dotB.style.borderRadius = '50%';
+                dotB.style.backgroundColor = pair.backgroundColor;
+                dotB.style.cursor = 'pointer';
+                dotB.style.border = '1px solid var(--background-modifier-border)';
+                dotB.addEventListener('click', async (ev) => {
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                  this._lastSelectedQuickColor = { textColor: pair.textColor || null, backgroundColor: pair.backgroundColor };
+                  if (activeDotEl && activeDotEl !== dotB) {
+                    try { activeDotEl.style.outline = ''; } catch (_) {}
+                    try { activeDotEl.classList.remove('act-color-dot-active'); } catch (_) {}
+                  }
+                  activeDotEl = dotB;
+                  try { dotB.style.outline = '2px solid var(--interactive-accent)'; } catch (_) {}
+                  try { dotB.classList.add('act-color-dot-active'); } catch (_) {}
+                  if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
+                    openStylesSubmenu(ev);
+                  } else {
+                    const firstStyle = stylesArr[0] || null;
+                    if (firstStyle) {
+                      await this._applyQuickStyleToSelection(firstStyle, this._lastSelectedQuickColor, selectedText, editor, view, (this.settings.quickColorsApplyMode !== 'act') && !(firstStyle && (firstStyle.groupUid || firstStyle.matchType)));
+                    } else {
+                      if (this.settings.quickColorsApplyMode === 'act') {
+                        await this._applyQuickColorACT(selectedText, null, pair.backgroundColor, view);
+                      } else {
+                        const p = this.getHighlightParams(null);
+                        const hexWithAlpha = this.hexToHexWithAlpha(pair.backgroundColor, p.opacity ?? 25);
+                        const borderCss = this.generateBorderStyle(null, pair.backgroundColor, null);
+                        const styleStr = `background-color: ${hexWithAlpha}; border-radius: ${(p.radius ?? 8)}px; padding: ${(p.vPad ?? 0)}px ${(p.hPad ?? 4)}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+                        const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
+                        editor.replaceSelection(html);
+                      }
+                    }
+                  }
+                });
+                dotsContainer.appendChild(dotB);
+              }
+            });
+            titleText.appendChild(dotsContainer);
+            const chevronIcon = document.createElement('div');
+            chevronIcon.className = 'menu-item-icon';
+            chevronIcon.style.cursor = 'pointer';
+            chevronIcon.style.marginLeft = 'auto';
+            try { setIcon(chevronIcon, 'chevron-right'); } catch (_) {}
+            chevronIcon.addEventListener('click', (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              openStylesSubmenu(ev);
+            });
+            const iconRight = document.createElement('div');
+            iconRight.className = 'menu-item-icon mod-submenu';
+            try { iconRight.style.cursor = 'pointer'; } catch (_) {}
+            iconRight.style.display = 'none';
+            iconRight.addEventListener('click', (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              openStylesSubmenu(ev);
+            });
+            titleEl.appendChild(iconLeft);
+            titleEl.appendChild(titleText);
+            if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
+              titleEl.appendChild(chevronIcon);
+            }
+            titleEl.appendChild(iconRight);
+            item.setTitle(titleEl);
+            item.onClick(() => {});
+          });
+        } else if (stylesArr.length > 0 && !this.settings.quickStylesEnabled) {
+          // Quick Colors off: show T/H/B indicators without submenu with logical styling
+          menu.addItem(item => {
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.gap = '8px';
+            const makeBtn = (label, type) => {
+              const btn = document.createElement('div');
+              btn.textContent = label;
+              btn.style.padding = '2px 6px';
+              btn.style.borderRadius = '4px';
+              btn.style.cursor = 'pointer';
+              // Style the indicator using the first style of this type
+              const target = stylesArr.find(s => (s.styleType || 'both') === type);
+              if (target) {
+                const tc = target.textColor || target.color || null;
+                const bc = target.backgroundColor || null;
+                const params = this.getHighlightParams(target);
+                const borderCss = this.generateBorderStyle(tc, bc, target);
+                let styleStr = '';
+                if (tc && (type === 'text' || type === 'both')) styleStr += `color:${tc};`;
+                if (bc && (type === 'highlight' || type === 'both')) {
+                  const bg = this.hexToHexWithAlpha(bc, params.opacity ?? 25);
+                  styleStr += `background-color:${bg};`;
+                }
+                styleStr += `border-radius:${(params.radius ?? 8)}px; padding:${(params.vPad ?? 0)}px ${(params.hPad ?? 4)}px;${borderCss}`;
+                btn.setAttr('style', styleStr);
+              }
+              btn.addEventListener('click', async (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                const target = stylesArr.find(s => (s.styleType || 'both') === type) || stylesArr[0];
+                await this._applyQuickStyleToSelection(target, null, selectedText, editor, view, (this.settings.quickColorsApplyMode !== 'act') && !(target && (target.groupUid || target.matchType)));
+              });
+              return btn;
+            };
+            container.appendChild(makeBtn('T', 'text'));
+            container.appendChild(makeBtn('H', 'highlight'));
+            container.appendChild(makeBtn('B', 'both'));
+            item.setTitle(container);
+            item.onClick(() => {});
+          });
+        } else if (this.settings.quickStylesEnabled && Array.isArray(this.settings.quickStyles) && this.settings.quickStyles.length > 0) {
+          menu.addItem(item => {
+            item.setIcon('heading-glyph');
+            item.setTitle(this.t('quick_styles_menu_option', 'Quick Styles'));
+            try { item.dom?.classList.add('has-submenu'); } catch (_) {}
+            try {
+              const iconRight = document.createElement('div');
+              iconRight.className = 'menu-item-icon mod-submenu';
+              setIcon(iconRight, 'chevron-right');
+              item.dom?.appendChild(iconRight);
+            } catch (_) {}
+            item.onClick((evt) => { openStylesSubmenu(evt); });
+          });
+        }
+
         const caseSensitive = !!this.settings.caseSensitive;
         const norm = (s) => caseSensitive ? String(s) : String(s).toLowerCase();
         const a = norm(selectedText);
@@ -3228,37 +3440,10 @@ module.exports = class AlwaysColorText extends Plugin {
               await this.debouncedSaveSettings();
               if (vpInput) vpInput.setValue('0');
               updatePreview();
-            }));
-      }
+    }));
+  }
 
-      {
-        let vpInput;
-        new Setting(containerEl)
-          .setName(this.plugin.t('highlight_vertical_padding','Highlight vertical padding (px)'))
-          .setDesc(this.plugin.t('highlight_vertical_padding_desc','Set the top and bottom padding (in px) for highlighted text'))
-          .addText(text => {
-            vpInput = text;
-            text
-              .setPlaceholder('e.g. 0, 1, 2')
-              .setValue(String(this.plugin.settings.highlightVerticalPadding ?? 0))
-              .onChange(async v => {
-                let val = parseInt(v);
-                if (isNaN(val)) val = 0;
-                this.plugin.settings.highlightVerticalPadding = val;
-                await this.debouncedSaveSettings();
-                updatePreview();
-              });
-          })
-          .addExtraButton(btn => btn
-            .setIcon('reset')
-            .setTooltip(this.plugin.t('reset_to_0','Reset to 0'))
-            .onClick(async () => {
-              this.plugin.settings.highlightVerticalPadding = 0;
-              await this.debouncedSaveSettings();
-              if (vpInput) vpInput.setValue('0');
-              updatePreview();
-            }));
-      }
+ 
 
       // Apply highlights if we found matches
       if (matches.length > 0) {
@@ -3276,6 +3461,76 @@ module.exports = class AlwaysColorText extends Plugin {
       try { filePath = this.app?.workspace?.getActiveFile()?.path || null; } catch (_) {}
       const we = filePath ? this.filterEntriesByAdvancedRules(filePath, weAll) : weAll;
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      
+      // NEW: Handle mark elements (==...==) in reading mode
+      try {
+        const markElements = element.querySelectorAll?.('mark') || [];
+        debugLog('MARK_FORMAT', `Found ${markElements.length} mark elements, we.length=${we.length}`);
+        
+        if (markElements.length > 0 && we.length > 0) {
+          // Log first 3 entries to see structure
+          for (let i = 0; i < Math.min(3, we.length); i++) {
+            const entry = we[i];
+            debugLog('MARK_FORMAT', `  Entry[${i}]: pattern="${entry?.pattern}", color="${entry?.color}", bg="${entry?.backgroundColor}"`);
+          }
+        }
+        
+        for (const mark of markElements) {
+          const styledSpan = mark.querySelector('span.always-color-text-highlight');
+          if (!styledSpan) continue;
+          
+          const markText = mark.textContent || '';
+          debugLog('MARK_FORMAT', `Processing mark: "${markText}", we.length=${we.length}`);
+          
+          // Try to find any entry that matches this text
+          let foundMatch = false;
+          for (let i = 0; i < we.length; i++) {
+            const entry = we[i];
+            if (!entry) continue;
+            
+            // Try multiple ways to match
+            const pattern = entry.pattern || entry.searchText;
+            if (!pattern) continue;
+            
+            // For simple text match (not regex)
+            const isSimpleMatch = !entry.isRegex && pattern && markText.includes(pattern);
+            
+            if (isSimpleMatch) {
+              debugLog('MARK_FORMAT', `MATCH! Entry[${i}] pattern="${pattern}" matched "${markText}"`);
+              
+              const bgColor = entry.backgroundColor || entry.color;
+              const textColor = entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : null;
+              const params = this.getHighlightParams(entry);
+              const bgRgba = this.hexToRgba(bgColor, params.opacity);
+              
+              debugLog('MARK_FORMAT', `  Applying: bg=${bgRgba}, text=${textColor}`);
+              
+              styledSpan.style.setProperty('background-color', bgRgba, 'important');
+              if (textColor) {
+                styledSpan.style.setProperty('color', textColor, 'important');
+              }
+              styledSpan.style.setProperty('padding-left', params.hPad + 'px', 'important');
+              styledSpan.style.setProperty('padding-right', params.hPad + 'px', 'important');
+              const vpad = params.vPad;
+              styledSpan.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+              styledSpan.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+              const br = ((params.hPad > 0 && params.radius === 0) ? 0 : params.radius);
+              styledSpan.style.setProperty('border-radius', br + 'px', 'important');
+              styledSpan.style.setProperty('border-top', `1px solid ${textColor || bgColor}`, 'important');
+              
+              foundMatch = true;
+              break;
+            }
+          }
+          
+          if (!foundMatch) {
+            debugLog('MARK_FORMAT', `No match found for: "${markText}"`);
+          }
+        }
+      } catch (e) {
+        debugError('MARK_FORMAT', 'Failed to process mark elements', e);
+      }
+      
       const taskCheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Checked)');
       const taskUncheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Unchecked)');
       const bulletEntry = we.find(e => e && e.presetLabel === 'Bullet Points');
@@ -4777,6 +5032,10 @@ module.exports = class AlwaysColorText extends Plugin {
       enableQuickColorOnce: false,
       enableQuickHighlightOnce: false,
       quickHighlightStyleEnable: false,
+      quickColorsEnabled: false,
+      quickColorsApplyMode: 'html',
+      quickColors: [], // Array of { textColor, backgroundColor, uid }
+      quickStyles: [], // Array of objects { id, name, style }
       quickHighlightUseGlobalStyle: false,
       quickHighlightOpacity: 25,
       quickHighlightBorderRadius: 8,
@@ -4792,12 +5051,25 @@ module.exports = class AlwaysColorText extends Plugin {
       pathSortMode: 'last-added',
       language: 'en',
       customSwatchesFolded: false, // Persist custom swatches folded state
+      globalHighlightFolded: false,
       readingModeHighlightFilter: null, // null: show all, 'highlight': show only highlights, 'text': show only text colors
       entriesSearchLimit: 0,
       blacklistSearchLimit: 0,
       pathSearchLimit: 0,
       showColoringReasonOnHover: false, // Show tooltip on hover explaining why text is colored
     }, loadedData);
+    
+    // Migrate legacy keys and structures
+    try {
+      if (typeof loadedData.quickColorsEnabled === 'boolean') {
+        this.settings.quickColorsEnabled = loadedData.quickColorsEnabled;
+      } else if (typeof loadedData.enableQuickColors === 'boolean' && typeof loadedData.quickColorsEnabled !== 'boolean') {
+        this.settings.quickColorsEnabled = loadedData.enableQuickColors;
+      }
+      if (Array.isArray(this.settings.quickColors) && this.settings.quickColors.length > 0 && typeof this.settings.quickColors[0] === 'string') {
+        this.settings.quickColors = this.settings.quickColors.map(hex => ({ textColor: hex, backgroundColor: null, uid: Date.now().toString(36) + Math.random().toString(36).slice(2) }));
+      }
+    } catch (_) {}
     
     try { this.sanitizeSettings(); } catch (e) {}
     
@@ -5401,6 +5673,7 @@ module.exports = class AlwaysColorText extends Plugin {
         x.borderLineStyle = typeof e.borderLineStyle === 'string' ? e.borderLineStyle : undefined;
         x.borderOpacity = typeof e.borderOpacity === 'number' ? e.borderOpacity : undefined;
         x.borderThickness = typeof e.borderThickness === 'number' ? e.borderThickness : undefined;
+        x.affectMarkElements = typeof e.affectMarkElements === 'boolean' ? e.affectMarkElements : undefined;
         
         return x;
       });
@@ -6509,6 +6782,109 @@ module.exports = class AlwaysColorText extends Plugin {
       return '';
     }
   }
+  
+  async _applyQuickColorACT(selectedText, textColor, backgroundColor, view, styleEntry = null) {
+    if (this.isWordBlacklisted(selectedText)) {
+      new Notice(this.t('notice_blacklisted_cannot_color',`"${selectedText}" is blacklisted and cannot be colored.`,{word:selectedText}));
+      return;
+    }
+    if (!Array.isArray(this.settings.wordEntries)) this.settings.wordEntries = [];
+    const matchType = (this.settings.partialMatch ? 'contains' : 'exact');
+    const idx = this.settings.wordEntries.findIndex(e => e && e.pattern === selectedText && !e.isRegex);
+    const styleType = (textColor && backgroundColor) ? 'both' : (backgroundColor ? 'highlight' : 'text');
+    const targetGroupUid = (styleEntry && styleEntry.groupUid) ? styleEntry.groupUid : null;
+    const groupsList = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : [];
+    const targetGroup = targetGroupUid ? groupsList.find(g => g && g.uid === targetGroupUid) : null;
+    if (idx !== -1) {
+      const entry = this.settings.wordEntries[idx];
+      entry.styleType = styleType;
+      if (textColor) { entry.color = ''; entry.textColor = textColor; entry._savedTextColor = textColor; }
+      if (backgroundColor) { entry.backgroundColor = backgroundColor; entry._savedBackgroundColor = backgroundColor; entry.textColor = entry.textColor || 'currentColor'; }
+      if (!entry.isRegex) entry.matchType = matchType;
+      // Copy custom style settings from styleEntry if provided
+      if (styleEntry) {
+        if (styleEntry.groupUid) entry.groupUid = styleEntry.groupUid;
+        if (styleEntry.matchType) entry.matchType = styleEntry.matchType;
+        if (typeof styleEntry.backgroundOpacity === 'number') entry.backgroundOpacity = styleEntry.backgroundOpacity;
+        if (typeof styleEntry.highlightBorderRadius === 'number') entry.highlightBorderRadius = styleEntry.highlightBorderRadius;
+        if (typeof styleEntry.highlightHorizontalPadding === 'number') entry.highlightHorizontalPadding = styleEntry.highlightHorizontalPadding;
+        if (typeof styleEntry.highlightVerticalPadding === 'number') entry.highlightVerticalPadding = styleEntry.highlightVerticalPadding;
+        if (typeof styleEntry.enableBorderThickness !== 'undefined') entry.enableBorderThickness = styleEntry.enableBorderThickness;
+        if (styleEntry.borderStyle) entry.borderStyle = styleEntry.borderStyle;
+        if (styleEntry.borderLineStyle) entry.borderLineStyle = styleEntry.borderLineStyle;
+        if (typeof styleEntry.borderOpacity === 'number') entry.borderOpacity = styleEntry.borderOpacity;
+        if (typeof styleEntry.borderThickness === 'number') entry.borderThickness = styleEntry.borderThickness;
+      }
+      if (targetGroup) {
+        this.settings.wordEntries.splice(idx, 1);
+        if (!Array.isArray(targetGroup.entries)) targetGroup.entries = [];
+        targetGroup.entries.push(entry);
+      }
+    } else {
+      const newEntry = { pattern: selectedText, isRegex: false, flags: '', matchType, styleType };
+      if (styleType === 'text') { newEntry.color = textColor; newEntry._savedTextColor = textColor; }
+      else if (styleType === 'highlight') { newEntry.color = ''; newEntry.textColor = 'currentColor'; newEntry.backgroundColor = backgroundColor; newEntry._savedBackgroundColor = backgroundColor; }
+      else { newEntry.color = ''; newEntry.textColor = textColor; newEntry.backgroundColor = backgroundColor; newEntry._savedTextColor = textColor; newEntry._savedBackgroundColor = backgroundColor; }
+      // Copy custom style settings from styleEntry if provided
+      if (styleEntry) {
+        if (styleEntry.groupUid) newEntry.groupUid = styleEntry.groupUid;
+        if (styleEntry.matchType) newEntry.matchType = styleEntry.matchType;
+        if (typeof styleEntry.backgroundOpacity === 'number') newEntry.backgroundOpacity = styleEntry.backgroundOpacity;
+        if (typeof styleEntry.highlightBorderRadius === 'number') newEntry.highlightBorderRadius = styleEntry.highlightBorderRadius;
+        if (typeof styleEntry.highlightHorizontalPadding === 'number') newEntry.highlightHorizontalPadding = styleEntry.highlightHorizontalPadding;
+        if (typeof styleEntry.highlightVerticalPadding === 'number') newEntry.highlightVerticalPadding = styleEntry.highlightVerticalPadding;
+        if (typeof styleEntry.enableBorderThickness !== 'undefined') newEntry.enableBorderThickness = styleEntry.enableBorderThickness;
+        if (styleEntry.borderStyle) newEntry.borderStyle = styleEntry.borderStyle;
+        if (styleEntry.borderLineStyle) newEntry.borderLineStyle = styleEntry.borderLineStyle;
+        if (typeof styleEntry.borderOpacity === 'number') newEntry.borderOpacity = styleEntry.borderOpacity;
+        if (typeof styleEntry.borderThickness === 'number') newEntry.borderThickness = styleEntry.borderThickness;
+      }
+      if (targetGroup) {
+        if (!Array.isArray(targetGroup.entries)) targetGroup.entries = [];
+        targetGroup.entries.push(newEntry);
+      } else {
+        this.settings.wordEntries.push(newEntry);
+      }
+    }
+    await this.saveSettings();
+    this.compileWordEntries();
+    this.compileTextBgColoringEntries();
+    this.reconfigureEditorExtensions();
+    this.refreshEditor(view, true);
+  }
+  
+  async _applyQuickStyleToSelection(style, selectedPair, selectedText, editor, view, forceInline = false) {
+    const styleType = style && style.styleType ? style.styleType : 'both';
+    const tc = (selectedPair && selectedPair.textColor) ? selectedPair.textColor : (style.textColor || style.color || null);
+    const bc = (selectedPair && selectedPair.backgroundColor) ? selectedPair.backgroundColor : (style.backgroundColor || null);
+    if (this.settings.quickColorsApplyMode === 'act' && !forceInline) {
+      // When using ACT mode, pass the style object so custom settings are preserved
+      await this._applyQuickColorACT(selectedText, styleType === 'text' ? tc : (styleType === 'both' ? tc : null), styleType === 'highlight' ? bc : (styleType === 'both' ? bc : null), view, style);
+      return;
+    }
+    const params = this.getHighlightParams(style);
+    const borderCss = this.generateBorderStyle(tc, bc, style);
+    if (styleType === 'text') {
+      const html = `<span style="color: ${tc || ''}">${selectedText}</span>`;
+      editor.replaceSelection(html);
+      return;
+    }
+    if (styleType === 'highlight') {
+      const bg = bc ? this.hexToHexWithAlpha(bc, params.opacity ?? 25) : null;
+      const styleStr = `${bg ? `background-color: ${bg}; ` : ''}border-radius: ${(params.radius ?? 8)}px; padding: ${(params.vPad ?? 0)}px ${(params.hPad ?? 4)}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+      const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
+      editor.replaceSelection(html);
+      return;
+    }
+    // both
+    const bg = bc ? this.hexToHexWithAlpha(bc, params.opacity ?? 25) : null;
+    let styleStr = '';
+    if (tc) styleStr += `color: ${tc} !important; `;
+    if (bg) styleStr += `background-color: ${bg}; `;
+    styleStr += `border-radius: ${(params.radius ?? 8)}px; padding: ${(params.vPad ?? 0)}px ${(params.hPad ?? 4)}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+    const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
+    editor.replaceSelection(html);
+  }
 
   // Helper: Extract color and background from selected HTML text in editor
   extractSelectedTextStyles(selectedText) {
@@ -7465,7 +7841,14 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       
       const span = document.createElement('span');
-      span.className = 'always-color-text-highlight';
+      // Get the entry to check for affectMarkElements flag
+      const entryForClass = m.entryRef || m.entry;
+      const classNames = ['always-color-text-highlight'];
+      // Add special class if this entry targets mark elements and .cm-highlight
+      if (entryForClass && entryForClass.affectMarkElements) {
+        classNames.push('always-color-text-highlight-marks');
+      }
+      span.className = classNames.join(' ');
       span.textContent = decodedText.slice(m.start, m.end);
       
       // Add tooltip for hover explanation if enabled
@@ -7481,7 +7864,8 @@ module.exports = class AlwaysColorText extends Plugin {
       // Get the entry and determine the style type
       // IMPORTANT: Use entryRef if available (has full entry with custom styling), otherwise fall back to entry
       const entry = m.entryRef || m.entry;
-      const styleType = entry && entry.styleType ? entry.styleType : 'text';
+      // If affectMarkElements flag is set, force 'highlight' styleType to apply background
+      let styleType = (entry && entry.affectMarkElements) ? 'highlight' : (entry && entry.styleType ? entry.styleType : 'text');
       
       // DEBUG: Log per-entry styling in reading mode with detailed entry inspection
       if (entry && entry.pattern) {
@@ -8724,9 +9108,11 @@ module.exports = class AlwaysColorText extends Plugin {
         let textOnlyEntries = entries.filter(e => !e || !e.isTextBg);
         // Exclude entries with partial match types based on actual matchType (with defaults)
         textOnlyEntries = textOnlyEntries.filter(e => {
-          if (!e || e.isTextBg || !(!e.styleType || e.styleType === 'text')) return true; // Keep non-matching entries
+          if (!e || e.isTextBg || !(!e.styleType || e.styleType === 'text')) return true;
           const actualMatchType = String(e.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
-          return !['contains','startswith', 'endswith'].includes(actualMatchType); // EXCLUDE partial matches
+          const isSentence = this.isSentenceLikePattern(e.pattern);
+          const isLatin = this.isLatinWordPattern(e.pattern);
+          return !(['contains','startswith','endswith'].includes(actualMatchType) && !isSentence && isLatin);
         });
         try { const tbCount = entries.filter(e => e && e.isTextBg).length; const toCount = textOnlyEntries.length; debugLog('PATTERN_MATCH_FILTER', `Total entries=${entries.length}, TextBg=${tbCount}, TextOnly=${toCount}, partialMatch=${this.settings.partialMatch}`); } catch (_) {}
         const candidates = textOnlyEntries;
@@ -10915,6 +11301,20 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         } else if (mt === 'contains' || mt === 'startswith' || mt === 'endswith') {
           // For sentence-like patterns, do the old validation
+          // If it's a regex entry, we trust the regex match (string inclusion check would fail for regex patterns)
+          if (entry.isRegex) {
+            matches.push({
+              start: from + colorStart,
+              end: from + colorEnd,
+              color: (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color,
+              styleType: entry.styleType,
+              textColor: entry.textColor,
+              backgroundColor: entry.backgroundColor,
+              entryRef: entry
+            });
+            continue;
+          }
+
           const fullWord = text.substring(colorStart, colorEnd);
           const cs = (typeof entry._caseSensitiveOverride === 'boolean')
             ? entry._caseSensitiveOverride
@@ -11223,7 +11623,8 @@ module.exports = class AlwaysColorText extends Plugin {
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         // Check the styleType to determine how to apply the color
-        const styleType = m.styleType || 'text';
+        // If affectMarkElements flag is set, force 'highlight' styleType
+        let styleType = (m.entryRef && m.entryRef.affectMarkElements) ? 'highlight' : (m.styleType || 'text');
         
         if (styleType === 'text') {
           if (this.settings.hideTextColors) continue;
@@ -11264,7 +11665,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const deco = Decoration.mark({ 
         attributes: { 
           style, 
-          class: 'always-color-text-highlight',
+          class: (m.entryRef && m.entryRef.affectMarkElements) ? 'always-color-text-highlight always-color-text-highlight-marks' : 'always-color-text-highlight',
           title: (this.settings.showColoringReasonOnHover && m.entry) ? this.getColoringReasonTooltip(m) : ''
         } 
       });
@@ -12135,7 +12536,8 @@ module.exports = class AlwaysColorText extends Plugin {
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         if (effectiveStyle === 'none') continue;
-        const styleType = m.styleType || 'text';
+        // If affectMarkElements flag is set, force 'highlight' styleType
+        let styleType = (m.entryRef && m.entryRef.affectMarkElements) ? 'highlight' : (m.styleType || 'text');
         if (styleType === 'text') {
           if (hideText) continue;
           style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
@@ -12162,7 +12564,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const deco = Decoration.mark({ 
         attributes: { 
           style, 
-          class: 'always-color-text-highlight',
+          class: (m.entryRef && m.entryRef.affectMarkElements) ? 'always-color-text-highlight always-color-text-highlight-marks' : 'always-color-text-highlight',
           title: (this.settings.showColoringReasonOnHover && m.entry) ? this.getColoringReasonTooltip(m) : ''
         } 
       });
@@ -12307,6 +12709,8 @@ class PresetModal extends Modal {
       { label: this.plugin.t('preset_basic_urls','Basic URLs'), pattern: '\\bhttps?://\\S+\\b', flags: '', examples: [this.plugin.t('preset_example_url', 'https://example.com')], group: 'markdown' },
       { label: this.plugin.t('preset_markdown_links','Markdown links'), pattern: '\\[[^\\]]+\\]\\(https?://[^)]+\\)', flags: '', examples: [this.plugin.t('preset_example_markdown_link', '[Link](https://example.com)')], group: 'markdown' },
       { label: this.plugin.t('preset_inline_comments','Comments (%%…%%)'), pattern: '%%[\\s\\S]*?%%', flags: 's', examples: [this.plugin.t('preset_example_comment', '%% comment %%')], group: 'markdown' },
+      { label: this.plugin.t('preset_highlighted_text','Highlighted Text (==...)'), pattern: '==[\\s\\S]*?==', flags: 's', examples: [this.plugin.t('preset_example_highlight','==highlighted text==')], group: 'markdown' },
+      { label: 'Highlights (====)', pattern: '==[\\s\\S]*?==', flags: '', examples: ['==highlighted=='], group: 'markdown', affectMarkElements: true },
       { label: this.plugin.t('preset_domain_names','Domain names'), pattern: '\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b', flags: '', examples: [this.plugin.t('preset_example_domain', 'example.com')] },
       { label: this.plugin.t('preset_email_addresses','Email addresses'), pattern: '\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', flags: '', examples: [this.plugin.t('preset_example_email', 'name@example.com')] },
       { label: this.plugin.t('preset_at_username','@username'), pattern: '@[a-zA-Z0-9_]+', flags: '', examples: [this.plugin.t('preset_example_username', '@username')] },
@@ -13371,11 +13775,12 @@ class RealTimeRegexTesterModal extends Modal {
 }
 
 class HighlightStylingModal extends Modal {
-  constructor(app, plugin, entry = null, parentEditEntryModal = null) {
+  constructor(app, plugin, entry = null, parentEditEntryModal = null, previewTextOverride = null) {
     super(app);
     this.plugin = plugin;
     this.entry = entry;
     this.parentEditEntryModal = parentEditEntryModal;
+    this.previewTextOverride = previewTextOverride;
     this._resetAllApplied = false;
     this._handlers = [];
   }
@@ -13383,9 +13788,133 @@ class HighlightStylingModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try { this.modalEl.addClass('act-highlight-styling-modal'); this.modalEl.addClass('act-highlight-modal'); this.modalEl.style.maxWidth = '900px !important'; this.modalEl.style.width = '900px !important'; this.modalEl.style.padding = '20px'; contentEl.style.maxWidth = '900px !important'; } catch (e) {}
-    const title = contentEl.createEl('h2', { text: this.plugin.t('highlight_styling_header','Edit Highlight Styling') });
-    title.style.marginTop = '0';
-    title.style.marginBottom = '12px';
+    // Header Row with Selects
+    const headerRow = contentEl.createDiv();
+    headerRow.style.display = 'flex';
+    headerRow.style.alignItems = 'center';
+    headerRow.style.gap = '8px';
+    headerRow.style.marginBottom = '12px';
+    headerRow.style.flexWrap = 'wrap';
+
+    const title = headerRow.createEl('h2', { text: this.plugin.t('highlight_styling_header','Edit Highlight Styling') });
+    title.style.margin = '0';
+    
+    // Spacer to push selects to the right
+    const spacer = headerRow.createDiv();
+    spacer.style.flex = '1';
+
+    // Group Select
+    const groupSelect = headerRow.createEl('select');
+    groupSelect.style.minWidth = '120px';
+    groupSelect.style.border = '1px solid var(--background-modifier-border)';
+    groupSelect.style.borderRadius = '4px';
+    groupSelect.style.background = 'var(--background-modifier-form-field)';
+    groupSelect.style.textAlign = 'center';
+    const defaultOpt = groupSelect.createEl('option', { text: this.plugin.t('default') });
+    defaultOpt.value = '';
+    const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+    groupsList.forEach(g => {
+      const name = (g && g.name && String(g.name).trim().length > 0) ? g.name : '(unnamed group)';
+      const opt = groupSelect.createEl('option', { text: name });
+      opt.value = g.uid || '';
+    });
+    // Find current group for this.entry
+    let currentGroupUid = null;
+    if (this.entry) {
+        if (this.entry.groupUid) {
+            currentGroupUid = this.entry.groupUid;
+        } else {
+             for (const g of groupsList) {
+                if (g.entries && g.entries.includes(this.entry)) {
+                    currentGroupUid = g.uid;
+                    break;
+                }
+             }
+        }
+    }
+    groupSelect.value = currentGroupUid || '';
+    
+    groupSelect.addEventListener('change', async () => {
+       const toUid = groupSelect.value || '';
+       const fromUid = currentGroupUid || '';
+       if (toUid === fromUid) return;
+       
+       // Handle Quick Styles directly
+       if (this.plugin.settings.quickStyles.includes(this.entry)) {
+           this.entry.groupUid = toUid;
+           currentGroupUid = toUid;
+           await this.plugin.saveSettings();
+           return;
+       }
+
+       let sourceArr = null;
+       if (fromUid === '') {
+         sourceArr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : (this.plugin.settings.wordEntries = []);
+       } else {
+         const srcGroup = groupsList.find(g => g && g.uid === fromUid);
+         sourceArr = srcGroup && Array.isArray(srcGroup.entries) ? srcGroup.entries : null;
+       }
+       let targetArr = null;
+       if (toUid === '') {
+         targetArr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : (this.plugin.settings.wordEntries = []);
+       } else {
+         const tgtGroup = groupsList.find(g => g && g.uid === toUid);
+         if (tgtGroup) {
+           targetArr = Array.isArray(tgtGroup.entries) ? tgtGroup.entries : (tgtGroup.entries = []);
+         }
+       }
+       
+       if (sourceArr && targetArr) {
+         const idx = sourceArr.indexOf(this.entry);
+         if (idx !== -1) {
+             sourceArr.splice(idx, 1);
+             targetArr.push(this.entry);
+             currentGroupUid = toUid;
+             await this.plugin.saveSettings();
+             this.plugin.compileWordEntries();
+             this.plugin.compileTextBgColoringEntries();
+             this.plugin.reconfigureEditorExtensions();
+             this.plugin.forceRefreshAllEditors();
+             this.plugin.triggerActiveDocumentRerender();
+         }
+       }
+    });
+
+    // Match Select
+    const matchSelect = headerRow.createEl('select');
+    matchSelect.style.minWidth = '120px';
+    matchSelect.style.border = '1px solid var(--background-modifier-border)';
+    matchSelect.style.borderRadius = '4px';
+    matchSelect.style.background = 'var(--background-modifier-form-field)';
+    matchSelect.style.textAlign = 'center';
+    matchSelect.innerHTML = `<option value="exact">${this.plugin.t('match_option_exact','exact')}</option><option value="contains">${this.plugin.t('match_option_contains','contains')}</option><option value="startsWith">${this.plugin.t('match_option_starts_with','starts with')}</option><option value="endsWith">${this.plugin.t('match_option_ends_with','ends with')}</option>`;
+    
+    if (this.entry) {
+        if (this.entry.isRegex) {
+            matchSelect.disabled = true;
+            matchSelect.style.opacity = '0.5';
+        } else {
+            let defaultMatch = (typeof this.entry.matchType === 'string' && this.entry.matchType) ? this.entry.matchType.toLowerCase() : 'exact';
+            if (defaultMatch === 'startswith' || defaultMatch === 'starts with') defaultMatch = 'startswith';
+            if (defaultMatch === 'endswith' || defaultMatch === 'ends with') defaultMatch = 'endswith';
+            matchSelect.value = defaultMatch === 'startswith' ? 'startsWith' : (defaultMatch === 'endswith' ? 'endsWith' : defaultMatch);
+        }
+    }
+    
+    matchSelect.addEventListener('change', async () => {
+        if (!this.entry) return;
+        let value = matchSelect.value;
+        if (value === 'startsWith') value = 'startswith';
+        if (value === 'endsWith') value = 'endswith';
+        this.entry.matchType = value;
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.triggerActiveDocumentRerender();
+    });
+
     const topRow = contentEl.createDiv();
     topRow.addClass('act-highlight-top-row');
     const previewWrap = topRow.createDiv();
@@ -13393,7 +13922,7 @@ class HighlightStylingModal extends Modal {
     const words = previewWrap.createDiv();
     words.style.textAlign = 'center';
     words.style.opacity = '0.8';
-    words.textContent = this.entry ? (this.entry.isRegex ? String(this.entry.pattern || '') : ((Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0) ? this.entry.groupedPatterns.join(', ') : String(this.entry.pattern || ''))) : '';
+    words.textContent = this.previewTextOverride ? this.previewTextOverride : (this.entry ? (this.entry.isRegex ? String(this.entry.pattern || '') : ((Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0) ? this.entry.groupedPatterns.join(', ') : String(this.entry.pattern || ''))) : '');
     const styleCol = topRow.createDiv();
     styleCol.addClass('act-highlight-style-col');
     const styleSelect = styleCol.createEl('select');
@@ -13646,7 +14175,8 @@ class HighlightStylingModal extends Modal {
         evt.preventDefault();
         evt.stopPropagation();
         const currentColor = colorInput.value || '#000000';
-        new ColorPickerModal(this.app, this.plugin, (color, result) => {
+        const isTextPicker = (colorInput === tColor);
+        const modal = new ColorPickerModal(this.app, this.plugin, (color, result) => {
           const tc = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null;
           const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
           // Determine which color to use
@@ -13655,7 +14185,15 @@ class HighlightStylingModal extends Modal {
             colorInput.value = selectedColor;
             renderPreview();
           }
-        }, 'single', currentColor, false).open();
+        }, isTextPicker ? 'text' : 'background', this.previewTextOverride || currentColor, false);
+        modal._hideHeaderControls = true;
+        if (isTextPicker) {
+          modal._preFillTextColor = currentColor;
+        } else {
+          modal._preFillBgColor = currentColor;
+          modal._preFillBorderColor = currentColor;
+        }
+        modal.open();
       });
     };
     setupHighlightColorPickerRightClick(tColor);
@@ -13902,67 +14440,23 @@ class EditEntryModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try { this.modalEl.addClass('act-edit-entry-modal'); this.modalEl.style.maxWidth = '900px'; this.modalEl.style.padding = '20px'; } catch (e) {}
+    
+    // Determine if regex early
+    const isRegex = !!(this.entry && this.entry.isRegex);
+
     const title = contentEl.createEl('h2', { text: this.plugin.t('edit_entry_header','Edit Entry') });
     title.style.marginTop = '0';
     title.style.marginBottom = '12px';
     
-    // Main layout: two columns (left: input/preview, right: controls)
-    const mainContainer = contentEl.createDiv();
-    mainContainer.style.display = 'flex';
-    mainContainer.style.gap = '8px';
-    mainContainer.style.width = '100%';
-    mainContainer.style.boxSizing = 'border-box';
-    
-    // Left column: text input + preview
-    const leftColumn = mainContainer.createDiv();
-    leftColumn.addClass('act-edit-entry-left-column');
-    leftColumn.style.flex = '1';
-    leftColumn.style.minWidth = '0';
-    leftColumn.style.display = 'flex';
-    leftColumn.style.flexDirection = 'column';
-    
-    // Row 1: input
-    const row1 = leftColumn.createDiv();
-    row1.addClass('act-edit-entry-row1');
-    const box = row1.createDiv();
-    box.addClass('act-edit-entry-textbox');
-    box.style.border = '1px solid var(--background-modifier-border)';
-    box.style.borderRadius = '4px';
-    box.style.background = 'var(--background-modifier-form-field)';
-    const textInput = box.createEl('textarea');
-    textInput.style.width = '100%';
-    textInput.style.height = '40px';
-    textInput.style.resize = 'none';
-    textInput.style.border = 'none';
-    textInput.style.outline = 'none';
-    textInput.style.background = 'transparent';
-    textInput.style.color = 'var(--text-normal)';
-    textInput.style.padding = '6px';
-    textInput.style.boxSizing = 'border-box';
-    
-    // Row 2: preview
-    const row2 = leftColumn.createDiv();
-    row2.addClass('act-edit-entry-row2');
-    const preview = row2.createDiv();
-    preview.addClass('act-edit-entry-preview');
-    preview.style.flex = '1';
-    preview.style.border = '1px dashed var(--background-modifier-border)';
-    preview.style.borderRadius = '4px';
-    preview.style.padding = '10px';
-    preview.style.background = 'var(--background-modifier-form-field)';
-    preview.style.whiteSpace = 'pre-wrap';
-    preview.style.wordWrap = 'break-word';
-    preview.style.minHeight = '60px';
-    
-    // Right column: controls
-    const rightColumn = mainContainer.createDiv();
-    rightColumn.addClass('act-edit-entry-right-column');
-    rightColumn.style.flex = '0 0 auto';
-    rightColumn.style.display = 'flex';
-    rightColumn.style.flexDirection = 'column';
-    rightColumn.style.gap = '8px';
-    
-    const groupSelect = rightColumn.createEl('select');
+    // Top Controls Row (Word Group & Match Type)
+    const topControls = contentEl.createDiv();
+    topControls.style.display = 'flex';
+    topControls.style.gap = '8px';
+    topControls.style.marginBottom = '12px';
+    topControls.style.alignItems = 'center';
+
+    // --- Group Select ---
+    const groupSelect = topControls.createEl('select');
     groupSelect.addClass('act-edit-entry-group-select');
     groupSelect.style.minWidth = '140px';
     groupSelect.style.border = '1px solid var(--background-modifier-border)';
@@ -14032,6 +14526,74 @@ class EditEntryModal extends Modal {
     };
     groupSelect.addEventListener('change', groupChangeHandler);
     this._handlers.push({ el: groupSelect, ev: 'change', fn: groupChangeHandler });
+
+    // --- Match Select ---
+    const matchSelect = topControls.createEl('select');
+    matchSelect.style.minWidth = '140px';
+    matchSelect.style.border = '1px solid var(--background-modifier-border)';
+    matchSelect.style.borderRadius = '4px';
+    matchSelect.style.background = 'var(--background-modifier-form-field)';
+    matchSelect.style.textAlign = 'center';
+    matchSelect.innerHTML = `<option value="exact">${this.plugin.t('match_option_exact','exact')}</option><option value="contains">${this.plugin.t('match_option_contains','contains')}</option><option value="startsWith">${this.plugin.t('match_option_starts_with','starts with')}</option><option value="endsWith">${this.plugin.t('match_option_ends_with','ends with')}</option>`;
+    if (isRegex) matchSelect.style.display = 'none';
+
+    // Main layout: two columns (left: input/preview, right: controls)
+    const mainContainer = contentEl.createDiv();
+    mainContainer.style.display = 'flex';
+    mainContainer.style.gap = '8px';
+    mainContainer.style.width = '100%';
+    mainContainer.style.boxSizing = 'border-box';
+    
+    // Left column: text input + preview
+    const leftColumn = mainContainer.createDiv();
+    leftColumn.addClass('act-edit-entry-left-column');
+    leftColumn.style.flex = '1';
+    leftColumn.style.minWidth = '0';
+    leftColumn.style.display = 'flex';
+    leftColumn.style.flexDirection = 'column';
+    
+    // Row 1: input
+    const row1 = leftColumn.createDiv();
+    row1.addClass('act-edit-entry-row1');
+    const box = row1.createDiv();
+    box.addClass('act-edit-entry-textbox');
+    box.style.border = '1px solid var(--background-modifier-border)';
+    box.style.borderRadius = '4px';
+    box.style.background = 'var(--background-modifier-form-field)';
+    const textInput = box.createEl('textarea');
+    textInput.style.width = '100%';
+    textInput.style.height = '40px';
+    textInput.style.resize = 'none';
+    textInput.style.border = 'none';
+    textInput.style.outline = 'none';
+    textInput.style.background = 'transparent';
+    textInput.style.color = 'var(--text-normal)';
+    textInput.style.padding = '6px';
+    textInput.style.boxSizing = 'border-box';
+    
+    // Row 2: preview
+    const row2 = leftColumn.createDiv();
+    row2.addClass('act-edit-entry-row2');
+    const preview = row2.createDiv();
+    preview.addClass('act-edit-entry-preview');
+    preview.style.flex = '1';
+    preview.style.border = '1px dashed var(--background-modifier-border)';
+    preview.style.borderRadius = '4px';
+    preview.style.padding = '10px';
+    preview.style.background = 'var(--background-modifier-form-field)';
+    preview.style.whiteSpace = 'pre-wrap';
+    preview.style.wordWrap = 'break-word';
+    preview.style.minHeight = '60px';
+    
+    // Right column: controls
+    const rightColumn = mainContainer.createDiv();
+    rightColumn.addClass('act-edit-entry-right-column');
+    rightColumn.style.flex = '0 0 auto';
+    rightColumn.style.display = 'flex';
+    rightColumn.style.flexDirection = 'column';
+    rightColumn.style.gap = '8px';
+    
+
     
     const styleSelect = rightColumn.createEl('select');
     styleSelect.addClass('act-edit-entry-style-select');
@@ -14064,7 +14626,8 @@ class EditEntryModal extends Modal {
           : ((Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0)
               ? this.entry.groupedPatterns.map(p => String(p).trim()).join(', ')
               : (this.entry && this.entry.pattern ? String(this.entry.pattern) : ''));
-        new ColorPickerModal(this.app, this.plugin, (color, result) => {
+        const isTextPicker = (colorInput === textColorInput);
+        const modal = new ColorPickerModal(this.app, this.plugin, (color, result) => {
           const tc = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null;
           const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
           // Determine which color to use
@@ -14073,7 +14636,10 @@ class EditEntryModal extends Modal {
             colorInput.value = selectedColor;
             onColorSelected(selectedColor);
           }
-        }, 'single', displayText, false).open();
+        }, isTextPicker ? 'text' : 'background', displayText, false);
+        modal._hideHeaderControls = true;
+        if (isTextPicker) modal._preFillTextColor = currentColor; else modal._preFillBgColor = currentColor;
+        modal.open();
       });
     };
     
@@ -14130,14 +14696,7 @@ class EditEntryModal extends Modal {
     controls.style.flexWrap = 'wrap';
     controls.style.gap = '8px';
     controls.style.marginTop = '12px';
-    const matchSelect = controls.createEl('select');
-    matchSelect.style.flex = '0.5 0 auto';
-    matchSelect.style.minWidth = '140px';
-    matchSelect.style.border = '1px solid var(--background-modifier-border)';
-    matchSelect.style.borderRadius = '4px';
-    matchSelect.style.background = 'var(--background-modifier-form-field)';
-    matchSelect.style.textAlign = 'center';
-    matchSelect.innerHTML = `<option value="exact">${this.plugin.t('match_option_exact','exact')}</option><option value="contains">${this.plugin.t('match_option_contains','contains')}</option><option value="startsWith">${this.plugin.t('match_option_starts_with','starts with')}</option><option value="endsWith">${this.plugin.t('match_option_ends_with','ends with')}</option>`;
+
     const caseSel = controls.createEl('select');
     caseSel.style.flex = '0.5 0 auto';
     caseSel.style.minWidth = '160px';
@@ -14165,7 +14724,7 @@ class EditEntryModal extends Modal {
     const initBgColor = (this.entry && (this.entry.backgroundColor || '')) || bgColorInput.value || '#000000';
     textColorInput.value = this.plugin.isValidHexColor(initTextColor) ? initTextColor : '#000000';
     if (initBgColor) bgColorInput.value = this.plugin.isValidHexColor(initBgColor) ? initBgColor : '#000000';
-    const isRegex = !!this.entry.isRegex;
+    // const isRegex = !!this.entry.isRegex; // Already defined at top
       if (isRegex) {
         textInput.value = this.entry.pattern || '';
         matchSelect.style.display = 'none';
@@ -15384,6 +15943,8 @@ class EditWordGroupModal extends Modal {
           const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
           if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
           const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', styleType: 'text', matchType: 'contains' };
+          // Copy preset properties like affectMarkElements
+          if (preset.affectMarkElements) entry.affectMarkElements = true;
           if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
           else if (tc) { entry.color = tc; entry.styleType = 'text'; entry._savedTextColor = tc; }
           else if (bc) { entry.textColor = 'currentColor'; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'highlight'; entry._savedBackgroundColor = bc; }
@@ -17213,7 +17774,7 @@ class ColorSettingTab extends PluginSettingTab {
       defaultColorsToggle.style.display = 'inline-block';
       defaultColorsToggle.style.width = '16px';
 
-      const defaultColorsTitle = defaultColorsHeaderDiv.createEl('h3', { text: this.plugin.t('default_colors_header','Default Colors') });
+      const defaultColorsTitle = defaultColorsHeaderDiv.createEl('h5', { text: this.plugin.t('default_colors_header','Default Colors') });
       defaultColorsTitle.style.margin = '0';
       defaultColorsTitle.style.padding = '0';
       defaultColorsTitle.style.flex = '1';
@@ -17280,7 +17841,7 @@ class ColorSettingTab extends PluginSettingTab {
       customSwatchesToggle.style.display = 'inline-block';
       customSwatchesToggle.style.width = '16px';
 
-      const customSwatchesTitle = customSwatchesHeaderDiv.createEl('h3', { text: this.plugin.t('custom_swatches_header','Custom Swatches') });
+      const customSwatchesTitle = customSwatchesHeaderDiv.createEl('h5', { text: this.plugin.t('custom_swatches_header','Custom Swatches') });
       customSwatchesTitle.style.margin = '0';
       customSwatchesTitle.style.padding = '0';
       customSwatchesTitle.style.flex = '1';
@@ -17339,7 +17900,7 @@ class ColorSettingTab extends PluginSettingTab {
           // Drag handle - Obsidian menu icon, transparent background, no box-shadow
           const dragHandle = row.createEl('button');
           setIcon(dragHandle, 'menu');
-          dragHandle.setAttribute('draggable', 'true');
+          // dragHandle.setAttribute('draggable', 'true');
           dragHandle.style.padding = '0';
           dragHandle.style.border = 'none';
           dragHandle.style.background = 'transparent';
@@ -17441,45 +18002,98 @@ class ColorSettingTab extends PluginSettingTab {
             this._refreshCustomSwatches();
           };
 
-          // Drag event handlers for reordering
-          const dragstartHandler = (e) => {
-            dragSource = row;
-            dragStartOrder = Array.from(customSwatchesContent.querySelectorAll('div[data-swatch-index]')).map(r => r.getAttribute('data-swatch-index'));
-            row.style.opacity = '0.5';
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', row.innerHTML);
-          };
-          const dragoverHandler = (e) => {
+          // Custom drag event handlers for reordering
+          dragHandle.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            if (dragSource && dragSource !== row) {
-              const rect = row.getBoundingClientRect();
-              const midpoint = rect.top + rect.height / 2;
-              if (e.clientY < midpoint) {
-                row.parentNode.insertBefore(dragSource, row);
-              } else {
-                row.parentNode.insertBefore(dragSource, row.nextSibling);
+            e.stopPropagation();
+            
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const rect = row.getBoundingClientRect();
+            const offsetX = startX - rect.left;
+            const offsetY = startY - rect.top;
+            
+            if (navigator.vibrate) navigator.vibrate(100);
+            
+            // Create ghost
+            const ghost = document.body.createDiv({ cls: 'drag-reorder-ghost' });
+            ghost.appendChild(row.cloneNode(true));
+            ghost.style.width = `${rect.width}px`;
+            ghost.style.height = `${rect.height}px`;
+            ghost.style.left = `${rect.left}px`;
+            ghost.style.top = `${rect.top}px`;
+            
+            // Hide original
+            row.classList.add('drag-ghost-hidden');
+            
+            const onMove = (moveEvent) => {
+              moveEvent.preventDefault();
+              const currentX = moveEvent.clientX;
+              const currentY = moveEvent.clientY;
+              
+              // Update ghost position
+              ghost.style.left = `${currentX - offsetX}px`;
+              ghost.style.top = `${currentY - offsetY}px`;
+              
+              // Reordering logic (25% overdrag threshold)
+              const children = Array.from(customSwatchesContent.querySelectorAll('div[data-swatch-index]'));
+              const currentIndex = children.indexOf(row);
+              if (currentIndex === -1) return;
+              
+              // Check Previous
+              if (currentIndex > 0) {
+                 const prevRow = children[currentIndex - 1];
+                 const prevRect = prevRow.getBoundingClientRect();
+                 const prevOverdrag = prevRect.height * 0.25;
+                 if (currentY < prevRect.bottom - prevOverdrag) {
+                     if (navigator.vibrate) navigator.vibrate(100);
+                     customSwatchesContent.insertBefore(row, prevRow);
+                     // Swap in data
+                     const item = userCustomSwatches.splice(currentIndex, 1)[0];
+                     userCustomSwatches.splice(currentIndex - 1, 0, item);
+                     // Update indices
+                     Array.from(customSwatchesContent.querySelectorAll('div[data-swatch-index]')).forEach((r, idx) => {
+                         r.setAttribute('data-swatch-index', idx.toString());
+                     });
+                     return;
+                 }
               }
-            }
-          };
-          const dragendHandler = async (e) => {
-            if (dragSource) dragSource.style.opacity = '1';
-            // Check if the order changed
-            if (dragSource && dragStartOrder) {
-              const currentOrder = Array.from(customSwatchesContent.querySelectorAll('div[data-swatch-index]')).map(r => r.getAttribute('data-swatch-index'));
-              const orderChanged = !dragStartOrder.every((val, idx) => val === currentOrder[idx]);
-              if (orderChanged) {
-                await saveDragReorder();
+              
+              // Check Next
+              if (currentIndex < children.length - 1) {
+                 const nextRow = children[currentIndex + 1];
+                 const nextRect = nextRow.getBoundingClientRect();
+                 const nextOverdrag = nextRect.height * 0.25;
+                 if (currentY > nextRect.top + nextOverdrag) {
+                     if (navigator.vibrate) navigator.vibrate(100);
+                     nextRow.after(row);
+                     // Swap in data
+                     const item = userCustomSwatches.splice(currentIndex, 1)[0];
+                     userCustomSwatches.splice(currentIndex + 1, 0, item);
+                     // Update indices
+                     Array.from(customSwatchesContent.querySelectorAll('div[data-swatch-index]')).forEach((r, idx) => {
+                         r.setAttribute('data-swatch-index', idx.toString());
+                     });
+                     return;
+                 }
               }
-            }
-            dragSource = null;
-            dragStartOrder = null;
-          };
-
-          // Only allow drag when using the handle
-          dragHandle.addEventListener('dragstart', dragstartHandler);
-          row.addEventListener('dragover', dragoverHandler);
-          dragHandle.addEventListener('dragend', dragendHandler);
+            };
+            
+            const onEnd = async () => {
+              document.removeEventListener('mousemove', onMove);
+              document.removeEventListener('mouseup', onEnd);
+              ghost.remove();
+              row.classList.remove('drag-ghost-hidden');
+              
+              this.plugin.settings.userCustomSwatches = userCustomSwatches;
+              this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map(s => s.color);
+              await this.plugin.saveSettings();
+              this._refreshCustomSwatches();
+            };
+            
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+          });
 
           nameInput.addEventListener('change', nameHandler);
           colorPicker.addEventListener('input', colorHandler);
@@ -17503,8 +18117,535 @@ class ColorSettingTab extends PluginSettingTab {
         
         this._refreshCustomSwatches();
       }));
+      // Align the button to the right and add spacing below
+      try {
+        addButtonSetting.settingEl.style.display = 'flex';
+        addButtonSetting.settingEl.style.justifyContent = 'flex-end';
+        addButtonSetting.settingEl.style.border = 'none';
+        addButtonSetting.settingEl.style.padding = '0';
+        addButtonSetting.settingEl.style.marginBottom = '10px';
+      } catch (_) {}
     } catch (e) { debugError('SETTINGS', '_refreshCustomSwatches error', e); }
   }
+
+  _refreshQuickColors() {
+    try {
+      if (!this._quickColorsContainer) return;
+      this._quickColorsContainer.empty();
+      
+      // Header and Toggle
+      const headerDiv = this._quickColorsContainer.createDiv();
+      headerDiv.style.display = 'flex';
+      headerDiv.style.alignItems = 'center';
+      headerDiv.style.justifyContent = 'space-between';
+      headerDiv.style.marginTop = '18px';
+      headerDiv.style.marginBottom = '8px';
+      
+      const leftDiv = headerDiv.createDiv();
+      leftDiv.style.display = 'flex';
+      leftDiv.style.alignItems = 'center';
+      leftDiv.style.gap = '10px';
+      
+      leftDiv.createEl('h3', { text: this.plugin.t('quick_colors_header', 'Quick Colors'), style: 'margin: 0;' });
+      
+      const toggle = new Setting(leftDiv)
+        .addToggle(t => t.setValue(this.plugin.settings.quickColorsEnabled).onChange(async v => {
+          this.plugin.settings.quickColorsEnabled = v;
+          await this.plugin.saveSettings();
+          this._refreshQuickColors();
+        }));
+      toggle.settingEl.style.border = 'none';
+      toggle.settingEl.style.padding = '0';
+      
+      // Description
+      const desc = this._quickColorsContainer.createDiv();
+      desc.style.margin = '-16px 0 8px';
+      desc.textContent = this.plugin.t('quick_colors_desc', 'Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used.');
+      
+      // Keep UI visible even when Quick Colors are disabled
+
+      // Quick Colors pairs container
+      const listDiv = this._quickColorsContainer.createDiv();
+      listDiv.style.display = 'flex';
+      listDiv.style.flexWrap = 'wrap';
+      listDiv.style.gap = '8px';
+      listDiv.style.alignItems = 'center';
+      listDiv.style.width = '100%';
+      listDiv.style.boxSizing = 'border-box';
+      
+      const colors = Array.isArray(this.plugin.settings.quickColors) ? this.plugin.settings.quickColors : [];
+      if (colors.length > 0) {
+        
+        colors.forEach((pair, i) => {
+          if (!pair || typeof pair !== 'object') pair = { textColor: '#87c760', backgroundColor: '#1d5010', uid: Date.now().toString(36) + Math.random().toString(36).slice(2) };
+          const row = listDiv.createDiv();
+          row.style.display = 'inline-flex';
+          row.style.alignItems = 'center';
+          row.style.gap = '8px';
+          row.style.marginBottom = '8px';
+          row.style.border = '1px solid var(--background-modifier-border)';
+          row.style.borderRadius = 'var(--button-radius)'; // BORDER RADIUS OF CUSTOM COLOR ENTRIES
+          row.style.padding = '6px';
+          row.style.flex = '0 0 auto';
+          row.setAttribute('data-qc-index', String(i));
+          
+          // Drag handle
+          const dragHandle = row.createEl('button');
+          setIcon(dragHandle, 'menu');
+          // dragHandle.setAttribute('draggable', 'true');
+          dragHandle.style.padding = '0';
+          dragHandle.style.border = 'none';
+          dragHandle.style.background = 'transparent';
+          dragHandle.style.boxShadow = 'none';
+          dragHandle.style.cursor = 'grab';
+          dragHandle.style.color = 'var(--text-muted)';
+          dragHandle.style.flexShrink = '0';
+          dragHandle.style.display = 'flex';
+          dragHandle.style.alignItems = 'center';
+          dragHandle.style.justifyContent = 'center';
+          dragHandle.setAttribute('aria-label', this.plugin.t('drag_to_reorder','Drag to reorder'));
+          
+          // Text color picker
+          const tCp = row.createEl('input', { type: 'color' });
+          tCp.value = (pair.textColor && this.plugin.isValidHexColor(pair.textColor)) ? pair.textColor : '#87c760';
+          tCp.style.width = '30px';
+          tCp.style.height = '30px';
+          tCp.style.borderRadius = '50%';
+          tCp.style.border = 'none';
+          tCp.style.padding = '0';
+          tCp.style.overflow = 'hidden';
+          tCp.style.background = 'transparent';
+          tCp.style.cursor = 'pointer';
+          tCp.title = this.plugin.t('text_color_title','Text Color');
+          const tChange = async () => {
+            const val = tCp.value;
+            if (!this.plugin.isValidHexColor(val)) return;
+            this.plugin.settings.quickColors[i].textColor = val;
+            await this.plugin.saveSettings();
+          };
+          tCp.addEventListener('input', tChange);
+          tCp.addEventListener('contextmenu', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+              const chosen = (result && result.textColor && this.plugin.isValidHexColor(result.textColor)) ? result.textColor : (color && this.plugin.isValidHexColor(color)) ? color : tCp.value;
+              if (chosen && this.plugin.isValidHexColor(chosen)) {
+                tCp.value = chosen;
+                await tChange();
+              }
+            }, 'text', this.plugin.t('selected_text_preview', 'Selected Text'));
+            modal._hideHeaderControls = true;
+            modal._preFillTextColor = tCp.value;
+            modal.open();
+          });
+          
+          // Highlight color picker
+          const bCp = row.createEl('input', { type: 'color' });
+          bCp.value = (pair.backgroundColor && this.plugin.isValidHexColor(pair.backgroundColor)) ? pair.backgroundColor : '#1d5010';
+          bCp.style.width = '30px';
+          bCp.style.height = '30px';
+          bCp.style.borderRadius = '50%';
+          bCp.style.border = 'none';
+          bCp.style.padding = '0';
+          bCp.style.overflow = 'hidden';
+          bCp.style.background = 'transparent';
+          bCp.style.cursor = 'pointer';
+          bCp.title = this.plugin.t('highlight_color_title','Highlight Color');
+          const bChange = async () => {
+            const val = bCp.value;
+            if (!this.plugin.isValidHexColor(val)) return;
+            this.plugin.settings.quickColors[i].backgroundColor = val;
+            await this.plugin.saveSettings();
+          };
+          bCp.addEventListener('input', bChange);
+          bCp.addEventListener('contextmenu', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const modal = new ColorPickerModal(this.app, this.plugin, async (color, result) => {
+              const chosen = (result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor)) ? result.backgroundColor : (color && this.plugin.isValidHexColor(color)) ? color : bCp.value;
+              if (chosen && this.plugin.isValidHexColor(chosen)) {
+                bCp.value = chosen;
+                await bChange();
+              }
+            }, 'background', this.plugin.t('selected_text_preview', 'Selected Text'), false);
+            modal._hideHeaderControls = true;
+            modal._preFillBgColor = bCp.value;
+            modal._preFillBorderColor = bCp.value;
+            modal.open();
+          });
+          
+          // Delete button
+          const delBtn = row.createEl('button', { text: '✕' });
+          delBtn.addClass('mod-warning');
+          delBtn.style.padding = '4px 8px';
+          delBtn.style.borderRadius = '4px';
+          delBtn.style.cursor = 'pointer';
+          delBtn.style.flexShrink = '0';
+          delBtn.addEventListener('click', async () => {
+            this.plugin.settings.quickColors.splice(i, 1);
+            await this.plugin.saveSettings();
+            this._refreshQuickColors();
+          });
+          
+          // Custom drag handlers
+          dragHandle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const rect = row.getBoundingClientRect();
+            const offsetX = startX - rect.left;
+            const offsetY = startY - rect.top;
+            
+            if (navigator.vibrate) navigator.vibrate(100);
+            
+            // Create ghost
+            const ghost = document.body.createDiv({ cls: 'drag-reorder-ghost' });
+            ghost.appendChild(row.cloneNode(true));
+            ghost.style.width = `${rect.width}px`;
+            ghost.style.height = `${rect.height}px`;
+            ghost.style.left = `${rect.left}px`;
+            ghost.style.top = `${rect.top}px`;
+            
+            // Hide original
+            row.classList.add('drag-ghost-hidden');
+            
+            const onMove = (moveEvent) => {
+              moveEvent.preventDefault();
+              const currentX = moveEvent.clientX;
+              const currentY = moveEvent.clientY;
+              
+              // Update ghost position
+              ghost.style.left = `${currentX - offsetX}px`;
+              ghost.style.top = `${currentY - offsetY}px`;
+              
+              // Reordering logic for Grid/Flow layout
+              const target = document.elementFromPoint(currentX, currentY);
+              const targetRow = target ? target.closest('div[data-qc-index]') : null;
+              
+              if (targetRow && targetRow !== row && targetRow.parentNode === listDiv) {
+                 const children = Array.from(listDiv.querySelectorAll('div[data-qc-index]'));
+                 const currentIndex = children.indexOf(row);
+                 const targetIndex = children.indexOf(targetRow);
+                 
+                 if (currentIndex !== -1 && targetIndex !== -1) {
+                     // Swap logic
+                     if (currentIndex < targetIndex) {
+                         // Move forward -> Place after target
+                         if (navigator.vibrate) navigator.vibrate(100);
+                         targetRow.after(row);
+                         // Update array
+                         const item = colors.splice(currentIndex, 1)[0];
+                         colors.splice(targetIndex, 0, item);
+                         // Update indices
+                         Array.from(listDiv.querySelectorAll('div[data-qc-index]')).forEach((r, idx) => {
+                             r.setAttribute('data-qc-index', idx.toString());
+                         });
+                         return;
+                     } else if (currentIndex > targetIndex) {
+                         // Move backward -> Place before target
+                         if (navigator.vibrate) navigator.vibrate(100);
+                         listDiv.insertBefore(row, targetRow);
+                         // Update array
+                         const item = colors.splice(currentIndex, 1)[0];
+                         colors.splice(targetIndex, 0, item);
+                         // Update indices
+                         Array.from(listDiv.querySelectorAll('div[data-qc-index]')).forEach((r, idx) => {
+                             r.setAttribute('data-qc-index', idx.toString());
+                         });
+                         return;
+                     }
+                 }
+              }
+            };
+            
+            const onEnd = async () => {
+              document.removeEventListener('mousemove', onMove);
+              document.removeEventListener('mouseup', onEnd);
+              ghost.remove();
+              row.classList.remove('drag-ghost-hidden');
+              
+              this.plugin.settings.quickColors = colors;
+              await this.plugin.saveSettings();
+              this._refreshQuickColors();
+            };
+            
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+          });
+        });
+      }
+      
+      const btnRow = this._quickColorsContainer.createDiv();
+      btnRow.style.display = 'flex';
+      btnRow.style.justifyContent = 'flex-end';
+      btnRow.style.marginTop = '10px';
+      const addBtn = btnRow.createEl('button', { text: this.plugin.t('btn_add_color', '+ Add Color') });
+      addBtn.addEventListener('click', async () => {
+        const newPair = { textColor: '#87c760', backgroundColor: '#1d5010', uid: Date.now().toString(36) + Math.random().toString(36).slice(2) };
+        this.plugin.settings.quickColors.push(newPair);
+        await this.plugin.saveSettings();
+        this._refreshQuickColors();
+      });
+      
+      // Apply mode setting: Always Color Text vs Inline HTML
+      const modeSetting = new Setting(this._quickColorsContainer)
+        .setName(this.plugin.t('quick_colors_apply_mode_label', 'The text coloring will apply as'))
+        .addDropdown(d => {
+          d.addOption('act', this.plugin.t('quick_colors_apply_mode_act', 'Always Color Text'));
+          d.addOption('html', this.plugin.t('quick_colors_apply_mode_html', 'Inline HTML'));
+          d.setValue(this.plugin.settings.quickColorsApplyMode || 'html');
+          d.onChange(async (v) => {
+            this.plugin.settings.quickColorsApplyMode = v;
+            await this.plugin.saveSettings();
+          });
+          if (d.selectEl) {
+             d.selectEl.style.textAlign = 'center';
+             d.selectEl.style.textAlignLast = 'center';
+          }
+        });
+      try { modeSetting.settingEl.style.marginTop = '10px'; } catch (e) {}
+
+    } catch (e) { console.error(e); }
+  }
+
+  _refreshQuickStyles() {
+    try {
+      if (!this._quickStylesContainer) return;
+      this._quickStylesContainer.empty();
+      
+      const headerDiv = this._quickStylesContainer.createDiv();
+      headerDiv.style.display = 'flex';
+      headerDiv.style.alignItems = 'center';
+      headerDiv.style.justifyContent = 'space-between';
+      headerDiv.style.marginTop = '18px';
+      headerDiv.style.marginBottom = '8px';
+      const leftDiv = headerDiv.createDiv();
+      leftDiv.style.display = 'flex';
+      leftDiv.style.alignItems = 'center';
+      leftDiv.style.gap = '10px';
+      leftDiv.createEl('h3', { text: this.plugin.t('quick_styles_header', 'Quick Styles'), style: 'margin: 0;' });
+      const toggle = new Setting(leftDiv)
+        .addToggle(t => t.setValue(!!this.plugin.settings.quickStylesEnabled).onChange(async v => {
+          this.plugin.settings.quickStylesEnabled = !!v;
+          await this.plugin.saveSettings();
+          this._refreshQuickStyles();
+        }));
+      toggle.settingEl.style.border = 'none';
+      toggle.settingEl.style.padding = '0';
+      const desc = this._quickStylesContainer.createDiv();
+      desc.style.margin = '-16px 0 8px';
+      desc.textContent = this.plugin.t('quick_styles_desc', 'Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used.');
+      
+      if (!this.plugin.settings.quickStylesEnabled) return;
+      
+      const listDiv = this._quickStylesContainer.createDiv();
+      const styles = Array.isArray(this.plugin.settings.quickStyles) ? this.plugin.settings.quickStyles : [];
+      
+      let dragSource = null;
+      
+      styles.forEach((style, i) => {
+        // Ensure style has uid
+        if (!style.uid) style.uid = Date.now() + Math.random().toString(36).slice(2);
+        
+        const row = listDiv.createDiv();
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '8px';
+        row.style.marginBottom = '8px';
+        row.style.padding = '4px';
+        row.style.border = '1px solid var(--background-modifier-border)';
+        row.style.borderRadius = 'var(--button-radius)'; // BORDER RADIUS OF QUICK STYLES ENTRIES
+        // row.draggable = true;
+        
+        // Drag Handle
+        const dragHandle = row.createDiv();
+        dragHandle.innerHTML = '<svg viewBox="0 0 100 100" width="30" height="20" fill="currentColor"><path d="M30 20h40v10H30zM30 45h40v10H30zM30 70h40v10H30z"/></svg>';
+        dragHandle.style.cursor = 'grab';
+        dragHandle.style.opacity = '0.6';
+        // dragHandle.style.width = '30px';
+        dragHandle.style.display = 'flex';
+        dragHandle.style.alignItems = 'center';
+        dragHandle.style.justifyContent = 'center';
+        
+        // Preview sample text
+        const previewEl = row.createDiv();
+        previewEl.textContent = 'Text';
+        previewEl.style.flex = '0 0 auto';
+        // previewEl.style.paddingLeft = '-20px';
+        const styleType = style && style.styleType ? style.styleType : 'both';
+        const tc = style.textColor || style.color || null;
+        const bc = style.backgroundColor || null;
+        const params = this.plugin.getHighlightParams(style);
+        const borderCss = this.plugin.generateBorderStyle(tc, bc, style);
+        let previewStyleStr = '';
+        if (styleType === 'text') {
+          if (tc) previewStyleStr += `color:${tc};`;
+        } else if (styleType === 'highlight') {
+          if (bc) {
+            const bg = this.plugin.hexToHexWithAlpha(bc, params.opacity ?? 25);
+            previewStyleStr += `background-color:${bg};`;
+          }
+          previewStyleStr += `border-radius:${(params.radius ?? 8)}px; padding:${(params.vPad ?? 0)}px ${(params.hPad ?? 4)}px;${borderCss}`;
+        } else {
+          if (tc) previewStyleStr += `color:${tc};`;
+          if (bc) {
+            const bg = this.plugin.hexToHexWithAlpha(bc, params.opacity ?? 25);
+            previewStyleStr += `background-color:${bg};`;
+          }
+          previewStyleStr += `border-radius:${(params.radius ?? 8)}px; padding:${(params.vPad ?? 0)}px ${(params.hPad ?? 4)}px;${borderCss}`;
+        }
+        previewEl.setAttr('style', previewStyleStr);
+        
+        // Name Input
+        const nameInput = row.createEl('input', { type: 'text', value: style.name || `Style ${i+1}` });
+        nameInput.style.flex = '1';
+        nameInput.placeholder = 'Style Name';
+        nameInput.addEventListener('change', async () => {
+          style.name = nameInput.value;
+          await this.plugin.saveSettings();
+        });
+        
+        // Settings Icon
+        const settingsBtn = row.createDiv();
+        settingsBtn.style.cursor = 'pointer';
+        settingsBtn.style.display = 'flex';
+        settingsBtn.style.paddingLeft = '0';
+        settingsBtn.style.paddingRight = '4px';
+        setIcon(settingsBtn, 'settings');
+        settingsBtn.addEventListener('click', () => {
+             if (!style.styleType) style.styleType = 'both';
+             const modal = new HighlightStylingModal(this.app, this.plugin, style, null, this.plugin.t('selected_text_preview', 'Selected Text'));
+             const originalOnClose = modal.onClose.bind(modal);
+             modal.onClose = async () => {
+                 originalOnClose();
+                 await this.plugin.saveSettings();
+                 setTimeout(() => {
+                   try { this._refreshQuickStyles(); } catch (e) { console.error(e); }
+                 }, 50);
+             };
+             modal.open();
+        });
+
+        // Context Menu
+        row.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const menu = new Menu();
+          menu.addItem(item => item.setTitle('Duplicate Entry').onClick(async () => {
+             const clone = JSON.parse(JSON.stringify(style));
+             clone.uid = Date.now() + Math.random().toString(36).slice(2);
+             clone.name = (clone.name || '') + ' (Copy)';
+             this.plugin.settings.quickStyles.splice(i + 1, 0, clone);
+             await this.plugin.saveSettings();
+             this._refreshQuickStyles();
+          }));
+          menu.addItem(item => item.setTitle('Delete Entry').setIcon('trash').onClick(async () => {
+             this.plugin.settings.quickStyles.splice(i, 1);
+             await this.plugin.saveSettings();
+             this._refreshQuickStyles();
+          }));
+          menu.showAtMouseEvent(e);
+        });
+        
+        // Custom Drag Implementation matching drag-example.ts
+        dragHandle.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const rect = row.getBoundingClientRect();
+          const offsetX = startX - rect.left;
+          const offsetY = startY - rect.top;
+          
+          if (navigator.vibrate) navigator.vibrate(100);
+          
+          // Create ghost
+          const ghost = document.body.createDiv({ cls: 'drag-reorder-ghost' });
+          ghost.appendChild(row.cloneNode(true));
+          ghost.style.width = `${rect.width}px`;
+          ghost.style.height = `${rect.height}px`;
+          ghost.style.left = `${rect.left}px`;
+          ghost.style.top = `${rect.top}px`;
+          
+          // Hide original
+          row.classList.add('drag-ghost-hidden');
+          
+          const onMove = (moveEvent) => {
+            moveEvent.preventDefault();
+            const currentX = moveEvent.clientX;
+            const currentY = moveEvent.clientY;
+            
+            // Update ghost position
+            ghost.style.left = `${currentX - offsetX}px`;
+            ghost.style.top = `${currentY - offsetY}px`;
+            
+            // Reordering logic
+            const children = Array.from(listDiv.children);
+            const currentIndex = children.indexOf(row);
+            if (currentIndex === -1) return;
+            
+            // Check Previous
+            if (currentIndex > 0) {
+               const prevRow = children[currentIndex - 1];
+               const prevRect = prevRow.getBoundingClientRect();
+               const prevOverdrag = prevRect.height * 0.25;
+               if (currentY < prevRect.bottom - prevOverdrag) {
+                   if (navigator.vibrate) navigator.vibrate(100);
+                   listDiv.insertBefore(row, prevRow);
+                   // Swap in data
+                   const item = styles.splice(currentIndex, 1)[0];
+                   styles.splice(currentIndex - 1, 0, item);
+                   return;
+               }
+            }
+            
+            // Check Next
+            if (currentIndex < children.length - 1) {
+               const nextRow = children[currentIndex + 1];
+               const nextRect = nextRow.getBoundingClientRect();
+               const nextOverdrag = nextRect.height * 0.25;
+               if (currentY > nextRect.top + nextOverdrag) {
+                   if (navigator.vibrate) navigator.vibrate(100);
+                   nextRow.after(row);
+                   // Swap in data
+                   const item = styles.splice(currentIndex, 1)[0];
+                   styles.splice(currentIndex + 1, 0, item);
+                   return;
+               }
+            }
+          };
+          
+          const onEnd = async () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            ghost.remove();
+            row.classList.remove('drag-ghost-hidden');
+            await this.plugin.saveSettings();
+            this._refreshQuickStyles();
+          };
+          
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onEnd);
+        });
+      });
+      
+      // Add Button
+      const btnRow = this._quickStylesContainer.createDiv();
+      btnRow.style.display = 'flex';
+      btnRow.style.justifyContent = 'flex-end';
+      const addBtn = btnRow.createEl('button', { text: this.plugin.t('btn_add_style', '+ Add Style') }); 
+      addBtn.style.marginBottom = '10px';
+      addBtn.addEventListener('click', async () => {
+         this.plugin.settings.quickStyles.push({ name: 'New Style', styleType: 'both', textColor: '#ffffff', backgroundColor: '#000000' });
+         await this.plugin.saveSettings();
+         this._refreshQuickStyles();
+      });
+
+    } catch (e) { console.error(e); }
+  }
+
 
   _refreshEntries() {
     try {
@@ -18187,8 +19328,41 @@ class ColorSettingTab extends PluginSettingTab {
         await this.debouncedSaveSettings();
       }));
 
-    containerEl.createEl('h2', { text: this.plugin.t('one_time_actions_header','One-Time Actions') });
-    new Setting(containerEl)
+    // --- One-Time Actions (Foldable) ---
+    const otaHeaderDiv = containerEl.createDiv();
+    otaHeaderDiv.style.display = 'flex';
+    otaHeaderDiv.style.alignItems = 'center';
+    otaHeaderDiv.style.gap = '8px';
+    otaHeaderDiv.style.marginTop = '16px';
+    otaHeaderDiv.style.marginBottom = '10px';
+    otaHeaderDiv.style.cursor = 'pointer';
+
+    const otaToggle = otaHeaderDiv.createEl('span');
+    otaToggle.textContent = this.plugin.settings.oneTimeActionsFolded ? '▶' : '▼';
+    otaToggle.style.fontSize = '12px';
+    otaToggle.style.fontWeight = 'bold';
+    otaToggle.style.display = 'inline-block';
+    otaToggle.style.width = '16px';
+
+    const otaTitle = otaHeaderDiv.createEl('h2', { text: this.plugin.t('one_time_actions_header','One-Time Actions') });
+    otaTitle.style.margin = '0';
+    otaTitle.style.padding = '0';
+    otaTitle.style.flex = '1';
+
+    const otaContainer = containerEl.createDiv();
+    otaContainer.style.display = (this.plugin.settings.oneTimeActionsFolded ? 'none' : 'block');
+    
+    const otaToggleHandler = async () => {
+      this.plugin.settings.oneTimeActionsFolded = !this.plugin.settings.oneTimeActionsFolded;
+      otaContainer.style.display = (this.plugin.settings.oneTimeActionsFolded ? 'none' : 'block');
+      otaToggle.textContent = this.plugin.settings.oneTimeActionsFolded ? '▶' : '▼';
+      await this.debouncedSaveSettings();
+    };
+    
+    otaHeaderDiv.addEventListener('click', otaToggleHandler);
+    try { this._cleanupHandlers.push(() => otaHeaderDiv.removeEventListener('click', otaToggleHandler)); } catch (_) {}
+
+    new Setting(otaContainer)
       .setName(this.plugin.t('setting_color_once','Color Once'))
       .setDesc(this.plugin.t('setting_color_once_desc','Inserts HTML inline for the selected text. This persists even if the plugin is turned off.'))
       .addToggle(t => t.setValue(this.plugin.settings.enableQuickColorOnce).onChange(async v => {
@@ -18196,7 +19370,7 @@ class ColorSettingTab extends PluginSettingTab {
         await this.plugin.saveSettings();
       }));
 
-    new Setting(containerEl)
+    new Setting(otaContainer)
       .setName(this.plugin.t('setting_highlight_once','Highlight Once'))
       .setDesc(this.plugin.t('setting_highlight_once_desc','Inserts HTML inline with background styling. This persists even if the plugin is turned off.'))
       .addToggle(t => t.setValue(this.plugin.settings.enableQuickHighlightOnce).onChange(async v => {
@@ -18207,7 +19381,7 @@ class ColorSettingTab extends PluginSettingTab {
       }));
 
     if (this.plugin.settings.enableQuickHighlightOnce) {
-      new Setting(containerEl)
+      new Setting(otaContainer)
         .setName(this.plugin.t('use_global_highlight_style','Use Global Highlight Style for Highlight Once'))
         .setDesc(this.plugin.t('use_global_highlight_style_desc','Uses your global inline style. The added HTML/CSS may be long.'))
         .addToggle(t => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async v => {
@@ -18217,7 +19391,7 @@ class ColorSettingTab extends PluginSettingTab {
           this.display();
         }));
 
-      new Setting(containerEl)
+      new Setting(otaContainer)
         .setName(this.plugin.t('style_highlight_once','Style Highlight Once'))
         .setDesc(this.plugin.t('style_highlight_once_desc','Uses your custom inline style. The added HTML/CSS may be long.'))
         .addToggle(t => t.setValue(this.plugin.settings.quickHighlightStyleEnable).onChange(async v => {
@@ -18229,7 +19403,7 @@ class ColorSettingTab extends PluginSettingTab {
 
       // Preview for Highlight Once styling (non-interactive), shown under the toggle
       if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
-        const previewSection = containerEl.createDiv();
+        const previewSection = otaContainer.createDiv();
         previewSection.style.margin = '8px 0 12px 0';
         previewSection.style.padding = '12px';
         previewSection.style.borderRadius = '8px';
@@ -18283,7 +19457,7 @@ class ColorSettingTab extends PluginSettingTab {
       }
 
       if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
-        new Setting(containerEl)
+        new Setting(otaContainer)
           .setName(this.plugin.t('highlight_once_opacity','Highlight once opacity'))
           .addSlider(slider => slider
             .setLimits(0, 100, 1)
@@ -18297,7 +19471,7 @@ class ColorSettingTab extends PluginSettingTab {
 
         {
           let brInput;
-          new Setting(containerEl)
+          new Setting(otaContainer)
             .setName(this.plugin.t('highlight_once_border_radius','Highlight once border radius (px)'))
             .addText(text => {
               brInput = text;
@@ -18325,7 +19499,7 @@ class ColorSettingTab extends PluginSettingTab {
 
         {
           let hpInput;
-          new Setting(containerEl)
+          new Setting(otaContainer)
             .setName(this.plugin.t('highlight_horizontal_padding','Highlight horizontal padding (px)'))
             .addText(text => {
               hpInput = text;
@@ -18353,7 +19527,7 @@ class ColorSettingTab extends PluginSettingTab {
 
         {
           let vpInput;
-          new Setting(containerEl)
+          new Setting(otaContainer)
             .setName(this.plugin.t('highlight_vertical_padding','Highlight vertical padding (px)'))
             .addText(text => {
               vpInput = text;
@@ -18379,7 +19553,7 @@ class ColorSettingTab extends PluginSettingTab {
               }));
         }
 
-        new Setting(containerEl)
+        new Setting(otaContainer)
           .setName(this.plugin.t('enable_border_highlight_once','Enable Border for Highlight Once'))
           .setDesc(this.plugin.t('enable_border_highlight_once_desc','Add a border to your inline highlight. The added HTML/CSS WILL be long.'))
           .addToggle(t => t
@@ -18393,7 +19567,7 @@ class ColorSettingTab extends PluginSettingTab {
             }));
 
         if (this.plugin.settings.quickHighlightEnableBorder) {
-          new Setting(containerEl)
+          new Setting(otaContainer)
             .setName(this.plugin.t('highlight_once_border_style','Highlight Once Border Sides'))
             .addDropdown(d => {
               d.selectEl.style.width = '200px';
@@ -18413,7 +19587,7 @@ class ColorSettingTab extends PluginSettingTab {
                 .onChange(async v => { this.plugin.settings.quickHighlightBorderStyle = v; await this.plugin.saveSettings(); try { this._updateQuickOncePreview?.(); } catch (e) {} });
             });
 
-          new Setting(containerEl)
+          new Setting(otaContainer)
             .setName(this.plugin.t('highlight_once_border_line_style','Border Style'))
             .addDropdown(d => {
               d.selectEl.style.width = '200px';
@@ -18430,7 +19604,7 @@ class ColorSettingTab extends PluginSettingTab {
                 .onChange(async v => { this.plugin.settings.quickHighlightBorderLineStyle = v; await this.plugin.saveSettings(); try { this._updateQuickOncePreview?.(); } catch (e) {} });
             });
 
-          new Setting(containerEl)
+          new Setting(otaContainer)
             .setName(this.plugin.t('highlight_once_border_opacity','Highlight Once Border Opacity'))
             .addSlider(slider => slider
               .setLimits(0, 100, 1)
@@ -18440,7 +19614,7 @@ class ColorSettingTab extends PluginSettingTab {
 
           {
             let btInput;
-            new Setting(containerEl)
+            new Setting(otaContainer)
               .setName(this.plugin.t('highlight_once_border_thickness','Highlight Once Border Thickness (px)'))
               .addText(text => {
                 btInput = text;
@@ -18472,9 +19646,42 @@ class ColorSettingTab extends PluginSettingTab {
     
 
     // --- Global Highlight Coloring Appearance ---
-    containerEl.createEl('h3', { text: this.plugin.t('global_highlight_appearance_header','Global Highlight Coloring Appearance') });
+    const ghHeaderDiv = containerEl.createDiv();
+    ghHeaderDiv.style.display = 'flex';
+    ghHeaderDiv.style.alignItems = 'center';
+    ghHeaderDiv.style.gap = '8px';
+    ghHeaderDiv.style.marginTop = '16px';
+    ghHeaderDiv.style.marginBottom = '10px';
+    ghHeaderDiv.style.cursor = 'pointer';
+
+    const ghToggle = ghHeaderDiv.createEl('span');
+    ghToggle.textContent = this.plugin.settings.globalHighlightFolded ? '▶' : '▼';
+    ghToggle.style.fontSize = '12px';
+    ghToggle.style.fontWeight = 'bold';
+    ghToggle.style.display = 'inline-block';
+    ghToggle.style.width = '16px';
+
+    const ghTitle = ghHeaderDiv.createEl('h3', { text: this.plugin.t('global_highlight_appearance_header','Global Highlight Coloring Appearance') });
+    ghTitle.style.margin = '0';
+    ghTitle.style.padding = '0';
+    ghTitle.style.flex = '1';
+    ghTitle.style.fontSize = '16px';
+    ghTitle.style.fontWeight = '600';
+
+    const ghContainer = containerEl.createDiv();
+    ghContainer.style.display = (this.plugin.settings.globalHighlightFolded ? 'none' : 'block');
+    
+    const ghToggleHandler = async () => {
+      this.plugin.settings.globalHighlightFolded = !this.plugin.settings.globalHighlightFolded;
+      ghContainer.style.display = (this.plugin.settings.globalHighlightFolded ? 'none' : 'block');
+      ghToggle.textContent = this.plugin.settings.globalHighlightFolded ? '▶' : '▼';
+      await this.debouncedSaveSettings();
+    };
+    
+    ghHeaderDiv.addEventListener('click', ghToggleHandler);
+    try { this._cleanupHandlers.push(() => ghHeaderDiv.removeEventListener('click', ghToggleHandler)); } catch (_) {}
       // Preview of highlight styling
-      const previewSection = containerEl.createDiv();
+      const previewSection = ghContainer.createDiv();
       previewSection.style.marginBottom = '16px';
       previewSection.style.padding = '12px';
       previewSection.style.borderRadius = '8px';
@@ -18533,7 +19740,7 @@ class ColorSettingTab extends PluginSettingTab {
       updatePreview();
 
       // Opacity slider (percent)
-      new Setting(containerEl)
+      new Setting(ghContainer)
         .setName(this.plugin.t('highlight_opacity','Highlight opacity'))
         .setDesc(this.plugin.t('highlight_opacity_desc','Set the opacity of the highlight (0-100%)'))
         .addSlider(slider => slider
@@ -18549,7 +19756,7 @@ class ColorSettingTab extends PluginSettingTab {
       // Border radius input (px)
       {
         let brInput;
-        new Setting(containerEl)
+        new Setting(ghContainer)
           .setName(this.plugin.t('highlight_border_radius','Highlight border radius (px)'))
           .setDesc(this.plugin.t('highlight_border_radius_desc','Set the border radius (in px) for rounded highlight corners'))
           .addText(text => {
@@ -18579,7 +19786,7 @@ class ColorSettingTab extends PluginSettingTab {
       // Horizontal padding input (px)
       {
         let hpInput;
-        new Setting(containerEl)
+        new Setting(ghContainer)
           .setName(this.plugin.t('highlight_horizontal_padding','Highlight horizontal padding (px)'))
           .setDesc(this.plugin.t('highlight_horizontal_padding_desc','Set the left and right padding (in px) for highlighted text'))
           .addText(text => {
@@ -18608,7 +19815,7 @@ class ColorSettingTab extends PluginSettingTab {
 
       {
         let vpInput;
-        new Setting(containerEl)
+        new Setting(ghContainer)
           .setName(this.plugin.t('highlight_vertical_padding','Highlight vertical padding (px)'))
           .setDesc(this.plugin.t('highlight_vertical_padding_desc','Set the top and bottom padding (in px) for highlighted text'))
           .addText(text => {
@@ -18636,7 +19843,7 @@ class ColorSettingTab extends PluginSettingTab {
       }
 
       // Toggle for box decoration break on line wrapping
-      new Setting(containerEl)
+      new Setting(ghContainer)
         .setName(this.plugin.t('rounded_corners_wrapping','Rounded corners on line wrapping'))
         .setDesc(this.plugin.t('rounded_corners_wrapping_desc','When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line.'))
         .addToggle(t => t
@@ -18647,7 +19854,7 @@ class ColorSettingTab extends PluginSettingTab {
           }));
 
       // NEW: Enable Highlight Border toggle
-      new Setting(containerEl)
+      new Setting(ghContainer)
         .setName(this.plugin.t('enable_highlight_border','Enable Highlight Border'))
         .setDesc(this.plugin.t('enable_highlight_border_desc','Add a border around highlights. The border will match the text or highlight color.'))
         .addToggle(t => t
@@ -18664,7 +19871,7 @@ class ColorSettingTab extends PluginSettingTab {
       // Show border controls only when enabled
       if (this.plugin.settings.enableBorderThickness) {
         // Border Style dropdown
-        new Setting(containerEl)
+        new Setting(ghContainer)
           .setName(this.plugin.t('border_style','Border Sides'))
           .setDesc(this.plugin.t('border_style_desc','Choose which sides to apply the border'))
           .addDropdown(d => {
@@ -18690,7 +19897,7 @@ class ColorSettingTab extends PluginSettingTab {
               });
           });
 
-        new Setting(containerEl)
+        new Setting(ghContainer)
           .setName(this.plugin.t('border_line_style','Border Style'))
           .setDesc(this.plugin.t('border_line_style_desc','Choose the border line style'))
           .addDropdown(d => {
@@ -18714,7 +19921,7 @@ class ColorSettingTab extends PluginSettingTab {
           });
 
         // Border Opacity slider
-        new Setting(containerEl)
+        new Setting(ghContainer)
           .setName(this.plugin.t('border_opacity','Border Opacity'))
           .setDesc(this.plugin.t('border_opacity_desc','Set the opacity of the border (0-100%)'))
           .addSlider(slider => slider
@@ -18730,7 +19937,7 @@ class ColorSettingTab extends PluginSettingTab {
         // Border Thickness input
         {
           let btInput;
-          new Setting(containerEl)
+          new Setting(ghContainer)
             .setName(this.plugin.t('border_thickness','Border Thickness (px)'))
             .setDesc(this.plugin.t('border_thickness_desc','Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)'))
             .addText(text => {
@@ -18761,9 +19968,42 @@ class ColorSettingTab extends PluginSettingTab {
     // }
 
     // --- Custom swatches settings ---
-    containerEl.createEl('h2', { text: this.plugin.t('color_swatches_header','Color Swatches') });
+    const swHeaderDiv = containerEl.createDiv();
+    swHeaderDiv.style.display = 'flex';
+    swHeaderDiv.style.alignItems = 'center';
+    swHeaderDiv.style.gap = '8px';
+    swHeaderDiv.style.marginTop = '24px';
+    swHeaderDiv.style.marginBottom = '10px';
+    swHeaderDiv.style.cursor = 'pointer';
 
-    new Setting(containerEl)
+    const swToggle = swHeaderDiv.createEl('span');
+    swToggle.textContent = this.plugin.settings.colorSwatchesFolded ? '▶' : '▼';
+    swToggle.style.fontSize = '12px';
+    swToggle.style.fontWeight = 'bold';
+    swToggle.style.display = 'inline-block';
+    swToggle.style.width = '16px';
+    swToggle.style.marginTop = '-8px';
+
+    const swTitle = swHeaderDiv.createEl('h2', { text: this.plugin.t('color_swatches_header','Color Swatches') });
+    swTitle.style.margin = '0';
+    swTitle.style.marginTop = '-8px';
+    swTitle.style.padding = '0';
+    swTitle.style.flex = '1';
+
+    const swContainer = containerEl.createDiv();
+    swContainer.style.display = (this.plugin.settings.colorSwatchesFolded ? 'none' : 'block');
+
+    const swToggleHandler = async () => {
+      this.plugin.settings.colorSwatchesFolded = !this.plugin.settings.colorSwatchesFolded;
+      swContainer.style.display = (this.plugin.settings.colorSwatchesFolded ? 'none' : 'block');
+      swToggle.textContent = this.plugin.settings.colorSwatchesFolded ? '▶' : '▼';
+      await this.debouncedSaveSettings();
+    };
+
+    swHeaderDiv.addEventListener('click', swToggleHandler);
+    try { this._cleanupHandlers.push(() => swHeaderDiv.removeEventListener('click', swToggleHandler)); } catch (_) {}
+
+    new Setting(swContainer)
       .setName(this.plugin.t('color_picker_layout','Color Picker Layout'))
       .setDesc(this.plugin.t('color_picker_layout_desc','Choose which color types to show when picking colors for text'))
       .addDropdown(dd => {
@@ -18779,7 +20019,7 @@ class ColorSettingTab extends PluginSettingTab {
         dd.onChange(async v => { this.plugin.settings.colorPickerMode = v; await this.plugin.saveSettings(); });
       });
 
-    new Setting(containerEl)
+    new Setting(swContainer)
       .setName(this.plugin.t('enable_custom_swatches','Enable custom swatches'))
       .setDesc(this.plugin.t('enable_custom_swatches_desc','Turn this on if you want to pick your own colors for the color picker.'))
       .addToggle(t => t.setValue(this.plugin.settings.customSwatchesEnabled).onChange(async v => {
@@ -18789,8 +20029,14 @@ class ColorSettingTab extends PluginSettingTab {
       }));
 
     // Store reference and render custom swatches
-    this._customSwatchesContainer = containerEl.createDiv();
+    this._customSwatchesContainer = swContainer.createDiv();
     this._refreshCustomSwatches();
+
+    // --- Quick Colors / Styles ---
+    this._quickColorsContainer = containerEl.createDiv();
+    this._refreshQuickColors();
+    this._quickStylesContainer = containerEl.createDiv();
+    this._refreshQuickStyles();
 
     }
     if (this._activeTab === 'always-color-texts') {
@@ -18950,6 +20196,8 @@ class ColorSettingTab extends PluginSettingTab {
             const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
             if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
         const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true, matchType: this.plugin.settings.partialMatch ? 'contains' : 'exact' };
+        // Copy preset properties like affectMarkElements
+        if (preset.affectMarkElements) entry.affectMarkElements = true;
         try { entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (e) { entry.uid = Date.now(); }
         if (tc && bc) { entry.textColor = tc; entry.backgroundColor = bc; entry.color = ''; entry.styleType = 'both'; entry._savedTextColor = tc; entry._savedBackgroundColor = bc; }
         else if (tc) { entry.color = tc; entry.styleType = 'text'; entry._savedTextColor = tc; }
@@ -20146,11 +21394,12 @@ class ColorPickerModal extends Modal {
     }
     
     // Check for prefill values set from context menu handlers
-    if (!initText && this._preFillTextColor && this.plugin.isValidHexColor(this._preFillTextColor)) {
+    // Always prioritize prefill values if they exist, as they come from direct user interaction (context menu)
+    if (this._preFillTextColor && this.plugin.isValidHexColor(this._preFillTextColor)) {
       initText = this._preFillTextColor;
       existingStyle = existingStyle || 'text';
     }
-    if (!initBg && this._preFillBgColor && this.plugin.isValidHexColor(this._preFillBgColor)) {
+    if (this._preFillBgColor && this.plugin.isValidHexColor(this._preFillBgColor)) {
       initBg = this._preFillBgColor;
       existingStyle = existingStyle || (initText ? 'both' : 'highlight');
     }
@@ -20168,13 +21417,36 @@ class ColorPickerModal extends Modal {
       preview.style.color = initText;
       tp.hex.value = initText;
       tp.colorInput.value = initText;
+      this.selectedTextColor = initText;
       // prefill does not count as a change; do not set selectedTextColor
     }
+    // Helper to apply prefilled values and update preview
+    const applyPrefill = (val, type) => {
+      if (type === 'text') {
+        if (tp && val) {
+          tp.colorInput.value = val;
+          tp.hex.value = val;
+          this.selectedTextColor = val;
+          preview.style.color = val;
+          try { preview.style.setProperty('--highlight-color', val); } catch (e) {}
+        }
+      } else if (type === 'background') {
+        if (bp && val) {
+          bp.colorInput.value = val;
+          bp.hex.value = val;
+          this.selectedBgColor = val;
+          const op = (matchedEntry && typeof matchedEntry.backgroundOpacity === 'number') ? matchedEntry.backgroundOpacity : (this.plugin.settings.backgroundOpacity ?? 25);
+          const rgba = this.plugin.hexToRgba(val, op);
+          preview.style.backgroundColor = rgba;
+          const borderSrc = (this._preFillBorderColor && this.plugin.isValidHexColor(this._preFillBorderColor))
+            ? this._preFillBorderColor
+            : (initText || this.selectedTextColor);
+          this.plugin.applyBorderStyleToElement(preview, borderSrc, val, matchedEntry);
+        }
+      }
+    };
     if (initBg && bp && this.mode !== 'text') {
-      const op = (matchedEntry && typeof matchedEntry.backgroundOpacity === 'number') ? matchedEntry.backgroundOpacity : (this.plugin.settings.backgroundOpacity ?? 25);
-      const rgba = this.plugin.hexToRgba(initBg, op);
-      preview.style.backgroundColor = rgba;
-      this.plugin.applyBorderStyleToElement(preview, initText, initBg, matchedEntry);
+      applyPrefill(initBg, 'background');
       const hPad = (matchedEntry && typeof matchedEntry.highlightHorizontalPadding === 'number') ? matchedEntry.highlightHorizontalPadding : (this.plugin.settings.highlightHorizontalPadding ?? 4);
       const vPad = (matchedEntry && typeof matchedEntry.highlightVerticalPadding === 'number') ? matchedEntry.highlightVerticalPadding : (this.plugin.settings.highlightVerticalPadding ?? 0);
       const radius = (matchedEntry && typeof matchedEntry.highlightBorderRadius === 'number') ? matchedEntry.highlightBorderRadius : (this.plugin.settings.highlightBorderRadius ?? 8);
@@ -20191,7 +21463,9 @@ class ColorPickerModal extends Modal {
       }
       bp.hex.value = initBg;
       bp.colorInput.value = initBg;
+      this.selectedBgColor = initBg;
       // prefill does not count as a change; do not set selectedBgColor
+      // border style already applied via applyBorderStyleToElement using _preFillBorderColor when available
     }
     // Also update the mode handling to properly detect text-and-background
     const actionRow = contentEl.createDiv();
