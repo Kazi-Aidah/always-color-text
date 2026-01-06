@@ -316,6 +316,7 @@ module.exports = {
   "preset_all_texts": "All Text",
   "preset_codeblocks": "Codeblocks",
   "preset_inline_comments": "Comments (%%...%%)",
+  "preset_highlighted_text": "Highlighted Text (==...)",
   "preset_parentheses": "Parentheses ()",
   "preset_square_brackets": "Square Brackets []",
   "preset_curly_braces": "Curly Braces {}",
@@ -357,6 +358,7 @@ module.exports = {
   "preset_example_double_quotes": "\"text\"",
   "preset_example_single_quotes": "'text'",
   "preset_example_single_quotes_word": "'word'",
+  "preset_example_highlight": "==highlighted text==",
   "preset_example_all_text": "This will target all texts.",
   
   // Blacklist Settings

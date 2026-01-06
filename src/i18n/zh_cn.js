@@ -314,6 +314,7 @@ module.exports = {
   "preset_all_texts": "所有文本",
   "preset_codeblocks": "代码块",
   "preset_inline_comments": "注释 (%%...%%)",
+  "preset_highlighted_text": "高亮文本 (==...)",
   "preset_parentheses": "圆括号 ()",
   "preset_square_brackets": "方括号 []",
   "preset_curly_braces": "大括号 {}",
@@ -355,6 +356,7 @@ module.exports = {
   "preset_example_double_quotes": "\"文本\"",
   "preset_example_single_quotes": "'文本'",
   "preset_example_single_quotes_word": "'单词'",
+  "preset_example_highlight": "==高亮文本==",
   "preset_example_all_text": "这将选中所有文本。",
   
   // Blacklist Settings
@@ -470,7 +472,7 @@ module.exports = {
   "quick_colors_header": "快速颜色",
   "quick_colors_desc": "允许通过在右键菜单中显示颜色来快速高亮或着色文本。如果关闭快速颜色，将使用快速样式中的每种样式颜色。",
   "quick_colors_apply_mode_label": "文本着色将应用为",
-  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_act": "始终为文本着色",
   "quick_colors_apply_mode_html": "内联 HTML",
   "quick_styles_header": "快速样式",
   "quick_styles_desc": "定义用于应用文本颜色和高亮显示的命名样式。如果关闭快速颜色，将使用此处的每种样式颜色。",

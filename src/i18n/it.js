@@ -314,6 +314,7 @@ module.exports = {
   "preset_all_texts": "Tutti i testi",
   "preset_codeblocks": "Blocchi di codice",
   "preset_inline_comments": "Commenti (%%…%%)",
+  "preset_highlighted_text": "Testo evidenziato (==...)",
   "preset_parentheses": "Parentesi ()",
   "preset_square_brackets": "Parentesi quadre []",
   "preset_curly_braces": "Parentesi graffe {}",
@@ -355,6 +356,7 @@ module.exports = {
   "preset_example_double_quotes": "\"testo\"",
   "preset_example_single_quotes": "'testo'",
   "preset_example_single_quotes_word": "'parola'",
+  "preset_example_highlight": "==testo evidenziato==",
   "preset_example_all_text": "Questo selezionerà tutto il testo.",
   
   // Blacklist Settings
@@ -470,7 +472,7 @@ module.exports = {
   "quick_colors_header": "Colori Rapidi",
   "quick_colors_desc": "Consente di evidenziare o colorare rapidamente il testo mostrando i colori nel menu contestuale. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile in Stili Rapidi.",
   "quick_colors_apply_mode_label": "La colorazione del testo verrà applicata come",
-  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_act": "Colora sempre il testo",
   "quick_colors_apply_mode_html": "HTML in linea",
   "quick_styles_header": "Stili Rapidi",
   "quick_styles_desc": "Definisci stili con nome per applicare colore del testo ed evidenziazioni. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile qui.",

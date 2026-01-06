@@ -314,6 +314,7 @@ module.exports = {
   "preset_all_texts": "Весь текст",
   "preset_codeblocks": "Блоки кода",
   "preset_inline_comments": "Комментарии (%%...%%)",
+  "preset_highlighted_text": "Выделенный текст (==...)",
   "preset_parentheses": "Круглые скобки ()",
   "preset_square_brackets": "Квадратные скобки []",
   "preset_curly_braces": "Фигурные скобки {}",
@@ -355,6 +356,7 @@ module.exports = {
   "preset_example_double_quotes": "\"текст\"",
   "preset_example_single_quotes": "'текст'",
   "preset_example_single_quotes_word": "'слово'",
+  "preset_example_highlight": "==выделенный текст==",
   "preset_example_all_text": "Это выберет весь текст.",
   
   // Blacklist Settings
@@ -470,8 +472,8 @@ module.exports = {
   "quick_colors_header": "Быстрые цвета",
   "quick_colors_desc": "Позволяет быстро выделять или окрашивать текст, показывая цвета в контекстном меню. Если Быстрые цвета отключены, будут использоваться цвета стилей из Быстрых стилей.",
   "quick_colors_apply_mode_label": "Окрашивание текста будет применяться как",
-  "quick_colors_apply_mode_act": "Always Color Text",
-  "quick_colors_apply_mode_html": "Inline HTML",
+  "quick_colors_apply_mode_act": "Всегда окрашивать текст",
+  "quick_colors_apply_mode_html": "Встроенный HTML",
   "quick_styles_header": "Быстрые стили",
   "quick_styles_desc": "Определите именованные стили для применения цвета текста и выделения. Если Быстрые цвета отключены, будут использоваться цвета стилей здесь.",
   "btn_add_style": "+ Добавить стиль",

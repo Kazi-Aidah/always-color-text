@@ -313,6 +313,7 @@ module.exports = {
   "preset_all_texts": "Tout le texte",
   "preset_codeblocks": "Blocs de code",
   "preset_inline_comments": "Commentaires (%%...%%)",
+  "preset_highlighted_text": "Texte surligné (==...)",
   "preset_parentheses": "Parenthèses ()",
   "preset_square_brackets": "Crochets []",
   "preset_curly_braces": "Accolades {}",
@@ -354,6 +355,7 @@ module.exports = {
   "preset_example_double_quotes": "\"texte\"",
   "preset_example_single_quotes": "'texte'",
   "preset_example_single_quotes_word": "'mot'",
+  "preset_example_highlight": "==texte surligné==",
   "preset_example_all_text": "Ceci ciblera tout le texte.",
   
   // Blacklist Settings
@@ -469,7 +471,7 @@ module.exports = {
   "quick_colors_header": "Couleurs Rapides",
   "quick_colors_desc": "Permet de surligner ou colorer rapidement du texte en affichant des couleurs dans le menu contextuel. Si Couleurs Rapides est désactivé, les couleurs par style dans Styles Rapides seront utilisées.",
   "quick_colors_apply_mode_label": "La coloration du texte s'appliquera comme",
-  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_act": "Toujours colorer le texte",
   "quick_colors_apply_mode_html": "HTML en ligne",
   "quick_styles_header": "Styles Rapides",
   "quick_styles_desc": "Définir des styles nommés pour appliquer la couleur du texte et les surlignages. Si Couleurs Rapides est désactivé, les couleurs par style ici seront utilisées.",

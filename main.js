@@ -307,6 +307,7 @@ var require_en = __commonJS({
       "preset_all_texts": "All Text",
       "preset_codeblocks": "Codeblocks",
       "preset_inline_comments": "Comments (%%...%%)",
+      "preset_highlighted_text": "Highlighted Text (==...)",
       "preset_parentheses": "Parentheses ()",
       "preset_square_brackets": "Square Brackets []",
       "preset_curly_braces": "Curly Braces {}",
@@ -347,6 +348,7 @@ var require_en = __commonJS({
       "preset_example_double_quotes": '"text"',
       "preset_example_single_quotes": "'text'",
       "preset_example_single_quotes_word": "'word'",
+      "preset_example_highlight": "==highlighted text==",
       "preset_example_all_text": "This will target all texts.",
       // Blacklist Settings
       "blacklist_words_header": "Blacklists",
@@ -763,6 +765,7 @@ var require_es = __commonJS({
       "preset_all_texts": "Todo el Texto",
       "preset_codeblocks": "Bloques de c\xF3digo",
       "preset_inline_comments": "Comentarios (%%...%%)",
+      "preset_highlighted_text": "Texto resaltado (==...)",
       "preset_parentheses": "Par\xE9ntesis ()",
       "preset_square_brackets": "Corchetes []",
       "preset_curly_braces": "Llaves {}",
@@ -803,6 +806,7 @@ var require_es = __commonJS({
       "preset_example_double_quotes": '"texto"',
       "preset_example_single_quotes": "'texto'",
       "preset_example_single_quotes_word": "'palabra'",
+      "preset_example_highlight": "==texto resaltado==",
       "preset_example_all_text": "Esto seleccionar\xE1 todo el texto.",
       // Blacklist Settings
       "blacklist_words_header": "Lista negra de palabras",
@@ -908,7 +912,7 @@ var require_es = __commonJS({
       "quick_colors_header": "Colores R\xE1pidos",
       "quick_colors_desc": "Permite resaltar o colorear texto r\xE1pidamente mostrando colores en el men\xFA contextual. Si Colores R\xE1pidos est\xE1 desactivado, se usar\xE1n los colores por estilo en Estilos R\xE1pidos.",
       "quick_colors_apply_mode_label": "El coloreado de texto se aplicar\xE1 como",
-      "quick_colors_apply_mode_act": "Always Color Text",
+      "quick_colors_apply_mode_act": "Siempre colorear texto",
       "quick_colors_apply_mode_html": "HTML en l\xEDnea",
       "quick_styles_header": "Estilos R\xE1pidos",
       "quick_styles_desc": "Define estilos con nombre para aplicar color de texto y resaltados. Si Colores R\xE1pidos est\xE1 desactivado, se usar\xE1n los colores por estilo aqu\xED.",
@@ -1219,6 +1223,7 @@ var require_fr = __commonJS({
       "preset_all_texts": "Tout le texte",
       "preset_codeblocks": "Blocs de code",
       "preset_inline_comments": "Commentaires (%%...%%)",
+      "preset_highlighted_text": "Texte surlign\xE9 (==...)",
       "preset_parentheses": "Parenth\xE8ses ()",
       "preset_square_brackets": "Crochets []",
       "preset_curly_braces": "Accolades {}",
@@ -1259,6 +1264,7 @@ var require_fr = __commonJS({
       "preset_example_double_quotes": '"texte"',
       "preset_example_single_quotes": "'texte'",
       "preset_example_single_quotes_word": "'mot'",
+      "preset_example_highlight": "==texte surlign\xE9==",
       "preset_example_all_text": "Ceci ciblera tout le texte.",
       // Blacklist Settings
       "blacklist_words_header": "Mots en liste noire",
@@ -1364,7 +1370,7 @@ var require_fr = __commonJS({
       "quick_colors_header": "Couleurs Rapides",
       "quick_colors_desc": "Permet de surligner ou colorer rapidement du texte en affichant des couleurs dans le menu contextuel. Si Couleurs Rapides est d\xE9sactiv\xE9, les couleurs par style dans Styles Rapides seront utilis\xE9es.",
       "quick_colors_apply_mode_label": "La coloration du texte s'appliquera comme",
-      "quick_colors_apply_mode_act": "Always Color Text",
+      "quick_colors_apply_mode_act": "Toujours colorer le texte",
       "quick_colors_apply_mode_html": "HTML en ligne",
       "quick_styles_header": "Styles Rapides",
       "quick_styles_desc": "D\xE9finir des styles nomm\xE9s pour appliquer la couleur du texte et les surlignages. Si Couleurs Rapides est d\xE9sactiv\xE9, les couleurs par style ici seront utilis\xE9es.",
@@ -1676,6 +1682,7 @@ var require_hi = __commonJS({
       "preset_all_texts": "\u0938\u092D\u0940 \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
       "preset_codeblocks": "\u0915\u094B\u0921 \u092C\u094D\u0932\u0949\u0915",
       "preset_inline_comments": "\u091F\u093F\u092A\u094D\u092A\u0923\u093F\u092F\u093E\u0901 (%%\u2026%%)",
+      "preset_highlighted_text": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u093F\u092F\u093E \u0939\u0941\u0906 \u091F\u0947\u0915\u094D\u0938\u094D\u091F (==...)",
       "preset_parentheses": "\u0915\u094B\u0937\u094D\u0920\u0915 ()",
       "preset_square_brackets": "\u0935\u0930\u094D\u0917 \u0915\u094B\u0937\u094D\u0920\u0915 []",
       "preset_curly_braces": "\u0918\u0941\u0902\u0918\u0930\u093E\u0932\u0947 \u092C\u094D\u0930\u0947\u0938\u0947\u0938 {}",
@@ -1716,6 +1723,7 @@ var require_hi = __commonJS({
       "preset_example_double_quotes": '"\u092A\u093E\u0920"',
       "preset_example_single_quotes": "'\u092A\u093E\u0920'",
       "preset_example_single_quotes_word": "'\u0936\u092C\u094D\u0926'",
+      "preset_example_highlight": "==\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u093F\u092F\u093E \u0939\u0941\u0906 \u091F\u0947\u0915\u094D\u0938\u094D\u091F==",
       "preset_example_all_text": "\u092F\u0939 \u0938\u092D\u0940 \u092A\u093E\u0920 \u0915\u094B \u0932\u0915\u094D\u0937\u093F\u0924 \u0915\u0930\u0947\u0917\u093E\u0964",
       // Blacklist Settings
       "blacklist_words_header": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0936\u092C\u094D\u0926",
@@ -1821,7 +1829,7 @@ var require_hi = __commonJS({
       "quick_colors_header": "\u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917",
       "quick_colors_desc": "\u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0926\u093F\u0916\u093E\u0915\u0930 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u091C\u0932\u094D\u0926\u0940 \u0938\u0947 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092F\u093E \u0930\u0902\u0917\u0928\u0947 \u0915\u0940 \u0905\u0928\u0941\u092E\u0924\u093F \u0926\u0947\u0924\u093E \u0939\u0948\u0964 \u092F\u0926\u093F \u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917 \u092C\u0902\u0926 \u0939\u0948\u0902, \u0924\u094B \u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u094B\u0902 \u092E\u0947\u0902 \u092A\u094D\u0930\u0924\u093F-\u0936\u0948\u0932\u0940 \u0930\u0902\u0917\u094B\u0902 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u093F\u092F\u093E \u091C\u093E\u090F\u0917\u093E\u0964",
       "quick_colors_apply_mode_label": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u093E\u0908 \u0907\u0938 \u0930\u0942\u092A \u092E\u0947\u0902 \u0932\u093E\u0917\u0942 \u0939\u094B\u0917\u0940",
-      "quick_colors_apply_mode_act": "Always Color Text",
+      "quick_colors_apply_mode_act": "\u0939\u092E\u0947\u0936\u093E \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0930\u0902\u0917\u0947\u0902",
       "quick_colors_apply_mode_html": "\u0907\u0928\u0932\u093E\u0907\u0928 HTML",
       "quick_styles_header": "\u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u093E\u0901",
       "quick_styles_desc": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917 \u0914\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0932\u093E\u0917\u0942 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0928\u093E\u092E\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u093E\u0901 \u092A\u0930\u093F\u092D\u093E\u0937\u093F\u0924 \u0915\u0930\u0947\u0902\u0964 \u092F\u0926\u093F \u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917 \u092C\u0902\u0926 \u0939\u0948\u0902, \u0924\u094B \u092F\u0939\u093E\u0902 \u092A\u094D\u0930\u0924\u093F-\u0936\u0948\u0932\u0940 \u0930\u0902\u0917\u094B\u0902 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u093F\u092F\u093E \u091C\u093E\u090F\u0917\u093E\u0964",
@@ -2133,6 +2141,7 @@ var require_it = __commonJS({
       "preset_all_texts": "Tutti i testi",
       "preset_codeblocks": "Blocchi di codice",
       "preset_inline_comments": "Commenti (%%\u2026%%)",
+      "preset_highlighted_text": "Testo evidenziato (==...)",
       "preset_parentheses": "Parentesi ()",
       "preset_square_brackets": "Parentesi quadre []",
       "preset_curly_braces": "Parentesi graffe {}",
@@ -2173,6 +2182,7 @@ var require_it = __commonJS({
       "preset_example_double_quotes": '"testo"',
       "preset_example_single_quotes": "'testo'",
       "preset_example_single_quotes_word": "'parola'",
+      "preset_example_highlight": "==testo evidenziato==",
       "preset_example_all_text": "Questo selezioner\xE0 tutto il testo.",
       // Blacklist Settings
       "blacklist_words_header": "Parole in blacklist",
@@ -2278,7 +2288,7 @@ var require_it = __commonJS({
       "quick_colors_header": "Colori Rapidi",
       "quick_colors_desc": "Consente di evidenziare o colorare rapidamente il testo mostrando i colori nel menu contestuale. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile in Stili Rapidi.",
       "quick_colors_apply_mode_label": "La colorazione del testo verr\xE0 applicata come",
-      "quick_colors_apply_mode_act": "Always Color Text",
+      "quick_colors_apply_mode_act": "Colora sempre il testo",
       "quick_colors_apply_mode_html": "HTML in linea",
       "quick_styles_header": "Stili Rapidi",
       "quick_styles_desc": "Definisci stili con nome per applicare colore del testo ed evidenziazioni. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile qui.",
@@ -2590,6 +2600,7 @@ var require_bn = __commonJS({
       "preset_all_texts": "\u09B8\u09AC \u099F\u09C7\u0995\u09CD\u09B8\u099F",
       "preset_codeblocks": "\u0995\u09CB\u09A1\u09AC\u09CD\u09B2\u0995",
       "preset_inline_comments": "\u09AE\u09A8\u09CD\u09A4\u09AC\u09CD\u09AF (%%\u2026%%)",
+      "preset_highlighted_text": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u099F\u09C7\u0995\u09CD\u09B8\u099F (==...)",
       "preset_parentheses": "\u09AC\u09A8\u09CD\u09A7\u09A8\u09C0 ()",
       "preset_square_brackets": "\u09AC\u09B0\u09CD\u0997 \u09AC\u09A8\u09CD\u09A7\u09A8\u09C0 []",
       "preset_curly_braces": "\u0995\u09BE\u09B0\u09CD\u09B2\u09BF \u09AC\u09CD\u09B0\u09C7\u09B8\u09C7\u09B8 {}",
@@ -2630,6 +2641,7 @@ var require_bn = __commonJS({
       "preset_example_double_quotes": '"\u09AA\u09BE\u09A0\u09CD\u09AF"',
       "preset_example_single_quotes": "'\u09AA\u09BE\u09A0\u09CD\u09AF'",
       "preset_example_single_quotes_word": "'\u09B6\u09AC\u09CD\u09A6'",
+      "preset_example_highlight": "==\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09BE \u099F\u09C7\u0995\u09CD\u09B8\u099F==",
       "preset_example_all_text": "\u098F\u099F\u09BF \u09B8\u09AE\u09B8\u09CD\u09A4 \u09AA\u09BE\u09A0\u09CD\u09AF\u0995\u09C7 \u09B2\u0995\u09CD\u09B7\u09CD\u09AF \u0995\u09B0\u09AC\u09C7\u0964",
       // Blacklist Settings
       "blacklist_words_header": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u09B6\u09AC\u09CD\u09A6\u0997\u09C1\u09B2\u09BF",
@@ -2735,7 +2747,7 @@ var require_bn = __commonJS({
       "quick_colors_header": "\u09A6\u09CD\u09B0\u09C1\u09A4 \u09B0\u0982",
       "quick_colors_desc": "\u09A1\u09BE\u09A8-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1\u09A4\u09C7 \u09B0\u0982 \u09AA\u09CD\u09B0\u09A6\u09B0\u09CD\u09B6\u09A8 \u0995\u09B0\u09C7 \u09A6\u09CD\u09B0\u09C1\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AC\u09BE \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u0985\u09A8\u09C1\u09AE\u09A4\u09BF \u09A6\u09C7\u09AF\u09BC\u0964 \u09AF\u09A6\u09BF \u09A6\u09CD\u09B0\u09C1\u09A4 \u09B0\u0982 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09C7, \u09A4\u09AC\u09C7 \u09A6\u09CD\u09B0\u09C1\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u0997\u09C1\u09B2\u09BF\u09A4\u09C7 \u09AA\u09CD\u09B0\u09A4\u09BF-\u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09B0\u0982 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B9\u09AC\u09C7\u0964",
       "quick_colors_apply_mode_label": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u098F\u0987\u09AD\u09BE\u09AC\u09C7 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u09B9\u09AC\u09C7",
-      "quick_colors_apply_mode_act": "Always Color Text",
+      "quick_colors_apply_mode_act": "\u09B8\u09AC\u09B8\u09AE\u09DF \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "quick_colors_apply_mode_html": "\u0987\u09A8\u09B2\u09BE\u0987\u09A8 HTML",
       "quick_styles_header": "\u09A6\u09CD\u09B0\u09C1\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2",
       "quick_styles_desc": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u098F\u09AC\u0982 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u0995\u09B0\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u09A8\u09BE\u09AE\u09AF\u09C1\u0995\u09CD\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09B8\u0982\u099C\u09CD\u099E\u09BE\u09AF\u09BC\u09BF\u09A4 \u0995\u09B0\u09C1\u09A8\u0964 \u09AF\u09A6\u09BF \u09A6\u09CD\u09B0\u09C1\u09A4 \u09B0\u0982 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09C7, \u09A4\u09AC\u09C7 \u098F\u0996\u09BE\u09A8\u09C7 \u09AA\u09CD\u09B0\u09A4\u09BF-\u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09B0\u0982 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B9\u09AC\u09C7\u0964",
@@ -3047,6 +3059,7 @@ var require_ru = __commonJS({
       "preset_all_texts": "\u0412\u0435\u0441\u044C \u0442\u0435\u043A\u0441\u0442",
       "preset_codeblocks": "\u0411\u043B\u043E\u043A\u0438 \u043A\u043E\u0434\u0430",
       "preset_inline_comments": "\u041A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0438 (%%...%%)",
+      "preset_highlighted_text": "\u0412\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 (==...)",
       "preset_parentheses": "\u041A\u0440\u0443\u0433\u043B\u044B\u0435 \u0441\u043A\u043E\u0431\u043A\u0438 ()",
       "preset_square_brackets": "\u041A\u0432\u0430\u0434\u0440\u0430\u0442\u043D\u044B\u0435 \u0441\u043A\u043E\u0431\u043A\u0438 []",
       "preset_curly_braces": "\u0424\u0438\u0433\u0443\u0440\u043D\u044B\u0435 \u0441\u043A\u043E\u0431\u043A\u0438 {}",
@@ -3087,6 +3100,7 @@ var require_ru = __commonJS({
       "preset_example_double_quotes": '"\u0442\u0435\u043A\u0441\u0442"',
       "preset_example_single_quotes": "'\u0442\u0435\u043A\u0441\u0442'",
       "preset_example_single_quotes_word": "'\u0441\u043B\u043E\u0432\u043E'",
+      "preset_example_highlight": "==\u0432\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442==",
       "preset_example_all_text": "\u042D\u0442\u043E \u0432\u044B\u0431\u0435\u0440\u0435\u0442 \u0432\u0435\u0441\u044C \u0442\u0435\u043A\u0441\u0442.",
       // Blacklist Settings
       "blacklist_words_header": "\u0427\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0441\u043B\u043E\u0432",
@@ -3192,8 +3206,8 @@ var require_ru = __commonJS({
       "quick_colors_header": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430",
       "quick_colors_desc": "\u041F\u043E\u0437\u0432\u043E\u043B\u044F\u0435\u0442 \u0431\u044B\u0441\u0442\u0440\u043E \u0432\u044B\u0434\u0435\u043B\u044F\u0442\u044C \u0438\u043B\u0438 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442, \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u044F \u0446\u0432\u0435\u0442\u0430 \u0432 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E. \u0415\u0441\u043B\u0438 \u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u044B, \u0431\u0443\u0434\u0443\u0442 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C\u0441\u044F \u0446\u0432\u0435\u0442\u0430 \u0441\u0442\u0438\u043B\u0435\u0439 \u0438\u0437 \u0411\u044B\u0441\u0442\u0440\u044B\u0445 \u0441\u0442\u0438\u043B\u0435\u0439.",
       "quick_colors_apply_mode_label": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0442\u0435\u043A\u0441\u0442\u0430 \u0431\u0443\u0434\u0435\u0442 \u043F\u0440\u0438\u043C\u0435\u043D\u044F\u0442\u044C\u0441\u044F \u043A\u0430\u043A",
-      "quick_colors_apply_mode_act": "Always Color Text",
-      "quick_colors_apply_mode_html": "Inline HTML",
+      "quick_colors_apply_mode_act": "\u0412\u0441\u0435\u0433\u0434\u0430 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442",
+      "quick_colors_apply_mode_html": "\u0412\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u0439 HTML",
       "quick_styles_header": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0441\u0442\u0438\u043B\u0438",
       "quick_styles_desc": "\u041E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u0435 \u0438\u043C\u0435\u043D\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0441\u0442\u0438\u043B\u0438 \u0434\u043B\u044F \u043F\u0440\u0438\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0438 \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u0438\u044F. \u0415\u0441\u043B\u0438 \u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u044B, \u0431\u0443\u0434\u0443\u0442 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C\u0441\u044F \u0446\u0432\u0435\u0442\u0430 \u0441\u0442\u0438\u043B\u0435\u0439 \u0437\u0434\u0435\u0441\u044C.",
       "btn_add_style": "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u0442\u0438\u043B\u044C",
@@ -3504,6 +3518,7 @@ var require_zh_cn = __commonJS({
       "preset_all_texts": "\u6240\u6709\u6587\u672C",
       "preset_codeblocks": "\u4EE3\u7801\u5757",
       "preset_inline_comments": "\u6CE8\u91CA (%%...%%)",
+      "preset_highlighted_text": "\u9AD8\u4EAE\u6587\u672C (==...)",
       "preset_parentheses": "\u5706\u62EC\u53F7 ()",
       "preset_square_brackets": "\u65B9\u62EC\u53F7 []",
       "preset_curly_braces": "\u5927\u62EC\u53F7 {}",
@@ -3544,6 +3559,7 @@ var require_zh_cn = __commonJS({
       "preset_example_double_quotes": '"\u6587\u672C"',
       "preset_example_single_quotes": "'\u6587\u672C'",
       "preset_example_single_quotes_word": "'\u5355\u8BCD'",
+      "preset_example_highlight": "==\u9AD8\u4EAE\u6587\u672C==",
       "preset_example_all_text": "\u8FD9\u5C06\u9009\u4E2D\u6240\u6709\u6587\u672C\u3002",
       // Blacklist Settings
       "blacklist_words_header": "\u9ED1\u540D\u5355\u5355\u8BCD",
@@ -3649,7 +3665,7 @@ var require_zh_cn = __commonJS({
       "quick_colors_header": "\u5FEB\u901F\u989C\u8272",
       "quick_colors_desc": "\u5141\u8BB8\u901A\u8FC7\u5728\u53F3\u952E\u83DC\u5355\u4E2D\u663E\u793A\u989C\u8272\u6765\u5FEB\u901F\u9AD8\u4EAE\u6216\u7740\u8272\u6587\u672C\u3002\u5982\u679C\u5173\u95ED\u5FEB\u901F\u989C\u8272\uFF0C\u5C06\u4F7F\u7528\u5FEB\u901F\u6837\u5F0F\u4E2D\u7684\u6BCF\u79CD\u6837\u5F0F\u989C\u8272\u3002",
       "quick_colors_apply_mode_label": "\u6587\u672C\u7740\u8272\u5C06\u5E94\u7528\u4E3A",
-      "quick_colors_apply_mode_act": "Always Color Text",
+      "quick_colors_apply_mode_act": "\u59CB\u7EC8\u4E3A\u6587\u672C\u7740\u8272",
       "quick_colors_apply_mode_html": "\u5185\u8054 HTML",
       "quick_styles_header": "\u5FEB\u901F\u6837\u5F0F",
       "quick_styles_desc": "\u5B9A\u4E49\u7528\u4E8E\u5E94\u7528\u6587\u672C\u989C\u8272\u548C\u9AD8\u4EAE\u663E\u793A\u7684\u547D\u540D\u6837\u5F0F\u3002\u5982\u679C\u5173\u95ED\u5FEB\u901F\u989C\u8272\uFF0C\u5C06\u4F7F\u7528\u6B64\u5904\u7684\u6BCF\u79CD\u6837\u5F0F\u989C\u8272\u3002",
@@ -7101,10 +7117,6 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   processMarkdownFormattingInReading(element, folderEntry = null) {
     try {
-      try {
-        debugLog("MARKDOWN_FORMAT", "Processing markdown formatting");
-      } catch (_) {
-      }
       const weAll = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
       let filePath = null;
       try {
@@ -7114,55 +7126,304 @@ module.exports = class AlwaysColorText extends Plugin {
       const we = filePath ? this.filterEntriesByAdvancedRules(filePath, weAll) : weAll;
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
       try {
-        const markElements = element.querySelectorAll?.("mark") || [];
-        debugLog("MARK_FORMAT", `Found ${markElements.length} mark elements, we.length=${we.length}`);
-        if (markElements.length > 0 && we.length > 0) {
-          for (let i = 0; i < Math.min(3, we.length); i++) {
-            const entry = we[i];
-            debugLog("MARK_FORMAT", `  Entry[${i}]: pattern="${entry?.pattern}", color="${entry?.color}", bg="${entry?.backgroundColor}"`);
-          }
-        }
+        const markElements = element && element.nodeName === "MARK" ? [element] : Array.from(element.querySelectorAll?.("mark") || []);
         for (const mark of markElements) {
           const styledSpan = mark.querySelector("span.always-color-text-highlight");
-          if (!styledSpan) continue;
+          const fallbackSpan = styledSpan || mark.querySelector(".always-color-text-highlight") || mark;
+          try {
+            if (fallbackSpan === mark && !styledSpan) {
+            }
+          } catch (_) {
+          }
           const markText = mark.textContent || "";
-          debugLog("MARK_FORMAT", `Processing mark: "${markText}", we.length=${we.length}`);
-          let foundMatch = false;
-          for (let i = 0; i < we.length; i++) {
-            const entry = we[i];
-            if (!entry) continue;
-            const pattern = entry.pattern || entry.searchText;
-            if (!pattern) continue;
-            const isSimpleMatch = !entry.isRegex && pattern && markText.includes(pattern);
-            if (isSimpleMatch) {
-              debugLog("MARK_FORMAT", `MATCH! Entry[${i}] pattern="${pattern}" matched "${markText}"`);
-              const bgColor = entry.backgroundColor || entry.color;
-              const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : null;
-              const params = this.getHighlightParams(entry);
-              const bgRgba = this.hexToRgba(bgColor, params.opacity);
-              debugLog("MARK_FORMAT", `  Applying: bg=${bgRgba}, text=${textColor}`);
-              styledSpan.style.setProperty("background-color", bgRgba, "important");
-              if (textColor) {
-                styledSpan.style.setProperty("color", textColor, "important");
+          let folderForMark = null;
+          try {
+            folderForMark = this.getBestFolderEntry(filePath);
+          } catch (_) {
+          }
+          try {
+            we.forEach((e) => this._patternMatcher && this._patternMatcher.compilePattern(e, this._regexCache));
+          } catch (_) {
+          }
+          let matches = this._patternMatcher ? this._patternMatcher.match(markText, we, folderForMark) : [];
+          try {
+          } catch (_) {
+          }
+          const qsEnabled = !!this.settings.quickStylesEnabled;
+          const qsArr = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
+          const mt = String(markText || "").trim();
+          let quickStyle = null;
+          if (qsEnabled && qsArr.length > 0 && mt.length > 0) {
+            const lc = mt.toLowerCase();
+            quickStyle = qsArr.find((s) => s && typeof s.name === "string" && s.name.toLowerCase() === lc) || null;
+            try {
+              if (quickStyle) {
               }
-              styledSpan.style.setProperty("padding-left", params.hPad + "px", "important");
-              styledSpan.style.setProperty("padding-right", params.hPad + "px", "important");
-              const vpad = params.vPad;
-              styledSpan.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
-              styledSpan.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
-              const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
-              styledSpan.style.setProperty("border-radius", br + "px", "important");
-              styledSpan.style.setProperty("border-top", `1px solid ${textColor || bgColor}`, "important");
-              foundMatch = true;
-              break;
+            } catch (_) {
             }
           }
-          if (!foundMatch) {
-            debugLog("MARK_FORMAT", `No match found for: "${markText}"`);
+          const presetEntry = we.find((e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements)) || weAll.find((e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements)) || null;
+          const highlightRegexEntry = presetEntry || (we.find((e) => e && e.isRegex && typeof e.pattern === "string" && e.pattern.includes("==[\\s\\S]*?==")) || weAll.find((e) => e && e.isRegex && typeof e.pattern === "string" && e.pattern.includes("==[\\s\\S]*?=="))) || null;
+          if (quickStyle) {
+            try {
+              mark.classList.add("always-color-text-highlight-marks");
+            } catch (_) {
+            }
+            try {
+              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add("always-color-text-highlight-marks");
+            } catch (_) {
+            }
+            const params = this.getHighlightParams(quickStyle);
+            const styleType2 = quickStyle.styleType || "both";
+            const tc = quickStyle.textColor || quickStyle.color || null;
+            const bc = quickStyle.backgroundColor || null;
+            if (bc) {
+              const bgRgba = this.hexToRgba(bc, params.opacity);
+              fallbackSpan.style.setProperty("background-color", bgRgba, "important");
+              try {
+                mark.style.setProperty("background-color", bgRgba, "important");
+              } catch (_) {
+              }
+              try {
+                fallbackSpan.style.setProperty("--highlight-background", bgRgba);
+              } catch (_) {
+              }
+              try {
+                mark.style.setProperty("--highlight-background", bgRgba);
+              } catch (_) {
+              }
+            } else {
+            }
+            if (tc) {
+              fallbackSpan.style.setProperty("color", tc, "important");
+              fallbackSpan.style.setProperty("--highlight-color", tc);
+              try {
+                mark.style.setProperty("color", tc, "important");
+              } catch (_) {
+              }
+              try {
+                mark.style.setProperty("--highlight-color", tc);
+              } catch (_) {
+              }
+            } else {
+            }
+            fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
+            fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
+            const vpad = params.vPad;
+            fallbackSpan.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+            fallbackSpan.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
+            fallbackSpan.style.setProperty("border-radius", br + "px", "important");
+            try {
+              const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
+              if (borderCss) {
+                fallbackSpan.style.cssText += borderCss;
+              }
+              if (borderCss) {
+                mark.style.cssText += borderCss;
+              }
+            } catch (_) {
+            }
+            try {
+            } catch (_) {
+            }
+          } else if (presetEntry || highlightRegexEntry) {
+            try {
+              mark.classList.add("always-color-text-highlight-marks");
+            } catch (_) {
+            }
+            try {
+              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add("always-color-text-highlight-marks");
+            } catch (_) {
+            }
+            const entryForMark = presetEntry || highlightRegexEntry;
+            const params = this.getHighlightParams(entryForMark);
+            const tc = entryForMark.textColor && entryForMark.textColor !== "currentColor" ? entryForMark.textColor : entryForMark.color || null;
+            const bc = entryForMark.backgroundColor || null;
+            if (bc) {
+              const bgRgba = this.hexToRgba(bc, params.opacity);
+              fallbackSpan.style.setProperty("background-color", bgRgba, "important");
+              try {
+                mark.style.setProperty("background-color", bgRgba, "important");
+              } catch (_) {
+              }
+              try {
+                fallbackSpan.style.setProperty("--highlight-background", bgRgba);
+              } catch (_) {
+              }
+              try {
+                mark.style.setProperty("--highlight-background", bgRgba);
+              } catch (_) {
+              }
+            } else {
+            }
+            if (tc) {
+              fallbackSpan.style.setProperty("color", tc, "important");
+              fallbackSpan.style.setProperty("--highlight-color", tc);
+              try {
+                mark.style.setProperty("color", tc, "important");
+              } catch (_) {
+              }
+              try {
+                mark.style.setProperty("--highlight-color", tc);
+              } catch (_) {
+              }
+            } else {
+            }
+            fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
+            fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
+            const vpad = params.vPad;
+            fallbackSpan.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+            fallbackSpan.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
+            fallbackSpan.style.setProperty("border-radius", br + "px", "important");
+            try {
+              const borderCss = this.generateBorderStyle(tc, bc, entryForMark);
+              if (borderCss) {
+                fallbackSpan.style.cssText += borderCss;
+              }
+              if (borderCss) {
+                mark.style.cssText += borderCss;
+              }
+            } catch (_) {
+            }
+            try {
+            } catch (_) {
+            }
+          } else if (Array.isArray(matches) && matches.length > 0) {
+            const csFrom = (entry2) => typeof entry2?._caseSensitiveOverride === "boolean" ? entry2._caseSensitiveOverride : typeof entry2?.caseSensitive === "boolean" ? entry2.caseSensitive : this.settings.caseSensitive;
+            const exact = matches.filter((mx) => {
+              const ent = mx.entryRef || mx.entry || {};
+              const pat = String(ent.pattern || "");
+              if (!pat) return false;
+              const cs = csFrom(ent);
+              return cs ? markText === pat : markText.toLowerCase() === pat.toLowerCase();
+            });
+            if (exact.length > 0) {
+              matches = exact;
+            }
+            matches.sort((a, b) => {
+              const pa = String(a.entryRef?.pattern || a.entry?.pattern || "").length;
+              const pb = String(b.entryRef?.pattern || b.entry?.pattern || "").length;
+              if (pb !== pa) return pb - pa;
+              const aBoth = (a.entryRef?.styleType || a.entry?.styleType) === "both";
+              const bBoth = (b.entryRef?.styleType || b.entry?.styleType) === "both";
+              if (aBoth !== bBoth) return bBoth ? 1 : -1;
+              const aText = !!(a.entryRef?.textColor && a.entryRef.textColor !== "currentColor" || a.color);
+              const bText = !!(b.entryRef?.textColor && b.entryRef.textColor !== "currentColor" || b.color);
+              if (aText !== bText) return bText ? 1 : -1;
+              return 0;
+            });
+            const m = matches[0];
+            const entry = m.entryRef || m.entry || null;
+            try {
+            } catch (_) {
+            }
+            try {
+              mark.classList.add("always-color-text-highlight-marks");
+            } catch (_) {
+            }
+            try {
+              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add("always-color-text-highlight-marks");
+            } catch (_) {
+            }
+            const params = this.getHighlightParams(entry);
+            let textColor = entry && entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : null;
+            if (!textColor && m && m.color) {
+              textColor = m.color;
+            }
+            const styleType2 = entry?.styleType || "both";
+            const bgColor = entry && entry.backgroundColor ? entry.backgroundColor : null;
+            if (bgColor && (styleType2 === "highlight" || styleType2 === "both")) {
+              const bgRgba = this.hexToRgba(bgColor, params.opacity);
+              fallbackSpan.style.setProperty("background-color", bgRgba, "important");
+              try {
+                mark.style.setProperty("background-color", bgRgba, "important");
+              } catch (_) {
+              }
+              try {
+                fallbackSpan.style.setProperty("--highlight-background", bgRgba);
+              } catch (_) {
+              }
+              try {
+                mark.style.setProperty("--highlight-background", bgRgba);
+              } catch (_) {
+              }
+            } else {
+            }
+            if (textColor && (styleType2 === "text" || styleType2 === "both")) {
+              fallbackSpan.style.setProperty("color", textColor, "important");
+              fallbackSpan.style.setProperty("--highlight-color", textColor);
+              try {
+                mark.style.setProperty("color", textColor, "important");
+              } catch (_) {
+              }
+              try {
+                mark.style.setProperty("--highlight-color", textColor);
+              } catch (_) {
+              }
+            } else {
+            }
+            fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
+            fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
+            const vpad = params.vPad;
+            fallbackSpan.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+            fallbackSpan.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
+            fallbackSpan.style.setProperty("border-radius", br + "px", "important");
+            try {
+              const borderCss = this.generateBorderStyle(textColor, bgColor, entry);
+              if (borderCss) {
+                fallbackSpan.style.cssText += borderCss;
+              }
+              if (borderCss) {
+                mark.style.cssText += borderCss;
+              }
+            } catch (_) {
+            }
+            try {
+            } catch (_) {
+            }
+          } else if (quickStyle) {
+            const params = this.getHighlightParams(quickStyle);
+            const styleType2 = quickStyle.styleType || "both";
+            const tc = quickStyle.textColor || quickStyle.color || null;
+            const bc = quickStyle.backgroundColor || null;
+            if (bc && (styleType2 === "highlight" || styleType2 === "both")) {
+              const bgRgba = this.hexToRgba(bc, params.opacity);
+              fallbackSpan.style.setProperty("background-color", bgRgba, "important");
+              try {
+                fallbackSpan.style.setProperty("--highlight-background", bgRgba);
+              } catch (_) {
+              }
+            } else {
+            }
+            if (tc && (styleType2 === "text" || styleType2 === "both")) {
+              fallbackSpan.style.setProperty("color", tc, "important");
+              fallbackSpan.style.setProperty("--highlight-color", tc);
+            } else {
+            }
+            fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
+            fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
+            const vpad = params.vPad;
+            fallbackSpan.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
+            fallbackSpan.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
+            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
+            fallbackSpan.style.setProperty("border-radius", br + "px", "important");
+            try {
+              const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
+              if (borderCss) {
+                fallbackSpan.style.cssText += borderCss;
+              }
+            } catch (_) {
+            }
+            try {
+            } catch (_) {
+            }
+          } else {
           }
         }
       } catch (e) {
-        debugError("MARK_FORMAT", "Failed to process mark elements", e);
       }
       const taskCheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Checked)");
       const taskUncheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Unchecked)");
@@ -7318,7 +7579,6 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     } catch (e) {
       try {
-        debugError("MARKDOWN_FORMAT", "Error processing markdown formatting", e);
       } catch (_) {
       }
     }
@@ -12248,6 +12508,9 @@ module.exports = class AlwaysColorText extends Plugin {
           if (node.parentElement?.closest("code, pre")) {
             return NodeFilter.FILTER_REJECT;
           }
+          if (node.parentElement?.closest("mark")) {
+            return NodeFilter.FILTER_REJECT;
+          }
           if (node.parentElement?.closest(".always-color-text-highlight")) {
             return NodeFilter.FILTER_REJECT;
           }
@@ -12288,6 +12551,9 @@ module.exports = class AlwaysColorText extends Plugin {
             if (node.parentElement?.closest("code, pre")) {
               return NodeFilter.FILTER_REJECT;
             }
+            if (node.parentElement?.closest("mark")) {
+              return NodeFilter.FILTER_REJECT;
+            }
             if (node.parentElement?.closest(".always-color-text-highlight")) {
               return NodeFilter.FILTER_REJECT;
             }
@@ -12324,6 +12590,9 @@ module.exports = class AlwaysColorText extends Plugin {
       {
         acceptNode(node) {
           if (node.parentElement?.closest("code, pre")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (node.parentElement?.closest("mark")) {
             return NodeFilter.FILTER_REJECT;
           }
           if (node.parentElement?.closest(".always-color-text-highlight")) {
@@ -16050,7 +16319,6 @@ var PresetModal = class extends Modal {
       { label: this.plugin.t("preset_markdown_links", "Markdown links"), pattern: "\\[[^\\]]+\\]\\(https?://[^)]+\\)", flags: "", examples: [this.plugin.t("preset_example_markdown_link", "[Link](https://example.com)")], group: "markdown" },
       { label: this.plugin.t("preset_inline_comments", "Comments (%%\u2026%%)"), pattern: "%%[\\s\\S]*?%%", flags: "s", examples: [this.plugin.t("preset_example_comment", "%% comment %%")], group: "markdown" },
       { label: this.plugin.t("preset_highlighted_text", "Highlighted Text (==...)"), pattern: "==[\\s\\S]*?==", flags: "s", examples: [this.plugin.t("preset_example_highlight", "==highlighted text==")], group: "markdown" },
-      { label: "Highlights (====)", pattern: "==[\\s\\S]*?==", flags: "", examples: ["==highlighted=="], group: "markdown", affectMarkElements: true },
       { label: this.plugin.t("preset_domain_names", "Domain names"), pattern: "\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b", flags: "", examples: [this.plugin.t("preset_example_domain", "example.com")] },
       { label: this.plugin.t("preset_email_addresses", "Email addresses"), pattern: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", flags: "", examples: [this.plugin.t("preset_example_email", "name@example.com")] },
       { label: this.plugin.t("preset_at_username", "@username"), pattern: "@[a-zA-Z0-9_]+", flags: "", examples: [this.plugin.t("preset_example_username", "@username")] },

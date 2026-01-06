@@ -314,6 +314,7 @@ module.exports = {
   "preset_all_texts": "সব টেক্সট",
   "preset_codeblocks": "কোডব্লক",
   "preset_inline_comments": "মন্তব্য (%%…%%)",
+  "preset_highlighted_text": "হাইলাইট টেক্সট (==...)",
   "preset_parentheses": "বন্ধনী ()",
   "preset_square_brackets": "বর্গ বন্ধনী []",
   "preset_curly_braces": "কার্লি ব্রেসেস {}",
@@ -355,6 +356,7 @@ module.exports = {
   "preset_example_double_quotes": "\"পাঠ্য\"",
   "preset_example_single_quotes": "'পাঠ্য'",
   "preset_example_single_quotes_word": "'শব্দ'",
+  "preset_example_highlight": "==হাইলাইট করা টেক্সট==",
   "preset_example_all_text": "এটি সমস্ত পাঠ্যকে লক্ষ্য করবে।",
   
   // Blacklist Settings
@@ -470,7 +472,7 @@ module.exports = {
   "quick_colors_header": "দ্রুত রং",
   "quick_colors_desc": "ডান-ক্লিক মেনুতে রং প্রদর্শন করে দ্রুত টেক্সট হাইলাইট বা রঙ করার অনুমতি দেয়। যদি দ্রুত রং বন্ধ থাকে, তবে দ্রুত স্টাইলগুলিতে প্রতি-স্টাইল রং ব্যবহার করা হবে।",
   "quick_colors_apply_mode_label": "টেক্সট রঙায়ন এইভাবে প্রয়োগ হবে",
-  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_act": "সবসময় টেক্সট রঙ করুন",
   "quick_colors_apply_mode_html": "ইনলাইন HTML",
   "quick_styles_header": "দ্রুত স্টাইল",
   "quick_styles_desc": "টেক্সট রঙ এবং হাইলাইট প্রয়োগ করার জন্য নামযুক্ত স্টাইল সংজ্ঞায়িত করুন। যদি দ্রুত রং বন্ধ থাকে, তবে এখানে প্রতি-স্টাইল রং ব্যবহার করা হবে।",

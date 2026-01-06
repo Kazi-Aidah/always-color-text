@@ -32,8 +32,8 @@ mark.always-color-text-highlight-marks {
   color: var(--highlight-color, currentColor) !important;
 }
 
-/* Override native mark styling in reading mode - force custom colors via inline styles in JavaScript */
-.markdown-rendered mark {
+/* Override native mark styling in reading mode, but preserve plugin-mark styles */
+.markdown-rendered mark:not(.always-color-text-highlight-marks) {
   background-color: transparent !important;
   color: inherit !important;
 }

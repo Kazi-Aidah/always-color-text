@@ -314,6 +314,7 @@ module.exports = {
   "preset_all_texts": "सभी टेक्स्ट",
   "preset_codeblocks": "कोड ब्लॉक",
   "preset_inline_comments": "टिप्पणियाँ (%%…%%)",
+  "preset_highlighted_text": "हाइलाइट किया हुआ टेक्स्ट (==...)",
   "preset_parentheses": "कोष्ठक ()",
   "preset_square_brackets": "वर्ग कोष्ठक []",
   "preset_curly_braces": "घुंघराले ब्रेसेस {}",
@@ -355,6 +356,7 @@ module.exports = {
   "preset_example_double_quotes": "\"पाठ\"",
   "preset_example_single_quotes": "'पाठ'",
   "preset_example_single_quotes_word": "'शब्द'",
+  "preset_example_highlight": "==हाइलाइट किया हुआ टेक्स्ट==",
   "preset_example_all_text": "यह सभी पाठ को लक्षित करेगा।",
   
   // Blacklist Settings
@@ -470,7 +472,7 @@ module.exports = {
   "quick_colors_header": "त्वरित रंग",
   "quick_colors_desc": "राइट-क्लिक मेनू में रंग दिखाकर टेक्स्ट को जल्दी से हाइलाइट या रंगने की अनुमति देता है। यदि त्वरित रंग बंद हैं, तो त्वरित शैलियों में प्रति-शैली रंगों का उपयोग किया जाएगा।",
   "quick_colors_apply_mode_label": "टेक्स्ट रंगाई इस रूप में लागू होगी",
-  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_act": "हमेशा टेक्स्ट को रंगें",
   "quick_colors_apply_mode_html": "इनलाइन HTML",
   "quick_styles_header": "त्वरित शैलियाँ",
   "quick_styles_desc": "टेक्स्ट रंग और हाइलाइट लागू करने के लिए नामित शैलियाँ परिभाषित करें। यदि त्वरित रंग बंद हैं, तो यहां प्रति-शैली रंगों का उपयोग किया जाएगा।",

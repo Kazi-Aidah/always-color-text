@@ -3455,7 +3455,6 @@ module.exports = class AlwaysColorText extends Plugin {
 
   processMarkdownFormattingInReading(element, folderEntry = null) {
     try {
-      try { debugLog('MARKDOWN_FORMAT', 'Processing markdown formatting'); } catch (_) {}
       const weAll = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
       let filePath = null;
       try { filePath = this.app?.workspace?.getActiveFile()?.path || null; } catch (_) {}
@@ -3464,71 +3463,208 @@ module.exports = class AlwaysColorText extends Plugin {
       
       // NEW: Handle mark elements (==...==) in reading mode
       try {
-        const markElements = element.querySelectorAll?.('mark') || [];
-        debugLog('MARK_FORMAT', `Found ${markElements.length} mark elements, we.length=${we.length}`);
+        const markElements = (element && element.nodeName === 'MARK')
+          ? [element]
+          : Array.from(element.querySelectorAll?.('mark') || []);
         
-        if (markElements.length > 0 && we.length > 0) {
-          // Log first 3 entries to see structure
-          for (let i = 0; i < Math.min(3, we.length); i++) {
-            const entry = we[i];
-            debugLog('MARK_FORMAT', `  Entry[${i}]: pattern="${entry?.pattern}", color="${entry?.color}", bg="${entry?.backgroundColor}"`);
-          }
-        }
-        
-        for (const mark of markElements) {
-          const styledSpan = mark.querySelector('span.always-color-text-highlight');
-          if (!styledSpan) continue;
-          
-          const markText = mark.textContent || '';
-          debugLog('MARK_FORMAT', `Processing mark: "${markText}", we.length=${we.length}`);
-          
-          // Try to find any entry that matches this text
-          let foundMatch = false;
-          for (let i = 0; i < we.length; i++) {
-            const entry = we[i];
-            if (!entry) continue;
-            
-            // Try multiple ways to match
-            const pattern = entry.pattern || entry.searchText;
-            if (!pattern) continue;
-            
-            // For simple text match (not regex)
-            const isSimpleMatch = !entry.isRegex && pattern && markText.includes(pattern);
-            
-            if (isSimpleMatch) {
-              debugLog('MARK_FORMAT', `MATCH! Entry[${i}] pattern="${pattern}" matched "${markText}"`);
-              
-              const bgColor = entry.backgroundColor || entry.color;
-              const textColor = entry.textColor && entry.textColor !== 'currentColor' ? entry.textColor : null;
-              const params = this.getHighlightParams(entry);
-              const bgRgba = this.hexToRgba(bgColor, params.opacity);
-              
-              debugLog('MARK_FORMAT', `  Applying: bg=${bgRgba}, text=${textColor}`);
-              
-              styledSpan.style.setProperty('background-color', bgRgba, 'important');
-              if (textColor) {
-                styledSpan.style.setProperty('color', textColor, 'important');
-              }
-              styledSpan.style.setProperty('padding-left', params.hPad + 'px', 'important');
-              styledSpan.style.setProperty('padding-right', params.hPad + 'px', 'important');
-              const vpad = params.vPad;
-              styledSpan.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important');
-              styledSpan.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important');
-              const br = ((params.hPad > 0 && params.radius === 0) ? 0 : params.radius);
-              styledSpan.style.setProperty('border-radius', br + 'px', 'important');
-              styledSpan.style.setProperty('border-top', `1px solid ${textColor || bgColor}`, 'important');
-              
-              foundMatch = true;
-              break;
+         for (const mark of markElements) {
+           const styledSpan = mark.querySelector('span.always-color-text-highlight');
+          const fallbackSpan = styledSpan || mark.querySelector('.always-color-text-highlight') || mark;
+          try { 
+            if (fallbackSpan === mark && !styledSpan) {
             }
-          }
+          } catch (_) {}
+           
+           const markText = mark.textContent || '';
           
-          if (!foundMatch) {
-            debugLog('MARK_FORMAT', `No match found for: "${markText}"`);
+          
+          let folderForMark = null;
+          try { folderForMark = this.getBestFolderEntry(filePath); } catch (_) {}
+          try { we.forEach(e => this._patternMatcher && this._patternMatcher.compilePattern(e, this._regexCache)); } catch (_) {}
+          let matches = this._patternMatcher ? this._patternMatcher.match(markText, we, folderForMark) : [];
+          try {
+          } catch (_) {}
+          const qsEnabled = !!this.settings.quickStylesEnabled;
+          const qsArr = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
+          const mt = String(markText || '').trim();
+          let quickStyle = null;
+          if (qsEnabled && qsArr.length > 0 && mt.length > 0) {
+            const lc = mt.toLowerCase();
+            quickStyle = qsArr.find(s => s && typeof s.name === 'string' && s.name.toLowerCase() === lc) || null;
+            try { if (quickStyle) {} } catch (_) {}
+          }
+          const presetEntry = (we.find(e => e && (e.presetLabel === 'Highlighted Text (==...)' || e.presetLabel === 'Highlights (====)' || e.affectMarkElements)) 
+            || weAll.find(e => e && (e.presetLabel === 'Highlighted Text (==...)' || e.presetLabel === 'Highlights (====)' || e.affectMarkElements))) || null;
+          // Fallback: detect highlight regex entry even if presetLabel not set
+          const highlightRegexEntry = presetEntry || (we.find(e => e && e.isRegex && typeof e.pattern === 'string' && e.pattern.includes('==[\\s\\S]*?=='))
+            || weAll.find(e => e && e.isRegex && typeof e.pattern === 'string' && e.pattern.includes('==[\\s\\S]*?=='))) || null;
+          if (quickStyle) {
+            try { mark.classList.add('always-color-text-highlight-marks'); } catch (_) {}
+            try { if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add('always-color-text-highlight-marks'); } catch (_) {}
+            const params = this.getHighlightParams(quickStyle);
+            const styleType = quickStyle.styleType || 'both';
+            const tc = quickStyle.textColor || quickStyle.color || null;
+            const bc = quickStyle.backgroundColor || null;
+            if (bc) {
+              const bgRgba = this.hexToRgba(bc, params.opacity);
+              fallbackSpan.style.setProperty('background-color', bgRgba, 'important');
+              try { mark.style.setProperty('background-color', bgRgba, 'important'); } catch (_) {}
+              try { fallbackSpan.style.setProperty('--highlight-background', bgRgba); } catch (_) {}
+              try { mark.style.setProperty('--highlight-background', bgRgba); } catch (_) {}
+            } else {
+            }
+            if (tc) {
+              fallbackSpan.style.setProperty('color', tc, 'important');
+              fallbackSpan.style.setProperty('--highlight-color', tc);
+              try { mark.style.setProperty('color', tc, 'important'); } catch (_) {}
+              try { mark.style.setProperty('--highlight-color', tc); } catch (_) {}
+            } else {
+            }
+            fallbackSpan.style.setProperty('padding-left', params.hPad + 'px', 'important');
+            fallbackSpan.style.setProperty('padding-right', params.hPad + 'px', 'important');
+            const vpad = params.vPad;
+            fallbackSpan.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+            fallbackSpan.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+            const br = ((params.hPad > 0 && params.radius === 0) ? 0 : params.radius);
+            fallbackSpan.style.setProperty('border-radius', br + 'px', 'important');
+            try {
+              const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
+              if (borderCss) { fallbackSpan.style.cssText += borderCss; }
+              if (borderCss) { mark.style.cssText += borderCss; }
+            } catch (_) {}
+            try { } catch (_) {}
+          } else if (presetEntry || highlightRegexEntry) {
+            try { mark.classList.add('always-color-text-highlight-marks'); } catch (_) {}
+            try { if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add('always-color-text-highlight-marks'); } catch (_) {}
+            const entryForMark = presetEntry || highlightRegexEntry;
+            const params = this.getHighlightParams(entryForMark);
+            const tc = (entryForMark.textColor && entryForMark.textColor !== 'currentColor') ? entryForMark.textColor : (entryForMark.color || null);
+            const bc = entryForMark.backgroundColor || null;
+            if (bc) {
+              const bgRgba = this.hexToRgba(bc, params.opacity);
+              fallbackSpan.style.setProperty('background-color', bgRgba, 'important');
+              try { mark.style.setProperty('background-color', bgRgba, 'important'); } catch (_) {}
+              try { fallbackSpan.style.setProperty('--highlight-background', bgRgba); } catch (_) {}
+              try { mark.style.setProperty('--highlight-background', bgRgba); } catch (_) {}
+            } else {
+            }
+            if (tc) {
+              fallbackSpan.style.setProperty('color', tc, 'important');
+              fallbackSpan.style.setProperty('--highlight-color', tc);
+              try { mark.style.setProperty('color', tc, 'important'); } catch (_) {}
+              try { mark.style.setProperty('--highlight-color', tc); } catch (_) {}
+            } else {
+            }
+            fallbackSpan.style.setProperty('padding-left', params.hPad + 'px', 'important');
+            fallbackSpan.style.setProperty('padding-right', params.hPad + 'px', 'important');
+            const vpad = params.vPad;
+            fallbackSpan.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+            fallbackSpan.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+            const br = ((params.hPad > 0 && params.radius === 0) ? 0 : params.radius);
+            fallbackSpan.style.setProperty('border-radius', br + 'px', 'important');
+            try {
+              const borderCss = this.generateBorderStyle(tc, bc, entryForMark);
+              if (borderCss) { fallbackSpan.style.cssText += borderCss; }
+              if (borderCss) { mark.style.cssText += borderCss; }
+            } catch (_) {}
+            try { } catch (_) {}
+          } else if (Array.isArray(matches) && matches.length > 0) {
+            const csFrom = (entry) => (typeof entry?._caseSensitiveOverride === 'boolean') ? entry._caseSensitiveOverride : (typeof entry?.caseSensitive === 'boolean') ? entry.caseSensitive : this.settings.caseSensitive;
+            const exact = matches.filter(mx => {
+              const ent = mx.entryRef || mx.entry || {};
+              const pat = String(ent.pattern || '');
+              if (!pat) return false;
+              const cs = csFrom(ent);
+              return cs ? (markText === pat) : (markText.toLowerCase() === pat.toLowerCase());
+            });
+            if (exact.length > 0) {
+              matches = exact;
+            }
+            matches.sort((a, b) => {
+              const pa = String((a.entryRef?.pattern || a.entry?.pattern || '')).length;
+              const pb = String((b.entryRef?.pattern || b.entry?.pattern || '')).length;
+              if (pb !== pa) return pb - pa;
+              const aBoth = ((a.entryRef?.styleType || a.entry?.styleType) === 'both');
+              const bBoth = ((b.entryRef?.styleType || b.entry?.styleType) === 'both');
+              if (aBoth !== bBoth) return bBoth ? 1 : -1;
+              const aText = !!((a.entryRef?.textColor && a.entryRef.textColor !== 'currentColor') || a.color);
+              const bText = !!((b.entryRef?.textColor && b.entryRef.textColor !== 'currentColor') || b.color);
+              if (aText !== bText) return bText ? 1 : -1;
+              return 0;
+            });
+            const m = matches[0];
+            const entry = m.entryRef || m.entry || null;
+            try { } catch (_) {}
+            try { mark.classList.add('always-color-text-highlight-marks'); } catch (_) {}
+            try { if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add('always-color-text-highlight-marks'); } catch (_) {}
+            const params = this.getHighlightParams(entry);
+            let textColor = (entry && entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : null;
+            if (!textColor && m && m.color) {
+              textColor = m.color;
+            }
+            const styleType = entry?.styleType || 'both';
+            const bgColor = (entry && entry.backgroundColor) ? entry.backgroundColor : null;
+            if (bgColor && (styleType === 'highlight' || styleType === 'both')) {
+              const bgRgba = this.hexToRgba(bgColor, params.opacity);
+              fallbackSpan.style.setProperty('background-color', bgRgba, 'important');
+              try { mark.style.setProperty('background-color', bgRgba, 'important'); } catch (_) {}
+              try { fallbackSpan.style.setProperty('--highlight-background', bgRgba); } catch (_) {}
+              try { mark.style.setProperty('--highlight-background', bgRgba); } catch (_) {}
+            } else {
+            }
+            if (textColor && (styleType === 'text' || styleType === 'both')) {
+              fallbackSpan.style.setProperty('color', textColor, 'important');
+              fallbackSpan.style.setProperty('--highlight-color', textColor);
+              try { mark.style.setProperty('color', textColor, 'important'); } catch (_) {}
+              try { mark.style.setProperty('--highlight-color', textColor); } catch (_) {}
+            } else {
+            }
+            fallbackSpan.style.setProperty('padding-left', params.hPad + 'px', 'important');
+            fallbackSpan.style.setProperty('padding-right', params.hPad + 'px', 'important');
+            const vpad = params.vPad;
+            fallbackSpan.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+            fallbackSpan.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+            const br = ((params.hPad > 0 && params.radius === 0) ? 0 : params.radius);
+            fallbackSpan.style.setProperty('border-radius', br + 'px', 'important');
+            try {
+              const borderCss = this.generateBorderStyle(textColor, bgColor, entry);
+              if (borderCss) { fallbackSpan.style.cssText += borderCss; }
+              if (borderCss) { mark.style.cssText += borderCss; }
+            } catch (_) {}
+            try { } catch (_) {}
+          } else if (quickStyle) {
+            const params = this.getHighlightParams(quickStyle);
+            const styleType = quickStyle.styleType || 'both';
+            const tc = quickStyle.textColor || quickStyle.color || null;
+            const bc = quickStyle.backgroundColor || null;
+            if (bc && (styleType === 'highlight' || styleType === 'both')) {
+              const bgRgba = this.hexToRgba(bc, params.opacity);
+              fallbackSpan.style.setProperty('background-color', bgRgba, 'important');
+              try { fallbackSpan.style.setProperty('--highlight-background', bgRgba); } catch (_) {}
+            } else {
+            }
+            if (tc && (styleType === 'text' || styleType === 'both')) {
+              fallbackSpan.style.setProperty('color', tc, 'important');
+              fallbackSpan.style.setProperty('--highlight-color', tc);
+            } else {
+            }
+            fallbackSpan.style.setProperty('padding-left', params.hPad + 'px', 'important');
+            fallbackSpan.style.setProperty('padding-right', params.hPad + 'px', 'important');
+            const vpad = params.vPad;
+            fallbackSpan.style.setProperty('padding-top', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+            fallbackSpan.style.setProperty('padding-bottom', (vpad >= 0 ? vpad : 0) + 'px', 'important');
+            const br = ((params.hPad > 0 && params.radius === 0) ? 0 : params.radius);
+            fallbackSpan.style.setProperty('border-radius', br + 'px', 'important');
+            try {
+              const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
+              if (borderCss) { fallbackSpan.style.cssText += borderCss; }
+            } catch (_) {}
+            try { } catch (_) {}
+          } else {
           }
         }
       } catch (e) {
-        debugError('MARK_FORMAT', 'Failed to process mark elements', e);
+        
       }
       
       const taskCheckedEntry = we.find(e => e && e.presetLabel === 'Task List (Checked)');
@@ -3691,9 +3827,9 @@ module.exports = class AlwaysColorText extends Plugin {
           if (!contentBlacklistedP) this._colorListItemContent(p, entry);
         }
       }
-    } catch (e) {
-      try { debugError('MARKDOWN_FORMAT', 'Error processing markdown formatting', e); } catch (_) {}
-    }
+  } catch (e) {
+      try { } catch (_) {}
+  }
   }
 
   // Helper: Style checkbox elements
@@ -8748,6 +8884,9 @@ module.exports = class AlwaysColorText extends Plugin {
           if (node.parentElement?.closest('code, pre')) {
             return NodeFilter.FILTER_REJECT;
           }
+          if (node.parentElement?.closest('mark')) {
+            return NodeFilter.FILTER_REJECT;
+          }
           // Skip text nodes already inside ACT highlight spans to prevent double processing
           if (node.parentElement?.closest('.always-color-text-highlight')) {
             return NodeFilter.FILTER_REJECT;
@@ -8791,16 +8930,19 @@ module.exports = class AlwaysColorText extends Plugin {
         block,
         NodeFilter.SHOW_TEXT,
         {
-          acceptNode(node) {
-            // Skip text nodes in code blocks
-            if (node.parentElement?.closest('code, pre')) {
-              return NodeFilter.FILTER_REJECT;
-            }
-            // CRITICAL FIX: Skip text nodes that are already inside highlight spans to prevent double-processing
-            if (node.parentElement?.closest('.always-color-text-highlight')) {
-              return NodeFilter.FILTER_REJECT;
-            }
-            try {
+        acceptNode(node) {
+          // Skip text nodes in code blocks
+          if (node.parentElement?.closest('code, pre')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (node.parentElement?.closest('mark')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          // CRITICAL FIX: Skip text nodes that are already inside highlight spans to prevent double-processing
+          if (node.parentElement?.closest('.always-color-text-highlight')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          try {
               if (node.parentElement?.closest('.act-skip-coloring')) {
                 return NodeFilter.FILTER_REJECT;
               }
@@ -8845,6 +8987,9 @@ module.exports = class AlwaysColorText extends Plugin {
         acceptNode(node) {
           // Skip text nodes in code blocks
           if (node.parentElement?.closest('code, pre')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (node.parentElement?.closest('mark')) {
             return NodeFilter.FILTER_REJECT;
           }
           // CRITICAL FIX: Skip text nodes that are already inside highlight spans to prevent double-processing
@@ -12710,7 +12855,6 @@ class PresetModal extends Modal {
       { label: this.plugin.t('preset_markdown_links','Markdown links'), pattern: '\\[[^\\]]+\\]\\(https?://[^)]+\\)', flags: '', examples: [this.plugin.t('preset_example_markdown_link', '[Link](https://example.com)')], group: 'markdown' },
       { label: this.plugin.t('preset_inline_comments','Comments (%%…%%)'), pattern: '%%[\\s\\S]*?%%', flags: 's', examples: [this.plugin.t('preset_example_comment', '%% comment %%')], group: 'markdown' },
       { label: this.plugin.t('preset_highlighted_text','Highlighted Text (==...)'), pattern: '==[\\s\\S]*?==', flags: 's', examples: [this.plugin.t('preset_example_highlight','==highlighted text==')], group: 'markdown' },
-      { label: 'Highlights (====)', pattern: '==[\\s\\S]*?==', flags: '', examples: ['==highlighted=='], group: 'markdown', affectMarkElements: true },
       { label: this.plugin.t('preset_domain_names','Domain names'), pattern: '\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b', flags: '', examples: [this.plugin.t('preset_example_domain', 'example.com')] },
       { label: this.plugin.t('preset_email_addresses','Email addresses'), pattern: '\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', flags: '', examples: [this.plugin.t('preset_example_email', 'name@example.com')] },
       { label: this.plugin.t('preset_at_username','@username'), pattern: '@[a-zA-Z0-9_]+', flags: '', examples: [this.plugin.t('preset_example_username', '@username')] },

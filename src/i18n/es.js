@@ -313,6 +313,7 @@ module.exports = {
   "preset_all_texts": "Todo el Texto",
   "preset_codeblocks": "Bloques de código",
   "preset_inline_comments": "Comentarios (%%...%%)",
+  "preset_highlighted_text": "Texto resaltado (==...)",
   "preset_parentheses": "Paréntesis ()",
   "preset_square_brackets": "Corchetes []",
   "preset_curly_braces": "Llaves {}",
@@ -354,6 +355,7 @@ module.exports = {
   "preset_example_double_quotes": "\"texto\"",
   "preset_example_single_quotes": "'texto'",
   "preset_example_single_quotes_word": "'palabra'",
+  "preset_example_highlight": "==texto resaltado==",
   "preset_example_all_text": "Esto seleccionará todo el texto.",
   
   // Blacklist Settings
@@ -469,7 +471,7 @@ module.exports = {
   "quick_colors_header": "Colores Rápidos",
   "quick_colors_desc": "Permite resaltar o colorear texto rápidamente mostrando colores en el menú contextual. Si Colores Rápidos está desactivado, se usarán los colores por estilo en Estilos Rápidos.",
   "quick_colors_apply_mode_label": "El coloreado de texto se aplicará como",
-  "quick_colors_apply_mode_act": "Always Color Text",
+  "quick_colors_apply_mode_act": "Siempre colorear texto",
   "quick_colors_apply_mode_html": "HTML en línea",
   "quick_styles_header": "Estilos Rápidos",
   "quick_styles_desc": "Define estilos con nombre para aplicar color de texto y resaltados. Si Colores Rápidos está desactivado, se usarán los colores por estilo aquí.",
