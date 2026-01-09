@@ -48,6 +48,8 @@ module.exports = {
   "show_always_color_text_menu_desc": "चयनित टेक्स्ट को रंगने के लिए राइट-क्लिक मेनू आइटम जोड़ता है।",
   "hide_inactive_groups_in_dropdowns": "ड्रॉपडाउन में निष्क्रिय समूह छुपाएँ",
   "hide_inactive_groups_in_dropdowns_desc": "ड्रॉपडाउन में समूह सूची प्रदर्शित करते समय निष्क्रिय शब्द समूहों को छुपाता है।",
+  "show_word_groups_in_commands": "कमांड में शब्द समूह दिखाएँ",
+  "show_word_groups_in_commands_desc": "चालू होने पर, शब्द समूह कमांड पैलेट में सक्रिय/निष्क्रिय कमांड के साथ दिखते हैं।",
   "tooltip_enable_for_file": "इस फ़ाइल के लिए चालू करें",
   "tooltip_delete_all_words": "परिभाषित सभी शब्द/पैटर्न हटाएँ",
   "tooltip_delete_all_blacklist": "ब्लैकलिस्टेड सभी शब्द/पैटर्न हटाएँ",
@@ -66,6 +68,12 @@ module.exports = {
   "command_manage_colored_texts": "रंगीन टेक्स्ट प्रबंधित करें",
   "command_toggle_hide_text_colors": "टेक्स्ट रंग छिपाएँ/दिखाएँ",
   "command_toggle_hide_highlights": "हाइलाइट्स छिपाएँ/दिखाएँ",
+  "command_hide_text_colors": "टेक्स्ट रंग छिपाएँ",
+  "command_unhide_text_colors": "टेक्स्ट रंग दिखाएँ",
+  "command_hide_highlights": "हाइलाइट्स छिपाएँ",
+  "command_unhide_highlights": "हाइलाइट्स दिखाएँ",
+  "command_activate_word_group": "{groupName} शब्द समूह सक्रिय करें",
+  "command_deactivate_word_group": "{groupName} शब्द समूह निष्क्रिय करें",
   
   // Notifications
   "notice_enabled": "हमेशा रंगीन टेक्स्ट चालू",

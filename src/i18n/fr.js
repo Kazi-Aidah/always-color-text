@@ -48,6 +48,8 @@ module.exports = {
   "show_always_color_text_menu_desc": "Ajoute un élément au menu clic-droit pour colorer le texte sélectionné.",
   "hide_inactive_groups_in_dropdowns": "Masquer les groupes inactifs dans les listes déroulantes",
   "hide_inactive_groups_in_dropdowns_desc": "Masque les groupes de mots inactifs lors de l'affichage des listes de groupes dans les listes déroulantes.",
+  "show_word_groups_in_commands": "Afficher les groupes de mots dans les commandes",
+  "show_word_groups_in_commands_desc": "Lorsque activé, les groupes de mots apparaissent dans la palette de commandes avec des commandes Activer/Désactiver.",
   "tooltip_enable_for_file": "Activer pour ce fichier",
   "tooltip_delete_all_words": "Supprimer tous les mots/motifs définis",
   "tooltip_delete_all_blacklist": "Supprimer tous les mots/motifs en liste noire",
@@ -66,6 +68,12 @@ module.exports = {
   "command_manage_colored_texts": "Gérer les textes colorés",
   "command_toggle_hide_text_colors": "Masquer/Afficher les couleurs de texte",
   "command_toggle_hide_highlights": "Masquer/Afficher les surbrillances",
+  "command_hide_text_colors": "Masquer les couleurs de texte",
+  "command_unhide_text_colors": "Afficher les couleurs de texte",
+  "command_hide_highlights": "Masquer les surbrillances",
+  "command_unhide_highlights": "Afficher les surbrillances",
+  "command_activate_word_group": "Activer le groupe de mots {groupName}",
+  "command_deactivate_word_group": "Désactiver le groupe de mots {groupName}",
   
   // Notifications
   "notice_enabled": "Always color text activé",

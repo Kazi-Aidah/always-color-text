@@ -53,6 +53,8 @@ var require_en = __commonJS({
       "show_always_color_text_menu_desc": "Adds a right-click menu item to color selected text.",
       "hide_inactive_groups_in_dropdowns": "Hide Inactive Groups in Dropdowns",
       "hide_inactive_groups_in_dropdowns_desc": "Hide inactive word groups when displaying group lists in dropdowns.",
+      "show_word_groups_in_commands": "Show Word Groups in Commands",
+      "show_word_groups_in_commands_desc": "When enabled, word groups appear in the command palette with Activate/Deactivate commands.",
       "tooltip_enable_for_file": "Enable for this file",
       "tooltip_delete_all_words": "Delete all defined words/patterns",
       "tooltip_delete_all_blacklist": "Delete all blacklisted words/patterns",
@@ -76,6 +78,12 @@ var require_en = __commonJS({
       "command_manage_colored_texts": "Manage Colored Texts",
       "command_toggle_hide_text_colors": "Hide/Unhide Text Colors",
       "command_toggle_hide_highlights": "Hide/Unhide Highlights",
+      "command_hide_text_colors": "Hide Text Colors",
+      "command_unhide_text_colors": "Unhide Text Colors",
+      "command_hide_highlights": "Hide Highlights",
+      "command_unhide_highlights": "Unhide Highlights",
+      "command_activate_word_group": "Activate {groupName} Word Group",
+      "command_deactivate_word_group": "Deactivate {groupName} Word Group",
       // Notifications
       "notice_enabled": "Always Color Text Enabled",
       "notice_disabled": "Always Color Text Disabled",
@@ -514,6 +522,8 @@ var require_es = __commonJS({
       "show_always_color_text_menu_desc": "A\xF1ade un elemento al men\xFA contextual para colorear el texto seleccionado.",
       "hide_inactive_groups_in_dropdowns": "Ocultar grupos inactivos en los men\xFAs desplegables",
       "hide_inactive_groups_in_dropdowns_desc": "Oculta los grupos de palabras inactivos al mostrar listas de grupos en los men\xFAs desplegables.",
+      "show_word_groups_in_commands": "Mostrar grupos de palabras en comandos",
+      "show_word_groups_in_commands_desc": "Cuando est\xE1 activado, los grupos de palabras aparecen en la paleta de comandos con comandos Activar/Desactivar.",
       "tooltip_enable_for_file": "Activar para este archivo",
       "tooltip_delete_all_words": "Eliminar todas las palabras/patrones definidos",
       "tooltip_delete_all_blacklist": "Eliminar todas las palabras/patrones de la lista negra",
@@ -531,6 +541,12 @@ var require_es = __commonJS({
       "command_manage_colored_texts": "Gestionar Textos Coloreados",
       "command_toggle_hide_text_colors": "Ocultar/Mostrar colores de texto",
       "command_toggle_hide_highlights": "Ocultar/Mostrar resaltados",
+      "command_hide_text_colors": "Ocultar colores de texto",
+      "command_unhide_text_colors": "Mostrar colores de texto",
+      "command_hide_highlights": "Ocultar resaltados",
+      "command_unhide_highlights": "Mostrar resaltados",
+      "command_activate_word_group": "Activar el grupo de palabras {groupName}",
+      "command_deactivate_word_group": "Desactivar el grupo de palabras {groupName}",
       // Notifications
       "notice_enabled": "Always color text activado",
       "notice_disabled": "Always color text desactivado",
@@ -972,6 +988,8 @@ var require_fr = __commonJS({
       "show_always_color_text_menu_desc": "Ajoute un \xE9l\xE9ment au menu clic-droit pour colorer le texte s\xE9lectionn\xE9.",
       "hide_inactive_groups_in_dropdowns": "Masquer les groupes inactifs dans les listes d\xE9roulantes",
       "hide_inactive_groups_in_dropdowns_desc": "Masque les groupes de mots inactifs lors de l'affichage des listes de groupes dans les listes d\xE9roulantes.",
+      "show_word_groups_in_commands": "Afficher les groupes de mots dans les commandes",
+      "show_word_groups_in_commands_desc": "Lorsque activ\xE9, les groupes de mots apparaissent dans la palette de commandes avec des commandes Activer/D\xE9sactiver.",
       "tooltip_enable_for_file": "Activer pour ce fichier",
       "tooltip_delete_all_words": "Supprimer tous les mots/motifs d\xE9finis",
       "tooltip_delete_all_blacklist": "Supprimer tous les mots/motifs en liste noire",
@@ -989,6 +1007,12 @@ var require_fr = __commonJS({
       "command_manage_colored_texts": "G\xE9rer les textes color\xE9s",
       "command_toggle_hide_text_colors": "Masquer/Afficher les couleurs de texte",
       "command_toggle_hide_highlights": "Masquer/Afficher les surbrillances",
+      "command_hide_text_colors": "Masquer les couleurs de texte",
+      "command_unhide_text_colors": "Afficher les couleurs de texte",
+      "command_hide_highlights": "Masquer les surbrillances",
+      "command_unhide_highlights": "Afficher les surbrillances",
+      "command_activate_word_group": "Activer le groupe de mots {groupName}",
+      "command_deactivate_word_group": "D\xE9sactiver le groupe de mots {groupName}",
       // Notifications
       "notice_enabled": "Always color text activ\xE9",
       "notice_disabled": "Always color text d\xE9sactiv\xE9",
@@ -1430,6 +1454,8 @@ var require_hi = __commonJS({
       "show_always_color_text_menu_desc": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0930\u0902\u0917\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u0906\u0907\u091F\u092E \u091C\u094B\u0921\u093C\u0924\u093E \u0939\u0948\u0964",
       "hide_inactive_groups_in_dropdowns": "\u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u092E\u0947\u0902 \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0938\u092E\u0942\u0939 \u091B\u0941\u092A\u093E\u090F\u0901",
       "hide_inactive_groups_in_dropdowns_desc": "\u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u092E\u0947\u0902 \u0938\u092E\u0942\u0939 \u0938\u0942\u091A\u0940 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u093F\u0924 \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939\u094B\u0902 \u0915\u094B \u091B\u0941\u092A\u093E\u0924\u093E \u0939\u0948\u0964",
+      "show_word_groups_in_commands": "\u0915\u092E\u093E\u0902\u0921 \u092E\u0947\u0902 \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0926\u093F\u0916\u093E\u090F\u0901",
+      "show_word_groups_in_commands_desc": "\u091A\u093E\u0932\u0942 \u0939\u094B\u0928\u0947 \u092A\u0930, \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0915\u092E\u093E\u0902\u0921 \u092A\u0948\u0932\u0947\u091F \u092E\u0947\u0902 \u0938\u0915\u094D\u0930\u093F\u092F/\u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0915\u092E\u093E\u0902\u0921 \u0915\u0947 \u0938\u093E\u0925 \u0926\u093F\u0916\u0924\u0947 \u0939\u0948\u0902\u0964",
       "tooltip_enable_for_file": "\u0907\u0938 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
       "tooltip_delete_all_words": "\u092A\u0930\u093F\u092D\u093E\u0937\u093F\u0924 \u0938\u092D\u0940 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0939\u091F\u093E\u090F\u0901",
       "tooltip_delete_all_blacklist": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F\u0947\u0921 \u0938\u092D\u0940 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0939\u091F\u093E\u090F\u0901",
@@ -1447,6 +1473,12 @@ var require_hi = __commonJS({
       "command_manage_colored_texts": "\u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
       "command_toggle_hide_text_colors": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917 \u091B\u093F\u092A\u093E\u090F\u0901/\u0926\u093F\u0916\u093E\u090F\u0901",
       "command_toggle_hide_highlights": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F\u094D\u0938 \u091B\u093F\u092A\u093E\u090F\u0901/\u0926\u093F\u0916\u093E\u090F\u0901",
+      "command_hide_text_colors": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917 \u091B\u093F\u092A\u093E\u090F\u0901",
+      "command_unhide_text_colors": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917 \u0926\u093F\u0916\u093E\u090F\u0901",
+      "command_hide_highlights": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F\u094D\u0938 \u091B\u093F\u092A\u093E\u090F\u0901",
+      "command_unhide_highlights": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F\u094D\u0938 \u0926\u093F\u0916\u093E\u090F\u0901",
+      "command_activate_word_group": "{groupName} \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0938\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902",
+      "command_deactivate_word_group": "{groupName} \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902",
       // Notifications
       "notice_enabled": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942",
       "notice_disabled": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u0902\u0926",
@@ -1889,6 +1921,8 @@ var require_it = __commonJS({
       "show_always_color_text_menu_desc": "Aggiunge una voce nel menu tasto destro per colorare il testo selezionato.",
       "hide_inactive_groups_in_dropdowns": "Nascondi gruppi inattivi nei menu a discesa",
       "hide_inactive_groups_in_dropdowns_desc": "Nasconde i gruppi di parole inattivi quando si visualizzano gli elenchi di gruppi nei menu a discesa.",
+      "show_word_groups_in_commands": "Mostra gruppi di parole nei comandi",
+      "show_word_groups_in_commands_desc": "Quando abilitato, i gruppi di parole appaiono nella palette dei comandi con comandi Attiva/Disattiva.",
       "tooltip_enable_for_file": "Abilita per questo file",
       "tooltip_delete_all_words": "Elimina tutte le parole/pattern definiti",
       "tooltip_delete_all_blacklist": "Elimina tutte le parole/pattern in blacklist",
@@ -1906,6 +1940,12 @@ var require_it = __commonJS({
       "command_manage_colored_texts": "Gestisci testi colorati",
       "command_toggle_hide_text_colors": "Nascondi/Mostra colori del testo",
       "command_toggle_hide_highlights": "Nascondi/Mostra evidenziazioni",
+      "command_hide_text_colors": "Nascondi colori del testo",
+      "command_unhide_text_colors": "Mostra colori del testo",
+      "command_hide_highlights": "Nascondi evidenziazioni",
+      "command_unhide_highlights": "Mostra evidenziazioni",
+      "command_activate_word_group": "Attiva il gruppo di parole {groupName}",
+      "command_deactivate_word_group": "Disattiva il gruppo di parole {groupName}",
       // Notifications
       "notice_enabled": "Always Color Text abilitato",
       "notice_disabled": "Always Color Text disabilitato",
@@ -2348,6 +2388,8 @@ var require_bn = __commonJS({
       "show_always_color_text_menu_desc": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u098F\u0995\u099F\u09BF \u09B0\u09BE\u0987\u099F-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1 \u0986\u0987\u099F\u09C7\u09AE \u09AF\u09CB\u0997 \u0995\u09B0\u09C7\u0964",
       "hide_inactive_groups_in_dropdowns": "\u09A1\u09AA\u09A1\u09BE\u0989\u09A8\u09C7 \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0997\u09CD\u09B0\u09C1\u09AA\u0997\u09C1\u09B2\u09BF \u09B2\u09C1\u0995\u09BE\u09A8",
       "hide_inactive_groups_in_dropdowns_desc": "\u09A1\u09AA\u09A1\u09BE\u0989\u09A8\u09C7 \u0997\u09CD\u09B0\u09C1\u09AA \u09A4\u09BE\u09B2\u09BF\u0995\u09BE \u09AA\u09CD\u09B0\u09A6\u09B0\u09CD\u09B6\u09A8\u09C7\u09B0 \u09B8\u09AE\u09AF\u09BC \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA\u0997\u09C1\u09B2\u09BF \u09B2\u09C1\u0995\u09BE\u09AF\u09BC\u0964",
+      "show_word_groups_in_commands": "\u0995\u09AE\u09BE\u09A8\u09CD\u09A1\u09C7 \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09A6\u09C7\u0996\u09BE\u09A8",
+      "show_word_groups_in_commands_desc": "\u09B8\u0995\u09CD\u09B7\u09AE \u09A5\u09BE\u0995\u09B2\u09C7, \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA\u0997\u09C1\u09B2\u09CB \u0995\u09AE\u09BE\u09A8\u09CD\u09A1 \u09AA\u09CD\u09AF\u09BE\u09B2\u09C7\u099F\u09C7 \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC/\u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09AE\u09BE\u09A8\u09CD\u09A1\u09B8\u09B9 \u09A6\u09C7\u0996\u09BE\u09AF\u09BC\u0964",
       "tooltip_enable_for_file": "\u098F\u0987 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "tooltip_delete_all_words": "\u09B8\u0982\u099C\u09CD\u099E\u09BE\u09AF\u09BC\u09BF\u09A4 \u09B8\u09AE\u09B8\u09CD\u09A4 \u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AE\u09C1\u099B\u09C1\u09A8",
       "tooltip_delete_all_blacklist": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0995\u09B0\u09BE \u09B8\u09AE\u09B8\u09CD\u09A4 \u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AE\u09C1\u099B\u09C1\u09A8",
@@ -2365,6 +2407,12 @@ var require_bn = __commonJS({
       "command_manage_colored_texts": "\u09B0\u0999\u09BE\u09AF\u09BC\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F\u0997\u09C1\u09B2\u09BF \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "command_toggle_hide_text_colors": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u09B2\u09C1\u0995\u09BE\u09A8/\u09A6\u09C7\u0996\u09BE\u09A8",
       "command_toggle_hide_highlights": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B2\u09C1\u0995\u09BE\u09A8/\u09A6\u09C7\u0996\u09BE\u09A8",
+      "command_hide_text_colors": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u09B2\u09C1\u0995\u09BE\u09A8",
+      "command_unhide_text_colors": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u09A6\u09C7\u0996\u09BE\u09A8",
+      "command_hide_highlights": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B2\u09C1\u0995\u09BE\u09A8",
+      "command_unhide_highlights": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09A6\u09C7\u0996\u09BE\u09A8",
+      "command_activate_word_group": "{groupName} \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
+      "command_deactivate_word_group": "{groupName} \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
       // Notifications
       "notice_enabled": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
       "notice_disabled": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
@@ -2807,6 +2855,8 @@ var require_ru = __commonJS({
       "show_always_color_text_menu_desc": "\u0412 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E \u043F\u043E\u044F\u0432\u043B\u044F\u0435\u0442\u0441\u044F \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442.",
       "hide_inactive_groups_in_dropdowns": "\u0421\u043A\u0440\u044B\u0432\u0430\u0442\u044C \u043D\u0435\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0432 \u0440\u0430\u0441\u043A\u0440\u044B\u0432\u0430\u044E\u0449\u0438\u0445\u0441\u044F \u0441\u043F\u0438\u0441\u043A\u0430\u0445",
       "hide_inactive_groups_in_dropdowns_desc": "\u0421\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u043D\u0435\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432 \u043F\u0440\u0438 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0438 \u0441\u043F\u0438\u0441\u043A\u043E\u0432 \u0433\u0440\u0443\u043F\u043F \u0432 \u0440\u0430\u0441\u043A\u0440\u044B\u0432\u0430\u044E\u0449\u0438\u0445\u0441\u044F \u043C\u0435\u043D\u044E.",
+      "show_word_groups_in_commands": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432 \u0432 \u043F\u0430\u043B\u0438\u0442\u0440\u0435 \u043A\u043E\u043C\u0430\u043D\u0434",
+      "show_word_groups_in_commands_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432 \u043F\u043E\u044F\u0432\u043B\u044F\u044E\u0442\u0441\u044F \u0432 \u043F\u0430\u043B\u0438\u0442\u0440\u0435 \u043A\u043E\u043C\u0430\u043D\u0434 \u0441 \u043A\u043E\u043C\u0430\u043D\u0434\u0430\u043C\u0438 \u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C/\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C.",
       "tooltip_enable_for_file": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0434\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
       "tooltip_delete_all_words": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u044B",
       "tooltip_delete_all_blacklist": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0438\u0437 \u0447\u0451\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 \u0432\u0441\u0435 \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u044B",
@@ -2824,6 +2874,12 @@ var require_ru = __commonJS({
       "command_manage_colored_texts": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430\u043C\u0438",
       "command_toggle_hide_text_colors": "\u0421\u043A\u0440\u044B\u0442\u044C/\u043F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430",
       "command_toggle_hide_highlights": "\u0421\u043A\u0440\u044B\u0442\u044C/\u043F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
+      "command_hide_text_colors": "\u0421\u043A\u0440\u044B\u0442\u044C \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430",
+      "command_unhide_text_colors": "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430",
+      "command_hide_highlights": "\u0421\u043A\u0440\u044B\u0442\u044C \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
+      "command_unhide_highlights": "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
+      "command_activate_word_group": "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0441\u043B\u043E\u0432 {groupName}",
+      "command_deactivate_word_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0441\u043B\u043E\u0432 {groupName}",
       // Notifications
       "notice_enabled": "Always Color Text \u0432\u043A\u043B\u044E\u0447\u0451\u043D",
       "notice_disabled": "Always Color Text \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D",
@@ -3266,6 +3322,8 @@ var require_zh_cn = __commonJS({
       "show_always_color_text_menu_desc": "\u6DFB\u52A0\u53F3\u952E\u83DC\u5355\u9879\uFF0C\u4E3A\u9009\u4E2D\u7684\u6587\u5B57\u7740\u8272\u3002",
       "hide_inactive_groups_in_dropdowns": "\u5728\u4E0B\u62C9\u83DC\u5355\u4E2D\u9690\u85CF\u4E0D\u6D3B\u8DC3\u7684\u7EC4",
       "hide_inactive_groups_in_dropdowns_desc": "\u5728\u4E0B\u62C9\u83DC\u5355\u4E2D\u663E\u793A\u7EC4\u5217\u8868\u65F6\u9690\u85CF\u4E0D\u6D3B\u8DC3\u7684\u5355\u8BCD\u7EC4\u3002",
+      "show_word_groups_in_commands": "\u5728\u547D\u4EE4\u4E2D\u663E\u793A\u8BCD\u7EC4",
+      "show_word_groups_in_commands_desc": "\u542F\u7528\u540E\uFF0C\u8BCD\u7EC4\u4F1A\u5728\u547D\u4EE4\u9762\u677F\u4E2D\u4EE5\u201C\u542F\u7528/\u505C\u7528\u201D\u547D\u4EE4\u663E\u793A\u3002",
       "tooltip_enable_for_file": "\u4E3A\u6B64\u6587\u4EF6\u542F\u7528",
       "tooltip_delete_all_words": "\u5220\u9664\u6240\u6709\u5DF2\u5B9A\u4E49\u7684\u5355\u8BCD/\u6A21\u5F0F",
       "tooltip_delete_all_blacklist": "\u5220\u9664\u6240\u6709\u9ED1\u540D\u5355\u5355\u8BCD/\u6A21\u5F0F",
@@ -3283,6 +3341,12 @@ var require_zh_cn = __commonJS({
       "command_manage_colored_texts": "\u7BA1\u7406\u5DF2\u7740\u8272\u7684\u6587\u672C",
       "command_toggle_hide_text_colors": "\u9690\u85CF/\u663E\u793A\u6587\u672C\u989C\u8272",
       "command_toggle_hide_highlights": "\u9690\u85CF/\u663E\u793A\u9AD8\u4EAE",
+      "command_hide_text_colors": "\u9690\u85CF\u6587\u672C\u989C\u8272",
+      "command_unhide_text_colors": "\u663E\u793A\u6587\u672C\u989C\u8272",
+      "command_hide_highlights": "\u9690\u85CF\u9AD8\u4EAE",
+      "command_unhide_highlights": "\u663E\u793A\u9AD8\u4EAE",
+      "command_activate_word_group": "\u542F\u7528 {groupName} \u8BCD\u7EC4",
+      "command_deactivate_word_group": "\u505C\u7528 {groupName} \u8BCD\u7EC4",
       // Notifications
       "notice_enabled": "\u6587\u5B57\u81EA\u52A8\u7740\u8272\u5DF2\u542F\u7528",
       "notice_disabled": "\u6587\u5B57\u81EA\u52A8\u7740\u8272\u5DF2\u7981\u7528",
@@ -3741,10 +3805,12 @@ var EDITOR_PERFORMANCE_CONSTANTS = {
   // Process 5k chars per chunk
   MAX_MATCHES_PER_PATTERN: 100,
   // Max matches per pattern in chunks
-  MAX_TOTAL_MATCHES: 3e3
+  MAX_TOTAL_MATCHES: 3e3,
   // Absolute limit for decorations
+  TYPING_DEBOUNCE_MS: 50
+  // Delay rebuilds while typing to reduce lag
 };
-var IS_DEVELOPMENT = true;
+var IS_DEVELOPMENT = false;
 var debugLog = (tag, ...args) => {
   if (IS_DEVELOPMENT) {
     console.log(`[${tag}]`, ...args);
@@ -5592,6 +5658,11 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (_) {
       this._readingModeIntervals = /* @__PURE__ */ new Map();
     }
+    try {
+      this._pathRulesCache = /* @__PURE__ */ new Map();
+    } catch (_) {
+      this._pathRulesCache = /* @__PURE__ */ new Map();
+    }
   }
   applyDisabledNeutralizerStyles() {
     try {
@@ -6801,13 +6872,14 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
       });
-      this.addCommand({
+      addTrackedCommand({
         id: "toggle-hide-text-colors",
-        name: this.t("command_toggle_hide_text_colors", "Hide/Unhide Text Colors"),
+        name: this.settings.hideTextColors ? this.t("command_unhide_text_colors", "Unhide Text Colors") : this.t("command_hide_text_colors", "Hide Text Colors"),
         callback: async () => {
           try {
             this.settings.hideTextColors = !this.settings.hideTextColors;
             await this.saveSettings();
+            this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
             this.removeEnabledReadingCalloutStyles();
             if (this.settings.enabled && !this.settings.hideTextColors) {
@@ -6849,11 +6921,12 @@ module.exports = class AlwaysColorText extends Plugin {
       });
       addTrackedCommand({
         id: "toggle-hide-highlights",
-        name: this.t("command_toggle_hide_highlights", "Hide/Unhide Highlights"),
+        name: this.settings.hideHighlights ? this.t("command_unhide_highlights", "Unhide Highlights") : this.t("command_hide_highlights", "Hide Highlights"),
         callback: async () => {
           try {
             this.settings.hideHighlights = !this.settings.hideHighlights;
             await this.saveSettings();
+            this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
             this.removeEnabledReadingCalloutStyles();
             if (this.settings.enabled && !this.settings.hideHighlights) {
@@ -6899,14 +6972,98 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
       });
+      if (this.settings?.showWordGroupsInCommands) {
+        this.registerWordGroupCommands();
+      }
       this._commandsRegistered = true;
     } catch (e) {
+    }
+  }
+  // Register word group commands
+  registerWordGroupCommands() {
+    try {
+      const groups = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : [];
+      groups.forEach((group) => {
+        if (!group) return;
+        const groupName = String(group.name || "").trim();
+        if (!groupName) return;
+        if (!group.uid) {
+          try {
+            group.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+          } catch (_) {
+          }
+        }
+        const isActive = group.active;
+        const commandId = `toggle-word-group-${group.uid}`;
+        const commandName = isActive ? this.t("command_deactivate_word_group", "Deactivate {groupName} Word Group", { groupName }) : this.t("command_activate_word_group", "Activate {groupName} Word Group", { groupName });
+        try {
+          this._registeredCommandIds.push(commandId);
+        } catch (_) {
+        }
+        this.addCommand({
+          id: commandId,
+          name: commandName,
+          callback: async () => {
+            try {
+              const latestGroup = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups.find((g) => g && g.uid === group.uid) : null;
+              if (!latestGroup) return;
+              latestGroup.active = !latestGroup.active;
+              await this.saveSettings();
+              this.reregisterCommandsWithLanguage();
+              const latestGroupName = String(latestGroup.name || groupName || "").trim();
+              const status = latestGroup.active ? this.t("notice_word_group_activated", `Word group "${latestGroupName}" activated`) : this.t("notice_word_group_deactivated", `Word group "${latestGroupName}" deactivated`);
+              new Notice(status);
+              this._cacheDirty = true;
+              this.reconfigureEditorExtensions();
+              this.forceRefreshAllEditors();
+              this.forceRefreshAllReadingViews();
+            } catch (e) {
+              debugError("COMMANDS", "Error toggling word group:", e);
+            }
+          }
+        });
+      });
+    } catch (e) {
+      debugError("COMMANDS", "Error registering word group commands:", e);
+    }
+  }
+  removeRegisteredCommands() {
+    try {
+      const pluginId = this.manifest && this.manifest.id || "always-color-text";
+      const removeCommandSafe = (fullId) => {
+        try {
+          if (this.app && this.app.commands && typeof this.app.commands.removeCommand === "function") {
+            this.app.commands.removeCommand(fullId);
+          }
+        } catch (_) {
+        }
+      };
+      const ids = Array.isArray(this._registeredCommandIds) ? Array.from(new Set(this._registeredCommandIds)) : [];
+      ids.forEach((id) => {
+        if (!id) return;
+        removeCommandSafe(`${pluginId}:${id}`);
+        removeCommandSafe(id);
+      });
+      try {
+        const cmds = this.app && this.app.commands && this.app.commands.commands;
+        if (cmds && typeof cmds === "object") {
+          Object.keys(cmds).forEach((fullId) => {
+            if (!fullId) return;
+            if (fullId.startsWith(`${pluginId}:toggle-word-group-`)) {
+              removeCommandSafe(fullId);
+            }
+          });
+        }
+      } catch (_) {
+      }
+    } catch (_) {
     }
   }
   // Re-register commands with updated language
   reregisterCommandsWithLanguage() {
     try {
       if (this.settings?.disableToggleModes?.command) return;
+      this.removeRegisteredCommands();
       this._commandsRegistered = false;
       this._registeredCommandIds = [];
       this.registerCommandPalette();
@@ -9022,6 +9179,7 @@ module.exports = class AlwaysColorText extends Plugin {
       enableAddToExistingMenu: true,
       enableAlwaysColorTextMenu: true,
       hideInactiveGroupsInDropdowns: true,
+      showWordGroupsInCommands: true,
       symbolWordColoring: false,
       // Enable/disable regex support in the settings UI/runtime
       enableRegexSupport: false,
@@ -9461,6 +9619,11 @@ module.exports = class AlwaysColorText extends Plugin {
     await this.saveData(this.settings);
     this.compileWordEntries();
     this.compileTextBgColoringEntries();
+    try {
+      this._pathRulesCache = /* @__PURE__ */ new Map();
+    } catch (e) {
+      this._pathRulesCache = /* @__PURE__ */ new Map();
+    }
     this.disablePluginFeatures();
     if (this.settings.enabled) {
       this.enablePluginFeatures();
@@ -10877,6 +11040,12 @@ module.exports = class AlwaysColorText extends Plugin {
   evaluatePathRules(filePath) {
     const rules = Array.isArray(this.settings.pathRules) ? this.settings.pathRules : [];
     if (!filePath || rules.length === 0) return { included: false, excluded: false, hasIncludes: false };
+    try {
+      if (this._pathRulesCache && this._pathRulesCache.has(filePath)) {
+        return this._pathRulesCache.get(filePath);
+      }
+    } catch (_) {
+    }
     const fp = this.normalizePath(filePath);
     let fileInclude = false;
     let fileExclude = false;
@@ -10969,7 +11138,12 @@ module.exports = class AlwaysColorText extends Plugin {
       excluded = true;
     }
     const hasFileRule = fileInclude || fileExclude;
-    return { included, excluded, hasIncludes, hasFileRule };
+    const result = { included, excluded, hasIncludes, hasFileRule };
+    try {
+      this._pathRulesCache && this._pathRulesCache.set(filePath, result);
+    } catch (_) {
+    }
+    return result;
   }
   // Advanced Rules: filter word entries based on file/folder path rules
   // CLEAR RULE ENGINE: Apply your four rules in strict order
@@ -14363,6 +14537,7 @@ module.exports = class AlwaysColorText extends Plugin {
         this.view = view;
         this.decorations = this.buildDeco(view);
         this.lastFilePath = view.file ? view.file.path : null;
+        this._typingDebounceTimer = null;
         try {
           if (plugin.settings.enabled) plugin._processLivePreviewCallouts(view);
         } catch (_) {
@@ -14385,18 +14560,38 @@ module.exports = class AlwaysColorText extends Plugin {
         const fileChanged = this.lastFilePath !== currentFilePath;
         this.lastFilePath = currentFilePath;
         if (update.docChanged || update.viewportChanged || fileChanged) {
-          this.decorations = this.buildDeco(update.view);
-          try {
-            if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view);
-          } catch (_) {
-          }
-          try {
-            if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view);
-          } catch (_) {
+          const onlyTypingChange = update.docChanged && !update.viewportChanged && !fileChanged;
+          if (onlyTypingChange) {
+            clearTimeout(this._typingDebounceTimer);
+            this._typingDebounceTimer = setTimeout(() => {
+              this.decorations = this.buildDeco(this.view);
+              try {
+                if (plugin.settings.enabled) plugin._processLivePreviewCallouts(this.view);
+              } catch (_) {
+              }
+              try {
+                if (plugin.settings.enabled) plugin._processLivePreviewTables(this.view);
+              } catch (_) {
+              }
+            }, EDITOR_PERFORMANCE_CONSTANTS.TYPING_DEBOUNCE_MS);
+          } else {
+            this.decorations = this.buildDeco(update.view);
+            try {
+              if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view);
+            } catch (_) {
+            }
+            try {
+              if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view);
+            } catch (_) {
+            }
           }
         }
       }
       destroy() {
+        try {
+          clearTimeout(this._typingDebounceTimer);
+        } catch (_) {
+        }
         try {
           plugin._detachLivePreviewCalloutObserver(this.view);
         } catch (_) {
@@ -14425,9 +14620,6 @@ module.exports = class AlwaysColorText extends Plugin {
           entries = previewEntries;
         }
         const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
-        if (fileForView && fileForView.path) {
-          entries = plugin.filterEntriesByAdvancedRules(fileForView.path, entries);
-        }
         if (entries.length === 0) return builder.finish();
         if (entries.length > EDITOR_PERFORMANCE_CONSTANTS.MAX_PATTERNS_STANDARD || text.length > EDITOR_PERFORMANCE_CONSTANTS.MAX_TEXT_LENGTH_STANDARD) {
           return plugin.buildDecoChunked(view, builder, from, extendedTo, text, entries, folderEntry, fileForView ? fileForView.path : null);
@@ -16317,7 +16509,7 @@ var PresetModal = class extends Modal {
       { label: this.plugin.t("preset_relative_dates", "Relative dates"), pattern: "\\b(?:today|tomorrow|yesterday|next week|last week)\\b", flags: "i", examples: [this.plugin.t("preset_example_relative", "today, tomorrow")] },
       { label: this.plugin.t("preset_basic_urls", "Basic URLs"), pattern: "\\bhttps?://\\S+\\b", flags: "", examples: [this.plugin.t("preset_example_url", "https://example.com")], group: "markdown" },
       { label: this.plugin.t("preset_markdown_links", "Markdown links"), pattern: "\\[[^\\]]+\\]\\(https?://[^)]+\\)", flags: "", examples: [this.plugin.t("preset_example_markdown_link", "[Link](https://example.com)")], group: "markdown" },
-      { label: this.plugin.t("preset_inline_comments", "Comments (%%\u2026%%)"), pattern: "%%[\\s\\S]*?%%", flags: "s", examples: [this.plugin.t("preset_example_comment", "%% comment %%")], group: "markdown" },
+      { label: this.plugin.t("preset_inline_comments", "Comments (%%\u2026%%)"), pattern: "%%\\s*[\\s\\S]*?\\s*%%", flags: "s", examples: [this.plugin.t("preset_example_comment", "%% comment %%")], group: "markdown" },
       { label: this.plugin.t("preset_highlighted_text", "Highlighted Text (==...)"), pattern: "==[\\s\\S]*?==", flags: "s", examples: [this.plugin.t("preset_example_highlight", "==highlighted text==")], group: "markdown" },
       { label: this.plugin.t("preset_domain_names", "Domain names"), pattern: "\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b", flags: "", examples: [this.plugin.t("preset_example_domain", "example.com")] },
       { label: this.plugin.t("preset_email_addresses", "Email addresses"), pattern: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", flags: "", examples: [this.plugin.t("preset_example_email", "name@example.com")] },
@@ -22351,6 +22543,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           this.plugin.reconfigureEditorExtensions();
           this.plugin.forceRefreshAllEditors();
           this.plugin.forceRefreshAllReadingViews();
+          if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
         };
         activeSelect.onchange = activeHandler;
         const nameInput = row.createEl("input", { type: "text", value: group.name || "" });
@@ -22359,6 +22552,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         const nameHandler = async () => {
           group.name = nameInput.value;
           await this.plugin.saveSettings();
+          if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
         };
         nameInput.onchange = nameHandler;
         const btnDuplicate = row.createEl("div");
@@ -22371,10 +22565,15 @@ var ColorSettingTab = class extends PluginSettingTab {
         btnDuplicate.onclick = async () => {
           const newGroup = JSON.parse(JSON.stringify(group));
           newGroup.name = (newGroup.name || "") + " (Copy)";
+          try {
+            newGroup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+          } catch (_) {
+          }
           this.plugin.settings.wordEntryGroups.push(newGroup);
           await this.plugin.saveSettings();
           this.plugin.compileWordEntries();
           this._refreshGroups();
+          if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
         };
         const btnEdit = row.createEl("div");
         btnEdit.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>';
@@ -22394,6 +22593,7 @@ var ColorSettingTab = class extends PluginSettingTab {
             this.plugin.forceRefreshAllEditors();
             this.plugin.forceRefreshAllReadingViews();
             this._refreshGroups();
+            if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
           }, async (groupToDelete) => {
             const actualIndex = this.plugin.settings.wordEntryGroups.findIndex((g) => g && g.uid === groupToDelete.uid);
             if (actualIndex !== -1) this.plugin.settings.wordEntryGroups.splice(actualIndex, 1);
@@ -22403,6 +22603,7 @@ var ColorSettingTab = class extends PluginSettingTab {
             this.plugin.forceRefreshAllEditors();
             this.plugin.forceRefreshAllReadingViews();
             this._refreshGroups();
+            if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
           }).open();
         };
       });
@@ -23604,9 +23805,14 @@ var ColorSettingTab = class extends PluginSettingTab {
         }).open();
       }));
       containerEl2.createEl("h3", { text: this.plugin.t("grouped_entries_header", "Grouped Entries") });
-      new Setting(containerEl2).setName(this.plugin.t("hide_inactive_groups_dropdown", "Hide inactive groups in dropdowns")).setDesc(this.plugin.t("hide_inactive_groups_dropdown_desc", "When enabled, only active word groups will appear in group dropdowns.")).addToggle((t) => t.setValue(!!this.plugin.settings.hideInactiveGroupsInDropdowns).onChange(async (v) => {
+      new Setting(containerEl2).setName(this.plugin.t("hide_inactive_groups_in_dropdowns", "Hide Inactive Groups in Dropdowns")).setDesc(this.plugin.t("hide_inactive_groups_in_dropdowns_desc", "Hide inactive word groups when displaying group lists in dropdowns.")).addToggle((t) => t.setValue(!!this.plugin.settings.hideInactiveGroupsInDropdowns).onChange(async (v) => {
         this.plugin.settings.hideInactiveGroupsInDropdowns = !!v;
         await this.plugin.saveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_word_groups_in_commands", "Show word groups in commands")).setDesc(this.plugin.t("show_word_groups_in_commands_desc", "When enabled, word groups appear in the command palette with Activate/Deactivate commands.")).addToggle((t) => t.setValue(!!this.plugin.settings.showWordGroupsInCommands).onChange(async (v) => {
+        this.plugin.settings.showWordGroupsInCommands = !!v;
+        await this.plugin.saveSettings();
+        this.plugin.reregisterCommandsWithLanguage();
       }));
       const groupSearchContainer = containerEl2.createDiv();
       try {

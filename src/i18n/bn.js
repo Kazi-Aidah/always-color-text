@@ -48,6 +48,8 @@ module.exports = {
   "show_always_color_text_menu_desc": "নির্বাচিত টেক্সট রঙ করার জন্য একটি রাইট-ক্লিক মেনু আইটেম যোগ করে।",
   "hide_inactive_groups_in_dropdowns": "ডপডাউনে নিষ্ক্রিয় গ্রুপগুলি লুকান",
   "hide_inactive_groups_in_dropdowns_desc": "ডপডাউনে গ্রুপ তালিকা প্রদর্শনের সময় নিষ্ক্রিয় শব্দ গ্রুপগুলি লুকায়।",
+  "show_word_groups_in_commands": "কমান্ডে শব্দ গ্রুপ দেখান",
+  "show_word_groups_in_commands_desc": "সক্ষম থাকলে, শব্দ গ্রুপগুলো কমান্ড প্যালেটে সক্রিয়/নিষ্ক্রিয় কমান্ডসহ দেখায়।",
   "tooltip_enable_for_file": "এই ফাইলের জন্য সক্ষম করুন",
   "tooltip_delete_all_words": "সংজ্ঞায়িত সমস্ত শব্দ/প্যাটার্ন মুছুন",
   "tooltip_delete_all_blacklist": "ব্ল্যাকলিস্ট করা সমস্ত শব্দ/প্যাটার্ন মুছুন",
@@ -66,6 +68,12 @@ module.exports = {
   "command_manage_colored_texts": "রঙায়িত টেক্সটগুলি পরিচালনা করুন",
   "command_toggle_hide_text_colors": "টেক্সট রঙ লুকান/দেখান",
   "command_toggle_hide_highlights": "হাইলাইট লুকান/দেখান",
+  "command_hide_text_colors": "টেক্সট রঙ লুকান",
+  "command_unhide_text_colors": "টেক্সট রঙ দেখান",
+  "command_hide_highlights": "হাইলাইট লুকান",
+  "command_unhide_highlights": "হাইলাইট দেখান",
+  "command_activate_word_group": "{groupName} শব্দ গ্রুপ সক্রিয় করুন",
+  "command_deactivate_word_group": "{groupName} শব্দ গ্রুপ নিষ্ক্রিয় করুন",
   
   // Notifications
   "notice_enabled": "অলওয়েজ কালার টেক্সট সক্রিয়",

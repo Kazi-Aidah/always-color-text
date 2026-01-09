@@ -48,6 +48,8 @@ module.exports = {
   "show_always_color_text_menu_desc": "В контекстном меню появляется возможность окрасить выбранный текст.",
   "hide_inactive_groups_in_dropdowns": "Скрывать неактивные группы в раскрывающихся списках",
   "hide_inactive_groups_in_dropdowns_desc": "Скрывает неактивные группы слов при отображении списков групп в раскрывающихся меню.",
+  "show_word_groups_in_commands": "Показывать группы слов в палитре команд",
+  "show_word_groups_in_commands_desc": "Если включено, группы слов появляются в палитре команд с командами Активировать/Деактивировать.",
   "tooltip_enable_for_file": "Включить для этого файла",
   "tooltip_delete_all_words": "Удалить все слова/шаблоны",
   "tooltip_delete_all_blacklist": "Удалить из чёрного списка все слова/шаблоны",
@@ -66,6 +68,12 @@ module.exports = {
   "command_manage_colored_texts": "Управление окрашенными текстами",
   "command_toggle_hide_text_colors": "Скрыть/показать цвета текста",
   "command_toggle_hide_highlights": "Скрыть/показать подсветки",
+  "command_hide_text_colors": "Скрыть цвета текста",
+  "command_unhide_text_colors": "Показать цвета текста",
+  "command_hide_highlights": "Скрыть подсветки",
+  "command_unhide_highlights": "Показать подсветки",
+  "command_activate_word_group": "Активировать группу слов {groupName}",
+  "command_deactivate_word_group": "Деактивировать группу слов {groupName}",
   
   // Notifications
   "notice_enabled": "Always Color Text включён",

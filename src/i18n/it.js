@@ -48,6 +48,8 @@ module.exports = {
   "show_always_color_text_menu_desc": "Aggiunge una voce nel menu tasto destro per colorare il testo selezionato.",
   "hide_inactive_groups_in_dropdowns": "Nascondi gruppi inattivi nei menu a discesa",
   "hide_inactive_groups_in_dropdowns_desc": "Nasconde i gruppi di parole inattivi quando si visualizzano gli elenchi di gruppi nei menu a discesa.",
+  "show_word_groups_in_commands": "Mostra gruppi di parole nei comandi",
+  "show_word_groups_in_commands_desc": "Quando abilitato, i gruppi di parole appaiono nella palette dei comandi con comandi Attiva/Disattiva.",
   "tooltip_enable_for_file": "Abilita per questo file",
   "tooltip_delete_all_words": "Elimina tutte le parole/pattern definiti",
   "tooltip_delete_all_blacklist": "Elimina tutte le parole/pattern in blacklist",
@@ -66,6 +68,12 @@ module.exports = {
   "command_manage_colored_texts": "Gestisci testi colorati",
   "command_toggle_hide_text_colors": "Nascondi/Mostra colori del testo",
   "command_toggle_hide_highlights": "Nascondi/Mostra evidenziazioni",
+  "command_hide_text_colors": "Nascondi colori del testo",
+  "command_unhide_text_colors": "Mostra colori del testo",
+  "command_hide_highlights": "Nascondi evidenziazioni",
+  "command_unhide_highlights": "Mostra evidenziazioni",
+  "command_activate_word_group": "Attiva il gruppo di parole {groupName}",
+  "command_deactivate_word_group": "Disattiva il gruppo di parole {groupName}",
   
   // Notifications
   "notice_enabled": "Always Color Text abilitato",

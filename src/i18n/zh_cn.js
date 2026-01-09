@@ -48,6 +48,8 @@ module.exports = {
   "show_always_color_text_menu_desc": "添加右键菜单项，为选中的文字着色。",
   "hide_inactive_groups_in_dropdowns": "在下拉菜单中隐藏不活跃的组",
   "hide_inactive_groups_in_dropdowns_desc": "在下拉菜单中显示组列表时隐藏不活跃的单词组。",
+  "show_word_groups_in_commands": "在命令中显示词组",
+  "show_word_groups_in_commands_desc": "启用后，词组会在命令面板中以“启用/停用”命令显示。",
   "tooltip_enable_for_file": "为此文件启用",
   "tooltip_delete_all_words": "删除所有已定义的单词/模式",
   "tooltip_delete_all_blacklist": "删除所有黑名单单词/模式",
@@ -66,6 +68,12 @@ module.exports = {
   "command_manage_colored_texts": "管理已着色的文本",
   "command_toggle_hide_text_colors": "隐藏/显示文本颜色",
   "command_toggle_hide_highlights": "隐藏/显示高亮",
+  "command_hide_text_colors": "隐藏文本颜色",
+  "command_unhide_text_colors": "显示文本颜色",
+  "command_hide_highlights": "隐藏高亮",
+  "command_unhide_highlights": "显示高亮",
+  "command_activate_word_group": "启用 {groupName} 词组",
+  "command_deactivate_word_group": "停用 {groupName} 词组",
   
   // Notifications
   "notice_enabled": "文字自动着色已启用",

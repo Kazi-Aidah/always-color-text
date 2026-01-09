@@ -48,6 +48,8 @@ module.exports = {
   "show_always_color_text_menu_desc": "Adds a right-click menu item to color selected text.",
   "hide_inactive_groups_in_dropdowns": "Hide Inactive Groups in Dropdowns",
   "hide_inactive_groups_in_dropdowns_desc": "Hide inactive word groups when displaying group lists in dropdowns.",
+  "show_word_groups_in_commands": "Show Word Groups in Commands",
+  "show_word_groups_in_commands_desc": "When enabled, word groups appear in the command palette with Activate/Deactivate commands.",
   "tooltip_enable_for_file": "Enable for this file",
   "tooltip_delete_all_words": "Delete all defined words/patterns",
   "tooltip_delete_all_blacklist": "Delete all blacklisted words/patterns",
@@ -72,6 +74,12 @@ module.exports = {
   "command_manage_colored_texts": "Manage Colored Texts",
   "command_toggle_hide_text_colors": "Hide/Unhide Text Colors",
   "command_toggle_hide_highlights": "Hide/Unhide Highlights",
+  "command_hide_text_colors": "Hide Text Colors",
+  "command_unhide_text_colors": "Unhide Text Colors",
+  "command_hide_highlights": "Hide Highlights",
+  "command_unhide_highlights": "Unhide Highlights",
+  "command_activate_word_group": "Activate {groupName} Word Group",
+  "command_deactivate_word_group": "Deactivate {groupName} Word Group",
   
   // Notifications
   "notice_enabled": "Always Color Text Enabled",

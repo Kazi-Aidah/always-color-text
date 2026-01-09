@@ -39,10 +39,11 @@ const EDITOR_PERFORMANCE_CONSTANTS = {
   PATTERN_CHUNK_SIZE: 20,            // Process 20 patterns per chunk  
   TEXT_CHUNK_SIZE: 5000,            // Process 5k chars per chunk
   MAX_MATCHES_PER_PATTERN: 100,    // Max matches per pattern in chunks
-  MAX_TOTAL_MATCHES: 3000         // Absolute limit for decorations
+  MAX_TOTAL_MATCHES: 3000,        // Absolute limit for decorations
+  TYPING_DEBOUNCE_MS: 50          // Delay rebuilds while typing to reduce lag
 };
 // Development mode flag
-const IS_DEVELOPMENT = true;
+const IS_DEVELOPMENT = false;
 
 // Helper function for conditional debug logging
 const debugLog = (tag, ...args) => {
@@ -2004,6 +2005,7 @@ module.exports = class AlwaysColorText extends Plugin {
     try { this._memoryManager.start(); } catch (_) {}
     try { this._lpObservers = new WeakMap(); } catch (_) { this._lpObservers = null; }
     try { this._readingModeIntervals = new Map(); } catch (_) { this._readingModeIntervals = new Map(); }
+    try { this._pathRulesCache = new Map(); } catch (_) { this._pathRulesCache = new Map(); }
   }
 
   applyDisabledNeutralizerStyles() {
@@ -3107,13 +3109,16 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       });
       // Add command to see only highlights
-  this.addCommand({
+      addTrackedCommand({
         id: 'toggle-hide-text-colors',
-        name: this.t('command_toggle_hide_text_colors', 'Hide/Unhide Text Colors'),
+        name: this.settings.hideTextColors
+          ? this.t('command_unhide_text_colors', 'Unhide Text Colors')
+          : this.t('command_hide_text_colors', 'Hide Text Colors'),
         callback: async () => {
           try {
             this.settings.hideTextColors = !this.settings.hideTextColors;
             await this.saveSettings();
+            this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
             // Update CSS styles for reading callouts based on hideTextColors setting
             this.removeEnabledReadingCalloutStyles();
@@ -3139,11 +3144,14 @@ module.exports = class AlwaysColorText extends Plugin {
       // Add command to see only text colors
       addTrackedCommand({
         id: 'toggle-hide-highlights',
-        name: this.t('command_toggle_hide_highlights', 'Hide/Unhide Highlights'),
+        name: this.settings.hideHighlights
+          ? this.t('command_unhide_highlights', 'Unhide Highlights')
+          : this.t('command_hide_highlights', 'Hide Highlights'),
         callback: async () => {
           try {
             this.settings.hideHighlights = !this.settings.hideHighlights;
             await this.saveSettings();
+            this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
             // Update CSS styles for reading callouts based on hideHighlights setting
             this.removeEnabledReadingCalloutStyles();
@@ -3173,14 +3181,109 @@ module.exports = class AlwaysColorText extends Plugin {
           } catch (_) {}
         }
       });
+      
+      // Add word group commands if enabled
+      if (this.settings?.showWordGroupsInCommands) {
+        this.registerWordGroupCommands();
+      }
+      
       this._commandsRegistered = true;
     } catch (e) {}
+  }
+
+  // Register word group commands
+  registerWordGroupCommands() {
+    try {
+      const groups = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : [];
+      
+      groups.forEach(group => {
+        if (!group) return;
+        const groupName = String(group.name || '').trim();
+        if (!groupName) return;
+        if (!group.uid) { try { group.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (_) {} }
+        
+        const isActive = group.active;
+        const commandId = `toggle-word-group-${group.uid}`;
+        const commandName = isActive 
+          ? this.t('command_deactivate_word_group', 'Deactivate {groupName} Word Group', { groupName })
+          : this.t('command_activate_word_group', 'Activate {groupName} Word Group', { groupName });
+        
+        try { this._registeredCommandIds.push(commandId); } catch (_) {}
+        this.addCommand({
+          id: commandId,
+          name: commandName,
+          callback: async () => {
+            try {
+              const latestGroup = Array.isArray(this.settings.wordEntryGroups)
+                ? this.settings.wordEntryGroups.find(g => g && g.uid === group.uid)
+                : null;
+              if (!latestGroup) return;
+              latestGroup.active = !latestGroup.active;
+              await this.saveSettings();
+              
+              // Refresh the command palette to update the command name
+              this.reregisterCommandsWithLanguage();
+              
+              // Show notification
+              const latestGroupName = String(latestGroup.name || groupName || '').trim();
+              const status = latestGroup.active 
+                ? this.t('notice_word_group_activated', `Word group "${latestGroupName}" activated`)
+                : this.t('notice_word_group_deactivated', `Word group "${latestGroupName}" deactivated`);
+              new Notice(status);
+              
+              // Refresh views
+              this._cacheDirty = true;
+              this.reconfigureEditorExtensions();
+              this.forceRefreshAllEditors();
+              this.forceRefreshAllReadingViews();
+              
+            } catch (e) {
+              debugError('COMMANDS', 'Error toggling word group:', e);
+            }
+          }
+        });
+      });
+      
+    } catch (e) {
+      debugError('COMMANDS', 'Error registering word group commands:', e);
+    }
+  }
+
+  removeRegisteredCommands() {
+    try {
+      const pluginId = (this.manifest && this.manifest.id) || 'always-color-text';
+      const removeCommandSafe = (fullId) => {
+        try {
+          if (this.app && this.app.commands && typeof this.app.commands.removeCommand === 'function') {
+            this.app.commands.removeCommand(fullId);
+          }
+        } catch (_) {}
+      };
+      const ids = Array.isArray(this._registeredCommandIds) ? Array.from(new Set(this._registeredCommandIds)) : [];
+      ids.forEach((id) => {
+        if (!id) return;
+        removeCommandSafe(`${pluginId}:${id}`);
+        removeCommandSafe(id);
+      });
+      try {
+        const cmds = this.app && this.app.commands && this.app.commands.commands;
+        if (cmds && typeof cmds === 'object') {
+          Object.keys(cmds).forEach((fullId) => {
+            if (!fullId) return;
+            if (fullId.startsWith(`${pluginId}:toggle-word-group-`)) {
+              removeCommandSafe(fullId);
+            }
+          });
+        }
+      } catch (_) {}
+    } catch (_) {}
   }
 
   // Re-register commands with updated language
   reregisterCommandsWithLanguage() {
     try {
       if (this.settings?.disableToggleModes?.command) return;
+      this.removeRegisteredCommands();
       // Clear the flag to allow re-registration
       this._commandsRegistered = false;
       // Clear tracked command IDs
@@ -5146,6 +5249,7 @@ module.exports = class AlwaysColorText extends Plugin {
       enableAddToExistingMenu: true,
       enableAlwaysColorTextMenu: true,
       hideInactiveGroupsInDropdowns: true,
+      showWordGroupsInCommands: true,
       symbolWordColoring: false,
       // Enable/disable regex support in the settings UI/runtime
       enableRegexSupport: false,
@@ -5626,6 +5730,7 @@ module.exports = class AlwaysColorText extends Plugin {
     // Recompile entries after saving
     this.compileWordEntries();
     this.compileTextBgColoringEntries();
+    try { this._pathRulesCache = new Map(); } catch (e) { this._pathRulesCache = new Map(); }
 
     this.disablePluginFeatures();
     if (this.settings.enabled) {
@@ -7179,6 +7284,11 @@ module.exports = class AlwaysColorText extends Plugin {
   evaluatePathRules(filePath) {
     const rules = Array.isArray(this.settings.pathRules) ? this.settings.pathRules : [];
     if (!filePath || rules.length === 0) return { included: false, excluded: false, hasIncludes: false };
+    try {
+      if (this._pathRulesCache && this._pathRulesCache.has(filePath)) {
+        return this._pathRulesCache.get(filePath);
+      }
+    } catch (_) {}
     const fp = this.normalizePath(filePath);
     let fileInclude = false;
     let fileExclude = false;
@@ -7238,7 +7348,9 @@ module.exports = class AlwaysColorText extends Plugin {
     else if (folderExclude) { included = false; excluded = true; }
     // Return detailed info: whether this file has an explicit rule
     const hasFileRule = fileInclude || fileExclude;
-    return { included, excluded, hasIncludes, hasFileRule };
+    const result = { included, excluded, hasIncludes, hasFileRule };
+    try { this._pathRulesCache && this._pathRulesCache.set(filePath, result); } catch (_) {}
+    return result;
   }
 
   // Advanced Rules: filter word entries based on file/folder path rules
@@ -10654,6 +10766,7 @@ module.exports = class AlwaysColorText extends Plugin {
         this.view = view;
         this.decorations = this.buildDeco(view);
         this.lastFilePath = view.file ? view.file.path : null;
+        this._typingDebounceTimer = null;
         try { if (plugin.settings.enabled) plugin._processLivePreviewCallouts(view); } catch (_) {}
         try { if (plugin.settings.enabled) plugin._processLivePreviewTables(view); } catch (_) {}
         try { if (plugin.settings.enabled) plugin._attachLivePreviewCalloutObserver(view); } catch (_) {}
@@ -10667,12 +10780,23 @@ module.exports = class AlwaysColorText extends Plugin {
         
         // Rebuild decorations if document changed, viewport changed, OR file/folder changed
         if (update.docChanged || update.viewportChanged || fileChanged) {
-          this.decorations = this.buildDeco(update.view);
-          try { if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view); } catch (_) {}
-          try { if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view); } catch (_) {}
+          const onlyTypingChange = update.docChanged && !update.viewportChanged && !fileChanged;
+          if (onlyTypingChange) {
+            clearTimeout(this._typingDebounceTimer);
+            this._typingDebounceTimer = setTimeout(() => {
+              this.decorations = this.buildDeco(this.view);
+              try { if (plugin.settings.enabled) plugin._processLivePreviewCallouts(this.view); } catch (_) {}
+              try { if (plugin.settings.enabled) plugin._processLivePreviewTables(this.view); } catch (_) {}
+            }, EDITOR_PERFORMANCE_CONSTANTS.TYPING_DEBOUNCE_MS);
+          } else {
+            this.decorations = this.buildDeco(update.view);
+            try { if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view); } catch (_) {}
+            try { if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view); } catch (_) {}
+          }
         }
       }
       destroy() {
+        try { clearTimeout(this._typingDebounceTimer); } catch (_) {}
         try { plugin._detachLivePreviewCalloutObserver(this.view); } catch (_) {}
         try { plugin._detachLivePreviewTableObserver(this.view); } catch (_) {}
       }
@@ -10699,9 +10823,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
 
         const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
-        if (fileForView && fileForView.path) {
-          entries = plugin.filterEntriesByAdvancedRules(fileForView.path, entries);
-        }
+        // entries already filtered above; avoid duplicate filtering
         
         if (entries.length === 0) return builder.finish();
         
@@ -12853,7 +12975,7 @@ class PresetModal extends Modal {
       { label: this.plugin.t('preset_relative_dates','Relative dates'), pattern: '\\b(?:today|tomorrow|yesterday|next week|last week)\\b', flags: 'i', examples: [this.plugin.t('preset_example_relative', 'today, tomorrow')] },
       { label: this.plugin.t('preset_basic_urls','Basic URLs'), pattern: '\\bhttps?://\\S+\\b', flags: '', examples: [this.plugin.t('preset_example_url', 'https://example.com')], group: 'markdown' },
       { label: this.plugin.t('preset_markdown_links','Markdown links'), pattern: '\\[[^\\]]+\\]\\(https?://[^)]+\\)', flags: '', examples: [this.plugin.t('preset_example_markdown_link', '[Link](https://example.com)')], group: 'markdown' },
-      { label: this.plugin.t('preset_inline_comments','Comments (%%…%%)'), pattern: '%%[\\s\\S]*?%%', flags: 's', examples: [this.plugin.t('preset_example_comment', '%% comment %%')], group: 'markdown' },
+      { label: this.plugin.t('preset_inline_comments','Comments (%%…%%)'), pattern: '%%\\s*[\\s\\S]*?\\s*%%', flags: 's', examples: [this.plugin.t('preset_example_comment', '%% comment %%')], group: 'markdown' },
       { label: this.plugin.t('preset_highlighted_text','Highlighted Text (==...)'), pattern: '==[\\s\\S]*?==', flags: 's', examples: [this.plugin.t('preset_example_highlight','==highlighted text==')], group: 'markdown' },
       { label: this.plugin.t('preset_domain_names','Domain names'), pattern: '\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b', flags: '', examples: [this.plugin.t('preset_example_domain', 'example.com')] },
       { label: this.plugin.t('preset_email_addresses','Email addresses'), pattern: '\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', flags: '', examples: [this.plugin.t('preset_example_email', 'name@example.com')] },
@@ -18999,13 +19121,14 @@ class ColorSettingTab extends PluginSettingTab {
           this.plugin.reconfigureEditorExtensions();
           this.plugin.forceRefreshAllEditors();
           this.plugin.forceRefreshAllReadingViews();
+          if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
         };
         activeSelect.onchange = activeHandler;
 
         const nameInput = row.createEl('input', { type: 'text', value: group.name || '' });
         nameInput.style.flex = '1';
         nameInput.placeholder = this.plugin.t('group_name_placeholder', 'Name your group');
-        const nameHandler = async () => { group.name = nameInput.value; await this.plugin.saveSettings(); };
+        const nameHandler = async () => { group.name = nameInput.value; await this.plugin.saveSettings(); if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage(); };
         nameInput.onchange = nameHandler;
 
         const btnDuplicate = row.createEl('div');
@@ -19018,10 +19141,12 @@ class ColorSettingTab extends PluginSettingTab {
         btnDuplicate.onclick = async () => {
           const newGroup = JSON.parse(JSON.stringify(group));
           newGroup.name = (newGroup.name || '') + ' (Copy)';
+          try { newGroup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (_) {}
           this.plugin.settings.wordEntryGroups.push(newGroup);
           await this.plugin.saveSettings();
           this.plugin.compileWordEntries();
           this._refreshGroups();
+          if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
         };
 
         const btnEdit = row.createEl('div');
@@ -19042,6 +19167,7 @@ class ColorSettingTab extends PluginSettingTab {
             this.plugin.forceRefreshAllEditors();
             this.plugin.forceRefreshAllReadingViews();
             this._refreshGroups();
+            if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
           }, async (groupToDelete) => {
             const actualIndex = this.plugin.settings.wordEntryGroups.findIndex(g => g && g.uid === groupToDelete.uid);
             if (actualIndex !== -1) this.plugin.settings.wordEntryGroups.splice(actualIndex, 1);
@@ -19051,6 +19177,7 @@ class ColorSettingTab extends PluginSettingTab {
             this.plugin.forceRefreshAllEditors();
             this.plugin.forceRefreshAllReadingViews();
             this._refreshGroups();
+            if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
           }).open();
         };
       });
@@ -20381,13 +20508,25 @@ class ColorSettingTab extends PluginSettingTab {
     containerEl.createEl('h3', { text: this.plugin.t('grouped_entries_header', 'Grouped Entries') });
     // containerEl.createEl('p', { text: this.plugin.t('grouped_entries_desc','Manage your word groups. Use search to filter by name.') });
     new Setting(containerEl)
-      .setName(this.plugin.t('hide_inactive_groups_dropdown','Hide inactive groups in dropdowns'))
-      .setDesc(this.plugin.t('hide_inactive_groups_dropdown_desc','When enabled, only active word groups will appear in group dropdowns.'))
+      .setName(this.plugin.t('hide_inactive_groups_in_dropdowns','Hide Inactive Groups in Dropdowns'))
+      .setDesc(this.plugin.t('hide_inactive_groups_in_dropdowns_desc','Hide inactive word groups when displaying group lists in dropdowns.'))
       .addToggle(t => t
         .setValue(!!this.plugin.settings.hideInactiveGroupsInDropdowns)
         .onChange(async v => {
           this.plugin.settings.hideInactiveGroupsInDropdowns = !!v;
           await this.plugin.saveSettings();
+        }));
+    
+    new Setting(containerEl)
+      .setName(this.plugin.t('show_word_groups_in_commands','Show word groups in commands'))
+      .setDesc(this.plugin.t('show_word_groups_in_commands_desc','When enabled, word groups appear in the command palette with Activate/Deactivate commands.'))
+      .addToggle(t => t
+        .setValue(!!this.plugin.settings.showWordGroupsInCommands)
+        .onChange(async v => {
+          this.plugin.settings.showWordGroupsInCommands = !!v;
+          await this.plugin.saveSettings();
+          // Re-register commands to show/hide word group commands
+          this.plugin.reregisterCommandsWithLanguage();
         }));
     const groupSearchContainer = containerEl.createDiv();
     try { groupSearchContainer.addClass('act-search-container'); } catch (e) { try { groupSearchContainer.classList.add('act-search-container'); } catch (_) {} }
