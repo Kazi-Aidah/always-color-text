@@ -467,7 +467,26 @@ var require_en = __commonJS({
       "quick_styles_header": "Quick Styles",
       "quick_styles_desc": "Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used.",
       "btn_add_style": "+ Add Style",
-      "quick_styles_menu_option": "Quick Styles"
+      "quick_styles_menu_option": "Quick Styles",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "Blacklist Group Entries",
+      "show_blacklist_groups_in_commands": "Show blacklist groups in commands",
+      "show_blacklist_groups_in_commands_desc": "When enabled, blacklist groups appear in the command palette with Activate/Deactivate commands.",
+      "search_blacklist_groups_placeholder": "Search blacklist groups\u2026",
+      "btn_create_new_blacklist_group": "+ Create New Blacklist Group",
+      "edit_blacklist_group_modal_title": "Edit Blacklist Group",
+      "tooltip_delete_all_blacklist_groups": "Delete all Blacklist Groups",
+      "confirm_delete_all_blacklist_groups_title": "Delete All Blacklist Groups",
+      "confirm_delete_all_blacklist_groups_desc": "Are you sure you want to delete ALL blacklist groups? This cannot be undone!",
+      "confirm_delete_blacklist_group_title": "Delete Blacklist Group",
+      "confirm_delete_blacklist_group_desc": "Are you sure you want to delete this blacklist group? This cannot be undone.",
+      "notice_blacklist_group_activated": "Blacklist group activated",
+      "notice_blacklist_group_deactivated": "Blacklist group deactivated",
+      "command_activate_blacklist_group": "Activate {groupName} Blacklist Group",
+      "command_deactivate_blacklist_group": "Deactivate {groupName} Blacklist Group",
+      "btn_duplicate_entry": "Duplicate Entry",
+      "btn_open_in_regex_tester": "Open in Regex Tester",
+      "btn_delete_entry": "Delete Entry"
     };
   }
 });
@@ -933,7 +952,26 @@ var require_es = __commonJS({
       "quick_styles_header": "Estilos R\xE1pidos",
       "quick_styles_desc": "Define estilos con nombre para aplicar color de texto y resaltados. Si Colores R\xE1pidos est\xE1 desactivado, se usar\xE1n los colores por estilo aqu\xED.",
       "btn_add_style": "+ A\xF1adir Estilo",
-      "quick_styles_menu_option": "Estilos R\xE1pidos"
+      "quick_styles_menu_option": "Estilos R\xE1pidos",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "Entradas del grupo de lista negra",
+      "show_blacklist_groups_in_commands": "Mostrar grupos de lista negra en comandos",
+      "show_blacklist_groups_in_commands_desc": "Cuando est\xE1 habilitado, los grupos de lista negra aparecen en la paleta de comandos con comandos Activar/Desactivar.",
+      "search_blacklist_groups_placeholder": "Buscar grupos de lista negra\u2026",
+      "btn_create_new_blacklist_group": "+ Crear nuevo grupo de lista negra",
+      "edit_blacklist_group_modal_title": "Editar grupo de lista negra",
+      "tooltip_delete_all_blacklist_groups": "Eliminar todos los grupos de lista negra",
+      "confirm_delete_all_blacklist_groups_title": "Eliminar todos los grupos de lista negra",
+      "confirm_delete_all_blacklist_groups_desc": "\xBFEst\xE1s seguro de que deseas eliminar TODOS los grupos de lista negra? \xA1Esto no se puede deshacer!",
+      "confirm_delete_blacklist_group_title": "Eliminar grupo de lista negra",
+      "confirm_delete_blacklist_group_desc": "\xBFEst\xE1s seguro de que deseas eliminar este grupo de lista negra? Esto no se puede deshacer.",
+      "notice_blacklist_group_activated": "Grupo de lista negra activado",
+      "notice_blacklist_group_deactivated": "Grupo de lista negra desactivado",
+      "command_activate_blacklist_group": "Activar grupo de lista negra {groupName}",
+      "command_deactivate_blacklist_group": "Desactivar grupo de lista negra {groupName}",
+      "btn_duplicate_entry": "Duplicar entrada",
+      "btn_open_in_regex_tester": "Abrir en Regex Tester",
+      "btn_delete_entry": "Eliminar entrada"
     };
   }
 });
@@ -1399,7 +1437,26 @@ var require_fr = __commonJS({
       "quick_styles_header": "Styles Rapides",
       "quick_styles_desc": "D\xE9finir des styles nomm\xE9s pour appliquer la couleur du texte et les surlignages. Si Couleurs Rapides est d\xE9sactiv\xE9, les couleurs par style ici seront utilis\xE9es.",
       "btn_add_style": "+ Ajouter un style",
-      "quick_styles_menu_option": "Styles Rapides"
+      "quick_styles_menu_option": "Styles Rapides",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "Entr\xE9es du groupe de liste noire",
+      "show_blacklist_groups_in_commands": "Afficher les groupes de liste noire dans les commandes",
+      "show_blacklist_groups_in_commands_desc": "Lorsqu'elle est activ\xE9e, les groupes de liste noire apparaissent dans la palette de commandes avec les commandes Activer/D\xE9sactiver.",
+      "search_blacklist_groups_placeholder": "Rechercher des groupes de liste noire\u2026",
+      "btn_create_new_blacklist_group": "+ Cr\xE9er un nouveau groupe de liste noire",
+      "edit_blacklist_group_modal_title": "Modifier le groupe de liste noire",
+      "tooltip_delete_all_blacklist_groups": "Supprimer tous les groupes de liste noire",
+      "confirm_delete_all_blacklist_groups_title": "Supprimer tous les groupes de liste noire",
+      "confirm_delete_all_blacklist_groups_desc": "\xCAtes-vous s\xFBr de vouloir supprimer TOUS les groupes de liste noire ? Cela ne peut pas \xEAtre annul\xE9 !",
+      "confirm_delete_blacklist_group_title": "Supprimer le groupe de liste noire",
+      "confirm_delete_blacklist_group_desc": "\xCAtes-vous s\xFBr de vouloir supprimer ce groupe de liste noire ? Cela ne peut pas \xEAtre annul\xE9.",
+      "notice_blacklist_group_activated": "Groupe de liste noire activ\xE9",
+      "notice_blacklist_group_deactivated": "Groupe de liste noire d\xE9sactiv\xE9",
+      "command_activate_blacklist_group": "Activer le groupe de liste noire {groupName}",
+      "command_deactivate_blacklist_group": "D\xE9sactiver le groupe de liste noire {groupName}",
+      "btn_duplicate_entry": "Dupliquer l'entr\xE9e",
+      "btn_open_in_regex_tester": "Ouvrir dans le testeur d'expression r\xE9guli\xE8re",
+      "btn_delete_entry": "Supprimer l'entr\xE9e"
     };
   }
 });
@@ -1866,7 +1923,26 @@ var require_hi = __commonJS({
       "quick_styles_header": "\u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u093E\u0901",
       "quick_styles_desc": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917 \u0914\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0932\u093E\u0917\u0942 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0928\u093E\u092E\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u093E\u0901 \u092A\u0930\u093F\u092D\u093E\u0937\u093F\u0924 \u0915\u0930\u0947\u0902\u0964 \u092F\u0926\u093F \u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917 \u092C\u0902\u0926 \u0939\u0948\u0902, \u0924\u094B \u092F\u0939\u093E\u0902 \u092A\u094D\u0930\u0924\u093F-\u0936\u0948\u0932\u0940 \u0930\u0902\u0917\u094B\u0902 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u093F\u092F\u093E \u091C\u093E\u090F\u0917\u093E\u0964",
       "btn_add_style": "+ \u0936\u0948\u0932\u0940 \u091C\u094B\u0921\u093C\u0947\u0902",
-      "quick_styles_menu_option": "\u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u093E\u0901"
+      "quick_styles_menu_option": "\u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u093E\u0901",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F\u092F\u093E\u0901",
+      "show_blacklist_groups_in_commands": "\u0915\u092E\u093E\u0902\u0921 \u092E\u0947\u0902 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0926\u093F\u0916\u093E\u090F\u0902",
+      "show_blacklist_groups_in_commands_desc": "\u0938\u0915\u094D\u0937\u092E \u0939\u094B\u0928\u0947 \u092A\u0930, \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0915\u092E\u093E\u0902\u0921 \u092A\u0948\u0932\u0947\u091F \u092E\u0947\u0902 \u0938\u0915\u094D\u0930\u093F\u092F/\u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902 \u0915\u092E\u093E\u0902\u0921 \u0915\u0947 \u0938\u093E\u0925 \u0926\u093F\u0916\u093E\u0908 \u0926\u0947\u0924\u0947 \u0939\u0948\u0902\u0964",
+      "search_blacklist_groups_placeholder": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939\u094B\u0902 \u0915\u094B \u0916\u094B\u091C\u0947\u0902\u2026",
+      "btn_create_new_blacklist_group": "+ \u0928\u092F\u093E \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u092C\u0928\u093E\u090F\u0902",
+      "edit_blacklist_group_modal_title": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+      "tooltip_delete_all_blacklist_groups": "\u0938\u092D\u0940 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939\u094B\u0902 \u0915\u094B \u0939\u091F\u093E\u090F\u0902",
+      "confirm_delete_all_blacklist_groups_title": "\u0938\u092D\u0940 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939\u094B\u0902 \u0915\u094B \u0939\u091F\u093E\u090F\u0902",
+      "confirm_delete_all_blacklist_groups_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0938\u092D\u0940 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939\u094B\u0902 \u0915\u094B \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902? \u092F\u0939 \u092A\u0942\u0930\u094D\u0935\u0935\u0924 \u0928\u0939\u0940\u0902 \u0915\u093F\u092F\u093E \u091C\u093E \u0938\u0915\u0924\u093E!",
+      "confirm_delete_blacklist_group_title": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0939\u091F\u093E\u090F\u0902",
+      "confirm_delete_blacklist_group_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0907\u0938 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0915\u094B \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902? \u092F\u0939 \u092A\u0942\u0930\u094D\u0935\u0935\u0924 \u0928\u0939\u0940\u0902 \u0915\u093F\u092F\u093E \u091C\u093E \u0938\u0915\u0924\u093E\u0964",
+      "notice_blacklist_group_activated": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0938\u0915\u094D\u0930\u093F\u092F \u0915\u093F\u092F\u093E \u0917\u092F\u093E",
+      "notice_blacklist_group_deactivated": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0915\u093F\u092F\u093E \u0917\u092F\u093E",
+      "command_activate_blacklist_group": "{groupName} \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0938\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902",
+      "command_deactivate_blacklist_group": "{groupName} \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902",
+      "btn_duplicate_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0915\u094B \u0921\u0941\u092A\u094D\u0932\u093F\u0915\u0947\u091F \u0915\u0930\u0947\u0902",
+      "btn_open_in_regex_tester": "Regex Tester \u092E\u0947\u0902 \u0916\u094B\u0932\u0947\u0902",
+      "btn_delete_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0939\u091F\u093E\u090F\u0902"
     };
   }
 });
@@ -2333,7 +2409,26 @@ var require_it = __commonJS({
       "quick_styles_header": "Stili Rapidi",
       "quick_styles_desc": "Definisci stili con nome per applicare colore del testo ed evidenziazioni. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile qui.",
       "btn_add_style": "+ Aggiungi Stile",
-      "quick_styles_menu_option": "Stili Rapidi"
+      "quick_styles_menu_option": "Stili Rapidi",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "Voci del gruppo blacklist",
+      "show_blacklist_groups_in_commands": "Mostra gruppi blacklist nei comandi",
+      "show_blacklist_groups_in_commands_desc": "Se abilitato, i gruppi blacklist vengono visualizzati nella tavolozza dei comandi con i comandi Attiva/Disattiva.",
+      "search_blacklist_groups_placeholder": "Cerca gruppi blacklist\u2026",
+      "btn_create_new_blacklist_group": "+ Crea nuovo gruppo blacklist",
+      "edit_blacklist_group_modal_title": "Modifica gruppo blacklist",
+      "tooltip_delete_all_blacklist_groups": "Elimina tutti i gruppi blacklist",
+      "confirm_delete_all_blacklist_groups_title": "Elimina tutti i gruppi blacklist",
+      "confirm_delete_all_blacklist_groups_desc": "Sei sicuro di voler eliminare TUTTI i gruppi blacklist? Non pu\xF2 essere annullato!",
+      "confirm_delete_blacklist_group_title": "Elimina gruppo blacklist",
+      "confirm_delete_blacklist_group_desc": "Sei sicuro di voler eliminare questo gruppo blacklist? Non pu\xF2 essere annullato.",
+      "notice_blacklist_group_activated": "Gruppo blacklist attivato",
+      "notice_blacklist_group_deactivated": "Gruppo blacklist disattivato",
+      "command_activate_blacklist_group": "Attiva gruppo blacklist {groupName}",
+      "command_deactivate_blacklist_group": "Disattiva gruppo blacklist {groupName}",
+      "btn_duplicate_entry": "Duplica voce",
+      "btn_open_in_regex_tester": "Apri in Regex Tester",
+      "btn_delete_entry": "Elimina voce"
     };
   }
 });
@@ -2800,7 +2895,26 @@ var require_bn = __commonJS({
       "quick_styles_header": "\u09A6\u09CD\u09B0\u09C1\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2",
       "quick_styles_desc": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u098F\u09AC\u0982 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u0995\u09B0\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u09A8\u09BE\u09AE\u09AF\u09C1\u0995\u09CD\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09B8\u0982\u099C\u09CD\u099E\u09BE\u09AF\u09BC\u09BF\u09A4 \u0995\u09B0\u09C1\u09A8\u0964 \u09AF\u09A6\u09BF \u09A6\u09CD\u09B0\u09C1\u09A4 \u09B0\u0982 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09C7, \u09A4\u09AC\u09C7 \u098F\u0996\u09BE\u09A8\u09C7 \u09AA\u09CD\u09B0\u09A4\u09BF-\u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09B0\u0982 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B9\u09AC\u09C7\u0964",
       "btn_add_style": "+ \u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
-      "quick_styles_menu_option": "\u09A6\u09CD\u09B0\u09C1\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2"
+      "quick_styles_menu_option": "\u09A6\u09CD\u09B0\u09C1\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF",
+      "show_blacklist_groups_in_commands": "\u0995\u09AE\u09BE\u09A8\u09CD\u09A1\u09C7 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09A6\u09C7\u0996\u09BE\u09A8",
+      "show_blacklist_groups_in_commands_desc": "\u09B8\u0995\u09CD\u09B7\u09AE \u09B9\u09B2\u09C7, \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA\u0997\u09C1\u09B2\u09BF \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC/\u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09BE\u09B0 \u0995\u09AE\u09BE\u09A8\u09CD\u09A1 \u09B8\u09B9 \u0995\u09AE\u09BE\u09A8\u09CD\u09A1 \u09AA\u09CD\u09AF\u09BE\u09B2\u09C7\u099F\u09C7 \u09AA\u09CD\u09B0\u09A6\u09B0\u09CD\u09B6\u09BF\u09A4 \u09B9\u09AF\u09BC\u0964",
+      "search_blacklist_groups_placeholder": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u0985\u09A8\u09C1\u09B8\u09A8\u09CD\u09A7\u09BE\u09A8 \u0995\u09B0\u09C1\u09A8\u2026",
+      "btn_create_new_blacklist_group": "+ \u09A8\u09A4\u09C1\u09A8 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09A4\u09C8\u09B0\u09BF \u0995\u09B0\u09C1\u09A8",
+      "edit_blacklist_group_modal_title": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      "tooltip_delete_all_blacklist_groups": "\u09B8\u09AE\u09B8\u09CD\u09A4 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09C1\u09A8",
+      "confirm_delete_all_blacklist_groups_title": "\u09B8\u09AE\u09B8\u09CD\u09A4 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09C1\u09A8",
+      "confirm_delete_all_blacklist_groups_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09B8\u09AE\u09B8\u09CD\u09A4 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8? \u098F\u099F\u09BF \u0986\u09A8\u09A1\u09C1 \u0995\u09B0\u09BE \u09AF\u09BE\u09AC\u09C7 \u09A8\u09BE!",
+      "confirm_delete_blacklist_group_title": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09C1\u09A8",
+      "confirm_delete_blacklist_group_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u098F\u0987 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8? \u098F\u099F\u09BF \u0986\u09A8\u09A1\u09C1 \u0995\u09B0\u09BE \u09AF\u09BE\u09AC\u09C7 \u09A8\u09BE\u0964",
+      "notice_blacklist_group_activated": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
+      "notice_blacklist_group_deactivated": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
+      "command_activate_blacklist_group": "{groupName} \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
+      "command_deactivate_blacklist_group": "{groupName} \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
+      "btn_duplicate_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09A1\u09C1\u09AA\u09CD\u09B2\u09BF\u0995\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
+      "btn_open_in_regex_tester": "Regex Tester \u098F \u0996\u09C1\u09B2\u09C1\u09A8",
+      "btn_delete_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09AE\u09C1\u099B\u09C1\u09A8"
     };
   }
 });
@@ -3267,7 +3381,26 @@ var require_ru = __commonJS({
       "quick_styles_header": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0441\u0442\u0438\u043B\u0438",
       "quick_styles_desc": "\u041E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u0435 \u0438\u043C\u0435\u043D\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0441\u0442\u0438\u043B\u0438 \u0434\u043B\u044F \u043F\u0440\u0438\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0438 \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u0438\u044F. \u0415\u0441\u043B\u0438 \u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u044B, \u0431\u0443\u0434\u0443\u0442 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C\u0441\u044F \u0446\u0432\u0435\u0442\u0430 \u0441\u0442\u0438\u043B\u0435\u0439 \u0437\u0434\u0435\u0441\u044C.",
       "btn_add_style": "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u0442\u0438\u043B\u044C",
-      "quick_styles_menu_option": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0441\u0442\u0438\u043B\u0438"
+      "quick_styles_menu_option": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0441\u0442\u0438\u043B\u0438",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "\u0417\u0430\u043F\u0438\u0441\u0438 \u0433\u0440\u0443\u043F\u043F\u044B \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430",
+      "show_blacklist_groups_in_commands": "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u044B \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 \u0432 \u043A\u043E\u043C\u0430\u043D\u0434\u0430\u0445",
+      "show_blacklist_groups_in_commands_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u0433\u0440\u0443\u043F\u043F\u044B \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u044E\u0442\u0441\u044F \u0432 \u043F\u0430\u043B\u0438\u0442\u0440\u0435 \u043A\u043E\u043C\u0430\u043D\u0434 \u0441 \u043A\u043E\u043C\u0430\u043D\u0434\u0430\u043C\u0438 \u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C/\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C.",
+      "search_blacklist_groups_placeholder": "\u041F\u043E\u0438\u0441\u043A \u0433\u0440\u0443\u043F\u043F \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430\u2026",
+      "btn_create_new_blacklist_group": "+ \u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u0443\u044E \u0433\u0440\u0443\u043F\u043F\u0443 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430",
+      "edit_blacklist_group_modal_title": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430",
+      "tooltip_delete_all_blacklist_groups": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430",
+      "confirm_delete_all_blacklist_groups_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430",
+      "confirm_delete_all_blacklist_groups_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0433\u0440\u0443\u043F\u043F\u044B \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430? \u042D\u0442\u043E \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C!",
+      "confirm_delete_blacklist_group_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430",
+      "confirm_delete_blacklist_group_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u0443 \u0433\u0440\u0443\u043F\u043F\u0443 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430? \u042D\u0442\u043E \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C.",
+      "notice_blacklist_group_activated": "\u0413\u0440\u0443\u043F\u043F\u0430 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D\u0430",
+      "notice_blacklist_group_deactivated": "\u0413\u0440\u0443\u043F\u043F\u0430 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 \u0434\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D\u0430",
+      "command_activate_blacklist_group": "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 {groupName}",
+      "command_deactivate_blacklist_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 {groupName}",
+      "btn_duplicate_entry": "\u0414\u0443\u0431\u043B\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
+      "btn_open_in_regex_tester": "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 Regex Tester",
+      "btn_delete_entry": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C"
     };
   }
 });
@@ -3734,7 +3867,26 @@ var require_zh_cn = __commonJS({
       "quick_styles_header": "\u5FEB\u901F\u6837\u5F0F",
       "quick_styles_desc": "\u5B9A\u4E49\u7528\u4E8E\u5E94\u7528\u6587\u672C\u989C\u8272\u548C\u9AD8\u4EAE\u663E\u793A\u7684\u547D\u540D\u6837\u5F0F\u3002\u5982\u679C\u5173\u95ED\u5FEB\u901F\u989C\u8272\uFF0C\u5C06\u4F7F\u7528\u6B64\u5904\u7684\u6BCF\u79CD\u6837\u5F0F\u989C\u8272\u3002",
       "btn_add_style": "+ \u6DFB\u52A0\u6837\u5F0F",
-      "quick_styles_menu_option": "\u5FEB\u901F\u6837\u5F0F"
+      "quick_styles_menu_option": "\u5FEB\u901F\u6837\u5F0F",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "\u9ED1\u540D\u5355\u7EC4\u6761\u76EE",
+      "show_blacklist_groups_in_commands": "\u5728\u547D\u4EE4\u4E2D\u663E\u793A\u9ED1\u540D\u5355\u7EC4",
+      "show_blacklist_groups_in_commands_desc": "\u542F\u7528\u540E\uFF0C\u9ED1\u540D\u5355\u7EC4\u5C06\u5728\u547D\u4EE4\u9762\u677F\u4E2D\u663E\u793A\uFF0C\u5E76\u5E26\u6709\u6FC0\u6D3B/\u505C\u7528\u547D\u4EE4\u3002",
+      "search_blacklist_groups_placeholder": "\u641C\u7D22\u9ED1\u540D\u5355\u7EC4\u2026",
+      "btn_create_new_blacklist_group": "+ \u521B\u5EFA\u65B0\u9ED1\u540D\u5355\u7EC4",
+      "edit_blacklist_group_modal_title": "\u7F16\u8F91\u9ED1\u540D\u5355\u7EC4",
+      "tooltip_delete_all_blacklist_groups": "\u5220\u9664\u6240\u6709\u9ED1\u540D\u5355\u7EC4",
+      "confirm_delete_all_blacklist_groups_title": "\u5220\u9664\u6240\u6709\u9ED1\u540D\u5355\u7EC4",
+      "confirm_delete_all_blacklist_groups_desc": "\u786E\u5B9A\u8981\u5220\u9664\u6240\u6709\u9ED1\u540D\u5355\u7EC4\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\uFF01",
+      "confirm_delete_blacklist_group_title": "\u5220\u9664\u9ED1\u540D\u5355\u7EC4",
+      "confirm_delete_blacklist_group_desc": "\u786E\u5B9A\u8981\u5220\u9664\u6B64\u9ED1\u540D\u5355\u7EC4\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\u3002",
+      "notice_blacklist_group_activated": "\u9ED1\u540D\u5355\u7EC4\u5DF2\u6FC0\u6D3B",
+      "notice_blacklist_group_deactivated": "\u9ED1\u540D\u5355\u7EC4\u5DF2\u505C\u7528",
+      "command_activate_blacklist_group": "\u6FC0\u6D3B {groupName} \u9ED1\u540D\u5355\u7EC4",
+      "command_deactivate_blacklist_group": "\u505C\u7528 {groupName} \u9ED1\u540D\u5355\u7EC4",
+      "btn_duplicate_entry": "\u590D\u5236\u6761\u76EE",
+      "btn_open_in_regex_tester": "\u5728\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\u4E2D\u6253\u5F00",
+      "btn_delete_entry": "\u5220\u9664\u6761\u76EE"
     };
   }
 });
@@ -3795,22 +3947,30 @@ try {
 var locales = require_i18n();
 var { show_toggle_command } = require_fr();
 var EDITOR_PERFORMANCE_CONSTANTS = {
-  MAX_PATTERNS_STANDARD: 30,
-  // Use standard processing for <= 30 patterns
-  MAX_TEXT_LENGTH_STANDARD: 1e4,
-  // Use standard processing for <= 10k chars
-  PATTERN_CHUNK_SIZE: 20,
-  // Process 20 patterns per chunk  
-  TEXT_CHUNK_SIZE: 5e3,
-  // Process 5k chars per chunk
-  MAX_MATCHES_PER_PATTERN: 100,
-  // Max matches per pattern in chunks
-  MAX_TOTAL_MATCHES: 3e3,
-  // Absolute limit for decorations
-  TYPING_DEBOUNCE_MS: 50
-  // Delay rebuilds while typing to reduce lag
+  MAX_PATTERNS_STANDARD: 20,
+  // Use standard processing for <= 20 patterns (reduced)
+  MAX_TEXT_LENGTH_STANDARD: 5e3,
+  // Use standard processing for <= 5k chars (reduced)
+  PATTERN_CHUNK_SIZE: 15,
+  // Process 15 patterns per chunk (reduced)  
+  TEXT_CHUNK_SIZE: 2500,
+  // Process 2.5k chars per chunk (reduced)
+  MAX_MATCHES_PER_PATTERN: 50,
+  // Max matches per pattern (reduced)
+  MAX_TOTAL_MATCHES: 1500,
+  // Absolute limit for decorations (reduced)
+  TYPING_DEBOUNCE_MS: 300,
+  // Delay rebuilds while typing - 300ms (increased from 150ms)
+  TYPING_GRACE_PERIOD_MS: 2e3,
+  // Skip decoration during active typing (2 seconds after last keystroke)
+  VIEWPORT_EXTENSION: 100,
+  // Extra pixels beyond viewport to include in text processing
+  CALLOUT_THROTTLE_MS: 1e3,
+  // Throttle callout processing to 1 second
+  TABLE_THROTTLE_MS: 1e3
+  // Throttle table processing to 1 second
 };
-var IS_DEVELOPMENT = false;
+var IS_DEVELOPMENT = true;
 var debugLog = (tag, ...args) => {
   if (IS_DEVELOPMENT) {
     console.log(`[${tag}]`, ...args);
@@ -3826,6 +3986,16 @@ var debugWarn = (tag, ...args) => {
     console.warn(`[${tag}]`, ...args);
   }
 };
+var GLOBAL_STYLE_KEYS = [
+  "borderLineStyle",
+  "borderOpacity",
+  "borderThickness",
+  "enableBorderThickness",
+  "highlightHorizontalPadding",
+  "highlightVerticalPadding",
+  "backgroundOpacity",
+  "highlightBorderRadius"
+];
 var RegexCache = class {
   constructor(maxSize = 100) {
     this.maxSize = maxSize;
@@ -4643,8 +4813,23 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
       menu.addItem((item2) => {
         item2.setTitle(this.plugin.t("edit_entry_header", "Edit Entry")).setIcon("pencil").onClick(() => {
           let entry2 = actualItem.entry;
+          if (entry2 && !entry2.uid) {
+            try {
+              entry2.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+            } catch (_) {
+              entry2.uid = Date.now();
+            }
+          }
           if (entry2 && entry2.uid) {
-            const reloadedEntry = this.plugin.settings.wordEntries.find((e) => e && e.uid === entry2.uid) || this.plugin.settings.textBgColoringEntries.find((e) => e && e.uid === entry2.uid);
+            let reloadedEntry = this.plugin.settings.wordEntries.find((e) => e && e.uid === entry2.uid) || this.plugin.settings.textBgColoringEntries.find((e) => e && e.uid === entry2.uid);
+            if (!reloadedEntry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+              for (const group of this.plugin.settings.wordEntryGroups) {
+                if (Array.isArray(group.entries)) {
+                  reloadedEntry = group.entries.find((e) => e && e.uid === entry2.uid);
+                  if (reloadedEntry) break;
+                }
+              }
+            }
             if (reloadedEntry) {
               entry2 = reloadedEntry;
               debugLog("EDIT_ENTRY", `Reloaded entry ${entry2.uid}: opacity=${entry2.backgroundOpacity}, radius=${entry2.highlightBorderRadius}`);
@@ -4777,7 +4962,28 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
         const menu = new Menu();
         menu.addItem((item2) => {
           item2.setTitle(this.plugin.t("edit_entry_header", "Edit Entry")).setIcon("pencil").onClick(() => {
-            const entry2 = actualItem.entry;
+            let entry2 = actualItem.entry;
+            if (entry2 && !entry2.uid) {
+              try {
+                entry2.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+              } catch (_) {
+                entry2.uid = Date.now();
+              }
+            }
+            if (entry2 && entry2.uid) {
+              let reloadedEntry = this.plugin.settings.wordEntries.find((e) => e && e.uid === entry2.uid) || this.plugin.settings.textBgColoringEntries.find((e) => e && e.uid === entry2.uid);
+              if (!reloadedEntry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+                for (const group of this.plugin.settings.wordEntryGroups) {
+                  if (Array.isArray(group.entries)) {
+                    reloadedEntry = group.entries.find((e) => e && e.uid === entry2.uid);
+                    if (reloadedEntry) break;
+                  }
+                }
+              }
+              if (reloadedEntry) {
+                entry2 = reloadedEntry;
+              }
+            }
             const modal = new EditEntryModal(this.app, this.plugin, entry2, null, this);
             modal.open();
           });
@@ -5633,7 +5839,11 @@ module.exports = class AlwaysColorText extends Plugin {
     this._registeredCommandIds = [];
     this._translations = typeof locales === "object" && locales ? locales : {};
     this._externalTranslations = {};
-    this._regexCache = new RegexCache(100);
+    this._regexCache = new RegexCache(200);
+    this._compiledBlacklistWords = [];
+    this._compiledBlacklistEntries = [];
+    this._compiledBlacklistGroups = {};
+    this._blacklistCompilationDirty = true;
     this._bloomFilter = new BloomFilter(2048);
     this._patternMatcher = new PatternMatcher(this.settings, {
       escapeRegex: (s) => this.escapeRegex(s),
@@ -5649,9 +5859,9 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (_) {
     }
     try {
-      this._lpObservers = /* @__PURE__ */ new WeakMap();
+      this._lpObservers = /* @__PURE__ */ new Map();
     } catch (_) {
-      this._lpObservers = null;
+      this._lpObservers = /* @__PURE__ */ new Map();
     }
     try {
       this._readingModeIntervals = /* @__PURE__ */ new Map();
@@ -5663,6 +5873,11 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (_) {
       this._pathRulesCache = /* @__PURE__ */ new Map();
     }
+    this._isTyping = false;
+    this._lastTypingTime = 0;
+    this._typingFlagTimer = null;
+    this._lpCalloutRaf = null;
+    this._lpTableRaf = null;
   }
   applyDisabledNeutralizerStyles() {
     try {
@@ -6975,6 +7190,9 @@ module.exports = class AlwaysColorText extends Plugin {
       if (this.settings?.showWordGroupsInCommands) {
         this.registerWordGroupCommands();
       }
+      if (this.settings?.showBlacklistGroupsInCommands) {
+        this.registerBlacklistGroupCommands();
+      }
       this._commandsRegistered = true;
     } catch (e) {
     }
@@ -7027,6 +7245,54 @@ module.exports = class AlwaysColorText extends Plugin {
       debugError("COMMANDS", "Error registering word group commands:", e);
     }
   }
+  // Register blacklist group commands
+  registerBlacklistGroupCommands() {
+    try {
+      const groups = Array.isArray(this.settings.blacklistEntryGroups) ? this.settings.blacklistEntryGroups : [];
+      groups.forEach((group) => {
+        if (!group) return;
+        const groupName = String(group.name || "").trim();
+        if (!groupName) return;
+        if (!group.uid) {
+          try {
+            group.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+          } catch (_) {
+          }
+        }
+        const isActive = group.active;
+        const commandId = `toggle-blacklist-group-${group.uid}`;
+        const commandName = isActive ? this.t("command_deactivate_blacklist_group", "Deactivate {groupName} Blacklist Group", { groupName }) : this.t("command_activate_blacklist_group", "Activate {groupName} Blacklist Group", { groupName });
+        try {
+          this._registeredCommandIds.push(commandId);
+        } catch (_) {
+        }
+        this.addCommand({
+          id: commandId,
+          name: commandName,
+          callback: async () => {
+            try {
+              const latestGroup = Array.isArray(this.settings.blacklistEntryGroups) ? this.settings.blacklistEntryGroups.find((g) => g && g.uid === group.uid) : null;
+              if (!latestGroup) return;
+              latestGroup.active = !latestGroup.active;
+              await this.saveSettings();
+              this.reregisterCommandsWithLanguage();
+              const latestGroupName = String(latestGroup.name || groupName || "").trim();
+              const status = latestGroup.active ? this.t("notice_blacklist_group_activated", `Blacklist group "${latestGroupName}" activated`) : this.t("notice_blacklist_group_deactivated", `Blacklist group "${latestGroupName}" deactivated`);
+              new Notice(status);
+              this._cacheDirty = true;
+              this.reconfigureEditorExtensions();
+              this.forceRefreshAllEditors();
+              this.forceRefreshAllReadingViews();
+            } catch (e) {
+              debugError("COMMANDS", "Error toggling blacklist group:", e);
+            }
+          }
+        });
+      });
+    } catch (e) {
+      debugError("COMMANDS", "Error registering blacklist group commands:", e);
+    }
+  }
   removeRegisteredCommands() {
     try {
       const pluginId = this.manifest && this.manifest.id || "always-color-text";
@@ -7049,7 +7315,7 @@ module.exports = class AlwaysColorText extends Plugin {
         if (cmds && typeof cmds === "object") {
           Object.keys(cmds).forEach((fullId) => {
             if (!fullId) return;
-            if (fullId.startsWith(`${pluginId}:toggle-word-group-`)) {
+            if (fullId.startsWith(`${pluginId}:toggle-word-group-`) || fullId.startsWith(`${pluginId}:toggle-blacklist-group-`)) {
               removeCommandSafe(fullId);
             }
           });
@@ -9096,12 +9362,82 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (_) {
     }
   }
+  // --- REFACTOR HELPERS ---
+  generateUid() {
+    try {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2);
+    } catch (e) {
+      return Date.now().toString();
+    }
+  }
+  migrateEntry(entry) {
+    if (!entry) return null;
+    if (!entry.uid) entry.uid = this.generateUid();
+    if ((entry.textColor === void 0 || entry.textColor === null) && entry.color) {
+      entry.textColor = entry.color;
+    }
+    delete entry.color;
+    delete entry._savedtextcolor;
+    delete entry._savedbackgroundcolor;
+    delete entry._savedTextColor;
+    delete entry._savedBackgroundColor;
+    return entry;
+  }
+  compressEntry(entry) {
+    if (!entry) return null;
+    const e = Object.assign({}, entry);
+    const s = this.settings;
+    if ((e.textColor === void 0 || e.textColor === null) && e.color) {
+      e.textColor = e.color;
+    }
+    delete e.color;
+    delete e._savedtextcolor;
+    delete e._savedbackgroundcolor;
+    delete e._savedTextColor;
+    delete e._savedBackgroundColor;
+    if (e.inclusionRules && e.inclusionRules.length === 0) delete e.inclusionRules;
+    if (e.exclusionRules && e.exclusionRules.length === 0) delete e.exclusionRules;
+    if (e.groupedPatterns && (e.groupedPatterns.length === 0 || e.groupedPatterns === null)) delete e.groupedPatterns;
+    if (e.textColor === null) delete e.textColor;
+    if (e.backgroundColor === null) delete e.backgroundColor;
+    if (e.presetLabel === "") delete e.presetLabel;
+    if (e.color === "") delete e.color;
+    if (e.textColor === "") delete e.textColor;
+    if (e.backgroundColor === "") delete e.backgroundColor;
+    if (e.backgroundOpacity === s.backgroundOpacity) delete e.backgroundOpacity;
+    if (e.highlightBorderRadius === s.highlightBorderRadius) delete e.highlightBorderRadius;
+    if (e.highlightHorizontalPadding === s.highlightHorizontalPadding) delete e.highlightHorizontalPadding;
+    if (e.highlightVerticalPadding === s.highlightVerticalPadding) delete e.highlightVerticalPadding;
+    if (e.enableBoxDecorationBreak === s.enableBoxDecorationBreak) delete e.enableBoxDecorationBreak;
+    if (e.enableBorderThickness === s.enableBorderThickness) delete e.enableBorderThickness;
+    if (e.borderOpacity === s.borderOpacity) delete e.borderOpacity;
+    if (e.borderThickness === s.borderThickness) delete e.borderThickness;
+    if (e.borderStyle === s.borderStyle) delete e.borderStyle;
+    if (e.borderLineStyle === s.borderLineStyle) delete e.borderLineStyle;
+    return e;
+  }
+  // Helper to merge entry styles with global defaults
+  getEffectiveStyles(entry) {
+    if (!entry) return {};
+    const s = this.settings;
+    const effective = {};
+    GLOBAL_STYLE_KEYS.forEach((key) => {
+      effective[key] = entry[key] !== void 0 && entry[key] !== null ? entry[key] : s[key];
+    });
+    return Object.assign({}, entry, effective);
+  }
   // --- Load plugin settings from disk, with defaults ---
   async loadSettings() {
     const loadedData = await this.loadData() || {};
+    if (loadedData.globalStyles && typeof loadedData.globalStyles === "object") {
+      Object.assign(loadedData, loadedData.globalStyles);
+      delete loadedData.globalStyles;
+    } else {
+    }
     if (!Array.isArray(loadedData.wordEntries)) loadedData.wordEntries = [];
     if (!Array.isArray(loadedData.wordEntryGroups)) loadedData.wordEntryGroups = [];
     if (!Array.isArray(loadedData.blacklistEntries)) loadedData.blacklistEntries = [];
+    if (!Array.isArray(loadedData.blacklistEntryGroups)) loadedData.blacklistEntryGroups = [];
     if (!Array.isArray(loadedData.pathRules)) loadedData.pathRules = [];
     try {
       const weWithCustom = (loadedData.wordEntries || []).filter((e) => e && (typeof e.backgroundOpacity === "number" || typeof e.highlightBorderRadius === "number"));
@@ -9119,6 +9455,7 @@ module.exports = class AlwaysColorText extends Plugin {
       wordColors: {},
       wordEntries: [],
       wordEntryGroups: [],
+      blacklistEntryGroups: [],
       caseSensitive: false,
       enabled: true,
       highlightStyle: "text",
@@ -9179,7 +9516,9 @@ module.exports = class AlwaysColorText extends Plugin {
       enableAddToExistingMenu: true,
       enableAlwaysColorTextMenu: true,
       hideInactiveGroupsInDropdowns: true,
+      hideInactiveBlacklistGroupsInDropdowns: true,
       showWordGroupsInCommands: true,
+      showBlacklistGroupsInCommands: true,
       symbolWordColoring: false,
       // Enable/disable regex support in the settings UI/runtime
       enableRegexSupport: false,
@@ -9247,6 +9586,20 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       this.sanitizeSettings();
     } catch (e) {
+    }
+    try {
+      if (Array.isArray(this.settings.wordEntries)) {
+        this.settings.wordEntries.forEach((e) => this.migrateEntry(e));
+      }
+      if (Array.isArray(this.settings.wordEntryGroups)) {
+        this.settings.wordEntryGroups.forEach((group) => {
+          if (Array.isArray(group.entries)) {
+            group.entries.forEach((e) => this.migrateEntry(e));
+          }
+        });
+      }
+    } catch (e) {
+      debugError("MIGRATION", "Refactor migration failed", e);
     }
     try {
       const weAfterSanitize = (this.settings.wordEntries || []).filter((e) => e && (typeof e.backgroundOpacity === "number" || typeof e.highlightBorderRadius === "number"));
@@ -9546,6 +9899,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     this.compileWordEntries();
     this.compileTextBgColoringEntries();
+    this.compileBlacklistEntries();
     try {
       this.startMemoryMonitor();
     } catch (e) {
@@ -9616,9 +9970,37 @@ module.exports = class AlwaysColorText extends Plugin {
       this.sanitizeSettings();
     } catch (e) {
     }
-    await this.saveData(this.settings);
+    const data = Object.assign({}, this.settings);
+    const globalStyles = {};
+    GLOBAL_STYLE_KEYS.forEach((key) => {
+      if (data[key] !== void 0) {
+        globalStyles[key] = data[key];
+        delete data[key];
+      }
+    });
+    data.globalStyles = globalStyles;
+    if (Array.isArray(data.wordEntries)) {
+      data.wordEntries = data.wordEntries.map((e) => this.compressEntry(e));
+    }
+    if (Array.isArray(data.wordEntryGroups)) {
+      data.wordEntryGroups = data.wordEntryGroups.map((g) => {
+        const ng = Object.assign({}, g);
+        if (Array.isArray(ng.entries)) {
+          ng.entries = ng.entries.map((e) => this.compressEntry(e));
+        }
+        return ng;
+      });
+    }
+    if (Array.isArray(data.quickStyles)) {
+      data.quickStyles = data.quickStyles.map((e) => this.compressEntry(e));
+    }
+    if (Array.isArray(data.quickColors)) {
+      data.quickColors = data.quickColors.map((e) => this.compressEntry(e));
+    }
+    await this.saveData(data);
     this.compileWordEntries();
     this.compileTextBgColoringEntries();
+    this.compileBlacklistEntries();
     try {
       this._pathRulesCache = /* @__PURE__ */ new Map();
     } catch (e) {
@@ -9963,11 +10345,10 @@ module.exports = class AlwaysColorText extends Plugin {
       const entry = {
         uid,
         pattern: patternStr,
-        color: String(color || "#000000"),
+        textColor: String(color || "#000000"),
         isRegex: !!isRegex,
         flags: String(flags || "").replace(/[^gimsuy]/g, ""),
         styleType: "text",
-        textColor: null,
         backgroundColor: null,
         matchType: !isRegex ? this.settings.partialMatch ? "contains" : "exact" : "regex",
         presetLabel: name ? String(name) : void 0,
@@ -10359,7 +10740,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     let lastIndex = 0;
     let safetyCounter = 0;
-    const maxIterations = 1e3;
+    const maxIterations = Math.min(EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN, 100);
     try {
       while (safetyCounter < maxIterations) {
         const match = regex.exec(text);
@@ -10368,6 +10749,7 @@ module.exports = class AlwaysColorText extends Plugin {
         if (regex.lastIndex === lastIndex) break;
         lastIndex = regex.lastIndex;
         safetyCounter++;
+        if (matches.length >= EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN) break;
       }
     } catch (e) {
       debugWarn("MATCH", "safeMatchLoop error", e);
@@ -10777,13 +11159,16 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     if (!Array.isArray(this.settings.wordEntries)) this.settings.wordEntries = [];
     const matchType = this.settings.partialMatch ? "contains" : "exact";
-    const idx = this.settings.wordEntries.findIndex((e) => e && e.pattern === selectedText && !e.isRegex);
     const styleType2 = textColor && backgroundColor ? "both" : backgroundColor ? "highlight" : "text";
     const targetGroupUid = styleEntry && styleEntry.groupUid ? styleEntry.groupUid : null;
     const groupsList = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : [];
     const targetGroup = targetGroupUid ? groupsList.find((g) => g && g.uid === targetGroupUid) : null;
-    if (idx !== -1) {
-      const entry = this.settings.wordEntries[idx];
+    const matchesEntry = (a, b) => {
+      if (!a || !b) return false;
+      if (a.uid && b.uid) return String(a.uid) === String(b.uid);
+      return String(a.pattern || "") === String(b.pattern || "") && !!a.isRegex === !!b.isRegex;
+    };
+    const applyStyleToEntry = (entry) => {
       entry.styleType = styleType2;
       if (textColor) {
         entry.color = "";
@@ -10809,10 +11194,55 @@ module.exports = class AlwaysColorText extends Plugin {
         if (typeof styleEntry.borderOpacity === "number") entry.borderOpacity = styleEntry.borderOpacity;
         if (typeof styleEntry.borderThickness === "number") entry.borderThickness = styleEntry.borderThickness;
       }
+    };
+    const removeFromAllGroups = (entry) => {
+      for (const g of groupsList) {
+        if (!g || !Array.isArray(g.entries) || g.entries.length === 0) continue;
+        for (let i = g.entries.length - 1; i >= 0; i--) {
+          if (matchesEntry(g.entries[i], entry)) g.entries.splice(i, 1);
+        }
+      }
+    };
+    const removeFromWordEntries = (entry) => {
+      if (!Array.isArray(this.settings.wordEntries) || this.settings.wordEntries.length === 0) return;
+      for (let i = this.settings.wordEntries.length - 1; i >= 0; i--) {
+        if (matchesEntry(this.settings.wordEntries[i], entry)) this.settings.wordEntries.splice(i, 1);
+      }
+    };
+    const findInGroups = () => {
+      for (const g of groupsList) {
+        if (!g || !Array.isArray(g.entries)) continue;
+        const idx2 = g.entries.findIndex((e) => e && e.pattern === selectedText && !e.isRegex);
+        if (idx2 !== -1) return { group: g, idx: idx2, entry: g.entries[idx2] };
+      }
+      return null;
+    };
+    const idx = this.settings.wordEntries.findIndex((e) => e && e.pattern === selectedText && !e.isRegex);
+    let existing = null;
+    let existingSource = null;
+    if (idx !== -1) {
+      existing = this.settings.wordEntries[idx];
+      existingSource = { type: "wordEntries", idx };
+    } else {
+      const gFound = findInGroups();
+      if (gFound && gFound.entry) {
+        existing = gFound.entry;
+        existingSource = { type: "group", group: gFound.group, idx: gFound.idx };
+      }
+    }
+    if (existing) {
+      applyStyleToEntry(existing);
       if (targetGroup) {
-        this.settings.wordEntries.splice(idx, 1);
+        removeFromWordEntries(existing);
+        removeFromAllGroups(existing);
         if (!Array.isArray(targetGroup.entries)) targetGroup.entries = [];
-        targetGroup.entries.push(entry);
+        targetGroup.entries.push(existing);
+      } else {
+        removeFromAllGroups(existing);
+        if (!existingSource || existingSource.type !== "wordEntries") {
+          removeFromWordEntries(existing);
+          this.settings.wordEntries.push(existing);
+        }
       }
     } else {
       const newEntry = { pattern: selectedText, isRegex: false, flags: "", matchType, styleType: styleType2 };
@@ -11442,7 +11872,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || "").trim()];
         const color = e.color;
-        if (!this.isValidHexColor(color)) {
+        if (!this.isValidHexColor(color) && !this.isValidHexColor(e.textColor)) {
           continue;
         }
         const isRegex = !!e.isRegex;
@@ -11744,6 +12174,103 @@ module.exports = class AlwaysColorText extends Plugin {
       const all = (Array.isArray(this._compiledWordEntries) ? this._compiledWordEntries : []).concat(Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : []);
       this._settingsIndex && this._settingsIndex.rebuild(all);
     } catch (_) {
+    }
+  }
+  // OPTIMIZATION: Pre-compile blacklist regexes for performance
+  // This avoids creating new RegExp objects on every blacklist check
+  compileBlacklistEntries() {
+    try {
+      this._compiledBlacklistWords = [];
+      this._compiledBlacklistEntries = [];
+      this._compiledBlacklistGroups = {};
+      const blacklistWords = Array.isArray(this.settings.blacklistWords) ? this.settings.blacklistWords : [];
+      for (const word of blacklistWords) {
+        if (!word) continue;
+        try {
+          const flags = this.settings.caseSensitive ? "" : "i";
+          const pattern = `\\b${this.escapeRegex(String(word))}\\b`;
+          const regex = this._regexCache.getOrCreate(pattern, flags);
+          if (regex) {
+            this._compiledBlacklistWords.push({ word, regex, flags });
+          }
+        } catch (e) {
+        }
+      }
+      const blacklistEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      for (const entry of blacklistEntries) {
+        if (!entry) continue;
+        try {
+          const compiled = { entry, patterns: [] };
+          if (entry.isRegex && this.settings.enableRegexSupport) {
+            const flags = entry.flags || (this.settings.caseSensitive ? "" : "i");
+            const regex = this._regexCache.getOrCreate(entry.pattern, flags);
+            if (regex) {
+              compiled.patterns.push({ regex, flags, isRegex: true });
+            }
+          } else {
+            const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
+            for (const p of patterns) {
+              if (!p) continue;
+              const flags = this.settings.caseSensitive ? "" : "i";
+              const pattern = `\\b${this.escapeRegex(String(p))}\\b`;
+              const regex = this._regexCache.getOrCreate(pattern, flags);
+              if (regex) {
+                compiled.patterns.push({ regex, flags, isRegex: false, pattern: String(p) });
+              }
+            }
+          }
+          if (compiled.patterns.length > 0) {
+            this._compiledBlacklistEntries.push(compiled);
+          }
+        } catch (e) {
+        }
+      }
+      const blacklistGroups = Array.isArray(this.settings.blacklistEntryGroups) ? this.settings.blacklistEntryGroups : [];
+      for (const group of blacklistGroups) {
+        if (!group || !group.uid) continue;
+        try {
+          const compiled = {
+            group,
+            entries: [],
+            isCaseSensitive: group.caseSensitiveOverride !== null ? group.caseSensitiveOverride : this.settings.caseSensitive,
+            matchType: group.matchTypeOverride || "contains"
+          };
+          const groupEntries = Array.isArray(group.entries) ? group.entries : [];
+          for (const entry of groupEntries) {
+            if (!entry) continue;
+            const entryCompiled = { entry, patterns: [] };
+            if (entry.isRegex && this.settings.enableRegexSupport) {
+              const flags = entry.flags || (compiled.isCaseSensitive ? "" : "i");
+              const regex = this._regexCache.getOrCreate(entry.pattern, flags);
+              if (regex) {
+                entryCompiled.patterns.push({ regex, flags, isRegex: true });
+              }
+            } else {
+              const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
+              for (const p of patterns) {
+                if (!p) continue;
+                const pattern = `\\b${this.escapeRegex(String(p))}\\b`;
+                const regex = this._regexCache.getOrCreate(pattern, compiled.isCaseSensitive ? "" : "i");
+                if (regex) {
+                  entryCompiled.patterns.push({ regex, pattern: String(p), isRegex: false });
+                }
+              }
+            }
+            if (entryCompiled.patterns.length > 0) {
+              entryCompiled.matchType = compiled.matchType;
+              compiled.entries.push(entryCompiled);
+            }
+          }
+          if (compiled.entries.length > 0) {
+            this._compiledBlacklistGroups[group.uid] = compiled;
+          }
+        } catch (e) {
+        }
+      }
+      this._blacklistCompilationDirty = false;
+      debugLog("BLACKLIST_COMPILE", `Compiled ${this._compiledBlacklistWords.length} words, ${this._compiledBlacklistEntries.length} entries, ${Object.keys(this._compiledBlacklistGroups).length} groups`);
+    } catch (e) {
+      debugError("BLACKLIST_COMPILE", "Failed to compile blacklist", e);
     }
   }
   // Apply Highlights in Reading View (Markdown Post Processor) - optional folderEntry may override match colors
@@ -13638,12 +14165,38 @@ module.exports = class AlwaysColorText extends Plugin {
   _processLivePreviewCallouts(view) {
     try {
       const now = Date.now();
-      if (this._lpLastRun && now - this._lpLastRun < 200) return;
+      if (this._lpLastRun && now - this._lpLastRun < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
       this._lpLastRun = now;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
       const isLP = root.closest && root.closest(".is-live-preview");
       if (!isLP) return;
+      if (this._isTyping && now - this._lastTypingTime < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
+      if (this._lpCalloutRaf) return;
+      this._lpCalloutRaf = requestAnimationFrame(() => {
+        this._lpCalloutRaf = null;
+        this._processLivePreviewCalloutsInternal(view);
+      });
+      return;
+    } catch (e) {
+      try {
+        debugError("LP_CALLOUT", "Failed coloring live preview callouts", e);
+      } catch (_) {
+      }
+    }
+  }
+  _processLivePreviewCalloutsInternal(view) {
+    try {
+      const root = view && view.dom ? view.dom : null;
+      if (!root) return;
+      const isLP = root.closest && root.closest(".is-live-preview");
+      if (!isLP) return;
+      const viewport = {
+        top: window.scrollY || 0,
+        bottom: (window.scrollY || 0) + (window.innerHeight || 0),
+        left: 0,
+        right: window.innerWidth || 0
+      };
       const callouts = root.querySelectorAll(".cm-callout, .callout");
       if (!callouts || callouts.length === 0) return;
       const fileForView = view.file || this.app.workspace.getActiveFile();
@@ -13702,8 +14255,28 @@ module.exports = class AlwaysColorText extends Plugin {
   _processLivePreviewTables(view) {
     try {
       const now = Date.now();
-      if (this._lpTablesLastRun && now - this._lpTablesLastRun < 200) return;
+      if (this._lpTablesLastRun && now - this._lpTablesLastRun < EDITOR_PERFORMANCE_CONSTANTS.TABLE_THROTTLE_MS) return;
       this._lpTablesLastRun = now;
+      const root = view && view.dom ? view.dom : null;
+      if (!root) return;
+      const isLP = root.closest && root.closest(".is-live-preview");
+      if (!isLP) return;
+      if (this._isTyping && now - this._lastTypingTime < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
+      if (this._lpTableRaf) return;
+      this._lpTableRaf = requestAnimationFrame(() => {
+        this._lpTableRaf = null;
+        this._processLivePreviewTablesInternal(view);
+      });
+      return;
+    } catch (e) {
+      try {
+        debugError("LP_TABLES", "Failed coloring live preview tables", e);
+      } catch (_) {
+      }
+    }
+  }
+  _processLivePreviewTablesInternal(view) {
+    try {
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
       const isLP = root.closest && root.closest(".is-live-preview");
@@ -13731,6 +14304,14 @@ module.exports = class AlwaysColorText extends Plugin {
       const entries = filePath ? this.filterEntriesByAdvancedRules(filePath, allEntries) : allEntries;
       const folderEntry = filePath ? this.getBestFolderEntry(filePath) : null;
       if (!this._lpTableCache) this._lpTableCache = /* @__PURE__ */ new WeakMap();
+      const isVisible = (el) => {
+        try {
+          const rect = el.getBoundingClientRect();
+          return rect.bottom >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight);
+        } catch (_) {
+          return true;
+        }
+      };
       let caretAnchor = null, caretFocus = null;
       try {
         const sel = window.getSelection && window.getSelection();
@@ -13740,10 +14321,22 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       } catch (_) {
       }
+      let processedCount = 0;
+      const maxProcessPerFrame = 10;
       for (const cell of cells) {
         try {
+          if (processedCount >= maxProcessPerFrame) {
+            requestAnimationFrame(() => {
+              try {
+                this._processLivePreviewTablesInternal(view);
+              } catch (_) {
+              }
+            });
+            break;
+          }
           const hasContent = cell.textContent && cell.textContent.trim().length > 0;
           if (!hasContent) continue;
+          if (!isVisible(cell)) continue;
           try {
             if (caretAnchor && cell.contains(caretAnchor) || caretFocus && cell.contains(caretFocus)) {
               continue;
@@ -13762,12 +14355,30 @@ module.exports = class AlwaysColorText extends Plugin {
           const prev = this._lpTableCache.get(cell);
           if (prev === sig) continue;
           this._lpTableCache.set(cell, sig);
-          this.processInChunks(cell, entries, folderEntry, {
-            clearExisting: true,
-            batchSize: 10,
-            forceProcess: true,
-            maxMatches: Infinity
-          });
+          try {
+            if (typeof this.processInChunks === "function") {
+              this.processInChunks(cell, entries, folderEntry, {
+                clearExisting: true,
+                batchSize: 10,
+                forceProcess: true,
+                maxMatches: Infinity
+              });
+            } else {
+              this.applyHighlights(cell, folderEntry, {
+                clearExisting: true,
+                entries
+              });
+            }
+          } catch (e) {
+            try {
+              this.applyHighlights(cell, folderEntry, {
+                clearExisting: true,
+                entries
+              });
+            } catch (_) {
+            }
+          }
+          processedCount++;
         } catch (_) {
         }
       }
@@ -13873,9 +14484,13 @@ module.exports = class AlwaysColorText extends Plugin {
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
       if (!this._lpTableObservers) this._lpTableObservers = /* @__PURE__ */ new Map();
-      const existing = this._lpTableObservers && this._lpTableObservers.get ? this._lpTableObservers.get(root) : null;
+      const existing = this._lpTableObservers.get(root);
       if (existing) return;
+      let debounceTimer = null;
+      const DEBOUNCE_MS = 300;
       const observer = new MutationObserver((mutations) => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        let hasRelevantChange = false;
         for (const m of mutations) {
           try {
             if (m.type === "childList") {
@@ -13883,20 +14498,31 @@ module.exports = class AlwaysColorText extends Plugin {
                 if (node && node.nodeType === 1) {
                   const el = node;
                   if (el.classList && el.classList.contains("cm-content") || el.querySelector && el.querySelector(".cm-content table")) {
-                    this._processLivePreviewTables(view);
-                    return;
+                    hasRelevantChange = true;
+                    break;
                   }
                 }
               }
-            } else if (m.type === "characterData" || m.type === "attributes") {
-              this._processLivePreviewTables(view);
-              return;
+            } else if (m.type === "characterData") {
+              const target = m.target;
+              if (target && (target.closest && target.closest(".cm-content table"))) {
+                hasRelevantChange = true;
+              }
             }
+            if (hasRelevantChange) break;
           } catch (_) {
           }
         }
+        if (hasRelevantChange) {
+          debounceTimer = setTimeout(() => {
+            try {
+              this._processLivePreviewTables(view);
+            } catch (_) {
+            }
+          }, DEBOUNCE_MS);
+        }
       });
-      observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true });
+      observer.observe(root, { childList: true, subtree: true });
       try {
         this._lpTableObservers.set(root, observer);
       } catch (_) {
@@ -14234,9 +14860,14 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const existing = this._lpObservers && this._lpObservers.get ? this._lpObservers.get(root) : null;
+      if (!this._lpObservers) this._lpObservers = /* @__PURE__ */ new Map();
+      const existing = this._lpObservers.get(root);
       if (existing) return;
+      let debounceTimer = null;
+      const DEBOUNCE_MS = 300;
       const observer = new MutationObserver((mutations) => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        let hasRelevantChange = false;
         for (const m of mutations) {
           try {
             if (m.type === "childList") {
@@ -14244,20 +14875,31 @@ module.exports = class AlwaysColorText extends Plugin {
                 if (node && node.nodeType === 1) {
                   const el = node;
                   if (el.classList && (el.classList.contains("cm-callout") || el.classList.contains("callout")) || el.querySelector && el.querySelector(".cm-callout, .callout")) {
-                    this._processLivePreviewCallouts(view);
-                    return;
+                    hasRelevantChange = true;
+                    break;
                   }
                 }
               }
-            } else if (m.type === "characterData" || m.type === "attributes") {
-              this._processLivePreviewCallouts(view);
-              return;
+            } else if (m.type === "characterData") {
+              const target = m.target;
+              if (target && (target.closest && target.closest(".cm-callout, .callout"))) {
+                hasRelevantChange = true;
+              }
             }
+            if (hasRelevantChange) break;
           } catch (_) {
           }
         }
+        if (hasRelevantChange) {
+          debounceTimer = setTimeout(() => {
+            try {
+              this._processLivePreviewCallouts(view);
+            } catch (_) {
+            }
+          }, DEBOUNCE_MS);
+        }
       });
-      observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true });
+      observer.observe(root, { childList: true, subtree: true });
       try {
         this._lpObservers.set(root, observer);
       } catch (_) {
@@ -14559,30 +15201,53 @@ module.exports = class AlwaysColorText extends Plugin {
         const currentFilePath = plugin.app.workspace.getActiveFile()?.path;
         const fileChanged = this.lastFilePath !== currentFilePath;
         this.lastFilePath = currentFilePath;
+        if (update.docChanged) {
+          plugin._isTyping = true;
+          plugin._lastTypingTime = Date.now();
+          clearTimeout(plugin._typingFlagTimer);
+          plugin._typingFlagTimer = setTimeout(() => {
+            plugin._isTyping = false;
+          }, EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS);
+        }
         if (update.docChanged || update.viewportChanged || fileChanged) {
           const onlyTypingChange = update.docChanged && !update.viewportChanged && !fileChanged;
           if (onlyTypingChange) {
             clearTimeout(this._typingDebounceTimer);
             this._typingDebounceTimer = setTimeout(() => {
               this.decorations = this.buildDeco(this.view);
-              try {
-                if (plugin.settings.enabled) plugin._processLivePreviewCallouts(this.view);
-              } catch (_) {
-              }
-              try {
-                if (plugin.settings.enabled) plugin._processLivePreviewTables(this.view);
-              } catch (_) {
-              }
-            }, EDITOR_PERFORMANCE_CONSTANTS.TYPING_DEBOUNCE_MS);
+              setTimeout(() => {
+                try {
+                  if (plugin.settings.enabled) plugin._processLivePreviewCallouts(this.view);
+                } catch (_) {
+                }
+                try {
+                  if (plugin.settings.enabled) plugin._processLivePreviewTables(this.view);
+                } catch (_) {
+                }
+              }, 300);
+            }, Math.max(EDITOR_PERFORMANCE_CONSTANTS.TYPING_DEBOUNCE_MS, 200));
           } else {
             this.decorations = this.buildDeco(update.view);
-            try {
-              if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view);
-            } catch (_) {
-            }
-            try {
-              if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view);
-            } catch (_) {
+            if (update.viewportChanged) {
+              requestAnimationFrame(() => {
+                try {
+                  if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view);
+                } catch (_) {
+                }
+                try {
+                  if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view);
+                } catch (_) {
+                }
+              });
+            } else {
+              try {
+                if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view);
+              } catch (_) {
+              }
+              try {
+                if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view);
+              } catch (_) {
+              }
             }
           }
         }
@@ -14606,7 +15271,7 @@ module.exports = class AlwaysColorText extends Plugin {
         let entries = plugin.getSortedWordEntries();
         const { from, to } = view.viewport;
         const docLength = view.state.doc.length;
-        const extendedTo = Math.min(to + 50, docLength);
+        const extendedTo = Math.min(to + EDITOR_PERFORMANCE_CONSTANTS.VIEWPORT_EXTENSION, docLength);
         const text = view.state.doc.sliceString(from, extendedTo);
         const fileForView = view.file || plugin.app.workspace.getActiveFile();
         if (!plugin.settings.enabled) return builder.finish();
@@ -14621,10 +15286,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
         if (entries.length === 0) return builder.finish();
-        if (entries.length > EDITOR_PERFORMANCE_CONSTANTS.MAX_PATTERNS_STANDARD || text.length > EDITOR_PERFORMANCE_CONSTANTS.MAX_TEXT_LENGTH_STANDARD) {
-          return plugin.buildDecoChunked(view, builder, from, extendedTo, text, entries, folderEntry, fileForView ? fileForView.path : null);
-        }
-        return plugin.buildDecoStandard(view, builder, from, extendedTo, text, entries, folderEntry, fileForView ? fileForView.path : null);
+        return plugin.buildDecoChunked(view, builder, from, extendedTo, text, entries, folderEntry, fileForView ? fileForView.path : null);
       }
     }, {
       decorations: (v) => v.decorations
@@ -14666,29 +15328,24 @@ module.exports = class AlwaysColorText extends Plugin {
   // NEW METHOD: Check if word is blacklisted
   isWordBlacklisted(word) {
     try {
-      const entries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      const words = Array.isArray(this.settings.blacklistWords) ? this.settings.blacklistWords : [];
-      const w = String(word);
-      for (const bw of words) {
-        if (!bw) continue;
-        const re = this.settings.caseSensitive ? new RegExp(`\\b${this.escapeRegex(String(bw))}\\b`) : new RegExp(`\\b${this.escapeRegex(String(bw))}\\b`, "i");
-        if (re.test(w)) return true;
+      if (this._blacklistCompilationDirty) this.compileBlacklistEntries();
+      const w = String(word || "");
+      for (const compiled of this._compiledBlacklistWords) {
+        compiled.regex.lastIndex = 0;
+        if (compiled.regex.test(w)) return true;
       }
-      for (const entry of entries) {
-        if (!entry) continue;
-        if (entry.isRegex && this.settings.enableRegexSupport) {
-          try {
-            const flags = entry.flags || (this.settings.caseSensitive ? "" : "i");
-            const re = new RegExp(entry.pattern, flags);
-            if (re.test(w)) return true;
-          } catch (e) {
-          }
-        } else {
-          const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
-          for (const p of patterns) {
-            if (!p) continue;
-            const re2 = this.settings.caseSensitive ? new RegExp(`\\b${this.escapeRegex(String(p))}\\b`) : new RegExp(`\\b${this.escapeRegex(String(p))}\\b`, "i");
-            if (re2.test(w)) return true;
+      for (const compiled of this._compiledBlacklistEntries) {
+        for (const pattern of compiled.patterns) {
+          pattern.regex.lastIndex = 0;
+          if (pattern.regex.test(w)) return true;
+        }
+      }
+      for (const compiled of Object.values(this._compiledBlacklistGroups)) {
+        if (!compiled.group.active) continue;
+        for (const entryCompiled of compiled.entries) {
+          for (const pattern of entryCompiled.patterns) {
+            pattern.regex.lastIndex = 0;
+            if (pattern.regex.test(w)) return true;
           }
         }
       }
@@ -14698,29 +15355,24 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   containsBlacklistedWord(text) {
     try {
-      const entries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      const words = Array.isArray(this.settings.blacklistWords) ? this.settings.blacklistWords : [];
-      const t = String(text);
-      for (const bw of words) {
-        if (!bw) continue;
-        const re = this.settings.caseSensitive ? new RegExp(`\\b${this.escapeRegex(String(bw))}\\b`) : new RegExp(`\\b${this.escapeRegex(String(bw))}\\b`, "i");
-        if (re.test(t)) return true;
+      if (this._blacklistCompilationDirty) this.compileBlacklistEntries();
+      const t = String(text || "");
+      for (const compiled of this._compiledBlacklistWords) {
+        compiled.regex.lastIndex = 0;
+        if (compiled.regex.test(t)) return true;
       }
-      for (const entry of entries) {
-        if (!entry) continue;
-        if (entry.isRegex && this.settings.enableRegexSupport) {
-          try {
-            const flags = entry.flags || (this.settings.caseSensitive ? "" : "i");
-            const re = new RegExp(entry.pattern, flags);
-            if (re.test(t)) return true;
-          } catch (e) {
-          }
-        } else {
-          const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
-          for (const p of patterns) {
-            if (!p) continue;
-            const re2 = this.settings.caseSensitive ? new RegExp(`\\b${this.escapeRegex(String(p))}\\b`) : new RegExp(`\\b${this.escapeRegex(String(p))}\\b`, "i");
-            if (re2.test(t)) return true;
+      for (const compiled of this._compiledBlacklistEntries) {
+        for (const pattern of compiled.patterns) {
+          pattern.regex.lastIndex = 0;
+          if (pattern.regex.test(t)) return true;
+        }
+      }
+      for (const compiled of Object.values(this._compiledBlacklistGroups)) {
+        if (!compiled.group.active) continue;
+        for (const entryCompiled of compiled.entries) {
+          for (const pattern of entryCompiled.patterns) {
+            pattern.regex.lastIndex = 0;
+            if (pattern.regex.test(t)) return true;
           }
         }
       }
@@ -14732,6 +15384,7 @@ module.exports = class AlwaysColorText extends Plugin {
   isLineBlacklistedByRegex(line) {
     try {
       const entries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      const groups = Array.isArray(this.settings.blacklistEntryGroups) ? this.settings.blacklistEntryGroups : [];
       const l = String(line);
       for (const entry of entries) {
         if (!entry || !entry.isRegex) continue;
@@ -14740,6 +15393,20 @@ module.exports = class AlwaysColorText extends Plugin {
           const re = new RegExp(entry.pattern, flags);
           if (re.test(l)) return true;
         } catch (e) {
+        }
+      }
+      for (const group of groups) {
+        if (!group || !group.active) continue;
+        const groupEntries = Array.isArray(group.entries) ? group.entries : [];
+        for (const entry of groupEntries) {
+          if (!entry || !entry.isRegex) continue;
+          try {
+            const isCaseSensitive = group.caseSensitiveOverride !== null ? group.caseSensitiveOverride : this.settings.caseSensitive;
+            const flags = entry.flags || (isCaseSensitive ? "" : "i");
+            const re = new RegExp(entry.pattern, flags);
+            if (re.test(l)) return true;
+          } catch (e) {
+          }
         }
       }
     } catch (e) {
@@ -17307,42 +17974,71 @@ var HighlightStylingModal = class extends Modal {
       const toUid = groupSelect.value || "";
       const fromUid = currentGroupUid || "";
       if (toUid === fromUid) return;
+      console.log("[GROUP_CHANGE] fromUid:", fromUid, "toUid:", toUid, "entry:", this.entry);
       if (this.plugin.settings.quickStyles.includes(this.entry)) {
         this.entry.groupUid = toUid;
         currentGroupUid = toUid;
         await this.plugin.saveSettings();
         return;
       }
-      let sourceArr = null;
+      const settings = this.plugin.settings;
+      if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
+      if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
       if (fromUid === "") {
-        sourceArr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : this.plugin.settings.wordEntries = [];
-      } else {
-        const srcGroup = groupsList.find((g) => g && g.uid === fromUid);
-        sourceArr = srcGroup && Array.isArray(srcGroup.entries) ? srcGroup.entries : null;
-      }
-      let targetArr = null;
-      if (toUid === "") {
-        targetArr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : this.plugin.settings.wordEntries = [];
-      } else {
-        const tgtGroup = groupsList.find((g) => g && g.uid === toUid);
-        if (tgtGroup) {
-          targetArr = Array.isArray(tgtGroup.entries) ? tgtGroup.entries : tgtGroup.entries = [];
-        }
-      }
-      if (sourceArr && targetArr) {
-        const idx = sourceArr.indexOf(this.entry);
+        const idx = settings.wordEntries.indexOf(this.entry);
+        console.log("[GROUP_CHANGE] Removing from wordEntries, index:", idx);
         if (idx !== -1) {
-          sourceArr.splice(idx, 1);
-          targetArr.push(this.entry);
-          currentGroupUid = toUid;
-          await this.plugin.saveSettings();
-          this.plugin.compileWordEntries();
-          this.plugin.compileTextBgColoringEntries();
-          this.plugin.reconfigureEditorExtensions();
-          this.plugin.forceRefreshAllEditors();
-          this.plugin.triggerActiveDocumentRerender();
+          settings.wordEntries.splice(idx, 1);
+        }
+      } else {
+        const fromGroup = settings.wordEntryGroups.find((g) => g && g.uid === fromUid);
+        console.log("[GROUP_CHANGE] fromGroup found:", !!fromGroup, "entries:", fromGroup?.entries?.length);
+        if (fromGroup && Array.isArray(fromGroup.entries)) {
+          const idx = fromGroup.entries.indexOf(this.entry);
+          console.log("[GROUP_CHANGE] indexOf in fromGroup.entries:", idx);
+          if (idx !== -1) {
+            console.log("[GROUP_CHANGE] REMOVING entry from fromGroup at index", idx);
+            fromGroup.entries.splice(idx, 1);
+            console.log("[GROUP_CHANGE] fromGroup.entries after removal:", fromGroup.entries.length);
+          } else {
+            console.log("[GROUP_CHANGE] Entry NOT found in fromGroup.entries, searching manually...");
+            for (let i = 0; i < fromGroup.entries.length; i++) {
+              if (fromGroup.entries[i] === this.entry) {
+                console.log("[GROUP_CHANGE] Found at index", i, "removing");
+                fromGroup.entries.splice(i, 1);
+                break;
+              }
+            }
+            console.log("[GROUP_CHANGE] Manual search done, fromGroup.entries now:", fromGroup.entries.length);
+          }
         }
       }
+      if (toUid === "") {
+        try {
+          delete this.entry.groupUid;
+        } catch (_) {
+        }
+        settings.wordEntries.push(this.entry);
+      } else {
+        const tgtGroup = settings.wordEntryGroups.find((g) => g && g.uid === toUid);
+        if (tgtGroup) {
+          if (!Array.isArray(tgtGroup.entries)) tgtGroup.entries = [];
+          try {
+            this.entry.groupUid = toUid;
+          } catch (_) {
+          }
+          tgtGroup.entries.push(this.entry);
+          console.log("[GROUP_CHANGE] Added to tgtGroup, entries now:", tgtGroup.entries.length);
+        }
+      }
+      currentGroupUid = toUid;
+      await this.plugin.saveSettings();
+      console.log("[GROUP_CHANGE] Settings saved");
+      this.plugin.compileWordEntries();
+      this.plugin.compileTextBgColoringEntries();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this.plugin.triggerActiveDocumentRerender();
     });
     const matchSelect = headerRow.createEl("select");
     matchSelect.style.minWidth = "120px";
@@ -17744,6 +18440,30 @@ var HighlightStylingModal = class extends Modal {
     };
     resetAllBtn.addEventListener("click", resetAllHandler);
     this._handlers.push({ el: resetAllBtn, ev: "click", fn: resetAllHandler });
+    const syncEntryColorsFromInputs = () => {
+      if (!this.entry) return;
+      const style = styleSelect.value;
+      this.entry._savedTextColor = tColor.value || this.entry._savedTextColor || this.entry.color || this.entry.textColor || "";
+      this.entry._savedBackgroundColor = bColor.value || this.entry._savedBackgroundColor || this.entry.backgroundColor || "";
+      if (style === "text") {
+        this.entry.color = tColor.value || "";
+      } else if (style === "highlight") {
+        this.entry.backgroundColor = bColor.value || "";
+        this.entry.textColor = "currentColor";
+        this.entry.color = "";
+      } else {
+        this.entry.textColor = tColor.value || "";
+        this.entry.backgroundColor = bColor.value || "";
+        this.entry.color = "";
+      }
+    };
+    const dispatchHighlightColorsChanged = () => {
+      syncEntryColorsFromInputs();
+      try {
+        window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
+      } catch (_) {
+      }
+    };
     const setupHighlightColorPickerRightClick = (colorInput) => {
       colorInput.addEventListener("contextmenu", (evt) => {
         evt.preventDefault();
@@ -17753,54 +18473,54 @@ var HighlightStylingModal = class extends Modal {
         const modal = new ColorPickerModal(this.app, this.plugin, (color, result) => {
           const tc = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null;
           const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
-          const selectedColor = bc && this.plugin.isValidHexColor(bc) ? bc : tc && this.plugin.isValidHexColor(tc) ? tc : color && this.plugin.isValidHexColor(color) ? color : currentColor;
-          if (selectedColor && this.plugin.isValidHexColor(selectedColor)) {
-            colorInput.value = selectedColor;
-            renderPreview();
+          const fallback = color && this.plugin.isValidHexColor(color) ? color : null;
+          let changed = false;
+          if (tc) {
+            tColor.value = tc;
+            changed = true;
+          } else if (fallback && isTextPicker) {
+            tColor.value = fallback;
+            changed = true;
           }
+          if (bc) {
+            bColor.value = bc;
+            changed = true;
+          } else if (fallback && !isTextPicker) {
+            bColor.value = fallback;
+            changed = true;
+          }
+          if (!changed) {
+            if (currentColor && this.plugin.isValidHexColor(currentColor)) {
+              if (isTextPicker) tColor.value = currentColor;
+              else bColor.value = currentColor;
+            }
+          }
+          dispatchHighlightColorsChanged();
+          renderPreview();
         }, isTextPicker ? "text" : "background", this.previewTextOverride || currentColor, false);
         modal._hideHeaderControls = true;
-        if (isTextPicker) {
-          modal._preFillTextColor = currentColor;
-        } else {
-          modal._preFillBgColor = currentColor;
-          modal._preFillBorderColor = currentColor;
+        if (tColor.value) modal._preFillTextColor = tColor.value;
+        if (bColor.value) {
+          modal._preFillBgColor = bColor.value;
+          modal._preFillBorderColor = bColor.value;
         }
         modal.open();
       });
     };
     setupHighlightColorPickerRightClick(tColor);
     setupHighlightColorPickerRightClick(bColor);
-    tColor.addEventListener("input", () => {
-      const style = styleSelect.value;
-      if (this.entry) {
-        if (style === "text") {
-          this.entry.color = tColor.value || "";
-        } else if (style === "both") {
-          this.entry.textColor = tColor.value || "";
-        }
-      }
-      try {
-        window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
-      } catch (_) {
-      }
+    const tColorInputHandler = () => {
+      dispatchHighlightColorsChanged();
       renderPreview();
-    });
-    bColor.addEventListener("input", () => {
-      const style = styleSelect.value;
-      if (this.entry) {
-        if (style === "highlight") {
-          this.entry.backgroundColor = bColor.value || "";
-        } else if (style === "both") {
-          this.entry.backgroundColor = bColor.value || "";
-        }
-      }
-      try {
-        window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
-      } catch (_) {
-      }
+    };
+    const bColorInputHandler = () => {
+      dispatchHighlightColorsChanged();
       renderPreview();
-    });
+    };
+    tColor.addEventListener("input", tColorInputHandler);
+    bColor.addEventListener("input", bColorInputHandler);
+    this._handlers.push({ el: tColor, ev: "input", fn: tColorInputHandler });
+    this._handlers.push({ el: bColor, ev: "input", fn: bColorInputHandler });
     const colorSyncHandler = (evt) => {
       try {
         if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
@@ -18010,32 +18730,46 @@ var EditEntryModal = class extends Modal {
     const title = contentEl.createEl("h2", { text: this.plugin.t("edit_entry_header", "Edit Entry") });
     title.style.marginTop = "0";
     title.style.marginBottom = "12px";
-    const topControls = contentEl.createDiv();
-    topControls.style.display = "flex";
-    topControls.style.gap = "8px";
-    topControls.style.marginBottom = "12px";
-    topControls.style.alignItems = "center";
-    const groupSelect = topControls.createEl("select");
-    groupSelect.addClass("act-edit-entry-group-select");
-    groupSelect.style.minWidth = "140px";
-    groupSelect.style.border = "1px solid var(--background-modifier-border)";
-    groupSelect.style.borderRadius = "4px";
-    groupSelect.style.background = "var(--background-modifier-form-field)";
-    groupSelect.style.textAlign = "center";
-    const defaultOpt = groupSelect.createEl("option", { text: this.plugin.t("default") });
-    defaultOpt.value = "";
     const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
-    groupsList.forEach((g) => {
-      const name = g && g.name && String(g.name).trim().length > 0 ? g.name : "(unnamed group)";
-      const opt = groupSelect.createEl("option", { text: name });
-      opt.value = g.uid || "";
-    });
     let currentGroupUid = null;
     try {
-      const inDefault = Array.isArray(this.plugin.settings.wordEntries) && this.plugin.settings.wordEntries.indexOf(this.entry) !== -1;
-      if (!inDefault && Array.isArray(groupsList)) {
+      const entryUid = this.entry && this.entry.uid ? String(this.entry.uid) : "";
+      const normalizePatterns = (e) => {
+        try {
+          if (!e) return "";
+          if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0) return e.groupedPatterns.map((p) => String(p || "").trim()).filter(Boolean).join(",").toLowerCase();
+          return String(e.pattern || "").trim().toLowerCase();
+        } catch (_) {
+          return "";
+        }
+      };
+      const keyOf = (e) => {
+        try {
+          if (!e) return "";
+          const isR = !!e.isRegex;
+          const flags = String(e.flags || "").trim();
+          const m = String(e.matchType || "").trim().toLowerCase();
+          const p = normalizePatterns(e);
+          return `${isR ? "r" : "t"}|${flags}|${m}|${p}`;
+        } catch (_) {
+          return "";
+        }
+      };
+      const entryKey = keyOf(this.entry);
+      const matches = (e) => {
+        try {
+          if (!e) return false;
+          if (entryUid && e.uid && String(e.uid || "") === entryUid) return true;
+          if (entryKey) return keyOf(e) === entryKey;
+          return false;
+        } catch (_) {
+          return false;
+        }
+      };
+      if (Array.isArray(groupsList)) {
         for (const g of groupsList) {
-          if (g && Array.isArray(g.entries) && g.entries.indexOf(this.entry) !== -1) {
+          if (!g || !Array.isArray(g.entries)) continue;
+          if (g.entries.some(matches)) {
             currentGroupUid = g.uid || null;
             break;
           }
@@ -18043,57 +18777,61 @@ var EditEntryModal = class extends Modal {
       }
     } catch (e) {
     }
-    groupSelect.value = currentGroupUid || "";
-    if (!currentGroupUid && this.fromPickColorModal && this.entry && this.entry._preselectedGroupUid) {
-      groupSelect.value = this.entry._preselectedGroupUid || "";
+    try {
+      const entryUid = this.entry && this.entry.uid ? String(this.entry.uid) : "";
+      const normalizePatterns = (e) => {
+        try {
+          if (!e) return "";
+          if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0) return e.groupedPatterns.map((p) => String(p || "").trim()).filter(Boolean).join(",").toLowerCase();
+          return String(e.pattern || "").trim().toLowerCase();
+        } catch (_) {
+          return "";
+        }
+      };
+      const keyOf = (e) => {
+        try {
+          if (!e) return "";
+          const isR = !!e.isRegex;
+          const flags = String(e.flags || "").trim();
+          const m = String(e.matchType || "").trim().toLowerCase();
+          const p = normalizePatterns(e);
+          return `${isR ? "r" : "t"}|${flags}|${m}|${p}`;
+        } catch (_) {
+          return "";
+        }
+      };
+      const entryKey = keyOf(this.entry);
+      const matches = (e) => {
+        try {
+          if (!e) return false;
+          if (entryUid && e.uid && String(e.uid || "") === entryUid) return true;
+          if (entryKey) return keyOf(e) === entryKey;
+          return false;
+        } catch (_) {
+          return false;
+        }
+      };
+      const settings = this.plugin.settings;
+      let found = null;
+      if (currentGroupUid && Array.isArray(groupsList)) {
+        const currentGroup = groupsList.find((g) => g && g.uid === currentGroupUid);
+        if (currentGroup && Array.isArray(currentGroup.entries)) {
+          found = currentGroup.entries.find(matches) || null;
+        }
+      }
+      if (!found && Array.isArray(settings.wordEntries)) {
+        found = settings.wordEntries.find(matches) || null;
+      }
+      if (!found && Array.isArray(groupsList)) {
+        for (const g of groupsList) {
+          if (!g || !Array.isArray(g.entries) || g.uid === currentGroupUid) continue;
+          found = g.entries.find(matches) || null;
+          if (found) break;
+        }
+      }
+      if (found) this.entry = found;
+    } catch (e) {
     }
-    const groupChangeHandler = async () => {
-      const toUid = groupSelect.value || "";
-      const fromUid = currentGroupUid || "";
-      if (toUid === fromUid) return;
-      let sourceArr = null;
-      if (fromUid === "") {
-        sourceArr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : this.plugin.settings.wordEntries = [];
-      } else {
-        const srcGroup = groupsList.find((g) => g && g.uid === fromUid);
-        sourceArr = srcGroup && Array.isArray(srcGroup.entries) ? srcGroup.entries : null;
-      }
-      let targetArr = null;
-      if (toUid === "") {
-        targetArr = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : this.plugin.settings.wordEntries = [];
-      } else {
-        const tgtGroup = groupsList.find((g) => g && g.uid === toUid);
-        if (tgtGroup) {
-          targetArr = Array.isArray(tgtGroup.entries) ? tgtGroup.entries : tgtGroup.entries = [];
-        }
-      }
-      if (!sourceArr || !targetArr) return;
-      const idx = sourceArr.indexOf(this.entry);
-      if (idx !== -1) {
-        const moved = sourceArr.splice(idx, 1)[0];
-        if (targetArr.indexOf(moved) === -1) {
-          targetArr.push(moved);
-        }
-        currentGroupUid = toUid || "";
-        await this.plugin.saveSettings();
-        this.plugin.compileWordEntries();
-        this.plugin.compileTextBgColoringEntries();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        this.plugin.forceRefreshAllReadingViews();
-        this.plugin.triggerActiveDocumentRerender();
-      }
-    };
-    groupSelect.addEventListener("change", groupChangeHandler);
-    this._handlers.push({ el: groupSelect, ev: "change", fn: groupChangeHandler });
-    const matchSelect = topControls.createEl("select");
-    matchSelect.style.minWidth = "140px";
-    matchSelect.style.border = "1px solid var(--background-modifier-border)";
-    matchSelect.style.borderRadius = "4px";
-    matchSelect.style.background = "var(--background-modifier-form-field)";
-    matchSelect.style.textAlign = "center";
-    matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
-    if (isRegex) matchSelect.style.display = "none";
     const mainContainer = contentEl.createDiv();
     mainContainer.style.display = "flex";
     mainContainer.style.gap = "8px";
@@ -18161,6 +18899,33 @@ var EditEntryModal = class extends Modal {
     pickerRow.style.justifyContent = "center";
     const textColorInput = pickerRow.createEl("input", { type: "color" });
     const bgColorInput = pickerRow.createEl("input", { type: "color" });
+    const dispatchColorsChanged = () => {
+      try {
+        window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
+      } catch (_) {
+      }
+      renderPreview();
+    };
+    const applyTextColorToEntry = (dispatch = true) => {
+      const style = styleSelect.value;
+      if (this.entry) this.entry._savedTextColor = textColorInput.value || this.entry._savedTextColor || this.entry.color || this.entry.textColor || "";
+      if (style === "text") {
+        this.entry.color = textColorInput.value || "";
+      } else if (style === "both") {
+        this.entry.textColor = textColorInput.value || "";
+      }
+      if (dispatch) dispatchColorsChanged();
+    };
+    const applyBgColorToEntry = (dispatch = true) => {
+      const style = styleSelect.value;
+      if (this.entry) this.entry._savedBackgroundColor = bgColorInput.value || this.entry._savedBackgroundColor || this.entry.backgroundColor || "";
+      if (style === "highlight") {
+        this.entry.backgroundColor = bgColorInput.value || "";
+      } else if (style === "both") {
+        this.entry.backgroundColor = bgColorInput.value || "";
+      }
+      if (dispatch) dispatchColorsChanged();
+    };
     const setupColorPickerRightClick = (colorInput, onColorSelected) => {
       colorInput.addEventListener("contextmenu", (evt) => {
         evt.preventDefault();
@@ -18171,50 +18936,44 @@ var EditEntryModal = class extends Modal {
         const modal = new ColorPickerModal(this.app, this.plugin, (color, result) => {
           const tc = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null;
           const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
-          const selectedColor = bc && this.plugin.isValidHexColor(bc) ? bc : tc && this.plugin.isValidHexColor(tc) ? tc : color && this.plugin.isValidHexColor(color) ? color : currentColor;
-          if (selectedColor && this.plugin.isValidHexColor(selectedColor)) {
-            colorInput.value = selectedColor;
-            onColorSelected(selectedColor);
+          const fallback = color && this.plugin.isValidHexColor(color) ? color : null;
+          let changed = false;
+          if (tc) {
+            textColorInput.value = tc;
+            changed = true;
+          } else if (fallback && isTextPicker) {
+            textColorInput.value = fallback;
+            changed = true;
           }
+          if (bc) {
+            bgColorInput.value = bc;
+            changed = true;
+          } else if (fallback && !isTextPicker) {
+            bgColorInput.value = fallback;
+            changed = true;
+          }
+          if (!changed) {
+            if (currentColor && this.plugin.isValidHexColor(currentColor)) {
+              if (isTextPicker) textColorInput.value = currentColor;
+              else bgColorInput.value = currentColor;
+            }
+          }
+          applyTextColorToEntry(false);
+          applyBgColorToEntry(false);
+          dispatchColorsChanged();
         }, isTextPicker ? "text" : "background", displayText, false);
         modal._hideHeaderControls = true;
-        if (isTextPicker) modal._preFillTextColor = currentColor;
-        else modal._preFillBgColor = currentColor;
+        if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
+        if (bgColorInput.value) modal._preFillBgColor = bgColorInput.value;
         modal.open();
       });
     };
-    setupColorPickerRightClick(textColorInput, () => {
-      renderPreview();
-    });
-    setupColorPickerRightClick(bgColorInput, () => {
-      renderPreview();
-    });
-    textColorInput.addEventListener("input", () => {
-      const style = styleSelect.value;
-      if (style === "text") {
-        this.entry.color = textColorInput.value || "";
-      } else if (style === "both") {
-        this.entry.textColor = textColorInput.value || "";
-      }
-      try {
-        window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
-      } catch (_) {
-      }
-      renderPreview();
-    });
-    bgColorInput.addEventListener("input", () => {
-      const style = styleSelect.value;
-      if (style === "highlight") {
-        this.entry.backgroundColor = bgColorInput.value || "";
-      } else if (style === "both") {
-        this.entry.backgroundColor = bgColorInput.value || "";
-      }
-      try {
-        window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
-      } catch (_) {
-      }
-      renderPreview();
-    });
+    setupColorPickerRightClick(textColorInput, applyTextColorToEntry);
+    setupColorPickerRightClick(bgColorInput, applyBgColorToEntry);
+    textColorInput.addEventListener("input", applyTextColorToEntry);
+    this._handlers.push({ el: textColorInput, ev: "input", fn: applyTextColorToEntry });
+    bgColorInput.addEventListener("input", applyBgColorToEntry);
+    this._handlers.push({ el: bgColorInput, ev: "input", fn: applyBgColorToEntry });
     const colorSyncHandler = (evt) => {
       try {
         if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
@@ -18235,7 +18994,130 @@ var EditEntryModal = class extends Modal {
     controls.style.flexWrap = "wrap";
     controls.style.gap = "8px";
     controls.style.marginTop = "12px";
+    controls.style.alignItems = "stretch";
+    controls.style.width = "100%";
+    controls.style.boxSizing = "border-box";
+    const groupSelect = controls.createEl("select");
+    groupSelect.addClass("act-edit-entry-group-select");
+    groupSelect.style.flex = "1 1 max-content";
+    groupSelect.style.minWidth = "max-content";
+    groupSelect.style.maxWidth = "100%";
+    groupSelect.style.width = "auto";
+    groupSelect.style.boxSizing = "border-box";
+    groupSelect.style.border = "1px solid var(--background-modifier-border)";
+    groupSelect.style.borderRadius = "4px";
+    groupSelect.style.background = "var(--background-modifier-form-field)";
+    groupSelect.style.textAlign = "center";
+    const defaultOpt = groupSelect.createEl("option", { text: this.plugin.t("default") });
+    defaultOpt.value = "";
+    groupsList.forEach((g) => {
+      const name = g && g.name && String(g.name).trim().length > 0 ? g.name : "(unnamed group)";
+      const opt = groupSelect.createEl("option", { text: name });
+      opt.value = g.uid || "";
+    });
+    groupSelect.value = currentGroupUid || "";
+    if (!currentGroupUid && this.fromPickColorModal && this.entry && this.entry._preselectedGroupUid) {
+      groupSelect.value = this.entry._preselectedGroupUid || "";
+    }
+    const groupChangeHandler = async () => {
+      const newGroupUid = groupSelect.value || "";
+      const originalGroupUid = currentGroupUid;
+      if (newGroupUid === originalGroupUid) return;
+      const settings = this.plugin.settings;
+      if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
+      if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
+      let entryToMove = null;
+      try {
+        entryToMove = JSON.parse(JSON.stringify(this.entry));
+      } catch (e) {
+        console.error("Failed to copy entry", e);
+        return;
+      }
+      const entryUid = this.entry?.uid;
+      const entryPattern = this.entry?.pattern;
+      const findEntryIndex = (arr) => {
+        if (!Array.isArray(arr)) return -1;
+        for (let i = 0; i < arr.length; i++) {
+          const e = arr[i];
+          if (!e) continue;
+          if (entryUid && e.uid && String(e.uid) === String(entryUid)) return i;
+          if (entryPattern && e.pattern === entryPattern && e.isRegex === this.entry.isRegex) return i;
+        }
+        return -1;
+      };
+      let idx = findEntryIndex(settings.wordEntries);
+      while (idx !== -1) {
+        settings.wordEntries.splice(idx, 1);
+        idx = findEntryIndex(settings.wordEntries);
+      }
+      if (Array.isArray(settings.wordEntryGroups)) {
+        for (const group of settings.wordEntryGroups) {
+          if (!group || !Array.isArray(group.entries)) continue;
+          let gIdx = findEntryIndex(group.entries);
+          while (gIdx !== -1) {
+            group.entries.splice(gIdx, 1);
+            gIdx = findEntryIndex(group.entries);
+          }
+        }
+      }
+      if (newGroupUid === "") {
+        try {
+          delete entryToMove.groupUid;
+        } catch (_) {
+        }
+        settings.wordEntries.push(entryToMove);
+      } else {
+        const newGroup = settings.wordEntryGroups.find((g) => g && g.uid === newGroupUid);
+        if (newGroup) {
+          if (!Array.isArray(newGroup.entries)) newGroup.entries = [];
+          try {
+            entryToMove.groupUid = newGroupUid;
+          } catch (_) {
+          }
+          newGroup.entries.push(entryToMove);
+        } else {
+          try {
+            delete entryToMove.groupUid;
+          } catch (_) {
+          }
+          settings.wordEntries.push(entryToMove);
+        }
+      }
+      currentGroupUid = newGroupUid;
+      this.entry = entryToMove;
+      await this.plugin.saveSettings();
+      this.plugin.compileWordEntries();
+      this.plugin.compileTextBgColoringEntries();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this.plugin.forceRefreshAllReadingViews();
+      this.plugin.triggerActiveDocumentRerender();
+      try {
+        if (typeof this.onSaved === "function") this.onSaved();
+      } catch (_) {
+      }
+      try {
+        if (this.parentModal && typeof this.parentModal._refreshEntries === "function") this.parentModal._refreshEntries();
+      } catch (_) {
+      }
+      try {
+        if (this.plugin.settingTab && typeof this.plugin.settingTab._refreshEntries === "function") this.plugin.settingTab._refreshEntries();
+      } catch (_) {
+      }
+    };
+    groupSelect.addEventListener("change", groupChangeHandler);
+    this._handlers.push({ el: groupSelect, ev: "change", fn: groupChangeHandler });
+    const matchSelect = controls.createEl("select");
+    matchSelect.style.display = "none";
+    matchSelect.style.flex = "0.5 0 auto";
+    matchSelect.style.minWidth = "160px";
+    matchSelect.style.border = "1px solid var(--background-modifier-border)";
+    matchSelect.style.borderRadius = "4px";
+    matchSelect.style.background = "var(--background-modifier-form-field)";
+    matchSelect.style.textAlign = "center";
+    matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
     const caseSel = controls.createEl("select");
+    caseSel.style.display = "none";
     caseSel.style.flex = "0.5 0 auto";
     caseSel.style.minWidth = "160px";
     caseSel.style.border = "1px solid var(--background-modifier-border)";
@@ -18243,8 +19125,23 @@ var EditEntryModal = class extends Modal {
     caseSel.style.background = "var(--background-modifier-form-field)";
     caseSel.style.textAlign = "center";
     caseSel.innerHTML = `<option value="case">${this.plugin.t("opt_case_sensitive", "is case sensitive")}</option><option value="nocase">${this.plugin.t("opt_not_case_sensitive", "not case sensitive")}</option>`;
+    let openRegexBtn = null;
+    if (isRegex) {
+      openRegexBtn = controls.createEl("button", { text: this.plugin.t("open_in_regex_tester", "Open in Regex Tester") });
+      openRegexBtn.style.flex = "1 1 max-content";
+      openRegexBtn.style.minWidth = "max-content";
+      openRegexBtn.style.maxWidth = "100%";
+      openRegexBtn.style.width = "auto";
+      openRegexBtn.style.boxSizing = "border-box";
+      openRegexBtn.style.whiteSpace = "nowrap";
+    }
     const hlBtn = controls.createEl("button", { text: this.plugin.t("edit_highlight_styling_btn", "Edit Highlight Styling") });
-    hlBtn.style.flex = "0 0 auto";
+    hlBtn.style.flex = "1 1 max-content";
+    hlBtn.style.minWidth = "max-content";
+    hlBtn.style.maxWidth = "100%";
+    hlBtn.style.width = "auto";
+    hlBtn.style.boxSizing = "border-box";
+    hlBtn.style.whiteSpace = "nowrap";
     const rulesHeader = contentEl.createEl("h3", { text: this.plugin.t("inclusion_exclusion_header", "Inclusion / Exclusion Rules") });
     const rulesContainer = contentEl.createDiv();
     rulesContainer.style.marginTop = "8px";
@@ -18264,32 +19161,10 @@ var EditEntryModal = class extends Modal {
     if (initBgColor) bgColorInput.value = this.plugin.isValidHexColor(initBgColor) ? initBgColor : "#000000";
     if (isRegex) {
       textInput.value = this.entry.pattern || "";
-      matchSelect.style.display = "none";
-      caseSel.style.display = "none";
-      const openRegexBtn = controls.createEl("button", { text: this.plugin.t("open_in_regex_tester", "Open in Regex Tester") });
-      openRegexBtn.style.flex = "0 0 auto";
-      const openRegexHandler = () => {
-        try {
-          const entry = this.entry;
-          const modal = new RealTimeRegexTesterModal(this.app, this.plugin, async (updatedEntry) => {
-            try {
-              this.onSaved && this.onSaved(updatedEntry);
-            } catch (_) {
-            }
-          }, null);
-          modal._editingEntry = entry;
-          modal._preFillPattern = entry.pattern || "";
-          modal._preFillFlags = entry.flags || "";
-          modal._preFillName = entry.presetLabel || "";
-          modal._preFillStyleType = entry.styleType || "both";
-          modal._preFillTextColor = (entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : this.plugin.isValidHexColor(entry.color) ? entry.color : "#87c760") || "#87c760";
-          modal._preFillBgColor = entry.backgroundColor || "#1d5010";
-          modal.open();
-        } catch (e) {
-        }
-      };
-      openRegexBtn.addEventListener("click", openRegexHandler);
-      this._handlers.push({ el: openRegexBtn, ev: "click", fn: openRegexHandler });
+      matchSelect.disabled = true;
+      matchSelect.style.opacity = "0.5";
+      caseSel.disabled = true;
+      caseSel.style.opacity = "0.5";
     } else {
       const patterns = Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0 ? this.entry.groupedPatterns : [String(this.entry.pattern || "")];
       textInput.value = patterns.map((p) => String(p).trim()).join(", ");
@@ -18330,6 +19205,38 @@ var EditEntryModal = class extends Modal {
         preview.appendChild(makeDiv(raw));
       }
     };
+    if (openRegexBtn) {
+      const openRegexFn = async () => {
+        try {
+          if (!this.entry || !this.entry.isRegex) return;
+          const modal = new RealTimeRegexTesterModal(this.app, this.plugin, () => {
+            try {
+              textInput.value = this.entry.pattern || "";
+            } catch (_) {
+            }
+            try {
+              renderPreview();
+            } catch (_) {
+            }
+          });
+          modal._editingEntry = this.entry;
+          if (this.entry.pattern) modal._preFillPattern = this.entry.pattern;
+          if (this.entry.flags) modal._preFillFlags = this.entry.flags;
+          if (this.entry.presetLabel) modal._preFillName = this.entry.presetLabel;
+          if (this.entry.styleType) modal._preFillStyleType = this.entry.styleType;
+          if (this.entry.color) modal._preFillTextColor = this.entry.color;
+          else if (this.entry.textColor) modal._preFillTextColor = this.entry.textColor;
+          else if (this.entry._savedTextColor) modal._preFillTextColor = this.entry._savedTextColor;
+          if (this.entry.backgroundColor) modal._preFillBgColor = this.entry.backgroundColor;
+          else if (this.entry._savedBackgroundColor) modal._preFillBgColor = this.entry._savedBackgroundColor;
+          modal.open();
+        } catch (e) {
+          new Notice(this.plugin.t("notice_error_opening_regex_tester", "Error opening regex tester"));
+        }
+      };
+      openRegexBtn.addEventListener("click", openRegexFn);
+      this._handlers.push({ el: openRegexBtn, ev: "click", fn: openRegexFn });
+    }
     const updatePickerVisibility = () => {
       const v = styleSelect.value;
       if (v === "text") {
@@ -18376,11 +19283,6 @@ var EditEntryModal = class extends Modal {
       updatePickerVisibility();
       renderPreview();
     };
-    [textColorInput, bgColorInput].forEach((el) => {
-      const fn = onInputImmediate;
-      el.addEventListener("input", fn);
-      this._handlers.push({ el, ev: "input", fn });
-    });
     textInput.addEventListener("input", onInputImmediate);
     this._handlers.push({ el: textInput, ev: "input", fn: onInputImmediate });
     styleSelect.addEventListener("change", styleChange);
@@ -19408,11 +20310,15 @@ var EditWordGroupModal = class extends Modal {
     topRow.style.alignItems = "center";
     topRow.style.gap = "10px";
     topRow.style.marginBottom = "15px";
+    topRow.style.flexWrap = "wrap";
     const activeSelect = topRow.createEl("select");
+    activeSelect.addClass("act-word-group-active-select");
     activeSelect.style.padding = "6px";
     activeSelect.style.borderRadius = "4px";
     activeSelect.style.border = "1px solid var(--background-modifier-border)";
     activeSelect.style.textAlign = "center";
+    activeSelect.style.flex = "0 0 auto";
+    activeSelect.style.width = "fit-content";
     const optActive = activeSelect.createEl("option", { text: this.plugin.t("group_active_label", "Active"), value: "true" });
     const optInactive = activeSelect.createEl("option", { text: this.plugin.t("group_inactive_label", "Inactive"), value: "false" });
     activeSelect.value = String(!!this.group.active);
@@ -19437,8 +20343,8 @@ var EditWordGroupModal = class extends Modal {
     caseSelect.style.borderRadius = "4px";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
     caseSelect.style.textAlign = "center";
-    caseSelect.style.maxWidth = "140px";
-    caseSelect.style.minWidth = "120px";
+    caseSelect.style.flex = "0 0 auto";
+    caseSelect.style.width = "fit-content";
     caseSelect.createEl("option", { text: this.plugin.t("opt_case_all", "Case Sensitivity (All)"), value: "per-entry" });
     caseSelect.createEl("option", { text: this.plugin.t("opt_case_sensitive", "is case sensitive"), value: "true" });
     caseSelect.createEl("option", { text: this.plugin.t("opt_not_case_sensitive", "not case sensitive"), value: "false" });
@@ -19455,8 +20361,8 @@ var EditWordGroupModal = class extends Modal {
     matchTypeSelect.style.borderRadius = "4px";
     matchTypeSelect.style.border = "1px solid var(--background-modifier-border)";
     matchTypeSelect.style.textAlign = "center";
-    matchTypeSelect.style.maxWidth = "180px";
-    matchTypeSelect.style.minWidth = "160px";
+    matchTypeSelect.style.flex = "0 0 auto";
+    matchTypeSelect.style.width = "fit-content";
     matchTypeSelect.createEl("option", { text: this.plugin.t("opt_match_all", "Match Type (All)"), value: "per-entry" });
     matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_contains", "Contains"), value: "contains" });
     matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_exact", "Exact"), value: "exact" });
@@ -19715,9 +20621,14 @@ var EditWordGroupModal = class extends Modal {
     this._cleanupHandlers.push(() => btnSave.removeEventListener("click", saveHandler));
   }
   _refreshGroupEntries() {
+    console.log("[REFRESH_GROUP_ENTRIES] Called for group:", this.group?.uid, "with", this.group?.entries?.length, "entries");
     if (!this._listDiv) return;
     this._listDiv.empty();
     let entries = [...this.group.entries];
+    console.log("[REFRESH_GROUP_ENTRIES] Entries before filter:", entries.length);
+    entries.forEach((e, i) => {
+      console.log("  [" + i + "]: pattern=" + e.pattern + ", uid=" + e.uid);
+    });
     if (this._searchQuery) {
       const q = this._searchQuery.toLowerCase();
       entries = entries.filter((e) => {
@@ -20028,17 +20939,23 @@ var EditWordGroupModal = class extends Modal {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const menu = new Menu(this.app);
-          menu.addItem((item) => {
-            item.setTitle(this.plugin.t("edit_entry_details", "Edit Entry Details")).setIcon("pencil").onClick(() => {
-              const modal = new EditEntryModal(this.app, this.plugin, entry, () => {
-                try {
-                  this._refreshGroupEntries();
-                } catch (e) {
-                }
-              }, this);
-              modal.open();
+          if (entry.isRegex) {
+            menu.addItem((item) => {
+              item.setTitle(this.plugin.t("open_in_regex_tester", "Open in Regex Tester")).setIcon("code").onClick(() => {
+                const modal = new RealTimeRegexTesterModal(this.app, this.plugin, (updatedEntry) => {
+                  if (updatedEntry) {
+                    Object.assign(entry, updatedEntry);
+                    this._refreshGroupEntries();
+                  }
+                });
+                modal._editingEntry = entry;
+                if (entry.pattern) modal._preFillPattern = entry.pattern;
+                if (entry.flags) modal._preFillFlags = entry.flags;
+                if (entry.presetLabel) modal._preFillName = entry.presetLabel;
+                modal.open();
+              });
             });
-          });
+          }
           menu.addItem((item) => {
             item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(() => {
               const dup = JSON.parse(JSON.stringify(entry));
@@ -20048,41 +20965,532 @@ var EditWordGroupModal = class extends Modal {
             });
           });
           menu.addItem((item) => {
-            item.setTitle(this.plugin.t("reset_text_color", "Reset Text Color")).setIcon("text").onClick(() => {
-              entry.textColor = null;
-              entry.color = "";
-              if (entry.backgroundColor) {
-                entry.styleType = "highlight";
-              } else {
-                entry.styleType = "text";
+            item.setTitle(this.plugin.t("context_delete_entry", "Delete entry")).setIcon("trash").onClick(() => {
+              const idx = this.group.entries.indexOf(entry);
+              if (idx > -1) {
+                this.group.entries.splice(idx, 1);
+                this._refreshGroupEntries();
               }
-              this._refreshGroupEntries();
             });
           });
-          menu.addItem((item) => {
-            item.setTitle(this.plugin.t("reset_highlight", "Reset Highlight")).setIcon("rectangle-horizontal").onClick(() => {
-              entry.backgroundColor = null;
-              if (entry.textColor || entry.color) {
-                entry.styleType = "text";
-              } else {
-                entry.styleType = "text";
-              }
-              this._refreshGroupEntries();
-            });
-          });
+          menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+        } catch (e) {
+          debugError("MODAL", "context menu error", e);
+        }
+      };
+      row.addEventListener("contextmenu", contextMenuHandler);
+    });
+  }
+  onClose() {
+    try {
+      this.onSave(this.group);
+    } catch (e) {
+      debugError("MODAL", "auto-save error on close", e);
+    }
+    try {
+      this._cleanupHandlers.forEach((cleanup) => {
+        try {
+          cleanup();
+        } catch (e) {
+        }
+      });
+      this._cleanupHandlers = [];
+      this.contentEl.empty();
+    } catch (e) {
+    }
+  }
+};
+var EditBlacklistGroupModal = class extends Modal {
+  constructor(app, plugin, group, onSave, onDelete) {
+    super(app);
+    this.plugin = plugin;
+    this.group = JSON.parse(JSON.stringify(group));
+    if (!Array.isArray(this.group.entries)) this.group.entries = [];
+    this.onSave = onSave;
+    this.onDelete = onDelete;
+    this._searchQuery = "";
+    this._limit = 0;
+    this._limitRegexOnly = false;
+    this._limitWordsOnly = false;
+    this._limitMatchStarts = false;
+    this._limitMatchEnds = false;
+    this._limitMatchExact = false;
+    this._listDiv = null;
+    this._cleanupHandlers = [];
+    this._sortMode = "last-added";
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this.modalEl.style.width = "900px";
+    this.modalEl.style.maxWidth = "95vw";
+    try {
+      this.modalEl.addClass("act-edit-blacklist-group-modal");
+    } catch (e) {
+      try {
+        this.modalEl.classList.add("act-edit-blacklist-group-modal");
+      } catch (_) {
+      }
+    }
+    const heading = contentEl.createEl("h2", { text: this.plugin.t("edit_blacklist_group_modal_title", "Edit Blacklist Group") });
+    heading.style.marginTop = "0";
+    heading.style.marginBottom = "15px";
+    const topRow = contentEl.createDiv();
+    topRow.style.display = "flex";
+    topRow.style.alignItems = "center";
+    topRow.style.gap = "10px";
+    topRow.style.marginBottom = "15px";
+    const activeSelect = topRow.createEl("select");
+    activeSelect.addClass("act-blacklist-group-active-select");
+    activeSelect.style.padding = "6px";
+    activeSelect.style.borderRadius = "4px";
+    activeSelect.style.border = "1px solid var(--background-modifier-border)";
+    activeSelect.style.textAlign = "center";
+    activeSelect.style.flex = "0 0 auto";
+    activeSelect.style.width = "fit-content";
+    const optActive = activeSelect.createEl("option", { text: this.plugin.t("group_active_label", "Active"), value: "true" });
+    const optInactive = activeSelect.createEl("option", { text: this.plugin.t("group_inactive_label", "Inactive"), value: "false" });
+    activeSelect.value = String(!!this.group.active);
+    const activeSelectHandler = () => {
+      this.group.active = activeSelect.value === "true";
+    };
+    activeSelect.addEventListener("change", activeSelectHandler);
+    this._cleanupHandlers.push(() => activeSelect.removeEventListener("change", activeSelectHandler));
+    const nameInput = topRow.createEl("input", { type: "text", value: this.group.name || "" });
+    nameInput.style.flex = "1";
+    nameInput.style.padding = "6px";
+    nameInput.style.borderRadius = "4px";
+    nameInput.style.border = "1px solid var(--background-modifier-border)";
+    nameInput.placeholder = this.plugin.t("group_name_placeholder", "Name your group");
+    const nameInputHandler = () => {
+      this.group.name = nameInput.value;
+    };
+    nameInput.addEventListener("input", nameInputHandler);
+    this._cleanupHandlers.push(() => nameInput.removeEventListener("input", nameInputHandler));
+    const caseSelect = topRow.createEl("select");
+    caseSelect.style.padding = "6px";
+    caseSelect.style.borderRadius = "4px";
+    caseSelect.style.border = "1px solid var(--background-modifier-border)";
+    caseSelect.style.textAlign = "center";
+    caseSelect.style.flex = "0 0 auto";
+    caseSelect.style.width = "fit-content";
+    caseSelect.createEl("option", { text: this.plugin.t("opt_case_all", "Case Sensitivity (All)"), value: "per-entry" });
+    caseSelect.createEl("option", { text: this.plugin.t("opt_case_sensitive", "is case sensitive"), value: "true" });
+    caseSelect.createEl("option", { text: this.plugin.t("opt_not_case_sensitive", "not case sensitive"), value: "false" });
+    caseSelect.value = typeof this.group.caseSensitiveOverride === "boolean" ? this.group.caseSensitiveOverride ? "true" : "false" : "per-entry";
+    const caseSelectHandler = () => {
+      const v = caseSelect.value;
+      if (v === "per-entry") this.group.caseSensitiveOverride = null;
+      else this.group.caseSensitiveOverride = v === "true";
+    };
+    caseSelect.addEventListener("change", caseSelectHandler);
+    this._cleanupHandlers.push(() => caseSelect.removeEventListener("change", caseSelectHandler));
+    const matchTypeSelect = topRow.createEl("select");
+    matchTypeSelect.style.padding = "6px";
+    matchTypeSelect.style.borderRadius = "4px";
+    matchTypeSelect.style.border = "1px solid var(--background-modifier-border)";
+    matchTypeSelect.style.textAlign = "center";
+    matchTypeSelect.style.flex = "0 0 auto";
+    matchTypeSelect.style.width = "fit-content";
+    matchTypeSelect.createEl("option", { text: this.plugin.t("opt_match_all", "Match Type (All)"), value: "per-entry" });
+    matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_contains", "Contains"), value: "contains" });
+    matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_exact", "Exact"), value: "exact" });
+    matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_starts_with", "Starts With"), value: "startswith" });
+    matchTypeSelect.createEl("option", { text: this.plugin.t("match_option_ends_with", "Ends With"), value: "endswith" });
+    matchTypeSelect.value = this.group.matchTypeOverride ? String(this.group.matchTypeOverride) : "per-entry";
+    const matchTypeHandler = () => {
+      const v = matchTypeSelect.value;
+      this.group.matchTypeOverride = v === "per-entry" ? null : v;
+    };
+    matchTypeSelect.addEventListener("change", matchTypeHandler);
+    this._cleanupHandlers.push(() => matchTypeSelect.removeEventListener("change", matchTypeHandler));
+    const searchRow = contentEl.createDiv();
+    try {
+      searchRow.addClass("act-search-container");
+    } catch (e) {
+      try {
+        searchRow.classList.add("act-search-container");
+      } catch (_) {
+      }
+    }
+    searchRow.style.display = "flex";
+    searchRow.style.alignItems = "center";
+    searchRow.style.gap = "8px";
+    searchRow.style.margin = "8px 0";
+    searchRow.style.paddingBottom = "-4px";
+    const searchInput = searchRow.createEl("input", { type: "text" });
+    searchInput.placeholder = this.plugin.t("search_blacklist_placeholder", "Search blacklisted words/patterns\u2026");
+    try {
+      searchInput.addClass("act-search-input");
+    } catch (e) {
+      try {
+        searchInput.classList.add("act-search-input");
+      } catch (_) {
+      }
+    }
+    searchInput.style.flex = "1 1 auto";
+    searchInput.style.padding = "6px";
+    searchInput.style.border = "1px solid var(--background-modifier-border)";
+    searchInput.style.borderRadius = "4px";
+    searchInput.value = this._searchQuery;
+    const searchHandler = () => {
+      this._searchQuery = String(searchInput.value || "").trim().toLowerCase();
+      this._refreshGroupEntries();
+    };
+    searchInput.addEventListener("input", searchHandler);
+    this._cleanupHandlers.push(() => searchInput.removeEventListener("input", searchHandler));
+    const searchIcon = searchRow.createDiv();
+    try {
+      searchIcon.addClass("act-search-icon");
+    } catch (e) {
+      try {
+        searchIcon.classList.add("act-search-icon");
+      } catch (_) {
+      }
+    }
+    const limitInput = searchRow.createEl("input", { type: "text" });
+    limitInput.value = String(this._limit);
+    limitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
+    limitInput.title = this.plugin.t("limit_input_tooltip", "0=all; number=last N; r=regex; w=words; sw=starts; ew=ends; e=exact");
+    limitInput.style.width = "80px";
+    limitInput.style.padding = "6px";
+    limitInput.style.border = "1px solid var(--background-modifier-border)";
+    limitInput.style.borderRadius = "4px";
+    const limitHandler = () => {
+      const raw = String(limitInput.value || "").trim().toLowerCase();
+      const parts = raw.split(/\s+/).filter(Boolean);
+      const numPart = parts.find((p) => /^\d+$/.test(p));
+      const num = numPart ? parseInt(numPart, 10) : NaN;
+      this._limit = !isNaN(num) && num >= 0 ? num : 0;
+      this._limitRegexOnly = false;
+      this._limitWordsOnly = false;
+      this._limitMatchStarts = false;
+      this._limitMatchEnds = false;
+      this._limitMatchExact = false;
+      for (const tok of parts) {
+        if (tok === "r") this._limitRegexOnly = true;
+        else if (tok === "w") this._limitWordsOnly = true;
+        else if (tok === "sw") this._limitMatchStarts = true;
+        else if (tok === "ew") this._limitMatchEnds = true;
+        else if (tok === "e") this._limitMatchExact = true;
+      }
+      this._refreshGroupEntries();
+    };
+    limitInput.addEventListener("input", limitHandler);
+    this._cleanupHandlers.push(() => limitInput.removeEventListener("input", limitHandler));
+    const hrBelowSearch = contentEl.createEl("hr");
+    hrBelowSearch.style.marginTop = "6px";
+    hrBelowSearch.style.marginBottom = "0px";
+    hrBelowSearch.style.border = "0px";
+    try {
+      hrBelowSearch.addClass("act-edit-blacklist-group-hr");
+    } catch (e) {
+      try {
+        hrBelowSearch.classList.add("act-edit-blacklist-group-hr");
+      } catch (_) {
+      }
+    }
+    this._listDiv = contentEl.createDiv();
+    this._listDiv.addClass("blacklist-entries-list");
+    this._listDiv.style.minHeight = "200px";
+    this._listDiv.style.maxHeight = "350px";
+    this._listDiv.style.overflowY = "auto";
+    this._listDiv.style.marginBottom = "15px";
+    this._listDiv.style.borderRadius = "4px";
+    this._listDiv.style.backgroundColor = "var(--background-primary)";
+    this._refreshGroupEntries();
+    const buttonRow = contentEl.createDiv();
+    buttonRow.style.display = "flex";
+    buttonRow.style.gap = "10px";
+    buttonRow.style.marginBottom = "15px";
+    buttonRow.style.alignItems = "center";
+    const sortModes = ["last-added", "a-z", "reverse-a-z"];
+    const sortLabels = {
+      "last-added": this.plugin.t("sort_label_last-added", "Sort: Last Added"),
+      "a-z": this.plugin.t("sort_label_a-z", "Sort: A-Z"),
+      "reverse-a-z": this.plugin.t("sort_label_reverse-a-z", "Sort: Z-A")
+    };
+    const sortBtn = buttonRow.createEl("button");
+    sortBtn.textContent = sortLabels[this._sortMode] || "Sort: Last Added";
+    sortBtn.style.cursor = "pointer";
+    sortBtn.style.padding = "6px 12px";
+    sortBtn.style.borderRadius = "4px";
+    const sortBtnHandler = () => {
+      const currentIndex = sortModes.indexOf(this._sortMode);
+      const nextIndex = (currentIndex + 1) % sortModes.length;
+      this._sortMode = sortModes[nextIndex];
+      sortBtn.textContent = sortLabels[this._sortMode];
+      this._refreshGroupEntries();
+    };
+    sortBtn.addEventListener("click", sortBtnHandler);
+    this._cleanupHandlers.push(() => sortBtn.removeEventListener("click", sortBtnHandler));
+    const addWordsBtn = buttonRow.createEl("button");
+    addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
+    addWordsBtn.style.cursor = "pointer";
+    addWordsBtn.style.padding = "6px 12px";
+    addWordsBtn.style.borderRadius = "4px";
+    addWordsBtn.style.flex = "1";
+    addWordsBtn.addClass("mod-cta");
+    const addWordsHandler = () => {
+      this.group.entries.push({ pattern: "", isRegex: false, flags: "", matchType: "contains" });
+      this._sortMode = "last-added";
+      this._refreshGroupEntries();
+      setTimeout(() => {
+        this._listDiv.scrollTop = this._listDiv.scrollHeight;
+      }, 50);
+    };
+    addWordsBtn.addEventListener("click", addWordsHandler);
+    this._cleanupHandlers.push(() => addWordsBtn.removeEventListener("click", addWordsHandler));
+    const addRegexBtn = buttonRow.createEl("button");
+    addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
+    addRegexBtn.style.cursor = "pointer";
+    addRegexBtn.style.padding = "6px 12px";
+    addRegexBtn.style.borderRadius = "4px";
+    addRegexBtn.style.flex = "1";
+    addRegexBtn.addClass("mod-cta");
+    const addRegexHandler = () => {
+      this._sortMode = "last-added";
+      const onAdded = (entry) => {
+        if (entry) {
+          this.group.entries.push(entry);
+        }
+        this._refreshGroupEntries();
+      };
+      new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
+    };
+    addRegexBtn.addEventListener("click", addRegexHandler);
+    this._cleanupHandlers.push(() => addRegexBtn.removeEventListener("click", addRegexHandler));
+    const presetsBtn = buttonRow.createEl("button");
+    presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
+    presetsBtn.style.cursor = "pointer";
+    presetsBtn.style.padding = "6px 12px";
+    presetsBtn.style.borderRadius = "4px";
+    const presetsHandler = () => {
+      new PresetModal(this.app, this.plugin, async (preset) => {
+        if (!preset) return;
+        const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", matchType: "contains", presetLabel: preset.label };
+        this.group.entries.push(entry);
+        this._sortMode = "last-added";
+        this._refreshGroupEntries();
+      }).open();
+    };
+    presetsBtn.addEventListener("click", presetsHandler);
+    this._cleanupHandlers.push(() => presetsBtn.removeEventListener("click", presetsHandler));
+    const footer = contentEl.createDiv();
+    footer.style.display = "flex";
+    footer.style.justifyContent = "space-between";
+    footer.style.alignItems = "center";
+    footer.style.marginTop = "15px";
+    footer.style.paddingTop = "15px";
+    footer.style.borderTop = "1px solid var(--background-modifier-border)";
+    const btnDelete = footer.createEl("button", { text: this.plugin.t("btn_delete_group", "Delete Group") });
+    btnDelete.addClass("mod-warning");
+    btnDelete.style.cursor = "pointer";
+    btnDelete.style.padding = "8px 16px";
+    const deleteHandler = () => {
+      new ConfirmationModal(this.app, this.plugin.t("confirm_delete_group_title", "Delete Group"), this.plugin.t("confirm_delete_group_desc", "Are you sure you want to delete this group?"), async () => {
+        this.close();
+        this.onDelete(this.group);
+      }).open();
+    };
+    btnDelete.addEventListener("click", deleteHandler);
+    this._cleanupHandlers.push(() => btnDelete.removeEventListener("click", deleteHandler));
+    const btnSave = footer.createEl("button", { text: this.plugin.t("btn_save_group", "Save Group") });
+    btnSave.addClass("mod-cta");
+    btnSave.style.cursor = "pointer";
+    btnSave.style.padding = "8px 16px";
+    const saveHandler = () => {
+      this.group.entries.forEach((entry) => {
+        if (!entry.hasOwnProperty("pattern")) entry.pattern = "";
+        if (!entry.hasOwnProperty("isRegex")) entry.isRegex = false;
+        if (!entry.hasOwnProperty("flags")) entry.flags = "";
+        if (!entry.hasOwnProperty("matchType")) entry.matchType = "contains";
+      });
+      this.onSave(this.group);
+      this.close();
+    };
+    btnSave.addEventListener("click", saveHandler);
+    this._cleanupHandlers.push(() => btnSave.removeEventListener("click", saveHandler));
+  }
+  _refreshGroupEntries() {
+    if (!this._listDiv) return;
+    this._listDiv.empty();
+    let entries = [...this.group.entries];
+    if (this._searchQuery) {
+      const q = this._searchQuery.toLowerCase();
+      entries = entries.filter((e) => {
+        const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || "")];
+        const text = [
+          ...patterns.map((p) => p.toLowerCase()),
+          String(e.presetLabel || "").toLowerCase(),
+          String(e.flags || "").toLowerCase()
+        ].join(" ");
+        if (this._limitMatchExact) return text === q;
+        if (this._limitMatchStarts) return text.startsWith(q);
+        if (this._limitMatchEnds) return text.endsWith(q);
+        return text.includes(q);
+      });
+    }
+    if (this._limitRegexOnly) {
+      entries = entries.filter((e) => !!e.isRegex);
+    } else if (this._limitWordsOnly) {
+      entries = entries.filter((e) => !e.isRegex);
+    }
+    if (this._sortMode === "a-z") {
+      entries.sort((a, b) => {
+        const patternA = a.pattern || "";
+        const patternB = b.pattern || "";
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
+      });
+    } else if (this._sortMode === "reverse-a-z") {
+      entries.sort((a, b) => {
+        const patternA = a.pattern || "";
+        const patternB = b.pattern || "";
+        const aEmpty = String(patternA).trim().length === 0;
+        const bEmpty = String(patternB).trim().length === 0;
+        if (aEmpty && !bEmpty) return 1;
+        if (!aEmpty && bEmpty) return -1;
+        return patternB.toLowerCase().localeCompare(patternA.toLowerCase());
+      });
+    }
+    const visibleEntries = this._limit && this._limit > 0 ? entries.slice(-this._limit) : entries;
+    if (visibleEntries.length === 0) {
+      this._listDiv.createDiv({ text: this.plugin.t("no_entries_found", "No entries found.") }).style.color = "var(--text-muted)";
+      return;
+    }
+    visibleEntries.forEach((entry) => {
+      const row = this._listDiv.createDiv();
+      try {
+        row.addClass("act-entry-row");
+      } catch (e) {
+        try {
+          row.classList.add("act-entry-row");
+        } catch (_) {
+        }
+      }
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.borderRadius = "4px";
+      row.style.paddingTop = "8px";
+      const matchSelect = row.createEl("select");
+      matchSelect.style.padding = "6px";
+      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.border = "1px solid var(--background-modifier-border)";
+      matchSelect.style.textAlign = "center";
+      matchSelect.style.maxWidth = "110px";
+      matchSelect.style.minWidth = "90px";
+      matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "Exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "Contains")}</option><option value="startswith">${this.plugin.t("match_option_starts_with", "Starts with")}</option><option value="endswith">${this.plugin.t("match_option_ends_with", "Ends with")}</option>`;
+      matchSelect.value = entry.matchType || "contains";
+      const matchSelectHandler = () => {
+        entry.matchType = matchSelect.value;
+      };
+      matchSelect.addEventListener("change", matchSelectHandler);
+      const updateVisibility = () => {
+        matchSelect.style.display = entry.isRegex ? "none" : "";
+      };
+      updateVisibility();
+      if (entry.isRegex && entry.presetLabel) {
+        const badge = row.createEl("span", { text: entry.presetLabel });
+        badge.style.marginRight = "8px";
+        badge.style.opacity = "0.7";
+        badge.style.flex = "0 0 auto";
+      }
+      const displayPatterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns.join(", ") : entry.pattern;
+      const patternInput = row.createEl("input", { type: "text", value: displayPatterns || "" });
+      patternInput.style.flex = "1";
+      patternInput.style.padding = "6px";
+      patternInput.style.borderRadius = "4px";
+      patternInput.style.border = "1px solid var(--background-modifier-border)";
+      patternInput.placeholder = this.plugin.t("word_pattern_placeholder_long", "pattern, word or comma-separated words (e.g. hello, world, foo)");
+      const patternHandler = () => {
+        const raw = String(patternInput.value || "");
+        const patterns = raw.split(",").map((p) => p.trim()).filter((p) => p.length > 0);
+        entry.pattern = patterns[0] || "";
+        entry.groupedPatterns = patterns.length > 1 ? patterns : null;
+      };
+      patternInput.addEventListener("change", patternHandler);
+      patternInput.addEventListener("blur", patternHandler);
+      let flagsInput = null;
+      if (entry.isRegex) {
+        flagsInput = row.createEl("input", { type: "text", value: entry.flags || "" });
+        flagsInput.style.width = "50px";
+        flagsInput.style.padding = "6px";
+        flagsInput.style.borderRadius = "4px";
+        flagsInput.style.border = "1px solid var(--background-modifier-border)";
+        flagsInput.placeholder = "flags";
+        flagsInput.title = "e.g., i, g, m";
+        const flagsHandler = () => {
+          entry.flags = flagsInput.value || "";
+        };
+        flagsInput.addEventListener("change", flagsHandler);
+      }
+      const regexChk = row.createEl("input", { type: "checkbox" });
+      regexChk.checked = !!entry.isRegex;
+      regexChk.title = this.plugin.t("use_regex", "Use Regex");
+      const regexChkHandler = () => {
+        entry.isRegex = regexChk.checked;
+        updateVisibility();
+        this._refreshGroupEntries();
+      };
+      regexChk.addEventListener("change", regexChkHandler);
+      const btnDelete = row.createEl("button", { text: "\u2715" });
+      btnDelete.addClass("mod-warning");
+      btnDelete.style.padding = "4px 8px";
+      btnDelete.style.borderRadius = "4px";
+      btnDelete.style.cursor = "pointer";
+      btnDelete.style.flex = "0 0 auto";
+      const deleteHandler = () => {
+        const idx = this.group.entries.indexOf(entry);
+        if (idx !== -1) {
+          this.group.entries.splice(idx, 1);
+          this._refreshGroupEntries();
+        }
+      };
+      btnDelete.addEventListener("click", deleteHandler);
+      const contextMenuHandler = (ev) => {
+        try {
+          ev && ev.preventDefault && ev.preventDefault();
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          const menu = new Menu(this.app);
           if (entry.isRegex) {
             menu.addItem((item) => {
-              item.setTitle(this.plugin.t("open_in_regex_tester", "Open in Regex Tester")).setIcon("pencil").onClick(() => {
-                const modal = new RealTimeRegexTesterModal(this.app, this.plugin, (updatedEntry) => {
+              item.setTitle(this.plugin.t("open_in_regex_tester", "Open in Regex Tester")).setIcon("code").onClick(() => {
+                const modal = new BlacklistRegexTesterModal(this.app, this.plugin, (updatedEntry) => {
                   if (updatedEntry) {
                     Object.assign(entry, updatedEntry);
                     this._refreshGroupEntries();
                   }
                 });
+                modal._editingEntry = entry;
+                if (entry.pattern) modal._preFillPattern = entry.pattern;
+                if (entry.flags) modal._preFillFlags = entry.flags;
+                if (entry.presetLabel) modal._preFillName = entry.presetLabel;
                 modal.open();
               });
             });
           }
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(() => {
+              const dup = JSON.parse(JSON.stringify(entry));
+              this.group.entries.push(dup);
+              this._sortMode = "last-added";
+              this._refreshGroupEntries();
+            });
+          });
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t("context_delete_entry", "Delete entry")).setIcon("trash").onClick(() => {
+              const idx = this.group.entries.indexOf(entry);
+              if (idx !== -1) {
+                this.group.entries.splice(idx, 1);
+                this._refreshGroupEntries();
+              }
+            });
+          });
           menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
         } catch (e) {
           debugError("MODAL", "context menu error", e);
@@ -20127,6 +21535,7 @@ var ColorSettingTab = class extends PluginSettingTab {
     this._pathRulesContainer = null;
     this._disabledFilesContainer = null;
     this._blacklistWordsContainer = null;
+    this._blacklistGroupsContainer = null;
     this._customSwatchesContainer = null;
     this._wordsSortMode = this.plugin.settings && this.plugin.settings.wordsSortMode ? this.plugin.settings.wordsSortMode : "last-added";
     this._textBgSortMode = "last-added";
@@ -20961,22 +22370,107 @@ var ColorSettingTab = class extends PluginSettingTab {
   _refreshDisabledFiles() {
     try {
       if (!this._disabledFilesContainer) return;
-      this._disabledFilesContainer.empty();
-      if (this.plugin.settings.disabledFiles.length > 0) {
-        const h4 = this._disabledFilesContainer.createEl("h5", { text: this.plugin.t("disabled_files_header", "Files with coloring disabled:") });
-        h4.style.margin = "20px 0 8px 0";
-        h4.style.marginTop = "20px";
-        this.plugin.settings.disabledFiles.forEach((filePath) => {
-          new Setting(this._disabledFilesContainer).setName(filePath).addExtraButton((btn) => btn.setIcon("x").setTooltip(this.plugin.t("tooltip_enable_for_file", "Enable for this file")).onClick(async () => {
-            const index = this.plugin.settings.disabledFiles.indexOf(filePath);
-            if (index > -1) {
-              this.plugin.settings.disabledFiles.splice(index, 1);
+      const hasAny = Array.isArray(this.plugin.settings.disabledFiles) && this.plugin.settings.disabledFiles.length > 0;
+      if (!this._disabledFilesHeaderEl) {
+        this._disabledFilesContainer.empty();
+        this._disabledFilesHeaderEl = this._disabledFilesContainer.createEl("h5", { text: this.plugin.t("disabled_files_header", "Files with coloring disabled:") });
+        this._disabledFilesHeaderEl.style.margin = "20px 0 8px 0";
+        this._disabledFilesHeaderEl.style.marginTop = "20px";
+        this._disabledFilesSearchContainer = this._disabledFilesContainer.createDiv();
+        try {
+          this._disabledFilesSearchContainer.addClass("act-search-container");
+        } catch (e) {
+          try {
+            this._disabledFilesSearchContainer.classList.add("act-search-container");
+          } catch (_) {
+          }
+        }
+        this._disabledFilesSearchContainer.style.margin = "8px 0";
+        this._disabledFilesSearchContainer.style.display = "flex";
+        this._disabledFilesSearchContainer.style.alignItems = "center";
+        this._disabledFilesSearchContainer.style.gap = "8px";
+        this._disabledFilesSearchInput = this._disabledFilesSearchContainer.createEl("input", { type: "text" });
+        try {
+          this._disabledFilesSearchInput.addClass("act-search-input");
+        } catch (e) {
+          try {
+            this._disabledFilesSearchInput.classList.add("act-search-input");
+          } catch (_) {
+          }
+        }
+        this._disabledFilesSearchInput.placeholder = this.plugin.t("search_disabled_files_placeholder", "Search disabled files\u2026");
+        this._disabledFilesSearchInput.title = this.plugin.t("search_disabled_files_aria_label", "Search disabled files");
+        try {
+          this._disabledFilesSearchInput.setAttribute("aria-label", this.plugin.t("search_disabled_files_aria_label", "Search disabled files"));
+        } catch (_) {
+        }
+        this._disabledFilesSearchInput.style.flex = "1 1 auto";
+        this._disabledFilesSearchInput.style.padding = "6px";
+        this._disabledFilesSearchInput.style.marginBottom = "6px";
+        this._disabledFilesSearchInput.style.border = "1px solid var(--background-modifier-border)";
+        this._disabledFilesSearchInput.style.borderRadius = "4px";
+        this._disabledFilesSearchInput.value = String(this._disabledFilesSearchQuery || "");
+        this._disabledFilesSearchIcon = this._disabledFilesSearchContainer.createDiv();
+        try {
+          this._disabledFilesSearchIcon.addClass("act-search-icon");
+        } catch (e) {
+          try {
+            this._disabledFilesSearchIcon.classList.add("act-search-icon");
+          } catch (_) {
+          }
+        }
+        const searchHandler = () => {
+          this._disabledFilesSearchQuery = String(this._disabledFilesSearchInput.value || "");
+          this._refreshDisabledFiles();
+        };
+        this._disabledFilesSearchInput.addEventListener("input", searchHandler);
+        this._disabledFilesSearchInput.addEventListener("click", searchHandler);
+        try {
+          this._cleanupHandlers && this._cleanupHandlers.push(() => {
+            try {
+              this._disabledFilesSearchInput.removeEventListener("input", searchHandler);
+            } catch (_) {
             }
-            await this.plugin.saveSettings();
-            this._refreshDisabledFiles();
-          }));
-        });
+            try {
+              this._disabledFilesSearchInput.removeEventListener("click", searchHandler);
+            } catch (_) {
+            }
+          });
+        } catch (_) {
+        }
+        this._disabledFilesListEl = this._disabledFilesContainer.createDiv();
       }
+      this._disabledFilesHeaderEl.style.display = hasAny ? "" : "none";
+      this._disabledFilesSearchContainer.style.display = hasAny ? "flex" : "none";
+      try {
+        this._disabledFilesListEl.empty();
+      } catch (e) {
+        try {
+          this._disabledFilesListEl.innerHTML = "";
+        } catch (_) {
+        }
+      }
+      if (!hasAny) return;
+      if (this._disabledFilesSearchInput && String(this._disabledFilesSearchInput.value || "") !== String(this._disabledFilesSearchQuery || "")) {
+        this._disabledFilesSearchInput.value = String(this._disabledFilesSearchQuery || "");
+      }
+      const q = String(this._disabledFilesSearchQuery || "").trim().toLowerCase();
+      const matchesQuery = (filePath) => {
+        if (!q) return true;
+        const fp = String(filePath || "");
+        const name = fp.split("/").pop() || fp;
+        return fp.toLowerCase().includes(q) || name.toLowerCase().includes(q);
+      };
+      this.plugin.settings.disabledFiles.filter(matchesQuery).forEach((filePath) => {
+        new Setting(this._disabledFilesListEl).setName(filePath).addExtraButton((btn) => btn.setIcon("x").setTooltip(this.plugin.t("tooltip_enable_for_file", "Enable for this file")).onClick(async () => {
+          const index = this.plugin.settings.disabledFiles.indexOf(filePath);
+          if (index > -1) {
+            this.plugin.settings.disabledFiles.splice(index, 1);
+          }
+          await this.plugin.saveSettings();
+          this._refreshDisabledFiles();
+        }));
+      });
     } catch (e) {
       debugError("SETTINGS", "_refreshDisabledFiles error", e);
     }
@@ -22504,6 +23998,18 @@ var ColorSettingTab = class extends PluginSettingTab {
         const matchesInactive = q === "inactive" && !g?.active;
         return matchesName || matchesActive || matchesInactive;
       }) : allGroups;
+      const saveDragReorder = async () => {
+        const groupRows = Array.from(container.querySelectorAll("div[data-group-uid]"));
+        const newOrder = groupRows.map((r) => {
+          const uid = r.getAttribute("data-group-uid");
+          return allGroups.find((g) => g && g.uid === uid);
+        }).filter((g) => g);
+        this.plugin.settings.wordEntryGroups = newOrder;
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+        this._refreshGroups();
+      };
       groups.forEach((group, index) => {
         const row = container.createDiv();
         try {
@@ -22522,6 +24028,20 @@ var ColorSettingTab = class extends PluginSettingTab {
         row.style.border = "1px solid var(--background-modifier-border)";
         row.style.borderRadius = "6px";
         row.style.backgroundColor = "var(--background-primary)";
+        row.setAttribute("data-group-uid", group.uid || "");
+        const dragHandle = row.createEl("button");
+        setIcon(dragHandle, "menu");
+        dragHandle.style.padding = "0";
+        dragHandle.style.border = "none";
+        dragHandle.style.background = "transparent";
+        dragHandle.style.boxShadow = "none";
+        dragHandle.style.cursor = "grab";
+        dragHandle.style.color = "var(--text-muted)";
+        dragHandle.style.flexShrink = "0";
+        dragHandle.style.display = "flex";
+        dragHandle.style.alignItems = "center";
+        dragHandle.style.justifyContent = "center";
+        dragHandle.setAttribute("aria-label", this.plugin.t("drag_to_reorder", "Drag to reorder"));
         const activeSelect = row.createEl("select");
         try {
           activeSelect.addClass("dropdown");
@@ -22606,6 +24126,249 @@ var ColorSettingTab = class extends PluginSettingTab {
             if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
           }).open();
         };
+        dragHandle.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const rect = row.getBoundingClientRect();
+          const offsetX = startX - rect.left;
+          const offsetY = startY - rect.top;
+          if (navigator.vibrate) navigator.vibrate(100);
+          const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+          ghost.appendChild(row.cloneNode(true));
+          ghost.style.width = `${rect.width}px`;
+          ghost.style.height = `${rect.height}px`;
+          ghost.style.left = `${rect.left}px`;
+          ghost.style.top = `${rect.top}px`;
+          row.classList.add("drag-ghost-hidden");
+          const onMove = (moveEvent) => {
+            moveEvent.preventDefault();
+            const currentX = moveEvent.clientX;
+            const currentY = moveEvent.clientY;
+            ghost.style.left = `${currentX - offsetX}px`;
+            ghost.style.top = `${currentY - offsetY}px`;
+            const children = Array.from(container.querySelectorAll("div[data-group-uid]"));
+            const currentIndex = children.indexOf(row);
+            if (currentIndex === -1) return;
+            if (currentIndex > 0) {
+              const prevRow = children[currentIndex - 1];
+              const prevRect = prevRow.getBoundingClientRect();
+              const prevOverdrag = prevRect.height * 0.25;
+              if (currentY < prevRect.bottom - prevOverdrag) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                container.insertBefore(row, prevRow);
+                return;
+              }
+            }
+            if (currentIndex < children.length - 1) {
+              const nextRow = children[currentIndex + 1];
+              const nextRect = nextRow.getBoundingClientRect();
+              const nextOverdrag = nextRect.height * 0.25;
+              if (currentY > nextRect.top + nextOverdrag) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                nextRow.after(row);
+                return;
+              }
+            }
+          };
+          const onEnd = async () => {
+            document.removeEventListener("mousemove", onMove);
+            document.removeEventListener("mouseup", onEnd);
+            ghost.remove();
+            row.classList.remove("drag-ghost-hidden");
+            await saveDragReorder();
+          };
+          document.addEventListener("mousemove", onMove);
+          document.addEventListener("mouseup", onEnd);
+        });
+      });
+    } catch (e) {
+    }
+  }
+  _refreshBlacklistGroups() {
+    try {
+      const container = this.containerEl.querySelector(".act-blacklist-groups-container");
+      if (!container) return;
+      container.empty();
+      const allGroups = Array.isArray(this.plugin.settings.blacklistEntryGroups) ? this.plugin.settings.blacklistEntryGroups : [];
+      const q = String(this._blacklistGroupSearch || "").toLowerCase().trim();
+      const groups = q ? allGroups.filter((g) => {
+        const matchesName = String(g?.name || "").toLowerCase().includes(q);
+        const matchesActive = q === "active" && g?.active;
+        const matchesInactive = q === "inactive" && !g?.active;
+        return matchesName || matchesActive || matchesInactive;
+      }) : allGroups;
+      const saveDragReorder = async () => {
+        const groupRows = Array.from(container.querySelectorAll("div[data-group-uid]"));
+        const newOrder = groupRows.map((r) => {
+          const uid = r.getAttribute("data-group-uid");
+          return allGroups.find((g) => g && g.uid === uid);
+        }).filter((g) => g);
+        this.plugin.settings.blacklistEntryGroups = newOrder;
+        await this.plugin.saveSettings();
+        if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+        this._refreshBlacklistGroups();
+      };
+      groups.forEach((group, index) => {
+        const row = container.createDiv();
+        try {
+          row.addClass("act-blacklist-group-row");
+        } catch (e) {
+          try {
+            row.classList.add("act-blacklist-group-row");
+          } catch (_) {
+          }
+        }
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.gap = "10px";
+        row.style.marginBottom = "10px";
+        row.style.padding = "10px";
+        row.style.border = "1px solid var(--background-modifier-border)";
+        row.style.borderRadius = "6px";
+        row.style.backgroundColor = "var(--background-primary)";
+        row.setAttribute("data-group-uid", group.uid || "");
+        const dragHandle = row.createEl("button");
+        setIcon(dragHandle, "menu");
+        dragHandle.style.padding = "0";
+        dragHandle.style.border = "none";
+        dragHandle.style.background = "transparent";
+        dragHandle.style.boxShadow = "none";
+        dragHandle.style.cursor = "grab";
+        dragHandle.style.color = "var(--text-muted)";
+        dragHandle.style.flexShrink = "0";
+        dragHandle.style.display = "flex";
+        dragHandle.style.alignItems = "center";
+        dragHandle.style.justifyContent = "center";
+        dragHandle.setAttribute("aria-label", this.plugin.t("drag_to_reorder", "Drag to reorder"));
+        const activeSelect = row.createEl("select");
+        try {
+          activeSelect.addClass("dropdown");
+        } catch (e) {
+        }
+        activeSelect.createEl("option", { text: this.plugin.t("group_active_label", "Active"), value: "true" });
+        activeSelect.createEl("option", { text: this.plugin.t("group_inactive_label", "Inactive"), value: "false" });
+        if (!group.uid) {
+          try {
+            group.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+          } catch (_) {
+          }
+        }
+        activeSelect.value = String(!!group.active);
+        const activeHandler = async () => {
+          group.active = activeSelect.value === "true";
+          await this.plugin.saveSettings();
+          if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+        };
+        activeSelect.onchange = activeHandler;
+        const nameInput = row.createEl("input", { type: "text", value: group.name || "" });
+        nameInput.style.flex = "1";
+        nameInput.placeholder = this.plugin.t("group_name_placeholder", "Name your group");
+        const nameHandler = async () => {
+          group.name = nameInput.value;
+          await this.plugin.saveSettings();
+          if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+        };
+        nameInput.onchange = nameHandler;
+        const btnDuplicate = row.createEl("div");
+        btnDuplicate.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        btnDuplicate.style.cursor = "pointer";
+        btnDuplicate.style.color = "var(--text-muted)";
+        btnDuplicate.title = this.plugin.t("tooltip_duplicate_group", "Duplicate Group");
+        btnDuplicate.style.display = "flex";
+        btnDuplicate.style.alignItems = "center";
+        btnDuplicate.onclick = async () => {
+          const newGroup = JSON.parse(JSON.stringify(group));
+          newGroup.name = (newGroup.name || "") + " (Copy)";
+          try {
+            newGroup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+          } catch (_) {
+          }
+          this.plugin.settings.blacklistEntryGroups.push(newGroup);
+          await this.plugin.saveSettings();
+          if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+          this._refreshBlacklistGroups();
+        };
+        const btnEdit = row.createEl("div");
+        btnEdit.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>';
+        btnEdit.style.cursor = "pointer";
+        btnEdit.style.color = "var(--text-muted)";
+        btnEdit.title = this.plugin.t("tooltip_edit_group_settings", "Edit Group Settings");
+        btnEdit.style.display = "flex";
+        btnEdit.style.alignItems = "center";
+        btnEdit.onclick = () => {
+          const latestGroup = this.plugin.settings.blacklistEntryGroups.find((g) => g && g.uid === group.uid) || group;
+          new EditBlacklistGroupModal(this.app, this.plugin, latestGroup, async (updatedGroup) => {
+            const idx = this.plugin.settings.blacklistEntryGroups.findIndex((g) => g && g.uid === updatedGroup.uid);
+            if (idx !== -1) this.plugin.settings.blacklistEntryGroups[idx] = updatedGroup;
+            await this.plugin.saveSettings();
+            if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+            this._refreshBlacklistGroups();
+          }, async (groupToDelete) => {
+            const actualIndex = this.plugin.settings.blacklistEntryGroups.findIndex((g) => g && g.uid === groupToDelete.uid);
+            if (actualIndex !== -1) this.plugin.settings.blacklistEntryGroups.splice(actualIndex, 1);
+            await this.plugin.saveSettings();
+            if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+            this._refreshBlacklistGroups();
+          }).open();
+        };
+        dragHandle.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const rect = row.getBoundingClientRect();
+          const offsetX = startX - rect.left;
+          const offsetY = startY - rect.top;
+          if (navigator.vibrate) navigator.vibrate(100);
+          const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+          ghost.appendChild(row.cloneNode(true));
+          ghost.style.width = `${rect.width}px`;
+          ghost.style.height = `${rect.height}px`;
+          ghost.style.left = `${rect.left}px`;
+          ghost.style.top = `${rect.top}px`;
+          row.classList.add("drag-ghost-hidden");
+          const onMove = (moveEvent) => {
+            moveEvent.preventDefault();
+            const currentX = moveEvent.clientX;
+            const currentY = moveEvent.clientY;
+            ghost.style.left = `${currentX - offsetX}px`;
+            ghost.style.top = `${currentY - offsetY}px`;
+            const children = Array.from(container.querySelectorAll("div[data-group-uid]"));
+            const currentIndex = children.indexOf(row);
+            if (currentIndex === -1) return;
+            if (currentIndex > 0) {
+              const prevRow = children[currentIndex - 1];
+              const prevRect = prevRow.getBoundingClientRect();
+              const prevOverdrag = prevRect.height * 0.25;
+              if (currentY < prevRect.bottom - prevOverdrag) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                container.insertBefore(row, prevRow);
+                return;
+              }
+            }
+            if (currentIndex < children.length - 1) {
+              const nextRow = children[currentIndex + 1];
+              const nextRect = nextRow.getBoundingClientRect();
+              const nextOverdrag = nextRect.height * 0.25;
+              if (currentY > nextRect.top + nextOverdrag) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                nextRow.after(row);
+                return;
+              }
+            }
+          };
+          const onEnd = async () => {
+            document.removeEventListener("mousemove", onMove);
+            document.removeEventListener("mouseup", onEnd);
+            ghost.remove();
+            row.classList.remove("drag-ghost-hidden");
+            await saveDragReorder();
+          };
+          document.addEventListener("mousemove", onMove);
+          document.addEventListener("mouseup", onEnd);
+        });
       });
     } catch (e) {
     }
@@ -22728,6 +24491,16 @@ var ColorSettingTab = class extends PluginSettingTab {
         this.containerEl?.empty();
       } catch (e) {
       }
+      this._pathRulesContainer = null;
+      this._disabledFilesContainer = null;
+      this._disabledFilesHeaderEl = null;
+      this._disabledFilesSearchContainer = null;
+      this._disabledFilesSearchInput = null;
+      this._disabledFilesSearchIcon = null;
+      this._disabledFilesListEl = null;
+      this._blacklistWordsContainer = null;
+      this._blacklistGroupsContainer = null;
+      this._customSwatchesContainer = null;
       this._suspendSorting = false;
       try {
         this._newEntriesSet && this._newEntriesSet.clear();
@@ -23921,7 +25694,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       });
     }
     if (this._activeTab === "blacklist") {
-      containerEl2.createEl("h2", { text: this.plugin.t("blacklist_words_header", "Blacklist words") });
+      containerEl2.createEl("h3", { text: this.plugin.t("blacklist_words_header", "Blacklist words") });
       containerEl2.createEl("p", { text: this.plugin.t("blacklist_words_desc", "Keywords or patterns here will never be colored, even for partial matches.") });
       const blSearchContainer = containerEl2.createDiv();
       try {
@@ -24117,6 +25890,108 @@ var ColorSettingTab = class extends PluginSettingTab {
           this._refreshBlacklistWords();
         }).open();
       }));
+      containerEl2.createEl("h3", { text: this.plugin.t("blacklist_grouped_entries_header", "Blacklist Group Entries") });
+      new Setting(containerEl2).setName(this.plugin.t("show_blacklist_groups_in_commands", "Show blacklist groups in commands")).setDesc(this.plugin.t("show_blacklist_groups_in_commands_desc", "When enabled, blacklist groups appear in the command palette with Activate/Deactivate commands.")).addToggle((t) => t.setValue(!!this.plugin.settings.showBlacklistGroupsInCommands).onChange(async (v) => {
+        this.plugin.settings.showBlacklistGroupsInCommands = !!v;
+        await this.plugin.saveSettings();
+        this.plugin.reregisterCommandsWithLanguage();
+      }));
+      const blGroupSearchContainer = containerEl2.createDiv();
+      try {
+        blGroupSearchContainer.addClass("act-search-container");
+      } catch (e) {
+        try {
+          blGroupSearchContainer.classList.add("act-search-container");
+        } catch (_) {
+        }
+      }
+      blGroupSearchContainer.style.margin = "8px 0";
+      blGroupSearchContainer.style.display = "flex";
+      blGroupSearchContainer.style.alignItems = "center";
+      blGroupSearchContainer.style.gap = "8px";
+      const blGroupSearch = blGroupSearchContainer.createEl("input", { type: "text" });
+      try {
+        blGroupSearch.addClass("act-search-input");
+      } catch (e) {
+        try {
+          blGroupSearch.classList.add("act-search-input");
+        } catch (_) {
+        }
+      }
+      blGroupSearch.placeholder = this.plugin.t("search_blacklist_groups_placeholder", "Search blacklist groups\u2026");
+      blGroupSearch.style.flex = "1 1 auto";
+      blGroupSearch.style.padding = "6px";
+      blGroupSearch.style.border = "1px solid var(--background-modifier-border)";
+      blGroupSearch.style.borderRadius = "4px";
+      blGroupSearch.addEventListener("input", () => {
+        this._blacklistGroupSearch = blGroupSearch.value || "";
+        this._refreshBlacklistGroups();
+      });
+      const blGroupIcon = blGroupSearchContainer.createDiv();
+      try {
+        blGroupIcon.addClass("act-search-icon");
+      } catch (e) {
+        try {
+          blGroupIcon.classList.add("act-search-icon");
+        } catch (_) {
+        }
+      }
+      const blGroupsContainer = containerEl2.createDiv();
+      blGroupsContainer.addClass("act-blacklist-groups-container");
+      this._blacklistGroupsContainer = blGroupsContainer;
+      this._refreshBlacklistGroups();
+      const blGroupButtonsContainer = containerEl2.createDiv();
+      blGroupButtonsContainer.style.display = "flex";
+      blGroupButtonsContainer.style.gap = "8px";
+      blGroupButtonsContainer.style.marginTop = "10px";
+      blGroupButtonsContainer.style.justifyContent = "space-between";
+      const btnCreateBlacklistGroup = blGroupButtonsContainer.createEl("button", { text: this.plugin.t("btn_create_new_blacklist_group", "+ Create New Blacklist Group") });
+      btnCreateBlacklistGroup.addClass("mod-cta");
+      btnCreateBlacklistGroup.onclick = async () => {
+        if (!this.plugin.settings.blacklistEntryGroups) this.plugin.settings.blacklistEntryGroups = [];
+        const newGroup = {
+          active: true,
+          name: "",
+          entries: []
+        };
+        try {
+          newGroup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        } catch (_) {
+        }
+        this.plugin.settings.blacklistEntryGroups.push(newGroup);
+        await this.plugin.saveSettings();
+        try {
+          new EditBlacklistGroupModal(this.app, this.plugin, newGroup, async (updatedGroup) => {
+            const idx = this.plugin.settings.blacklistEntryGroups.findIndex((g) => g && g.uid === newGroup.uid);
+            if (idx !== -1) {
+              this.plugin.settings.blacklistEntryGroups[idx] = updatedGroup;
+            }
+            await this.plugin.saveSettings();
+            if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+            this._refreshBlacklistGroups();
+          }, async (groupToDelete) => {
+            const actualIndex = this.plugin.settings.blacklistEntryGroups.findIndex((g) => g && g.uid === groupToDelete.uid);
+            if (actualIndex !== -1) {
+              this.plugin.settings.blacklistEntryGroups.splice(actualIndex, 1);
+            }
+            await this.plugin.saveSettings();
+            if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+            this._refreshBlacklistGroups();
+          }).open();
+        } catch (_) {
+          this._refreshBlacklistGroups();
+        }
+      };
+      new Setting(blGroupButtonsContainer).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_blacklist_groups", "Delete all Blacklist Groups")).onClick(async () => {
+        new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_blacklist_groups_title", "Delete All Blacklist Groups"), this.plugin.t("confirm_delete_all_blacklist_groups_desc", "Are you sure you want to delete ALL blacklist groups? This cannot be undone!"), async () => {
+          this.plugin.settings.blacklistEntryGroups = [];
+          await this.plugin.saveSettings();
+          if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
+          this._refreshBlacklistGroups();
+        }).open();
+      })).then((setting) => {
+        setting.settingEl.classList.add("act-delete-blacklist-groups-setting");
+      });
     }
     if (this._activeTab === "file-folder-rules") {
       containerEl2.createEl("h3", { text: this.plugin.t("file_folder_rules_header", "File & Folder Coloring Rules") });

@@ -37,6 +37,8 @@ Replace default swatches with your favorite colors for instant access!
 ![Quick Colors AND Quick Styles](assets/quick-color-AND-quick-styles.png)
 
 If Quick Colors are enabled, the style uses the chosen Quick Color; if not, it uses its own colors.
+Word Groups and Match Types can also be assigned to a Quick Style :D
+
 ---
 
 ## Smart Text Matching
@@ -109,7 +111,7 @@ Switch styles seamlessly, changing from "Both" to "Highlight" and back retains y
 ### Word Groups
 Entries can be added to a word group right from the Pick Color modal, and the word group can be set as active when you need it, otherwise kept inactive. Your wish.
 
-You can also set a match type and case sensitivity for all the entries in a word group.
+You can also set a **match type** and **case sensitivity** for all the entries in a word group.
 ![](assets/word-group-selects.png)
 
 ### Entry Filtering (Limit Input)

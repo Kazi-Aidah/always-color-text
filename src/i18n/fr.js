@@ -484,5 +484,25 @@ module.exports = {
   "quick_styles_header": "Styles Rapides",
   "quick_styles_desc": "Définir des styles nommés pour appliquer la couleur du texte et les surlignages. Si Couleurs Rapides est désactivé, les couleurs par style ici seront utilisées.",
   "btn_add_style": "+ Ajouter un style",
-  "quick_styles_menu_option": "Styles Rapides"
+  "quick_styles_menu_option": "Styles Rapides",
+  
+  // Blacklist Groups
+  "blacklist_grouped_entries_header": "Entrées du groupe de liste noire",
+  "show_blacklist_groups_in_commands": "Afficher les groupes de liste noire dans les commandes",
+  "show_blacklist_groups_in_commands_desc": "Lorsqu'elle est activée, les groupes de liste noire apparaissent dans la palette de commandes avec les commandes Activer/Désactiver.",
+  "search_blacklist_groups_placeholder": "Rechercher des groupes de liste noire…",
+  "btn_create_new_blacklist_group": "+ Créer un nouveau groupe de liste noire",
+  "edit_blacklist_group_modal_title": "Modifier le groupe de liste noire",
+  "tooltip_delete_all_blacklist_groups": "Supprimer tous les groupes de liste noire",
+  "confirm_delete_all_blacklist_groups_title": "Supprimer tous les groupes de liste noire",
+  "confirm_delete_all_blacklist_groups_desc": "Êtes-vous sûr de vouloir supprimer TOUS les groupes de liste noire ? Cela ne peut pas être annulé !",
+  "confirm_delete_blacklist_group_title": "Supprimer le groupe de liste noire",
+  "confirm_delete_blacklist_group_desc": "Êtes-vous sûr de vouloir supprimer ce groupe de liste noire ? Cela ne peut pas être annulé.",
+  "notice_blacklist_group_activated": "Groupe de liste noire activé",
+  "notice_blacklist_group_deactivated": "Groupe de liste noire désactivé",
+  "command_activate_blacklist_group": "Activer le groupe de liste noire {groupName}",
+  "command_deactivate_blacklist_group": "Désactiver le groupe de liste noire {groupName}",
+  "btn_duplicate_entry": "Dupliquer l'entrée",
+  "btn_open_in_regex_tester": "Ouvrir dans le testeur d'expression régulière",
+  "btn_delete_entry": "Supprimer l'entrée"
 };

@@ -485,7 +485,27 @@ module.exports = {
   "quick_styles_header": "Быстрые стили",
   "quick_styles_desc": "Определите именованные стили для применения цвета текста и выделения. Если Быстрые цвета отключены, будут использоваться цвета стилей здесь.",
   "btn_add_style": "+ Добавить стиль",
-  "quick_styles_menu_option": "Быстрые стили"
+  "quick_styles_menu_option": "Быстрые стили",
+  
+  // Blacklist Groups
+  "blacklist_grouped_entries_header": "Записи группы черного списка",
+  "show_blacklist_groups_in_commands": "Показать группы черного списка в командах",
+  "show_blacklist_groups_in_commands_desc": "Если включено, группы черного списка отображаются в палитре команд с командами Активировать/Деактивировать.",
+  "search_blacklist_groups_placeholder": "Поиск групп черного списка…",
+  "btn_create_new_blacklist_group": "+ Создать новую группу черного списка",
+  "edit_blacklist_group_modal_title": "Редактировать группу черного списка",
+  "tooltip_delete_all_blacklist_groups": "Удалить все группы черного списка",
+  "confirm_delete_all_blacklist_groups_title": "Удалить все группы черного списка",
+  "confirm_delete_all_blacklist_groups_desc": "Вы уверены, что хотите удалить ВСЕ группы черного списка? Это невозможно отменить!",
+  "confirm_delete_blacklist_group_title": "Удалить группу черного списка",
+  "confirm_delete_blacklist_group_desc": "Вы уверены, что хотите удалить эту группу черного списка? Это невозможно отменить.",
+  "notice_blacklist_group_activated": "Группа черного списка активирована",
+  "notice_blacklist_group_deactivated": "Группа черного списка деактивирована",
+  "command_activate_blacklist_group": "Активировать группу черного списка {groupName}",
+  "command_deactivate_blacklist_group": "Деактивировать группу черного списка {groupName}",
+  "btn_duplicate_entry": "Дублировать запись",
+  "btn_open_in_regex_tester": "Открыть в Regex Tester",
+  "btn_delete_entry": "Удалить запись"
 };
 
 // Thanks @Frumkin13 for the translation <3

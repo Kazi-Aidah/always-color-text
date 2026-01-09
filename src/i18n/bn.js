@@ -485,5 +485,25 @@ module.exports = {
   "quick_styles_header": "দ্রুত স্টাইল",
   "quick_styles_desc": "টেক্সট রঙ এবং হাইলাইট প্রয়োগ করার জন্য নামযুক্ত স্টাইল সংজ্ঞায়িত করুন। যদি দ্রুত রং বন্ধ থাকে, তবে এখানে প্রতি-স্টাইল রং ব্যবহার করা হবে।",
   "btn_add_style": "+ স্টাইল যোগ করুন",
-  "quick_styles_menu_option": "দ্রুত স্টাইল"
+  "quick_styles_menu_option": "দ্রুত স্টাইল",
+  
+  // Blacklist Groups
+  "blacklist_grouped_entries_header": "ব্ল্যাকলিস্ট গ্রুপ এন্ট্রি",
+  "show_blacklist_groups_in_commands": "কমান্ডে ব্ল্যাকলিস্ট গ্রুপ দেখান",
+  "show_blacklist_groups_in_commands_desc": "সক্ষম হলে, ব্ল্যাকলিস্ট গ্রুপগুলি সক্রিয়/নিষ্ক্রিয় করার কমান্ড সহ কমান্ড প্যালেটে প্রদর্শিত হয়।",
+  "search_blacklist_groups_placeholder": "ব্ল্যাকলিস্ট গ্রুপ অনুসন্ধান করুন…",
+  "btn_create_new_blacklist_group": "+ নতুন ব্ল্যাকলিস্ট গ্রুপ তৈরি করুন",
+  "edit_blacklist_group_modal_title": "ব্ল্যাকলিস্ট গ্রুপ সম্পাদনা করুন",
+  "tooltip_delete_all_blacklist_groups": "সমস্ত ব্ল্যাকলিস্ট গ্রুপ মুছুন",
+  "confirm_delete_all_blacklist_groups_title": "সমস্ত ব্ল্যাকলিস্ট গ্রুপ মুছুন",
+  "confirm_delete_all_blacklist_groups_desc": "আপনি কি সমস্ত ব্ল্যাকলিস্ট গ্রুপ মুছতে চান? এটি আনডু করা যাবে না!",
+  "confirm_delete_blacklist_group_title": "ব্ল্যাকলিস্ট গ্রুপ মুছুন",
+  "confirm_delete_blacklist_group_desc": "আপনি কি এই ব্ল্যাকলিস্ট গ্রুপ মুছতে চান? এটি আনডু করা যাবে না।",
+  "notice_blacklist_group_activated": "ব্ল্যাকলিস্ট গ্রুপ সক্রিয় করা হয়েছে",
+  "notice_blacklist_group_deactivated": "ব্ল্যাকলিস্ট গ্রুপ নিষ্ক্রিয় করা হয়েছে",
+  "command_activate_blacklist_group": "{groupName} ব্ল্যাকলিস্ট গ্রুপ সক্রিয় করুন",
+  "command_deactivate_blacklist_group": "{groupName} ব্ল্যাকলিস্ট গ্রুপ নিষ্ক্রিয় করুন",
+  "btn_duplicate_entry": "এন্ট্রি ডুপ্লিকেট করুন",
+  "btn_open_in_regex_tester": "Regex Tester এ খুলুন",
+  "btn_delete_entry": "এন্ট্রি মুছুন"
 };

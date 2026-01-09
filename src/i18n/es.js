@@ -484,5 +484,25 @@ module.exports = {
   "quick_styles_header": "Estilos Rápidos",
   "quick_styles_desc": "Define estilos con nombre para aplicar color de texto y resaltados. Si Colores Rápidos está desactivado, se usarán los colores por estilo aquí.",
   "btn_add_style": "+ Añadir Estilo",
-  "quick_styles_menu_option": "Estilos Rápidos"
+  "quick_styles_menu_option": "Estilos Rápidos",
+  
+  // Blacklist Groups
+  "blacklist_grouped_entries_header": "Entradas del grupo de lista negra",
+  "show_blacklist_groups_in_commands": "Mostrar grupos de lista negra en comandos",
+  "show_blacklist_groups_in_commands_desc": "Cuando está habilitado, los grupos de lista negra aparecen en la paleta de comandos con comandos Activar/Desactivar.",
+  "search_blacklist_groups_placeholder": "Buscar grupos de lista negra…",
+  "btn_create_new_blacklist_group": "+ Crear nuevo grupo de lista negra",
+  "edit_blacklist_group_modal_title": "Editar grupo de lista negra",
+  "tooltip_delete_all_blacklist_groups": "Eliminar todos los grupos de lista negra",
+  "confirm_delete_all_blacklist_groups_title": "Eliminar todos los grupos de lista negra",
+  "confirm_delete_all_blacklist_groups_desc": "¿Estás seguro de que deseas eliminar TODOS los grupos de lista negra? ¡Esto no se puede deshacer!",
+  "confirm_delete_blacklist_group_title": "Eliminar grupo de lista negra",
+  "confirm_delete_blacklist_group_desc": "¿Estás seguro de que deseas eliminar este grupo de lista negra? Esto no se puede deshacer.",
+  "notice_blacklist_group_activated": "Grupo de lista negra activado",
+  "notice_blacklist_group_deactivated": "Grupo de lista negra desactivado",
+  "command_activate_blacklist_group": "Activar grupo de lista negra {groupName}",
+  "command_deactivate_blacklist_group": "Desactivar grupo de lista negra {groupName}",
+  "btn_duplicate_entry": "Duplicar entrada",
+  "btn_open_in_regex_tester": "Abrir en Regex Tester",
+  "btn_delete_entry": "Eliminar entrada"
 };

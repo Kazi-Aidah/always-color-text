@@ -485,5 +485,25 @@ module.exports = {
   "quick_styles_header": "快速样式",
   "quick_styles_desc": "定义用于应用文本颜色和高亮显示的命名样式。如果关闭快速颜色，将使用此处的每种样式颜色。",
   "btn_add_style": "+ 添加样式",
-  "quick_styles_menu_option": "快速样式"
+  "quick_styles_menu_option": "快速样式",
+  
+  // Blacklist Groups
+  "blacklist_grouped_entries_header": "黑名单组条目",
+  "show_blacklist_groups_in_commands": "在命令中显示黑名单组",
+  "show_blacklist_groups_in_commands_desc": "启用后，黑名单组将在命令面板中显示，并带有激活/停用命令。",
+  "search_blacklist_groups_placeholder": "搜索黑名单组…",
+  "btn_create_new_blacklist_group": "+ 创建新黑名单组",
+  "edit_blacklist_group_modal_title": "编辑黑名单组",
+  "tooltip_delete_all_blacklist_groups": "删除所有黑名单组",
+  "confirm_delete_all_blacklist_groups_title": "删除所有黑名单组",
+  "confirm_delete_all_blacklist_groups_desc": "确定要删除所有黑名单组吗？此操作无法撤销！",
+  "confirm_delete_blacklist_group_title": "删除黑名单组",
+  "confirm_delete_blacklist_group_desc": "确定要删除此黑名单组吗？此操作无法撤销。",
+  "notice_blacklist_group_activated": "黑名单组已激活",
+  "notice_blacklist_group_deactivated": "黑名单组已停用",
+  "command_activate_blacklist_group": "激活 {groupName} 黑名单组",
+  "command_deactivate_blacklist_group": "停用 {groupName} 黑名单组",
+  "btn_duplicate_entry": "复制条目",
+  "btn_open_in_regex_tester": "在正则表达式测试器中打开",
+  "btn_delete_entry": "删除条目"
 };

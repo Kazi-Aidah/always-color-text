@@ -485,5 +485,25 @@ module.exports = {
   "quick_styles_header": "त्वरित शैलियाँ",
   "quick_styles_desc": "टेक्स्ट रंग और हाइलाइट लागू करने के लिए नामित शैलियाँ परिभाषित करें। यदि त्वरित रंग बंद हैं, तो यहां प्रति-शैली रंगों का उपयोग किया जाएगा।",
   "btn_add_style": "+ शैली जोड़ें",
-  "quick_styles_menu_option": "त्वरित शैलियाँ"
+  "quick_styles_menu_option": "त्वरित शैलियाँ",
+  
+  // Blacklist Groups
+  "blacklist_grouped_entries_header": "ब्लैकलिस्ट समूह प्रविष्टियाँ",
+  "show_blacklist_groups_in_commands": "कमांड में ब्लैकलिस्ट समूह दिखाएं",
+  "show_blacklist_groups_in_commands_desc": "सक्षम होने पर, ब्लैकलिस्ट समूह कमांड पैलेट में सक्रिय/निष्क्रिय करें कमांड के साथ दिखाई देते हैं।",
+  "search_blacklist_groups_placeholder": "ब्लैकलिस्ट समूहों को खोजें…",
+  "btn_create_new_blacklist_group": "+ नया ब्लैकलिस्ट समूह बनाएं",
+  "edit_blacklist_group_modal_title": "ब्लैकलिस्ट समूह संपादित करें",
+  "tooltip_delete_all_blacklist_groups": "सभी ब्लैकलिस्ट समूहों को हटाएं",
+  "confirm_delete_all_blacklist_groups_title": "सभी ब्लैकलिस्ट समूहों को हटाएं",
+  "confirm_delete_all_blacklist_groups_desc": "क्या आप सभी ब्लैकलिस्ट समूहों को हटाना चाहते हैं? यह पूर्ववत नहीं किया जा सकता!",
+  "confirm_delete_blacklist_group_title": "ब्लैकलिस्ट समूह हटाएं",
+  "confirm_delete_blacklist_group_desc": "क्या आप इस ब्लैकलिस्ट समूह को हटाना चाहते हैं? यह पूर्ववत नहीं किया जा सकता।",
+  "notice_blacklist_group_activated": "ब्लैकलिस्ट समूह सक्रिय किया गया",
+  "notice_blacklist_group_deactivated": "ब्लैकलिस्ट समूह निष्क्रिय किया गया",
+  "command_activate_blacklist_group": "{groupName} ब्लैकलिस्ट समूह सक्रिय करें",
+  "command_deactivate_blacklist_group": "{groupName} ब्लैकलिस्ट समूह निष्क्रिय करें",
+  "btn_duplicate_entry": "प्रविष्टि को डुप्लिकेट करें",
+  "btn_open_in_regex_tester": "Regex Tester में खोलें",
+  "btn_delete_entry": "प्रविष्टि हटाएं"
 };

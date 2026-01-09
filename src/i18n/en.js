@@ -487,5 +487,25 @@ module.exports = {
   "quick_styles_header": "Quick Styles",
   "quick_styles_desc": "Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used.",
   "btn_add_style": "+ Add Style",
-  "quick_styles_menu_option": "Quick Styles"
+  "quick_styles_menu_option": "Quick Styles",
+  
+  // Blacklist Groups
+  "blacklist_grouped_entries_header": "Blacklist Group Entries",
+  "show_blacklist_groups_in_commands": "Show blacklist groups in commands",
+  "show_blacklist_groups_in_commands_desc": "When enabled, blacklist groups appear in the command palette with Activate/Deactivate commands.",
+  "search_blacklist_groups_placeholder": "Search blacklist groups…",
+  "btn_create_new_blacklist_group": "+ Create New Blacklist Group",
+  "edit_blacklist_group_modal_title": "Edit Blacklist Group",
+  "tooltip_delete_all_blacklist_groups": "Delete all Blacklist Groups",
+  "confirm_delete_all_blacklist_groups_title": "Delete All Blacklist Groups",
+  "confirm_delete_all_blacklist_groups_desc": "Are you sure you want to delete ALL blacklist groups? This cannot be undone!",
+  "confirm_delete_blacklist_group_title": "Delete Blacklist Group",
+  "confirm_delete_blacklist_group_desc": "Are you sure you want to delete this blacklist group? This cannot be undone.",
+  "notice_blacklist_group_activated": "Blacklist group activated",
+  "notice_blacklist_group_deactivated": "Blacklist group deactivated",
+  "command_activate_blacklist_group": "Activate {groupName} Blacklist Group",
+  "command_deactivate_blacklist_group": "Deactivate {groupName} Blacklist Group",
+  "btn_duplicate_entry": "Duplicate Entry",
+  "btn_open_in_regex_tester": "Open in Regex Tester",
+  "btn_delete_entry": "Delete Entry"
 };

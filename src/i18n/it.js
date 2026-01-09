@@ -485,5 +485,25 @@ module.exports = {
   "quick_styles_header": "Stili Rapidi",
   "quick_styles_desc": "Definisci stili con nome per applicare colore del testo ed evidenziazioni. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile qui.",
   "btn_add_style": "+ Aggiungi Stile",
-  "quick_styles_menu_option": "Stili Rapidi"
+  "quick_styles_menu_option": "Stili Rapidi",
+  
+  // Blacklist Groups
+  "blacklist_grouped_entries_header": "Voci del gruppo blacklist",
+  "show_blacklist_groups_in_commands": "Mostra gruppi blacklist nei comandi",
+  "show_blacklist_groups_in_commands_desc": "Se abilitato, i gruppi blacklist vengono visualizzati nella tavolozza dei comandi con i comandi Attiva/Disattiva.",
+  "search_blacklist_groups_placeholder": "Cerca gruppi blacklist…",
+  "btn_create_new_blacklist_group": "+ Crea nuovo gruppo blacklist",
+  "edit_blacklist_group_modal_title": "Modifica gruppo blacklist",
+  "tooltip_delete_all_blacklist_groups": "Elimina tutti i gruppi blacklist",
+  "confirm_delete_all_blacklist_groups_title": "Elimina tutti i gruppi blacklist",
+  "confirm_delete_all_blacklist_groups_desc": "Sei sicuro di voler eliminare TUTTI i gruppi blacklist? Non può essere annullato!",
+  "confirm_delete_blacklist_group_title": "Elimina gruppo blacklist",
+  "confirm_delete_blacklist_group_desc": "Sei sicuro di voler eliminare questo gruppo blacklist? Non può essere annullato.",
+  "notice_blacklist_group_activated": "Gruppo blacklist attivato",
+  "notice_blacklist_group_deactivated": "Gruppo blacklist disattivato",
+  "command_activate_blacklist_group": "Attiva gruppo blacklist {groupName}",
+  "command_deactivate_blacklist_group": "Disattiva gruppo blacklist {groupName}",
+  "btn_duplicate_entry": "Duplica voce",
+  "btn_open_in_regex_tester": "Apri in Regex Tester",
+  "btn_delete_entry": "Elimina voce"
 };
