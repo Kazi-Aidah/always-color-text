@@ -134,6 +134,8 @@ var require_en = __commonJS({
       "confirm_delete_all_blacklist_desc": "Are you sure you want to delete ALL blacklist entries? This cannot be undone!",
       "restart_required_title": "Restart Required",
       "restart_required_desc": "Disabling command palette toggle requires an Obsidian restart to fully remove the command from the palette. Restart now?",
+      "btn_cancel": "Cancel",
+      "btn_confirm": "Confirm",
       // Basic Settings
       "enable_document_color": "Enable Document Color",
       "color_in_reading_mode": "Color in Reading Mode",
@@ -148,6 +150,7 @@ var require_en = __commonJS({
       "regex_support_desc": "Allow patterns to be regex. Invalid regex will be ignored for safety.",
       "disable_regex_safety": "Disable Regex Safety Check",
       "disable_regex_safety_desc": "Allow complex or potentially dangerous expressions. May cause lag or freezes.",
+      "requires_regex_safety_disabled": "Requires regex safety disabled",
       "case_sensitive": "Case Sensitive",
       "case_sensitive_desc": 'If on, "word" and "Word" are different. If off, they color the same.',
       "partial_match": "Partial Match",
@@ -460,6 +463,10 @@ var require_en = __commonJS({
       "label_border_opacity": "Border Opacity",
       "label_border_thickness": "Border Thickness",
       "btn_save_style": "Save Style",
+      "share_export_title": "Always Color Text export",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "Style Name",
+      "preview_text": "Text",
       // Quick Colors / Styles
       "quick_colors_header": "Quick Colors",
       "quick_colors_desc": "Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used.",
@@ -977,7 +984,14 @@ var require_es = __commonJS({
       "btn_duplicate_entry": "Duplicar entrada",
       "btn_open_in_regex_tester": "Abrir en Regex Tester",
       "move_to_blacklist_group": "Mover a grupo de lista negra",
-      "btn_delete_entry": "Eliminar entrada"
+      "btn_delete_entry": "Eliminar entrada",
+      "btn_cancel": "Cancelar",
+      "btn_confirm": "Confirmar",
+      "requires_regex_safety_disabled": "Requiere seguridad regex desactivada",
+      "share_export_title": "Always Color Text exportaci\xF3n",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "Nombre del estilo",
+      "preview_text": "Texto"
     };
   }
 });
@@ -1465,7 +1479,14 @@ var require_fr = __commonJS({
       "btn_duplicate_entry": "Dupliquer l'entr\xE9e",
       "btn_open_in_regex_tester": "Ouvrir dans le testeur d'expression r\xE9guli\xE8re",
       "move_to_blacklist_group": "D\xE9placer vers un groupe de liste noire",
-      "btn_delete_entry": "Supprimer l'entr\xE9e"
+      "btn_delete_entry": "Supprimer l'entr\xE9e",
+      "btn_cancel": "Annuler",
+      "btn_confirm": "Confirmer",
+      "requires_regex_safety_disabled": "N\xE9cessite la s\xE9curit\xE9 regex d\xE9sactiv\xE9e",
+      "share_export_title": "Always Color Text export",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "Nom du style",
+      "preview_text": "Texte"
     };
   }
 });
@@ -1597,6 +1618,8 @@ var require_hi = __commonJS({
       "confirm_delete_all_groups_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0935\u093E\u0915\u0908 \u0938\u092D\u0940 \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902? \u0906\u092A \u0907\u0938\u0947 \u092A\u0942\u0930\u094D\u0935\u0935\u0924 \u0928\u0939\u0940\u0902 \u0915\u0930 \u0938\u0915\u0924\u0947!",
       "restart_required_title": "\u0930\u0940\u0938\u094D\u091F\u093E\u0930\u094D\u091F \u0906\u0935\u0936\u094D\u092F\u0915",
       "restart_required_desc": "\u0915\u092E\u093E\u0902\u0921 \u092A\u0948\u0932\u0947\u091F \u091F\u0949\u0917\u0932 \u092C\u0902\u0926 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u092A\u0948\u0932\u0947\u091F \u0938\u0947 \u0915\u092E\u093E\u0902\u0921\u094D\u0938 \u0915\u094B \u092A\u0942\u0930\u0940 \u0924\u0930\u0939 \u0939\u091F\u093E\u0928\u0947 \u0939\u0947\u0924\u0941 \u0911\u092C\u094D\u0938\u0940\u0921\u093F\u092F\u0928 \u0915\u094B \u0930\u0940\u0938\u094D\u091F\u093E\u0930\u094D\u091F \u0915\u0930\u0928\u093E \u0906\u0935\u0936\u094D\u092F\u0915 \u0939\u0948\u0964 \u0905\u092D\u0940 \u0930\u0940\u0938\u094D\u091F\u093E\u0930\u094D\u091F \u0915\u0930\u0947\u0902?",
+      "btn_cancel": "\u0930\u0926\u094D\u0926 \u0915\u0930\u0947\u0902",
+      "btn_confirm": "\u092A\u0941\u0937\u094D\u091F\u093F \u0915\u0930\u0947\u0902",
       // Basic Settings
       "enable_document_color": "\u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0930\u0902\u0917 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
       "color_in_reading_mode": "\u0930\u0940\u0921\u093F\u0902\u0917 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
@@ -1611,6 +1634,7 @@ var require_hi = __commonJS({
       "regex_support_desc": "\u092A\u0948\u091F\u0930\u094D\u0928 \u0915\u094B \u0930\u0947\u0917\u0941\u0932\u0930 \u090F\u0915\u094D\u0938\u092A\u094D\u0930\u0947\u0936\u0928 \u0939\u094B\u0928\u0947 \u0915\u0940 \u0905\u0928\u0941\u092E\u0924\u093F \u0926\u0947\u0902\u0964 \u0938\u0941\u0930\u0915\u094D\u0937\u093E \u0915\u0947 \u0932\u093F\u090F \u0905\u092E\u093E\u0928\u094D\u092F \u0930\u0947\u0917\u0947\u0915\u094D\u0938 \u0915\u094B \u0928\u091C\u093C\u0930\u0905\u0902\u0926\u093E\u091C\u093C \u0915\u093F\u092F\u093E \u091C\u093E\u0924\u093E \u0939\u0948\u0964",
       "disable_regex_safety": "\u0930\u0947\u0917\u0947\u0915\u094D\u0938 \u0938\u0941\u0930\u0915\u094D\u0937\u093E \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "disable_regex_safety_desc": "\u091C\u091F\u093F\u0932 \u092F\u093E \u0938\u0902\u092D\u093E\u0935\u093F\u0924 \u0916\u0924\u0930\u0928\u093E\u0915 \u090F\u0915\u094D\u0938\u092A\u094D\u0930\u0947\u0936\u0928\u094D\u0938 \u0915\u0940 \u0905\u0928\u0941\u092E\u0924\u093F \u0926\u0947\u0902\u0964 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928 \u0938\u092E\u0938\u094D\u092F\u093E\u090F\u0901 \u092F\u093E \u092B\u094D\u0930\u0940\u091C\u093C \u0939\u094B \u0938\u0915\u0924\u0940 \u0939\u0948\u0902\u0964",
+      "requires_regex_safety_disabled": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u0938\u0941\u0930\u0915\u094D\u0937\u093E \u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0928\u093E \u0906\u0935\u0936\u094D\u092F\u0915 \u0939\u0948",
       "case_sensitive": "\u0915\u0947\u0938 \u0938\u0947\u0902\u0938\u093F\u091F\u093F\u0935",
       "case_sensitive_desc": '\u092F\u0926\u093F \u092F\u0939 \u091A\u093E\u0932\u0942 \u0939\u0948, \u0924\u094B "word" \u0914\u0930 "Word" \u0915\u094B \u0905\u0932\u0917 \u092E\u093E\u0928\u093E \u091C\u093E\u0924\u093E \u0939\u0948\u0964 \u092F\u0926\u093F \u092C\u0902\u0926 \u0939\u0948, \u0924\u094B \u0935\u0947 \u0938\u092E\u093E\u0928 \u0930\u0942\u092A \u0938\u0947 \u0930\u0902\u0917\u0947 \u091C\u093E\u0924\u0947 \u0939\u0948\u0902\u0964',
       "partial_match": "\u0906\u0902\u0936\u093F\u0915 \u092E\u093F\u0932\u093E\u0928",
@@ -1925,6 +1949,10 @@ var require_hi = __commonJS({
       "label_border_opacity": "\u092C\u0949\u0930\u094D\u0921\u0930 \u0905\u092A\u093E\u0930\u0926\u0930\u094D\u0936\u093F\u0924\u093E",
       "label_border_thickness": "\u092C\u0949\u0930\u094D\u0921\u0930 \u092E\u094B\u091F\u093E\u0908",
       "btn_save_style": "\u0938\u094D\u091F\u093E\u0907\u0932 \u0938\u0939\u0947\u091C\u0947\u0902",
+      "share_export_title": "Always Color Text export",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "Style Name",
+      "preview_text": "Text",
       // Quick Colors / Styles
       "quick_colors_header": "\u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917",
       "quick_colors_desc": "\u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0926\u093F\u0916\u093E\u0915\u0930 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u091C\u0932\u094D\u0926\u0940 \u0938\u0947 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092F\u093E \u0930\u0902\u0917\u0928\u0947 \u0915\u0940 \u0905\u0928\u0941\u092E\u0924\u093F \u0926\u0947\u0924\u093E \u0939\u0948\u0964 \u092F\u0926\u093F \u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917 \u092C\u0902\u0926 \u0939\u0948\u0902, \u0924\u094B \u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u094B\u0902 \u092E\u0947\u0902 \u092A\u094D\u0930\u0924\u093F-\u0936\u0948\u0932\u0940 \u0930\u0902\u0917\u094B\u0902 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u093F\u092F\u093E \u091C\u093E\u090F\u0917\u093E\u0964",
@@ -2443,7 +2471,14 @@ var require_it = __commonJS({
       "btn_duplicate_entry": "Duplica voce",
       "btn_open_in_regex_tester": "Apri in Regex Tester",
       "move_to_blacklist_group": "Sposta al gruppo blacklist",
-      "btn_delete_entry": "Elimina voce"
+      "btn_delete_entry": "Elimina voce",
+      "btn_cancel": "Annulla",
+      "btn_confirm": "Conferma",
+      "requires_regex_safety_disabled": "Richiede sicurezza regex disabilitata",
+      "share_export_title": "Always Color Text export",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "Nome stile",
+      "preview_text": "Testo"
     };
   }
 });
@@ -2546,6 +2581,10 @@ var require_bn = __commonJS({
       "notice_export_failed": "\u098F\u0995\u09CD\u09B8\u09AA\u09CB\u09B0\u09CD\u099F \u09AC\u09CD\u09AF\u09B0\u09CD\u09A5",
       "notice_import_completed": "\u0987\u09AE\u09CD\u09AA\u09CB\u09B0\u09CD\u099F \u09B8\u09AE\u09CD\u09AA\u09A8\u09CD\u09A8",
       "notice_import_failed": "\u0987\u09AE\u09CD\u09AA\u09CB\u09B0\u09CD\u099F \u09AC\u09CD\u09AF\u09B0\u09CD\u09A5",
+      "share_export_title": "Always Color Text export",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "Style Name",
+      "preview_text": "Text",
       "notice_invalid_regex": "\u0985\u09AC\u09C8\u09A7 \u09A8\u09BF\u09AF\u09BC\u09AE\u09BF\u09A4 \u0985\u09AD\u09BF\u09AC\u09CD\u09AF\u0995\u09CD\u09A4\u09BF",
       "notice_empty_pattern": "\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u0996\u09BE\u09B2\u09BF",
       "notice_added_regex": "\u09B0\u09BF\u099C\u09C7\u0995\u09CD\u09B8 \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
@@ -3035,6 +3074,10 @@ var require_ru = __commonJS({
       "notice_export_failed": "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0432\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u044D\u043A\u0441\u043F\u043E\u0440\u0442",
       "notice_import_completed": "\u0418\u043C\u043F\u043E\u0440\u0442 \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D",
       "notice_import_failed": "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0432\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u0438\u043C\u043F\u043E\u0440\u0442",
+      "share_export_title": "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 Always Color Text",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0441\u0442\u0438\u043B\u044F",
+      "preview_text": "\u0422\u0435\u043A\u0441\u0442",
       "notice_invalid_regex": "\u041D\u0435\u043A\u043E\u0440\u0440\u0435\u043A\u0442\u043D\u043E\u0435 \u0440\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0435 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0435",
       "notice_empty_pattern": "\u0428\u0430\u0431\u043B\u043E\u043D \u043F\u0443\u0441\u0442",
       "notice_added_regex": "Regex \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D",
@@ -3910,7 +3953,14 @@ var require_zh_cn = __commonJS({
       "btn_duplicate_entry": "\u590D\u5236\u6761\u76EE",
       "btn_open_in_regex_tester": "\u5728\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\u4E2D\u6253\u5F00",
       "move_to_blacklist_group": "\u79FB\u5230\u9ED1\u540D\u5355\u7EC4",
-      "btn_delete_entry": "\u5220\u9664\u6761\u76EE"
+      "btn_delete_entry": "\u5220\u9664\u6761\u76EE",
+      "btn_cancel": "\u53D6\u6D88",
+      "btn_confirm": "\u786E\u8BA4",
+      "requires_regex_safety_disabled": "\u9700\u8981\u7981\u7528\u6B63\u5219\u5B89\u5168",
+      "share_export_title": "Always Color Text \u5BFC\u51FA",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "\u6837\u5F0F\u540D\u79F0",
+      "preview_text": "\u6587\u672C"
     };
   }
 });
@@ -3994,7 +4044,7 @@ var EDITOR_PERFORMANCE_CONSTANTS = {
   TABLE_THROTTLE_MS: 1e3
   // Throttle table processing to 1 second
 };
-var IS_DEVELOPMENT = true;
+var IS_DEVELOPMENT = false;
 var debugLog = (tag, ...args) => {
   if (IS_DEVELOPMENT) {
     console.log(`[${tag}]`, ...args);
@@ -4009,6 +4059,9 @@ var debugWarn = (tag, ...args) => {
   if (IS_DEVELOPMENT) {
     console.warn(`[${tag}]`, ...args);
   }
+};
+var escapeHtml = (str) => {
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 };
 var GLOBAL_STYLE_KEYS = [
   "borderLineStyle",
@@ -8734,6 +8787,28 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {
     }
     try {
+      if (this._docCtx) {
+        document.removeEventListener("contextmenu", this._docCtx, true);
+        document.removeEventListener("mousedown", this._docCtx, true);
+        document.removeEventListener("pointerdown", this._docCtx, true);
+      }
+      if (this._docAux) {
+        document.removeEventListener("auxclick", this._docAux, true);
+      }
+      if (this._dropdownClickListener) {
+        document.removeEventListener("click", this._dropdownClickListener);
+      }
+      if (this._dropdownKeyListener) {
+        document.removeEventListener("keydown", this._dropdownKeyListener);
+      }
+      if (this._scrollListener) {
+        document.removeEventListener("scroll", this._scrollListener, true);
+      }
+      window.removeEventListener("act-colors-changed", this.syncColorsFromParent);
+      window.removeEventListener("act-style-updated", this.styleUpdateHandler);
+    } catch (e) {
+    }
+    try {
       this.ribbonIcon?.remove();
     } catch (e) {
     }
@@ -10120,7 +10195,7 @@ module.exports = class AlwaysColorText extends Plugin {
             const file = new File([json], fname, { type: "application/json" });
             const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
             if (canShare && navigator.share) {
-              await navigator.share({ files: [file], title: fname, text: "Always Color Text export" });
+              await navigator.share({ files: [file], title: fname, text: this.plugin.t("share_export_title", "Always Color Text export") });
               return fname;
             }
           }
@@ -17339,7 +17414,7 @@ var PresetModal = class extends Modal {
       sample.style.opacity = "0.7";
       sample.style.fontSize = "11px";
       if (p.disableRegexSafety) {
-        const badge = infoDiv.createEl("span", { text: "Requires regex safety disabled" });
+        const badge = infoDiv.createEl("span", { text: this.plugin.t("requires_regex_safety_disabled", "Requires regex safety disabled") });
         badge.style.opacity = "0.6";
         badge.style.fontSize = "10px";
         badge.style.color = "var(--text-warning)";
@@ -17380,7 +17455,7 @@ var PresetModal = class extends Modal {
       sample.style.opacity = "0.7";
       sample.style.fontSize = "11px";
       if (p.disableRegexSafety) {
-        const badge = infoDiv.createEl("span", { text: "Requires regex safety disabled" });
+        const badge = infoDiv.createEl("span", { text: this.plugin.t("requires_regex_safety_disabled", "Requires regex safety disabled") });
         badge.style.opacity = "0.6";
         badge.style.fontSize = "10px";
         badge.style.color = "var(--text-warning)";
@@ -17421,7 +17496,7 @@ var PresetModal = class extends Modal {
       sample.style.opacity = "0.7";
       sample.style.fontSize = "11px";
       if (p.disableRegexSafety) {
-        const badge = infoDiv.createEl("span", { text: "Requires regex safety disabled" });
+        const badge = infoDiv.createEl("span", { text: this.plugin.t("requires_regex_safety_disabled", "Requires regex safety disabled") });
         badge.style.opacity = "0.6";
         badge.style.fontSize = "10px";
         badge.style.color = "var(--text-warning)";
@@ -17647,7 +17722,6 @@ var RealTimeRegexTesterModal = class extends Modal {
       }
       return out;
     };
-    const escapeHtml = (str) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const renderPreview = () => {
       const raw = String(testInput.value || "");
       const patRaw = String(regexInput2.value || "").trim();
@@ -17656,20 +17730,20 @@ var RealTimeRegexTesterModal = class extends Modal {
       if (!patRaw) {
         status.textContent = "";
         previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 matches";
+        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
         return;
       }
       const pat = this.plugin.sanitizePattern(patRaw, true);
       if (!pat) {
         status.textContent = "";
         previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 matches";
+        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
         return;
       }
       if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) {
         status.textContent = "";
         previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 matches";
+        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
         return;
       }
       let re;
@@ -18507,7 +18581,7 @@ var HighlightStylingModal = class extends Modal {
         div.textContent = txt;
         previewWrap.appendChild(div);
       } catch (_) {
-        previewWrap.innerHTML = `<div style="${matchStyle}">${txt}</div>`;
+        previewWrap.innerHTML = `<div style="${matchStyle}">${escapeHtml(txt)}</div>`;
       }
     };
     const updatePickerVisibility = () => {
@@ -19350,14 +19424,13 @@ var EditEntryModal = class extends Modal {
       const sHighlight = `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`;
       const sBoth = `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
       const styleStr = style === "text" ? sText : style === "highlight" ? sHighlight : sBoth;
-      const escapeHtml = (str) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       while (preview.firstChild) preview.removeChild(preview.firstChild);
       if (!raw) return;
       const words = raw.split(",").map((w) => w.trim()).filter(Boolean);
       const makeDiv = (text) => {
         const div = document.createElement("div");
         div.setAttribute("style", styleStr);
-        div.textContent = escapeHtml(text);
+        div.textContent = text;
         return div;
       };
       if (words.length > 1) {
@@ -19537,7 +19610,7 @@ var EditEntryModal = class extends Modal {
         pathInput.style.padding = "6px";
         pathInput.style.border = "1px solid var(--background-modifier-border)";
         pathInput.style.borderRadius = "var(--radius-m)";
-        const delBtn = row.createEl("button", { text: "\u2715" });
+        const delBtn = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
         delBtn.addClass("mod-warning");
         const modeHandler = async () => {
           const currMode = r._mode;
@@ -20074,7 +20147,6 @@ var BlacklistRegexTesterModal = class extends Modal {
       }
       return out;
     };
-    const escapeHtml = (str) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const renderPreview = () => {
       const raw = String(testInput.value || "");
       const patRaw = String(regexInput2.value || "").trim();
@@ -20942,7 +21014,7 @@ var EditWordGroupModal = class extends Modal {
         flagsInput.style.padding = "6px";
         flagsInput.style.borderRadius = "4px";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
-        flagsInput.placeholder = "flags";
+        flagsInput.placeholder = this.plugin.t("flags_placeholder", "Flags");
         flagsInput.title = "e.g., i, g, m";
         const flagsHandler = () => {
           entry.flags = flagsInput.value || "";
@@ -21088,7 +21160,7 @@ var EditWordGroupModal = class extends Modal {
         };
         cpBg.addEventListener("contextmenu", cpBgContextHandler);
       }
-      const btnDel = row.createEl("button", { text: "\u2715" });
+      const btnDel = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
       btnDel.addClass("mod-warning");
       btnDel.style.cursor = "pointer";
       btnDel.style.padding = "6px 10px";
@@ -21629,7 +21701,7 @@ var EditBlacklistGroupModal = class extends Modal {
         flagsInput.style.padding = "6px";
         flagsInput.style.borderRadius = "4px";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
-        flagsInput.placeholder = "flags";
+        flagsInput.placeholder = this.plugin.t("flags_placeholder", "Flags");
         flagsInput.title = "e.g., i, g, m";
         const flagsHandler = () => {
           entry.flags = flagsInput.value || "";
@@ -21645,7 +21717,7 @@ var EditBlacklistGroupModal = class extends Modal {
         this._refreshGroupEntries();
       };
       regexChk.addEventListener("change", regexChkHandler);
-      const btnDelete = row.createEl("button", { text: "\u2715" });
+      const btnDelete = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
       btnDelete.addClass("mod-warning");
       btnDelete.style.padding = "4px 8px";
       btnDelete.style.borderRadius = "4px";
@@ -21964,7 +22036,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           opt.value = sw.name || "";
         });
       }
-      const del = row.createEl("button", { text: "\u2715" });
+      const del = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
       del.addClass("mod-warning");
       del.style.padding = "4px 8px";
       del.style.borderRadius = "4px";
@@ -22808,7 +22880,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         flagsInput.style.borderRadius = "4px";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
         if (!entry.isRegex) flagsInput.style.display = "none";
-        const del = row.createEl("button", { text: "\u2715" });
+        const del = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
         del.addClass("mod-warning");
         del.style.padding = "4px 8px";
         del.style.borderRadius = "4px";
@@ -23159,7 +23231,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         input.style.padding = "6px";
         input.style.borderRadius = "4px";
         input.style.border = "1px solid var(--background-modifier-border)";
-        const del = row.createEl("button", { text: "\u2715" });
+        const del = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
         del.addClass("mod-warning");
         del.style.cursor = "pointer";
         del.style.flex = "0 0 auto";
@@ -23521,7 +23593,7 @@ var ColorSettingTab = class extends PluginSettingTab {
             } catch (_) {
             }
           };
-          const delBtn = row.createEl("button", { text: "\u2715" });
+          const delBtn = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
           delBtn.addClass("mod-warning");
           delBtn.style.padding = "4px 8px";
           delBtn.style.borderRadius = "4px";
@@ -23590,7 +23662,13 @@ var ColorSettingTab = class extends PluginSettingTab {
             const offsetY = startY - rect.top;
             if (navigator.vibrate) navigator.vibrate(100);
             const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
-            ghost.appendChild(row.cloneNode(true));
+            const clone = row.cloneNode(true);
+            const originalInputs = row.querySelectorAll("input, select, textarea");
+            const clonedInputs = clone.querySelectorAll("input, select, textarea");
+            originalInputs.forEach((el, idx) => {
+              if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+            });
+            ghost.appendChild(clone);
             ghost.style.width = `${rect.width}px`;
             ghost.style.height = `${rect.height}px`;
             ghost.style.left = `${rect.left}px`;
@@ -23802,7 +23880,7 @@ var ColorSettingTab = class extends PluginSettingTab {
             modal._preFillBorderColor = bCp.value;
             modal.open();
           });
-          const delBtn = row.createEl("button", { text: "\u2715" });
+          const delBtn = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
           delBtn.addClass("mod-warning");
           delBtn.style.padding = "4px 8px";
           delBtn.style.borderRadius = "4px";
@@ -23823,7 +23901,13 @@ var ColorSettingTab = class extends PluginSettingTab {
             const offsetY = startY - rect.top;
             if (navigator.vibrate) navigator.vibrate(100);
             const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
-            ghost.appendChild(row.cloneNode(true));
+            const clone = row.cloneNode(true);
+            const originalInputs = row.querySelectorAll("input, select, textarea");
+            const clonedInputs = clone.querySelectorAll("input, select, textarea");
+            originalInputs.forEach((el, idx) => {
+              if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+            });
+            ghost.appendChild(clone);
             ghost.style.width = `${rect.width}px`;
             ghost.style.height = `${rect.height}px`;
             ghost.style.left = `${rect.left}px`;
@@ -23957,7 +24041,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         dragHandle.style.alignItems = "center";
         dragHandle.style.justifyContent = "center";
         const previewEl = row.createDiv();
-        previewEl.textContent = "Text";
+        previewEl.textContent = this.plugin.t("preview_text", "Text");
         previewEl.style.flex = "0 0 auto";
         const styleType2 = style && style.styleType ? style.styleType : "both";
         const tc = style.textColor || style.color || null;
@@ -23984,7 +24068,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         previewEl.setAttr("style", previewStyleStr);
         const nameInput = row.createEl("input", { type: "text", value: style.name || `Style ${i + 1}` });
         nameInput.style.flex = "1";
-        nameInput.placeholder = "Style Name";
+        nameInput.placeholder = this.plugin.t("style_name_placeholder", "Style Name");
         nameInput.addEventListener("change", async () => {
           style.name = nameInput.value;
           await this.plugin.saveSettings();
@@ -24040,7 +24124,13 @@ var ColorSettingTab = class extends PluginSettingTab {
           const offsetY = startY - rect.top;
           if (navigator.vibrate) navigator.vibrate(100);
           const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
-          ghost.appendChild(row.cloneNode(true));
+          const clone = row.cloneNode(true);
+          const originalInputs = row.querySelectorAll("input, select, textarea");
+          const clonedInputs = clone.querySelectorAll("input, select, textarea");
+          originalInputs.forEach((el, idx) => {
+            if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+          });
+          ghost.appendChild(clone);
           ghost.style.width = `${rect.width}px`;
           ghost.style.height = `${rect.height}px`;
           ghost.style.left = `${rect.left}px`;
@@ -24323,6 +24413,15 @@ var ColorSettingTab = class extends PluginSettingTab {
           activeSelect.addClass("dropdown");
         } catch (e) {
         }
+        try {
+          activeSelect.addClass("act-group-select");
+        } catch (e) {
+          try {
+            activeSelect.classList.add("act-group-select");
+          } catch (_) {
+          }
+        }
+        activeSelect.style.minWidth = "100px";
         activeSelect.createEl("option", { text: this.plugin.t("group_active_label", "Active"), value: "true" });
         activeSelect.createEl("option", { text: this.plugin.t("group_inactive_label", "Inactive"), value: "false" });
         if (!group.uid) {
@@ -24411,8 +24510,20 @@ var ColorSettingTab = class extends PluginSettingTab {
           const offsetX = startX - rect.left;
           const offsetY = startY - rect.top;
           if (navigator.vibrate) navigator.vibrate(100);
+          const originalDisabled = [];
+          const allInteractive = row.querySelectorAll("input, select, button");
+          allInteractive.forEach((el) => {
+            originalDisabled.push(el.disabled);
+            el.disabled = true;
+          });
           const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
-          ghost.appendChild(row.cloneNode(true));
+          const clone = row.cloneNode(true);
+          const originalInputs = row.querySelectorAll("input, select, textarea");
+          const clonedInputs = clone.querySelectorAll("input, select, textarea");
+          originalInputs.forEach((el, idx) => {
+            if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+          });
+          ghost.appendChild(clone);
           ghost.style.width = `${rect.width}px`;
           ghost.style.height = `${rect.height}px`;
           ghost.style.left = `${rect.left}px`;
@@ -24453,6 +24564,9 @@ var ColorSettingTab = class extends PluginSettingTab {
             document.removeEventListener("mouseup", onEnd);
             ghost.remove();
             row.classList.remove("drag-ghost-hidden");
+            allInteractive.forEach((el, idx) => {
+              el.disabled = originalDisabled[idx];
+            });
             await saveDragReorder();
           };
           document.addEventListener("mousemove", onMove);
@@ -24523,6 +24637,15 @@ var ColorSettingTab = class extends PluginSettingTab {
           activeSelect.addClass("dropdown");
         } catch (e) {
         }
+        try {
+          activeSelect.addClass("act-group-select");
+        } catch (e) {
+          try {
+            activeSelect.classList.add("act-group-select");
+          } catch (_) {
+          }
+        }
+        activeSelect.style.minWidth = "100px";
         activeSelect.createEl("option", { text: this.plugin.t("group_active_label", "Active"), value: "true" });
         activeSelect.createEl("option", { text: this.plugin.t("group_inactive_label", "Inactive"), value: "false" });
         if (!group.uid) {
@@ -24598,8 +24721,20 @@ var ColorSettingTab = class extends PluginSettingTab {
           const offsetX = startX - rect.left;
           const offsetY = startY - rect.top;
           if (navigator.vibrate) navigator.vibrate(100);
+          const originalDisabled = [];
+          const allInteractive = row.querySelectorAll("input, select, button");
+          allInteractive.forEach((el) => {
+            originalDisabled.push(el.disabled);
+            el.disabled = true;
+          });
           const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
-          ghost.appendChild(row.cloneNode(true));
+          const clone = row.cloneNode(true);
+          const originalInputs = row.querySelectorAll("input, select, textarea");
+          const clonedInputs = clone.querySelectorAll("input, select, textarea");
+          originalInputs.forEach((el, idx) => {
+            if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+          });
+          ghost.appendChild(clone);
           ghost.style.width = `${rect.width}px`;
           ghost.style.height = `${rect.height}px`;
           ghost.style.left = `${rect.left}px`;
@@ -24640,6 +24775,9 @@ var ColorSettingTab = class extends PluginSettingTab {
             document.removeEventListener("mouseup", onEnd);
             ghost.remove();
             row.classList.remove("drag-ghost-hidden");
+            allInteractive.forEach((el, idx) => {
+              el.disabled = originalDisabled[idx];
+            });
             await saveDragReorder();
           };
           document.addEventListener("mousemove", onMove);
@@ -27609,11 +27747,11 @@ var ConfirmationModal = class extends Modal {
     buttonDiv.style.justifyContent = "flex-end";
     buttonDiv.style.marginTop = "20px";
     buttonDiv.style.gap = "10px";
-    const cancelButton = buttonDiv.createEl("button", { text: "Cancel" });
+    const cancelButton = buttonDiv.createEl("button", { text: this.plugin.t("btn_cancel", "Cancel") });
     const cancelHandler = () => this.close();
     cancelButton.addEventListener("click", cancelHandler);
     this._eventListeners.push({ el: cancelButton, event: "click", handler: cancelHandler });
-    const confirmButton = buttonDiv.createEl("button", { text: "Confirm" });
+    const confirmButton = buttonDiv.createEl("button", { text: this.plugin.t("btn_confirm", "Confirm") });
     confirmButton.addClass("mod-warning");
     const confirmHandler = () => {
       this.onConfirm();

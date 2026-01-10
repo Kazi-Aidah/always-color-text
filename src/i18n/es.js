@@ -507,5 +507,12 @@ module.exports = {
   "btn_duplicate_entry": "Duplicar entrada",
   "btn_open_in_regex_tester": "Abrir en Regex Tester",
   "move_to_blacklist_group": "Mover a grupo de lista negra",
-  "btn_delete_entry": "Eliminar entrada"
+  "btn_delete_entry": "Eliminar entrada",
+  "btn_cancel": "Cancelar",
+  "btn_confirm": "Confirmar",
+  "requires_regex_safety_disabled": "Requiere seguridad regex desactivada",
+  "share_export_title": "Always Color Text exportación",
+  "delete_button_text": "✕",
+  "style_name_placeholder": "Nombre del estilo",
+  "preview_text": "Texto"
 };

@@ -132,6 +132,8 @@ module.exports = {
   "confirm_delete_all_blacklist_desc": "Are you sure you want to delete ALL blacklist entries? This cannot be undone!",
   "restart_required_title": "Restart Required",
   "restart_required_desc": "Disabling command palette toggle requires an Obsidian restart to fully remove the command from the palette. Restart now?",
+  "btn_cancel": "Cancel",
+  "btn_confirm": "Confirm",
   
   // Basic Settings
   "enable_document_color": "Enable Document Color",
@@ -148,6 +150,7 @@ module.exports = {
   "regex_support_desc": "Allow patterns to be regex. Invalid regex will be ignored for safety.",
   "disable_regex_safety": "Disable Regex Safety Check",
   "disable_regex_safety_desc": "Allow complex or potentially dangerous expressions. May cause lag or freezes.",
+  "requires_regex_safety_disabled": "Requires regex safety disabled",
   "case_sensitive": "Case Sensitive",
   "case_sensitive_desc": "If on, \"word\" and \"Word\" are different. If off, they color the same.",
   "partial_match": "Partial Match",
@@ -479,6 +482,10 @@ module.exports = {
   "label_border_opacity": "Border Opacity",
   "label_border_thickness": "Border Thickness",
   "btn_save_style": "Save Style",
+  "share_export_title": "Always Color Text export",
+  "delete_button_text": "✕",
+  "style_name_placeholder": "Style Name",
+  "preview_text": "Text",
   
   // Quick Colors / Styles
   "quick_colors_header": "Quick Colors",

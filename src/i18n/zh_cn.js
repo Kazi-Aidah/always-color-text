@@ -508,5 +508,12 @@ module.exports = {
   "btn_duplicate_entry": "复制条目",
   "btn_open_in_regex_tester": "在正则表达式测试器中打开",
   "move_to_blacklist_group": "移到黑名单组",
-  "btn_delete_entry": "删除条目"
+  "btn_delete_entry": "删除条目",
+  "btn_cancel": "取消",
+  "btn_confirm": "确认",
+  "requires_regex_safety_disabled": "需要禁用正则安全",
+  "share_export_title": "Always Color Text 导出",
+  "delete_button_text": "✕",
+  "style_name_placeholder": "样式名称",
+  "preview_text": "文本"
 };

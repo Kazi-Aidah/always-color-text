@@ -508,5 +508,12 @@ module.exports = {
   "btn_duplicate_entry": "Duplica voce",
   "btn_open_in_regex_tester": "Apri in Regex Tester",
   "move_to_blacklist_group": "Sposta al gruppo blacklist",
-  "btn_delete_entry": "Elimina voce"
+  "btn_delete_entry": "Elimina voce",
+  "btn_cancel": "Annulla",
+  "btn_confirm": "Conferma",
+  "requires_regex_safety_disabled": "Richiede sicurezza regex disabilitata",
+  "share_export_title": "Always Color Text export",
+  "delete_button_text": "✕",
+  "style_name_placeholder": "Nome stile",
+  "preview_text": "Testo"
 };

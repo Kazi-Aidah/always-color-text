@@ -505,5 +505,14 @@ module.exports = {
   "command_activate_blacklist_group": "Activer le groupe de liste noire {groupName}",
   "command_deactivate_blacklist_group": "Désactiver le groupe de liste noire {groupName}",
   "btn_duplicate_entry": "Dupliquer l'entrée",
-  "btn_open_in_regex_tester": "Ouvrir dans le testeur d'expression régulière",  "move_to_blacklist_group": "Déplacer vers un groupe de liste noire",  "btn_delete_entry": "Supprimer l'entrée"
+  "btn_open_in_regex_tester": "Ouvrir dans le testeur d'expression régulière",
+  "move_to_blacklist_group": "Déplacer vers un groupe de liste noire",
+  "btn_delete_entry": "Supprimer l'entrée",
+  "btn_cancel": "Annuler",
+  "btn_confirm": "Confirmer",
+  "requires_regex_safety_disabled": "Nécessite la sécurité regex désactivée",
+  "share_export_title": "Always Color Text export",
+  "delete_button_text": "✕",
+  "style_name_placeholder": "Nom du style",
+  "preview_text": "Texte"
 };

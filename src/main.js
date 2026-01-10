@@ -47,7 +47,7 @@ const EDITOR_PERFORMANCE_CONSTANTS = {
   TABLE_THROTTLE_MS: 1000          // Throttle table processing to 1 second
 };
 // Development mode flag
-const IS_DEVELOPMENT = true;
+const IS_DEVELOPMENT = false;
 
 // Helper function for conditional debug logging
 const debugLog = (tag, ...args) => {
@@ -66,6 +66,15 @@ const debugWarn = (tag, ...args) => {
   if (IS_DEVELOPMENT) {
     console.warn(`[${tag}]`, ...args);
   }
+};
+
+const escapeHtml = (str) => {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 };
 
 // Keys that are considered "Global Styles" and should be extracted to globalStyles object in JSON
@@ -4713,6 +4722,29 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     } catch (e) { }
 
+    // Clean up global event listeners
+    try {
+      if (this._docCtx) {
+        document.removeEventListener('contextmenu', this._docCtx, true);
+        document.removeEventListener('mousedown', this._docCtx, true);
+        document.removeEventListener('pointerdown', this._docCtx, true);
+      }
+      if (this._docAux) {
+        document.removeEventListener('auxclick', this._docAux, true);
+      }
+      if (this._dropdownClickListener) {
+        document.removeEventListener('click', this._dropdownClickListener);
+      }
+      if (this._dropdownKeyListener) {
+        document.removeEventListener('keydown', this._dropdownKeyListener);
+      }
+      if (this._scrollListener) {
+        document.removeEventListener('scroll', this._scrollListener, true);
+      }
+      window.removeEventListener('act-colors-changed', this.syncColorsFromParent);
+      window.removeEventListener('act-style-updated', this.styleUpdateHandler);
+    } catch (e) { }
+
     // Clean up DOM references
     try { this.ribbonIcon?.remove(); } catch (e) { }
     try { this.statusBar?.remove(); } catch (e) { }
@@ -6106,7 +6138,7 @@ module.exports = class AlwaysColorText extends Plugin {
             const file = new File([json], fname, { type: 'application/json' });
             const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
             if (canShare && navigator.share) {
-              await navigator.share({ files: [file], title: fname, text: 'Always Color Text export' });
+              await navigator.share({ files: [file], title: fname, text: this.plugin.t('share_export_title', 'Always Color Text export') });
               return fname;
             }
           }
@@ -13781,7 +13813,7 @@ class PresetModal extends Modal {
       sample.style.opacity = '0.7';
       sample.style.fontSize = '11px';
       if (p.disableRegexSafety) {
-        const badge = infoDiv.createEl('span', { text: 'Requires regex safety disabled' });
+        const badge = infoDiv.createEl('span', { text: this.plugin.t('requires_regex_safety_disabled', 'Requires regex safety disabled') });
         badge.style.opacity = '0.6';
         badge.style.fontSize = '10px';
         badge.style.color = 'var(--text-warning)';
@@ -13819,7 +13851,7 @@ class PresetModal extends Modal {
       sample.style.opacity = '0.7';
       sample.style.fontSize = '11px';
       if (p.disableRegexSafety) {
-        const badge = infoDiv.createEl('span', { text: 'Requires regex safety disabled' });
+        const badge = infoDiv.createEl('span', { text: this.plugin.t('requires_regex_safety_disabled', 'Requires regex safety disabled') });
         badge.style.opacity = '0.6';
         badge.style.fontSize = '10px';
         badge.style.color = 'var(--text-warning)';
@@ -13857,7 +13889,7 @@ class PresetModal extends Modal {
       sample.style.opacity = '0.7';
       sample.style.fontSize = '11px';
       if (p.disableRegexSafety) {
-        const badge = infoDiv.createEl('span', { text: 'Requires regex safety disabled' });
+        const badge = infoDiv.createEl('span', { text: this.plugin.t('requires_regex_safety_disabled', 'Requires regex safety disabled') });
         badge.style.opacity = '0.6';
         badge.style.fontSize = '10px';
         badge.style.color = 'var(--text-warning)';
@@ -14089,12 +14121,7 @@ class RegexTesterModal extends Modal {
 
       // Always show raw text if no pattern
       if (!patRaw) {
-        const escaped = String(raw)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/\n/g, '<br>');
-        previewWrap.innerHTML = escaped;
+        previewWrap.innerHTML = escapeHtml(String(raw)).replace(/\n/g, '<br>');
         return;
       }
 
@@ -14127,14 +14154,7 @@ class RegexTesterModal extends Modal {
 
       // Force rendering even if there's an error
       try {
-        const escapeHtml = (str) => {
-          return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-        };
+
 
         const f = flags.includes('g') ? flags : (flags + 'g');
         const re = new RegExp(pat, f);
@@ -14180,12 +14200,7 @@ class RegexTesterModal extends Modal {
         status.textContent = `${(raw.match(re) || []).length} match(es) found`;
       } catch (err) {
         status.textContent = this.plugin.t('notice_invalid_regex', 'Invalid regular expression') + ': ' + String(err.message || err);
-        const escaped = String(raw)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/\n/g, '<br>');
-        previewWrap.innerHTML = escaped;
+        previewWrap.innerHTML = escapeHtml(String(raw)).replace(/\n/g, '<br>');
       }
     };
 
@@ -14482,7 +14497,7 @@ class RealTimeRegexTesterModal extends Modal {
       for (const ch of ['g', 'i', 'm', 's', 'u', 'y']) { if (s.includes(ch)) out += ch; }
       return out;
     };
-    const escapeHtml = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
     const renderPreview = () => {
       const raw = String(testInput.value || '');
       const patRaw = String(regexInput.value || '').trim();
@@ -14491,20 +14506,20 @@ class RealTimeRegexTesterModal extends Modal {
       if (!patRaw) {
         status.textContent = '';
         previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, '<br>');
-        matchFooter.textContent = '0 matches';
+        matchFooter.textContent = '0 ' + this.plugin.t('matches', 'matches');
         return;
       }
       const pat = this.plugin.sanitizePattern(patRaw, true);
       if (!pat) {
         status.textContent = '';
         previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, '<br>');
-        matchFooter.textContent = '0 matches';
+        matchFooter.textContent = '0 ' + this.plugin.t('matches', 'matches');
         return;
       }
       if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) {
         status.textContent = '';
         previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, '<br>');
-        matchFooter.textContent = '0 matches';
+        matchFooter.textContent = '0 ' + this.plugin.t('matches', 'matches');
         return;
       }
       let re;
@@ -15187,7 +15202,7 @@ class HighlightStylingModal extends Modal {
         div.textContent = txt;
         previewWrap.appendChild(div);
       } catch (_) {
-        previewWrap.innerHTML = `<div style="${matchStyle}">${txt}</div>`;
+        previewWrap.innerHTML = `<div style="${matchStyle}">${escapeHtml(txt)}</div>`;
       }
     };
     const updatePickerVisibility = () => {
@@ -16063,14 +16078,14 @@ class EditEntryModal extends Modal {
       const sHighlight = `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`;
       const sBoth = `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
       const styleStr = style === 'text' ? sText : (style === 'highlight' ? sHighlight : sBoth);
-      const escapeHtml = (str) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
       while (preview.firstChild) preview.removeChild(preview.firstChild);
       if (!raw) return;
       const words = raw.split(',').map(w => w.trim()).filter(Boolean);
       const makeDiv = (text) => {
         const div = document.createElement('div');
         div.setAttribute('style', styleStr);
-        div.textContent = escapeHtml(text);
+        div.textContent = text;
         return div;
       };
       if (words.length > 1) {
@@ -16234,7 +16249,7 @@ class EditEntryModal extends Modal {
         pathInput.style.padding = '6px';
         pathInput.style.border = '1px solid var(--background-modifier-border)';
         pathInput.style.borderRadius = 'var(--radius-m)';
-        const delBtn = row.createEl('button', { text: '✕' });
+        const delBtn = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
         delBtn.addClass('mod-warning');
         const modeHandler = async () => {
           const currMode = r._mode;
@@ -16708,7 +16723,7 @@ class BlacklistRegexTesterModal extends Modal {
       for (const ch of ['g', 'i', 'm', 's', 'u', 'y']) { if (s.includes(ch)) out += ch; }
       return out;
     };
-    const escapeHtml = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
     const renderPreview = () => {
       const raw = String(testInput.value || '');
       const patRaw = String(regexInput.value || '').trim();
@@ -17500,7 +17515,7 @@ class EditWordGroupModal extends Modal {
         flagsInput.style.padding = '6px';
         flagsInput.style.borderRadius = '4px';
         flagsInput.style.border = '1px solid var(--background-modifier-border)';
-        flagsInput.placeholder = 'flags';
+        flagsInput.placeholder = this.plugin.t('flags_placeholder', 'Flags');
         flagsInput.title = 'e.g., i, g, m';
         const flagsHandler = () => { entry.flags = flagsInput.value || ''; };
         flagsInput.addEventListener('change', flagsHandler);
@@ -17642,7 +17657,7 @@ class EditWordGroupModal extends Modal {
       }
 
       // 8. DELETE BUTTON (X)
-      const btnDel = row.createEl('button', { text: '✕' });
+      const btnDel = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
       btnDel.addClass('mod-warning');
       btnDel.style.cursor = 'pointer';
       btnDel.style.padding = '6px 10px';
@@ -18195,7 +18210,7 @@ class EditBlacklistGroupModal extends Modal {
         flagsInput.style.padding = '6px';
         flagsInput.style.borderRadius = '4px';
         flagsInput.style.border = '1px solid var(--background-modifier-border)';
-        flagsInput.placeholder = 'flags';
+        flagsInput.placeholder = this.plugin.t('flags_placeholder', 'Flags');
         flagsInput.title = 'e.g., i, g, m';
         const flagsHandler = () => { entry.flags = flagsInput.value || ''; };
         flagsInput.addEventListener('change', flagsHandler);
@@ -18213,7 +18228,7 @@ class EditBlacklistGroupModal extends Modal {
       regexChk.addEventListener('change', regexChkHandler);
 
       // 5. DELETE BUTTON (X button like main blacklist entries)
-      const btnDelete = row.createEl('button', { text: '✕' });
+      const btnDelete = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
       btnDelete.addClass('mod-warning');
       btnDelete.style.padding = '4px 8px';
       btnDelete.style.borderRadius = '4px';
@@ -18548,7 +18563,7 @@ class ColorSettingTab extends PluginSettingTab {
       }
 
       // ELEMENT 5: Delete button
-      const del = row.createEl('button', { text: '✕' });
+      const del = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
       del.addClass('mod-warning');
       del.style.padding = '4px 8px';
       del.style.borderRadius = '4px';
@@ -19339,7 +19354,7 @@ class ColorSettingTab extends PluginSettingTab {
         flagsInput.style.border = '1px solid var(--background-modifier-border)';
         if (!entry.isRegex) flagsInput.style.display = 'none';
 
-        const del = row.createEl('button', { text: '✕' });
+        const del = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
         del.addClass('mod-warning');
         del.style.padding = '4px 8px';
         del.style.borderRadius = '4px';
@@ -19695,7 +19710,7 @@ class ColorSettingTab extends PluginSettingTab {
         input.style.padding = '6px';
         input.style.borderRadius = '4px';
         input.style.border = '1px solid var(--background-modifier-border)';
-        const del = row.createEl('button', { text: '✕' });
+        const del = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
         del.addClass('mod-warning');
         del.style.cursor = 'pointer';
         del.style.flex = '0 0 auto';
@@ -19995,7 +20010,7 @@ class ColorSettingTab extends PluginSettingTab {
             } catch (_) { }
           };
 
-          const delBtn = row.createEl('button', { text: '✕' });
+          const delBtn = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
           delBtn.addClass('mod-warning');
           delBtn.style.padding = '4px 8px';
           delBtn.style.borderRadius = '4px';
@@ -20069,7 +20084,14 @@ class ColorSettingTab extends PluginSettingTab {
 
             // Create ghost
             const ghost = document.body.createDiv({ cls: 'drag-reorder-ghost' });
-            ghost.appendChild(row.cloneNode(true));
+            const clone = row.cloneNode(true);
+            // Manually copy values for selects/inputs because cloneNode doesn't copy dynamic values
+            const originalInputs = row.querySelectorAll('input, select, textarea');
+            const clonedInputs = clone.querySelectorAll('input, select, textarea');
+            originalInputs.forEach((el, idx) => {
+               if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+            });
+            ghost.appendChild(clone);
             ghost.style.width = `${rect.width}px`;
             ghost.style.height = `${rect.height}px`;
             ghost.style.left = `${rect.left}px`;
@@ -20327,7 +20349,7 @@ class ColorSettingTab extends PluginSettingTab {
           });
 
           // Delete button
-          const delBtn = row.createEl('button', { text: '✕' });
+          const delBtn = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
           delBtn.addClass('mod-warning');
           delBtn.style.padding = '4px 8px';
           delBtn.style.borderRadius = '4px';
@@ -20354,7 +20376,14 @@ class ColorSettingTab extends PluginSettingTab {
 
             // Create ghost
             const ghost = document.body.createDiv({ cls: 'drag-reorder-ghost' });
-            ghost.appendChild(row.cloneNode(true));
+            const clone = row.cloneNode(true);
+            // Manually copy values for selects/inputs because cloneNode doesn't copy dynamic values
+            const originalInputs = row.querySelectorAll('input, select, textarea');
+            const clonedInputs = clone.querySelectorAll('input, select, textarea');
+            originalInputs.forEach((el, idx) => {
+               if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+            });
+            ghost.appendChild(clone);
             ghost.style.width = `${rect.width}px`;
             ghost.style.height = `${rect.height}px`;
             ghost.style.left = `${rect.left}px`;
@@ -20523,7 +20552,7 @@ class ColorSettingTab extends PluginSettingTab {
 
         // Preview sample text
         const previewEl = row.createDiv();
-        previewEl.textContent = 'Text';
+        previewEl.textContent = this.plugin.t('preview_text', 'Text');
         previewEl.style.flex = '0 0 auto';
         // previewEl.style.paddingLeft = '-20px';
         const styleType = style && style.styleType ? style.styleType : 'both';
@@ -20553,7 +20582,7 @@ class ColorSettingTab extends PluginSettingTab {
         // Name Input
         const nameInput = row.createEl('input', { type: 'text', value: style.name || `Style ${i + 1}` });
         nameInput.style.flex = '1';
-        nameInput.placeholder = 'Style Name';
+        nameInput.placeholder = this.plugin.t('style_name_placeholder', 'Style Name');
         nameInput.addEventListener('change', async () => {
           style.name = nameInput.value;
           await this.plugin.saveSettings();
@@ -20615,7 +20644,14 @@ class ColorSettingTab extends PluginSettingTab {
 
           // Create ghost
           const ghost = document.body.createDiv({ cls: 'drag-reorder-ghost' });
-          ghost.appendChild(row.cloneNode(true));
+          const clone = row.cloneNode(true);
+          // Manually copy values for selects/inputs because cloneNode doesn't copy dynamic values
+          const originalInputs = row.querySelectorAll('input, select, textarea');
+          const clonedInputs = clone.querySelectorAll('input, select, textarea');
+          originalInputs.forEach((el, idx) => {
+             if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+          });
+          ghost.appendChild(clone);
           ghost.style.width = `${rect.width}px`;
           ghost.style.height = `${rect.height}px`;
           ghost.style.left = `${rect.left}px`;
@@ -20927,6 +20963,8 @@ class ColorSettingTab extends PluginSettingTab {
 
         const activeSelect = row.createEl('select');
         try { activeSelect.addClass('dropdown'); } catch (e) { }
+        try { activeSelect.addClass('act-group-select'); } catch (e) { try { activeSelect.classList.add('act-group-select'); } catch (_) { } }
+        activeSelect.style.minWidth = '100px';
         activeSelect.createEl('option', { text: this.plugin.t('group_active_label', 'Active'), value: 'true' });
         activeSelect.createEl('option', { text: this.plugin.t('group_inactive_label', 'Inactive'), value: 'false' });
         if (!group.uid) { try { group.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (_) { } }
@@ -21011,15 +21049,30 @@ class ColorSettingTab extends PluginSettingTab {
 
           if (navigator.vibrate) navigator.vibrate(100);
 
+          // Disable all interactive elements during drag to prevent state changes
+          const originalDisabled = [];
+          const allInteractive = row.querySelectorAll('input, select, button');
+          allInteractive.forEach(el => {
+            originalDisabled.push(el.disabled);
+            el.disabled = true;
+          });
+
           // Create ghost
           const ghost = document.body.createDiv({ cls: 'drag-reorder-ghost' });
-          ghost.appendChild(row.cloneNode(true));
+          const clone = row.cloneNode(true);
+          // Manually copy values for selects/inputs because cloneNode doesn't copy dynamic values
+          const originalInputs = row.querySelectorAll('input, select, textarea');
+          const clonedInputs = clone.querySelectorAll('input, select, textarea');
+          originalInputs.forEach((el, idx) => {
+             if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+          });
+          ghost.appendChild(clone);
           ghost.style.width = `${rect.width}px`;
           ghost.style.height = `${rect.height}px`;
           ghost.style.left = `${rect.left}px`;
           ghost.style.top = `${rect.top}px`;
 
-          // Hide original
+          // Hide original (and its interactive elements)
           row.classList.add('drag-ghost-hidden');
 
           const onMove = (moveEvent) => {
@@ -21066,6 +21119,12 @@ class ColorSettingTab extends PluginSettingTab {
             document.removeEventListener('mouseup', onEnd);
             ghost.remove();
             row.classList.remove('drag-ghost-hidden');
+
+            // Re-enable interactive elements
+            allInteractive.forEach((el, idx) => {
+              el.disabled = originalDisabled[idx];
+            });
+
             await saveDragReorder();
           };
 
@@ -21133,6 +21192,8 @@ class ColorSettingTab extends PluginSettingTab {
 
         const activeSelect = row.createEl('select');
         try { activeSelect.addClass('dropdown'); } catch (e) { }
+        try { activeSelect.addClass('act-group-select'); } catch (e) { try { activeSelect.classList.add('act-group-select'); } catch (_) { } }
+        activeSelect.style.minWidth = '100px';
         activeSelect.createEl('option', { text: this.plugin.t('group_active_label', 'Active'), value: 'true' });
         activeSelect.createEl('option', { text: this.plugin.t('group_inactive_label', 'Inactive'), value: 'false' });
         if (!group.uid) { try { group.uid = Date.now().toString(36) + Math.random().toString(36).slice(2); } catch (_) { } }
@@ -21204,15 +21265,30 @@ class ColorSettingTab extends PluginSettingTab {
 
           if (navigator.vibrate) navigator.vibrate(100);
 
+          // Disable all interactive elements during drag to prevent state changes
+          const originalDisabled = [];
+          const allInteractive = row.querySelectorAll('input, select, button');
+          allInteractive.forEach(el => {
+            originalDisabled.push(el.disabled);
+            el.disabled = true;
+          });
+
           // Create ghost
           const ghost = document.body.createDiv({ cls: 'drag-reorder-ghost' });
-          ghost.appendChild(row.cloneNode(true));
+          const clone = row.cloneNode(true);
+          // Manually copy values for selects/inputs because cloneNode doesn't copy dynamic values
+          const originalInputs = row.querySelectorAll('input, select, textarea');
+          const clonedInputs = clone.querySelectorAll('input, select, textarea');
+          originalInputs.forEach((el, idx) => {
+             if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+          });
+          ghost.appendChild(clone);
           ghost.style.width = `${rect.width}px`;
           ghost.style.height = `${rect.height}px`;
           ghost.style.left = `${rect.left}px`;
           ghost.style.top = `${rect.top}px`;
 
-          // Hide original
+          // Hide original (and its interactive elements)
           row.classList.add('drag-ghost-hidden');
 
           const onMove = (moveEvent) => {
@@ -21259,6 +21335,12 @@ class ColorSettingTab extends PluginSettingTab {
             document.removeEventListener('mouseup', onEnd);
             ghost.remove();
             row.classList.remove('drag-ghost-hidden');
+
+            // Re-enable interactive elements
+            allInteractive.forEach((el, idx) => {
+              el.disabled = originalDisabled[idx];
+            });
+
             await saveDragReorder();
           };
 
@@ -24244,12 +24326,12 @@ class ConfirmationModal extends Modal {
     buttonDiv.style.marginTop = '20px';
     buttonDiv.style.gap = '10px';
 
-    const cancelButton = buttonDiv.createEl('button', { text: 'Cancel' });
+    const cancelButton = buttonDiv.createEl('button', { text: this.plugin.t('btn_cancel', 'Cancel') });
     const cancelHandler = () => this.close();
     cancelButton.addEventListener('click', cancelHandler);
     this._eventListeners.push({ el: cancelButton, event: 'click', handler: cancelHandler });
 
-    const confirmButton = buttonDiv.createEl('button', { text: 'Confirm' });
+    const confirmButton = buttonDiv.createEl('button', { text: this.plugin.t('btn_confirm', 'Confirm') });
     confirmButton.addClass('mod-warning');
     const confirmHandler = () => {
       this.onConfirm();

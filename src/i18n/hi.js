@@ -128,6 +128,8 @@ module.exports = {
   "confirm_delete_all_groups_desc": "क्या आप वाकई सभी शब्द समूह हटाना चाहते हैं? आप इसे पूर्ववत नहीं कर सकते!",
   "restart_required_title": "रीस्टार्ट आवश्यक",
   "restart_required_desc": "कमांड पैलेट टॉगल बंद करने के लिए पैलेट से कमांड्स को पूरी तरह हटाने हेतु ऑब्सीडियन को रीस्टार्ट करना आवश्यक है। अभी रीस्टार्ट करें?",
+  "btn_cancel": "रद्द करें",
+  "btn_confirm": "पुष्टि करें",
   
   // Basic Settings
   "enable_document_color": "दस्तावेज़ रंग चालू करें",
@@ -144,6 +146,7 @@ module.exports = {
   "regex_support_desc": "पैटर्न को रेगुलर एक्सप्रेशन होने की अनुमति दें। सुरक्षा के लिए अमान्य रेगेक्स को नज़रअंदाज़ किया जाता है।",
   "disable_regex_safety": "रेगेक्स सुरक्षा बंद करें",
   "disable_regex_safety_desc": "जटिल या संभावित खतरनाक एक्सप्रेशन्स की अनुमति दें। प्रदर्शन समस्याएँ या फ्रीज़ हो सकती हैं।",
+  "requires_regex_safety_disabled": "रेजेक्स सुरक्षा अक्षम करना आवश्यक है",
   "case_sensitive": "केस सेंसिटिव",
   "case_sensitive_desc": "यदि यह चालू है, तो \"word\" और \"Word\" को अलग माना जाता है। यदि बंद है, तो वे समान रूप से रंगे जाते हैं।",
   "partial_match": "आंशिक मिलान",
@@ -477,6 +480,10 @@ module.exports = {
   "label_border_opacity": "बॉर्डर अपारदर्शिता",
   "label_border_thickness": "बॉर्डर मोटाई",
   "btn_save_style": "स्टाइल सहेजें",
+  "share_export_title": "Always Color Text export",
+  "delete_button_text": "✕",
+  "style_name_placeholder": "Style Name",
+  "preview_text": "Text",
   
   // Quick Colors / Styles
   "quick_colors_header": "त्वरित रंग",
