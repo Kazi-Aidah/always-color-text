@@ -173,6 +173,8 @@ module.exports = {
   "opt_border_full": "Полная рамка (Все стороны)",
   "opt_border_top_bottom": "Верх и Низ",
   "opt_border_left_right": "Лево и Право",
+  "opt_border_top_left_right": "Верх, Лево и Право",
+  "opt_border_bottom_left_right": "Низ, Лево и Право",
   "opt_border_top_right": "Верх и Право",
   "opt_border_top_left": "Верх и Лево",
   "opt_border_bottom_right": "Низ и Право",
@@ -505,6 +507,7 @@ module.exports = {
   "command_deactivate_blacklist_group": "Деактивировать группу черного списка {groupName}",
   "btn_duplicate_entry": "Дублировать запись",
   "btn_open_in_regex_tester": "Открыть в Regex Tester",
+  "move_to_blacklist_group": "Перенести в группу чёрного списка",
   "btn_delete_entry": "Удалить запись"
 };
 

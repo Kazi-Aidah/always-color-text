@@ -177,6 +177,8 @@ module.exports = {
   "opt_border_full": "Full Border (All Sides)",
   "opt_border_top_bottom": "Top & Bottom",
   "opt_border_left_right": "Left & Right",
+  "opt_border_top_left_right": "Top, Left & Right",
+  "opt_border_bottom_left_right": "Bottom, Left & Right",
   "opt_border_top_right": "Top & Right",
   "opt_border_top_left": "Top & Left",
   "opt_border_bottom_right": "Bottom & Right",
@@ -507,5 +509,6 @@ module.exports = {
   "command_deactivate_blacklist_group": "Deactivate {groupName} Blacklist Group",
   "btn_duplicate_entry": "Duplicate Entry",
   "btn_open_in_regex_tester": "Open in Regex Tester",
+  "move_to_blacklist_group": "Move to blacklist group",
   "btn_delete_entry": "Delete Entry"
 };

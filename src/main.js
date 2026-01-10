@@ -7250,6 +7250,10 @@ module.exports = class AlwaysColorText extends Plugin {
         return ` border-top: ${borderCSS} border-bottom: ${borderCSS}`;
       case 'left-right':
         return ` border-left: ${borderCSS} border-right: ${borderCSS}`;
+      case 'top-left-right':
+        return ` border-top: ${borderCSS} border-left: ${borderCSS} border-right: ${borderCSS}`;
+      case 'bottom-left-right':
+        return ` border-bottom: ${borderCSS} border-left: ${borderCSS} border-right: ${borderCSS}`;
       case 'top-right':
         return ` border-top: ${borderCSS} border-right: ${borderCSS}`;
       case 'top-left':
@@ -15106,6 +15110,8 @@ class HighlightStylingModal extends Modal {
       ['full', this.plugin.t('opt_border_full', 'Full Border (All Sides)')],
       ['top-bottom', this.plugin.t('opt_border_top_bottom', 'Top & Bottom')],
       ['left-right', this.plugin.t('opt_border_left_right', 'Left & Right')],
+      ['top-left-right', this.plugin.t('opt_border_top_left_right', 'Top, Left & Right')],
+      ['bottom-left-right', this.plugin.t('opt_border_bottom_left_right', 'Bottom, Left & Right')],
       ['top-right', this.plugin.t('opt_border_top_right', 'Top & Right')],
       ['top-left', this.plugin.t('opt_border_top_left', 'Top & Left')],
       ['bottom-right', this.plugin.t('opt_border_bottom_right', 'Bottom & Right')],
@@ -17744,7 +17750,7 @@ class SelectBlacklistGroupModal extends FuzzySuggestModal {
     super(app);
     this.plugin = plugin;
     this.onSelected = onSelected;
-    this.setPlaceholder(this.plugin.t('prompt_select_blacklist_group', 'Search blacklist groups…'));
+    this.setPlaceholder(this.plugin.t('search_blacklist_groups_placeholder', 'Search blacklist groups…'));
   }
 
   getItems() {
@@ -19537,11 +19543,11 @@ class ColorSettingTab extends PluginSettingTab {
             });
             
             menu.addItem((item) => {
-              item.setTitle('Duplicate Entry').setIcon('copy').onClick(duplicateHandler);
+              item.setTitle(this.plugin.t('duplicate_entry', 'Duplicate Entry')).setIcon('copy').onClick(duplicateHandler);
             });
             if (entry.isRegex) {
               menu.addItem((item) => {
-                item.setTitle('Open in Regex Tester').setIcon('pencil').onClick(openInRegexTesterHandler);
+                item.setTitle(this.plugin.t('open_in_regex_tester', 'Open in Regex Tester')).setIcon('pencil').onClick(openInRegexTesterHandler);
               });
             }
             
@@ -20578,7 +20584,7 @@ class ColorSettingTab extends PluginSettingTab {
         row.addEventListener('contextmenu', (e) => {
           e.preventDefault();
           const menu = new Menu();
-          menu.addItem(item => item.setTitle('Duplicate Entry').onClick(async () => {
+          menu.addItem(item => item.setTitle(this.plugin.t('duplicate_entry', 'Duplicate Entry')).onClick(async () => {
             const clone = JSON.parse(JSON.stringify(style));
             clone.uid = Date.now() + Math.random().toString(36).slice(2);
             clone.name = (clone.name || '') + ' (Copy)';
@@ -21936,6 +21942,8 @@ class ColorSettingTab extends PluginSettingTab {
                   .addOption('full', this.plugin.t('opt_border_full', 'Full border (all sides)'))
                   .addOption('top-bottom', this.plugin.t('opt_border_top_bottom', 'Top & Bottom borders'))
                   .addOption('left-right', this.plugin.t('opt_border_left_right', 'Left & Right borders'))
+                  .addOption('top-left-right', this.plugin.t('opt_border_top_left_right', 'Top, Left & Right borders'))
+                  .addOption('bottom-left-right', this.plugin.t('opt_border_bottom_left_right', 'Bottom, Left & Right borders'))
                   .addOption('top-right', this.plugin.t('opt_border_top_right', 'Top & Right borders'))
                   .addOption('top-left', this.plugin.t('opt_border_top_left', 'Top & Left borders'))
                   .addOption('bottom-right', this.plugin.t('opt_border_bottom_right', 'Bottom & Right borders'))
@@ -22242,6 +22250,8 @@ class ColorSettingTab extends PluginSettingTab {
               .addOption('full', this.plugin.t('opt_border_full', 'Full border (all sides)'))
               .addOption('top-bottom', this.plugin.t('opt_border_top_bottom', 'Top & Bottom borders'))
               .addOption('left-right', this.plugin.t('opt_border_left_right', 'Left & Right borders'))
+              .addOption('top-left-right', this.plugin.t('opt_border_top_left_right', 'Top, Left & Right borders'))
+              .addOption('bottom-left-right', this.plugin.t('opt_border_bottom_left_right', 'Bottom, Left & Right borders'))
               .addOption('top-right', this.plugin.t('opt_border_top_right', 'Top & Right borders'))
               .addOption('top-left', this.plugin.t('opt_border_top_left', 'Top & Left borders'))
               .addOption('bottom-right', this.plugin.t('opt_border_bottom_right', 'Bottom & Right borders'))

@@ -173,6 +173,8 @@ module.exports = {
   "opt_border_full": "Bordure complète (Tous les côtés)",
   "opt_border_top_bottom": "Haut et Bas",
   "opt_border_left_right": "Gauche et Droite",
+  "opt_border_top_left_right": "Haut, Gauche et Droite",
+  "opt_border_bottom_left_right": "Bas, Gauche et Droite",
   "opt_border_top_right": "Haut et Droite",
   "opt_border_top_left": "Haut et Gauche",
   "opt_border_bottom_right": "Bas et Droite",
@@ -503,6 +505,5 @@ module.exports = {
   "command_activate_blacklist_group": "Activer le groupe de liste noire {groupName}",
   "command_deactivate_blacklist_group": "Désactiver le groupe de liste noire {groupName}",
   "btn_duplicate_entry": "Dupliquer l'entrée",
-  "btn_open_in_regex_tester": "Ouvrir dans le testeur d'expression régulière",
-  "btn_delete_entry": "Supprimer l'entrée"
+  "btn_open_in_regex_tester": "Ouvrir dans le testeur d'expression régulière",  "move_to_blacklist_group": "Déplacer vers un groupe de liste noire",  "btn_delete_entry": "Supprimer l'entrée"
 };

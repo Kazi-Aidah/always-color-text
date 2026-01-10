@@ -173,6 +173,8 @@ module.exports = {
   "opt_border_full": "完整边框（所有边）",
   "opt_border_top_bottom": "上下",
   "opt_border_left_right": "左右",
+  "opt_border_top_left_right": "上、左、右",
+  "opt_border_bottom_left_right": "下、左、右",
   "opt_border_top_right": "右上",
   "opt_border_top_left": "左上",
   "opt_border_bottom_right": "右下",
@@ -505,5 +507,6 @@ module.exports = {
   "command_deactivate_blacklist_group": "停用 {groupName} 黑名单组",
   "btn_duplicate_entry": "复制条目",
   "btn_open_in_regex_tester": "在正则表达式测试器中打开",
+  "move_to_blacklist_group": "移到黑名单组",
   "btn_delete_entry": "删除条目"
 };

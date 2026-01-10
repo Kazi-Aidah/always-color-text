@@ -174,6 +174,8 @@ var require_en = __commonJS({
       "opt_border_full": "Full Border (All Sides)",
       "opt_border_top_bottom": "Top & Bottom",
       "opt_border_left_right": "Left & Right",
+      "opt_border_top_left_right": "Top, Left & Right",
+      "opt_border_bottom_left_right": "Bottom, Left & Right",
       "opt_border_top_right": "Top & Right",
       "opt_border_top_left": "Top & Left",
       "opt_border_bottom_right": "Bottom & Right",
@@ -486,6 +488,7 @@ var require_en = __commonJS({
       "command_deactivate_blacklist_group": "Deactivate {groupName} Blacklist Group",
       "btn_duplicate_entry": "Duplicate Entry",
       "btn_open_in_regex_tester": "Open in Regex Tester",
+      "move_to_blacklist_group": "Move to blacklist group",
       "btn_delete_entry": "Delete Entry"
     };
   }
@@ -658,6 +661,8 @@ var require_es = __commonJS({
       "opt_border_full": "Borde Completo (Todos los lados)",
       "opt_border_top_bottom": "Arriba y Abajo",
       "opt_border_left_right": "Izquierda y Derecha",
+      "opt_border_top_left_right": "Arriba, Izquierda y Derecha",
+      "opt_border_bottom_left_right": "Abajo, Izquierda y Derecha",
       "opt_border_top_right": "Arriba y Derecha",
       "opt_border_top_left": "Arriba e Izquierda",
       "opt_border_bottom_right": "Abajo y Derecha",
@@ -971,6 +976,7 @@ var require_es = __commonJS({
       "command_deactivate_blacklist_group": "Desactivar grupo de lista negra {groupName}",
       "btn_duplicate_entry": "Duplicar entrada",
       "btn_open_in_regex_tester": "Abrir en Regex Tester",
+      "move_to_blacklist_group": "Mover a grupo de lista negra",
       "btn_delete_entry": "Eliminar entrada"
     };
   }
@@ -1143,6 +1149,8 @@ var require_fr = __commonJS({
       "opt_border_full": "Bordure compl\xE8te (Tous les c\xF4t\xE9s)",
       "opt_border_top_bottom": "Haut et Bas",
       "opt_border_left_right": "Gauche et Droite",
+      "opt_border_top_left_right": "Haut, Gauche et Droite",
+      "opt_border_bottom_left_right": "Bas, Gauche et Droite",
       "opt_border_top_right": "Haut et Droite",
       "opt_border_top_left": "Haut et Gauche",
       "opt_border_bottom_right": "Bas et Droite",
@@ -1456,6 +1464,7 @@ var require_fr = __commonJS({
       "command_deactivate_blacklist_group": "D\xE9sactiver le groupe de liste noire {groupName}",
       "btn_duplicate_entry": "Dupliquer l'entr\xE9e",
       "btn_open_in_regex_tester": "Ouvrir dans le testeur d'expression r\xE9guli\xE8re",
+      "move_to_blacklist_group": "D\xE9placer vers un groupe de liste noire",
       "btn_delete_entry": "Supprimer l'entr\xE9e"
     };
   }
@@ -1628,6 +1637,8 @@ var require_hi = __commonJS({
       "opt_border_full": "\u092A\u0942\u0930\u094D\u0923 \u092C\u0949\u0930\u094D\u0921\u0930 (\u0938\u092D\u0940 \u0913\u0930)",
       "opt_border_top_bottom": "\u090A\u092A\u0930 \u0914\u0930 \u0928\u0940\u091A\u0947 \u092C\u0949\u0930\u094D\u0921\u0930",
       "opt_border_left_right": "\u092C\u093E\u090F\u0901 \u0914\u0930 \u0926\u093E\u090F\u0901 \u092C\u0949\u0930\u094D\u0921\u0930",
+      "opt_border_top_left_right": "\u090A\u092A\u0930, \u092C\u093E\u090F\u0901 \u0914\u0930 \u0926\u093E\u090F\u0901 \u092C\u0949\u0930\u094D\u0921\u0930",
+      "opt_border_bottom_left_right": "\u0928\u0940\u091A\u0947, \u092C\u093E\u090F\u0901 \u0914\u0930 \u0926\u093E\u090F\u0901 \u092C\u0949\u0930\u094D\u0921\u0930",
       "opt_border_top_right": "\u090A\u092A\u0930 \u0914\u0930 \u0926\u093E\u090F\u0901 \u092C\u0949\u0930\u094D\u0921\u0930",
       "opt_border_top_left": "\u090A\u092A\u0930 \u0914\u0930 \u092C\u093E\u090F\u0901 \u092C\u0949\u0930\u094D\u0921\u0930",
       "opt_border_bottom_right": "\u0928\u0940\u091A\u0947 \u0914\u0930 \u0926\u093E\u090F\u0901 \u092C\u0949\u0930\u094D\u0921\u0930",
@@ -1942,6 +1953,7 @@ var require_hi = __commonJS({
       "command_deactivate_blacklist_group": "{groupName} \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0938\u092E\u0942\u0939 \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902",
       "btn_duplicate_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0915\u094B \u0921\u0941\u092A\u094D\u0932\u093F\u0915\u0947\u091F \u0915\u0930\u0947\u0902",
       "btn_open_in_regex_tester": "Regex Tester \u092E\u0947\u0902 \u0916\u094B\u0932\u0947\u0902",
+      "move_to_blacklist_group": "\u0915\u093E\u0932\u0940 \u0938\u0942\u091A\u0940 \u0938\u092E\u0942\u0939 \u0915\u094B \u0938\u094D\u0925\u093E\u0928\u093E\u0902\u0924\u0930\u093F\u0924 \u0915\u0930\u0947\u0902",
       "btn_delete_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0939\u091F\u093E\u090F\u0902"
     };
   }
@@ -2114,6 +2126,8 @@ var require_it = __commonJS({
       "opt_border_full": "Bordo completo (tutti i lati)",
       "opt_border_top_bottom": "Bordi superiore e inferiore",
       "opt_border_left_right": "Bordi sinistro e destro",
+      "opt_border_top_left_right": "Bordi superiore, sinistro e destro",
+      "opt_border_bottom_left_right": "Bordi inferiore, sinistro e destro",
       "opt_border_top_right": "Bordi superiore e destro",
       "opt_border_top_left": "Bordi superiore e sinistro",
       "opt_border_bottom_right": "Bordi inferiore e destro",
@@ -2428,6 +2442,7 @@ var require_it = __commonJS({
       "command_deactivate_blacklist_group": "Disattiva gruppo blacklist {groupName}",
       "btn_duplicate_entry": "Duplica voce",
       "btn_open_in_regex_tester": "Apri in Regex Tester",
+      "move_to_blacklist_group": "Sposta al gruppo blacklist",
       "btn_delete_entry": "Elimina voce"
     };
   }
@@ -2600,6 +2615,8 @@ var require_bn = __commonJS({
       "opt_border_full": "\u09AA\u09C2\u09B0\u09CD\u09A3 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 (\u09B8\u09AC \u09A6\u09BF\u0995)",
       "opt_border_top_bottom": "\u0989\u09AA\u09B0 \u098F\u09AC\u0982 \u09A8\u09BF\u099A\u09C7\u09B0 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0",
       "opt_border_left_right": "\u09AC\u09BE\u09AE \u098F\u09AC\u0982 \u09A1\u09BE\u09A8 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0",
+      "opt_border_top_left_right": "\u0989\u09AA\u09B0, \u09AC\u09BE\u09AE \u098F\u09AC\u0982 \u09A1\u09BE\u09A8 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0",
+      "opt_border_bottom_left_right": "\u09A8\u09BF\u099A, \u09AC\u09BE\u09AE \u098F\u09AC\u0982 \u09A1\u09BE\u09A8 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0",
       "opt_border_top_right": "\u0989\u09AA\u09B0 \u098F\u09AC\u0982 \u09A1\u09BE\u09A8 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0",
       "opt_border_top_left": "\u0989\u09AA\u09B0 \u098F\u09AC\u0982 \u09AC\u09BE\u09AE \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0",
       "opt_border_bottom_right": "\u09A8\u09BF\u099A \u098F\u09AC\u0982 \u09A1\u09BE\u09A8 \u09AC\u09B0\u09CD\u09A1\u09BE\u09B0",
@@ -2914,6 +2931,7 @@ var require_bn = __commonJS({
       "command_deactivate_blacklist_group": "{groupName} \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0997\u09CD\u09B0\u09C1\u09AA \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
       "btn_duplicate_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09A1\u09C1\u09AA\u09CD\u09B2\u09BF\u0995\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
       "btn_open_in_regex_tester": "Regex Tester \u098F \u0996\u09C1\u09B2\u09C1\u09A8",
+      "move_to_blacklist_group": "\u0995\u09BE\u09B2\u09CB \u09B8\u09C2\u099A\u09C0 \u0997\u09CD\u09B0\u09C1\u09AA\u09C7 \u09B8\u0981\u099A\u09BE\u09B2\u09A8 \u0995\u09B0\u09C1\u09A8",
       "btn_delete_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09AE\u09C1\u099B\u09C1\u09A8"
     };
   }
@@ -3086,6 +3104,8 @@ var require_ru = __commonJS({
       "opt_border_full": "\u041F\u043E\u043B\u043D\u0430\u044F \u0440\u0430\u043C\u043A\u0430 (\u0412\u0441\u0435 \u0441\u0442\u043E\u0440\u043E\u043D\u044B)",
       "opt_border_top_bottom": "\u0412\u0435\u0440\u0445 \u0438 \u041D\u0438\u0437",
       "opt_border_left_right": "\u041B\u0435\u0432\u043E \u0438 \u041F\u0440\u0430\u0432\u043E",
+      "opt_border_top_left_right": "\u0412\u0435\u0440\u0445, \u041B\u0435\u0432\u043E \u0438 \u041F\u0440\u0430\u0432\u043E",
+      "opt_border_bottom_left_right": "\u041D\u0438\u0437, \u041B\u0435\u0432\u043E \u0438 \u041F\u0440\u0430\u0432\u043E",
       "opt_border_top_right": "\u0412\u0435\u0440\u0445 \u0438 \u041F\u0440\u0430\u0432\u043E",
       "opt_border_top_left": "\u0412\u0435\u0440\u0445 \u0438 \u041B\u0435\u0432\u043E",
       "opt_border_bottom_right": "\u041D\u0438\u0437 \u0438 \u041F\u0440\u0430\u0432\u043E",
@@ -3400,6 +3420,7 @@ var require_ru = __commonJS({
       "command_deactivate_blacklist_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0447\u0435\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430 {groupName}",
       "btn_duplicate_entry": "\u0414\u0443\u0431\u043B\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
       "btn_open_in_regex_tester": "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 Regex Tester",
+      "move_to_blacklist_group": "\u041F\u0435\u0440\u0435\u043D\u0435\u0441\u0442\u0438 \u0432 \u0433\u0440\u0443\u043F\u043F\u0443 \u0447\u0451\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430",
       "btn_delete_entry": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C"
     };
   }
@@ -3572,6 +3593,8 @@ var require_zh_cn = __commonJS({
       "opt_border_full": "\u5B8C\u6574\u8FB9\u6846\uFF08\u6240\u6709\u8FB9\uFF09",
       "opt_border_top_bottom": "\u4E0A\u4E0B",
       "opt_border_left_right": "\u5DE6\u53F3",
+      "opt_border_top_left_right": "\u4E0A\u3001\u5DE6\u3001\u53F3",
+      "opt_border_bottom_left_right": "\u4E0B\u3001\u5DE6\u3001\u53F3",
       "opt_border_top_right": "\u53F3\u4E0A",
       "opt_border_top_left": "\u5DE6\u4E0A",
       "opt_border_bottom_right": "\u53F3\u4E0B",
@@ -3886,6 +3909,7 @@ var require_zh_cn = __commonJS({
       "command_deactivate_blacklist_group": "\u505C\u7528 {groupName} \u9ED1\u540D\u5355\u7EC4",
       "btn_duplicate_entry": "\u590D\u5236\u6761\u76EE",
       "btn_open_in_regex_tester": "\u5728\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\u4E2D\u6253\u5F00",
+      "move_to_blacklist_group": "\u79FB\u5230\u9ED1\u540D\u5355\u7EC4",
       "btn_delete_entry": "\u5220\u9664\u6761\u76EE"
     };
   }
@@ -11081,6 +11105,10 @@ module.exports = class AlwaysColorText extends Plugin {
         return ` border-top: ${borderCSS} border-bottom: ${borderCSS}`;
       case "left-right":
         return ` border-left: ${borderCSS} border-right: ${borderCSS}`;
+      case "top-left-right":
+        return ` border-top: ${borderCSS} border-left: ${borderCSS} border-right: ${borderCSS}`;
+      case "bottom-left-right":
+        return ` border-bottom: ${borderCSS} border-left: ${borderCSS} border-right: ${borderCSS}`;
       case "top-right":
         return ` border-top: ${borderCSS} border-right: ${borderCSS}`;
       case "top-left":
@@ -18352,6 +18380,8 @@ var HighlightStylingModal = class extends Modal {
       ["full", this.plugin.t("opt_border_full", "Full Border (All Sides)")],
       ["top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom")],
       ["left-right", this.plugin.t("opt_border_left_right", "Left & Right")],
+      ["top-left-right", this.plugin.t("opt_border_top_left_right", "Top, Left & Right")],
+      ["bottom-left-right", this.plugin.t("opt_border_bottom_left_right", "Bottom, Left & Right")],
       ["top-right", this.plugin.t("opt_border_top_right", "Top & Right")],
       ["top-left", this.plugin.t("opt_border_top_left", "Top & Left")],
       ["bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right")],
@@ -21157,7 +21187,7 @@ var SelectBlacklistGroupModal = class extends FuzzySuggestModal {
     super(app);
     this.plugin = plugin;
     this.onSelected = onSelected;
-    this.setPlaceholder(this.plugin.t("prompt_select_blacklist_group", "Search blacklist groups\u2026"));
+    this.setPlaceholder(this.plugin.t("search_blacklist_groups_placeholder", "Search blacklist groups\u2026"));
   }
   getItems() {
     const groups = Array.isArray(this.plugin.settings.blacklistEntryGroups) ? this.plugin.settings.blacklistEntryGroups : [];
@@ -22962,11 +22992,11 @@ var ColorSettingTab = class extends PluginSettingTab {
               });
             });
             menu.addItem((item) => {
-              item.setTitle("Duplicate Entry").setIcon("copy").onClick(duplicateHandler);
+              item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(duplicateHandler);
             });
             if (entry.isRegex) {
               menu.addItem((item) => {
-                item.setTitle("Open in Regex Tester").setIcon("pencil").onClick(openInRegexTesterHandler);
+                item.setTitle(this.plugin.t("open_in_regex_tester", "Open in Regex Tester")).setIcon("pencil").onClick(openInRegexTesterHandler);
               });
             }
             menu.addItem((item) => {
@@ -23985,7 +24015,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         row.addEventListener("contextmenu", (e) => {
           e.preventDefault();
           const menu = new Menu();
-          menu.addItem((item) => item.setTitle("Duplicate Entry").onClick(async () => {
+          menu.addItem((item) => item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).onClick(async () => {
             const clone = JSON.parse(JSON.stringify(style));
             clone.uid = Date.now() + Math.random().toString(36).slice(2);
             clone.name = (clone.name || "") + " (Copy)";
@@ -25246,7 +25276,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           if (this.plugin.settings.quickHighlightEnableBorder) {
             new Setting(otaContainer).setName(this.plugin.t("highlight_once_border_style", "Highlight Once Border Sides")).addDropdown((d) => {
               d.selectEl.style.width = "200px";
-              return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.quickHighlightBorderStyle ?? "full").onChange(async (v) => {
+              return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-left-right", this.plugin.t("opt_border_top_left_right", "Top, Left & Right borders")).addOption("bottom-left-right", this.plugin.t("opt_border_bottom_left_right", "Bottom, Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.quickHighlightBorderStyle ?? "full").onChange(async (v) => {
                 this.plugin.settings.quickHighlightBorderStyle = v;
                 await this.plugin.saveSettings();
                 try {
@@ -25461,7 +25491,7 @@ var ColorSettingTab = class extends PluginSettingTab {
             d.selectEl.style.textAlign = "center";
           } catch (e) {
           }
-          return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.borderStyle ?? "full").onChange(async (v) => {
+          return d.addOption("full", this.plugin.t("opt_border_full", "Full border (all sides)")).addOption("top-bottom", this.plugin.t("opt_border_top_bottom", "Top & Bottom borders")).addOption("left-right", this.plugin.t("opt_border_left_right", "Left & Right borders")).addOption("top-left-right", this.plugin.t("opt_border_top_left_right", "Top, Left & Right borders")).addOption("bottom-left-right", this.plugin.t("opt_border_bottom_left_right", "Bottom, Left & Right borders")).addOption("top-right", this.plugin.t("opt_border_top_right", "Top & Right borders")).addOption("top-left", this.plugin.t("opt_border_top_left", "Top & Left borders")).addOption("bottom-right", this.plugin.t("opt_border_bottom_right", "Bottom & Right borders")).addOption("bottom-left", this.plugin.t("opt_border_bottom_left", "Bottom & Left borders")).addOption("top", this.plugin.t("opt_border_top", "Top border only")).addOption("bottom", this.plugin.t("opt_border_bottom", "Bottom border only")).addOption("left", this.plugin.t("opt_border_left", "Left border only")).addOption("right", this.plugin.t("opt_border_right", "Right border only")).setValue(this.plugin.settings.borderStyle ?? "full").onChange(async (v) => {
             this.plugin.settings.borderStyle = v;
             await this.debouncedSaveSettings();
             updatePreview2();

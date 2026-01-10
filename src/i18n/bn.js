@@ -173,6 +173,8 @@ module.exports = {
   "opt_border_full": "পূর্ণ বর্ডার (সব দিক)",
   "opt_border_top_bottom": "উপর এবং নিচের বর্ডার",
   "opt_border_left_right": "বাম এবং ডান বর্ডার",
+  "opt_border_top_left_right": "উপর, বাম এবং ডান বর্ডার",
+  "opt_border_bottom_left_right": "নিচ, বাম এবং ডান বর্ডার",
   "opt_border_top_right": "উপর এবং ডান বর্ডার",
   "opt_border_top_left": "উপর এবং বাম বর্ডার",
   "opt_border_bottom_right": "নিচ এবং ডান বর্ডার",
@@ -505,5 +507,6 @@ module.exports = {
   "command_deactivate_blacklist_group": "{groupName} ব্ল্যাকলিস্ট গ্রুপ নিষ্ক্রিয় করুন",
   "btn_duplicate_entry": "এন্ট্রি ডুপ্লিকেট করুন",
   "btn_open_in_regex_tester": "Regex Tester এ খুলুন",
+  "move_to_blacklist_group": "কালো সূচী গ্রুপে সঁচালন করুন",
   "btn_delete_entry": "এন্ট্রি মুছুন"
 };

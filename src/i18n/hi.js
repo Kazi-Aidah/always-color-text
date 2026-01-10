@@ -173,6 +173,8 @@ module.exports = {
   "opt_border_full": "पूर्ण बॉर्डर (सभी ओर)",
   "opt_border_top_bottom": "ऊपर और नीचे बॉर्डर",
   "opt_border_left_right": "बाएँ और दाएँ बॉर्डर",
+  "opt_border_top_left_right": "ऊपर, बाएँ और दाएँ बॉर्डर",
+  "opt_border_bottom_left_right": "नीचे, बाएँ और दाएँ बॉर्डर",
   "opt_border_top_right": "ऊपर और दाएँ बॉर्डर",
   "opt_border_top_left": "ऊपर और बाएँ बॉर्डर",
   "opt_border_bottom_right": "नीचे और दाएँ बॉर्डर",
@@ -505,5 +507,6 @@ module.exports = {
   "command_deactivate_blacklist_group": "{groupName} ब्लैकलिस्ट समूह निष्क्रिय करें",
   "btn_duplicate_entry": "प्रविष्टि को डुप्लिकेट करें",
   "btn_open_in_regex_tester": "Regex Tester में खोलें",
+  "move_to_blacklist_group": "काली सूची समूह को स्थानांतरित करें",
   "btn_delete_entry": "प्रविष्टि हटाएं"
 };
