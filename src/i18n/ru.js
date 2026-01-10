@@ -328,7 +328,7 @@ module.exports = {
   "preset_all_texts": "Весь текст",
   "preset_codeblocks": "Блоки кода",
   "preset_inline_comments": "Комментарии (%%...%%)",
-  "preset_highlighted_text": "Выделенный текст (==...)",
+  "preset_highlighted_text": "Выделенный текст (==...==)",
   "preset_parentheses": "Круглые скобки ()",
   "preset_square_brackets": "Квадратные скобки []",
   "preset_curly_braces": "Фигурные скобки {}",

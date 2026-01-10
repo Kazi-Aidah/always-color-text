@@ -324,7 +324,7 @@ module.exports = {
   "preset_all_texts": "所有文本",
   "preset_codeblocks": "代码块",
   "preset_inline_comments": "注释 (%%...%%)",
-  "preset_highlighted_text": "高亮文本 (==...)",
+  "preset_highlighted_text": "高亮文本 (==...==)",
   "preset_parentheses": "圆括号 ()",
   "preset_square_brackets": "方括号 []",
   "preset_curly_braces": "大括号 {}",

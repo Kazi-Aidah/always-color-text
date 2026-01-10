@@ -30,14 +30,15 @@ Replace default swatches with your favorite colors for instant access!
 ![Custom Swatches in Color Picker](assets/custom-swatches.png)
 
 ### Quick Actions
-- **Quick Colors**: Pick a text color and background color group to appear directly in the right-click menu.
-![Quick Colors WITH Quick Styles](assets/quick-color+quick-styles.png)
+- **Quick Colors**: Choose a text color and background color group that appears directly in the right click menu.
+  ![Quick Colors with Quick Styles](assets/quick-color+quick-styles.png)
 
 - **Quick Styles**: Apply a highlight style to selected text.
-![Quick Colors AND Quick Styles](assets/quick-color-AND-quick-styles.png)
+  ![Quick Colors and Quick Styles](assets/quick-color-AND-quick-styles.png)
 
-If Quick Colors are enabled, the style uses the chosen Quick Color; if not, it uses its own colors.
-Word Groups and Match Types can also be assigned to a Quick Style :D
+If **Quick Colors** are enabled, the style uses the selected Quick Color. If they are disabled, the style falls back to its own colors and inherits the styling from the first Quick Style entry. If no Quick Style exists, the default styling is applied.
+
+Word Groups and Match Types can also be assigned to a Quick Style!
 
 ---
 

@@ -324,7 +324,7 @@ module.exports = {
   "preset_all_texts": "Tutti i testi",
   "preset_codeblocks": "Blocchi di codice",
   "preset_inline_comments": "Commenti (%%…%%)",
-  "preset_highlighted_text": "Testo evidenziato (==...)",
+  "preset_highlighted_text": "Testo evidenziato (==...==)",
   "preset_parentheses": "Parentesi ()",
   "preset_square_brackets": "Parentesi quadre []",
   "preset_curly_braces": "Parentesi graffe {}",

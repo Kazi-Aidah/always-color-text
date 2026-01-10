@@ -328,7 +328,7 @@ module.exports = {
   "preset_all_texts": "সব টেক্সট",
   "preset_codeblocks": "কোডব্লক",
   "preset_inline_comments": "মন্তব্য (%%…%%)",
-  "preset_highlighted_text": "হাইলাইট টেক্সট (==...)",
+  "preset_highlighted_text": "হাইলাইট টেক্সট (==...==)",
   "preset_parentheses": "বন্ধনী ()",
   "preset_square_brackets": "বর্গ বন্ধনী []",
   "preset_curly_braces": "কার্লি ব্রেসেস {}",

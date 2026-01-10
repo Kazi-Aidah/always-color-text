@@ -323,7 +323,7 @@ module.exports = {
   "preset_all_texts": "Tout le texte",
   "preset_codeblocks": "Blocs de code",
   "preset_inline_comments": "Commentaires (%%...%%)",
-  "preset_highlighted_text": "Texte surligné (==...)",
+  "preset_highlighted_text": "Texte surligné (==...==)",
   "preset_parentheses": "Parenthèses ()",
   "preset_square_brackets": "Crochets []",
   "preset_curly_braces": "Accolades {}",

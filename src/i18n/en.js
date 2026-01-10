@@ -329,7 +329,7 @@ module.exports = {
   "preset_all_texts": "All Text",
   "preset_codeblocks": "Codeblocks",
   "preset_inline_comments": "Comments (%%...%%)",
-  "preset_highlighted_text": "Highlighted Text (==...)",
+  "preset_highlighted_text": "Highlighted Text (==...==)",
   "preset_parentheses": "Parentheses ()",
   "preset_square_brackets": "Square Brackets []",
   "preset_curly_braces": "Curly Braces {}",
@@ -516,6 +516,6 @@ module.exports = {
   "command_deactivate_blacklist_group": "Deactivate {groupName} Blacklist Group",
   "btn_duplicate_entry": "Duplicate Entry",
   "btn_open_in_regex_tester": "Open in Regex Tester",
-  "move_to_blacklist_group": "Move to blacklist group",
+  "move_to_blacklist_group": "Move to Blacklist Group",
   "btn_delete_entry": "Delete Entry"
 };

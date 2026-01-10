@@ -1,6 +1,6 @@
 {
   "name": "always-color-text",
-  "version": "0.0.0",
+  "version": "1.13.0",
   "private": true,
   "scripts": {
     "build.js": "node build.js"

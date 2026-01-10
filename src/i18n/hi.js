@@ -327,7 +327,7 @@ module.exports = {
   "preset_all_texts": "सभी टेक्स्ट",
   "preset_codeblocks": "कोड ब्लॉक",
   "preset_inline_comments": "टिप्पणियाँ (%%…%%)",
-  "preset_highlighted_text": "हाइलाइट किया हुआ टेक्स्ट (==...)",
+  "preset_highlighted_text": "हाइलाइट किया हुआ टेक्स्ट (==...==)",
   "preset_parentheses": "कोष्ठक ()",
   "preset_square_brackets": "वर्ग कोष्ठक []",
   "preset_curly_braces": "घुंघराले ब्रेसेस {}",
