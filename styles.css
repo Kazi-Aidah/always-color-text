@@ -780,3 +780,6 @@ button.mod-cta {
   pointer-events: none;
 }
 
+.menu-item.tappable.has-submenu.act-color-dots {
+padding: 2px 0px !important;
+}

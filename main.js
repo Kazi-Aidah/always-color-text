@@ -6540,7 +6540,8 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         const stylesArr = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
         this._lastSelectedQuickColor = null;
-        const openStylesSubmenu = (anchorEvent) => {
+        let closeMenuTimeout = null;
+        const openStylesSubmenu = (anchorEvent, positionOverride = null) => {
           if (!this.settings.quickStylesEnabled) return;
           if (this._openQuickStylesSubmenu) {
             try {
@@ -6590,14 +6591,66 @@ module.exports = class AlwaysColorText extends Plugin {
               });
             });
           });
-          sub.showAtMouseEvent(anchorEvent);
+          if (positionOverride) {
+            try {
+              sub.showAtPosition(positionOverride);
+            } catch (e) {
+              sub.showAtMouseEvent(anchorEvent);
+            }
+          } else {
+            sub.showAtMouseEvent(anchorEvent);
+          }
           this._openQuickStylesSubmenu = sub;
+          if (sub.dom) {
+            sub.dom.addEventListener("mouseenter", () => {
+              if (closeMenuTimeout) {
+                clearTimeout(closeMenuTimeout);
+                closeMenuTimeout = null;
+              }
+            });
+            sub.dom.addEventListener("mouseleave", () => {
+              closeMenuTimeout = setTimeout(() => {
+                if (this._openQuickStylesSubmenu) {
+                  try {
+                    this._openQuickStylesSubmenu.hide();
+                  } catch (_) {
+                  }
+                  this._openQuickStylesSubmenu = null;
+                }
+              }, 300);
+            });
+          }
         };
         if (this.settings.quickColorsEnabled && Array.isArray(this.settings.quickColors) && this.settings.quickColors.length > 0) {
           menu.addItem((item) => {
             const titleEl = document.createElement("div");
             titleEl.className = "menu-item tappable has-submenu";
             titleEl.classList.add("act-color-dots");
+            titleEl.addEventListener("mouseenter", (ev) => {
+              if (closeMenuTimeout) {
+                clearTimeout(closeMenuTimeout);
+                closeMenuTimeout = null;
+              }
+              if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
+                try {
+                  const rect = titleEl.getBoundingClientRect();
+                  openStylesSubmenu(ev, { x: rect.right, y: rect.top });
+                } catch (e) {
+                  openStylesSubmenu(ev);
+                }
+              }
+            });
+            titleEl.addEventListener("mouseleave", () => {
+              closeMenuTimeout = setTimeout(() => {
+                if (this._openQuickStylesSubmenu) {
+                  try {
+                    this._openQuickStylesSubmenu.hide();
+                  } catch (_) {
+                  }
+                  this._openQuickStylesSubmenu = null;
+                }
+              }, 300);
+            });
             const iconLeft = document.createElement("div");
             iconLeft.className = "menu-item-icon";
             const titleText = document.createElement("div");
@@ -6624,6 +6677,22 @@ module.exports = class AlwaysColorText extends Plugin {
                 dotB.addEventListener("click", async (ev) => {
                   ev.preventDefault();
                   ev.stopPropagation();
+                  if (activeDotEl === dotB) {
+                    try {
+                      activeDotEl.style.outline = "";
+                    } catch (_) {
+                    }
+                    try {
+                      activeDotEl.classList.remove("act-color-dot-active");
+                    } catch (_) {
+                    }
+                    activeDotEl = null;
+                    this._lastSelectedQuickColor = null;
+                    if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
+                      openStylesSubmenu(ev);
+                    }
+                    return;
+                  }
                   this._lastSelectedQuickColor = { textColor: pair.textColor || null, backgroundColor: pair.backgroundColor };
                   if (activeDotEl && activeDotEl !== dotB) {
                     try {
@@ -6700,7 +6769,10 @@ module.exports = class AlwaysColorText extends Plugin {
             }
             titleEl.appendChild(iconRight);
             item.setTitle(titleEl);
-            item.onClick(() => {
+            item.onClick((evt) => {
+              if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
+                openStylesSubmenu(evt);
+              }
             });
           });
         } else if (this.settings.quickStylesEnabled && Array.isArray(this.settings.quickStyles) && this.settings.quickStyles.length > 0) {
@@ -9610,7 +9682,6 @@ module.exports = class AlwaysColorText extends Plugin {
       pathSortMode: "last-added",
       language: "en",
       customSwatchesFolded: false,
-      // Persist custom swatches folded state
       globalHighlightFolded: false,
       readingModeHighlightFilter: null,
       // null: show all, 'highlight': show only highlights, 'text': show only text colors
