@@ -5840,6 +5840,10 @@ module.exports = class AlwaysColorText extends Plugin {
     this._translations = typeof locales === "object" && locales ? locales : {};
     this._externalTranslations = {};
     this._regexCache = new RegexCache(200);
+    this._compiledWordPatterns = {};
+    this._wordPatternsCompilationDirty = true;
+    this._compiledTextBgPatterns = {};
+    this._textBgPatternsCompilationDirty = true;
     this._compiledBlacklistWords = [];
     this._compiledBlacklistEntries = [];
     this._compiledBlacklistGroups = {};
@@ -9900,6 +9904,10 @@ module.exports = class AlwaysColorText extends Plugin {
     this.compileWordEntries();
     this.compileTextBgColoringEntries();
     this.compileBlacklistEntries();
+    this._wordPatternsCompilationDirty = true;
+    this._textBgPatternsCompilationDirty = true;
+    this._blacklistCompilationDirty = true;
+    this.compileBlacklistEntries();
     try {
       this.startMemoryMonitor();
     } catch (e) {
@@ -10733,6 +10741,14 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // --- Safe Regex Matching Loop with Protection ---
   safeMatchLoop(regex, text) {
+    if (this._wordPatternsCompilationDirty) try {
+      this.compileWordPatterns();
+    } catch (e) {
+    }
+    if (this._textBgPatternsCompilationDirty) try {
+      this.compileTextBgPatterns();
+    } catch (e) {
+    }
     const matches = [];
     try {
       if (regex) regex.lastIndex = 0;
@@ -12174,6 +12190,59 @@ module.exports = class AlwaysColorText extends Plugin {
       const all = (Array.isArray(this._compiledWordEntries) ? this._compiledWordEntries : []).concat(Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : []);
       this._settingsIndex && this._settingsIndex.rebuild(all);
     } catch (_) {
+    }
+    try {
+      this.compileWordPatterns();
+    } catch (e) {
+      debugError("COMPILE", "Failed to compile word patterns", e);
+    }
+    try {
+      this.compileTextBgPatterns();
+    } catch (e) {
+      debugError("COMPILE", "Failed to compile text+bg patterns", e);
+    }
+  }
+  // OPTIMIZATION: Pre-compile word pattern regexes for extreme performance
+  // This builds lookup table for quick pattern matching without recreating RegExp
+  compileWordPatterns() {
+    try {
+      this._compiledWordPatterns = {};
+      const entries = Array.isArray(this._compiledWordEntries) ? this._compiledWordEntries : [];
+      for (const entry of entries) {
+        if (!entry || entry.invalid || !entry.regex) continue;
+        const key = `${entry.pattern}::${entry.flags || ""}`;
+        this._compiledWordPatterns[key] = {
+          regex: entry.regex,
+          pattern: entry.pattern,
+          flags: entry.flags,
+          entry
+        };
+      }
+      this._wordPatternsCompilationDirty = false;
+      debugLog("COMPILE_WORD_PATTERNS", `Compiled ${Object.keys(this._compiledWordPatterns).length} word patterns`);
+    } catch (e) {
+      debugError("COMPILE_WORD_PATTERNS", "Failed to compile word patterns", e);
+    }
+  }
+  // OPTIMIZATION: Pre-compile text+bg pattern regexes for extreme performance
+  compileTextBgPatterns() {
+    try {
+      this._compiledTextBgPatterns = {};
+      const entries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
+      for (const entry of entries) {
+        if (!entry || entry.invalid || !entry.regex) continue;
+        const key = `${entry.pattern}::${entry.flags || ""}`;
+        this._compiledTextBgPatterns[key] = {
+          regex: entry.regex,
+          pattern: entry.pattern,
+          flags: entry.flags,
+          entry
+        };
+      }
+      this._textBgPatternsCompilationDirty = false;
+      debugLog("COMPILE_TEXTBG_PATTERNS", `Compiled ${Object.keys(this._compiledTextBgPatterns).length} text+bg patterns`);
+    } catch (e) {
+      debugError("COMPILE_TEXTBG_PATTERNS", "Failed to compile text+bg patterns", e);
     }
   }
   // OPTIMIZATION: Pre-compile blacklist regexes for performance
@@ -17974,7 +18043,9 @@ var HighlightStylingModal = class extends Modal {
       const toUid = groupSelect.value || "";
       const fromUid = currentGroupUid || "";
       if (toUid === fromUid) return;
-      console.log("[GROUP_CHANGE] fromUid:", fromUid, "toUid:", toUid, "entry:", this.entry);
+      console.log("\n====== [GROUP_CHANGE] START ======");
+      console.log("[GROUP_CHANGE] fromUid:", fromUid, "toUid:", toUid);
+      console.log("[GROUP_CHANGE] entry:", this.entry);
       if (this.plugin.settings.quickStyles.includes(this.entry)) {
         this.entry.groupUid = toUid;
         currentGroupUid = toUid;
@@ -17984,41 +18055,46 @@ var HighlightStylingModal = class extends Modal {
       const settings = this.plugin.settings;
       if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
       if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
-      if (fromUid === "") {
-        const idx = settings.wordEntries.indexOf(this.entry);
-        console.log("[GROUP_CHANGE] Removing from wordEntries, index:", idx);
-        if (idx !== -1) {
-          settings.wordEntries.splice(idx, 1);
-        }
+      console.log("\n[GROUP_CHANGE] === BEFORE STATE ===");
+      console.log("[GROUP_CHANGE] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
+      console.log("\n[GROUP_CHANGE] === REMOVING FROM ALL LOCATIONS ===");
+      const wordEntriesIdx = settings.wordEntries.indexOf(this.entry);
+      if (wordEntriesIdx !== -1) {
+        console.log("[GROUP_CHANGE] \u2713 Removing from wordEntries at index:", wordEntriesIdx);
+        settings.wordEntries.splice(wordEntriesIdx, 1);
       } else {
-        const fromGroup = settings.wordEntryGroups.find((g) => g && g.uid === fromUid);
-        console.log("[GROUP_CHANGE] fromGroup found:", !!fromGroup, "entries:", fromGroup?.entries?.length);
-        if (fromGroup && Array.isArray(fromGroup.entries)) {
-          const idx = fromGroup.entries.indexOf(this.entry);
-          console.log("[GROUP_CHANGE] indexOf in fromGroup.entries:", idx);
-          if (idx !== -1) {
-            console.log("[GROUP_CHANGE] REMOVING entry from fromGroup at index", idx);
-            fromGroup.entries.splice(idx, 1);
-            console.log("[GROUP_CHANGE] fromGroup.entries after removal:", fromGroup.entries.length);
+        console.log("[GROUP_CHANGE] \u25CB Entry not in wordEntries");
+      }
+      for (const group of settings.wordEntryGroups) {
+        if (group && Array.isArray(group.entries)) {
+          const groupIdx = group.entries.indexOf(this.entry);
+          if (groupIdx !== -1) {
+            console.log('[GROUP_CHANGE] \u2713 Removing from group "' + group.name + '" (uid=' + group.uid + ") at index:", groupIdx);
+            group.entries.splice(groupIdx, 1);
+            console.log("[GROUP_CHANGE]   Group now has", group.entries.length, "entries");
           } else {
-            console.log("[GROUP_CHANGE] Entry NOT found in fromGroup.entries, searching manually...");
-            for (let i = 0; i < fromGroup.entries.length; i++) {
-              if (fromGroup.entries[i] === this.entry) {
-                console.log("[GROUP_CHANGE] Found at index", i, "removing");
-                fromGroup.entries.splice(i, 1);
-                break;
-              }
-            }
-            console.log("[GROUP_CHANGE] Manual search done, fromGroup.entries now:", fromGroup.entries.length);
+            console.log('[GROUP_CHANGE] \u25CB Entry not in group "' + group.name + '" (uid=' + group.uid + ")");
           }
         }
       }
+      console.log("\n[GROUP_CHANGE] === AFTER REMOVAL STATE ===");
+      console.log("[GROUP_CHANGE] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
+      console.log("\n[GROUP_CHANGE] === ADDING TO NEW LOCATION ===");
       if (toUid === "") {
         try {
           delete this.entry.groupUid;
         } catch (_) {
         }
         settings.wordEntries.push(this.entry);
+        console.log("[GROUP_CHANGE] \u2713 Added to wordEntries (Default)");
       } else {
         const tgtGroup = settings.wordEntryGroups.find((g) => g && g.uid === toUid);
         if (tgtGroup) {
@@ -18028,17 +18104,44 @@ var HighlightStylingModal = class extends Modal {
           } catch (_) {
           }
           tgtGroup.entries.push(this.entry);
-          console.log("[GROUP_CHANGE] Added to tgtGroup, entries now:", tgtGroup.entries.length);
+          console.log('[GROUP_CHANGE] \u2713 Added to target group "' + tgtGroup.name + '" (uid=' + toUid + "), now has", tgtGroup.entries.length, "entries");
+        } else {
+          console.log("[GROUP_CHANGE] \u2717 Target group not found! toUid:", toUid);
         }
       }
+      console.log("\n[GROUP_CHANGE] === AFTER ADDITION STATE ===");
+      console.log("[GROUP_CHANGE] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
       currentGroupUid = toUid;
       await this.plugin.saveSettings();
-      console.log("[GROUP_CHANGE] Settings saved");
+      console.log("\n[GROUP_CHANGE] \u2713 Settings saved to disk");
+      console.log("\n[GROUP_CHANGE] === AFTER SAVE STATE ===");
+      console.log("[GROUP_CHANGE] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
+      console.log("\n[GROUP_CHANGE] === REFRESHING ===");
       this.plugin.compileWordEntries();
+      console.log("[GROUP_CHANGE] \u2713 compileWordEntries() called");
       this.plugin.compileTextBgColoringEntries();
+      console.log("[GROUP_CHANGE] \u2713 compileTextBgColoringEntries() called");
       this.plugin.reconfigureEditorExtensions();
+      console.log("[GROUP_CHANGE] \u2713 reconfigureEditorExtensions() called");
       this.plugin.forceRefreshAllEditors();
+      console.log("[GROUP_CHANGE] \u2713 forceRefreshAllEditors() called");
       this.plugin.triggerActiveDocumentRerender();
+      console.log("[GROUP_CHANGE] \u2713 triggerActiveDocumentRerender() called");
+      console.log("\n[GROUP_CHANGE] === FINAL STATE AFTER REFRESH ===");
+      console.log("[GROUP_CHANGE] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
+      console.log("====== [GROUP_CHANGE] END ======\n");
     });
     const matchSelect = headerRow.createEl("select");
     matchSelect.style.minWidth = "120px";
@@ -18713,6 +18816,7 @@ var EditEntryModal = class extends Modal {
         this.entry.uid = Date.now();
       }
     }
+    this.originalEntryUid = this.entry?.uid;
     this.onSaved = onSaved;
     this._handlers = [];
     this._dropdownCleanups = [];
@@ -18777,6 +18881,7 @@ var EditEntryModal = class extends Modal {
       }
     } catch (e) {
     }
+    this.originalGroupUid = currentGroupUid;
     try {
       const entryUid = this.entry && this.entry.uid ? String(this.entry.uid) : "";
       const normalizePatterns = (e) => {
@@ -19021,77 +19126,103 @@ var EditEntryModal = class extends Modal {
     }
     const groupChangeHandler = async () => {
       const newGroupUid = groupSelect.value || "";
-      const originalGroupUid = currentGroupUid;
+      const originalGroupUid = this.originalGroupUid;
       if (newGroupUid === originalGroupUid) return;
+      console.log("\n====== [GROUP_CHANGE_EDIT_MODAL] START ======");
+      console.log("[GROUP_CHANGE_EDIT_MODAL] Moving entry from group:", originalGroupUid, "to group:", newGroupUid);
+      console.log("[GROUP_CHANGE_EDIT_MODAL] Entry object:", this.entry);
       const settings = this.plugin.settings;
       if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
       if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
-      let entryToMove = null;
-      try {
-        entryToMove = JSON.parse(JSON.stringify(this.entry));
-      } catch (e) {
-        console.error("Failed to copy entry", e);
-        return;
+      console.log("\n[GROUP_CHANGE_EDIT_MODAL] === BEFORE STATE ===");
+      console.log("[GROUP_CHANGE_EDIT_MODAL] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE_EDIT_MODAL] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE_EDIT_MODAL] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
+      console.log("\n[GROUP_CHANGE_EDIT_MODAL] === REMOVING FROM ALL LOCATIONS ===");
+      const wordEntriesIdx = settings.wordEntries.indexOf(this.entry);
+      if (wordEntriesIdx !== -1) {
+        console.log("[GROUP_CHANGE_EDIT_MODAL] \u2713 Removing from wordEntries at index:", wordEntriesIdx);
+        settings.wordEntries.splice(wordEntriesIdx, 1);
+      } else {
+        console.log("[GROUP_CHANGE_EDIT_MODAL] \u25CB Entry not in wordEntries");
       }
-      const entryUid = this.entry?.uid;
-      const entryPattern = this.entry?.pattern;
-      const findEntryIndex = (arr) => {
-        if (!Array.isArray(arr)) return -1;
-        for (let i = 0; i < arr.length; i++) {
-          const e = arr[i];
-          if (!e) continue;
-          if (entryUid && e.uid && String(e.uid) === String(entryUid)) return i;
-          if (entryPattern && e.pattern === entryPattern && e.isRegex === this.entry.isRegex) return i;
-        }
-        return -1;
-      };
-      let idx = findEntryIndex(settings.wordEntries);
-      while (idx !== -1) {
-        settings.wordEntries.splice(idx, 1);
-        idx = findEntryIndex(settings.wordEntries);
-      }
-      if (Array.isArray(settings.wordEntryGroups)) {
-        for (const group of settings.wordEntryGroups) {
-          if (!group || !Array.isArray(group.entries)) continue;
-          let gIdx = findEntryIndex(group.entries);
-          while (gIdx !== -1) {
-            group.entries.splice(gIdx, 1);
-            gIdx = findEntryIndex(group.entries);
+      for (const group of settings.wordEntryGroups) {
+        if (group && Array.isArray(group.entries)) {
+          const groupIdx = group.entries.indexOf(this.entry);
+          if (groupIdx !== -1) {
+            console.log('[GROUP_CHANGE_EDIT_MODAL] \u2713 Removing from group "' + group.name + '" (uid=' + group.uid + ") at index:", groupIdx);
+            group.entries.splice(groupIdx, 1);
+            console.log("[GROUP_CHANGE_EDIT_MODAL]   Group now has", group.entries.length, "entries");
+          } else {
+            console.log('[GROUP_CHANGE_EDIT_MODAL] \u25CB Entry not in group "' + group.name + '" (uid=' + group.uid + ")");
           }
         }
       }
+      console.log("\n[GROUP_CHANGE_EDIT_MODAL] === AFTER REMOVAL STATE ===");
+      console.log("[GROUP_CHANGE_EDIT_MODAL] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE_EDIT_MODAL] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE_EDIT_MODAL] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
+      console.log("\n[GROUP_CHANGE_EDIT_MODAL] === ADDING SAME OBJECT TO NEW LOCATION ===");
       if (newGroupUid === "") {
         try {
-          delete entryToMove.groupUid;
+          delete this.entry.groupUid;
         } catch (_) {
         }
-        settings.wordEntries.push(entryToMove);
+        settings.wordEntries.push(this.entry);
+        console.log("[GROUP_CHANGE_EDIT_MODAL] \u2713 Added SAME entry object to wordEntries (Default)");
       } else {
         const newGroup = settings.wordEntryGroups.find((g) => g && g.uid === newGroupUid);
         if (newGroup) {
           if (!Array.isArray(newGroup.entries)) newGroup.entries = [];
           try {
-            entryToMove.groupUid = newGroupUid;
+            this.entry.groupUid = newGroupUid;
           } catch (_) {
           }
-          newGroup.entries.push(entryToMove);
+          newGroup.entries.push(this.entry);
+          console.log('[GROUP_CHANGE_EDIT_MODAL] \u2713 Added SAME entry object to target group "' + newGroup.name + '" (uid=' + newGroupUid + "), now has", newGroup.entries.length, "entries");
         } else {
-          try {
-            delete entryToMove.groupUid;
-          } catch (_) {
-          }
-          settings.wordEntries.push(entryToMove);
+          console.log("[GROUP_CHANGE_EDIT_MODAL] \u2717 Target group not found! newGroupUid:", newGroupUid);
         }
       }
+      console.log("\n[GROUP_CHANGE_EDIT_MODAL] === AFTER ADDITION STATE ===");
+      console.log("[GROUP_CHANGE_EDIT_MODAL] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE_EDIT_MODAL] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE_EDIT_MODAL] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
       currentGroupUid = newGroupUid;
-      this.entry = entryToMove;
       await this.plugin.saveSettings();
+      console.log("\n[GROUP_CHANGE_EDIT_MODAL] \u2713 Settings saved to disk");
+      console.log("\n[GROUP_CHANGE_EDIT_MODAL] === AFTER SAVE STATE ===");
+      console.log("[GROUP_CHANGE_EDIT_MODAL] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE_EDIT_MODAL] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE_EDIT_MODAL] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
+      console.log("\n[GROUP_CHANGE_EDIT_MODAL] === REFRESHING ===");
       this.plugin.compileWordEntries();
+      console.log("[GROUP_CHANGE_EDIT_MODAL] \u2713 compileWordEntries() called");
       this.plugin.compileTextBgColoringEntries();
+      console.log("[GROUP_CHANGE_EDIT_MODAL] \u2713 compileTextBgColoringEntries() called");
       this.plugin.reconfigureEditorExtensions();
+      console.log("[GROUP_CHANGE_EDIT_MODAL] \u2713 reconfigureEditorExtensions() called");
       this.plugin.forceRefreshAllEditors();
+      console.log("[GROUP_CHANGE_EDIT_MODAL] \u2713 forceRefreshAllEditors() called");
       this.plugin.forceRefreshAllReadingViews();
+      console.log("[GROUP_CHANGE_EDIT_MODAL] \u2713 forceRefreshAllReadingViews() called");
       this.plugin.triggerActiveDocumentRerender();
+      console.log("[GROUP_CHANGE_EDIT_MODAL] \u2713 triggerActiveDocumentRerender() called");
+      console.log("\n[GROUP_CHANGE_EDIT_MODAL] === FINAL STATE AFTER REFRESH ===");
+      console.log("[GROUP_CHANGE_EDIT_MODAL] wordEntries count:", settings.wordEntries.length);
+      console.log("[GROUP_CHANGE_EDIT_MODAL] Entry in wordEntries?:", settings.wordEntries.includes(this.entry));
+      settings.wordEntryGroups.forEach((g, idx) => {
+        console.log(`[GROUP_CHANGE_EDIT_MODAL] Group ${idx} (${g.name}, uid=${g.uid}): ${g.entries?.length || 0} entries, contains this entry?:`, g.entries?.includes(this.entry));
+      });
+      console.log("====== [GROUP_CHANGE_EDIT_MODAL] END ======\n");
       try {
         if (typeof this.onSaved === "function") this.onSaved();
       } catch (_) {
@@ -20621,6 +20752,11 @@ var EditWordGroupModal = class extends Modal {
     this._cleanupHandlers.push(() => btnSave.removeEventListener("click", saveHandler));
   }
   _refreshGroupEntries() {
+    const currentGroupInSettings = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups.find((g) => g && g.uid === this.group?.uid) : null;
+    if (currentGroupInSettings) {
+      this.group = currentGroupInSettings;
+      console.log("[REFRESH_GROUP_ENTRIES] Reloaded group from settings");
+    }
     console.log("[REFRESH_GROUP_ENTRIES] Called for group:", this.group?.uid, "with", this.group?.entries?.length, "entries");
     if (!this._listDiv) return;
     this._listDiv.empty();
@@ -20939,6 +21075,14 @@ var EditWordGroupModal = class extends Modal {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const menu = new Menu(this.app);
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t("edit_entry_details", "Edit Entry Details")).setIcon("pencil").onClick(() => {
+              const modal = new EditEntryModal(this.app, this.plugin, entry, () => {
+                this._refreshGroupEntries();
+              });
+              modal.open();
+            });
+          });
           if (entry.isRegex) {
             menu.addItem((item) => {
               item.setTitle(this.plugin.t("open_in_regex_tester", "Open in Regex Tester")).setIcon("code").onClick(() => {
@@ -20983,7 +21127,15 @@ var EditWordGroupModal = class extends Modal {
   }
   onClose() {
     try {
-      this.onSave(this.group);
+      const currentGroupInSettings = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups.find((g) => g && g.uid === this.group?.uid) : null;
+      if (currentGroupInSettings) {
+        console.log("[WORD_GROUP_MODAL_CLOSE] Group found in current settings, NOT saving stale copy");
+        console.log("[WORD_GROUP_MODAL_CLOSE] Our copy has", this.group.entries?.length, "entries");
+        console.log("[WORD_GROUP_MODAL_CLOSE] Current settings has", currentGroupInSettings.entries?.length, "entries");
+      } else {
+        console.log("[WORD_GROUP_MODAL_CLOSE] Group not found in settings, saving our copy");
+        this.onSave(this.group);
+      }
     } catch (e) {
       debugError("MODAL", "auto-save error on close", e);
     }
@@ -20997,6 +21149,31 @@ var EditWordGroupModal = class extends Modal {
       this._cleanupHandlers = [];
       this.contentEl.empty();
     } catch (e) {
+    }
+  }
+};
+var SelectBlacklistGroupModal = class extends FuzzySuggestModal {
+  constructor(app, plugin, onSelected) {
+    super(app);
+    this.plugin = plugin;
+    this.onSelected = onSelected;
+    this.setPlaceholder(this.plugin.t("prompt_select_blacklist_group", "Search blacklist groups\u2026"));
+  }
+  getItems() {
+    const groups = Array.isArray(this.plugin.settings.blacklistEntryGroups) ? this.plugin.settings.blacklistEntryGroups : [];
+    return groups.map((group) => ({
+      group,
+      label: group && group.name && String(group.name).trim().length > 0 ? String(group.name) : "(unnamed group)"
+    }));
+  }
+  getItemText(item) {
+    return String(item.label || "");
+  }
+  onChooseItem(item, evt) {
+    if (evt && evt.button === 2) return;
+    const actualItem = item.item || item;
+    if (this.onSelected) {
+      this.onSelected(actualItem.group);
     }
   }
 };
@@ -21474,6 +21651,39 @@ var EditBlacklistGroupModal = class extends Modal {
               });
             });
           }
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t("move_to_blacklist_group", "Move to blacklist group")).setIcon("arrow-right").onClick(() => {
+              const blacklistGroups = Array.isArray(this.plugin.settings.blacklistEntryGroups) ? this.plugin.settings.blacklistEntryGroups : [];
+              if (blacklistGroups.length === 0) {
+                new Notice(this.plugin.t("no_blacklist_groups_available", "No blacklist groups available"));
+                return;
+              }
+              const modal = new SelectBlacklistGroupModal(this.app, this.plugin, async (selectedGroup) => {
+                try {
+                  const entryToMove = JSON.parse(JSON.stringify(entry));
+                  const idx = this.group.entries.indexOf(entry);
+                  if (idx !== -1) {
+                    this.group.entries.splice(idx, 1);
+                  }
+                  if (!Array.isArray(selectedGroup.entries)) selectedGroup.entries = [];
+                  entryToMove.groupUid = selectedGroup.uid;
+                  selectedGroup.entries.push(entryToMove);
+                  await this.plugin.saveSettings();
+                  this.plugin.compileBlacklistEntries();
+                  this.plugin.reconfigureEditorExtensions();
+                  this.plugin.forceRefreshAllEditors();
+                  this.plugin.triggerActiveDocumentRerender();
+                  this._refreshGroupEntries();
+                  const groupName = selectedGroup && selectedGroup.name && String(selectedGroup.name).trim().length > 0 ? selectedGroup.name : "(unnamed group)";
+                  new Notice(this.plugin.t("entry_moved_to_group", 'Entry moved to "{groupName}"').replace("{groupName}", groupName));
+                } catch (e) {
+                  debugError("MODAL", "Error moving entry to blacklist group:", e);
+                  new Notice(this.plugin.t("notice_error_moving_entry", "Error moving entry. Please try again."));
+                }
+              });
+              modal.open();
+            });
+          });
           menu.addItem((item) => {
             item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(() => {
               const dup = JSON.parse(JSON.stringify(entry));
@@ -22719,6 +22929,39 @@ var ColorSettingTab = class extends PluginSettingTab {
             if (ev && ev.stopPropagation) ev.stopPropagation();
             const menu = new Menu(this.app);
             menu.addItem((item) => {
+              item.setTitle(this.plugin.t("move_to_blacklist_group", "Move to blacklist group")).setIcon("arrow-right").onClick(() => {
+                const blacklistGroups = Array.isArray(this.plugin.settings.blacklistEntryGroups) ? this.plugin.settings.blacklistEntryGroups : [];
+                if (blacklistGroups.length === 0) {
+                  new Notice(this.plugin.t("no_blacklist_groups_available", "No blacklist groups available"));
+                  return;
+                }
+                const modal = new SelectBlacklistGroupModal(this.app, this.plugin, async (selectedGroup) => {
+                  try {
+                    const entryToMove = JSON.parse(JSON.stringify(entry));
+                    let entryIdx = resolveBlacklistIndex();
+                    if (entryIdx !== -1) {
+                      this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
+                    }
+                    if (!Array.isArray(selectedGroup.entries)) selectedGroup.entries = [];
+                    entryToMove.groupUid = selectedGroup.uid;
+                    selectedGroup.entries.push(entryToMove);
+                    await this.plugin.saveSettings();
+                    this.plugin.compileBlacklistEntries();
+                    this.plugin.reconfigureEditorExtensions();
+                    this.plugin.forceRefreshAllEditors();
+                    this.plugin.triggerActiveDocumentRerender();
+                    this._refreshBlacklistWords();
+                    const groupName = selectedGroup && selectedGroup.name && String(selectedGroup.name).trim().length > 0 ? selectedGroup.name : "(unnamed group)";
+                    new Notice(this.plugin.t("entry_moved_to_group", 'Entry moved to "{groupName}"').replace("{groupName}", groupName));
+                  } catch (e) {
+                    debugError("SETTINGS", "Error moving entry to blacklist group:", e);
+                    new Notice(this.plugin.t("notice_error_moving_entry", "Error moving entry. Please try again."));
+                  }
+                });
+                modal.open();
+              });
+            });
+            menu.addItem((item) => {
               item.setTitle("Duplicate Entry").setIcon("copy").onClick(duplicateHandler);
             });
             if (entry.isRegex) {
@@ -22726,6 +22969,9 @@ var ColorSettingTab = class extends PluginSettingTab {
                 item.setTitle("Open in Regex Tester").setIcon("pencil").onClick(openInRegexTesterHandler);
               });
             }
+            menu.addItem((item) => {
+              item.setTitle(this.plugin.t("context_delete_entry", "Delete entry")).setIcon("trash").onClick(delHandler);
+            });
             menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
           } catch (e) {
             debugError("SETTINGS", "context menu error", e);
