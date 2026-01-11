@@ -36,15 +36,15 @@ const { show_toggle_command } = require('./i18n/fr');
 const EDITOR_PERFORMANCE_CONSTANTS = {
   MAX_PATTERNS_STANDARD: 20,           // Use standard processing for <= 20 patterns (reduced)
   MAX_TEXT_LENGTH_STANDARD: 5000,     // Use standard processing for <= 5k chars (reduced)
-  PATTERN_CHUNK_SIZE: 15,            // Process 15 patterns per chunk (reduced)  
-  TEXT_CHUNK_SIZE: 2500,            // Process 2.5k chars per chunk (reduced)
+  PATTERN_CHUNK_SIZE: 10,             // REDUCED: Process 10 patterns per chunk during typing
+  TEXT_CHUNK_SIZE: 2000,              // REDUCED: Process 2k chars per chunk during typing
   MAX_MATCHES_PER_PATTERN: 100,      // Max matches per pattern (increased for better UX)
   MAX_TOTAL_MATCHES: 2000,          // Absolute limit for decorations (increased)
-  TYPING_DEBOUNCE_MS: 300,          // Delay rebuilds while typing - 300ms
-  TYPING_GRACE_PERIOD_MS: 1000,     // Skip decoration during active typing (1 second after last keystroke)
-  VIEWPORT_EXTENSION: 200,          // Extra pixels beyond viewport to include in text processing (increased)
-  CALLOUT_THROTTLE_MS: 1000,       // Throttle callout processing to 1 second
-  TABLE_THROTTLE_MS: 1000          // Throttle table processing to 1 second
+  TYPING_DEBOUNCE_MS: 500,           // INCREASED: Delay rebuilds while typing - 500ms (wait longer before recomputing)
+  TYPING_GRACE_PERIOD_MS: 1500,      // INCREASED: Skip decoration during active typing (1.5 seconds after last keystroke)
+  VIEWPORT_EXTENSION: 100,            // Buffer beyond viewport to include in text processing
+  CALLOUT_THROTTLE_MS: 1000,         // Throttle callout processing to 1 second
+  TABLE_THROTTLE_MS: 1000            // Throttle table processing to 1 second
 };
 
 // Pre-compiled regex patterns for performance
@@ -9330,6 +9330,37 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
+  // CRITICAL PERFORMANCE FIX: Check if element is inside a collapsed header section
+  // This prevents processing hidden text that contributes to lag
+  isElementInCollapsedSection(element) {
+    try {
+      // Check if element itself is hidden with display:none
+      const style = window.getComputedStyle(element);
+      if (style.display === 'none') return true;
+      if (style.visibility === 'hidden') return true;
+    } catch (_) { }
+
+    // Walk up the DOM tree to find a collapsed heading
+    let current = element.parentElement;
+    while (current && current !== document.body) {
+      try {
+        // Check for Obsidian's collapsed header marker
+        if (current.classList.contains('is-collapsed')) {
+          return true;
+        }
+        
+        // Check for inline hidden/collapsed markers
+        const style = window.getComputedStyle(current);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+          return true;
+        }
+      } catch (_) { }
+      current = current.parentElement;
+    }
+    
+    return false;
+  }
+
   // Efficient, non-recursive, DOM walker for reading mode
   _wrapMatchesRecursive(element, entries, folderEntry = null, options = {}) {
     debugLog('WRAP', `Starting with ${entries.length} entries`);
@@ -9494,6 +9525,7 @@ module.exports = class AlwaysColorText extends Plugin {
     // Debug: report how many block-like elements were discovered and what will be skipped
     try { debugLog('COLOR', `Processing ${queue.length} blocks, skipping first ${skipFirstN}`); } catch (e) { }
     let visited = 0;
+    let collapsedSkipped = 0;
     for (let qIndex = 0; qIndex < queue.length; qIndex++) {
       const block = queue[qIndex];
       // Skip blocks we've been asked to skip (deferred pass)
@@ -9503,10 +9535,24 @@ module.exports = class AlwaysColorText extends Plugin {
         visited++;
         continue;
       }
+      
+      // CRITICAL PERFORMANCE FIX: Skip blocks inside collapsed sections
+      if (this.isElementInCollapsedSection(block)) {
+        collapsedSkipped++;
+        if ((collapsedSkipped % 50) === 1) {
+          try { debugLog('COLLAPSE_SKIP', `Skipping block in collapsed section (${collapsedSkipped} total skipped)`); } catch (e) { }
+        }
+        continue;
+      }
+      
       const effectiveStyle = 'text';
       // Call extracted per-block processor
       try { if ((qIndex % 100) === 0) debugLog('COLOR', `Processing block ${qIndex}`); } catch (e) { }
       this._errorRecovery.wrap('PROCESS_BLOCK', () => this._processBlock(block, allEntriesToProcess, folderEntry, { clearExisting, effectiveStyle, immediateLimit, qIndex, skipFirstN, element, forceProcess: (options && options.forceProcess) || this.settings.forceFullRenderInReading, maxMatches: (options && options.maxMatches) || (this.settings.forceFullRenderInReading ? Infinity : undefined) }), () => null);
+    }
+    
+    if (collapsedSkipped > 0) {
+      try { debugLog('COLLAPSE_SKIP', `Total collapsed blocks skipped: ${collapsedSkipped}`); } catch (e) { }
     }
 
     // Clear queue references to help GC
@@ -11564,8 +11610,9 @@ module.exports = class AlwaysColorText extends Plugin {
 
         let entries = plugin.getSortedWordEntries();
         const { from, to } = view.viewport;
-        // OPTIMIZATION: Use extended buffer for pattern matching at boundaries
         const docLength = view.state.doc.length;
+        
+        // OPTIMIZATION: Use extended buffer for pattern matching at boundaries
         const extendedTo = Math.min(to + EDITOR_PERFORMANCE_CONSTANTS.VIEWPORT_EXTENSION, docLength);
         const text = view.state.doc.sliceString(from, extendedTo);
 
@@ -13180,9 +13227,19 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
 
+        // OPTIMIZATION: Simple early exit for heading range check
+        // With 220+ headers, checking all headers per match was O(n²)
+        // Early exits skip headers that can't possibly overlap
         if (headingRanges && headingRanges.length > 0) {
           let inHeading = false;
-          for (const hr of headingRanges) { if (matchStart < hr.end && matchEnd > hr.start) { inHeading = true; break; } }
+          for (const hr of headingRanges) {
+            if (matchEnd <= hr.start) continue;
+            if (matchStart >= hr.end) continue;
+            if (matchStart < hr.end && matchEnd > hr.start) {
+              inHeading = true;
+              break;
+            }
+          }
           if (inHeading) continue;
         }
 
