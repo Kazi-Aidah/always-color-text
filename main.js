@@ -11778,10 +11778,8 @@ module.exports = class AlwaysColorText extends Plugin {
         return false;
       };
       const pathEval = this.evaluatePathRules(filePath);
-      const isFolderExcluded = pathEval.excluded && !pathEval.hasFileRule;
-      const isFileExplicitlyIncluded = pathEval.hasFileRule && pathEval.included;
-      if (isFolderExcluded && !isFileExplicitlyIncluded) {
-        debugLog("RULE_ENGINE", `Skipping: folder excluded for ${filePath}`);
+      if (pathEval.excluded) {
+        debugLog("RULE_ENGINE", `Skipping: path excluded for ${filePath}`);
         return false;
       }
       const matchType = (rule) => {
@@ -15423,46 +15421,18 @@ module.exports = class AlwaysColorText extends Plugin {
           }, EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS);
         }
         if (update.docChanged || update.viewportChanged || fileChanged) {
-          const onlyTypingChange = update.docChanged && !update.viewportChanged && !fileChanged;
-          if (onlyTypingChange) {
-            clearTimeout(this._typingDebounceTimer);
-            this._typingDebounceTimer = setTimeout(() => {
-              this.decorations = this.buildDeco(this.view);
-              setTimeout(() => {
-                try {
-                  if (plugin.settings.enabled) plugin._processLivePreviewCallouts(this.view);
-                } catch (_) {
-                }
-                try {
-                  if (plugin.settings.enabled) plugin._processLivePreviewTables(this.view);
-                } catch (_) {
-                }
-              }, 300);
-            }, Math.max(EDITOR_PERFORMANCE_CONSTANTS.TYPING_DEBOUNCE_MS, 200));
-          } else {
-            this.decorations = this.buildDeco(update.view);
-            if (update.viewportChanged) {
-              requestAnimationFrame(() => {
-                try {
-                  if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view);
-                } catch (_) {
-                }
-                try {
-                  if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view);
-                } catch (_) {
-                }
-              });
-            } else {
-              try {
-                if (plugin.settings.enabled) plugin._processLivePreviewCallouts(update.view);
-              } catch (_) {
-              }
-              try {
-                if (plugin.settings.enabled) plugin._processLivePreviewTables(update.view);
-              } catch (_) {
-              }
+          this.decorations = this.buildDeco(update.view);
+          clearTimeout(this._typingDebounceTimer);
+          this._typingDebounceTimer = setTimeout(() => {
+            try {
+              if (plugin.settings.enabled) plugin._processLivePreviewCallouts(this.view);
+            } catch (_) {
             }
-          }
+            try {
+              if (plugin.settings.enabled) plugin._processLivePreviewTables(this.view);
+            } catch (_) {
+            }
+          }, 300);
         }
       }
       destroy() {
@@ -16785,6 +16755,9 @@ module.exports = class AlwaysColorText extends Plugin {
           break;
         }
       }
+    } else {
+      const chunkMatches = this.processPatternChunk(text, from, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges);
+      allMatches = allMatches.concat(chunkMatches);
     }
     return this.applyDecorationsFromMatches(builder, allMatches, folderEntry);
   }
@@ -16794,7 +16767,7 @@ module.exports = class AlwaysColorText extends Plugin {
     const matches = [];
     for (const entry of patternChunk) {
       if (!entry || entry.invalid) continue;
-      const isPartialEntry = !entry.isTextBg && (!entry.styleType || entry.styleType === "text") && ["contains", "startswith", "endswith"].includes(String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern) && this.isLatinWordPattern(entry.pattern);
+      const isPartialEntry = !entry.isRegex && !entry.isTextBg && (!entry.styleType || entry.styleType === "text") && ["contains", "startswith", "endswith"].includes(String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern) && this.isLatinWordPattern(entry.pattern);
       if (isPartialEntry) continue;
       if (entry.fastTest && !entry.fastTest(text)) continue;
       const regex = entry.regex;
@@ -16863,7 +16836,7 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       if (matches.length > 200) break;
     }
-    const partialEntries = patternChunk.filter((e) => e && !e.invalid && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
+    const partialEntries = patternChunk.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
     if (partialEntries.length > 0 && matches.length < 200) {
       for (const entry of partialEntries) {
         const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
@@ -16961,7 +16934,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const isTextOnly = !entry.isTextBg && (!entry.styleType || entry.styleType === "text");
       const actualMatchType = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
       const isPartialMatch = ["contains", "startswith", "endswith"].includes(actualMatchType);
-      if (isTextOnly && isPartialMatch) continue;
+      if (!entry.isRegex && isTextOnly && isPartialMatch) continue;
       if (entry.fastTest && !entry.fastTest(chunkText)) continue;
       const regex = entry.regex;
       if (!regex) continue;
@@ -17028,7 +17001,7 @@ module.exports = class AlwaysColorText extends Plugin {
       if (matches.length > 30) break;
     }
     if (matches.length < 100) {
-      const textOnlyEntries = entries.filter((e) => e && !e.invalid && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
+      const textOnlyEntries = entries.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
       if (textOnlyEntries.length > 0) {
         for (const entry of textOnlyEntries) {
           const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
@@ -20782,7 +20755,7 @@ var EditWordGroupModal = class extends Modal {
     btnDelete.style.cursor = "pointer";
     btnDelete.style.padding = "8px 16px";
     const deleteHandler = () => {
-      new ConfirmationModal(this.app, this.plugin.t("confirm_delete_group_title", "Delete Group"), this.plugin.t("confirm_delete_group_desc", "Are you sure you want to delete this group?"), async () => {
+      new ConfirmationModal(this.app, this.plugin, this.plugin.t("confirm_delete_group_title", "Delete Group"), this.plugin.t("confirm_delete_group_desc", "Are you sure you want to delete this group?"), async () => {
         this.close();
         this.onDelete(this.group);
       }).open();
@@ -21519,7 +21492,7 @@ var EditBlacklistGroupModal = class extends Modal {
     btnDelete.style.cursor = "pointer";
     btnDelete.style.padding = "8px 16px";
     const deleteHandler = () => {
-      new ConfirmationModal(this.app, this.plugin.t("confirm_delete_group_title", "Delete Group"), this.plugin.t("confirm_delete_group_desc", "Are you sure you want to delete this group?"), async () => {
+      new ConfirmationModal(this.app, this.plugin, this.plugin.t("confirm_delete_group_title", "Delete Group"), this.plugin.t("confirm_delete_group_desc", "Are you sure you want to delete this group?"), async () => {
         this.close();
         this.onDelete(this.group);
       }).open();
@@ -23572,8 +23545,7 @@ var ColorSettingTab = class extends PluginSettingTab {
             this.plugin.settings.userCustomSwatches[i].color = val;
             this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map((s) => s.color);
             if (this.plugin.settings.linkSwatchUpdatesToEntries) {
-              const entries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
-              entries.forEach((e) => {
+              const updateEntry = (e) => {
                 try {
                   if (e) {
                     if (typeof e.color === "string" && e.color.toLowerCase() === String(prev || "").toLowerCase()) {
@@ -23590,6 +23562,14 @@ var ColorSettingTab = class extends PluginSettingTab {
                     }
                   }
                 } catch (_) {
+                }
+              };
+              const entries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+              entries.forEach(updateEntry);
+              const groups = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+              groups.forEach((g) => {
+                if (g && Array.isArray(g.entries)) {
+                  g.entries.forEach(updateEntry);
                 }
               });
             }
@@ -24316,11 +24296,30 @@ var ColorSettingTab = class extends PluginSettingTab {
       container.empty();
       const allGroups = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
       const q = String(this._groupSearch || "").toLowerCase().trim();
+      const swDefault = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
+      const swCustom = Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches : [];
+      const allSwatches = [...swDefault, ...swCustom];
+      const getSwatchName = (hex) => {
+        try {
+          if (!hex || !this.plugin.isValidHexColor(hex)) return "";
+          const m = allSwatches.find((sw) => sw && sw.color && String(sw.color).toLowerCase() === String(hex).toLowerCase());
+          return String(m && m.name ? m.name : "").toLowerCase();
+        } catch (_) {
+          return "";
+        }
+      };
       const groups = q ? allGroups.filter((g) => {
         const matchesName = String(g?.name || "").toLowerCase().includes(q);
         const matchesActive = q === "active" && g?.active;
         const matchesInactive = q === "inactive" && !g?.active;
-        return matchesName || matchesActive || matchesInactive;
+        const matchesSwatch = (Array.isArray(g.entries) ? g.entries : []).some((e) => {
+          const tHex = e && e.textColor && e.textColor !== "currentColor" ? e.textColor : this.plugin.isValidHexColor(e && e.color) ? e.color : "";
+          const bHex = this.plugin.isValidHexColor(e && e.backgroundColor) ? e.backgroundColor : "";
+          const tName = getSwatchName(tHex);
+          const bName = getSwatchName(bHex);
+          return tName.includes(q) || bName.includes(q);
+        });
+        return matchesName || matchesActive || matchesInactive || matchesSwatch;
       }) : allGroups;
       const saveDragReorder = async () => {
         const groupRows = Array.from(container.querySelectorAll("div[data-group-uid]"));
@@ -25119,7 +25118,7 @@ var ColorSettingTab = class extends PluginSettingTab {
               this.plugin._commandsRegistered = true;
             }
           } else {
-            new ConfirmationModal(this.app, this.plugin.t("restart_required_title", "Restart required"), this.plugin.t("restart_required_desc", "Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?"), () => {
+            new ConfirmationModal(this.app, this.plugin, this.plugin.t("restart_required_title", "Restart required"), this.plugin.t("restart_required_desc", "Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?"), () => {
               try {
                 location.reload();
               } catch (e) {
@@ -25941,7 +25940,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       presetsBtn.addEventListener("click", presetsHandler);
       this._cleanupHandlers.push(() => presetsBtn.removeEventListener("click", presetsHandler));
       new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_words", "Delete all defined words/patterns")).onClick(async () => {
-        new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_title", "Delete all words"), this.plugin.t("confirm_delete_all_desc", "Are you sure you want to delete all your colored words/patterns? You can't undo this!"), async () => {
+        new ConfirmationModal(this.app, this.plugin, this.plugin.t("confirm_delete_all_title", "Delete all words"), this.plugin.t("confirm_delete_all_desc", "Are you sure you want to delete all your colored words/patterns? You can't undo this!"), async () => {
           this.plugin.settings.wordEntries = [];
           await this.plugin.saveSettings();
           this.plugin.reconfigureEditorExtensions();
@@ -26052,7 +26051,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         }
       };
       new Setting(groupButtonsContainer).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_groups", "Delete all Word Groups")).onClick(async () => {
-        new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_groups_title", "Delete All Word Groups"), this.plugin.t("confirm_delete_all_groups_desc", "Are you sure you want to delete ALL word groups? This cannot be undone!"), async () => {
+        new ConfirmationModal(this.app, this.plugin, this.plugin.t("confirm_delete_all_groups_title", "Delete All Word Groups"), this.plugin.t("confirm_delete_all_groups_desc", "Are you sure you want to delete ALL word groups? This cannot be undone!"), async () => {
           this.plugin.settings.wordEntryGroups = [];
           await this.plugin.saveSettings();
           this.plugin.compileWordEntries();
@@ -26256,7 +26255,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       blacklistPresetsBtn.addEventListener("click", blacklistPresetsHandler);
       this._cleanupHandlers.push(() => blacklistPresetsBtn.removeEventListener("click", blacklistPresetsHandler));
       new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_blacklist", "Delete all blacklisted words/patterns")).onClick(async () => {
-        new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_blacklist_title", "Delete all blacklisted words"), this.plugin.t("confirm_delete_all_blacklist_desc", "Are you sure you want to delete all blacklist entries? You can't undo this!"), async () => {
+        new ConfirmationModal(this.app, this.plugin, this.plugin.t("confirm_delete_all_blacklist_title", "Delete all blacklisted words"), this.plugin.t("confirm_delete_all_blacklist_desc", "Are you sure you want to delete all blacklist entries? You can't undo this!"), async () => {
           this.plugin.settings.blacklistEntries = [];
           await this.plugin.saveSettings();
           this._refreshBlacklistWords();
@@ -26355,7 +26354,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         }
       };
       new Setting(blGroupButtonsContainer).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_blacklist_groups", "Delete all Blacklist Groups")).onClick(async () => {
-        new ConfirmationModal(this.app, this.plugin.t("confirm_delete_all_blacklist_groups_title", "Delete All Blacklist Groups"), this.plugin.t("confirm_delete_all_blacklist_groups_desc", "Are you sure you want to delete ALL blacklist groups? This cannot be undone!"), async () => {
+        new ConfirmationModal(this.app, this.plugin, this.plugin.t("confirm_delete_all_blacklist_groups_title", "Delete All Blacklist Groups"), this.plugin.t("confirm_delete_all_blacklist_groups_desc", "Are you sure you want to delete ALL blacklist groups? This cannot be undone!"), async () => {
           this.plugin.settings.blacklistEntryGroups = [];
           await this.plugin.saveSettings();
           if (this.plugin.settings.showBlacklistGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
@@ -27686,8 +27685,9 @@ var ColorPickerModal = class extends Modal {
   }
 };
 var ConfirmationModal = class extends Modal {
-  constructor(app, title, message, onConfirm) {
+  constructor(app, plugin, title, message, onConfirm) {
     super(app);
+    this.plugin = plugin;
     this.title = title;
     this.message = message;
     this.onConfirm = onConfirm;
