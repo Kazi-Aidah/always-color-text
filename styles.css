@@ -729,6 +729,16 @@ button.mod-cta {
 .act-delete-groups-setting {
   border-top: 0 !important;
   padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.act-section-divider {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-top: 2px solid var(--background-modifier-border);
+  border-radius: 0px;
+  margin-bottom: -10px;
 }
 
 .act-group-row {

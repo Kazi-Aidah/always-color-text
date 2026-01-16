@@ -68,6 +68,10 @@ module.exports = {
   "command_color_selected": "Color Selected Text",
   "command_toggle_current": "Enable/Disable coloring for current document",
   "command_toggle_global": "Enable/Disable Always Color Text",
+  "command_enable_current": "Enable coloring for current document",
+  "command_disable_current": "Disable coloring for current document",
+  "command_enable_global": "Enable Always Color Text",
+  "command_disable_global": "Disable Always Color Text",
   "command_manage_advanced_rules": "manage specific include/exclude rules",
   "command_open_regex_tester": "Add Regex (Open Regex Tester)",
   "command_open_blacklist_regex_tester": "Add Blacklist Regex",
@@ -309,6 +313,7 @@ module.exports = {
   // Presets
   "btn_presets": "Presets",
   "preset_all_headings": "All Headings (H1-H6)",
+  "preset_headings_h3": "Headings (H3)",
   "preset_bullet_points": "Bullet Points",
   "preset_numbered_lists": "Numbered Lists",
   "preset_task_checked": "Task Lists (Checked)",
@@ -344,6 +349,7 @@ module.exports = {
 
   // Preset Examples
   "preset_example_heading": "# Heading",
+  "preset_example_heading_h3": "### Heading",
   "preset_example_bullet": "- Bullet point",
   "preset_example_numbered": "1. First item",
   "preset_example_task_checked": "- [x] Completed",

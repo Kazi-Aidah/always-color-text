@@ -72,6 +72,10 @@ var require_en = __commonJS({
       "command_color_selected": "Color Selected Text",
       "command_toggle_current": "Enable/Disable coloring for current document",
       "command_toggle_global": "Enable/Disable Always Color Text",
+      "command_enable_current": "Enable coloring for current document",
+      "command_disable_current": "Disable coloring for current document",
+      "command_enable_global": "Enable Always Color Text",
+      "command_disable_global": "Disable Always Color Text",
       "command_manage_advanced_rules": "manage specific include/exclude rules",
       "command_open_regex_tester": "Add Regex (Open Regex Tester)",
       "command_open_blacklist_regex_tester": "Add Blacklist Regex",
@@ -300,6 +304,7 @@ var require_en = __commonJS({
       // Presets
       "btn_presets": "Presets",
       "preset_all_headings": "All Headings (H1-H6)",
+      "preset_headings_h3": "Headings (H3)",
       "preset_bullet_points": "Bullet Points",
       "preset_numbered_lists": "Numbered Lists",
       "preset_task_checked": "Task Lists (Checked)",
@@ -334,6 +339,7 @@ var require_en = __commonJS({
       "preset_group_brackets": "Brackets",
       // Preset Examples
       "preset_example_heading": "# Heading",
+      "preset_example_heading_h3": "### Heading",
       "preset_example_bullet": "- Bullet point",
       "preset_example_numbered": "1. First item",
       "preset_example_task_checked": "- [x] Completed",
@@ -564,6 +570,10 @@ var require_es = __commonJS({
       "command_color_selected": "Colorear Texto Seleccionado",
       "command_toggle_current": "Activar/Desactivar coloreado para el documento actual",
       "command_toggle_global": "Activar/Desactivar Always Color Text",
+      "command_enable_current": "Activar coloreado para el documento actual",
+      "command_disable_current": "Desactivar coloreado para el documento actual",
+      "command_enable_global": "Activar Always Color Text",
+      "command_disable_global": "Desactivar Always Color Text",
       "command_manage_advanced_rules": "gestionar reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
       "command_open_regex_tester": "A\xF1adir Regex (Abrir Probador de Regex)",
       "command_open_blacklist_regex_tester": "Agregar Expresi\xF3n Regular de Lista Negra",
@@ -1059,6 +1069,10 @@ var require_fr = __commonJS({
       "command_color_selected": "Colorer le texte s\xE9lectionn\xE9",
       "command_toggle_current": "Activer/D\xE9sactiver le coloriage pour le document actuel",
       "command_toggle_global": "Activer/D\xE9sactiver Always Color Text",
+      "command_enable_current": "Activer le coloriage pour le document actuel",
+      "command_disable_current": "D\xE9sactiver le coloriage pour le document actuel",
+      "command_enable_global": "Activer Always Color Text",
+      "command_disable_global": "D\xE9sactiver Always Color Text",
       "command_manage_advanced_rules": "g\xE9rer les r\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
       "command_open_regex_tester": "Ajouter Regex (Ouvrir le Testeur Regex)",
       "command_open_blacklist_regex_tester": "Ajouter Regex \xE0 la Liste Noire",
@@ -1554,6 +1568,10 @@ var require_hi = __commonJS({
       "command_color_selected": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u0947\u0902",
       "command_toggle_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u091A\u093E\u0932\u0942/\u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "command_toggle_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942/\u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
+      "command_enable_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
+      "command_disable_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
+      "command_enable_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
+      "command_disable_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "command_manage_advanced_rules": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
       "command_open_regex_tester": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902 (\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091F\u0947\u0938\u094D\u091F\u0930 \u0916\u094B\u0932\u0947\u0902)",
       "command_open_blacklist_regex_tester": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u092E\u0947\u0902 \u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902",
@@ -2050,6 +2068,10 @@ var require_it = __commonJS({
       "command_color_selected": "Colora testo selezionato",
       "command_toggle_current": "Abilita/Disabilita colorazione per il documento corrente",
       "command_toggle_global": "Abilita/Disabilita Always Color Text",
+      "command_enable_current": "Abilita colorazione per il documento corrente",
+      "command_disable_current": "Disabilita colorazione per il documento corrente",
+      "command_enable_global": "Abilita Always Color Text",
+      "command_disable_global": "Disabilita Always Color Text",
       "command_manage_advanced_rules": "gestisci regole specifiche di inclusione/esclusione",
       "command_open_regex_tester": "Aggiungi Regex (Apri Tester Regex)",
       "command_open_blacklist_regex_tester": "Aggiungi Regex alla Lista Nera",
@@ -2546,6 +2568,10 @@ var require_bn = __commonJS({
       "command_color_selected": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "command_toggle_current": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09B8\u0995\u09CD\u09B7\u09AE/\u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "command_toggle_global": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u0995\u09CD\u09B7\u09AE/\u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "command_enable_current": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "command_disable_current": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "command_enable_global": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "command_disable_global": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "command_manage_advanced_rules": "\u09A8\u09BF\u09B0\u09CD\u09A6\u09BF\u09B7\u09CD\u099F \u0985\u09A8\u09CD\u09A4\u09B0\u09CD\u09AD\u09C1\u0995\u09CD\u09A4\u09BF/\u09AC\u09B0\u09CD\u099C\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "command_open_regex_tester": "Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8 (Regex \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u0995 \u0996\u09C1\u09B2\u09C1\u09A8)",
       "command_open_blacklist_regex_tester": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7 Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
@@ -3039,6 +3065,10 @@ var require_ru = __commonJS({
       "command_color_selected": "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u043D\u0435\u0448\u043D\u0438\u0439 \u0432\u0438\u0434 \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u043E\u0433\u043E \u0442\u0435\u043A\u0441\u0442\u0430",
       "command_toggle_current": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
       "command_toggle_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
+      "command_enable_current": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
+      "command_disable_current": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
+      "command_enable_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
+      "command_disable_global": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
       "command_manage_advanced_rules": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
       "command_open_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex (\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043E\u0440 Regex)",
       "command_open_blacklist_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
@@ -3532,6 +3562,10 @@ var require_zh_cn = __commonJS({
       "command_color_selected": "\u7740\u8272\u9009\u4E2D\u6587\u5B57",
       "command_toggle_current": "\u542F\u7528/\u7981\u7528\u5F53\u524D\u6587\u6863\u7740\u8272",
       "command_toggle_global": "\u542F\u7528/\u7981\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
+      "command_enable_current": "\u4E3A\u5F53\u524D\u6587\u6863\u542F\u7528\u7740\u8272",
+      "command_disable_current": "\u4E3A\u5F53\u524D\u6587\u6863\u7981\u7528\u7740\u8272",
+      "command_enable_global": "\u542F\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
+      "command_disable_global": "\u7981\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
       "command_manage_advanced_rules": "\u7BA1\u7406\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
       "command_open_regex_tester": "\u6DFB\u52A0\u6B63\u5219\u8868\u8FBE\u5F0F\uFF08\u6253\u5F00\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\uFF09",
       "command_open_blacklist_regex_tester": "\u6DFB\u52A0\u9ED1\u540D\u5355\u6B63\u5219\u8868\u8FBE\u5F0F",
@@ -4056,7 +4090,59 @@ var REGEX_CONSTANTS = {
   NUMBERED_LIST: /^(\s*)(\d+\.)(\s+)(.*)$/,
   BULLET_POINT: /^(\s*)([\-\*])(\s+)(.*)$/
 };
-var IS_DEVELOPMENT = false;
+function getHeadingLevelsFromPattern(pattern) {
+  try {
+    if (!pattern || typeof pattern !== "string") return [];
+    const levels = /* @__PURE__ */ new Set();
+    const quantMatch = pattern.match(/#\{(\d+)(?:,(\d+))?\}/);
+    if (quantMatch) {
+      let start = parseInt(quantMatch[1], 10);
+      let end = quantMatch[2] ? parseInt(quantMatch[2], 10) : start;
+      if (!Number.isFinite(start) || start < 1) start = 1;
+      if (!Number.isFinite(end) || end > 6) end = 6;
+      for (let l = start; l <= end; l++) levels.add(l);
+    } else {
+      const hashRun = pattern.match(/#+/);
+      if (hashRun) {
+        const len = hashRun[0].length;
+        if (len >= 1 && len <= 6) levels.add(len);
+      }
+    }
+    return Array.from(levels);
+  } catch (e) {
+    return [];
+  }
+}
+function getEntryForHeadingLevel(entries, level) {
+  if (!Array.isArray(entries) || level < 1 || level > 6) return null;
+  let match = null;
+  let bestSpan = Infinity;
+  try {
+    for (const entry of entries) {
+      if (!entry || !entry.pattern) continue;
+      const pattern = String(entry.pattern);
+      const levels = getHeadingLevelsFromPattern(pattern);
+      if (Array.isArray(levels) && levels.length > 0 && levels.includes(level)) {
+        const span = levels.length;
+        if (span < bestSpan) {
+          bestSpan = span;
+          match = entry;
+        }
+      }
+    }
+    if (match) return match;
+  } catch (e) {
+  }
+  for (const entry of entries) {
+    if (!entry || !entry.pattern) continue;
+    const pattern = String(entry.pattern);
+    if (/#\{1,6\}/.test(pattern)) {
+      return entry;
+    }
+  }
+  return null;
+}
+var IS_DEVELOPMENT = true;
 var debugLog = (tag, ...args) => {
 };
 var debugError = (tag, ...args) => {
@@ -7039,7 +7125,16 @@ module.exports = class AlwaysColorText extends Plugin {
       });
       addTrackedCommand({
         id: "toggle-coloring-for-current-document",
-        name: this.t("command_toggle_current", "Enable/Disable coloring for current document"),
+        name: (() => {
+          try {
+            const md = this.app.workspace.getActiveFile();
+            if (md && this.settings.disabledFiles && this.settings.disabledFiles.includes(md.path)) {
+              return this.t("command_enable_current", "Enable coloring for current document");
+            }
+          } catch (_) {
+          }
+          return this.t("command_disable_current", "Disable coloring for current document");
+        })(),
         callback: async () => {
           const md = this.app.workspace.getActiveFile();
           if (!md) {
@@ -7056,11 +7151,15 @@ module.exports = class AlwaysColorText extends Plugin {
             await this.saveSettings();
             new Notice(this.t("notice_coloring_disabled_for_path", `Coloring disabled for ${md.path}`, { path: md.path }));
           }
+          try {
+            this.reregisterCommandsWithLanguage();
+          } catch (_) {
+          }
         }
       });
       addTrackedCommand({
         id: "toggle-always-color-text",
-        name: this.t("command_toggle_global", "Enable/Disable Always Color Text"),
+        name: this.settings.enabled ? this.t("command_disable_global", "Disable Always Color Text") : this.t("command_enable_global", "Enable Always Color Text"),
         callback: async () => {
           this.settings.enabled = !this.settings.enabled;
           await this.saveSettings();
@@ -7085,6 +7184,10 @@ module.exports = class AlwaysColorText extends Plugin {
             }
             this.refreshAllLivePreviewCallouts();
             this.forceReprocessLivePreviewCallouts();
+          } catch (_) {
+          }
+          try {
+            this.reregisterCommandsWithLanguage();
           } catch (_) {
           }
         }
@@ -7208,6 +7311,9 @@ module.exports = class AlwaysColorText extends Plugin {
         callback: async () => {
           try {
             this.settings.hideTextColors = !this.settings.hideTextColors;
+            if (this.settings.hideTextColors && this.settings.hideHighlights) {
+              this.settings.hideHighlights = false;
+            }
             await this.saveSettings();
             this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
@@ -7255,6 +7361,9 @@ module.exports = class AlwaysColorText extends Plugin {
         callback: async () => {
           try {
             this.settings.hideHighlights = !this.settings.hideHighlights;
+            if (this.settings.hideHighlights && this.settings.hideTextColors) {
+              this.settings.hideTextColors = false;
+            }
             await this.saveSettings();
             this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
@@ -7655,7 +7764,22 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   processMarkdownFormattingInReading(element, folderEntry = null) {
     try {
-      const weAll = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      let weAll = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries.slice() : [];
+      if (Array.isArray(this.settings.wordEntryGroups)) {
+        this.settings.wordEntryGroups.forEach((group) => {
+          if (group && group.active && Array.isArray(group.entries)) {
+            const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
+            const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
+            const mapped = group.entries.map((e) => {
+              const copy = Object.assign({}, e);
+              if (groupMatch) copy.matchType = groupMatch;
+              if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+              return copy;
+            });
+            weAll = weAll.concat(mapped);
+          }
+        });
+      }
       let filePath = null;
       try {
         filePath = this.app?.workspace?.getActiveFile()?.path || null;
@@ -10396,6 +10520,10 @@ module.exports = class AlwaysColorText extends Plugin {
       s.quickHighlightBorderThickness = Math.max(0, Math.min(5, Number(s.quickHighlightBorderThickness ?? 1)));
       s.hideHighlights = !!s.hideHighlights;
       s.hideTextColors = !!s.hideTextColors;
+      if (s.hideHighlights && s.hideTextColors) {
+        s.hideHighlights = false;
+        s.hideTextColors = false;
+      }
       const allowedSort = /* @__PURE__ */ new Set(["last-added", "a-z", "reverse-a-z", "style-order", "color"]);
       if (!allowedSort.has(s.wordsSortMode)) s.wordsSortMode = "last-added";
       const allowedBl = /* @__PURE__ */ new Set(["last-added", "a-z", "reverse-a-z"]);
@@ -13529,14 +13657,14 @@ module.exports = class AlwaysColorText extends Plugin {
       let text = node.textContent;
       const headingEl = node.parentElement?.closest("h1, h2, h3, h4, h5, h6");
       if (headingEl) {
-        const label = "All Headings (H1-H6)";
-        const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-        const hasHeadingBlacklist = !!blEntries.find((e) => e && e.presetLabel === label && !!e.isRegex);
-        if (hasHeadingBlacklist) {
-          continue;
+        const we = entries;
+        const tagName = (headingEl.tagName || "").toUpperCase();
+        let level = 0;
+        if (tagName.startsWith("H")) {
+          const parsed = parseInt(tagName.substring(1), 10);
+          if (!isNaN(parsed)) level = parsed;
         }
-        const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
-        const headingEntry = we.find((e) => e && e.presetLabel === label);
+        const headingEntry = level > 0 ? getEntryForHeadingLevel(we, level) : null;
         if (headingEntry) {
           if (headingEntry.styleType === "highlight" || headingEntry.styleType === "both") {
             if (!headingEl.querySelector(".act-heading-wrapper")) {
@@ -15719,9 +15847,6 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {
     }
     try {
-      const label = "All Headings (H1-H6)";
-      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      hasHeadingBlacklist = !!blEntries.find((e) => e && e.presetLabel === label && !!e.isRegex);
       headingRanges = [];
       let posScan = 0;
       while (posScan <= text.length) {
@@ -15741,39 +15866,37 @@ module.exports = class AlwaysColorText extends Plugin {
         if (nextNLScan === -1) break;
         posScan = nextNLScan + 1;
       }
-      if (!hasHeadingBlacklist) {
-        const we = entries;
-        const headingEntry = we.find((e) => e && e.presetLabel === label);
-        if (headingEntry) {
-          let pos = 0;
-          while (pos <= text.length) {
-            const lineStart = pos;
-            const nextNL = text.indexOf("\n", pos);
-            const lineEnd = nextNL === -1 ? text.length : nextNL;
-            let i = lineStart;
-            while (i < lineEnd && /\s/.test(text[i])) i++;
-            let hashes = 0;
-            while (i < lineEnd && text[i] === "#" && hashes < 6) {
-              hashes++;
-              i++;
+      const we = entries;
+      let pos = 0;
+      while (pos <= text.length) {
+        const lineStart = pos;
+        const nextNL = text.indexOf("\n", pos);
+        const lineEnd = nextNL === -1 ? text.length : nextNL;
+        let i = lineStart;
+        while (i < lineEnd && /\s/.test(text[i])) i++;
+        let hashes = 0;
+        while (i < lineEnd && text[i] === "#" && hashes < 6) {
+          hashes++;
+          i++;
+        }
+        if (hashes > 0 && i < lineEnd && text[i] === " ") {
+          while (i < lineEnd && text[i] === " ") i++;
+          const start = from + i;
+          const end = from + lineEnd;
+          const entryToUse = hashes > 0 ? getEntryForHeadingLevel(we, hashes) : null;
+          if (entryToUse) {
+            if (entryToUse.backgroundColor) {
+              const tc = entryToUse.textColor || "currentColor";
+              const bc = entryToUse.backgroundColor;
+              matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+            } else {
+              const c = entryToUse.color || entryToUse.textColor;
+              if (c) matches.push({ start, end, color: c });
             }
-            if (hashes > 0 && i < lineEnd && text[i] === " ") {
-              while (i < lineEnd && text[i] === " ") i++;
-              const start = from + i;
-              const end = from + lineEnd;
-              if (headingEntry.backgroundColor) {
-                const tc = headingEntry.textColor || "currentColor";
-                const bc = headingEntry.backgroundColor;
-                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-              } else {
-                const c = headingEntry.color || headingEntry.textColor;
-                if (c) matches.push({ start, end, color: c });
-              }
-            }
-            if (nextNL === -1) break;
-            pos = nextNL + 1;
           }
         }
+        if (nextNL === -1) break;
+        pos = nextNL + 1;
       }
     } catch (e) {
     }
@@ -16477,9 +16600,6 @@ module.exports = class AlwaysColorText extends Plugin {
     let headingRanges = [];
     let hasHeadingBlacklist = false;
     try {
-      const label = "All Headings (H1-H6)";
-      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      hasHeadingBlacklist = !!blEntries.find((e) => e && e.presetLabel === label && !!e.isRegex);
       headingRanges = [];
       let posScan = 0;
       while (posScan <= text.length) {
@@ -16499,38 +16619,36 @@ module.exports = class AlwaysColorText extends Plugin {
         if (nextNLScan === -1) break;
         posScan = nextNLScan + 1;
       }
-      if (!hasHeadingBlacklist) {
-        const we = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
-        const headingEntry = we.find((e) => e && e.presetLabel === label);
-        if (headingEntry) {
-          let pos = 0;
-          while (pos <= text.length) {
-            const lineStart = pos;
-            const nextNL = text.indexOf("\n", pos);
-            const lineEnd = nextNL === -1 ? text.length : nextNL;
-            let i = lineStart;
-            while (i < lineEnd && /\s/.test(text[i])) i++;
-            let hashes = 0;
-            while (i < lineEnd && text[i] === "#" && hashes < 6) {
-              hashes++;
-              i++;
+      const we = entries;
+      let pos = 0;
+      while (pos <= text.length) {
+        const lineStart = pos;
+        const nextNL = text.indexOf("\n", pos);
+        const lineEnd = nextNL === -1 ? text.length : nextNL;
+        let i = lineStart;
+        while (i < lineEnd && /\s/.test(text[i])) i++;
+        let hashes = 0;
+        while (i < lineEnd && text[i] === "#" && hashes < 6) {
+          hashes++;
+          i++;
+        }
+        if (hashes > 0 && i < lineEnd && text[i] === " ") {
+          const start = from + lineStart;
+          const end = from + lineEnd;
+          const entryToUse = hashes > 0 ? getEntryForHeadingLevel(we, hashes) : null;
+          if (entryToUse) {
+            if (entryToUse.backgroundColor) {
+              const tc = entryToUse.textColor || "currentColor";
+              const bc = entryToUse.backgroundColor;
+              allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: entryToUse });
+            } else {
+              const c = entryToUse.color || entryToUse.textColor;
+              if (c) allMatches.push({ start, end, color: c, entryRef: entryToUse });
             }
-            if (hashes > 0 && i < lineEnd && text[i] === " ") {
-              const start = from + lineStart;
-              const end = from + lineEnd;
-              if (headingEntry.backgroundColor) {
-                const tc = headingEntry.textColor || "currentColor";
-                const bc = headingEntry.backgroundColor;
-                allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: headingEntry });
-              } else {
-                const c = headingEntry.color || headingEntry.textColor;
-                if (c) allMatches.push({ start, end, color: c, entryRef: headingEntry });
-              }
-            }
-            if (nextNL === -1) break;
-            pos = nextNL + 1;
           }
         }
+        if (nextNL === -1) break;
+        pos = nextNL + 1;
       }
     } catch (e) {
     }
@@ -17375,6 +17493,7 @@ var PresetModal = class extends Modal {
     contentEl.style.maxWidth = "1200px !important";
     const presets = [
       { label: this.plugin.t("preset_all_headings", "All Headings (H1-H6)"), pattern: "^\\s*#{1,6}\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_heading", "# Heading")] },
+      { label: this.plugin.t("preset_headings_h3", "Headings (H3)"), pattern: "^\\s*#{3}\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_heading_h3", "### Heading")], group: "markdown" },
       { label: this.plugin.t("preset_bullet_points", "Bullet Points"), pattern: "^\\s*[\\-\\*]\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_bullet", "- Bullet point")], group: "markdown" },
       { label: this.plugin.t("preset_numbered_lists", "Numbered Lists"), pattern: "^\\s*\\d+\\.\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_numbered", "1. First item")], group: "markdown" },
       { label: this.plugin.t("preset_task_checked", "Task List (Checked)"), pattern: "^\\s*[\\-\\*]\\s+\\[[xX]\\]\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_task_checked", "- [x] Completed")], group: "markdown" },
@@ -20712,7 +20831,7 @@ var EditWordGroupModal = class extends Modal {
           const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : null;
           const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
           if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
-          const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", styleType: "text", matchType: "contains" };
+          const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", styleType: "text", matchType: "contains", presetLabel: preset.label };
           if (preset.affectMarkElements) entry.affectMarkElements = true;
           if (tc && bc) {
             entry.textColor = tc;
@@ -21765,6 +21884,7 @@ var ColorSettingTab = class extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
+    this.icon = "palette";
     this._activeTab = "general";
     this.debouncedSaveSettings = debounce(this.plugin.saveSettings.bind(this.plugin), 800);
     this._lastRerender = 0;
@@ -24037,7 +24157,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         row.addEventListener("contextmenu", (e) => {
           e.preventDefault();
           const menu = new Menu();
-          menu.addItem((item) => item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).onClick(async () => {
+          menu.addItem((item) => item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(async () => {
             const clone = JSON.parse(JSON.stringify(style));
             clone.uid = Date.now() + Math.random().toString(36).slice(2);
             clone.name = (clone.name || "") + " (Copy)";
@@ -24975,7 +25095,6 @@ var ColorSettingTab = class extends PluginSettingTab {
       }));
       try {
         releaseNotesSettingEl.settingEl.style.borderTop = "none";
-        releaseNotesSettingEl.settingEl.style.marginTop = "-18px";
       } catch (e) {
       }
       new Setting(containerEl2).setName(this.plugin.t("language_label", "Language")).setDesc(this.plugin.t("language_desc", "Select the language to be used in this plugin")).addDropdown((d) => {
@@ -25705,7 +25824,11 @@ var ColorSettingTab = class extends PluginSettingTab {
       } catch (e) {
       }
       containerEl2.createEl("p", { text: this.plugin.t("always_colored_texts_desc", "Here's where you manage your word / patterns and their colors.") });
-      new Setting(containerEl2);
+      const dividerSetting = new Setting(containerEl2);
+      try {
+        dividerSetting.settingEl.classList.add("act-section-divider");
+      } catch (_) {
+      }
       const entriesSearchContainer = containerEl2.createDiv();
       try {
         entriesSearchContainer.addClass("act-search-container");
@@ -25939,7 +26062,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       };
       presetsBtn.addEventListener("click", presetsHandler);
       this._cleanupHandlers.push(() => presetsBtn.removeEventListener("click", presetsHandler));
-      new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_words", "Delete all defined words/patterns")).onClick(async () => {
+      const deleteAllWordsSetting = new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_words", "Delete all defined words/patterns")).onClick(async () => {
         new ConfirmationModal(this.app, this.plugin, this.plugin.t("confirm_delete_all_title", "Delete all words"), this.plugin.t("confirm_delete_all_desc", "Are you sure you want to delete all your colored words/patterns? You can't undo this!"), async () => {
           this.plugin.settings.wordEntries = [];
           await this.plugin.saveSettings();
@@ -25948,6 +26071,10 @@ var ColorSettingTab = class extends PluginSettingTab {
           this._refreshEntries();
         }).open();
       }));
+      try {
+        deleteAllWordsSetting.settingEl.classList.add("act-delete-groups-setting");
+      } catch (_) {
+      }
       containerEl2.createEl("h3", { text: this.plugin.t("grouped_entries_header", "Grouped Entries") });
       new Setting(containerEl2).setName(this.plugin.t("hide_inactive_groups_in_dropdowns", "Hide Inactive Groups in Dropdowns")).setDesc(this.plugin.t("hide_inactive_groups_in_dropdowns_desc", "Hide inactive word groups when displaying group lists in dropdowns.")).addToggle((t) => t.setValue(!!this.plugin.settings.hideInactiveGroupsInDropdowns).onChange(async (v) => {
         this.plugin.settings.hideInactiveGroupsInDropdowns = !!v;
@@ -26254,13 +26381,17 @@ var ColorSettingTab = class extends PluginSettingTab {
       };
       blacklistPresetsBtn.addEventListener("click", blacklistPresetsHandler);
       this._cleanupHandlers.push(() => blacklistPresetsBtn.removeEventListener("click", blacklistPresetsHandler));
-      new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_blacklist", "Delete all blacklisted words/patterns")).onClick(async () => {
+      const deleteAllBlacklistSetting = new Setting(containerEl2).addExtraButton((b) => b.setIcon("trash").setTooltip(this.plugin.t("tooltip_delete_all_blacklist", "Delete all blacklisted words/patterns")).onClick(async () => {
         new ConfirmationModal(this.app, this.plugin, this.plugin.t("confirm_delete_all_blacklist_title", "Delete all blacklisted words"), this.plugin.t("confirm_delete_all_blacklist_desc", "Are you sure you want to delete all blacklist entries? You can't undo this!"), async () => {
           this.plugin.settings.blacklistEntries = [];
           await this.plugin.saveSettings();
           this._refreshBlacklistWords();
         }).open();
       }));
+      try {
+        deleteAllBlacklistSetting.settingEl.classList.add("act-delete-groups-setting");
+      } catch (_) {
+      }
       containerEl2.createEl("h3", { text: this.plugin.t("blacklist_grouped_entries_header", "Blacklist Group Entries") });
       new Setting(containerEl2).setName(this.plugin.t("show_blacklist_groups_in_commands", "Show blacklist groups in commands")).setDesc(this.plugin.t("show_blacklist_groups_in_commands_desc", "When enabled, blacklist groups appear in the command palette with Activate/Deactivate commands.")).addToggle((t) => t.setValue(!!this.plugin.settings.showBlacklistGroupsInCommands).onChange(async (v) => {
         this.plugin.settings.showBlacklistGroupsInCommands = !!v;
