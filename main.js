@@ -10928,6 +10928,7 @@ module.exports = class AlwaysColorText extends Plugin {
   isSentenceLikePattern(p) {
     try {
       const s = String(p || "");
+      if (/^[A-Za-z0-9'\-]+(?:\s+[A-Za-z0-9'\-]+)+$/.test(s)) return false;
       return /[\s,\.;:!\?"'\(\)\[\]\{\}<>@#]/.test(s);
     } catch (e) {
       return false;
@@ -11156,6 +11157,9 @@ module.exports = class AlwaysColorText extends Plugin {
       } catch (e) {
       }
     } catch (e) {
+    }
+    if (isRegex) {
+      return (text) => true;
     }
     return (text) => {
       const bloom = this._bloomFilter;
@@ -17070,7 +17074,7 @@ module.exports = class AlwaysColorText extends Plugin {
     const matches = [];
     for (const entry of patternChunk) {
       if (!entry || entry.invalid) continue;
-      const isPartialEntry = !entry.isRegex && !entry.isTextBg && (!entry.styleType || entry.styleType === "text") && ["contains", "startswith", "endswith"].includes(String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern) && this.isLatinWordPattern(entry.pattern);
+      const isPartialEntry = !entry.isRegex && !entry.isTextBg && (!entry.styleType || entry.styleType === "text") && ["contains", "startswith", "endswith"].includes(String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern);
       if (isPartialEntry) continue;
       if (entry.fastTest && !entry.fastTest(text)) continue;
       const regex = entry.regex;
@@ -17139,9 +17143,11 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       if (matches.length > 200) break;
     }
-    const partialEntries = patternChunk.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
+    const partialEntries = patternChunk.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
+    const wordPartialEntries = partialEntries.filter((e) => this.isLatinWordPattern(e.pattern));
+    const phrasePartialEntries = partialEntries.filter((e) => !this.isLatinWordPattern(e.pattern));
     if (partialEntries.length > 0 && matches.length < 200) {
-      for (const entry of partialEntries) {
+      for (const entry of wordPartialEntries) {
         const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
         if (mt === "startswith" || mt === "endswith") {
           const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
@@ -17165,7 +17171,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const wStart = match.index;
         const wEnd = wStart + w.length;
         if (this.isMatchInBlacklistedRange(baseFrom + wStart, baseFrom + wEnd, blacklistedListRanges)) continue;
-        for (const entry of partialEntries) {
+        for (const entry of wordPartialEntries) {
           if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
           if (this.isWordBlacklisted(entry.pattern)) continue;
           const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
@@ -17224,6 +17230,87 @@ module.exports = class AlwaysColorText extends Plugin {
         try {
           if (typeof wordRegex.lastIndex === "number" && wordRegex.lastIndex === match.index) wordRegex.lastIndex++;
         } catch (e) {
+        }
+      }
+      if (phrasePartialEntries.length > 0 && matches.length < 200) {
+        let textLower = null;
+        const getTextForCase = (cs) => {
+          if (cs) return text;
+          if (!textLower) textLower = text.toLowerCase();
+          return textLower;
+        };
+        for (const entry of phrasePartialEntries) {
+          if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+          if (this.isWordBlacklisted(entry.pattern)) continue;
+          const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
+          const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
+          const textForSearch = getTextForCase(cs);
+          const rawPattern = String(entry.pattern || "");
+          const pat = cs ? rawPattern : rawPattern.toLowerCase();
+          if (!pat) continue;
+          let fromIndex = 0;
+          let localMatchCount = 0;
+          while (matches.length < 200 && localMatchCount < MAX_MATCHES_PER_PATTERN) {
+            const idx = textForSearch.indexOf(pat, fromIndex);
+            if (idx === -1) break;
+            const mStart = idx;
+            const mEnd = idx + pat.length;
+            let ok = false;
+            if (mt === "contains") {
+              ok = true;
+            } else if (mt === "startswith") {
+              const leftChar = mStart > 0 ? text[mStart - 1] : "";
+              const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === "-" || ch === "'";
+              ok = mStart === 0 || !isWordChar(leftChar);
+            } else if (mt === "endswith") {
+              const rightChar = mEnd < text.length ? text[mEnd] : "";
+              const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === "-" || ch === "'";
+              ok = mEnd === text.length || !isWordChar(rightChar);
+            }
+            if (ok) {
+              const absStart = baseFrom + mStart;
+              const absEnd = baseFrom + mEnd;
+              if (this.isMatchInBlacklistedRange(absStart, absEnd, blacklistedListRanges)) {
+                fromIndex = mStart + 1;
+                continue;
+              }
+              let expandedStart = mStart;
+              let expandedEnd = mEnd;
+              while (expandedStart > 0 && (/[A-Za-z0-9]/.test(text[expandedStart - 1]) || text[expandedStart - 1] === "-" || text[expandedStart - 1] === "'")) {
+                expandedStart--;
+              }
+              while (expandedEnd < text.length && (/[A-Za-z0-9]/.test(text[expandedEnd]) || text[expandedEnd] === "-" || text[expandedEnd] === "'")) {
+                expandedEnd++;
+              }
+              let overlapsWithExisting = false;
+              for (const existingMatch of matches) {
+                if (baseFrom + expandedStart < existingMatch.end && baseFrom + expandedEnd > existingMatch.start) {
+                  overlapsWithExisting = true;
+                  break;
+                }
+              }
+              for (const textBgMatch of existingMatches) {
+                if (textBgMatch.isTextBg && baseFrom + expandedStart < textBgMatch.end && baseFrom + expandedEnd > textBgMatch.start) {
+                  overlapsWithExisting = true;
+                  break;
+                }
+              }
+              if (!overlapsWithExisting) {
+                matches.push({
+                  start: baseFrom + expandedStart,
+                  end: baseFrom + expandedEnd,
+                  color: folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color,
+                  styleType: entry.styleType,
+                  textColor: entry.textColor,
+                  backgroundColor: entry.backgroundColor
+                });
+                if (matches.length > 200) break;
+              }
+              localMatchCount++;
+            }
+            fromIndex = mStart + 1;
+          }
+          if (matches.length > 200) break;
         }
       }
     }
