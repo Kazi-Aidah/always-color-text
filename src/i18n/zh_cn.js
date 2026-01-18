@@ -135,6 +135,7 @@ module.exports = {
   
   // Basic Settings
   "enable_document_color": "启用文档着色",
+  "color_in_live_preview_mode": "在实时预览模式下着色",
   "color_in_reading_mode": "在阅读模式下着色",
   "force_full_render_reading": "阅读模式下强制完整渲染",
   "force_full_render_reading_desc": "如果启用，阅读模式将尝试一次性着色整个文档。在大型文档上可能会导致卡顿，请谨慎使用！",
@@ -406,7 +407,9 @@ module.exports = {
   "mode_does_not_color_in": "不在其中着色",
   "label_text_include": "白名单",
   "label_text_exclude": "黑名单",
-  "enter_path_or_pattern": "输入路径或模式",
+  "label_enable_in": "启用范围",
+  "label_disable_in": "禁用范围",
+  "enter_path_or_pattern": "输入路径、模式或标签",
   "label_regex": "正则表达式",
   
   // Advanced Rules

@@ -135,6 +135,7 @@ module.exports = {
   
   // Basic Settings
   "enable_document_color": "Abilita colore documento",
+  "color_in_live_preview_mode": "Colora in modalità Live Preview",
   "color_in_reading_mode": "Colora in modalità lettura",
   "force_full_render_reading": "Forza rendering completo in modalità lettura",
   "force_full_render_reading_desc": "Se attivo, la modalità lettura tenterà di colorare l'intero documento in una sola passata. Può causare problemi di prestazioni su documenti grandi. Usare con cautela!",
@@ -406,7 +407,9 @@ module.exports = {
   "mode_does_not_color_in": "non colora in",
   "label_text_include": "Whitelist",
   "label_text_exclude": "Blacklist",
-  "enter_path_or_pattern": "Inserisci percorso o modello",
+  "label_enable_in": "Abilita in",
+  "label_disable_in": "Disabilita in",
+  "enter_path_or_pattern": "Inserisci percorso, modello o tag",
   "label_regex": "Espressione regolare",
   
   // Advanced Rules

@@ -139,6 +139,7 @@ module.exports = {
   
   // Basic Settings
   "enable_document_color": "Включить окрашивание документа",
+  "color_in_live_preview_mode": "Окрашивать в режиме Live Preview",
   "color_in_reading_mode": "Окрашивать в режиме чтения",
   "force_full_render_reading": "Принудительно выполнять полный рендеринг в режиме чтения",
   "force_full_render_reading_desc": "Если включено, режим чтения попытается окрасить весь документ сразу. Может вызвать замедление на больших документах, используйте с осторожностью!",
@@ -410,7 +411,9 @@ module.exports = {
   "mode_does_not_color_in": "не окрашивает в",
   "label_text_include": "Белый список",
   "label_text_exclude": "Чёрный список",
-  "enter_path_or_pattern": "Введите путь или шаблон",
+  "label_enable_in": "Включить в",
+  "label_disable_in": "Отключить в",
+  "enter_path_or_pattern": "Введите путь, шаблон или теги",
   "label_regex": "Regex",
   
   // Advanced Rules

@@ -135,6 +135,7 @@ module.exports = {
   
   // Basic Settings
   "enable_document_color": "Activar color en el documento",
+  "color_in_live_preview_mode": "Colorear en Modo Vista Previa",
   "color_in_reading_mode": "Colorear en Modo Lectura",
   "force_full_render_reading": "Forzar renderizado completo en Modo Lectura",
   "force_full_render_reading_desc": "Si está activado, el Modo Lectura intentará colorear todo el documento a la vez. ¡Puede causar retrasos en documentos grandes, úsalo con cuidado!",
@@ -405,7 +406,9 @@ module.exports = {
   "mode_does_not_color_in": "no colores en",
   "label_text_include": "Lista Blanca",
   "label_text_exclude": "Lista Negra",
-  "enter_path_or_pattern": "Ingrese ruta o patrón",
+  "label_enable_in": "Habilitar en",
+  "label_disable_in": "Deshabilitar en",
+  "enter_path_or_pattern": "Ingrese ruta, patrón o etiquetas",
   "label_regex": "Expresión regular",
   
   // Advanced Rules

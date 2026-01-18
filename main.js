@@ -142,6 +142,7 @@ var require_en = __commonJS({
       "btn_confirm": "Confirm",
       // Basic Settings
       "enable_document_color": "Enable Document Color",
+      "color_in_live_preview_mode": "Color in Live Preview Mode",
       "color_in_reading_mode": "Color in Reading Mode",
       "force_full_render_reading": "Force Full Render in Reading Mode",
       "force_full_render_reading_desc": "If on, Reading Mode will try to color the whole document at once. May cause lag on large docs, use carefully!",
@@ -400,7 +401,9 @@ var require_en = __commonJS({
       "mode_does_not_color_in": "does not color in",
       "label_text_include": "Whitelist",
       "label_text_exclude": "Blacklist",
-      "enter_path_or_pattern": "Enter path or pattern",
+      "label_enable_in": "Enable in",
+      "label_disable_in": "Disable in",
+      "enter_path_or_pattern": "Enter path, pattern or tags",
       "label_regex": "Regex",
       // Advanced Rules
       "advanced_rules_header": "Specific Include/Exclude Rules",
@@ -640,6 +643,7 @@ var require_es = __commonJS({
       "restart_required_desc": "Desactivar la alternancia en la paleta de comandos requiere reiniciar Obsidian para eliminar completamente el comando de la paleta. \xBFReiniciar ahora?",
       // Basic Settings
       "enable_document_color": "Activar color en el documento",
+      "color_in_live_preview_mode": "Colorear en Modo Vista Previa",
       "color_in_reading_mode": "Colorear en Modo Lectura",
       "force_full_render_reading": "Forzar renderizado completo en Modo Lectura",
       "force_full_render_reading_desc": "Si est\xE1 activado, el Modo Lectura intentar\xE1 colorear todo el documento a la vez. \xA1Puede causar retrasos en documentos grandes, \xFAsalo con cuidado!",
@@ -896,7 +900,9 @@ var require_es = __commonJS({
       "mode_does_not_color_in": "no colores en",
       "label_text_include": "Lista Blanca",
       "label_text_exclude": "Lista Negra",
-      "enter_path_or_pattern": "Ingrese ruta o patr\xF3n",
+      "label_enable_in": "Habilitar en",
+      "label_disable_in": "Deshabilitar en",
+      "enter_path_or_pattern": "Ingrese ruta, patr\xF3n o etiquetas",
       "label_regex": "Expresi\xF3n regular",
       // Advanced Rules
       "advanced_rules_header": "Reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
@@ -1139,6 +1145,7 @@ var require_fr = __commonJS({
       "restart_required_desc": "D\xE9sactiver l'activation dans la palette de commandes n\xE9cessite un red\xE9marrage d'Obsidian pour supprimer compl\xE8tement la commande de la palette. Red\xE9marrer maintenant ?",
       // Basic Settings
       "enable_document_color": "Activer la couleur du document",
+      "color_in_live_preview_mode": "Colorer en mode pr\xE9visualisation",
       "color_in_reading_mode": "Colorer en mode lecture",
       "force_full_render_reading": "Forcer le rendu complet en mode lecture",
       "force_full_render_reading_desc": "Si activ\xE9, le mode lecture essaiera de colorer tout le document \xE0 la fois. Peut causer des ralentissements sur les gros documents, utilisez avec prudence !",
@@ -1395,7 +1402,9 @@ var require_fr = __commonJS({
       "mode_does_not_color_in": "ne colore pas dans",
       "label_text_include": "Liste Blanche",
       "label_text_exclude": "Liste Noire",
-      "enter_path_or_pattern": "Entrer un chemin ou un motif",
+      "label_enable_in": "Activer dans",
+      "label_disable_in": "D\xE9sactiver dans",
+      "enter_path_or_pattern": "Entrer un chemin, un motif ou des balises",
       "label_regex": "Expression r\xE9guli\xE8re",
       // Advanced Rules
       "advanced_rules_header": "R\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
@@ -1640,6 +1649,7 @@ var require_hi = __commonJS({
       "btn_confirm": "\u092A\u0941\u0937\u094D\u091F\u093F \u0915\u0930\u0947\u0902",
       // Basic Settings
       "enable_document_color": "\u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0930\u0902\u0917 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
+      "color_in_live_preview_mode": "\u0932\u093E\u0907\u0935 \u092A\u094D\u0930\u0940\u0935\u094D\u092F\u0942 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
       "color_in_reading_mode": "\u0930\u0940\u0921\u093F\u0902\u0917 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
       "force_full_render_reading": "\u0930\u0940\u0921\u093F\u0902\u0917 \u092E\u094B\u0921 \u092E\u0947\u0902 \u092A\u0942\u0930\u094D\u0923 \u0930\u0947\u0902\u0921\u0930 \u092B\u094B\u0930\u094D\u0938 \u0915\u0930\u0947\u0902",
       "force_full_render_reading_desc": "\u091C\u092C \u091A\u093E\u0932\u0942 \u0939\u094B, \u0924\u094B \u0930\u0940\u0921\u093F\u0902\u0917-\u092E\u094B\u0921 \u092A\u0942\u0930\u0947 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u094B \u090F\u0915 \u092A\u093E\u0938 \u092E\u0947\u0902 \u0930\u0902\u0917\u0928\u0947 \u0915\u093E \u092A\u094D\u0930\u092F\u093E\u0938 \u0915\u0930\u0947\u0917\u093E\u0964 \u092C\u0921\u093C\u0947 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C\u094B\u0902 \u092A\u0930 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928 \u0938\u092E\u0938\u094D\u092F\u093E\u090F\u0901 \u0939\u094B \u0938\u0915\u0924\u0940 \u0939\u0948\u0902\u0964 \u0938\u093E\u0935\u0927\u093E\u0928\u0940 \u0938\u0947 \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0947\u0902!",
@@ -1898,7 +1908,9 @@ var require_hi = __commonJS({
       "mode_does_not_color_in": "\u0915\u0947 \u092D\u0940\u0924\u0930 \u0930\u0902\u0917 \u0928\u0939\u0940\u0902 \u0915\u0930\u0924\u093E",
       "label_text_include": "\u0935\u094D\u0939\u093E\u0907\u091F\u0932\u093F\u0938\u094D\u091F",
       "label_text_exclude": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F",
-      "enter_path_or_pattern": "\u092A\u0925 \u092F\u093E \u092A\u0948\u091F\u0930\u094D\u0928 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902",
+      "label_enable_in": "\u092F\u0939\u093E\u0901 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "label_disable_in": "\u092F\u0939\u093E\u0901 \u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "enter_path_or_pattern": "\u092A\u0925, \u092A\u0948\u091F\u0930\u094D\u0928 \u092F\u093E \u091F\u0948\u0917 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902",
       "label_regex": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938",
       // Advanced Rules
       "advanced_rules_header": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E",
@@ -2138,6 +2150,7 @@ var require_it = __commonJS({
       "restart_required_desc": "Disabilitare il toggle della palette comandi richiede il riavvio di Obsidian per rimuovere completamente i comandi dalla palette. Riavviare ora?",
       // Basic Settings
       "enable_document_color": "Abilita colore documento",
+      "color_in_live_preview_mode": "Colora in modalit\xE0 Live Preview",
       "color_in_reading_mode": "Colora in modalit\xE0 lettura",
       "force_full_render_reading": "Forza rendering completo in modalit\xE0 lettura",
       "force_full_render_reading_desc": "Se attivo, la modalit\xE0 lettura tenter\xE0 di colorare l'intero documento in una sola passata. Pu\xF2 causare problemi di prestazioni su documenti grandi. Usare con cautela!",
@@ -2395,7 +2408,9 @@ var require_it = __commonJS({
       "mode_does_not_color_in": "non colora in",
       "label_text_include": "Whitelist",
       "label_text_exclude": "Blacklist",
-      "enter_path_or_pattern": "Inserisci percorso o modello",
+      "label_enable_in": "Abilita in",
+      "label_disable_in": "Disabilita in",
+      "enter_path_or_pattern": "Inserisci percorso, modello o tag",
       "label_regex": "Espressione regolare",
       // Advanced Rules
       "advanced_rules_header": "Regole specifiche di inclusione/esclusione",
@@ -2642,6 +2657,7 @@ var require_bn = __commonJS({
       "restart_required_desc": "\u0995\u09AE\u09BE\u09A8\u09CD\u09A1 \u09AA\u09CD\u09AF\u09BE\u09B2\u09C7\u099F \u099F\u0997\u09B2 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09A4\u09C7 \u09AA\u09CD\u09AF\u09BE\u09B2\u09C7\u099F \u09A5\u09C7\u0995\u09C7 \u0995\u09AE\u09BE\u09A8\u09CD\u09A1\u0997\u09C1\u09B2\u09BF \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3\u09AD\u09BE\u09AC\u09C7 \u09B8\u09B0\u09BE\u09A8\u09CB\u09B0 \u099C\u09A8\u09CD\u09AF \u0985\u09AC\u09B8\u09BF\u09A1\u09BF\u09AF\u09BC\u09BE\u09A8 \u09B0\u09BF\u09B8\u09CD\u099F\u09BE\u09B0\u09CD\u099F \u0995\u09B0\u09A4\u09C7 \u09B9\u09AC\u09C7\u0964 \u098F\u0996\u09A8\u0987 \u09B0\u09BF\u09B8\u09CD\u099F\u09BE\u09B0\u09CD\u099F \u0995\u09B0\u09AC\u09C7\u09A8?",
       // Basic Settings
       "enable_document_color": "\u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F \u09B0\u0999 \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "color_in_live_preview_mode": "\u09B2\u09BE\u0987\u09AD \u09AA\u09CD\u09B0\u09BF\u09AD\u09BF\u0989 \u09AE\u09CB\u09A1\u09C7 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "color_in_reading_mode": "\u09B0\u09BF\u09A1\u09BF\u0982 \u09AE\u09CB\u09A1\u09C7 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "force_full_render_reading": "\u09B0\u09BF\u09A1\u09BF\u0982 \u09AE\u09CB\u09A1\u09C7 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3 \u09B0\u09C7\u09A8\u09CD\u09A1\u09BE\u09B0 \u099C\u09CB\u09B0 \u0995\u09B0\u09C1\u09A8",
       "force_full_render_reading_desc": "\u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u09B0\u09BF\u09A1\u09BF\u0982-\u09AE\u09CB\u09A1 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F \u098F\u0995 \u09AA\u09BE\u09B8\u09C7 \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u099A\u09C7\u09B7\u09CD\u099F\u09BE \u0995\u09B0\u09AC\u09C7\u0964 \u09AC\u09A1\u09BC \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7 \u09AA\u09BE\u09B0\u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u09A8\u09CD\u09B8 \u0987\u09B8\u09CD\u09AF\u09C1 \u09B9\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964 \u09B8\u09A4\u09B0\u09CD\u0995\u09A4\u09BE\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8!",
@@ -2899,7 +2915,9 @@ var require_bn = __commonJS({
       "mode_does_not_color_in": "\u098F\u09B0 \u09AE\u09A7\u09CD\u09AF\u09C7 \u09B0\u0999 \u0995\u09B0\u09C7 \u09A8\u09BE",
       "label_text_include": "\u09B9\u09CB\u09AF\u09BC\u09BE\u0987\u099F\u09B2\u09BF\u09B8\u09CD\u099F",
       "label_text_exclude": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F",
-      "enter_path_or_pattern": "\u09AA\u09BE\u09A5 \u09AC\u09BE \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09B2\u09BF\u0996\u09C1\u09A8",
+      "label_enable_in": "\u098F\u09A4\u09C7 \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
+      "label_disable_in": "\u098F\u09A4\u09C7 \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
+      "enter_path_or_pattern": "\u09AA\u09BE\u09A5, \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AC\u09BE \u099F\u09CD\u09AF\u09BE\u0997 \u09B2\u09BF\u0996\u09C1\u09A8",
       "label_regex": "\u09B0\u09C7\u099C\u09C7\u0995\u09CD\u09B8",
       // Advanced Rules
       "advanced_rules_header": "\u09A8\u09BF\u09B0\u09CD\u09A6\u09BF\u09B7\u09CD\u099F \u0985\u09A8\u09CD\u09A4\u09B0\u09CD\u09AD\u09C1\u0995\u09CD\u09A4\u09BF/\u09AC\u09B0\u09CD\u099C\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE",
@@ -3139,6 +3157,7 @@ var require_ru = __commonJS({
       "restart_required_desc": "\u0414\u043B\u044F \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0438\u0437 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043A\u043E\u043C\u0430\u043D\u0434 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 Obsidian. \u041F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0441\u0435\u0439\u0447\u0430\u0441?",
       // Basic Settings
       "enable_document_color": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
+      "color_in_live_preview_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 Live Preview",
       "color_in_reading_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading": "\u041F\u0440\u0438\u043D\u0443\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u0442\u044C \u043F\u043E\u043B\u043D\u044B\u0439 \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433 \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u0440\u0435\u0436\u0438\u043C \u0447\u0442\u0435\u043D\u0438\u044F \u043F\u043E\u043F\u044B\u0442\u0430\u0435\u0442\u0441\u044F \u043E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0432\u0435\u0441\u044C \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442 \u0441\u0440\u0430\u0437\u0443. \u041C\u043E\u0436\u0435\u0442 \u0432\u044B\u0437\u0432\u0430\u0442\u044C \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u043D\u0430 \u0431\u043E\u043B\u044C\u0448\u0438\u0445 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0445, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u0441 \u043E\u0441\u0442\u043E\u0440\u043E\u0436\u043D\u043E\u0441\u0442\u044C\u044E!",
@@ -3396,7 +3415,9 @@ var require_ru = __commonJS({
       "mode_does_not_color_in": "\u043D\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0432",
       "label_text_include": "\u0411\u0435\u043B\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       "label_text_exclude": "\u0427\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
-      "enter_path_or_pattern": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043F\u0443\u0442\u044C \u0438\u043B\u0438 \u0448\u0430\u0431\u043B\u043E\u043D",
+      "label_enable_in": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0432",
+      "label_disable_in": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0432",
+      "enter_path_or_pattern": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043F\u0443\u0442\u044C, \u0448\u0430\u0431\u043B\u043E\u043D \u0438\u043B\u0438 \u0442\u0435\u0433\u0438",
       "label_regex": "Regex",
       // Advanced Rules
       "advanced_rules_header": "\u0421\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
@@ -3632,6 +3653,7 @@ var require_zh_cn = __commonJS({
       "restart_required_desc": "\u7981\u7528\u547D\u4EE4\u9762\u677F\u4E2D\u7684\u6FC0\u6D3B\u9700\u8981\u91CD\u542F Obsidian \u624D\u80FD\u4ECE\u547D\u4EE4\u9762\u677F\u4E2D\u5B8C\u5168\u79FB\u9664\u8BE5\u547D\u4EE4\u3002\u73B0\u5728\u91CD\u542F\u5417\uFF1F",
       // Basic Settings
       "enable_document_color": "\u542F\u7528\u6587\u6863\u7740\u8272",
+      "color_in_live_preview_mode": "\u5728\u5B9E\u65F6\u9884\u89C8\u6A21\u5F0F\u4E0B\u7740\u8272",
       "color_in_reading_mode": "\u5728\u9605\u8BFB\u6A21\u5F0F\u4E0B\u7740\u8272",
       "force_full_render_reading": "\u9605\u8BFB\u6A21\u5F0F\u4E0B\u5F3A\u5236\u5B8C\u6574\u6E32\u67D3",
       "force_full_render_reading_desc": "\u5982\u679C\u542F\u7528\uFF0C\u9605\u8BFB\u6A21\u5F0F\u5C06\u5C1D\u8BD5\u4E00\u6B21\u6027\u7740\u8272\u6574\u4E2A\u6587\u6863\u3002\u5728\u5927\u578B\u6587\u6863\u4E0A\u53EF\u80FD\u4F1A\u5BFC\u81F4\u5361\u987F\uFF0C\u8BF7\u8C28\u614E\u4F7F\u7528\uFF01",
@@ -3889,7 +3911,9 @@ var require_zh_cn = __commonJS({
       "mode_does_not_color_in": "\u4E0D\u5728\u5176\u4E2D\u7740\u8272",
       "label_text_include": "\u767D\u540D\u5355",
       "label_text_exclude": "\u9ED1\u540D\u5355",
-      "enter_path_or_pattern": "\u8F93\u5165\u8DEF\u5F84\u6216\u6A21\u5F0F",
+      "label_enable_in": "\u542F\u7528\u8303\u56F4",
+      "label_disable_in": "\u7981\u7528\u8303\u56F4",
+      "enter_path_or_pattern": "\u8F93\u5165\u8DEF\u5F84\u3001\u6A21\u5F0F\u6216\u6807\u7B7E",
       "label_regex": "\u6B63\u5219\u8868\u8FBE\u5F0F",
       // Advanced Rules
       "advanced_rules_header": "\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
@@ -6327,13 +6351,24 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     if (this.settings.enabled) {
       this.removeDisabledNeutralizerStyles();
-      try {
-        this.applyEnabledLivePreviewCalloutStyles();
-      } catch (_) {
-      }
-      try {
-        this.applyEnabledLivePreviewTextColorStyles();
-      } catch (_) {
+      if (!this.settings.disableLivePreviewColoring) {
+        try {
+          this.applyEnabledLivePreviewCalloutStyles();
+        } catch (_) {
+        }
+        try {
+          this.applyEnabledLivePreviewTextColorStyles();
+        } catch (_) {
+        }
+      } else {
+        try {
+          this.removeEnabledLivePreviewCalloutStyles();
+        } catch (_) {
+        }
+        try {
+          this.removeEnabledLivePreviewTextColorStyles();
+        } catch (_) {
+        }
       }
       try {
         this.applyEnabledReadingCalloutStyles();
@@ -6346,13 +6381,15 @@ module.exports = class AlwaysColorText extends Plugin {
         this.removeHideHighlightsNeutralizerStyles();
       }
       setTimeout(() => {
-        try {
-          this.refreshAllLivePreviewCallouts();
-        } catch (_) {
-        }
-        try {
-          this.refreshAllLivePreviewTables();
-        } catch (_) {
+        if (!this.settings.disableLivePreviewColoring) {
+          try {
+            this.refreshAllLivePreviewCallouts();
+          } catch (_) {
+          }
+          try {
+            this.refreshAllLivePreviewTables();
+          } catch (_) {
+          }
         }
         try {
           this.refreshAllBasesViews();
@@ -6398,8 +6435,13 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         try {
           if (this.settings.enabled) {
-            this.applyEnabledLivePreviewCalloutStyles();
-            this.applyEnabledLivePreviewTextColorStyles();
+            if (!this.settings.disableLivePreviewColoring) {
+              this.applyEnabledLivePreviewCalloutStyles();
+              this.applyEnabledLivePreviewTextColorStyles();
+            } else {
+              this.removeEnabledLivePreviewCalloutStyles();
+              this.removeEnabledLivePreviewTextColorStyles();
+            }
             this.applyEnabledReadingCalloutStyles();
             if (this.settings.hideHighlights) {
               this.applyHideHighlightsNeutralizerStyles();
@@ -6412,10 +6454,12 @@ module.exports = class AlwaysColorText extends Plugin {
             this.removeEnabledReadingCalloutStyles();
             this.removeHideHighlightsNeutralizerStyles();
           }
-          this.refreshAllLivePreviewCallouts();
-          this.forceReprocessLivePreviewCallouts();
-          this.refreshAllLivePreviewTables();
-          this.forceReprocessLivePreviewTables();
+          if (!this.settings.disableLivePreviewColoring) {
+            this.refreshAllLivePreviewCallouts();
+            this.forceReprocessLivePreviewCallouts();
+            this.refreshAllLivePreviewTables();
+            this.forceReprocessLivePreviewTables();
+          }
           this.refreshAllBasesViews();
           this.forceReprocessBasesViews();
         } catch (_) {
@@ -6448,8 +6492,13 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         try {
           if (this.settings.enabled) {
-            this.applyEnabledLivePreviewCalloutStyles();
-            this.applyEnabledLivePreviewTextColorStyles();
+            if (!this.settings.disableLivePreviewColoring) {
+              this.applyEnabledLivePreviewCalloutStyles();
+              this.applyEnabledLivePreviewTextColorStyles();
+            } else {
+              this.removeEnabledLivePreviewCalloutStyles();
+              this.removeEnabledLivePreviewTextColorStyles();
+            }
             this.applyEnabledReadingCalloutStyles();
             if (this.settings.hideHighlights) {
               this.applyHideHighlightsNeutralizerStyles();
@@ -6462,10 +6511,12 @@ module.exports = class AlwaysColorText extends Plugin {
             this.removeEnabledReadingCalloutStyles();
             this.removeHideHighlightsNeutralizerStyles();
           }
-          this.refreshAllLivePreviewCallouts();
-          this.forceReprocessLivePreviewCallouts();
-          this.refreshAllLivePreviewTables();
-          this.forceReprocessLivePreviewTables();
+          if (!this.settings.disableLivePreviewColoring) {
+            this.refreshAllLivePreviewCallouts();
+            this.forceReprocessLivePreviewCallouts();
+            this.refreshAllLivePreviewTables();
+            this.forceReprocessLivePreviewTables();
+          }
           this.refreshAllBasesViews();
           this.forceReprocessBasesViews();
         } catch (_) {
@@ -6494,6 +6545,14 @@ module.exports = class AlwaysColorText extends Plugin {
         });
       });
     }));
+    this.registerEvent(
+      this.app.metadataCache.on("changed", (file) => {
+        if (file === this.app.workspace.getActiveFile()) {
+          this.forceRefreshAllEditors();
+          this.forceRefreshAllReadingViews();
+        }
+      })
+    );
     this.registerEvent(this.app.workspace.on("editor-menu", (menu, editor, view) => {
       const selectedText = editor.getSelection().trim();
       if (selectedText.length > 0) {
@@ -7176,14 +7235,20 @@ module.exports = class AlwaysColorText extends Plugin {
           }
           try {
             if (this.settings.enabled) {
-              this.applyEnabledLivePreviewCalloutStyles();
+              if (!this.settings.disableLivePreviewColoring) {
+                this.applyEnabledLivePreviewCalloutStyles();
+              } else {
+                this.removeEnabledLivePreviewCalloutStyles();
+              }
               this.applyEnabledReadingCalloutStyles();
             } else {
               this.removeEnabledLivePreviewCalloutStyles();
               this.removeEnabledReadingCalloutStyles();
             }
-            this.refreshAllLivePreviewCallouts();
-            this.forceReprocessLivePreviewCallouts();
+            if (!this.settings.disableLivePreviewColoring) {
+              this.refreshAllLivePreviewCallouts();
+              this.forceReprocessLivePreviewCallouts();
+            }
           } catch (_) {
           }
           try {
@@ -7325,21 +7390,23 @@ module.exports = class AlwaysColorText extends Plugin {
             this.reconfigureEditorExtensions();
             this.forceRefreshAllEditors();
             this.forceRefreshAllReadingViews();
-            try {
-              this.refreshAllLivePreviewCallouts();
-            } catch (_) {
-            }
-            try {
-              this.forceReprocessLivePreviewCallouts();
-            } catch (_) {
-            }
-            try {
-              this.refreshAllLivePreviewTables();
-            } catch (_) {
-            }
-            try {
-              this.forceReprocessLivePreviewTables();
-            } catch (_) {
+            if (!this.settings.disableLivePreviewColoring) {
+              try {
+                this.refreshAllLivePreviewCallouts();
+              } catch (_) {
+              }
+              try {
+                this.forceReprocessLivePreviewCallouts();
+              } catch (_) {
+              }
+              try {
+                this.refreshAllLivePreviewTables();
+              } catch (_) {
+              }
+              try {
+                this.forceReprocessLivePreviewTables();
+              } catch (_) {
+              }
             }
             try {
               this.refreshAllBasesViews();
@@ -7381,21 +7448,23 @@ module.exports = class AlwaysColorText extends Plugin {
             this.reconfigureEditorExtensions();
             this.forceRefreshAllEditors();
             this.forceRefreshAllReadingViews();
-            try {
-              this.refreshAllLivePreviewCallouts();
-            } catch (_) {
-            }
-            try {
-              this.forceReprocessLivePreviewCallouts();
-            } catch (_) {
-            }
-            try {
-              this.refreshAllLivePreviewTables();
-            } catch (_) {
-            }
-            try {
-              this.forceReprocessLivePreviewTables();
-            } catch (_) {
+            if (!this.settings.disableLivePreviewColoring) {
+              try {
+                this.refreshAllLivePreviewCallouts();
+              } catch (_) {
+              }
+              try {
+                this.forceReprocessLivePreviewCallouts();
+              } catch (_) {
+              }
+              try {
+                this.refreshAllLivePreviewTables();
+              } catch (_) {
+              }
+              try {
+                this.forceReprocessLivePreviewTables();
+              } catch (_) {
+              }
             }
             try {
               this.refreshAllBasesViews();
@@ -7762,30 +7831,30 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     }
   }
-  processMarkdownFormattingInReading(element, folderEntry = null) {
+  processMarkdownFormattingInReading(element, folderEntry = null, entries = null) {
     try {
-      let weAll = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries.slice() : [];
-      if (Array.isArray(this.settings.wordEntryGroups)) {
-        this.settings.wordEntryGroups.forEach((group) => {
-          if (group && group.active && Array.isArray(group.entries)) {
-            const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
-            const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
-            const mapped = group.entries.map((e) => {
-              const copy = Object.assign({}, e);
-              if (groupMatch) copy.matchType = groupMatch;
-              if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
-              return copy;
-            });
-            weAll = weAll.concat(mapped);
-          }
-        });
+      let we;
+      if (Array.isArray(entries) && entries.length > 0) {
+        we = entries;
+      } else {
+        let weAll2 = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries.slice() : [];
+        if (Array.isArray(this.settings.wordEntryGroups)) {
+          this.settings.wordEntryGroups.forEach((group) => {
+            if (group && group.active && Array.isArray(group.entries)) {
+              const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
+              const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
+              const mapped = group.entries.map((e) => {
+                const copy = Object.assign({}, e);
+                if (groupMatch) copy.matchType = groupMatch;
+                if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+                return copy;
+              });
+              weAll2 = weAll2.concat(mapped);
+            }
+          });
+        }
+        we = weAll2;
       }
-      let filePath = null;
-      try {
-        filePath = this.app?.workspace?.getActiveFile()?.path || null;
-      } catch (_) {
-      }
-      const we = filePath ? this.filterEntriesByAdvancedRules(filePath, weAll) : weAll;
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
       try {
         const markElements = element && element.nodeName === "MARK" ? [element] : Array.from(element.querySelectorAll?.("mark") || []);
@@ -9770,6 +9839,7 @@ module.exports = class AlwaysColorText extends Plugin {
       forceFullRenderInReading: false,
       // Disable coloring in reading/preview mode (editor remains colored)
       disableReadingModeColoring: false,
+      disableLivePreviewColoring: false,
       // Text & Background Coloring entries
       textBgColoringEntries: [],
       // Enable/disable Text & Background Coloring option in right-click menu
@@ -10419,6 +10489,10 @@ module.exports = class AlwaysColorText extends Plugin {
         } else {
           x.inclusionRules = [];
         }
+        if (!Array.isArray(x.enableFolders)) x.enableFolders = [];
+        if (!Array.isArray(x.disableFolders)) x.disableFolders = [];
+        if (!Array.isArray(x.enableTags)) x.enableTags = [];
+        if (!Array.isArray(x.disableTags)) x.disableTags = [];
         if (Array.isArray(e.exclusionRules)) {
           x.exclusionRules = e.exclusionRules.map((r) => ({
             path: String(r && r.path || ""),
@@ -10439,6 +10513,17 @@ module.exports = class AlwaysColorText extends Plugin {
         x.borderThickness = typeof e.borderThickness === "number" ? e.borderThickness : void 0;
         x.affectMarkElements = typeof e.affectMarkElements === "boolean" ? e.affectMarkElements : void 0;
         return x;
+      });
+      if (!Array.isArray(s.wordEntryGroups)) s.wordEntryGroups = [];
+      s.wordEntryGroups = s.wordEntryGroups.map((g) => {
+        const group = Object.assign({}, g || {});
+        if (!Array.isArray(group.entries)) group.entries = [];
+        if (!Array.isArray(group.enableFolders)) group.enableFolders = [];
+        if (!Array.isArray(group.disableFolders)) group.disableFolders = [];
+        if (!Array.isArray(group.enableTags)) group.enableTags = [];
+        if (!Array.isArray(group.disableTags)) group.disableTags = [];
+        group.entries = group.entries.map((e) => Object.assign({}, e || {}));
+        return group;
       });
       s.blacklistEntries = s.blacklistEntries.map((e) => {
         const x = Object.assign({}, e || {});
@@ -11697,14 +11782,15 @@ module.exports = class AlwaysColorText extends Plugin {
   detectRuleKind(path) {
     const s = String(path || "").trim();
     if (!s) return { kind: "vault" };
+    if (s.startsWith("#")) return { kind: "tag", tag: s.slice(1) };
     const isParenRegex = s.startsWith("(") && s.endsWith(")");
     if (isParenRegex) return { kind: "regex", pattern: s.slice(1, -1) };
     if (/\/$/.test(s)) return { kind: "exact-folder", path: s.replace(/\/$/, "") };
     if (s.includes("/")) return { kind: "exact-file", path: s };
     return { kind: "name", name: s };
   }
-  _matchesByName(filePath, name) {
-    const fp = this.normalizePath(filePath);
+  _matchesByName(filePath2, name) {
+    const fp = this.normalizePath(filePath2);
     const nm = String(name || "").trim();
     if (!nm) return { fileMatch: true, folderMatch: true };
     const base = this._basename(fp);
@@ -11720,26 +11806,26 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     return { fileMatch, folderMatch };
   }
-  _matchFolder(pattern, filePath) {
-    const fp = this.normalizePath(filePath);
+  _matchFolder(pattern, filePath2) {
+    const fp = this.normalizePath(filePath2);
     const re = this._folderPatternToRegExp(pattern);
     return !!(re && re.test(fp));
   }
-  _matchFile(rulePath, filePath) {
+  _matchFile(rulePath, filePath2) {
     const a = this.normalizePath(rulePath);
-    const b = this.normalizePath(filePath);
+    const b = this.normalizePath(filePath2);
     return a === b;
   }
-  evaluatePathRules(filePath) {
+  evaluatePathRules(filePath2) {
     const rules = Array.isArray(this.settings.pathRules) ? this.settings.pathRules : [];
-    if (!filePath || rules.length === 0) return { included: false, excluded: false, hasIncludes: false };
+    if (!filePath2 || rules.length === 0) return { included: false, excluded: false, hasIncludes: false };
     try {
-      if (this._pathRulesCache && this._pathRulesCache.has(filePath)) {
-        return this._pathRulesCache.get(filePath);
+      if (this._pathRulesCache && this._pathRulesCache.has(filePath2)) {
+        return this._pathRulesCache.get(filePath2);
       }
     } catch (_) {
     }
-    const fp = this.normalizePath(filePath);
+    const fp = this.normalizePath(filePath2);
     let fileInclude = false;
     let fileExclude = false;
     let folderInclude = false;
@@ -11772,6 +11858,15 @@ module.exports = class AlwaysColorText extends Plugin {
         if (folderMatch) {
           if (mode === "include") folderInclude = true;
           else folderExclude = true;
+        }
+        continue;
+      }
+      if (dk.kind === "tag") {
+        const tags = this.getFileTags(fp).map((t) => t.replace(/^#/, ""));
+        const hasTag = tags.includes(String(dk.tag || "").replace(/^#/, ""));
+        if (hasTag) {
+          if (mode === "include") fileInclude = true;
+          else fileExclude = true;
         }
         continue;
       }
@@ -11833,7 +11928,7 @@ module.exports = class AlwaysColorText extends Plugin {
     const hasFileRule = fileInclude || fileExclude;
     const result = { included, excluded, hasIncludes, hasFileRule };
     try {
-      this._pathRulesCache && this._pathRulesCache.set(filePath, result);
+      this._pathRulesCache && this._pathRulesCache.set(filePath2, result);
     } catch (_) {
     }
     return result;
@@ -11844,15 +11939,78 @@ module.exports = class AlwaysColorText extends Plugin {
   // Rule 2: File explicitly included in excluded folder? → File gets colored
   // Rule 3: Text "only colors in" this file/folder? → Color only here
   // Rule 4: Text "does not color in" this file/folder? → Don't color here
-  shouldColorText(filePath, textPattern, entry = null) {
+  shouldColorText(filePath2, textPattern, entry = null) {
     try {
-      if (!filePath || !textPattern) return true;
-      const fp = this.normalizePath(filePath);
+      if (!filePath2 || !textPattern) return true;
+      const fp = this.normalizePath(filePath2);
+      if (entry) {
+        const enableFolders = Array.isArray(entry.groupEnableFolders) ? entry.groupEnableFolders : [];
+        const disableFolders = Array.isArray(entry.groupDisableFolders) ? entry.groupDisableFolders : [];
+        const hasEnableFolders = enableFolders.length > 0;
+        const hasDisableFolders = disableFolders.length > 0;
+        if (hasEnableFolders || hasDisableFolders) {
+          const parents = this._parentFolders(fp).map((p) => this.normalizePath(p));
+          const normRule = (p) => this.normalizePath(String(p || "").trim());
+          let enableMatch = false;
+          let disableMatch = false;
+          let bestEnableDepth = -1;
+          let bestDisableDepth = -1;
+          for (const f of enableFolders) {
+            const fNorm = normRule(f);
+            if (!fNorm) continue;
+            if (fNorm === "/" || fNorm === "") {
+              enableMatch = true;
+              if (bestEnableDepth < 0) bestEnableDepth = 0;
+              continue;
+            }
+            const matchParent = parents.find((p) => p === fNorm);
+            if (matchParent) {
+              enableMatch = true;
+              const depth = matchParent.split("/").length;
+              if (depth > bestEnableDepth) bestEnableDepth = depth;
+            }
+          }
+          for (const f of disableFolders) {
+            const fNorm = normRule(f);
+            if (!fNorm) continue;
+            if (fNorm === "/" || fNorm === "") {
+              disableMatch = true;
+              if (bestDisableDepth < 0) bestDisableDepth = 0;
+              continue;
+            }
+            const matchParent = parents.find((p) => p === fNorm);
+            if (matchParent) {
+              disableMatch = true;
+              const depth = matchParent.split("/").length;
+              if (depth > bestDisableDepth) bestDisableDepth = depth;
+            }
+          }
+          if (!enableMatch && !disableMatch) {
+            if (hasEnableFolders) return false;
+          } else if (enableMatch && disableMatch) {
+            if (bestDisableDepth > bestEnableDepth) return false;
+          } else if (!enableMatch && disableMatch) {
+            return false;
+          }
+        }
+        const hasEnableTags = Array.isArray(entry.groupEnableTags) && entry.groupEnableTags.length > 0;
+        const hasDisableTags = Array.isArray(entry.groupDisableTags) && entry.groupDisableTags.length > 0;
+        if (hasEnableTags || hasDisableTags) {
+          const fileTags = this.getFileTags(filePath2);
+          const normTag = (t) => String(t || "").replace(/^#/, "").trim();
+          const enableTags = hasEnableTags ? entry.groupEnableTags.map(normTag).filter(Boolean) : [];
+          const disableTags = hasDisableTags ? entry.groupDisableTags.map(normTag).filter(Boolean) : [];
+          const enableMatchTag = enableTags.length > 0 && fileTags.some((t) => enableTags.includes(normTag(t)));
+          const disableMatchTag = disableTags.length > 0 && fileTags.some((t) => disableTags.includes(normTag(t)));
+          if (enableTags.length > 0 && !enableMatchTag) return false;
+          if (disableMatchTag && !enableMatchTag) return false;
+        }
+      }
       const pathRules = Array.isArray(this.settings.pathRules) ? this.settings.pathRules : [];
       const advRules = Array.isArray(this.settings.advancedRules) ? this.settings.advancedRules : [];
       const caseInsensitive = !this.settings.caseSensitive;
       if (String(textPattern).includes("belmo")) {
-        debugLog("RULE_CHECK_BELMO", `Checking pattern "${textPattern}" in file "${filePath}"`);
+        debugLog("RULE_CHECK_BELMO", `Checking pattern "${textPattern}" in file "${filePath2}"`);
         debugLog("RULE_CHECK_BELMO", `advRules count: ${advRules.length}`);
         advRules.forEach((r, i) => {
           debugLog("RULE_CHECK_BELMO", `Rule ${i}: text="${r.text}" mode="${r.mode}" path="${r.path}"`);
@@ -11905,9 +12063,9 @@ module.exports = class AlwaysColorText extends Plugin {
         }
         return false;
       };
-      const pathEval = this.evaluatePathRules(filePath);
+      const pathEval = this.evaluatePathRules(filePath2);
       if (pathEval.excluded) {
-        debugLog("RULE_ENGINE", `Skipping: path excluded for ${filePath}`);
+        debugLog("RULE_ENGINE", `Skipping: path excluded for ${filePath2}`);
         return false;
       }
       const matchType = (rule) => {
@@ -11974,12 +12132,12 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
   // Filter entries based on the four rules using shouldColorText
-  filterEntriesByAdvancedRules(filePath, entries) {
+  filterEntriesByAdvancedRules(filePath2, entries) {
     try {
-      if (!filePath || !Array.isArray(entries) || entries.length === 0) return entries;
+      if (!filePath2 || !Array.isArray(entries) || entries.length === 0) return entries;
       const filtered = entries.filter((entry) => {
         if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern, entry);
+        return this.shouldColorText(filePath2, entry.pattern, entry);
       });
       return filtered;
     } catch (e) {
@@ -11994,12 +12152,34 @@ module.exports = class AlwaysColorText extends Plugin {
       return false;
     }
   }
+  getFileTags(filePath2) {
+    try {
+      const af = this.app.vault.getAbstractFileByPath(filePath2);
+      if (!af) return [];
+      const cache = this.app.metadataCache.getFileCache(af);
+      if (!cache) return [];
+      const tags = /* @__PURE__ */ new Set();
+      const normalize = (t) => String(t || "").replace(/^#/, "").trim();
+      const raw = cache.frontmatter?.tags;
+      if (Array.isArray(raw)) {
+        raw.forEach((t) => tags.add(normalize(t)));
+      } else if (typeof raw === "string") {
+        raw.split(",").forEach((t) => tags.add(normalize(t)));
+      }
+      if (Array.isArray(cache.tags)) {
+        cache.tags.forEach((t) => tags.add(normalize(t.tag)));
+      }
+      return Array.from(tags).filter(Boolean);
+    } catch (e) {
+      return [];
+    }
+  }
   // Return the most specific folder rule that matches filePath, or null
-  getBestFolderEntry(filePath) {
+  getBestFolderEntry(filePath2) {
     try {
       const rules = Array.isArray(this.settings.pathRules) ? this.settings.pathRules : [];
-      if (!filePath || rules.length === 0) return null;
-      const fp = this.normalizePath(filePath);
+      if (!filePath2 || rules.length === 0) return null;
+      const fp = this.normalizePath(filePath2);
       const parents = this._parentFolders(fp);
       let best = null;
       for (const r of rules) {
@@ -12120,6 +12300,11 @@ module.exports = class AlwaysColorText extends Plugin {
               const copy = Object.assign({}, e);
               if (groupMatch) copy.matchType = groupMatch;
               if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+              copy._groupUid = group.uid || null;
+              copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
+              copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
+              copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
+              copy.groupDisableTags = Array.isArray(group.disableTags) ? group.disableTags.slice() : [];
               return copy;
             });
             allEntries = allEntries.concat(mapped);
@@ -12177,6 +12362,11 @@ module.exports = class AlwaysColorText extends Plugin {
             // Copy per-entry include/exclude rules so filtering still works after reload
             inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
             exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
+            groupUid: e._groupUid || null,
+            groupEnableFolders: Array.isArray(e.groupEnableFolders) ? e.groupEnableFolders.slice() : [],
+            groupDisableFolders: Array.isArray(e.groupDisableFolders) ? e.groupDisableFolders.slice() : [],
+            groupEnableTags: Array.isArray(e.groupEnableTags) ? e.groupEnableTags.slice() : [],
+            groupDisableTags: Array.isArray(e.groupDisableTags) ? e.groupDisableTags.slice() : [],
             // Copy custom styling properties directly to compiled entry as well
             backgroundOpacity: e.backgroundOpacity,
             highlightBorderRadius: e.highlightBorderRadius,
@@ -12285,6 +12475,11 @@ module.exports = class AlwaysColorText extends Plugin {
               const copy = Object.assign({}, e);
               if (groupMatch) copy.matchType = groupMatch;
               if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+              copy._groupUid = group.uid || null;
+              copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
+              copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
+              copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
+              copy.groupDisableTags = Array.isArray(group.disableTags) ? group.disableTags.slice() : [];
               return copy;
             });
             source = source.concat(mapped);
@@ -12360,6 +12555,11 @@ module.exports = class AlwaysColorText extends Plugin {
             // Copy per-entry include/exclude rules so filtering still works after reload
             inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
             exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
+            groupUid: e._groupUid || null,
+            groupEnableFolders: Array.isArray(e.groupEnableFolders) ? e.groupEnableFolders.slice() : [],
+            groupDisableFolders: Array.isArray(e.groupDisableFolders) ? e.groupDisableFolders.slice() : [],
+            groupEnableTags: Array.isArray(e.groupEnableTags) ? e.groupEnableTags.slice() : [],
+            groupDisableTags: Array.isArray(e.groupDisableTags) ? e.groupDisableTags.slice() : [],
             // Copy custom styling properties directly to compiled entry as well
             backgroundOpacity: e.backgroundOpacity,
             highlightBorderRadius: e.highlightBorderRadius,
@@ -13305,21 +13505,8 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     return false;
   }
-  // Efficient, non-recursive, DOM walker for reading mode
   _wrapMatchesRecursive(element, entries, folderEntry = null, options = {}) {
     debugLog("WRAP", `Starting with ${entries.length} entries`);
-    let filePath = null;
-    try {
-      filePath = this.app?.workspace?.getActiveFile()?.path || null;
-    } catch (_) {
-    }
-    try {
-      if (filePath) {
-        entries = this.filterEntriesByAdvancedRules(filePath, entries || this.getSortedWordEntries());
-        debugLog("WRAP", `After advanced rules filtering: ${entries.length} entries`);
-      }
-    } catch (_) {
-    }
     try {
       const textContent = element.textContent || "";
       const nonRomanCharCount = this.countNonRomanCharacters(textContent);
@@ -13331,7 +13518,7 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {
     }
     try {
-      this.processMarkdownFormattingInReading(element, folderEntry);
+      this.processMarkdownFormattingInReading(element, folderEntry, entries);
     } catch (e) {
     }
     const simpleEntries = entries.filter(
@@ -13498,15 +13685,6 @@ module.exports = class AlwaysColorText extends Plugin {
       effectiveStyle = "text";
     }
     const immediateLimit = opts.immediateLimit || 0;
-    let filePath = null;
-    try {
-      filePath = this.app?.workspace?.getActiveFile()?.path || null;
-    } catch (_) {
-    }
-    try {
-      if (filePath) entries = this.filterEntriesByAdvancedRules(filePath, entries || this.getSortedWordEntries());
-    } catch (_) {
-    }
     try {
       this._perfCounters.totalBlocksProcessed = (this._perfCounters.totalBlocksProcessed || 0) + 1;
     } catch (e) {
@@ -13532,7 +13710,7 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {
     }
     try {
-      this.processMarkdownFormattingInReading(block, folderEntry);
+      this.processMarkdownFormattingInReading(block, folderEntry, entries);
     } catch (e) {
       try {
         debugError("MARKDOWN_FORMAT", "per-block processing error", e);
@@ -14503,6 +14681,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   _processLivePreviewCallouts(view) {
     try {
+      if (this.settings.disableLivePreviewColoring) return;
       const now = Date.now();
       if (this._lpLastRun && now - this._lpLastRun < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
       this._lpLastRun = now;
@@ -14539,9 +14718,9 @@ module.exports = class AlwaysColorText extends Plugin {
       const callouts = root.querySelectorAll(".cm-callout, .callout");
       if (!callouts || callouts.length === 0) return;
       const fileForView = view.file || this.app.workspace.getActiveFile();
-      const filePath = fileForView ? fileForView.path : null;
-      const docDisabled = !!(filePath && this.settings.disabledFiles && this.settings.disabledFiles.includes(filePath));
-      const fmDisabled = !!(filePath && this.isFrontmatterColoringDisabled && this.isFrontmatterColoringDisabled(filePath));
+      const filePath2 = fileForView ? fileForView.path : null;
+      const docDisabled = !!(filePath2 && this.settings.disabledFiles && this.settings.disabledFiles.includes(filePath2));
+      const fmDisabled = !!(filePath2 && this.isFrontmatterColoringDisabled && this.isFrontmatterColoringDisabled(filePath2));
       if (!this.settings.enabled || docDisabled || fmDisabled) {
         for (const co of callouts) {
           try {
@@ -14556,8 +14735,8 @@ module.exports = class AlwaysColorText extends Plugin {
         return;
       }
       const allEntries = this.getSortedWordEntries();
-      const entries = filePath ? this.filterEntriesByAdvancedRules(filePath, allEntries) : allEntries;
-      const folderEntry = filePath ? this.getBestFolderEntry(filePath) : null;
+      const entries = filePath2 ? this.filterEntriesByAdvancedRules(filePath2, allEntries) : allEntries;
+      const folderEntry = filePath2 ? this.getBestFolderEntry(filePath2) : null;
       if (!this._lpCalloutCache) this._lpCalloutCache = /* @__PURE__ */ new WeakMap();
       for (const co of callouts) {
         try {
@@ -14593,6 +14772,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   _processLivePreviewTables(view) {
     try {
+      if (this.settings.disableLivePreviewColoring) return;
       const now = Date.now();
       if (this._lpTablesLastRun && now - this._lpTablesLastRun < EDITOR_PERFORMANCE_CONSTANTS.TABLE_THROTTLE_MS) return;
       this._lpTablesLastRun = now;
@@ -14623,9 +14803,9 @@ module.exports = class AlwaysColorText extends Plugin {
       const cells = root.querySelectorAll(".cm-content table td, .cm-content table th");
       if (!cells || cells.length === 0) return;
       const fileForView = view.file || this.app.workspace.getActiveFile();
-      const filePath = fileForView ? fileForView.path : null;
-      const docDisabled = !!(filePath && this.settings.disabledFiles && this.settings.disabledFiles.includes(filePath));
-      const fmDisabled = !!(filePath && this.isFrontmatterColoringDisabled && this.isFrontmatterColoringDisabled(filePath));
+      const filePath2 = fileForView ? fileForView.path : null;
+      const docDisabled = !!(filePath2 && this.settings.disabledFiles && this.settings.disabledFiles.includes(filePath2));
+      const fmDisabled = !!(filePath2 && this.isFrontmatterColoringDisabled && this.isFrontmatterColoringDisabled(filePath2));
       if (!this.settings.enabled || docDisabled || fmDisabled) {
         for (const cell of cells) {
           try {
@@ -14640,8 +14820,8 @@ module.exports = class AlwaysColorText extends Plugin {
         return;
       }
       const allEntries = this.getSortedWordEntries();
-      const entries = filePath ? this.filterEntriesByAdvancedRules(filePath, allEntries) : allEntries;
-      const folderEntry = filePath ? this.getBestFolderEntry(filePath) : null;
+      const entries = filePath2 ? this.filterEntriesByAdvancedRules(filePath2, allEntries) : allEntries;
+      const folderEntry = filePath2 ? this.getBestFolderEntry(filePath2) : null;
       if (!this._lpTableCache) this._lpTableCache = /* @__PURE__ */ new WeakMap();
       const isVisible = (el) => {
         try {
@@ -14755,7 +14935,7 @@ module.exports = class AlwaysColorText extends Plugin {
               } catch (e) {
               }
             }
-            if (this.settings.enabled) {
+            if (this.settings.enabled && !this.settings.disableLivePreviewColoring) {
               this._processLivePreviewTables(view);
               try {
                 this._attachLivePreviewTableObserver(view);
@@ -14820,6 +15000,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   _attachLivePreviewTableObserver(view) {
     try {
+      if (this.settings.disableLivePreviewColoring) return;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
       if (!this._lpTableObservers) this._lpTableObservers = /* @__PURE__ */ new Map();
@@ -14938,7 +15119,7 @@ module.exports = class AlwaysColorText extends Plugin {
               } catch (e) {
               }
             }
-            if (this.settings.enabled) {
+            if (this.settings.enabled && !this.settings.disableLivePreviewColoring) {
               this._processLivePreviewCallouts(view);
               this._processLivePreviewTables(view);
               this._processBasesViews();
@@ -15055,12 +15236,12 @@ module.exports = class AlwaysColorText extends Plugin {
       const roots = Array.from(document.querySelectorAll(".bases-view"));
       if (!roots || roots.length === 0) return;
       const fileForView = this.app.workspace.getActiveFile();
-      const filePath = fileForView ? fileForView.path : null;
-      const docDisabled = !!(filePath && this.settings.disabledFiles && this.settings.disabledFiles.includes(filePath));
-      const fmDisabled = !!(filePath && this.isFrontmatterColoringDisabled && this.isFrontmatterColoringDisabled(filePath));
+      const filePath2 = fileForView ? fileForView.path : null;
+      const docDisabled = !!(filePath2 && this.settings.disabledFiles && this.settings.disabledFiles.includes(filePath2));
+      const fmDisabled = !!(filePath2 && this.isFrontmatterColoringDisabled && this.isFrontmatterColoringDisabled(filePath2));
       const allEntries = this.getSortedWordEntries();
-      const entries = filePath ? this.filterEntriesByAdvancedRules(filePath, allEntries) : allEntries;
-      const folderEntry = filePath ? this.getBestFolderEntry(filePath) : null;
+      const entries = filePath2 ? this.filterEntriesByAdvancedRules(filePath2, allEntries) : allEntries;
+      const folderEntry = filePath2 ? this.getBestFolderEntry(filePath2) : null;
       if (!this._basesCache) this._basesCache = /* @__PURE__ */ new WeakMap();
       for (const root of roots) {
         const targets = root.querySelectorAll(".bases-table-cell, .metadata-input-longtext, .multi-select-pill-content, .multi-select-input");
@@ -15197,6 +15378,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   _attachLivePreviewCalloutObserver(view) {
     try {
+      if (this.settings.disableLivePreviewColoring) return;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
       if (!this._lpObservers) this._lpObservers = /* @__PURE__ */ new Map();
@@ -15520,19 +15702,19 @@ module.exports = class AlwaysColorText extends Plugin {
         this.lastFilePath = view.file ? view.file.path : null;
         this._typingDebounceTimer = null;
         try {
-          if (plugin.settings.enabled) plugin._processLivePreviewCallouts(view);
+          if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewCallouts(view);
         } catch (_) {
         }
         try {
-          if (plugin.settings.enabled) plugin._processLivePreviewTables(view);
+          if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewTables(view);
         } catch (_) {
         }
         try {
-          if (plugin.settings.enabled) plugin._attachLivePreviewCalloutObserver(view);
+          if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._attachLivePreviewCalloutObserver(view);
         } catch (_) {
         }
         try {
-          if (plugin.settings.enabled) plugin._attachLivePreviewTableObserver(view);
+          if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._attachLivePreviewTableObserver(view);
         } catch (_) {
         }
       }
@@ -15553,11 +15735,11 @@ module.exports = class AlwaysColorText extends Plugin {
           clearTimeout(this._typingDebounceTimer);
           this._typingDebounceTimer = setTimeout(() => {
             try {
-              if (plugin.settings.enabled) plugin._processLivePreviewCallouts(this.view);
+              if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewCallouts(this.view);
             } catch (_) {
             }
             try {
-              if (plugin.settings.enabled) plugin._processLivePreviewTables(this.view);
+              if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewTables(this.view);
             } catch (_) {
             }
           }, 300);
@@ -15579,6 +15761,9 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       buildDeco(view) {
         const builder = new RangeSetBuilder();
+        const root = view && view.dom ? view.dom : null;
+        const isLivePreview = root && root.closest && root.closest(".is-live-preview");
+        if (plugin.settings.disableLivePreviewColoring && isLivePreview) return builder.finish();
         let entries = plugin.getSortedWordEntries();
         const { from, to } = view.viewport;
         const docLength = view.state.doc.length;
@@ -15795,7 +15980,7 @@ module.exports = class AlwaysColorText extends Plugin {
     return false;
   }
   // NEW METHOD: Standard editor processing for small/medium pattern/text sizes
-  buildDecoStandard(view, builder, from, to, text, entries, folderEntry, filePath = null) {
+  buildDecoStandard(view, builder, from, to, text, entries, folderEntry, filePath2 = null) {
     const entries_copy = entries || this.getSortedWordEntries();
     const allTimeEntries = entries_copy.filter((e) => e && e.presetLabel && (e.presetLabel.includes("Times") || e.pattern.includes("am")));
     debugLog("TIMEPM_ENTRY", `Total entries=${entries_copy.length}, Time entries found=${allTimeEntries.length}`);
@@ -15911,10 +16096,10 @@ module.exports = class AlwaysColorText extends Plugin {
       const taskUncheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !!e.isRegex);
       const numberedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Numbered Lists" && !!e.isRegex);
       const bulletBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Bullet Points" && !!e.isRegex);
-      const taskCheckedAllowed = !filePath || this.shouldColorText(filePath, taskCheckedEntry ? taskCheckedEntry.pattern : null);
-      const taskUncheckedAllowed = !filePath || this.shouldColorText(filePath, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
-      const numberedAllowed = !filePath || this.shouldColorText(filePath, numberedEntry ? numberedEntry.pattern : null);
-      const bulletAllowed = !filePath || this.shouldColorText(filePath, bulletEntry ? bulletEntry.pattern : null);
+      const taskCheckedAllowed = !filePath2 || this.shouldColorText(filePath2, taskCheckedEntry ? taskCheckedEntry.pattern : null);
+      const taskUncheckedAllowed = !filePath2 || this.shouldColorText(filePath2, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
+      const numberedAllowed = !filePath2 || this.shouldColorText(filePath2, numberedEntry ? numberedEntry.pattern : null);
+      const bulletAllowed = !filePath2 || this.shouldColorText(filePath2, bulletEntry ? bulletEntry.pattern : null);
       let pos = 0;
       while (pos <= text.length) {
         const lineStart = pos;
@@ -16020,10 +16205,10 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from);
     let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
-    if (filePath) {
+    if (filePath2) {
       textBgEntries = textBgEntries.filter((entry) => {
         if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern, entry);
+        return this.shouldColorText(filePath2, entry.pattern, entry);
       });
     }
     for (const entry of textBgEntries) {
@@ -16565,7 +16750,7 @@ module.exports = class AlwaysColorText extends Plugin {
     return builder.finish();
   }
   // NEW METHOD: Chunked editor processing for large pattern sets or large text
-  buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath = null) {
+  buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath2 = null) {
     const CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
     const MAX_MATCHES = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
@@ -16663,10 +16848,10 @@ module.exports = class AlwaysColorText extends Plugin {
       const taskUncheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !!e.isRegex);
       const numberedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Numbered Lists" && !!e.isRegex);
       const bulletBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Bullet Points" && !!e.isRegex);
-      const taskCheckedAllowed = !filePath || this.shouldColorText(filePath, taskCheckedEntry ? taskCheckedEntry.pattern : null);
-      const taskUncheckedAllowed = !filePath || this.shouldColorText(filePath, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
-      const numberedAllowed = !filePath || this.shouldColorText(filePath, numberedEntry ? numberedEntry.pattern : null);
-      const bulletAllowed = !filePath || this.shouldColorText(filePath, bulletEntry ? bulletEntry.pattern : null);
+      const taskCheckedAllowed = !filePath2 || this.shouldColorText(filePath2, taskCheckedEntry ? taskCheckedEntry.pattern : null);
+      const taskUncheckedAllowed = !filePath2 || this.shouldColorText(filePath2, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
+      const numberedAllowed = !filePath2 || this.shouldColorText(filePath2, numberedEntry ? numberedEntry.pattern : null);
+      const bulletAllowed = !filePath2 || this.shouldColorText(filePath2, bulletEntry ? bulletEntry.pattern : null);
       let pos = 0;
       while (pos <= text.length) {
         const lineStart = pos;
@@ -16773,10 +16958,10 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from);
     let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
-    if (filePath) {
+    if (filePath2) {
       textBgEntries = textBgEntries.filter((entry) => {
         if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern, entry);
+        return this.shouldColorText(filePath2, entry.pattern, entry);
       });
     }
     if (textBgEntries.length > 0) {
@@ -20657,6 +20842,65 @@ var EditWordGroupModal = class extends Modal {
     };
     matchTypeSelect.addEventListener("change", matchTypeHandler);
     this._cleanupHandlers.push(() => matchTypeSelect.removeEventListener("change", matchTypeHandler));
+    const enableDisableRow = contentEl.createDiv();
+    enableDisableRow.style.display = "grid";
+    enableDisableRow.style.gridTemplateColumns = "auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)";
+    enableDisableRow.style.gap = "8px";
+    enableDisableRow.style.alignItems = "center";
+    enableDisableRow.style.marginBottom = "12px";
+    const enLabel = enableDisableRow.createEl("div", { text: this.plugin.t("label_enable_in", "Enable in") });
+    enLabel.style.color = "var(--text-muted)";
+    const enFoldersInput = enableDisableRow.createEl("input", { type: "text" });
+    enFoldersInput.placeholder = "folder1/, folder2/";
+    enFoldersInput.style.padding = "6px";
+    enFoldersInput.style.borderRadius = "4px";
+    enFoldersInput.style.border = "1px solid var(--background-modifier-border)";
+    enFoldersInput.value = Array.isArray(this.group.enableFolders) ? this.group.enableFolders.join(", ") : "";
+    const enTagsInput = enableDisableRow.createEl("input", { type: "text" });
+    enTagsInput.placeholder = "#tag1, #tag2";
+    enTagsInput.style.padding = "6px";
+    enTagsInput.style.borderRadius = "4px";
+    enTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    enTagsInput.value = Array.isArray(this.group.enableTags) ? this.group.enableTags.map((t) => t.startsWith("#") ? t : `#${t}`).join(", ") : "";
+    const disLabel = enableDisableRow.createEl("div", { text: this.plugin.t("label_disable_in", "Disable in") });
+    disLabel.style.color = "var(--text-muted)";
+    const disFoldersInput = enableDisableRow.createEl("input", { type: "text" });
+    disFoldersInput.placeholder = "folder1/, folder2/";
+    disFoldersInput.style.padding = "6px";
+    disFoldersInput.style.borderRadius = "4px";
+    disFoldersInput.style.border = "1px solid var(--background-modifier-border)";
+    disFoldersInput.value = Array.isArray(this.group.disableFolders) ? this.group.disableFolders.join(", ") : "";
+    const disTagsInput = enableDisableRow.createEl("input", { type: "text" });
+    disTagsInput.placeholder = "#tag1, #tag2";
+    disTagsInput.style.padding = "6px";
+    disTagsInput.style.borderRadius = "4px";
+    disTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    disTagsInput.value = Array.isArray(this.group.disableTags) ? this.group.disableTags.map((t) => t.startsWith("#") ? t : `#${t}`).join(", ") : "";
+    const parseList = (raw, isTag) => {
+      const arr = String(raw || "").split(",").map((s) => s.trim()).filter(Boolean);
+      if (isTag) return arr.map((t) => t.replace(/^#/, "")).filter(Boolean);
+      return arr;
+    };
+    const enFoldersHandler = () => {
+      this.group.enableFolders = parseList(enFoldersInput.value, false);
+    };
+    const enTagsHandler = () => {
+      this.group.enableTags = parseList(enTagsInput.value, true);
+    };
+    const disFoldersHandler = () => {
+      this.group.disableFolders = parseList(disFoldersInput.value, false);
+    };
+    const disTagsHandler = () => {
+      this.group.disableTags = parseList(disTagsInput.value, true);
+    };
+    enFoldersInput.addEventListener("input", enFoldersHandler);
+    enTagsInput.addEventListener("input", enTagsHandler);
+    disFoldersInput.addEventListener("input", disFoldersHandler);
+    disTagsInput.addEventListener("input", disTagsHandler);
+    this._cleanupHandlers.push(() => enFoldersInput.removeEventListener("input", enFoldersHandler));
+    this._cleanupHandlers.push(() => enTagsInput.removeEventListener("input", enTagsHandler));
+    this._cleanupHandlers.push(() => disFoldersInput.removeEventListener("input", disFoldersHandler));
+    this._cleanupHandlers.push(() => disTagsInput.removeEventListener("input", disTagsHandler));
     const searchRow = contentEl.createDiv();
     try {
       searchRow.addClass("act-search-container");
@@ -21272,13 +21516,8 @@ var EditWordGroupModal = class extends Modal {
   }
   onClose() {
     try {
-      const currentGroupInSettings = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups.find((g) => g && g.uid === this.group?.uid) : null;
-      if (currentGroupInSettings) {
-      } else {
-        this.onSave(this.group);
-      }
+      this.onSave(this.group);
     } catch (e) {
-      debugError("MODAL", "auto-save error on close", e);
     }
     try {
       this._cleanupHandlers.forEach((cleanup) => {
@@ -22818,15 +23057,15 @@ var ColorSettingTab = class extends PluginSettingTab {
         this._disabledFilesSearchInput.value = String(this._disabledFilesSearchQuery || "");
       }
       const q = String(this._disabledFilesSearchQuery || "").trim().toLowerCase();
-      const matchesQuery = (filePath) => {
+      const matchesQuery = (filePath2) => {
         if (!q) return true;
-        const fp = String(filePath || "");
+        const fp = String(filePath2 || "");
         const name = fp.split("/").pop() || fp;
         return fp.toLowerCase().includes(q) || name.toLowerCase().includes(q);
       };
-      this.plugin.settings.disabledFiles.filter(matchesQuery).forEach((filePath) => {
-        new Setting(this._disabledFilesListEl).setName(filePath).addExtraButton((btn) => btn.setIcon("x").setTooltip(this.plugin.t("tooltip_enable_for_file", "Enable for this file")).onClick(async () => {
-          const index = this.plugin.settings.disabledFiles.indexOf(filePath);
+      this.plugin.settings.disabledFiles.filter(matchesQuery).forEach((filePath2) => {
+        new Setting(this._disabledFilesListEl).setName(filePath2).addExtraButton((btn) => btn.setIcon("x").setTooltip(this.plugin.t("tooltip_enable_for_file", "Enable for this file")).onClick(async () => {
+          const index = this.plugin.settings.disabledFiles.indexOf(filePath2);
           if (index > -1) {
             this.plugin.settings.disabledFiles.splice(index, 1);
           }
@@ -25122,6 +25361,59 @@ var ColorSettingTab = class extends PluginSettingTab {
         this.plugin.settings.enabled = v;
         await this.debouncedSaveSettings();
       }));
+      new Setting(containerEl2).setName(this.plugin.t("color_in_live_preview_mode", "Color in live preview mode")).addToggle((t) => t.setValue(!this.plugin.settings.disableLivePreviewColoring).onChange(async (v) => {
+        this.plugin.settings.disableLivePreviewColoring = !v;
+        await this.debouncedSaveSettings();
+        try {
+          if (this.plugin.settings.enabled) {
+            if (v) {
+              try {
+                this.plugin.applyEnabledLivePreviewCalloutStyles();
+              } catch (_) {
+              }
+              try {
+                this.plugin.applyEnabledLivePreviewTextColorStyles();
+              } catch (_) {
+              }
+            } else {
+              try {
+                this.plugin.removeEnabledLivePreviewCalloutStyles();
+              } catch (_) {
+              }
+              try {
+                this.plugin.removeEnabledLivePreviewTextColorStyles();
+              } catch (_) {
+              }
+            }
+            try {
+              this.plugin.refreshAllLivePreviewCallouts();
+            } catch (_) {
+            }
+            try {
+              this.plugin.forceReprocessLivePreviewCallouts();
+            } catch (_) {
+            }
+            try {
+              this.plugin.refreshAllLivePreviewTables();
+            } catch (_) {
+            }
+            try {
+              this.plugin.forceReprocessLivePreviewTables();
+            } catch (_) {
+            }
+          } else {
+            try {
+              this.plugin.removeEnabledLivePreviewCalloutStyles();
+            } catch (_) {
+            }
+            try {
+              this.plugin.removeEnabledLivePreviewTextColorStyles();
+            } catch (_) {
+            }
+          }
+        } catch (_) {
+        }
+      }));
       new Setting(containerEl2).setName(this.plugin.t("color_in_reading_mode", "Color in reading mode")).addToggle((t) => t.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async (v) => {
         this.plugin.settings.disableReadingModeColoring = !v;
         await this.debouncedSaveSettings();
@@ -26140,7 +26432,11 @@ var ColorSettingTab = class extends PluginSettingTab {
         const newGroup = {
           active: true,
           name: "",
-          entries: []
+          entries: [],
+          enableFolders: [],
+          disableFolders: [],
+          enableTags: [],
+          disableTags: []
         };
         try {
           newGroup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);

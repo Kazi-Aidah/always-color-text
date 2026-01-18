@@ -139,6 +139,7 @@ module.exports = {
   
   // Basic Settings
   "enable_document_color": "ডকুমেন্ট রঙ সক্ষম করুন",
+  "color_in_live_preview_mode": "লাইভ প্রিভিউ মোডে রঙ করুন",
   "color_in_reading_mode": "রিডিং মোডে রঙ করুন",
   "force_full_render_reading": "রিডিং মোডে সম্পূর্ণ রেন্ডার জোর করুন",
   "force_full_render_reading_desc": "চালু থাকলে, রিডিং-মোড সম্পূর্ণ ডকুমেন্ট এক পাসে রঙ করার চেষ্টা করবে। বড় ডকুমেন্টে পারফরম্যান্স ইস্যু হতে পারে। সতর্কতার সাথে ব্যবহার করুন!",
@@ -410,7 +411,9 @@ module.exports = {
   "mode_does_not_color_in": "এর মধ্যে রঙ করে না",
   "label_text_include": "হোয়াইটলিস্ট",
   "label_text_exclude": "ব্ল্যাকলিস্ট",
-  "enter_path_or_pattern": "পাথ বা প্যাটার্ন লিখুন",
+  "label_enable_in": "এতে সক্রিয় করুন",
+  "label_disable_in": "এতে নিষ্ক্রিয় করুন",
+  "enter_path_or_pattern": "পাথ, প্যাটার্ন বা ট্যাগ লিখুন",
   "label_regex": "রেজেক্স",
   
   // Advanced Rules

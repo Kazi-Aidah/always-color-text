@@ -137,6 +137,7 @@ module.exports = {
   
   // Basic Settings
   "enable_document_color": "दस्तावेज़ रंग चालू करें",
+  "color_in_live_preview_mode": "लाइव प्रीव्यू मोड में रंग लगाएँ",
   "color_in_reading_mode": "रीडिंग मोड में रंग लगाएँ",
   "force_full_render_reading": "रीडिंग मोड में पूर्ण रेंडर फोर्स करें",
   "force_full_render_reading_desc": "जब चालू हो, तो रीडिंग-मोड पूरे दस्तावेज़ को एक पास में रंगने का प्रयास करेगा। बड़े दस्तावेज़ों पर प्रदर्शन समस्याएँ हो सकती हैं। सावधानी से उपयोग करें!",
@@ -409,7 +410,9 @@ module.exports = {
   "mode_does_not_color_in": "के भीतर रंग नहीं करता",
   "label_text_include": "व्हाइटलिस्ट",
   "label_text_exclude": "ब्लैकलिस्ट",
-  "enter_path_or_pattern": "पथ या पैटर्न दर्ज करें",
+  "label_enable_in": "यहाँ सक्षम करें",
+  "label_disable_in": "यहाँ अक्षम करें",
+  "enter_path_or_pattern": "पथ, पैटर्न या टैग दर्ज करें",
   "label_regex": "रेजेक्स",
   
   // Advanced Rules

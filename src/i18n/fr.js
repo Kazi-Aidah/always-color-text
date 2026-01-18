@@ -135,6 +135,7 @@ module.exports = {
   
   // Basic Settings
   "enable_document_color": "Activer la couleur du document",
+  "color_in_live_preview_mode": "Colorer en mode prévisualisation",
   "color_in_reading_mode": "Colorer en mode lecture",
   "force_full_render_reading": "Forcer le rendu complet en mode lecture",
   "force_full_render_reading_desc": "Si activé, le mode lecture essaiera de colorer tout le document à la fois. Peut causer des ralentissements sur les gros documents, utilisez avec prudence !",
@@ -405,7 +406,9 @@ module.exports = {
   "mode_does_not_color_in": "ne colore pas dans",
   "label_text_include": "Liste Blanche",
   "label_text_exclude": "Liste Noire",
-  "enter_path_or_pattern": "Entrer un chemin ou un motif",
+  "label_enable_in": "Activer dans",
+  "label_disable_in": "Désactiver dans",
+  "enter_path_or_pattern": "Entrer un chemin, un motif ou des balises",
   "label_regex": "Expression régulière",
   
   // Advanced Rules
