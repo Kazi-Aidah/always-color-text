@@ -145,6 +145,8 @@ module.exports = {
   "color_in_reading_mode": "Color in Reading Mode",
   "force_full_render_reading": "Force Full Render in Reading Mode",
   "force_full_render_reading_desc": "If on, Reading Mode will try to color the whole document at once. May cause lag on large docs, use carefully!",
+  "lightweight_mode": "Experimental: Extremely lightweight mode",
+  "lightweight_mode_desc": "Greatly reduces processing while typing. May skip some matches.",
   "disable_coloring_current_file": "Disable coloring for current file",
   "disable_coloring_current_file_desc": "Adds an exclude rule for the active file under File & Folder Coloring Rules.",
   "btn_disable_for_this_file": "Disable for this file",

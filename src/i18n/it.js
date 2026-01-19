@@ -139,6 +139,8 @@ module.exports = {
   "color_in_reading_mode": "Colora in modalità lettura",
   "force_full_render_reading": "Forza rendering completo in modalità lettura",
   "force_full_render_reading_desc": "Se attivo, la modalità lettura tenterà di colorare l'intero documento in una sola passata. Può causare problemi di prestazioni su documenti grandi. Usare con cautela!",
+  "lightweight_mode": "Sperimentale: modalità estremamente leggera",
+  "lightweight_mode_desc": "Riduce molto l'elaborazione durante la digitazione. Può saltare alcune occorrenze.",
   "disable_coloring_current_file": "Disabilita colorazione per file corrente",
   "disable_coloring_current_file_desc": "Aggiunge una regola di esclusione per il file attivo sotto regole colorazione file e cartelle.",
   "btn_disable_for_this_file": "Disabilita per questo file",

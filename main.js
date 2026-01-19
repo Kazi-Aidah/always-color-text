@@ -146,6 +146,8 @@ var require_en = __commonJS({
       "color_in_reading_mode": "Color in Reading Mode",
       "force_full_render_reading": "Force Full Render in Reading Mode",
       "force_full_render_reading_desc": "If on, Reading Mode will try to color the whole document at once. May cause lag on large docs, use carefully!",
+      "lightweight_mode": "Experimental: Extremely lightweight mode",
+      "lightweight_mode_desc": "Greatly reduces processing while typing. May skip some matches.",
       "disable_coloring_current_file": "Disable coloring for current file",
       "disable_coloring_current_file_desc": "Adds an exclude rule for the active file under File & Folder Coloring Rules.",
       "btn_disable_for_this_file": "Disable for this file",
@@ -647,6 +649,8 @@ var require_es = __commonJS({
       "color_in_reading_mode": "Colorear en Modo Lectura",
       "force_full_render_reading": "Forzar renderizado completo en Modo Lectura",
       "force_full_render_reading_desc": "Si est\xE1 activado, el Modo Lectura intentar\xE1 colorear todo el documento a la vez. \xA1Puede causar retrasos en documentos grandes, \xFAsalo con cuidado!",
+      "lightweight_mode": "Experimental: modo extremadamente ligero",
+      "lightweight_mode_desc": "Reduce mucho el procesamiento mientras escribes. Puede saltarse algunas coincidencias.",
       "disable_coloring_current_file": "Desactivar coloreado para el archivo actual",
       "disable_coloring_current_file_desc": "A\xF1ade una regla de exclusi\xF3n para el archivo activo en Reglas de Coloreado para Archivos y Carpetas.",
       "btn_disable_for_this_file": "Desactivar para este archivo",
@@ -1149,6 +1153,8 @@ var require_fr = __commonJS({
       "color_in_reading_mode": "Colorer en mode lecture",
       "force_full_render_reading": "Forcer le rendu complet en mode lecture",
       "force_full_render_reading_desc": "Si activ\xE9, le mode lecture essaiera de colorer tout le document \xE0 la fois. Peut causer des ralentissements sur les gros documents, utilisez avec prudence !",
+      "lightweight_mode": "Exp\xE9rimental : mode extr\xEAmement l\xE9ger",
+      "lightweight_mode_desc": "R\xE9duit fortement le traitement pendant la frappe. Peut ignorer certaines correspondances.",
       "disable_coloring_current_file": "D\xE9sactiver le coloriage pour le fichier actuel",
       "disable_coloring_current_file_desc": "Ajoute une r\xE8gle d'exclusion pour le fichier actif sous R\xE8gles de coloriage des fichiers et dossiers.",
       "btn_disable_for_this_file": "D\xE9sactiver pour ce fichier",
@@ -1653,6 +1659,8 @@ var require_hi = __commonJS({
       "color_in_reading_mode": "\u0930\u0940\u0921\u093F\u0902\u0917 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
       "force_full_render_reading": "\u0930\u0940\u0921\u093F\u0902\u0917 \u092E\u094B\u0921 \u092E\u0947\u0902 \u092A\u0942\u0930\u094D\u0923 \u0930\u0947\u0902\u0921\u0930 \u092B\u094B\u0930\u094D\u0938 \u0915\u0930\u0947\u0902",
       "force_full_render_reading_desc": "\u091C\u092C \u091A\u093E\u0932\u0942 \u0939\u094B, \u0924\u094B \u0930\u0940\u0921\u093F\u0902\u0917-\u092E\u094B\u0921 \u092A\u0942\u0930\u0947 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u094B \u090F\u0915 \u092A\u093E\u0938 \u092E\u0947\u0902 \u0930\u0902\u0917\u0928\u0947 \u0915\u093E \u092A\u094D\u0930\u092F\u093E\u0938 \u0915\u0930\u0947\u0917\u093E\u0964 \u092C\u0921\u093C\u0947 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C\u094B\u0902 \u092A\u0930 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928 \u0938\u092E\u0938\u094D\u092F\u093E\u090F\u0901 \u0939\u094B \u0938\u0915\u0924\u0940 \u0939\u0948\u0902\u0964 \u0938\u093E\u0935\u0927\u093E\u0928\u0940 \u0938\u0947 \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0947\u0902!",
+      "lightweight_mode": "\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915: \u0905\u0924\u094D\u092F\u0902\u0924 \u0939\u0932\u094D\u0915\u093E \u092E\u094B\u0921",
+      "lightweight_mode_desc": "\u091F\u093E\u0907\u092A \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u092A\u094D\u0930\u094B\u0938\u0947\u0938\u093F\u0902\u0917 \u0915\u094B \u0915\u093E\u092B\u0940 \u0915\u092E \u0915\u0930\u0924\u093E \u0939\u0948\u0964 \u0915\u0941\u091B \u092E\u093F\u0932\u093E\u0928 \u091B\u0942\u091F \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964",
       "disable_coloring_current_file": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "disable_coloring_current_file_desc": "\u092B\u093C\u093E\u0907\u0932 \u0914\u0930 \u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u0930\u0902\u0917\u093E\u0908 \u0928\u093F\u092F\u092E\u094B\u0902 \u0915\u0947 \u0924\u0939\u0924 \u0938\u0915\u094D\u0930\u093F\u092F \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u090F\u0915 \u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E \u091C\u094B\u0921\u093C\u0924\u093E \u0939\u0948\u0964",
       "btn_disable_for_this_file": "\u0907\u0938 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
@@ -2154,6 +2162,8 @@ var require_it = __commonJS({
       "color_in_reading_mode": "Colora in modalit\xE0 lettura",
       "force_full_render_reading": "Forza rendering completo in modalit\xE0 lettura",
       "force_full_render_reading_desc": "Se attivo, la modalit\xE0 lettura tenter\xE0 di colorare l'intero documento in una sola passata. Pu\xF2 causare problemi di prestazioni su documenti grandi. Usare con cautela!",
+      "lightweight_mode": "Sperimentale: modalit\xE0 estremamente leggera",
+      "lightweight_mode_desc": "Riduce molto l'elaborazione durante la digitazione. Pu\xF2 saltare alcune occorrenze.",
       "disable_coloring_current_file": "Disabilita colorazione per file corrente",
       "disable_coloring_current_file_desc": "Aggiunge una regola di esclusione per il file attivo sotto regole colorazione file e cartelle.",
       "btn_disable_for_this_file": "Disabilita per questo file",
@@ -2661,6 +2671,8 @@ var require_bn = __commonJS({
       "color_in_reading_mode": "\u09B0\u09BF\u09A1\u09BF\u0982 \u09AE\u09CB\u09A1\u09C7 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "force_full_render_reading": "\u09B0\u09BF\u09A1\u09BF\u0982 \u09AE\u09CB\u09A1\u09C7 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3 \u09B0\u09C7\u09A8\u09CD\u09A1\u09BE\u09B0 \u099C\u09CB\u09B0 \u0995\u09B0\u09C1\u09A8",
       "force_full_render_reading_desc": "\u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u09B0\u09BF\u09A1\u09BF\u0982-\u09AE\u09CB\u09A1 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F \u098F\u0995 \u09AA\u09BE\u09B8\u09C7 \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u099A\u09C7\u09B7\u09CD\u099F\u09BE \u0995\u09B0\u09AC\u09C7\u0964 \u09AC\u09A1\u09BC \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7 \u09AA\u09BE\u09B0\u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u09A8\u09CD\u09B8 \u0987\u09B8\u09CD\u09AF\u09C1 \u09B9\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964 \u09B8\u09A4\u09B0\u09CD\u0995\u09A4\u09BE\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8!",
+      "lightweight_mode": "\u09AA\u09CD\u09B0\u09BE\u09AF\u09BC\u09CB\u0997\u09BF\u0995: \u0985\u09A4\u09BF\u09B0\u09BF\u0995\u09CD\u09A4 \u09B9\u09BE\u09B2\u0995\u09BE \u09AE\u09CB\u09A1",
+      "lightweight_mode_desc": "\u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09AA\u09CD\u09B0\u09B8\u09C7\u09B8\u09BF\u0982 \u0985\u09A8\u09C7\u0995 \u0995\u09AE\u09BF\u09AF\u09BC\u09C7 \u09A6\u09C7\u09AF\u09BC\u0964 \u0995\u09BF\u099B\u09C1 \u09AE\u09CD\u09AF\u09BE\u099A \u09AC\u09BE\u09A6 \u09AA\u09A1\u09BC\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964",
       "disable_coloring_current_file": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "disable_coloring_current_file_desc": "\u09AB\u09BE\u0987\u09B2 \u0993 \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0 \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09B0\u09C1\u09B2\u09B8 \u098F\u09B0 \u0985\u09A7\u09C0\u09A8\u09C7 \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u098F\u0995\u099F\u09BF \u098F\u0995\u09CD\u09B8\u0995\u09CD\u09B2\u09C1\u09A1 \u09B0\u09C1\u09B2 \u09AF\u09CB\u0997 \u0995\u09B0\u09C7\u0964",
       "btn_disable_for_this_file": "\u098F\u0987 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
@@ -3161,6 +3173,8 @@ var require_ru = __commonJS({
       "color_in_reading_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading": "\u041F\u0440\u0438\u043D\u0443\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u0442\u044C \u043F\u043E\u043B\u043D\u044B\u0439 \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433 \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u0440\u0435\u0436\u0438\u043C \u0447\u0442\u0435\u043D\u0438\u044F \u043F\u043E\u043F\u044B\u0442\u0430\u0435\u0442\u0441\u044F \u043E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0432\u0435\u0441\u044C \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442 \u0441\u0440\u0430\u0437\u0443. \u041C\u043E\u0436\u0435\u0442 \u0432\u044B\u0437\u0432\u0430\u0442\u044C \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u043D\u0430 \u0431\u043E\u043B\u044C\u0448\u0438\u0445 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0445, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u0441 \u043E\u0441\u0442\u043E\u0440\u043E\u0436\u043D\u043E\u0441\u0442\u044C\u044E!",
+      "lightweight_mode": "\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u043E: \u0441\u0432\u0435\u0440\u0445\u043B\u0451\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C",
+      "lightweight_mode_desc": "\u0421\u0438\u043B\u044C\u043D\u043E \u0443\u043C\u0435\u043D\u044C\u0448\u0430\u0435\u0442 \u043E\u0431\u044A\u0451\u043C \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438 \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u043D\u0430\u0431\u043E\u0440\u0430 \u0442\u0435\u043A\u0441\u0442\u0430. \u041C\u043E\u0436\u0435\u0442 \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0430\u0442\u044C \u043D\u0435\u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u044F.",
       "disable_coloring_current_file": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
       "disable_coloring_current_file_desc": "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u043F\u0440\u0430\u0432\u0438\u043B\u043E \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u0434\u043B\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430 \u0432 \u0440\u0430\u0437\u0434\u0435\u043B \xAB\u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u044F \u0444\u0430\u0439\u043B\u043E\u0432 \u0438 \u043F\u0430\u043F\u043E\u043A\xBB.",
       "btn_disable_for_this_file": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0434\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
@@ -3657,6 +3671,8 @@ var require_zh_cn = __commonJS({
       "color_in_reading_mode": "\u5728\u9605\u8BFB\u6A21\u5F0F\u4E0B\u7740\u8272",
       "force_full_render_reading": "\u9605\u8BFB\u6A21\u5F0F\u4E0B\u5F3A\u5236\u5B8C\u6574\u6E32\u67D3",
       "force_full_render_reading_desc": "\u5982\u679C\u542F\u7528\uFF0C\u9605\u8BFB\u6A21\u5F0F\u5C06\u5C1D\u8BD5\u4E00\u6B21\u6027\u7740\u8272\u6574\u4E2A\u6587\u6863\u3002\u5728\u5927\u578B\u6587\u6863\u4E0A\u53EF\u80FD\u4F1A\u5BFC\u81F4\u5361\u987F\uFF0C\u8BF7\u8C28\u614E\u4F7F\u7528\uFF01",
+      "lightweight_mode": "\u5B9E\u9A8C\u529F\u80FD\uFF1A\u6781\u81F4\u8F7B\u91CF\u6A21\u5F0F",
+      "lightweight_mode_desc": "\u5728\u8F93\u5165\u65F6\u5927\u5E45\u51CF\u5C11\u5904\u7406\u91CF\u3002\u53EF\u80FD\u4F1A\u6F0F\u6389\u90E8\u5206\u5339\u914D\u3002",
       "disable_coloring_current_file": "\u7981\u7528\u5F53\u524D\u6587\u4EF6\u7740\u8272",
       "disable_coloring_current_file_desc": "\u5728\u6587\u4EF6\u548C\u6587\u4EF6\u5939\u7740\u8272\u89C4\u5219\u4E0B\u4E3A\u6D3B\u52A8\u6587\u4EF6\u6DFB\u52A0\u6392\u9664\u89C4\u5219\u3002",
       "btn_disable_for_this_file": "\u4E3A\u6B64\u6587\u4EF6\u7981\u7528",
@@ -6548,6 +6564,12 @@ module.exports = class AlwaysColorText extends Plugin {
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
         if (file === this.app.workspace.getActiveFile()) {
+          try {
+            if (this._pathRulesCache && file && file.path) {
+              this._pathRulesCache.delete(file.path);
+            }
+          } catch (_) {
+          }
           this.forceRefreshAllEditors();
           this.forceRefreshAllReadingViews();
         }
@@ -9122,6 +9144,17 @@ module.exports = class AlwaysColorText extends Plugin {
     if (!this.markdownPostProcessorRegistered) {
       this._unregisterMarkdownPostProcessor = this.registerMarkdownPostProcessor((el, ctx) => {
         if (!this.settings.enabled) return;
+        try {
+          const qaRoot = el && el.closest ? el.closest('[data-id="quickadd"], .quickadd-settings, .quickAdd-settings') : null;
+          if (qaRoot) {
+            try {
+              qaRoot.classList.add("act-skip-coloring");
+            } catch (_) {
+            }
+            return;
+          }
+        } catch (_) {
+        }
         let sp = null;
         try {
           sp = ctx && typeof ctx.sourcePath === "string" ? ctx.sourcePath : this.app && this.app.workspace && this.app.workspace.getActiveFile && this.app.workspace.getActiveFile() ? this.app.workspace.getActiveFile().path : null;
@@ -9837,6 +9870,8 @@ module.exports = class AlwaysColorText extends Plugin {
       enableRegexSupport: false,
       // Opt-in: force full reading-mode render (WARNING: may freeze UI on large notes)
       forceFullRenderInReading: false,
+      // Opt-in: extremely lightweight processing mode (experimental)
+      extremeLightweightMode: false,
       // Disable coloring in reading/preview mode (editor remains colored)
       disableReadingModeColoring: false,
       disableLivePreviewColoring: false,
@@ -11170,6 +11205,9 @@ module.exports = class AlwaysColorText extends Plugin {
   // --- Lightweight mode decision for very large documents ---
   shouldUseLightweightMode(textLength, textContent = "") {
     try {
+      if (this.settings && this.settings.extremeLightweightMode) {
+        return true;
+      }
       const isLargeDoc = Number(textLength) > 5e4;
       const isNonRomanHeavy = this.getNonRomanCharacterRatio(textContent) > 0.3;
       return isLargeDoc || isNonRomanHeavy;
@@ -11954,7 +11992,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const hasDisableFolders = disableFolders.length > 0;
         if (hasEnableFolders || hasDisableFolders) {
           const parents = this._parentFolders(fp).map((p) => this.normalizePath(p));
-          const normRule = (p) => this.normalizePath(String(p || "").trim());
+          const normRule = (p) => this.normalizePath(String(p || "").trim()).replace(/\/$/, "");
           let enableMatch = false;
           let disableMatch = false;
           let bestEnableDepth = -1;
@@ -13946,7 +13984,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       };
       const isForced = opts && opts.forceProcess || this.settings.forceFullRenderInReading;
-      const maxMatches = typeof opts.maxMatches === "number" ? opts.maxMatches : isForced ? Infinity : 500;
+      const maxMatches = typeof opts.maxMatches === "number" ? opts.maxMatches : isForced ? Infinity : this.settings && this.settings.extremeLightweightMode ? 250 : 500;
       let matches = [];
       let textBgEntries = entries.filter((e) => e && e.isTextBg === true);
       const TEXT_BG_CHUNK_SIZE = 10;
@@ -14685,7 +14723,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   _processLivePreviewCallouts(view) {
     try {
-      if (this.settings.disableLivePreviewColoring) return;
+      if (this.settings.disableLivePreviewColoring || this.settings.extremeLightweightMode) return;
       const now = Date.now();
       if (this._lpLastRun && now - this._lpLastRun < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
       this._lpLastRun = now;
@@ -14776,7 +14814,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   _processLivePreviewTables(view) {
     try {
-      if (this.settings.disableLivePreviewColoring) return;
+      if (this.settings.disableLivePreviewColoring || this.settings.extremeLightweightMode) return;
       const now = Date.now();
       if (this._lpTablesLastRun && now - this._lpTablesLastRun < EDITOR_PERFORMANCE_CONSTANTS.TABLE_THROTTLE_MS) return;
       this._lpTablesLastRun = now;
@@ -25551,6 +25589,22 @@ var ColorSettingTab = class extends PluginSettingTab {
           this.plugin.forceRefreshAllReadingViews();
         } catch (e) {
           debugError("SETTINGS", "forceFullRenderInReading handler failed", e);
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("lightweight_mode", "Experimental: Lightweight mode")).setDesc(this.plugin.t("lightweight_mode_desc", "")).addToggle((t) => t.setValue(this.plugin.settings.extremeLightweightMode).onChange(async (v) => {
+        this.plugin.settings.extremeLightweightMode = v;
+        await this.debouncedSaveSettings();
+        try {
+          this.plugin.reconfigureEditorExtensions();
+        } catch (e) {
+        }
+        try {
+          this.plugin.forceRefreshAllEditors();
+        } catch (e) {
+        }
+        try {
+          this.plugin.forceRefreshAllReadingViews();
+        } catch (e) {
         }
       }));
       new Setting(containerEl2).setName(this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {

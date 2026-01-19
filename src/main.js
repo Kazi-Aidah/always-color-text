@@ -2580,6 +2580,11 @@ module.exports = class AlwaysColorText extends Plugin {
     this.registerEvent(
       this.app.metadataCache.on('changed', (file) => {
         if (file === this.app.workspace.getActiveFile()) {
+          try {
+            if (this._pathRulesCache && file && file.path) {
+              this._pathRulesCache.delete(file.path);
+            }
+          } catch (_) { }
           this.forceRefreshAllEditors();
           this.forceRefreshAllReadingViews();
         }
@@ -4967,6 +4972,13 @@ module.exports = class AlwaysColorText extends Plugin {
     if (!this.markdownPostProcessorRegistered) {
       this._unregisterMarkdownPostProcessor = this.registerMarkdownPostProcessor((el, ctx) => {
         if (!this.settings.enabled) return;
+        try {
+          const qaRoot = el && el.closest ? el.closest('[data-id="quickadd"], .quickadd-settings, .quickAdd-settings') : null;
+          if (qaRoot) {
+            try { qaRoot.classList.add('act-skip-coloring'); } catch (_) { }
+            return;
+          }
+        } catch (_) { }
         let sp = null;
         try {
           sp = (ctx && typeof ctx.sourcePath === 'string') ? ctx.sourcePath : ((this.app && this.app.workspace && this.app.workspace.getActiveFile && this.app.workspace.getActiveFile()) ? this.app.workspace.getActiveFile().path : null);
@@ -5680,6 +5692,8 @@ module.exports = class AlwaysColorText extends Plugin {
       enableRegexSupport: false,
       // Opt-in: force full reading-mode render (WARNING: may freeze UI on large notes)
       forceFullRenderInReading: false,
+      // Opt-in: extremely lightweight processing mode (experimental)
+      extremeLightweightMode: false,
       // Disable coloring in reading/preview mode (editor remains colored)
       disableReadingModeColoring: false,
       disableLivePreviewColoring: false,
@@ -7174,10 +7188,11 @@ module.exports = class AlwaysColorText extends Plugin {
   // --- Lightweight mode decision for very large documents ---
   shouldUseLightweightMode(textLength, textContent = '') {
     try {
-      // Use lightweight mode for very large documents OR non-Roman heavy content
+      if (this.settings && this.settings.extremeLightweightMode) {
+        return true;
+      }
       const isLargeDoc = Number(textLength) > 50000;
       const isNonRomanHeavy = this.getNonRomanCharacterRatio(textContent) > 0.3;
-
       return isLargeDoc || isNonRomanHeavy;
     } catch (e) {
       return false;
@@ -7954,7 +7969,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
         if (hasEnableFolders || hasDisableFolders) {
           const parents = this._parentFolders(fp).map(p => this.normalizePath(p));
-          const normRule = (p) => this.normalizePath(String(p || '').trim());
+          const normRule = (p) => this.normalizePath(String(p || '').trim()).replace(/\/$/, '');
 
           let enableMatch = false;
           let disableMatch = false;
@@ -10119,9 +10134,11 @@ module.exports = class AlwaysColorText extends Plugin {
         try { return this.isWordBlacklisted(textToCheck); } catch (e) { return false; }
       };
 
-      // For forced processing, use unlimited matches; otherwise cap at 500
+      // For forced processing, use unlimited matches; otherwise cap (lower in extreme mode)
       const isForced = (opts && opts.forceProcess) || this.settings.forceFullRenderInReading;
-      const maxMatches = typeof opts.maxMatches === 'number' ? opts.maxMatches : (isForced ? Infinity : 500);
+      const maxMatches = typeof opts.maxMatches === 'number'
+        ? opts.maxMatches
+        : (isForced ? Infinity : (this.settings && this.settings.extremeLightweightMode ? 250 : 500));
       let matches = [];
 
       // FIRST: Process text+bg entries (they have priority) - with chunking for performance
@@ -10909,7 +10926,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
   _processLivePreviewCallouts(view) {
     try {
-      if (this.settings.disableLivePreviewColoring) return;
+      if (this.settings.disableLivePreviewColoring || this.settings.extremeLightweightMode) return;
       const now = Date.now();
       // OPTIMIZATION: More aggressive throttling (1 second) and skip during typing
       if (this._lpLastRun && (now - this._lpLastRun) < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
@@ -11006,7 +11023,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
   _processLivePreviewTables(view) {
     try {
-      if (this.settings.disableLivePreviewColoring) return;
+      if (this.settings.disableLivePreviewColoring || this.settings.extremeLightweightMode) return;
       const now = Date.now();
       // OPTIMIZATION: More aggressive throttling (1 second) and skip during typing
       if (this._lpTablesLastRun && (now - this._lpTablesLastRun) < EDITOR_PERFORMANCE_CONSTANTS.TABLE_THROTTLE_MS) return;
@@ -11841,8 +11858,6 @@ module.exports = class AlwaysColorText extends Plugin {
 
         // Rebuild decorations if document changed, viewport changed, OR file/folder changed
         if (update.docChanged || update.viewportChanged || fileChanged) {
-          // Always rebuild decorations immediately to ensure Regex rules trigger correctly during typing
-          // The previous optimization of skipping updates during typing caused Regex rules to not trigger
           this.decorations = this.buildDeco(update.view);
 
           // Debounce heavy operations (callouts/tables) to prevent lag
@@ -22086,6 +22101,17 @@ class ColorSettingTab extends PluginSettingTab {
           await this.debouncedSaveSettings();
           // Trigger immediate refresh of reading views so the new mode takes effect
           try { this.plugin.forceRefreshAllReadingViews(); } catch (e) { debugError('SETTINGS', 'forceFullRenderInReading handler failed', e); }
+        }));
+
+      new Setting(containerEl)
+        .setName(this.plugin.t('lightweight_mode', 'Experimental: Lightweight mode'))
+        .setDesc(this.plugin.t('lightweight_mode_desc', ''))
+        .addToggle(t => t.setValue(this.plugin.settings.extremeLightweightMode).onChange(async v => {
+          this.plugin.settings.extremeLightweightMode = v;
+          await this.debouncedSaveSettings();
+          try { this.plugin.reconfigureEditorExtensions(); } catch (e) { }
+          try { this.plugin.forceRefreshAllEditors(); } catch (e) { }
+          try { this.plugin.forceRefreshAllReadingViews(); } catch (e) { }
         }));
 
       new Setting(containerEl)

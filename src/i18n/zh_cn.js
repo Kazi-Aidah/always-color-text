@@ -139,6 +139,8 @@ module.exports = {
   "color_in_reading_mode": "在阅读模式下着色",
   "force_full_render_reading": "阅读模式下强制完整渲染",
   "force_full_render_reading_desc": "如果启用，阅读模式将尝试一次性着色整个文档。在大型文档上可能会导致卡顿，请谨慎使用！",
+  "lightweight_mode": "实验功能：极致轻量模式",
+  "lightweight_mode_desc": "在输入时大幅减少处理量。可能会漏掉部分匹配。",
   "disable_coloring_current_file": "禁用当前文件着色",
   "disable_coloring_current_file_desc": "在文件和文件夹着色规则下为活动文件添加排除规则。",
   "btn_disable_for_this_file": "为此文件禁用",
