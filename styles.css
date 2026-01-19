@@ -725,24 +725,46 @@ button.mod-cta {
   color: var(--text-on-accent) !important;
 }
 
+.act-toggle {
+   margin-inline-start: -25px;
+   margin-bottom: 15px;
+}
+
 /* Delete all groups setting - remove border and padding */
 .act-delete-groups-setting {
   border-top: 0 !important;
   padding: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+  border: none !important;
+}
+
+.act-desc {
+   padding-inline-start: 16px;
+   font-size: small;
+   color: var(--text-muted);
 }
 
 .act-section-divider {
   background: transparent !important;
   box-shadow: none !important;
-  border-top: 2px solid var(--background-modifier-border);
-  border-radius: 0px;
-  margin-bottom: -10px;
+  border: none !important;
+  /* border-top: 2px solid var(--background-modifier-border) !important; */
+  border-radius: 0px !important;
+  margin: 0px !important;
+  padding: 6px !important;
 }
 
-.act-group-row {
+.act-entry-row input, .act-entry-row select  {
+  border-radius: var(--input-radius) !important;
+}
+
+.act-entry-row button, .act-entry-row select  {
   border-radius: var(--button-radius) !important;
+}
+
+.act-search-input {
+  border-radius: var(--input-radius) !important;
 }
 
 .act-edit-entry-group-select {

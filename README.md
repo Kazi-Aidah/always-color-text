@@ -64,7 +64,7 @@ Customize the styling and rules for each colored entry via "Edit Entry Details":
   ![Edit Highlight Styling Modal](assets/edit-highlight-styling-modal.png)
 
 - **Inclusion / Exclusion Rules**  
-  Exclude specific folders or files from coloring, or limit coloring to particular locations.
+  Exclude specific folders, files, or **files with specific tags** from coloring, or limit coloring to specific folders.
   ![Edit Entry Modal with Paths](assets/edit-entry-modal-w-paths.png)
 
 <!-- - **Partial Match**  
@@ -113,7 +113,11 @@ Switch styles seamlessly, changing from "Both" to "Highlight" and back retains y
 Entries can be added to a word group right from the Pick Color modal, and the word group can be set as active when you need it, otherwise kept inactive. Your wish.
 
 You can also set a **match type** and **case sensitivity** for all the entries in a word group.
+Also, **enable or disable entire word groups** for specific folders or files containing specific tags!
+
 ![](assets/word-group-selects.png)
+
+**Note:** Use `/` to target root folder (whole vault) for the Enable in/Disable in.
 
 ### Entry Filtering (Limit Input)
 Use the **limit input** beside the search bar (also available in the "Add to Existing Entry" modal) to instantly filter entries by type, match type, or count.
@@ -145,6 +149,8 @@ Right-click any entry and choose "Add to Existing Entry" to add the selected tex
 
 ### File & Folder Control
 Use "Include" to color specific documents or "Exclude" to disable coloring in entire folders.
+You can now create rules based on tags! Include or exclude files that contain specific tags (e.g., `#private`, `#draft`).
+
 ![File & Folder Coloring Rules](assets/file-folder-rules.png)
 
 **Note**: File-level rules override folder-level rules.

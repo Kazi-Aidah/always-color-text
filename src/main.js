@@ -17,9 +17,11 @@
 const moment = window.moment;
 
 // CodeMirror utilities
-let RangeSetBuilder, Decoration, ViewPlugin;
+let RangeSetBuilder, Decoration, ViewPlugin, StateEffect;
 try {
-  RangeSetBuilder = require('@codemirror/state').RangeSetBuilder;
+  const cmState = require('@codemirror/state');
+  RangeSetBuilder = cmState.RangeSetBuilder;
+  StateEffect = cmState.StateEffect;
   Decoration = require('@codemirror/view').Decoration;
   ViewPlugin = require('@codemirror/view').ViewPlugin;
 } catch (e) {
@@ -27,7 +29,11 @@ try {
   RangeSetBuilder = class { };
   Decoration = { mark: () => ({}) };
   ViewPlugin = { fromClass: () => ({}) };
+  StateEffect = { define: () => ({ of: () => ({}) }) };
 }
+
+// Define a state effect to force decoration rebuilds
+const forceRebuildEffect = StateEffect.define();
 
 const locales = require('./i18n');
 const { show_toggle_command } = require('./i18n/fr');
@@ -217,6 +223,8 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
     this._isRightClick = false;
     this._docCtx = null;
     this._lastAddedEntryUid = null;
+    this._suggestionsContainerHandlers = [];
+    this._menuReferences = [];
     this.setPlaceholder(this.plugin.t('prompt_search_existing', 'Search existing entries…'));
   }
   onOpen() {
@@ -226,7 +234,10 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
       const pic = this.modalEl.querySelector('.prompt-input-container');
       if (pic) pic.classList.add('act');
       const pi = this.modalEl.querySelector('.prompt-input');
-      if (pi) pi.classList.add('act');
+      if (pi) {
+        pi.classList.add('act');
+        pi.style.borderRadius = 'var(--input-radius)';
+      }
       const pia = this.modalEl.querySelector('.prompt-input-cta');
       if (pia) pia.classList.add('act');
       const clr = this.modalEl.querySelector('.search-input-clear-button');
@@ -920,6 +931,18 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
       if (this._modalClickSuppress && this.modalEl) {
         this.modalEl.removeEventListener('click', this._modalClickSuppress, true);
         this._modalClickSuppress = null;
+      }
+      if (this._suggestionsContainerHandlers && Array.isArray(this._suggestionsContainerHandlers)) {
+        this._suggestionsContainerHandlers.forEach(h => {
+          try { h.el && h.el.removeEventListener && h.el.removeEventListener(h.event, h.handler, h.opts); } catch (_) { }
+        });
+        this._suggestionsContainerHandlers = [];
+      }
+      if (this._menuReferences && Array.isArray(this._menuReferences)) {
+        this._menuReferences.forEach(menu => {
+          try { menu && menu.dom && menu.dom.remove && menu.dom.remove(); } catch (_) { }
+        });
+        this._menuReferences = [];
       }
     } catch (_) { }
     this._isRightClick = false;
@@ -1637,19 +1660,27 @@ class PatternMatcher {
     if (!effectiveCS && !flags.includes('i')) flags += 'i';
     try {
       if (isRegex && this.settings.enableRegexSupport) {
-        entry.regex = cache ? cache.getOrCreate(entry.pattern, flags) : new RegExp(entry.pattern, flags);
+        entry.regex = cache ? cache.getOrCreate(entry.pattern, flags) : this._createRegexSafe(entry.pattern, flags);
         const tf = flags.replace(/g/g, '');
-        entry.testRegex = cache ? cache.getOrCreate(entry.pattern, tf) : (tf === '' ? new RegExp(entry.pattern) : new RegExp(entry.pattern, tf));
+        entry.testRegex = cache ? cache.getOrCreate(entry.pattern, tf) : (tf === '' ? this._createRegexSafe(entry.pattern, '') : this._createRegexSafe(entry.pattern, tf));
       } else {
         const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(entry.pattern) : entry.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const lf = effectiveCS ? 'g' : 'gi';
-        entry.regex = cache ? cache.getOrCreate(esc, lf) : new RegExp(esc, lf);
-        entry.testRegex = effectiveCS ? (cache ? cache.getOrCreate(esc, '') : new RegExp(esc)) : (cache ? cache.getOrCreate(esc, 'i') : new RegExp(esc, 'i'));
+        entry.regex = cache ? cache.getOrCreate(esc, lf) : this._createRegexSafe(esc, lf);
+        entry.testRegex = effectiveCS ? (cache ? cache.getOrCreate(esc, '') : this._createRegexSafe(esc, '')) : (cache ? cache.getOrCreate(esc, 'i') : this._createRegexSafe(esc, 'i'));
       }
     } catch (_) {
       entry.invalid = true;
     }
     return entry;
+  }
+
+  _createRegexSafe(pattern, flags) {
+    try {
+      return new RegExp(pattern, flags);
+    } catch (_) {
+      return null;
+    }
   }
 
   isWordCharacter(char) {
@@ -2661,7 +2692,7 @@ module.exports = class AlwaysColorText extends Plugin {
             item.setTitle(this.t('menu_always_color_text', 'Always color text'))
               .setIcon('palette')
               .onClick(() => {
-                if (this.isWordBlacklisted(selectedText)) {
+                if (this.isWordBlacklisted(selectedText, view.file.path)) {
                   new Notice(this.t('notice_blacklisted_cannot_color', `"${selectedText}" is blacklisted and cannot be colored.`, { word: selectedText }));
                   return;
                 }
@@ -3742,12 +3773,12 @@ module.exports = class AlwaysColorText extends Plugin {
       // Skip code blocks and preformatted text
       if (block.closest('code, pre')) continue;
 
-      this.processBlockWithSimplePatterns(block, simpleEntries, folderEntry, effectiveStyle);
+      this.processBlockWithSimplePatterns(block, simpleEntries, folderEntry, effectiveStyle, options.filePath);
     }
   }
 
   // NEW METHOD: Process block with simple string matching
-  processBlockWithSimplePatterns(block, simpleEntries, folderEntry, effectiveStyle) {
+  processBlockWithSimplePatterns(block, simpleEntries, folderEntry, effectiveStyle, filePath = null) {
     try { if (block && (block.classList?.contains('act-skip-coloring') || block.closest?.('.act-skip-coloring'))) return; } catch (_) { }
     const walker = document.createTreeWalker(
       block,
@@ -3837,13 +3868,13 @@ module.exports = class AlwaysColorText extends Plugin {
 
       // Apply highlights if we found matches
       if (matches.length > 0) {
-        this.applySimpleHighlights(node, matches, text);
+        this.applySimpleHighlights(node, matches, text, filePath);
       }
     }
   }
 
 
-  processMarkdownFormattingInReading(element, folderEntry = null, entries = null) {
+  processMarkdownFormattingInReading(element, folderEntry = null, entries = null, filePath = null) {
     try {
       let we;
       if (Array.isArray(entries) && entries.length > 0) {
@@ -4156,7 +4187,7 @@ module.exports = class AlwaysColorText extends Plugin {
         if (li.closest('code, pre')) continue;
         // Extract actual content, stripping markdown prefixes
         const contentText = this.extractListItemContent(li);
-        const contentBlacklisted = this.containsBlacklistedWord(contentText);
+        const contentBlacklisted = this.containsBlacklistedWord(contentText, filePath);
         try {
           debugLog('MARKDOWN_FORMAT', 'LI', {
             innerHTML: (li.innerHTML || '').substring(0, 100),
@@ -4217,7 +4248,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const entry = isChecked ? taskCheckedEntry : taskUncheckedEntry;
         // Extract actual content, stripping checkbox prefix
         const contentText = this.extractListItemContent(p);
-        const contentBlacklistedP = this.containsBlacklistedWord(contentText);
+        const contentBlacklistedP = this.containsBlacklistedWord(contentText, filePath);
         const blocked = (isChecked && hasTaskCheckedBlacklist) || (!isChecked && hasTaskUncheckedBlacklist);
         if (blocked) {
           try {
@@ -6701,7 +6732,10 @@ module.exports = class AlwaysColorText extends Plugin {
   forceRefreshAllEditors() {
     this.app.workspace.iterateAllLeaves(leaf => {
       if (leaf.view instanceof MarkdownView && leaf.view.editor?.cm) {
-        leaf.view.editor.cm.dispatch({ changes: [] });
+        // Dispatch a state effect to force decoration rebuild
+        leaf.view.editor.cm.dispatch({
+          effects: forceRebuildEffect.of(null)
+        });
       }
     });
 
@@ -7565,7 +7599,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   async _applyQuickColorACT(selectedText, textColor, backgroundColor, view, styleEntry = null) {
-    if (this.isWordBlacklisted(selectedText)) {
+    if (this.isWordBlacklisted(selectedText, view?.file?.path)) {
       new Notice(this.t('notice_blacklisted_cannot_color', `"${selectedText}" is blacklisted and cannot be colored.`, { word: selectedText }));
       return;
     }
@@ -7967,9 +8001,14 @@ module.exports = class AlwaysColorText extends Plugin {
         const hasEnableFolders = enableFolders.length > 0;
         const hasDisableFolders = disableFolders.length > 0;
 
+        let folderDecision = 0; // 0: Neutral, 1: Allowed, -1: Denied
         if (hasEnableFolders || hasDisableFolders) {
           const parents = this._parentFolders(fp).map(p => this.normalizePath(p));
-          const normRule = (p) => this.normalizePath(String(p || '').trim()).replace(/\/$/, '');
+          const normRule = (p) => {
+            const n = this.normalizePath(String(p || '').trim());
+            if (n === '/') return '/';
+            return n.replace(/\/$/, '');
+          };
 
           let enableMatch = false;
           let disableMatch = false;
@@ -8009,17 +8048,21 @@ module.exports = class AlwaysColorText extends Plugin {
           }
 
           if (!enableMatch && !disableMatch) {
-            if (hasEnableFolders) return false;
+            if (hasEnableFolders) folderDecision = -1; // Implicit deny
           } else if (enableMatch && disableMatch) {
-            if (bestDisableDepth > bestEnableDepth) return false;
+            if (bestDisableDepth > bestEnableDepth) folderDecision = -1;
+            else folderDecision = 1;
           } else if (!enableMatch && disableMatch) {
-            return false;
+            folderDecision = -1;
+          } else if (enableMatch && !disableMatch) {
+            folderDecision = 1;
           }
         }
 
         const hasEnableTags = Array.isArray(entry.groupEnableTags) && entry.groupEnableTags.length > 0;
         const hasDisableTags = Array.isArray(entry.groupDisableTags) && entry.groupDisableTags.length > 0;
-
+        
+        let tagDecision = 0; // 0: Neutral, 1: Allowed, -1: Denied
         if (hasEnableTags || hasDisableTags) {
           const fileTags = this.getFileTags(filePath);
           const normTag = (t) => String(t || '').replace(/^#/, '').trim();
@@ -8029,8 +8072,19 @@ module.exports = class AlwaysColorText extends Plugin {
           const enableMatchTag = enableTags.length > 0 && fileTags.some(t => enableTags.includes(normTag(t)));
           const disableMatchTag = disableTags.length > 0 && fileTags.some(t => disableTags.includes(normTag(t)));
 
-          if (enableTags.length > 0 && !enableMatchTag) return false;
-          if (disableMatchTag && !enableMatchTag) return false;
+          if (enableTags.length > 0 && !enableMatchTag) {
+             tagDecision = -1; // Implicit deny
+          }
+          
+          if (disableMatchTag) tagDecision = -1;
+          if (enableMatchTag) tagDecision = 1; // Explicit allow overrides explicit deny (matches legacy behavior)
+        }
+
+        // OR Logic for Enabling: If EITHER is explicitly allowed, allow it.
+        if (folderDecision === 1 || tagDecision === 1) {
+          // Allow (return true implied, but we must not return false here)
+        } else if (folderDecision === -1 || tagDecision === -1) {
+          return false;
         }
       }
 
@@ -8076,6 +8130,11 @@ module.exports = class AlwaysColorText extends Plugin {
         const pathStr = String(rule.path || '').trim();
         if (pathStr.length === 0) return true; // vault-wide
         const dk = this.detectRuleKind(pathStr);
+        if (dk.kind === 'tag') {
+          const tags = this.getFileTags(filePath).map(t => t.replace(/^#/, ''));
+          if (tags.includes(String(dk.tag || '').replace(/^#/, ''))) return 'file';
+          return null;
+        }
         if (dk.kind === 'name') {
           const { fileMatch, folderMatch } = this._matchesByName(fp, dk.name);
           return fileMatch || folderMatch;
@@ -8113,6 +8172,11 @@ module.exports = class AlwaysColorText extends Plugin {
         const pathStr = String(rule.path || '').trim();
         if (pathStr.length === 0) return 'vault';
         const dk = this.detectRuleKind(pathStr);
+        if (dk.kind === 'tag') {
+          const tags = this.getFileTags(filePath).map(t => t.replace(/^#/, ''));
+          if (tags.includes(String(dk.tag || '').replace(/^#/, ''))) return 'file';
+          return null;
+        }
         if (dk.kind === 'name') {
           const { fileMatch, folderMatch } = this._matchesByName(fp, dk.name);
           if (fileMatch) return 'file';
@@ -8913,7 +8977,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Apply highlights for simple patterns (ultra-fast version)
-  applySimpleHighlights(textNode, matches, text) {
+  applySimpleHighlights(textNode, matches, text, filePath = null) {
     if (!matches || matches.length === 0) return;
     // Guard: if this text node is already within a highlight span, skip to avoid nested spans
     try { if (textNode.parentElement?.closest('.always-color-text-highlight')) return; } catch (_) { }
@@ -8922,7 +8986,7 @@ module.exports = class AlwaysColorText extends Plugin {
     try {
       const filtered = [];
       for (const m of matches) {
-        if (this.isContextBlacklisted(decodedText, m.start, m.end)) continue;
+        if (this.isContextBlacklisted(decodedText, m.start, m.end, filePath)) continue;
         filtered.push(m);
       }
       matches = filtered;
@@ -9337,10 +9401,10 @@ module.exports = class AlwaysColorText extends Plugin {
         debugLog('ACT', 'Large doc detected -> using viewport-based rendering');
         if (isReadingRoot) {
           try {
-            this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: 0, batchSize: 30, clearExisting: true, forceProcess: true, maxMatches: Infinity });
+            this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: 0, batchSize: 30, clearExisting: true, forceProcess: true, maxMatches: Infinity, filePath: ctx.sourcePath });
           } catch (e) {
             debugError('ACT', 'processInChunks immediate failed', e);
-            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
+            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
           }
           return;
         } else {
@@ -9348,7 +9412,7 @@ module.exports = class AlwaysColorText extends Plugin {
             this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
           } catch (e) {
             debugError('ACT', 'setupViewportObserver failed', e);
-            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
+            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
           }
           return;
         }
@@ -9356,7 +9420,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
     } catch (e) { }
 
-    const processNow = () => this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries });
+    const processNow = () => this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
 
     // Fast-path immediate pass for visible content
     const t0 = performance.now();
@@ -9379,12 +9443,12 @@ module.exports = class AlwaysColorText extends Plugin {
           debugLog('DEFERRED', `Start: ${label}, skipFirstN=${immediateBlocks}`);
           try {
             // Prefer chunked processing for large documents; force completion (bypass perf gate)
-            this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: immediateBlocks, batchSize: 30, clearExisting: true, forceProcess: true })
+            this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: immediateBlocks, batchSize: 30, clearExisting: true, forceProcess: true, filePath: ctx.sourcePath })
               .then(() => debugLog('DEFERRED', `Completed: ${label} in ${(performance.now() - t1).toFixed(1)}ms`))
               .catch(e => debugError('DEFERRED', 'processInChunks error', e));
           } catch (e) {
             debugError('DEFERRED', 'fallback applyHighlights due to error', e);
-            this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: true, entries: allowedEntries });
+            this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
           }
         } catch (e) { debugError('ACT', 'deferred pass error', e); }
       };
@@ -9415,7 +9479,7 @@ module.exports = class AlwaysColorText extends Plugin {
       setTimeout(() => {
         try {
           const t3 = performance.now();
-          this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: false, entries: allowedEntries });
+          this.applyHighlights(el, folderEntry || null, { skipFirstN: immediateBlocks, clearExisting: false, entries: allowedEntries, filePath: ctx.sourcePath });
           debugLog('ACT', `deferred (fallback-final) in ${(performance.now() - t3).toFixed(1)}ms`);
         } catch (err) { debugError('ACT', 'fallback-final error', err); }
       }, 1500);
@@ -9433,7 +9497,8 @@ module.exports = class AlwaysColorText extends Plugin {
         immediateBlocks: 50,
         skipFirstN: 0,
         clearExisting: true,
-        entries
+        entries,
+        filePath: ctx.sourcePath
       });
 
       // Schedule the rest to run after a short delay in larger batches
@@ -9514,6 +9579,12 @@ module.exports = class AlwaysColorText extends Plugin {
         // Simple string search for non-Roman patterns (more efficient)
         let pos = 0;
         while ((pos = text.indexOf(pattern, pos)) !== -1) {
+          // Check blacklist with folder/tag rules
+          if (this.isContextBlacklisted(text, pos, pos + pattern.length, opts.filePath)) {
+            pos += pattern.length;
+            continue;
+          }
+
           matches.push({
             start: pos,
             end: pos + pattern.length,
@@ -9677,7 +9748,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
 
     try {
-      this.processMarkdownFormattingInReading(element, folderEntry, entries);
+      this.processMarkdownFormattingInReading(element, folderEntry, entries, options.filePath);
     } catch (e) { }
 
     // SEPARATE SIMPLE PATTERNS FOR OPTIMIZED PROCESSING (but not in reading mode)
@@ -9833,7 +9904,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const effectiveStyle = 'text';
       // Call extracted per-block processor
       try { if ((qIndex % 100) === 0) debugLog('COLOR', `Processing block ${qIndex}`); } catch (e) { }
-      this._errorRecovery.wrap('PROCESS_BLOCK', () => this._processBlock(block, allEntriesToProcess, folderEntry, { clearExisting, effectiveStyle, immediateLimit, qIndex, skipFirstN, element, forceProcess: (options && options.forceProcess) || this.settings.forceFullRenderInReading, maxMatches: (options && options.maxMatches) || (this.settings.forceFullRenderInReading ? Infinity : undefined) }), () => null);
+      this._errorRecovery.wrap('PROCESS_BLOCK', () => this._processBlock(block, allEntriesToProcess, folderEntry, { clearExisting, effectiveStyle, immediateLimit, qIndex, skipFirstN, element, forceProcess: (options && options.forceProcess) || this.settings.forceFullRenderInReading, maxMatches: (options && options.maxMatches) || (this.settings.forceFullRenderInReading ? Infinity : undefined), filePath: options.filePath }), () => null);
     }
     
     if (collapsedSkipped > 0) {
@@ -9893,7 +9964,7 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) { }
 
     try {
-      this.processMarkdownFormattingInReading(block, folderEntry, entries);
+      this.processMarkdownFormattingInReading(block, folderEntry, entries, opts.filePath);
     } catch (e) {
       try { debugError('MARKDOWN_FORMAT', 'per-block processing error', e); } catch (_) { }
     }
@@ -10131,7 +10202,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
       // Define isBlacklisted helper function early so it can be used throughout
       const isBlacklisted = (textToCheck) => {
-        try { return this.isWordBlacklisted(textToCheck); } catch (e) { return false; }
+        try { return this.isWordBlacklisted(textToCheck, opts.filePath); } catch (e) { return false; }
       };
 
       // For forced processing, use unlimited matches; otherwise cap (lower in extreme mode)
@@ -10902,7 +10973,8 @@ module.exports = class AlwaysColorText extends Plugin {
           clearExisting: options.clearExisting !== false,
           effectiveStyle: 'text',
           forceProcess: forceProcess || this.settings.forceFullRenderInReading,
-          maxMatches: (options && typeof options.maxMatches !== 'undefined') ? options.maxMatches : (forceProcess || this.settings.forceFullRenderInReading ? Infinity : undefined)
+          maxMatches: (options && typeof options.maxMatches !== 'undefined') ? options.maxMatches : (forceProcess || this.settings.forceFullRenderInReading ? Infinity : undefined),
+          filePath: options.filePath
         }), () => null);
       } catch (e) {
         debugError('CHUNK', 'block error', e);
@@ -11143,12 +11215,14 @@ module.exports = class AlwaysColorText extends Plugin {
                 clearExisting: true,
                 batchSize: 10,
                 forceProcess: true,
-                maxMatches: Infinity
+                maxMatches: Infinity,
+                filePath: filePath
               });
             } else {
               this.applyHighlights(cell, folderEntry, {
                 clearExisting: true,
-                entries: entries
+                entries: entries,
+                filePath: filePath
               });
             }
           } catch (e) {
@@ -11156,7 +11230,8 @@ module.exports = class AlwaysColorText extends Plugin {
             try {
               this.applyHighlights(cell, folderEntry, {
                 clearExisting: true,
-                entries: entries
+                entries: entries,
+                filePath: filePath
               });
             } catch (_) { }
           }
@@ -11645,7 +11720,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (!blk) { processing = false; return; }
           try {
             const es = (options && Array.isArray(options.entries)) ? options.entries : this.getSortedWordEntries();
-            this._errorRecovery.wrap('PROCESS_BLOCK', () => this._processBlock(blk, es, folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: 'text', forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)) }), () => null);
+            this._errorRecovery.wrap('PROCESS_BLOCK', () => this._processBlock(blk, es, folderEntry, { clearExisting: options.clearExisting !== false, effectiveStyle: 'text', forceProcess: options.forceProcess || this.settings.forceFullRenderInReading, maxMatches: (options.maxMatches || (this.settings.forceFullRenderInReading ? Infinity : undefined)), filePath: options.filePath }), () => null);
           } catch (e) { debugError('VIEWPORT', '_processBlock failed', e); }
           if (pq.size() > 0) {
             setTimeout(run, 0);
@@ -11845,6 +11920,9 @@ module.exports = class AlwaysColorText extends Plugin {
         const fileChanged = this.lastFilePath !== currentFilePath;
         this.lastFilePath = currentFilePath;
 
+        // Check for force rebuild effect
+        const forceRebuild = update.transactions.some(tr => tr.effects.some(e => e.is(forceRebuildEffect)));
+
         // Track typing state for performance optimization - aggressive throttling during typing
         if (update.docChanged) {
           plugin._isTyping = true;
@@ -11856,8 +11934,8 @@ module.exports = class AlwaysColorText extends Plugin {
           }, EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS);
         }
 
-        // Rebuild decorations if document changed, viewport changed, OR file/folder changed
-        if (update.docChanged || update.viewportChanged || fileChanged) {
+        // Rebuild decorations if document changed, viewport changed, file/folder changed OR forced
+        if (update.docChanged || update.viewportChanged || fileChanged || forceRebuild) {
           this.decorations = this.buildDeco(update.view);
 
           // Debounce heavy operations (callouts/tables) to prevent lag
@@ -11964,7 +12042,104 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Check if word is blacklisted
-  isWordBlacklisted(word) {
+  isGroupEnabledForFile(group, filePath) {
+    if (!group || !filePath) return true;
+    
+    const enableFolders = Array.isArray(group.enableFolders) ? group.enableFolders : [];
+    const disableFolders = Array.isArray(group.disableFolders) ? group.disableFolders : [];
+    const hasEnableFolders = enableFolders.length > 0;
+    const hasDisableFolders = disableFolders.length > 0;
+    
+    let folderDecision = 0; // 0: Neutral, 1: Allowed, -1: Denied
+    
+    if (hasEnableFolders || hasDisableFolders) {
+      const fp = this.normalizePath(filePath);
+      const parents = this._parentFolders(fp).map(p => this.normalizePath(p));
+      const normRule = (p) => {
+        const n = this.normalizePath(String(p || '').trim());
+        if (n === '/') return '/';
+        return n.replace(/\/$/, '');
+      };
+
+      let enableMatch = false;
+      let disableMatch = false;
+      let bestEnableDepth = -1;
+      let bestDisableDepth = -1;
+
+      for (const f of enableFolders) {
+        const fNorm = normRule(f);
+        if (!fNorm) continue;
+        if (fNorm === '/' || fNorm === '') {
+          enableMatch = true;
+          if (bestEnableDepth < 0) bestEnableDepth = 0;
+          continue;
+        }
+        const matchParent = parents.find(p => p === fNorm);
+        if (matchParent) {
+          enableMatch = true;
+          const depth = matchParent.split('/').length;
+          if (depth > bestEnableDepth) bestEnableDepth = depth;
+        }
+      }
+
+      for (const f of disableFolders) {
+        const fNorm = normRule(f);
+        if (!fNorm) continue;
+        if (fNorm === '/' || fNorm === '') {
+          disableMatch = true;
+          if (bestDisableDepth < 0) bestDisableDepth = 0;
+          continue;
+        }
+        const matchParent = parents.find(p => p === fNorm);
+        if (matchParent) {
+          disableMatch = true;
+          const depth = matchParent.split('/').length;
+          if (depth > bestDisableDepth) bestDisableDepth = depth;
+        }
+      }
+
+      if (!enableMatch && !disableMatch) {
+        if (hasEnableFolders) folderDecision = -1;
+      } else if (enableMatch && disableMatch) {
+        if (bestDisableDepth > bestEnableDepth) folderDecision = -1;
+        else folderDecision = 1;
+      } else if (!enableMatch && disableMatch) {
+        folderDecision = -1;
+      } else if (enableMatch && !disableMatch) {
+        folderDecision = 1;
+      }
+    }
+
+    const enableTags = Array.isArray(group.enableTags) ? group.enableTags : [];
+    const disableTags = Array.isArray(group.disableTags) ? group.disableTags : [];
+    const hasEnableTags = enableTags.length > 0;
+    const hasDisableTags = disableTags.length > 0;
+    
+    let tagDecision = 0;
+    
+    if (hasEnableTags || hasDisableTags) {
+      const fileTags = this.getFileTags(filePath);
+      const normTag = (t) => String(t || '').replace(/^#/, '').trim();
+      const enableTagsNorm = hasEnableTags ? enableTags.map(normTag).filter(Boolean) : [];
+      const disableTagsNorm = hasDisableTags ? disableTags.map(normTag).filter(Boolean) : [];
+
+      const enableMatchTag = enableTagsNorm.length > 0 && fileTags.some(t => enableTagsNorm.includes(normTag(t)));
+      const disableMatchTag = disableTagsNorm.length > 0 && fileTags.some(t => disableTagsNorm.includes(normTag(t)));
+
+      if (enableTagsNorm.length > 0 && !enableMatchTag) {
+         tagDecision = -1;
+      }
+      
+      if (disableMatchTag) tagDecision = -1;
+      if (enableMatchTag) tagDecision = 1;
+    }
+
+    if (folderDecision === 1 || tagDecision === 1) return true;
+    if (folderDecision === -1 || tagDecision === -1) return false;
+    return true;
+  }
+
+  isWordBlacklisted(word, filePath = null) {
     // OPTIMIZATION: Use pre-compiled blacklist regexes instead of creating new ones each time
     try {
       if (this._blacklistCompilationDirty) this.compileBlacklistEntries();
@@ -11988,6 +12163,8 @@ module.exports = class AlwaysColorText extends Plugin {
       // Check pre-compiled blacklist groups (only active ones)
       for (const compiled of Object.values(this._compiledBlacklistGroups)) {
         if (!compiled.group.active) continue;
+        if (filePath && !this.isGroupEnabledForFile(compiled.group, filePath)) continue;
+
         for (const entryCompiled of compiled.entries) {
           for (const pattern of entryCompiled.patterns) {
             pattern.regex.lastIndex = 0;
@@ -11999,7 +12176,7 @@ module.exports = class AlwaysColorText extends Plugin {
     return false;
   }
 
-  containsBlacklistedWord(text) {
+  containsBlacklistedWord(text, filePath = null) {
     // OPTIMIZATION: Use pre-compiled blacklist regexes instead of creating new ones each time
     try {
       if (this._blacklistCompilationDirty) this.compileBlacklistEntries();
@@ -12023,6 +12200,8 @@ module.exports = class AlwaysColorText extends Plugin {
       // Check pre-compiled blacklist groups (only active ones)
       for (const compiled of Object.values(this._compiledBlacklistGroups)) {
         if (!compiled.group.active) continue;
+        if (filePath && !this.isGroupEnabledForFile(compiled.group, filePath)) continue;
+        
         for (const entryCompiled of compiled.entries) {
           for (const pattern of entryCompiled.patterns) {
             pattern.regex.lastIndex = 0;
@@ -12035,7 +12214,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Check if a full line is blacklisted by regex pattern (for markdown formatting)
-  isLineBlacklistedByRegex(line) {
+  isLineBlacklistedByRegex(line, filePath = null) {
     try {
       // OPTIMIZATION: Use pre-compiled blacklist regexes
       if (this._blacklistCompilationDirty) this.compileBlacklistEntries();
@@ -12054,6 +12233,8 @@ module.exports = class AlwaysColorText extends Plugin {
       // Check pre-compiled blacklist groups (only active ones)
       for (const compiled of Object.values(this._compiledBlacklistGroups)) {
         if (!compiled.group.active) continue;
+        if (filePath && !this.isGroupEnabledForFile(compiled.group, filePath)) continue;
+        
         for (const entryCompiled of compiled.entries) {
           for (const pattern of entryCompiled.patterns) {
             if (!pattern.isRegex) continue; // Only regex entries apply to full lines
@@ -12067,7 +12248,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Get all text ranges that are within blacklisted list items
-  getBlacklistedListItemRanges(text, baseOffset = 0) {
+  getBlacklistedListItemRanges(text, baseOffset = 0, filePath = null) {
     const ranges = [];
     try {
       let pos = 0;
@@ -12078,7 +12259,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const line = text.substring(lineStart, lineEnd);
 
         // Check if this line is a list item that's blacklisted
-        if (this.isLineBlacklistedByRegex(line)) {
+        if (this.isLineBlacklistedByRegex(line, filePath)) {
           // This entire line's content should be excluded from coloring
           ranges.push({
             start: baseOffset + lineStart,
@@ -12110,15 +12291,15 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Context-aware blacklist check with prefix-aware tokens
-  isContextBlacklisted(text, matchStart, matchEnd) {
+  isContextBlacklisted(text, matchStart, matchEnd, filePath = null) {
     try {
       const fullWord = this.extractFullWord(text, matchStart, matchEnd);
-      if (this.isWordBlacklisted(fullWord)) return true;
+      if (this.isWordBlacklisted(fullWord, filePath)) return true;
       if (matchStart > 0) {
         const prev = text[matchStart - 1];
         if (prev && /[@#]/.test(prev)) {
           const token = prev + fullWord;
-          if (this.isWordBlacklisted(token)) return true;
+          if (this.isWordBlacklisted(token, filePath)) return true;
         }
       }
       let ls = matchStart;
@@ -12131,7 +12312,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const mNumbered = /^\s*\d+\.\s+(.*)$/.exec(line);
       const mBullet = /^\s*[\-\*]\s+(.*)$/.exec(line);
       const content = (mTaskChecked && mTaskChecked[1]) || (mTaskUnchecked && mTaskUnchecked[1]) || (mNumbered && mNumbered[1]) || (mBullet && mBullet[1]) || null;
-      if (content && this.containsBlacklistedWord(content)) return true;
+      if (content && this.containsBlacklistedWord(content, filePath)) return true;
     } catch (e) { }
     return false;
   }
@@ -12309,8 +12490,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const contentEnd = lineEnd;
             const contentText = mdMatch[6] || '';
             // Check both content blacklist AND line-level regex blacklist
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
               const start = from + contentStart;
               const end = from + contentEnd;
               if (taskCheckedEntry.backgroundColor) {
@@ -12335,8 +12516,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const contentEnd = lineEnd;
             const contentText = mdMatch[6] || '';
             // Check both content blacklist AND line-level regex blacklist
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
               const start = from + contentStart;
               const end = from + contentEnd;
               if (taskUncheckedEntry.backgroundColor) {
@@ -12361,8 +12542,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const contentEnd = lineEnd;
             const contentText = mdMatch[4] || '';
             // Check both content blacklist AND line-level regex blacklist
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
               const start = from + contentStart;
               const end = from + contentEnd;
               if (numberedEntry.backgroundColor) {
@@ -12386,8 +12567,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const contentEnd = lineEnd;
             const contentText = mdMatch[4] || '';
             // Check both content blacklist AND line-level regex blacklist
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
               const start = from + contentStart;
               const end = from + contentEnd;
               if (bulletEntry.backgroundColor) {
@@ -12409,7 +12590,7 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) { }
 
     // Get all blacklisted list item ranges (so we can exclude individual word matches from being colored)
-    const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from);
+    const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from, filePath);
 
     // FIRST: Process text+bg entries (they have priority and override other styling)
     // Filter text+bg entries by file rules just like regular entries
@@ -12437,7 +12618,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
         if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry)) continue;
 
-        if (this.isContextBlacklisted(text, matchStart, matchEnd)) continue;
+        if (this.isContextBlacklisted(text, matchStart, matchEnd, filePath)) continue;
 
         const absStart = from + matchStart;
         const absEnd = from + matchEnd;
@@ -12644,7 +12825,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
 
         // Use helper to extract full word and check if blacklisted
-        if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length)) continue;
+        if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length, filePath)) continue;
 
         const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
         let colorStart = match.index;
@@ -12788,7 +12969,7 @@ module.exports = class AlwaysColorText extends Plugin {
           const wStart = match.index;
           const wEnd = wStart + w.length;
 
-          if (this.isWordBlacklisted(w)) continue;
+          if (this.isWordBlacklisted(w, filePath)) continue;
 
           const absWStart = from + wStart;
           const absWEnd = from + wEnd;
@@ -12806,7 +12987,7 @@ module.exports = class AlwaysColorText extends Plugin {
             if (!entry || entry.invalid) continue;
             // Skip pure symbol patterns in partial match
             if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
-            if (this.isWordBlacklisted(entry.pattern)) continue;
+            if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
 
             // This section only handles 'contains' matchType
             const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
@@ -13074,7 +13255,7 @@ module.exports = class AlwaysColorText extends Plugin {
   buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath = null) {
     const CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
-    const MAX_MATCHES = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
+    const MAX_MATCHES = this.settings.extremeLightweightMode ? 250 : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
 
     // Handle codeblocks first (same as in buildDecoStandard)
@@ -13203,8 +13384,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const contentEnd = lineEnd;
             const contentText = mdMatch[6] || '';
             // Check both content blacklist AND line-level regex blacklist
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
               const start = from + contentStart;
               const end = from + contentEnd;
               if (taskCheckedEntry.backgroundColor) {
@@ -13229,8 +13410,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const contentEnd = lineEnd;
             const contentText = mdMatch[6] || '';
             // Check both content blacklist AND line-level regex blacklist
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
               const start = from + contentStart;
               const end = from + contentEnd;
               if (taskUncheckedEntry.backgroundColor) {
@@ -13255,8 +13436,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const contentEnd = lineEnd;
             const contentText = mdMatch[4] || '';
             // Check both content blacklist AND line-level regex blacklist
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
               const start = from + contentStart;
               const end = from + contentEnd;
               if (numberedEntry.backgroundColor) {
@@ -13281,8 +13462,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const contentEnd = lineEnd;
             const contentText = mdMatch[4] || '';
             // Check both content blacklist AND line-level regex blacklist
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText) && !lineBlacklisted) {
+            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
               const start = from + contentStart;
               const end = from + contentEnd;
               if (bulletEntry.backgroundColor) {
@@ -13304,7 +13485,7 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) { }
 
     // Get all blacklisted list item ranges (so we can exclude individual word matches from being colored)
-    const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from);
+    const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from, filePath);
 
     // FIRST: Process text+bg entries (they have priority)
     // Filter text+bg entries by file rules just like regular entries
@@ -13336,7 +13517,7 @@ module.exports = class AlwaysColorText extends Plugin {
             continue;
           }
 
-          if (this.isContextBlacklisted(text, matchStart, matchEnd)) continue;
+          if (this.isContextBlacklisted(text, matchStart, matchEnd, filePath)) continue;
 
           const absStart = from + matchStart;
           const absEnd = from + matchEnd;
@@ -13396,7 +13577,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
       for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
         const chunk = entries.slice(i, i + CHUNK_SIZE);
-        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges);
+        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
         allMatches = allMatches.concat(chunkMatches);
 
         // Chunk processing logs removed - too verbose
@@ -13420,7 +13601,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const chunkText = text.slice(pos, chunkEnd);
         const chunkFrom = from + pos;
 
-        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges);
+        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
         allMatches = allMatches.concat(chunkMatches);
 
         // Text chunk processing logs removed - too verbose
@@ -13433,7 +13614,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     else {
       // Strategy 3: Default processing (few patterns, short text)
-      const chunkMatches = this.processPatternChunk(text, from, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges);
+      const chunkMatches = this.processPatternChunk(text, from, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
       allMatches = allMatches.concat(chunkMatches);
     }
 
@@ -13444,8 +13625,8 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Process a chunk of patterns
-  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = []) {
-    const MAX_MATCHES_PER_PATTERN = EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
+  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null) {
+    const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? 10 : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     const matches = [];
 
     for (const entry of patternChunk) {
@@ -13521,7 +13702,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
 
         // Context-aware blacklist check
-        if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length)) continue;
+        if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length, filePath)) continue;
 
         matches.push({
           start: matchStart,
@@ -13573,7 +13754,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
         for (const entry of wordPartialEntries) {
           if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
-          if (this.isWordBlacklisted(entry.pattern)) continue;
+          if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
 
           const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
           const cs = (typeof entry._caseSensitiveOverride === 'boolean')
@@ -13649,7 +13830,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
         for (const entry of phrasePartialEntries) {
           if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
-          if (this.isWordBlacklisted(entry.pattern)) continue;
+          if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
 
           const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
           const cs = (typeof entry._caseSensitiveOverride === 'boolean')
@@ -13746,7 +13927,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Process a chunk of text
-  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = []) {
+  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null) {
     const matches = [];
 
     for (const entry of entries) {
@@ -13813,7 +13994,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
 
         // Use helper to extract full word and check if blacklisted
-        if (this.isContextBlacklisted(chunkText, match.index, match.index + matchedText.length)) continue;
+        if (this.isContextBlacklisted(chunkText, match.index, match.index + matchedText.length, filePath)) continue;
 
         matches.push({
           start: matchStart,
@@ -13861,13 +14042,13 @@ module.exports = class AlwaysColorText extends Plugin {
           const wStart = match.index;
           const wEnd = wStart + w.length;
 
-          if (this.isWordBlacklisted(w)) continue;
+          if (this.isWordBlacklisted(w, filePath)) continue;
           if (this.isMatchInBlacklistedRange(chunkFrom + wStart, chunkFrom + wEnd, blacklistedListRanges)) continue;
 
           for (const entry of textOnlyEntries) {
             if (!entry || entry.invalid) continue;
             if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
-            if (this.isWordBlacklisted(entry.pattern)) continue;
+            if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
 
             const mt = String(entry.matchType || (this.settings.partialMatch ? 'contains' : 'exact')).toLowerCase();
             const cs = (typeof entry._caseSensitiveOverride === 'boolean')
@@ -14095,6 +14276,9 @@ module.exports = class AlwaysColorText extends Plugin {
       try { this._cachedSortedEntries = null; this._cacheDirty = true; } catch (e) { }
       try { if (this._regexCache) this._regexCache.clear(); } catch (e) { }
       try { this._compiledWordEntries = []; } catch (e) { }
+      try { this._lpCalloutCache = null; } catch (e) { }
+      try { this._lpTableCache = null; } catch (e) { }
+      try { this._canvasDebounceTimers = null; } catch (e) { }
 
       // Clear all reading mode intervals
       try {
@@ -16602,7 +16786,7 @@ class EditEntryModal extends Modal {
         modeSel.style.border = '1px solid var(--background-modifier-border)';
         modeSel.style.borderRadius = 'var(--radius-m)';
         modeSel.style.background = 'var(--background-modifier-form-field)';
-        const pathInput = row.createEl('input', { type: 'text', value: String(r.path || '') });
+        const pathInput = row.createEl('input', { type: 'text', value: String(r.path || ''), placeholder: this.plugin.t('enter_path_or_pattern', 'Enter path, pattern or tags') });
         pathInput.style.flex = '1';
         pathInput.style.padding = '6px';
         pathInput.style.border = '1px solid var(--background-modifier-border)';
@@ -16850,6 +17034,9 @@ class EditEntryModal extends Modal {
         if (this.entry.borderLineStyle) foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
         if (typeof this.entry.borderOpacity === 'number') foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
         if (typeof this.entry.borderThickness === 'number') foundArray[foundIdx].borderThickness = this.entry.borderThickness;
+        // Persist inclusion/exclusion rules
+        if (this.entry.inclusionRules) foundArray[foundIdx].inclusionRules = this.entry.inclusionRules;
+        if (this.entry.exclusionRules) foundArray[foundIdx].exclusionRules = this.entry.exclusionRules;
         // Leave undefined values as-is to inherit global defaults
 
         await this.plugin.saveSettings();
@@ -16903,6 +17090,10 @@ class EditEntryModal extends Modal {
         if (this.entry.borderLineStyle) newEntry.borderLineStyle = this.entry.borderLineStyle;
         if (typeof this.entry.borderOpacity === 'number') newEntry.borderOpacity = this.entry.borderOpacity;
         if (typeof this.entry.borderThickness === 'number') newEntry.borderThickness = this.entry.borderThickness;
+        
+        // Persist inclusion/exclusion rules
+        if (this.entry.inclusionRules) newEntry.inclusionRules = this.entry.inclusionRules;
+        if (this.entry.exclusionRules) newEntry.exclusionRules = this.entry.exclusionRules;
 
         const toGroupUid = groupSelect.value || '';
         if (toGroupUid) {
@@ -17556,7 +17747,7 @@ class EditWordGroupModal extends Modal {
     searchInput.style.flex = '1 1 auto';
     searchInput.style.padding = '6px';
     searchInput.style.border = '1px solid var(--background-modifier-border)';
-    searchInput.style.borderRadius = '4px';
+    searchInput.style.borderRadius = 'var(--input-radius)';
     searchInput.value = this._searchQuery;
     const searchHandler = () => { this._searchQuery = String(searchInput.value || '').trim().toLowerCase(); this._refreshGroupEntries(); };
     searchInput.addEventListener('input', searchHandler);
@@ -17572,7 +17763,7 @@ class EditWordGroupModal extends Modal {
     limitInput.style.width = '80px';
     limitInput.style.padding = '6px';
     limitInput.style.border = '1px solid var(--background-modifier-border)';
-    limitInput.style.borderRadius = '4px';
+    limitInput.style.borderRadius = 'var(--input-radius)';
     const limitHandler = () => {
       const raw = String(limitInput.value || '').trim().toLowerCase();
       const parts = raw.split(/\s+/).filter(Boolean);
@@ -18076,6 +18267,7 @@ class EditWordGroupModal extends Modal {
       btnDel.addClass('mod-warning');
       btnDel.style.cursor = 'pointer';
       btnDel.style.padding = '6px 10px';
+      btnDel.style.border = 'none';
       const delHandler = () => {
         const idx = this.group.entries.indexOf(entry);
         if (idx > -1) {
@@ -18298,6 +18490,69 @@ class EditBlacklistGroupModal extends Modal {
     matchTypeSelect.addEventListener('change', matchTypeHandler);
     this._cleanupHandlers.push(() => matchTypeSelect.removeEventListener('change', matchTypeHandler));
 
+    const enableDisableRow = contentEl.createDiv();
+    enableDisableRow.style.display = 'grid';
+    enableDisableRow.style.gridTemplateColumns = 'auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)';
+    enableDisableRow.style.gap = '8px';
+    enableDisableRow.style.alignItems = 'center';
+    enableDisableRow.style.marginBottom = '12px';
+
+    const enLabel = enableDisableRow.createEl('div', { text: this.plugin.t('label_enable_in', 'Enable in') });
+    enLabel.style.color = 'var(--text-muted)';
+
+    const enFoldersInput = enableDisableRow.createEl('input', { type: 'text' });
+    enFoldersInput.placeholder = 'folder1/, folder2/';
+    enFoldersInput.style.padding = '6px';
+    enFoldersInput.style.borderRadius = '4px';
+    enFoldersInput.style.border = '1px solid var(--background-modifier-border)';
+    enFoldersInput.value = Array.isArray(this.group.enableFolders) ? this.group.enableFolders.join(', ') : '';
+
+    const enTagsInput = enableDisableRow.createEl('input', { type: 'text' });
+    enTagsInput.placeholder = '#tag1, #tag2';
+    enTagsInput.style.padding = '6px';
+    enTagsInput.style.borderRadius = '4px';
+    enTagsInput.style.border = '1px solid var(--background-modifier-border)';
+    enTagsInput.value = Array.isArray(this.group.enableTags) ? this.group.enableTags.map(t => t.startsWith('#') ? t : `#${t}`).join(', ') : '';
+
+    const disLabel = enableDisableRow.createEl('div', { text: this.plugin.t('label_disable_in', 'Disable in') });
+    disLabel.style.color = 'var(--text-muted)';
+    
+    const disFoldersInput = enableDisableRow.createEl('input', { type: 'text' });
+    disFoldersInput.placeholder = 'folder1/, folder2/';
+    disFoldersInput.style.padding = '6px';
+    disFoldersInput.style.borderRadius = '4px';
+    disFoldersInput.style.border = '1px solid var(--background-modifier-border)';
+    disFoldersInput.value = Array.isArray(this.group.disableFolders) ? this.group.disableFolders.join(', ') : '';
+
+    const disTagsInput = enableDisableRow.createEl('input', { type: 'text' });
+    disTagsInput.placeholder = '#tag1, #tag2';
+    disTagsInput.style.padding = '6px';
+    disTagsInput.style.borderRadius = '4px';
+    disTagsInput.style.border = '1px solid var(--background-modifier-border)';
+    disTagsInput.value = Array.isArray(this.group.disableTags) ? this.group.disableTags.map(t => t.startsWith('#') ? t : `#${t}`).join(', ') : '';
+
+    // Helper to parse lists
+    const parseList = (raw, isTag) => {
+      const arr = String(raw || '').split(',').map(s => s.trim()).filter(Boolean);
+      if (isTag) return arr.map(t => t.replace(/^#/, '')).filter(Boolean);
+      return arr;
+    };
+    
+    const enFoldersHandler = () => { this.group.enableFolders = parseList(enFoldersInput.value, false); };
+    const enTagsHandler = () => { this.group.enableTags = parseList(enTagsInput.value, true); };
+    const disFoldersHandler = () => { this.group.disableFolders = parseList(disFoldersInput.value, false); };
+    const disTagsHandler = () => { this.group.disableTags = parseList(disTagsInput.value, true); };
+
+    enFoldersInput.addEventListener('input', enFoldersHandler);
+    enTagsInput.addEventListener('input', enTagsHandler);
+    disFoldersInput.addEventListener('input', disFoldersHandler);
+    disTagsInput.addEventListener('input', disTagsHandler);
+
+    this._cleanupHandlers.push(() => enFoldersInput.removeEventListener('input', enFoldersHandler));
+    this._cleanupHandlers.push(() => enTagsInput.removeEventListener('input', enTagsHandler));
+    this._cleanupHandlers.push(() => disFoldersInput.removeEventListener('input', disFoldersHandler));
+    this._cleanupHandlers.push(() => disTagsInput.removeEventListener('input', disTagsHandler));
+
     // SEARCH BAR & LIMIT INPUT ROW
     const searchRow = contentEl.createDiv();
     try { searchRow.addClass('act-search-container'); } catch (e) { try { searchRow.classList.add('act-search-container'); } catch (_) { } }
@@ -18313,7 +18568,7 @@ class EditBlacklistGroupModal extends Modal {
     searchInput.style.flex = '1 1 auto';
     searchInput.style.padding = '6px';
     searchInput.style.border = '1px solid var(--background-modifier-border)';
-    searchInput.style.borderRadius = '4px';
+    searchInput.style.borderRadius = 'var(--input-radius)';
     searchInput.value = this._searchQuery;
     const searchHandler = () => { this._searchQuery = String(searchInput.value || '').trim().toLowerCase(); this._refreshGroupEntries(); };
     searchInput.addEventListener('input', searchHandler);
@@ -18329,7 +18584,7 @@ class EditBlacklistGroupModal extends Modal {
     limitInput.style.width = '80px';
     limitInput.style.padding = '6px';
     limitInput.style.border = '1px solid var(--background-modifier-border)';
-    limitInput.style.borderRadius = '4px';
+    limitInput.style.borderRadius = 'var(--input-radius)';
     const limitHandler = () => {
       const raw = String(limitInput.value || '').trim().toLowerCase();
       const parts = raw.split(/\s+/).filter(Boolean);
@@ -18367,7 +18622,6 @@ class EditBlacklistGroupModal extends Modal {
     this._listDiv.style.overflowY = 'auto';
     this._listDiv.style.marginBottom = '15px';
     this._listDiv.style.borderRadius = '4px';
-    this._listDiv.style.backgroundColor = 'var(--background-primary)';
     this._refreshGroupEntries();
 
     // BUTTON ROW: Sort | Add Word | Add Regex | Presets
@@ -19605,7 +19859,6 @@ class ColorSettingTab extends PluginSettingTab {
         this._disabledFilesSearchInput.style.padding = '6px';
         this._disabledFilesSearchInput.style.marginBottom = '6px';
         this._disabledFilesSearchInput.style.border = '1px solid var(--background-modifier-border)';
-        this._disabledFilesSearchInput.style.borderRadius = '4px';
         this._disabledFilesSearchInput.value = String(this._disabledFilesSearchQuery || '');
 
         this._disabledFilesSearchIcon = this._disabledFilesSearchContainer.createDiv();
@@ -20125,6 +20378,7 @@ class ColorSettingTab extends PluginSettingTab {
         input.style.border = '1px solid var(--background-modifier-border)';
         const del = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
         del.addClass('mod-warning');
+        del.style.border = 'none';
         del.style.cursor = 'pointer';
         del.style.flex = '0 0 auto';
         const updateDropdown = () => {
@@ -20618,8 +20872,10 @@ class ColorSettingTab extends PluginSettingTab {
         addButtonSetting.settingEl.style.display = 'flex';
         addButtonSetting.settingEl.style.justifyContent = 'flex-end';
         addButtonSetting.settingEl.style.border = 'none';
+        addButtonSetting.settingEl.style.background = 'transparent';
         addButtonSetting.settingEl.style.padding = '0';
         addButtonSetting.settingEl.style.marginBottom = '10px';
+        addButtonSetting.settingEl.style.marginTop = '12px';
       } catch (_) { }
     } catch (e) { debugError('SETTINGS', '_refreshCustomSwatches error', e); }
   }
@@ -20634,7 +20890,7 @@ class ColorSettingTab extends PluginSettingTab {
       headerDiv.style.display = 'flex';
       headerDiv.style.alignItems = 'center';
       headerDiv.style.justifyContent = 'space-between';
-      headerDiv.style.marginTop = '18px';
+      headerDiv.style.marginTop = '30px';
       headerDiv.style.marginBottom = '8px';
 
       const leftDiv = headerDiv.createDiv();
@@ -20652,10 +20908,13 @@ class ColorSettingTab extends PluginSettingTab {
         }));
       toggle.settingEl.style.border = 'none';
       toggle.settingEl.style.padding = '0';
+      toggle.settingEl.style.background = 'none';
+      toggle.settingEl.addClass('act-toggle');
 
       // Description
       const desc = this._quickColorsContainer.createDiv();
-      desc.style.margin = '-16px 0 8px';
+      desc.addClass('act-desc');
+      desc.style.margin = '-16px 0 14px';
       desc.textContent = this.plugin.t('quick_colors_desc', 'Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used.');
 
       // Keep UI visible even when Quick Colors are disabled
@@ -20680,7 +20939,8 @@ class ColorSettingTab extends PluginSettingTab {
           row.style.gap = '8px';
           row.style.marginBottom = '8px';
           row.style.border = '1px solid var(--background-modifier-border)';
-          row.style.borderRadius = 'var(--button-radius)'; // BORDER RADIUS OF CUSTOM COLOR ENTRIES
+          row.style.borderRadius = 'var(--setting-items-radius)'; // BORDER RADIUS OF CUSTOM COLOR ENTRIES
+          row.style.backgroundColor = 'var(--setting-items-background)';
           row.style.padding = '6px';
           row.style.flex = '0 0 auto';
           row.setAttribute('data-qc-index', String(i));
@@ -20906,6 +21166,7 @@ class ColorSettingTab extends PluginSettingTab {
           if (d.selectEl) {
             d.selectEl.style.textAlign = 'center';
             d.selectEl.style.textAlignLast = 'center';
+            d.selectEl.style.minWidth = '180px';
           }
         });
       try { modeSetting.settingEl.style.marginTop = '10px'; } catch (e) { }
@@ -20922,7 +21183,7 @@ class ColorSettingTab extends PluginSettingTab {
       headerDiv.style.display = 'flex';
       headerDiv.style.alignItems = 'center';
       headerDiv.style.justifyContent = 'space-between';
-      headerDiv.style.marginTop = '18px';
+      headerDiv.style.marginTop = '30px';
       headerDiv.style.marginBottom = '8px';
       const leftDiv = headerDiv.createDiv();
       leftDiv.style.display = 'flex';
@@ -20937,8 +21198,12 @@ class ColorSettingTab extends PluginSettingTab {
         }));
       toggle.settingEl.style.border = 'none';
       toggle.settingEl.style.padding = '0';
+      toggle.settingEl.style.background = 'none';
+      toggle.settingEl.addClass('act-toggle');
+      
       const desc = this._quickStylesContainer.createDiv();
-      desc.style.margin = '-16px 0 8px';
+      desc.addClass('act-desc');
+      desc.style.margin = '-16px 0 14px';
       desc.textContent = this.plugin.t('quick_styles_desc', 'Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used.');
 
       // if (!this.plugin.settings.quickStylesEnabled) return;
@@ -20959,7 +21224,8 @@ class ColorSettingTab extends PluginSettingTab {
         row.style.marginBottom = '8px';
         row.style.padding = '4px';
         row.style.border = '1px solid var(--background-modifier-border)';
-        row.style.borderRadius = 'var(--button-radius)'; // BORDER RADIUS OF QUICK STYLES ENTRIES
+        row.style.borderRadius = 'var(--setting-items-radius)'; // BORDER RADIUS OF QUICK STYLES ENTRIES
+        row.style.background = 'var(--setting-items-background)';
         // row.draggable = true;
 
         // Drag Handle
@@ -21384,8 +21650,8 @@ class ColorSettingTab extends PluginSettingTab {
         row.style.marginBottom = '10px';
         row.style.padding = '10px';
         row.style.border = '1px solid var(--background-modifier-border)';
-        row.style.borderRadius = '6px';
-        row.style.backgroundColor = 'var(--background-primary)';
+        row.style.borderRadius = 'var(--setting-items-radius)';
+        row.style.backgroundColor = 'var(--setting-items-background)';
         row.setAttribute('data-group-uid', group.uid || '');
 
         // Drag handle
@@ -21615,8 +21881,8 @@ class ColorSettingTab extends PluginSettingTab {
         row.style.marginBottom = '10px';
         row.style.padding = '10px';
         row.style.border = '1px solid var(--background-modifier-border)';
-        row.style.borderRadius = 'var(--button-radius)';
-        row.style.backgroundColor = 'var(--background-primary)';
+        row.style.borderRadius = 'var(--setting-items-radius)';
+        row.style.backgroundColor = 'var(--setting-items-background)';
         row.setAttribute('data-group-uid', group.uid || '');
 
         // Drag handle
@@ -22979,7 +23245,9 @@ class ColorSettingTab extends PluginSettingTab {
       const headerEl = containerEl.createEl('h3', { text: this.plugin.t('colored_texts_header', 'Colored Texts') });
       try { headerEl.className = 'always-colored-texts-header'; } catch (e) { }
       try { headerEl.style.marginTop = '30px !important'; } catch (e) { }
-      containerEl.createEl('p', { text: this.plugin.t('always_colored_texts_desc', 'Here\'s where you manage your word / patterns and their colors.') });
+      const desc = containerEl.createEl('p', { text: this.plugin.t('always_colored_texts_desc', 'Here\'s where you manage your word / patterns and their colors.') });
+      desc.addClass('act-desc');
+      desc.style.marginTop = '-7px';
       const dividerSetting = new Setting(containerEl);
       try { dividerSetting.settingEl.classList.add('act-section-divider'); } catch (_) { }
       const entriesSearchContainer = containerEl.createDiv();
@@ -22995,7 +23263,6 @@ class ColorSettingTab extends PluginSettingTab {
       entriesSearch.style.flex = '1 1 auto';
       entriesSearch.style.padding = '6px';
       entriesSearch.style.border = '1px solid var(--background-modifier-border)';
-      entriesSearch.style.borderRadius = '4px';
       const entriesIcon = entriesSearchContainer.createDiv();
       try { entriesIcon.addClass('act-search-icon'); } catch (e) { try { entriesIcon.classList.add('act-search-icon'); } catch (_) { } }
       const entriesSearchHandler = () => { this._entriesSearchQuery = String(entriesSearch.value || '').trim().toLowerCase(); try { this._refreshEntries(); } catch (e) { } };
@@ -23010,7 +23277,7 @@ class ColorSettingTab extends PluginSettingTab {
       entriesLimitInput.style.width = '64px';
       entriesLimitInput.style.padding = '6px';
       entriesLimitInput.style.border = '1px solid var(--background-modifier-border)';
-      entriesLimitInput.style.borderRadius = '4px';
+      entriesLimitInput.style.borderRadius = 'var(--input-radius)';
       const entriesLimitHandler = () => {
         const raw = String(entriesLimitInput.value || '').trim().toLowerCase();
         const parts = raw.split(/\s+/).filter(Boolean);
@@ -23206,7 +23473,6 @@ class ColorSettingTab extends PluginSettingTab {
       groupSearch.style.flex = '1 1 auto';
       groupSearch.style.padding = '6px';
       groupSearch.style.border = '1px solid var(--background-modifier-border)';
-      groupSearch.style.borderRadius = '4px';
       groupSearch.addEventListener('input', () => {
         this._groupSearch = groupSearch.value || '';
         this._refreshGroups();
@@ -23296,7 +23562,9 @@ class ColorSettingTab extends PluginSettingTab {
     if (this._activeTab === 'blacklist') {
       // Blacklist words
       containerEl.createEl('h3', { text: this.plugin.t('blacklist_words_header', 'Blacklist words') });
-      containerEl.createEl('p', { text: this.plugin.t('blacklist_words_desc', 'Keywords or patterns here will never be colored, even for partial matches.') });
+      const desc = containerEl.createEl('p', { text: this.plugin.t('blacklist_words_desc', 'Keywords or patterns here will never be colored, even for partial matches.') });
+      desc.addClass('act-desc');
+      desc.style.marginTop = '-7px';
 
 
 
@@ -23313,7 +23581,6 @@ class ColorSettingTab extends PluginSettingTab {
       blSearch.style.flex = '1 1 auto';
       blSearch.style.padding = '6px';
       blSearch.style.border = '1px solid var(--background-modifier-border)';
-      blSearch.style.borderRadius = '4px';
       const blIcon = blSearchContainer.createDiv();
       try { blIcon.addClass('act-search-icon'); } catch (e) { try { blIcon.classList.add('act-search-icon'); } catch (_) { } }
       const blSearchHandler = () => { this._blacklistSearchQuery = String(blSearch.value || '').trim().toLowerCase(); try { this._refreshBlacklistWords(); } catch (e) { } };
@@ -23328,7 +23595,7 @@ class ColorSettingTab extends PluginSettingTab {
       blLimitInput.style.width = '64px';
       blLimitInput.style.padding = '6px';
       blLimitInput.style.border = '1px solid var(--background-modifier-border)';
-      blLimitInput.style.borderRadius = '4px';
+      blLimitInput.style.borderRadius = 'var(--input-radius)';
       const blLimitHandler = () => {
         const raw = String(blLimitInput.value || '').trim().toLowerCase();
         const parts = raw.split(/\s+/).filter(Boolean);
@@ -23482,7 +23749,6 @@ class ColorSettingTab extends PluginSettingTab {
       blGroupSearch.style.flex = '1 1 auto';
       blGroupSearch.style.padding = '6px';
       blGroupSearch.style.border = '1px solid var(--background-modifier-border)';
-      blGroupSearch.style.borderRadius = '4px';
       blGroupSearch.addEventListener('input', () => {
         this._blacklistGroupSearch = blGroupSearch.value || '';
         this._refreshBlacklistGroups();
@@ -23557,7 +23823,9 @@ class ColorSettingTab extends PluginSettingTab {
     }
     if (this._activeTab === 'file-folder-rules') {
       containerEl.createEl('h3', { text: this.plugin.t('file_folder_rules_header', 'File & Folder Coloring Rules') });
-      containerEl.createEl('p', { text: this.plugin.t('file_folder_rules_desc', 'Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.') });
+      const desc = containerEl.createEl('p', { text: this.plugin.t('file_folder_rules_desc', 'Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.') });
+      desc.addClass('act-desc');
+      desc.style.marginTop = '-7px';
       // Search bar for Path rules
       const prSearchContainer = containerEl.createDiv();
       try { prSearchContainer.addClass('act-search-container'); } catch (e) { try { prSearchContainer.classList.add('act-search-container'); } catch (_) { } }
@@ -23571,7 +23839,6 @@ class ColorSettingTab extends PluginSettingTab {
       prSearch.style.flex = '1 1 auto';
       prSearch.style.padding = '6px';
       prSearch.style.border = '1px solid var(--background-modifier-border)';
-      prSearch.style.borderRadius = '4px';
       const prIcon = prSearchContainer.createDiv();
       try { prIcon.addClass('act-search-icon'); } catch (e) { try { prIcon.classList.add('act-search-icon'); } catch (_) { } }
       const prSearchHandler = () => { this._pathRulesSearchQuery = String(prSearch.value || '').trim().toLowerCase(); try { this._refreshPathRules(); } catch (e) { } };
@@ -23587,7 +23854,7 @@ class ColorSettingTab extends PluginSettingTab {
       prLimitInput.style.width = '64px';
       prLimitInput.style.padding = '6px';
       prLimitInput.style.border = '1px solid var(--background-modifier-border)';
-      prLimitInput.style.borderRadius = '4px';
+      prLimitInput.style.borderRadius = 'var(--input-radius)';
       const prLimitHandler = () => {
         const raw = String(prLimitInput.value || '').trim().toLowerCase();
         const parts = raw.split(/\s+/).filter(Boolean);
@@ -23706,6 +23973,9 @@ class ColorSettingTab extends PluginSettingTab {
         }));
 
     }
+
+    // Apply .act-desc class to all setting descriptions
+    // containerEl.querySelectorAll('.setting-item-description').forEach(el => el.addClass('act-desc'));
   }
 
   // Method to focus and/or create a text & background coloring entry with pre-filled text
