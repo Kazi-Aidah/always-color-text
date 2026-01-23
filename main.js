@@ -4104,20 +4104,20 @@ var EDITOR_PERFORMANCE_CONSTANTS = {
   // Use standard processing for <= 20 patterns (reduced)
   MAX_TEXT_LENGTH_STANDARD: 5e3,
   // Use standard processing for <= 5k chars (reduced)
-  PATTERN_CHUNK_SIZE: 10,
-  // REDUCED: Process 10 patterns per chunk during typing
+  PATTERN_CHUNK_SIZE: 20,
+  // INCREASED: Process 20 patterns per chunk (better throughput)
   TEXT_CHUNK_SIZE: 2e3,
   // REDUCED: Process 2k chars per chunk during typing
-  MAX_MATCHES_PER_PATTERN: 100,
+  MAX_MATCHES_PER_PATTERN: 500,
   // Max matches per pattern (increased for better UX)
-  MAX_TOTAL_MATCHES: 2e3,
+  MAX_TOTAL_MATCHES: 4e3,
   // Absolute limit for decorations (increased)
   TYPING_DEBOUNCE_MS: 500,
   // INCREASED: Delay rebuilds while typing - 500ms (wait longer before recomputing)
   TYPING_GRACE_PERIOD_MS: 1500,
   // INCREASED: Skip decoration during active typing (1.5 seconds after last keystroke)
-  VIEWPORT_EXTENSION: 100,
-  // Buffer beyond viewport to include in text processing
+  VIEWPORT_EXTENSION: 200,
+  // INCREASED: Buffer beyond viewport to include in text processing
   CALLOUT_THROTTLE_MS: 1e3,
   // Throttle callout processing to 1 second
   TABLE_THROTTLE_MS: 1e3
@@ -14062,7 +14062,7 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       };
       const isForced = opts && opts.forceProcess || this.settings.forceFullRenderInReading;
-      const maxMatches = typeof opts.maxMatches === "number" ? opts.maxMatches : isForced ? Infinity : this.settings && this.settings.extremeLightweightMode ? 250 : 500;
+      const maxMatches = typeof opts.maxMatches === "number" ? opts.maxMatches : isForced ? Infinity : this.settings && this.settings.extremeLightweightMode ? 500 : 500;
       let matches = [];
       try {
         const spoilerRegex = /\|\|.*?\|\|/g;
@@ -14826,7 +14826,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   _processLivePreviewCallouts(view) {
     try {
-      if (this.settings.disableLivePreviewColoring || this.settings.extremeLightweightMode) return;
+      if (this.settings.disableLivePreviewColoring) return;
       const now = Date.now();
       if (this._lpLastRun && now - this._lpLastRun < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
       this._lpLastRun = now;
@@ -14917,7 +14917,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   _processLivePreviewTables(view, force = false) {
     try {
-      if (this.settings.disableLivePreviewColoring || this.settings.extremeLightweightMode) return;
+      if (this.settings.disableLivePreviewColoring) return;
       const now = Date.now();
       if (!force && this._lpTablesLastRun && now - this._lpTablesLastRun < EDITOR_PERFORMANCE_CONSTANTS.TABLE_THROTTLE_MS) return;
       this._lpTablesLastRun = now;
@@ -16760,11 +16760,13 @@ module.exports = class AlwaysColorText extends Plugin {
             try {
               const flags = cs ? "" : "i";
               const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(patRaw) : patRaw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-              const re = new RegExp(`^[A-Za-z]*${esc}$`, flags);
+              const re = new RegExp(`^[A-Za-z0-9'\\-]*${esc}$`, flags);
               ok = re.test(fullWord);
             } catch (_) {
               ok = word.endsWith(pat);
             }
+          } else if (mt === "exact") {
+            ok = word === pat;
           }
           if (!ok) {
             try {
@@ -17056,9 +17058,11 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // NEW METHOD: Chunked editor processing for large pattern sets or large text
   buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath = null) {
+    const startTime = performance.now();
+    const TIME_BUDGET_MS = 12;
     const CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
-    const MAX_MATCHES = this.settings.extremeLightweightMode ? 250 : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
+    const MAX_MATCHES = this.settings.extremeLightweightMode ? 4e3 : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
     try {
       const we = entries;
@@ -17380,7 +17384,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // NEW METHOD: Process a chunk of patterns
   processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null) {
-    const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? 10 : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
+    const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     const matches = [];
     for (const entry of patternChunk) {
       if (!entry || entry.invalid) continue;
@@ -17449,14 +17453,14 @@ module.exports = class AlwaysColorText extends Plugin {
           entryRef: entry
         });
         matchCount++;
-        if (matches.length > 200) break;
+        if (matches.length > 2e3) break;
       }
-      if (matches.length > 200) break;
+      if (matches.length > 2e3) break;
     }
     const partialEntries = patternChunk.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
     const wordPartialEntries = partialEntries.filter((e) => this.isLatinWordPattern(e.pattern));
     const phrasePartialEntries = partialEntries.filter((e) => !this.isLatinWordPattern(e.pattern));
-    if (partialEntries.length > 0 && matches.length < 200) {
+    if (partialEntries.length > 0 && matches.length < 2e3) {
       for (const entry of wordPartialEntries) {
         const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
         if (mt === "startswith" || mt === "endswith") {
@@ -17466,8 +17470,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const flags = cs ? "" : "i";
             const esc = this.escapeRegex(pat);
             try {
-              if (mt === "startswith") entry._startswithRegex = new RegExp(`^${esc}[A-Za-z]*$`, flags);
-              else entry._endswithRegex = new RegExp(`^[A-Za-z]*${esc}$`, flags);
+              if (mt === "startswith") entry._startswithRegex = new RegExp(`^${esc}[A-Za-z0-9'\\-]*$`, flags);
+              else entry._endswithRegex = new RegExp(`^[A-Za-z0-9'\\-]*${esc}$`, flags);
               entry._lastCs = cs;
             } catch (_) {
             }
@@ -17529,20 +17533,21 @@ module.exports = class AlwaysColorText extends Plugin {
                 color: folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color,
                 styleType: entry.styleType,
                 textColor: entry.textColor,
-                backgroundColor: entry.backgroundColor
+                backgroundColor: entry.backgroundColor,
+                entryRef: entry
               });
-              if (matches.length > 200) break;
+              if (matches.length > 2e3) break;
             }
             break;
           }
         }
-        if (matches.length > 200) break;
+        if (matches.length > 2e3) break;
         try {
           if (typeof wordRegex.lastIndex === "number" && wordRegex.lastIndex === match.index) wordRegex.lastIndex++;
         } catch (e) {
         }
       }
-      if (phrasePartialEntries.length > 0 && matches.length < 200) {
+      if (phrasePartialEntries.length > 0 && matches.length < 2e3) {
         let textLower = null;
         const getTextForCase = (cs) => {
           if (cs) return text;
@@ -17560,7 +17565,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (!pat) continue;
           let fromIndex = 0;
           let localMatchCount = 0;
-          while (matches.length < 200 && localMatchCount < MAX_MATCHES_PER_PATTERN) {
+          while (matches.length < 2e3 && localMatchCount < MAX_MATCHES_PER_PATTERN) {
             const idx = textForSearch.indexOf(pat, fromIndex);
             if (idx === -1) break;
             const mStart = idx;
@@ -17612,15 +17617,16 @@ module.exports = class AlwaysColorText extends Plugin {
                   color: folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color,
                   styleType: entry.styleType,
                   textColor: entry.textColor,
-                  backgroundColor: entry.backgroundColor
+                  backgroundColor: entry.backgroundColor,
+                  entryRef: entry
                 });
-                if (matches.length > 200) break;
+                if (matches.length > 2e3) break;
               }
               localMatchCount++;
             }
             fromIndex = mStart + 1;
           }
-          if (matches.length > 200) break;
+          if (matches.length > 2e3) break;
         }
       }
     }
@@ -17629,12 +17635,13 @@ module.exports = class AlwaysColorText extends Plugin {
   // NEW METHOD: Process a chunk of text
   processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null) {
     const matches = [];
+    const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     for (const entry of entries) {
       if (!entry || entry.invalid) continue;
       const isTextOnly = !entry.isTextBg && (!entry.styleType || entry.styleType === "text");
       const actualMatchType = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
       const isPartialMatch = ["contains", "startswith", "endswith"].includes(actualMatchType);
-      if (!entry.isRegex && isTextOnly && isPartialMatch) continue;
+      if (!entry.isRegex && isTextOnly && isPartialMatch && this.isLatinWordPattern(entry.pattern)) continue;
       if (entry.fastTest && !entry.fastTest(chunkText)) continue;
       const regex = entry.regex;
       if (!regex) continue;
@@ -17644,7 +17651,7 @@ module.exports = class AlwaysColorText extends Plugin {
         regex.lastIndex = 0;
       } catch (e) {
       }
-      while ((match = regex.exec(chunkText)) && matchCount < 5) {
+      while ((match = regex.exec(chunkText)) && matchCount < MAX_MATCHES_PER_PATTERN) {
         const matchedText = match[0];
         const matchStart = chunkFrom + match.index;
         const matchEnd = chunkFrom + match.index + matchedText.length;
@@ -17696,11 +17703,11 @@ module.exports = class AlwaysColorText extends Plugin {
           entryRef: entry
         });
         matchCount++;
-        if (matches.length > 100) break;
+        if (matches.length > 2e3) break;
       }
-      if (matches.length > 30) break;
+      if (matches.length > 2e3) break;
     }
-    if (matches.length < 100) {
+    if (matches.length < 2e3) {
       const textOnlyEntries = entries.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
       if (textOnlyEntries.length > 0) {
         for (const entry of textOnlyEntries) {
@@ -17712,8 +17719,8 @@ module.exports = class AlwaysColorText extends Plugin {
               const flags = cs ? "" : "i";
               const esc = this.escapeRegex(pat);
               try {
-                if (mt === "startswith") entry._startswithRegex = new RegExp(`^${esc}[A-Za-z]*$`, flags);
-                else entry._endswithRegex = new RegExp(`^[A-Za-z]*${esc}$`, flags);
+                if (mt === "startswith") entry._startswithRegex = new RegExp(`^${esc}[A-Za-z0-9'\\-]*$`, flags);
+                else entry._endswithRegex = new RegExp(`^[A-Za-z0-9'\\-]*${esc}$`, flags);
                 entry._lastCs = cs;
               } catch (_) {
               }
@@ -17779,7 +17786,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   styleType: "text",
                   entryRef: entry
                 });
-                if (matches.length > 100) break;
+                if (matches.length > 2e3) break;
               } else {
                 for (let i = matches.length - 1; i >= 0; i--) {
                   const m = matches[i];
@@ -17795,12 +17802,12 @@ module.exports = class AlwaysColorText extends Plugin {
                   styleType: "text",
                   entryRef: entry
                 });
-                if (matches.length > 100) break;
+                if (matches.length > 2e3) break;
               }
               break;
             }
           }
-          if (matches.length > 100) break;
+          if (matches.length > 2e3) break;
           try {
             if (typeof wordRegex.lastIndex === "number" && wordRegex.lastIndex === match.index) wordRegex.lastIndex++;
           } catch (e) {
@@ -17870,8 +17877,11 @@ module.exports = class AlwaysColorText extends Plugin {
           let overlapsTextBg = false;
           for (const f of fullTextBg) {
             if (m.start < f.end && m.end > f.start) {
-              overlapsTextBg = true;
-              break;
+              const fStyle = f.styleType || (f.entryRef ? f.entryRef.styleType : null);
+              if (fStyle !== "highlight") {
+                overlapsTextBg = true;
+                break;
+              }
             }
           }
           if (overlapsTextBg) continue;
