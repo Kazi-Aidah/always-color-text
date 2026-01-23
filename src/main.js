@@ -5551,7 +5551,7 @@ module.exports = class AlwaysColorText extends Plugin {
       entry.textColor = entry.color;
     }
     // Remove legacy fields
-    delete entry.color;
+    // delete entry.color; // Kept for compatibility with 'both' style background color fallback
     delete entry._savedtextcolor;
     delete entry._savedbackgroundcolor;
     delete entry._savedTextColor;
@@ -5569,7 +5569,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if ((e.textColor === undefined || e.textColor === null) && e.color) {
       e.textColor = e.color;
     }
-    delete e.color;
+    // delete e.color; // Kept for compatibility
     delete e._savedtextcolor;
     delete e._savedbackgroundcolor;
     delete e._savedTextColor;
@@ -5725,6 +5725,8 @@ module.exports = class AlwaysColorText extends Plugin {
       forceFullRenderInReading: false,
       // Opt-in: extremely lightweight processing mode (experimental)
       extremeLightweightMode: false,
+      // Opt-in: Smart Updates (Freeze non-active lines)
+      enableSmartUpdates: false,
       // Disable coloring in reading/preview mode (editor remains colored)
       disableReadingModeColoring: false,
       disableLivePreviewColoring: false,
@@ -10971,6 +10973,11 @@ module.exports = class AlwaysColorText extends Plugin {
     const blocks = [];
     const tags = new Set(selector.split(',').map(s => s.trim().toUpperCase()));
 
+    // OPTION: Include the root element itself if requested (for leaf nodes like table cells)
+    if (options.includeSelf && element && tags.has(element.nodeName)) {
+      blocks.push(element);
+    }
+
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT, {
       acceptNode(node) {
         return tags.has(node.nodeName) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
@@ -11125,12 +11132,12 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) { try { debugError('LP_CALLOUT', 'Failed coloring live preview callouts', e); } catch (_) { } }
   }
 
-  _processLivePreviewTables(view) {
+  _processLivePreviewTables(view, force = false) {
     try {
       if (this.settings.disableLivePreviewColoring || this.settings.extremeLightweightMode) return;
       const now = Date.now();
       // OPTIMIZATION: More aggressive throttling (1 second) and skip during typing
-      if (this._lpTablesLastRun && (now - this._lpTablesLastRun) < EDITOR_PERFORMANCE_CONSTANTS.TABLE_THROTTLE_MS) return;
+      if (!force && this._lpTablesLastRun && (now - this._lpTablesLastRun) < EDITOR_PERFORMANCE_CONSTANTS.TABLE_THROTTLE_MS) return;
       this._lpTablesLastRun = now;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
@@ -11138,10 +11145,10 @@ module.exports = class AlwaysColorText extends Plugin {
       if (!isLP) return;
       
       // OPTIMIZATION: Skip processing entirely during active typing - this is key to reducing lag
-      if (this._isTyping && (now - this._lastTypingTime) < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
+      if (!force && this._isTyping && (now - this._lastTypingTime) < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
       
       // Use requestAnimationFrame to batch DOM reads
-      if (this._lpTableRaf) return;
+      if (this._lpTableRaf) cancelAnimationFrame(this._lpTableRaf); // Cancel pending if forced or new request comes
       this._lpTableRaf = requestAnimationFrame(() => {
         this._lpTableRaf = null;
         this._processLivePreviewTablesInternal(view);
@@ -11202,7 +11209,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
       // Process only visible cells to improve performance
       let processedCount = 0;
-      const maxProcessPerFrame = 10; // Limit processing to 10 cells per frame
+      const maxProcessPerFrame = 100; // Limit processing to 100 cells per frame
       
       for (const cell of cells) {
         try {
@@ -11545,7 +11552,8 @@ module.exports = class AlwaysColorText extends Plugin {
               clearExisting: true,
               batchSize: 10,
               forceProcess: true,
-              maxMatches: Infinity
+              maxMatches: Infinity,
+              includeSelf: true
             });
           } catch (_) { }
         }
@@ -11903,7 +11911,7 @@ module.exports = class AlwaysColorText extends Plugin {
     for (const m of matches) {
       let style;
       if (effectiveStyle === 'text') {
-        style = `color: ${m.color}; --highlight-color: ${m.color};`;
+        style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
       } else {
         // Use per-entry properties if available, otherwise fall back to global settings
         const hPad = (typeof m.highlightHorizontalPadding === 'number') ? m.highlightHorizontalPadding : (this.settings.highlightHorizontalPadding ?? 4);
@@ -11917,7 +11925,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const br = ((hPad > 0 && radius === 0) ? 0 : radius);
         const boxDecoBreak = (this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : '';
 
-        style = `background: none; background-color: ${this.hexToRgba(m.color, opacity)}; border-radius: ${br}px; padding-left: ${hPad}px; padding-right: ${hPad}px; ${vPadCss}${boxDecoBreak}`;
+        style = `background: none; background-color: ${this.hexToRgba(m.color, opacity)} !important; border-radius: ${br}px !important; padding-left: ${hPad}px !important; padding-right: ${hPad}px !important; ${vPadCss}${boxDecoBreak}`;
       }
 
       const deco = Decoration.mark({
@@ -11941,12 +11949,41 @@ module.exports = class AlwaysColorText extends Plugin {
         this.decorations = this.buildDeco(view);
         this.lastFilePath = view.file ? view.file.path : null;
         this._typingDebounceTimer = null;
+        this.wasInTable = false;
+        try {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0) {
+            const node = sel.anchorNode;
+            if (node && (node.nodeType === 1 ? node : node.parentElement)?.closest('.cm-content table')) {
+              this.wasInTable = true;
+            }
+          }
+        } catch (_) { }
         try { if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewCallouts(view); } catch (_) { }
         try { if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewTables(view); } catch (_) { }
         try { if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._attachLivePreviewCalloutObserver(view); } catch (_) { }
         try { if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._attachLivePreviewTableObserver(view); } catch (_) { }
       }
       update(update) {
+        // Strict Table Rerender on Exit
+        if (update.selectionSet) {
+          let isInTable = false;
+          try {
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0) {
+              const node = sel.anchorNode;
+              if (node && (node.nodeType === 1 ? node : node.parentElement)?.closest('.cm-content table')) {
+                isInTable = true;
+              }
+            }
+          } catch (_) { }
+
+          if (this.wasInTable && !isInTable) {
+            try { plugin._processLivePreviewTables(this.view, true); } catch (_) { }
+          }
+          this.wasInTable = isInTable;
+        }
+
         // Get current active file to detect folder changes
         const currentFilePath = plugin.app.workspace.getActiveFile()?.path;
         const fileChanged = this.lastFilePath !== currentFilePath;
@@ -11968,7 +12005,47 @@ module.exports = class AlwaysColorText extends Plugin {
 
         // Rebuild decorations if document changed, viewport changed, file/folder changed OR forced
         if (update.docChanged || update.viewportChanged || fileChanged || forceRebuild) {
-          this.decorations = this.buildDeco(update.view);
+          // SMART UPDATE: Only re-scan changed lines if enabled, not forced, and file/viewport stable
+          if (plugin.settings.enableSmartUpdates && update.docChanged && !forceRebuild && !fileChanged && !update.viewportChanged) {
+            try {
+              this.decorations = this.decorations.map(update.changes);
+              
+              const dirtyRanges = [];
+              update.changes.iterChanges((fromA, toA, fromB, toB) => {
+                const startLine = update.view.state.doc.lineAt(fromB);
+                const endLine = update.view.state.doc.lineAt(toB);
+                dirtyRanges.push({ from: startLine.from, to: endLine.to });
+              });
+
+              if (dirtyRanges.length > 0) {
+                const { entries, folderEntry } = this.getApplicableEntries(update.view);
+                if (entries && entries.length > 0) {
+                  for (const range of dirtyRanges) {
+                    this.decorations = this.decorations.update({
+                      filter: (from, to) => to < range.from || from > range.to
+                    });
+                    
+                    const builder = new RangeSetBuilder();
+                    const text = update.view.state.doc.sliceString(range.from, range.to);
+                    const chunkDecos = plugin.buildDecoChunked(update.view, builder, range.from, range.to, text, entries, folderEntry, currentFilePath);
+                    
+                    const newRanges = [];
+                    chunkDecos.between(range.from, range.to, (f, t, v) => {
+                      newRanges.push({from: f, to: t, value: v});
+                    });
+                    
+                    this.decorations = this.decorations.update({
+                      add: newRanges
+                    });
+                  }
+                }
+              }
+            } catch (e) {
+              this.decorations = this.buildDeco(update.view);
+            }
+          } else {
+            this.decorations = this.buildDeco(update.view);
+          }
 
           // Debounce heavy operations (callouts/tables) to prevent lag
           clearTimeout(this._typingDebounceTimer);
@@ -11983,6 +12060,25 @@ module.exports = class AlwaysColorText extends Plugin {
         try { plugin._detachLivePreviewCalloutObserver(this.view); } catch (_) { }
         try { plugin._detachLivePreviewTableObserver(this.view); } catch (_) { }
       }
+      getApplicableEntries(view) {
+        if (!plugin.settings.enabled) return { entries: [], folderEntry: null };
+        
+        let entries = plugin.getSortedWordEntries();
+        const fileForView = view.file || plugin.app.workspace.getActiveFile();
+        
+        if (fileForView) {
+          const prb = plugin.evaluatePathRules(fileForView.path);
+          if (plugin.settings.disabledFiles.includes(fileForView.path)) return { entries: [], folderEntry: null };
+          if (plugin.isFrontmatterColoringDisabled(fileForView.path)) return { entries: [], folderEntry: null };
+          let previewEntries = entries;
+          if (fileForView && fileForView.path) previewEntries = plugin.filterEntriesByAdvancedRules(fileForView.path, entries);
+          if ((prb.excluded || (plugin.hasGlobalExclude() && prb.hasIncludes && !prb.included)) && previewEntries.length === 0) return { entries: [], folderEntry: null };
+          entries = previewEntries;
+        }
+
+        const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
+        return { entries, folderEntry };
+      }
       buildDeco(view) {
         const builder = new RangeSetBuilder();
 
@@ -11990,30 +12086,16 @@ module.exports = class AlwaysColorText extends Plugin {
         const isLivePreview = root && root.closest && root.closest('.is-live-preview');
         if (plugin.settings.disableLivePreviewColoring && isLivePreview) return builder.finish();
 
-        let entries = plugin.getSortedWordEntries();
+        const { entries, folderEntry } = this.getApplicableEntries(view);
+        if (entries.length === 0) return builder.finish();
+
         const { from, to } = view.viewport;
         const docLength = view.state.doc.length;
         
         // OPTIMIZATION: Use extended buffer for pattern matching at boundaries
         const extendedTo = Math.min(to + EDITOR_PERFORMANCE_CONSTANTS.VIEWPORT_EXTENSION, docLength);
         const text = view.state.doc.sliceString(from, extendedTo);
-
         const fileForView = view.file || plugin.app.workspace.getActiveFile();
-        if (!plugin.settings.enabled) return builder.finish();
-        if (fileForView) {
-          const prb = plugin.evaluatePathRules(fileForView.path);
-          if (plugin.settings.disabledFiles.includes(fileForView.path)) return builder.finish();
-          if (plugin.isFrontmatterColoringDisabled(fileForView.path)) return builder.finish();
-          let previewEntries = entries;
-          if (fileForView && fileForView.path) previewEntries = plugin.filterEntriesByAdvancedRules(fileForView.path, entries);
-          if ((prb.excluded || (plugin.hasGlobalExclude() && prb.hasIncludes && !prb.included)) && previewEntries.length === 0) return builder.finish();
-          entries = previewEntries;
-        }
-
-        const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
-        // entries already filtered above; avoid duplicate filtering
-
-        if (entries.length === 0) return builder.finish();
 
         // OPTIMIZATION: Always use chunked processing for aggressive optimization
         // This ensures we never process too many matches at once
@@ -13212,12 +13294,12 @@ module.exports = class AlwaysColorText extends Plugin {
         if (hideText && hideBg) continue;
         const params = this.getHighlightParams(m.entryRef);
         const borderStyle = this.generateBorderStyle(hideText ? null : m.textColor, hideBg ? null : m.backgroundColor, m.entryRef);
-        const textPart = hideText ? '' : `color: ${m.textColor}; --highlight-color: ${m.textColor}; `;
+        const textPart = hideText ? '' : `color: ${m.textColor} !important; --highlight-color: ${m.textColor}; `;
         const vPad = params.vPad;
         const vPadCss = vPad >= 0
           ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
           : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(m.backgroundColor, params.opacity)}; border-radius: ${(params.radius)}px; padding-left: ${(params.hPad)}px; padding-right: ${(params.hPad)}px; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(m.backgroundColor, params.opacity)} !important; border-radius: ${(params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         // Check the styleType to determine how to apply the color
@@ -13226,7 +13308,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
         if (styleType === 'text') {
           if (this.settings.hideTextColors) continue;
-          style = `color: ${m.color}; --highlight-color: ${m.color};`;
+          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         } else if (styleType === 'highlight') {
           if (this.settings.hideHighlights) continue;
           // Background highlight only
@@ -13237,7 +13319,7 @@ module.exports = class AlwaysColorText extends Plugin {
           const vPadCssH = vPadH >= 0
             ? `padding-top: ${vPadH}px !important; padding-bottom: ${vPadH}px !important;`
             : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadH}px !important; margin-bottom: ${vPadH}px !important;`;
-          style = `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${(params.hPad > 0 && params.radius === 0 ? 0 : params.radius)}px; padding-left: ${(params.hPad)}px; padding-right: ${(params.hPad)}px; ${vPadCssH}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
+          style = `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.hPad > 0 && params.radius === 0 ? 0 : params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCssH}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`;
         } else if (styleType === 'both') {
           // Both text and background color
           const textColor = (m.textColor && m.textColor !== 'currentColor') ? m.textColor : (m.color || null);
@@ -13247,17 +13329,17 @@ module.exports = class AlwaysColorText extends Plugin {
           if (hideText && hideBg) continue;
           const params = this.getHighlightParams(m.entryRef);
           const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef);
-          const textPart = hideText ? '' : (textColor ? `color: ${textColor}; --highlight-color: ${textColor}; ` : '');
+          const textPart = hideText ? '' : (textColor ? `color: ${textColor} !important; --highlight-color: ${textColor}; ` : '');
           const vPadB = params.vPad;
           const vPadCssB = vPadB >= 0
             ? `padding-top: ${vPadB}px !important; padding-bottom: ${vPadB}px !important;`
             : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadB}px !important; margin-bottom: ${vPadB}px !important;`;
-          const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${(params.radius)}px; padding-left: ${(params.hPad)}px; padding-right: ${(params.hPad)}px; ${vPadCssB}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+          const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCssB}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           // Default to text color
           if (this.settings.hideTextColors) continue;
-          style = `color: ${m.color}; --highlight-color: ${m.color};`;
+          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         }
       }
       const deco = Decoration.mark({
@@ -14270,8 +14352,8 @@ module.exports = class AlwaysColorText extends Plugin {
         if (hideText && hideBg) continue;
         const params = this.getHighlightParams(m.entryRef);
         const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef);
-        const textPart = hideText ? '' : `color: ${textColor}; `;
-        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${(params.radius)}px; padding-left: ${(params.hPad)}px; padding-right: ${(params.hPad)}px; padding-top: ${(params.vPad)}px; padding-bottom: ${(params.vPad)}px;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
+        const textPart = hideText ? '' : `color: ${textColor} !important; `;
+        const bgPart = hideBg ? '' : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; padding-top: ${(params.vPad)}px !important; padding-bottom: ${(params.vPad)}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         if (effectiveStyle === 'none') continue;
@@ -14279,25 +14361,25 @@ module.exports = class AlwaysColorText extends Plugin {
         let styleType = (m.entryRef && m.entryRef.affectMarkElements) ? 'highlight' : (m.styleType || 'text');
         if (styleType === 'text') {
           if (hideText) continue;
-          style = `color: ${m.color}; --highlight-color: ${m.color};`;
+          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         } else if (styleType === 'highlight') {
           const bgColor = m.backgroundColor || m.color;
           if (hideBg) continue;
           const params = this.getHighlightParams(m.entryRef);
           const borderStyle = this.generateBorderStyle(null, bgColor, m.entryRef);
-          style = (() => { const vPad = params.vPad; const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px; padding-bottom: ${vPad}px;` : `padding-top: 0px; padding-bottom: 0px; margin-top: ${vPad}px; margin-bottom: ${vPad}px;`; return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${(params.hPad > 0 && params.radius === 0 ? 0 : params.radius)}px; padding-left: ${(params.hPad)}px; padding-right: ${(params.hPad)}px; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`; })();
+          style = (() => { const vPad = params.vPad; const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.hPad > 0 && params.radius === 0 ? 0 : params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${borderStyle}`; })();
         } else if (styleType === 'both') {
           const textColor = (m.textColor && m.textColor !== 'currentColor') ? m.textColor : (m.color || null);
           const bgColor = m.backgroundColor || m.color;
           if (hideText && hideBg) continue;
           const params = this.getHighlightParams(m.entryRef);
           const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef);
-          const textPart = hideText ? '' : (textColor ? `color: ${textColor}; --highlight-color: ${textColor}; ` : '');
-          const bgPart = (() => { if (hideBg) return ''; const vPad = params.vPad; const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px; padding-bottom: ${vPad}px;` : `padding-top: 0px; padding-bottom: 0px; margin-top: ${vPad}px; margin-bottom: ${vPad}px;`; return `background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${(params.radius)}px; padding-left: ${(params.hPad)}px; padding-right: ${(params.hPad)}px; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`; })();
+          const textPart = hideText ? '' : (textColor ? `color: ${textColor} !important; --highlight-color: ${textColor}; ` : '');
+          const bgPart = (() => { if (hideBg) return ''; const vPad = params.vPad; const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`; return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${(params.radius)}px !important; padding-left: ${(params.hPad)}px !important; padding-right: ${(params.hPad)}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}`; })();
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           if (hideText) continue;
-          style = `color: ${m.color}; --highlight-color: ${m.color};`;
+          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         }
       }
       const deco = Decoration.mark({
@@ -22422,6 +22504,16 @@ class ColorSettingTab extends PluginSettingTab {
           try { this.plugin.reconfigureEditorExtensions(); } catch (e) { }
           try { this.plugin.forceRefreshAllEditors(); } catch (e) { }
           try { this.plugin.forceRefreshAllReadingViews(); } catch (e) { }
+        }));
+
+      new Setting(containerEl)
+        .setName(this.plugin.t('smart_update_mode', 'Smart Updates (Experimental)'))
+        .setDesc(this.plugin.t('smart_update_mode_desc', 'Only updates coloring for modified lines while typing. Freezes other lines to improve performance. May cause sync issues with multi-line patterns.'))
+        .addToggle(t => t.setValue(this.plugin.settings.enableSmartUpdates).onChange(async v => {
+          this.plugin.settings.enableSmartUpdates = v;
+          await this.debouncedSaveSettings();
+          try { this.plugin.reconfigureEditorExtensions(); } catch (e) { }
+          try { this.plugin.forceRefreshAllEditors(); } catch (e) { }
         }));
 
       new Setting(containerEl)
