@@ -6224,7 +6224,7 @@ module.exports = class AlwaysColorText extends Plugin {
             --link-unresolved-color: var(--highlight-color);
             --link-color-hover: var(--highlight-color);
             --link-external-color-hover: var(--highlight-color);
-            color: var(--highlight-color) !important;
+            color: var(--highlight-color);
           }
         `;
         document.head.appendChild(style);
@@ -6248,7 +6248,7 @@ module.exports = class AlwaysColorText extends Plugin {
         style.textContent = `
           .is-live-preview .cm-content .always-color-text-highlight,
           .is-live-preview .cm-content .always-color-text-highlight * {
-            color: var(--highlight-color) !important;
+            color: var(--highlight-color);
           }
         `;
         document.head.appendChild(style);
@@ -6282,7 +6282,7 @@ module.exports = class AlwaysColorText extends Plugin {
             --link-unresolved-color: var(--highlight-color);
             --link-color-hover: var(--highlight-color);
             --link-external-color-hover: var(--highlight-color);
-            color: var(--highlight-color) !important;
+            color: var(--highlight-color);
           }
         `;
         document.head.appendChild(style);
@@ -8397,11 +8397,11 @@ module.exports = class AlwaysColorText extends Plugin {
           style.id = "act-list-marker-style";
           style.textContent = `
             .act-colored-list-item { position: relative; }
-            li.act-colored-list-item::marker { color: var(--act-marker-color, inherit) !important; }
+            li.act-colored-list-item::marker { color: var(--act-marker-color, inherit); }
             li.act-colored-list-item .list-bullet,
-            li.act-colored-list-item .list-number { color: var(--act-marker-color, inherit) !important; }
-            .markdown-preview-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit) !important; }
-            .markdown-reading-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit) !important; }
+            li.act-colored-list-item .list-number { color: var(--act-marker-color, inherit); }
+            .markdown-preview-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit); }
+            .markdown-reading-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit); }
           `;
           try {
             document.head.appendChild(style);
@@ -11738,7 +11738,7 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     const bg = bc ? this.hexToHexWithAlpha(bc, params.opacity ?? 25) : null;
     let styleStr = "";
-    if (tc) styleStr += `color: ${tc} !important; `;
+    if (tc) styleStr += `color: ${tc}; `;
     if (bg) styleStr += `background-color: ${bg}; `;
     styleStr += `border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
     const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
@@ -13778,6 +13778,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // Extracted helper: process a single block element (previously inlined inside _wrapMatchesRecursive)
   _processBlock(block, entries, folderEntry, opts = {}) {
+    if (block.matches && block.matches(".inline_spoilers-spoiler")) return;
     try {
       try {
         this._domRefs.set(block, { processedAt: Date.now(), matchCount: 0 });
@@ -13839,6 +13840,9 @@ module.exports = class AlwaysColorText extends Plugin {
           if (node.parentElement?.closest("mark")) {
             return NodeFilter.FILTER_REJECT;
           }
+          if (node.parentElement?.closest(".inline_spoilers-spoiler")) {
+            return NodeFilter.FILTER_REJECT;
+          }
           if (node.parentElement?.closest(".always-color-text-highlight")) {
             return NodeFilter.FILTER_REJECT;
           }
@@ -13885,6 +13889,9 @@ module.exports = class AlwaysColorText extends Plugin {
             if (node.parentElement?.closest(".always-color-text-highlight")) {
               return NodeFilter.FILTER_REJECT;
             }
+            if (node.parentElement?.closest(".inline_spoilers-spoiler")) {
+              return NodeFilter.FILTER_REJECT;
+            }
             try {
               if (node.parentElement?.closest(".act-skip-coloring")) {
                 return NodeFilter.FILTER_REJECT;
@@ -13924,6 +13931,9 @@ module.exports = class AlwaysColorText extends Plugin {
             return NodeFilter.FILTER_REJECT;
           }
           if (node.parentElement?.closest(".always-color-text-highlight")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (node.parentElement?.closest(".inline_spoilers-spoiler")) {
             return NodeFilter.FILTER_REJECT;
           }
           try {
@@ -14054,6 +14064,21 @@ module.exports = class AlwaysColorText extends Plugin {
       const isForced = opts && opts.forceProcess || this.settings.forceFullRenderInReading;
       const maxMatches = typeof opts.maxMatches === "number" ? opts.maxMatches : isForced ? Infinity : this.settings && this.settings.extremeLightweightMode ? 250 : 500;
       let matches = [];
+      try {
+        const spoilerRegex = /\|\|.*?\|\|/g;
+        let sMatch;
+        while ((sMatch = spoilerRegex.exec(text)) !== null) {
+          matches.push({
+            start: sMatch.index,
+            end: sMatch.index + sMatch[0].length,
+            skip: true,
+            // Dummy props for sorting/merging compatibility
+            color: void 0,
+            styleType: "text"
+          });
+        }
+      } catch (e) {
+      }
       let textBgEntries = entries.filter((e) => e && e.isTextBg === true);
       const TEXT_BG_CHUNK_SIZE = 10;
       try {
@@ -14554,10 +14579,16 @@ module.exports = class AlwaysColorText extends Plugin {
           let m = nonOverlapping[i];
           let j = i + 1;
           while (j < nonOverlapping.length && nonOverlapping[j].start === nonOverlapping[j - 1].end && !m.isTextBg && !nonOverlapping[j].isTextBg && (nonOverlapping[j].color === m.color || nonOverlapping[j].textColor === m.textColor && nonOverlapping[j].backgroundColor === m.backgroundColor || nonOverlapping[j].styleType === m.styleType)) {
-            m = { start: m.start, end: nonOverlapping[j].end, color: m.color, styleType: m.styleType, textColor: m.textColor, backgroundColor: m.backgroundColor };
+            m = { start: m.start, end: nonOverlapping[j].end, color: m.color, styleType: m.styleType, textColor: m.textColor, backgroundColor: m.backgroundColor, skip: m.skip };
             j++;
           }
           if (m.start > pos) frag.appendChild(document.createTextNode(text.slice(pos, m.start)));
+          if (m.skip) {
+            frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
+            pos = m.end;
+            i = j;
+            continue;
+          }
           if (effectiveStyle === "none") {
             frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
           } else {
@@ -15785,7 +15816,7 @@ module.exports = class AlwaysColorText extends Plugin {
     for (const m of matches) {
       let style;
       if (effectiveStyle === "text") {
-        style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
+        style = `color: ${m.color}; --highlight-color: ${m.color};`;
       } else {
         const hPad = typeof m.highlightHorizontalPadding === "number" ? m.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
         const vPad = typeof m.highlightVerticalPadding === "number" ? m.highlightVerticalPadding : this.settings.highlightVerticalPadding ?? 0;
@@ -15794,7 +15825,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
         const br = hPad > 0 && radius === 0 ? 0 : radius;
         const boxDecoBreak = this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : "";
-        style = `background: none !important; background-color: ${this.hexToRgba(m.color, opacity)} !important; border-radius: ${br}px !important; padding-left: ${hPad}px !important; padding-right: ${hPad}px !important; ${vPadCss}${boxDecoBreak}`;
+        style = `background: none; background-color: ${this.hexToRgba(m.color, opacity)}; border-radius: ${br}px; padding-left: ${hPad}px; padding-right: ${hPad}px; ${vPadCss}${boxDecoBreak}`;
       }
       const deco = Decoration.mark({
         attributes: {
@@ -16893,16 +16924,16 @@ module.exports = class AlwaysColorText extends Plugin {
         if (hideText && hideBg) continue;
         const params = this.getHighlightParams(m.entryRef);
         const borderStyle = this.generateBorderStyle(hideText ? null : m.textColor, hideBg ? null : m.backgroundColor, m.entryRef);
-        const textPart = hideText ? "" : `color: ${m.textColor} !important; --highlight-color: ${m.textColor}; `;
+        const textPart = hideText ? "" : `color: ${m.textColor}; --highlight-color: ${m.textColor}; `;
         const vPad = params.vPad;
         const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(m.backgroundColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(m.backgroundColor, params.opacity)}; border-radius: ${params.radius}px; padding-left: ${params.hPad}px; padding-right: ${params.hPad}px; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         let styleType2 = m.entryRef && m.entryRef.affectMarkElements ? "highlight" : m.styleType || "text";
         if (styleType2 === "text") {
           if (this.settings.hideTextColors) continue;
-          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
+          style = `color: ${m.color}; --highlight-color: ${m.color};`;
         } else if (styleType2 === "highlight") {
           if (this.settings.hideHighlights) continue;
           const bgColor = m.backgroundColor || m.color;
@@ -16910,7 +16941,7 @@ module.exports = class AlwaysColorText extends Plugin {
           const borderStyle = this.generateBorderStyle(null, bgColor, m.entryRef);
           const vPadH = params.vPad;
           const vPadCssH = vPadH >= 0 ? `padding-top: ${vPadH}px !important; padding-bottom: ${vPadH}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadH}px !important; margin-bottom: ${vPadH}px !important;`;
-          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssH}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+          style = `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px; padding-left: ${params.hPad}px; padding-right: ${params.hPad}px; ${vPadCssH}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
         } else if (styleType2 === "both") {
           const textColor = m.textColor && m.textColor !== "currentColor" ? m.textColor : m.color || null;
           const bgColor = m.backgroundColor || m.color;
@@ -16919,14 +16950,14 @@ module.exports = class AlwaysColorText extends Plugin {
           if (hideText && hideBg) continue;
           const params = this.getHighlightParams(m.entryRef);
           const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef);
-          const textPart = hideText ? "" : textColor ? `color: ${textColor} !important; --highlight-color: ${textColor}; ` : "";
+          const textPart = hideText ? "" : textColor ? `color: ${textColor}; --highlight-color: ${textColor}; ` : "";
           const vPadB = params.vPad;
           const vPadCssB = vPadB >= 0 ? `padding-top: ${vPadB}px !important; padding-bottom: ${vPadB}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadB}px !important; margin-bottom: ${vPadB}px !important;`;
-          const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssB}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+          const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${params.radius}px; padding-left: ${params.hPad}px; padding-right: ${params.hPad}px; ${vPadCssB}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           if (this.settings.hideTextColors) continue;
-          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
+          style = `color: ${m.color}; --highlight-color: ${m.color};`;
         }
       }
       const deco = Decoration.mark({
@@ -16966,7 +16997,16 @@ module.exports = class AlwaysColorText extends Plugin {
           const end = from + cbMatch.index + cbMatch[0].length;
           allMatches.push({ start, end, skip: true });
         }
-      } else if (codeblockEntry) {
+      }
+      try {
+        for (const spoilerMatch of text.matchAll(/\|\|[\s\S]*?\|\|/g)) {
+          const start = from + spoilerMatch.index;
+          const end = from + spoilerMatch.index + spoilerMatch[0].length;
+          allMatches.push({ start, end, skip: true });
+        }
+      } catch (e) {
+      }
+      if (codeblockEntry && !hasCodeblockBlacklist) {
         for (const cbMatch of text.matchAll(/```[\s\S]*?```/g)) {
           const start = from + cbMatch.index;
           const end = from + cbMatch.index + cbMatch[0].length;
@@ -17768,6 +17808,7 @@ module.exports = class AlwaysColorText extends Plugin {
       for (const m of filtered) limited.push(m);
     }
     for (const m of limited) {
+      if (m.skip) continue;
       let style;
       const hideText = this.settings.hideTextColors === true;
       const hideBg = this.settings.hideHighlights === true;
@@ -17777,15 +17818,15 @@ module.exports = class AlwaysColorText extends Plugin {
         if (hideText && hideBg) continue;
         const params = this.getHighlightParams(m.entryRef);
         const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef);
-        const textPart = hideText ? "" : `color: ${textColor} !important; `;
-        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+        const textPart = hideText ? "" : `color: ${textColor}; `;
+        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${params.radius}px; padding-left: ${params.hPad}px; padding-right: ${params.hPad}px; padding-top: ${params.vPad}px; padding-bottom: ${params.vPad}px;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         if (effectiveStyle === "none") continue;
         let styleType2 = m.entryRef && m.entryRef.affectMarkElements ? "highlight" : m.styleType || "text";
         if (styleType2 === "text") {
           if (hideText) continue;
-          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
+          style = `color: ${m.color}; --highlight-color: ${m.color};`;
         } else if (styleType2 === "highlight") {
           const bgColor = m.backgroundColor || m.color;
           if (hideBg) continue;
@@ -17793,8 +17834,8 @@ module.exports = class AlwaysColorText extends Plugin {
           const borderStyle = this.generateBorderStyle(null, bgColor, m.entryRef);
           style = (() => {
             const vPad = params.vPad;
-            const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-            return `background: none !important; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+            const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px; padding-bottom: ${vPad}px;` : `padding-top: 0px; padding-bottom: 0px; margin-top: ${vPad}px; margin-bottom: ${vPad}px;`;
+            return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px; padding-left: ${params.hPad}px; padding-right: ${params.hPad}px; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
           })();
         } else if (styleType2 === "both") {
           const textColor = m.textColor && m.textColor !== "currentColor" ? m.textColor : m.color || null;
@@ -17802,17 +17843,17 @@ module.exports = class AlwaysColorText extends Plugin {
           if (hideText && hideBg) continue;
           const params = this.getHighlightParams(m.entryRef);
           const borderStyle = this.generateBorderStyle(hideText ? null : textColor, hideBg ? null : bgColor, m.entryRef);
-          const textPart = hideText ? "" : textColor ? `color: ${textColor} !important; --highlight-color: ${textColor}; ` : "";
+          const textPart = hideText ? "" : textColor ? `color: ${textColor}; --highlight-color: ${textColor}; ` : "";
           const bgPart = (() => {
             if (hideBg) return "";
             const vPad = params.vPad;
-            const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-            return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+            const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px; padding-bottom: ${vPad}px;` : `padding-top: 0px; padding-bottom: 0px; margin-top: ${vPad}px; margin-bottom: ${vPad}px;`;
+            return `background-color: ${this.hexToRgba(bgColor, params.opacity)}; border-radius: ${params.radius}px; padding-left: ${params.hPad}px; padding-right: ${params.hPad}px; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
           })();
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           if (hideText) continue;
-          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
+          style = `color: ${m.color}; --highlight-color: ${m.color};`;
         }
       }
       const deco = Decoration.mark({

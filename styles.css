@@ -49,6 +49,20 @@ mark.always-color-text-highlight-marks {
   color: inherit !important;
 }
 
+/* Fix for Inline Spoilers: Ensure text is hidden when inside a spoiler */
+.inline_spoilers-spoiler .always-color-text-highlight,
+.inline_spoilers-editor-spoiler .always-color-text-highlight,
+.is-live-preview .cm-content .inline_spoilers-editor-spoiler .always-color-text-highlight,
+.markdown-reading-view .markdown-rendered .inline_spoilers-spoiler .always-color-text-highlight,
+body .inline_spoilers-spoiler .always-color-text-highlight,
+body .inline_spoilers-editor-spoiler .always-color-text-highlight {
+  color: inherit !important;
+  background-color: transparent !important;
+  --text-normal: inherit !important;
+  --link-color: inherit !important;
+  --link-external-color: inherit !important;
+}
+
 /* Force highlight color through nested spans */
 .cm-highlight .always-color-text-highlight-marks {
   background-color: var(--highlight-background, transparent) !important;
