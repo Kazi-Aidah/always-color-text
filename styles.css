@@ -22,6 +22,14 @@
   color: var(--highlight-color, currentColor) !important;
 }
 
+/* Force internal formatting spans to inherit color from our wrapper in Live Preview */
+.always-color-text-highlight .cm-strong,
+.always-color-text-highlight .cm-em,
+.always-color-text-highlight .cm-strong.cm-em,
+.always-color-text-highlight .cm-formatting {
+  color: var(--highlight-color, inherit) !important;
+}
+
 mark.always-color-text-highlight-marks {
   background-color: var(--highlight-background, transparent) !important;
   color: var(--highlight-color, currentColor) !important;
@@ -74,6 +82,15 @@ mark .always-color-text-highlight-marks {
   color: var(--highlight-color, currentColor) !important;
 }
 
+/* Ensure highlight styles overpower internal elements in Reading Mode */
+mark.always-color-text-highlight-marks * {
+  background-color: transparent !important;
+  color: inherit !important;
+  --text-normal: inherit !important;
+  --link-color: inherit !important;
+  --link-external-color: inherit !important;
+}
+
 /* Settings button rows base layout */
 .entries-button-row,
 .blacklist-button-row,
@@ -90,14 +107,21 @@ mark .always-color-text-highlight-marks {
 .act-search-input {
   padding-left: 28px !important;
   background-color: var(--background-modifier-form-field);
-  background-repeat: no-repeat;
-  background-position: 8px center;
-  background-size: 16px 16px;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='7' stroke='%237a7a7a' stroke-width='2'/%3E%3Cline x1='16.5' y1='16.5' x2='21' y2='21' stroke='%237a7a7a' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.act-search-input:focus {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
 }
 
 .act-search-container {
   position: relative;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
 .act-search-icon {
@@ -116,233 +140,33 @@ mark .always-color-text-highlight-marks {
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
-  -webkit-mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m21 21-4.34-4.34'/%3E%3Ccircle stroke='black' stroke-width='2' cx='11' cy='11' r='8'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m21 21-4.34-4.34'/%3E%3Ccircle stroke='black' stroke-width='2' cx='11' cy='11' r='8'/%3E%3C/svg%3E");
 }
 
+/*-webkit-mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+} */
+
+/* Color Swatch Grid */
 .color-swatch-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 8px;
   margin-top: 12px;
-}
-/* Override Obsidian's link color variables for elements with our highlights */
-.cm-line .always-color-text-highlight,
-.cm-content .always-color-text-highlight,
-.markdown-preview-view .always-color-text-highlight,
-.markdown-reading-view .always-color-text-highlight {
-  --link-color: var(--highlight-color, currentColor) !important;
-  --link-external-color: var(--highlight-color, currentColor) !important;
-  --link-unresolved-color: var(--highlight-color, currentColor) !important;
-  --link-color-hover: var(--highlight-color, currentColor) !important;
-  --link-external-color-hover: var(--highlight-color, currentColor) !important;
-  --text-normal: var(--highlight-color, currentColor) !important;
-}
-
-/* Force color inheritance on all link states */
-.cm-underline .always-color-text-highlight,
-.cm-url .always-color-text-highlight,
-.cm-link .always-color-text-highlight,
-.internal-link .always-color-text-highlight,
-.external-link .always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-  text-decoration-color: var(--highlight-color, currentColor) !important;
-  --text-normal: var(--highlight-color, currentColor) !important;
-}
-
-/* Target the specific Obsidian classes that apply link colors */
-.cm-line:not(.cm-active) .cm-underline .always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-}
-
-/* Additional specificity for nested link scenarios */
-a .always-color-text-highlight,
-.cm-link-text .always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-  text-decoration: inherit !important;
-  border-bottom: inherit !important;
-}
-
-/* Ensure highlight styles persist through Obsidian's dynamic rendering */
-.always-color-text-highlight {
-  /* Prevent Obsidian's underline class from affecting our highlights */
-  -webkit-text-decoration-color: var(--highlight-color, currentColor) !important;
-  text-decoration-line: inherit !important;
-  text-decoration-style: inherit !important;
-  text-decoration-thickness: inherit !important;
-}
-
-/* LIVE PREVIEW MODE: Override CodeMirror 6 link styling */
-.cm-editor .cm-underline.always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-  text-decoration: inherit !important;
-  -webkit-text-decoration-color: var(--highlight-color, currentColor) !important;
-  text-decoration-color: var(--highlight-color, currentColor) !important;
-  --text-normal: var(--highlight-color, currentColor) !important;
-  --link-color: var(--highlight-color, currentColor) !important;
-}
-
-.cm-editor .cm-url.always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-  text-decoration: inherit !important;
-  --text-normal: var(--highlight-color, currentColor) !important;
-}
-
-.cm-editor .cm-link.always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-  text-decoration: inherit !important;
-  --text-normal: var(--highlight-color, currentColor) !important;
-}
-
-.cm-editor .cm-hmd-internal-link.always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-}
-
-/* Canvas embeds: ensure highlights render inside canvas nodes */
-.canvas-node .markdown-embed-content .always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-  background-color: var(--highlight-background, transparent) !important;
-  text-decoration: inherit !important;
-  --text-normal: var(--highlight-color, currentColor) !important;
-}
-
-.cm-editor .cm-link-text.always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-  --text-normal: var(--highlight-color, currentColor) !important;
-}
-
-/* Double specificity for maximum override */
-.cm-content .cm-underline.always-color-text-highlight,
-.cm-content .cm-url.always-color-text-highlight,
-.cm-content .cm-link.always-color-text-highlight {
-  color: var(--highlight-color, currentColor) !important;
-  text-decoration: inherit !important;
-  --text-normal: var(--highlight-color, currentColor) !important;
-}
-
-/* Target active line with specific override */
-.cm-line .always-color-text-highlight {
-  --link-color: var(--highlight-color, currentColor) !important;
-  --link-external-color: var(--highlight-color, currentColor) !important;
-  --text-normal: var(--highlight-color, currentColor) !important;
-  color: var(--highlight-color, currentColor) !important;
-}
-
-/* Fix padding/layout for color settings UI elements */
-
-/* Scope input styling to this plugin's entry lists (avoid global .setting-item) */
-.color-words-list input[type="checkbox"],
-.text-bg-coloring-list input[type="checkbox"],
-.blacklist-words-list input[type="checkbox"] {
-  margin: 0;
-  padding: 0;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.color-words-list input[type="checkbox"]:checked:after,
-.text-bg-coloring-list input[type="checkbox"]:checked:after,
-.blacklist-words-list input[type="checkbox"]:checked:after {
-    content: "";
-    top: 0px;
-    left: 0px;
-    right: 0px;
-    position: absolute;
-    width: var(--checkbox-size);
-    height: var(--checkbox-size);
-    display: block;
-    background-color: var(--checkbox-marker-color);
-}
-
-.color-words-list input[type="text"],
-.text-bg-coloring-list input[type="text"],
-.blacklist-words-list input[type="text"],
-.color-words-list input[type="color"],
-.text-bg-coloring-list input[type="color"],
-.blacklist-words-list input[type="color"],
-.color-words-list select,
-.text-bg-coloring-list select,
-.blacklist-words-list select {
-  padding: 6px;
-  margin: 0;
-  vertical-align: middle;
-  box-sizing: border-box;
-}
-
-.color-words-list input[type="color"],
-.text-bg-coloring-list input[type="color"],
-.blacklist-words-list input[type="color"] {
-  width: 44px;
-  height: 44px;
-  padding: 2px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-/* Ensure consistent spacing in color entry rows */
-.always-color-list > div,
-.text-bg-coloring-list > div,
-.text-bg-coloring-full-list > div,
-.blacklist-words-list > div {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-/* Consistent swatch select styling (scoped to plugin lists only) */
-.color-words-list select,
-.text-bg-coloring-list select,
-.blacklist-words-list select,
-.always-color-list select {
-  padding: 6px 8px !important;
-  border-radius: 4px;
-  border: 1px solid var(--background-modifier-border);
-  color: var(--text-normal);
-  height: auto;
-  line-height: 1.5;
-  min-width: 140px;
-  flex: 0 0 auto;
-}
-
-select {
-  padding: 6px 8px !important;
-}
-
-/* Fix flex alignment for row items */
-.always-color-list > div input[type="checkbox"],
-.text-bg-coloring-list > div input[type="checkbox"],
-.text-bg-coloring-full-list > div input[type="checkbox"],
-.blacklist-words-list > div input[type="checkbox"] {
-  margin: 0;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-/* Ensure consistent padding in input fields */
-.always-color-list > div input[type="text"],
-.text-bg-coloring-list > div input[type="text"],
-.text-bg-coloring-full-list > div input[type="text"],
-.blacklist-words-list > div input[type="text"],
-.always-color-list > div input[type="color"],
-.text-bg-coloring-list > div input[type="color"],
-.text-bg-coloring-full-list > div input[type="color"] {
-  padding: 6px;
-  margin: 0;
-  border-radius: 4px;
-  border: 1px solid var(--background-modifier-border);
-  box-sizing: border-box;
-}
-
-.entries-button-row,
-.blacklist-button-row,
-.path-button-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
   width: 100%;
+}
+
+.act-tab-button.act-tab-active {
+  background-color: var(--interactive-accent) !important;
+  color: var(--text-on-accent) !important;
+}
+
+/* Fix for conflicting Bold + BoldItalic styles in Reading Mode */
+.markdown-rendered strong.act-transparent-strong {
+  background-color: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
 }
 
 @media (max-width: 768px) {
@@ -369,6 +193,7 @@ select {
 @media (max-width: 480px) {
   .color-swatch-grid {
     grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+    gap: 8px;
   }
   .color-picker-panel {
     padding: 12px;
@@ -828,4 +653,8 @@ button.mod-cta {
 
 .menu-item.tappable.has-submenu.act-color-dots {
 padding: 2px 0px !important;
+}
+
+body.theme-light.act-light-mode-fix .always-color-text-highlight {
+  filter: brightness(0.7);
 }

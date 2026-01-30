@@ -1,12 +1,13 @@
 // To build, run: "npm run build.js" or "node build.js"
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const esbuild = require('esbuild');
 
-try {
-  execSync('esbuild src/main.js --bundle --outfile=main.js --platform=node --external:obsidian --loader:.json=json', { stdio: 'inherit' });
-} catch (err) {
-  console.error('Noooo Build failed:', err && err.message ? err.message : err);
-  process.exit(1);
-}
+esbuild.build({
+  entryPoints: ['src/main.js'],
+  bundle: true,
+  outfile: 'main.js',
+  platform: 'node',
+  external: ['obsidian'],
+  loader: { '.json': 'json' },
+  logLevel: 'info',
+}).catch(() => process.exit(1));

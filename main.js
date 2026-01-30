@@ -337,6 +337,9 @@ var require_en = __commonJS({
       "preset_double_quotes": "Double Quotes",
       "preset_single_quotes": "Single Quotes",
       "preset_single_quotes_word_bounded": "Single Quotes (Word Bounded)",
+      "preset_bold": "Bold",
+      "preset_italic": "Italic",
+      "preset_bold_italic": "Bold Italic",
       "preset_group_markdown_formatting": "Markdown Formatting",
       "preset_group_other_patterns": "Other Patterns",
       "preset_group_brackets": "Brackets",
@@ -4083,12 +4086,18 @@ var RangeSetBuilder;
 var Decoration;
 var ViewPlugin;
 var StateEffect;
+var syntaxTree;
 try {
   const cmState = require("@codemirror/state");
   RangeSetBuilder = cmState.RangeSetBuilder;
   StateEffect = cmState.StateEffect;
   Decoration = require("@codemirror/view").Decoration;
   ViewPlugin = require("@codemirror/view").ViewPlugin;
+  try {
+    syntaxTree = require("@codemirror/language").syntaxTree;
+  } catch (e) {
+    console.warn("Always Color Text: syntaxTree not available");
+  }
 } catch (e) {
   RangeSetBuilder = class {
   };
@@ -6377,6 +6386,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   async onload() {
     await this.loadSettings();
+    this.updateLightModeFixer();
     if (typeof this.settings.quickColorsEnabled === "undefined") this.settings.quickColorsEnabled = false;
     if (!this.settings.quickColorsApplyMode) this.settings.quickColorsApplyMode = "html";
     if (!Array.isArray(this.settings.quickColors)) this.settings.quickColors = [];
@@ -7916,10 +7926,15 @@ module.exports = class AlwaysColorText extends Plugin {
       try {
         const markElements = element && element.nodeName === "MARK" ? [element] : Array.from(element.querySelectorAll?.("mark") || []);
         for (const mark of markElements) {
+          try {
+            mark.classList.add("always-color-text-highlight-marks");
+          } catch (_) {
+          }
           const styledSpan = mark.querySelector("span.always-color-text-highlight");
           const fallbackSpan = styledSpan || mark.querySelector(".always-color-text-highlight") || mark;
           try {
-            if (fallbackSpan === mark && !styledSpan) {
+            if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) {
+              fallbackSpan.classList.add("always-color-text-highlight-marks");
             }
           } catch (_) {
           }
@@ -7929,14 +7944,6 @@ module.exports = class AlwaysColorText extends Plugin {
             folderForMark = this.getBestFolderEntry(filePath);
           } catch (_) {
           }
-          try {
-            we.forEach((e) => this._patternMatcher && this._patternMatcher.compilePattern(e, this._regexCache));
-          } catch (_) {
-          }
-          let matches = this._patternMatcher ? this._patternMatcher.match(markText, we, folderForMark) : [];
-          try {
-          } catch (_) {
-          }
           const qsEnabled = !!this.settings.quickStylesEnabled;
           const qsArr = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
           const mt = String(markText || "").trim();
@@ -7944,23 +7951,15 @@ module.exports = class AlwaysColorText extends Plugin {
           if (qsEnabled && qsArr.length > 0 && mt.length > 0) {
             const lc = mt.toLowerCase();
             quickStyle = qsArr.find((s) => s && typeof s.name === "string" && s.name.toLowerCase() === lc) || null;
-            try {
-              if (quickStyle) {
-              }
-            } catch (_) {
-            }
           }
-          const presetEntry = we.find((e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements)) || weAll.find((e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements)) || null;
+          const findHighlightEntry = (entries2) => {
+            if (!Array.isArray(entries2)) return null;
+            const reversed = [...entries2].reverse();
+            return reversed.find((e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements || e.styleType === "highlight" && !e.targetElement));
+          };
+          const presetEntry = findHighlightEntry(we) || findHighlightEntry(weAll) || null;
           const highlightRegexEntry = presetEntry || (we.find((e) => e && e.isRegex && typeof e.pattern === "string" && e.pattern.includes("==[\\s\\S]*?==")) || weAll.find((e) => e && e.isRegex && typeof e.pattern === "string" && e.pattern.includes("==[\\s\\S]*?=="))) || null;
           if (quickStyle) {
-            try {
-              mark.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
-            try {
-              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
             const params = this.getHighlightParams(quickStyle);
             const styleType2 = quickStyle.styleType || "both";
             const tc = quickStyle.textColor || quickStyle.color || null;
@@ -7980,7 +7979,6 @@ module.exports = class AlwaysColorText extends Plugin {
                 mark.style.setProperty("--highlight-background", bgRgba);
               } catch (_) {
               }
-            } else {
             }
             if (tc) {
               fallbackSpan.style.setProperty("color", tc, "important");
@@ -7993,7 +7991,6 @@ module.exports = class AlwaysColorText extends Plugin {
                 mark.style.setProperty("--highlight-color", tc);
               } catch (_) {
               }
-            } else {
             }
             fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
             fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
@@ -8012,18 +8009,7 @@ module.exports = class AlwaysColorText extends Plugin {
               }
             } catch (_) {
             }
-            try {
-            } catch (_) {
-            }
           } else if (presetEntry || highlightRegexEntry) {
-            try {
-              mark.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
-            try {
-              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
             const entryForMark = presetEntry || highlightRegexEntry;
             const params = this.getHighlightParams(entryForMark);
             const tc = entryForMark.textColor && entryForMark.textColor !== "currentColor" ? entryForMark.textColor : entryForMark.color || null;
@@ -8043,7 +8029,6 @@ module.exports = class AlwaysColorText extends Plugin {
                 mark.style.setProperty("--highlight-background", bgRgba);
               } catch (_) {
               }
-            } else {
             }
             if (tc) {
               fallbackSpan.style.setProperty("color", tc, "important");
@@ -8056,7 +8041,6 @@ module.exports = class AlwaysColorText extends Plugin {
                 mark.style.setProperty("--highlight-color", tc);
               } catch (_) {
               }
-            } else {
             }
             fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
             fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
@@ -8075,143 +8059,10 @@ module.exports = class AlwaysColorText extends Plugin {
               }
             } catch (_) {
             }
-            try {
-            } catch (_) {
-            }
-          } else if (Array.isArray(matches) && matches.length > 0) {
-            const csFrom = (entry2) => typeof entry2?._caseSensitiveOverride === "boolean" ? entry2._caseSensitiveOverride : typeof entry2?.caseSensitive === "boolean" ? entry2.caseSensitive : this.settings.caseSensitive;
-            const exact = matches.filter((mx) => {
-              const ent = mx.entryRef || mx.entry || {};
-              const pat = String(ent.pattern || "");
-              if (!pat) return false;
-              const cs = csFrom(ent);
-              return cs ? markText === pat : markText.toLowerCase() === pat.toLowerCase();
-            });
-            if (exact.length > 0) {
-              matches = exact;
-            }
-            matches.sort((a, b) => {
-              const pa = String(a.entryRef?.pattern || a.entry?.pattern || "").length;
-              const pb = String(b.entryRef?.pattern || b.entry?.pattern || "").length;
-              if (pb !== pa) return pb - pa;
-              const aBoth = (a.entryRef?.styleType || a.entry?.styleType) === "both";
-              const bBoth = (b.entryRef?.styleType || b.entry?.styleType) === "both";
-              if (aBoth !== bBoth) return bBoth ? 1 : -1;
-              const aText = !!(a.entryRef?.textColor && a.entryRef.textColor !== "currentColor" || a.color);
-              const bText = !!(b.entryRef?.textColor && b.entryRef.textColor !== "currentColor" || b.color);
-              if (aText !== bText) return bText ? 1 : -1;
-              return 0;
-            });
-            const m = matches[0];
-            const entry = m.entryRef || m.entry || null;
-            try {
-            } catch (_) {
-            }
-            try {
-              mark.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
-            try {
-              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
-            const params = this.getHighlightParams(entry);
-            let textColor = entry && entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : null;
-            if (!textColor && m && m.color) {
-              textColor = m.color;
-            }
-            const styleType2 = entry?.styleType || "both";
-            const bgColor = entry && entry.backgroundColor ? entry.backgroundColor : null;
-            if (bgColor && (styleType2 === "highlight" || styleType2 === "both")) {
-              const bgRgba = this.hexToRgba(bgColor, params.opacity);
-              fallbackSpan.style.setProperty("background-color", bgRgba, "important");
-              try {
-                mark.style.setProperty("background-color", bgRgba, "important");
-              } catch (_) {
-              }
-              try {
-                fallbackSpan.style.setProperty("--highlight-background", bgRgba);
-              } catch (_) {
-              }
-              try {
-                mark.style.setProperty("--highlight-background", bgRgba);
-              } catch (_) {
-              }
-            } else {
-            }
-            if (textColor && (styleType2 === "text" || styleType2 === "both")) {
-              fallbackSpan.style.setProperty("color", textColor, "important");
-              fallbackSpan.style.setProperty("--highlight-color", textColor);
-              try {
-                mark.style.setProperty("color", textColor, "important");
-              } catch (_) {
-              }
-              try {
-                mark.style.setProperty("--highlight-color", textColor);
-              } catch (_) {
-              }
-            } else {
-            }
-            fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
-            fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
-            const vpad = params.vPad;
-            fallbackSpan.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
-            fallbackSpan.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
-            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
-            fallbackSpan.style.setProperty("border-radius", br + "px", "important");
-            try {
-              const borderCss = this.generateBorderStyle(textColor, bgColor, entry);
-              if (borderCss) {
-                fallbackSpan.style.cssText += borderCss;
-              }
-              if (borderCss) {
-                mark.style.cssText += borderCss;
-              }
-            } catch (_) {
-            }
-            try {
-            } catch (_) {
-            }
-          } else if (quickStyle) {
-            const params = this.getHighlightParams(quickStyle);
-            const styleType2 = quickStyle.styleType || "both";
-            const tc = quickStyle.textColor || quickStyle.color || null;
-            const bc = quickStyle.backgroundColor || null;
-            if (bc && (styleType2 === "highlight" || styleType2 === "both")) {
-              const bgRgba = this.hexToRgba(bc, params.opacity);
-              fallbackSpan.style.setProperty("background-color", bgRgba, "important");
-              try {
-                fallbackSpan.style.setProperty("--highlight-background", bgRgba);
-              } catch (_) {
-              }
-            } else {
-            }
-            if (tc && (styleType2 === "text" || styleType2 === "both")) {
-              fallbackSpan.style.setProperty("color", tc, "important");
-              fallbackSpan.style.setProperty("--highlight-color", tc);
-            } else {
-            }
-            fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
-            fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
-            const vpad = params.vPad;
-            fallbackSpan.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
-            fallbackSpan.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
-            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
-            fallbackSpan.style.setProperty("border-radius", br + "px", "important");
-            try {
-              const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
-              if (borderCss) {
-                fallbackSpan.style.cssText += borderCss;
-              }
-            } catch (_) {
-            }
-            try {
-            } catch (_) {
-            }
-          } else {
           }
         }
       } catch (e) {
+        console.error("Always Color Text: Error handling mark elements", e);
       }
       const taskCheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Checked)");
       const taskUncheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Unchecked)");
@@ -9170,7 +9021,19 @@ module.exports = class AlwaysColorText extends Plugin {
     this.disablePluginFeatures();
   }
   // --- Register CodeMirror, markdown, and listeners ---
+  updateLightModeFixer() {
+    try {
+      if (this.settings.enabled && this.settings.lightModeFixer) {
+        document.body.classList.add("act-light-mode-fix");
+      } else {
+        document.body.classList.remove("act-light-mode-fix");
+      }
+    } catch (e) {
+    }
+  }
   enablePluginFeatures() {
+    this.updateLightModeFixer();
+    this.applyFormattingStyles();
     if (!this.cmExtensionRegistered) {
       this.extension = this.buildEditorExtension();
       this.registerEditorExtension(this.extension);
@@ -9385,6 +9248,10 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // --- Remove all CodeMirror extensions & listeners ---
   disablePluginFeatures() {
+    try {
+      document.body.classList.remove("act-light-mode-fix");
+    } catch (_) {
+    }
     if (this.cmExtensionRegistered && this.extension) {
       this.app.workspace.unregisterEditorExtension(this.extension);
       this.cmExtensionRegistered = false;
@@ -9613,6 +9480,26 @@ module.exports = class AlwaysColorText extends Plugin {
       let pos = 0;
       for (const m of matches) {
         if (m.start > pos) appendRange(frag, pos, m.start);
+        const entry = m.entryRef || m.entry;
+        const presetLabel = entry?.presetLabel || "";
+        const isBoldItalicPreset = /bold|italic/i.test(presetLabel);
+        let skipWrapper = false;
+        if (isBoldItalicPreset) {
+          for (const b of segBounds) {
+            if (b.end <= m.start) continue;
+            if (b.start >= m.end) break;
+            const parent = b.seg.node.parentElement;
+            if (parent && (parent.closest(".cm-strong, .cm-em, .markdown-rendered strong, .markdown-rendered em") || parent.matches && parent.matches(".cm-strong, .cm-em, .markdown-rendered strong, .markdown-rendered em"))) {
+              skipWrapper = true;
+              break;
+            }
+          }
+        }
+        if (skipWrapper) {
+          appendRange(frag, m.start, m.end);
+          pos = m.end;
+          continue;
+        }
         const span = document.createElement("span");
         span.className = "always-color-text-highlight";
         const styleType2 = m.isTextBg ? "both" : m.styleType || "text";
@@ -9952,8 +9839,9 @@ module.exports = class AlwaysColorText extends Plugin {
       entriesSearchLimit: 0,
       blacklistSearchLimit: 0,
       pathSearchLimit: 0,
-      showColoringReasonOnHover: false
+      showColoringReasonOnHover: false,
       // Show tooltip on hover explaining why text is colored
+      lightModeFixer: false
     }, loadedData);
     try {
       if (typeof loadedData.quickColorsEnabled === "boolean") {
@@ -10113,6 +10001,8 @@ module.exports = class AlwaysColorText extends Plugin {
           groupedPatterns: e.groupedPatterns || null,
           matchType: typeof e.matchType === "string" && (/* @__PURE__ */ new Set(["exact", "contains", "startswith", "endswith"])).has(e.matchType.toLowerCase()) ? e.matchType.toLowerCase() : this.settings.partialMatch ? "contains" : "exact",
           presetLabel: e.presetLabel || void 0,
+          // PRESERVE targetElement (Critical for reading mode formatting)
+          targetElement: e.targetElement || (e.presetLabel && /bold\s*italic/i.test(e.presetLabel) ? "strong-em" : e.presetLabel && /bold/i.test(e.presetLabel) ? "strong" : e.presetLabel && /italic/i.test(e.presetLabel) ? "em" : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" ? "strong" : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" ? "em" : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" ? "strong-em" : void 0),
           // PRESERVE custom styling properties from original entry
           backgroundOpacity: e.backgroundOpacity,
           highlightBorderRadius: e.highlightBorderRadius,
@@ -10352,6 +10242,65 @@ module.exports = class AlwaysColorText extends Plugin {
     return allReleases;
   }
   // --- Save settings and refresh plugin state ---
+  applyFormattingStyles() {
+    try {
+      const styleId = "act-formatting-styles";
+      let styleEl = document.getElementById(styleId);
+      const we = this.settings.wordEntries || [];
+      const weAll2 = (this.settings.wordEntryGroups || []).reduce((acc, g) => acc.concat(g.entries || []), []).concat(we);
+      const targets = [
+        { type: "strong", selector: ".cm-strong, .markdown-rendered strong" },
+        { type: "em", selector: ".cm-em, .markdown-rendered em" },
+        { type: "strong-em", selector: ".cm-strong.cm-em, .cm-strong .cm-em, .cm-em .cm-strong, .markdown-rendered strong em, .markdown-rendered em strong" }
+      ];
+      let css = "";
+      targets.forEach((t) => {
+        const reversedWe = [...we].reverse();
+        const reversedWeAll = [...weAll2].reverse();
+        const entry = reversedWe.find((e) => e && e.targetElement === t.type) || reversedWeAll.find((e) => e && e.targetElement === t.type);
+        if (entry) {
+          const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
+          const bgColor = entry.backgroundColor || null;
+          css += `${t.selector} {`;
+          if (textColor || bgColor) {
+            if (textColor) css += ` color: ${textColor} !important;`;
+            if (bgColor) {
+              const opacityRaw = typeof entry.backgroundOpacity === "number" ? entry.backgroundOpacity : this.settings.backgroundOpacity ?? 25;
+              const opacity = opacityRaw <= 1 && opacityRaw > 0 ? opacityRaw * 100 : opacityRaw;
+              const bgRgba = this.hexToRgba(bgColor, opacity);
+              css += ` background-color: ${bgRgba} !important;`;
+            }
+          }
+          {
+            const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
+            const vPad = typeof entry.highlightVerticalPadding === "number" ? entry.highlightVerticalPadding : this.settings.highlightVerticalPadding ?? 0;
+            const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
+            css += ` padding-left: ${hPad}px !important; padding-right: ${hPad}px !important;`;
+            css += ` padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`;
+            css += ` border-radius: ${radius}px !important;`;
+            if (borderCSS) css += borderCSS;
+            if (this.settings.enableBoxDecorationBreak !== false) {
+              css += ` box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+            }
+          }
+          css += ` } 
+`;
+        }
+      });
+      if (css) {
+        if (!styleEl) {
+          styleEl = document.createElement("style");
+          styleEl.id = styleId;
+          document.head.appendChild(styleEl);
+        }
+        styleEl.textContent = css;
+      } else {
+        if (styleEl) styleEl.remove();
+      }
+    } catch (e) {
+      console.error("ACT: Error applying formatting styles", e);
+    }
+  }
   async saveSettings() {
     try {
       this.sanitizeSettings();
@@ -11411,47 +11360,47 @@ module.exports = class AlwaysColorText extends Plugin {
     const borderColorRgba = this.hexToRgba(sourceColor, borderOpacity);
     const borderStyleType = entry && typeof entry.borderStyle === "string" ? entry.borderStyle : this.settings.borderStyle ?? "full";
     const lineStyle = entry && typeof entry.borderLineStyle === "string" ? entry.borderLineStyle : this.settings.borderLineStyle ?? "solid";
-    const borderCSS = `${borderThickness}px ${lineStyle} ${borderColorRgba}`;
+    const borderCSS2 = `${borderThickness}px ${lineStyle} ${borderColorRgba}`;
     switch (borderStyleType) {
       case "bottom":
-        element.style.borderBottom = borderCSS;
+        element.style.borderBottom = borderCSS2;
         break;
       case "top":
-        element.style.borderTop = borderCSS;
+        element.style.borderTop = borderCSS2;
         break;
       case "left":
-        element.style.borderLeft = borderCSS;
+        element.style.borderLeft = borderCSS2;
         break;
       case "right":
-        element.style.borderRight = borderCSS;
+        element.style.borderRight = borderCSS2;
         break;
       case "top-bottom":
-        element.style.borderTop = borderCSS;
-        element.style.borderBottom = borderCSS;
+        element.style.borderTop = borderCSS2;
+        element.style.borderBottom = borderCSS2;
         break;
       case "left-right":
-        element.style.borderLeft = borderCSS;
-        element.style.borderRight = borderCSS;
+        element.style.borderLeft = borderCSS2;
+        element.style.borderRight = borderCSS2;
         break;
       case "top-right":
-        element.style.borderTop = borderCSS;
-        element.style.borderRight = borderCSS;
+        element.style.borderTop = borderCSS2;
+        element.style.borderRight = borderCSS2;
         break;
       case "top-left":
-        element.style.borderTop = borderCSS;
-        element.style.borderLeft = borderCSS;
+        element.style.borderTop = borderCSS2;
+        element.style.borderLeft = borderCSS2;
         break;
       case "bottom-right":
-        element.style.borderBottom = borderCSS;
-        element.style.borderRight = borderCSS;
+        element.style.borderBottom = borderCSS2;
+        element.style.borderRight = borderCSS2;
         break;
       case "bottom-left":
-        element.style.borderBottom = borderCSS;
-        element.style.borderLeft = borderCSS;
+        element.style.borderBottom = borderCSS2;
+        element.style.borderLeft = borderCSS2;
         break;
       case "full":
       default:
-        element.style.border = borderCSS;
+        element.style.border = borderCSS2;
         break;
     }
   }
@@ -11474,35 +11423,35 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     const borderStyleType = entry && typeof entry.borderStyle === "string" ? entry.borderStyle : this.settings.borderStyle ?? "full";
     const lineStyle = entry && typeof entry.borderLineStyle === "string" ? entry.borderLineStyle : this.settings.borderLineStyle ?? "solid";
-    const borderCSS = `${borderThickness}px ${lineStyle} ${borderColor} !important;`;
+    const borderCSS2 = `${borderThickness}px ${lineStyle} ${borderColor} !important;`;
     switch (borderStyleType) {
       case "bottom":
-        return ` border-bottom: ${borderCSS}`;
+        return ` border-bottom: ${borderCSS2}`;
       case "top":
-        return ` border-top: ${borderCSS}`;
+        return ` border-top: ${borderCSS2}`;
       case "left":
-        return ` border-left: ${borderCSS}`;
+        return ` border-left: ${borderCSS2}`;
       case "right":
-        return ` border-right: ${borderCSS}`;
+        return ` border-right: ${borderCSS2}`;
       case "top-bottom":
-        return ` border-top: ${borderCSS} border-bottom: ${borderCSS}`;
+        return ` border-top: ${borderCSS2} border-bottom: ${borderCSS2}`;
       case "left-right":
-        return ` border-left: ${borderCSS} border-right: ${borderCSS}`;
+        return ` border-left: ${borderCSS2} border-right: ${borderCSS2}`;
       case "top-left-right":
-        return ` border-top: ${borderCSS} border-left: ${borderCSS} border-right: ${borderCSS}`;
+        return ` border-top: ${borderCSS2} border-left: ${borderCSS2} border-right: ${borderCSS2}`;
       case "bottom-left-right":
-        return ` border-bottom: ${borderCSS} border-left: ${borderCSS} border-right: ${borderCSS}`;
+        return ` border-bottom: ${borderCSS2} border-left: ${borderCSS2} border-right: ${borderCSS2}`;
       case "top-right":
-        return ` border-top: ${borderCSS} border-right: ${borderCSS}`;
+        return ` border-top: ${borderCSS2} border-right: ${borderCSS2}`;
       case "top-left":
-        return ` border-top: ${borderCSS} border-left: ${borderCSS}`;
+        return ` border-top: ${borderCSS2} border-left: ${borderCSS2}`;
       case "bottom-right":
-        return ` border-bottom: ${borderCSS} border-right: ${borderCSS}`;
+        return ` border-bottom: ${borderCSS2} border-right: ${borderCSS2}`;
       case "bottom-left":
-        return ` border-bottom: ${borderCSS} border-left: ${borderCSS}`;
+        return ` border-bottom: ${borderCSS2} border-left: ${borderCSS2}`;
       case "full":
       default:
-        return ` border: ${borderCSS}`;
+        return ` border: ${borderCSS2}`;
     }
   }
   getHighlightParams(entry) {
@@ -12405,6 +12354,19 @@ module.exports = class AlwaysColorText extends Plugin {
               const copy = Object.assign({}, e);
               if (groupMatch) copy.matchType = groupMatch;
               if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+              if (group.styleType) copy.styleType = group.styleType;
+              if (group.textColor) copy.textColor = group.textColor;
+              if (group.color) copy.color = group.color;
+              if (group.backgroundColor) copy.backgroundColor = group.backgroundColor;
+              if (typeof group.backgroundOpacity !== "undefined") copy.backgroundOpacity = group.backgroundOpacity;
+              if (typeof group.highlightBorderRadius !== "undefined") copy.highlightBorderRadius = group.highlightBorderRadius;
+              if (typeof group.highlightHorizontalPadding !== "undefined") copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
+              if (typeof group.highlightVerticalPadding !== "undefined") copy.highlightVerticalPadding = group.highlightVerticalPadding;
+              if (typeof group.enableBorderThickness !== "undefined") copy.enableBorderThickness = group.enableBorderThickness;
+              if (group.borderStyle) copy.borderStyle = group.borderStyle;
+              if (group.borderLineStyle) copy.borderLineStyle = group.borderLineStyle;
+              if (typeof group.borderOpacity !== "undefined") copy.borderOpacity = group.borderOpacity;
+              if (typeof group.borderThickness !== "undefined") copy.borderThickness = group.borderThickness;
               copy._groupUid = group.uid || null;
               copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
               copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
@@ -12464,6 +12426,7 @@ module.exports = class AlwaysColorText extends Plugin {
             entryRef: e,
             // Keep reference to original entry for highlight styling parameters
             caseSensitive: effectiveCaseSensitive,
+            targetElement: e.targetElement || (e.presetLabel && /bold\s*italic/i.test(e.presetLabel) ? "strong-em" : e.presetLabel && /bold/i.test(e.presetLabel) ? "strong" : e.presetLabel && /italic/i.test(e.presetLabel) ? "em" : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" ? "strong" : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" ? "em" : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" ? "strong-em" : void 0),
             // Copy per-entry include/exclude rules so filtering still works after reload
             inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
             exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
@@ -12580,6 +12543,19 @@ module.exports = class AlwaysColorText extends Plugin {
               const copy = Object.assign({}, e);
               if (groupMatch) copy.matchType = groupMatch;
               if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+              if (group.styleType) copy.styleType = group.styleType;
+              if (group.textColor) copy.textColor = group.textColor;
+              if (group.color) copy.color = group.color;
+              if (group.backgroundColor) copy.backgroundColor = group.backgroundColor;
+              if (typeof group.backgroundOpacity !== "undefined") copy.backgroundOpacity = group.backgroundOpacity;
+              if (typeof group.highlightBorderRadius !== "undefined") copy.highlightBorderRadius = group.highlightBorderRadius;
+              if (typeof group.highlightHorizontalPadding !== "undefined") copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
+              if (typeof group.highlightVerticalPadding !== "undefined") copy.highlightVerticalPadding = group.highlightVerticalPadding;
+              if (typeof group.enableBorderThickness !== "undefined") copy.enableBorderThickness = group.enableBorderThickness;
+              if (group.borderStyle) copy.borderStyle = group.borderStyle;
+              if (group.borderLineStyle) copy.borderLineStyle = group.borderLineStyle;
+              if (typeof group.borderOpacity !== "undefined") copy.borderOpacity = group.borderOpacity;
+              if (typeof group.borderThickness !== "undefined") copy.borderThickness = group.borderThickness;
               copy._groupUid = group.uid || null;
               copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
               copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
@@ -12594,6 +12570,10 @@ module.exports = class AlwaysColorText extends Plugin {
       debugLog("[TBG_COMPILE_START]", `Starting with ${source.length} source entries from wordEntries`);
       for (const e of source) {
         if (!e || !e.backgroundColor) continue;
+        if (e.presetLabel) {
+          const label = String(e.presetLabel).toLowerCase();
+          if (label.includes("bold") || label.includes("italic")) continue;
+        }
         if (e.pattern === "hello") {
           debugLog("[TBG_SOURCE_ENTRY]", `Source entry 'hello': opacity=${e.backgroundOpacity}, radius=${e.highlightBorderRadius}, bg=${e.backgroundColor}`);
         }
@@ -12892,12 +12872,68 @@ module.exports = class AlwaysColorText extends Plugin {
       debugError("BLACKLIST_COMPILE", "Failed to compile blacklist", e);
     }
   }
+  // NEW METHOD: Apply highlights to specific HTML elements (for logic-based coloring)
+  applyElementHighlights(el, entries, folderEntry = null) {
+    if (!el || !entries || entries.length === 0) return;
+    for (const entry of entries) {
+      if (!entry || !entry.targetElement) continue;
+      let selector = entry.targetElement;
+      if (selector === "strong-em") selector = "strong > em, em > strong";
+      let elements;
+      try {
+        elements = el.querySelectorAll(selector);
+      } catch (e) {
+        continue;
+      }
+      if (elements.length === 0) continue;
+      const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
+      const backgroundColor = entry.backgroundColor || null;
+      const finalTextColor = folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : textColor;
+      const hideText = this.settings.hideTextColors === true;
+      const hideBg = this.settings.hideHighlights === true;
+      for (const element of elements) {
+        if (!hideText && finalTextColor) {
+          element.style.setProperty("color", finalTextColor, "important");
+          element.style.setProperty("--highlight-color", finalTextColor);
+        }
+        if (!hideBg && backgroundColor) {
+          const params = this.getHighlightParams(entry);
+          const bgRgba = this.hexToRgba(backgroundColor, params.opacity);
+          element.style.setProperty("background-color", bgRgba, "important");
+          element.style.setProperty("border-radius", params.radius + "px", "important");
+          element.style.setProperty("padding-left", params.hPad + "px", "important");
+          element.style.setProperty("padding-right", params.hPad + "px", "important");
+          const vPad = params.vPad;
+          if (vPad >= 0) {
+            element.style.setProperty("padding-top", vPad + "px", "important");
+            element.style.setProperty("padding-bottom", vPad + "px", "important");
+          } else {
+            element.style.setProperty("padding-top", "0px", "important");
+            element.style.setProperty("padding-bottom", "0px", "important");
+            element.style.setProperty("margin-top", vPad + "px", "important");
+            element.style.setProperty("margin-bottom", vPad + "px", "important");
+          }
+          if (this.settings.enableBoxDecorationBreak ?? true) {
+            element.style.boxDecorationBreak = "clone";
+            element.style.WebkitBoxDecorationBreak = "clone";
+          }
+        }
+      }
+    }
+  }
   // Apply Highlights in Reading View (Markdown Post Processor) - optional folderEntry may override match colors
   applyHighlights(el, folderEntry = null, options = {}) {
     const entries = options && Array.isArray(options.entries) ? options.entries : this.getSortedWordEntries();
     if (entries.length === 0) return;
     if (!el.isConnected) return;
-    this._wrapMatchesRecursive(el, entries, folderEntry, options || {});
+    const elementEntries = entries.filter((e) => e && e.targetElement);
+    const regexEntries = entries.filter((e) => e && !e.targetElement);
+    if (elementEntries.length > 0) {
+      this.applyElementHighlights(el, elementEntries, folderEntry);
+    }
+    if (regexEntries.length > 0) {
+      this._wrapMatchesRecursive(el, regexEntries, folderEntry, options || {});
+    }
   }
   // NEW METHOD: Apply highlights for simple patterns (ultra-fast version)
   applySimpleHighlights(textNode, matches, text, filePath = null) {
@@ -13251,6 +13287,30 @@ module.exports = class AlwaysColorText extends Plugin {
     const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
     const allEntries = this.getSortedWordEntries();
     const allowedEntries = this.filterEntriesByAdvancedRules(ctx.sourcePath, allEntries);
+    for (const entry of allowedEntries) {
+      if (!entry.targetElement && entry.isRegex) {
+        if (entry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") entry.targetElement = "strong";
+        else if (entry.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") entry.targetElement = "em";
+        else if (entry.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") entry.targetElement = "strong-em";
+      }
+    }
+    try {
+      if (el && el.querySelectorAll) {
+        const strongs = el.querySelectorAll("strong");
+        for (let i = 0; i < strongs.length; i++) {
+          const strong = strongs[i];
+          const ems = strong.getElementsByTagName("em");
+          if (ems.length > 0) {
+            let allEmText = "";
+            for (let j = 0; j < ems.length; j++) allEmText += ems[j].textContent;
+            if (strong.textContent.trim() === allEmText.trim()) {
+              strong.classList.add("act-transparent-strong");
+            }
+          }
+        }
+      }
+    } catch (e) {
+    }
     const isExcludedByPathRules = pr.excluded || this.hasGlobalExclude() && pr.hasIncludes && !pr.included;
     if (isExcludedByPathRules && allowedEntries.length === 0) {
       debugLog("ACT", "Skipping: excluded by path rules with no advanced rule exceptions");
@@ -13494,9 +13554,9 @@ module.exports = class AlwaysColorText extends Plugin {
               const bg = m.backgroundColor || m.textColor;
               if (bg) {
                 try {
-                  span.style.setProperty("background-color", this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25), "important");
+                  span.style.setProperty("background-color", this.hexToRgba(bg, this.settings.backgroundOpacity ?? 0.3), "important");
                 } catch (_) {
-                  span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25);
+                  span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 0.3);
                 }
                 try {
                   span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
@@ -13545,9 +13605,9 @@ module.exports = class AlwaysColorText extends Plugin {
             }
             if (!hideBg && bg) {
               try {
-                span.style.setProperty("background-color", this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25), "important");
+                span.style.setProperty("background-color", this.hexToRgba(bg, this.settings.backgroundOpacity ?? 0.3), "important");
               } catch (_) {
-                span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25);
+                span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 0.3);
               }
               try {
                 span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
@@ -14592,6 +14652,22 @@ module.exports = class AlwaysColorText extends Plugin {
           if (effectiveStyle === "none") {
             frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
           } else {
+            const entry = m.entryRef || m.entry;
+            const presetLabel = entry?.presetLabel || "";
+            const isBoldItalicPreset = /bold|italic/i.test(presetLabel);
+            let skipWrapper = false;
+            if (isBoldItalicPreset) {
+              const parent = node.parentElement;
+              if (parent && (parent.closest(".cm-strong, .cm-em, .markdown-rendered strong, .markdown-rendered em") || parent.matches && parent.matches(".cm-strong, .cm-em, .markdown-rendered strong, .markdown-rendered em"))) {
+                skipWrapper = true;
+              }
+            }
+            if (skipWrapper) {
+              frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
+              pos = m.end;
+              i = j;
+              continue;
+            }
             const span = document.createElement("span");
             span.className = "always-color-text-highlight";
             span.textContent = text.slice(m.start, m.end);
@@ -15987,6 +16063,15 @@ module.exports = class AlwaysColorText extends Plugin {
           if ((prb.excluded || plugin.hasGlobalExclude() && prb.hasIncludes && !prb.included) && previewEntries.length === 0) return { entries: [], folderEntry: null };
           entries = previewEntries;
         }
+        for (const entry of entries) {
+          if (!entry.targetElement && entry.isRegex) {
+            const pattern = entry.pattern;
+            const label = (entry.presetLabel || "").toLowerCase();
+            if (pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" || label === "bold" || label.includes("bold (")) entry.targetElement = "strong";
+            else if (pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" || label === "italic" || label.includes("italic (")) entry.targetElement = "em";
+            else if (pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" || label === "bold italic" || label.includes("bold italic")) entry.targetElement = "strong-em";
+          }
+        }
         const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
         return { entries, folderEntry };
       }
@@ -16002,7 +16087,7 @@ module.exports = class AlwaysColorText extends Plugin {
         const extendedTo = Math.min(to + EDITOR_PERFORMANCE_CONSTANTS.VIEWPORT_EXTENSION, docLength);
         const text = view.state.doc.sliceString(from, extendedTo);
         const fileForView = view.file || plugin.app.workspace.getActiveFile();
-        return plugin.buildDecoChunked(view, builder, from, extendedTo, text, entries, folderEntry, fileForView ? fileForView.path : null);
+        return plugin.buildDecoChunked(view, builder, from, extendedTo, text, entries, folderEntry, fileForView ? fileForView.path : null, syntaxTree);
       }
     }, {
       decorations: (v) => v.decorations
@@ -16993,6 +17078,25 @@ module.exports = class AlwaysColorText extends Plugin {
       toApply = merged;
     }
     for (const m of toApply) {
+      if (tree) {
+        try {
+          const checkPos = Math.min(m.end - 1, Math.max(m.start, Math.floor((m.start + m.end) / 2)));
+          const node = tree.resolve(checkPos, 1);
+          let curr = node;
+          let isInsideFormat = false;
+          while (curr) {
+            if (curr.name === "Strong" || curr.name === "Emphasis" || curr.name === "StrongEmphasis") {
+              isInsideFormat = true;
+              break;
+            }
+            curr = curr.parent;
+          }
+          if (isInsideFormat) {
+            continue;
+          }
+        } catch (e) {
+        }
+      }
       let style;
       if (m.isTextBg) {
         const hideText = this.settings.hideTextColors === true;
@@ -17057,9 +17161,10 @@ module.exports = class AlwaysColorText extends Plugin {
     return builder.finish();
   }
   // NEW METHOD: Chunked editor processing for large pattern sets or large text
-  buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath = null) {
+  buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath = null, syntaxTreeFn = null) {
     const startTime = performance.now();
     const TIME_BUDGET_MS = 12;
+    const tree2 = syntaxTreeFn && view && view.state ? syntaxTreeFn(view.state) : null;
     const CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
     const MAX_MATCHES = this.settings.extremeLightweightMode ? 4e3 : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
@@ -17351,10 +17456,21 @@ module.exports = class AlwaysColorText extends Plugin {
         if (allMatches.length > MAX_MATCHES) break;
       }
     }
-    if (entries.length > CHUNK_SIZE) {
-      debugLog("PATTERN_PROCESSING", `Starting pattern processing for ${entries.length} patterns`);
-      for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
-        const chunk = entries.slice(i, i + CHUNK_SIZE);
+    const regexEntries = entries.filter((e) => {
+      if (e.targetElement) return false;
+      if (e.presetLabel) {
+        const label = String(e.presetLabel).toLowerCase();
+        if (label.includes("bold") || label.includes("italic")) return false;
+      }
+      if (e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") return false;
+      if (e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") return false;
+      if (e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") return false;
+      return true;
+    });
+    if (regexEntries.length > CHUNK_SIZE) {
+      debugLog("PATTERN_PROCESSING", `Starting pattern processing for ${regexEntries.length} patterns`);
+      for (let i = 0; i < regexEntries.length; i += CHUNK_SIZE) {
+        const chunk = regexEntries.slice(i, i + CHUNK_SIZE);
         const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
         allMatches = allMatches.concat(chunkMatches);
         if (allMatches.length > MAX_MATCHES) {
@@ -17370,17 +17486,17 @@ module.exports = class AlwaysColorText extends Plugin {
         const chunkEnd = Math.min(pos + TEXT_CHUNK_SIZE, text.length);
         const chunkText = text.slice(pos, chunkEnd);
         const chunkFrom = from + pos;
-        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
+        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, regexEntries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
         allMatches = allMatches.concat(chunkMatches);
         if (allMatches.length > MAX_MATCHES) {
           break;
         }
       }
     } else {
-      const chunkMatches = this.processPatternChunk(text, from, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
+      const chunkMatches = this.processPatternChunk(text, from, regexEntries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
       allMatches = allMatches.concat(chunkMatches);
     }
-    return this.applyDecorationsFromMatches(builder, allMatches, folderEntry);
+    return this.applyDecorationsFromMatches(builder, allMatches, folderEntry, tree2);
   }
   // NEW METHOD: Process a chunk of patterns
   processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null) {
@@ -18097,6 +18213,9 @@ var PresetModal = class extends Modal {
     }
     contentEl.style.maxWidth = "1200px !important";
     const presets = [
+      { label: this.plugin.t("preset_bold", "Bold"), pattern: "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1", flags: "", examples: ["**bold**"], group: "markdown", isFormatting: true, targetElement: "strong" },
+      { label: this.plugin.t("preset_italic", "Italic"), pattern: "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1", flags: "", examples: ["*italic*"], group: "markdown", isFormatting: true, targetElement: "em" },
+      { label: this.plugin.t("preset_bold_italic", "Bold Italic"), pattern: "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1", flags: "", examples: ["***bold_italic***"], group: "markdown", isFormatting: true, targetElement: "strong-em" },
       { label: this.plugin.t("preset_all_headings", "All Headings (H1-H6)"), pattern: "^\\s*#{1,6}\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_heading", "# Heading")] },
       { label: this.plugin.t("preset_headings_h3", "Headings (H3)"), pattern: "^\\s*#{3}\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_heading_h3", "### Heading")], group: "markdown" },
       { label: this.plugin.t("preset_bullet_points", "Bullet Points"), pattern: "^\\s*[\\-\\*]\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_bullet", "- Bullet point")], group: "markdown" },
@@ -18112,7 +18231,7 @@ var PresetModal = class extends Modal {
       { label: this.plugin.t("preset_basic_urls", "Basic URLs"), pattern: "\\bhttps?://\\S+\\b", flags: "", examples: [this.plugin.t("preset_example_url", "https://example.com")], group: "markdown" },
       { label: this.plugin.t("preset_markdown_links", "Markdown links"), pattern: "\\[[^\\]]+\\]\\(https?://[^)]+\\)", flags: "", examples: [this.plugin.t("preset_example_markdown_link", "[Link](https://example.com)")], group: "markdown" },
       { label: this.plugin.t("preset_inline_comments", "Comments (%%\u2026%%)"), pattern: "%%\\s*[\\s\\S]*?\\s*%%", flags: "s", examples: [this.plugin.t("preset_example_comment", "%% comment %%")], group: "markdown" },
-      { label: this.plugin.t("preset_highlighted_text", "Highlighted Text (==...)"), pattern: "==[\\s\\S]*?==", flags: "s", examples: [this.plugin.t("preset_example_highlight", "==highlighted text==")], group: "markdown" },
+      { label: this.plugin.t("preset_highlighted_text", "Highlighted Text (==...)"), pattern: "==[\\s\\S]*?==", flags: "s", examples: [this.plugin.t("preset_example_highlight", "==highlighted text==")], group: "markdown", affectMarkElements: true },
       { label: this.plugin.t("preset_domain_names", "Domain names"), pattern: "\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b", flags: "", examples: [this.plugin.t("preset_example_domain", "example.com")] },
       { label: this.plugin.t("preset_email_addresses", "Email addresses"), pattern: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", flags: "", examples: [this.plugin.t("preset_example_email", "name@example.com")] },
       { label: this.plugin.t("preset_at_username", "@username"), pattern: "@[a-zA-Z0-9_]+", flags: "", examples: [this.plugin.t("preset_example_username", "@username")] },
@@ -18129,11 +18248,12 @@ var PresetModal = class extends Modal {
       { label: this.plugin.t("preset_single_quotes_word_bounded", "Single Quotes '' (word-bounded)"), pattern: "'\\b[^'\\r\\n]*\\b'", flags: "", examples: [this.plugin.t("preset_example_single_quotes_word", "'word'")], group: "brackets", disableRegexSafety: true },
       { label: this.plugin.t("preset_all_texts", "All texts"), pattern: ".+", flags: "", examples: [this.plugin.t("preset_example_all_text", "This will target all texts.")], group: "markdown" }
     ];
-    const markdownPresets = presets.filter((p) => p.group === "markdown" || [
+    const formattingPresets = presets.filter((p) => p.isFormatting);
+    const markdownPresets = presets.filter((p) => (p.group === "markdown" || [
       this.plugin.t("preset_all_headings", "All Headings (H1-H6)")
-    ].includes(p.label));
+    ].includes(p.label)) && !p.isFormatting);
     const bracketPresets = presets.filter((p) => p.group === "brackets");
-    const otherPresets = presets.filter((p) => !markdownPresets.includes(p) && !bracketPresets.includes(p));
+    const otherPresets = presets.filter((p) => !markdownPresets.includes(p) && !bracketPresets.includes(p) && !formattingPresets.includes(p));
     const container = contentEl.createDiv();
     container.style.display = "grid";
     container.style.gridTemplateColumns = "1fr 1fr 1fr";
@@ -18159,6 +18279,29 @@ var PresetModal = class extends Modal {
     leftTitle.style.fontWeight = "600";
     leftTitle.style.opacity = "0.8";
     const leftList = leftCol.createDiv();
+    if (formattingPresets.length > 0) {
+      const row = leftList.createDiv();
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.marginBottom = "8px";
+      formattingPresets.forEach((p) => {
+        const btn = row.createEl("button", { text: p.label });
+        btn.style.fontSize = "12px";
+        btn.style.padding = "6px 10px";
+        btn.style.flex = "1";
+        btn.title = p.examples && p.examples[0] ? p.examples[0] : "";
+        const handler = () => {
+          try {
+            this.onChoose && this.onChoose(p);
+          } finally {
+            this.close();
+          }
+        };
+        btn.addEventListener("click", handler);
+        this._listeners.push({ el: btn, h: handler });
+      });
+    }
     markdownPresets.forEach((p) => {
       const row = leftList.createDiv();
       row.style.display = "flex";
@@ -18856,120 +18999,141 @@ var HighlightStylingModal = class extends Modal {
   }
   onOpen() {
     const { contentEl } = this;
+    const clearResetFlag = () => {
+      this._resetAllApplied = false;
+    };
+    contentEl.addEventListener("input", clearResetFlag, true);
+    contentEl.addEventListener("change", clearResetFlag, true);
+    this._handlers.push({ el: contentEl, ev: "input", fn: clearResetFlag });
+    this._handlers.push({ el: contentEl, ev: "change", fn: clearResetFlag });
     contentEl.empty();
     try {
       this.modalEl.addClass("act-highlight-styling-modal");
       this.modalEl.addClass("act-highlight-modal");
-      this.modalEl.style.maxWidth = "900px !important";
-      this.modalEl.style.width = "900px !important";
       this.modalEl.style.padding = "20px";
-      contentEl.style.maxWidth = "900px !important";
     } catch (e) {
     }
+    const isGroup = this.entry && Array.isArray(this.entry.entries);
     const headerRow = contentEl.createDiv();
     headerRow.style.display = "flex";
     headerRow.style.alignItems = "center";
     headerRow.style.gap = "8px";
     headerRow.style.marginBottom = "12px";
     headerRow.style.flexWrap = "wrap";
-    const title = headerRow.createEl("h2", { text: this.plugin.t("highlight_styling_header", "Edit Highlight Styling") });
+    const headerTitle = isGroup ? "Edit Group Highlight Styling" : this.plugin.t("highlight_styling_header", "Edit Highlight Styling");
+    const title = headerRow.createEl("h2", { text: headerTitle });
     title.style.margin = "0";
     const spacer = headerRow.createDiv();
     spacer.style.flex = "1";
-    const groupSelect = headerRow.createEl("select");
-    groupSelect.style.minWidth = "120px";
-    groupSelect.style.border = "1px solid var(--background-modifier-border)";
-    groupSelect.style.borderRadius = "4px";
-    groupSelect.style.background = "var(--background-modifier-form-field)";
-    groupSelect.style.textAlign = "center";
-    const defaultOpt = groupSelect.createEl("option", { text: this.plugin.t("default") });
-    defaultOpt.value = "";
-    const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
-    groupsList.forEach((g) => {
-      const name = g && g.name && String(g.name).trim().length > 0 ? g.name : "(unnamed group)";
-      const opt = groupSelect.createEl("option", { text: name });
-      opt.value = g.uid || "";
-    });
-    let currentGroupUid = null;
-    if (this.entry) {
-      if (this.entry.groupUid) {
-        currentGroupUid = this.entry.groupUid;
-      } else {
-        for (const g of groupsList) {
-          if (g.entries && g.entries.includes(this.entry)) {
-            currentGroupUid = g.uid;
-            break;
+    if (!isGroup) {
+      const groupSelect = headerRow.createEl("select");
+      groupSelect.style.minWidth = "120px";
+      groupSelect.style.border = "1px solid var(--background-modifier-border)";
+      groupSelect.style.borderRadius = "4px";
+      groupSelect.style.background = "var(--background-modifier-form-field)";
+      groupSelect.style.textAlign = "center";
+      const defaultOpt = groupSelect.createEl("option", { text: this.plugin.t("default") });
+      defaultOpt.value = "";
+      const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+      groupsList.forEach((g) => {
+        const name = g && g.name && String(g.name).trim().length > 0 ? g.name : "(unnamed group)";
+        const opt = groupSelect.createEl("option", { text: name });
+        opt.value = g.uid || "";
+      });
+      let currentGroupUid = null;
+      if (this.entry) {
+        if (this.entry.groupUid) {
+          currentGroupUid = this.entry.groupUid;
+        } else {
+          for (const g of groupsList) {
+            if (g.entries && g.entries.includes(this.entry)) {
+              currentGroupUid = g.uid;
+              break;
+            }
           }
         }
       }
-    }
-    groupSelect.value = currentGroupUid || "";
-    groupSelect.addEventListener("change", async () => {
-      const toUid = groupSelect.value || "";
-      const fromUid = currentGroupUid || "";
-      if (toUid === fromUid) return;
-      if (this.plugin.settings.quickStyles.includes(this.entry)) {
-        this.entry.groupUid = toUid;
-        currentGroupUid = toUid;
-        await this.plugin.saveSettings();
-        return;
-      }
-      const settings = this.plugin.settings;
-      if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
-      if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
-      const wordEntriesIdx = settings.wordEntries.indexOf(this.entry);
-      if (wordEntriesIdx !== -1) {
-        settings.wordEntries.splice(wordEntriesIdx, 1);
-      }
-      for (const group of settings.wordEntryGroups) {
-        if (group && Array.isArray(group.entries)) {
-          const groupIdx = group.entries.indexOf(this.entry);
-          if (groupIdx !== -1) {
-            group.entries.splice(groupIdx, 1);
+      groupSelect.value = currentGroupUid || "";
+      groupSelect.addEventListener("change", async () => {
+        const toUid = groupSelect.value || "";
+        const fromUid = currentGroupUid || "";
+        if (toUid === fromUid) return;
+        if (this.plugin.settings.quickStyles.includes(this.entry)) {
+          this.entry.groupUid = toUid;
+          currentGroupUid = toUid;
+          await this.plugin.saveSettings();
+          return;
+        }
+        const settings = this.plugin.settings;
+        if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
+        if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
+        const wordEntriesIdx = settings.wordEntries.indexOf(this.entry);
+        if (wordEntriesIdx !== -1) {
+          settings.wordEntries.splice(wordEntriesIdx, 1);
+        }
+        for (const group of settings.wordEntryGroups) {
+          if (group && Array.isArray(group.entries)) {
+            const groupIdx = group.entries.indexOf(this.entry);
+            if (groupIdx !== -1) {
+              group.entries.splice(groupIdx, 1);
+            }
           }
         }
-      }
-      if (toUid === "") {
-        try {
-          delete this.entry.groupUid;
-        } catch (_) {
-        }
-        settings.wordEntries.push(this.entry);
-      } else {
-        const tgtGroup = settings.wordEntryGroups.find((g) => g && g.uid === toUid);
-        if (tgtGroup) {
-          if (!Array.isArray(tgtGroup.entries)) tgtGroup.entries = [];
+        if (toUid === "") {
           try {
-            this.entry.groupUid = toUid;
+            delete this.entry.groupUid;
           } catch (_) {
           }
-          tgtGroup.entries.push(this.entry);
+          settings.wordEntries.push(this.entry);
+        } else {
+          const tgtGroup = settings.wordEntryGroups.find((g) => g && g.uid === toUid);
+          if (tgtGroup) {
+            if (!Array.isArray(tgtGroup.entries)) tgtGroup.entries = [];
+            try {
+              this.entry.groupUid = toUid;
+            } catch (_) {
+            }
+            tgtGroup.entries.push(this.entry);
+          }
         }
-      }
-      currentGroupUid = toUid;
-      await this.plugin.saveSettings();
-      this.plugin.compileWordEntries();
-      this.plugin.compileTextBgColoringEntries();
-      this.plugin.reconfigureEditorExtensions();
-      this.plugin.forceRefreshAllEditors();
-      this.plugin.triggerActiveDocumentRerender();
-    });
+        currentGroupUid = toUid;
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.triggerActiveDocumentRerender();
+      });
+    }
     const matchSelect = headerRow.createEl("select");
     matchSelect.style.minWidth = "120px";
     matchSelect.style.border = "1px solid var(--background-modifier-border)";
     matchSelect.style.borderRadius = "4px";
     matchSelect.style.background = "var(--background-modifier-form-field)";
     matchSelect.style.textAlign = "center";
-    matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
-    if (this.entry) {
-      if (this.entry.isRegex) {
-        matchSelect.disabled = true;
-        matchSelect.style.opacity = "0.5";
-      } else {
-        let defaultMatch = typeof this.entry.matchType === "string" && this.entry.matchType ? this.entry.matchType.toLowerCase() : "exact";
-        if (defaultMatch === "startswith" || defaultMatch === "starts with") defaultMatch = "startswith";
-        if (defaultMatch === "endswith" || defaultMatch === "ends with") defaultMatch = "endswith";
-        matchSelect.value = defaultMatch === "startswith" ? "startsWith" : defaultMatch === "endswith" ? "endsWith" : defaultMatch;
+    if (isGroup) {
+      matchSelect.innerHTML = `<option value="per-entry">${this.plugin.t("opt_match_all", "Match Type (All)")}</option>
+        <option value="exact">${this.plugin.t("match_option_exact", "exact")}</option>
+        <option value="contains">${this.plugin.t("match_option_contains", "contains")}</option>
+        <option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option>
+        <option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
+      const currentOverride = this.entry.matchTypeOverride;
+      matchSelect.value = typeof currentOverride === "string" && currentOverride ? currentOverride : "per-entry";
+    } else {
+      matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option>
+        <option value="contains">${this.plugin.t("match_option_contains", "contains")}</option>
+        <option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option>
+        <option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
+      if (this.entry) {
+        if (this.entry.isRegex) {
+          matchSelect.disabled = true;
+          matchSelect.style.opacity = "0.5";
+        } else {
+          let defaultMatch = typeof this.entry.matchType === "string" && this.entry.matchType ? this.entry.matchType.toLowerCase() : "exact";
+          if (defaultMatch === "startswith" || defaultMatch === "starts with") defaultMatch = "startswith";
+          if (defaultMatch === "endswith" || defaultMatch === "ends with") defaultMatch = "endswith";
+          matchSelect.value = defaultMatch === "startswith" ? "startsWith" : defaultMatch === "endswith" ? "endsWith" : defaultMatch;
+        }
       }
     }
     matchSelect.addEventListener("change", async () => {
@@ -18977,7 +19141,11 @@ var HighlightStylingModal = class extends Modal {
       let value = matchSelect.value;
       if (value === "startsWith") value = "startswith";
       if (value === "endsWith") value = "endswith";
-      this.entry.matchType = value;
+      if (isGroup) {
+        this.entry.matchTypeOverride = value === "per-entry" ? null : value;
+      } else {
+        this.entry.matchType = value;
+      }
       await this.plugin.saveSettings();
       this.plugin.compileWordEntries();
       this.plugin.compileTextBgColoringEntries();
@@ -18992,11 +19160,15 @@ var HighlightStylingModal = class extends Modal {
     const words = previewWrap.createDiv();
     words.style.textAlign = "center";
     words.style.opacity = "0.8";
-    words.textContent = this.previewTextOverride ? this.previewTextOverride : this.entry ? this.entry.isRegex ? String(this.entry.pattern || "") : Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0 ? this.entry.groupedPatterns.join(", ") : String(this.entry.pattern || "") : "";
+    words.textContent = this.previewTextOverride ? this.previewTextOverride : isGroup ? this.entry.name || "Group" : this.entry ? this.entry.isRegex ? String(this.entry.pattern || "") : Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0 ? this.entry.groupedPatterns.join(", ") : String(this.entry.pattern || "") : "";
     const styleCol = topRow.createDiv();
     styleCol.addClass("act-highlight-style-col");
     const styleSelect = styleCol.createEl("select");
     styleSelect.addClass("act-highlight-style-select");
+    if (isGroup) {
+      const defaultOpt = styleSelect.createEl("option", { text: this.plugin.t("opt_style_default", "Default (Per-Entry)") });
+      defaultOpt.value = "";
+    }
     ["text", "highlight", "both"].forEach((val) => {
       const opt = styleSelect.createEl("option", { text: this.plugin.t("style_type_" + val, val === "text" ? "color" : val) });
       opt.value = val;
@@ -19005,9 +19177,10 @@ var HighlightStylingModal = class extends Modal {
     styleSelect.style.borderRadius = "4px";
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.textAlign = "center";
-    styleSelect.value = this.entry && this.entry.styleType ? this.entry.styleType : "both";
+    styleSelect.value = this.entry && this.entry.styleType ? this.entry.styleType : isGroup ? "" : "both";
     const pickerRow = styleCol.createDiv();
     pickerRow.addClass("act-highlight-picker-row");
+    if (isGroup && !styleSelect.value) pickerRow.style.display = "none";
     const tColor = pickerRow.createEl("input", { type: "color" });
     const bColor = pickerRow.createEl("input", { type: "color" });
     tColor.value = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "#ffffff") || "#ffffff";
@@ -19273,6 +19446,19 @@ var HighlightStylingModal = class extends Modal {
     });
     const renderPreview = () => {
       const style = styleSelect.value;
+      if (isGroup && !style) {
+        const txt2 = words.textContent || "";
+        try {
+          while (previewWrap.firstChild) previewWrap.removeChild(previewWrap.firstChild);
+          const div = document.createElement("div");
+          div.textContent = txt2;
+          div.style.opacity = "1";
+          previewWrap.appendChild(div);
+        } catch (_) {
+          previewWrap.innerHTML = `<div>${escapeHtml(txt2)}</div>`;
+        }
+        return;
+      }
       const t = tColor.value;
       const b = bColor.value;
       const p = this.plugin.getHighlightParams(this.entry);
@@ -19324,6 +19510,7 @@ var HighlightStylingModal = class extends Modal {
     actions.style.marginTop = "12px";
     const resetAllBtn = actions.createEl("button", { text: this.plugin.t("btn_reset_all", "Reset Highlight Style") });
     const resetAllHandler = () => {
+      const isGroup2 = this.entry && Array.isArray(this.entry.entries);
       if (this.entry) {
         this.entry.backgroundOpacity = void 0;
         this.entry.highlightBorderRadius = void 0;
@@ -19334,6 +19521,12 @@ var HighlightStylingModal = class extends Modal {
         this.entry.borderLineStyle = void 0;
         this.entry.borderOpacity = void 0;
         this.entry.borderThickness = void 0;
+        if (isGroup2) {
+          this.entry.styleType = void 0;
+          this.entry.color = void 0;
+          this.entry.textColor = void 0;
+          this.entry.backgroundColor = void 0;
+        }
       }
       this._resetAllApplied = true;
       try {
@@ -19346,6 +19539,10 @@ var HighlightStylingModal = class extends Modal {
         lineSel.value = this.plugin.settings.borderLineStyle ?? "solid";
         bOpSlider.value = String(this.plugin.settings.borderOpacity ?? 100);
         thickInput.value = String(this.plugin.settings.borderThickness ?? 1);
+        if (isGroup2) {
+          styleSelect.value = "";
+          pickerRow.style.display = "none";
+        }
       } catch (_) {
       }
       renderPreview();
@@ -19454,41 +19651,61 @@ var HighlightStylingModal = class extends Modal {
     styleSelect.addEventListener("change", () => {
       if (this.entry) {
         const st = styleSelect.value;
-        this.entry.styleType = st;
-        if (st === "text") {
-          this.entry.color = tColor.value || "";
-          this.entry.textColor = null;
-          this.entry.backgroundColor = null;
-        } else if (st === "highlight") {
-          this.entry.color = "";
-          this.entry.textColor = "currentColor";
-          this.entry.backgroundColor = bColor.value || "";
+        if (isGroup && !st) {
+          this.entry.styleType = void 0;
+          this.entry.color = void 0;
+          this.entry.textColor = void 0;
+          this.entry.backgroundColor = void 0;
+          pickerRow.style.display = "none";
         } else {
-          this.entry.color = "";
-          this.entry.textColor = tColor.value || "";
-          this.entry.backgroundColor = bColor.value || "";
+          this.entry.styleType = st;
+          pickerRow.style.display = "";
+          try {
+            updatePickerVisibility();
+          } catch (_) {
+          }
+          if (st === "text") {
+            this.entry.color = tColor.value || "";
+            this.entry.textColor = null;
+            this.entry.backgroundColor = null;
+          } else if (st === "highlight") {
+            this.entry.color = "";
+            this.entry.textColor = "currentColor";
+            this.entry.backgroundColor = bColor.value || "";
+          } else {
+            this.entry.color = "";
+            this.entry.textColor = tColor.value || "";
+            this.entry.backgroundColor = bColor.value || "";
+          }
         }
       }
       renderPreview();
     });
     const saveBtn = actions.createEl("button", { text: this.plugin.t("btn_save_style", "Save Style") });
     saveBtn.addClass("mod-cta");
-    const saveHandler = async () => {
+    const saveData = async (shouldClose = true) => {
       if (this.entry) {
         const st = styleSelect.value;
-        this.entry.styleType = st;
-        if (st === "text") {
-          this.entry.color = tColor.value || "";
-          this.entry.textColor = null;
-          this.entry.backgroundColor = null;
-        } else if (st === "highlight") {
-          this.entry.color = "";
-          this.entry.textColor = "currentColor";
-          this.entry.backgroundColor = bColor.value || "";
+        if (isGroup && !st) {
+          this.entry.styleType = void 0;
+          this.entry.color = void 0;
+          this.entry.textColor = void 0;
+          this.entry.backgroundColor = void 0;
         } else {
-          this.entry.color = "";
-          this.entry.textColor = tColor.value || "";
-          this.entry.backgroundColor = bColor.value || "";
+          this.entry.styleType = st;
+          if (st === "text") {
+            this.entry.color = tColor.value || "";
+            this.entry.textColor = null;
+            this.entry.backgroundColor = null;
+          } else if (st === "highlight") {
+            this.entry.color = "";
+            this.entry.textColor = "currentColor";
+            this.entry.backgroundColor = bColor.value || "";
+          } else {
+            this.entry.color = "";
+            this.entry.textColor = tColor.value || "";
+            this.entry.backgroundColor = bColor.value || "";
+          }
         }
         if (this._resetAllApplied) {
           this.entry.backgroundOpacity = void 0;
@@ -19536,7 +19753,21 @@ var HighlightStylingModal = class extends Modal {
             }
           }
         }
-        if (foundArray && foundIdx !== -1) {
+        if (foundIdx === -1 && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+          for (const group of this.plugin.settings.wordEntryGroups) {
+            if (group && Array.isArray(group.entries)) {
+              for (let i = 0; i < group.entries.length; i++) {
+                if (group.entries[i].uid === entryUid) {
+                  foundArray = group.entries;
+                  foundIdx = i;
+                  break;
+                }
+              }
+            }
+            if (foundIdx !== -1) break;
+          }
+        }
+        if (foundIdx !== -1 && foundArray) {
           foundArray[foundIdx].styleType = this.entry.styleType;
           foundArray[foundIdx].color = this.entry.color;
           foundArray[foundIdx].textColor = this.entry.textColor;
@@ -19550,12 +19781,8 @@ var HighlightStylingModal = class extends Modal {
           foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
           foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
           foundArray[foundIdx].borderThickness = this.entry.borderThickness;
-          debugLog("[SAVE_DEBUG]", `Entry at [${foundIdx}] in ${foundArray === this.plugin.settings.wordEntries ? "wordEntries" : "textBgColoringEntries"}: ${JSON.stringify({ pattern: foundArray[foundIdx].pattern, opacity: foundArray[foundIdx].backgroundOpacity, radius: foundArray[foundIdx].highlightBorderRadius, hPad: foundArray[foundIdx].highlightHorizontalPadding })}`);
         }
         await this.plugin.saveSettings();
-        if (foundArray && foundIdx !== -1) {
-          debugLog("[AFTER_SAVE]", `Memory check: entry still has opacity=${foundArray[foundIdx].backgroundOpacity}, radius=${foundArray[foundIdx].highlightBorderRadius}`);
-        }
         this.plugin.compileWordEntries();
         this.plugin.compileTextBgColoringEntries();
         this.plugin.reconfigureEditorExtensions();
@@ -19593,12 +19820,20 @@ var HighlightStylingModal = class extends Modal {
         } catch (e) {
         }
       }
-      this.close();
+      if (shouldClose) this.close();
     };
+    const saveHandler = () => saveData(true);
     saveBtn.addEventListener("click", saveHandler);
     this._handlers.push({ el: saveBtn, ev: "click", fn: saveHandler });
+    this._saveData = saveData;
   }
   onClose() {
+    try {
+      if (this._saveData) {
+        this._saveData(false);
+      }
+    } catch (e) {
+    }
     try {
       this._handlers.forEach((h) => {
         try {
@@ -19912,7 +20147,7 @@ var EditEntryModal = class extends Modal {
     controls.style.flexWrap = "wrap";
     controls.style.gap = "8px";
     controls.style.marginTop = "12px";
-    controls.style.alignItems = "stretch";
+    controls.style.alignItems = "center";
     controls.style.width = "100%";
     controls.style.boxSizing = "border-box";
     const groupSelect = controls.createEl("select");
@@ -19921,6 +20156,8 @@ var EditEntryModal = class extends Modal {
     groupSelect.style.minWidth = "max-content";
     groupSelect.style.maxWidth = "100%";
     groupSelect.style.width = "auto";
+    groupSelect.style.height = "32px";
+    groupSelect.style.padding = "0 10px";
     groupSelect.style.boxSizing = "border-box";
     groupSelect.style.border = "1px solid var(--background-modifier-border)";
     groupSelect.style.borderRadius = "4px";
@@ -19936,6 +20173,9 @@ var EditEntryModal = class extends Modal {
     groupSelect.value = currentGroupUid || "";
     if (!currentGroupUid && this.fromPickColorModal && this.entry && this.entry._preselectedGroupUid) {
       groupSelect.value = this.entry._preselectedGroupUid || "";
+    }
+    if (!groupsList || groupsList.length === 0) {
+      groupSelect.style.display = "none";
     }
     const groupChangeHandler = async () => {
       const newGroupUid = groupSelect.value || "";
@@ -19997,18 +20237,22 @@ var EditEntryModal = class extends Modal {
     groupSelect.addEventListener("change", groupChangeHandler);
     this._handlers.push({ el: groupSelect, ev: "change", fn: groupChangeHandler });
     const matchSelect = controls.createEl("select");
-    matchSelect.style.display = "none";
     matchSelect.style.flex = "0.5 0 auto";
     matchSelect.style.minWidth = "160px";
+    matchSelect.style.height = "32px";
+    matchSelect.style.padding = "0 10px";
+    matchSelect.style.boxSizing = "border-box";
     matchSelect.style.border = "1px solid var(--background-modifier-border)";
     matchSelect.style.borderRadius = "4px";
     matchSelect.style.background = "var(--background-modifier-form-field)";
     matchSelect.style.textAlign = "center";
     matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
     const caseSel = controls.createEl("select");
-    caseSel.style.display = "none";
     caseSel.style.flex = "0.5 0 auto";
     caseSel.style.minWidth = "160px";
+    caseSel.style.height = "32px";
+    caseSel.style.padding = "0 10px";
+    caseSel.style.boxSizing = "border-box";
     caseSel.style.border = "1px solid var(--background-modifier-border)";
     caseSel.style.borderRadius = "4px";
     caseSel.style.background = "var(--background-modifier-form-field)";
@@ -20021,6 +20265,8 @@ var EditEntryModal = class extends Modal {
       openRegexBtn.style.minWidth = "max-content";
       openRegexBtn.style.maxWidth = "100%";
       openRegexBtn.style.width = "auto";
+      openRegexBtn.style.height = "32px";
+      openRegexBtn.style.padding = "0 10px";
       openRegexBtn.style.boxSizing = "border-box";
       openRegexBtn.style.whiteSpace = "nowrap";
     }
@@ -20029,6 +20275,8 @@ var EditEntryModal = class extends Modal {
     hlBtn.style.minWidth = "max-content";
     hlBtn.style.maxWidth = "100%";
     hlBtn.style.width = "auto";
+    hlBtn.style.height = "32px";
+    hlBtn.style.padding = "0 10px";
     hlBtn.style.boxSizing = "border-box";
     hlBtn.style.whiteSpace = "nowrap";
     const rulesHeader = contentEl.createEl("h3", { text: this.plugin.t("inclusion_exclusion_header", "Inclusion / Exclusion Rules") });
@@ -20062,7 +20310,8 @@ var EditEntryModal = class extends Modal {
       if (defaultMatch === "endswith" || defaultMatch === "ends with") defaultMatch = "endswith";
       matchSelect.value = defaultMatch === "startswith" ? "startsWith" : defaultMatch === "endswith" ? "endsWith" : defaultMatch;
     }
-    caseSel.value = this.plugin.settings.caseSensitive ? "case" : "nocase";
+    const isCase = typeof this.entry.caseSensitive === "boolean" ? this.entry.caseSensitive : !!this.plugin.settings.caseSensitive;
+    caseSel.value = isCase ? "case" : "nocase";
     const renderPreview = () => {
       const raw = String(textInput.value || "");
       const style = styleSelect.value;
@@ -20190,8 +20439,16 @@ var EditEntryModal = class extends Modal {
     }
     const caseFn = async () => {
       const v = caseSel.value;
-      this.plugin.settings.caseSensitive = v === "case";
+      this.entry.caseSensitive = v === "case";
+      const idx = this.plugin.settings.wordEntries.indexOf(this.entry);
+      if (idx !== -1) this.plugin.settings.wordEntries[idx].caseSensitive = v === "case";
       await this.plugin.saveSettings();
+      this.plugin.compileWordEntries();
+      this.plugin.compileTextBgColoringEntries();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this.plugin.forceRefreshAllReadingViews();
+      this.plugin.triggerActiveDocumentRerender();
     };
     caseSel.addEventListener("change", caseFn);
     this._handlers.push({ el: caseSel, ev: "change", fn: caseFn });
@@ -20461,7 +20718,7 @@ var EditEntryModal = class extends Modal {
     saveRow.style.marginTop = "14px";
     const saveBtn = saveRow.createEl("button", { text: this.plugin.t("btn_save_entry", "Save Entry") });
     saveBtn.addClass("mod-cta");
-    const saveHandler = async () => {
+    const saveHandler = async (shouldClose = true) => {
       const st = styleSelect.value;
       let matchTypeVal = isRegex ? "regex" : matchSelect.value;
       if (matchTypeVal === "startsWith") matchTypeVal = "startswith";
@@ -20474,7 +20731,7 @@ var EditEntryModal = class extends Modal {
         const originalState = this.entry._originalState;
         const hasChanges = patternVal !== originalState.pattern || st !== originalState.styleType || textColorVal !== originalState.color || bgColorVal !== originalState.backgroundColor || matchTypeVal !== originalState.matchType;
         if (!hasChanges) {
-          this.close();
+          if (shouldClose) this.close();
           return;
         }
       }
@@ -20661,13 +20918,19 @@ var EditEntryModal = class extends Modal {
         } catch (e) {
         }
       }
-      this.close();
+      if (shouldClose) this.close();
     };
-    saveBtn.addEventListener("click", saveHandler);
-    this._handlers.push({ el: saveBtn, ev: "click", fn: saveHandler });
+    const boundSave = () => saveHandler(true);
+    saveBtn.addEventListener("click", boundSave);
+    this._handlers.push({ el: saveBtn, ev: "click", fn: boundSave });
+    this._saveData = saveHandler;
     this._refreshPreview = renderPreview;
   }
   onClose() {
+    try {
+      if (this._saveData) this._saveData(false);
+    } catch (e) {
+    }
     try {
       this._handlers.forEach((h) => {
         try {
@@ -21266,6 +21529,26 @@ var EditWordGroupModal = class extends Modal {
     };
     matchTypeSelect.addEventListener("change", matchTypeHandler);
     this._cleanupHandlers.push(() => matchTypeSelect.removeEventListener("change", matchTypeHandler));
+    const editBtn = topRow.createEl("button");
+    try {
+      setIcon(editBtn, "edit-3");
+    } catch (e) {
+    }
+    editBtn.title = this.plugin.t("edit_group_highlight_styling", "Edit Group Highlight Styling");
+    editBtn.style.flex = "0 0 auto";
+    editBtn.style.display = "flex";
+    editBtn.style.alignItems = "center";
+    editBtn.style.justifyContent = "center";
+    editBtn.style.padding = "6px";
+    editBtn.style.borderRadius = "4px";
+    editBtn.style.border = "1px solid var(--background-modifier-border)";
+    editBtn.style.background = "var(--background-modifier-form-field)";
+    editBtn.style.cursor = "pointer";
+    const editHandler = () => {
+      new HighlightStylingModal(this.app, this.plugin, this.group, this, this.group.name).open();
+    };
+    editBtn.addEventListener("click", editHandler);
+    this._cleanupHandlers.push(() => editBtn.removeEventListener("click", editHandler));
     const enableDisableRow = contentEl.createDiv();
     enableDisableRow.style.display = "grid";
     enableDisableRow.style.gridTemplateColumns = "auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)";
@@ -21501,6 +21784,7 @@ var EditWordGroupModal = class extends Modal {
           if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
           const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", styleType: "text", matchType: "contains", presetLabel: preset.label };
           if (preset.affectMarkElements) entry.affectMarkElements = true;
+          if (preset.targetElement) entry.targetElement = preset.targetElement;
           if (tc && bc) {
             entry.textColor = tc;
             entry.backgroundColor = bc;
@@ -22313,7 +22597,15 @@ var EditBlacklistGroupModal = class extends Modal {
     const presetsHandler = () => {
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
-        const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", matchType: "contains", presetLabel: preset.label };
+        const entry = {
+          pattern: preset.pattern,
+          isRegex: true,
+          flags: preset.flags || "",
+          matchType: "contains",
+          presetLabel: preset.label,
+          targetElement: preset.targetElement
+          // Preserve targetElement for logic-based coloring
+        };
         this.group.entries.push(entry);
         this._sortMode = "last-added";
         this._refreshGroupEntries();
@@ -22879,6 +23171,18 @@ var ColorSettingTab = class extends PluginSettingTab {
               this.plugin.settings.wordEntries[idx].groupedPatterns = null;
               entry.pattern = newPattern;
               entry.groupedPatterns = null;
+              const p = newPattern;
+              let te = void 0;
+              if (p === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") te = "strong";
+              else if (p === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") te = "em";
+              else if (p === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") te = "strong-em";
+              if (te) {
+                this.plugin.settings.wordEntries[idx].targetElement = te;
+                entry.targetElement = te;
+              } else if (entry.targetElement && (entry.targetElement === "strong" || entry.targetElement === "em" || entry.targetElement === "strong-em")) {
+                delete this.plugin.settings.wordEntries[idx].targetElement;
+                delete entry.targetElement;
+              }
             } else {
               const patterns = newPattern.split(",").map((p) => String(p).trim()).filter((p) => p.length > 0);
               this.plugin.settings.wordEntries[idx].pattern = patterns[0];
@@ -25976,6 +26280,11 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (e) {
         }
       }));
+      new Setting(containerEl2).setName(this.plugin.t("light_mode_fixer", "Light Mode Text Color Fixer")).setDesc(this.plugin.t("light_mode_fixer_desc", "Automatically darkens colored text when using Light theme to improve visibility.")).addToggle((t) => t.setValue(this.plugin.settings.lightModeFixer).onChange(async (v) => {
+        this.plugin.settings.lightModeFixer = v;
+        await this.debouncedSaveSettings();
+        this.plugin.updateLightModeFixer();
+      }));
       new Setting(containerEl2).setName(this.plugin.t("smart_update_mode", "Smart Updates (Experimental)")).setDesc(this.plugin.t("smart_update_mode_desc", "Only updates coloring for modified lines while typing. Freezes other lines to improve performance. May cause sync issues with multi-line patterns.")).addToggle((t) => t.setValue(this.plugin.settings.enableSmartUpdates).onChange(async (v) => {
         this.plugin.settings.enableSmartUpdates = v;
         await this.debouncedSaveSettings();
@@ -26833,6 +27142,7 @@ var ColorSettingTab = class extends PluginSettingTab {
             if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
             const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true, matchType: this.plugin.settings.partialMatch ? "contains" : "exact" };
             if (preset.affectMarkElements) entry.affectMarkElements = true;
+            if (preset.targetElement) entry.targetElement = preset.targetElement;
             try {
               entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
             } catch (e) {
@@ -27181,7 +27491,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       const blacklistPresetsHandler = () => {
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
-          const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true };
+          const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true, targetElement: preset.targetElement };
           try {
             newEntry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
           } catch (e) {
@@ -27958,7 +28268,7 @@ var ColorPickerModal = class extends Modal {
         btn.style.aspectRatio = "1 / 1";
         btn.style.minWidth = "44px";
         btn.style.minHeight = "44px";
-        btn.style.border = "1px solid var(--background-modifier-border)";
+        btn.style.setProperty("border", "transparent", "important");
         btn.style.borderRadius = "12px";
         btn.style.cursor = "pointer";
         btn.style.opacity = "1";
@@ -28482,6 +28792,9 @@ var ColorPickerModal = class extends Modal {
               styleType: "both",
               matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")
             };
+            if (newEntry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong";
+            else if (newEntry.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "em";
+            else if (newEntry.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong-em";
             targetArr.push(newEntry);
             debugLog("MODAL", "create both", newEntry);
           }
@@ -28533,6 +28846,9 @@ var ColorPickerModal = class extends Modal {
           if (!updated) {
             if (selectedGroup) {
               const newEntry = { pattern: word, color: textColor, isRegex: false, flags: "", styleType: "text", matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact") };
+              if (newEntry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong";
+              else if (newEntry.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "em";
+              else if (newEntry.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong-em";
               targetArr.push(newEntry);
               await this.plugin.saveSettings();
               this.plugin.compileWordEntries();
@@ -28587,6 +28903,9 @@ var ColorPickerModal = class extends Modal {
               styleType: "highlight",
               matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")
             };
+            if (newEntry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong";
+            else if (newEntry.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "em";
+            else if (newEntry.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong-em";
             targetArr.push(newEntry);
             debugLog("MODAL", "create highlight", newEntry);
           }
