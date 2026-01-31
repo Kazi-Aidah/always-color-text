@@ -6859,7 +6859,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   const html = `<span style="color: ${color}">${selectedText}</span>`;
                   editor.replaceSelection(html);
                 }
-              }, "text", selectedText).open();
+              }, "text", selectedText, true).open();
             });
           });
         }
@@ -25938,8 +25938,6 @@ var ColorSettingTab = class extends PluginSettingTab {
             } catch (_) {
             }
           }
-          preview.style.width = "20px";
-          preview.style.height = "20px";
           preview.style.flexShrink = "0";
           preview.style.display = "flex";
           preview.style.alignItems = "center";
@@ -25947,7 +25945,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           preview.style.fontSize = "12px";
           preview.style.fontWeight = "bold";
           preview.style.cursor = "default";
-          preview.textContent = "A";
+          preview.textContent = "Text";
           const t = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
           const b = group.backgroundColor || "";
           const p = this.plugin.getHighlightParams(group);
@@ -25960,6 +25958,10 @@ var ColorSettingTab = class extends PluginSettingTab {
             preview.style.backgroundColor = "transparent";
           }
           preview.style.borderRadius = (p.radius ?? 8) + "px";
+          preview.style.paddingLeft = (p.hPad ?? 4) + "px";
+          preview.style.paddingRight = (p.hPad ?? 4) + "px";
+          preview.style.paddingTop = (p.vPad ?? 0) + "px";
+          preview.style.paddingBottom = (p.vPad ?? 0) + "px";
           if (p.enableBorder) {
             const borderStyle = this.plugin.generateBorderStyle(t, b, group);
             if (borderStyle) {
@@ -28360,7 +28362,7 @@ var ColorPickerModal = class extends Modal {
     h2.style.marginTop = "0";
     h2.style.marginBottom = "0px";
     h2.style.flex = "1 1 auto";
-    const hideControls = !!this._hideHeaderControls;
+    const hideControls = !!this._hideHeaderControls || this.isQuickOnce;
     const groupsRaw = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
     const groups = this.plugin.settings.hideInactiveGroupsInDropdowns ? groupsRaw.filter((g) => g && g.active) : groupsRaw;
     if (!hideControls && groups.length > 0) {

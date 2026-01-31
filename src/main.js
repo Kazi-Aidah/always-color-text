@@ -2759,7 +2759,7 @@ module.exports = class AlwaysColorText extends Plugin {
                     const html = `<span style="color: ${color}">${selectedText}</span>`;
                     editor.replaceSelection(html);
                   }
-                }, 'text', selectedText).open();
+                }, 'text', selectedText, true).open();
               });
           });
         }
@@ -22629,8 +22629,6 @@ class ColorSettingTab extends PluginSettingTab {
         if (group.textColor || group.backgroundColor || (typeof group.enableBorderThickness !== 'undefined' && group.enableBorderThickness)) {
           const preview = row.createDiv();
           try { preview.addClass('act-group-styling-preview'); } catch (e) { try { preview.classList.add('act-group-styling-preview'); } catch (_) { } }
-          preview.style.width = '20px';
-          preview.style.height = '20px';
           preview.style.flexShrink = '0';
           preview.style.display = 'flex';
           preview.style.alignItems = 'center';
@@ -22638,7 +22636,7 @@ class ColorSettingTab extends PluginSettingTab {
           preview.style.fontSize = '12px';
           preview.style.fontWeight = 'bold';
           preview.style.cursor = 'default';
-          preview.textContent = 'A';
+          preview.textContent = 'Text';
 
           const t = group.textColor && group.textColor !== 'currentColor' ? group.textColor : '';
           const b = group.backgroundColor || '';
@@ -22656,6 +22654,10 @@ class ColorSettingTab extends PluginSettingTab {
           
           // Apply Highlight Styling Params
           preview.style.borderRadius = (p.radius ?? 8) + 'px';
+          preview.style.paddingLeft = (p.hPad ?? 4) + 'px';
+          preview.style.paddingRight = (p.hPad ?? 4) + 'px';
+          preview.style.paddingTop = (p.vPad ?? 0) + 'px';
+          preview.style.paddingBottom = (p.vPad ?? 0) + 'px';
           
           if (p.enableBorder) {
             const borderStyle = this.plugin.generateBorderStyle(t, b, group);
@@ -25130,7 +25132,7 @@ class ColorPickerModal extends Modal {
     h2.style.marginTop = '0';
     h2.style.marginBottom = '0px';
     h2.style.flex = '1 1 auto';
-    const hideControls = !!this._hideHeaderControls;
+    const hideControls = !!this._hideHeaderControls || this.isQuickOnce;
     const groupsRaw = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
     const groups = (this.plugin.settings.hideInactiveGroupsInDropdowns ? groupsRaw.filter(g => g && g.active) : groupsRaw);
     if (!hideControls && groups.length > 0) {
