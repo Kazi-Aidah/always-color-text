@@ -1,4 +1,4 @@
-﻿const {
+const {
   Plugin,
   PluginSettingTab,
   Setting,
@@ -4439,6 +4439,10 @@ module.exports = class AlwaysColorText extends Plugin {
         const textColor = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : null;
         const resolvedTextColor = textColor || entry.color || null;
 
+        if (resolvedTextColor && this.isDarkColor(resolvedTextColor)) {
+          span.classList.add('act-dark-color');
+        }
+
         if (styleType === 'text') {
           if (resolvedTextColor && !hideText) {
             try { span.style.setProperty('color', resolvedTextColor, 'important'); } catch (_) { span.style.color = resolvedTextColor; }
@@ -4751,6 +4755,9 @@ module.exports = class AlwaysColorText extends Plugin {
         // Create span with appropriate styling
         const span = document.createElement('span');
         span.className = 'always-color-text-highlight';
+        if ((color && this.isDarkColor(color)) || (bgColor && this.isDarkColor(bgColor))) {
+          span.classList.add('act-dark-color');
+        }
         span.textContent = text;
 
         if (styleType === 'text' && color) {
@@ -4931,8 +4938,19 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) { }
   }
 
+  updateDarkModeFixer() {
+    try {
+      if (this.settings.enabled && this.settings.darkModeFixer) {
+        document.body.classList.add('act-dark-mode-fix');
+      } else {
+        document.body.classList.remove('act-dark-mode-fix');
+      }
+    } catch (e) { }
+  }
+
   enablePluginFeatures() {
     this.updateLightModeFixer();
+    this.updateDarkModeFixer();
     this.applyFormattingStyles();
     if (!this.cmExtensionRegistered) {
       this.extension = this.buildEditorExtension();
@@ -5143,6 +5161,7 @@ module.exports = class AlwaysColorText extends Plugin {
   // --- Remove all CodeMirror extensions & listeners ---
   disablePluginFeatures() {
     try { document.body.classList.remove('act-light-mode-fix'); } catch (_) { }
+    try { document.body.classList.remove('act-dark-mode-fix'); } catch (_) { }
     if (this.cmExtensionRegistered && this.extension) {
       this.app.workspace.unregisterEditorExtension(this.extension);
       this.cmExtensionRegistered = false;
@@ -5738,6 +5757,7 @@ module.exports = class AlwaysColorText extends Plugin {
       pathSearchLimit: 0,
       showColoringReasonOnHover: false, // Show tooltip on hover explaining why text is colored
       lightModeFixer: false,
+      darkModeFixer: false,
     }, loadedData);
 
     // Migrate legacy keys and structures
@@ -7413,6 +7433,33 @@ module.exports = class AlwaysColorText extends Plugin {
     if (hex.includes(';') || hex.toLowerCase().includes('!important') || /\s/.test(hex)) return false;
     const hexRegex = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/;
     return hexRegex.test(hex);
+  }
+
+  // Helper: Check if a color is "dark" (low luminance)
+  isDarkColor(color) {
+    if (!color) return false;
+    try {
+      let r, g, b;
+      if (color.startsWith('#')) {
+        let hex = color.substring(1);
+        if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+        if (hex.length !== 6) return false;
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+      } else if (color.startsWith('rgb')) {
+        const parts = color.match(/\d+/g);
+        if (!parts || parts.length < 3) return false;
+        r = parseInt(parts[0]);
+        g = parseInt(parts[1]);
+        b = parseInt(parts[2]);
+      } else {
+        return false;
+      }
+      // Perceived luminance (YIQ/NTSC)
+      const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+      return luma < 60; // Threshold for "dark" (approx < 25% brightness)
+    } catch (e) { return false; }
   }
 
   hexToRgba(hex, opacityPercent) {
@@ -12159,9 +12206,11 @@ module.exports = class AlwaysColorText extends Plugin {
         style = `background: none; background-color: ${this.hexToRgba(m.color, opacity)} !important; border-radius: ${br}px !important; padding-left: ${hPad}px !important; padding-right: ${hPad}px !important; ${vPadCss}${boxDecoBreak}`;
       }
 
+      const isDark = m.color && this.isDarkColor(m.color);
       const deco = Decoration.mark({
         attributes: {
           style,
+          class: isDark ? 'always-color-text-highlight act-dark-color' : 'always-color-text-highlight',
           title: (this.settings.showColoringReasonOnHover && m.color) ? `matches "${m.entry?.pattern || ''}"` : ''
         }
       });
@@ -13612,10 +13661,13 @@ module.exports = class AlwaysColorText extends Plugin {
           style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         }
       }
+      const isDark = (m.color || m.textColor || m.backgroundColor) && this.isDarkColor(m.color || m.textColor || m.backgroundColor);
+      const baseClass = (m.entryRef && m.entryRef.affectMarkElements) ? 'always-color-text-highlight always-color-text-highlight-marks' : 'always-color-text-highlight';
+
       const deco = Decoration.mark({
         attributes: {
           style,
-          class: (m.entryRef && m.entryRef.affectMarkElements) ? 'always-color-text-highlight always-color-text-highlight-marks' : 'always-color-text-highlight',
+          class: isDark ? `${baseClass} act-dark-color` : baseClass,
           title: (this.settings.showColoringReasonOnHover && m.entry) ? this.getColoringReasonTooltip(m) : ''
         }
       });
@@ -14692,10 +14744,11 @@ module.exports = class AlwaysColorText extends Plugin {
           style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         }
       }
+      const isDark = (m.color || m.textColor || m.backgroundColor) && this.isDarkColor(m.color || m.textColor || m.backgroundColor);
       const deco = Decoration.mark({
         attributes: {
           style,
-          class: (m.entryRef && m.entryRef.affectMarkElements) ? 'always-color-text-highlight always-color-text-highlight-marks' : 'always-color-text-highlight',
+          class: ((m.entryRef && m.entryRef.affectMarkElements) ? 'always-color-text-highlight always-color-text-highlight-marks' : 'always-color-text-highlight') + (isDark ? ' act-dark-color' : ''),
           title: (this.settings.showColoringReasonOnHover && m.entry) ? this.getColoringReasonTooltip(m) : ''
         }
       });
@@ -23043,6 +23096,15 @@ class ColorSettingTab extends PluginSettingTab {
           this.plugin.settings.lightModeFixer = v;
           await this.debouncedSaveSettings();
           this.plugin.updateLightModeFixer();
+        }));
+
+      new Setting(containerEl)
+        .setName(this.plugin.t('dark_mode_fixer', 'Dark Mode Text Color Fixer'))
+        .setDesc(this.plugin.t('dark_mode_fixer_desc', 'Automatically lightens colored text when using Dark theme to improve visibility.'))
+        .addToggle(t => t.setValue(this.plugin.settings.darkModeFixer).onChange(async v => {
+          this.plugin.settings.darkModeFixer = v;
+          await this.debouncedSaveSettings();
+          this.plugin.updateDarkModeFixer();
         }));
 
       new Setting(containerEl)
