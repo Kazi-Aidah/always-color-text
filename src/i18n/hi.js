@@ -33,6 +33,8 @@ module.exports = {
   "file_menu_disable": "इस फ़ाइल के लिए हमेशा रंगीन टेक्स्ट बंद करें",
   "menu_color_once": "एक बार रंग लगाएँ",
   "menu_highlight_once": "एक बार हाइलाइट करें",
+  "menu_color_highlight_once": "रंग / एक बार हाइलाइट करें",
+  "menu_remove_inline_color": "इनलाइन रंग हटाएँ",
   "menu_always_color_text": "हमेशा रंगीन टेक्स्ट",
   "menu_remove_always_color_text": "हमेशा रंगीन टेक्स्ट हटाएँ",
   "menu_blacklist_word": "रंगाई से शब्द ब्लैकलिस्ट करें",
@@ -61,11 +63,19 @@ module.exports = {
   // Commands
   "command_color_selected": "चयनित टेक्स्ट रंगें",
   "command_toggle_current": "वर्तमान दस्तावेज़ के लिए रंगाई चालू/बंद करें",
-  "command_toggle_global": "हमेशा रंगीन टेक्स्ट चालू/बंद करें",
   "command_enable_current": "वर्तमान दस्तावेज़ के लिए रंगाई चालू करें",
   "command_disable_current": "वर्तमान दस्तावेज़ के लिए रंगाई बंद करें",
-  "command_enable_global": "हमेशा रंगीन टेक्स्ट चालू करें",
-  "command_disable_global": "हमेशा रंगीन टेक्स्ट बंद करें",
+  "command_toggle_global": "वैश्विक रंगाई सक्षम/अक्षम करें",
+  "command_enable_global": "वैश्विक रंगाई सक्षम करें",
+  "command_disable_global": "वैश्विक रंगाई अक्षम करें",
+  "enable_document_color": "वैश्विक रंग सक्षम करें",
+  "color_swatches_header": "रंग प्रबंधन",
+  "color_rendering_header": "रंग प्रतिपादन और प्रदर्शन",
+  "theme_support_header": "थीम समर्थन",
+  "matching_behavior_header": "मिलान व्यवहार",
+  "smart_updates": "स्मार्ट अपडेट (प्रयोगात्मक)",
+  "light_mode_fixer": "लाइट मोड टेक्स्ट कलर फिक्सर",
+  "dark_mode_fixer": "डार्क मोड टेक्स्ट कलर फिक्सर",
   "command_manage_advanced_rules": "विशिष्ट समावेशन/बहिष्करण नियम प्रबंधित करें",
   "command_open_regex_tester": "रेजेक्स जोड़ें (रेजेक्स टेस्टर खोलें)",
   "command_open_blacklist_regex_tester": "ब्लैकलिस्ट में रेजेक्स जोड़ें",
@@ -136,12 +146,11 @@ module.exports = {
   "btn_confirm": "पुष्टि करें",
   
   // Basic Settings
-  "enable_document_color": "दस्तावेज़ रंग चालू करें",
-  "color_in_live_preview_mode": "लाइव प्रीव्यू मोड में रंग लगाएँ",
+  "color_in_live_preview_mode": "लाइव पूर्वावलोकन मोड में रंग",
   "color_in_reading_mode": "रीडिंग मोड में रंग लगाएँ",
   "force_full_render_reading": "रीडिंग मोड में पूर्ण रेंडर फोर्स करें",
   "force_full_render_reading_desc": "जब चालू हो, तो रीडिंग-मोड पूरे दस्तावेज़ को एक पास में रंगने का प्रयास करेगा। बड़े दस्तावेज़ों पर प्रदर्शन समस्याएँ हो सकती हैं। सावधानी से उपयोग करें!",
-  "lightweight_mode": "प्रयोगात्मक: अत्यंत हल्का मोड",
+  "lightweight_mode": "Lightweight mode (Experimental)",
   "lightweight_mode_desc": "टाइप करते समय प्रोसेसिंग को काफी कम करता है। कुछ मिलान छूट सकते हैं।",
   "disable_coloring_current_file": "वर्तमान फ़ाइल के लिए रंगाई बंद करें",
   "disable_coloring_current_file_desc": "फ़ाइल और फ़ोल्डर रंगाई नियमों के तहत सक्रिय फ़ाइल के लिए एक बहिष्करण नियम जोड़ता है।",
@@ -165,6 +174,8 @@ module.exports = {
   "setting_color_once_desc": "चयनित टेक्स्ट के लिए HTML इनलाइन सम्मिलित करता है। प्लगइन बंद होने पर भी यह बना रहता है।",
   "setting_highlight_once": "एक बार हाइलाइट करें",
   "setting_highlight_once_desc": "बैकग्राउंड स्टाइलिंग के साथ HTML इनलाइन सम्मिलित करता है। प्लगइन बंद होने पर भी यह बना रहता है।",
+  "setting_color_highlight_once": "रंग और एक बार हाइलाइट करें",
+  "setting_color_highlight_once_desc": "दोनों पाठ रंग और पृष्ठभूमि हाइलाइट इनलाइन लागू करने के लिए एकीकृत रंग पिकर खोलता है। एकीकृत मेनू का उपयोग करता है।",
   "highlight_once_preview": "एक बार हाइलाइट प्रीव्यू",
   "highlight_once_preview_text": "देखें कि एक बार हाइलाइट कैसा दिखेगा!",
   
@@ -234,7 +245,7 @@ module.exports = {
   "opt_line_outset": "आउटसेट",
   
   // Color Swatches
-  "color_swatches_header": "रंग स्वैचेस",
+
   "color_picker_layout": "रंग पिकर लेआउट",
   "color_picker_layout_desc": "टेक्स्ट के लिए रंग चुनते समय कौन से रंग प्रकार दिखाने हैं चुनें",
   "opt_both_text_left": "दोनों: टेक्स्ट बाएँ, हाइलाइट दाएँ",
@@ -251,7 +262,7 @@ module.exports = {
   "use_swatch_names_desc": "शब्द/पैटर्न इनपुट्स के बगल में स्वैच नामों का ड्रॉपडाउन दिखाएँ",
   "link_swatches_to_entries": "स्वैच अपडेट्स को टेक्स्ट रंगों से लिंक करें",
   "link_swatches_to_entries_desc": "जब कस्टम स्वैच का रंग बदलता है, उस रंग का उपयोग करने वाले सभी एंट्रीज़ अपडेट करें",
-  "default_colors_header": "डिफॉल्ट रंग",
+  "default_colors_header": "डिफ़ॉल्ट नमूने",
   "custom_swatches_header": "कस्टम स्वैचेस",
   "btn_add_color": "+ रंग जोड़ें",
   "no_custom_swatches_yet": "अभी तक कोई कस्टम स्वैचेस नहीं। बनाने के लिए \"+ रंग जोड़ें\" क्लिक करें।",
@@ -495,6 +506,7 @@ module.exports = {
   "preview_text": "Text",
   
   // Quick Colors / Styles
+  "quick_actions_header": "Quick Actions",
   "quick_colors_header": "त्वरित रंग",
   "quick_colors_desc": "राइट-क्लिक मेनू में रंग दिखाकर टेक्स्ट को जल्दी से हाइलाइट या रंगने की अनुमति देता है। यदि त्वरित रंग बंद हैं, तो त्वरित शैलियों में प्रति-शैली रंगों का उपयोग किया जाएगा।",
   "quick_colors_apply_mode_label": "टेक्स्ट रंगाई इस रूप में लागू होगी",
@@ -524,5 +536,11 @@ module.exports = {
   "btn_duplicate_entry": "प्रविष्टि को डुप्लिकेट करें",
   "btn_open_in_regex_tester": "Regex Tester में खोलें",
   "move_to_blacklist_group": "काली सूची समूह को स्थानांतरित करें",
-  "btn_delete_entry": "प्रविष्टि हटाएं"
+  "btn_delete_entry": "प्रविष्टि हटाएं",
+  "edit_group_highlight_styling": "समूह हाइलाइट स्टाइल संपादित करें",
+  "light_mode_fixer_desc": "दृश्यता में सुधार के लिए लाइट थीम का उपयोग करते समय रंगीन टेक्स्ट को स्वचालित रूप से गहरा करता है।",
+  "dark_mode_fixer_desc": "दृश्यता में सुधार के लिए डार्क थीम का उपयोग करते समय रंगीन टेक्स्ट को स्वचालित रूप से हल्का करता है।",
+  "preset_bold": "बोल्ड",
+  "preset_italic": "इटालिक",
+  "preset_bold_italic": "बोल्ड इटालिक"
 };

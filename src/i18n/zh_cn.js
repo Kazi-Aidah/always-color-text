@@ -33,6 +33,8 @@ module.exports = {
   "file_menu_disable": "为此文件禁用文字自动着色",
   "menu_color_once": "着色一次",
   "menu_highlight_once": "高亮一次",
+  "menu_color_highlight_once": "颜色 / 高亮一次",
+  "menu_remove_inline_color": "移除内联颜色",
   "menu_always_color_text": "文字自动着色",
   "menu_remove_always_color_text": "移除文字自动着色",
   "menu_blacklist_word": "将单词加入着色黑名单",
@@ -61,11 +63,19 @@ module.exports = {
   // Commands
   "command_color_selected": "着色选中文字",
   "command_toggle_current": "启用/禁用当前文档着色",
-  "command_toggle_global": "启用/禁用文字自动着色",
-  "command_enable_current": "为当前文档启用着色",
-  "command_disable_current": "为当前文档禁用着色",
-  "command_enable_global": "启用文字自动着色",
-  "command_disable_global": "禁用文字自动着色",
+  "command_enable_current": "启用当前文档着色",
+  "command_disable_current": "禁用当前文档着色",
+  "command_toggle_global": "启用/禁用全局着色",
+  "command_enable_global": "启用全局着色",
+  "command_disable_global": "禁用全局着色",
+  "enable_document_color": "启用全局颜色",
+
+  "color_rendering_header": "颜色渲染与性能",
+  "theme_support_header": "主题支持",
+  "matching_behavior_header": "匹配行为",
+  "smart_updates": "智能更新 (实验性)",
+  "light_mode_fixer": "亮色模式文本颜色修复器",
+  "dark_mode_fixer": "暗色模式文本颜色修复器",
   "command_manage_advanced_rules": "管理特定包含/排除规则",
   "command_open_regex_tester": "添加正则表达式（打开正则表达式测试器）",
   "command_open_blacklist_regex_tester": "添加黑名单正则表达式",
@@ -134,12 +144,11 @@ module.exports = {
   "restart_required_desc": "禁用命令面板中的激活需要重启 Obsidian 才能从命令面板中完全移除该命令。现在重启吗？",
   
   // Basic Settings
-  "enable_document_color": "启用文档着色",
   "color_in_live_preview_mode": "在实时预览模式下着色",
   "color_in_reading_mode": "在阅读模式下着色",
   "force_full_render_reading": "阅读模式下强制完整渲染",
   "force_full_render_reading_desc": "如果启用，阅读模式将尝试一次性着色整个文档。在大型文档上可能会导致卡顿，请谨慎使用！",
-  "lightweight_mode": "实验功能：极致轻量模式",
+  "lightweight_mode": "Lightweight mode (Experimental)",
   "lightweight_mode_desc": "在输入时大幅减少处理量。可能会漏掉部分匹配。",
   "disable_coloring_current_file": "禁用当前文件着色",
   "disable_coloring_current_file_desc": "在文件和文件夹着色规则下为活动文件添加排除规则。",
@@ -162,6 +171,8 @@ module.exports = {
   "setting_color_once_desc": "为选定的文本插入内联 HTML 样式。即使禁用插件也会保留。",
   "setting_highlight_once": "高亮一次",
   "setting_highlight_once_desc": "插入带背景的内联 HTML 样式。即使禁用插件也会保留。",
+  "setting_color_highlight_once": "颜色和高亮一次",
+  "setting_color_highlight_once_desc": "打开统一的颜色选择器以应用内联文本颜色和背景高亮。使用统一菜单。",
   "highlight_once_preview": "高亮一次预览",
   "highlight_once_preview_text": "这就是高亮一次的样子！",
   
@@ -231,7 +242,7 @@ module.exports = {
   "opt_line_outset": "外凸",
   
   // Color Swatches
-  "color_swatches_header": "色板",
+  "color_swatches_header": "颜色管理",
   "color_picker_layout": "颜色选择器布局",
   "color_picker_layout_desc": "选择为单词选择颜色时显示的颜色类型",
   "opt_both_text_left": "两者：文本左，高亮右",
@@ -248,7 +259,7 @@ module.exports = {
   "use_swatch_names_desc": "在单词/模式输入旁边显示色板名称下拉列表",
   "link_swatches_to_entries": "将色板更新链接到着色文本",
   "link_swatches_to_entries_desc": "当自定义色板的颜色更改时，更新所有使用该色板的条目",
-  "default_colors_header": "默认颜色",
+  "default_colors_header": "默认色板",
   "custom_swatches_header": "自定义色板",
   "btn_add_color": "+ 添加颜色",
   "no_custom_swatches_yet": "尚无自定义色板。点击 \"+ 添加颜色\" 创建一个。",
@@ -488,6 +499,7 @@ module.exports = {
   "btn_save_style": "保存样式",
   
   // Quick Colors / Styles
+  "quick_actions_header": "Quick Actions",
   "quick_colors_header": "快速颜色",
   "quick_colors_desc": "允许通过在右键菜单中显示颜色来快速高亮或着色文本。如果关闭快速颜色，将使用快速样式中的每种样式颜色。",
   "quick_colors_apply_mode_label": "文本着色将应用为",
@@ -524,5 +536,11 @@ module.exports = {
   "share_export_title": "Always Color Text 导出",
   "delete_button_text": "✕",
   "style_name_placeholder": "样式名称",
-  "preview_text": "文本"
+  "preview_text": "文本",
+  "edit_group_highlight_styling": "编辑组高亮样式",
+  "light_mode_fixer_desc": "使用浅色主题时自动加深彩色文本以提高可见性。",
+  "dark_mode_fixer_desc": "使用深色主题时自动变浅彩色文本以提高可见性。",
+  "preset_bold": "粗体",
+  "preset_italic": "斜体",
+  "preset_bold_italic": "粗斜体"
 };

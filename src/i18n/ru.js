@@ -33,6 +33,8 @@ module.exports = {
   "file_menu_disable": "Отключить окрашивание для этого файла",
   "menu_color_once": "Окрасить однократно",
   "menu_highlight_once": "Подсветить однократно",
+  "menu_color_highlight_once": "Цвет / Подсветить однократно",
+  "menu_remove_inline_color": "Убрать Инлайн Цвет",
   "menu_always_color_text": "Изменить внешний вид текста",
   "menu_remove_always_color_text": "Убрать Always Color Text",
   "menu_blacklist_word": "Добавить слово в чёрный список",
@@ -61,11 +63,19 @@ module.exports = {
   // Commands
   "command_color_selected": "Изменить внешний вид выделенного текста",
   "command_toggle_current": "Включить/отключить окрашивание для текущего документа",
-  "command_toggle_global": "Включить/отключить Always Color Text",
   "command_enable_current": "Включить окрашивание для текущего документа",
   "command_disable_current": "Отключить окрашивание для текущего документа",
-  "command_enable_global": "Включить Always Color Text",
-  "command_disable_global": "Отключить Always Color Text",
+  "command_toggle_global": "Включить/отключить глобальное окрашивание",
+  "command_enable_global": "Включить глобальное окрашивание",
+  "command_disable_global": "Отключить глобальное окрашивание",
+  "enable_document_color": "Включить глобальное окрашивание",
+  "color_swatches_header": "Управление цветом",
+  "color_rendering_header": "Рендеринг цвета и производительность",
+  "theme_support_header": "Поддержка тем",
+  "matching_behavior_header": "Поведение сопоставления",
+  "smart_updates": "Умные обновления (Экспериментальный)",
+  "light_mode_fixer": "Исправление цвета текста в светлом режиме",
+  "dark_mode_fixer": "Исправление цвета текста в темном режиме",
   "command_manage_advanced_rules": "Управление специфическими правилами включения/исключения",
   "command_open_regex_tester": "Добавить Regex (Открыть конфигуратор Regex)",
   "command_open_blacklist_regex_tester": "Добавить Regex в чёрный список",
@@ -138,12 +148,11 @@ module.exports = {
   "restart_required_desc": "Для полного удаления команды из палитры команд требуется перезагрузка Obsidian. Перезагрузить сейчас?",
   
   // Basic Settings
-  "enable_document_color": "Включить окрашивание документа",
-  "color_in_live_preview_mode": "Окрашивать в режиме Live Preview",
+  "color_in_live_preview_mode": "Цвет в режиме предпросмотра",
   "color_in_reading_mode": "Окрашивать в режиме чтения",
   "force_full_render_reading": "Принудительно выполнять полный рендеринг в режиме чтения",
   "force_full_render_reading_desc": "Если включено, режим чтения попытается окрасить весь документ сразу. Может вызвать замедление на больших документах, используйте с осторожностью!",
-  "lightweight_mode": "Экспериментально: сверхлёгкий режим",
+  "lightweight_mode": "Lightweight mode (Experimental)",
   "lightweight_mode_desc": "Сильно уменьшает объём обработки во время набора текста. Может пропускать некоторые совпадения.",
   "disable_coloring_current_file": "Отключить окрашивание для текущего файла",
   "disable_coloring_current_file_desc": "Добавляет правило исключения для активного файла в раздел «Правила окрашивания файлов и папок».",
@@ -166,6 +175,8 @@ module.exports = {
   "setting_color_once_desc": "Вставить inline HTML стиль для выделенного текста. Сохраняется даже если плагин отключён.",
   "setting_highlight_once": "Подсветить однократно",
   "setting_highlight_once_desc": "Вставить inline HTML стиль с фоном. Сохраняется даже если плагин отключён.",
+  "setting_color_highlight_once": "Цвет и Подсветить однократно",
+  "setting_color_highlight_once_desc": "Открывает унифицированный селектор цвета для применения как цвета текста, так и подсветки фона в строке. Использует унифицированное меню.",
   "highlight_once_preview": "Предпросмотр однократной подсветки",
   "highlight_once_preview_text": "Так будет выглядеть однократная подсветка!",
   
@@ -235,7 +246,7 @@ module.exports = {
   "opt_line_outset": "Выступ",
   
   // Color Swatches
-  "color_swatches_header": "Палитры цветов",
+
   "color_picker_layout": "Макет выбора цвета",
   "color_picker_layout_desc": "Выберите типы цветов для отображения при выборе цвета для слова",
   "opt_both_text_left": "Оба: Текст Слева, Подсветка Справа",
@@ -252,7 +263,7 @@ module.exports = {
   "use_swatch_names_desc": "Показывать выпадающий список имен палитр рядом с вводом слова/шаблона",
   "link_swatches_to_entries": "Связать обновления палитр с окрашенными текстами",
   "link_swatches_to_entries_desc": "Обновлять все записи, использующие пользовательскую палитру, когда цвет этой палитры меняется",
-  "default_colors_header": "Цвета по умолчанию",
+  "default_colors_header": "Образцы по умолчанию",
   "custom_swatches_header": "Пользовательские палитры",
   "btn_add_color": "+ Добавить цвет",
   "no_custom_swatches_yet": "Пока нет пользовательских палитр. Нажмите «+ Добавить цвет», чтобы создать.",
@@ -492,6 +503,7 @@ module.exports = {
   "btn_save_style": "Сохранить стиль",
   
   // Quick Colors / Styles
+  "quick_actions_header": "Quick Actions",
   "quick_colors_header": "Быстрые цвета",
   "quick_colors_desc": "Позволяет быстро подсвечивать или окрашивать текст, показывая цвета в контекстном меню. Если Быстрые цвета отключены, будут использоваться цвета стилей из Быстрых стилей.",
   "quick_colors_apply_mode_label": "Окрашивать текст с помощью",
@@ -521,7 +533,13 @@ module.exports = {
   "btn_duplicate_entry": "Дублировать запись",
   "btn_open_in_regex_tester": "Открыть в конфигураторе Regex",
   "move_to_blacklist_group": "Перенести в сгруппированный чёрный список",
-  "btn_delete_entry": "Удалить запись"
+  "btn_delete_entry": "Удалить запись",
+  "edit_group_highlight_styling": "Редактировать стиль выделения группы",
+  "light_mode_fixer_desc": "Автоматически затемняет цветной текст при использовании светлой темы для улучшения видимости.",
+  "dark_mode_fixer_desc": "Автоматически осветляет цветной текст при использовании темной темы для улучшения видимости.",
+  "preset_bold": "Жирный",
+  "preset_italic": "Курсив",
+  "preset_bold_italic": "Жирный курсив"
 };
 
 // Thanks @Frumkin13 for the translation <3

@@ -38,6 +38,8 @@ var require_en = __commonJS({
       "file_menu_disable": "Disable Always Color Text for this file",
       "menu_color_once": "Color Once",
       "menu_highlight_once": "Highlight Once",
+      "menu_color_highlight_once": "Color / Highlight Once",
+      "menu_remove_inline_color": "Remove Inline Color",
       "menu_always_color_text": "Always Color Text",
       "menu_remove_always_color_text": "Remove Always Color Text",
       "menu_blacklist_word": "Blacklist Word",
@@ -71,11 +73,11 @@ var require_en = __commonJS({
       // Commands
       "command_color_selected": "Color Selected Text",
       "command_toggle_current": "Enable/Disable coloring for current document",
-      "command_toggle_global": "Enable/Disable Always Color Text",
+      "command_toggle_global": "Enable/Disable Global Coloring",
       "command_enable_current": "Enable coloring for current document",
       "command_disable_current": "Disable coloring for current document",
-      "command_enable_global": "Enable Always Color Text",
-      "command_disable_global": "Disable Always Color Text",
+      "command_enable_global": "Enable Global Coloring",
+      "command_disable_global": "Disable Global Coloring",
       "command_manage_advanced_rules": "manage specific include/exclude rules",
       "command_open_regex_tester": "Add Regex (Open Regex Tester)",
       "command_open_blacklist_regex_tester": "Add Blacklist Regex",
@@ -141,12 +143,18 @@ var require_en = __commonJS({
       "btn_cancel": "Cancel",
       "btn_confirm": "Confirm",
       // Basic Settings
-      "enable_document_color": "Enable Document Color",
+      "enable_document_color": "Enable Global Color",
+      "color_rendering_header": "Color Rendering & Performance",
+      "theme_support_header": "Theme Support",
+      "matching_behavior_header": "Matching Behavior",
+      "smart_updates": "Smart Updates (Experimental)",
+      "light_mode_fixer": "Light Mode Text Color Fixer",
+      "dark_mode_fixer": "Dark Mode Text Color Fixer",
       "color_in_live_preview_mode": "Color in Live Preview Mode",
       "color_in_reading_mode": "Color in Reading Mode",
       "force_full_render_reading": "Force Full Render in Reading Mode",
       "force_full_render_reading_desc": "If on, Reading Mode will try to color the whole document at once. May cause lag on large docs, use carefully!",
-      "lightweight_mode": "Experimental: Extremely lightweight mode",
+      "lightweight_mode": "Lightweight mode (Experimental)",
       "lightweight_mode_desc": "Greatly reduces processing while typing. May skip some matches.",
       "disable_coloring_current_file": "Disable coloring for current file",
       "disable_coloring_current_file_desc": "Adds an exclude rule for the active file under File & Folder Coloring Rules.",
@@ -168,6 +176,8 @@ var require_en = __commonJS({
       "setting_color_once_desc": "Insert HTML inline style for selected text. Persists even if plugin is off.",
       "setting_highlight_once": "Highlight Once",
       "setting_highlight_once_desc": "Insert HTML inline style with background. Persists even if plugin is off.",
+      "setting_color_highlight_once": "Color & Highlight Once",
+      "setting_color_highlight_once_desc": "Opens the unified color picker to apply both text color and background highlight inline. Uses Unified Menu.",
       "highlight_once_preview": "Highlight Once Preview",
       "highlight_once_preview_text": "This is how highlight once looks!",
       // Highlight Once Settings
@@ -232,24 +242,18 @@ var require_en = __commonJS({
       "opt_line_inset": "Inset",
       "opt_line_outset": "Outset",
       // Color Swatches
-      "color_swatches_header": "Color Swatches",
+      "color_swatches_header": "Color Management",
       "color_picker_layout": "Color Picker Layout",
-      "color_picker_layout_desc": "Choose what color types to show when picking a color for a word",
-      "opt_both_text_left": "Both: Text Left, Highlight Right",
-      "opt_both_bg_left": "Both: Highlight Left, Text Right",
-      "opt_both_text_top": "Both (Vertical): Text Top, Highlight Bottom",
-      "opt_both_bg_top": "Both (Vertical): Highlight Top, Text Bottom",
-      "opt_text_only": "Text Color Only",
-      "opt_background_only": "Highlight Color Only",
-      "replace_default_swatches": "Replace Default Swatches",
-      "replace_default_swatches_desc": "If on, only your custom colors show in the picker, no defaults!",
-      "enable_custom_swatches": "Enable Custom Swatches",
-      "enable_custom_swatches_desc": "If on, your custom swatches will appear in the color picker.",
-      "use_swatch_names": "Color Text Using Swatch Names",
-      "use_swatch_names_desc": "Show a dropdown of swatch names next to the word/pattern input",
-      "link_swatches_to_entries": "Link Swatch Updates to Colored Texts",
-      "link_swatches_to_entries_desc": "Update all entries using a custom swatch when that swatch color changes",
-      "default_colors_header": "Default Colors",
+      "color_picker_layout_desc": "Choose which color types to show when picking colors for text",
+      "enable_custom_swatches": "Enable custom swatches",
+      "enable_custom_swatches_desc": "Turn this on if you want to pick your own colors for the color picker.",
+      "replace_default_swatches": "Replace default swatches",
+      "replace_default_swatches_desc": "If enabled, only your custom swatches will be shown. If disabled, they will be appended to the default ones.",
+      "use_swatch_names": "Use swatch names for coloring text",
+      "use_swatch_names_desc": "If enabled, the text will be colored using the name of the swatch (e.g., 'Red') instead of the hex code.",
+      "link_swatch_updates": "Link swatch updates to text colors",
+      "link_swatch_updates_desc": "If enabled, updating a swatch color will update all text colored with that swatch.",
+      "default_colors_header": "Default Swatches",
       "custom_swatches_header": "Custom Swatches",
       "btn_add_color": "+ Add Color",
       "no_custom_swatches_yet": 'No custom swatches yet. Click "+ Add Color" to create one.',
@@ -482,6 +486,7 @@ var require_en = __commonJS({
       "style_name_placeholder": "Style Name",
       "preview_text": "Text",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "Quick Colors",
       "quick_colors_desc": "Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used.",
       "quick_colors_apply_mode_label": "The text coloring will apply as",
@@ -510,7 +515,10 @@ var require_en = __commonJS({
       "btn_duplicate_entry": "Duplicate Entry",
       "btn_open_in_regex_tester": "Open in Regex Tester",
       "move_to_blacklist_group": "Move to Blacklist Group",
-      "btn_delete_entry": "Delete Entry"
+      "btn_delete_entry": "Delete Entry",
+      "edit_group_highlight_styling": "Edit Group Highlight Styling",
+      "light_mode_fixer_desc": "Automatically darkens colored text when using Light theme to improve visibility.",
+      "dark_mode_fixer_desc": "Automatically lightens colored text when using Dark theme to improve visibility."
     };
   }
 });
@@ -550,6 +558,8 @@ var require_es = __commonJS({
       "file_menu_disable": "Desactivar always color text para este archivo",
       "menu_color_once": "Colorear Una Vez",
       "menu_highlight_once": "Resaltar Una Vez",
+      "menu_color_highlight_once": "Color / Resaltar Una Vez",
+      "menu_remove_inline_color": "Eliminar Color Inline",
       "menu_always_color_text": "Always color text",
       "menu_remove_always_color_text": "Eliminar Always Color Text",
       "menu_blacklist_word": "A\xF1adir Palabra a la Lista Negra",
@@ -577,11 +587,19 @@ var require_es = __commonJS({
       // Commands
       "command_color_selected": "Colorear Texto Seleccionado",
       "command_toggle_current": "Activar/Desactivar coloreado para el documento actual",
-      "command_toggle_global": "Activar/Desactivar Always Color Text",
       "command_enable_current": "Activar coloreado para el documento actual",
       "command_disable_current": "Desactivar coloreado para el documento actual",
-      "command_enable_global": "Activar Always Color Text",
-      "command_disable_global": "Desactivar Always Color Text",
+      "command_toggle_global": "Activar/Desactivar coloraci\xF3n global",
+      "command_enable_global": "Activar coloraci\xF3n global",
+      "command_disable_global": "Desactivar coloraci\xF3n global",
+      "enable_document_color": "Activar color global",
+      "color_swatches_header": "Gesti\xF3n del color",
+      "color_rendering_header": "Renderizado de color y rendimiento",
+      "theme_support_header": "Soporte de temas",
+      "matching_behavior_header": "Comportamiento de coincidencia",
+      "smart_updates": "Actualizaciones inteligentes (Experimental)",
+      "light_mode_fixer": "Corrector de color de texto en modo claro",
+      "dark_mode_fixer": "Corrector de color de texto en modo oscuro",
       "command_manage_advanced_rules": "gestionar reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
       "command_open_regex_tester": "A\xF1adir Regex (Abrir Probador de Regex)",
       "command_open_blacklist_regex_tester": "Agregar Expresi\xF3n Regular de Lista Negra",
@@ -647,12 +665,11 @@ var require_es = __commonJS({
       "restart_required_title": "Reinicio necesario",
       "restart_required_desc": "Desactivar la alternancia en la paleta de comandos requiere reiniciar Obsidian para eliminar completamente el comando de la paleta. \xBFReiniciar ahora?",
       // Basic Settings
-      "enable_document_color": "Activar color en el documento",
       "color_in_live_preview_mode": "Colorear en Modo Vista Previa",
       "color_in_reading_mode": "Colorear en Modo Lectura",
       "force_full_render_reading": "Forzar renderizado completo en Modo Lectura",
       "force_full_render_reading_desc": "Si est\xE1 activado, el Modo Lectura intentar\xE1 colorear todo el documento a la vez. \xA1Puede causar retrasos en documentos grandes, \xFAsalo con cuidado!",
-      "lightweight_mode": "Experimental: modo extremadamente ligero",
+      "lightweight_mode": "Lightweight mode (Experimental)",
       "lightweight_mode_desc": "Reduce mucho el procesamiento mientras escribes. Puede saltarse algunas coincidencias.",
       "disable_coloring_current_file": "Desactivar coloreado para el archivo actual",
       "disable_coloring_current_file_desc": "A\xF1ade una regla de exclusi\xF3n para el archivo activo en Reglas de Coloreado para Archivos y Carpetas.",
@@ -673,6 +690,8 @@ var require_es = __commonJS({
       "setting_color_once_desc": "Insertar estilo HTML inline para el texto seleccionado. Persiste incluso si el plugin est\xE1 desactivado.",
       "setting_highlight_once": "Resaltar Una Vez",
       "setting_highlight_once_desc": "Insertar estilo HTML inline con fondo. Persiste incluso si el plugin est\xE1 desactivado.",
+      "setting_color_highlight_once": "Color y Resaltar una vez",
+      "setting_color_highlight_once_desc": "Abre el selector de color unificado para aplicar tanto el color del texto como el resaltado de fondo en l\xEDnea. Utiliza el men\xFA unificado.",
       "highlight_once_preview": "Vista previa de Resaltar Una Vez",
       "highlight_once_preview_text": "\xA1As\xED se ve el resaltado una vez!",
       // Highlight Once Settings
@@ -737,7 +756,6 @@ var require_es = __commonJS({
       "opt_line_inset": "Recuadro",
       "opt_line_outset": "Relieve",
       // Color Swatches
-      "color_swatches_header": "Muestras de Color",
       "color_picker_layout": "Dise\xF1o del Selector de Color",
       "color_picker_layout_desc": "Elige qu\xE9 tipos de color mostrar al elegir un color para una palabra",
       "opt_both_text_left": "Ambos: Texto Izquierda, Resaltado Derecha",
@@ -754,7 +772,7 @@ var require_es = __commonJS({
       "use_swatch_names_desc": "Mostrar un men\xFA desplegable de nombres de muestras junto a la entrada de palabra/patr\xF3n",
       "link_swatches_to_entries": "Vincular actualizaciones de muestras a textos coloreados",
       "link_swatches_to_entries_desc": "Actualizar todas las entradas que usan una muestra personalizada cuando cambia el color de esa muestra",
-      "default_colors_header": "Colores Predeterminados",
+      "default_colors_header": "Muestras predeterminadas",
       "custom_swatches_header": "Muestras Personalizadas",
       "btn_add_color": "+ A\xF1adir Color",
       "no_custom_swatches_yet": 'A\xFAn no hay muestras personalizadas. Haz clic en "+ A\xF1adir Color" para crear una.',
@@ -979,6 +997,7 @@ var require_es = __commonJS({
       "label_border_thickness": "Grosor del borde",
       "btn_save_style": "Guardar estilo",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "Colores R\xE1pidos",
       "quick_colors_desc": "Permite resaltar o colorear texto r\xE1pidamente mostrando colores en el men\xFA contextual. Si Colores R\xE1pidos est\xE1 desactivado, se usar\xE1n los colores por estilo en Estilos R\xE1pidos.",
       "quick_colors_apply_mode_label": "El coloreado de texto se aplicar\xE1 como",
@@ -1014,7 +1033,13 @@ var require_es = __commonJS({
       "share_export_title": "Always Color Text exportaci\xF3n",
       "delete_button_text": "\u2715",
       "style_name_placeholder": "Nombre del estilo",
-      "preview_text": "Texto"
+      "preview_text": "Texto",
+      "edit_group_highlight_styling": "Editar estilo de resaltado del grupo",
+      "light_mode_fixer_desc": "Oscurece autom\xE1ticamente el texto coloreado al usar el tema claro para mejorar la visibilidad.",
+      "dark_mode_fixer_desc": "Aclara autom\xE1ticamente el texto coloreado al usar el tema oscuro para mejorar la visibilidad.",
+      "preset_bold": "Negrita",
+      "preset_italic": "Cursiva",
+      "preset_bold_italic": "Negrita Cursiva"
     };
   }
 });
@@ -1054,6 +1079,8 @@ var require_fr = __commonJS({
       "file_menu_disable": "D\xE9sactiver toujours colorer le texte pour ce fichier",
       "menu_color_once": "Colorer une fois",
       "menu_highlight_once": "Surligner une fois",
+      "menu_color_highlight_once": "Couleur / Surligner une fois",
+      "menu_remove_inline_color": "Supprimer la couleur en ligne",
       "menu_always_color_text": "Toujours colorer le texte",
       "menu_remove_always_color_text": "Supprimer Always Color Text",
       "menu_blacklist_word": "Mettre le mot en liste noire pour le coloriage",
@@ -1081,11 +1108,19 @@ var require_fr = __commonJS({
       // Commands
       "command_color_selected": "Colorer le texte s\xE9lectionn\xE9",
       "command_toggle_current": "Activer/D\xE9sactiver le coloriage pour le document actuel",
-      "command_toggle_global": "Activer/D\xE9sactiver Always Color Text",
       "command_enable_current": "Activer le coloriage pour le document actuel",
       "command_disable_current": "D\xE9sactiver le coloriage pour le document actuel",
-      "command_enable_global": "Activer Always Color Text",
-      "command_disable_global": "D\xE9sactiver Always Color Text",
+      "command_toggle_global": "Activer/D\xE9sactiver la coloration globale",
+      "command_enable_global": "Activer la coloration globale",
+      "command_disable_global": "D\xE9sactiver la coloration globale",
+      "enable_document_color": "Activer la couleur globale",
+      "color_swatches_header": "Gestion des couleurs",
+      "color_rendering_header": "Rendu des couleurs et performances",
+      "theme_support_header": "Support de th\xE8me",
+      "matching_behavior_header": "Comportement de correspondance",
+      "smart_updates": "Mises \xE0 jour intelligentes (Exp\xE9rimental)",
+      "light_mode_fixer": "Correcteur de couleur de texte en mode clair",
+      "dark_mode_fixer": "Correcteur de couleur de texte en mode sombre",
       "command_manage_advanced_rules": "g\xE9rer les r\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
       "command_open_regex_tester": "Ajouter Regex (Ouvrir le Testeur Regex)",
       "command_open_blacklist_regex_tester": "Ajouter Regex \xE0 la Liste Noire",
@@ -1151,12 +1186,11 @@ var require_fr = __commonJS({
       "restart_required_title": "Red\xE9marrage requis",
       "restart_required_desc": "D\xE9sactiver l'activation dans la palette de commandes n\xE9cessite un red\xE9marrage d'Obsidian pour supprimer compl\xE8tement la commande de la palette. Red\xE9marrer maintenant ?",
       // Basic Settings
-      "enable_document_color": "Activer la couleur du document",
-      "color_in_live_preview_mode": "Colorer en mode pr\xE9visualisation",
+      "color_in_live_preview_mode": "Colore en mode aper\xE7u direct",
       "color_in_reading_mode": "Colorer en mode lecture",
       "force_full_render_reading": "Forcer le rendu complet en mode lecture",
       "force_full_render_reading_desc": "Si activ\xE9, le mode lecture essaiera de colorer tout le document \xE0 la fois. Peut causer des ralentissements sur les gros documents, utilisez avec prudence !",
-      "lightweight_mode": "Exp\xE9rimental : mode extr\xEAmement l\xE9ger",
+      "lightweight_mode": "Lightweight mode (Experimental)",
       "lightweight_mode_desc": "R\xE9duit fortement le traitement pendant la frappe. Peut ignorer certaines correspondances.",
       "disable_coloring_current_file": "D\xE9sactiver le coloriage pour le fichier actuel",
       "disable_coloring_current_file_desc": "Ajoute une r\xE8gle d'exclusion pour le fichier actif sous R\xE8gles de coloriage des fichiers et dossiers.",
@@ -1177,6 +1211,8 @@ var require_fr = __commonJS({
       "setting_color_once_desc": "Ins\xE9rer un style HTML en ligne pour le texte s\xE9lectionn\xE9. Persiste m\xEAme si le plugin est d\xE9sactiv\xE9.",
       "setting_highlight_once": "Surligner une fois",
       "setting_highlight_once_desc": "Ins\xE9rer un style HTML en ligne avec fond. Persiste m\xEAme si le plugin est d\xE9sactiv\xE9.",
+      "setting_color_highlight_once": "Couleur et Surligner une fois",
+      "setting_color_highlight_once_desc": "Ouvre le s\xE9lecteur de couleur unifi\xE9 pour appliquer \xE0 la fois la couleur du texte et le surlignage de l'arri\xE8re-plan en ligne. Utilise le menu unifi\xE9.",
       "highlight_once_preview": "Aper\xE7u de Surligner une fois",
       "highlight_once_preview_text": "Voici \xE0 quoi ressemble le surlignage une fois !",
       // Highlight Once Settings
@@ -1241,7 +1277,6 @@ var require_fr = __commonJS({
       "opt_line_inset": "Incrust\xE9",
       "opt_line_outset": "Relief",
       // Color Swatches
-      "color_swatches_header": "Nuanciers de couleurs",
       "color_picker_layout": "Disposition du s\xE9lecteur de couleurs",
       "color_picker_layout_desc": "Choisissez les types de couleurs \xE0 afficher lors du choix d'une couleur pour un mot",
       "opt_both_text_left": "Les deux : Texte Gauche, Surbrillance Droite",
@@ -1258,7 +1293,7 @@ var require_fr = __commonJS({
       "use_swatch_names_desc": "Afficher une liste d\xE9roulante des noms de nuanciers \xE0 c\xF4t\xE9 de l'entr\xE9e mot/motif",
       "link_swatches_to_entries": "Lier les mises \xE0 jour des nuanciers aux textes color\xE9s",
       "link_swatches_to_entries_desc": "Mettre \xE0 jour toutes les entr\xE9es utilisant un nuancier personnalis\xE9 lorsque la couleur de ce nuancier change",
-      "default_colors_header": "Couleurs par d\xE9faut",
+      "default_colors_header": "Nuanciers par d\xE9faut",
       "custom_swatches_header": "Nuanciers personnalis\xE9s",
       "btn_add_color": "+ Ajouter une couleur",
       "no_custom_swatches_yet": 'Pas encore de nuanciers personnalis\xE9s. Cliquez sur "+ Ajouter une couleur" pour en cr\xE9er un.',
@@ -1483,6 +1518,7 @@ var require_fr = __commonJS({
       "label_border_thickness": "\xC9paisseur de la bordure",
       "btn_save_style": "Enregistrer le style",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "Couleurs Rapides",
       "quick_colors_desc": "Permet de surligner ou colorer rapidement du texte en affichant des couleurs dans le menu contextuel. Si Couleurs Rapides est d\xE9sactiv\xE9, les couleurs par style dans Styles Rapides seront utilis\xE9es.",
       "quick_colors_apply_mode_label": "La coloration du texte s'appliquera comme",
@@ -1518,6 +1554,12 @@ var require_fr = __commonJS({
       "share_export_title": "Always Color Text export",
       "delete_button_text": "\u2715",
       "style_name_placeholder": "Nom du style",
+      "edit_group_highlight_styling": "Modifier le style de surlignage du groupe",
+      "light_mode_fixer_desc": "Assombrit automatiquement le texte color\xE9 lors de l'utilisation du th\xE8me clair pour am\xE9liorer la visibilit\xE9.",
+      "dark_mode_fixer_desc": "\xC9claircit automatiquement le texte color\xE9 lors de l'utilisation du th\xE8me sombre pour am\xE9liorer la visibilit\xE9.",
+      "preset_bold": "Gras",
+      "preset_italic": "Italique",
+      "preset_bold_italic": "Gras Italique",
       "preview_text": "Texte"
     };
   }
@@ -1558,6 +1600,8 @@ var require_hi = __commonJS({
       "file_menu_disable": "\u0907\u0938 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "menu_color_once": "\u090F\u0915 \u092C\u093E\u0930 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
       "menu_highlight_once": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902",
+      "menu_color_highlight_once": "\u0930\u0902\u0917 / \u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902",
+      "menu_remove_inline_color": "\u0907\u0928\u0932\u093E\u0907\u0928 \u0930\u0902\u0917 \u0939\u091F\u093E\u090F\u0901",
       "menu_always_color_text": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
       "menu_remove_always_color_text": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0939\u091F\u093E\u090F\u0901",
       "menu_blacklist_word": "\u0930\u0902\u0917\u093E\u0908 \u0938\u0947 \u0936\u092C\u094D\u0926 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0915\u0930\u0947\u0902",
@@ -1585,11 +1629,19 @@ var require_hi = __commonJS({
       // Commands
       "command_color_selected": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u0947\u0902",
       "command_toggle_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u091A\u093E\u0932\u0942/\u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
-      "command_toggle_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942/\u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "command_enable_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
       "command_disable_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
-      "command_enable_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
-      "command_disable_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
+      "command_toggle_global": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917\u093E\u0908 \u0938\u0915\u094D\u0937\u092E/\u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_enable_global": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917\u093E\u0908 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_disable_global": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917\u093E\u0908 \u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "enable_document_color": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "color_swatches_header": "\u0930\u0902\u0917 \u092A\u094D\u0930\u092C\u0902\u0927\u0928",
+      "color_rendering_header": "\u0930\u0902\u0917 \u092A\u094D\u0930\u0924\u093F\u092A\u093E\u0926\u0928 \u0914\u0930 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928",
+      "theme_support_header": "\u0925\u0940\u092E \u0938\u092E\u0930\u094D\u0925\u0928",
+      "matching_behavior_header": "\u092E\u093F\u0932\u093E\u0928 \u0935\u094D\u092F\u0935\u0939\u093E\u0930",
+      "smart_updates": "\u0938\u094D\u092E\u093E\u0930\u094D\u091F \u0905\u092A\u0921\u0947\u091F (\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915)",
+      "light_mode_fixer": "\u0932\u093E\u0907\u091F \u092E\u094B\u0921 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0932\u0930 \u092B\u093F\u0915\u094D\u0938\u0930",
+      "dark_mode_fixer": "\u0921\u093E\u0930\u094D\u0915 \u092E\u094B\u0921 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0932\u0930 \u092B\u093F\u0915\u094D\u0938\u0930",
       "command_manage_advanced_rules": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
       "command_open_regex_tester": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902 (\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091F\u0947\u0938\u094D\u091F\u0930 \u0916\u094B\u0932\u0947\u0902)",
       "command_open_blacklist_regex_tester": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u092E\u0947\u0902 \u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902",
@@ -1657,12 +1709,11 @@ var require_hi = __commonJS({
       "btn_cancel": "\u0930\u0926\u094D\u0926 \u0915\u0930\u0947\u0902",
       "btn_confirm": "\u092A\u0941\u0937\u094D\u091F\u093F \u0915\u0930\u0947\u0902",
       // Basic Settings
-      "enable_document_color": "\u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0930\u0902\u0917 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
-      "color_in_live_preview_mode": "\u0932\u093E\u0907\u0935 \u092A\u094D\u0930\u0940\u0935\u094D\u092F\u0942 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
+      "color_in_live_preview_mode": "\u0932\u093E\u0907\u0935 \u092A\u0942\u0930\u094D\u0935\u093E\u0935\u0932\u094B\u0915\u0928 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917",
       "color_in_reading_mode": "\u0930\u0940\u0921\u093F\u0902\u0917 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
       "force_full_render_reading": "\u0930\u0940\u0921\u093F\u0902\u0917 \u092E\u094B\u0921 \u092E\u0947\u0902 \u092A\u0942\u0930\u094D\u0923 \u0930\u0947\u0902\u0921\u0930 \u092B\u094B\u0930\u094D\u0938 \u0915\u0930\u0947\u0902",
       "force_full_render_reading_desc": "\u091C\u092C \u091A\u093E\u0932\u0942 \u0939\u094B, \u0924\u094B \u0930\u0940\u0921\u093F\u0902\u0917-\u092E\u094B\u0921 \u092A\u0942\u0930\u0947 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u094B \u090F\u0915 \u092A\u093E\u0938 \u092E\u0947\u0902 \u0930\u0902\u0917\u0928\u0947 \u0915\u093E \u092A\u094D\u0930\u092F\u093E\u0938 \u0915\u0930\u0947\u0917\u093E\u0964 \u092C\u0921\u093C\u0947 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C\u094B\u0902 \u092A\u0930 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928 \u0938\u092E\u0938\u094D\u092F\u093E\u090F\u0901 \u0939\u094B \u0938\u0915\u0924\u0940 \u0939\u0948\u0902\u0964 \u0938\u093E\u0935\u0927\u093E\u0928\u0940 \u0938\u0947 \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0947\u0902!",
-      "lightweight_mode": "\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915: \u0905\u0924\u094D\u092F\u0902\u0924 \u0939\u0932\u094D\u0915\u093E \u092E\u094B\u0921",
+      "lightweight_mode": "Lightweight mode (Experimental)",
       "lightweight_mode_desc": "\u091F\u093E\u0907\u092A \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u092A\u094D\u0930\u094B\u0938\u0947\u0938\u093F\u0902\u0917 \u0915\u094B \u0915\u093E\u092B\u0940 \u0915\u092E \u0915\u0930\u0924\u093E \u0939\u0948\u0964 \u0915\u0941\u091B \u092E\u093F\u0932\u093E\u0928 \u091B\u0942\u091F \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964",
       "disable_coloring_current_file": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "disable_coloring_current_file_desc": "\u092B\u093C\u093E\u0907\u0932 \u0914\u0930 \u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u0930\u0902\u0917\u093E\u0908 \u0928\u093F\u092F\u092E\u094B\u0902 \u0915\u0947 \u0924\u0939\u0924 \u0938\u0915\u094D\u0930\u093F\u092F \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u090F\u0915 \u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E \u091C\u094B\u0921\u093C\u0924\u093E \u0939\u0948\u0964",
@@ -1684,6 +1735,8 @@ var require_hi = __commonJS({
       "setting_color_once_desc": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0947 \u0932\u093F\u090F HTML \u0907\u0928\u0932\u093E\u0907\u0928 \u0938\u092E\u094D\u092E\u093F\u0932\u093F\u0924 \u0915\u0930\u0924\u093E \u0939\u0948\u0964 \u092A\u094D\u0932\u0917\u0907\u0928 \u092C\u0902\u0926 \u0939\u094B\u0928\u0947 \u092A\u0930 \u092D\u0940 \u092F\u0939 \u092C\u0928\u093E \u0930\u0939\u0924\u093E \u0939\u0948\u0964",
       "setting_highlight_once": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902",
       "setting_highlight_once_desc": "\u092C\u0948\u0915\u0917\u094D\u0930\u093E\u0909\u0902\u0921 \u0938\u094D\u091F\u093E\u0907\u0932\u093F\u0902\u0917 \u0915\u0947 \u0938\u093E\u0925 HTML \u0907\u0928\u0932\u093E\u0907\u0928 \u0938\u092E\u094D\u092E\u093F\u0932\u093F\u0924 \u0915\u0930\u0924\u093E \u0939\u0948\u0964 \u092A\u094D\u0932\u0917\u0907\u0928 \u092C\u0902\u0926 \u0939\u094B\u0928\u0947 \u092A\u0930 \u092D\u0940 \u092F\u0939 \u092C\u0928\u093E \u0930\u0939\u0924\u093E \u0939\u0948\u0964",
+      "setting_color_highlight_once": "\u0930\u0902\u0917 \u0914\u0930 \u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902",
+      "setting_color_highlight_once_desc": "\u0926\u094B\u0928\u094B\u0902 \u092A\u093E\u0920 \u0930\u0902\u0917 \u0914\u0930 \u092A\u0943\u0937\u094D\u0920\u092D\u0942\u092E\u093F \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0907\u0928\u0932\u093E\u0907\u0928 \u0932\u093E\u0917\u0942 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u090F\u0915\u0940\u0915\u0943\u0924 \u0930\u0902\u0917 \u092A\u093F\u0915\u0930 \u0916\u094B\u0932\u0924\u093E \u0939\u0948\u0964 \u090F\u0915\u0940\u0915\u0943\u0924 \u092E\u0947\u0928\u0942 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0924\u093E \u0939\u0948\u0964",
       "highlight_once_preview": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092A\u094D\u0930\u0940\u0935\u094D\u092F\u0942",
       "highlight_once_preview_text": "\u0926\u0947\u0916\u0947\u0902 \u0915\u093F \u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0948\u0938\u093E \u0926\u093F\u0916\u0947\u0917\u093E!",
       // Highlight Once Settings
@@ -1748,7 +1801,6 @@ var require_hi = __commonJS({
       "opt_line_inset": "\u0907\u0928\u0938\u0947\u091F",
       "opt_line_outset": "\u0906\u0909\u091F\u0938\u0947\u091F",
       // Color Swatches
-      "color_swatches_header": "\u0930\u0902\u0917 \u0938\u094D\u0935\u0948\u091A\u0947\u0938",
       "color_picker_layout": "\u0930\u0902\u0917 \u092A\u093F\u0915\u0930 \u0932\u0947\u0906\u0909\u091F",
       "color_picker_layout_desc": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917 \u091A\u0941\u0928\u0924\u0947 \u0938\u092E\u092F \u0915\u094C\u0928 \u0938\u0947 \u0930\u0902\u0917 \u092A\u094D\u0930\u0915\u093E\u0930 \u0926\u093F\u0916\u093E\u0928\u0947 \u0939\u0948\u0902 \u091A\u0941\u0928\u0947\u0902",
       "opt_both_text_left": "\u0926\u094B\u0928\u094B\u0902: \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u093E\u090F\u0901, \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0926\u093E\u090F\u0901",
@@ -1765,7 +1817,7 @@ var require_hi = __commonJS({
       "use_swatch_names_desc": "\u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0907\u0928\u092A\u0941\u091F\u094D\u0938 \u0915\u0947 \u092C\u0917\u0932 \u092E\u0947\u0902 \u0938\u094D\u0935\u0948\u091A \u0928\u093E\u092E\u094B\u0902 \u0915\u093E \u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u0926\u093F\u0916\u093E\u090F\u0901",
       "link_swatches_to_entries": "\u0938\u094D\u0935\u0948\u091A \u0905\u092A\u0921\u0947\u091F\u094D\u0938 \u0915\u094B \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u094B\u0902 \u0938\u0947 \u0932\u093F\u0902\u0915 \u0915\u0930\u0947\u0902",
       "link_swatches_to_entries_desc": "\u091C\u092C \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A \u0915\u093E \u0930\u0902\u0917 \u092C\u0926\u0932\u0924\u093E \u0939\u0948, \u0909\u0938 \u0930\u0902\u0917 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0928\u0947 \u0935\u093E\u0932\u0947 \u0938\u092D\u0940 \u090F\u0902\u091F\u094D\u0930\u0940\u091C\u093C \u0905\u092A\u0921\u0947\u091F \u0915\u0930\u0947\u0902",
-      "default_colors_header": "\u0921\u093F\u092B\u0949\u0932\u094D\u091F \u0930\u0902\u0917",
+      "default_colors_header": "\u0921\u093F\u092B\u093C\u0949\u0932\u094D\u091F \u0928\u092E\u0942\u0928\u0947",
       "custom_swatches_header": "\u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938",
       "btn_add_color": "+ \u0930\u0902\u0917 \u091C\u094B\u0921\u093C\u0947\u0902",
       "no_custom_swatches_yet": '\u0905\u092D\u0940 \u0924\u0915 \u0915\u094B\u0908 \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938 \u0928\u0939\u0940\u0902\u0964 \u092C\u0928\u093E\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F "+ \u0930\u0902\u0917 \u091C\u094B\u0921\u093C\u0947\u0902" \u0915\u094D\u0932\u093F\u0915 \u0915\u0930\u0947\u0902\u0964',
@@ -1995,6 +2047,7 @@ var require_hi = __commonJS({
       "style_name_placeholder": "Style Name",
       "preview_text": "Text",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "\u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917",
       "quick_colors_desc": "\u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0926\u093F\u0916\u093E\u0915\u0930 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u091C\u0932\u094D\u0926\u0940 \u0938\u0947 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092F\u093E \u0930\u0902\u0917\u0928\u0947 \u0915\u0940 \u0905\u0928\u0941\u092E\u0924\u093F \u0926\u0947\u0924\u093E \u0939\u0948\u0964 \u092F\u0926\u093F \u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917 \u092C\u0902\u0926 \u0939\u0948\u0902, \u0924\u094B \u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u094B\u0902 \u092E\u0947\u0902 \u092A\u094D\u0930\u0924\u093F-\u0936\u0948\u0932\u0940 \u0930\u0902\u0917\u094B\u0902 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u093F\u092F\u093E \u091C\u093E\u090F\u0917\u093E\u0964",
       "quick_colors_apply_mode_label": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u093E\u0908 \u0907\u0938 \u0930\u0942\u092A \u092E\u0947\u0902 \u0932\u093E\u0917\u0942 \u0939\u094B\u0917\u0940",
@@ -2023,7 +2076,13 @@ var require_hi = __commonJS({
       "btn_duplicate_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0915\u094B \u0921\u0941\u092A\u094D\u0932\u093F\u0915\u0947\u091F \u0915\u0930\u0947\u0902",
       "btn_open_in_regex_tester": "Regex Tester \u092E\u0947\u0902 \u0916\u094B\u0932\u0947\u0902",
       "move_to_blacklist_group": "\u0915\u093E\u0932\u0940 \u0938\u0942\u091A\u0940 \u0938\u092E\u0942\u0939 \u0915\u094B \u0938\u094D\u0925\u093E\u0928\u093E\u0902\u0924\u0930\u093F\u0924 \u0915\u0930\u0947\u0902",
-      "btn_delete_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0939\u091F\u093E\u090F\u0902"
+      "btn_delete_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0939\u091F\u093E\u090F\u0902",
+      "edit_group_highlight_styling": "\u0938\u092E\u0942\u0939 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0938\u094D\u091F\u093E\u0907\u0932 \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+      "light_mode_fixer_desc": "\u0926\u0943\u0936\u094D\u092F\u0924\u093E \u092E\u0947\u0902 \u0938\u0941\u0927\u093E\u0930 \u0915\u0947 \u0932\u093F\u090F \u0932\u093E\u0907\u091F \u0925\u0940\u092E \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0938\u094D\u0935\u091A\u093E\u0932\u093F\u0924 \u0930\u0942\u092A \u0938\u0947 \u0917\u0939\u0930\u093E \u0915\u0930\u0924\u093E \u0939\u0948\u0964",
+      "dark_mode_fixer_desc": "\u0926\u0943\u0936\u094D\u092F\u0924\u093E \u092E\u0947\u0902 \u0938\u0941\u0927\u093E\u0930 \u0915\u0947 \u0932\u093F\u090F \u0921\u093E\u0930\u094D\u0915 \u0925\u0940\u092E \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0938\u094D\u0935\u091A\u093E\u0932\u093F\u0924 \u0930\u0942\u092A \u0938\u0947 \u0939\u0932\u094D\u0915\u093E \u0915\u0930\u0924\u093E \u0939\u0948\u0964",
+      "preset_bold": "\u092C\u094B\u0932\u094D\u0921",
+      "preset_italic": "\u0907\u091F\u093E\u0932\u093F\u0915",
+      "preset_bold_italic": "\u092C\u094B\u0932\u094D\u0921 \u0907\u091F\u093E\u0932\u093F\u0915"
     };
   }
 });
@@ -2063,6 +2122,8 @@ var require_it = __commonJS({
       "file_menu_disable": "Disabilita Always Color Text per questo file",
       "menu_color_once": "Colora una volta",
       "menu_highlight_once": "Evidenzia una volta",
+      "menu_color_highlight_once": "Colore / Evidenzia una volta",
+      "menu_remove_inline_color": "Rimuovi Colore Inline",
       "menu_always_color_text": "Always Color Text",
       "menu_remove_always_color_text": "Rimuovi Always Color Text",
       "menu_blacklist_word": "Aggiungi parola alla blacklist",
@@ -2090,11 +2151,19 @@ var require_it = __commonJS({
       // Commands
       "command_color_selected": "Colora testo selezionato",
       "command_toggle_current": "Abilita/Disabilita colorazione per il documento corrente",
-      "command_toggle_global": "Abilita/Disabilita Always Color Text",
       "command_enable_current": "Abilita colorazione per il documento corrente",
       "command_disable_current": "Disabilita colorazione per il documento corrente",
-      "command_enable_global": "Abilita Always Color Text",
-      "command_disable_global": "Disabilita Always Color Text",
+      "command_toggle_global": "Abilita/Disabilita colorazione globale",
+      "command_enable_global": "Abilita colorazione globale",
+      "command_disable_global": "Disabilita colorazione globale",
+      "enable_document_color": "Abilita colore globale",
+      "color_swatches_header": "Gestione colori",
+      "color_rendering_header": "Resa cromatica e prestazioni",
+      "theme_support_header": "Supporto temi",
+      "matching_behavior_header": "Comportamento di corrispondenza",
+      "smart_updates": "Aggiornamenti intelligenti (Sperimentale)",
+      "light_mode_fixer": "Correttore colore testo modalit\xE0 chiara",
+      "dark_mode_fixer": "Correttore colore testo modalit\xE0 scura",
       "command_manage_advanced_rules": "gestisci regole specifiche di inclusione/esclusione",
       "command_open_regex_tester": "Aggiungi Regex (Apri Tester Regex)",
       "command_open_blacklist_regex_tester": "Aggiungi Regex alla Lista Nera",
@@ -2160,12 +2229,11 @@ var require_it = __commonJS({
       "restart_required_title": "Riavvio richiesto",
       "restart_required_desc": "Disabilitare il toggle della palette comandi richiede il riavvio di Obsidian per rimuovere completamente i comandi dalla palette. Riavviare ora?",
       // Basic Settings
-      "enable_document_color": "Abilita colore documento",
-      "color_in_live_preview_mode": "Colora in modalit\xE0 Live Preview",
+      "color_in_live_preview_mode": "Colore in modalit\xE0 anteprima live",
       "color_in_reading_mode": "Colora in modalit\xE0 lettura",
       "force_full_render_reading": "Forza rendering completo in modalit\xE0 lettura",
       "force_full_render_reading_desc": "Se attivo, la modalit\xE0 lettura tenter\xE0 di colorare l'intero documento in una sola passata. Pu\xF2 causare problemi di prestazioni su documenti grandi. Usare con cautela!",
-      "lightweight_mode": "Sperimentale: modalit\xE0 estremamente leggera",
+      "lightweight_mode": "Lightweight mode (Experimental)",
       "lightweight_mode_desc": "Riduce molto l'elaborazione durante la digitazione. Pu\xF2 saltare alcune occorrenze.",
       "disable_coloring_current_file": "Disabilita colorazione per file corrente",
       "disable_coloring_current_file_desc": "Aggiunge una regola di esclusione per il file attivo sotto regole colorazione file e cartelle.",
@@ -2186,6 +2254,8 @@ var require_it = __commonJS({
       "setting_color_once_desc": "Inserisce HTML inline per il testo selezionato. Persiste anche se il plugin \xE8 disattivato.",
       "setting_highlight_once": "Evidenzia una volta",
       "setting_highlight_once_desc": "Inserisce HTML inline con stile di sfondo. Persiste anche se il plugin \xE8 disattivato.",
+      "setting_color_highlight_once": "Colore e Evidenzia una volta",
+      "setting_color_highlight_once_desc": "Apre il selettore di colori unificato per applicare sia il colore del testo che l'evidenziazione dello sfondo in linea. Utilizza il menu unificato.",
       "highlight_once_preview": "Anteprima evidenziazione una volta",
       "highlight_once_preview_text": "Ecco come apparir\xE0 l'evidenziazione!",
       // Highlight Once Settings
@@ -2250,7 +2320,6 @@ var require_it = __commonJS({
       "opt_line_inset": "incassato",
       "opt_line_outset": "sporgente",
       // Color Swatches
-      "color_swatches_header": "Campioni colore",
       "color_picker_layout": "Layout selettore colore",
       "color_picker_layout_desc": "Scegli quali tipi di colore mostrare quando si selezionano colori per il testo",
       "opt_both_text_left": "Entrambi: Testo sinistra, Evidenziazione destra",
@@ -2267,7 +2336,7 @@ var require_it = __commonJS({
       "use_swatch_names_desc": "Mostra un menu a tendina con i nomi dei campioni accanto ai campi di inserimento parole/pattern",
       "link_swatches_to_entries": "Collega aggiornamenti dei campioni ai colori del testo",
       "link_swatches_to_entries_desc": "Quando cambia il colore di un campione personalizzato, aggiorna tutte le voci che usano quel colore",
-      "default_colors_header": "Colori predefiniti",
+      "default_colors_header": "Campioni predefiniti",
       "custom_swatches_header": "Campioni personalizzati",
       "btn_add_color": "+ Aggiungi colore",
       "no_custom_swatches_yet": 'Ancora nessun campione personalizzato. Clicca "+ Aggiungi colore" per crearne uno.',
@@ -2493,6 +2562,7 @@ var require_it = __commonJS({
       "label_border_thickness": "Spessore bordo",
       "btn_save_style": "Salva stile",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "Colori Rapidi",
       "quick_colors_desc": "Consente di evidenziare o colorare rapidamente il testo mostrando i colori nel menu contestuale. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile in Stili Rapidi.",
       "quick_colors_apply_mode_label": "La colorazione del testo verr\xE0 applicata come",
@@ -2528,7 +2598,13 @@ var require_it = __commonJS({
       "share_export_title": "Always Color Text export",
       "delete_button_text": "\u2715",
       "style_name_placeholder": "Nome stile",
-      "preview_text": "Testo"
+      "preview_text": "Testo",
+      "edit_group_highlight_styling": "Modifica stile evidenziazione gruppo",
+      "light_mode_fixer_desc": "Scurisce automaticamente il testo colorato quando si utilizza il tema chiaro per migliorare la visibilit\xE0.",
+      "dark_mode_fixer_desc": "Schiarisce automaticamente il testo colorato quando si utilizza il tema scuro per migliorare la visibilit\xE0.",
+      "preset_bold": "Grassetto",
+      "preset_italic": "Corsivo",
+      "preset_bold_italic": "Grassetto Corsivo"
     };
   }
 });
@@ -2568,6 +2644,8 @@ var require_bn = __commonJS({
       "file_menu_disable": "\u098F\u0987 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "menu_color_once": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "menu_highlight_once": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8",
+      "menu_color_highlight_once": "\u09B0\u0999 / \u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8",
+      "menu_remove_inline_color": "\u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09B0\u0999 \u09B8\u09B0\u09BE\u09A8",
       "menu_always_color_text": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F",
       "menu_remove_always_color_text": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u09B0\u09BE\u09A8",
       "menu_blacklist_word": "\u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09A5\u09C7\u0995\u09C7 \u09B6\u09AC\u09CD\u09A6 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0995\u09B0\u09C1\u09A8",
@@ -2674,7 +2752,7 @@ var require_bn = __commonJS({
       "color_in_reading_mode": "\u09B0\u09BF\u09A1\u09BF\u0982 \u09AE\u09CB\u09A1\u09C7 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "force_full_render_reading": "\u09B0\u09BF\u09A1\u09BF\u0982 \u09AE\u09CB\u09A1\u09C7 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3 \u09B0\u09C7\u09A8\u09CD\u09A1\u09BE\u09B0 \u099C\u09CB\u09B0 \u0995\u09B0\u09C1\u09A8",
       "force_full_render_reading_desc": "\u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u09B0\u09BF\u09A1\u09BF\u0982-\u09AE\u09CB\u09A1 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F \u098F\u0995 \u09AA\u09BE\u09B8\u09C7 \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u099A\u09C7\u09B7\u09CD\u099F\u09BE \u0995\u09B0\u09AC\u09C7\u0964 \u09AC\u09A1\u09BC \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7 \u09AA\u09BE\u09B0\u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u09A8\u09CD\u09B8 \u0987\u09B8\u09CD\u09AF\u09C1 \u09B9\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964 \u09B8\u09A4\u09B0\u09CD\u0995\u09A4\u09BE\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8!",
-      "lightweight_mode": "\u09AA\u09CD\u09B0\u09BE\u09AF\u09BC\u09CB\u0997\u09BF\u0995: \u0985\u09A4\u09BF\u09B0\u09BF\u0995\u09CD\u09A4 \u09B9\u09BE\u09B2\u0995\u09BE \u09AE\u09CB\u09A1",
+      "lightweight_mode": "Lightweight mode (Experimental)",
       "lightweight_mode_desc": "\u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09AA\u09CD\u09B0\u09B8\u09C7\u09B8\u09BF\u0982 \u0985\u09A8\u09C7\u0995 \u0995\u09AE\u09BF\u09AF\u09BC\u09C7 \u09A6\u09C7\u09AF\u09BC\u0964 \u0995\u09BF\u099B\u09C1 \u09AE\u09CD\u09AF\u09BE\u099A \u09AC\u09BE\u09A6 \u09AA\u09A1\u09BC\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964",
       "disable_coloring_current_file": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "disable_coloring_current_file_desc": "\u09AB\u09BE\u0987\u09B2 \u0993 \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0 \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09B0\u09C1\u09B2\u09B8 \u098F\u09B0 \u0985\u09A7\u09C0\u09A8\u09C7 \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u098F\u0995\u099F\u09BF \u098F\u0995\u09CD\u09B8\u0995\u09CD\u09B2\u09C1\u09A1 \u09B0\u09C1\u09B2 \u09AF\u09CB\u0997 \u0995\u09B0\u09C7\u0964",
@@ -2695,6 +2773,8 @@ var require_bn = __commonJS({
       "setting_color_once_desc": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF HTML \u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09B8\u09A8\u09CD\u09A8\u09BF\u09AC\u09C7\u09B6 \u0995\u09B0\u09C7\u0964 \u09AA\u09CD\u09B2\u09BE\u0997\u0987\u09A8 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09B2\u09C7\u0993 \u098F\u099F\u09BF \u09B8\u09CD\u09A5\u09BE\u09AF\u09BC\u09C0 \u09A5\u09BE\u0995\u09C7\u0964",
       "setting_highlight_once": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8",
       "setting_highlight_once_desc": "\u09AC\u09CD\u09AF\u09BE\u0995\u0997\u09CD\u09B0\u09BE\u0989\u09A8\u09CD\u09A1 \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u09BF\u0982 \u09B8\u09B9 HTML \u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09B8\u09A8\u09CD\u09A8\u09BF\u09AC\u09C7\u09B6 \u0995\u09B0\u09C7\u0964 \u09AA\u09CD\u09B2\u09BE\u0997\u0987\u09A8 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09B2\u09C7\u0993 \u098F\u099F\u09BF \u09B8\u09CD\u09A5\u09BE\u09AF\u09BC\u09C0 \u09A5\u09BE\u0995\u09C7\u0964",
+      "setting_color_highlight_once": "\u09B0\u0999 \u098F\u09AC\u0982 \u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8",
+      "setting_color_highlight_once_desc": "\u0989\u09AD\u09AF\u09BC \u09AA\u09BE\u09A0\u09CD\u09AF \u09B0\u0999 \u098F\u09AC\u0982 \u09AA\u099F\u09AD\u09C2\u09AE\u09BF \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u0995\u09B0\u09A4\u09C7 \u0987\u0989\u09A8\u09BF\u09AB\u09BE\u0987\u09A1 \u09B0\u0999 \u09AA\u09BF\u0995\u09BE\u09B0 \u0996\u09CB\u09B2\u09C7\u0964 \u0987\u0989\u09A8\u09BF\u09AB\u09BE\u0987\u09A1 \u09AE\u09C7\u09A8\u09C1 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C7\u0964",
       "highlight_once_preview": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AA\u09CD\u09B0\u09BF\u09AD\u09BF\u0989",
       "highlight_once_preview_text": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09C7\u09AE\u09A8 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7 \u09A4\u09BE \u09A6\u09C7\u0996\u09C1\u09A8!",
       // Highlight Once Settings
@@ -2776,7 +2856,7 @@ var require_bn = __commonJS({
       "use_swatch_names_desc": "\u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u0987\u09A8\u09AA\u09C1\u099F\u09C7\u09B0 \u09AA\u09BE\u09B6\u09C7 \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BE\u09AE\u09C7\u09B0 \u09A1\u09CD\u09B0\u09AA\u09A1\u09BE\u0989\u09A8 \u09A6\u09C7\u0996\u09BE\u09A8",
       "link_swatches_to_entries": "\u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u0986\u09AA\u09A1\u09C7\u099F\u0995\u09C7 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09C7\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09B2\u09BF\u0982\u0995 \u0995\u09B0\u09C1\u09A8",
       "link_swatches_to_entries_desc": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u09C7\u09B0 \u09B0\u0999 \u09AA\u09B0\u09BF\u09AC\u09B0\u09CD\u09A4\u09A8 \u09B9\u09B2\u09C7, \u09B8\u09C7\u0987 \u09B0\u0999 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B8\u09AC \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
-      "default_colors_header": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B0\u0999\u0997\u09C1\u09B2\u09BF",
+      "default_colors_header": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B8\u09CB\u09AF\u09BC\u09BE\u099A",
       "custom_swatches_header": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF",
       "btn_add_color": "+ \u09B0\u0999 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
       "no_custom_swatches_yet": '\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8\u09CB \u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09C7\u0987\u0964 \u09A4\u09C8\u09B0\u09BF \u0995\u09B0\u09A4\u09C7 "+ \u09B0\u0999 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8" \u0995\u09CD\u09B2\u09BF\u0995 \u0995\u09B0\u09C1\u09A8\u0964',
@@ -3002,6 +3082,7 @@ var require_bn = __commonJS({
       "label_border_thickness": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0\u09C7\u09B0 \u09AA\u09C1\u09B0\u09C1\u09A4\u09CD\u09AC",
       "btn_save_style": "\u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09C1\u09A8",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "\u09A6\u09CD\u09B0\u09C1\u09A4 \u09B0\u0982",
       "quick_colors_desc": "\u09A1\u09BE\u09A8-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1\u09A4\u09C7 \u09B0\u0982 \u09AA\u09CD\u09B0\u09A6\u09B0\u09CD\u09B6\u09A8 \u0995\u09B0\u09C7 \u09A6\u09CD\u09B0\u09C1\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AC\u09BE \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u0985\u09A8\u09C1\u09AE\u09A4\u09BF \u09A6\u09C7\u09AF\u09BC\u0964 \u09AF\u09A6\u09BF \u09A6\u09CD\u09B0\u09C1\u09A4 \u09B0\u0982 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09C7, \u09A4\u09AC\u09C7 \u09A6\u09CD\u09B0\u09C1\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u0997\u09C1\u09B2\u09BF\u09A4\u09C7 \u09AA\u09CD\u09B0\u09A4\u09BF-\u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09B0\u0982 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B9\u09AC\u09C7\u0964",
       "quick_colors_apply_mode_label": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u098F\u0987\u09AD\u09BE\u09AC\u09C7 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u09B9\u09AC\u09C7",
@@ -3030,7 +3111,16 @@ var require_bn = __commonJS({
       "btn_duplicate_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09A1\u09C1\u09AA\u09CD\u09B2\u09BF\u0995\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
       "btn_open_in_regex_tester": "Regex Tester \u098F \u0996\u09C1\u09B2\u09C1\u09A8",
       "move_to_blacklist_group": "\u0995\u09BE\u09B2\u09CB \u09B8\u09C2\u099A\u09C0 \u0997\u09CD\u09B0\u09C1\u09AA\u09C7 \u09B8\u0981\u099A\u09BE\u09B2\u09A8 \u0995\u09B0\u09C1\u09A8",
-      "btn_delete_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09AE\u09C1\u099B\u09C1\u09A8"
+      "btn_delete_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09AE\u09C1\u099B\u09C1\u09A8",
+      "edit_group_highlight_styling": "\u0997\u09CD\u09B0\u09C1\u09AA \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u09BF\u0982 \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      "light_mode_fixer_desc": "\u09A6\u09C3\u09B6\u09CD\u09AF\u09AE\u09BE\u09A8\u09A4\u09BE \u0989\u09A8\u09CD\u09A8\u09A4 \u0995\u09B0\u09A4\u09C7 \u09B2\u09BE\u0987\u099F \u09A5\u09BF\u09AE \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09B0\u0999\u09BF\u09A8 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u09CD\u09AC\u09AF\u09BC\u0982\u0995\u09CD\u09B0\u09BF\u09AF\u09BC\u09AD\u09BE\u09AC\u09C7 \u0997\u09BE\u09A2\u09BC \u0995\u09B0\u09C7\u0964",
+      "dark_mode_fixer_desc": "\u09A6\u09C3\u09B6\u09CD\u09AF\u09AE\u09BE\u09A8\u09A4\u09BE \u0989\u09A8\u09CD\u09A8\u09A4 \u0995\u09B0\u09A4\u09C7 \u09A1\u09BE\u09B0\u09CD\u0995 \u09A5\u09BF\u09AE \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09B0\u0999\u09BF\u09A8 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u09CD\u09AC\u09AF\u09BC\u0982\u0995\u09CD\u09B0\u09BF\u09AF\u09BC\u09AD\u09BE\u09AC\u09C7 \u09B9\u09BE\u09B2\u0995\u09BE \u0995\u09B0\u09C7\u0964",
+      "preset_bold": "\u09AC\u09CB\u09B2\u09CD\u09A1",
+      "preset_italic": "\u0987\u099F\u09BE\u09B2\u09BF\u0995",
+      "preset_bold_italic": "\u09AC\u09CB\u09B2\u09CD\u09A1 \u0987\u099F\u09BE\u09B2\u09BF\u0995",
+      "theme_support_header": "\u09A5\u09BF\u09AE \u09B8\u09AE\u09B0\u09CD\u09A5\u09A8",
+      "matching_behavior_header": "\u09AE\u09CD\u09AF\u09BE\u099A\u09BF\u0982 \u0986\u099A\u09B0\u09A3",
+      "color_rendering_header": "\u09B0\u0999 \u09B0\u09C7\u09A8\u09CD\u09A1\u09BE\u09B0\u09BF\u0982 \u098F\u09AC\u0982 \u0995\u09B0\u09CD\u09AE\u0995\u09CD\u09B7\u09AE\u09A4\u09BE"
     };
   }
 });
@@ -3070,6 +3160,8 @@ var require_ru = __commonJS({
       "file_menu_disable": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
       "menu_color_once": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
       "menu_highlight_once": "\u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
+      "menu_color_highlight_once": "\u0426\u0432\u0435\u0442 / \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
+      "menu_remove_inline_color": "\u0423\u0431\u0440\u0430\u0442\u044C \u0418\u043D\u043B\u0430\u0439\u043D \u0426\u0432\u0435\u0442",
       "menu_always_color_text": "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u043D\u0435\u0448\u043D\u0438\u0439 \u0432\u0438\u0434 \u0442\u0435\u043A\u0441\u0442\u0430",
       "menu_remove_always_color_text": "\u0423\u0431\u0440\u0430\u0442\u044C Always Color Text",
       "menu_blacklist_word": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u043B\u043E\u0432\u043E \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
@@ -3097,11 +3189,19 @@ var require_ru = __commonJS({
       // Commands
       "command_color_selected": "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u043D\u0435\u0448\u043D\u0438\u0439 \u0432\u0438\u0434 \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u043E\u0433\u043E \u0442\u0435\u043A\u0441\u0442\u0430",
       "command_toggle_current": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
-      "command_toggle_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
       "command_enable_current": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
       "command_disable_current": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
-      "command_enable_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
-      "command_disable_global": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
+      "command_toggle_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435",
+      "command_enable_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435",
+      "command_disable_global": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435",
+      "enable_document_color": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435",
+      "color_swatches_header": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u043E\u043C",
+      "color_rendering_header": "\u0420\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433 \u0446\u0432\u0435\u0442\u0430 \u0438 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u044C",
+      "theme_support_header": "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u0442\u0435\u043C",
+      "matching_behavior_header": "\u041F\u043E\u0432\u0435\u0434\u0435\u043D\u0438\u0435 \u0441\u043E\u043F\u043E\u0441\u0442\u0430\u0432\u043B\u0435\u043D\u0438\u044F",
+      "smart_updates": "\u0423\u043C\u043D\u044B\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F (\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0439)",
+      "light_mode_fixer": "\u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432 \u0441\u0432\u0435\u0442\u043B\u043E\u043C \u0440\u0435\u0436\u0438\u043C\u0435",
+      "dark_mode_fixer": "\u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432 \u0442\u0435\u043C\u043D\u043E\u043C \u0440\u0435\u0436\u0438\u043C\u0435",
       "command_manage_advanced_rules": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
       "command_open_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex (\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043E\u0440 Regex)",
       "command_open_blacklist_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
@@ -3171,12 +3271,11 @@ var require_ru = __commonJS({
       "restart_required_title": "\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430",
       "restart_required_desc": "\u0414\u043B\u044F \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0438\u0437 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043A\u043E\u043C\u0430\u043D\u0434 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 Obsidian. \u041F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0441\u0435\u0439\u0447\u0430\u0441?",
       // Basic Settings
-      "enable_document_color": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
-      "color_in_live_preview_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 Live Preview",
+      "color_in_live_preview_mode": "\u0426\u0432\u0435\u0442 \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u043F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u0430",
       "color_in_reading_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading": "\u041F\u0440\u0438\u043D\u0443\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u0442\u044C \u043F\u043E\u043B\u043D\u044B\u0439 \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433 \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u0440\u0435\u0436\u0438\u043C \u0447\u0442\u0435\u043D\u0438\u044F \u043F\u043E\u043F\u044B\u0442\u0430\u0435\u0442\u0441\u044F \u043E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0432\u0435\u0441\u044C \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442 \u0441\u0440\u0430\u0437\u0443. \u041C\u043E\u0436\u0435\u0442 \u0432\u044B\u0437\u0432\u0430\u0442\u044C \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u043D\u0430 \u0431\u043E\u043B\u044C\u0448\u0438\u0445 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0445, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u0441 \u043E\u0441\u0442\u043E\u0440\u043E\u0436\u043D\u043E\u0441\u0442\u044C\u044E!",
-      "lightweight_mode": "\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u043E: \u0441\u0432\u0435\u0440\u0445\u043B\u0451\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C",
+      "lightweight_mode": "Lightweight mode (Experimental)",
       "lightweight_mode_desc": "\u0421\u0438\u043B\u044C\u043D\u043E \u0443\u043C\u0435\u043D\u044C\u0448\u0430\u0435\u0442 \u043E\u0431\u044A\u0451\u043C \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438 \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u043D\u0430\u0431\u043E\u0440\u0430 \u0442\u0435\u043A\u0441\u0442\u0430. \u041C\u043E\u0436\u0435\u0442 \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0430\u0442\u044C \u043D\u0435\u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u044F.",
       "disable_coloring_current_file": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
       "disable_coloring_current_file_desc": "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u043F\u0440\u0430\u0432\u0438\u043B\u043E \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u0434\u043B\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430 \u0432 \u0440\u0430\u0437\u0434\u0435\u043B \xAB\u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u044F \u0444\u0430\u0439\u043B\u043E\u0432 \u0438 \u043F\u0430\u043F\u043E\u043A\xBB.",
@@ -3197,6 +3296,8 @@ var require_ru = __commonJS({
       "setting_color_once_desc": "\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C inline HTML \u0441\u0442\u0438\u043B\u044C \u0434\u043B\u044F \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u043E\u0433\u043E \u0442\u0435\u043A\u0441\u0442\u0430. \u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442\u0441\u044F \u0434\u0430\u0436\u0435 \u0435\u0441\u043B\u0438 \u043F\u043B\u0430\u0433\u0438\u043D \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D.",
       "setting_highlight_once": "\u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
       "setting_highlight_once_desc": "\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C inline HTML \u0441\u0442\u0438\u043B\u044C \u0441 \u0444\u043E\u043D\u043E\u043C. \u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442\u0441\u044F \u0434\u0430\u0436\u0435 \u0435\u0441\u043B\u0438 \u043F\u043B\u0430\u0433\u0438\u043D \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D.",
+      "setting_color_highlight_once": "\u0426\u0432\u0435\u0442 \u0438 \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
+      "setting_color_highlight_once_desc": "\u041E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u0443\u043D\u0438\u0444\u0438\u0446\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0441\u0435\u043B\u0435\u043A\u0442\u043E\u0440 \u0446\u0432\u0435\u0442\u0430 \u0434\u043B\u044F \u043F\u0440\u0438\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043A\u0430\u043A \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430, \u0442\u0430\u043A \u0438 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438 \u0444\u043E\u043D\u0430 \u0432 \u0441\u0442\u0440\u043E\u043A\u0435. \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442 \u0443\u043D\u0438\u0444\u0438\u0446\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u043E\u0435 \u043C\u0435\u043D\u044E.",
       "highlight_once_preview": "\u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E\u0439 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
       "highlight_once_preview_text": "\u0422\u0430\u043A \u0431\u0443\u0434\u0435\u0442 \u0432\u044B\u0433\u043B\u044F\u0434\u0435\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u0430\u044F \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430!",
       // Highlight Once Settings
@@ -3261,7 +3362,6 @@ var require_ru = __commonJS({
       "opt_line_inset": "\u0412\u0441\u0442\u0430\u0432\u043A\u0430",
       "opt_line_outset": "\u0412\u044B\u0441\u0442\u0443\u043F",
       // Color Swatches
-      "color_swatches_header": "\u041F\u0430\u043B\u0438\u0442\u0440\u044B \u0446\u0432\u0435\u0442\u043E\u0432",
       "color_picker_layout": "\u041C\u0430\u043A\u0435\u0442 \u0432\u044B\u0431\u043E\u0440\u0430 \u0446\u0432\u0435\u0442\u0430",
       "color_picker_layout_desc": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0438\u043F\u044B \u0446\u0432\u0435\u0442\u043E\u0432 \u0434\u043B\u044F \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u043F\u0440\u0438 \u0432\u044B\u0431\u043E\u0440\u0435 \u0446\u0432\u0435\u0442\u0430 \u0434\u043B\u044F \u0441\u043B\u043E\u0432\u0430",
       "opt_both_text_left": "\u041E\u0431\u0430: \u0422\u0435\u043A\u0441\u0442 \u0421\u043B\u0435\u0432\u0430, \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430 \u0421\u043F\u0440\u0430\u0432\u0430",
@@ -3278,7 +3378,7 @@ var require_ru = __commonJS({
       "use_swatch_names_desc": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0432\u044B\u043F\u0430\u0434\u0430\u044E\u0449\u0438\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0438\u043C\u0435\u043D \u043F\u0430\u043B\u0438\u0442\u0440 \u0440\u044F\u0434\u043E\u043C \u0441 \u0432\u0432\u043E\u0434\u043E\u043C \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u0430",
       "link_swatches_to_entries": "\u0421\u0432\u044F\u0437\u0430\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u043F\u0430\u043B\u0438\u0442\u0440 \u0441 \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430\u043C\u0438",
       "link_swatches_to_entries_desc": "\u041E\u0431\u043D\u043E\u0432\u043B\u044F\u0442\u044C \u0432\u0441\u0435 \u0437\u0430\u043F\u0438\u0441\u0438, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044E\u0449\u0438\u0435 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0443\u044E \u043F\u0430\u043B\u0438\u0442\u0440\u0443, \u043A\u043E\u0433\u0434\u0430 \u0446\u0432\u0435\u0442 \u044D\u0442\u043E\u0439 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043C\u0435\u043D\u044F\u0435\u0442\u0441\u044F",
-      "default_colors_header": "\u0426\u0432\u0435\u0442\u0430 \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E",
+      "default_colors_header": "\u041E\u0431\u0440\u0430\u0437\u0446\u044B \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E",
       "custom_swatches_header": "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u043B\u0438\u0442\u0440\u044B",
       "btn_add_color": "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0446\u0432\u0435\u0442",
       "no_custom_swatches_yet": "\u041F\u043E\u043A\u0430 \u043D\u0435\u0442 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0445 \u043F\u0430\u043B\u0438\u0442\u0440. \u041D\u0430\u0436\u043C\u0438\u0442\u0435 \xAB+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0446\u0432\u0435\u0442\xBB, \u0447\u0442\u043E\u0431\u044B \u0441\u043E\u0437\u0434\u0430\u0442\u044C.",
@@ -3504,6 +3604,7 @@ var require_ru = __commonJS({
       "label_border_thickness": "\u0422\u043E\u043B\u0449\u0438\u043D\u0430 \u0440\u0430\u043C\u043A\u0438",
       "btn_save_style": "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0441\u0442\u0438\u043B\u044C",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430",
       "quick_colors_desc": "\u041F\u043E\u0437\u0432\u043E\u043B\u044F\u0435\u0442 \u0431\u044B\u0441\u0442\u0440\u043E \u043F\u043E\u0434\u0441\u0432\u0435\u0447\u0438\u0432\u0430\u0442\u044C \u0438\u043B\u0438 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442, \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u044F \u0446\u0432\u0435\u0442\u0430 \u0432 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E. \u0415\u0441\u043B\u0438 \u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u044B, \u0431\u0443\u0434\u0443\u0442 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C\u0441\u044F \u0446\u0432\u0435\u0442\u0430 \u0441\u0442\u0438\u043B\u0435\u0439 \u0438\u0437 \u0411\u044B\u0441\u0442\u0440\u044B\u0445 \u0441\u0442\u0438\u043B\u0435\u0439.",
       "quick_colors_apply_mode_label": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442 \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E",
@@ -3532,7 +3633,13 @@ var require_ru = __commonJS({
       "btn_duplicate_entry": "\u0414\u0443\u0431\u043B\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
       "btn_open_in_regex_tester": "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043E\u0440\u0435 Regex",
       "move_to_blacklist_group": "\u041F\u0435\u0440\u0435\u043D\u0435\u0441\u0442\u0438 \u0432 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
-      "btn_delete_entry": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C"
+      "btn_delete_entry": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
+      "edit_group_highlight_styling": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0442\u0438\u043B\u044C \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u0438\u044F \u0433\u0440\u0443\u043F\u043F\u044B",
+      "light_mode_fixer_desc": "\u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u0437\u0430\u0442\u0435\u043C\u043D\u044F\u0435\u0442 \u0446\u0432\u0435\u0442\u043D\u043E\u0439 \u0442\u0435\u043A\u0441\u0442 \u043F\u0440\u0438 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0438 \u0441\u0432\u0435\u0442\u043B\u043E\u0439 \u0442\u0435\u043C\u044B \u0434\u043B\u044F \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0432\u0438\u0434\u0438\u043C\u043E\u0441\u0442\u0438.",
+      "dark_mode_fixer_desc": "\u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u043E\u0441\u0432\u0435\u0442\u043B\u044F\u0435\u0442 \u0446\u0432\u0435\u0442\u043D\u043E\u0439 \u0442\u0435\u043A\u0441\u0442 \u043F\u0440\u0438 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0438 \u0442\u0435\u043C\u043D\u043E\u0439 \u0442\u0435\u043C\u044B \u0434\u043B\u044F \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0432\u0438\u0434\u0438\u043C\u043E\u0441\u0442\u0438.",
+      "preset_bold": "\u0416\u0438\u0440\u043D\u044B\u0439",
+      "preset_italic": "\u041A\u0443\u0440\u0441\u0438\u0432",
+      "preset_bold_italic": "\u0416\u0438\u0440\u043D\u044B\u0439 \u043A\u0443\u0440\u0441\u0438\u0432"
     };
   }
 });
@@ -3572,6 +3679,8 @@ var require_zh_cn = __commonJS({
       "file_menu_disable": "\u4E3A\u6B64\u6587\u4EF6\u7981\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
       "menu_color_once": "\u7740\u8272\u4E00\u6B21",
       "menu_highlight_once": "\u9AD8\u4EAE\u4E00\u6B21",
+      "menu_color_highlight_once": "\u989C\u8272 / \u9AD8\u4EAE\u4E00\u6B21",
+      "menu_remove_inline_color": "\u79FB\u9664\u5185\u8054\u989C\u8272",
       "menu_always_color_text": "\u6587\u5B57\u81EA\u52A8\u7740\u8272",
       "menu_remove_always_color_text": "\u79FB\u9664\u6587\u5B57\u81EA\u52A8\u7740\u8272",
       "menu_blacklist_word": "\u5C06\u5355\u8BCD\u52A0\u5165\u7740\u8272\u9ED1\u540D\u5355",
@@ -3599,11 +3708,18 @@ var require_zh_cn = __commonJS({
       // Commands
       "command_color_selected": "\u7740\u8272\u9009\u4E2D\u6587\u5B57",
       "command_toggle_current": "\u542F\u7528/\u7981\u7528\u5F53\u524D\u6587\u6863\u7740\u8272",
-      "command_toggle_global": "\u542F\u7528/\u7981\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
-      "command_enable_current": "\u4E3A\u5F53\u524D\u6587\u6863\u542F\u7528\u7740\u8272",
-      "command_disable_current": "\u4E3A\u5F53\u524D\u6587\u6863\u7981\u7528\u7740\u8272",
-      "command_enable_global": "\u542F\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
-      "command_disable_global": "\u7981\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
+      "command_enable_current": "\u542F\u7528\u5F53\u524D\u6587\u6863\u7740\u8272",
+      "command_disable_current": "\u7981\u7528\u5F53\u524D\u6587\u6863\u7740\u8272",
+      "command_toggle_global": "\u542F\u7528/\u7981\u7528\u5168\u5C40\u7740\u8272",
+      "command_enable_global": "\u542F\u7528\u5168\u5C40\u7740\u8272",
+      "command_disable_global": "\u7981\u7528\u5168\u5C40\u7740\u8272",
+      "enable_document_color": "\u542F\u7528\u5168\u5C40\u989C\u8272",
+      "color_rendering_header": "\u989C\u8272\u6E32\u67D3\u4E0E\u6027\u80FD",
+      "theme_support_header": "\u4E3B\u9898\u652F\u6301",
+      "matching_behavior_header": "\u5339\u914D\u884C\u4E3A",
+      "smart_updates": "\u667A\u80FD\u66F4\u65B0 (\u5B9E\u9A8C\u6027)",
+      "light_mode_fixer": "\u4EAE\u8272\u6A21\u5F0F\u6587\u672C\u989C\u8272\u4FEE\u590D\u5668",
+      "dark_mode_fixer": "\u6697\u8272\u6A21\u5F0F\u6587\u672C\u989C\u8272\u4FEE\u590D\u5668",
       "command_manage_advanced_rules": "\u7BA1\u7406\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
       "command_open_regex_tester": "\u6DFB\u52A0\u6B63\u5219\u8868\u8FBE\u5F0F\uFF08\u6253\u5F00\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\uFF09",
       "command_open_blacklist_regex_tester": "\u6DFB\u52A0\u9ED1\u540D\u5355\u6B63\u5219\u8868\u8FBE\u5F0F",
@@ -3669,12 +3785,11 @@ var require_zh_cn = __commonJS({
       "restart_required_title": "\u9700\u8981\u91CD\u542F",
       "restart_required_desc": "\u7981\u7528\u547D\u4EE4\u9762\u677F\u4E2D\u7684\u6FC0\u6D3B\u9700\u8981\u91CD\u542F Obsidian \u624D\u80FD\u4ECE\u547D\u4EE4\u9762\u677F\u4E2D\u5B8C\u5168\u79FB\u9664\u8BE5\u547D\u4EE4\u3002\u73B0\u5728\u91CD\u542F\u5417\uFF1F",
       // Basic Settings
-      "enable_document_color": "\u542F\u7528\u6587\u6863\u7740\u8272",
       "color_in_live_preview_mode": "\u5728\u5B9E\u65F6\u9884\u89C8\u6A21\u5F0F\u4E0B\u7740\u8272",
       "color_in_reading_mode": "\u5728\u9605\u8BFB\u6A21\u5F0F\u4E0B\u7740\u8272",
       "force_full_render_reading": "\u9605\u8BFB\u6A21\u5F0F\u4E0B\u5F3A\u5236\u5B8C\u6574\u6E32\u67D3",
       "force_full_render_reading_desc": "\u5982\u679C\u542F\u7528\uFF0C\u9605\u8BFB\u6A21\u5F0F\u5C06\u5C1D\u8BD5\u4E00\u6B21\u6027\u7740\u8272\u6574\u4E2A\u6587\u6863\u3002\u5728\u5927\u578B\u6587\u6863\u4E0A\u53EF\u80FD\u4F1A\u5BFC\u81F4\u5361\u987F\uFF0C\u8BF7\u8C28\u614E\u4F7F\u7528\uFF01",
-      "lightweight_mode": "\u5B9E\u9A8C\u529F\u80FD\uFF1A\u6781\u81F4\u8F7B\u91CF\u6A21\u5F0F",
+      "lightweight_mode": "Lightweight mode (Experimental)",
       "lightweight_mode_desc": "\u5728\u8F93\u5165\u65F6\u5927\u5E45\u51CF\u5C11\u5904\u7406\u91CF\u3002\u53EF\u80FD\u4F1A\u6F0F\u6389\u90E8\u5206\u5339\u914D\u3002",
       "disable_coloring_current_file": "\u7981\u7528\u5F53\u524D\u6587\u4EF6\u7740\u8272",
       "disable_coloring_current_file_desc": "\u5728\u6587\u4EF6\u548C\u6587\u4EF6\u5939\u7740\u8272\u89C4\u5219\u4E0B\u4E3A\u6D3B\u52A8\u6587\u4EF6\u6DFB\u52A0\u6392\u9664\u89C4\u5219\u3002",
@@ -3695,6 +3810,8 @@ var require_zh_cn = __commonJS({
       "setting_color_once_desc": "\u4E3A\u9009\u5B9A\u7684\u6587\u672C\u63D2\u5165\u5185\u8054 HTML \u6837\u5F0F\u3002\u5373\u4F7F\u7981\u7528\u63D2\u4EF6\u4E5F\u4F1A\u4FDD\u7559\u3002",
       "setting_highlight_once": "\u9AD8\u4EAE\u4E00\u6B21",
       "setting_highlight_once_desc": "\u63D2\u5165\u5E26\u80CC\u666F\u7684\u5185\u8054 HTML \u6837\u5F0F\u3002\u5373\u4F7F\u7981\u7528\u63D2\u4EF6\u4E5F\u4F1A\u4FDD\u7559\u3002",
+      "setting_color_highlight_once": "\u989C\u8272\u548C\u9AD8\u4EAE\u4E00\u6B21",
+      "setting_color_highlight_once_desc": "\u6253\u5F00\u7EDF\u4E00\u7684\u989C\u8272\u9009\u62E9\u5668\u4EE5\u5E94\u7528\u5185\u8054\u6587\u672C\u989C\u8272\u548C\u80CC\u666F\u9AD8\u4EAE\u3002\u4F7F\u7528\u7EDF\u4E00\u83DC\u5355\u3002",
       "highlight_once_preview": "\u9AD8\u4EAE\u4E00\u6B21\u9884\u89C8",
       "highlight_once_preview_text": "\u8FD9\u5C31\u662F\u9AD8\u4EAE\u4E00\u6B21\u7684\u6837\u5B50\uFF01",
       // Highlight Once Settings
@@ -3759,7 +3876,7 @@ var require_zh_cn = __commonJS({
       "opt_line_inset": "\u5185\u5D4C",
       "opt_line_outset": "\u5916\u51F8",
       // Color Swatches
-      "color_swatches_header": "\u8272\u677F",
+      "color_swatches_header": "\u989C\u8272\u7BA1\u7406",
       "color_picker_layout": "\u989C\u8272\u9009\u62E9\u5668\u5E03\u5C40",
       "color_picker_layout_desc": "\u9009\u62E9\u4E3A\u5355\u8BCD\u9009\u62E9\u989C\u8272\u65F6\u663E\u793A\u7684\u989C\u8272\u7C7B\u578B",
       "opt_both_text_left": "\u4E24\u8005\uFF1A\u6587\u672C\u5DE6\uFF0C\u9AD8\u4EAE\u53F3",
@@ -3776,7 +3893,7 @@ var require_zh_cn = __commonJS({
       "use_swatch_names_desc": "\u5728\u5355\u8BCD/\u6A21\u5F0F\u8F93\u5165\u65C1\u8FB9\u663E\u793A\u8272\u677F\u540D\u79F0\u4E0B\u62C9\u5217\u8868",
       "link_swatches_to_entries": "\u5C06\u8272\u677F\u66F4\u65B0\u94FE\u63A5\u5230\u7740\u8272\u6587\u672C",
       "link_swatches_to_entries_desc": "\u5F53\u81EA\u5B9A\u4E49\u8272\u677F\u7684\u989C\u8272\u66F4\u6539\u65F6\uFF0C\u66F4\u65B0\u6240\u6709\u4F7F\u7528\u8BE5\u8272\u677F\u7684\u6761\u76EE",
-      "default_colors_header": "\u9ED8\u8BA4\u989C\u8272",
+      "default_colors_header": "\u9ED8\u8BA4\u8272\u677F",
       "custom_swatches_header": "\u81EA\u5B9A\u4E49\u8272\u677F",
       "btn_add_color": "+ \u6DFB\u52A0\u989C\u8272",
       "no_custom_swatches_yet": '\u5C1A\u65E0\u81EA\u5B9A\u4E49\u8272\u677F\u3002\u70B9\u51FB "+ \u6DFB\u52A0\u989C\u8272" \u521B\u5EFA\u4E00\u4E2A\u3002',
@@ -4002,6 +4119,7 @@ var require_zh_cn = __commonJS({
       "label_border_thickness": "\u8FB9\u6846\u539A\u5EA6",
       "btn_save_style": "\u4FDD\u5B58\u6837\u5F0F",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "\u5FEB\u901F\u989C\u8272",
       "quick_colors_desc": "\u5141\u8BB8\u901A\u8FC7\u5728\u53F3\u952E\u83DC\u5355\u4E2D\u663E\u793A\u989C\u8272\u6765\u5FEB\u901F\u9AD8\u4EAE\u6216\u7740\u8272\u6587\u672C\u3002\u5982\u679C\u5173\u95ED\u5FEB\u901F\u989C\u8272\uFF0C\u5C06\u4F7F\u7528\u5FEB\u901F\u6837\u5F0F\u4E2D\u7684\u6BCF\u79CD\u6837\u5F0F\u989C\u8272\u3002",
       "quick_colors_apply_mode_label": "\u6587\u672C\u7740\u8272\u5C06\u5E94\u7528\u4E3A",
@@ -4037,7 +4155,13 @@ var require_zh_cn = __commonJS({
       "share_export_title": "Always Color Text \u5BFC\u51FA",
       "delete_button_text": "\u2715",
       "style_name_placeholder": "\u6837\u5F0F\u540D\u79F0",
-      "preview_text": "\u6587\u672C"
+      "preview_text": "\u6587\u672C",
+      "edit_group_highlight_styling": "\u7F16\u8F91\u7EC4\u9AD8\u4EAE\u6837\u5F0F",
+      "light_mode_fixer_desc": "\u4F7F\u7528\u6D45\u8272\u4E3B\u9898\u65F6\u81EA\u52A8\u52A0\u6DF1\u5F69\u8272\u6587\u672C\u4EE5\u63D0\u9AD8\u53EF\u89C1\u6027\u3002",
+      "dark_mode_fixer_desc": "\u4F7F\u7528\u6DF1\u8272\u4E3B\u9898\u65F6\u81EA\u52A8\u53D8\u6D45\u5F69\u8272\u6587\u672C\u4EE5\u63D0\u9AD8\u53EF\u89C1\u6027\u3002",
+      "preset_bold": "\u7C97\u4F53",
+      "preset_italic": "\u659C\u4F53",
+      "preset_bold_italic": "\u7C97\u659C\u4F53"
     };
   }
 });
@@ -6198,6 +6322,109 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (_) {
     }
   }
+  applyHighlightPresetTransparency() {
+    try {
+      const hasHighlightPreset = Array.isArray(this.settings.wordEntries) && this.settings.wordEntries.some(
+        (e) => e.pattern === "==[\\s\\S]*?==" || e.pattern === "==.*?=="
+      );
+      let style = document.getElementById("act-highlight-preset-transparency");
+      if (hasHighlightPreset) {
+        if (!style) {
+          style = document.createElement("style");
+          style.id = "act-highlight-preset-transparency";
+          style.textContent = `
+            .markdown-rendered mark:not(.always-color-text-highlight-marks) {
+              background-color: transparent !important;
+              color: inherit !important;
+            }
+            .cm-highlight {
+              background-color: transparent !important;
+              color: inherit !important;
+            }
+            .cm-s-obsidian span.cm-highlight {
+              background-color: transparent !important;
+              color: inherit !important;
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      } else {
+        if (style) style.remove();
+      }
+    } catch (_) {
+    }
+  }
+  removeHighlightPresetTransparency() {
+    try {
+      const style = document.getElementById("act-highlight-preset-transparency");
+      if (style) style.remove();
+    } catch (_) {
+    }
+  }
+  removeFormattingPresetStyles() {
+    try {
+      const style = document.getElementById("act-formatting-preset-styles");
+      if (style) style.remove();
+    } catch (_) {
+    }
+  }
+  applyFormattingPresetStyles() {
+    try {
+      const entries = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      const hasBold = entries.some((e) => e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1");
+      const hasItalic = entries.some((e) => e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1");
+      const hasBoldItalic = entries.some((e) => e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1");
+      let style = document.getElementById("act-formatting-preset-styles");
+      if (hasBold || hasItalic || hasBoldItalic) {
+        if (!style) {
+          style = document.createElement("style");
+          style.id = "act-formatting-preset-styles";
+          document.head.appendChild(style);
+        }
+        let css = "";
+        if (hasBold) {
+          css += `
+                .cm-strong, strong {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+                .cm-s-obsidian span.cm-strong {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+            `;
+        }
+        if (hasItalic) {
+          css += `
+                .cm-em, em {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+                .cm-s-obsidian span.cm-em {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+            `;
+        }
+        if (hasBoldItalic) {
+          css += `
+                .cm-strong.cm-em, strong em, em strong {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+                 .cm-s-obsidian span.cm-strong.cm-em {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+            `;
+        }
+        style.textContent = css;
+      } else {
+        if (style) style.remove();
+      }
+    } catch (_) {
+    }
+  }
   neutralizeExistingHighlightBackgrounds() {
     try {
       document.querySelectorAll(".always-color-text-highlight").forEach((el) => {
@@ -6392,6 +6619,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (!Array.isArray(this.settings.quickColors)) this.settings.quickColors = [];
     if (!Array.isArray(this.settings.quickStyles)) this.settings.quickStyles = [];
     if (typeof this.settings.quickStylesEnabled === "undefined") this.settings.quickStylesEnabled = true;
+    if (typeof this.settings.enableQuickColorHighlightOnce === "undefined") this.settings.enableQuickColorHighlightOnce = false;
     try {
       this.migrateAdvancedRulesToPerEntry();
       await this.saveSettings();
@@ -6659,9 +6887,56 @@ module.exports = class AlwaysColorText extends Plugin {
                   const rgba = this.hexToRgba(bg, 25);
                   style = `background-color: ${rgba};`;
                 }
-                const html = `<span class="always-color-text-highlight" style="${style}">${selectedText}</span>`;
+                const html = `<span style="${style}">${selectedText}</span>`;
                 editor.replaceSelection(html);
               }, "background", selectedText, true).open();
+            });
+          });
+        }
+        const cpm = this.settings.colorPickerMode || "both";
+        const isBoth = cpm === "both" || cpm === "both-bg-left" || cpm === "both-v-text-top" || cpm === "both-v-bg-top";
+        if (this.settings.enableQuickColorHighlightOnce && isBoth) {
+          menu.addItem((item) => {
+            item.setTitle(this.t("menu_color_highlight_once", "Color / Highlight Once")).setIcon("paintbrush").onClick(() => {
+              new ColorPickerModal(this.app, this, async (color, result) => {
+                const tc = result && result.textColor && this.isValidHexColor(result.textColor) ? result.textColor : null;
+                const bg = result && result.backgroundColor && this.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
+                if (!tc && !bg) return;
+                let style = "";
+                if (tc) style += `color: ${tc}; `;
+                if (bg) {
+                  if (this.settings.quickHighlightUseGlobalStyle) {
+                    const rgba = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25);
+                    const radius = this.settings.highlightBorderRadius ?? 8;
+                    const pad = this.settings.highlightHorizontalPadding ?? 4;
+                    const border = this.generateBorderStyle(null, bg);
+                    style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
+                  } else if (this.settings.quickHighlightStyleEnable) {
+                    const hexWithAlpha = this.hexToHexWithAlpha(bg, this.settings.quickHighlightOpacity ?? 25);
+                    const radius = this.settings.quickHighlightBorderRadius ?? 8;
+                    const pad = this.settings.quickHighlightHorizontalPadding ?? 4;
+                    const vpad = this.settings.quickHighlightVerticalPadding ?? 0;
+                    const border = this.generateOnceBorderStyle(bg);
+                    style += `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px; padding-top: ${vpad}px; padding-bottom: ${vpad}px;${border}`;
+                  } else {
+                    const rgba = this.hexToRgba(bg, 25);
+                    style += `background-color: ${rgba};`;
+                  }
+                }
+                const html = `<span style="${style.trim()}">${selectedText}</span>`;
+                editor.replaceSelection(html);
+              }, "text-and-background", selectedText, true).open();
+            });
+          });
+        }
+        const isHtmlColor = /^<span\s+(?:style="[^"]*(?:color|background-color):[^"]*"|class="always-color-text-highlight"[^>]*)(?:>)(.*)<\/span>$/s.test(selectedText);
+        if (isHtmlColor) {
+          menu.addItem((item) => {
+            item.setTitle(this.t("menu_remove_inline_color", "Remove Inline Color")).setIcon("trash").onClick(() => {
+              const match = selectedText.match(/^<span\s+(?:[^>]+)>(.*)<\/span>$/s);
+              if (match && match[1]) {
+                editor.replaceSelection(match[1]);
+              }
             });
           });
         }
@@ -6753,7 +7028,11 @@ module.exports = class AlwaysColorText extends Plugin {
         const stylesArr = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
         this._lastSelectedQuickColor = null;
         let closeMenuTimeout = null;
-        const openStylesSubmenu = (anchorEvent, positionOverride = null) => {
+        const openStylesSubmenu = (anchorEvent, anchorElement = null) => {
+          if (closeMenuTimeout) {
+            clearTimeout(closeMenuTimeout);
+            closeMenuTimeout = null;
+          }
           if (!this.settings.quickStylesEnabled) return;
           if (this._openQuickStylesSubmenu) {
             try {
@@ -6803,13 +7082,34 @@ module.exports = class AlwaysColorText extends Plugin {
               });
             });
           });
-          if (positionOverride) {
-            try {
-              sub.showAtPosition(positionOverride);
-            } catch (e) {
+          try {
+            let targetEl = anchorElement;
+            if (!targetEl && anchorEvent) {
+              if (anchorEvent instanceof Element) targetEl = anchorEvent;
+              else if (anchorEvent.target) targetEl = anchorEvent.target.closest(".menu-item") || anchorEvent.target;
+            }
+            let rect = null;
+            if (targetEl && targetEl.getBoundingClientRect) {
+              rect = targetEl.getBoundingClientRect();
+            }
+            if (rect) {
+              const winWidth = window.innerWidth;
+              const threshold = 350;
+              const estimatedWidth = 160;
+              const distToRight = winWidth - rect.right;
+              let targetX, targetY;
+              targetY = rect.top;
+              if (distToRight < threshold) {
+                targetX = rect.left - estimatedWidth + 5;
+              } else {
+                targetX = rect.right - 5;
+              }
+              if (targetX < 10) targetX = 10;
+              sub.showAtPosition({ x: targetX, y: targetY });
+            } else {
               sub.showAtMouseEvent(anchorEvent);
             }
-          } else {
+          } catch (e) {
             sub.showAtMouseEvent(anchorEvent);
           }
           this._openQuickStylesSubmenu = sub;
@@ -6845,10 +7145,9 @@ module.exports = class AlwaysColorText extends Plugin {
               }
               if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
                 try {
-                  const rect = titleEl.getBoundingClientRect();
-                  openStylesSubmenu(ev, { x: rect.right, y: rect.top });
+                  openStylesSubmenu(ev, titleEl);
                 } catch (e) {
-                  openStylesSubmenu(ev);
+                  openStylesSubmenu(ev, titleEl);
                 }
               }
             });
@@ -6901,7 +7200,7 @@ module.exports = class AlwaysColorText extends Plugin {
                     activeDotEl = null;
                     this._lastSelectedQuickColor = null;
                     if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
-                      openStylesSubmenu(ev);
+                      openStylesSubmenu(ev, titleEl);
                     }
                     return;
                   }
@@ -6926,7 +7225,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   } catch (_) {
                   }
                   if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
-                    openStylesSubmenu(ev);
+                    openStylesSubmenu(ev, titleEl);
                   } else {
                     const firstStyle = stylesArr[0] || null;
                     if (firstStyle) {
@@ -6960,7 +7259,7 @@ module.exports = class AlwaysColorText extends Plugin {
             chevronIcon.addEventListener("click", (ev) => {
               ev.preventDefault();
               ev.stopPropagation();
-              openStylesSubmenu(ev);
+              openStylesSubmenu(ev, titleEl);
             });
             const iconRight = document.createElement("div");
             iconRight.className = "menu-item-icon mod-submenu";
@@ -6972,7 +7271,7 @@ module.exports = class AlwaysColorText extends Plugin {
             iconRight.addEventListener("click", (ev) => {
               ev.preventDefault();
               ev.stopPropagation();
-              openStylesSubmenu(ev);
+              openStylesSubmenu(ev, titleEl);
             });
             titleEl.appendChild(iconLeft);
             titleEl.appendChild(titleText);
@@ -6983,7 +7282,7 @@ module.exports = class AlwaysColorText extends Plugin {
             item.setTitle(titleEl);
             item.onClick((evt) => {
               if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
-                openStylesSubmenu(evt);
+                openStylesSubmenu(evt, titleEl);
               }
             });
           });
@@ -7002,8 +7301,27 @@ module.exports = class AlwaysColorText extends Plugin {
               item.dom?.appendChild(iconRight);
             } catch (_) {
             }
+            try {
+              if (item.dom) {
+                item.dom.addEventListener("mouseenter", (ev) => {
+                  openStylesSubmenu(ev, item.dom);
+                });
+                item.dom.addEventListener("mouseleave", () => {
+                  closeMenuTimeout = setTimeout(() => {
+                    if (this._openQuickStylesSubmenu) {
+                      try {
+                        this._openQuickStylesSubmenu.hide();
+                      } catch (_) {
+                      }
+                      this._openQuickStylesSubmenu = null;
+                    }
+                  }, 300);
+                });
+              }
+            } catch (_) {
+            }
             item.onClick((evt) => {
-              openStylesSubmenu(evt);
+              openStylesSubmenu(evt, item.dom);
             });
           });
         }
@@ -7285,7 +7603,7 @@ module.exports = class AlwaysColorText extends Plugin {
       });
       addTrackedCommand({
         id: "toggle-always-color-text",
-        name: this.settings.enabled ? this.t("command_disable_global", "Disable Always Color Text") : this.t("command_enable_global", "Enable Always Color Text"),
+        name: this.settings.enabled ? this.t("command_disable_global", "Disable Global Coloring") : this.t("command_enable_global", "Enable Global Coloring"),
         callback: async () => {
           this.settings.enabled = !this.settings.enabled;
           await this.saveSettings();
@@ -9050,7 +9368,9 @@ module.exports = class AlwaysColorText extends Plugin {
   enablePluginFeatures() {
     this.updateLightModeFixer();
     this.updateDarkModeFixer();
+    this.applyFormattingPresetStyles();
     this.applyFormattingStyles();
+    this.applyHighlightPresetTransparency();
     if (!this.cmExtensionRegistered) {
       this.extension = this.buildEditorExtension();
       this.registerEditorExtension(this.extension);
@@ -9265,6 +9585,13 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // --- Remove all CodeMirror extensions & listeners ---
   disablePluginFeatures() {
+    this.removeHighlightPresetTransparency();
+    this.removeFormattingPresetStyles();
+    try {
+      const s = document.getElementById("act-formatting-styles");
+      if (s) s.remove();
+    } catch (_) {
+    }
     try {
       document.body.classList.remove("act-light-mode-fix");
     } catch (_) {
@@ -10270,10 +10597,20 @@ module.exports = class AlwaysColorText extends Plugin {
       let styleEl = document.getElementById(styleId);
       const we = this.settings.wordEntries || [];
       const weAll2 = (this.settings.wordEntryGroups || []).reduce((acc, g) => acc.concat(g.entries || []), []).concat(we);
+      const hasBoldItalic = we.some((e) => e.targetElement === "strong-em") || weAll2.some((e) => e.targetElement === "strong-em");
       const targets = [
-        { type: "strong", selector: ".cm-strong, .markdown-rendered strong" },
-        { type: "em", selector: ".cm-em, .markdown-rendered em" },
-        { type: "strong-em", selector: ".cm-strong.cm-em, .cm-strong .cm-em, .cm-em .cm-strong, .markdown-rendered strong em, .markdown-rendered em strong" }
+        {
+          type: "strong",
+          selector: hasBoldItalic ? ".cm-strong:not(.cm-em), .markdown-rendered strong:not(:has(em)), .cm-s-obsidian span.cm-strong:not(.cm-em)" : ".cm-strong, .markdown-rendered strong, .cm-s-obsidian span.cm-strong"
+        },
+        {
+          type: "em",
+          selector: hasBoldItalic ? ".cm-em:not(.cm-strong), .markdown-rendered em:not(:has(strong)), .cm-s-obsidian span.cm-em:not(.cm-strong)" : ".cm-em, .markdown-rendered em, .cm-s-obsidian span.cm-em"
+        },
+        {
+          type: "strong-em",
+          selector: ".cm-strong.cm-em, .cm-strong .cm-em, .cm-em .cm-strong, .markdown-rendered strong em, .markdown-rendered em strong, .cm-s-obsidian span.cm-strong.cm-em"
+        }
       ];
       let css = "";
       targets.forEach((t) => {
@@ -10297,6 +10634,7 @@ module.exports = class AlwaysColorText extends Plugin {
             const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
             const vPad = typeof entry.highlightVerticalPadding === "number" ? entry.highlightVerticalPadding : this.settings.highlightVerticalPadding ?? 0;
             const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
+            const borderCSS = this.generateBorderStyle(textColor, bgColor, entry);
             css += ` padding-left: ${hPad}px !important; padding-right: ${hPad}px !important;`;
             css += ` padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`;
             css += ` border-radius: ${radius}px !important;`;
@@ -11409,47 +11747,47 @@ module.exports = class AlwaysColorText extends Plugin {
     const borderColorRgba = this.hexToRgba(sourceColor, borderOpacity);
     const borderStyleType = entry && typeof entry.borderStyle === "string" ? entry.borderStyle : this.settings.borderStyle ?? "full";
     const lineStyle = entry && typeof entry.borderLineStyle === "string" ? entry.borderLineStyle : this.settings.borderLineStyle ?? "solid";
-    const borderCSS2 = `${borderThickness}px ${lineStyle} ${borderColorRgba}`;
+    const borderCSS = `${borderThickness}px ${lineStyle} ${borderColorRgba}`;
     switch (borderStyleType) {
       case "bottom":
-        element.style.borderBottom = borderCSS2;
+        element.style.borderBottom = borderCSS;
         break;
       case "top":
-        element.style.borderTop = borderCSS2;
+        element.style.borderTop = borderCSS;
         break;
       case "left":
-        element.style.borderLeft = borderCSS2;
+        element.style.borderLeft = borderCSS;
         break;
       case "right":
-        element.style.borderRight = borderCSS2;
+        element.style.borderRight = borderCSS;
         break;
       case "top-bottom":
-        element.style.borderTop = borderCSS2;
-        element.style.borderBottom = borderCSS2;
+        element.style.borderTop = borderCSS;
+        element.style.borderBottom = borderCSS;
         break;
       case "left-right":
-        element.style.borderLeft = borderCSS2;
-        element.style.borderRight = borderCSS2;
+        element.style.borderLeft = borderCSS;
+        element.style.borderRight = borderCSS;
         break;
       case "top-right":
-        element.style.borderTop = borderCSS2;
-        element.style.borderRight = borderCSS2;
+        element.style.borderTop = borderCSS;
+        element.style.borderRight = borderCSS;
         break;
       case "top-left":
-        element.style.borderTop = borderCSS2;
-        element.style.borderLeft = borderCSS2;
+        element.style.borderTop = borderCSS;
+        element.style.borderLeft = borderCSS;
         break;
       case "bottom-right":
-        element.style.borderBottom = borderCSS2;
-        element.style.borderRight = borderCSS2;
+        element.style.borderBottom = borderCSS;
+        element.style.borderRight = borderCSS;
         break;
       case "bottom-left":
-        element.style.borderBottom = borderCSS2;
-        element.style.borderLeft = borderCSS2;
+        element.style.borderBottom = borderCSS;
+        element.style.borderLeft = borderCSS;
         break;
       case "full":
       default:
-        element.style.border = borderCSS2;
+        element.style.border = borderCSS;
         break;
     }
   }
@@ -11472,35 +11810,35 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     const borderStyleType = entry && typeof entry.borderStyle === "string" ? entry.borderStyle : this.settings.borderStyle ?? "full";
     const lineStyle = entry && typeof entry.borderLineStyle === "string" ? entry.borderLineStyle : this.settings.borderLineStyle ?? "solid";
-    const borderCSS2 = `${borderThickness}px ${lineStyle} ${borderColor} !important;`;
+    const borderCSS = `${borderThickness}px ${lineStyle} ${borderColor} !important;`;
     switch (borderStyleType) {
       case "bottom":
-        return ` border-bottom: ${borderCSS2}`;
+        return ` border-bottom: ${borderCSS}`;
       case "top":
-        return ` border-top: ${borderCSS2}`;
+        return ` border-top: ${borderCSS}`;
       case "left":
-        return ` border-left: ${borderCSS2}`;
+        return ` border-left: ${borderCSS}`;
       case "right":
-        return ` border-right: ${borderCSS2}`;
+        return ` border-right: ${borderCSS}`;
       case "top-bottom":
-        return ` border-top: ${borderCSS2} border-bottom: ${borderCSS2}`;
+        return ` border-top: ${borderCSS} border-bottom: ${borderCSS}`;
       case "left-right":
-        return ` border-left: ${borderCSS2} border-right: ${borderCSS2}`;
+        return ` border-left: ${borderCSS} border-right: ${borderCSS}`;
       case "top-left-right":
-        return ` border-top: ${borderCSS2} border-left: ${borderCSS2} border-right: ${borderCSS2}`;
+        return ` border-top: ${borderCSS} border-left: ${borderCSS} border-right: ${borderCSS}`;
       case "bottom-left-right":
-        return ` border-bottom: ${borderCSS2} border-left: ${borderCSS2} border-right: ${borderCSS2}`;
+        return ` border-bottom: ${borderCSS} border-left: ${borderCSS} border-right: ${borderCSS}`;
       case "top-right":
-        return ` border-top: ${borderCSS2} border-right: ${borderCSS2}`;
+        return ` border-top: ${borderCSS} border-right: ${borderCSS}`;
       case "top-left":
-        return ` border-top: ${borderCSS2} border-left: ${borderCSS2}`;
+        return ` border-top: ${borderCSS} border-left: ${borderCSS}`;
       case "bottom-right":
-        return ` border-bottom: ${borderCSS2} border-right: ${borderCSS2}`;
+        return ` border-bottom: ${borderCSS} border-right: ${borderCSS}`;
       case "bottom-left":
-        return ` border-bottom: ${borderCSS2} border-left: ${borderCSS2}`;
+        return ` border-bottom: ${borderCSS} border-left: ${borderCSS}`;
       case "full":
       default:
-        return ` border: ${borderCSS2}`;
+        return ` border: ${borderCSS}`;
     }
   }
   getHighlightParams(entry) {
@@ -11739,7 +12077,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (tc) styleStr += `color: ${tc}; `;
     if (bg) styleStr += `background-color: ${bg}; `;
     styleStr += `border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-    const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
+    const html = `<span style="${styleStr}">${selectedText}</span>`;
     editor.replaceSelection(html);
   }
   // Helper: Extract color and background from selected HTML text in editor
@@ -19074,7 +19412,7 @@ var HighlightStylingModal = class extends Modal {
     headerRow.style.gap = "8px";
     headerRow.style.marginBottom = "12px";
     headerRow.style.flexWrap = "wrap";
-    const headerTitle = isGroup ? "Edit Group Highlight Styling" : this.plugin.t("highlight_styling_header", "Edit Highlight Styling");
+    const headerTitle = isGroup ? this.plugin.t("edit_group_highlight_styling", "Edit Group Highlight Styling") : this.plugin.t("highlight_styling_header", "Edit Highlight Styling");
     const title = headerRow.createEl("h2", { text: headerTitle });
     title.style.margin = "0";
     const spacer = headerRow.createDiv();
@@ -23831,7 +24169,6 @@ var ColorSettingTab = class extends PluginSettingTab {
         this._disabledFilesSearchContainer.style.margin = "8px 0";
         this._disabledFilesSearchContainer.style.display = "flex";
         this._disabledFilesSearchContainer.style.alignItems = "center";
-        this._disabledFilesSearchContainer.style.gap = "8px";
         this._disabledFilesSearchInput = this._disabledFilesSearchContainer.createEl("input", { type: "text" });
         try {
           this._disabledFilesSearchInput.addClass("act-search-input");
@@ -23848,8 +24185,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (_) {
         }
         this._disabledFilesSearchInput.style.flex = "1 1 auto";
-        this._disabledFilesSearchInput.style.padding = "6px";
-        this._disabledFilesSearchInput.style.marginBottom = "6px";
+        this._disabledFilesSearchInput.style.padding = "6px 6px 6px 30px";
         this._disabledFilesSearchInput.style.border = "1px solid var(--background-modifier-border)";
         this._disabledFilesSearchInput.value = String(this._disabledFilesSearchQuery || "");
         this._disabledFilesSearchIcon = this._disabledFilesSearchContainer.createDiv();
@@ -24548,23 +24884,6 @@ var ColorSettingTab = class extends PluginSettingTab {
     try {
       if (!this._customSwatchesContainer) return;
       this._customSwatchesContainer.empty();
-      new Setting(this._customSwatchesContainer).setName(this.plugin.t("replace_default_swatches", "Replace default swatches")).setDesc(this.plugin.t("replace_default_swatches_desc", "If this is on, only your custom colors will show up in the color picker. No default ones!")).addToggle((t) => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async (v) => {
-        this.plugin.settings.replaceDefaultSwatches = v;
-        await this.plugin.saveSettings();
-      }));
-      new Setting(this._customSwatchesContainer).setName(this.plugin.t("use_swatch_names", "Use swatch names for coloring text")).setDesc(this.plugin.t("use_swatch_names_desc", "Show a dropdown of swatch names next to word/pattern inputs")).addToggle((t) => t.setValue(this.plugin.settings.useSwatchNamesForText).onChange(async (v) => {
-        this.plugin.settings.useSwatchNamesForText = v;
-        await this.plugin.saveSettings();
-        this._initializedSettingsUI = false;
-        try {
-          this.display();
-        } catch (e) {
-        }
-      }));
-      new Setting(this._customSwatchesContainer).setName(this.plugin.t("link_swatches_to_entries", "Link swatch updates to text colors")).setDesc(this.plugin.t("link_swatches_to_entries_desc", "When a custom swatch color changes, update all entries using that color")).addToggle((t) => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async (v) => {
-        this.plugin.settings.linkSwatchUpdatesToEntries = v;
-        await this.plugin.saveSettings();
-      }));
       if (typeof this._defaultColorsFolded === "undefined") {
         this._defaultColorsFolded = true;
       }
@@ -24584,7 +24903,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       defaultColorsToggle.style.fontWeight = "bold";
       defaultColorsToggle.style.display = "inline-block";
       defaultColorsToggle.style.width = "16px";
-      const defaultColorsTitle = defaultColorsHeaderDiv.createEl("h5", { text: this.plugin.t("default_colors_header", "Default Colors") });
+      const defaultColorsTitle = defaultColorsHeaderDiv.createEl("h5", { text: this.plugin.t("default_colors_header", "Default Swatches") });
       defaultColorsTitle.style.margin = "0";
       defaultColorsTitle.style.padding = "0";
       defaultColorsTitle.style.flex = "1";
@@ -25609,6 +25928,47 @@ var ColorSettingTab = class extends PluginSettingTab {
           if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
         };
         activeSelect.onchange = activeHandler;
+        if (group.textColor || group.backgroundColor || typeof group.enableBorderThickness !== "undefined" && group.enableBorderThickness) {
+          const preview = row.createDiv();
+          try {
+            preview.addClass("act-group-styling-preview");
+          } catch (e) {
+            try {
+              preview.classList.add("act-group-styling-preview");
+            } catch (_) {
+            }
+          }
+          preview.style.width = "20px";
+          preview.style.height = "20px";
+          preview.style.flexShrink = "0";
+          preview.style.display = "flex";
+          preview.style.alignItems = "center";
+          preview.style.justifyContent = "center";
+          preview.style.fontSize = "12px";
+          preview.style.fontWeight = "bold";
+          preview.style.cursor = "default";
+          preview.textContent = "A";
+          const t = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
+          const b = group.backgroundColor || "";
+          const p = this.plugin.getHighlightParams(group);
+          const rgba = b ? this.plugin.hexToRgba(b, p.opacity ?? 25) : "transparent";
+          if (t) preview.style.color = t;
+          else preview.style.color = "var(--text-normal)";
+          if (b) {
+            preview.style.backgroundColor = rgba;
+          } else {
+            preview.style.backgroundColor = "transparent";
+          }
+          preview.style.borderRadius = (p.radius ?? 8) + "px";
+          if (p.enableBorder) {
+            const borderStyle = this.plugin.generateBorderStyle(t, b, group);
+            if (borderStyle) {
+              preview.style.cssText += borderStyle;
+            }
+          } else {
+            preview.style.border = "1px solid var(--background-modifier-border)";
+          }
+        }
         const nameInput = row.createEl("input", { type: "text", value: group.name || "" });
         nameInput.style.flex = "1";
         nameInput.placeholder = this.plugin.t("group_name_placeholder", "Name your group");
@@ -26209,7 +26569,81 @@ var ColorSettingTab = class extends PluginSettingTab {
         });
         return d;
       });
-      new Setting(containerEl2).setName(this.plugin.t("enable_document_color", "Enable document color")).addToggle((t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
+      new Setting(containerEl2).setName(this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
+        this.plugin.settings.disableToggleModes.statusBar = !v;
+        await this.plugin.saveSettings();
+        try {
+          if (v && !this.plugin.statusBar) {
+            this.plugin.statusBar = this.plugin.addStatusBarItem();
+            this.plugin.updateStatusBar();
+            this.plugin.statusBar.onclick = () => {
+              this.plugin.settings.enabled = !this.plugin.settings.enabled;
+              this.plugin.saveSettings();
+              this.plugin.updateStatusBar();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+            };
+          } else if (!v && this.plugin.statusBar) {
+            try {
+              this.plugin.statusBar.remove();
+            } catch (e) {
+            }
+            this.plugin.statusBar = null;
+          }
+        } catch (e) {
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
+        this.plugin.settings.disableToggleModes.ribbon = !v;
+        await this.plugin.saveSettings();
+        try {
+          if (v && !this.ribbonIcon) {
+            this.ribbonIcon = this.addRibbonIcon("palette", this.t("ribbon_title", "Always color text"), async () => {
+              this.settings.enabled = !this.settings.enabled;
+              await this.saveSettings();
+              this.updateStatusBar();
+              this.reconfigureEditorExtensions();
+              this.forceRefreshAllEditors();
+              this.forceRefreshAllReadingViews();
+              if (this.settings.enabled) new Notice(this.t("notice_enabled", "Always color text enabled"));
+              else new Notice(this.t("notice_disabled", "Always color text disabled"));
+            });
+          } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
+            try {
+              this.ribbonIcon.remove();
+            } catch (e) {
+            }
+            this.ribbonIcon = null;
+          }
+        } catch (e) {
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.command).onChange(async (v) => {
+        this.plugin.settings.disableToggleModes.command = !v;
+        await this.plugin.saveSettings();
+        try {
+          if (v) {
+            if (!this.plugin._commandsRegistered) {
+              try {
+                this.plugin.registerCommandPalette?.();
+              } catch (e) {
+              }
+              this.plugin._commandsRegistered = true;
+            }
+          } else {
+            new ConfirmationModal(this.app, this.plugin, this.plugin.t("restart_required_title", "Restart required"), this.plugin.t("restart_required_desc", "Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?"), () => {
+              try {
+                location.reload();
+              } catch (e) {
+              }
+            }).open();
+          }
+        } catch (e) {
+        }
+      }));
+      containerEl2.createEl("h3", { text: this.plugin.t("color_rendering_header", "Color Rendering & Performance") });
+      new Setting(containerEl2).setName(this.plugin.t("enable_document_color", "Enable Global Color")).addToggle((t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
         this.plugin.settings.enabled = v;
         await this.debouncedSaveSettings();
       }));
@@ -26318,7 +26752,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           debugError("SETTINGS", "forceFullRenderInReading handler failed", e);
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("lightweight_mode", "Experimental: Lightweight mode")).setDesc(this.plugin.t("lightweight_mode_desc", "")).addToggle((t) => t.setValue(this.plugin.settings.extremeLightweightMode).onChange(async (v) => {
+      new Setting(containerEl2).setName(this.plugin.t("lightweight_mode", "Lightweight mode (Experimental)")).setDesc(this.plugin.t("lightweight_mode_desc", "")).addToggle((t) => t.setValue(this.plugin.settings.extremeLightweightMode).onChange(async (v) => {
         this.plugin.settings.extremeLightweightMode = v;
         await this.debouncedSaveSettings();
         try {
@@ -26334,16 +26768,6 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (e) {
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("light_mode_fixer", "Light Mode Text Color Fixer")).setDesc(this.plugin.t("light_mode_fixer_desc", "Automatically darkens colored text when using Light theme to improve visibility.")).addToggle((t) => t.setValue(this.plugin.settings.lightModeFixer).onChange(async (v) => {
-        this.plugin.settings.lightModeFixer = v;
-        await this.debouncedSaveSettings();
-        this.plugin.updateLightModeFixer();
-      }));
-      new Setting(containerEl2).setName(this.plugin.t("dark_mode_fixer", "Dark Mode Text Color Fixer")).setDesc(this.plugin.t("dark_mode_fixer_desc", "Automatically lightens colored text when using Dark theme to improve visibility.")).addToggle((t) => t.setValue(this.plugin.settings.darkModeFixer).onChange(async (v) => {
-        this.plugin.settings.darkModeFixer = v;
-        await this.debouncedSaveSettings();
-        this.plugin.updateDarkModeFixer();
-      }));
       new Setting(containerEl2).setName(this.plugin.t("smart_update_mode", "Smart Updates (Experimental)")).setDesc(this.plugin.t("smart_update_mode_desc", "Only updates coloring for modified lines while typing. Freezes other lines to improve performance. May cause sync issues with multi-line patterns.")).addToggle((t) => t.setValue(this.plugin.settings.enableSmartUpdates).onChange(async (v) => {
         this.plugin.settings.enableSmartUpdates = v;
         await this.debouncedSaveSettings();
@@ -26356,93 +26780,15 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (e) {
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
-        this.plugin.settings.disableToggleModes.statusBar = !v;
-        await this.plugin.saveSettings();
-        try {
-          if (v && !this.plugin.statusBar) {
-            this.plugin.statusBar = this.plugin.addStatusBarItem();
-            this.plugin.updateStatusBar();
-            this.plugin.statusBar.onclick = () => {
-              this.plugin.settings.enabled = !this.plugin.settings.enabled;
-              this.plugin.saveSettings();
-              this.plugin.updateStatusBar();
-              this.plugin.reconfigureEditorExtensions();
-              this.plugin.forceRefreshAllEditors();
-              this.plugin.forceRefreshAllReadingViews();
-            };
-          } else if (!v && this.plugin.statusBar) {
-            try {
-              this.plugin.statusBar.remove();
-            } catch (e) {
-            }
-            this.plugin.statusBar = null;
-          }
-        } catch (e) {
-        }
+      containerEl2.createEl("h3", { text: this.plugin.t("matching_behavior_header", "Matching Behavior") });
+      new Setting(containerEl2).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(this.plugin.t("case_sensitive_desc", `If this is on, "word" and "Word" are treated as different. If it's off, they're colored the same.`)).addToggle((t) => t.setValue(this.plugin.settings.caseSensitive).onChange(async (v) => {
+        this.plugin.settings.caseSensitive = v;
+        await this.debouncedSaveSettings();
       }));
-      new Setting(containerEl2).setName(this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
-        this.plugin.settings.disableToggleModes.ribbon = !v;
-        await this.plugin.saveSettings();
-        try {
-          if (v && !this.ribbonIcon) {
-            this.ribbonIcon = this.addRibbonIcon("palette", this.t("ribbon_title", "Always color text"), async () => {
-              this.settings.enabled = !this.settings.enabled;
-              await this.saveSettings();
-              this.updateStatusBar();
-              this.reconfigureEditorExtensions();
-              this.forceRefreshAllEditors();
-              this.forceRefreshAllReadingViews();
-              if (this.settings.enabled) new Notice(this.t("notice_enabled", "Always color text enabled"));
-              else new Notice(this.t("notice_disabled", "Always color text disabled"));
-            });
-          } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
-            try {
-              this.ribbonIcon.remove();
-            } catch (e) {
-            }
-            this.ribbonIcon = null;
-          }
-        } catch (e) {
-        }
+      new Setting(containerEl2).setName(this.plugin.t("partial_match", "Partial match")).setDesc(this.plugin.t("partial_match_desc", 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')).addToggle((t) => t.setValue(this.plugin.settings.partialMatch).onChange(async (v) => {
+        this.plugin.settings.partialMatch = v;
+        await this.debouncedSaveSettings();
       }));
-      new Setting(containerEl2).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.command).onChange(async (v) => {
-        this.plugin.settings.disableToggleModes.command = !v;
-        await this.plugin.saveSettings();
-        try {
-          if (v) {
-            if (!this.plugin._commandsRegistered) {
-              try {
-                this.plugin.registerCommandPalette?.();
-              } catch (e) {
-              }
-              this.plugin._commandsRegistered = true;
-            }
-          } else {
-            new ConfirmationModal(this.app, this.plugin, this.plugin.t("restart_required_title", "Restart required"), this.plugin.t("restart_required_desc", "Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?"), () => {
-              try {
-                location.reload();
-              } catch (e) {
-              }
-            }).open();
-          }
-        } catch (e) {
-        }
-      }));
-      containerEl2.createEl("h2", { text: this.plugin.t("menu_options_header", "Menu Options") });
-      new Setting(containerEl2).setName(this.plugin.t("show_add_to_existing_menu", 'Show "Add to Existing Entry" in right-click menu')).setDesc(this.plugin.t("show_add_to_existing_menu_desc", "Adds a right-click menu item to add selected text to an existing entry.")).addToggle((t) => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async (v) => {
-        this.plugin.settings.enableAddToExistingMenu = v;
-        await this.plugin.saveSettings();
-      }));
-      new Setting(containerEl2).setName(this.plugin.t("show_always_color_text_menu", 'Show "Always Color Text" in right-click menu')).setDesc(this.plugin.t("show_always_color_text_menu_desc", "Adds a right-click menu item to color selected text.")).addToggle((t) => t.setValue(this.plugin.settings.enableAlwaysColorTextMenu).onChange(async (v) => {
-        this.plugin.settings.enableAlwaysColorTextMenu = v;
-        await this.plugin.saveSettings();
-      }));
-      new Setting(containerEl2).setName(this.plugin.t("show_blacklist_menu", 'Show "Blacklist Word" in right-click menu')).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
-        this.plugin.settings.enableBlacklistMenu = v;
-        await this.plugin.saveSettings();
-      }));
-      containerEl2.createEl("h3", { text: this.plugin.t("coloring_settings_header", "Coloring Settings") });
       new Setting(containerEl2).setName(this.plugin.t("regex_support", "Regex support")).setDesc(this.plugin.t("regex_support_desc", "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.")).addToggle((t) => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async (v) => {
         this.plugin.settings.enableRegexSupport = v;
         await this.plugin.saveSettings();
@@ -26465,13 +26811,29 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (e) {
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(this.plugin.t("case_sensitive_desc", `If this is on, "word" and "Word" are treated as different. If it's off, they're colored the same.`)).addToggle((t) => t.setValue(this.plugin.settings.caseSensitive).onChange(async (v) => {
-        this.plugin.settings.caseSensitive = v;
+      containerEl2.createEl("h3", { text: this.plugin.t("theme_support_header", "Theme Support") });
+      new Setting(containerEl2).setName(this.plugin.t("light_mode_fixer", "Light Mode Text Color Fixer")).setDesc(this.plugin.t("light_mode_fixer_desc", "Automatically darkens colored text when using Light theme to improve visibility.")).addToggle((t) => t.setValue(this.plugin.settings.lightModeFixer).onChange(async (v) => {
+        this.plugin.settings.lightModeFixer = v;
         await this.debouncedSaveSettings();
+        this.plugin.updateLightModeFixer();
       }));
-      new Setting(containerEl2).setName(this.plugin.t("partial_match", "Partial match")).setDesc(this.plugin.t("partial_match_desc", 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')).addToggle((t) => t.setValue(this.plugin.settings.partialMatch).onChange(async (v) => {
-        this.plugin.settings.partialMatch = v;
+      new Setting(containerEl2).setName(this.plugin.t("dark_mode_fixer", "Dark Mode Text Color Fixer")).setDesc(this.plugin.t("dark_mode_fixer_desc", "Automatically lightens colored text when using Dark theme to improve visibility.")).addToggle((t) => t.setValue(this.plugin.settings.darkModeFixer).onChange(async (v) => {
+        this.plugin.settings.darkModeFixer = v;
         await this.debouncedSaveSettings();
+        this.plugin.updateDarkModeFixer();
+      }));
+      containerEl2.createEl("h3", { text: this.plugin.t("menu_options_header", "Menu Options") });
+      new Setting(containerEl2).setName(this.plugin.t("show_always_color_text_menu", 'Show "Always Color Text" in right-click menu')).setDesc(this.plugin.t("show_always_color_text_menu_desc", "Adds a right-click menu item to color selected text.")).addToggle((t) => t.setValue(this.plugin.settings.enableAlwaysColorTextMenu).onChange(async (v) => {
+        this.plugin.settings.enableAlwaysColorTextMenu = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_add_to_existing_menu", 'Show "Add to Existing Entry" in right-click menu')).setDesc(this.plugin.t("show_add_to_existing_menu_desc", "Adds a right-click menu item to add selected text to an existing entry.")).addToggle((t) => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async (v) => {
+        this.plugin.settings.enableAddToExistingMenu = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_blacklist_menu", 'Show "Blacklist Word" in right-click menu')).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
+        this.plugin.settings.enableBlacklistMenu = v;
+        await this.plugin.saveSettings();
       }));
       const otaHeaderDiv = containerEl2.createDiv();
       otaHeaderDiv.style.display = "flex";
@@ -26512,6 +26874,10 @@ var ColorSettingTab = class extends PluginSettingTab {
         await this.plugin.saveSettings();
         this._initializedSettingsUI = false;
         this.display();
+      }));
+      new Setting(otaContainer).setName(this.plugin.t("setting_color_highlight_once", "Color & Highlight Once")).setDesc(this.plugin.t("setting_color_highlight_once_desc", "Opens the unified color picker to apply both text color and background highlight inline. Uses Unified Menu.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickColorHighlightOnce).onChange(async (v) => {
+        this.plugin.settings.enableQuickColorHighlightOnce = v;
+        await this.plugin.saveSettings();
       }));
       if (this.plugin.settings.enableQuickHighlightOnce) {
         new Setting(otaContainer).setName(this.plugin.t("use_global_highlight_style", "Use Global Highlight Style for Highlight Once")).setDesc(this.plugin.t("use_global_highlight_style_desc", "Uses your global inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async (v) => {
@@ -26944,7 +27310,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       swToggle.style.display = "inline-block";
       swToggle.style.width = "16px";
       swToggle.style.marginTop = "-8px";
-      const swTitle = swHeaderDiv.createEl("h2", { text: this.plugin.t("color_swatches_header", "Color Swatches") });
+      const swTitle = swHeaderDiv.createEl("h2", { text: this.plugin.t("color_swatches_header", "Color Management") });
       swTitle.style.margin = "0";
       swTitle.style.marginTop = "-8px";
       swTitle.style.padding = "0";
@@ -26987,6 +27353,18 @@ var ColorSettingTab = class extends PluginSettingTab {
         this.plugin.settings.customSwatchesEnabled = v;
         await this.plugin.saveSettings();
         this._refreshCustomSwatches();
+      }));
+      new Setting(swContainer).setName(this.plugin.t("replace_default_swatches", "Replace default swatches")).setDesc(this.plugin.t("replace_default_swatches_desc", "If enabled, only your custom swatches will be shown. If disabled, they will be appended to the default ones.")).addToggle((t) => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async (v) => {
+        this.plugin.settings.replaceDefaultSwatches = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(swContainer).setName(this.plugin.t("use_swatch_names", "Use swatch names for coloring text")).setDesc(this.plugin.t("use_swatch_names_desc", 'If enabled, the text will be colored using the name of the swatch (e.g., "Red") instead of the hex code.')).addToggle((t) => t.setValue(this.plugin.settings.useSwatchNamesForText).onChange(async (v) => {
+        this.plugin.settings.useSwatchNamesForText = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(swContainer).setName(this.plugin.t("link_swatch_updates", "Link swatch updates to text colors")).setDesc(this.plugin.t("link_swatch_updates_desc", "If enabled, updating a swatch color will update all text colored with that swatch.")).addToggle((t) => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async (v) => {
+        this.plugin.settings.linkSwatchUpdatesToEntries = v;
+        await this.plugin.saveSettings();
       }));
       this._customSwatchesContainer = swContainer.createDiv();
       this._refreshCustomSwatches();
@@ -28256,6 +28634,7 @@ var ColorPickerModal = class extends Modal {
               preview.style.paddingLeft = preview.style.paddingRight = "";
               preview.style.paddingTop = preview.style.paddingBottom = "";
             }
+            this._hasUserChanges = true;
           } else {
             const op = matchedEntry && typeof matchedEntry.backgroundOpacity === "number" ? matchedEntry.backgroundOpacity : this.plugin.settings.backgroundOpacity ?? 25;
             const rgba = this.plugin.hexToRgba(val, op);

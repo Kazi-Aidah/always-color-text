@@ -41,12 +41,15 @@ mark.always-color-text-highlight-marks {
 }
 
 /* Override native mark styling in reading mode, but preserve plugin-mark styles */
+/* 
 .markdown-rendered mark:not(.always-color-text-highlight-marks) {
   background-color: transparent !important;
   color: inherit !important;
 }
+*/
 
 /* Hide cm-highlight background in live preview to show only inner styled span */
+/* 
 .cm-highlight {
   background-color: transparent !important;
   color: inherit !important;
@@ -56,6 +59,7 @@ mark.always-color-text-highlight-marks {
   background-color: transparent !important;
   color: inherit !important;
 }
+*/
 
 /* Fix for Inline Spoilers: Ensure text is hidden when inside a spoiler */
 .inline_spoilers-spoiler .always-color-text-highlight,

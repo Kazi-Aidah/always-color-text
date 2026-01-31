@@ -33,6 +33,8 @@ module.exports = {
   "file_menu_disable": "Disabilita Always Color Text per questo file",
   "menu_color_once": "Colora una volta",
   "menu_highlight_once": "Evidenzia una volta",
+  "menu_color_highlight_once": "Colore / Evidenzia una volta",
+  "menu_remove_inline_color": "Rimuovi Colore Inline",
   "menu_always_color_text": "Always Color Text",
   "menu_remove_always_color_text": "Rimuovi Always Color Text",
   "menu_blacklist_word": "Aggiungi parola alla blacklist",
@@ -61,11 +63,19 @@ module.exports = {
   // Commands
   "command_color_selected": "Colora testo selezionato",
   "command_toggle_current": "Abilita/Disabilita colorazione per il documento corrente",
-  "command_toggle_global": "Abilita/Disabilita Always Color Text",
   "command_enable_current": "Abilita colorazione per il documento corrente",
   "command_disable_current": "Disabilita colorazione per il documento corrente",
-  "command_enable_global": "Abilita Always Color Text",
-  "command_disable_global": "Disabilita Always Color Text",
+  "command_toggle_global": "Abilita/Disabilita colorazione globale",
+  "command_enable_global": "Abilita colorazione globale",
+  "command_disable_global": "Disabilita colorazione globale",
+  "enable_document_color": "Abilita colore globale",
+  "color_swatches_header": "Gestione colori",
+  "color_rendering_header": "Resa cromatica e prestazioni",
+  "theme_support_header": "Supporto temi",
+  "matching_behavior_header": "Comportamento di corrispondenza",
+  "smart_updates": "Aggiornamenti intelligenti (Sperimentale)",
+  "light_mode_fixer": "Correttore colore testo modalità chiara",
+  "dark_mode_fixer": "Correttore colore testo modalità scura",
   "command_manage_advanced_rules": "gestisci regole specifiche di inclusione/esclusione",
   "command_open_regex_tester": "Aggiungi Regex (Apri Tester Regex)",
   "command_open_blacklist_regex_tester": "Aggiungi Regex alla Lista Nera",
@@ -134,12 +144,11 @@ module.exports = {
   "restart_required_desc": "Disabilitare il toggle della palette comandi richiede il riavvio di Obsidian per rimuovere completamente i comandi dalla palette. Riavviare ora?",
   
   // Basic Settings
-  "enable_document_color": "Abilita colore documento",
-  "color_in_live_preview_mode": "Colora in modalità Live Preview",
+  "color_in_live_preview_mode": "Colore in modalità anteprima live",
   "color_in_reading_mode": "Colora in modalità lettura",
   "force_full_render_reading": "Forza rendering completo in modalità lettura",
   "force_full_render_reading_desc": "Se attivo, la modalità lettura tenterà di colorare l'intero documento in una sola passata. Può causare problemi di prestazioni su documenti grandi. Usare con cautela!",
-  "lightweight_mode": "Sperimentale: modalità estremamente leggera",
+  "lightweight_mode": "Lightweight mode (Experimental)",
   "lightweight_mode_desc": "Riduce molto l'elaborazione durante la digitazione. Può saltare alcune occorrenze.",
   "disable_coloring_current_file": "Disabilita colorazione per file corrente",
   "disable_coloring_current_file_desc": "Aggiunge una regola di esclusione per il file attivo sotto regole colorazione file e cartelle.",
@@ -162,6 +171,8 @@ module.exports = {
   "setting_color_once_desc": "Inserisce HTML inline per il testo selezionato. Persiste anche se il plugin è disattivato.",
   "setting_highlight_once": "Evidenzia una volta",
   "setting_highlight_once_desc": "Inserisce HTML inline con stile di sfondo. Persiste anche se il plugin è disattivato.",
+  "setting_color_highlight_once": "Colore e Evidenzia una volta",
+  "setting_color_highlight_once_desc": "Apre il selettore di colori unificato per applicare sia il colore del testo che l'evidenziazione dello sfondo in linea. Utilizza il menu unificato.",
   "highlight_once_preview": "Anteprima evidenziazione una volta",
   "highlight_once_preview_text": "Ecco come apparirà l'evidenziazione!",
   
@@ -231,7 +242,7 @@ module.exports = {
   "opt_line_outset": "sporgente",
   
   // Color Swatches
-  "color_swatches_header": "Campioni colore",
+
   "color_picker_layout": "Layout selettore colore",
   "color_picker_layout_desc": "Scegli quali tipi di colore mostrare quando si selezionano colori per il testo",
   "opt_both_text_left": "Entrambi: Testo sinistra, Evidenziazione destra",
@@ -248,7 +259,7 @@ module.exports = {
   "use_swatch_names_desc": "Mostra un menu a tendina con i nomi dei campioni accanto ai campi di inserimento parole/pattern",
   "link_swatches_to_entries": "Collega aggiornamenti dei campioni ai colori del testo",
   "link_swatches_to_entries_desc": "Quando cambia il colore di un campione personalizzato, aggiorna tutte le voci che usano quel colore",
-  "default_colors_header": "Colori predefiniti",
+  "default_colors_header": "Campioni predefiniti",
   "custom_swatches_header": "Campioni personalizzati",
   "btn_add_color": "+ Aggiungi colore",
   "no_custom_swatches_yet": "Ancora nessun campione personalizzato. Clicca \"+ Aggiungi colore\" per crearne uno.",
@@ -488,6 +499,7 @@ module.exports = {
   "btn_save_style": "Salva stile",
   
   // Quick Colors / Styles
+  "quick_actions_header": "Quick Actions",
   "quick_colors_header": "Colori Rapidi",
   "quick_colors_desc": "Consente di evidenziare o colorare rapidamente il testo mostrando i colori nel menu contestuale. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile in Stili Rapidi.",
   "quick_colors_apply_mode_label": "La colorazione del testo verrà applicata come",
@@ -524,5 +536,11 @@ module.exports = {
   "share_export_title": "Always Color Text export",
   "delete_button_text": "✕",
   "style_name_placeholder": "Nome stile",
-  "preview_text": "Testo"
+  "preview_text": "Testo",
+  "edit_group_highlight_styling": "Modifica stile evidenziazione gruppo",
+  "light_mode_fixer_desc": "Scurisce automaticamente il testo colorato quando si utilizza il tema chiaro per migliorare la visibilità.",
+  "dark_mode_fixer_desc": "Schiarisce automaticamente il testo colorato quando si utilizza il tema scuro per migliorare la visibilità.",
+  "preset_bold": "Grassetto",
+  "preset_italic": "Corsivo",
+  "preset_bold_italic": "Grassetto Corsivo"
 };

@@ -1,4 +1,4 @@
-const {
+﻿const {
   Plugin,
   PluginSettingTab,
   Setting,
@@ -2255,6 +2255,120 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (_) { }
   }
 
+  applyHighlightPresetTransparency() {
+    try {
+      const hasHighlightPreset = Array.isArray(this.settings.wordEntries) && this.settings.wordEntries.some(e => 
+        (e.pattern === '==[\\s\\S]*?==' || e.pattern === '==.*?==')
+      );
+
+      let style = document.getElementById('act-highlight-preset-transparency');
+      
+      if (hasHighlightPreset) {
+        if (!style) {
+          style = document.createElement('style');
+          style.id = 'act-highlight-preset-transparency';
+          style.textContent = `
+            .markdown-rendered mark:not(.always-color-text-highlight-marks) {
+              background-color: transparent !important;
+              color: inherit !important;
+            }
+            .cm-highlight {
+              background-color: transparent !important;
+              color: inherit !important;
+            }
+            .cm-s-obsidian span.cm-highlight {
+              background-color: transparent !important;
+              color: inherit !important;
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      } else {
+        if (style) style.remove();
+      }
+    } catch (_) { }
+  }
+
+  removeHighlightPresetTransparency() {
+    try {
+      const style = document.getElementById('act-highlight-preset-transparency');
+      if (style) style.remove();
+    } catch (_) { }
+  }
+
+  removeFormattingPresetStyles() {
+    try {
+      const style = document.getElementById('act-formatting-preset-styles');
+      if (style) style.remove();
+    } catch (_) { }
+  }
+
+  applyFormattingPresetStyles() {
+    try {
+      const entries = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      
+      // Patterns matching standard Markdown presets in the plugin
+      const hasBold = entries.some(e => e.pattern === '(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1');
+      const hasItalic = entries.some(e => e.pattern === '(\\*|_)(?=\\S)([^\\r]*?\\S)\\1');
+      const hasBoldItalic = entries.some(e => e.pattern === '(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1');
+
+      let style = document.getElementById('act-formatting-preset-styles');
+      
+      if (hasBold || hasItalic || hasBoldItalic) {
+        if (!style) {
+          style = document.createElement('style');
+          style.id = 'act-formatting-preset-styles';
+          document.head.appendChild(style);
+        }
+        
+        let css = '';
+        
+        if (hasBold) {
+            css += `
+                .cm-strong, strong {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+                .cm-s-obsidian span.cm-strong {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+            `;
+        }
+        
+        if (hasItalic) {
+            css += `
+                .cm-em, em {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+                .cm-s-obsidian span.cm-em {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+            `;
+        }
+
+         if (hasBoldItalic) {
+            css += `
+                .cm-strong.cm-em, strong em, em strong {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+                 .cm-s-obsidian span.cm-strong.cm-em {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+            `;
+        }
+
+        style.textContent = css;
+      } else {
+        if (style) style.remove();
+      }
+    } catch (_) { }
+  }
+
   neutralizeExistingHighlightBackgrounds() {
     try {
       document.querySelectorAll('.always-color-text-highlight').forEach(el => {
@@ -2444,6 +2558,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (!Array.isArray(this.settings.quickColors)) this.settings.quickColors = [];
     if (!Array.isArray(this.settings.quickStyles)) this.settings.quickStyles = [];
     if (typeof this.settings.quickStylesEnabled === 'undefined') this.settings.quickStylesEnabled = true;
+    if (typeof this.settings.enableQuickColorHighlightOnce === 'undefined') this.settings.enableQuickColorHighlightOnce = false;
 
     // Migrate old global advancedRules to per-entry rules on first load
     try { this.migrateAdvancedRulesToPerEntry(); await this.saveSettings(); } catch (_) { }
@@ -2675,9 +2790,69 @@ module.exports = class AlwaysColorText extends Plugin {
                     const rgba = this.hexToRgba(bg, 25);
                     style = `background-color: ${rgba};`;
                   }
-                  const html = `<span class="always-color-text-highlight" style="${style}">${selectedText}</span>`;
+                  const html = `<span style="${style}">${selectedText}</span>`;
                   editor.replaceSelection(html);
                 }, 'background', selectedText, true).open();
+              });
+          });
+        }
+
+        const cpm = this.settings.colorPickerMode || 'both';
+        const isBoth = (cpm === 'both' || cpm === 'both-bg-left' || cpm === 'both-v-text-top' || cpm === 'both-v-bg-top');
+        if (this.settings.enableQuickColorHighlightOnce && isBoth) {
+          menu.addItem(item => {
+            item.setTitle(this.t('menu_color_highlight_once', 'Color / Highlight Once'))
+              .setIcon('paintbrush')
+              .onClick(() => {
+                new ColorPickerModal(this.app, this, async (color, result) => {
+                  const tc = (result && result.textColor && this.isValidHexColor(result.textColor)) ? result.textColor : null;
+                  const bg = (result && result.backgroundColor && this.isValidHexColor(result.backgroundColor)) ? result.backgroundColor : null;
+                  
+                  if (!tc && !bg) return;
+                  
+                  let style = '';
+                  if (tc) style += `color: ${tc}; `;
+                  
+                  if (bg) {
+                    if (this.settings.quickHighlightUseGlobalStyle) {
+                      const rgba = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25);
+                      const radius = this.settings.highlightBorderRadius ?? 8;
+                      const pad = this.settings.highlightHorizontalPadding ?? 4;
+                      const border = this.generateBorderStyle(null, bg);
+                      style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? ' box-decoration-break: clone; -webkit-box-decoration-break: clone;' : ''}${border}`;
+                    } else if (this.settings.quickHighlightStyleEnable) {
+                      const hexWithAlpha = this.hexToHexWithAlpha(bg, this.settings.quickHighlightOpacity ?? 25);
+                      const radius = this.settings.quickHighlightBorderRadius ?? 8;
+                      const pad = this.settings.quickHighlightHorizontalPadding ?? 4;
+                      const vpad = this.settings.quickHighlightVerticalPadding ?? 0;
+                      const border = this.generateOnceBorderStyle(bg);
+                      style += `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px; padding-top: ${vpad}px; padding-bottom: ${vpad}px;${border}`;
+                    } else {
+                      const rgba = this.hexToRgba(bg, 25);
+                      style += `background-color: ${rgba};`;
+                    }
+                  }
+                  
+                  const html = `<span style="${style.trim()}">${selectedText}</span>`;
+                  editor.replaceSelection(html);
+                }, 'text-and-background', selectedText, true).open();
+              });
+          });
+        }
+
+        // Check if selected text is wrapped in HTML span with color or class
+        const isHtmlColor = /^<span\s+(?:style="[^"]*(?:color|background-color):[^"]*"|class="always-color-text-highlight"[^>]*)(?:>)(.*)<\/span>$/s.test(selectedText);
+        if (isHtmlColor) {
+          menu.addItem(item => {
+            item.setTitle(this.t('menu_remove_inline_color', 'Remove Inline Color'))
+              .setIcon('trash')
+              .onClick(() => {
+                // Extract inner text using regex to be safe, or just DOM parser if needed, 
+                // but regex is faster for this specific format
+                const match = selectedText.match(/^<span\s+(?:[^>]+)>(.*)<\/span>$/s);
+                if (match && match[1]) {
+                  editor.replaceSelection(match[1]);
+                }
               });
           });
         }
@@ -2758,7 +2933,8 @@ module.exports = class AlwaysColorText extends Plugin {
         // Reset active color selection for this context menu
         this._lastSelectedQuickColor = null;
         let closeMenuTimeout = null;
-        const openStylesSubmenu = (anchorEvent, positionOverride = null) => {
+        const openStylesSubmenu = (anchorEvent, anchorElement = null) => {
+          if (closeMenuTimeout) { clearTimeout(closeMenuTimeout); closeMenuTimeout = null; }
           if (!this.settings.quickStylesEnabled) return;
           // Remove any previously open submenu to prevent duplicates
           if (this._openQuickStylesSubmenu) {
@@ -2806,11 +2982,52 @@ module.exports = class AlwaysColorText extends Plugin {
               });
             });
           });
-          if (positionOverride) {
-            try { sub.showAtPosition(positionOverride); } catch (e) { sub.showAtMouseEvent(anchorEvent); }
-          } else {
+          
+          // Smart positioning: check distance to window borders
+          try {
+            let targetEl = anchorElement;
+            if (!targetEl && anchorEvent) {
+              if (anchorEvent instanceof Element) targetEl = anchorEvent;
+              else if (anchorEvent.target) targetEl = anchorEvent.target.closest('.menu-item') || anchorEvent.target;
+            }
+
+            let rect = null;
+            if (targetEl && targetEl.getBoundingClientRect) {
+              rect = targetEl.getBoundingClientRect();
+            }
+
+            if (rect) {
+              const winWidth = window.innerWidth;
+              const threshold = 350; // Distance from right edge to trigger left-side positioning
+              const estimatedWidth = 160; // Estimated width of the submenu
+              
+              const distToRight = winWidth - rect.right;
+              let targetX, targetY;
+              
+              // Align tops
+              targetY = rect.top;
+
+              if (distToRight < threshold) {
+                // Not enough space on right -> Position on LEFT of the menu item
+                // Use a smaller estimated width and add slight overlap to reduce gap
+                targetX = rect.left - estimatedWidth + 5;
+              } else {
+                // Enough space -> Position on RIGHT of the menu item
+                // Small overlap for continuity
+                targetX = rect.right - 5;
+              }
+
+              // Safety check for left edge
+              if (targetX < 10) targetX = 10;
+              
+              sub.showAtPosition({ x: targetX, y: targetY });
+            } else {
+              sub.showAtMouseEvent(anchorEvent);
+            }
+          } catch (e) {
             sub.showAtMouseEvent(anchorEvent);
           }
+
           this._openQuickStylesSubmenu = sub;
           
           // Handle submenu hover persistence
@@ -2843,10 +3060,9 @@ module.exports = class AlwaysColorText extends Plugin {
               }
               if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
                 try {
-                  const rect = titleEl.getBoundingClientRect();
-                  openStylesSubmenu(ev, { x: rect.right, y: rect.top });
+                  openStylesSubmenu(ev, titleEl);
                 } catch (e) {
-                  openStylesSubmenu(ev);
+                  openStylesSubmenu(ev, titleEl);
                 }
               }
             });
@@ -2892,7 +3108,7 @@ module.exports = class AlwaysColorText extends Plugin {
                     activeDotEl = null;
                     this._lastSelectedQuickColor = null;
                     if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
-                      openStylesSubmenu(ev);
+                      openStylesSubmenu(ev, titleEl);
                     }
                     return;
                   }
@@ -2905,7 +3121,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   try { dotB.style.outline = '2px solid var(--interactive-accent)'; } catch (_) { }
                   try { dotB.classList.add('act-color-dot-active'); } catch (_) { }
                   if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
-                    openStylesSubmenu(ev);
+                    openStylesSubmenu(ev, titleEl);
                   } else {
                     const firstStyle = stylesArr[0] || null;
                     if (firstStyle) {
@@ -2936,7 +3152,7 @@ module.exports = class AlwaysColorText extends Plugin {
             chevronIcon.addEventListener('click', (ev) => {
               ev.preventDefault();
               ev.stopPropagation();
-              openStylesSubmenu(ev);
+              openStylesSubmenu(ev, titleEl);
             });
             const iconRight = document.createElement('div');
             iconRight.className = 'menu-item-icon mod-submenu';
@@ -2945,7 +3161,7 @@ module.exports = class AlwaysColorText extends Plugin {
             iconRight.addEventListener('click', (ev) => {
               ev.preventDefault();
               ev.stopPropagation();
-              openStylesSubmenu(ev);
+              openStylesSubmenu(ev, titleEl);
             });
             titleEl.appendChild(iconLeft);
             titleEl.appendChild(titleText);
@@ -2956,7 +3172,7 @@ module.exports = class AlwaysColorText extends Plugin {
             item.setTitle(titleEl);
             item.onClick((evt) => {
               if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
-                openStylesSubmenu(evt);
+                openStylesSubmenu(evt, titleEl);
               }
             });
           });
@@ -2971,7 +3187,25 @@ module.exports = class AlwaysColorText extends Plugin {
               setIcon(iconRight, 'chevron-right');
               item.dom?.appendChild(iconRight);
             } catch (_) { }
-            item.onClick((evt) => { openStylesSubmenu(evt); });
+            
+            // Add hover support
+            try {
+               if (item.dom) {
+                 item.dom.addEventListener('mouseenter', (ev) => {
+                     openStylesSubmenu(ev, item.dom);
+                 });
+                 item.dom.addEventListener('mouseleave', () => {
+                     closeMenuTimeout = setTimeout(() => {
+                         if (this._openQuickStylesSubmenu) {
+                             try { this._openQuickStylesSubmenu.hide(); } catch (_) { }
+                             this._openQuickStylesSubmenu = null;
+                         }
+                     }, 300);
+                 });
+               }
+            } catch (_) { }
+            
+            item.onClick((evt) => { openStylesSubmenu(evt, item.dom); });
           });
         }
 
@@ -3232,8 +3466,8 @@ module.exports = class AlwaysColorText extends Plugin {
       addTrackedCommand({
         id: 'toggle-always-color-text',
         name: this.settings.enabled
-          ? this.t('command_disable_global', 'Disable Always Color Text')
-          : this.t('command_enable_global', 'Enable Always Color Text'),
+          ? this.t('command_disable_global', 'Disable Global Coloring')
+          : this.t('command_enable_global', 'Enable Global Coloring'),
         callback: async () => {
           this.settings.enabled = !this.settings.enabled;
           await this.saveSettings();
@@ -4951,7 +5185,9 @@ module.exports = class AlwaysColorText extends Plugin {
   enablePluginFeatures() {
     this.updateLightModeFixer();
     this.updateDarkModeFixer();
+    this.applyFormattingPresetStyles();
     this.applyFormattingStyles();
+    this.applyHighlightPresetTransparency();
     if (!this.cmExtensionRegistered) {
       this.extension = this.buildEditorExtension();
       this.registerEditorExtension(this.extension);
@@ -5160,6 +5396,9 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // --- Remove all CodeMirror extensions & listeners ---
   disablePluginFeatures() {
+    this.removeHighlightPresetTransparency();
+    this.removeFormattingPresetStyles();
+    try { const s = document.getElementById('act-formatting-styles'); if (s) s.remove(); } catch (_) { }
     try { document.body.classList.remove('act-light-mode-fix'); } catch (_) { }
     try { document.body.classList.remove('act-dark-mode-fix'); } catch (_) { }
     if (this.cmExtensionRegistered && this.extension) {
@@ -6225,10 +6464,25 @@ module.exports = class AlwaysColorText extends Plugin {
       const we = this.settings.wordEntries || [];
       const weAll = (this.settings.wordEntryGroups || []).reduce((acc, g) => acc.concat(g.entries || []), []).concat(we);
       
+      const hasBoldItalic = we.some(e => e.targetElement === 'strong-em') || weAll.some(e => e.targetElement === 'strong-em');
+
       const targets = [
-        { type: 'strong', selector: '.cm-strong, .markdown-rendered strong' },
-        { type: 'em', selector: '.cm-em, .markdown-rendered em' },
-        { type: 'strong-em', selector: '.cm-strong.cm-em, .cm-strong .cm-em, .cm-em .cm-strong, .markdown-rendered strong em, .markdown-rendered em strong' }
+        { 
+            type: 'strong', 
+            selector: hasBoldItalic 
+                ? '.cm-strong:not(.cm-em), .markdown-rendered strong:not(:has(em)), .cm-s-obsidian span.cm-strong:not(.cm-em)' 
+                : '.cm-strong, .markdown-rendered strong, .cm-s-obsidian span.cm-strong' 
+        },
+        { 
+            type: 'em', 
+            selector: hasBoldItalic 
+                ? '.cm-em:not(.cm-strong), .markdown-rendered em:not(:has(strong)), .cm-s-obsidian span.cm-em:not(.cm-strong)' 
+                : '.cm-em, .markdown-rendered em, .cm-s-obsidian span.cm-em' 
+        },
+        { 
+            type: 'strong-em', 
+            selector: '.cm-strong.cm-em, .cm-strong .cm-em, .cm-em .cm-strong, .markdown-rendered strong em, .markdown-rendered em strong, .cm-s-obsidian span.cm-strong.cm-em' 
+        }
       ];
 
       let css = '';
@@ -6265,6 +6519,7 @@ module.exports = class AlwaysColorText extends Plugin {
              const hPad = typeof entry.highlightHorizontalPadding === 'number' ? entry.highlightHorizontalPadding : (this.settings.highlightHorizontalPadding ?? 4);
              const vPad = typeof entry.highlightVerticalPadding === 'number' ? entry.highlightVerticalPadding : (this.settings.highlightVerticalPadding ?? 0);
              const radius = typeof entry.highlightBorderRadius === 'number' ? entry.highlightBorderRadius : (this.settings.highlightBorderRadius ?? 8);
+             const borderCSS = this.generateBorderStyle(textColor, bgColor, entry);
              
              // Ensure element behaves like a box for padding/radius
              // For some themes, bold/italic might be inline, so padding works horizontally but radius might need display adjustment
@@ -7856,7 +8111,7 @@ module.exports = class AlwaysColorText extends Plugin {
     if (tc) styleStr += `color: ${tc}; `;
     if (bg) styleStr += `background-color: ${bg}; `;
     styleStr += `border-radius: ${(params.radius ?? 8)}px; padding: ${(params.vPad ?? 0)}px ${(params.hPad ?? 4)}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-    const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
+    const html = `<span style="${styleStr}">${selectedText}</span>`;
     editor.replaceSelection(html);
   }
 
@@ -16008,7 +16263,7 @@ class HighlightStylingModal extends Modal {
     headerRow.style.marginBottom = '12px';
     headerRow.style.flexWrap = 'wrap';
 
-    const headerTitle = isGroup ? 'Edit Group Highlight Styling' : this.plugin.t('highlight_styling_header', 'Edit Highlight Styling');
+    const headerTitle = isGroup ? this.plugin.t('edit_group_highlight_styling', 'Edit Group Highlight Styling') : this.plugin.t('highlight_styling_header', 'Edit Highlight Styling');
     const title = headerRow.createEl('h2', { text: headerTitle });
     title.style.margin = '0';
 
@@ -20557,7 +20812,7 @@ class ColorSettingTab extends PluginSettingTab {
         this._disabledFilesSearchContainer.style.margin = '8px 0';
         this._disabledFilesSearchContainer.style.display = 'flex';
         this._disabledFilesSearchContainer.style.alignItems = 'center';
-        this._disabledFilesSearchContainer.style.gap = '8px';
+        // this._disabledFilesSearchContainer.style.gap = '8px'; // Removed to fix icon positioning
 
         this._disabledFilesSearchInput = this._disabledFilesSearchContainer.createEl('input', { type: 'text' });
         try { this._disabledFilesSearchInput.addClass('act-search-input'); } catch (e) { try { this._disabledFilesSearchInput.classList.add('act-search-input'); } catch (_) { } }
@@ -20565,8 +20820,8 @@ class ColorSettingTab extends PluginSettingTab {
         this._disabledFilesSearchInput.title = this.plugin.t('search_disabled_files_aria_label', 'Search disabled files');
         try { this._disabledFilesSearchInput.setAttribute('aria-label', this.plugin.t('search_disabled_files_aria_label', 'Search disabled files')); } catch (_) { }
         this._disabledFilesSearchInput.style.flex = '1 1 auto';
-        this._disabledFilesSearchInput.style.padding = '6px';
-        this._disabledFilesSearchInput.style.marginBottom = '6px';
+        this._disabledFilesSearchInput.style.padding = '6px 6px 6px 30px'; // Increased left padding for icon
+        // this._disabledFilesSearchInput.style.marginBottom = '6px';
         this._disabledFilesSearchInput.style.border = '1px solid var(--background-modifier-border)';
         this._disabledFilesSearchInput.value = String(this._disabledFilesSearchQuery || '');
 
@@ -21166,33 +21421,6 @@ class ColorSettingTab extends PluginSettingTab {
       if (!this._customSwatchesContainer) return;
       this._customSwatchesContainer.empty();
 
-      // Toggle: Replace default swatches (affects color picker modal composition)
-      new Setting(this._customSwatchesContainer)
-        .setName(this.plugin.t('replace_default_swatches', 'Replace default swatches'))
-        .setDesc(this.plugin.t('replace_default_swatches_desc', 'If this is on, only your custom colors will show up in the color picker. No default ones!'))
-        .addToggle(t => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async v => {
-          this.plugin.settings.replaceDefaultSwatches = v;
-          await this.plugin.saveSettings();
-        }));
-
-      // Toggle: Use swatch names for coloring text
-      new Setting(this._customSwatchesContainer)
-        .setName(this.plugin.t('use_swatch_names', 'Use swatch names for coloring text'))
-        .setDesc(this.plugin.t('use_swatch_names_desc', 'Show a dropdown of swatch names next to word/pattern inputs'))
-        .addToggle(t => t.setValue(this.plugin.settings.useSwatchNamesForText).onChange(async v => {
-          this.plugin.settings.useSwatchNamesForText = v;
-          await this.plugin.saveSettings();
-          this._initializedSettingsUI = false;
-          try { this.display(); } catch (e) { }
-        }));
-      new Setting(this._customSwatchesContainer)
-        .setName(this.plugin.t('link_swatches_to_entries', 'Link swatch updates to text colors'))
-        .setDesc(this.plugin.t('link_swatches_to_entries_desc', 'When a custom swatch color changes, update all entries using that color'))
-        .addToggle(t => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async v => {
-          this.plugin.settings.linkSwatchUpdatesToEntries = v;
-          await this.plugin.saveSettings();
-        }));
-
       // Determine fold states (initialize if not set)
       if (typeof this._defaultColorsFolded === 'undefined') {
         this._defaultColorsFolded = true; // Default colors start folded
@@ -21217,7 +21445,7 @@ class ColorSettingTab extends PluginSettingTab {
       defaultColorsToggle.style.display = 'inline-block';
       defaultColorsToggle.style.width = '16px';
 
-      const defaultColorsTitle = defaultColorsHeaderDiv.createEl('h5', { text: this.plugin.t('default_colors_header', 'Default Colors') });
+      const defaultColorsTitle = defaultColorsHeaderDiv.createEl('h5', { text: this.plugin.t('default_colors_header', 'Default Swatches') });
       defaultColorsTitle.style.margin = '0';
       defaultColorsTitle.style.padding = '0';
       defaultColorsTitle.style.flex = '1';
@@ -22397,6 +22625,48 @@ class ColorSettingTab extends PluginSettingTab {
         };
         activeSelect.onchange = activeHandler;
 
+        // Group Styling Preview
+        if (group.textColor || group.backgroundColor || (typeof group.enableBorderThickness !== 'undefined' && group.enableBorderThickness)) {
+          const preview = row.createDiv();
+          try { preview.addClass('act-group-styling-preview'); } catch (e) { try { preview.classList.add('act-group-styling-preview'); } catch (_) { } }
+          preview.style.width = '20px';
+          preview.style.height = '20px';
+          preview.style.flexShrink = '0';
+          preview.style.display = 'flex';
+          preview.style.alignItems = 'center';
+          preview.style.justifyContent = 'center';
+          preview.style.fontSize = '12px';
+          preview.style.fontWeight = 'bold';
+          preview.style.cursor = 'default';
+          preview.textContent = 'A';
+
+          const t = group.textColor && group.textColor !== 'currentColor' ? group.textColor : '';
+          const b = group.backgroundColor || '';
+          const p = this.plugin.getHighlightParams(group);
+          const rgba = b ? this.plugin.hexToRgba(b, p.opacity ?? 25) : 'transparent';
+          
+          if (t) preview.style.color = t;
+          else preview.style.color = 'var(--text-normal)';
+
+          if (b) {
+            preview.style.backgroundColor = rgba;
+          } else {
+            preview.style.backgroundColor = 'transparent';
+          }
+          
+          // Apply Highlight Styling Params
+          preview.style.borderRadius = (p.radius ?? 8) + 'px';
+          
+          if (p.enableBorder) {
+            const borderStyle = this.plugin.generateBorderStyle(t, b, group);
+            if (borderStyle) {
+              preview.style.cssText += borderStyle;
+            }
+          } else {
+            preview.style.border = '1px solid var(--background-modifier-border)';
+          }
+        }
+
         const nameInput = row.createEl('input', { type: 'text', value: group.name || '' });
         nameInput.style.flex = '1';
         nameInput.placeholder = this.plugin.t('group_name_placeholder', 'Name your group');
@@ -23001,9 +23271,82 @@ class ColorSettingTab extends PluginSettingTab {
           return d;
         });
 
+      new Setting(containerEl)
+        .setName(this.plugin.t('show_toggle_statusbar', 'Show Toggle in Status Bar'))
+        .addToggle(t => t
+          .setValue(!this.plugin.settings.disableToggleModes.statusBar)
+          .onChange(async v => {
+            this.plugin.settings.disableToggleModes.statusBar = !v;
+            await this.plugin.saveSettings();
+            try {
+              if (v && !this.plugin.statusBar) {
+                this.plugin.statusBar = this.plugin.addStatusBarItem();
+                this.plugin.updateStatusBar();
+                this.plugin.statusBar.onclick = () => {
+                  this.plugin.settings.enabled = !this.plugin.settings.enabled;
+                  this.plugin.saveSettings();
+                  this.plugin.updateStatusBar();
+                  this.plugin.reconfigureEditorExtensions();
+                  this.plugin.forceRefreshAllEditors();
+                  this.plugin.forceRefreshAllReadingViews();
+                };
+              } else if (!v && this.plugin.statusBar) {
+                try { this.plugin.statusBar.remove(); } catch (e) { }
+                this.plugin.statusBar = null;
+              }
+            } catch (e) { }
+          }));
+
+      new Setting(containerEl)
+        .setName(this.plugin.t('show_toggle_ribbon', 'Show Toggle icon in ribbon'))
+        .addToggle(t => t
+          .setValue(!this.plugin.settings.disableToggleModes.ribbon)
+          .onChange(async v => {
+            this.plugin.settings.disableToggleModes.ribbon = !v;
+            await this.plugin.saveSettings();
+            try {
+              if (v && !this.ribbonIcon) {
+                this.ribbonIcon = this.addRibbonIcon('palette', this.t('ribbon_title', 'Always color text'), async () => {
+                  this.settings.enabled = !this.settings.enabled;
+                  await this.saveSettings();
+                  this.updateStatusBar();
+                  this.reconfigureEditorExtensions();
+                  this.forceRefreshAllEditors();
+                  this.forceRefreshAllReadingViews();
+                  if (this.settings.enabled) new Notice(this.t('notice_enabled', 'Always color text enabled'));
+                  else new Notice(this.t('notice_disabled', 'Always color text disabled'));
+                });
+              } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
+                try { this.ribbonIcon.remove(); } catch (e) { }
+                this.ribbonIcon = null;
+              }
+            } catch (e) { }
+          }));
+
+      new Setting(containerEl)
+        .setName(this.plugin.t('show_toggle_command', 'Show Toggle in command'))
+        .addToggle(t => t
+          .setValue(!this.plugin.settings.disableToggleModes.command)
+          .onChange(async v => {
+            this.plugin.settings.disableToggleModes.command = !v;
+            await this.plugin.saveSettings();
+            try {
+              if (v) {
+                if (!this.plugin._commandsRegistered) {
+                  try { this.plugin.registerCommandPalette?.(); } catch (e) { }
+                  this.plugin._commandsRegistered = true;
+                }
+              } else {
+                new ConfirmationModal(this.app, this.plugin, this.plugin.t('restart_required_title', 'Restart required'), this.plugin.t('restart_required_desc', 'Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?'), () => { try { location.reload(); } catch (e) { } }).open();
+              }
+            } catch (e) { }
+          }));
+
+      containerEl.createEl('h3', { text: this.plugin.t('color_rendering_header', 'Color Rendering & Performance') });
+
       // 1. Enable document color
       new Setting(containerEl)
-        .setName(this.plugin.t('enable_document_color', 'Enable document color'))
+        .setName(this.plugin.t('enable_document_color', 'Enable Global Color'))
         .addToggle(t => t.setValue(this.plugin.settings.enabled).onChange(async v => {
           this.plugin.settings.enabled = v;
           await this.debouncedSaveSettings();
@@ -23079,7 +23422,7 @@ class ColorSettingTab extends PluginSettingTab {
         }));
 
       new Setting(containerEl)
-        .setName(this.plugin.t('lightweight_mode', 'Experimental: Lightweight mode'))
+        .setName(this.plugin.t('lightweight_mode', 'Lightweight mode (Experimental)'))
         .setDesc(this.plugin.t('lightweight_mode_desc', ''))
         .addToggle(t => t.setValue(this.plugin.settings.extremeLightweightMode).onChange(async v => {
           this.plugin.settings.extremeLightweightMode = v;
@@ -23087,24 +23430,6 @@ class ColorSettingTab extends PluginSettingTab {
           try { this.plugin.reconfigureEditorExtensions(); } catch (e) { }
           try { this.plugin.forceRefreshAllEditors(); } catch (e) { }
           try { this.plugin.forceRefreshAllReadingViews(); } catch (e) { }
-        }));
-
-      new Setting(containerEl)
-        .setName(this.plugin.t('light_mode_fixer', 'Light Mode Text Color Fixer'))
-        .setDesc(this.plugin.t('light_mode_fixer_desc', 'Automatically darkens colored text when using Light theme to improve visibility.'))
-        .addToggle(t => t.setValue(this.plugin.settings.lightModeFixer).onChange(async v => {
-          this.plugin.settings.lightModeFixer = v;
-          await this.debouncedSaveSettings();
-          this.plugin.updateLightModeFixer();
-        }));
-
-      new Setting(containerEl)
-        .setName(this.plugin.t('dark_mode_fixer', 'Dark Mode Text Color Fixer'))
-        .setDesc(this.plugin.t('dark_mode_fixer_desc', 'Automatically lightens colored text when using Dark theme to improve visibility.'))
-        .addToggle(t => t.setValue(this.plugin.settings.darkModeFixer).onChange(async v => {
-          this.plugin.settings.darkModeFixer = v;
-          await this.debouncedSaveSettings();
-          this.plugin.updateDarkModeFixer();
         }));
 
       new Setting(containerEl)
@@ -23117,117 +23442,22 @@ class ColorSettingTab extends PluginSettingTab {
           try { this.plugin.forceRefreshAllEditors(); } catch (e) { }
         }));
 
-      new Setting(containerEl)
-        .setName(this.plugin.t('show_toggle_statusbar', 'Show Toggle in Status Bar'))
-        .addToggle(t => t
-          .setValue(!this.plugin.settings.disableToggleModes.statusBar)
-          .onChange(async v => {
-            this.plugin.settings.disableToggleModes.statusBar = !v;
-            await this.plugin.saveSettings();
-            try {
-              if (v && !this.plugin.statusBar) {
-                this.plugin.statusBar = this.plugin.addStatusBarItem();
-                this.plugin.updateStatusBar();
-                this.plugin.statusBar.onclick = () => {
-                  this.plugin.settings.enabled = !this.plugin.settings.enabled;
-                  this.plugin.saveSettings();
-                  this.plugin.updateStatusBar();
-                  this.plugin.reconfigureEditorExtensions();
-                  this.plugin.forceRefreshAllEditors();
-                  this.plugin.forceRefreshAllReadingViews();
-                };
-              } else if (!v && this.plugin.statusBar) {
-                try { this.plugin.statusBar.remove(); } catch (e) { }
-                this.plugin.statusBar = null;
-              }
-            } catch (e) { }
-          }));
+      containerEl.createEl('h3', { text: this.plugin.t('matching_behavior_header', 'Matching Behavior') });
 
       new Setting(containerEl)
-        .setName(this.plugin.t('show_toggle_ribbon', 'Show Toggle icon in ribbon'))
-        .addToggle(t => t
-          .setValue(!this.plugin.settings.disableToggleModes.ribbon)
-          .onChange(async v => {
-            this.plugin.settings.disableToggleModes.ribbon = !v;
-            await this.plugin.saveSettings();
-            try {
-              if (v && !this.ribbonIcon) {
-                this.ribbonIcon = this.addRibbonIcon('palette', this.t('ribbon_title', 'Always color text'), async () => {
-                  this.settings.enabled = !this.settings.enabled;
-                  await this.saveSettings();
-                  this.updateStatusBar();
-                  this.reconfigureEditorExtensions();
-                  this.forceRefreshAllEditors();
-                  this.forceRefreshAllReadingViews();
-                  if (this.settings.enabled) new Notice(this.t('notice_enabled', 'Always color text enabled'));
-                  else new Notice(this.t('notice_disabled', 'Always color text disabled'));
-                });
-              } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
-                try { this.ribbonIcon.remove(); } catch (e) { }
-                this.ribbonIcon = null;
-              }
-            } catch (e) { }
-          }));
-
-      new Setting(containerEl)
-        .setName(this.plugin.t('show_toggle_command', 'Show Toggle in command'))
-        .addToggle(t => t
-          .setValue(!this.plugin.settings.disableToggleModes.command)
-          .onChange(async v => {
-            this.plugin.settings.disableToggleModes.command = !v;
-            await this.plugin.saveSettings();
-            try {
-              if (v) {
-                if (!this.plugin._commandsRegistered) {
-                  try { this.plugin.registerCommandPalette?.(); } catch (e) { }
-                  this.plugin._commandsRegistered = true;
-                }
-              } else {
-                new ConfirmationModal(this.app, this.plugin, this.plugin.t('restart_required_title', 'Restart required'), this.plugin.t('restart_required_desc', 'Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?'), () => { try { location.reload(); } catch (e) { } }).open();
-              }
-            } catch (e) { }
-          }));
-
-      containerEl.createEl('h2', { text: this.plugin.t('menu_options_header', 'Menu Options') });
-
-      new Setting(containerEl)
-        .setName(this.plugin.t('show_add_to_existing_menu', 'Show "Add to Existing Entry" in right-click menu'))
-        .setDesc(this.plugin.t('show_add_to_existing_menu_desc', 'Adds a right-click menu item to add selected text to an existing entry.'))
-        .addToggle(t => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async v => {
-          this.plugin.settings.enableAddToExistingMenu = v;
-          await this.plugin.saveSettings();
+        .setName(this.plugin.t('case_sensitive', 'Case sensitive'))
+        .setDesc(this.plugin.t('case_sensitive_desc', 'If this is on, "word" and "Word" are treated as different. If it\'s off, they\'re colored the same.'))
+        .addToggle(t => t.setValue(this.plugin.settings.caseSensitive).onChange(async v => {
+          this.plugin.settings.caseSensitive = v;
+          await this.debouncedSaveSettings();
         }));
-
       new Setting(containerEl)
-        .setName(this.plugin.t('show_always_color_text_menu', 'Show "Always Color Text" in right-click menu'))
-        .setDesc(this.plugin.t('show_always_color_text_menu_desc', 'Adds a right-click menu item to color selected text.'))
-        .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysColorTextMenu).onChange(async v => {
-          this.plugin.settings.enableAlwaysColorTextMenu = v;
-          await this.plugin.saveSettings();
+        .setName(this.plugin.t('partial_match', 'Partial match'))
+        .setDesc(this.plugin.t('partial_match_desc', 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").'))
+        .addToggle(t => t.setValue(this.plugin.settings.partialMatch).onChange(async v => {
+          this.plugin.settings.partialMatch = v;
+          await this.debouncedSaveSettings();
         }));
-
-      new Setting(containerEl)
-        .setName(this.plugin.t('show_blacklist_menu', 'Show "Blacklist Word" in right-click menu'))
-        .setDesc(this.plugin.t('show_blacklist_menu_desc', 'Adds a right-click menu item to blacklist selected text from coloring.'))
-        .addToggle(t => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async v => {
-          this.plugin.settings.enableBlacklistMenu = v;
-          await this.plugin.saveSettings();
-        }));
-
-      // new Setting(containerEl)
-      //   .setName(this.plugin.t('show_coloring_reason_on_hover','Show coloring reason on hover'))
-      //   .setDesc(this.plugin.t('show_coloring_reason_on_hover_desc','Hover over colored text to see why it\'s colored (e.g., "contains \'act\'" or "starts with \'red\'")'))
-      //   .addToggle(t => t
-      //     .setValue(this.plugin.settings.showColoringReasonOnHover)
-      //     .onChange(async v => {
-      //       this.plugin.settings.showColoringReasonOnHover = v;
-      //       await this.plugin.saveSettings();
-      //       try { this.plugin.reconfigureEditorExtensions(); } catch (e) {}
-      //       try { this.plugin.forceRefreshAllEditors(); } catch (e) {}
-      //       try { this.plugin.forceRefreshAllReadingViews(); } catch (e) {}
-      //     }));
-
-      containerEl.createEl('h3', { text: this.plugin.t('coloring_settings_header', 'Coloring Settings') });
       new Setting(containerEl)
         .setName(this.plugin.t('regex_support', 'Regex support'))
         .setDesc(this.plugin.t('regex_support_desc', 'Allow patterns to be regular expressions. Invalid regexes are ignored for safety.'))
@@ -23247,19 +23477,51 @@ class ColorSettingTab extends PluginSettingTab {
           try { this.plugin.forceRefreshAllEditors(); } catch (e) { }
           try { this.plugin.forceRefreshAllReadingViews(); } catch (e) { }
         }));
+
+      containerEl.createEl('h3', { text: this.plugin.t('theme_support_header', 'Theme Support') });
+
       new Setting(containerEl)
-        .setName(this.plugin.t('case_sensitive', 'Case sensitive'))
-        .setDesc(this.plugin.t('case_sensitive_desc', 'If this is on, "word" and "Word" are treated as different. If it\'s off, they\'re colored the same.'))
-        .addToggle(t => t.setValue(this.plugin.settings.caseSensitive).onChange(async v => {
-          this.plugin.settings.caseSensitive = v;
+        .setName(this.plugin.t('light_mode_fixer', 'Light Mode Text Color Fixer'))
+        .setDesc(this.plugin.t('light_mode_fixer_desc', 'Automatically darkens colored text when using Light theme to improve visibility.'))
+        .addToggle(t => t.setValue(this.plugin.settings.lightModeFixer).onChange(async v => {
+          this.plugin.settings.lightModeFixer = v;
           await this.debouncedSaveSettings();
+          this.plugin.updateLightModeFixer();
         }));
+
       new Setting(containerEl)
-        .setName(this.plugin.t('partial_match', 'Partial match'))
-        .setDesc(this.plugin.t('partial_match_desc', 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").'))
-        .addToggle(t => t.setValue(this.plugin.settings.partialMatch).onChange(async v => {
-          this.plugin.settings.partialMatch = v;
+        .setName(this.plugin.t('dark_mode_fixer', 'Dark Mode Text Color Fixer'))
+        .setDesc(this.plugin.t('dark_mode_fixer_desc', 'Automatically lightens colored text when using Dark theme to improve visibility.'))
+        .addToggle(t => t.setValue(this.plugin.settings.darkModeFixer).onChange(async v => {
+          this.plugin.settings.darkModeFixer = v;
           await this.debouncedSaveSettings();
+          this.plugin.updateDarkModeFixer();
+        }));
+
+      containerEl.createEl('h3', { text: this.plugin.t('menu_options_header', 'Menu Options') });
+
+      new Setting(containerEl)
+        .setName(this.plugin.t('show_always_color_text_menu', 'Show "Always Color Text" in right-click menu'))
+        .setDesc(this.plugin.t('show_always_color_text_menu_desc', 'Adds a right-click menu item to color selected text.'))
+        .addToggle(t => t.setValue(this.plugin.settings.enableAlwaysColorTextMenu).onChange(async v => {
+          this.plugin.settings.enableAlwaysColorTextMenu = v;
+          await this.plugin.saveSettings();
+        }));
+
+      new Setting(containerEl)
+        .setName(this.plugin.t('show_add_to_existing_menu', 'Show "Add to Existing Entry" in right-click menu'))
+        .setDesc(this.plugin.t('show_add_to_existing_menu_desc', 'Adds a right-click menu item to add selected text to an existing entry.'))
+        .addToggle(t => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async v => {
+          this.plugin.settings.enableAddToExistingMenu = v;
+          await this.plugin.saveSettings();
+        }));
+
+      new Setting(containerEl)
+        .setName(this.plugin.t('show_blacklist_menu', 'Show "Blacklist Word" in right-click menu'))
+        .setDesc(this.plugin.t('show_blacklist_menu_desc', 'Adds a right-click menu item to blacklist selected text from coloring.'))
+        .addToggle(t => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async v => {
+          this.plugin.settings.enableBlacklistMenu = v;
+          await this.plugin.saveSettings();
         }));
 
       // --- One-Time Actions (Foldable) ---
@@ -23312,6 +23574,14 @@ class ColorSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
           this._initializedSettingsUI = false;
           this.display();
+        }));
+
+      new Setting(otaContainer)
+        .setName(this.plugin.t('setting_color_highlight_once', 'Color & Highlight Once'))
+        .setDesc(this.plugin.t('setting_color_highlight_once_desc', 'Opens the unified color picker to apply both text color and background highlight inline. Uses Unified Menu.'))
+        .addToggle(t => t.setValue(this.plugin.settings.enableQuickColorHighlightOnce).onChange(async v => {
+          this.plugin.settings.enableQuickColorHighlightOnce = v;
+          await this.plugin.saveSettings();
         }));
 
       if (this.plugin.settings.enableQuickHighlightOnce) {
@@ -23922,7 +24192,7 @@ class ColorSettingTab extends PluginSettingTab {
       swToggle.style.width = '16px';
       swToggle.style.marginTop = '-8px';
 
-      const swTitle = swHeaderDiv.createEl('h2', { text: this.plugin.t('color_swatches_header', 'Color Swatches') });
+      const swTitle = swHeaderDiv.createEl('h2', { text: this.plugin.t('color_swatches_header', 'Color Management') });
       swTitle.style.margin = '0';
       swTitle.style.marginTop = '-8px';
       swTitle.style.padding = '0';
@@ -23965,6 +24235,32 @@ class ColorSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
           this._refreshCustomSwatches();
         }));
+
+      new Setting(swContainer)
+        .setName(this.plugin.t('replace_default_swatches', 'Replace default swatches'))
+        .setDesc(this.plugin.t('replace_default_swatches_desc', 'If enabled, only your custom swatches will be shown. If disabled, they will be appended to the default ones.'))
+        .addToggle(t => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async v => {
+          this.plugin.settings.replaceDefaultSwatches = v;
+          await this.plugin.saveSettings();
+        }));
+
+      new Setting(swContainer)
+        .setName(this.plugin.t('use_swatch_names', 'Use swatch names for coloring text'))
+        .setDesc(this.plugin.t('use_swatch_names_desc', 'If enabled, the text will be colored using the name of the swatch (e.g., "Red") instead of the hex code.'))
+        .addToggle(t => t.setValue(this.plugin.settings.useSwatchNamesForText).onChange(async v => {
+          this.plugin.settings.useSwatchNamesForText = v;
+          await this.plugin.saveSettings();
+        }));
+
+      new Setting(swContainer)
+        .setName(this.plugin.t('link_swatch_updates', 'Link swatch updates to text colors'))
+        .setDesc(this.plugin.t('link_swatch_updates_desc', 'If enabled, updating a swatch color will update all text colored with that swatch.'))
+        .addToggle(t => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async v => {
+          this.plugin.settings.linkSwatchUpdatesToEntries = v;
+          await this.plugin.saveSettings();
+        }));
+
+        
 
       // Store reference and render custom swatches
       this._customSwatchesContainer = swContainer.createDiv();
@@ -25092,6 +25388,7 @@ class ColorPickerModal extends Modal {
               preview.style.paddingLeft = preview.style.paddingRight = '';
               preview.style.paddingTop = preview.style.paddingBottom = '';
             }
+            this._hasUserChanges = true;
           } else {
             const op = (matchedEntry && typeof matchedEntry.backgroundOpacity === 'number') ? matchedEntry.backgroundOpacity : (this.plugin.settings.backgroundOpacity ?? 25);
             const rgba = this.plugin.hexToRgba(val, op);

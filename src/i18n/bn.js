@@ -33,6 +33,8 @@ module.exports = {
   "file_menu_disable": "এই ফাইলের জন্য অলওয়েজ কালার টেক্সট অক্ষম করুন",
   "menu_color_once": "একবার রঙ করুন",
   "menu_highlight_once": "একবার হাইলাইট করুন",
+  "menu_color_highlight_once": "রঙ / একবার হাইলাইট করুন",
+  "menu_remove_inline_color": "ইনলাইন রঙ সরান",
   "menu_always_color_text": "অলওয়েজ কালার টেক্সট",
   "menu_remove_always_color_text": "অলওয়েজ কালার টেক্সট সরান",
   "menu_blacklist_word": "রঙায়ন থেকে শব্দ ব্ল্যাকলিস্ট করুন",
@@ -143,7 +145,7 @@ module.exports = {
   "color_in_reading_mode": "রিডিং মোডে রঙ করুন",
   "force_full_render_reading": "রিডিং মোডে সম্পূর্ণ রেন্ডার জোর করুন",
   "force_full_render_reading_desc": "চালু থাকলে, রিডিং-মোড সম্পূর্ণ ডকুমেন্ট এক পাসে রঙ করার চেষ্টা করবে। বড় ডকুমেন্টে পারফরম্যান্স ইস্যু হতে পারে। সতর্কতার সাথে ব্যবহার করুন!",
-  "lightweight_mode": "প্রায়োগিক: অতিরিক্ত হালকা মোড",
+  "lightweight_mode": "Lightweight mode (Experimental)",
   "lightweight_mode_desc": "টাইপ করার সময় প্রসেসিং অনেক কমিয়ে দেয়। কিছু ম্যাচ বাদ পড়তে পারে।",
   "disable_coloring_current_file": "বর্তমান ফাইলের জন্য রঙায়ন অক্ষম করুন",
   "disable_coloring_current_file_desc": "ফাইল ও ফোল্ডার রঙায়ন রুলস এর অধীনে সক্রিয় ফাইলের জন্য একটি এক্সক্লুড রুল যোগ করে।",
@@ -166,6 +168,8 @@ module.exports = {
   "setting_color_once_desc": "নির্বাচিত টেক্সটের জন্য HTML ইনলাইন সন্নিবেশ করে। প্লাগইন বন্ধ থাকলেও এটি স্থায়ী থাকে।",
   "setting_highlight_once": "একবার হাইলাইট করুন",
   "setting_highlight_once_desc": "ব্যাকগ্রাউন্ড স্টাইলিং সহ HTML ইনলাইন সন্নিবেশ করে। প্লাগইন বন্ধ থাকলেও এটি স্থায়ী থাকে।",
+  "setting_color_highlight_once": "রঙ এবং একবার হাইলাইট করুন",
+  "setting_color_highlight_once_desc": "উভয় পাঠ্য রঙ এবং পটভূমি হাইলাইট ইনলাইন প্রয়োগ করতে ইউনিফাইড রঙ পিকার খোলে। ইউনিফাইড মেনু ব্যবহার করে।",
   "highlight_once_preview": "একবার হাইলাইট প্রিভিউ",
   "highlight_once_preview_text": "একবার হাইলাইট কেমন দেখাবে তা দেখুন!",
   
@@ -252,7 +256,7 @@ module.exports = {
   "use_swatch_names_desc": "শব্দ/প্যাটার্ন ইনপুটের পাশে সোয়াচ নামের ড্রপডাউন দেখান",
   "link_swatches_to_entries": "সোয়াচ আপডেটকে টেক্সট রঙের সাথে লিংক করুন",
   "link_swatches_to_entries_desc": "কাস্টম সোয়াচের রঙ পরিবর্তন হলে, সেই রঙ ব্যবহার করা সব এন্ট্রি আপডেট করুন",
-  "default_colors_header": "ডিফল্ট রঙগুলি",
+  "default_colors_header": "ডিফল্ট সোয়াচ",
   "custom_swatches_header": "কাস্টম সোয়াচগুলি",
   "btn_add_color": "+ রঙ যোগ করুন",
   "no_custom_swatches_yet": "এখনো কোনো কাস্টম সোয়াচ নেই। তৈরি করতে \"+ রঙ যোগ করুন\" ক্লিক করুন।",
@@ -492,6 +496,7 @@ module.exports = {
   "btn_save_style": "স্টাইল সংরক্ষণ করুন",
   
   // Quick Colors / Styles
+  "quick_actions_header": "Quick Actions",
   "quick_colors_header": "দ্রুত রং",
   "quick_colors_desc": "ডান-ক্লিক মেনুতে রং প্রদর্শন করে দ্রুত টেক্সট হাইলাইট বা রঙ করার অনুমতি দেয়। যদি দ্রুত রং বন্ধ থাকে, তবে দ্রুত স্টাইলগুলিতে প্রতি-স্টাইল রং ব্যবহার করা হবে।",
   "quick_colors_apply_mode_label": "টেক্সট রঙায়ন এইভাবে প্রয়োগ হবে",
@@ -521,5 +526,14 @@ module.exports = {
   "btn_duplicate_entry": "এন্ট্রি ডুপ্লিকেট করুন",
   "btn_open_in_regex_tester": "Regex Tester এ খুলুন",
   "move_to_blacklist_group": "কালো সূচী গ্রুপে সঁচালন করুন",
-  "btn_delete_entry": "এন্ট্রি মুছুন"
+  "btn_delete_entry": "এন্ট্রি মুছুন",
+  "edit_group_highlight_styling": "গ্রুপ হাইলাইট স্টাইলিং সম্পাদনা করুন",
+  "light_mode_fixer_desc": "দৃশ্যমানতা উন্নত করতে লাইট থিম ব্যবহার করার সময় রঙিন টেক্সট স্বয়ংক্রিয়ভাবে গাঢ় করে।",
+  "dark_mode_fixer_desc": "দৃশ্যমানতা উন্নত করতে ডার্ক থিম ব্যবহার করার সময় রঙিন টেক্সট স্বয়ংক্রিয়ভাবে হালকা করে।",
+  "preset_bold": "বোল্ড",
+  "preset_italic": "ইটালিক",
+  "preset_bold_italic": "বোল্ড ইটালিক",
+  "theme_support_header": "থিম সমর্থন",
+  "matching_behavior_header": "ম্যাচিং আচরণ",
+  "color_rendering_header": "রঙ রেন্ডারিং এবং কর্মক্ষমতা"
 };
