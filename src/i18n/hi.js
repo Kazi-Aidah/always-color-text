@@ -156,7 +156,7 @@ module.exports = {
   "color_in_reading_mode": "रीडिंग मोड में रंग लगाएँ",
   "force_full_render_reading": "रीडिंग मोड में पूर्ण रेंडर फोर्स करें",
   "force_full_render_reading_desc": "जब चालू हो, तो रीडिंग-मोड पूरे दस्तावेज़ को एक पास में रंगने का प्रयास करेगा। बड़े दस्तावेज़ों पर प्रदर्शन समस्याएँ हो सकती हैं। सावधानी से उपयोग करें!",
-  "lightweight_mode": "Lightweight mode (Experimental)",
+  "lightweight_mode": "लाइटवेट मोड (प्रयोगात्मक)",
   "lightweight_mode_desc": "टाइप करते समय प्रोसेसिंग को काफी कम करता है। कुछ मिलान छूट सकते हैं।",
   "disable_coloring_current_file": "वर्तमान फ़ाइल के लिए रंगाई बंद करें",
   "disable_coloring_current_file_desc": "फ़ाइल और फ़ोल्डर रंगाई नियमों के तहत सक्रिय फ़ाइल के लिए एक बहिष्करण नियम जोड़ता है।",

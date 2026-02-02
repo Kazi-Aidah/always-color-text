@@ -23573,7 +23573,7 @@ class ColorSettingTab extends PluginSettingTab {
 
       new Setting(containerEl)
         .setName(this.plugin.t('smart_update_mode', 'Smart Updates (Experimental)'))
-        .setDesc(this.plugin.t('smart_update_mode_desc', 'Only updates coloring for modified lines while typing. Freezes other lines to improve performance. May cause sync issues with multi-line patterns.'))
+        .setDesc(this.plugin.t('smart_update_mode_desc', 'Only updates coloring for active line while typing and freezes other lines to improve performance.'))
         .addToggle(t => t.setValue(this.plugin.settings.enableSmartUpdates).onChange(async v => {
           this.plugin.settings.enableSmartUpdates = v;
           await this.debouncedSaveSettings();

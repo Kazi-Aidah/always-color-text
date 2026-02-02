@@ -152,7 +152,8 @@ module.exports = {
   "color_rendering_header": "Color Rendering & Performance",
   "theme_support_header": "Theme Support",
   "matching_behavior_header": "Matching Behavior",
-  "smart_updates": "Smart Updates (Experimental)",
+  "smart_update_mode": "Smart Updates (Experimental)",
+  "smart_update_mode_desc": "Only updates coloring for active line while typing and freezes other lines to improve performance.",
   "light_mode_fixer": "Light Mode Text Color Fixer",
   "dark_mode_fixer": "Dark Mode Text Color Fixer",
   "color_in_live_preview_mode": "Color in Live Preview Mode",
@@ -542,7 +543,7 @@ module.exports = {
   "btn_duplicate_entry": "Duplicate Entry",
   "btn_open_in_regex_tester": "Open in Regex Tester",
   "move_to_blacklist_group": "Move to Blacklist Group",
-    "btn_delete_entry": "Delete Entry",
+  "btn_delete_entry": "Delete Entry",
   "edit_group_highlight_styling": "Edit Group Highlight Styling",
   "light_mode_fixer_desc": "Automatically darkens colored text when using Light theme to improve visibility.",
   "dark_mode_fixer_desc": "Automatically lightens colored text when using Dark theme to improve visibility."
