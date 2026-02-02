@@ -68,6 +68,10 @@ module.exports = {
   "command_disable_current": "বর্তমান ডকুমেন্টের জন্য রঙায়ন অক্ষম করুন",
   "command_enable_global": "অলওয়েজ কালার টেক্সট সক্ষম করুন",
   "command_disable_global": "অলওয়েজ কালার টেক্সট অক্ষম করুন",
+  "command_enable_lightweight_mode": "লাইটওয়েট মোড চালু করুন",
+  "command_disable_lightweight_mode": "লাইটওয়েট মোড বন্ধ করুন",
+  "command_color_highlight_once": "নির্বাচিত টেক্সট রং / হাইলাইট করুন (একবার)",
+  "notice_select_text_first_once": "দয়া করে প্রথমে টেক্সট নির্বাচন করুন।",
   "command_manage_advanced_rules": "নির্দিষ্ট অন্তর্ভুক্তি/বর্জন নিয়ম পরিচালনা করুন",
   "command_open_regex_tester": "Regex যোগ করুন (Regex পরীক্ষক খুলুন)",
   "command_open_blacklist_regex_tester": "ব্ল্যাকলিস্টে Regex যোগ করুন",
@@ -82,6 +86,8 @@ module.exports = {
   "command_deactivate_word_group": "{groupName} শব্দ গ্রুপ নিষ্ক্রিয় করুন",
   
   // Notifications
+  "notice_lightweight_mode_enabled": "লাইটওয়েট মোড চালু",
+  "notice_lightweight_mode_disabled": "লাইটওয়েট মোড বন্ধ",
   "notice_enabled": "অলওয়েজ কালার টেক্সট সক্রিয়",
   "notice_disabled": "অলওয়েজ কালার টেক্সট নিষ্ক্রিয়",
   "notice_blacklisted_cannot_color": "\"{word}\" ব্ল্যাকলিস্টে রয়েছে এবং রঙ করা যাবে না।",

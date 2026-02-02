@@ -68,6 +68,10 @@ module.exports = {
   "command_toggle_global": "Activer/Désactiver la coloration globale",
   "command_enable_global": "Activer la coloration globale",
   "command_disable_global": "Désactiver la coloration globale",
+  "command_enable_lightweight_mode": "Activer le mode léger",
+  "command_disable_lightweight_mode": "Désactiver le mode léger",
+  "command_color_highlight_once": "Colorer / Surligner le texte sélectionné (une fois)",
+  "notice_select_text_first_once": "Veuillez d'abord sélectionner du texte pour le colorer/surligner.",
   "enable_document_color": "Activer la couleur globale",
   "color_swatches_header": "Gestion des couleurs",
   "color_rendering_header": "Rendu des couleurs et performances",
@@ -90,6 +94,8 @@ module.exports = {
   "command_deactivate_word_group": "Désactiver le groupe de mots {groupName}",
   
   // Notifications
+  "notice_lightweight_mode_enabled": "Mode léger activé",
+  "notice_lightweight_mode_disabled": "Mode léger désactivé",
   "notice_enabled": "Always color text activé",
   "notice_disabled": "Always color text désactivé",
   "notice_blacklisted_cannot_color": "\"{word}\" est sur liste noire et ne peut pas être coloré.",

@@ -33,8 +33,8 @@ module.exports = {
   "file_menu_disable": "Отключить окрашивание для этого файла",
   "menu_color_once": "Окрасить однократно",
   "menu_highlight_once": "Подсветить однократно",
-  "menu_color_highlight_once": "Цвет / Подсветить однократно",
-  "menu_remove_inline_color": "Убрать Инлайн Цвет",
+  "menu_color_highlight_once": "Цвет / Подсветить однократно", // added
+  "menu_remove_inline_color": "Убрать Инлайн Цвет", // added
   "menu_always_color_text": "Изменить внешний вид текста",
   "menu_remove_always_color_text": "Убрать Always Color Text",
   "menu_blacklist_word": "Добавить слово в чёрный список",
@@ -65,17 +65,20 @@ module.exports = {
   "command_toggle_current": "Включить/отключить окрашивание для текущего документа",
   "command_enable_current": "Включить окрашивание для текущего документа",
   "command_disable_current": "Отключить окрашивание для текущего документа",
-  "command_toggle_global": "Включить/отключить глобальное окрашивание",
-  "command_enable_global": "Включить глобальное окрашивание",
-  "command_disable_global": "Отключить глобальное окрашивание",
-  "enable_document_color": "Включить глобальное окрашивание",
-  "color_swatches_header": "Управление цветом",
-  "color_rendering_header": "Рендеринг цвета и производительность",
-  "theme_support_header": "Поддержка тем",
-  "matching_behavior_header": "Поведение сопоставления",
-  "smart_updates": "Умные обновления (Экспериментальный)",
-  "light_mode_fixer": "Исправление цвета текста в светлом режиме",
-  "dark_mode_fixer": "Исправление цвета текста в темном режиме",
+  "command_toggle_global": "Включить/отключить Always Color Text",
+  "command_enable_global": "Включить Always Color Text",
+  "command_disable_global": "Отключить Always Color Text",
+  "command_enable_lightweight_mode": "Включить легкий режим", // added
+  "command_disable_lightweight_mode": "Отключить легкий режим", // added
+  "command_color_highlight_once": "Окрасить / Выделить выбранный текст (один раз)", // added
+  "notice_select_text_first_once": "Пожалуйста, сначала выберите текст.", // added
+  "enable_document_color": "Включить окрашивание документа",
+  "color_rendering_header": "Рендеринг цвета и производительность", // added
+  "theme_support_header": "Поддержка тем", // added
+  "matching_behavior_header": "Поведение сопоставления", // added
+  "smart_updates": "Умные обновления (Экспериментальный)", // added
+  "light_mode_fixer": "Исправление цвета текста в светлом режиме", // added
+  "dark_mode_fixer": "Исправление цвета текста в темном режиме", // added
   "command_manage_advanced_rules": "Управление специфическими правилами включения/исключения",
   "command_open_regex_tester": "Добавить Regex (Открыть конфигуратор Regex)",
   "command_open_blacklist_regex_tester": "Добавить Regex в чёрный список",
@@ -90,6 +93,8 @@ module.exports = {
   "command_deactivate_word_group": "Деактивировать группу слов {groupName}",
   
   // Notifications
+  "notice_lightweight_mode_enabled": "Легкий режим включен", // added
+  "notice_lightweight_mode_disabled": "Легкий режим выключен", // added
   "notice_enabled": "Always Color Text включён",
   "notice_disabled": "Always Color Text отключён",
   "notice_blacklisted_cannot_color": "«{word}» находится в чёрном списке и не может быть окрашено.",
@@ -144,15 +149,19 @@ module.exports = {
   "confirm_delete_all_blacklist_desc": "Вы уверены, что хотите удалить ВСЕ слова/шаблоны из чёрного списка? Это действие необратимо!",
   "confirm_delete_all_groups_title": "Удалить все группы слов",
   "confirm_delete_all_groups_desc": "Вы уверены, что хотите удалить ВСЕ группы слов? Это действие необратимо!",
+  "confirm_delete_all_blacklist_groups_title": "Удалить все сгруппированные чёрные списки",
+  "confirm_delete_all_blacklist_groups_desc": "Вы уверены, что хотите удалить ВСЕ сгруппированные чёрные списки? Это действие невозможно отменить!",
+  "confirm_delete_blacklist_group_title": "Удалить сгруппированный чёрный список",
+  "confirm_delete_blacklist_group_desc": "Вы уверены, что хотите удалить этот сгруппированный чёрный список? Это действие невозможно отменить.",
   "restart_required_title": "Требуется перезагрузка",
   "restart_required_desc": "Для полного удаления команды из палитры команд требуется перезагрузка Obsidian. Перезагрузить сейчас?",
   
   // Basic Settings
-  "color_in_live_preview_mode": "Цвет в режиме предпросмотра",
+  "color_in_live_preview_mode": "Окрашивать в режиме Live Preview",
   "color_in_reading_mode": "Окрашивать в режиме чтения",
   "force_full_render_reading": "Принудительно выполнять полный рендеринг в режиме чтения",
   "force_full_render_reading_desc": "Если включено, режим чтения попытается окрасить весь документ сразу. Может вызвать замедление на больших документах, используйте с осторожностью!",
-  "lightweight_mode": "Lightweight mode (Experimental)",
+  "lightweight_mode": "Экспериментально: сверхлёгкий режим",
   "lightweight_mode_desc": "Сильно уменьшает объём обработки во время набора текста. Может пропускать некоторые совпадения.",
   "disable_coloring_current_file": "Отключить окрашивание для текущего файла",
   "disable_coloring_current_file_desc": "Добавляет правило исключения для активного файла в раздел «Правила окрашивания файлов и папок».",
@@ -175,8 +184,8 @@ module.exports = {
   "setting_color_once_desc": "Вставить inline HTML стиль для выделенного текста. Сохраняется даже если плагин отключён.",
   "setting_highlight_once": "Подсветить однократно",
   "setting_highlight_once_desc": "Вставить inline HTML стиль с фоном. Сохраняется даже если плагин отключён.",
-  "setting_color_highlight_once": "Цвет и Подсветить однократно",
-  "setting_color_highlight_once_desc": "Открывает унифицированный селектор цвета для применения как цвета текста, так и подсветки фона в строке. Использует унифицированное меню.",
+  "setting_color_highlight_once": "Цвет и Подсветить однократно", // added
+  "setting_color_highlight_once_desc": "Открывает унифицированный селектор цвета для применения как цвета текста, так и подсветки фона в строке. Использует унифицированное меню.", // added
   "highlight_once_preview": "Предпросмотр однократной подсветки",
   "highlight_once_preview_text": "Так будет выглядеть однократная подсветка!",
   
@@ -246,7 +255,7 @@ module.exports = {
   "opt_line_outset": "Выступ",
   
   // Color Swatches
-
+  "color_swatches_header": "Палитры цветов",
   "color_picker_layout": "Макет выбора цвета",
   "color_picker_layout_desc": "Выберите типы цветов для отображения при выборе цвета для слова",
   "opt_both_text_left": "Оба: Текст Слева, Подсветка Справа",
@@ -263,7 +272,7 @@ module.exports = {
   "use_swatch_names_desc": "Показывать выпадающий список имен палитр рядом с вводом слова/шаблона",
   "link_swatches_to_entries": "Связать обновления палитр с окрашенными текстами",
   "link_swatches_to_entries_desc": "Обновлять все записи, использующие пользовательскую палитру, когда цвет этой палитры меняется",
-  "default_colors_header": "Образцы по умолчанию",
+  "default_colors_header": "Цвета по умолчанию",
   "custom_swatches_header": "Пользовательские палитры",
   "btn_add_color": "+ Добавить цвет",
   "no_custom_swatches_yet": "Пока нет пользовательских палитр. Нажмите «+ Добавить цвет», чтобы создать.",
@@ -503,7 +512,7 @@ module.exports = {
   "btn_save_style": "Сохранить стиль",
   
   // Quick Colors / Styles
-  "quick_actions_header": "Quick Actions",
+  "quick_actions_header": "Быстрые действия", // added
   "quick_colors_header": "Быстрые цвета",
   "quick_colors_desc": "Позволяет быстро подсвечивать или окрашивать текст, показывая цвета в контекстном меню. Если Быстрые цвета отключены, будут использоваться цвета стилей из Быстрых стилей.",
   "quick_colors_apply_mode_label": "Окрашивать текст с помощью",
@@ -522,24 +531,22 @@ module.exports = {
   "btn_create_new_blacklist_group": "+ Создать новый сгруппированный чёрный список",
   "edit_blacklist_group_modal_title": "Редактировать сгруппированный чёрный список",
   "tooltip_delete_all_blacklist_groups": "Удалить все сгруппированные чёрные списки",
-  "confirm_delete_all_blacklist_groups_title": "Удалить все сгруппированные чёрные списки",
-  "confirm_delete_all_blacklist_groups_desc": "Вы уверены, что хотите удалить ВСЕ сгруппированные чёрные списки? Это действие невозможно отменить!",
-  "confirm_delete_blacklist_group_title": "Удалить сгруппированный чёрный список",
-  "confirm_delete_blacklist_group_desc": "Вы уверены, что хотите удалить этот сгруппированный чёрный список? Это действие невозможно отменить.",
-  "notice_blacklist_group_activated": "Сгруппированный чёрный список активирован",
-  "notice_blacklist_group_deactivated": "Сгруппированный чёрный список деактивирован",
-  "command_activate_blacklist_group": "Активировать сгруппированный чёрный список {groupName}",
-  "command_deactivate_blacklist_group": "Деактивировать сгруппированный чёрный список {groupName}",
   "btn_duplicate_entry": "Дублировать запись",
   "btn_open_in_regex_tester": "Открыть в конфигураторе Regex",
   "move_to_blacklist_group": "Перенести в сгруппированный чёрный список",
   "btn_delete_entry": "Удалить запись",
-  "edit_group_highlight_styling": "Редактировать стиль выделения группы",
-  "light_mode_fixer_desc": "Автоматически затемняет цветной текст при использовании светлой темы для улучшения видимости.",
-  "dark_mode_fixer_desc": "Автоматически осветляет цветной текст при использовании темной темы для улучшения видимости.",
-  "preset_bold": "Жирный",
-  "preset_italic": "Курсив",
-  "preset_bold_italic": "Жирный курсив"
+  "edit_group_highlight_styling": "Редактировать стиль выделения группы", // added
+  "light_mode_fixer_desc": "Автоматически затемняет цветной текст при использовании светлой темы для улучшения видимости.", // added
+  "dark_mode_fixer_desc": "Автоматически осветляет цветной текст при использовании темной темы для улучшения видимости.", // added
+  "preset_bold": "Жирный", // added
+  "preset_italic": "Курсив", // added
+  "preset_bold_italic": "Жирный курсив", // added
+
+  // Blacklist Group Commands
+  "notice_blacklist_group_activated": "Сгруппированный чёрный список активирован",
+  "notice_blacklist_group_deactivated": "Сгруппированный чёрный список деактивирован",
+  "command_activate_blacklist_group": "Активировать сгруппированный чёрный список {groupName}",
+  "command_deactivate_blacklist_group": "Деактивировать сгруппированный чёрный список {groupName}"
 };
 
 // Thanks @Frumkin13 for the translation <3

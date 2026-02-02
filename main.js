@@ -88,9 +88,15 @@ var require_en = __commonJS({
       "command_unhide_text_colors": "Unhide Text Colors",
       "command_hide_highlights": "Hide Highlights",
       "command_unhide_highlights": "Unhide Highlights",
+      "command_enable_lightweight_mode": "Enable Lightweight Mode",
+      "command_disable_lightweight_mode": "Disable Lightweight Mode",
+      "command_color_highlight_once": "Color / Highlight Once Selected Text",
+      "notice_select_text_first_once": "Please select text first to color/highlight once.",
       "command_activate_word_group": "Activate {groupName} Word Group",
       "command_deactivate_word_group": "Deactivate {groupName} Word Group",
       // Notifications
+      "notice_lightweight_mode_enabled": "Lightweight Mode enabled",
+      "notice_lightweight_mode_disabled": "Lightweight Mode disabled",
       "notice_enabled": "Always Color Text Enabled",
       "notice_disabled": "Always Color Text Disabled",
       "notice_blacklisted_cannot_color": '"{word}" is blacklisted and cannot be colored.',
@@ -610,9 +616,15 @@ var require_es = __commonJS({
       "command_unhide_text_colors": "Mostrar colores de texto",
       "command_hide_highlights": "Ocultar resaltados",
       "command_unhide_highlights": "Mostrar resaltados",
+      "command_enable_lightweight_mode": "Activar Modo Ligero",
+      "command_disable_lightweight_mode": "Desactivar Modo Ligero",
+      "command_color_highlight_once": "Colorear / Resaltar Texto Seleccionado (Una vez)",
+      "notice_select_text_first_once": "Por favor seleccione texto primero para colorear/resaltar.",
       "command_activate_word_group": "Activar el grupo de palabras {groupName}",
       "command_deactivate_word_group": "Desactivar el grupo de palabras {groupName}",
       // Notifications
+      "notice_lightweight_mode_enabled": "Modo Ligero activado",
+      "notice_lightweight_mode_disabled": "Modo Ligero desactivado",
       "notice_enabled": "Always color text activado",
       "notice_disabled": "Always color text desactivado",
       "notice_blacklisted_cannot_color": '"{word}" est\xE1 en la lista negra y no puede colorearse.',
@@ -1113,6 +1125,10 @@ var require_fr = __commonJS({
       "command_toggle_global": "Activer/D\xE9sactiver la coloration globale",
       "command_enable_global": "Activer la coloration globale",
       "command_disable_global": "D\xE9sactiver la coloration globale",
+      "command_enable_lightweight_mode": "Activer le mode l\xE9ger",
+      "command_disable_lightweight_mode": "D\xE9sactiver le mode l\xE9ger",
+      "command_color_highlight_once": "Colorer / Surligner le texte s\xE9lectionn\xE9 (une fois)",
+      "notice_select_text_first_once": "Veuillez d'abord s\xE9lectionner du texte pour le colorer/surligner.",
       "enable_document_color": "Activer la couleur globale",
       "color_swatches_header": "Gestion des couleurs",
       "color_rendering_header": "Rendu des couleurs et performances",
@@ -1134,6 +1150,8 @@ var require_fr = __commonJS({
       "command_activate_word_group": "Activer le groupe de mots {groupName}",
       "command_deactivate_word_group": "D\xE9sactiver le groupe de mots {groupName}",
       // Notifications
+      "notice_lightweight_mode_enabled": "Mode l\xE9ger activ\xE9",
+      "notice_lightweight_mode_disabled": "Mode l\xE9ger d\xE9sactiv\xE9",
       "notice_enabled": "Always color text activ\xE9",
       "notice_disabled": "Always color text d\xE9sactiv\xE9",
       "notice_blacklisted_cannot_color": '"{word}" est sur liste noire et ne peut pas \xEAtre color\xE9.',
@@ -1634,6 +1652,10 @@ var require_hi = __commonJS({
       "command_toggle_global": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917\u093E\u0908 \u0938\u0915\u094D\u0937\u092E/\u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
       "command_enable_global": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917\u093E\u0908 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
       "command_disable_global": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917\u093E\u0908 \u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_enable_lightweight_mode": "\u0932\u093E\u0907\u091F\u0935\u0947\u091F \u092E\u094B\u0921 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_disable_lightweight_mode": "\u0932\u093E\u0907\u091F\u0935\u0947\u091F \u092E\u094B\u0921 \u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_color_highlight_once": "\u091A\u092F\u0928\u093F\u0924 \u092A\u093E\u0920 \u0915\u094B \u0930\u0902\u0917\u0947\u0902 / \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902 (\u090F\u0915 \u092C\u093E\u0930)",
+      "notice_select_text_first_once": "\u0915\u0943\u092A\u092F\u093E \u092A\u0939\u0932\u0947 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u0941\u0928\u0947\u0902\u0964",
       "enable_document_color": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
       "color_swatches_header": "\u0930\u0902\u0917 \u092A\u094D\u0930\u092C\u0902\u0927\u0928",
       "color_rendering_header": "\u0930\u0902\u0917 \u092A\u094D\u0930\u0924\u093F\u092A\u093E\u0926\u0928 \u0914\u0930 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928",
@@ -1655,6 +1677,8 @@ var require_hi = __commonJS({
       "command_activate_word_group": "{groupName} \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0938\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902",
       "command_deactivate_word_group": "{groupName} \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902",
       // Notifications
+      "notice_lightweight_mode_enabled": "\u0932\u093E\u0907\u091F\u0935\u0947\u091F \u092E\u094B\u0921 \u0938\u0915\u094D\u0937\u092E",
+      "notice_lightweight_mode_disabled": "\u0932\u093E\u0907\u091F\u0935\u0947\u091F \u092E\u094B\u0921 \u0905\u0915\u094D\u0937\u092E",
       "notice_enabled": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942",
       "notice_disabled": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u0902\u0926",
       "notice_blacklisted_cannot_color": '"{word}" \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F\u0947\u0921 \u0939\u0948 \u0914\u0930 \u0930\u0902\u0917 \u0928\u0939\u0940\u0902 \u0932\u0917\u093E\u092F\u093E \u091C\u093E \u0938\u0915\u0924\u093E\u0964',
@@ -2174,9 +2198,15 @@ var require_it = __commonJS({
       "command_unhide_text_colors": "Mostra colori del testo",
       "command_hide_highlights": "Nascondi evidenziazioni",
       "command_unhide_highlights": "Mostra evidenziazioni",
+      "command_enable_lightweight_mode": "Abilita modalit\xE0 leggera",
+      "command_disable_lightweight_mode": "Disabilita modalit\xE0 leggera",
+      "command_color_highlight_once": "Colora / Evidenzia testo selezionato (una volta)",
+      "notice_select_text_first_once": "Seleziona prima del testo da colorare.",
       "command_activate_word_group": "Attiva il gruppo di parole {groupName}",
       "command_deactivate_word_group": "Disattiva il gruppo di parole {groupName}",
       // Notifications
+      "notice_lightweight_mode_enabled": "Modalit\xE0 leggera attivata",
+      "notice_lightweight_mode_disabled": "Modalit\xE0 leggera disattivata",
       "notice_enabled": "Always Color Text abilitato",
       "notice_disabled": "Always Color Text disabilitato",
       "notice_blacklisted_cannot_color": '"{word}" \xE8 in blacklist e non pu\xF2 essere colorata.',
@@ -2678,6 +2708,10 @@ var require_bn = __commonJS({
       "command_disable_current": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "command_enable_global": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "command_disable_global": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "command_enable_lightweight_mode": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 \u099A\u09BE\u09B2\u09C1 \u0995\u09B0\u09C1\u09A8",
+      "command_disable_lightweight_mode": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 \u09AC\u09A8\u09CD\u09A7 \u0995\u09B0\u09C1\u09A8",
+      "command_color_highlight_once": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0982 / \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8 (\u098F\u0995\u09AC\u09BE\u09B0)",
+      "notice_select_text_first_once": "\u09A6\u09AF\u09BC\u09BE \u0995\u09B0\u09C7 \u09AA\u09CD\u09B0\u09A5\u09AE\u09C7 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8\u0964",
       "command_manage_advanced_rules": "\u09A8\u09BF\u09B0\u09CD\u09A6\u09BF\u09B7\u09CD\u099F \u0985\u09A8\u09CD\u09A4\u09B0\u09CD\u09AD\u09C1\u0995\u09CD\u09A4\u09BF/\u09AC\u09B0\u09CD\u099C\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "command_open_regex_tester": "Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8 (Regex \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u0995 \u0996\u09C1\u09B2\u09C1\u09A8)",
       "command_open_blacklist_regex_tester": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7 Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
@@ -2691,6 +2725,8 @@ var require_bn = __commonJS({
       "command_activate_word_group": "{groupName} \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
       "command_deactivate_word_group": "{groupName} \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
       // Notifications
+      "notice_lightweight_mode_enabled": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 \u099A\u09BE\u09B2\u09C1",
+      "notice_lightweight_mode_disabled": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 \u09AC\u09A8\u09CD\u09A7",
       "notice_enabled": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
       "notice_disabled": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
       "notice_blacklisted_cannot_color": '"{word}" \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7 \u09B0\u09AF\u09BC\u09C7\u099B\u09C7 \u098F\u09AC\u0982 \u09B0\u0999 \u0995\u09B0\u09BE \u09AF\u09BE\u09AC\u09C7 \u09A8\u09BE\u0964',
@@ -3161,7 +3197,9 @@ var require_ru = __commonJS({
       "menu_color_once": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
       "menu_highlight_once": "\u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
       "menu_color_highlight_once": "\u0426\u0432\u0435\u0442 / \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
+      // added
       "menu_remove_inline_color": "\u0423\u0431\u0440\u0430\u0442\u044C \u0418\u043D\u043B\u0430\u0439\u043D \u0426\u0432\u0435\u0442",
+      // added
       "menu_always_color_text": "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u043D\u0435\u0448\u043D\u0438\u0439 \u0432\u0438\u0434 \u0442\u0435\u043A\u0441\u0442\u0430",
       "menu_remove_always_color_text": "\u0423\u0431\u0440\u0430\u0442\u044C Always Color Text",
       "menu_blacklist_word": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u043B\u043E\u0432\u043E \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
@@ -3191,17 +3229,30 @@ var require_ru = __commonJS({
       "command_toggle_current": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
       "command_enable_current": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
       "command_disable_current": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
-      "command_toggle_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435",
-      "command_enable_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435",
-      "command_disable_global": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435",
-      "enable_document_color": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435",
-      "color_swatches_header": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u043E\u043C",
+      "command_toggle_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
+      "command_enable_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
+      "command_disable_global": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
+      "command_enable_lightweight_mode": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043B\u0435\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C",
+      // added
+      "command_disable_lightweight_mode": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043B\u0435\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C",
+      // added
+      "command_color_highlight_once": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C / \u0412\u044B\u0434\u0435\u043B\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 (\u043E\u0434\u0438\u043D \u0440\u0430\u0437)",
+      // added
+      "notice_select_text_first_once": "\u041F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0435\u043A\u0441\u0442.",
+      // added
+      "enable_document_color": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
       "color_rendering_header": "\u0420\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433 \u0446\u0432\u0435\u0442\u0430 \u0438 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u044C",
+      // added
       "theme_support_header": "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u0442\u0435\u043C",
+      // added
       "matching_behavior_header": "\u041F\u043E\u0432\u0435\u0434\u0435\u043D\u0438\u0435 \u0441\u043E\u043F\u043E\u0441\u0442\u0430\u0432\u043B\u0435\u043D\u0438\u044F",
+      // added
       "smart_updates": "\u0423\u043C\u043D\u044B\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F (\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0439)",
+      // added
       "light_mode_fixer": "\u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432 \u0441\u0432\u0435\u0442\u043B\u043E\u043C \u0440\u0435\u0436\u0438\u043C\u0435",
+      // added
       "dark_mode_fixer": "\u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432 \u0442\u0435\u043C\u043D\u043E\u043C \u0440\u0435\u0436\u0438\u043C\u0435",
+      // added
       "command_manage_advanced_rules": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
       "command_open_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex (\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043E\u0440 Regex)",
       "command_open_blacklist_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
@@ -3215,6 +3266,10 @@ var require_ru = __commonJS({
       "command_activate_word_group": "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0441\u043B\u043E\u0432 {groupName}",
       "command_deactivate_word_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0441\u043B\u043E\u0432 {groupName}",
       // Notifications
+      "notice_lightweight_mode_enabled": "\u041B\u0435\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C \u0432\u043A\u043B\u044E\u0447\u0435\u043D",
+      // added
+      "notice_lightweight_mode_disabled": "\u041B\u0435\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C \u0432\u044B\u043A\u043B\u044E\u0447\u0435\u043D",
+      // added
       "notice_enabled": "Always Color Text \u0432\u043A\u043B\u044E\u0447\u0451\u043D",
       "notice_disabled": "Always Color Text \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D",
       "notice_blacklisted_cannot_color": "\xAB{word}\xBB \u043D\u0430\u0445\u043E\u0434\u0438\u0442\u0441\u044F \u0432 \u0447\u0451\u0440\u043D\u043E\u043C \u0441\u043F\u0438\u0441\u043A\u0435 \u0438 \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043E.",
@@ -3268,14 +3323,18 @@ var require_ru = __commonJS({
       "confirm_delete_all_blacklist_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u044B \u0438\u0437 \u0447\u0451\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E!",
       "confirm_delete_all_groups_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432",
       "confirm_delete_all_groups_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E!",
+      "confirm_delete_all_blacklist_groups_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
+      "confirm_delete_all_blacklist_groups_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C!",
+      "confirm_delete_blacklist_group_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
+      "confirm_delete_blacklist_group_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u043E\u0442 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C.",
       "restart_required_title": "\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430",
       "restart_required_desc": "\u0414\u043B\u044F \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0438\u0437 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043A\u043E\u043C\u0430\u043D\u0434 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 Obsidian. \u041F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0441\u0435\u0439\u0447\u0430\u0441?",
       // Basic Settings
-      "color_in_live_preview_mode": "\u0426\u0432\u0435\u0442 \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u043F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u0430",
+      "color_in_live_preview_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 Live Preview",
       "color_in_reading_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading": "\u041F\u0440\u0438\u043D\u0443\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u0442\u044C \u043F\u043E\u043B\u043D\u044B\u0439 \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433 \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u0440\u0435\u0436\u0438\u043C \u0447\u0442\u0435\u043D\u0438\u044F \u043F\u043E\u043F\u044B\u0442\u0430\u0435\u0442\u0441\u044F \u043E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0432\u0435\u0441\u044C \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442 \u0441\u0440\u0430\u0437\u0443. \u041C\u043E\u0436\u0435\u0442 \u0432\u044B\u0437\u0432\u0430\u0442\u044C \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u043D\u0430 \u0431\u043E\u043B\u044C\u0448\u0438\u0445 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0445, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u0441 \u043E\u0441\u0442\u043E\u0440\u043E\u0436\u043D\u043E\u0441\u0442\u044C\u044E!",
-      "lightweight_mode": "Lightweight mode (Experimental)",
+      "lightweight_mode": "\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u043E: \u0441\u0432\u0435\u0440\u0445\u043B\u0451\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C",
       "lightweight_mode_desc": "\u0421\u0438\u043B\u044C\u043D\u043E \u0443\u043C\u0435\u043D\u044C\u0448\u0430\u0435\u0442 \u043E\u0431\u044A\u0451\u043C \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438 \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u043D\u0430\u0431\u043E\u0440\u0430 \u0442\u0435\u043A\u0441\u0442\u0430. \u041C\u043E\u0436\u0435\u0442 \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0430\u0442\u044C \u043D\u0435\u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u044F.",
       "disable_coloring_current_file": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
       "disable_coloring_current_file_desc": "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u043F\u0440\u0430\u0432\u0438\u043B\u043E \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u0434\u043B\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430 \u0432 \u0440\u0430\u0437\u0434\u0435\u043B \xAB\u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u044F \u0444\u0430\u0439\u043B\u043E\u0432 \u0438 \u043F\u0430\u043F\u043E\u043A\xBB.",
@@ -3297,7 +3356,9 @@ var require_ru = __commonJS({
       "setting_highlight_once": "\u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
       "setting_highlight_once_desc": "\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C inline HTML \u0441\u0442\u0438\u043B\u044C \u0441 \u0444\u043E\u043D\u043E\u043C. \u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442\u0441\u044F \u0434\u0430\u0436\u0435 \u0435\u0441\u043B\u0438 \u043F\u043B\u0430\u0433\u0438\u043D \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D.",
       "setting_color_highlight_once": "\u0426\u0432\u0435\u0442 \u0438 \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
+      // added
       "setting_color_highlight_once_desc": "\u041E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u0443\u043D\u0438\u0444\u0438\u0446\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0441\u0435\u043B\u0435\u043A\u0442\u043E\u0440 \u0446\u0432\u0435\u0442\u0430 \u0434\u043B\u044F \u043F\u0440\u0438\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043A\u0430\u043A \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430, \u0442\u0430\u043A \u0438 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438 \u0444\u043E\u043D\u0430 \u0432 \u0441\u0442\u0440\u043E\u043A\u0435. \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442 \u0443\u043D\u0438\u0444\u0438\u0446\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u043E\u0435 \u043C\u0435\u043D\u044E.",
+      // added
       "highlight_once_preview": "\u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E\u0439 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
       "highlight_once_preview_text": "\u0422\u0430\u043A \u0431\u0443\u0434\u0435\u0442 \u0432\u044B\u0433\u043B\u044F\u0434\u0435\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u0430\u044F \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430!",
       // Highlight Once Settings
@@ -3362,6 +3423,7 @@ var require_ru = __commonJS({
       "opt_line_inset": "\u0412\u0441\u0442\u0430\u0432\u043A\u0430",
       "opt_line_outset": "\u0412\u044B\u0441\u0442\u0443\u043F",
       // Color Swatches
+      "color_swatches_header": "\u041F\u0430\u043B\u0438\u0442\u0440\u044B \u0446\u0432\u0435\u0442\u043E\u0432",
       "color_picker_layout": "\u041C\u0430\u043A\u0435\u0442 \u0432\u044B\u0431\u043E\u0440\u0430 \u0446\u0432\u0435\u0442\u0430",
       "color_picker_layout_desc": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0438\u043F\u044B \u0446\u0432\u0435\u0442\u043E\u0432 \u0434\u043B\u044F \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u043F\u0440\u0438 \u0432\u044B\u0431\u043E\u0440\u0435 \u0446\u0432\u0435\u0442\u0430 \u0434\u043B\u044F \u0441\u043B\u043E\u0432\u0430",
       "opt_both_text_left": "\u041E\u0431\u0430: \u0422\u0435\u043A\u0441\u0442 \u0421\u043B\u0435\u0432\u0430, \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430 \u0421\u043F\u0440\u0430\u0432\u0430",
@@ -3378,7 +3440,7 @@ var require_ru = __commonJS({
       "use_swatch_names_desc": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0432\u044B\u043F\u0430\u0434\u0430\u044E\u0449\u0438\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0438\u043C\u0435\u043D \u043F\u0430\u043B\u0438\u0442\u0440 \u0440\u044F\u0434\u043E\u043C \u0441 \u0432\u0432\u043E\u0434\u043E\u043C \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u0430",
       "link_swatches_to_entries": "\u0421\u0432\u044F\u0437\u0430\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u043F\u0430\u043B\u0438\u0442\u0440 \u0441 \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430\u043C\u0438",
       "link_swatches_to_entries_desc": "\u041E\u0431\u043D\u043E\u0432\u043B\u044F\u0442\u044C \u0432\u0441\u0435 \u0437\u0430\u043F\u0438\u0441\u0438, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044E\u0449\u0438\u0435 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0443\u044E \u043F\u0430\u043B\u0438\u0442\u0440\u0443, \u043A\u043E\u0433\u0434\u0430 \u0446\u0432\u0435\u0442 \u044D\u0442\u043E\u0439 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043C\u0435\u043D\u044F\u0435\u0442\u0441\u044F",
-      "default_colors_header": "\u041E\u0431\u0440\u0430\u0437\u0446\u044B \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E",
+      "default_colors_header": "\u0426\u0432\u0435\u0442\u0430 \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E",
       "custom_swatches_header": "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u043B\u0438\u0442\u0440\u044B",
       "btn_add_color": "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0446\u0432\u0435\u0442",
       "no_custom_swatches_yet": "\u041F\u043E\u043A\u0430 \u043D\u0435\u0442 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0445 \u043F\u0430\u043B\u0438\u0442\u0440. \u041D\u0430\u0436\u043C\u0438\u0442\u0435 \xAB+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0446\u0432\u0435\u0442\xBB, \u0447\u0442\u043E\u0431\u044B \u0441\u043E\u0437\u0434\u0430\u0442\u044C.",
@@ -3604,7 +3666,8 @@ var require_ru = __commonJS({
       "label_border_thickness": "\u0422\u043E\u043B\u0449\u0438\u043D\u0430 \u0440\u0430\u043C\u043A\u0438",
       "btn_save_style": "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0441\u0442\u0438\u043B\u044C",
       // Quick Colors / Styles
-      "quick_actions_header": "Quick Actions",
+      "quick_actions_header": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044F",
+      // added
       "quick_colors_header": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430",
       "quick_colors_desc": "\u041F\u043E\u0437\u0432\u043E\u043B\u044F\u0435\u0442 \u0431\u044B\u0441\u0442\u0440\u043E \u043F\u043E\u0434\u0441\u0432\u0435\u0447\u0438\u0432\u0430\u0442\u044C \u0438\u043B\u0438 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442, \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u044F \u0446\u0432\u0435\u0442\u0430 \u0432 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E. \u0415\u0441\u043B\u0438 \u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u044B, \u0431\u0443\u0434\u0443\u0442 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C\u0441\u044F \u0446\u0432\u0435\u0442\u0430 \u0441\u0442\u0438\u043B\u0435\u0439 \u0438\u0437 \u0411\u044B\u0441\u0442\u0440\u044B\u0445 \u0441\u0442\u0438\u043B\u0435\u0439.",
       "quick_colors_apply_mode_label": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442 \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E",
@@ -3622,24 +3685,27 @@ var require_ru = __commonJS({
       "btn_create_new_blacklist_group": "+ \u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u044B\u0439 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       "edit_blacklist_group_modal_title": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       "tooltip_delete_all_blacklist_groups": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
-      "confirm_delete_all_blacklist_groups_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
-      "confirm_delete_all_blacklist_groups_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C!",
-      "confirm_delete_blacklist_group_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
-      "confirm_delete_blacklist_group_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u043E\u0442 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C.",
-      "notice_blacklist_group_activated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
-      "notice_blacklist_group_deactivated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0434\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
-      "command_activate_blacklist_group": "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}",
-      "command_deactivate_blacklist_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}",
       "btn_duplicate_entry": "\u0414\u0443\u0431\u043B\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
       "btn_open_in_regex_tester": "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043E\u0440\u0435 Regex",
       "move_to_blacklist_group": "\u041F\u0435\u0440\u0435\u043D\u0435\u0441\u0442\u0438 \u0432 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       "btn_delete_entry": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
       "edit_group_highlight_styling": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0442\u0438\u043B\u044C \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u0438\u044F \u0433\u0440\u0443\u043F\u043F\u044B",
+      // added
       "light_mode_fixer_desc": "\u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u0437\u0430\u0442\u0435\u043C\u043D\u044F\u0435\u0442 \u0446\u0432\u0435\u0442\u043D\u043E\u0439 \u0442\u0435\u043A\u0441\u0442 \u043F\u0440\u0438 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0438 \u0441\u0432\u0435\u0442\u043B\u043E\u0439 \u0442\u0435\u043C\u044B \u0434\u043B\u044F \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0432\u0438\u0434\u0438\u043C\u043E\u0441\u0442\u0438.",
+      // added
       "dark_mode_fixer_desc": "\u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u043E\u0441\u0432\u0435\u0442\u043B\u044F\u0435\u0442 \u0446\u0432\u0435\u0442\u043D\u043E\u0439 \u0442\u0435\u043A\u0441\u0442 \u043F\u0440\u0438 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0438 \u0442\u0435\u043C\u043D\u043E\u0439 \u0442\u0435\u043C\u044B \u0434\u043B\u044F \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0432\u0438\u0434\u0438\u043C\u043E\u0441\u0442\u0438.",
+      // added
       "preset_bold": "\u0416\u0438\u0440\u043D\u044B\u0439",
+      // added
       "preset_italic": "\u041A\u0443\u0440\u0441\u0438\u0432",
-      "preset_bold_italic": "\u0416\u0438\u0440\u043D\u044B\u0439 \u043A\u0443\u0440\u0441\u0438\u0432"
+      // added
+      "preset_bold_italic": "\u0416\u0438\u0440\u043D\u044B\u0439 \u043A\u0443\u0440\u0441\u0438\u0432",
+      // added
+      // Blacklist Group Commands
+      "notice_blacklist_group_activated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
+      "notice_blacklist_group_deactivated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0434\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
+      "command_activate_blacklist_group": "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}",
+      "command_deactivate_blacklist_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}"
     };
   }
 });
@@ -3713,6 +3779,10 @@ var require_zh_cn = __commonJS({
       "command_toggle_global": "\u542F\u7528/\u7981\u7528\u5168\u5C40\u7740\u8272",
       "command_enable_global": "\u542F\u7528\u5168\u5C40\u7740\u8272",
       "command_disable_global": "\u7981\u7528\u5168\u5C40\u7740\u8272",
+      "command_enable_lightweight_mode": "\u542F\u7528\u8F7B\u91CF\u6A21\u5F0F",
+      "command_disable_lightweight_mode": "\u7981\u7528\u8F7B\u91CF\u6A21\u5F0F",
+      "command_color_highlight_once": "\u4E00\u6B21\u6027\u7740\u8272/\u9AD8\u4EAE\u9009\u4E2D\u53CA\u6587\u672C",
+      "notice_select_text_first_once": "\u8BF7\u5148\u9009\u62E9\u6587\u672C\u3002",
       "enable_document_color": "\u542F\u7528\u5168\u5C40\u989C\u8272",
       "color_rendering_header": "\u989C\u8272\u6E32\u67D3\u4E0E\u6027\u80FD",
       "theme_support_header": "\u4E3B\u9898\u652F\u6301",
@@ -3733,6 +3803,8 @@ var require_zh_cn = __commonJS({
       "command_activate_word_group": "\u542F\u7528 {groupName} \u8BCD\u7EC4",
       "command_deactivate_word_group": "\u505C\u7528 {groupName} \u8BCD\u7EC4",
       // Notifications
+      "notice_lightweight_mode_enabled": "\u8F7B\u91CF\u6A21\u5F0F\u5DF2\u542F\u7528",
+      "notice_lightweight_mode_disabled": "\u8F7B\u91CF\u6A21\u5F0F\u5DF2\u7981\u7528",
       "notice_enabled": "\u6587\u5B57\u81EA\u52A8\u7740\u8272\u5DF2\u542F\u7528",
       "notice_disabled": "\u6587\u5B57\u81EA\u52A8\u7740\u8272\u5DF2\u7981\u7528",
       "notice_blacklisted_cannot_color": '"{word}" \u5DF2\u52A0\u5165\u9ED1\u540D\u5355\uFF0C\u65E0\u6CD5\u7740\u8272\u3002',
@@ -7602,6 +7674,83 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       });
       addTrackedCommand({
+        id: "toggle-lightweight-mode",
+        name: (() => {
+          try {
+            return this.settings.extremeLightweightMode ? this.t("command_disable_lightweight_mode", "Disable Lightweight Mode") : this.t("command_enable_lightweight_mode", "Enable Lightweight Mode");
+          } catch (_) {
+          }
+          return this.t("command_enable_lightweight_mode", "Enable Lightweight Mode");
+        })(),
+        callback: async () => {
+          this.settings.extremeLightweightMode = !this.settings.extremeLightweightMode;
+          await this.saveSettings();
+          new Notice(this.settings.extremeLightweightMode ? this.t("notice_lightweight_mode_enabled", "Lightweight Mode enabled") : this.t("notice_lightweight_mode_disabled", "Lightweight Mode disabled"));
+          this.reregisterCommandsWithLanguage();
+          this.forceRefreshAllEditors();
+        }
+      });
+      addTrackedCommand({
+        id: "color-highlight-once-selected-text",
+        name: this.t("command_color_highlight_once", "Color / Highlight Once Selected Text"),
+        editorCallback: (editor, view) => {
+          const word = editor.getSelection().trim();
+          if (!word) {
+            new Notice(this.t("notice_select_text_first_once", "Please select text first to color/highlight once."));
+            return;
+          }
+          new ColorPickerModal(this.app, this, async (color, result) => {
+            const sel = result || {};
+            const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
+            const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+            if (!tc && !bc) return;
+            const styleParts = [];
+            if (tc) styleParts.push(`color: ${tc}`);
+            if (bc) {
+              const op = typeof this.settings.backgroundOpacity === "number" ? this.settings.backgroundOpacity : 25;
+              const rgba = this.hexToRgba(bc, op);
+              styleParts.push(`background-color: ${rgba}`);
+              let applyStyles = false;
+              let hPad = 0, vPad = 0, radius = 0;
+              let borderCss = "";
+              if (this.settings.quickHighlightUseGlobalStyle) {
+                applyStyles = true;
+                hPad = typeof this.settings.highlightHorizontalPadding === "number" ? this.settings.highlightHorizontalPadding : 4;
+                vPad = typeof this.settings.highlightVerticalPadding === "number" ? this.settings.highlightVerticalPadding : 0;
+                radius = typeof this.settings.highlightBorderRadius === "number" ? this.settings.highlightBorderRadius : 8;
+                if (this.settings.enableBorderThickness) {
+                  borderCss = this.generateGlobalBorderStyle(bc);
+                }
+              } else if (this.settings.quickHighlightStyleEnable) {
+                applyStyles = true;
+                hPad = typeof this.settings.quickHighlightHorizontalPadding === "number" ? this.settings.quickHighlightHorizontalPadding : 4;
+                vPad = typeof this.settings.quickHighlightVerticalPadding === "number" ? this.settings.quickHighlightVerticalPadding : 0;
+                radius = typeof this.settings.quickHighlightBorderRadius === "number" ? this.settings.quickHighlightBorderRadius : 8;
+                if (this.settings.quickHighlightEnableBorder) {
+                  borderCss = this.generateOnceBorderStyle(bc);
+                }
+              }
+              if (applyStyles) {
+                styleParts.push(`padding: ${vPad}px ${hPad}px`);
+                styleParts.push(`border-radius: ${radius}px`);
+                if (this.settings.enableBoxDecorationBreak ?? true) {
+                  styleParts.push(`box-decoration-break: clone`);
+                  styleParts.push(`-webkit-box-decoration-break: clone`);
+                }
+                if (borderCss) {
+                  const borderParts = borderCss.split(";").map((s) => s.trim()).filter((s) => s);
+                  borderParts.forEach((bp) => styleParts.push(bp));
+                }
+              }
+            }
+            if (styleParts.length > 0) {
+              const span = `<span style="${styleParts.join("; ")}">${word}</span>`;
+              editor.replaceSelection(span);
+            }
+          }, "text-and-background", word, true).open();
+        }
+      });
+      addTrackedCommand({
         id: "toggle-always-color-text",
         name: this.settings.enabled ? this.t("command_disable_global", "Disable Global Coloring") : this.t("command_enable_global", "Enable Global Coloring"),
         callback: async () => {
@@ -10157,6 +10306,7 @@ module.exports = class AlwaysColorText extends Plugin {
       pathRules: [],
       // Allow disabling regex safety checks (dangerous)
       disableRegexSafety: false,
+      enableQuickColorHighlightOnce: false,
       enableQuickColorOnce: false,
       enableQuickHighlightOnce: false,
       quickHighlightStyleEnable: false,
@@ -11885,6 +12035,45 @@ module.exports = class AlwaysColorText extends Plugin {
       const borderColor = this.hexToRgba(backgroundColor, opacity);
       const type = this.settings.quickHighlightBorderStyle ?? "full";
       const lineStyle = this.settings.quickHighlightBorderLineStyle ?? "solid";
+      const css = `${thickness}px ${lineStyle} ${borderColor}`;
+      switch (type) {
+        case "bottom":
+          return ` border-bottom: ${css};`;
+        case "top":
+          return ` border-top: ${css};`;
+        case "left":
+          return ` border-left: ${css};`;
+        case "right":
+          return ` border-right: ${css};`;
+        case "top-bottom":
+          return ` border-top: ${css}; border-bottom: ${css};`;
+        case "left-right":
+          return ` border-left: ${css}; border-right: ${css};`;
+        case "top-right":
+          return ` border-top: ${css}; border-right: ${css};`;
+        case "top-left":
+          return ` border-top: ${css}; border-left: ${css};`;
+        case "bottom-right":
+          return ` border-bottom: ${css}; border-right: ${css};`;
+        case "bottom-left":
+          return ` border-bottom: ${css}; border-left: ${css};`;
+        case "full":
+        default:
+          return ` border: ${css};`;
+      }
+    } catch (_) {
+      return "";
+    }
+  }
+  generateGlobalBorderStyle(backgroundColor) {
+    try {
+      if (this.settings.hideHighlights === true) return "";
+      if (!this.settings.enableBorderThickness) return "";
+      const thickness = this.settings.borderThickness ?? 1;
+      const opacity = this.settings.borderOpacity ?? 100;
+      const borderColor = this.hexToRgba(backgroundColor, opacity);
+      const type = this.settings.borderStyle ?? "full";
+      const lineStyle = this.settings.borderLineStyle ?? "solid";
       const css = `${thickness}px ${lineStyle} ${borderColor}`;
       switch (type) {
         case "bottom":
@@ -13721,43 +13910,23 @@ module.exports = class AlwaysColorText extends Plugin {
       return;
     }
     try {
-      if (el && el.textContent && this.shouldUseLightweightMode(el.textContent.length)) {
-        this.processLargeDocument(el, ctx, folderEntry);
-        return;
-      }
-    } catch (e) {
-    }
-    const immediateBlocks = 20;
-    const isReadingRoot = (() => {
-      try {
-        if (!el) return false;
-        if (el.classList && (el.classList.contains("markdown-reading-view") || el.classList.contains("markdown-preview-view"))) return true;
-        if (el.closest && el.closest(".markdown-reading-view, .markdown-preview-view")) return true;
-        return false;
-      } catch (_) {
-        return false;
-      }
-    })();
-    try {
       if (this.shouldUseLightweightMode && this.shouldUseLightweightMode(el.textContent ? el.textContent.length : 0)) {
         debugLog("ACT", "Large doc detected -> using viewport-based rendering");
-        if (isReadingRoot) {
+        try {
+          this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
+          this._processBasesViews();
           try {
-            this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: 0, batchSize: 30, clearExisting: true, forceProcess: true, maxMatches: Infinity, filePath: ctx.sourcePath });
-          } catch (e) {
-            debugError("ACT", "processInChunks immediate failed", e);
-            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
+            const pseudoView = { dom: el, file: { path: ctx.sourcePath } };
+            this._processLivePreviewCallouts(pseudoView);
+            this._processLivePreviewTables(pseudoView);
+          } catch (err) {
+            debugError("ACT", "lightweight mode element processing failed", err);
           }
-          return;
-        } else {
-          try {
-            this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
-          } catch (e) {
-            debugError("ACT", "setupViewportObserver failed", e);
-            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
-          }
-          return;
+        } catch (e) {
+          debugError("ACT", "setupViewportObserver failed", e);
+          this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
         }
+        return;
       }
     } catch (e) {
     }
@@ -13838,8 +14007,17 @@ module.exports = class AlwaysColorText extends Plugin {
         try {
           this.processInChunks(el, entries, folderEntry, {
             batchSize: 30,
-            clearExisting: false
+            clearExisting: false,
+            forceProcess: true
+            // Force full render even in lightweight mode as per user request
           });
+          this._processBasesViews();
+          try {
+            const pseudoView = { dom: el, file: { path: ctx.sourcePath } };
+            this._processLivePreviewCallouts(pseudoView, true);
+            this._processLivePreviewTables(pseudoView, true);
+          } catch (_) {
+          }
         } catch (e) {
           debugError("LARGE", "deferred processing failed", e);
         }
@@ -15287,21 +15465,21 @@ module.exports = class AlwaysColorText extends Plugin {
     debugLog("CHUNK", `done: ${blocks.length} blocks processed`);
     blocks.length = 0;
   }
-  _processLivePreviewCallouts(view) {
+  _processLivePreviewCallouts(view, force = false) {
     try {
       if (this.settings.disableLivePreviewColoring) return;
       const now = Date.now();
-      if (this._lpLastRun && now - this._lpLastRun < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
+      if (!force && this._lpLastRun && now - this._lpLastRun < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
       this._lpLastRun = now;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest(".is-live-preview");
+      const isLP = root.closest && root.closest(".is-live-preview") || root.closest && root.closest(".canvas-node") || root.closest && root.closest(".markdown-embed") || force;
       if (!isLP) return;
-      if (this._isTyping && now - this._lastTypingTime < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
+      if (!force && this._isTyping && now - this._lastTypingTime < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
       if (this._lpCalloutRaf) return;
       this._lpCalloutRaf = requestAnimationFrame(() => {
         this._lpCalloutRaf = null;
-        this._processLivePreviewCalloutsInternal(view);
+        this._processLivePreviewCalloutsInternal(view, force);
       });
       return;
     } catch (e) {
@@ -15311,11 +15489,11 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     }
   }
-  _processLivePreviewCalloutsInternal(view) {
+  _processLivePreviewCalloutsInternal(view, force = false) {
     try {
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest(".is-live-preview");
+      const isLP = root.closest && root.closest(".is-live-preview") || root.closest && root.closest(".canvas-node") || root.closest && root.closest(".markdown-embed") || force;
       if (!isLP) return;
       const viewport = {
         top: window.scrollY || 0,
@@ -15386,13 +15564,13 @@ module.exports = class AlwaysColorText extends Plugin {
       this._lpTablesLastRun = now;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest(".is-live-preview");
+      const isLP = root.closest && root.closest(".is-live-preview") || root.closest && root.closest(".canvas-node") || root.closest && root.closest(".markdown-embed") || force;
       if (!isLP) return;
       if (!force && this._isTyping && now - this._lastTypingTime < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
       if (this._lpTableRaf) cancelAnimationFrame(this._lpTableRaf);
       this._lpTableRaf = requestAnimationFrame(() => {
         this._lpTableRaf = null;
-        this._processLivePreviewTablesInternal(view);
+        this._processLivePreviewTablesInternal(view, force);
       });
       return;
     } catch (e) {
@@ -15402,11 +15580,11 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     }
   }
-  _processLivePreviewTablesInternal(view) {
+  _processLivePreviewTablesInternal(view, force = false) {
     try {
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest(".is-live-preview");
+      const isLP = root.closest && root.closest(".is-live-preview") || root.closest && root.closest(".canvas-node") || root.closest && root.closest(".markdown-embed") || force;
       if (!isLP) return;
       const cells = root.querySelectorAll(".cm-content table td, .cm-content table th");
       if (!cells || cells.length === 0) return;
@@ -26881,7 +27059,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         this.plugin.settings.enableQuickColorHighlightOnce = v;
         await this.plugin.saveSettings();
       }));
-      if (this.plugin.settings.enableQuickHighlightOnce) {
+      if (this.plugin.settings.enableQuickHighlightOnce || this.plugin.settings.enableQuickColorHighlightOnce) {
         new Setting(otaContainer).setName(this.plugin.t("use_global_highlight_style", "Use Global Highlight Style for Highlight Once")).setDesc(this.plugin.t("use_global_highlight_style_desc", "Uses your global inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async (v) => {
           this.plugin.settings.quickHighlightUseGlobalStyle = v;
           await this.plugin.saveSettings();

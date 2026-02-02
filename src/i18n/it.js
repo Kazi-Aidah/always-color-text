@@ -86,10 +86,16 @@ module.exports = {
   "command_unhide_text_colors": "Mostra colori del testo",
   "command_hide_highlights": "Nascondi evidenziazioni",
   "command_unhide_highlights": "Mostra evidenziazioni",
+  "command_enable_lightweight_mode": "Abilita modalità leggera",
+  "command_disable_lightweight_mode": "Disabilita modalità leggera",
+  "command_color_highlight_once": "Colora / Evidenzia testo selezionato (una volta)",
+  "notice_select_text_first_once": "Seleziona prima del testo da colorare.",
   "command_activate_word_group": "Attiva il gruppo di parole {groupName}",
   "command_deactivate_word_group": "Disattiva il gruppo di parole {groupName}",
   
   // Notifications
+  "notice_lightweight_mode_enabled": "Modalità leggera attivata",
+  "notice_lightweight_mode_disabled": "Modalità leggera disattivata",
   "notice_enabled": "Always Color Text abilitato",
   "notice_disabled": "Always Color Text disabilitato",
   "notice_blacklisted_cannot_color": "\"{word}\" è in blacklist e non può essere colorata.",

@@ -68,6 +68,10 @@ module.exports = {
   "command_toggle_global": "启用/禁用全局着色",
   "command_enable_global": "启用全局着色",
   "command_disable_global": "禁用全局着色",
+  "command_enable_lightweight_mode": "启用轻量模式",
+  "command_disable_lightweight_mode": "禁用轻量模式",
+  "command_color_highlight_once": "一次性着色/高亮选中及文本",
+  "notice_select_text_first_once": "请先选择文本。",
   "enable_document_color": "启用全局颜色",
 
   "color_rendering_header": "颜色渲染与性能",
@@ -90,6 +94,8 @@ module.exports = {
   "command_deactivate_word_group": "停用 {groupName} 词组",
   
   // Notifications
+  "notice_lightweight_mode_enabled": "轻量模式已启用",
+  "notice_lightweight_mode_disabled": "轻量模式已禁用",
   "notice_enabled": "文字自动着色已启用",
   "notice_disabled": "文字自动着色已禁用",
   "notice_blacklisted_cannot_color": "\"{word}\" 已加入黑名单，无法着色。",

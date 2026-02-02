@@ -3464,6 +3464,99 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       });
       addTrackedCommand({
+        id: 'toggle-lightweight-mode',
+        name: (() => {
+          try {
+            return this.settings.extremeLightweightMode ? this.t('command_disable_lightweight_mode', 'Disable Lightweight Mode') : this.t('command_enable_lightweight_mode', 'Enable Lightweight Mode');
+          } catch (_) { }
+          return this.t('command_enable_lightweight_mode', 'Enable Lightweight Mode');
+        })(),
+        callback: async () => {
+          this.settings.extremeLightweightMode = !this.settings.extremeLightweightMode;
+          await this.saveSettings();
+          new Notice(this.settings.extremeLightweightMode ? this.t('notice_lightweight_mode_enabled', 'Lightweight Mode enabled') : this.t('notice_lightweight_mode_disabled', 'Lightweight Mode disabled'));
+          this.reregisterCommandsWithLanguage();
+          this.forceRefreshAllEditors();
+        }
+      });
+      addTrackedCommand({
+        id: 'color-highlight-once-selected-text',
+        name: this.t('command_color_highlight_once', 'Color / Highlight Once Selected Text'),
+        editorCallback: (editor, view) => {
+          const word = editor.getSelection().trim();
+          if (!word) {
+            new Notice(this.t('notice_select_text_first_once', 'Please select text first to color/highlight once.'));
+            return;
+          }
+          new ColorPickerModal(this.app, this, async (color, result) => {
+            const sel = result || {};
+            const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
+            const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+            
+            if (!tc && !bc) return;
+
+            const styleParts = [];
+            if (tc) styleParts.push(`color: ${tc}`);
+            if (bc) {
+               const op = (typeof this.settings.backgroundOpacity === 'number') ? this.settings.backgroundOpacity : 25;
+               const rgba = this.hexToRgba(bc, op);
+               styleParts.push(`background-color: ${rgba}`);
+               
+               let applyStyles = false;
+               let hPad = 0, vPad = 0, radius = 0;
+               let borderCss = '';
+
+               if (this.settings.quickHighlightUseGlobalStyle) {
+                 applyStyles = true;
+                 hPad = (typeof this.settings.highlightHorizontalPadding === 'number') ? this.settings.highlightHorizontalPadding : 4;
+                 vPad = (typeof this.settings.highlightVerticalPadding === 'number') ? this.settings.highlightVerticalPadding : 0;
+                 radius = (typeof this.settings.highlightBorderRadius === 'number') ? this.settings.highlightBorderRadius : 8;
+                 
+                 // Generate border if enabled globally
+                 if (this.settings.enableBorderThickness) {
+                    borderCss = this.generateGlobalBorderStyle(bc);
+                 }
+               } else if (this.settings.quickHighlightStyleEnable) {
+                 applyStyles = true;
+                 hPad = (typeof this.settings.quickHighlightHorizontalPadding === 'number') ? this.settings.quickHighlightHorizontalPadding : 4;
+                 vPad = (typeof this.settings.quickHighlightVerticalPadding === 'number') ? this.settings.quickHighlightVerticalPadding : 0;
+                 radius = (typeof this.settings.quickHighlightBorderRadius === 'number') ? this.settings.quickHighlightBorderRadius : 8;
+                 
+                 // Generate border if enabled for quick once
+                 if (this.settings.quickHighlightEnableBorder) {
+                   borderCss = this.generateOnceBorderStyle(bc);
+                 }
+               }
+
+               if (applyStyles) {
+                  styleParts.push(`padding: ${vPad}px ${hPad}px`);
+                  styleParts.push(`border-radius: ${radius}px`);
+                  if (this.settings.enableBoxDecorationBreak ?? true) {
+                    styleParts.push(`box-decoration-break: clone`);
+                    styleParts.push(`-webkit-box-decoration-break: clone`);
+                  }
+                  if (borderCss) {
+                    // borderCss comes as a string of css properties like " border: ...;"
+                    // We need to clean it up to fit into styleParts (which joins with '; ')
+                    // The generated string has semicolons and 'property: value' format.
+                    // Let's strip the leading space and any wrapping if needed.
+                    // Actually, generateOnceBorderStyle returns something like " border: ...;"
+                    // styleParts.join('; ') expects just "prop: value"
+                    // So we should split by semicolon and add parts.
+                    const borderParts = borderCss.split(';').map(s => s.trim()).filter(s => s);
+                    borderParts.forEach(bp => styleParts.push(bp));
+                  }
+               }
+            }
+            
+            if (styleParts.length > 0) {
+              const span = `<span style="${styleParts.join('; ')}">${word}</span>`;
+              editor.replaceSelection(span);
+            }
+          }, 'text-and-background', word, true).open();
+        }
+      });
+      addTrackedCommand({
         id: 'toggle-always-color-text',
         name: this.settings.enabled
           ? this.t('command_disable_global', 'Disable Global Coloring')
@@ -5967,6 +6060,7 @@ module.exports = class AlwaysColorText extends Plugin {
       pathRules: [],
       // Allow disabling regex safety checks (dangerous)
       disableRegexSafety: false,
+      enableQuickColorHighlightOnce: false,
       enableQuickColorOnce: false,
       enableQuickHighlightOnce: false,
       quickHighlightStyleEnable: false,
@@ -7964,6 +8058,36 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
+  generateGlobalBorderStyle(backgroundColor) {
+    try {
+      if (this.settings.hideHighlights === true) return '';
+      if (!this.settings.enableBorderThickness) return '';
+      const thickness = this.settings.borderThickness ?? 1;
+      const opacity = this.settings.borderOpacity ?? 100;
+      const borderColor = this.hexToRgba(backgroundColor, opacity);
+      const type = this.settings.borderStyle ?? 'full';
+      const lineStyle = this.settings.borderLineStyle ?? 'solid';
+      const css = `${thickness}px ${lineStyle} ${borderColor}`;
+      switch (type) {
+        case 'bottom': return ` border-bottom: ${css};`;
+        case 'top': return ` border-top: ${css};`;
+        case 'left': return ` border-left: ${css};`;
+        case 'right': return ` border-right: ${css};`;
+        case 'top-bottom': return ` border-top: ${css}; border-bottom: ${css};`;
+        case 'left-right': return ` border-left: ${css}; border-right: ${css};`;
+        case 'top-right': return ` border-top: ${css}; border-right: ${css};`;
+        case 'top-left': return ` border-top: ${css}; border-left: ${css};`;
+        case 'bottom-right': return ` border-bottom: ${css}; border-right: ${css};`;
+        case 'bottom-left': return ` border-bottom: ${css}; border-left: ${css};`;
+        case 'full':
+        default:
+          return ` border: ${css};`;
+      }
+    } catch (_) {
+      return '';
+    }
+  }
+
   async _applyQuickColorACT(selectedText, textColor, backgroundColor, view, styleEntry = null) {
     if (this.isWordBlacklisted(selectedText, view?.file?.path)) {
       new Notice(this.t('notice_blacklisted_cannot_color', `"${selectedText}" is blacklisted and cannot be colored.`, { word: selectedText }));
@@ -9892,45 +10016,31 @@ module.exports = class AlwaysColorText extends Plugin {
     }
 
 
-    // If this is a very large document, use progressive large-document processing
-    try {
-      if (el && el.textContent && this.shouldUseLightweightMode(el.textContent.length)) {
-        this.processLargeDocument(el, ctx, folderEntry);
-        return;
-      }
-    } catch (e) { }
-
-    const immediateBlocks = 20;
-    const isReadingRoot = (() => {
-      try {
-        if (!el) return false;
-        if (el.classList && (el.classList.contains('markdown-reading-view') || el.classList.contains('markdown-preview-view'))) return true;
-        if (el.closest && el.closest('.markdown-reading-view, .markdown-preview-view')) return true;
-        return false;
-      } catch (_) { return false; }
-    })();
-
     // If this is a very large document, prefer viewport-based incremental rendering
     try {
       if (this.shouldUseLightweightMode && this.shouldUseLightweightMode(el.textContent ? el.textContent.length : 0)) {
         debugLog('ACT', 'Large doc detected -> using viewport-based rendering');
-        if (isReadingRoot) {
+        try {
+          this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
+          // Ensure bases are processed for large documents
+          this._processBasesViews();
+          
+          // CRITICAL FIX: Ensure callouts and tables are processed in lightweight mode
+          // Pass a pseudo-view object since we only have the element
           try {
-            this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: 0, batchSize: 30, clearExisting: true, forceProcess: true, maxMatches: Infinity, filePath: ctx.sourcePath });
-          } catch (e) {
-            debugError('ACT', 'processInChunks immediate failed', e);
-            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
-          }
-          return;
-        } else {
-          try {
-            this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
-          } catch (e) {
-            debugError('ACT', 'setupViewportObserver failed', e);
-            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
-          }
-          return;
+            const pseudoView = { dom: el, file: { path: ctx.sourcePath } };
+            // We can skip the is-live-preview check here or let the methods handle it
+            // The methods _processLivePreviewCallouts/_processLivePreviewTables check for .is-live-preview
+            // so it is safe to call them even if this is reading mode (they will just return)
+            this._processLivePreviewCallouts(pseudoView);
+            this._processLivePreviewTables(pseudoView);
+          } catch (err) { debugError('ACT', 'lightweight mode element processing failed', err); }
+
+        } catch (e) {
+          debugError('ACT', 'setupViewportObserver failed', e);
+          this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
         }
+        return;
       }
 
     } catch (e) { }
@@ -10021,8 +10131,19 @@ module.exports = class AlwaysColorText extends Plugin {
         try {
           this.processInChunks(el, entries, folderEntry, {
             batchSize: 30,
-            clearExisting: false
+            clearExisting: false,
+            forceProcess: true // Force full render even in lightweight mode as per user request
           });
+          // Ensure bases are processed
+          this._processBasesViews();
+          
+          // CRITICAL: Ensure callouts and tables are processed even in large documents
+          try {
+            const pseudoView = { dom: el, file: { path: ctx.sourcePath } };
+            // Pass force=true to bypass throttling and force processing in this context
+            this._processLivePreviewCallouts(pseudoView, true);
+            this._processLivePreviewTables(pseudoView, true);
+          } catch (_) { }
         } catch (e) { debugError('LARGE', 'deferred processing failed', e); }
       }, 1000);
     } catch (e) { debugError('LARGE', 'processLargeDocument failed', e); }
@@ -11568,36 +11689,44 @@ module.exports = class AlwaysColorText extends Plugin {
     blocks.length = 0;
   }
 
-  _processLivePreviewCallouts(view) {
+  _processLivePreviewCallouts(view, force = false) {
     try {
       if (this.settings.disableLivePreviewColoring) return;
       const now = Date.now();
       // OPTIMIZATION: More aggressive throttling (1 second) and skip during typing
-      if (this._lpLastRun && (now - this._lpLastRun) < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
+      if (!force && this._lpLastRun && (now - this._lpLastRun) < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
       this._lpLastRun = now;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest('.is-live-preview');
+      // Allow processing in Live Preview, Canvas, or if forced (for lightweight mode support)
+      const isLP = (root.closest && root.closest('.is-live-preview')) || 
+                   (root.closest && root.closest('.canvas-node')) || 
+                   (root.closest && root.closest('.markdown-embed')) ||
+                   force;
       if (!isLP) return;
       
       // OPTIMIZATION: Skip processing entirely during active typing - this is key to reducing lag
-      if (this._isTyping && (now - this._lastTypingTime) < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
+      if (!force && this._isTyping && (now - this._lastTypingTime) < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
       
       // Use requestAnimationFrame to batch DOM reads
       if (this._lpCalloutRaf) return;
       this._lpCalloutRaf = requestAnimationFrame(() => {
         this._lpCalloutRaf = null;
-        this._processLivePreviewCalloutsInternal(view);
+        this._processLivePreviewCalloutsInternal(view, force);
       });
       return;
     } catch (e) { try { debugError('LP_CALLOUT', 'Failed coloring live preview callouts', e); } catch (_) { } }
   }
 
-  _processLivePreviewCalloutsInternal(view) {
+  _processLivePreviewCalloutsInternal(view, force = false) {
     try {
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest('.is-live-preview');
+      // Allow processing in Live Preview, Canvas, or if forced
+      const isLP = (root.closest && root.closest('.is-live-preview')) || 
+                   (root.closest && root.closest('.canvas-node')) || 
+                   (root.closest && root.closest('.markdown-embed')) ||
+                   force;
       if (!isLP) return;
       
       // Process only visible callouts using IntersectionObserver-like approach
@@ -11674,7 +11803,11 @@ module.exports = class AlwaysColorText extends Plugin {
       this._lpTablesLastRun = now;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest('.is-live-preview');
+      // Allow processing in Live Preview, Canvas, or if forced
+      const isLP = (root.closest && root.closest('.is-live-preview')) || 
+                   (root.closest && root.closest('.canvas-node')) || 
+                   (root.closest && root.closest('.markdown-embed')) ||
+                   force;
       if (!isLP) return;
       
       // OPTIMIZATION: Skip processing entirely during active typing - this is key to reducing lag
@@ -11684,17 +11817,21 @@ module.exports = class AlwaysColorText extends Plugin {
       if (this._lpTableRaf) cancelAnimationFrame(this._lpTableRaf); // Cancel pending if forced or new request comes
       this._lpTableRaf = requestAnimationFrame(() => {
         this._lpTableRaf = null;
-        this._processLivePreviewTablesInternal(view);
+        this._processLivePreviewTablesInternal(view, force);
       });
       return;
     } catch (e) { try { debugError('LP_TABLES', 'Failed coloring live preview tables', e); } catch (_) { } }
   }
 
-  _processLivePreviewTablesInternal(view) {
+  _processLivePreviewTablesInternal(view, force = false) {
     try {
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest('.is-live-preview');
+      // Allow processing in Live Preview, Canvas, or if forced
+      const isLP = (root.closest && root.closest('.is-live-preview')) || 
+                   (root.closest && root.closest('.canvas-node')) || 
+                   (root.closest && root.closest('.markdown-embed')) ||
+                   force;
       if (!isLP) return;
       
       const cells = root.querySelectorAll('.cm-content table td, .cm-content table th');
@@ -23586,7 +23723,7 @@ class ColorSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
-      if (this.plugin.settings.enableQuickHighlightOnce) {
+      if (this.plugin.settings.enableQuickHighlightOnce || this.plugin.settings.enableQuickColorHighlightOnce) {
         new Setting(otaContainer)
           .setName(this.plugin.t('use_global_highlight_style', 'Use Global Highlight Style for Highlight Once'))
           .setDesc(this.plugin.t('use_global_highlight_style_desc', 'Uses your global inline style. The added HTML/CSS may be long.'))

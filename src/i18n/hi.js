@@ -68,6 +68,10 @@ module.exports = {
   "command_toggle_global": "वैश्विक रंगाई सक्षम/अक्षम करें",
   "command_enable_global": "वैश्विक रंगाई सक्षम करें",
   "command_disable_global": "वैश्विक रंगाई अक्षम करें",
+  "command_enable_lightweight_mode": "लाइटवेट मोड सक्षम करें",
+  "command_disable_lightweight_mode": "लाइटवेट मोड अक्षम करें",
+  "command_color_highlight_once": "चयनित पाठ को रंगें / हाइलाइट करें (एक बार)",
+  "notice_select_text_first_once": "कृपया पहले टेक्स्ट चुनें।",
   "enable_document_color": "वैश्विक रंग सक्षम करें",
   "color_swatches_header": "रंग प्रबंधन",
   "color_rendering_header": "रंग प्रतिपादन और प्रदर्शन",
@@ -90,6 +94,8 @@ module.exports = {
   "command_deactivate_word_group": "{groupName} शब्द समूह निष्क्रिय करें",
   
   // Notifications
+  "notice_lightweight_mode_enabled": "लाइटवेट मोड सक्षम",
+  "notice_lightweight_mode_disabled": "लाइटवेट मोड अक्षम",
   "notice_enabled": "हमेशा रंगीन टेक्स्ट चालू",
   "notice_disabled": "हमेशा रंगीन टेक्स्ट बंद",
   "notice_blacklisted_cannot_color": "\"{word}\" ब्लैकलिस्टेड है और रंग नहीं लगाया जा सकता।",
