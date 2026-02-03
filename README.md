@@ -119,6 +119,10 @@ Also, **enable or disable entire word groups** for specific folders or files con
 
 **Note:** Use `/` to target root folder (whole vault) for the Enable in/Disable in.
 
+### Word Group Styling
+You can style the word group itself! This styling will be applied to all entries within that group.
+![Word Group Styling](assets/word-group-styling.png)
+
 ### Entry Filtering (Limit Input)
 Use the **limit input** beside the search bar (also available in the "Add to Existing Entry" modal) to instantly filter entries by type, match type, or count.
 
@@ -157,6 +161,15 @@ You can now create rules based on tags! Include or exclude files that contain sp
 
 ---
 
+## Theme Compatibility
+
+### Light & Dark Mode Text Fixers
+Ensure your colors look great in any theme!
+- **Dark Mode Text Fixer**: If you usually set colors in **Light Mode**, turn this on. It automatically adjusts dark text colors to be readable in Dark Mode.
+- **Light Mode Text Fixer**: If you set colors in **Dark Mode**, turning this on will adjust light text colors to be visible in Light Mode.
+
+---
+
 ## Performance & Safety
 
 ### Built-in Protection
@@ -164,6 +177,10 @@ You can now create rules based on tags! Include or exclude files that contain sp
 - **Progressive loading** colors visible content first
 - **Memory monitoring** prevents slowdowns
 - **Active file only** coloring for optimal performance
+
+### Optimization Settings
+- **Lightweight Mode**: Skips partial match expansion and uses a stricter match limit for maximum performance.
+- **Smart Updates**: Only updates active lines of the document to keep the editor responsive.
 
 ### Reading Mode Note
 For best results in Reading mode, enable **"Force full render"** in settings. This ensures smooth coloring but is disabled by default to prevent potential performance issues.
