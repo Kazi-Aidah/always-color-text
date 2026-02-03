@@ -7,6 +7,7 @@ const bn = require('./i18n/bn.js');
 const ru = require('./i18n/ru.js');
 const zh_cn = require('./i18n/zh_cn.js');
 const de = require('./i18n/de.js');
+const ar = require('./i18n/ar.js');
 
 module.exports = {
   en,
@@ -17,5 +18,6 @@ module.exports = {
   bn,
   ru,
   zh_cn,
-  de
+  de,
+  ar
 };

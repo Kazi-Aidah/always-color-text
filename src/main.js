@@ -2550,6 +2550,45 @@ module.exports = class AlwaysColorText extends Plugin {
     }
   }
 
+  async openSettingsAndFocusRegex() {
+    try {
+      this.app.setting.open();
+      await this.app.setting.openTabById(this.manifest.id);
+      
+      const tab = this.settingTab;
+      if (tab) {
+        if (tab._activeTab !== 'general') {
+            tab._activeTab = 'general';
+            tab._initializedSettingsUI = false;
+            tab.display();
+        }
+        
+        // Poll for the element in case rendering takes time
+        let attempts = 0;
+        const findAndScroll = () => {
+            const el = tab.containerEl.querySelector('.act-regex-support-setting');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Flash effect
+                el.style.transition = 'background-color 0.5s';
+                const originalBg = el.style.backgroundColor || ''; // Handle empty string case
+                el.style.backgroundColor = 'var(--text-selection)';
+                setTimeout(() => {
+                    el.style.backgroundColor = originalBg;
+                }, 1000);
+            } else if (attempts < 20) { // Try for ~2 seconds
+                attempts++;
+                setTimeout(findAndScroll, 100);
+            }
+        };
+        
+        setTimeout(findAndScroll, 100);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   async onload() {
     await this.loadSettings();
     this.updateLightModeFixer();
@@ -18975,6 +19014,15 @@ class EditWordGroupModal extends Modal {
     presetsBtn.style.padding = '6px 12px';
     presetsBtn.style.borderRadius = '4px';
     const presetsHandler = () => {
+      if (!this.plugin.settings.enableRegexSupport) {
+        new AlertModal(this.app, this.plugin, this.plugin.t('regex_support', 'Regex Support'), this.plugin.t('notice_regex_support_disabled'), {
+          text: this.plugin.t('btn_take_me_there', 'Take me there'),
+          callback: () => {
+            this.plugin.openSettingsAndFocusRegex();
+          }
+        }).open();
+        return;
+      }
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
         new ColorPickerModal(this.app, this.plugin, async (color, result) => {
@@ -19790,6 +19838,15 @@ class EditBlacklistGroupModal extends Modal {
     presetsBtn.style.padding = '6px 12px';
     presetsBtn.style.borderRadius = '4px';
     const presetsHandler = () => {
+      if (!this.plugin.settings.enableRegexSupport) {
+        new AlertModal(this.app, this.plugin, this.plugin.t('regex_support', 'Regex Support'), this.plugin.t('notice_regex_support_disabled'), {
+          text: this.plugin.t('btn_take_me_there', 'Take me there'),
+          callback: () => {
+            this.plugin.openSettingsAndFocusRegex();
+          }
+        }).open();
+        return;
+      }
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
         const entry = { 
@@ -20656,7 +20713,7 @@ class ColorSettingTab extends PluginSettingTab {
         flagsInput.style.display = regexChk.checked ? '' : 'none';
         // Show notice if regex is enabled but regex support is disabled
         if (regexChk.checked && !this.plugin.settings.enableRegexSupport) {
-          new Notice(this.plugin.t('notice_regex_support_disabled', 'Regex support is disabled. Enable it in settings to use regex patterns.'));
+          new Notice(this.plugin.t('notice_regex_support_disabled', 'To use Presets, enable Regex Support from the General tab in Settings.'));
         }
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -21138,7 +21195,6 @@ class ColorSettingTab extends PluginSettingTab {
         const del = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
         del.addClass('mod-warning');
         del.style.padding = '4px 8px';
-        del.style.borderRadius = '4px';
         del.style.cursor = 'pointer';
 
         if (!entry.uid) {
@@ -22124,7 +22180,7 @@ class ColorSettingTab extends PluginSettingTab {
           const delBtn = row.createEl('button', { text: this.plugin.t('delete_button_text', '✕') });
           delBtn.addClass('mod-warning');
           delBtn.style.padding = '4px 8px';
-          delBtn.style.borderRadius = '4px';
+          delBtn.style.borderRadius = 'var(--button-radius)';
           delBtn.style.cursor = 'pointer';
           delBtn.style.flexShrink = '0';
           delBtn.addEventListener('click', async () => {
@@ -23616,6 +23672,7 @@ class ColorSettingTab extends PluginSettingTab {
       new Setting(containerEl)
         .setName(this.plugin.t('regex_support', 'Regex support'))
         .setDesc(this.plugin.t('regex_support_desc', 'Allow patterns to be regular expressions. Invalid regexes are ignored for safety.'))
+        .setClass('act-regex-support-setting')
         .addToggle(t => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async v => {
           this.plugin.settings.enableRegexSupport = v;
           await this.plugin.saveSettings();
@@ -24579,6 +24636,15 @@ class ColorSettingTab extends PluginSettingTab {
       presetsBtn.style.cursor = 'pointer';
       presetsBtn.style.flex = '0 0 auto';
       const presetsHandler = () => {
+        if (!this.plugin.settings.enableRegexSupport) {
+          new AlertModal(this.app, this.plugin, this.plugin.t('regex_support', 'Regex Support'), this.plugin.t('notice_regex_support_disabled'), {
+            text: this.plugin.t('btn_take_me_there', 'Take me there'),
+            callback: () => {
+              this.plugin.openSettingsAndFocusRegex();
+            }
+          }).open();
+          return;
+        }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
           new ColorPickerModal(this.app, this.plugin, async (color, result) => {
@@ -24883,6 +24949,15 @@ class ColorSettingTab extends PluginSettingTab {
       blacklistPresetsBtn.style.cursor = 'pointer';
       blacklistPresetsBtn.style.flex = '0 0 auto';
       const blacklistPresetsHandler = () => {
+        if (!this.plugin.settings.enableRegexSupport) {
+          new AlertModal(this.app, this.plugin, this.plugin.t('regex_support', 'Regex Support'), this.plugin.t('notice_regex_support_disabled'), {
+            text: this.plugin.t('btn_take_me_there', 'Take me there'),
+            callback: () => {
+              this.plugin.openSettingsAndFocusRegex();
+            }
+          }).open();
+          return;
+        }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
           const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || '', groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true, targetElement: preset.targetElement };
@@ -26265,6 +26340,61 @@ class ColorPickerModal extends Modal {
     this._eventListeners = [];
 
     // Now empty the content
+    this.contentEl.empty();
+  }
+}
+
+// --- Alert Modal Class (for simple warnings) ---
+class AlertModal extends Modal {
+  constructor(app, plugin, title, message, customAction) {
+    super(app);
+    this.plugin = plugin;
+    this.title = title;
+    this.message = message;
+    this.customAction = customAction; // { text: string, callback: () => void }
+    this._eventListeners = [];
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this._eventListeners = [];
+
+    const h2 = contentEl.createEl('h2', { text: this.title });
+    h2.style.marginTop = '0';
+    try { h2.style.color = 'var(--text-warning)'; } catch (e) { }
+    
+    contentEl.createEl('p', { text: this.message });
+
+    const buttonDiv = contentEl.createDiv();
+    buttonDiv.style.display = 'flex';
+    buttonDiv.style.justifyContent = 'flex-end';
+    buttonDiv.style.marginTop = '20px';
+    buttonDiv.style.gap = '10px';
+
+    if (this.customAction) {
+      const actionBtn = buttonDiv.createEl('button', { text: this.customAction.text });
+      actionBtn.addClass('mod-cta');
+      const actionHandler = () => {
+        this.close();
+        if (this.customAction.callback) this.customAction.callback();
+      };
+      actionBtn.addEventListener('click', actionHandler);
+      this._eventListeners.push({ el: actionBtn, event: 'click', handler: actionHandler });
+    }
+
+    const okButton = buttonDiv.createEl('button', { text: this.plugin.t('btn_ok', 'OK') });
+    if (!this.customAction) okButton.addClass('mod-cta');
+    const okHandler = () => this.close();
+    okButton.addEventListener('click', okHandler);
+    this._eventListeners.push({ el: okButton, event: 'click', handler: okHandler });
+  }
+
+  onClose() {
+    this._eventListeners.forEach(({ el, event, handler }) => {
+      el.removeEventListener(event, handler);
+    });
+    this._eventListeners = [];
     this.contentEl.empty();
   }
 }

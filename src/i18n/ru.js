@@ -138,7 +138,9 @@ module.exports = {
   "notice_text_colors_visible": "Цвета текста видны",
   "notice_highlights_hidden": "Подсветки скрыты",
   "notice_highlights_visible": "Подсветки видны",
-  "notice_regex_support_disabled": "Поддержка регулярных выражений отключена. Включите её в настройках, чтобы использовать шаблоны регулярных выражений.",
+  "notice_regex_support_disabled": "Чтобы использовать пресеты, включите поддержку регулярных выражений на вкладке «Общие» в настройках.", // added
+  "btn_take_me_there": "Перейти", // added
+  "btn_ok": "ОК", // added
   "notice_no_active_file_to_disable": "Нет активного файла для отключения окрашивания.",
   "notice_already_disabled_for_path": "Окрашивание уже отключено для {path}",
   "notice_filter_disabled": "Фильтр отключён",
