@@ -54,6 +54,7 @@ const EDITOR_PERFORMANCE_CONSTANTS = {
   TEXT_CHUNK_SIZE: 2000,              // REDUCED: Process 2k chars per chunk during typing
   MAX_MATCHES_PER_PATTERN: 500,      // Max matches per pattern (increased for better UX)
   MAX_TOTAL_MATCHES: 4000,          // Absolute limit for decorations (increased)
+  LIGHTWEIGHT_MAX_TOTAL_MATCHES: 1000, // Reduced limit for lightweight mode
   TYPING_DEBOUNCE_MS: 500,           // INCREASED: Delay rebuilds while typing - 500ms (wait longer before recomputing)
   TYPING_GRACE_PERIOD_MS: 1500,      // INCREASED: Skip decoration during active typing (1.5 seconds after last keystroke)
   VIEWPORT_EXTENSION: 200,            // INCREASED: Buffer beyond viewport to include in text processing
@@ -10855,7 +10856,7 @@ module.exports = class AlwaysColorText extends Plugin {
       const isForced = (opts && opts.forceProcess) || this.settings.forceFullRenderInReading;
       const maxMatches = typeof opts.maxMatches === 'number'
         ? opts.maxMatches
-        : (isForced ? Infinity : (this.settings && this.settings.extremeLightweightMode ? 500 : 500));
+        : (isForced ? Infinity : (this.settings && this.settings.extremeLightweightMode ? 200 : 500));
       let matches = [];
 
       // DETECT INLINE SPOILERS to skip (Reading Mode)
@@ -12683,13 +12684,26 @@ module.exports = class AlwaysColorText extends Plugin {
               this.decorations = this.decorations.map(update.changes);
               
               const dirtyRanges = [];
+              let totalDirtyLength = 0;
+              const viewport = update.view.viewport;
+              
               update.changes.iterChanges((fromA, toA, fromB, toB) => {
                 const startLine = update.view.state.doc.lineAt(fromB);
                 const endLine = update.view.state.doc.lineAt(toB);
-                dirtyRanges.push({ from: startLine.from, to: endLine.to });
+                
+                // OPTIMIZATION: Only update ranges that are actually visible
+                // If the change is outside the viewport, we don't need to re-color it immediately
+                if (endLine.to < viewport.from || startLine.from > viewport.to) return;
+
+                const range = { from: startLine.from, to: endLine.to };
+                dirtyRanges.push(range);
+                totalDirtyLength += (range.to - range.from);
               });
 
-              if (dirtyRanges.length > 0) {
+              // Safety valve: If we have too much to update (e.g. large paste), fall back to standard build
+              if (totalDirtyLength > 5000) {
+                 this.decorations = this.buildDeco(update.view);
+              } else if (dirtyRanges.length > 0) {
                 const { entries, folderEntry } = this.getApplicableEntries(update.view);
                 if (entries && entries.length > 0) {
                   for (const range of dirtyRanges) {
@@ -12721,10 +12735,11 @@ module.exports = class AlwaysColorText extends Plugin {
 
           // Debounce heavy operations (callouts/tables) to prevent lag
           clearTimeout(this._typingDebounceTimer);
+          const debounceMs = plugin.settings.extremeLightweightMode ? 1000 : EDITOR_PERFORMANCE_CONSTANTS.TYPING_DEBOUNCE_MS;
           this._typingDebounceTimer = setTimeout(() => {
             try { if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewCallouts(this.view); } catch (_) { }
             try { if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewTables(this.view); } catch (_) { }
-          }, 300);
+          }, debounceMs);
         }
       }
       destroy() {
@@ -13812,7 +13827,8 @@ module.exports = class AlwaysColorText extends Plugin {
               let expandedWStart = wStart;
               let expandedWEnd = wEnd;
 
-              if (!this.isSentenceLikePattern(entry.pattern)) {
+              // OPTIMIZATION: Skip expansion in extreme lightweight mode
+              if (!this.settings.extremeLightweightMode && !this.isSentenceLikePattern(entry.pattern)) {
                 // Expand backward to find the start of the full word
                 while (expandedWStart > 0 && ((/[A-Za-z0-9]/.test(text[expandedWStart - 1])) || text[expandedWStart - 1] === '-' || text[expandedWStart - 1] === "'")) {
                   expandedWStart--;
@@ -14090,7 +14106,7 @@ module.exports = class AlwaysColorText extends Plugin {
     const CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
     // Increase limit for extreme lightweight mode to prevent dropped matches
-    const MAX_MATCHES = this.settings.extremeLightweightMode ? 4000 : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
+    const MAX_MATCHES = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.LIGHTWEIGHT_MAX_TOTAL_MATCHES : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
 
     // Handle codeblocks first (same as in buildDecoStandard)
