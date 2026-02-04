@@ -20,6 +20,12 @@ var require_en = __commonJS({
       "language_fr": "Fran\xE7ais",
       "language_eu": "Basque",
       "language_ru": "P\u0443\u0441\u0441\u043A\u0438\u0439",
+      "language_de": "Deutsch",
+      "language_hi": "\u0939\u093F\u0928\u094D\u0926\u0940",
+      "language_bn": "\u09AC\u09BE\u0982\u09B2\u09BE",
+      "language_it": "Italiano",
+      "language_zh_cn": "\u7B80\u4F53\u4E2D\u6587",
+      "language_ar": "\u0627\u0644\u0639\u0631\u0628\u064A\u0629",
       "language_auto": "System Default",
       "default": "Default",
       // Release Notes
@@ -38,6 +44,8 @@ var require_en = __commonJS({
       "file_menu_disable": "Disable Always Color Text for this file",
       "menu_color_once": "Color Once",
       "menu_highlight_once": "Highlight Once",
+      "menu_color_highlight_once": "Color / Highlight Once",
+      "menu_remove_inline_color": "Remove Inline Color",
       "menu_always_color_text": "Always Color Text",
       "menu_remove_always_color_text": "Remove Always Color Text",
       "menu_blacklist_word": "Blacklist Word",
@@ -71,11 +79,11 @@ var require_en = __commonJS({
       // Commands
       "command_color_selected": "Color Selected Text",
       "command_toggle_current": "Enable/Disable coloring for current document",
-      "command_toggle_global": "Enable/Disable Always Color Text",
+      "command_toggle_global": "Enable/Disable Global Coloring",
       "command_enable_current": "Enable coloring for current document",
       "command_disable_current": "Disable coloring for current document",
-      "command_enable_global": "Enable Always Color Text",
-      "command_disable_global": "Disable Always Color Text",
+      "command_enable_global": "Enable Global Coloring",
+      "command_disable_global": "Disable Global Coloring",
       "command_manage_advanced_rules": "manage specific include/exclude rules",
       "command_open_regex_tester": "Add Regex (Open Regex Tester)",
       "command_open_blacklist_regex_tester": "Add Blacklist Regex",
@@ -86,9 +94,15 @@ var require_en = __commonJS({
       "command_unhide_text_colors": "Unhide Text Colors",
       "command_hide_highlights": "Hide Highlights",
       "command_unhide_highlights": "Unhide Highlights",
+      "command_enable_lightweight_mode": "Enable Lightweight Mode",
+      "command_disable_lightweight_mode": "Disable Lightweight Mode",
+      "command_color_highlight_once": "Color / Highlight Once Selected Text",
+      "notice_select_text_first_once": "Please select text first to color/highlight once.",
       "command_activate_word_group": "Activate {groupName} Word Group",
       "command_deactivate_word_group": "Deactivate {groupName} Word Group",
       // Notifications
+      "notice_lightweight_mode_enabled": "Lightweight Mode enabled",
+      "notice_lightweight_mode_disabled": "Lightweight Mode disabled",
       "notice_enabled": "Always Color Text Enabled",
       "notice_disabled": "Always Color Text Disabled",
       "notice_blacklisted_cannot_color": '"{word}" is blacklisted and cannot be colored.',
@@ -127,7 +141,9 @@ var require_en = __commonJS({
       "notice_text_colors_visible": "Text colors visible",
       "notice_highlights_hidden": "Highlights hidden",
       "notice_highlights_visible": "Highlights visible",
-      "notice_regex_support_disabled": "Regex support is disabled. Enable it in settings to use regex patterns.",
+      "notice_regex_support_disabled": "To use Presets, enable Regex Support from the General tab in Settings.",
+      "btn_take_me_there": "Take me there",
+      "btn_ok": "OK",
       "notice_no_active_file_to_disable": "No active file to disable coloring for.",
       "notice_already_disabled_for_path": "Coloring already disabled for {path}",
       "notice_filter_disabled": "Filter Disabled",
@@ -141,13 +157,22 @@ var require_en = __commonJS({
       "btn_cancel": "Cancel",
       "btn_confirm": "Confirm",
       // Basic Settings
-      "enable_document_color": "Enable Document Color",
+      "enable_document_color": "Enable Global Color",
+      "color_rendering_header": "Color Rendering & Performance",
+      "theme_support_header": "Theme Support",
+      "matching_behavior_header": "Matching Behavior",
+      "smart_update_mode": "Smart Updates (Experimental)",
+      "smart_update_mode_desc": "Intelligently updates only visible, changed lines while typing. Significantly improves typing performance.",
+      "word_completion_coloring": "Word Completion Coloring (Experimental)",
+      "word_completion_coloring_desc": "Only color words after a space is typed. Prevents partial matches from being colored while typing.",
+      "light_mode_fixer": "Light Mode Text Color Fixer",
+      "dark_mode_fixer": "Dark Mode Text Color Fixer",
       "color_in_live_preview_mode": "Color in Live Preview Mode",
       "color_in_reading_mode": "Color in Reading Mode",
       "force_full_render_reading": "Force Full Render in Reading Mode",
       "force_full_render_reading_desc": "If on, Reading Mode will try to color the whole document at once. May cause lag on large docs, use carefully!",
-      "lightweight_mode": "Experimental: Extremely lightweight mode",
-      "lightweight_mode_desc": "Greatly reduces processing while typing. May skip some matches.",
+      "lightweight_mode": "Lightweight Mode (Experimental)",
+      "lightweight_mode_desc": "Optimized for speed. Skips expensive checks and partial matches. Auto-enabled for large files.",
       "disable_coloring_current_file": "Disable coloring for current file",
       "disable_coloring_current_file_desc": "Adds an exclude rule for the active file under File & Folder Coloring Rules.",
       "btn_disable_for_this_file": "Disable for this file",
@@ -168,6 +193,8 @@ var require_en = __commonJS({
       "setting_color_once_desc": "Insert HTML inline style for selected text. Persists even if plugin is off.",
       "setting_highlight_once": "Highlight Once",
       "setting_highlight_once_desc": "Insert HTML inline style with background. Persists even if plugin is off.",
+      "setting_color_highlight_once": "Color & Highlight Once",
+      "setting_color_highlight_once_desc": "Opens the unified color picker to apply both text color and background highlight inline. Uses Unified Menu.",
       "highlight_once_preview": "Highlight Once Preview",
       "highlight_once_preview_text": "This is how highlight once looks!",
       // Highlight Once Settings
@@ -232,24 +259,18 @@ var require_en = __commonJS({
       "opt_line_inset": "Inset",
       "opt_line_outset": "Outset",
       // Color Swatches
-      "color_swatches_header": "Color Swatches",
+      "color_swatches_header": "Color Management",
       "color_picker_layout": "Color Picker Layout",
-      "color_picker_layout_desc": "Choose what color types to show when picking a color for a word",
-      "opt_both_text_left": "Both: Text Left, Highlight Right",
-      "opt_both_bg_left": "Both: Highlight Left, Text Right",
-      "opt_both_text_top": "Both (Vertical): Text Top, Highlight Bottom",
-      "opt_both_bg_top": "Both (Vertical): Highlight Top, Text Bottom",
-      "opt_text_only": "Text Color Only",
-      "opt_background_only": "Highlight Color Only",
-      "replace_default_swatches": "Replace Default Swatches",
-      "replace_default_swatches_desc": "If on, only your custom colors show in the picker, no defaults!",
-      "enable_custom_swatches": "Enable Custom Swatches",
-      "enable_custom_swatches_desc": "If on, your custom swatches will appear in the color picker.",
-      "use_swatch_names": "Color Text Using Swatch Names",
-      "use_swatch_names_desc": "Show a dropdown of swatch names next to the word/pattern input",
-      "link_swatches_to_entries": "Link Swatch Updates to Colored Texts",
-      "link_swatches_to_entries_desc": "Update all entries using a custom swatch when that swatch color changes",
-      "default_colors_header": "Default Colors",
+      "color_picker_layout_desc": "Choose which color types to show when picking colors for text",
+      "enable_custom_swatches": "Enable custom swatches",
+      "enable_custom_swatches_desc": "Turn this on if you want to pick your own colors for the color picker.",
+      "replace_default_swatches": "Replace default swatches",
+      "replace_default_swatches_desc": "If enabled, only your custom swatches will be shown. If disabled, they will be appended to the default ones.",
+      "use_swatch_names": "Use swatch names for coloring text",
+      "use_swatch_names_desc": "If enabled, the text will be colored using the name of the swatch (e.g., 'Red') instead of the hex code.",
+      "link_swatch_updates": "Link swatch updates to text colors",
+      "link_swatch_updates_desc": "If enabled, updating a swatch color will update all text colored with that swatch.",
+      "default_colors_header": "Default Swatches",
       "custom_swatches_header": "Custom Swatches",
       "btn_add_color": "+ Add Color",
       "no_custom_swatches_yet": 'No custom swatches yet. Click "+ Add Color" to create one.',
@@ -337,6 +358,9 @@ var require_en = __commonJS({
       "preset_double_quotes": "Double Quotes",
       "preset_single_quotes": "Single Quotes",
       "preset_single_quotes_word_bounded": "Single Quotes (Word Bounded)",
+      "preset_bold": "Bold",
+      "preset_italic": "Italic",
+      "preset_bold_italic": "Bold Italic",
       "preset_group_markdown_formatting": "Markdown Formatting",
       "preset_group_other_patterns": "Other Patterns",
       "preset_group_brackets": "Brackets",
@@ -479,6 +503,7 @@ var require_en = __commonJS({
       "style_name_placeholder": "Style Name",
       "preview_text": "Text",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "Quick Colors",
       "quick_colors_desc": "Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used.",
       "quick_colors_apply_mode_label": "The text coloring will apply as",
@@ -507,7 +532,10 @@ var require_en = __commonJS({
       "btn_duplicate_entry": "Duplicate Entry",
       "btn_open_in_regex_tester": "Open in Regex Tester",
       "move_to_blacklist_group": "Move to Blacklist Group",
-      "btn_delete_entry": "Delete Entry"
+      "btn_delete_entry": "Delete Entry",
+      "edit_group_highlight_styling": "Edit Group Highlight Styling",
+      "light_mode_fixer_desc": "Automatically darkens colored text when using Light theme to improve visibility.",
+      "dark_mode_fixer_desc": "Automatically lightens colored text when using Dark theme to improve visibility."
     };
   }
 });
@@ -547,6 +575,8 @@ var require_es = __commonJS({
       "file_menu_disable": "Desactivar always color text para este archivo",
       "menu_color_once": "Colorear Una Vez",
       "menu_highlight_once": "Resaltar Una Vez",
+      "menu_color_highlight_once": "Color / Resaltar Una Vez",
+      "menu_remove_inline_color": "Eliminar Color Inline",
       "menu_always_color_text": "Always color text",
       "menu_remove_always_color_text": "Eliminar Always Color Text",
       "menu_blacklist_word": "A\xF1adir Palabra a la Lista Negra",
@@ -574,11 +604,22 @@ var require_es = __commonJS({
       // Commands
       "command_color_selected": "Colorear Texto Seleccionado",
       "command_toggle_current": "Activar/Desactivar coloreado para el documento actual",
-      "command_toggle_global": "Activar/Desactivar Always Color Text",
       "command_enable_current": "Activar coloreado para el documento actual",
       "command_disable_current": "Desactivar coloreado para el documento actual",
-      "command_enable_global": "Activar Always Color Text",
-      "command_disable_global": "Desactivar Always Color Text",
+      "command_toggle_global": "Activar/Desactivar coloraci\xF3n global",
+      "command_enable_global": "Activar coloraci\xF3n global",
+      "command_disable_global": "Desactivar coloraci\xF3n global",
+      "enable_document_color": "Activar color global",
+      "color_swatches_header": "Gesti\xF3n del color",
+      "color_rendering_header": "Renderizado de color y rendimiento",
+      "theme_support_header": "Soporte de temas",
+      "matching_behavior_header": "Comportamiento de coincidencia",
+      "smart_update_mode": "Actualizaciones inteligentes (Experimental)",
+      "smart_update_mode_desc": "Solo actualiza el coloreado de la l\xEDnea activa mientras se escribe y congela otras l\xEDneas para mejorar el rendimiento.",
+      "word_completion_coloring": "Coloreado al completar palabra (Experimental)",
+      "word_completion_coloring_desc": "Solo colorea palabras despu\xE9s de escribir un espacio. Evita que las coincidencias parciales se coloreen mientras se escribe.",
+      "light_mode_fixer": "Corrector de color de texto en modo claro",
+      "dark_mode_fixer": "Corrector de color de texto en modo oscuro",
       "command_manage_advanced_rules": "gestionar reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
       "command_open_regex_tester": "A\xF1adir Regex (Abrir Probador de Regex)",
       "command_open_blacklist_regex_tester": "Agregar Expresi\xF3n Regular de Lista Negra",
@@ -589,9 +630,15 @@ var require_es = __commonJS({
       "command_unhide_text_colors": "Mostrar colores de texto",
       "command_hide_highlights": "Ocultar resaltados",
       "command_unhide_highlights": "Mostrar resaltados",
+      "command_enable_lightweight_mode": "Activar Modo Ligero",
+      "command_disable_lightweight_mode": "Desactivar Modo Ligero",
+      "command_color_highlight_once": "Colorear / Resaltar Texto Seleccionado (Una vez)",
+      "notice_select_text_first_once": "Por favor seleccione texto primero para colorear/resaltar.",
       "command_activate_word_group": "Activar el grupo de palabras {groupName}",
       "command_deactivate_word_group": "Desactivar el grupo de palabras {groupName}",
       // Notifications
+      "notice_lightweight_mode_enabled": "Modo Ligero activado",
+      "notice_lightweight_mode_disabled": "Modo Ligero desactivado",
       "notice_enabled": "Always color text activado",
       "notice_disabled": "Always color text desactivado",
       "notice_blacklisted_cannot_color": '"{word}" est\xE1 en la lista negra y no puede colorearse.',
@@ -630,7 +677,9 @@ var require_es = __commonJS({
       "notice_text_colors_visible": "Colores de texto visibles",
       "notice_highlights_hidden": "Resaltados ocultos",
       "notice_highlights_visible": "Resaltados visibles",
-      "notice_regex_support_disabled": "El soporte de regex est\xE1 desactivado. Act\xEDvalo en la configuraci\xF3n para usar patrones regex.",
+      "notice_regex_support_disabled": "Para usar ajustes preestablecidos, habilite el soporte de Regex en la pesta\xF1a General de Configuraci\xF3n.",
+      "btn_take_me_there": "Ll\xE9vame all\xED",
+      "btn_ok": "Aceptar",
       "notice_no_active_file_to_disable": "No hay archivo activo para desactivar el coloreado.",
       "notice_already_disabled_for_path": "El coloreado ya est\xE1 desactivado para {path}",
       "notice_filter_disabled": "Filtro desactivado",
@@ -644,13 +693,12 @@ var require_es = __commonJS({
       "restart_required_title": "Reinicio necesario",
       "restart_required_desc": "Desactivar la alternancia en la paleta de comandos requiere reiniciar Obsidian para eliminar completamente el comando de la paleta. \xBFReiniciar ahora?",
       // Basic Settings
-      "enable_document_color": "Activar color en el documento",
       "color_in_live_preview_mode": "Colorear en Modo Vista Previa",
       "color_in_reading_mode": "Colorear en Modo Lectura",
       "force_full_render_reading": "Forzar renderizado completo en Modo Lectura",
       "force_full_render_reading_desc": "Si est\xE1 activado, el Modo Lectura intentar\xE1 colorear todo el documento a la vez. \xA1Puede causar retrasos en documentos grandes, \xFAsalo con cuidado!",
-      "lightweight_mode": "Experimental: modo extremadamente ligero",
-      "lightweight_mode_desc": "Reduce mucho el procesamiento mientras escribes. Puede saltarse algunas coincidencias.",
+      "lightweight_mode": "Modo ligero (Experimental)",
+      "lightweight_mode_desc": "Reduce enormemente el procesamiento al escribir. Puede omitir algunas coincidencias.",
       "disable_coloring_current_file": "Desactivar coloreado para el archivo actual",
       "disable_coloring_current_file_desc": "A\xF1ade una regla de exclusi\xF3n para el archivo activo en Reglas de Coloreado para Archivos y Carpetas.",
       "btn_disable_for_this_file": "Desactivar para este archivo",
@@ -670,6 +718,8 @@ var require_es = __commonJS({
       "setting_color_once_desc": "Insertar estilo HTML inline para el texto seleccionado. Persiste incluso si el plugin est\xE1 desactivado.",
       "setting_highlight_once": "Resaltar Una Vez",
       "setting_highlight_once_desc": "Insertar estilo HTML inline con fondo. Persiste incluso si el plugin est\xE1 desactivado.",
+      "setting_color_highlight_once": "Color y Resaltar una vez",
+      "setting_color_highlight_once_desc": "Abre el selector de color unificado para aplicar tanto el color del texto como el resaltado de fondo en l\xEDnea. Utiliza el men\xFA unificado.",
       "highlight_once_preview": "Vista previa de Resaltar Una Vez",
       "highlight_once_preview_text": "\xA1As\xED se ve el resaltado una vez!",
       // Highlight Once Settings
@@ -734,7 +784,6 @@ var require_es = __commonJS({
       "opt_line_inset": "Recuadro",
       "opt_line_outset": "Relieve",
       // Color Swatches
-      "color_swatches_header": "Muestras de Color",
       "color_picker_layout": "Dise\xF1o del Selector de Color",
       "color_picker_layout_desc": "Elige qu\xE9 tipos de color mostrar al elegir un color para una palabra",
       "opt_both_text_left": "Ambos: Texto Izquierda, Resaltado Derecha",
@@ -751,7 +800,7 @@ var require_es = __commonJS({
       "use_swatch_names_desc": "Mostrar un men\xFA desplegable de nombres de muestras junto a la entrada de palabra/patr\xF3n",
       "link_swatches_to_entries": "Vincular actualizaciones de muestras a textos coloreados",
       "link_swatches_to_entries_desc": "Actualizar todas las entradas que usan una muestra personalizada cuando cambia el color de esa muestra",
-      "default_colors_header": "Colores Predeterminados",
+      "default_colors_header": "Muestras predeterminadas",
       "custom_swatches_header": "Muestras Personalizadas",
       "btn_add_color": "+ A\xF1adir Color",
       "no_custom_swatches_yet": 'A\xFAn no hay muestras personalizadas. Haz clic en "+ A\xF1adir Color" para crear una.',
@@ -976,6 +1025,7 @@ var require_es = __commonJS({
       "label_border_thickness": "Grosor del borde",
       "btn_save_style": "Guardar estilo",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "Colores R\xE1pidos",
       "quick_colors_desc": "Permite resaltar o colorear texto r\xE1pidamente mostrando colores en el men\xFA contextual. Si Colores R\xE1pidos est\xE1 desactivado, se usar\xE1n los colores por estilo en Estilos R\xE1pidos.",
       "quick_colors_apply_mode_label": "El coloreado de texto se aplicar\xE1 como",
@@ -1011,7 +1061,13 @@ var require_es = __commonJS({
       "share_export_title": "Always Color Text exportaci\xF3n",
       "delete_button_text": "\u2715",
       "style_name_placeholder": "Nombre del estilo",
-      "preview_text": "Texto"
+      "preview_text": "Texto",
+      "edit_group_highlight_styling": "Editar estilo de resaltado del grupo",
+      "light_mode_fixer_desc": "Oscurece autom\xE1ticamente el texto coloreado al usar el tema claro para mejorar la visibilidad.",
+      "dark_mode_fixer_desc": "Aclara autom\xE1ticamente el texto coloreado al usar el tema oscuro para mejorar la visibilidad.",
+      "preset_bold": "Negrita",
+      "preset_italic": "Cursiva",
+      "preset_bold_italic": "Negrita Cursiva"
     };
   }
 });
@@ -1051,6 +1107,8 @@ var require_fr = __commonJS({
       "file_menu_disable": "D\xE9sactiver toujours colorer le texte pour ce fichier",
       "menu_color_once": "Colorer une fois",
       "menu_highlight_once": "Surligner une fois",
+      "menu_color_highlight_once": "Couleur / Surligner une fois",
+      "menu_remove_inline_color": "Supprimer la couleur en ligne",
       "menu_always_color_text": "Toujours colorer le texte",
       "menu_remove_always_color_text": "Supprimer Always Color Text",
       "menu_blacklist_word": "Mettre le mot en liste noire pour le coloriage",
@@ -1078,11 +1136,26 @@ var require_fr = __commonJS({
       // Commands
       "command_color_selected": "Colorer le texte s\xE9lectionn\xE9",
       "command_toggle_current": "Activer/D\xE9sactiver le coloriage pour le document actuel",
-      "command_toggle_global": "Activer/D\xE9sactiver Always Color Text",
       "command_enable_current": "Activer le coloriage pour le document actuel",
       "command_disable_current": "D\xE9sactiver le coloriage pour le document actuel",
-      "command_enable_global": "Activer Always Color Text",
-      "command_disable_global": "D\xE9sactiver Always Color Text",
+      "command_toggle_global": "Activer/D\xE9sactiver la coloration globale",
+      "command_enable_global": "Activer la coloration globale",
+      "command_disable_global": "D\xE9sactiver la coloration globale",
+      "command_enable_lightweight_mode": "Activer le mode l\xE9ger",
+      "command_disable_lightweight_mode": "D\xE9sactiver le mode l\xE9ger",
+      "command_color_highlight_once": "Colorer / Surligner le texte s\xE9lectionn\xE9 (une fois)",
+      "notice_select_text_first_once": "Veuillez d'abord s\xE9lectionner du texte pour le colorer/surligner.",
+      "enable_document_color": "Activer la couleur globale",
+      "color_swatches_header": "Gestion des couleurs",
+      "color_rendering_header": "Rendu des couleurs et performances",
+      "theme_support_header": "Support de th\xE8me",
+      "matching_behavior_header": "Comportement de correspondance",
+      "smart_update_mode": "Mises \xE0 jour intelligentes (Exp\xE9rimental)",
+      "smart_update_mode_desc": "Met \xE0 jour la coloration uniquement pour la ligne active lors de la frappe et fige les autres lignes pour am\xE9liorer les performances.",
+      "word_completion_coloring": "Coloration apr\xE8s mot complet (Exp\xE9rimental)",
+      "word_completion_coloring_desc": "Ne colore les mots qu'apr\xE8s la saisie d'un espace. Emp\xEAche la coloration des correspondances partielles pendant la frappe.",
+      "light_mode_fixer": "Correcteur de couleur de texte en mode clair",
+      "dark_mode_fixer": "Correcteur de couleur de texte en mode sombre",
       "command_manage_advanced_rules": "g\xE9rer les r\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
       "command_open_regex_tester": "Ajouter Regex (Ouvrir le Testeur Regex)",
       "command_open_blacklist_regex_tester": "Ajouter Regex \xE0 la Liste Noire",
@@ -1096,6 +1169,8 @@ var require_fr = __commonJS({
       "command_activate_word_group": "Activer le groupe de mots {groupName}",
       "command_deactivate_word_group": "D\xE9sactiver le groupe de mots {groupName}",
       // Notifications
+      "notice_lightweight_mode_enabled": "Mode l\xE9ger activ\xE9",
+      "notice_lightweight_mode_disabled": "Mode l\xE9ger d\xE9sactiv\xE9",
       "notice_enabled": "Always color text activ\xE9",
       "notice_disabled": "Always color text d\xE9sactiv\xE9",
       "notice_blacklisted_cannot_color": '"{word}" est sur liste noire et ne peut pas \xEAtre color\xE9.',
@@ -1134,7 +1209,9 @@ var require_fr = __commonJS({
       "notice_text_colors_visible": "Couleurs de texte visibles",
       "notice_highlights_hidden": "Surbrillances masqu\xE9es",
       "notice_highlights_visible": "Surbrillances visibles",
-      "notice_regex_support_disabled": "Le support des regex est d\xE9sactiv\xE9. Activez-le dans les param\xE8tres pour utiliser des mod\xE8les regex.",
+      "notice_regex_support_disabled": "Pour utiliser les pr\xE9r\xE9glages, activez le support Regex dans l'onglet G\xE9n\xE9ral des param\xE8tres.",
+      "btn_take_me_there": "Y aller",
+      "btn_ok": "OK",
       "notice_no_active_file_to_disable": "Aucun fichier actif pour d\xE9sactiver le coloriage.",
       "notice_already_disabled_for_path": "Coloriage d\xE9j\xE0 d\xE9sactiv\xE9 pour {path}",
       "notice_filter_disabled": "Filtre d\xE9sactiv\xE9",
@@ -1148,13 +1225,12 @@ var require_fr = __commonJS({
       "restart_required_title": "Red\xE9marrage requis",
       "restart_required_desc": "D\xE9sactiver l'activation dans la palette de commandes n\xE9cessite un red\xE9marrage d'Obsidian pour supprimer compl\xE8tement la commande de la palette. Red\xE9marrer maintenant ?",
       // Basic Settings
-      "enable_document_color": "Activer la couleur du document",
-      "color_in_live_preview_mode": "Colorer en mode pr\xE9visualisation",
+      "color_in_live_preview_mode": "Colore en mode aper\xE7u direct",
       "color_in_reading_mode": "Colorer en mode lecture",
       "force_full_render_reading": "Forcer le rendu complet en mode lecture",
       "force_full_render_reading_desc": "Si activ\xE9, le mode lecture essaiera de colorer tout le document \xE0 la fois. Peut causer des ralentissements sur les gros documents, utilisez avec prudence !",
-      "lightweight_mode": "Exp\xE9rimental : mode extr\xEAmement l\xE9ger",
-      "lightweight_mode_desc": "R\xE9duit fortement le traitement pendant la frappe. Peut ignorer certaines correspondances.",
+      "lightweight_mode": "Mode l\xE9ger (Exp\xE9rimental)",
+      "lightweight_mode_desc": "R\xE9duit consid\xE9rablement le traitement lors de la frappe. Peut ignorer certaines correspondances.",
       "disable_coloring_current_file": "D\xE9sactiver le coloriage pour le fichier actuel",
       "disable_coloring_current_file_desc": "Ajoute une r\xE8gle d'exclusion pour le fichier actif sous R\xE8gles de coloriage des fichiers et dossiers.",
       "btn_disable_for_this_file": "D\xE9sactiver pour ce fichier",
@@ -1174,6 +1250,8 @@ var require_fr = __commonJS({
       "setting_color_once_desc": "Ins\xE9rer un style HTML en ligne pour le texte s\xE9lectionn\xE9. Persiste m\xEAme si le plugin est d\xE9sactiv\xE9.",
       "setting_highlight_once": "Surligner une fois",
       "setting_highlight_once_desc": "Ins\xE9rer un style HTML en ligne avec fond. Persiste m\xEAme si le plugin est d\xE9sactiv\xE9.",
+      "setting_color_highlight_once": "Couleur et Surligner une fois",
+      "setting_color_highlight_once_desc": "Ouvre le s\xE9lecteur de couleur unifi\xE9 pour appliquer \xE0 la fois la couleur du texte et le surlignage de l'arri\xE8re-plan en ligne. Utilise le menu unifi\xE9.",
       "highlight_once_preview": "Aper\xE7u de Surligner une fois",
       "highlight_once_preview_text": "Voici \xE0 quoi ressemble le surlignage une fois !",
       // Highlight Once Settings
@@ -1238,7 +1316,6 @@ var require_fr = __commonJS({
       "opt_line_inset": "Incrust\xE9",
       "opt_line_outset": "Relief",
       // Color Swatches
-      "color_swatches_header": "Nuanciers de couleurs",
       "color_picker_layout": "Disposition du s\xE9lecteur de couleurs",
       "color_picker_layout_desc": "Choisissez les types de couleurs \xE0 afficher lors du choix d'une couleur pour un mot",
       "opt_both_text_left": "Les deux : Texte Gauche, Surbrillance Droite",
@@ -1255,7 +1332,7 @@ var require_fr = __commonJS({
       "use_swatch_names_desc": "Afficher une liste d\xE9roulante des noms de nuanciers \xE0 c\xF4t\xE9 de l'entr\xE9e mot/motif",
       "link_swatches_to_entries": "Lier les mises \xE0 jour des nuanciers aux textes color\xE9s",
       "link_swatches_to_entries_desc": "Mettre \xE0 jour toutes les entr\xE9es utilisant un nuancier personnalis\xE9 lorsque la couleur de ce nuancier change",
-      "default_colors_header": "Couleurs par d\xE9faut",
+      "default_colors_header": "Nuanciers par d\xE9faut",
       "custom_swatches_header": "Nuanciers personnalis\xE9s",
       "btn_add_color": "+ Ajouter une couleur",
       "no_custom_swatches_yet": 'Pas encore de nuanciers personnalis\xE9s. Cliquez sur "+ Ajouter une couleur" pour en cr\xE9er un.',
@@ -1480,6 +1557,7 @@ var require_fr = __commonJS({
       "label_border_thickness": "\xC9paisseur de la bordure",
       "btn_save_style": "Enregistrer le style",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "Couleurs Rapides",
       "quick_colors_desc": "Permet de surligner ou colorer rapidement du texte en affichant des couleurs dans le menu contextuel. Si Couleurs Rapides est d\xE9sactiv\xE9, les couleurs par style dans Styles Rapides seront utilis\xE9es.",
       "quick_colors_apply_mode_label": "La coloration du texte s'appliquera comme",
@@ -1515,6 +1593,12 @@ var require_fr = __commonJS({
       "share_export_title": "Always Color Text export",
       "delete_button_text": "\u2715",
       "style_name_placeholder": "Nom du style",
+      "edit_group_highlight_styling": "Modifier le style de surlignage du groupe",
+      "light_mode_fixer_desc": "Assombrit automatiquement le texte color\xE9 lors de l'utilisation du th\xE8me clair pour am\xE9liorer la visibilit\xE9.",
+      "dark_mode_fixer_desc": "\xC9claircit automatiquement le texte color\xE9 lors de l'utilisation du th\xE8me sombre pour am\xE9liorer la visibilit\xE9.",
+      "preset_bold": "Gras",
+      "preset_italic": "Italique",
+      "preset_bold_italic": "Gras Italique",
       "preview_text": "Texte"
     };
   }
@@ -1555,6 +1639,8 @@ var require_hi = __commonJS({
       "file_menu_disable": "\u0907\u0938 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "menu_color_once": "\u090F\u0915 \u092C\u093E\u0930 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
       "menu_highlight_once": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902",
+      "menu_color_highlight_once": "\u0930\u0902\u0917 / \u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902",
+      "menu_remove_inline_color": "\u0907\u0928\u0932\u093E\u0907\u0928 \u0930\u0902\u0917 \u0939\u091F\u093E\u090F\u0901",
       "menu_always_color_text": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
       "menu_remove_always_color_text": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0939\u091F\u093E\u090F\u0901",
       "menu_blacklist_word": "\u0930\u0902\u0917\u093E\u0908 \u0938\u0947 \u0936\u092C\u094D\u0926 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u0915\u0930\u0947\u0902",
@@ -1582,11 +1668,26 @@ var require_hi = __commonJS({
       // Commands
       "command_color_selected": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u0947\u0902",
       "command_toggle_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u091A\u093E\u0932\u0942/\u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
-      "command_toggle_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942/\u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "command_enable_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
       "command_disable_current": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
-      "command_enable_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
-      "command_disable_global": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
+      "command_toggle_global": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917\u093E\u0908 \u0938\u0915\u094D\u0937\u092E/\u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_enable_global": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917\u093E\u0908 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_disable_global": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917\u093E\u0908 \u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_enable_lightweight_mode": "\u0932\u093E\u0907\u091F\u0935\u0947\u091F \u092E\u094B\u0921 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_disable_lightweight_mode": "\u0932\u093E\u0907\u091F\u0935\u0947\u091F \u092E\u094B\u0921 \u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "command_color_highlight_once": "\u091A\u092F\u0928\u093F\u0924 \u092A\u093E\u0920 \u0915\u094B \u0930\u0902\u0917\u0947\u0902 / \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902 (\u090F\u0915 \u092C\u093E\u0930)",
+      "notice_select_text_first_once": "\u0915\u0943\u092A\u092F\u093E \u092A\u0939\u0932\u0947 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u0941\u0928\u0947\u0902\u0964",
+      "enable_document_color": "\u0935\u0948\u0936\u094D\u0935\u093F\u0915 \u0930\u0902\u0917 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "color_swatches_header": "\u0930\u0902\u0917 \u092A\u094D\u0930\u092C\u0902\u0927\u0928",
+      "color_rendering_header": "\u0930\u0902\u0917 \u092A\u094D\u0930\u0924\u093F\u092A\u093E\u0926\u0928 \u0914\u0930 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928",
+      "theme_support_header": "\u0925\u0940\u092E \u0938\u092E\u0930\u094D\u0925\u0928",
+      "matching_behavior_header": "\u092E\u093F\u0932\u093E\u0928 \u0935\u094D\u092F\u0935\u0939\u093E\u0930",
+      "smart_update_mode": "\u0938\u094D\u092E\u093E\u0930\u094D\u091F \u0905\u092A\u0921\u0947\u091F\u094D\u0938 (\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915)",
+      "smart_update_mode_desc": "\u091F\u093E\u0907\u092A \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0915\u0947\u0935\u0932 \u0926\u093F\u0916\u093E\u0908 \u0926\u0947\u0928\u0947 \u0935\u093E\u0932\u0940, \u092C\u0926\u0932\u0940 \u0939\u0941\u0908 \u092A\u0902\u0915\u094D\u0924\u093F\u092F\u094B\u0902 \u0915\u094B \u092C\u0941\u0926\u094D\u0927\u093F\u092E\u093E\u0928\u0940 \u0938\u0947 \u0905\u092A\u0921\u0947\u091F \u0915\u0930\u0924\u093E \u0939\u0948\u0964 \u091F\u093E\u0907\u092A\u093F\u0902\u0917 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928 \u0915\u094B \u0915\u093E\u092B\u0940 \u092C\u0947\u0939\u0924\u0930 \u092C\u0928\u093E\u0924\u093E \u0939\u0948\u0964",
+      "word_completion_coloring": "\u0936\u092C\u094D\u0926 \u092A\u0942\u0930\u094D\u0923 \u0939\u094B\u0928\u0947 \u092A\u0930 \u0930\u0902\u0917 \u092D\u0930\u0928\u093E (\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915)",
+      "word_completion_coloring_desc": "\u0938\u094D\u092A\u0947\u0938 \u091F\u093E\u0907\u092A \u0915\u0930\u0928\u0947 \u0915\u0947 \u092C\u093E\u0926 \u0939\u0940 \u0936\u092C\u094D\u0926\u094B\u0902 \u092E\u0947\u0902 \u0930\u0902\u0917 \u092D\u0930\u0947\u0902\u0964 \u091F\u093E\u0907\u092A \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0906\u0902\u0936\u093F\u0915 \u092E\u0947\u0932\u094B\u0902 \u092E\u0947\u0902 \u0930\u0902\u0917 \u092D\u0930\u0928\u0947 \u0938\u0947 \u0930\u094B\u0915\u0924\u093E \u0939\u0948\u0964",
+      "light_mode_fixer": "\u0932\u093E\u0907\u091F \u092E\u094B\u0921 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0932\u0930 \u092B\u093F\u0915\u094D\u0938\u0930",
+      "dark_mode_fixer": "\u0921\u093E\u0930\u094D\u0915 \u092E\u094B\u0921 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0932\u0930 \u092B\u093F\u0915\u094D\u0938\u0930",
       "command_manage_advanced_rules": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
       "command_open_regex_tester": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902 (\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091F\u0947\u0938\u094D\u091F\u0930 \u0916\u094B\u0932\u0947\u0902)",
       "command_open_blacklist_regex_tester": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u092E\u0947\u0902 \u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902",
@@ -1600,6 +1701,8 @@ var require_hi = __commonJS({
       "command_activate_word_group": "{groupName} \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0938\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902",
       "command_deactivate_word_group": "{groupName} \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F \u0915\u0930\u0947\u0902",
       // Notifications
+      "notice_lightweight_mode_enabled": "\u0932\u093E\u0907\u091F\u0935\u0947\u091F \u092E\u094B\u0921 \u0938\u0915\u094D\u0937\u092E",
+      "notice_lightweight_mode_disabled": "\u0932\u093E\u0907\u091F\u0935\u0947\u091F \u092E\u094B\u0921 \u0905\u0915\u094D\u0937\u092E",
       "notice_enabled": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942",
       "notice_disabled": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u0902\u0926",
       "notice_blacklisted_cannot_color": '"{word}" \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F\u0947\u0921 \u0939\u0948 \u0914\u0930 \u0930\u0902\u0917 \u0928\u0939\u0940\u0902 \u0932\u0917\u093E\u092F\u093E \u091C\u093E \u0938\u0915\u0924\u093E\u0964',
@@ -1638,7 +1741,9 @@ var require_hi = __commonJS({
       "notice_text_colors_visible": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917 \u0926\u093F\u0916\u093E\u0908 \u0926\u0947 \u0930\u0939\u0947 \u0939\u0948\u0902",
       "notice_highlights_hidden": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F\u094D\u0938 \u091B\u093F\u092A\u093E\u090F \u0917\u090F",
       "notice_highlights_visible": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F\u094D\u0938 \u0926\u093F\u0916\u093E\u0908 \u0926\u0947 \u0930\u0939\u0947 \u0939\u0948\u0902",
-      "notice_regex_support_disabled": "Regex \u0938\u0939\u093E\u092F\u0924\u093E \u092C\u0902\u0926 \u0939\u0948\u0964 Regex \u092A\u0948\u091F\u0930\u094D\u0928 \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0938\u0947\u091F\u093F\u0902\u0917 \u092E\u0947\u0902 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902\u0964",
+      "notice_regex_support_disabled": "\u092A\u094D\u0930\u0940\u0938\u0947\u091F\u094D\u0938 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F, \u0938\u0947\u091F\u093F\u0902\u0917\u094D\u0938 \u092E\u0947\u0902 \u0938\u093E\u092E\u093E\u0928\u094D\u092F \u091F\u0948\u092C \u0938\u0947 \u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u0938\u092E\u0930\u094D\u0925\u0928 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902\u0964",
+      "btn_take_me_there": "\u092E\u0941\u091D\u0947 \u0935\u0939\u093E\u0902 \u0932\u0947 \u091A\u0932\u094B",
+      "btn_ok": "\u0920\u0940\u0915 \u0939\u0948",
       "notice_no_active_file_to_disable": "\u0930\u0902\u0917\u093E\u0908 \u092C\u0902\u0926 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0915\u094B\u0908 \u0938\u0915\u094D\u0930\u093F\u092F \u092B\u093C\u093E\u0907\u0932 \u0928\u0939\u0940\u0902 \u0939\u0948\u0964",
       "notice_already_disabled_for_path": "{path} \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092A\u0939\u0932\u0947 \u0938\u0947 \u0939\u0940 \u092C\u0902\u0926 \u0939\u0948",
       "notice_filter_disabled": "\u092B\u093F\u0932\u094D\u091F\u0930 \u092C\u0902\u0926 \u0915\u0940",
@@ -1654,12 +1759,11 @@ var require_hi = __commonJS({
       "btn_cancel": "\u0930\u0926\u094D\u0926 \u0915\u0930\u0947\u0902",
       "btn_confirm": "\u092A\u0941\u0937\u094D\u091F\u093F \u0915\u0930\u0947\u0902",
       // Basic Settings
-      "enable_document_color": "\u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0930\u0902\u0917 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
-      "color_in_live_preview_mode": "\u0932\u093E\u0907\u0935 \u092A\u094D\u0930\u0940\u0935\u094D\u092F\u0942 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
+      "color_in_live_preview_mode": "\u0932\u093E\u0907\u0935 \u092A\u0942\u0930\u094D\u0935\u093E\u0935\u0932\u094B\u0915\u0928 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917",
       "color_in_reading_mode": "\u0930\u0940\u0921\u093F\u0902\u0917 \u092E\u094B\u0921 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0932\u0917\u093E\u090F\u0901",
       "force_full_render_reading": "\u0930\u0940\u0921\u093F\u0902\u0917 \u092E\u094B\u0921 \u092E\u0947\u0902 \u092A\u0942\u0930\u094D\u0923 \u0930\u0947\u0902\u0921\u0930 \u092B\u094B\u0930\u094D\u0938 \u0915\u0930\u0947\u0902",
       "force_full_render_reading_desc": "\u091C\u092C \u091A\u093E\u0932\u0942 \u0939\u094B, \u0924\u094B \u0930\u0940\u0921\u093F\u0902\u0917-\u092E\u094B\u0921 \u092A\u0942\u0930\u0947 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C \u0915\u094B \u090F\u0915 \u092A\u093E\u0938 \u092E\u0947\u0902 \u0930\u0902\u0917\u0928\u0947 \u0915\u093E \u092A\u094D\u0930\u092F\u093E\u0938 \u0915\u0930\u0947\u0917\u093E\u0964 \u092C\u0921\u093C\u0947 \u0926\u0938\u094D\u0924\u093E\u0935\u0947\u091C\u093C\u094B\u0902 \u092A\u0930 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928 \u0938\u092E\u0938\u094D\u092F\u093E\u090F\u0901 \u0939\u094B \u0938\u0915\u0924\u0940 \u0939\u0948\u0902\u0964 \u0938\u093E\u0935\u0927\u093E\u0928\u0940 \u0938\u0947 \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0947\u0902!",
-      "lightweight_mode": "\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915: \u0905\u0924\u094D\u092F\u0902\u0924 \u0939\u0932\u094D\u0915\u093E \u092E\u094B\u0921",
+      "lightweight_mode": "\u0932\u093E\u0907\u091F\u0935\u0947\u091F \u092E\u094B\u0921 (\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915)",
       "lightweight_mode_desc": "\u091F\u093E\u0907\u092A \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u092A\u094D\u0930\u094B\u0938\u0947\u0938\u093F\u0902\u0917 \u0915\u094B \u0915\u093E\u092B\u0940 \u0915\u092E \u0915\u0930\u0924\u093E \u0939\u0948\u0964 \u0915\u0941\u091B \u092E\u093F\u0932\u093E\u0928 \u091B\u0942\u091F \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964",
       "disable_coloring_current_file": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092C\u0902\u0926 \u0915\u0930\u0947\u0902",
       "disable_coloring_current_file_desc": "\u092B\u093C\u093E\u0907\u0932 \u0914\u0930 \u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u0930\u0902\u0917\u093E\u0908 \u0928\u093F\u092F\u092E\u094B\u0902 \u0915\u0947 \u0924\u0939\u0924 \u0938\u0915\u094D\u0930\u093F\u092F \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u090F\u0915 \u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E \u091C\u094B\u0921\u093C\u0924\u093E \u0939\u0948\u0964",
@@ -1681,6 +1785,8 @@ var require_hi = __commonJS({
       "setting_color_once_desc": "\u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0947 \u0932\u093F\u090F HTML \u0907\u0928\u0932\u093E\u0907\u0928 \u0938\u092E\u094D\u092E\u093F\u0932\u093F\u0924 \u0915\u0930\u0924\u093E \u0939\u0948\u0964 \u092A\u094D\u0932\u0917\u0907\u0928 \u092C\u0902\u0926 \u0939\u094B\u0928\u0947 \u092A\u0930 \u092D\u0940 \u092F\u0939 \u092C\u0928\u093E \u0930\u0939\u0924\u093E \u0939\u0948\u0964",
       "setting_highlight_once": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902",
       "setting_highlight_once_desc": "\u092C\u0948\u0915\u0917\u094D\u0930\u093E\u0909\u0902\u0921 \u0938\u094D\u091F\u093E\u0907\u0932\u093F\u0902\u0917 \u0915\u0947 \u0938\u093E\u0925 HTML \u0907\u0928\u0932\u093E\u0907\u0928 \u0938\u092E\u094D\u092E\u093F\u0932\u093F\u0924 \u0915\u0930\u0924\u093E \u0939\u0948\u0964 \u092A\u094D\u0932\u0917\u0907\u0928 \u092C\u0902\u0926 \u0939\u094B\u0928\u0947 \u092A\u0930 \u092D\u0940 \u092F\u0939 \u092C\u0928\u093E \u0930\u0939\u0924\u093E \u0939\u0948\u0964",
+      "setting_color_highlight_once": "\u0930\u0902\u0917 \u0914\u0930 \u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0930\u0947\u0902",
+      "setting_color_highlight_once_desc": "\u0926\u094B\u0928\u094B\u0902 \u092A\u093E\u0920 \u0930\u0902\u0917 \u0914\u0930 \u092A\u0943\u0937\u094D\u0920\u092D\u0942\u092E\u093F \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0907\u0928\u0932\u093E\u0907\u0928 \u0932\u093E\u0917\u0942 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u090F\u0915\u0940\u0915\u0943\u0924 \u0930\u0902\u0917 \u092A\u093F\u0915\u0930 \u0916\u094B\u0932\u0924\u093E \u0939\u0948\u0964 \u090F\u0915\u0940\u0915\u0943\u0924 \u092E\u0947\u0928\u0942 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0924\u093E \u0939\u0948\u0964",
       "highlight_once_preview": "\u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092A\u094D\u0930\u0940\u0935\u094D\u092F\u0942",
       "highlight_once_preview_text": "\u0926\u0947\u0916\u0947\u0902 \u0915\u093F \u090F\u0915 \u092C\u093E\u0930 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0948\u0938\u093E \u0926\u093F\u0916\u0947\u0917\u093E!",
       // Highlight Once Settings
@@ -1745,7 +1851,6 @@ var require_hi = __commonJS({
       "opt_line_inset": "\u0907\u0928\u0938\u0947\u091F",
       "opt_line_outset": "\u0906\u0909\u091F\u0938\u0947\u091F",
       // Color Swatches
-      "color_swatches_header": "\u0930\u0902\u0917 \u0938\u094D\u0935\u0948\u091A\u0947\u0938",
       "color_picker_layout": "\u0930\u0902\u0917 \u092A\u093F\u0915\u0930 \u0932\u0947\u0906\u0909\u091F",
       "color_picker_layout_desc": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917 \u091A\u0941\u0928\u0924\u0947 \u0938\u092E\u092F \u0915\u094C\u0928 \u0938\u0947 \u0930\u0902\u0917 \u092A\u094D\u0930\u0915\u093E\u0930 \u0926\u093F\u0916\u093E\u0928\u0947 \u0939\u0948\u0902 \u091A\u0941\u0928\u0947\u0902",
       "opt_both_text_left": "\u0926\u094B\u0928\u094B\u0902: \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092C\u093E\u090F\u0901, \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0926\u093E\u090F\u0901",
@@ -1762,7 +1867,7 @@ var require_hi = __commonJS({
       "use_swatch_names_desc": "\u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0907\u0928\u092A\u0941\u091F\u094D\u0938 \u0915\u0947 \u092C\u0917\u0932 \u092E\u0947\u0902 \u0938\u094D\u0935\u0948\u091A \u0928\u093E\u092E\u094B\u0902 \u0915\u093E \u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u0926\u093F\u0916\u093E\u090F\u0901",
       "link_swatches_to_entries": "\u0938\u094D\u0935\u0948\u091A \u0905\u092A\u0921\u0947\u091F\u094D\u0938 \u0915\u094B \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u094B\u0902 \u0938\u0947 \u0932\u093F\u0902\u0915 \u0915\u0930\u0947\u0902",
       "link_swatches_to_entries_desc": "\u091C\u092C \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A \u0915\u093E \u0930\u0902\u0917 \u092C\u0926\u0932\u0924\u093E \u0939\u0948, \u0909\u0938 \u0930\u0902\u0917 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0928\u0947 \u0935\u093E\u0932\u0947 \u0938\u092D\u0940 \u090F\u0902\u091F\u094D\u0930\u0940\u091C\u093C \u0905\u092A\u0921\u0947\u091F \u0915\u0930\u0947\u0902",
-      "default_colors_header": "\u0921\u093F\u092B\u0949\u0932\u094D\u091F \u0930\u0902\u0917",
+      "default_colors_header": "\u0921\u093F\u092B\u093C\u0949\u0932\u094D\u091F \u0928\u092E\u0942\u0928\u0947",
       "custom_swatches_header": "\u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938",
       "btn_add_color": "+ \u0930\u0902\u0917 \u091C\u094B\u0921\u093C\u0947\u0902",
       "no_custom_swatches_yet": '\u0905\u092D\u0940 \u0924\u0915 \u0915\u094B\u0908 \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938 \u0928\u0939\u0940\u0902\u0964 \u092C\u0928\u093E\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F "+ \u0930\u0902\u0917 \u091C\u094B\u0921\u093C\u0947\u0902" \u0915\u094D\u0932\u093F\u0915 \u0915\u0930\u0947\u0902\u0964',
@@ -1992,6 +2097,7 @@ var require_hi = __commonJS({
       "style_name_placeholder": "Style Name",
       "preview_text": "Text",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "\u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917",
       "quick_colors_desc": "\u0930\u093E\u0907\u091F-\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u092E\u0947\u0902 \u0930\u0902\u0917 \u0926\u093F\u0916\u093E\u0915\u0930 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u091C\u0932\u094D\u0926\u0940 \u0938\u0947 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092F\u093E \u0930\u0902\u0917\u0928\u0947 \u0915\u0940 \u0905\u0928\u0941\u092E\u0924\u093F \u0926\u0947\u0924\u093E \u0939\u0948\u0964 \u092F\u0926\u093F \u0924\u094D\u0935\u0930\u093F\u0924 \u0930\u0902\u0917 \u092C\u0902\u0926 \u0939\u0948\u0902, \u0924\u094B \u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u094B\u0902 \u092E\u0947\u0902 \u092A\u094D\u0930\u0924\u093F-\u0936\u0948\u0932\u0940 \u0930\u0902\u0917\u094B\u0902 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u093F\u092F\u093E \u091C\u093E\u090F\u0917\u093E\u0964",
       "quick_colors_apply_mode_label": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u093E\u0908 \u0907\u0938 \u0930\u0942\u092A \u092E\u0947\u0902 \u0932\u093E\u0917\u0942 \u0939\u094B\u0917\u0940",
@@ -2020,7 +2126,13 @@ var require_hi = __commonJS({
       "btn_duplicate_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0915\u094B \u0921\u0941\u092A\u094D\u0932\u093F\u0915\u0947\u091F \u0915\u0930\u0947\u0902",
       "btn_open_in_regex_tester": "Regex Tester \u092E\u0947\u0902 \u0916\u094B\u0932\u0947\u0902",
       "move_to_blacklist_group": "\u0915\u093E\u0932\u0940 \u0938\u0942\u091A\u0940 \u0938\u092E\u0942\u0939 \u0915\u094B \u0938\u094D\u0925\u093E\u0928\u093E\u0902\u0924\u0930\u093F\u0924 \u0915\u0930\u0947\u0902",
-      "btn_delete_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0939\u091F\u093E\u090F\u0902"
+      "btn_delete_entry": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0939\u091F\u093E\u090F\u0902",
+      "edit_group_highlight_styling": "\u0938\u092E\u0942\u0939 \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0938\u094D\u091F\u093E\u0907\u0932 \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+      "light_mode_fixer_desc": "\u0926\u0943\u0936\u094D\u092F\u0924\u093E \u092E\u0947\u0902 \u0938\u0941\u0927\u093E\u0930 \u0915\u0947 \u0932\u093F\u090F \u0932\u093E\u0907\u091F \u0925\u0940\u092E \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0938\u094D\u0935\u091A\u093E\u0932\u093F\u0924 \u0930\u0942\u092A \u0938\u0947 \u0917\u0939\u0930\u093E \u0915\u0930\u0924\u093E \u0939\u0948\u0964",
+      "dark_mode_fixer_desc": "\u0926\u0943\u0936\u094D\u092F\u0924\u093E \u092E\u0947\u0902 \u0938\u0941\u0927\u093E\u0930 \u0915\u0947 \u0932\u093F\u090F \u0921\u093E\u0930\u094D\u0915 \u0925\u0940\u092E \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0938\u094D\u0935\u091A\u093E\u0932\u093F\u0924 \u0930\u0942\u092A \u0938\u0947 \u0939\u0932\u094D\u0915\u093E \u0915\u0930\u0924\u093E \u0939\u0948\u0964",
+      "preset_bold": "\u092C\u094B\u0932\u094D\u0921",
+      "preset_italic": "\u0907\u091F\u093E\u0932\u093F\u0915",
+      "preset_bold_italic": "\u092C\u094B\u0932\u094D\u0921 \u0907\u091F\u093E\u0932\u093F\u0915"
     };
   }
 });
@@ -2060,6 +2172,8 @@ var require_it = __commonJS({
       "file_menu_disable": "Disabilita Always Color Text per questo file",
       "menu_color_once": "Colora una volta",
       "menu_highlight_once": "Evidenzia una volta",
+      "menu_color_highlight_once": "Colore / Evidenzia una volta",
+      "menu_remove_inline_color": "Rimuovi Colore Inline",
       "menu_always_color_text": "Always Color Text",
       "menu_remove_always_color_text": "Rimuovi Always Color Text",
       "menu_blacklist_word": "Aggiungi parola alla blacklist",
@@ -2087,11 +2201,22 @@ var require_it = __commonJS({
       // Commands
       "command_color_selected": "Colora testo selezionato",
       "command_toggle_current": "Abilita/Disabilita colorazione per il documento corrente",
-      "command_toggle_global": "Abilita/Disabilita Always Color Text",
       "command_enable_current": "Abilita colorazione per il documento corrente",
       "command_disable_current": "Disabilita colorazione per il documento corrente",
-      "command_enable_global": "Abilita Always Color Text",
-      "command_disable_global": "Disabilita Always Color Text",
+      "command_toggle_global": "Abilita/Disabilita colorazione globale",
+      "command_enable_global": "Abilita colorazione globale",
+      "command_disable_global": "Disabilita colorazione globale",
+      "enable_document_color": "Abilita colore globale",
+      "color_swatches_header": "Gestione colori",
+      "color_rendering_header": "Resa cromatica e prestazioni",
+      "theme_support_header": "Supporto temi",
+      "matching_behavior_header": "Comportamento di corrispondenza",
+      "smart_update_mode": "Aggiornamenti intelligenti (Sperimentale)",
+      "smart_update_mode_desc": "Aggiorna la colorazione solo per la riga attiva durante la digitazione e blocca le altre righe per migliorare le prestazioni.",
+      "word_completion_coloring": "Colorazione al completamento della parola (Sperimentale)",
+      "word_completion_coloring_desc": "Colora le parole solo dopo aver digitato uno spazio. Impedisce che le corrispondenze parziali vengano colorate durante la digitazione.",
+      "light_mode_fixer": "Correttore colore testo modalit\xE0 chiara",
+      "dark_mode_fixer": "Correttore colore testo modalit\xE0 scura",
       "command_manage_advanced_rules": "gestisci regole specifiche di inclusione/esclusione",
       "command_open_regex_tester": "Aggiungi Regex (Apri Tester Regex)",
       "command_open_blacklist_regex_tester": "Aggiungi Regex alla Lista Nera",
@@ -2102,9 +2227,15 @@ var require_it = __commonJS({
       "command_unhide_text_colors": "Mostra colori del testo",
       "command_hide_highlights": "Nascondi evidenziazioni",
       "command_unhide_highlights": "Mostra evidenziazioni",
+      "command_enable_lightweight_mode": "Abilita modalit\xE0 leggera",
+      "command_disable_lightweight_mode": "Disabilita modalit\xE0 leggera",
+      "command_color_highlight_once": "Colora / Evidenzia testo selezionato (una volta)",
+      "notice_select_text_first_once": "Seleziona prima del testo da colorare.",
       "command_activate_word_group": "Attiva il gruppo di parole {groupName}",
       "command_deactivate_word_group": "Disattiva il gruppo di parole {groupName}",
       // Notifications
+      "notice_lightweight_mode_enabled": "Modalit\xE0 leggera attivata",
+      "notice_lightweight_mode_disabled": "Modalit\xE0 leggera disattivata",
       "notice_enabled": "Always Color Text abilitato",
       "notice_disabled": "Always Color Text disabilitato",
       "notice_blacklisted_cannot_color": '"{word}" \xE8 in blacklist e non pu\xF2 essere colorata.',
@@ -2143,7 +2274,9 @@ var require_it = __commonJS({
       "notice_text_colors_visible": "Colori del testo visibili",
       "notice_highlights_hidden": "Evidenziazioni nascoste",
       "notice_highlights_visible": "Evidenziazioni visibili",
-      "notice_regex_support_disabled": "Il supporto regex \xE8 disabilitato. Abilitalo nelle impostazioni per utilizzare i pattern regex.",
+      "notice_regex_support_disabled": "Per usare i Preset, abilita il Supporto Regex dalla scheda Generale nelle Impostazioni.",
+      "btn_take_me_there": "Portami l\xEC",
+      "btn_ok": "OK",
       "notice_no_active_file_to_disable": "Nessun file attivo per disabilitare la colorazione.",
       "notice_already_disabled_for_path": "La colorazione \xE8 gi\xE0 disabilitata per {path}",
       "notice_filter_disabled": "Filtro disabilitato",
@@ -2157,13 +2290,12 @@ var require_it = __commonJS({
       "restart_required_title": "Riavvio richiesto",
       "restart_required_desc": "Disabilitare il toggle della palette comandi richiede il riavvio di Obsidian per rimuovere completamente i comandi dalla palette. Riavviare ora?",
       // Basic Settings
-      "enable_document_color": "Abilita colore documento",
-      "color_in_live_preview_mode": "Colora in modalit\xE0 Live Preview",
+      "color_in_live_preview_mode": "Colore in modalit\xE0 anteprima live",
       "color_in_reading_mode": "Colora in modalit\xE0 lettura",
       "force_full_render_reading": "Forza rendering completo in modalit\xE0 lettura",
       "force_full_render_reading_desc": "Se attivo, la modalit\xE0 lettura tenter\xE0 di colorare l'intero documento in una sola passata. Pu\xF2 causare problemi di prestazioni su documenti grandi. Usare con cautela!",
-      "lightweight_mode": "Sperimentale: modalit\xE0 estremamente leggera",
-      "lightweight_mode_desc": "Riduce molto l'elaborazione durante la digitazione. Pu\xF2 saltare alcune occorrenze.",
+      "lightweight_mode": "Modalit\xE0 leggera (Sperimentale)",
+      "lightweight_mode_desc": "Riduce notevolmente l'elaborazione durante la digitazione. Potrebbe saltare alcune corrispondenze.",
       "disable_coloring_current_file": "Disabilita colorazione per file corrente",
       "disable_coloring_current_file_desc": "Aggiunge una regola di esclusione per il file attivo sotto regole colorazione file e cartelle.",
       "btn_disable_for_this_file": "Disabilita per questo file",
@@ -2183,6 +2315,8 @@ var require_it = __commonJS({
       "setting_color_once_desc": "Inserisce HTML inline per il testo selezionato. Persiste anche se il plugin \xE8 disattivato.",
       "setting_highlight_once": "Evidenzia una volta",
       "setting_highlight_once_desc": "Inserisce HTML inline con stile di sfondo. Persiste anche se il plugin \xE8 disattivato.",
+      "setting_color_highlight_once": "Colore e Evidenzia una volta",
+      "setting_color_highlight_once_desc": "Apre il selettore di colori unificato per applicare sia il colore del testo che l'evidenziazione dello sfondo in linea. Utilizza il menu unificato.",
       "highlight_once_preview": "Anteprima evidenziazione una volta",
       "highlight_once_preview_text": "Ecco come apparir\xE0 l'evidenziazione!",
       // Highlight Once Settings
@@ -2247,7 +2381,6 @@ var require_it = __commonJS({
       "opt_line_inset": "incassato",
       "opt_line_outset": "sporgente",
       // Color Swatches
-      "color_swatches_header": "Campioni colore",
       "color_picker_layout": "Layout selettore colore",
       "color_picker_layout_desc": "Scegli quali tipi di colore mostrare quando si selezionano colori per il testo",
       "opt_both_text_left": "Entrambi: Testo sinistra, Evidenziazione destra",
@@ -2264,7 +2397,7 @@ var require_it = __commonJS({
       "use_swatch_names_desc": "Mostra un menu a tendina con i nomi dei campioni accanto ai campi di inserimento parole/pattern",
       "link_swatches_to_entries": "Collega aggiornamenti dei campioni ai colori del testo",
       "link_swatches_to_entries_desc": "Quando cambia il colore di un campione personalizzato, aggiorna tutte le voci che usano quel colore",
-      "default_colors_header": "Colori predefiniti",
+      "default_colors_header": "Campioni predefiniti",
       "custom_swatches_header": "Campioni personalizzati",
       "btn_add_color": "+ Aggiungi colore",
       "no_custom_swatches_yet": 'Ancora nessun campione personalizzato. Clicca "+ Aggiungi colore" per crearne uno.',
@@ -2490,6 +2623,7 @@ var require_it = __commonJS({
       "label_border_thickness": "Spessore bordo",
       "btn_save_style": "Salva stile",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "Colori Rapidi",
       "quick_colors_desc": "Consente di evidenziare o colorare rapidamente il testo mostrando i colori nel menu contestuale. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile in Stili Rapidi.",
       "quick_colors_apply_mode_label": "La colorazione del testo verr\xE0 applicata come",
@@ -2525,7 +2659,13 @@ var require_it = __commonJS({
       "share_export_title": "Always Color Text export",
       "delete_button_text": "\u2715",
       "style_name_placeholder": "Nome stile",
-      "preview_text": "Testo"
+      "preview_text": "Testo",
+      "edit_group_highlight_styling": "Modifica stile evidenziazione gruppo",
+      "light_mode_fixer_desc": "Scurisce automaticamente il testo colorato quando si utilizza il tema chiaro per migliorare la visibilit\xE0.",
+      "dark_mode_fixer_desc": "Schiarisce automaticamente il testo colorato quando si utilizza il tema scuro per migliorare la visibilit\xE0.",
+      "preset_bold": "Grassetto",
+      "preset_italic": "Corsivo",
+      "preset_bold_italic": "Grassetto Corsivo"
     };
   }
 });
@@ -2565,6 +2705,8 @@ var require_bn = __commonJS({
       "file_menu_disable": "\u098F\u0987 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "menu_color_once": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "menu_highlight_once": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8",
+      "menu_color_highlight_once": "\u09B0\u0999 / \u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8",
+      "menu_remove_inline_color": "\u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09B0\u0999 \u09B8\u09B0\u09BE\u09A8",
       "menu_always_color_text": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F",
       "menu_remove_always_color_text": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u09B0\u09BE\u09A8",
       "menu_blacklist_word": "\u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09A5\u09C7\u0995\u09C7 \u09B6\u09AC\u09CD\u09A6 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0995\u09B0\u09C1\u09A8",
@@ -2597,6 +2739,10 @@ var require_bn = __commonJS({
       "command_disable_current": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "command_enable_global": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "command_disable_global": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "command_enable_lightweight_mode": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 \u099A\u09BE\u09B2\u09C1 \u0995\u09B0\u09C1\u09A8",
+      "command_disable_lightweight_mode": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 \u09AC\u09A8\u09CD\u09A7 \u0995\u09B0\u09C1\u09A8",
+      "command_color_highlight_once": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0982 / \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8 (\u098F\u0995\u09AC\u09BE\u09B0)",
+      "notice_select_text_first_once": "\u09A6\u09AF\u09BC\u09BE \u0995\u09B0\u09C7 \u09AA\u09CD\u09B0\u09A5\u09AE\u09C7 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8\u0964",
       "command_manage_advanced_rules": "\u09A8\u09BF\u09B0\u09CD\u09A6\u09BF\u09B7\u09CD\u099F \u0985\u09A8\u09CD\u09A4\u09B0\u09CD\u09AD\u09C1\u0995\u09CD\u09A4\u09BF/\u09AC\u09B0\u09CD\u099C\u09A8 \u09A8\u09BF\u09AF\u09BC\u09AE \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "command_open_regex_tester": "Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8 (Regex \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u0995 \u0996\u09C1\u09B2\u09C1\u09A8)",
       "command_open_blacklist_regex_tester": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7 Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
@@ -2610,6 +2756,8 @@ var require_bn = __commonJS({
       "command_activate_word_group": "{groupName} \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
       "command_deactivate_word_group": "{groupName} \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
       // Notifications
+      "notice_lightweight_mode_enabled": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 \u099A\u09BE\u09B2\u09C1",
+      "notice_lightweight_mode_disabled": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 \u09AC\u09A8\u09CD\u09A7",
       "notice_enabled": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
       "notice_disabled": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
       "notice_blacklisted_cannot_color": '"{word}" \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7 \u09B0\u09AF\u09BC\u09C7\u099B\u09C7 \u098F\u09AC\u0982 \u09B0\u0999 \u0995\u09B0\u09BE \u09AF\u09BE\u09AC\u09C7 \u09A8\u09BE\u0964',
@@ -2652,7 +2800,9 @@ var require_bn = __commonJS({
       "notice_text_colors_visible": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u09A6\u09C3\u09B6\u09CD\u09AF\u09AE\u09BE\u09A8",
       "notice_highlights_hidden": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B2\u09C1\u0995\u09BE\u09A8\u09CB \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
       "notice_highlights_visible": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09A6\u09C3\u09B6\u09CD\u09AF\u09AE\u09BE\u09A8",
-      "notice_regex_support_disabled": "\u09B0\u09C7\u099C\u09C7\u0995\u09CD\u09B8 \u09B8\u0982\u0998\u09BE\u09A4 \u09B8\u09A8\u09CD\u09AC\u09AC\u09B0\u09A8 \u099C\u09A8\u0995 \u0985\u0995\u09CD\u09B7\u09AE\u0964 \u09B0\u09C7\u099C\u09C7\u0995\u09CD\u09B8 \u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09A8 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09AC\u09BE\u09B0 \u0985\u09A8\u09C1\u09AE\u09A4\u09BF \u09A6\u09BF\u09AF\u09BC\u09C7 \u098F\u099F\u09BF \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8\u0964",
+      "notice_regex_support_disabled": "\u09AA\u09CD\u09B0\u09BF\u09B8\u09C7\u099F \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09A4\u09C7, \u09B8\u09C7\u099F\u09BF\u0982\u09B8\u09C7\u09B0 \u09B8\u09BE\u09A7\u09BE\u09B0\u09A3 \u099F\u09CD\u09AF\u09BE\u09AC \u09A5\u09C7\u0995\u09C7 Regex \u09B8\u09AE\u09B0\u09CD\u09A5\u09A8 \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8\u0964",
+      "btn_take_me_there": "\u0986\u09AE\u09BE\u0995\u09C7 \u09B8\u09C7\u0996\u09BE\u09A8\u09C7 \u09A8\u09BF\u09AF\u09BC\u09C7 \u09AF\u09BE\u09A8",
+      "btn_ok": "\u09A0\u09BF\u0995 \u0986\u099B\u09C7",
       "notice_no_active_file_to_disable": "\u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u0995\u09CB\u09A8\u09CB \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09AB\u09BE\u0987\u09B2 \u09A8\u09C7\u0987\u0964",
       "notice_already_disabled_for_path": "{path} \u098F\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0987\u09A4\u09BF\u09AE\u09A7\u09CD\u09AF\u09C7\u0987 \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
       "notice_filter_disabled": "\u09AB\u09BF\u09B2\u09CD\u099F\u09BE\u09B0 \u0985\u0995\u09CD\u09B7\u09AE",
@@ -2671,7 +2821,11 @@ var require_bn = __commonJS({
       "color_in_reading_mode": "\u09B0\u09BF\u09A1\u09BF\u0982 \u09AE\u09CB\u09A1\u09C7 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "force_full_render_reading": "\u09B0\u09BF\u09A1\u09BF\u0982 \u09AE\u09CB\u09A1\u09C7 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3 \u09B0\u09C7\u09A8\u09CD\u09A1\u09BE\u09B0 \u099C\u09CB\u09B0 \u0995\u09B0\u09C1\u09A8",
       "force_full_render_reading_desc": "\u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u09B0\u09BF\u09A1\u09BF\u0982-\u09AE\u09CB\u09A1 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F \u098F\u0995 \u09AA\u09BE\u09B8\u09C7 \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u099A\u09C7\u09B7\u09CD\u099F\u09BE \u0995\u09B0\u09AC\u09C7\u0964 \u09AC\u09A1\u09BC \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7 \u09AA\u09BE\u09B0\u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u09A8\u09CD\u09B8 \u0987\u09B8\u09CD\u09AF\u09C1 \u09B9\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964 \u09B8\u09A4\u09B0\u09CD\u0995\u09A4\u09BE\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8!",
-      "lightweight_mode": "\u09AA\u09CD\u09B0\u09BE\u09AF\u09BC\u09CB\u0997\u09BF\u0995: \u0985\u09A4\u09BF\u09B0\u09BF\u0995\u09CD\u09A4 \u09B9\u09BE\u09B2\u0995\u09BE \u09AE\u09CB\u09A1",
+      "smart_update_mode": "\u09B8\u09CD\u09AE\u09BE\u09B0\u09CD\u099F \u0986\u09AA\u09A1\u09C7\u099F (\u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u09BE\u09AE\u09C2\u09B2\u0995)",
+      "smart_update_mode_desc": "\u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09B6\u09C1\u09A7\u09C1\u09AE\u09BE\u09A4\u09CD\u09B0 \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09B2\u09BE\u0987\u09A8\u09C7\u09B0 \u09B0\u0999 \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09C7 \u098F\u09AC\u0982 \u09AA\u09BE\u09B0\u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u09A8\u09CD\u09B8 \u0989\u09A8\u09CD\u09A8\u09A4 \u0995\u09B0\u09A4\u09C7 \u0985\u09A8\u09CD\u09AF\u09BE\u09A8\u09CD\u09AF \u09B2\u09BE\u0987\u09A8\u0997\u09C1\u09B2\u09BF \u09AB\u09CD\u09B0\u09BF\u099C \u0995\u09B0\u09C7\u0964",
+      "word_completion_coloring": "\u09B6\u09AC\u09CD\u09A6 \u09AA\u09C2\u09B0\u09CD\u09A3 \u09B9\u0993\u09DF\u09BE\u09B0 \u09AA\u09B0 \u09B0\u0999 \u0995\u09B0\u09BE (\u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u09BE\u09AE\u09C2\u09B2\u0995)",
+      "word_completion_coloring_desc": "\u09B6\u09C1\u09A7\u09C1\u09AE\u09BE\u09A4\u09CD\u09B0 \u09B8\u09CD\u09AA\u09C7\u09B8 \u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09AA\u09B0\u09C7 \u09B6\u09AC\u09CD\u09A6\u0997\u09C1\u09B2\u09BF \u09B0\u0999 \u0995\u09B0\u09C1\u09A8\u0964 \u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u0986\u0982\u09B6\u09BF\u0995 \u09AE\u09BF\u09B2\u0997\u09C1\u09B2\u09BF\u09A4\u09C7 \u09B0\u0999 \u0995\u09B0\u09BE \u09AA\u09CD\u09B0\u09A4\u09BF\u09B0\u09CB\u09A7 \u0995\u09B0\u09C7\u0964",
+      "lightweight_mode": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 (\u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u09BE\u09AE\u09C2\u09B2\u0995)",
       "lightweight_mode_desc": "\u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09AA\u09CD\u09B0\u09B8\u09C7\u09B8\u09BF\u0982 \u0985\u09A8\u09C7\u0995 \u0995\u09AE\u09BF\u09AF\u09BC\u09C7 \u09A6\u09C7\u09AF\u09BC\u0964 \u0995\u09BF\u099B\u09C1 \u09AE\u09CD\u09AF\u09BE\u099A \u09AC\u09BE\u09A6 \u09AA\u09A1\u09BC\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964",
       "disable_coloring_current_file": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "disable_coloring_current_file_desc": "\u09AB\u09BE\u0987\u09B2 \u0993 \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0 \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09B0\u09C1\u09B2\u09B8 \u098F\u09B0 \u0985\u09A7\u09C0\u09A8\u09C7 \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u098F\u0995\u099F\u09BF \u098F\u0995\u09CD\u09B8\u0995\u09CD\u09B2\u09C1\u09A1 \u09B0\u09C1\u09B2 \u09AF\u09CB\u0997 \u0995\u09B0\u09C7\u0964",
@@ -2692,6 +2846,8 @@ var require_bn = __commonJS({
       "setting_color_once_desc": "\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF HTML \u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09B8\u09A8\u09CD\u09A8\u09BF\u09AC\u09C7\u09B6 \u0995\u09B0\u09C7\u0964 \u09AA\u09CD\u09B2\u09BE\u0997\u0987\u09A8 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09B2\u09C7\u0993 \u098F\u099F\u09BF \u09B8\u09CD\u09A5\u09BE\u09AF\u09BC\u09C0 \u09A5\u09BE\u0995\u09C7\u0964",
       "setting_highlight_once": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8",
       "setting_highlight_once_desc": "\u09AC\u09CD\u09AF\u09BE\u0995\u0997\u09CD\u09B0\u09BE\u0989\u09A8\u09CD\u09A1 \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u09BF\u0982 \u09B8\u09B9 HTML \u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09B8\u09A8\u09CD\u09A8\u09BF\u09AC\u09C7\u09B6 \u0995\u09B0\u09C7\u0964 \u09AA\u09CD\u09B2\u09BE\u0997\u0987\u09A8 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09B2\u09C7\u0993 \u098F\u099F\u09BF \u09B8\u09CD\u09A5\u09BE\u09AF\u09BC\u09C0 \u09A5\u09BE\u0995\u09C7\u0964",
+      "setting_color_highlight_once": "\u09B0\u0999 \u098F\u09AC\u0982 \u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8",
+      "setting_color_highlight_once_desc": "\u0989\u09AD\u09AF\u09BC \u09AA\u09BE\u09A0\u09CD\u09AF \u09B0\u0999 \u098F\u09AC\u0982 \u09AA\u099F\u09AD\u09C2\u09AE\u09BF \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u0995\u09B0\u09A4\u09C7 \u0987\u0989\u09A8\u09BF\u09AB\u09BE\u0987\u09A1 \u09B0\u0999 \u09AA\u09BF\u0995\u09BE\u09B0 \u0996\u09CB\u09B2\u09C7\u0964 \u0987\u0989\u09A8\u09BF\u09AB\u09BE\u0987\u09A1 \u09AE\u09C7\u09A8\u09C1 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C7\u0964",
       "highlight_once_preview": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AA\u09CD\u09B0\u09BF\u09AD\u09BF\u0989",
       "highlight_once_preview_text": "\u098F\u0995\u09AC\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09C7\u09AE\u09A8 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7 \u09A4\u09BE \u09A6\u09C7\u0996\u09C1\u09A8!",
       // Highlight Once Settings
@@ -2773,7 +2929,7 @@ var require_bn = __commonJS({
       "use_swatch_names_desc": "\u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u0987\u09A8\u09AA\u09C1\u099F\u09C7\u09B0 \u09AA\u09BE\u09B6\u09C7 \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BE\u09AE\u09C7\u09B0 \u09A1\u09CD\u09B0\u09AA\u09A1\u09BE\u0989\u09A8 \u09A6\u09C7\u0996\u09BE\u09A8",
       "link_swatches_to_entries": "\u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u0986\u09AA\u09A1\u09C7\u099F\u0995\u09C7 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09C7\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09B2\u09BF\u0982\u0995 \u0995\u09B0\u09C1\u09A8",
       "link_swatches_to_entries_desc": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u09C7\u09B0 \u09B0\u0999 \u09AA\u09B0\u09BF\u09AC\u09B0\u09CD\u09A4\u09A8 \u09B9\u09B2\u09C7, \u09B8\u09C7\u0987 \u09B0\u0999 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B8\u09AC \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
-      "default_colors_header": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B0\u0999\u0997\u09C1\u09B2\u09BF",
+      "default_colors_header": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B8\u09CB\u09AF\u09BC\u09BE\u099A",
       "custom_swatches_header": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF",
       "btn_add_color": "+ \u09B0\u0999 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
       "no_custom_swatches_yet": '\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8\u09CB \u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09C7\u0987\u0964 \u09A4\u09C8\u09B0\u09BF \u0995\u09B0\u09A4\u09C7 "+ \u09B0\u0999 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8" \u0995\u09CD\u09B2\u09BF\u0995 \u0995\u09B0\u09C1\u09A8\u0964',
@@ -2999,6 +3155,7 @@ var require_bn = __commonJS({
       "label_border_thickness": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0\u09C7\u09B0 \u09AA\u09C1\u09B0\u09C1\u09A4\u09CD\u09AC",
       "btn_save_style": "\u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09C1\u09A8",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "\u09A6\u09CD\u09B0\u09C1\u09A4 \u09B0\u0982",
       "quick_colors_desc": "\u09A1\u09BE\u09A8-\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1\u09A4\u09C7 \u09B0\u0982 \u09AA\u09CD\u09B0\u09A6\u09B0\u09CD\u09B6\u09A8 \u0995\u09B0\u09C7 \u09A6\u09CD\u09B0\u09C1\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AC\u09BE \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u0985\u09A8\u09C1\u09AE\u09A4\u09BF \u09A6\u09C7\u09AF\u09BC\u0964 \u09AF\u09A6\u09BF \u09A6\u09CD\u09B0\u09C1\u09A4 \u09B0\u0982 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09C7, \u09A4\u09AC\u09C7 \u09A6\u09CD\u09B0\u09C1\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u0997\u09C1\u09B2\u09BF\u09A4\u09C7 \u09AA\u09CD\u09B0\u09A4\u09BF-\u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09B0\u0982 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B9\u09AC\u09C7\u0964",
       "quick_colors_apply_mode_label": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u098F\u0987\u09AD\u09BE\u09AC\u09C7 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u09B9\u09AC\u09C7",
@@ -3027,7 +3184,18 @@ var require_bn = __commonJS({
       "btn_duplicate_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09A1\u09C1\u09AA\u09CD\u09B2\u09BF\u0995\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
       "btn_open_in_regex_tester": "Regex Tester \u098F \u0996\u09C1\u09B2\u09C1\u09A8",
       "move_to_blacklist_group": "\u0995\u09BE\u09B2\u09CB \u09B8\u09C2\u099A\u09C0 \u0997\u09CD\u09B0\u09C1\u09AA\u09C7 \u09B8\u0981\u099A\u09BE\u09B2\u09A8 \u0995\u09B0\u09C1\u09A8",
-      "btn_delete_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09AE\u09C1\u099B\u09C1\u09A8"
+      "btn_delete_entry": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09AE\u09C1\u099B\u09C1\u09A8",
+      "edit_group_highlight_styling": "\u0997\u09CD\u09B0\u09C1\u09AA \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u09BF\u0982 \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      "light_mode_fixer": "\u09B2\u09BE\u0987\u099F \u09AE\u09CB\u09A1 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0995\u09BE\u09B2\u09BE\u09B0 \u09AB\u09BF\u0995\u09CD\u09B8\u09BE\u09B0",
+      "dark_mode_fixer": "\u09A1\u09BE\u09B0\u09CD\u0995 \u09AE\u09CB\u09A1 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0995\u09BE\u09B2\u09BE\u09B0 \u09AB\u09BF\u0995\u09CD\u09B8\u09BE\u09B0",
+      "light_mode_fixer_desc": "\u09A6\u09C3\u09B6\u09CD\u09AF\u09AE\u09BE\u09A8\u09A4\u09BE \u0989\u09A8\u09CD\u09A8\u09A4 \u0995\u09B0\u09A4\u09C7 \u09B2\u09BE\u0987\u099F \u09A5\u09BF\u09AE \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09B0\u0999\u09BF\u09A8 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u09CD\u09AC\u09AF\u09BC\u0982\u0995\u09CD\u09B0\u09BF\u09AF\u09BC\u09AD\u09BE\u09AC\u09C7 \u0997\u09BE\u09A2\u09BC \u0995\u09B0\u09C7\u0964",
+      "dark_mode_fixer_desc": "\u09A6\u09C3\u09B6\u09CD\u09AF\u09AE\u09BE\u09A8\u09A4\u09BE \u0989\u09A8\u09CD\u09A8\u09A4 \u0995\u09B0\u09A4\u09C7 \u09A1\u09BE\u09B0\u09CD\u0995 \u09A5\u09BF\u09AE \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09B0\u0999\u09BF\u09A8 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u09CD\u09AC\u09AF\u09BC\u0982\u0995\u09CD\u09B0\u09BF\u09AF\u09BC\u09AD\u09BE\u09AC\u09C7 \u09B9\u09BE\u09B2\u0995\u09BE \u0995\u09B0\u09C7\u0964",
+      "preset_bold": "\u09AC\u09CB\u09B2\u09CD\u09A1",
+      "preset_italic": "\u0987\u099F\u09BE\u09B2\u09BF\u0995",
+      "preset_bold_italic": "\u09AC\u09CB\u09B2\u09CD\u09A1 \u0987\u099F\u09BE\u09B2\u09BF\u0995",
+      "theme_support_header": "\u09A5\u09BF\u09AE \u09B8\u09AE\u09B0\u09CD\u09A5\u09A8",
+      "matching_behavior_header": "\u09AE\u09CD\u09AF\u09BE\u099A\u09BF\u0982 \u0986\u099A\u09B0\u09A3",
+      "color_rendering_header": "\u09B0\u0999 \u09B0\u09C7\u09A8\u09CD\u09A1\u09BE\u09B0\u09BF\u0982 \u098F\u09AC\u0982 \u0995\u09B0\u09CD\u09AE\u0995\u09CD\u09B7\u09AE\u09A4\u09BE"
     };
   }
 });
@@ -3067,6 +3235,10 @@ var require_ru = __commonJS({
       "file_menu_disable": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
       "menu_color_once": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
       "menu_highlight_once": "\u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
+      "menu_color_highlight_once": "\u0426\u0432\u0435\u0442 / \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
+      // added
+      "menu_remove_inline_color": "\u0423\u0431\u0440\u0430\u0442\u044C \u0418\u043D\u043B\u0430\u0439\u043D \u0426\u0432\u0435\u0442",
+      // added
       "menu_always_color_text": "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u043D\u0435\u0448\u043D\u0438\u0439 \u0432\u0438\u0434 \u0442\u0435\u043A\u0441\u0442\u0430",
       "menu_remove_always_color_text": "\u0423\u0431\u0440\u0430\u0442\u044C Always Color Text",
       "menu_blacklist_word": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u043B\u043E\u0432\u043E \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
@@ -3094,11 +3266,35 @@ var require_ru = __commonJS({
       // Commands
       "command_color_selected": "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u043D\u0435\u0448\u043D\u0438\u0439 \u0432\u0438\u0434 \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u043E\u0433\u043E \u0442\u0435\u043A\u0441\u0442\u0430",
       "command_toggle_current": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
-      "command_toggle_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
       "command_enable_current": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
       "command_disable_current": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
+      "command_toggle_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u043E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
       "command_enable_global": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
       "command_disable_global": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C Always Color Text",
+      "command_enable_lightweight_mode": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043B\u0435\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C",
+      // added
+      "command_disable_lightweight_mode": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043B\u0435\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C",
+      // added
+      "command_color_highlight_once": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C / \u0412\u044B\u0434\u0435\u043B\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 (\u043E\u0434\u0438\u043D \u0440\u0430\u0437)",
+      // added
+      "notice_select_text_first_once": "\u041F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0435\u043A\u0441\u0442.",
+      // added
+      "enable_document_color": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
+      "color_rendering_header": "\u0420\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433 \u0446\u0432\u0435\u0442\u0430 \u0438 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u044C",
+      // added
+      "theme_support_header": "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u0442\u0435\u043C",
+      // added
+      "matching_behavior_header": "\u041F\u043E\u0432\u0435\u0434\u0435\u043D\u0438\u0435 \u0441\u043E\u043F\u043E\u0441\u0442\u0430\u0432\u043B\u0435\u043D\u0438\u044F",
+      // added
+      "smart_update_mode": "\u0423\u043C\u043D\u044B\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F (\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0439)",
+      // added
+      "smart_update_mode_desc": "\u041E\u0431\u043D\u043E\u0432\u043B\u044F\u0435\u0442 \u0440\u0430\u0441\u043A\u0440\u0430\u0441\u043A\u0443 \u0442\u043E\u043B\u044C\u043A\u043E \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0439 \u0441\u0442\u0440\u043E\u043A\u0438 \u043F\u0440\u0438 \u043D\u0430\u0431\u043E\u0440\u0435 \u0442\u0435\u043A\u0441\u0442\u0430 \u0438 \u0437\u0430\u043C\u043E\u0440\u0430\u0436\u0438\u0432\u0430\u0435\u0442 \u0434\u0440\u0443\u0433\u0438\u0435 \u0441\u0442\u0440\u043E\u043A\u0438 \u0434\u043B\u044F \u043F\u043E\u0432\u044B\u0448\u0435\u043D\u0438\u044F \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u0438.",
+      "word_completion_coloring": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u043F\u0440\u0438 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u0438 \u0441\u043B\u043E\u0432\u0430 (\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u043E)",
+      "word_completion_coloring_desc": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0441\u043B\u043E\u0432\u0430 \u0442\u043E\u043B\u044C\u043A\u043E \u043F\u043E\u0441\u043B\u0435 \u0432\u0432\u043E\u0434\u0430 \u043F\u0440\u043E\u0431\u0435\u043B\u0430. \u041F\u0440\u0435\u0434\u043E\u0442\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0447\u0430\u0441\u0442\u0438\u0447\u043D\u044B\u0445 \u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u0439 \u043F\u0440\u0438 \u043D\u0430\u0431\u043E\u0440\u0435 \u0442\u0435\u043A\u0441\u0442\u0430.",
+      "light_mode_fixer": "\u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432 \u0441\u0432\u0435\u0442\u043B\u043E\u043C \u0440\u0435\u0436\u0438\u043C\u0435",
+      // added
+      "dark_mode_fixer": "\u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432 \u0442\u0435\u043C\u043D\u043E\u043C \u0440\u0435\u0436\u0438\u043C\u0435",
+      // added
       "command_manage_advanced_rules": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u043C\u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
       "command_open_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex (\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043E\u0440 Regex)",
       "command_open_blacklist_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
@@ -3112,6 +3308,10 @@ var require_ru = __commonJS({
       "command_activate_word_group": "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0441\u043B\u043E\u0432 {groupName}",
       "command_deactivate_word_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0441\u043B\u043E\u0432 {groupName}",
       // Notifications
+      "notice_lightweight_mode_enabled": "\u041B\u0435\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C \u0432\u043A\u043B\u044E\u0447\u0435\u043D",
+      // added
+      "notice_lightweight_mode_disabled": "\u041B\u0435\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C \u0432\u044B\u043A\u043B\u044E\u0447\u0435\u043D",
+      // added
       "notice_enabled": "Always Color Text \u0432\u043A\u043B\u044E\u0447\u0451\u043D",
       "notice_disabled": "Always Color Text \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D",
       "notice_blacklisted_cannot_color": "\xAB{word}\xBB \u043D\u0430\u0445\u043E\u0434\u0438\u0442\u0441\u044F \u0432 \u0447\u0451\u0440\u043D\u043E\u043C \u0441\u043F\u0438\u0441\u043A\u0435 \u0438 \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043E.",
@@ -3154,7 +3354,12 @@ var require_ru = __commonJS({
       "notice_text_colors_visible": "\u0426\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432\u0438\u0434\u043D\u044B",
       "notice_highlights_hidden": "\u041F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438 \u0441\u043A\u0440\u044B\u0442\u044B",
       "notice_highlights_visible": "\u041F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438 \u0432\u0438\u0434\u043D\u044B",
-      "notice_regex_support_disabled": "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u0440\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u044B\u0445 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0439 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u0430. \u0412\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \u0435\u0451 \u0432 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u0445, \u0447\u0442\u043E\u0431\u044B \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u0448\u0430\u0431\u043B\u043E\u043D\u044B \u0440\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u044B\u0445 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0439.",
+      "notice_regex_support_disabled": "\u0427\u0442\u043E\u0431\u044B \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u043F\u0440\u0435\u0441\u0435\u0442\u044B, \u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0443 \u0440\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u044B\u0445 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0439 \u043D\u0430 \u0432\u043A\u043B\u0430\u0434\u043A\u0435 \xAB\u041E\u0431\u0449\u0438\u0435\xBB \u0432 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u0445.",
+      // added
+      "btn_take_me_there": "\u041F\u0435\u0440\u0435\u0439\u0442\u0438",
+      // added
+      "btn_ok": "\u041E\u041A",
+      // added
       "notice_no_active_file_to_disable": "\u041D\u0435\u0442 \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430 \u0434\u043B\u044F \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u044F.",
       "notice_already_disabled_for_path": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0443\u0436\u0435 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u043E \u0434\u043B\u044F {path}",
       "notice_filter_disabled": "\u0424\u0438\u043B\u044C\u0442\u0440 \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D",
@@ -3165,16 +3370,19 @@ var require_ru = __commonJS({
       "confirm_delete_all_blacklist_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u044B \u0438\u0437 \u0447\u0451\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E!",
       "confirm_delete_all_groups_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432",
       "confirm_delete_all_groups_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E!",
+      "confirm_delete_all_blacklist_groups_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
+      "confirm_delete_all_blacklist_groups_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C!",
+      "confirm_delete_blacklist_group_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
+      "confirm_delete_blacklist_group_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u043E\u0442 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C.",
       "restart_required_title": "\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430",
       "restart_required_desc": "\u0414\u043B\u044F \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0438\u0437 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043A\u043E\u043C\u0430\u043D\u0434 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 Obsidian. \u041F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0441\u0435\u0439\u0447\u0430\u0441?",
       // Basic Settings
-      "enable_document_color": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
       "color_in_live_preview_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 Live Preview",
       "color_in_reading_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading": "\u041F\u0440\u0438\u043D\u0443\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u0442\u044C \u043F\u043E\u043B\u043D\u044B\u0439 \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433 \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
       "force_full_render_reading_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u0440\u0435\u0436\u0438\u043C \u0447\u0442\u0435\u043D\u0438\u044F \u043F\u043E\u043F\u044B\u0442\u0430\u0435\u0442\u0441\u044F \u043E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0432\u0435\u0441\u044C \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442 \u0441\u0440\u0430\u0437\u0443. \u041C\u043E\u0436\u0435\u0442 \u0432\u044B\u0437\u0432\u0430\u0442\u044C \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u043D\u0430 \u0431\u043E\u043B\u044C\u0448\u0438\u0445 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0445, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u0441 \u043E\u0441\u0442\u043E\u0440\u043E\u0436\u043D\u043E\u0441\u0442\u044C\u044E!",
-      "lightweight_mode": "\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u043E: \u0441\u0432\u0435\u0440\u0445\u043B\u0451\u0433\u043A\u0438\u0439 \u0440\u0435\u0436\u0438\u043C",
-      "lightweight_mode_desc": "\u0421\u0438\u043B\u044C\u043D\u043E \u0443\u043C\u0435\u043D\u044C\u0448\u0430\u0435\u0442 \u043E\u0431\u044A\u0451\u043C \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438 \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u043D\u0430\u0431\u043E\u0440\u0430 \u0442\u0435\u043A\u0441\u0442\u0430. \u041C\u043E\u0436\u0435\u0442 \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0430\u0442\u044C \u043D\u0435\u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u044F.",
+      "lightweight_mode": "\u041B\u0435\u0433\u043A\u043E\u0432\u0435\u0441\u043D\u044B\u0439 \u0440\u0435\u0436\u0438\u043C (\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u043E)",
+      "lightweight_mode_desc": "\u0417\u043D\u0430\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0441\u043D\u0438\u0436\u0430\u0435\u0442 \u043D\u0430\u0433\u0440\u0443\u0437\u043A\u0443 \u043F\u0440\u0438 \u043D\u0430\u0431\u043E\u0440\u0435 \u0442\u0435\u043A\u0441\u0442\u0430. \u041C\u043E\u0436\u0435\u0442 \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0430\u0442\u044C \u043D\u0435\u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u044F.",
       "disable_coloring_current_file": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
       "disable_coloring_current_file_desc": "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u043F\u0440\u0430\u0432\u0438\u043B\u043E \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u0434\u043B\u044F \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430 \u0432 \u0440\u0430\u0437\u0434\u0435\u043B \xAB\u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u044F \u0444\u0430\u0439\u043B\u043E\u0432 \u0438 \u043F\u0430\u043F\u043E\u043A\xBB.",
       "btn_disable_for_this_file": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0434\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
@@ -3194,6 +3402,10 @@ var require_ru = __commonJS({
       "setting_color_once_desc": "\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C inline HTML \u0441\u0442\u0438\u043B\u044C \u0434\u043B\u044F \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u043E\u0433\u043E \u0442\u0435\u043A\u0441\u0442\u0430. \u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442\u0441\u044F \u0434\u0430\u0436\u0435 \u0435\u0441\u043B\u0438 \u043F\u043B\u0430\u0433\u0438\u043D \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D.",
       "setting_highlight_once": "\u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
       "setting_highlight_once_desc": "\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C inline HTML \u0441\u0442\u0438\u043B\u044C \u0441 \u0444\u043E\u043D\u043E\u043C. \u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442\u0441\u044F \u0434\u0430\u0436\u0435 \u0435\u0441\u043B\u0438 \u043F\u043B\u0430\u0433\u0438\u043D \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D.",
+      "setting_color_highlight_once": "\u0426\u0432\u0435\u0442 \u0438 \u041F\u043E\u0434\u0441\u0432\u0435\u0442\u0438\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E",
+      // added
+      "setting_color_highlight_once_desc": "\u041E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u0443\u043D\u0438\u0444\u0438\u0446\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0441\u0435\u043B\u0435\u043A\u0442\u043E\u0440 \u0446\u0432\u0435\u0442\u0430 \u0434\u043B\u044F \u043F\u0440\u0438\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043A\u0430\u043A \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430, \u0442\u0430\u043A \u0438 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438 \u0444\u043E\u043D\u0430 \u0432 \u0441\u0442\u0440\u043E\u043A\u0435. \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442 \u0443\u043D\u0438\u0444\u0438\u0446\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u043E\u0435 \u043C\u0435\u043D\u044E.",
+      // added
       "highlight_once_preview": "\u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u043E\u0439 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
       "highlight_once_preview_text": "\u0422\u0430\u043A \u0431\u0443\u0434\u0435\u0442 \u0432\u044B\u0433\u043B\u044F\u0434\u0435\u0442\u044C \u043E\u0434\u043D\u043E\u043A\u0440\u0430\u0442\u043D\u0430\u044F \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430!",
       // Highlight Once Settings
@@ -3501,6 +3713,8 @@ var require_ru = __commonJS({
       "label_border_thickness": "\u0422\u043E\u043B\u0449\u0438\u043D\u0430 \u0440\u0430\u043C\u043A\u0438",
       "btn_save_style": "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0441\u0442\u0438\u043B\u044C",
       // Quick Colors / Styles
+      "quick_actions_header": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044F",
+      // added
       "quick_colors_header": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430",
       "quick_colors_desc": "\u041F\u043E\u0437\u0432\u043E\u043B\u044F\u0435\u0442 \u0431\u044B\u0441\u0442\u0440\u043E \u043F\u043E\u0434\u0441\u0432\u0435\u0447\u0438\u0432\u0430\u0442\u044C \u0438\u043B\u0438 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442, \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u044F \u0446\u0432\u0435\u0442\u0430 \u0432 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u043C \u043C\u0435\u043D\u044E. \u0415\u0441\u043B\u0438 \u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0446\u0432\u0435\u0442\u0430 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u044B, \u0431\u0443\u0434\u0443\u0442 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C\u0441\u044F \u0446\u0432\u0435\u0442\u0430 \u0441\u0442\u0438\u043B\u0435\u0439 \u0438\u0437 \u0411\u044B\u0441\u0442\u0440\u044B\u0445 \u0441\u0442\u0438\u043B\u0435\u0439.",
       "quick_colors_apply_mode_label": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442 \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E",
@@ -3518,18 +3732,27 @@ var require_ru = __commonJS({
       "btn_create_new_blacklist_group": "+ \u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u044B\u0439 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       "edit_blacklist_group_modal_title": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       "tooltip_delete_all_blacklist_groups": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
-      "confirm_delete_all_blacklist_groups_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
-      "confirm_delete_all_blacklist_groups_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0447\u0451\u0440\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C!",
-      "confirm_delete_blacklist_group_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
-      "confirm_delete_blacklist_group_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u043E\u0442 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C.",
-      "notice_blacklist_group_activated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
-      "notice_blacklist_group_deactivated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0434\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
-      "command_activate_blacklist_group": "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}",
-      "command_deactivate_blacklist_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}",
       "btn_duplicate_entry": "\u0414\u0443\u0431\u043B\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
       "btn_open_in_regex_tester": "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043E\u0440\u0435 Regex",
       "move_to_blacklist_group": "\u041F\u0435\u0440\u0435\u043D\u0435\u0441\u0442\u0438 \u0432 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
-      "btn_delete_entry": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C"
+      "btn_delete_entry": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
+      "edit_group_highlight_styling": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0442\u0438\u043B\u044C \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u0438\u044F \u0433\u0440\u0443\u043F\u043F\u044B",
+      // added
+      "light_mode_fixer_desc": "\u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u0437\u0430\u0442\u0435\u043C\u043D\u044F\u0435\u0442 \u0446\u0432\u0435\u0442\u043D\u043E\u0439 \u0442\u0435\u043A\u0441\u0442 \u043F\u0440\u0438 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0438 \u0441\u0432\u0435\u0442\u043B\u043E\u0439 \u0442\u0435\u043C\u044B \u0434\u043B\u044F \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0432\u0438\u0434\u0438\u043C\u043E\u0441\u0442\u0438.",
+      // added
+      "dark_mode_fixer_desc": "\u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u043E\u0441\u0432\u0435\u0442\u043B\u044F\u0435\u0442 \u0446\u0432\u0435\u0442\u043D\u043E\u0439 \u0442\u0435\u043A\u0441\u0442 \u043F\u0440\u0438 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0438 \u0442\u0435\u043C\u043D\u043E\u0439 \u0442\u0435\u043C\u044B \u0434\u043B\u044F \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0432\u0438\u0434\u0438\u043C\u043E\u0441\u0442\u0438.",
+      // added
+      "preset_bold": "\u0416\u0438\u0440\u043D\u044B\u0439",
+      // added
+      "preset_italic": "\u041A\u0443\u0440\u0441\u0438\u0432",
+      // added
+      "preset_bold_italic": "\u0416\u0438\u0440\u043D\u044B\u0439 \u043A\u0443\u0440\u0441\u0438\u0432",
+      // added
+      // Blacklist Group Commands
+      "notice_blacklist_group_activated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
+      "notice_blacklist_group_deactivated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0434\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
+      "command_activate_blacklist_group": "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}",
+      "command_deactivate_blacklist_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}"
     };
   }
 });
@@ -3569,6 +3792,8 @@ var require_zh_cn = __commonJS({
       "file_menu_disable": "\u4E3A\u6B64\u6587\u4EF6\u7981\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
       "menu_color_once": "\u7740\u8272\u4E00\u6B21",
       "menu_highlight_once": "\u9AD8\u4EAE\u4E00\u6B21",
+      "menu_color_highlight_once": "\u989C\u8272 / \u9AD8\u4EAE\u4E00\u6B21",
+      "menu_remove_inline_color": "\u79FB\u9664\u5185\u8054\u989C\u8272",
       "menu_always_color_text": "\u6587\u5B57\u81EA\u52A8\u7740\u8272",
       "menu_remove_always_color_text": "\u79FB\u9664\u6587\u5B57\u81EA\u52A8\u7740\u8272",
       "menu_blacklist_word": "\u5C06\u5355\u8BCD\u52A0\u5165\u7740\u8272\u9ED1\u540D\u5355",
@@ -3596,11 +3821,25 @@ var require_zh_cn = __commonJS({
       // Commands
       "command_color_selected": "\u7740\u8272\u9009\u4E2D\u6587\u5B57",
       "command_toggle_current": "\u542F\u7528/\u7981\u7528\u5F53\u524D\u6587\u6863\u7740\u8272",
-      "command_toggle_global": "\u542F\u7528/\u7981\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
-      "command_enable_current": "\u4E3A\u5F53\u524D\u6587\u6863\u542F\u7528\u7740\u8272",
-      "command_disable_current": "\u4E3A\u5F53\u524D\u6587\u6863\u7981\u7528\u7740\u8272",
-      "command_enable_global": "\u542F\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
-      "command_disable_global": "\u7981\u7528\u6587\u5B57\u81EA\u52A8\u7740\u8272",
+      "command_enable_current": "\u542F\u7528\u5F53\u524D\u6587\u6863\u7740\u8272",
+      "command_disable_current": "\u7981\u7528\u5F53\u524D\u6587\u6863\u7740\u8272",
+      "command_toggle_global": "\u542F\u7528/\u7981\u7528\u5168\u5C40\u7740\u8272",
+      "command_enable_global": "\u542F\u7528\u5168\u5C40\u7740\u8272",
+      "command_disable_global": "\u7981\u7528\u5168\u5C40\u7740\u8272",
+      "command_enable_lightweight_mode": "\u542F\u7528\u8F7B\u91CF\u6A21\u5F0F",
+      "command_disable_lightweight_mode": "\u7981\u7528\u8F7B\u91CF\u6A21\u5F0F",
+      "command_color_highlight_once": "\u4E00\u6B21\u6027\u7740\u8272/\u9AD8\u4EAE\u9009\u4E2D\u53CA\u6587\u672C",
+      "notice_select_text_first_once": "\u8BF7\u5148\u9009\u62E9\u6587\u672C\u3002",
+      "enable_document_color": "\u542F\u7528\u5168\u5C40\u989C\u8272",
+      "color_rendering_header": "\u989C\u8272\u6E32\u67D3\u4E0E\u6027\u80FD",
+      "theme_support_header": "\u4E3B\u9898\u652F\u6301",
+      "matching_behavior_header": "\u5339\u914D\u884C\u4E3A",
+      "smart_update_mode": "\u667A\u80FD\u66F4\u65B0 (\u5B9E\u9A8C\u6027)",
+      "smart_update_mode_desc": "\u4EC5\u5728\u8F93\u5165\u65F6\u66F4\u65B0\u5F53\u524D\u884C\u7684\u7740\u8272\uFF0C\u5E76\u51BB\u7ED3\u5176\u4ED6\u884C\u4EE5\u63D0\u9AD8\u6027\u80FD\u3002",
+      "word_completion_coloring": "\u5355\u8BCD\u5B8C\u6210\u7740\u8272 (\u5B9E\u9A8C\u6027)",
+      "word_completion_coloring_desc": "\u4EC5\u5728\u8F93\u5165\u7A7A\u683C\u540E\u7740\u8272\u5355\u8BCD\u3002\u9632\u6B62\u5728\u6253\u5B57\u65F6\u7740\u8272\u90E8\u5206\u5339\u914D\u9879\u3002",
+      "light_mode_fixer": "\u4EAE\u8272\u6A21\u5F0F\u6587\u672C\u989C\u8272\u4FEE\u590D\u5668",
+      "dark_mode_fixer": "\u6697\u8272\u6A21\u5F0F\u6587\u672C\u989C\u8272\u4FEE\u590D\u5668",
       "command_manage_advanced_rules": "\u7BA1\u7406\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
       "command_open_regex_tester": "\u6DFB\u52A0\u6B63\u5219\u8868\u8FBE\u5F0F\uFF08\u6253\u5F00\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\uFF09",
       "command_open_blacklist_regex_tester": "\u6DFB\u52A0\u9ED1\u540D\u5355\u6B63\u5219\u8868\u8FBE\u5F0F",
@@ -3614,6 +3853,8 @@ var require_zh_cn = __commonJS({
       "command_activate_word_group": "\u542F\u7528 {groupName} \u8BCD\u7EC4",
       "command_deactivate_word_group": "\u505C\u7528 {groupName} \u8BCD\u7EC4",
       // Notifications
+      "notice_lightweight_mode_enabled": "\u8F7B\u91CF\u6A21\u5F0F\u5DF2\u542F\u7528",
+      "notice_lightweight_mode_disabled": "\u8F7B\u91CF\u6A21\u5F0F\u5DF2\u7981\u7528",
       "notice_enabled": "\u6587\u5B57\u81EA\u52A8\u7740\u8272\u5DF2\u542F\u7528",
       "notice_disabled": "\u6587\u5B57\u81EA\u52A8\u7740\u8272\u5DF2\u7981\u7528",
       "notice_blacklisted_cannot_color": '"{word}" \u5DF2\u52A0\u5165\u9ED1\u540D\u5355\uFF0C\u65E0\u6CD5\u7740\u8272\u3002',
@@ -3652,7 +3893,9 @@ var require_zh_cn = __commonJS({
       "notice_text_colors_visible": "\u6587\u672C\u989C\u8272\u53EF\u89C1",
       "notice_highlights_hidden": "\u9AD8\u4EAE\u5DF2\u9690\u85CF",
       "notice_highlights_visible": "\u9AD8\u4EAE\u53EF\u89C1",
-      "notice_regex_support_disabled": "\u6B63\u5219\u8868\u8FBE\u5F0F\u652F\u6301\u5DF2\u7981\u7528\u3002\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u542F\u7528\u4EE5\u4F7F\u7528\u6B63\u5219\u8868\u8FBE\u5F0F\u6A21\u5F0F\u3002",
+      "notice_regex_support_disabled": "\u8981\u4F7F\u7528\u9884\u8BBE\uFF0C\u8BF7\u5728\u8BBE\u7F6E\u7684\u201C\u5E38\u89C4\u201D\u9009\u9879\u5361\u4E2D\u542F\u7528\u6B63\u5219\u8868\u8FBE\u5F0F\u652F\u6301\u3002",
+      "btn_take_me_there": "\u5E26\u6211\u53BB",
+      "btn_ok": "\u786E\u5B9A",
       "notice_no_active_file_to_disable": "\u6CA1\u6709\u6D3B\u52A8\u6587\u4EF6\u53EF\u7981\u7528\u7740\u8272\u3002",
       "notice_already_disabled_for_path": "\u5DF2\u4E3A {path} \u7981\u7528\u7740\u8272",
       "notice_filter_disabled": "\u8FC7\u6EE4\u5668\u5DF2\u7981\u7528",
@@ -3666,13 +3909,12 @@ var require_zh_cn = __commonJS({
       "restart_required_title": "\u9700\u8981\u91CD\u542F",
       "restart_required_desc": "\u7981\u7528\u547D\u4EE4\u9762\u677F\u4E2D\u7684\u6FC0\u6D3B\u9700\u8981\u91CD\u542F Obsidian \u624D\u80FD\u4ECE\u547D\u4EE4\u9762\u677F\u4E2D\u5B8C\u5168\u79FB\u9664\u8BE5\u547D\u4EE4\u3002\u73B0\u5728\u91CD\u542F\u5417\uFF1F",
       // Basic Settings
-      "enable_document_color": "\u542F\u7528\u6587\u6863\u7740\u8272",
       "color_in_live_preview_mode": "\u5728\u5B9E\u65F6\u9884\u89C8\u6A21\u5F0F\u4E0B\u7740\u8272",
       "color_in_reading_mode": "\u5728\u9605\u8BFB\u6A21\u5F0F\u4E0B\u7740\u8272",
       "force_full_render_reading": "\u9605\u8BFB\u6A21\u5F0F\u4E0B\u5F3A\u5236\u5B8C\u6574\u6E32\u67D3",
       "force_full_render_reading_desc": "\u5982\u679C\u542F\u7528\uFF0C\u9605\u8BFB\u6A21\u5F0F\u5C06\u5C1D\u8BD5\u4E00\u6B21\u6027\u7740\u8272\u6574\u4E2A\u6587\u6863\u3002\u5728\u5927\u578B\u6587\u6863\u4E0A\u53EF\u80FD\u4F1A\u5BFC\u81F4\u5361\u987F\uFF0C\u8BF7\u8C28\u614E\u4F7F\u7528\uFF01",
-      "lightweight_mode": "\u5B9E\u9A8C\u529F\u80FD\uFF1A\u6781\u81F4\u8F7B\u91CF\u6A21\u5F0F",
-      "lightweight_mode_desc": "\u5728\u8F93\u5165\u65F6\u5927\u5E45\u51CF\u5C11\u5904\u7406\u91CF\u3002\u53EF\u80FD\u4F1A\u6F0F\u6389\u90E8\u5206\u5339\u914D\u3002",
+      "lightweight_mode": "\u8F7B\u91CF\u6A21\u5F0F\uFF08\u5B9E\u9A8C\u6027\uFF09",
+      "lightweight_mode_desc": "\u5927\u5E45\u51CF\u5C11\u8F93\u5165\u65F6\u7684\u5904\u7406\u91CF\u3002\u53EF\u80FD\u4F1A\u8DF3\u8FC7\u67D0\u4E9B\u5339\u914D\u3002",
       "disable_coloring_current_file": "\u7981\u7528\u5F53\u524D\u6587\u4EF6\u7740\u8272",
       "disable_coloring_current_file_desc": "\u5728\u6587\u4EF6\u548C\u6587\u4EF6\u5939\u7740\u8272\u89C4\u5219\u4E0B\u4E3A\u6D3B\u52A8\u6587\u4EF6\u6DFB\u52A0\u6392\u9664\u89C4\u5219\u3002",
       "btn_disable_for_this_file": "\u4E3A\u6B64\u6587\u4EF6\u7981\u7528",
@@ -3692,6 +3934,8 @@ var require_zh_cn = __commonJS({
       "setting_color_once_desc": "\u4E3A\u9009\u5B9A\u7684\u6587\u672C\u63D2\u5165\u5185\u8054 HTML \u6837\u5F0F\u3002\u5373\u4F7F\u7981\u7528\u63D2\u4EF6\u4E5F\u4F1A\u4FDD\u7559\u3002",
       "setting_highlight_once": "\u9AD8\u4EAE\u4E00\u6B21",
       "setting_highlight_once_desc": "\u63D2\u5165\u5E26\u80CC\u666F\u7684\u5185\u8054 HTML \u6837\u5F0F\u3002\u5373\u4F7F\u7981\u7528\u63D2\u4EF6\u4E5F\u4F1A\u4FDD\u7559\u3002",
+      "setting_color_highlight_once": "\u989C\u8272\u548C\u9AD8\u4EAE\u4E00\u6B21",
+      "setting_color_highlight_once_desc": "\u6253\u5F00\u7EDF\u4E00\u7684\u989C\u8272\u9009\u62E9\u5668\u4EE5\u5E94\u7528\u5185\u8054\u6587\u672C\u989C\u8272\u548C\u80CC\u666F\u9AD8\u4EAE\u3002\u4F7F\u7528\u7EDF\u4E00\u83DC\u5355\u3002",
       "highlight_once_preview": "\u9AD8\u4EAE\u4E00\u6B21\u9884\u89C8",
       "highlight_once_preview_text": "\u8FD9\u5C31\u662F\u9AD8\u4EAE\u4E00\u6B21\u7684\u6837\u5B50\uFF01",
       // Highlight Once Settings
@@ -3756,7 +4000,7 @@ var require_zh_cn = __commonJS({
       "opt_line_inset": "\u5185\u5D4C",
       "opt_line_outset": "\u5916\u51F8",
       // Color Swatches
-      "color_swatches_header": "\u8272\u677F",
+      "color_swatches_header": "\u989C\u8272\u7BA1\u7406",
       "color_picker_layout": "\u989C\u8272\u9009\u62E9\u5668\u5E03\u5C40",
       "color_picker_layout_desc": "\u9009\u62E9\u4E3A\u5355\u8BCD\u9009\u62E9\u989C\u8272\u65F6\u663E\u793A\u7684\u989C\u8272\u7C7B\u578B",
       "opt_both_text_left": "\u4E24\u8005\uFF1A\u6587\u672C\u5DE6\uFF0C\u9AD8\u4EAE\u53F3",
@@ -3773,7 +4017,7 @@ var require_zh_cn = __commonJS({
       "use_swatch_names_desc": "\u5728\u5355\u8BCD/\u6A21\u5F0F\u8F93\u5165\u65C1\u8FB9\u663E\u793A\u8272\u677F\u540D\u79F0\u4E0B\u62C9\u5217\u8868",
       "link_swatches_to_entries": "\u5C06\u8272\u677F\u66F4\u65B0\u94FE\u63A5\u5230\u7740\u8272\u6587\u672C",
       "link_swatches_to_entries_desc": "\u5F53\u81EA\u5B9A\u4E49\u8272\u677F\u7684\u989C\u8272\u66F4\u6539\u65F6\uFF0C\u66F4\u65B0\u6240\u6709\u4F7F\u7528\u8BE5\u8272\u677F\u7684\u6761\u76EE",
-      "default_colors_header": "\u9ED8\u8BA4\u989C\u8272",
+      "default_colors_header": "\u9ED8\u8BA4\u8272\u677F",
       "custom_swatches_header": "\u81EA\u5B9A\u4E49\u8272\u677F",
       "btn_add_color": "+ \u6DFB\u52A0\u989C\u8272",
       "no_custom_swatches_yet": '\u5C1A\u65E0\u81EA\u5B9A\u4E49\u8272\u677F\u3002\u70B9\u51FB "+ \u6DFB\u52A0\u989C\u8272" \u521B\u5EFA\u4E00\u4E2A\u3002',
@@ -3999,6 +4243,7 @@ var require_zh_cn = __commonJS({
       "label_border_thickness": "\u8FB9\u6846\u539A\u5EA6",
       "btn_save_style": "\u4FDD\u5B58\u6837\u5F0F",
       // Quick Colors / Styles
+      "quick_actions_header": "Quick Actions",
       "quick_colors_header": "\u5FEB\u901F\u989C\u8272",
       "quick_colors_desc": "\u5141\u8BB8\u901A\u8FC7\u5728\u53F3\u952E\u83DC\u5355\u4E2D\u663E\u793A\u989C\u8272\u6765\u5FEB\u901F\u9AD8\u4EAE\u6216\u7740\u8272\u6587\u672C\u3002\u5982\u679C\u5173\u95ED\u5FEB\u901F\u989C\u8272\uFF0C\u5C06\u4F7F\u7528\u5FEB\u901F\u6837\u5F0F\u4E2D\u7684\u6BCF\u79CD\u6837\u5F0F\u989C\u8272\u3002",
       "quick_colors_apply_mode_label": "\u6587\u672C\u7740\u8272\u5C06\u5E94\u7528\u4E3A",
@@ -4034,7 +4279,1081 @@ var require_zh_cn = __commonJS({
       "share_export_title": "Always Color Text \u5BFC\u51FA",
       "delete_button_text": "\u2715",
       "style_name_placeholder": "\u6837\u5F0F\u540D\u79F0",
-      "preview_text": "\u6587\u672C"
+      "preview_text": "\u6587\u672C",
+      "edit_group_highlight_styling": "\u7F16\u8F91\u7EC4\u9AD8\u4EAE\u6837\u5F0F",
+      "light_mode_fixer_desc": "\u4F7F\u7528\u6D45\u8272\u4E3B\u9898\u65F6\u81EA\u52A8\u52A0\u6DF1\u5F69\u8272\u6587\u672C\u4EE5\u63D0\u9AD8\u53EF\u89C1\u6027\u3002",
+      "dark_mode_fixer_desc": "\u4F7F\u7528\u6DF1\u8272\u4E3B\u9898\u65F6\u81EA\u52A8\u53D8\u6D45\u5F69\u8272\u6587\u672C\u4EE5\u63D0\u9AD8\u53EF\u89C1\u6027\u3002",
+      "preset_bold": "\u7C97\u4F53",
+      "preset_italic": "\u659C\u4F53",
+      "preset_bold_italic": "\u7C97\u659C\u4F53"
+    };
+  }
+});
+
+// src/i18n/de.js
+var require_de = __commonJS({
+  "src/i18n/de.js"(exports2, module2) {
+    module2.exports = {
+      // Plugin Metadata & Basic Labels
+      "__name": "Deutsch",
+      "settings_title": "Always Color Text Einstellungen",
+      "header_plugin_name": "Always Color Text",
+      "ribbon_title": "Always Color Text",
+      // Language Settings
+      "language_label": "Sprache",
+      "language_desc": "W\xE4hlen Sie die Sprache f\xFCr das Plugin",
+      "language_en": "English",
+      "language_es": "Espa\xF1ol",
+      "language_fr": "Fran\xE7ais",
+      "language_eu": "Baskisch",
+      "language_ru": "Russisch",
+      "language_auto": "Systemstandard",
+      "default": "Standard",
+      // Release Notes
+      "latest_release_notes_label": "Neueste Versionshinweise",
+      "latest_release_notes_desc": "Pr\xFCfen Sie die neuesten Versionshinweise f\xFCr das Plugin",
+      "open_changelog_button": "\xC4nderungsprotokoll \xF6ffnen",
+      "command_show_release_notes": "Neueste Versionshinweise anzeigen",
+      "changelog_view_on_github": "Auf GitHub ansehen",
+      "changelog_loading": "Lade Versionen...",
+      "changelog_no_info": "Keine Versionsinformationen verf\xFCgbar.",
+      "changelog_release": "Version",
+      "changelog_no_notes": "Keine Notizen",
+      "changelog_failed_to_load": "Laden der Versionshinweise fehlgeschlagen.",
+      // UI Elements & Menus
+      "file_menu_enable": "Always Color Text f\xFCr diese Datei aktivieren",
+      "file_menu_disable": "Always Color Text f\xFCr diese Datei deaktivieren",
+      "menu_color_once": "Einmal f\xE4rben",
+      "menu_highlight_once": "Einmal hervorheben",
+      "menu_color_highlight_once": "Einmal f\xE4rben / hervorheben",
+      "menu_remove_inline_color": "Inline-Farbe entfernen",
+      "menu_always_color_text": "Always Color Text",
+      "menu_remove_always_color_text": "Always Color Text entfernen",
+      "menu_blacklist_word": "Wort auf die schwarze Liste setzen",
+      "show_toggle_statusbar": "Umschalter in der Statusleiste anzeigen",
+      "show_toggle_ribbon": "Umschalt-Symbol im Men\xFCband anzeigen",
+      "show_toggle_command": "Umschalter in Befehlen anzeigen",
+      "menu_options_header": "Men\xFCoptionen",
+      "show_blacklist_menu": '"Wort auf die schwarze Liste setzen" im Rechtsklick-Men\xFC anzeigen',
+      "show_blacklist_menu_desc": "F\xFCgt einen Rechtsklick-Men\xFCpunkt hinzu, um ausgew\xE4hlten Text von der F\xE4rbung auszuschlie\xDFen.",
+      "show_add_to_existing_menu": '"Zu vorhandenem Eintrag hinzuf\xFCgen" im Rechtsklick-Men\xFC anzeigen',
+      "show_add_to_existing_menu_desc": "F\xFCgt einen Rechtsklick-Men\xFCpunkt hinzu, um ausgew\xE4hlten Text zu einem vorhandenen Eintrag hinzuzuf\xFCgen.",
+      "show_always_color_text_menu": '"Always Color Text" im Rechtsklick-Men\xFC anzeigen',
+      "show_always_color_text_menu_desc": "F\xFCgt einen Rechtsklick-Men\xFCpunkt hinzu, um ausgew\xE4hlten Text zu f\xE4rben.",
+      "hide_inactive_groups_in_dropdowns": "Inaktive Gruppen in Dropdowns ausblenden",
+      "hide_inactive_groups_in_dropdowns_desc": "Inaktive Wortgruppen beim Anzeigen von Gruppenlisten in Dropdowns ausblenden.",
+      "show_word_groups_in_commands": "Wortgruppen in Befehlen anzeigen",
+      "show_word_groups_in_commands_desc": "Wenn aktiviert, erscheinen Wortgruppen in der Befehlspalette mit Befehlen zum Aktivieren/Deaktivieren.",
+      "tooltip_enable_for_file": "F\xFCr diese Datei aktivieren",
+      "tooltip_delete_all_words": "Alle definierten W\xF6rter/Muster l\xF6schen",
+      "tooltip_delete_all_blacklist": "Alle W\xF6rter/Muster der schwarzen Liste l\xF6schen",
+      "tooltip_use_regex": "Als Regex-Muster verwenden",
+      "drag_to_reorder": "Zum Neuordnen ziehen",
+      "reset_text_color": "Textfarbe zur\xFCcksetzen",
+      "reset_highlight": "Hervorhebung zur\xFCcksetzen",
+      "tooltip_duplicate_group": "Gruppe duplizieren",
+      "tooltip_edit_group_settings": "Gruppeneinstellungen bearbeiten",
+      "tooltip_delete_all_groups": "Alle Wortgruppen l\xF6schen",
+      "grouped_entries_desc": "Wortgruppen verwalten. Suchfilter nach Gruppennamen.",
+      "search_groups_placeholder": "Gruppen suchen\u2026",
+      "no_entries_found": "Keine Eintr\xE4ge gefunden.",
+      // Commands
+      "command_color_selected": "Ausgew\xE4hlten Text f\xE4rben",
+      "command_toggle_current": "F\xE4rbung f\xFCr aktuelles Dokument aktivieren/deaktivieren",
+      "command_toggle_global": "Globale F\xE4rbung aktivieren/deaktivieren",
+      "command_enable_current": "F\xE4rbung f\xFCr aktuelles Dokument aktivieren",
+      "command_disable_current": "F\xE4rbung f\xFCr aktuelles Dokument deaktivieren",
+      "command_enable_global": "Globale F\xE4rbung aktivieren",
+      "command_disable_global": "Globale F\xE4rbung deaktivieren",
+      "command_manage_advanced_rules": "Spezifische Einschluss-/Ausschlussregeln verwalten",
+      "command_open_regex_tester": "Regex hinzuf\xFCgen (Regex-Tester \xF6ffnen)",
+      "command_open_blacklist_regex_tester": "Blacklist-Regex hinzuf\xFCgen",
+      "command_manage_colored_texts": "Gef\xE4rbte Texte verwalten",
+      "command_toggle_hide_text_colors": "Textfarben ausblenden/einblenden",
+      "command_toggle_hide_highlights": "Hervorhebungen ausblenden/einblenden",
+      "command_hide_text_colors": "Textfarben ausblenden",
+      "command_unhide_text_colors": "Textfarben einblenden",
+      "command_hide_highlights": "Hervorhebungen ausblenden",
+      "command_unhide_highlights": "Hervorhebungen einblenden",
+      "command_enable_lightweight_mode": "Leichtgewichtsmodus aktivieren",
+      "command_disable_lightweight_mode": "Leichtgewichtsmodus deaktivieren",
+      "command_color_highlight_once": "Ausgew\xE4hlten Text Einmal f\xE4rben / hervorheben",
+      "notice_select_text_first_once": "Bitte w\xE4hlen Sie zuerst Text aus, um ihn einmal zu f\xE4rben/hervorzuheben.",
+      "command_activate_word_group": "Wortgruppe {groupName} aktivieren",
+      "command_deactivate_word_group": "Wortgruppe {groupName} deaktivieren",
+      // Notifications
+      "notice_lightweight_mode_enabled": "Leichtgewichtsmodus aktiviert",
+      "notice_lightweight_mode_disabled": "Leichtgewichtsmodus deaktiviert",
+      "notice_enabled": "Always Color Text Aktiviert",
+      "notice_disabled": "Always Color Text Deaktiviert",
+      "notice_blacklisted_cannot_color": '"{word}" steht auf der schwarzen Liste und kann nicht gef\xE4rbt werden.',
+      "notice_removed_always_color": 'Always Color Text f\xFCr "{word}" entfernt.',
+      "notice_added_to_blacklist": '"{word}" zur schwarzen Liste hinzugef\xFCgt.',
+      "notice_already_blacklisted": '"{word}" steht bereits auf der schwarzen Liste.',
+      "notice_select_text_first": "Bitte w\xE4hlen Sie zuerst etwas Text aus.",
+      "notice_no_active_file": "Keine aktive Datei zum Umschalten der F\xE4rbung.",
+      "notice_coloring_enabled_for_path": "F\xE4rbung aktiviert f\xFCr {path}",
+      "notice_coloring_disabled_for_path": "F\xE4rbung deaktiviert f\xFCr {path}",
+      "notice_global_enabled": "Always Color Text Aktiviert",
+      "notice_global_disabled": "Always Color Text Deaktiviert",
+      "notice_unable_open_changelog": "\xC4nderungsprotokoll-Modal kann nicht ge\xF6ffnet werden.",
+      "notice_pattern_blocked": "Muster aus Sicherheitsgr\xFCnden blockiert:",
+      "notice_pattern_too_complex": "Muster zu komplex:",
+      "notice_invalid_hex_format": "Ung\xFCltiges Hex-Farbformat. Verwenden Sie #RRGGBB oder #RGB.",
+      "notice_error_saving_changes": "Fehler beim Speichern der \xC4nderungen. Bitte versuchen Sie es erneut.",
+      "notice_invalid_color_format": "Ung\xFCltiges Farbformat.",
+      "notice_exported": "Exportiert: {fname}",
+      "notice_export_failed": "Export fehlgeschlagen",
+      "notice_import_completed": "Import abgeschlossen",
+      "notice_import_failed": "Import fehlgeschlagen",
+      "notice_invalid_regex": "Ung\xFCltiger Regex",
+      "notice_empty_pattern": "Muster ist leer",
+      "notice_added_regex": "Regex hinzugef\xFCgt",
+      "notice_rule_updated": "Regel aktualisiert",
+      "notice_regex_updated": "Regex aktualisiert",
+      "notice_entry_updated": "Eintrag aktualisiert",
+      "notice_entry_duplicated": "Eintrag dupliziert",
+      "notice_error_opening_regex_tester": "Fehler beim \xD6ffnen des Regex-Testers",
+      "notice_error_opening_blacklist_regex_tester": "Fehler beim \xD6ffnen des Blacklist-Regex-Testers",
+      "notice_error_opening_advanced_rules": "Fehler beim \xD6ffnen des Modals f\xFCr erweiterte Regeln",
+      "notice_text_color_reset": "Textfarbe zur\xFCckgesetzt",
+      "notice_highlight_reset": "Hervorhebung zur\xFCckgesetzt",
+      "notice_text_colors_hidden": "Textfarben ausgeblendet",
+      "notice_text_colors_visible": "Textfarben sichtbar",
+      "notice_highlights_hidden": "Hervorhebungen ausgeblendet",
+      "notice_highlights_visible": "Hervorhebungen sichtbar",
+      "notice_regex_support_disabled": "Um Voreinstellungen zu verwenden, aktivieren Sie die Regex-Unterst\xFCtzung im Reiter Allgemein der Einstellungen.",
+      "btn_take_me_there": "Bring mich dorthin",
+      "btn_ok": "OK",
+      "notice_no_active_file_to_disable": "Keine aktive Datei, um F\xE4rbung zu deaktivieren.",
+      "notice_already_disabled_for_path": "F\xE4rbung bereits deaktiviert f\xFCr {path}",
+      "notice_filter_disabled": "Filter deaktiviert",
+      // Confirmation Dialogs
+      "confirm_delete_all_title": "Alle W\xF6rter l\xF6schen",
+      "confirm_delete_all_desc": "Sind Sie sicher, dass Sie ALLE gef\xE4rbten W\xF6rter/Muster l\xF6schen m\xF6chten? Dies kann nicht r\xFCckg\xE4ngig gemacht werden!",
+      "confirm_delete_all_blacklist_title": "Alle W\xF6rter der schwarzen Liste l\xF6schen",
+      "confirm_delete_all_blacklist_desc": "Sind Sie sicher, dass Sie ALLE Eintr\xE4ge der schwarzen Liste l\xF6schen m\xF6chten? Dies kann nicht r\xFCckg\xE4ngig gemacht werden!",
+      "restart_required_title": "Neustart erforderlich",
+      "restart_required_desc": "Das Deaktivieren des Befehlspaletten-Umschalters erfordert einen Neustart von Obsidian, um den Befehl vollst\xE4ndig aus der Palette zu entfernen. Jetzt neu starten?",
+      "btn_cancel": "Abbrechen",
+      "btn_confirm": "Best\xE4tigen",
+      // Basic Settings
+      "enable_document_color": "Globale Farbe aktivieren",
+      "color_rendering_header": "Farbwiedergabe & Leistung",
+      "theme_support_header": "Themenunterst\xFCtzung",
+      "matching_behavior_header": "\xDCbereinstimmungsverhalten",
+      "smart_update_mode": "Intelligente Aktualisierungen (Experimentell)",
+      "smart_update_mode_desc": "Aktualisiert intelligent nur sichtbare, ge\xE4nderte Zeilen w\xE4hrend des Tippens. Verbessert die Tippleistung erheblich.",
+      "word_completion_coloring": "Wortvervollst\xE4ndigungs-F\xE4rbung (Experimentell)",
+      "word_completion_coloring_desc": "F\xE4rbt W\xF6rter erst nach Eingabe eines Leerzeichens. Verhindert das F\xE4rben von Teil\xFCbereinstimmungen w\xE4hrend des Tippens.",
+      "light_mode_fixer": "Textfarbkorrektur f\xFCr hellen Modus",
+      "dark_mode_fixer": "Textfarbkorrektur f\xFCr dunklen Modus",
+      "color_in_live_preview_mode": "Im Live-Vorschau-Modus f\xE4rben",
+      "color_in_reading_mode": "Im Lesemodus f\xE4rben",
+      "force_full_render_reading": "Vollst\xE4ndiges Rendern im Lesemodus erzwingen",
+      "force_full_render_reading_desc": "Wenn aktiviert, versucht der Lesemodus, das gesamte Dokument auf einmal zu f\xE4rben. Kann bei gro\xDFen Dokumenten zu Verz\xF6gerungen f\xFChren, vorsichtig verwenden!",
+      "lightweight_mode": "Leichtgewichtsmodus (Experimentell)",
+      "lightweight_mode_desc": "Optimiert f\xFCr Geschwindigkeit. \xDCberspringt teure Pr\xFCfungen und Teil\xFCbereinstimmungen. Automatisch aktiviert f\xFCr gro\xDFe Dateien.",
+      "disable_coloring_current_file": "F\xE4rbung f\xFCr aktuelle Datei deaktivieren",
+      "disable_coloring_current_file_desc": "F\xFCgt eine Ausschlussregel f\xFCr die aktive Datei unter Datei- & Ordner-F\xE4rbungsregeln hinzu.",
+      "btn_disable_for_this_file": "F\xFCr diese Datei deaktivieren",
+      // Coloring Settings
+      "coloring_settings_header": "F\xE4rbungseinstellungen",
+      "regex_support": "Regex-Unterst\xFCtzung",
+      "regex_support_desc": "Erlaubt Muster als Regex. Ung\xFCltige Regex werden aus Sicherheitsgr\xFCnden ignoriert.",
+      "disable_regex_safety": "Regex-Sicherheitspr\xFCfung deaktivieren",
+      "disable_regex_safety_desc": "Erlaubt komplexe oder potenziell gef\xE4hrliche Ausdr\xFCcke. Kann zu Verz\xF6gerungen oder Einfrieren f\xFChren.",
+      "requires_regex_safety_disabled": "Erfordert deaktivierte Regex-Sicherheit",
+      "case_sensitive": "Gro\xDF-/Kleinschreibung beachten",
+      "case_sensitive_desc": 'Wenn aktiviert, sind "Wort" und "wort" unterschiedlich. Wenn deaktiviert, werden sie gleich gef\xE4rbt.',
+      "partial_match": "Teil\xFCbereinstimmung",
+      "partial_match_desc": 'Wenn aktiviert, wird das ganze Wort gef\xE4rbt, wenn ein gef\xE4rbtes Wort darin gefunden wird (z.B. "ein" f\xE4rbt "klein").',
+      // One-Time Actions
+      "one_time_actions_header": "Einmalige Aktionen",
+      "setting_color_once": "Einmal f\xE4rben",
+      "setting_color_once_desc": "F\xFCgt HTML-Inline-Stil f\xFCr ausgew\xE4hlten Text ein. Bleibt bestehen, auch wenn das Plugin ausgeschaltet ist.",
+      "setting_highlight_once": "Einmal hervorheben",
+      "setting_highlight_once_desc": "F\xFCgt HTML-Inline-Stil mit Hintergrund ein. Bleibt bestehen, auch wenn das Plugin ausgeschaltet ist.",
+      "setting_color_highlight_once": "Einmal f\xE4rben & hervorheben",
+      "setting_color_highlight_once_desc": "\xD6ffnet den einheitlichen Farbw\xE4hler, um sowohl Textfarbe als auch Hintergrundhervorhebung inline anzuwenden. Verwendet einheitliches Men\xFC.",
+      "highlight_once_preview": "Vorschau f\xFCr Einmal hervorheben",
+      "highlight_once_preview_text": "So sieht einmal hervorheben aus!",
+      // Highlight Once Settings
+      "highlight_once_opacity": "Deckkraft f\xFCr Einmal hervorheben",
+      "highlight_once_border_radius": "Rahmenradius f\xFCr Einmal hervorheben (px)",
+      "reset_to_8": "Auf 8 zur\xFCcksetzen",
+      "highlight_horizontal_padding": "Horizontale Polsterung f\xFCr Hervorhebung (px)",
+      "highlight_vertical_padding": "Vertikale Polsterung f\xFCr Hervorhebung (px)",
+      "reset_to_4": "Auf 4 zur\xFCcksetzen",
+      "enable_border_highlight_once": "Rahmen f\xFCr Einmal hervorheben aktivieren",
+      "enable_border_highlight_once_desc": "F\xFCgt einen Rahmen zur Inline-Hervorhebung hinzu. Hinzugef\xFCgtes HTML/CSS wird lang sein.",
+      "highlight_once_border_style": "Rahmenseite f\xFCr Einmal hervorheben",
+      "highlight_once_border_line_style": "Rahmenstil",
+      "opt_border_full": "Vollst\xE4ndiger Rahmen (Alle Seiten)",
+      "opt_border_top_bottom": "Oben & Unten",
+      "opt_border_left_right": "Links & Rechts",
+      "opt_border_top_left_right": "Oben, Links & Rechts",
+      "opt_border_bottom_left_right": "Unten, Links & Rechts",
+      "opt_border_top_right": "Oben & Rechts",
+      "opt_border_top_left": "Oben & Links",
+      "opt_border_bottom_right": "Unten & Rechts",
+      "opt_border_bottom_left": "Unten & Links",
+      "opt_border_top": "Nur Oben",
+      "opt_border_bottom": "Nur Unten",
+      "opt_border_left": "Nur Links",
+      "opt_border_right": "Nur Rechts",
+      "highlight_once_border_opacity": "Rahmendeckkraft f\xFCr Einmal hervorheben",
+      "highlight_once_border_thickness": "Rahmendicke f\xFCr Einmal hervorheben (px)",
+      "reset_to_1": "Auf 1 zur\xFCcksetzen",
+      "use_global_highlight_style": "Globalen Hervorhebungsstil f\xFCr Einmal hervorheben verwenden",
+      "use_global_highlight_style_desc": "Verwendet Ihre globalen Inline-Stile. Hinzugef\xFCgtes HTML/CSS kann lang sein.",
+      "style_highlight_once": "Einmal hervorheben stylen",
+      "style_highlight_once_desc": "Verwendet Ihre benutzerdefinierten Inline-Stile. Hinzugef\xFCgtes HTML/CSS kann lang sein.",
+      // Global Highlight Appearance
+      "global_highlight_appearance_header": "Erscheinungsbild der globalen Hervorhebungsf\xE4rbung",
+      "highlight_opacity": "Deckkraft der Hervorhebung",
+      "highlight_opacity_desc": "Stellen Sie die Deckkraft der Hervorhebung ein (0-100%)",
+      "highlight_border_radius": "Rahmenradius der Hervorhebung (px)",
+      "highlight_border_radius_desc": "Stellen Sie den Rahmenradius der Hervorhebungsecken in px ein",
+      "highlight_horizontal_padding_desc": "Stellen Sie die linke/rechte Polsterung f\xFCr hervorgehobenen Text in px ein",
+      "highlight_vertical_padding_desc": "Stellen Sie die obere/untere Polsterung f\xFCr hervorgehobenen Text in px ein",
+      "rounded_corners_wrapping": "Abgerundete Ecken bei Umbruch",
+      "rounded_corners_wrapping_desc": "Wenn aktiviert, haben Hervorhebungen abgerundete Ecken auf allen Seiten, auch wenn Text in eine neue Zeile umbricht.",
+      "enable_highlight_border": "Hervorhebungsrahmen aktivieren",
+      "enable_highlight_border_desc": "F\xFCgt einen Rahmen um Hervorhebungen hinzu. Rahmen entspricht Text- oder Hervorhebungsfarbe.",
+      "border_style": "Rahmenseite",
+      "border_style_desc": "W\xE4hlen Sie, auf welchen Seiten der Rahmen angewendet werden soll",
+      "border_line_style": "Rahmenstil",
+      "border_line_style_desc": "W\xE4hlen Sie den Rahmenlinienstil",
+      "border_opacity": "Rahmendeckkraft",
+      "border_opacity_desc": "Stellen Sie die Deckkraft des Rahmens ein (0-100%)",
+      "border_thickness": "Rahmendicke (px)",
+      "border_thickness_desc": "Stellen Sie die Rahmendicke von 0-5 Pixeln ein (z.B. 1, 2.5, 5)",
+      "highlight_preview": "Hervorhebungsvorschau",
+      "highlight_preview_text": "So sieht Ihre Hervorhebung aus!",
+      "opt_line_solid": "Durchgezogen",
+      "opt_line_dashed": "Gestrichelt",
+      "opt_line_dotted": "Gepunktet",
+      "opt_line_double": "Doppelt",
+      "opt_line_groove": "Gerillt",
+      "opt_line_ridge": "Grat",
+      "opt_line_inset": "Eingelassen",
+      "opt_line_outset": "Hervorstehend",
+      // Color Swatches
+      "color_swatches_header": "Farbverwaltung",
+      "color_picker_layout": "Farbw\xE4hler-Layout",
+      "color_picker_layout_desc": "W\xE4hlen Sie, welche Farbtypen beim Ausw\xE4hlen von Farben f\xFCr Text angezeigt werden sollen",
+      "enable_custom_swatches": "Benutzerdefinierte Farbfelder aktivieren",
+      "enable_custom_swatches_desc": "Aktivieren Sie dies, wenn Sie Ihre eigenen Farben f\xFCr den Farbw\xE4hler ausw\xE4hlen m\xF6chten.",
+      "replace_default_swatches": "Standard-Farbfelder ersetzen",
+      "replace_default_swatches_desc": "Wenn aktiviert, werden nur Ihre benutzerdefinierten Farbfelder angezeigt. Wenn deaktiviert, werden sie an die Standardfelder angeh\xE4ngt.",
+      "use_swatch_names": "Farbfeldnamen zum F\xE4rben von Text verwenden",
+      "use_swatch_names_desc": "Wenn aktiviert, wird der Text unter Verwendung des Namens des Farbfelds (z.B. 'Rot') anstelle des Hex-Codes gef\xE4rbt.",
+      "link_swatch_updates": "Farbfeldaktualisierungen mit Textfarben verkn\xFCpfen",
+      "link_swatch_updates_desc": "Wenn aktiviert, aktualisiert eine \xC4nderung der Farbfeldfarbe alle mit diesem Farbfeld gef\xE4rbten Texte.",
+      "default_colors_header": "Standard-Farbfelder",
+      "custom_swatches_header": "Benutzerdefinierte Farbfelder",
+      "btn_add_color": "+ Farbe hinzuf\xFCgen",
+      "no_custom_swatches_yet": 'Noch keine benutzerdefinierten Farbfelder. Klicken Sie auf "+ Farbe hinzuf\xFCgen", um eines zu erstellen.',
+      "label_built_in": "(Eingebaut)",
+      // Color Picker
+      "pick_color_header": "Farbe w\xE4hlen",
+      "selected_text_preview": "Ausgew\xE4hlter Text",
+      "text_color_title": "Textfarbe",
+      "select_swatch": "Farbfeld w\xE4hlen...",
+      "highlight_color_title": "Hervorhebungsfarbe",
+      "select_highlight_swatch": "Hervorhebungsfarbfeld w\xE4hlen...",
+      "settings_tab_general": "Allgemein",
+      "settings_tab_colored_texts": "Gef\xE4rbte Texte",
+      "settings_tab_blacklists": "Schwarze Listen",
+      "settings_tab_file_folder_rules": "Datei / Ordner Regeln",
+      "settings_tab_data": "Daten",
+      // Always Colored Texts
+      "colored_texts_header": "Gef\xE4rbte Texte",
+      "always_colored_texts_desc": "Hier verwalten Sie Ihre W\xF6rter/Muster und deren Farben.",
+      "grouped_entries_header": "Gruppierte Eintr\xE4ge",
+      "btn_create_new_group": "+ Neue Gruppe erstellen",
+      "edit_word_group_modal_title": "Wortgruppe bearbeiten",
+      "group_name_placeholder": "Benennen Sie Ihre Gruppe",
+      "btn_save_group": "Gruppe speichern",
+      "btn_delete_group": "Gruppe l\xF6schen",
+      "group_active_label": "Aktiv",
+      "group_inactive_label": "Inaktiv",
+      "confirm_delete_group_title": "Gruppe l\xF6schen",
+      "confirm_delete_group_desc": "Sind Sie sicher, dass Sie diese Gruppe l\xF6schen m\xF6chten? Dies kann nicht r\xFCckg\xE4ngig gemacht werden.",
+      "confirm_delete_all_groups_title": "Alle Wortgruppen l\xF6schen",
+      "confirm_delete_all_groups_desc": "Sind Sie sicher, dass Sie ALLE Wortgruppen l\xF6schen m\xF6chten? Dies kann nicht r\xFCckg\xE4ngig gemacht werden!",
+      "search_colored_words_placeholder": "Suche gef\xE4rbte W\xF6rter oder Muster...",
+      "btn_add_new_word": "+ Neues Wort hinzuf\xFCgen",
+      "sort_label_last-added": "Sortierung: Zuletzt hinzugef\xFCgt",
+      "sort_label_a-z": "Sortierung: A-Z",
+      "sort_label_reverse-a-z": "Sortierung: Z-A",
+      "sort_label_style-order": "Sortierung: Stilreihenfolge",
+      "sort_label_color": "Sortierung: Farbe",
+      "style_type_text": "Farbe",
+      "style_type_highlight": "Hervorhebung",
+      "style_type_both": "Beides",
+      "word_pattern_placeholder_long": "Muster, Wort oder kommagetrennte W\xF6rter (z.B. hallo, welt, foo)",
+      "word_pattern_placeholder_short": "Schl\xFCsselwort oder Muster, oder kommagetrennte W\xF6rter",
+      "use_regex": "Regex verwenden",
+      "flags_placeholder": "Flags",
+      "text_or_regex_placeholder": "Text/Regex Eingabe",
+      "duplicate_entry": "Eintrag duplizieren",
+      "open_in_regex_tester": "Im Regex-Tester \xF6ffnen",
+      "no_rules_configured": "Keine Regeln konfiguriert.",
+      "no_rules_found": "Keine Regeln gefunden.",
+      "match_option_exact": "Exakt",
+      "match_option_contains": "Enth\xE4lt",
+      "match_option_starts_with": "Beginnt mit",
+      "match_option_ends_with": "Endet mit",
+      // Presets
+      "btn_presets": "Voreinstellungen",
+      "preset_all_headings": "Alle \xDCberschriften (H1-H6)",
+      "preset_headings_h3": "\xDCberschriften (H3)",
+      "preset_bullet_points": "Aufz\xE4hlungspunkte",
+      "preset_numbered_lists": "Nummerierte Listen",
+      "preset_task_checked": "Aufgabenlisten (Erledigt)",
+      "preset_task_unchecked": "Aufgabenlisten (Unerledigt)",
+      "preset_dates_yyyy_mm_dd": "Daten (JJJJ-MM-TT)",
+      "preset_times_am_pm": "Zeiten (AM/PM)",
+      "preset_times_24h": "Zeiten (24h)",
+      "preset_dates_yyyy_mmm_dd": "Daten (JJJJ-MMM-TT)",
+      "preset_relative_dates": "Relative Daten",
+      "preset_basic_urls": "Einfache URLs",
+      "preset_markdown_links": "Markdown-Links",
+      "preset_domain_names": "Domain-Namen",
+      "preset_email_addresses": "E-Mail-Adressen",
+      "preset_at_username": "@Benutzername",
+      "preset_currency": "W\xE4hrung",
+      "preset_measurements": "Ma\xDFeinheiten",
+      "preset_phone_numbers": "Telefonnummern",
+      "preset_all_texts": "S\xE4mtlicher Text",
+      "preset_codeblocks": "Codebl\xF6cke",
+      "preset_inline_comments": "Kommentare (%%...%%)",
+      "preset_highlighted_text": "Hervorgehobener Text (==...==)",
+      "preset_parentheses": "Klammern ()",
+      "preset_square_brackets": "Eckige Klammern []",
+      "preset_curly_braces": "Geschweifte Klammern {}",
+      "preset_angle_brackets": "Spitze Klammern <>",
+      "preset_colons": "Doppelpunkte :",
+      "preset_double_quotes": "Doppelte Anf\xFChrungszeichen",
+      "preset_single_quotes": "Einfache Anf\xFChrungszeichen",
+      "preset_single_quotes_word_bounded": "Einfache Anf\xFChrungszeichen (Wortgebunden)",
+      "preset_bold": "Fett",
+      "preset_italic": "Kursiv",
+      "preset_bold_italic": "Fett Kursiv",
+      "preset_group_markdown_formatting": "Markdown-Formatierung",
+      "preset_group_other_patterns": "Andere Muster",
+      "preset_group_brackets": "Klammern",
+      // Preset Examples
+      "preset_example_heading": "# \xDCberschrift",
+      "preset_example_heading_h3": "### \xDCberschrift",
+      "preset_example_bullet": "- Aufz\xE4hlungspunkt",
+      "preset_example_numbered": "1. Erstes Element",
+      "preset_example_task_checked": "- [x] Erledigt",
+      "preset_example_task_unchecked": "- [ ] Zu erledigen",
+      "preset_example_codeblock": "``` code ```",
+      "preset_example_date_iso": "2009-01-19",
+      "preset_example_date_text": "2025-Jan-19",
+      "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_24h": "13:00",
+      "preset_example_relative": "heute, morgen",
+      "preset_example_url": "https://beispiel.de",
+      "preset_example_markdown_link": "[Link](https://beispiel.de)",
+      "preset_example_comment": "%% kommentar %%",
+      "preset_example_domain": "beispiel.de",
+      "preset_example_email": "name@beispiel.de",
+      "preset_example_username": "@benutzername",
+      "preset_example_currency": "$29.99",
+      "preset_example_measurement": "25kg",
+      "preset_example_phone": "123-456-7890",
+      "preset_example_parentheses": "( text )",
+      "preset_example_square_brackets": "[ ja ]",
+      "preset_example_curly_braces": "{ nein }",
+      "preset_example_angle_brackets": "< text >",
+      "preset_example_colons": ": text :",
+      "preset_example_double_quotes": '"text"',
+      "preset_example_single_quotes": "'text'",
+      "preset_example_single_quotes_word": "'wort'",
+      "preset_example_highlight": "==hervorgehobener text==",
+      "preset_example_all_text": "Dies zielt auf alle Texte ab.",
+      // Blacklist Settings
+      "blacklist_words_header": "Schwarze Listen",
+      "blacklist_words_desc": "Schl\xFCsselw\xF6rter oder Muster hier werden nie gef\xE4rbt, auch nicht bei Teil\xFCbereinstimmungen.",
+      "search_blacklist_placeholder": "Suche W\xF6rter oder Muster der schwarzen Liste\u2026",
+      "blacklist_sort_label_last-added": "Sortierung: Zuletzt hinzugef\xFCgt",
+      "blacklist_sort_label_a-z": "Sortierung: A-Z",
+      "blacklist_sort_label_reverse-a-z": "Sortierung: Z-A",
+      "btn_add_blacklist": "+ Wort oder Muster zur schwarzen Liste hinzuf\xFCgen",
+      "btn_add_to_blacklist": "+ Zur schwarzen Liste hinzuf\xFCgen",
+      "btn_add_blacklist_word": "+ Wort zur schwarzen Liste hinzuf\xFCgen",
+      "btn_add_blacklist_regex": "+ Regex zur schwarzen Liste hinzuf\xFCgen",
+      // File & Folder Rules
+      "file_folder_rules_header": "Datei & Ordner F\xE4rbungsregeln",
+      "file_folder_rules_desc": "Steuern Sie die F\xE4rbung mit Namens\xFCbereinstimmung, exakten Pfaden oder Regex-Mustern. Lassen Sie einen leeren Ausschlusseintrag, um die F\xE4rbung tresorweit zu deaktivieren.",
+      "search_file_folder_rules_placeholder": "Suche Datei/Ordner Regeln\u2026",
+      "path_sort_label_last-added": "Sortierung: Zuletzt hinzugef\xFCgt",
+      "path_sort_label_a-z": "Sortierung: A-Z",
+      "path_sort_label_reverse-a-z": "Sortierung: Z-A",
+      "path_sort_label_mode": "Sortierung: Modus",
+      "path_sort_label_type": "Sortierung: Typ",
+      "btn_add_file_folder_rule": "+ Datei/Ordner Regel hinzuf\xFCgen",
+      "disabled_files_header": "Dateien mit deaktivierter F\xE4rbung:",
+      // Advanced Settings - Inclusion Exclusion Labels
+      "path_rule_mode_include": "Einschlie\xDFen",
+      "path_rule_mode_exclude": "Ausschlie\xDFen",
+      "text_rule_mode_include": "f\xE4rbt nur in (Whitelist)",
+      "text_rule_mode_exclude": "f\xE4rbt nicht in (Blacklist)",
+      "mode_only_colors_in": "f\xE4rbt nur in",
+      "mode_does_not_color_in": "f\xE4rbt nicht in",
+      "label_text_include": "Whitelist",
+      "label_text_exclude": "Blacklist",
+      "label_enable_in": "Aktivieren in",
+      "label_disable_in": "Deaktivieren in",
+      "enter_path_or_pattern": "Pfad, Muster oder Tags eingeben",
+      "label_regex": "Regex",
+      // Advanced Rules
+      "advanced_rules_header": "Spezifische Einschluss-/Ausschlussregeln",
+      "advanced_rules_modal_header": "Spezifische Einschluss-/Ausschlussregeln",
+      "advanced_rules_manage_button": "spezifische Einschluss-/Ausschlussregeln verwalten",
+      "edit_rule_header": "Regel bearbeiten",
+      "add_rule_header": "Neue Regel hinzuf\xFCgen",
+      "btn_add_rule": "+ Regel hinzuf\xFCgen",
+      "btn_save_rule": "Regel speichern",
+      "btn_add_words": "+ W\xF6rter hinzuf\xFCgen",
+      "btn_add_regex": "+ Regex hinzuf\xFCgen",
+      "btn_save_regex": "Regex speichern",
+      // Regex Tester
+      "regex_tester_header": "Regex-Tester",
+      "regex_tester_blacklist": "Regex-Tester - Blacklist",
+      "regex_expression_placeholder": "Setzen Sie Ihren Regex-Ausdruck hier ein",
+      "regex_subject_placeholder": "Geben Sie Ihr Subjekt / Teststring hier ein...",
+      "regex_name_placeholder": "Benennen Sie Ihren Regex",
+      "matches": "\xDCbereinstimmungen",
+      "matches_found": "\xDCbereinstimmungen gefunden",
+      // Regex Flags
+      "flag_g": "Global Flag: Alle \xDCbereinstimmungen finden",
+      "flag_i": "Gro\xDF-/Kleinschreibung ignorieren Flag",
+      "flag_m": "Mehrzeilen Flag: ^ und $ passen auf Zeilengrenzen",
+      "flag_s": "dotAll Flag: . passt auf Zeilenumbr\xFCche",
+      "flag_u": "Unicode Flag: als Unicode-Code-Points behandeln",
+      "flag_y": "Sticky Flag: \xDCbereinstimmung ab lastIndex Position",
+      // Data Export/Import
+      "data_export_import_header": "Daten Export/Import",
+      "export_plugin_data": "Plugin-Daten exportieren",
+      "export_plugin_data_desc": "Einstellungen, W\xF6rter und Regeln in eine JSON-Datei exportieren.",
+      "btn_export": "Exportieren",
+      "import_plugin_data": "Plugin-Daten importieren",
+      "import_plugin_data_desc": "Einstellungen aus einer JSON-Datei importieren",
+      "btn_import": "Importieren",
+      "limit_input_placeholder": "Limit",
+      "limit_input_tooltip": "0=alle; Zahl=letzte N; r=regex; h=hervorhebung; c=text; b=text+hg; sw=beginnt; ew=endet; e=exakt",
+      // Missing Keys Added
+      "highlight_styling_header": "Hervorhebungsstyling bearbeiten",
+      "edit_entry_header": "Eintrag bearbeiten",
+      "opt_case_sensitive": "Gro\xDF-/Kleinschreibung beachten",
+      "opt_not_case_sensitive": "Gro\xDF-/Kleinschreibung ignorieren",
+      "opt_case_all": "Gro\xDF-/Kleinschreibung (Alle)",
+      "opt_match_all": "\xDCbereinstimmungstyp (Alle)",
+      "edit_highlight_styling_btn": "Hervorhebungsstyling bearbeiten",
+      "inclusion_exclusion_header": "Einschluss- / Ausschlussregeln",
+      "btn_save_entry": "Eintrag speichern",
+      "edit_entry_details": "Eintragsdetails bearbeiten",
+      "prompt_search_existing": "Suche vorhandene Eintr\xE4ge\u2026",
+      "command_add_to_existing_entry": "Zu vorhandenem Eintrag hinzuf\xFCgen",
+      "context_remove_from_entry": '"{word}" aus Eintrag entfernen',
+      "context_delete_entry": "Eintrag l\xF6schen",
+      "btn_reset": "Zur\xFCcksetzen",
+      "btn_reset_all": "Hervorhebungsstil zur\xFCcksetzen",
+      "btn_add_word": "+ Wort hinzuf\xFCgen",
+      "btn_add_regex_short": "+ Regex hinzuf\xFCgen",
+      "section_highlight_border_styling": "Hervorhebungsrahmen-Styling",
+      "section_highlight_styling": "Hervorhebungsstyling",
+      "label_highlight_opacity": "Hervorhebungsdeckkraft",
+      "label_highlight_radius": "Hervorhebungsrahmenradius",
+      "label_horizontal_padding": "Horizontale Polsterung",
+      "label_vertical_padding": "Vertikale Polsterung",
+      "label_enable_border": "Rahmen aktivieren",
+      "label_border_sides": "Rahmenseiten",
+      "label_border_style": "Rahmenstil",
+      "label_border_opacity": "Rahmendeckkraft",
+      "label_border_thickness": "Rahmendicke",
+      "btn_save_style": "Stil speichern",
+      "share_export_title": "Always Color Text Export",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "Stilname",
+      "preview_text": "Text",
+      // Quick Colors / Styles
+      "quick_actions_header": "Schnellaktionen",
+      "quick_colors_header": "Schnellfarben",
+      "quick_colors_desc": "Erlaubt es Ihnen, Text schnell hervorzuheben oder zu f\xE4rben, indem Farben im Rechtsklick-Men\xFC angezeigt werden. Wenn Schnellfarben deaktiviert sind, werden Farben pro Stil in Schnellstilen verwendet.",
+      "quick_colors_apply_mode_label": "Die Textf\xE4rbung wird angewendet als",
+      "quick_colors_apply_mode_act": "Always Color Text",
+      "quick_colors_apply_mode_html": "Inline HTML",
+      "quick_styles_header": "Schnellstile",
+      "quick_styles_desc": "Definieren Sie benannte Stile zum Anwenden von Textfarbe und Hervorhebungen. Wenn Schnellfarben deaktiviert sind, werden Farben pro Stil hier verwendet.",
+      "btn_add_style": "+ Stil hinzuf\xFCgen",
+      "quick_styles_menu_option": "Schnellstile",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "Blacklist-Gruppeneintr\xE4ge",
+      "show_blacklist_groups_in_commands": "Blacklist-Gruppen in Befehlen anzeigen",
+      "show_blacklist_groups_in_commands_desc": "Wenn aktiviert, erscheinen Blacklist-Gruppen in der Befehlspalette mit Befehlen zum Aktivieren/Deaktivieren.",
+      "search_blacklist_groups_placeholder": "Suche Blacklist-Gruppen\u2026",
+      "btn_create_new_blacklist_group": "+ Neue Blacklist-Gruppe erstellen",
+      "edit_blacklist_group_modal_title": "Blacklist-Gruppe bearbeiten",
+      "tooltip_delete_all_blacklist_groups": "Alle Blacklist-Gruppen l\xF6schen",
+      "confirm_delete_all_blacklist_groups_title": "Alle Blacklist-Gruppen l\xF6schen",
+      "confirm_delete_all_blacklist_groups_desc": "Sind Sie sicher, dass Sie ALLE Blacklist-Gruppen l\xF6schen m\xF6chten? Dies kann nicht r\xFCckg\xE4ngig gemacht werden!",
+      "confirm_delete_blacklist_group_title": "Blacklist-Gruppe l\xF6schen",
+      "confirm_delete_blacklist_group_desc": "Sind Sie sicher, dass Sie diese Blacklist-Gruppe l\xF6schen m\xF6chten? Dies kann nicht r\xFCckg\xE4ngig gemacht werden.",
+      "notice_blacklist_group_activated": "Blacklist-Gruppe aktiviert",
+      "notice_blacklist_group_deactivated": "Blacklist-Gruppe deaktiviert",
+      "command_activate_blacklist_group": "Blacklist-Gruppe {groupName} aktivieren",
+      "command_deactivate_blacklist_group": "Blacklist-Gruppe {groupName} deaktivieren",
+      "btn_duplicate_entry": "Eintrag duplizieren",
+      "btn_open_in_regex_tester": "Im Regex-Tester \xF6ffnen",
+      "move_to_blacklist_group": "In Blacklist-Gruppe verschieben",
+      "btn_delete_entry": "Eintrag l\xF6schen",
+      "edit_group_highlight_styling": "Gruppen-Hervorhebungsstyling bearbeiten",
+      "light_mode_fixer_desc": "Dunkelt gef\xE4rbten Text automatisch ab, wenn das helle Design verwendet wird, um die Lesbarkeit zu verbessern.",
+      "dark_mode_fixer_desc": "Hellt gef\xE4rbten Text automatisch auf, wenn das dunkle Design verwendet wird, um die Lesbarkeit zu verbessern."
+    };
+  }
+});
+
+// src/i18n/ar.js
+var require_ar = __commonJS({
+  "src/i18n/ar.js"(exports2, module2) {
+    module2.exports = {
+      // Plugin Metadata & Basic Labels
+      "__name": "\u0627\u0644\u0639\u0631\u0628\u064A\u0629",
+      "settings_title": "\u0625\u0639\u062F\u0627\u062F\u0627\u062A Always Color Text",
+      "header_plugin_name": "Always Color Text",
+      "ribbon_title": "Always Color Text",
+      // Language Settings
+      "language_label": "\u0627\u0644\u0644\u063A\u0629",
+      "language_desc": "\u0627\u062E\u062A\u0631 \u0644\u063A\u0629 \u0627\u0644\u0625\u0636\u0627\u0641\u0629",
+      "language_en": "\u0627\u0644\u0625\u0646\u062C\u0644\u064A\u0632\u064A\u0629",
+      "language_es": "\u0627\u0644\u0625\u0633\u0628\u0627\u0646\u064A\u0629",
+      "language_fr": "\u0627\u0644\u0641\u0631\u0646\u0633\u064A\u0629",
+      "language_eu": "\u0627\u0644\u0628\u0627\u0633\u0643\u064A\u0629",
+      "language_ru": "\u0627\u0644\u0631\u0648\u0633\u064A\u0629",
+      "language_de": "\u0627\u0644\u0623\u0644\u0645\u0627\u0646\u064A\u0629",
+      "language_hi": "\u0627\u0644\u0647\u0646\u062F\u064A\u0629",
+      "language_bn": "\u0627\u0644\u0628\u0646\u063A\u0627\u0644\u064A\u0629",
+      "language_it": "\u0627\u0644\u0625\u064A\u0637\u0627\u0644\u064A\u0629",
+      "language_zh_cn": "\u0627\u0644\u0635\u064A\u0646\u064A\u0629 \u0627\u0644\u0645\u0628\u0633\u0637\u0629",
+      "language_ar": "\u0627\u0644\u0639\u0631\u0628\u064A\u0629",
+      "language_auto": "\u0627\u0641\u062A\u0631\u0627\u0636\u064A \u0627\u0644\u0646\u0638\u0627\u0645",
+      "default": "\u0627\u0641\u062A\u0631\u0627\u0636\u064A",
+      // Release Notes
+      "latest_release_notes_label": "\u0645\u0644\u0627\u062D\u0638\u0627\u062A \u0627\u0644\u0625\u0635\u062F\u0627\u0631 \u0627\u0644\u0623\u062E\u064A\u0631",
+      "latest_release_notes_desc": "\u062A\u062D\u0642\u0642 \u0645\u0646 \u0623\u062D\u062F\u062B \u0645\u0644\u0627\u062D\u0638\u0627\u062A \u0627\u0644\u0625\u0635\u062F\u0627\u0631 \u0644\u0644\u0625\u0636\u0627\u0641\u0629",
+      "open_changelog_button": "\u0641\u062A\u062D \u0633\u062C\u0644 \u0627\u0644\u062A\u063A\u064A\u064A\u0631\u0627\u062A",
+      "command_show_release_notes": "\u0639\u0631\u0636 \u0645\u0644\u0627\u062D\u0638\u0627\u062A \u0627\u0644\u0625\u0635\u062F\u0627\u0631 \u0627\u0644\u0623\u062E\u064A\u0631",
+      "changelog_view_on_github": "\u0639\u0631\u0636 \u0639\u0644\u0649 GitHub",
+      "changelog_loading": "\u062C\u0627\u0631\u064A \u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0625\u0635\u062F\u0627\u0631\u0627\u062A...",
+      "changelog_no_info": "\u0644\u0627 \u062A\u062A\u0648\u0641\u0631 \u0645\u0639\u0644\u0648\u0645\u0627\u062A \u0639\u0646 \u0627\u0644\u0625\u0635\u062F\u0627\u0631.",
+      "changelog_release": "\u0625\u0635\u062F\u0627\u0631",
+      "changelog_no_notes": "\u0644\u0627 \u062A\u0648\u062C\u062F \u0645\u0644\u0627\u062D\u0638\u0627\u062A",
+      "changelog_failed_to_load": "\u0641\u0634\u0644 \u062A\u062D\u0645\u064A\u0644 \u0645\u0644\u0627\u062D\u0638\u0627\u062A \u0627\u0644\u0625\u0635\u062F\u0627\u0631.",
+      // UI Elements & Menus
+      "file_menu_enable": "\u062A\u0641\u0639\u064A\u0644 Always Color Text \u0644\u0647\u0630\u0627 \u0627\u0644\u0645\u0644\u0641",
+      "file_menu_disable": "\u062A\u0639\u0637\u064A\u0644 Always Color Text \u0644\u0647\u0630\u0627 \u0627\u0644\u0645\u0644\u0641",
+      "menu_color_once": "\u062A\u0644\u0648\u064A\u0646 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "menu_highlight_once": "\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "menu_color_highlight_once": "\u062A\u0644\u0648\u064A\u0646 / \u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "menu_remove_inline_color": "\u0625\u0632\u0627\u0644\u0629 \u0627\u0644\u0644\u0648\u0646 \u0627\u0644\u0645\u0636\u0645\u0646",
+      "menu_always_color_text": "Always Color Text",
+      "menu_remove_always_color_text": "\u0625\u0632\u0627\u0644\u0629 Always Color Text",
+      "menu_blacklist_word": "\u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0643\u0644\u0645\u0629 \u0644\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "show_toggle_statusbar": "\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u062A\u0628\u062F\u064A\u0644 \u0641\u064A \u0634\u0631\u064A\u0637 \u0627\u0644\u062D\u0627\u0644\u0629",
+      "show_toggle_ribbon": "\u0625\u0638\u0647\u0627\u0631 \u0623\u064A\u0642\u0648\u0646\u0629 \u0627\u0644\u062A\u0628\u062F\u064A\u0644 \u0641\u064A \u0627\u0644\u0634\u0631\u064A\u0637 \u0627\u0644\u062C\u0627\u0646\u0628\u064A",
+      "show_toggle_command": "\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u062A\u0628\u062F\u064A\u0644 \u0641\u064A \u0627\u0644\u0623\u0648\u0627\u0645\u0631",
+      "menu_options_header": "\u062E\u064A\u0627\u0631\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629",
+      "show_blacklist_menu": '\u0625\u0638\u0647\u0627\u0631 "\u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0643\u0644\u0645\u0629 \u0644\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621" \u0641\u064A \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0646\u0642\u0631 \u0628\u0632\u0631 \u0627\u0644\u0645\u0627\u0648\u0633 \u0627\u0644\u0623\u064A\u0645\u0646',
+      "show_blacklist_menu_desc": "\u064A\u0636\u064A\u0641 \u0639\u0646\u0635\u0631 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0646\u0642\u0631 \u0628\u0632\u0631 \u0627\u0644\u0645\u0627\u0648\u0633 \u0627\u0644\u0623\u064A\u0645\u0646 \u0644\u0625\u062F\u0631\u0627\u062C \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u062D\u062F\u062F \u0641\u064A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621 \u0648\u0645\u0646\u0639 \u062A\u0644\u0648\u064A\u0646\u0647.",
+      "show_add_to_existing_menu": '\u0625\u0638\u0647\u0627\u0631 "\u0625\u0636\u0627\u0641\u0629 \u0625\u0644\u0649 \u0625\u062F\u062E\u0627\u0644 \u0645\u0648\u062C\u0648\u062F" \u0641\u064A \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0646\u0642\u0631 \u0628\u0632\u0631 \u0627\u0644\u0645\u0627\u0648\u0633 \u0627\u0644\u0623\u064A\u0645\u0646',
+      "show_add_to_existing_menu_desc": "\u064A\u0636\u064A\u0641 \u0639\u0646\u0635\u0631 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0646\u0642\u0631 \u0628\u0632\u0631 \u0627\u0644\u0645\u0627\u0648\u0633 \u0627\u0644\u0623\u064A\u0645\u0646 \u0644\u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u062D\u062F\u062F \u0625\u0644\u0649 \u0625\u062F\u062E\u0627\u0644 \u0645\u0648\u062C\u0648\u062F.",
+      "show_always_color_text_menu": '\u0625\u0638\u0647\u0627\u0631 "Always Color Text" \u0641\u064A \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0646\u0642\u0631 \u0628\u0632\u0631 \u0627\u0644\u0645\u0627\u0648\u0633 \u0627\u0644\u0623\u064A\u0645\u0646',
+      "show_always_color_text_menu_desc": "\u064A\u0636\u064A\u0641 \u0639\u0646\u0635\u0631 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0646\u0642\u0631 \u0628\u0632\u0631 \u0627\u0644\u0645\u0627\u0648\u0633 \u0627\u0644\u0623\u064A\u0645\u0646 \u0644\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u062D\u062F\u062F.",
+      "hide_inactive_groups_in_dropdowns": "\u0625\u062E\u0641\u0627\u0621 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0627\u062A \u063A\u064A\u0631 \u0627\u0644\u0646\u0634\u0637\u0629 \u0641\u064A \u0627\u0644\u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0645\u0646\u0633\u062F\u0644\u0629",
+      "hide_inactive_groups_in_dropdowns_desc": "\u0625\u062E\u0641\u0627\u0621 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0643\u0644\u0645\u0627\u062A \u063A\u064A\u0631 \u0627\u0644\u0646\u0634\u0637\u0629 \u0639\u0646\u062F \u0639\u0631\u0636 \u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0641\u064A \u0627\u0644\u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0645\u0646\u0633\u062F\u0644\u0629.",
+      "show_word_groups_in_commands": "\u0625\u0638\u0647\u0627\u0631 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0643\u0644\u0645\u0627\u062A \u0641\u064A \u0627\u0644\u0623\u0648\u0627\u0645\u0631",
+      "show_word_groups_in_commands_desc": "\u0639\u0646\u062F \u0627\u0644\u062A\u0641\u0639\u064A\u0644\u060C \u062A\u0638\u0647\u0631 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0643\u0644\u0645\u0627\u062A \u0641\u064A \u0644\u0648\u062D\u0629 \u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0645\u0639 \u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u062A\u0641\u0639\u064A\u0644/\u0627\u0644\u062A\u0639\u0637\u064A\u0644.",
+      "tooltip_enable_for_file": "\u062A\u0641\u0639\u064A\u0644 \u0644\u0647\u0630\u0627 \u0627\u0644\u0645\u0644\u0641",
+      "tooltip_delete_all_words": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0627\u0644\u0643\u0644\u0645\u0627\u062A/\u0627\u0644\u0623\u0646\u0645\u0627\u0637 \u0627\u0644\u0645\u0639\u0631\u0641\u0629",
+      "tooltip_delete_all_blacklist": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0627\u0644\u0643\u0644\u0645\u0627\u062A/\u0627\u0644\u0623\u0646\u0645\u0627\u0637 \u0641\u064A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "tooltip_use_regex": "\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0643\u0646\u0645\u0637 Regex",
+      "drag_to_reorder": "\u0627\u0633\u062D\u0628 \u0644\u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u062A\u0631\u062A\u064A\u0628",
+      "reset_text_color": "\u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0644\u0648\u0646 \u0627\u0644\u0646\u0635",
+      "reset_highlight": "\u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "tooltip_duplicate_group": "\u062A\u0643\u0631\u0627\u0631 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629",
+      "tooltip_edit_group_settings": "\u062A\u0639\u062F\u064A\u0644 \u0625\u0639\u062F\u0627\u062F\u0627\u062A \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629",
+      "tooltip_delete_all_groups": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0643\u0644\u0645\u0627\u062A",
+      "grouped_entries_desc": "\u0625\u062F\u0627\u0631\u0629 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0643\u0644\u0645\u0627\u062A. \u062A\u0635\u0641\u064A\u0629 \u0627\u0644\u0628\u062D\u062B \u062D\u0633\u0628 \u0627\u0633\u0645 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629.",
+      "search_groups_placeholder": "\u0628\u062D\u062B \u0641\u064A \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0627\u062A...",
+      "no_entries_found": "\u0644\u0645 \u064A\u062A\u0645 \u0627\u0644\u0639\u062B\u0648\u0631 \u0639\u0644\u0649 \u0625\u062F\u062E\u0627\u0644\u0627\u062A.",
+      // Commands
+      "command_color_selected": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u062D\u062F\u062F",
+      "command_toggle_current": "\u062A\u0641\u0639\u064A\u0644/\u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0644\u0645\u0633\u062A\u0646\u062F \u0627\u0644\u062D\u0627\u0644\u064A",
+      "command_toggle_global": "\u062A\u0641\u0639\u064A\u0644/\u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0639\u0627\u0645",
+      "command_enable_current": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0644\u0645\u0633\u062A\u0646\u062F \u0627\u0644\u062D\u0627\u0644\u064A",
+      "command_disable_current": "\u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0644\u0645\u0633\u062A\u0646\u062F \u0627\u0644\u062D\u0627\u0644\u064A",
+      "command_enable_global": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0639\u0627\u0645",
+      "command_disable_global": "\u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0639\u0627\u0645",
+      "command_manage_advanced_rules": "\u0625\u062F\u0627\u0631\u0629 \u0642\u0648\u0627\u0639\u062F \u0627\u0644\u062A\u0636\u0645\u064A\u0646/\u0627\u0644\u0627\u0633\u062A\u0628\u0639\u0627\u062F \u0627\u0644\u0645\u062D\u062F\u062F\u0629",
+      "command_open_regex_tester": "\u0625\u0636\u0627\u0641\u0629 Regex (\u0641\u062A\u062D \u0645\u062E\u062A\u0628\u0631 Regex)",
+      "command_open_blacklist_regex_tester": "\u0625\u0636\u0627\u0641\u0629 Regex \u0644\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "command_manage_colored_texts": "\u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629",
+      "command_toggle_hide_text_colors": "\u0625\u062E\u0641\u0627\u0621/\u0625\u0638\u0647\u0627\u0631 \u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635",
+      "command_toggle_hide_highlights": "\u0625\u062E\u0641\u0627\u0621/\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "command_hide_text_colors": "\u0625\u062E\u0641\u0627\u0621 \u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635",
+      "command_unhide_text_colors": "\u0625\u0638\u0647\u0627\u0631 \u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635",
+      "command_hide_highlights": "\u0625\u062E\u0641\u0627\u0621 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "command_unhide_highlights": "\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "command_enable_lightweight_mode": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062E\u0641\u064A\u0641",
+      "command_disable_lightweight_mode": "\u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062E\u0641\u064A\u0641",
+      "command_color_highlight_once": "\u062A\u0644\u0648\u064A\u0646 / \u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u062D\u062F\u062F \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "notice_select_text_first_once": "\u0627\u0644\u0631\u062C\u0627\u0621 \u062A\u062D\u062F\u064A\u062F \u0627\u0644\u0646\u0635 \u0623\u0648\u0644\u0627\u064B \u0644\u0644\u062A\u0644\u0648\u064A\u0646/\u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629.",
+      "command_activate_word_group": "\u062A\u0641\u0639\u064A\u0644 \u0645\u062C\u0645\u0648\u0639\u0629 \u0643\u0644\u0645\u0627\u062A {groupName}",
+      "command_deactivate_word_group": "\u062A\u0639\u0637\u064A\u0644 \u0645\u062C\u0645\u0648\u0639\u0629 \u0643\u0644\u0645\u0627\u062A {groupName}",
+      // Notifications
+      "notice_lightweight_mode_enabled": "\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062E\u0641\u064A\u0641",
+      "notice_lightweight_mode_disabled": "\u062A\u0645 \u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062E\u0641\u064A\u0641",
+      "notice_enabled": "\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 Always Color Text",
+      "notice_disabled": "\u062A\u0645 \u062A\u0639\u0637\u064A\u0644 Always Color Text",
+      "notice_blacklisted_cannot_color": '"{word}" \u0645\u0648\u062C\u0648\u062F \u0641\u064A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621 \u0648\u0644\u0627 \u064A\u0645\u0643\u0646 \u062A\u0644\u0648\u064A\u0646\u0647.',
+      "notice_removed_always_color": '\u062A\u0645\u062A \u0625\u0632\u0627\u0644\u0629 Always Color Text \u0644\u0640 "{word}".',
+      "notice_added_to_blacklist": '\u062A\u0645\u062A \u0625\u0636\u0627\u0641\u0629 "{word}" \u0625\u0644\u0649 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621.',
+      "notice_already_blacklisted": '"{word}" \u0645\u0648\u062C\u0648\u062F \u0628\u0627\u0644\u0641\u0639\u0644 \u0641\u064A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621.',
+      "notice_select_text_first": "\u0627\u0644\u0631\u062C\u0627\u0621 \u062A\u062D\u062F\u064A\u062F \u0628\u0639\u0636 \u0627\u0644\u0646\u0635 \u0623\u0648\u0644\u0627\u064B.",
+      "notice_no_active_file": "\u0644\u0627 \u064A\u0648\u062C\u062F \u0645\u0644\u0641 \u0646\u0634\u0637 \u0644\u062A\u0628\u062F\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0647.",
+      "notice_coloring_enabled_for_path": "\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0640 {path}",
+      "notice_coloring_disabled_for_path": "\u062A\u0645 \u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0640 {path}",
+      "notice_global_enabled": "\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 Always Color Text",
+      "notice_global_disabled": "\u062A\u0645 \u062A\u0639\u0637\u064A\u0644 Always Color Text",
+      "notice_unable_open_changelog": "\u062A\u0639\u0630\u0631 \u0641\u062A\u062D \u0646\u0627\u0641\u0630\u0629 \u0633\u062C\u0644 \u0627\u0644\u062A\u063A\u064A\u064A\u0631\u0627\u062A.",
+      "notice_pattern_blocked": "\u062A\u0645 \u062D\u0638\u0631 \u0627\u0644\u0646\u0645\u0637 \u0644\u0633\u0644\u0627\u0645\u0629 \u0627\u0644\u0630\u0627\u0643\u0631\u0629:",
+      "notice_pattern_too_complex": "\u0627\u0644\u0646\u0645\u0637 \u0645\u0639\u0642\u062F \u062C\u062F\u0627\u064B:",
+      "notice_invalid_hex_format": "\u062A\u0646\u0633\u064A\u0642 \u0644\u0648\u0646 hex \u063A\u064A\u0631 \u0635\u0627\u0644\u062D. \u0627\u0633\u062A\u062E\u062F\u0645 #RRGGBB \u0623\u0648 #RGB.",
+      "notice_error_saving_changes": "\u062E\u0637\u0623 \u0641\u064A \u062D\u0641\u0638 \u0627\u0644\u062A\u063A\u064A\u064A\u0631\u0627\u062A. \u064A\u0631\u062C\u0649 \u0627\u0644\u0645\u062D\u0627\u0648\u0644\u0629 \u0645\u0631\u0629 \u0623\u062E\u0631\u0649.",
+      "notice_invalid_color_format": "\u062A\u0646\u0633\u064A\u0642 \u0644\u0648\u0646 \u063A\u064A\u0631 \u0635\u0627\u0644\u062D.",
+      "notice_exported": "\u062A\u0645 \u0627\u0644\u062A\u0635\u062F\u064A\u0631: {fname}",
+      "notice_export_failed": "\u0641\u0634\u0644 \u0627\u0644\u062A\u0635\u062F\u064A\u0631",
+      "notice_import_completed": "\u062A\u0645 \u0627\u0644\u0627\u0633\u062A\u064A\u0631\u0627\u062F",
+      "notice_import_failed": "\u0641\u0634\u0644 \u0627\u0644\u0627\u0633\u062A\u064A\u0631\u0627\u062F",
+      "notice_invalid_regex": "Regex \u063A\u064A\u0631 \u0635\u0627\u0644\u062D",
+      "notice_empty_pattern": "\u0627\u0644\u0646\u0645\u0637 \u0641\u0627\u0631\u063A",
+      "notice_added_regex": "\u062A\u0645\u062A \u0625\u0636\u0627\u0641\u0629 Regex",
+      "notice_rule_updated": "\u062A\u0645 \u062A\u062D\u062F\u064A\u062B \u0627\u0644\u0642\u0627\u0639\u062F\u0629",
+      "notice_regex_updated": "\u062A\u0645 \u062A\u062D\u062F\u064A\u062B Regex",
+      "notice_entry_updated": "\u062A\u0645 \u062A\u062D\u062F\u064A\u062B \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
+      "notice_entry_duplicated": "\u062A\u0645 \u062A\u0643\u0631\u0627\u0631 \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
+      "notice_error_opening_regex_tester": "\u062E\u0637\u0623 \u0641\u064A \u0641\u062A\u062D \u0645\u062E\u062A\u0628\u0631 regex",
+      "notice_error_opening_blacklist_regex_tester": "\u062E\u0637\u0623 \u0641\u064A \u0641\u062A\u062D \u0645\u062E\u062A\u0628\u0631 regex \u0644\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "notice_error_opening_advanced_rules": "\u062E\u0637\u0623 \u0641\u064A \u0641\u062A\u062D \u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u0645\u062A\u0642\u062F\u0645\u0629",
+      "notice_text_color_reset": "\u062A\u0645 \u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0644\u0648\u0646 \u0627\u0644\u0646\u0635",
+      "notice_highlight_reset": "\u062A\u0645 \u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "notice_text_colors_hidden": "\u062A\u0645 \u0625\u062E\u0641\u0627\u0621 \u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635",
+      "notice_text_colors_visible": "\u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635 \u0645\u0631\u0626\u064A\u0629",
+      "notice_highlights_hidden": "\u062A\u0645 \u0625\u062E\u0641\u0627\u0621 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "notice_highlights_visible": "\u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0626\u064A",
+      "notice_regex_support_disabled": "\u0644\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A \u0627\u0644\u0645\u0633\u0628\u0642\u0629\u060C \u0642\u0645 \u0628\u062A\u0641\u0639\u064A\u0644 \u062F\u0639\u0645 Regex \u0645\u0646 \u0639\u0644\u0627\u0645\u0629 \u0627\u0644\u062A\u0628\u0648\u064A\u0628 \u0639\u0627\u0645 \u0641\u064A \u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A.",
+      "btn_take_me_there": "\u062E\u0630\u0646\u064A \u0625\u0644\u0649 \u0647\u0646\u0627\u0643",
+      "btn_ok": "\u0645\u0648\u0627\u0641\u0642",
+      "notice_no_active_file_to_disable": "\u0644\u0627 \u064A\u0648\u062C\u062F \u0645\u0644\u0641 \u0646\u0634\u0637 \u0644\u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0647.",
+      "notice_already_disabled_for_path": "\u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0645\u0639\u0637\u0644 \u0628\u0627\u0644\u0641\u0639\u0644 \u0644\u0640 {path}",
+      "notice_filter_disabled": "\u062A\u0645 \u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u0645\u0631\u0634\u062D",
+      // Confirmation Dialogs
+      "confirm_delete_all_title": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0627\u0644\u0643\u0644\u0645\u0627\u062A",
+      "confirm_delete_all_desc": "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0623\u0646\u0643 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0627\u0644\u0643\u0644\u0645\u0627\u062A/\u0627\u0644\u0623\u0646\u0645\u0627\u0637 \u0627\u0644\u0645\u0644\u0648\u0646\u0629\u061F \u0644\u0627 \u064A\u0645\u0643\u0646 \u0627\u0644\u062A\u0631\u0627\u062C\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062C\u0631\u0627\u0621!",
+      "confirm_delete_all_blacklist_title": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0643\u0644\u0645\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "confirm_delete_all_blacklist_desc": "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0623\u0646\u0643 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0625\u062F\u062E\u0627\u0644\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621\u061F \u0644\u0627 \u064A\u0645\u0643\u0646 \u0627\u0644\u062A\u0631\u0627\u062C\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062C\u0631\u0627\u0621!",
+      "restart_required_title": "\u0645\u0637\u0644\u0648\u0628 \u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u062A\u0634\u063A\u064A\u0644",
+      "restart_required_desc": "\u064A\u062A\u0637\u0644\u0628 \u062A\u0639\u0637\u064A\u0644 \u062A\u0628\u062F\u064A\u0644 \u0644\u0648\u062D\u0629 \u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0625\u0639\u0627\u062F\u0629 \u062A\u0634\u063A\u064A\u0644 Obsidian \u0644\u0625\u0632\u0627\u0644\u0629 \u0627\u0644\u0623\u0645\u0631 \u0628\u0627\u0644\u0643\u0627\u0645\u0644 \u0645\u0646 \u0627\u0644\u0644\u0648\u062D\u0629. \u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u062A\u0634\u063A\u064A\u0644 \u0627\u0644\u0622\u0646\u061F",
+      "btn_cancel": "\u0625\u0644\u063A\u0627\u0621",
+      "btn_confirm": "\u062A\u0623\u0643\u064A\u062F",
+      // Basic Settings
+      "enable_document_color": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0639\u0627\u0645",
+      "color_rendering_header": "\u0639\u0631\u0636 \u0627\u0644\u0623\u0644\u0648\u0627\u0646 \u0648\u0627\u0644\u0623\u062F\u0627\u0621",
+      "theme_support_header": "\u062F\u0639\u0645 \u0627\u0644\u0633\u0645\u0627\u062A",
+      "matching_behavior_header": "\u0633\u0644\u0648\u0643 \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0629",
+      "smart_update_mode": "\u0627\u0644\u062A\u062D\u062F\u064A\u062B\u0627\u062A \u0627\u0644\u0630\u0643\u064A\u0629 (\u062A\u062C\u0631\u064A\u0628\u064A)",
+      "smart_update_mode_desc": "\u064A\u0642\u0648\u0645 \u0628\u062A\u062D\u062F\u064A\u062B \u0627\u0644\u0623\u0633\u0637\u0631 \u0627\u0644\u0645\u0631\u0626\u064A\u0629 \u0648\u0627\u0644\u0645\u062A\u063A\u064A\u0631\u0629 \u0641\u0642\u0637 \u0628\u0630\u0643\u0627\u0621 \u0623\u062B\u0646\u0627\u0621 \u0627\u0644\u0643\u062A\u0627\u0628\u0629. \u064A\u062D\u0633\u0646 \u0623\u062F\u0627\u0621 \u0627\u0644\u0643\u062A\u0627\u0628\u0629 \u0628\u0634\u0643\u0644 \u0643\u0628\u064A\u0631.",
+      "word_completion_coloring": "\u062A\u0644\u0648\u064A\u0646 \u0625\u0643\u0645\u0627\u0644 \u0627\u0644\u0643\u0644\u0645\u0627\u062A (\u062A\u062C\u0631\u064A\u0628\u064A)",
+      "word_completion_coloring_desc": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0643\u0644\u0645\u0627\u062A \u0641\u0642\u0637 \u0628\u0639\u062F \u0643\u062A\u0627\u0628\u0629 \u0645\u0633\u0627\u0641\u0629. \u064A\u0645\u0646\u0639 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u062A\u0637\u0627\u0628\u0642\u0627\u062A \u0627\u0644\u062C\u0632\u0626\u064A\u0629 \u0623\u062B\u0646\u0627\u0621 \u0627\u0644\u0643\u062A\u0627\u0628\u0629.",
+      "light_mode_fixer": "\u0645\u0635\u062D\u062D \u0644\u0648\u0646 \u0627\u0644\u0646\u0635 \u0641\u064A \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0641\u0627\u062A\u062D",
+      "dark_mode_fixer": "\u0645\u0635\u062D\u062D \u0644\u0648\u0646 \u0627\u0644\u0646\u0635 \u0641\u064A \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062F\u0627\u0643\u0646",
+      "color_in_live_preview_mode": "\u062A\u0644\u0648\u064A\u0646 \u0641\u064A \u0648\u0636\u0639 \u0627\u0644\u0645\u0639\u0627\u064A\u0646\u0629 \u0627\u0644\u062D\u064A\u0629",
+      "color_in_reading_mode": "\u062A\u0644\u0648\u064A\u0646 \u0641\u064A \u0648\u0636\u0639 \u0627\u0644\u0642\u0631\u0627\u0621\u0629",
+      "force_full_render_reading": "\u0641\u0631\u0636 \u0627\u0644\u0639\u0631\u0636 \u0627\u0644\u0643\u0627\u0645\u0644 \u0641\u064A \u0648\u0636\u0639 \u0627\u0644\u0642\u0631\u0627\u0621\u0629",
+      "force_full_render_reading_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0633\u064A\u062D\u0627\u0648\u0644 \u0648\u0636\u0639 \u0627\u0644\u0642\u0631\u0627\u0621\u0629 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0645\u0633\u062A\u0646\u062F \u0628\u0627\u0644\u0643\u0627\u0645\u0644 \u062F\u0641\u0639\u0629 \u0648\u0627\u062D\u062F\u0629. \u0642\u062F \u064A\u0633\u0628\u0628 \u0628\u0637\u0626\u0627\u064B \u0641\u064A \u0627\u0644\u0645\u0633\u062A\u0646\u062F\u0627\u062A \u0627\u0644\u0643\u0628\u064A\u0631\u0629\u060C \u0627\u0633\u062A\u062E\u062F\u0645\u0647 \u0628\u062D\u0630\u0631!",
+      "lightweight_mode": "\u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062E\u0641\u064A\u0641 (\u062A\u062C\u0631\u064A\u0628\u064A)",
+      "lightweight_mode_desc": "\u0645\u062D\u0633\u0646 \u0644\u0644\u0633\u0631\u0639\u0629. \u064A\u062A\u062E\u0637\u0649 \u0627\u0644\u0641\u062D\u0648\u0635\u0627\u062A \u0627\u0644\u0645\u0643\u0644\u0641\u0629 \u0648\u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0627\u062A \u0627\u0644\u062C\u0632\u0626\u064A\u0629. \u064A\u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B \u0644\u0644\u0645\u0644\u0641\u0627\u062A \u0627\u0644\u0643\u0628\u064A\u0631\u0629.",
+      "disable_coloring_current_file": "\u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0644\u0645\u0644\u0641 \u0627\u0644\u062D\u0627\u0644\u064A",
+      "disable_coloring_current_file_desc": "\u064A\u0636\u064A\u0641 \u0642\u0627\u0639\u062F\u0629 \u0627\u0633\u062A\u0628\u0639\u0627\u062F \u0644\u0644\u0645\u0644\u0641 \u0627\u0644\u0646\u0634\u0637 \u0636\u0645\u0646 \u0642\u0648\u0627\u0639\u062F \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0645\u0644\u0641\u0627\u062A \u0648\u0627\u0644\u0645\u062C\u0644\u062F\u0627\u062A.",
+      "btn_disable_for_this_file": "\u062A\u0639\u0637\u064A\u0644 \u0644\u0647\u0630\u0627 \u0627\u0644\u0645\u0644\u0641",
+      // Coloring Settings
+      "coloring_settings_header": "\u0625\u0639\u062F\u0627\u062F\u0627\u062A \u0627\u0644\u062A\u0644\u0648\u064A\u0646",
+      "regex_support": "\u062F\u0639\u0645 Regex",
+      "regex_support_desc": "\u0627\u0644\u0633\u0645\u0627\u062D \u0644\u0644\u0623\u0646\u0645\u0627\u0637 \u0628\u0623\u0646 \u062A\u0643\u0648\u0646 regex. \u0633\u064A\u062A\u0645 \u062A\u062C\u0627\u0647\u0644 regex \u063A\u064A\u0631 \u0627\u0644\u0635\u0627\u0644\u062D \u0644\u0644\u0623\u0645\u0627\u0646.",
+      "disable_regex_safety": "\u062A\u0639\u0637\u064A\u0644 \u0641\u062D\u0635 \u0623\u0645\u0627\u0646 Regex",
+      "disable_regex_safety_desc": "\u0627\u0644\u0633\u0645\u0627\u062D \u0628\u0627\u0644\u062A\u0639\u0628\u064A\u0631\u0627\u062A \u0627\u0644\u0645\u0639\u0642\u062F\u0629 \u0623\u0648 \u0627\u0644\u062A\u064A \u064A\u062D\u062A\u0645\u0644 \u0623\u0646 \u062A\u0643\u0648\u0646 \u062E\u0637\u0631\u0629. \u0642\u062F \u064A\u0633\u0628\u0628 \u0628\u0637\u0626\u0627\u064B \u0623\u0648 \u062A\u062C\u0645\u062F\u0627\u064B.",
+      "requires_regex_safety_disabled": "\u064A\u062A\u0637\u0644\u0628 \u062A\u0639\u0637\u064A\u0644 \u0623\u0645\u0627\u0646 regex",
+      "case_sensitive": "\u062D\u0633\u0627\u0633 \u0644\u062D\u0627\u0644\u0629 \u0627\u0644\u0623\u062D\u0631\u0641",
+      "case_sensitive_desc": '\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0641\u0625\u0646 "word" \u0648 "Word" \u0645\u062E\u062A\u0644\u0641\u0627\u0646. \u0625\u0630\u0627 \u062A\u0645 \u062A\u0639\u0637\u064A\u0644\u0647\u060C \u064A\u062A\u0645 \u062A\u0644\u0648\u064A\u0646\u0647\u0645\u0627 \u0628\u0646\u0641\u0633 \u0627\u0644\u0637\u0631\u064A\u0642\u0629.',
+      "partial_match": "\u0645\u0637\u0627\u0628\u0642\u0629 \u062C\u0632\u0626\u064A\u0629",
+      "partial_match_desc": '\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u064A\u0644\u0648\u0646 \u0627\u0644\u0643\u0644\u0645\u0629 \u0628\u0627\u0644\u0643\u0627\u0645\u0644 \u0625\u0630\u0627 \u062A\u0645 \u0627\u0644\u0639\u062B\u0648\u0631 \u0639\u0644\u0649 \u0623\u064A \u0643\u0644\u0645\u0629 \u0645\u0644\u0648\u0646\u0629 \u0628\u062F\u0627\u062E\u0644\u0647\u0627 (\u0645\u062B\u0644 "as" \u062A\u0644\u0648\u0646 "Jasper").',
+      // One-Time Actions
+      "one_time_actions_header": "\u0625\u062C\u0631\u0627\u0621\u0627\u062A \u0644\u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "setting_color_once": "\u062A\u0644\u0648\u064A\u0646 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "setting_color_once_desc": "\u0625\u062F\u0631\u0627\u062C \u0646\u0645\u0637 HTML \u0645\u0636\u0645\u0646 \u0644\u0644\u0646\u0635 \u0627\u0644\u0645\u062D\u062F\u062F. \u064A\u0633\u062A\u0645\u0631 \u062D\u062A\u0649 \u0625\u0630\u0627 \u062A\u0645 \u0625\u064A\u0642\u0627\u0641 \u062A\u0634\u063A\u064A\u0644 \u0627\u0644\u0625\u0636\u0627\u0641\u0629.",
+      "setting_highlight_once": "\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "setting_highlight_once_desc": "\u0625\u062F\u0631\u0627\u062C \u0646\u0645\u0637 HTML \u0645\u0636\u0645\u0646 \u0645\u0639 \u062E\u0644\u0641\u064A\u0629. \u064A\u0633\u062A\u0645\u0631 \u062D\u062A\u0649 \u0625\u0630\u0627 \u062A\u0645 \u0625\u064A\u0642\u0627\u0641 \u062A\u0634\u063A\u064A\u0644 \u0627\u0644\u0625\u0636\u0627\u0641\u0629.",
+      "setting_color_highlight_once": "\u062A\u0644\u0648\u064A\u0646 \u0648\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "setting_color_highlight_once_desc": "\u064A\u0641\u062A\u062D \u0645\u0646\u062A\u0642\u064A \u0627\u0644\u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0645\u0648\u062D\u062F \u0644\u062A\u0637\u0628\u064A\u0642 \u0643\u0644 \u0645\u0646 \u0644\u0648\u0646 \u0627\u0644\u0646\u0635 \u0648\u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u062E\u0644\u0641\u064A\u0629 \u0628\u0634\u0643\u0644 \u0645\u0636\u0645\u0646. \u064A\u0633\u062A\u062E\u062F\u0645 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0645\u0648\u062D\u062F\u0629.",
+      "highlight_once_preview": "\u0645\u0639\u0627\u064A\u0646\u0629 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "highlight_once_preview_text": "\u0647\u0643\u0630\u0627 \u064A\u0628\u062F\u0648 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629!",
+      // Highlight Once Settings
+      "highlight_once_opacity": "\u0634\u0641\u0627\u0641\u064A\u0629 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "highlight_once_border_radius": "\u0646\u0635\u0641 \u0642\u0637\u0631 \u062D\u062F\u0648\u062F \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629 (px)",
+      "reset_to_8": "\u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0625\u0644\u0649 8",
+      "highlight_horizontal_padding": "\u0627\u0644\u062A\u0628\u0627\u0639\u062F \u0627\u0644\u0623\u0641\u0642\u064A \u0644\u0644\u062A\u0645\u064A\u064A\u0632 (px)",
+      "highlight_vertical_padding": "\u0627\u0644\u062A\u0628\u0627\u0639\u062F \u0627\u0644\u0639\u0645\u0648\u062F\u064A \u0644\u0644\u062A\u0645\u064A\u064A\u0632 (px)",
+      "reset_to_4": "\u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0625\u0644\u0649 4",
+      "enable_border_highlight_once": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062D\u062F\u0648\u062F \u0644\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "enable_border_highlight_once_desc": "\u0625\u0636\u0627\u0641\u0629 \u062D\u062F \u0644\u0644\u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u0645\u0636\u0645\u0646. \u0633\u064A\u0643\u0648\u0646 HTML/CSS \u0627\u0644\u0645\u0636\u0627\u0641 \u0637\u0648\u064A\u0644\u0627\u064B.",
+      "highlight_once_border_style": "\u062C\u0627\u0646\u0628 \u062D\u062F\u0648\u062F \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "highlight_once_border_line_style": "\u0646\u0645\u0637 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "opt_border_full": "\u062D\u062F\u0648\u062F \u0643\u0627\u0645\u0644\u0629 (\u0643\u0644 \u0627\u0644\u062C\u0648\u0627\u0646\u0628)",
+      "opt_border_top_bottom": "\u0623\u0639\u0644\u0649 \u0648\u0623\u0633\u0641\u0644",
+      "opt_border_left_right": "\u064A\u0633\u0627\u0631 \u0648\u064A\u0645\u064A\u0646",
+      "opt_border_top_left_right": "\u0623\u0639\u0644\u0649\u060C \u064A\u0633\u0627\u0631 \u0648\u064A\u0645\u064A\u0646",
+      "opt_border_bottom_left_right": "\u0623\u0633\u0641\u0644\u060C \u064A\u0633\u0627\u0631 \u0648\u064A\u0645\u064A\u0646",
+      "opt_border_top_right": "\u0623\u0639\u0644\u0649 \u0648\u064A\u0645\u064A\u0646",
+      "opt_border_top_left": "\u0623\u0639\u0644\u0649 \u0648\u064A\u0633\u0627\u0631",
+      "opt_border_bottom_right": "\u0623\u0633\u0641\u0644 \u0648\u064A\u0645\u064A\u0646",
+      "opt_border_bottom_left": "\u0623\u0633\u0641\u0644 \u0648\u064A\u0633\u0627\u0631",
+      "opt_border_top": "\u0623\u0639\u0644\u0649 \u0641\u0642\u0637",
+      "opt_border_bottom": "\u0623\u0633\u0641\u0644 \u0641\u0642\u0637",
+      "opt_border_left": "\u064A\u0633\u0627\u0631 \u0641\u0642\u0637",
+      "opt_border_right": "\u064A\u0645\u064A\u0646 \u0641\u0642\u0637",
+      "highlight_once_border_opacity": "\u0634\u0641\u0627\u0641\u064A\u0629 \u062D\u062F\u0648\u062F \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "highlight_once_border_thickness": "\u0633\u0645\u0627\u0643\u0629 \u062D\u062F\u0648\u062F \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629 (px)",
+      "reset_to_1": "\u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0625\u0644\u0649 1",
+      "use_global_highlight_style": "\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0646\u0645\u0637 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u0639\u0627\u0645 \u0644\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "use_global_highlight_style_desc": "\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0623\u0646\u0645\u0627\u0637\u0643 \u0627\u0644\u0645\u0636\u0645\u0646\u0629 \u0627\u0644\u0639\u0627\u0645\u0629. \u0642\u062F \u064A\u0643\u0648\u0646 HTML/CSS \u0627\u0644\u0645\u0636\u0627\u0641 \u0637\u0648\u064A\u0644\u0627\u064B.",
+      "style_highlight_once": "\u062A\u0646\u0633\u064A\u0642 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0645\u0631\u0629 \u0648\u0627\u062D\u062F\u0629",
+      "style_highlight_once_desc": "\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0623\u0646\u0645\u0627\u0637\u0643 \u0627\u0644\u0645\u0636\u0645\u0646\u0629 \u0627\u0644\u0645\u062E\u0635\u0635\u0629. \u0642\u062F \u064A\u0643\u0648\u0646 HTML/CSS \u0627\u0644\u0645\u0636\u0627\u0641 \u0637\u0648\u064A\u0644\u0627\u064B.",
+      // Global Highlight Appearance
+      "global_highlight_appearance_header": "\u0645\u0638\u0647\u0631 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u0639\u0627\u0645",
+      "highlight_opacity": "\u0634\u0641\u0627\u0641\u064A\u0629 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "highlight_opacity_desc": "\u062A\u0639\u064A\u064A\u0646 \u0634\u0641\u0627\u0641\u064A\u0629 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 (0-100%)",
+      "highlight_border_radius": "\u0646\u0635\u0641 \u0642\u0637\u0631 \u062D\u062F\u0648\u062F \u0627\u0644\u062A\u0645\u064A\u064A\u0632 (px)",
+      "highlight_border_radius_desc": "\u062A\u0639\u064A\u064A\u0646 \u0646\u0635\u0641 \u0642\u0637\u0631 \u062D\u062F\u0648\u062F \u0632\u0648\u0627\u064A\u0627 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0628\u0627\u0644\u0628\u0643\u0633\u0644",
+      "highlight_horizontal_padding_desc": "\u062A\u0639\u064A\u064A\u0646 \u0627\u0644\u062A\u0628\u0627\u0639\u062F \u0627\u0644\u0623\u064A\u0633\u0631/\u0627\u0644\u0623\u064A\u0645\u0646 \u0644\u0644\u0646\u0635 \u0627\u0644\u0645\u0645\u064A\u0632 \u0628\u0627\u0644\u0628\u0643\u0633\u0644",
+      "highlight_vertical_padding_desc": "\u062A\u0639\u064A\u064A\u0646 \u0627\u0644\u062A\u0628\u0627\u0639\u062F \u0627\u0644\u0639\u0644\u0648\u064A/\u0627\u0644\u0633\u0641\u0644\u064A \u0644\u0644\u0646\u0635 \u0627\u0644\u0645\u0645\u064A\u0632 \u0628\u0627\u0644\u0628\u0643\u0633\u0644",
+      "rounded_corners_wrapping": "\u0632\u0648\u0627\u064A\u0627 \u062F\u0627\u0626\u0631\u064A\u0629 \u0639\u0646\u062F \u0627\u0644\u0627\u0644\u062A\u0641\u0627\u0641",
+      "rounded_corners_wrapping_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u064A\u0643\u0648\u0646 \u0644\u0644\u062A\u0645\u064A\u064A\u0632 \u0632\u0648\u0627\u064A\u0627 \u062F\u0627\u0626\u0631\u064A\u0629 \u0639\u0644\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0648\u0627\u0646\u0628 \u062D\u062A\u0649 \u0639\u0646\u062F\u0645\u0627 \u064A\u0644\u062A\u0641 \u0627\u0644\u0646\u0635 \u0625\u0644\u0649 \u0633\u0637\u0631 \u062C\u062F\u064A\u062F.",
+      "enable_highlight_border": "\u062A\u0641\u0639\u064A\u0644 \u062D\u062F\u0648\u062F \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "enable_highlight_border_desc": "\u0625\u0636\u0627\u0641\u0629 \u062D\u062F \u062D\u0648\u0644 \u0627\u0644\u062A\u0645\u064A\u064A\u0632. \u0627\u0644\u062D\u062F \u064A\u0637\u0627\u0628\u0642 \u0644\u0648\u0646 \u0627\u0644\u0646\u0635 \u0623\u0648 \u0627\u0644\u062A\u0645\u064A\u064A\u0632.",
+      "border_style": "\u062C\u0627\u0646\u0628 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "border_style_desc": "\u062A\u062D\u062F\u064A\u062F \u0627\u0644\u062C\u0648\u0627\u0646\u0628 \u0627\u0644\u062A\u064A \u0633\u064A\u062A\u0645 \u062A\u0637\u0628\u064A\u0642 \u0627\u0644\u062D\u062F\u0648\u062F \u0639\u0644\u064A\u0647\u0627",
+      "border_line_style": "\u0646\u0645\u0637 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "border_line_style_desc": "\u062A\u062D\u062F\u064A\u062F \u0646\u0645\u0637 \u062E\u0637 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "border_opacity": "\u0634\u0641\u0627\u0641\u064A\u0629 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "border_opacity_desc": "\u062A\u0639\u064A\u064A\u0646 \u0634\u0641\u0627\u0641\u064A\u0629 \u0627\u0644\u062D\u062F\u0648\u062F (0-100%)",
+      "border_thickness": "\u0633\u0645\u0627\u0643\u0629 \u0627\u0644\u062D\u062F\u0648\u062F (px)",
+      "border_thickness_desc": "\u062A\u0639\u064A\u064A\u0646 \u0633\u0645\u0627\u0643\u0629 \u0627\u0644\u062D\u062F\u0648\u062F \u0645\u0646 0-5 \u0628\u0643\u0633\u0644 (\u0645\u062B\u0644 1\u060C 2.5\u060C 5)",
+      "highlight_preview": "\u0645\u0639\u0627\u064A\u0646\u0629 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "highlight_preview_text": "\u0647\u0643\u0630\u0627 \u064A\u0628\u062F\u0648 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u062E\u0627\u0635 \u0628\u0643!",
+      "opt_line_solid": "\u0645\u062A\u0635\u0644",
+      "opt_line_dashed": "\u0645\u062A\u0642\u0637\u0639",
+      "opt_line_dotted": "\u0645\u0646\u0642\u0637",
+      "opt_line_double": "\u0645\u0632\u062F\u0648\u062C",
+      "opt_line_groove": "\u0645\u062D\u0641\u0648\u0631",
+      "opt_line_ridge": "\u0628\u0627\u0631\u0632",
+      "opt_line_inset": "\u063A\u0627\u0626\u0631",
+      "opt_line_outset": "\u0646\u0627\u0641\u0631",
+      // Color Swatches
+      "color_swatches_header": "\u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u0623\u0644\u0648\u0627\u0646",
+      "color_picker_layout": "\u062A\u062E\u0637\u064A\u0637 \u0645\u0646\u062A\u0642\u064A \u0627\u0644\u0623\u0644\u0648\u0627\u0646",
+      "color_picker_layout_desc": "\u0627\u062E\u062A\u0631 \u0623\u0646\u0648\u0627\u0639 \u0627\u0644\u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u062A\u064A \u0633\u062A\u0638\u0647\u0631 \u0639\u0646\u062F \u0627\u062E\u062A\u064A\u0627\u0631 \u0623\u0644\u0648\u0627\u0646 \u0644\u0644\u0646\u0635",
+      "enable_custom_swatches": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0645\u062E\u0635\u0635\u0629",
+      "enable_custom_swatches_desc": "\u0642\u0645 \u0628\u062A\u0634\u063A\u064A\u0644 \u0647\u0630\u0627 \u0625\u0630\u0627 \u0643\u0646\u062A \u062A\u0631\u064A\u062F \u0627\u062E\u062A\u064A\u0627\u0631 \u0623\u0644\u0648\u0627\u0646\u0643 \u0627\u0644\u062E\u0627\u0635\u0629 \u0644\u0645\u0646\u062A\u0642\u064A \u0627\u0644\u0623\u0644\u0648\u0627\u0646.",
+      "replace_default_swatches": "\u0627\u0633\u062A\u0628\u062F\u0627\u0644 \u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0627\u0641\u062A\u0631\u0627\u0636\u064A\u0629",
+      "replace_default_swatches_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0633\u062A\u0638\u0647\u0631 \u0639\u064A\u0646\u0627\u062A\u0643 \u0627\u0644\u0645\u062E\u0635\u0635\u0629 \u0641\u0642\u0637. \u0625\u0630\u0627 \u062A\u0645 \u062A\u0639\u0637\u064A\u0644\u0647\u060C \u0633\u064A\u062A\u0645 \u0625\u0644\u062D\u0627\u0642\u0647\u0627 \u0628\u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0627\u0641\u062A\u0631\u0627\u0636\u064A\u0629.",
+      "use_swatch_names": "\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0644\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635",
+      "use_swatch_names_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0633\u064A\u062A\u0645 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0633\u0645 \u0627\u0644\u0639\u064A\u0646\u0629 (\u0645\u062B\u0644 'Red') \u0628\u062F\u0644\u0627\u064B \u0645\u0646 \u0643\u0648\u062F hex.",
+      "link_swatch_updates": "\u0631\u0628\u0637 \u062A\u062D\u062F\u064A\u062B\u0627\u062A \u0627\u0644\u0639\u064A\u0646\u0629 \u0628\u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635",
+      "link_swatch_updates_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0641\u0625\u0646 \u062A\u062D\u062F\u064A\u062B \u0644\u0648\u0646 \u0627\u0644\u0639\u064A\u0646\u0629 \u0633\u064A\u062D\u062F\u062B \u062C\u0645\u064A\u0639 \u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629 \u0628\u062A\u0644\u0643 \u0627\u0644\u0639\u064A\u0646\u0629.",
+      "default_colors_header": "\u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0627\u0641\u062A\u0631\u0627\u0636\u064A\u0629",
+      "custom_swatches_header": "\u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0645\u062E\u0635\u0635\u0629",
+      "btn_add_color": "+ \u0625\u0636\u0627\u0641\u0629 \u0644\u0648\u0646",
+      "no_custom_swatches_yet": '\u0644\u0627 \u062A\u0648\u062C\u062F \u0639\u064A\u0646\u0627\u062A \u0645\u062E\u0635\u0635\u0629 \u0628\u0639\u062F. \u0627\u0646\u0642\u0631 \u0641\u0648\u0642 "+ \u0625\u0636\u0627\u0641\u0629 \u0644\u0648\u0646" \u0644\u0625\u0646\u0634\u0627\u0621 \u0648\u0627\u062D\u062F\u0629.',
+      "label_built_in": "(\u0645\u062F\u0645\u062C)",
+      // Color Picker
+      "pick_color_header": "\u0627\u062E\u062A\u0631 \u0644\u0648\u0646\u0627\u064B",
+      "selected_text_preview": "\u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u062D\u062F\u062F",
+      "text_color_title": "\u0644\u0648\u0646 \u0627\u0644\u0646\u0635",
+      "select_swatch": "\u0627\u062E\u062A\u0631 \u0639\u064A\u0646\u0629...",
+      "highlight_color_title": "\u0644\u0648\u0646 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "select_highlight_swatch": "\u0627\u062E\u062A\u0631 \u0639\u064A\u0646\u0629 \u062A\u0645\u064A\u064A\u0632...",
+      "settings_tab_general": "\u0639\u0627\u0645",
+      "settings_tab_colored_texts": "\u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629",
+      "settings_tab_blacklists": "\u0627\u0644\u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "settings_tab_file_folder_rules": "\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u0645\u0644\u0641\u0627\u062A / \u0627\u0644\u0645\u062C\u0644\u062F\u0627\u062A",
+      "settings_tab_data": "\u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A",
+      // Always Colored Texts
+      "colored_texts_header": "\u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629",
+      "always_colored_texts_desc": "\u0647\u0646\u0627 \u062A\u062F\u064A\u0631 \u0643\u0644\u0645\u0627\u062A\u0643/\u0623\u0646\u0645\u0627\u0637\u0643 \u0648\u0623\u0644\u0648\u0627\u0646\u0647\u0627.",
+      "grouped_entries_header": "\u0627\u0644\u0625\u062F\u062E\u0627\u0644\u0627\u062A \u0627\u0644\u0645\u062C\u0645\u0639\u0629",
+      "btn_create_new_group": "+ \u0625\u0646\u0634\u0627\u0621 \u0645\u062C\u0645\u0648\u0639\u0629 \u062C\u062F\u064A\u062F\u0629",
+      "edit_word_group_modal_title": "\u062A\u0639\u062F\u064A\u0644 \u0645\u062C\u0645\u0648\u0639\u0629 \u0627\u0644\u0643\u0644\u0645\u0627\u062A",
+      "group_name_placeholder": "\u0633\u0645\u0651\u0650 \u0645\u062C\u0645\u0648\u0639\u062A\u0643",
+      "btn_save_group": "\u062D\u0641\u0638 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629",
+      "btn_delete_group": "\u062D\u0630\u0641 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629",
+      "group_active_label": "\u0646\u0634\u0637",
+      "group_inactive_label": "\u063A\u064A\u0631 \u0646\u0634\u0637",
+      "confirm_delete_group_title": "\u062D\u0630\u0641 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629",
+      "confirm_delete_group_desc": "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0623\u0646\u0643 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u0647\u0630\u0647 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629\u061F \u0644\u0627 \u064A\u0645\u0643\u0646 \u0627\u0644\u062A\u0631\u0627\u062C\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062C\u0631\u0627\u0621.",
+      "confirm_delete_all_groups_title": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0643\u0644\u0645\u0627\u062A",
+      "confirm_delete_all_groups_desc": "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0623\u0646\u0643 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0643\u0644\u0645\u0627\u062A\u061F \u0644\u0627 \u064A\u0645\u0643\u0646 \u0627\u0644\u062A\u0631\u0627\u062C\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062C\u0631\u0627\u0621!",
+      "search_colored_words_placeholder": "\u0628\u062D\u062B \u0639\u0646 \u0643\u0644\u0645\u0627\u062A \u0623\u0648 \u0623\u0646\u0645\u0627\u0637 \u0645\u0644\u0648\u0646\u0629...",
+      "btn_add_new_word": "+ \u0625\u0636\u0627\u0641\u0629 \u0643\u0644\u0645\u0629 \u062C\u062F\u064A\u062F\u0629",
+      "sort_label_last-added": "\u0641\u0631\u0632: \u0622\u062E\u0631 \u0625\u0636\u0627\u0641\u0629",
+      "sort_label_a-z": "\u0641\u0631\u0632: \u0623-\u064A",
+      "sort_label_reverse-a-z": "\u0641\u0631\u0632: \u064A-\u0623",
+      "sort_label_style-order": "\u0641\u0631\u0632: \u062A\u0631\u062A\u064A\u0628 \u0627\u0644\u0646\u0645\u0637",
+      "sort_label_color": "\u0641\u0631\u0632: \u0627\u0644\u0644\u0648\u0646",
+      "style_type_text": "\u0644\u0648\u0646",
+      "style_type_highlight": "\u062A\u0645\u064A\u064A\u0632",
+      "style_type_both": "\u0643\u0644\u0627\u0647\u0645\u0627",
+      "word_pattern_placeholder_long": "\u0646\u0645\u0637\u060C \u0643\u0644\u0645\u0629\u060C \u0623\u0648 \u0643\u0644\u0645\u0627\u062A \u0645\u0641\u0635\u0648\u0644\u0629 \u0628\u0641\u0627\u0635\u0644\u0629 (\u0645\u062B\u0644 \u0645\u0631\u062D\u0628\u0627\u064B\u060C \u0639\u0627\u0644\u0645\u060C foo)",
+      "word_pattern_placeholder_short": "\u0643\u0644\u0645\u0629 \u0645\u0641\u062A\u0627\u062D\u064A\u0629 \u0623\u0648 \u0646\u0645\u0637\u060C \u0623\u0648 \u0643\u0644\u0645\u0627\u062A \u0645\u0641\u0635\u0648\u0644\u0629 \u0628\u0641\u0627\u0635\u0644\u0629",
+      "use_regex": "\u0627\u0633\u062A\u062E\u062F\u0627\u0645 Regex",
+      "flags_placeholder": "\u0623\u0639\u0644\u0627\u0645",
+      "text_or_regex_placeholder": "\u0625\u062F\u062E\u0627\u0644 \u0646\u0635/Regex",
+      "duplicate_entry": "\u0625\u062F\u062E\u0627\u0644 \u0645\u0643\u0631\u0631",
+      "open_in_regex_tester": "\u0641\u062A\u062D \u0641\u064A \u0645\u062E\u062A\u0628\u0631 Regex",
+      "no_rules_configured": "\u0644\u0645 \u064A\u062A\u0645 \u062A\u0643\u0648\u064A\u0646 \u0642\u0648\u0627\u0639\u062F.",
+      "no_rules_found": "\u0644\u0645 \u064A\u062A\u0645 \u0627\u0644\u0639\u062B\u0648\u0631 \u0639\u0644\u0649 \u0642\u0648\u0627\u0639\u062F.",
+      "match_option_exact": "\u0645\u0637\u0627\u0628\u0642",
+      "match_option_contains": "\u064A\u062D\u062A\u0648\u064A \u0639\u0644\u0649",
+      "match_option_starts_with": "\u064A\u0628\u062F\u0623 \u0628\u0640",
+      "match_option_ends_with": "\u064A\u0646\u062A\u0647\u064A \u0628\u0640",
+      // Presets
+      "btn_presets": "\u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A \u0627\u0644\u0645\u0633\u0628\u0642\u0629",
+      "preset_all_headings": "\u0643\u0644 \u0627\u0644\u0639\u0646\u0627\u0648\u064A\u0646 (H1-H6)",
+      "preset_headings_h3": "\u0639\u0646\u0627\u0648\u064A\u0646 (H3)",
+      "preset_bullet_points": "\u0646\u0642\u0627\u0637 \u0627\u0644\u062A\u0639\u062F\u0627\u062F",
+      "preset_numbered_lists": "\u0627\u0644\u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0645\u0631\u0642\u0645\u0629",
+      "preset_task_checked": "\u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0645\u0647\u0627\u0645 (\u0645\u0643\u062A\u0645\u0644\u0629)",
+      "preset_task_unchecked": "\u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0645\u0647\u0627\u0645 (\u063A\u064A\u0631 \u0645\u0643\u062A\u0645\u0644\u0629)",
+      "preset_dates_yyyy_mm_dd": "\u0627\u0644\u062A\u0648\u0627\u0631\u064A\u062E (YYYY-MM-DD)",
+      "preset_times_am_pm": "\u0627\u0644\u0623\u0648\u0642\u0627\u062A (\u0635/\u0645)",
+      "preset_times_24h": "\u0627\u0644\u0623\u0648\u0642\u0627\u062A (24 \u0633\u0627\u0639\u0629)",
+      "preset_dates_yyyy_mmm_dd": "\u0627\u0644\u062A\u0648\u0627\u0631\u064A\u062E (YYYY-MMM-DD)",
+      "preset_relative_dates": "\u0627\u0644\u062A\u0648\u0627\u0631\u064A\u062E \u0627\u0644\u0646\u0633\u0628\u064A\u0629",
+      "preset_basic_urls": "\u0639\u0646\u0627\u0648\u064A\u0646 URL \u0627\u0644\u0623\u0633\u0627\u0633\u064A\u0629",
+      "preset_markdown_links": "\u0631\u0648\u0627\u0628\u0637 Markdown",
+      "preset_domain_names": "\u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0646\u0637\u0627\u0642\u0627\u062A",
+      "preset_email_addresses": "\u0639\u0646\u0627\u0648\u064A\u0646 \u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A",
+      "preset_at_username": "@\u0627\u0633\u0645_\u0627\u0644\u0645\u0633\u062A\u062E\u062F\u0645",
+      "preset_currency": "\u0627\u0644\u0639\u0645\u0644\u0629",
+      "preset_measurements": "\u0627\u0644\u0642\u064A\u0627\u0633\u0627\u062A",
+      "preset_phone_numbers": "\u0623\u0631\u0642\u0627\u0645 \u0627\u0644\u0647\u0648\u0627\u062A\u0641",
+      "preset_all_texts": "\u0643\u0644 \u0627\u0644\u0646\u0635\u0648\u0635",
+      "preset_codeblocks": "\u0643\u062A\u0644 \u0627\u0644\u062A\u0639\u0644\u064A\u0645\u0627\u062A \u0627\u0644\u0628\u0631\u0645\u062C\u064A\u0629",
+      "preset_inline_comments": "\u0627\u0644\u062A\u0639\u0644\u064A\u0642\u0627\u062A (%%...%%)",
+      "preset_highlighted_text": "\u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u0645\u064A\u0632 (==...==)",
+      "preset_parentheses": "\u0623\u0642\u0648\u0627\u0633 ()",
+      "preset_square_brackets": "\u0623\u0642\u0648\u0627\u0633 \u0645\u0631\u0628\u0639\u0629 []",
+      "preset_curly_braces": "\u0623\u0642\u0648\u0627\u0633 \u0645\u0639\u0642\u0648\u0641\u0629 {}",
+      "preset_angle_brackets": "\u0623\u0642\u0648\u0627\u0633 \u0632\u0627\u0648\u064A\u0629 <>",
+      "preset_colons": "\u0646\u0642\u0637\u062A\u0627\u0646 :",
+      "preset_double_quotes": "\u0639\u0644\u0627\u0645\u0627\u062A \u062A\u0646\u0635\u064A\u0635 \u0645\u0632\u062F\u0648\u062C\u0629",
+      "preset_single_quotes": "\u0639\u0644\u0627\u0645\u0627\u062A \u062A\u0646\u0635\u064A\u0635 \u0645\u0641\u0631\u062F\u0629",
+      "preset_single_quotes_word_bounded": "\u0639\u0644\u0627\u0645\u0627\u062A \u062A\u0646\u0635\u064A\u0635 \u0645\u0641\u0631\u062F\u0629 (\u0645\u062D\u062F\u062F\u0629 \u0628\u0643\u0644\u0645\u0629)",
+      "preset_bold": "\u0639\u0631\u064A\u0636",
+      "preset_italic": "\u0645\u0627\u0626\u0644",
+      "preset_bold_italic": "\u0639\u0631\u064A\u0636 \u0645\u0627\u0626\u0644",
+      "preset_group_markdown_formatting": "\u062A\u0646\u0633\u064A\u0642 Markdown",
+      "preset_group_other_patterns": "\u0623\u0646\u0645\u0627\u0637 \u0623\u062E\u0631\u0649",
+      "preset_group_brackets": "\u0623\u0642\u0648\u0627\u0633",
+      // Preset Examples
+      "preset_example_heading": "# \u0639\u0646\u0648\u0627\u0646",
+      "preset_example_heading_h3": "### \u0639\u0646\u0648\u0627\u0646",
+      "preset_example_bullet": "- \u0646\u0642\u0637\u0629",
+      "preset_example_numbered": "1. \u0627\u0644\u0639\u0646\u0635\u0631 \u0627\u0644\u0623\u0648\u0644",
+      "preset_example_task_checked": "- [x] \u0645\u0643\u062A\u0645\u0644",
+      "preset_example_task_unchecked": "- [ ] \u0644\u0644\u0642\u064A\u0627\u0645 \u0628\u0647",
+      "preset_example_codeblock": "``` \u0643\u0648\u062F ```",
+      "preset_example_date_iso": "2009-01-19",
+      "preset_example_date_text": "2025-\u064A\u0646\u0627\u064A\u0631-19",
+      "preset_example_time_ampm": "9:05\u0645",
+      "preset_example_time_24h": "13:00",
+      "preset_example_relative": "\u0627\u0644\u064A\u0648\u0645\u060C \u063A\u062F\u0627\u064B",
+      "preset_example_url": "https://example.com",
+      "preset_example_markdown_link": "[\u0631\u0627\u0628\u0637](https://example.com)",
+      "preset_example_comment": "%% \u062A\u0639\u0644\u064A\u0642 %%",
+      "preset_example_domain": "example.com",
+      "preset_example_email": "name@example.com",
+      "preset_example_username": "@username",
+      "preset_example_currency": "$29.99",
+      "preset_example_measurement": "25\u0643\u062C\u0645",
+      "preset_example_phone": "123-456-7890",
+      "preset_example_parentheses": "( \u0646\u0635 )",
+      "preset_example_square_brackets": "[ \u0646\u0639\u0645 ]",
+      "preset_example_curly_braces": "{ \u0644\u0627 }",
+      "preset_example_angle_brackets": "< \u0646\u0635 >",
+      "preset_example_colons": ": \u0646\u0635 :",
+      "preset_example_double_quotes": '"\u0646\u0635"',
+      "preset_example_single_quotes": "'\u0646\u0635'",
+      "preset_example_single_quotes_word": "'\u0643\u0644\u0645\u0629'",
+      "preset_example_highlight": "==\u0646\u0635 \u0645\u0645\u064A\u0632==",
+      "preset_example_all_text": "\u0633\u064A\u0633\u062A\u0647\u062F\u0641 \u0647\u0630\u0627 \u0643\u0644 \u0627\u0644\u0646\u0635\u0648\u0635.",
+      // Blacklist Settings
+      "blacklist_words_header": "\u0627\u0644\u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "blacklist_words_desc": "\u0627\u0644\u0643\u0644\u0645\u0627\u062A \u0627\u0644\u0645\u0641\u062A\u0627\u062D\u064A\u0629 \u0623\u0648 \u0627\u0644\u0623\u0646\u0645\u0627\u0637 \u0647\u0646\u0627 \u0644\u0646 \u064A\u062A\u0645 \u062A\u0644\u0648\u064A\u0646\u0647\u0627 \u0623\u0628\u062F\u0627\u064B\u060C \u062D\u062A\u0649 \u0644\u0644\u0645\u0637\u0627\u0628\u0642\u0627\u062A \u0627\u0644\u062C\u0632\u0626\u064A\u0629.",
+      "search_blacklist_placeholder": "\u0628\u062D\u062B \u0639\u0646 \u0643\u0644\u0645\u0627\u062A \u0623\u0648 \u0623\u0646\u0645\u0627\u0637 \u0641\u064A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621...",
+      "blacklist_sort_label_last-added": "\u0641\u0631\u0632: \u0622\u062E\u0631 \u0625\u0636\u0627\u0641\u0629",
+      "blacklist_sort_label_a-z": "\u0641\u0631\u0632: \u0623-\u064A",
+      "blacklist_sort_label_reverse-a-z": "\u0641\u0631\u0632: \u064A-\u0623",
+      "btn_add_blacklist": "+ \u0625\u0636\u0627\u0641\u0629 \u0643\u0644\u0645\u0629 \u0623\u0648 \u0646\u0645\u0637 \u0644\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "btn_add_to_blacklist": "+ \u0625\u0636\u0627\u0641\u0629 \u0644\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "btn_add_blacklist_word": "+ \u0625\u0636\u0627\u0641\u0629 \u0643\u0644\u0645\u0629 \u0644\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "btn_add_blacklist_regex": "+ \u0625\u0636\u0627\u0641\u0629 regex \u0644\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      // File & Folder Rules
+      "file_folder_rules_header": "\u0642\u0648\u0627\u0639\u062F \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0645\u0644\u0641\u0627\u062A \u0648\u0627\u0644\u0645\u062C\u0644\u062F\u0627\u062A",
+      "file_folder_rules_desc": "\u0627\u0644\u062A\u062D\u0643\u0645 \u0641\u064A \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0628\u0645\u0637\u0627\u0628\u0642\u0629 \u0627\u0644\u0627\u0633\u0645\u060C \u0627\u0644\u0645\u0633\u0627\u0631\u0627\u062A \u0627\u0644\u062F\u0642\u064A\u0642\u0629\u060C \u0623\u0648 \u0623\u0646\u0645\u0627\u0637 regex. \u0627\u062A\u0631\u0643 \u0625\u062F\u062E\u0627\u0644 \u0627\u0644\u0627\u0633\u062A\u0628\u0639\u0627\u062F \u0641\u0627\u0631\u063A\u0627\u064B \u0644\u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0639\u0644\u0649 \u0645\u0633\u062A\u0648\u0649 \u0627\u0644\u0645\u062E\u0632\u0646 \u0628\u0627\u0644\u0643\u0627\u0645\u0644.",
+      "search_file_folder_rules_placeholder": "\u0628\u062D\u062B \u0641\u064A \u0642\u0648\u0627\u0639\u062F \u0627\u0644\u0645\u0644\u0641\u0627\u062A/\u0627\u0644\u0645\u062C\u0644\u062F\u0627\u062A...",
+      "path_sort_label_last-added": "\u0641\u0631\u0632: \u0622\u062E\u0631 \u0625\u0636\u0627\u0641\u0629",
+      "path_sort_label_a-z": "\u0641\u0631\u0632: \u0623-\u064A",
+      "path_sort_label_reverse-a-z": "\u0641\u0631\u0632: \u064A-\u0623",
+      "path_sort_label_mode": "\u0641\u0631\u0632: \u0627\u0644\u0648\u0636\u0639",
+      "path_sort_label_type": "\u0641\u0631\u0632: \u0627\u0644\u0646\u0648\u0639",
+      "btn_add_file_folder_rule": "+ \u0625\u0636\u0627\u0641\u0629 \u0642\u0627\u0639\u062F\u0629 \u0645\u0644\u0641/\u0645\u062C\u0644\u062F",
+      "disabled_files_header": "\u0627\u0644\u0645\u0644\u0641\u0627\u062A \u0627\u0644\u0645\u0639\u0637\u0644 \u0641\u064A\u0647\u0627 \u0627\u0644\u062A\u0644\u0648\u064A\u0646:",
+      // Advanced Settings - Inclusion Exclusion Labels
+      "path_rule_mode_include": "\u062A\u0636\u0645\u064A\u0646",
+      "path_rule_mode_exclude": "\u0627\u0633\u062A\u0628\u0639\u0627\u062F",
+      "text_rule_mode_include": "\u064A\u0644\u0648\u0646 \u0641\u0642\u0637 \u0641\u064A (\u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0628\u064A\u0636\u0627\u0621)",
+      "text_rule_mode_exclude": "\u0644\u0627 \u064A\u0644\u0648\u0646 \u0641\u064A (\u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621)",
+      "mode_only_colors_in": "\u064A\u0644\u0648\u0646 \u0641\u0642\u0637 \u0641\u064A",
+      "mode_does_not_color_in": "\u0644\u0627 \u064A\u0644\u0648\u0646 \u0641\u064A",
+      "label_text_include": "\u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0628\u064A\u0636\u0627\u0621",
+      "label_text_exclude": "\u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "label_enable_in": "\u062A\u0641\u0639\u064A\u0644 \u0641\u064A",
+      "label_disable_in": "\u062A\u0639\u0637\u064A\u0644 \u0641\u064A",
+      "enter_path_or_pattern": "\u0623\u062F\u062E\u0644 \u0627\u0644\u0645\u0633\u0627\u0631\u060C \u0627\u0644\u0646\u0645\u0637 \u0623\u0648 \u0627\u0644\u0648\u0633\u0648\u0645",
+      "label_regex": "Regex",
+      // Advanced Rules
+      "advanced_rules_header": "\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u062A\u0636\u0645\u064A\u0646/\u0627\u0644\u0627\u0633\u062A\u0628\u0639\u0627\u062F \u0627\u0644\u0645\u062D\u062F\u062F\u0629",
+      "advanced_rules_modal_header": "\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u062A\u0636\u0645\u064A\u0646/\u0627\u0644\u0627\u0633\u062A\u0628\u0639\u0627\u062F \u0627\u0644\u0645\u062D\u062F\u062F\u0629",
+      "advanced_rules_manage_button": "\u0625\u062F\u0627\u0631\u0629 \u0642\u0648\u0627\u0639\u062F \u0627\u0644\u062A\u0636\u0645\u064A\u0646/\u0627\u0644\u0627\u0633\u062A\u0628\u0639\u0627\u062F \u0627\u0644\u0645\u062D\u062F\u062F\u0629",
+      "edit_rule_header": "\u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u0642\u0627\u0639\u062F\u0629",
+      "add_rule_header": "\u0625\u0636\u0627\u0641\u0629 \u0642\u0627\u0639\u062F\u0629 \u062C\u062F\u064A\u062F\u0629",
+      "btn_add_rule": "+ \u0625\u0636\u0627\u0641\u0629 \u0642\u0627\u0639\u062F\u0629",
+      "btn_save_rule": "\u062D\u0641\u0638 \u0627\u0644\u0642\u0627\u0639\u062F\u0629",
+      "btn_add_words": "+ \u0625\u0636\u0627\u0641\u0629 \u0643\u0644\u0645\u0627\u062A",
+      "btn_add_regex": "+ \u0625\u0636\u0627\u0641\u0629 Regex",
+      "btn_save_regex": "\u062D\u0641\u0638 Regex",
+      // Regex Tester
+      "regex_tester_header": "\u0645\u062E\u062A\u0628\u0631 Regex",
+      "regex_tester_blacklist": "\u0645\u062E\u062A\u0628\u0631 Regex - \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "regex_expression_placeholder": "\u0636\u0639 \u062A\u0639\u0628\u064A\u0631 Regex \u0647\u0646\u0627",
+      "regex_subject_placeholder": "\u0627\u0643\u062A\u0628 \u0645\u0648\u0636\u0648\u0639\u0643 / \u0633\u0644\u0633\u0644\u0629 \u0627\u0644\u0627\u062E\u062A\u0628\u0627\u0631 \u0647\u0646\u0627...",
+      "regex_name_placeholder": "\u0633\u0645\u0651\u0650 \u0627\u0644\u0640 regex \u0627\u0644\u062E\u0627\u0635 \u0628\u0643",
+      "matches": "\u0645\u0637\u0627\u0628\u0642\u0627\u062A",
+      "matches_found": "\u0645\u0637\u0627\u0628\u0642\u0627\u062A \u062A\u0645 \u0627\u0644\u0639\u062B\u0648\u0631 \u0639\u0644\u064A\u0647\u0627",
+      // Regex Flags
+      "flag_g": "\u0639\u0644\u0645 \u0639\u0627\u0644\u0645\u064A: \u0627\u0644\u0639\u062B\u0648\u0631 \u0639\u0644\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0627\u062A",
+      "flag_i": "\u0639\u0644\u0645 \u063A\u064A\u0631 \u062D\u0633\u0627\u0633 \u0644\u062D\u0627\u0644\u0629 \u0627\u0644\u0623\u062D\u0631\u0641",
+      "flag_m": "\u0639\u0644\u0645 \u0645\u062A\u0639\u062F\u062F \u0627\u0644\u0623\u0633\u0637\u0631: ^ \u0648 $ \u062A\u0637\u0627\u0628\u0642 \u062D\u062F\u0648\u062F \u0627\u0644\u0623\u0633\u0637\u0631",
+      "flag_s": "\u0639\u0644\u0645 dotAll: . \u064A\u0637\u0627\u0628\u0642 \u0627\u0644\u0623\u0633\u0637\u0631 \u0627\u0644\u062C\u062F\u064A\u062F\u0629",
+      "flag_u": "\u0639\u0644\u0645 unicode: \u0645\u0639\u0627\u0645\u0644\u0629 \u0643\u0646\u0642\u0627\u0637 \u0643\u0648\u062F unicode",
+      "flag_y": "\u0639\u0644\u0645 sticky: \u0645\u0637\u0627\u0628\u0642\u0629 \u0645\u0646 \u0645\u0648\u0642\u0639 lastIndex",
+      // Data Export/Import
+      "data_export_import_header": "\u062A\u0635\u062F\u064A\u0631/\u0627\u0633\u062A\u064A\u0631\u0627\u062F \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A",
+      "export_plugin_data": "\u062A\u0635\u062F\u064A\u0631 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0625\u0636\u0627\u0641\u0629",
+      "export_plugin_data_desc": "\u062A\u0635\u062F\u064A\u0631 \u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A\u060C \u0627\u0644\u0643\u0644\u0645\u0627\u062A\u060C \u0648\u0627\u0644\u0642\u0648\u0627\u0639\u062F \u0625\u0644\u0649 \u0645\u0644\u0641 JSON.",
+      "btn_export": "\u062A\u0635\u062F\u064A\u0631",
+      "import_plugin_data": "\u0627\u0633\u062A\u064A\u0631\u0627\u062F \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0625\u0636\u0627\u0641\u0629",
+      "import_plugin_data_desc": "\u0627\u0633\u062A\u064A\u0631\u0627\u062F \u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A \u0645\u0646 \u0645\u0644\u0641 JSON",
+      "btn_import": "\u0627\u0633\u062A\u064A\u0631\u0627\u062F",
+      "limit_input_placeholder": "\u0627\u0644\u062D\u062F",
+      "limit_input_tooltip": "0=\u0627\u0644\u0643\u0644; \u0631\u0642\u0645=\u0622\u062E\u0631 N; r=regex; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact",
+      // Missing Keys Added
+      "highlight_styling_header": "\u062A\u0639\u062F\u064A\u0644 \u062A\u0646\u0633\u064A\u0642 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "edit_entry_header": "\u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
+      "opt_case_sensitive": "\u062D\u0633\u0627\u0633 \u0644\u062D\u0627\u0644\u0629 \u0627\u0644\u0623\u062D\u0631\u0641",
+      "opt_not_case_sensitive": "\u063A\u064A\u0631 \u062D\u0633\u0627\u0633 \u0644\u062D\u0627\u0644\u0629 \u0627\u0644\u0623\u062D\u0631\u0641",
+      "opt_case_all": "\u062D\u0633\u0627\u0633\u064A\u0629 \u062D\u0627\u0644\u0629 \u0627\u0644\u0623\u062D\u0631\u0641 (\u0627\u0644\u0643\u0644)",
+      "opt_match_all": "\u0646\u0648\u0639 \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0629 (\u0627\u0644\u0643\u0644)",
+      "edit_highlight_styling_btn": "\u062A\u0639\u062F\u064A\u0644 \u062A\u0646\u0633\u064A\u0642 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "inclusion_exclusion_header": "\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u062A\u0636\u0645\u064A\u0646 / \u0627\u0644\u0627\u0633\u062A\u0628\u0639\u0627\u062F",
+      "btn_save_entry": "\u062D\u0641\u0638 \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
+      "edit_entry_details": "\u062A\u0639\u062F\u064A\u0644 \u062A\u0641\u0627\u0635\u064A\u0644 \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
+      "prompt_search_existing": "\u0628\u062D\u062B \u0641\u064A \u0627\u0644\u0625\u062F\u062E\u0627\u0644\u0627\u062A \u0627\u0644\u0645\u0648\u062C\u0648\u062F\u0629...",
+      "command_add_to_existing_entry": "\u0625\u0636\u0627\u0641\u0629 \u0625\u0644\u0649 \u0625\u062F\u062E\u0627\u0644 \u0645\u0648\u062C\u0648\u062F",
+      "context_remove_from_entry": '\u0625\u0632\u0627\u0644\u0629 "{word}" \u0645\u0646 \u0627\u0644\u0625\u062F\u062E\u0627\u0644',
+      "context_delete_entry": "\u062D\u0630\u0641 \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
+      "btn_reset": "\u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646",
+      "btn_reset_all": "\u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0646\u0645\u0637 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "btn_add_word": "+ \u0625\u0636\u0627\u0641\u0629 \u0643\u0644\u0645\u0629",
+      "btn_add_regex_short": "+ \u0625\u0636\u0627\u0641\u0629 Regex",
+      "section_highlight_border_styling": "\u062A\u0646\u0633\u064A\u0642 \u062D\u062F\u0648\u062F \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "section_highlight_styling": "\u062A\u0646\u0633\u064A\u0642 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "label_highlight_opacity": "\u0634\u0641\u0627\u0641\u064A\u0629 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "label_highlight_radius": "\u0646\u0635\u0641 \u0642\u0637\u0631 \u062D\u062F\u0648\u062F \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
+      "label_horizontal_padding": "\u0627\u0644\u062A\u0628\u0627\u0639\u062F \u0627\u0644\u0623\u0641\u0642\u064A",
+      "label_vertical_padding": "\u0627\u0644\u062A\u0628\u0627\u0639\u062F \u0627\u0644\u0639\u0645\u0648\u062F\u064A",
+      "label_enable_border": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "label_border_sides": "\u062C\u0648\u0627\u0646\u0628 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "label_border_style": "\u0646\u0645\u0637 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "label_border_opacity": "\u0634\u0641\u0627\u0641\u064A\u0629 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "label_border_thickness": "\u0633\u0645\u0627\u0643\u0629 \u0627\u0644\u062D\u062F\u0648\u062F",
+      "btn_save_style": "\u062D\u0641\u0638 \u0627\u0644\u0646\u0645\u0637",
+      "share_export_title": "\u062A\u0635\u062F\u064A\u0631 Always Color Text",
+      "delete_button_text": "\u2715",
+      "style_name_placeholder": "\u0627\u0633\u0645 \u0627\u0644\u0646\u0645\u0637",
+      "preview_text": "\u0646\u0635",
+      // Quick Colors / Styles
+      "quick_actions_header": "\u0625\u062C\u0631\u0627\u0621\u0627\u062A \u0633\u0631\u064A\u0639\u0629",
+      "quick_colors_header": "\u0623\u0644\u0648\u0627\u0646 \u0633\u0631\u064A\u0639\u0629",
+      "quick_colors_desc": "\u064A\u0633\u0645\u062D \u0644\u0643 \u0628\u062A\u0645\u064A\u064A\u0632 \u0623\u0648 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0628\u0633\u0631\u0639\u0629 \u0639\u0646 \u0637\u0631\u064A\u0642 \u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u0623\u0644\u0648\u0627\u0646 \u0641\u064A \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0646\u0642\u0631 \u0628\u0632\u0631 \u0627\u0644\u0645\u0627\u0648\u0633 \u0627\u0644\u0623\u064A\u0645\u0646. \u0625\u0630\u0627 \u062A\u0645 \u0625\u064A\u0642\u0627\u0641 \u0627\u0644\u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0633\u0631\u064A\u0639\u0629\u060C \u0633\u064A\u062A\u0645 \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0623\u0644\u0648\u0627\u0646 \u0643\u0644 \u0646\u0645\u0637 \u0641\u064A \u0627\u0644\u0623\u0646\u0645\u0627\u0637 \u0627\u0644\u0633\u0631\u064A\u0639\u0629.",
+      "quick_colors_apply_mode_label": "\u0633\u064A\u062A\u0645 \u062A\u0637\u0628\u064A\u0642 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0643\u0640",
+      "quick_colors_apply_mode_act": "Always Color Text",
+      "quick_colors_apply_mode_html": "HTML \u0645\u0636\u0645\u0646",
+      "quick_styles_header": "\u0623\u0646\u0645\u0627\u0637 \u0633\u0631\u064A\u0639\u0629",
+      "quick_styles_desc": "\u062A\u062D\u062F\u064A\u062F \u0623\u0646\u0645\u0627\u0637 \u0645\u0633\u0645\u0627\u0629 \u0644\u062A\u0637\u0628\u064A\u0642 \u0644\u0648\u0646 \u0627\u0644\u0646\u0635 \u0648\u0627\u0644\u062A\u0645\u064A\u064A\u0632. \u0625\u0630\u0627 \u062A\u0645 \u0625\u064A\u0642\u0627\u0641 \u0627\u0644\u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0633\u0631\u064A\u0639\u0629\u060C \u0633\u064A\u062A\u0645 \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0623\u0644\u0648\u0627\u0646 \u0643\u0644 \u0646\u0645\u0637 \u0647\u0646\u0627.",
+      "btn_add_style": "+ \u0625\u0636\u0627\u0641\u0629 \u0646\u0645\u0637",
+      "quick_styles_menu_option": "\u0623\u0646\u0645\u0627\u0637 \u0633\u0631\u064A\u0639\u0629",
+      // Blacklist Groups
+      "blacklist_grouped_entries_header": "\u0625\u062F\u062E\u0627\u0644\u0627\u062A \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "show_blacklist_groups_in_commands": "\u0625\u0638\u0647\u0627\u0631 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621 \u0641\u064A \u0627\u0644\u0623\u0648\u0627\u0645\u0631",
+      "show_blacklist_groups_in_commands_desc": "\u0639\u0646\u062F \u0627\u0644\u062A\u0641\u0639\u064A\u0644\u060C \u062A\u0638\u0647\u0631 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621 \u0641\u064A \u0644\u0648\u062D\u0629 \u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0645\u0639 \u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u062A\u0641\u0639\u064A\u0644/\u0627\u0644\u062A\u0639\u0637\u064A\u0644.",
+      "search_blacklist_groups_placeholder": "\u0628\u062D\u062B \u0641\u064A \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621...",
+      "btn_create_new_blacklist_group": "+ \u0625\u0646\u0634\u0627\u0621 \u0645\u062C\u0645\u0648\u0639\u0629 \u0642\u0627\u0626\u0645\u0629 \u0633\u0648\u062F\u0627\u0621 \u062C\u062F\u064A\u062F\u0629",
+      "edit_blacklist_group_modal_title": "\u062A\u0639\u062F\u064A\u0644 \u0645\u062C\u0645\u0648\u0639\u0629 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "tooltip_delete_all_blacklist_groups": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "confirm_delete_all_blacklist_groups_title": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "confirm_delete_all_blacklist_groups_desc": "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0623\u0646\u0643 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0645\u062C\u0645\u0648\u0639\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621\u061F \u0644\u0627 \u064A\u0645\u0643\u0646 \u0627\u0644\u062A\u0631\u0627\u062C\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062C\u0631\u0627\u0621!",
+      "confirm_delete_blacklist_group_title": "\u062D\u0630\u0641 \u0645\u062C\u0645\u0648\u0639\u0629 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "confirm_delete_blacklist_group_desc": "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0623\u0646\u0643 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u0645\u062C\u0645\u0648\u0639\u0629 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621 \u0647\u0630\u0647\u061F \u0644\u0627 \u064A\u0645\u0643\u0646 \u0627\u0644\u062A\u0631\u0627\u062C\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062C\u0631\u0627\u0621.",
+      "notice_blacklist_group_activated": "\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 \u0645\u062C\u0645\u0648\u0639\u0629 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "notice_blacklist_group_deactivated": "\u062A\u0645 \u062A\u0639\u0637\u064A\u0644 \u0645\u062C\u0645\u0648\u0639\u0629 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "command_activate_blacklist_group": "\u062A\u0641\u0639\u064A\u0644 \u0645\u062C\u0645\u0648\u0639\u0629 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621 {groupName}",
+      "command_deactivate_blacklist_group": "\u062A\u0639\u0637\u064A\u0644 \u0645\u062C\u0645\u0648\u0639\u0629 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621 {groupName}",
+      "btn_duplicate_entry": "\u062A\u0643\u0631\u0627\u0631 \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
+      "btn_open_in_regex_tester": "\u0641\u062A\u062D \u0641\u064A \u0645\u062E\u062A\u0628\u0631 Regex",
+      "move_to_blacklist_group": "\u0646\u0642\u0644 \u0625\u0644\u0649 \u0645\u062C\u0645\u0648\u0639\u0629 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
+      "btn_delete_entry": "\u062D\u0630\u0641 \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
+      "edit_group_highlight_styling": "\u062A\u0639\u062F\u064A\u0644 \u062A\u0646\u0633\u064A\u0642 \u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629",
+      "light_mode_fixer_desc": "\u064A\u0642\u0648\u0645 \u0628\u062A\u063A\u0645\u064A\u0642 \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u0644\u0648\u0646 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B \u0639\u0646\u062F \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0644\u0633\u0645\u0629 \u0627\u0644\u0641\u0627\u062A\u062D\u0629 \u0644\u062A\u062D\u0633\u064A\u0646 \u0627\u0644\u0631\u0624\u064A\u0629.",
+      "dark_mode_fixer_desc": "\u064A\u0642\u0648\u0645 \u0628\u062A\u0641\u062A\u064A\u062D \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u0644\u0648\u0646 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B \u0639\u0646\u062F \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0644\u0633\u0645\u0629 \u0627\u0644\u062F\u0627\u0643\u0646\u0629 \u0644\u062A\u062D\u0633\u064A\u0646 \u0627\u0644\u0631\u0624\u064A\u0629."
     };
   }
 });
@@ -4050,6 +5369,8 @@ var require_i18n = __commonJS({
     var bn = require_bn();
     var ru = require_ru();
     var zh_cn = require_zh_cn();
+    var de = require_de();
+    var ar = require_ar();
     module2.exports = {
       en,
       es,
@@ -4058,7 +5379,9 @@ var require_i18n = __commonJS({
       it,
       bn,
       ru,
-      zh_cn
+      zh_cn,
+      de,
+      ar
     };
   }
 });
@@ -4083,12 +5406,18 @@ var RangeSetBuilder;
 var Decoration;
 var ViewPlugin;
 var StateEffect;
+var syntaxTree;
 try {
   const cmState = require("@codemirror/state");
   RangeSetBuilder = cmState.RangeSetBuilder;
   StateEffect = cmState.StateEffect;
   Decoration = require("@codemirror/view").Decoration;
   ViewPlugin = require("@codemirror/view").ViewPlugin;
+  try {
+    syntaxTree = require("@codemirror/language").syntaxTree;
+  } catch (e) {
+    console.warn("Always Color Text: syntaxTree not available");
+  }
 } catch (e) {
   RangeSetBuilder = class {
   };
@@ -4104,20 +5433,22 @@ var EDITOR_PERFORMANCE_CONSTANTS = {
   // Use standard processing for <= 20 patterns (reduced)
   MAX_TEXT_LENGTH_STANDARD: 5e3,
   // Use standard processing for <= 5k chars (reduced)
-  PATTERN_CHUNK_SIZE: 10,
-  // REDUCED: Process 10 patterns per chunk during typing
+  PATTERN_CHUNK_SIZE: 20,
+  // INCREASED: Process 20 patterns per chunk (better throughput)
   TEXT_CHUNK_SIZE: 2e3,
   // REDUCED: Process 2k chars per chunk during typing
-  MAX_MATCHES_PER_PATTERN: 100,
+  MAX_MATCHES_PER_PATTERN: 500,
   // Max matches per pattern (increased for better UX)
-  MAX_TOTAL_MATCHES: 2e3,
+  MAX_TOTAL_MATCHES: 4e3,
   // Absolute limit for decorations (increased)
+  LIGHTWEIGHT_MAX_TOTAL_MATCHES: 1e3,
+  // Reduced limit for lightweight mode
   TYPING_DEBOUNCE_MS: 500,
   // INCREASED: Delay rebuilds while typing - 500ms (wait longer before recomputing)
   TYPING_GRACE_PERIOD_MS: 1500,
   // INCREASED: Skip decoration during active typing (1.5 seconds after last keystroke)
-  VIEWPORT_EXTENSION: 100,
-  // Buffer beyond viewport to include in text processing
+  VIEWPORT_EXTENSION: 200,
+  // INCREASED: Buffer beyond viewport to include in text processing
   CALLOUT_THROTTLE_MS: 1e3,
   // Throttle callout processing to 1 second
   TABLE_THROTTLE_MS: 1e3
@@ -4187,7 +5518,7 @@ function getEntryForHeadingLevel(entries, level) {
   }
   return null;
 }
-var IS_DEVELOPMENT = true;
+var IS_DEVELOPMENT = false;
 var debugLog = (tag, ...args) => {
 };
 var debugError = (tag, ...args) => {
@@ -4913,6 +6244,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
     } catch (_) {
     }
     this._isRightClick = false;
+    super.onClose();
   }
   getItems() {
     const we = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
@@ -6189,6 +7521,109 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (_) {
     }
   }
+  applyHighlightPresetTransparency() {
+    try {
+      const hasHighlightPreset = Array.isArray(this.settings.wordEntries) && this.settings.wordEntries.some(
+        (e) => e.pattern === "==[\\s\\S]*?==" || e.pattern === "==.*?=="
+      );
+      let style = document.getElementById("act-highlight-preset-transparency");
+      if (hasHighlightPreset) {
+        if (!style) {
+          style = document.createElement("style");
+          style.id = "act-highlight-preset-transparency";
+          style.textContent = `
+            .markdown-rendered mark:not(.always-color-text-highlight-marks) {
+              background-color: transparent !important;
+              color: inherit !important;
+            }
+            .cm-highlight {
+              background-color: transparent !important;
+              color: inherit !important;
+            }
+            .cm-s-obsidian span.cm-highlight {
+              background-color: transparent !important;
+              color: inherit !important;
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      } else {
+        if (style) style.remove();
+      }
+    } catch (_) {
+    }
+  }
+  removeHighlightPresetTransparency() {
+    try {
+      const style = document.getElementById("act-highlight-preset-transparency");
+      if (style) style.remove();
+    } catch (_) {
+    }
+  }
+  removeFormattingPresetStyles() {
+    try {
+      const style = document.getElementById("act-formatting-preset-styles");
+      if (style) style.remove();
+    } catch (_) {
+    }
+  }
+  applyFormattingPresetStyles() {
+    try {
+      const entries = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      const hasBold = entries.some((e) => e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1");
+      const hasItalic = entries.some((e) => e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1");
+      const hasBoldItalic = entries.some((e) => e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1");
+      let style = document.getElementById("act-formatting-preset-styles");
+      if (hasBold || hasItalic || hasBoldItalic) {
+        if (!style) {
+          style = document.createElement("style");
+          style.id = "act-formatting-preset-styles";
+          document.head.appendChild(style);
+        }
+        let css = "";
+        if (hasBold) {
+          css += `
+                .cm-strong, strong {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+                .cm-s-obsidian span.cm-strong {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+            `;
+        }
+        if (hasItalic) {
+          css += `
+                .cm-em, em {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+                .cm-s-obsidian span.cm-em {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+            `;
+        }
+        if (hasBoldItalic) {
+          css += `
+                .cm-strong.cm-em, strong em, em strong {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+                 .cm-s-obsidian span.cm-strong.cm-em {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                }
+            `;
+        }
+        style.textContent = css;
+      } else {
+        if (style) style.remove();
+      }
+    } catch (_) {
+    }
+  }
   neutralizeExistingHighlightBackgrounds() {
     try {
       document.querySelectorAll(".always-color-text-highlight").forEach((el) => {
@@ -6224,7 +7659,7 @@ module.exports = class AlwaysColorText extends Plugin {
             --link-unresolved-color: var(--highlight-color);
             --link-color-hover: var(--highlight-color);
             --link-external-color-hover: var(--highlight-color);
-            color: var(--highlight-color) !important;
+            color: var(--highlight-color);
           }
         `;
         document.head.appendChild(style);
@@ -6248,7 +7683,7 @@ module.exports = class AlwaysColorText extends Plugin {
         style.textContent = `
           .is-live-preview .cm-content .always-color-text-highlight,
           .is-live-preview .cm-content .always-color-text-highlight * {
-            color: var(--highlight-color) !important;
+            color: var(--highlight-color);
           }
         `;
         document.head.appendChild(style);
@@ -6282,7 +7717,7 @@ module.exports = class AlwaysColorText extends Plugin {
             --link-unresolved-color: var(--highlight-color);
             --link-color-hover: var(--highlight-color);
             --link-external-color-hover: var(--highlight-color);
-            color: var(--highlight-color) !important;
+            color: var(--highlight-color);
           }
         `;
         document.head.appendChild(style);
@@ -6375,13 +7810,48 @@ module.exports = class AlwaysColorText extends Plugin {
       return ["auto"];
     }
   }
+  async openSettingsAndFocusRegex() {
+    try {
+      this.app.setting.open();
+      await this.app.setting.openTabById(this.manifest.id);
+      const tab = this.settingTab;
+      if (tab) {
+        if (tab._activeTab !== "general") {
+          tab._activeTab = "general";
+          tab._initializedSettingsUI = false;
+          tab.display();
+        }
+        let attempts = 0;
+        const findAndScroll = () => {
+          const el = tab.containerEl.querySelector(".act-regex-support-setting");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.style.transition = "background-color 0.5s";
+            const originalBg = el.style.backgroundColor || "";
+            el.style.backgroundColor = "var(--text-selection)";
+            setTimeout(() => {
+              el.style.backgroundColor = originalBg;
+            }, 1e3);
+          } else if (attempts < 20) {
+            attempts++;
+            setTimeout(findAndScroll, 100);
+          }
+        };
+        setTimeout(findAndScroll, 100);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
   async onload() {
     await this.loadSettings();
+    this.updateLightModeFixer();
     if (typeof this.settings.quickColorsEnabled === "undefined") this.settings.quickColorsEnabled = false;
     if (!this.settings.quickColorsApplyMode) this.settings.quickColorsApplyMode = "html";
     if (!Array.isArray(this.settings.quickColors)) this.settings.quickColors = [];
     if (!Array.isArray(this.settings.quickStyles)) this.settings.quickStyles = [];
     if (typeof this.settings.quickStylesEnabled === "undefined") this.settings.quickStylesEnabled = true;
+    if (typeof this.settings.enableQuickColorHighlightOnce === "undefined") this.settings.enableQuickColorHighlightOnce = false;
     try {
       this.migrateAdvancedRulesToPerEntry();
       await this.saveSettings();
@@ -6621,7 +8091,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   const html = `<span style="color: ${color}">${selectedText}</span>`;
                   editor.replaceSelection(html);
                 }
-              }, "text", selectedText).open();
+              }, "text", selectedText, true).open();
             });
           });
         }
@@ -6649,9 +8119,56 @@ module.exports = class AlwaysColorText extends Plugin {
                   const rgba = this.hexToRgba(bg, 25);
                   style = `background-color: ${rgba};`;
                 }
-                const html = `<span class="always-color-text-highlight" style="${style}">${selectedText}</span>`;
+                const html = `<span style="${style}">${selectedText}</span>`;
                 editor.replaceSelection(html);
               }, "background", selectedText, true).open();
+            });
+          });
+        }
+        const cpm = this.settings.colorPickerMode || "both";
+        const isBoth = cpm === "both" || cpm === "both-bg-left" || cpm === "both-v-text-top" || cpm === "both-v-bg-top";
+        if (this.settings.enableQuickColorHighlightOnce && isBoth) {
+          menu.addItem((item) => {
+            item.setTitle(this.t("menu_color_highlight_once", "Color / Highlight Once")).setIcon("paintbrush").onClick(() => {
+              new ColorPickerModal(this.app, this, async (color, result) => {
+                const tc = result && result.textColor && this.isValidHexColor(result.textColor) ? result.textColor : null;
+                const bg = result && result.backgroundColor && this.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
+                if (!tc && !bg) return;
+                let style = "";
+                if (tc) style += `color: ${tc}; `;
+                if (bg) {
+                  if (this.settings.quickHighlightUseGlobalStyle) {
+                    const rgba = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25);
+                    const radius = this.settings.highlightBorderRadius ?? 8;
+                    const pad = this.settings.highlightHorizontalPadding ?? 4;
+                    const border = this.generateBorderStyle(null, bg);
+                    style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
+                  } else if (this.settings.quickHighlightStyleEnable) {
+                    const hexWithAlpha = this.hexToHexWithAlpha(bg, this.settings.quickHighlightOpacity ?? 25);
+                    const radius = this.settings.quickHighlightBorderRadius ?? 8;
+                    const pad = this.settings.quickHighlightHorizontalPadding ?? 4;
+                    const vpad = this.settings.quickHighlightVerticalPadding ?? 0;
+                    const border = this.generateOnceBorderStyle(bg);
+                    style += `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px; padding-top: ${vpad}px; padding-bottom: ${vpad}px;${border}`;
+                  } else {
+                    const rgba = this.hexToRgba(bg, 25);
+                    style += `background-color: ${rgba};`;
+                  }
+                }
+                const html = `<span style="${style.trim()}">${selectedText}</span>`;
+                editor.replaceSelection(html);
+              }, "text-and-background", selectedText, true).open();
+            });
+          });
+        }
+        const isHtmlColor = /^<span\s+(?:style="[^"]*(?:color|background-color):[^"]*"|class="always-color-text-highlight"[^>]*)(?:>)(.*)<\/span>$/s.test(selectedText);
+        if (isHtmlColor) {
+          menu.addItem((item) => {
+            item.setTitle(this.t("menu_remove_inline_color", "Remove Inline Color")).setIcon("trash").onClick(() => {
+              const match = selectedText.match(/^<span\s+(?:[^>]+)>(.*)<\/span>$/s);
+              if (match && match[1]) {
+                editor.replaceSelection(match[1]);
+              }
             });
           });
         }
@@ -6743,7 +8260,11 @@ module.exports = class AlwaysColorText extends Plugin {
         const stylesArr = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
         this._lastSelectedQuickColor = null;
         let closeMenuTimeout = null;
-        const openStylesSubmenu = (anchorEvent, positionOverride = null) => {
+        const openStylesSubmenu = (anchorEvent, anchorElement = null) => {
+          if (closeMenuTimeout) {
+            clearTimeout(closeMenuTimeout);
+            closeMenuTimeout = null;
+          }
           if (!this.settings.quickStylesEnabled) return;
           if (this._openQuickStylesSubmenu) {
             try {
@@ -6793,13 +8314,34 @@ module.exports = class AlwaysColorText extends Plugin {
               });
             });
           });
-          if (positionOverride) {
-            try {
-              sub.showAtPosition(positionOverride);
-            } catch (e) {
+          try {
+            let targetEl = anchorElement;
+            if (!targetEl && anchorEvent) {
+              if (anchorEvent instanceof Element) targetEl = anchorEvent;
+              else if (anchorEvent.target) targetEl = anchorEvent.target.closest(".menu-item") || anchorEvent.target;
+            }
+            let rect = null;
+            if (targetEl && targetEl.getBoundingClientRect) {
+              rect = targetEl.getBoundingClientRect();
+            }
+            if (rect) {
+              const winWidth = window.innerWidth;
+              const threshold = 350;
+              const estimatedWidth = 160;
+              const distToRight = winWidth - rect.right;
+              let targetX, targetY;
+              targetY = rect.top;
+              if (distToRight < threshold) {
+                targetX = rect.left - estimatedWidth + 5;
+              } else {
+                targetX = rect.right - 5;
+              }
+              if (targetX < 10) targetX = 10;
+              sub.showAtPosition({ x: targetX, y: targetY });
+            } else {
               sub.showAtMouseEvent(anchorEvent);
             }
-          } else {
+          } catch (e) {
             sub.showAtMouseEvent(anchorEvent);
           }
           this._openQuickStylesSubmenu = sub;
@@ -6835,10 +8377,9 @@ module.exports = class AlwaysColorText extends Plugin {
               }
               if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
                 try {
-                  const rect = titleEl.getBoundingClientRect();
-                  openStylesSubmenu(ev, { x: rect.right, y: rect.top });
+                  openStylesSubmenu(ev, titleEl);
                 } catch (e) {
-                  openStylesSubmenu(ev);
+                  openStylesSubmenu(ev, titleEl);
                 }
               }
             });
@@ -6891,7 +8432,7 @@ module.exports = class AlwaysColorText extends Plugin {
                     activeDotEl = null;
                     this._lastSelectedQuickColor = null;
                     if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
-                      openStylesSubmenu(ev);
+                      openStylesSubmenu(ev, titleEl);
                     }
                     return;
                   }
@@ -6916,7 +8457,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   } catch (_) {
                   }
                   if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
-                    openStylesSubmenu(ev);
+                    openStylesSubmenu(ev, titleEl);
                   } else {
                     const firstStyle = stylesArr[0] || null;
                     if (firstStyle) {
@@ -6950,7 +8491,7 @@ module.exports = class AlwaysColorText extends Plugin {
             chevronIcon.addEventListener("click", (ev) => {
               ev.preventDefault();
               ev.stopPropagation();
-              openStylesSubmenu(ev);
+              openStylesSubmenu(ev, titleEl);
             });
             const iconRight = document.createElement("div");
             iconRight.className = "menu-item-icon mod-submenu";
@@ -6962,7 +8503,7 @@ module.exports = class AlwaysColorText extends Plugin {
             iconRight.addEventListener("click", (ev) => {
               ev.preventDefault();
               ev.stopPropagation();
-              openStylesSubmenu(ev);
+              openStylesSubmenu(ev, titleEl);
             });
             titleEl.appendChild(iconLeft);
             titleEl.appendChild(titleText);
@@ -6973,7 +8514,7 @@ module.exports = class AlwaysColorText extends Plugin {
             item.setTitle(titleEl);
             item.onClick((evt) => {
               if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
-                openStylesSubmenu(evt);
+                openStylesSubmenu(evt, titleEl);
               }
             });
           });
@@ -6992,8 +8533,27 @@ module.exports = class AlwaysColorText extends Plugin {
               item.dom?.appendChild(iconRight);
             } catch (_) {
             }
+            try {
+              if (item.dom) {
+                item.dom.addEventListener("mouseenter", (ev) => {
+                  openStylesSubmenu(ev, item.dom);
+                });
+                item.dom.addEventListener("mouseleave", () => {
+                  closeMenuTimeout = setTimeout(() => {
+                    if (this._openQuickStylesSubmenu) {
+                      try {
+                        this._openQuickStylesSubmenu.hide();
+                      } catch (_) {
+                      }
+                      this._openQuickStylesSubmenu = null;
+                    }
+                  }, 300);
+                });
+              }
+            } catch (_) {
+            }
             item.onClick((evt) => {
-              openStylesSubmenu(evt);
+              openStylesSubmenu(evt, item.dom);
             });
           });
         }
@@ -7274,8 +8834,85 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       });
       addTrackedCommand({
+        id: "toggle-lightweight-mode",
+        name: (() => {
+          try {
+            return this.settings.extremeLightweightMode ? this.t("command_disable_lightweight_mode", "Disable Lightweight Mode") : this.t("command_enable_lightweight_mode", "Enable Lightweight Mode");
+          } catch (_) {
+          }
+          return this.t("command_enable_lightweight_mode", "Enable Lightweight Mode");
+        })(),
+        callback: async () => {
+          this.settings.extremeLightweightMode = !this.settings.extremeLightweightMode;
+          await this.saveSettings();
+          new Notice(this.settings.extremeLightweightMode ? this.t("notice_lightweight_mode_enabled", "Lightweight Mode enabled") : this.t("notice_lightweight_mode_disabled", "Lightweight Mode disabled"));
+          this.reregisterCommandsWithLanguage();
+          this.forceRefreshAllEditors();
+        }
+      });
+      addTrackedCommand({
+        id: "color-highlight-once-selected-text",
+        name: this.t("command_color_highlight_once", "Color / Highlight Once Selected Text"),
+        editorCallback: (editor, view) => {
+          const word = editor.getSelection().trim();
+          if (!word) {
+            new Notice(this.t("notice_select_text_first_once", "Please select text first to color/highlight once."));
+            return;
+          }
+          new ColorPickerModal(this.app, this, async (color, result) => {
+            const sel = result || {};
+            const tc = sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
+            const bc = sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+            if (!tc && !bc) return;
+            const styleParts = [];
+            if (tc) styleParts.push(`color: ${tc}`);
+            if (bc) {
+              const op = typeof this.settings.backgroundOpacity === "number" ? this.settings.backgroundOpacity : 25;
+              const rgba = this.hexToRgba(bc, op);
+              styleParts.push(`background-color: ${rgba}`);
+              let applyStyles = false;
+              let hPad = 0, vPad = 0, radius = 0;
+              let borderCss = "";
+              if (this.settings.quickHighlightUseGlobalStyle) {
+                applyStyles = true;
+                hPad = typeof this.settings.highlightHorizontalPadding === "number" ? this.settings.highlightHorizontalPadding : 4;
+                vPad = typeof this.settings.highlightVerticalPadding === "number" ? this.settings.highlightVerticalPadding : 0;
+                radius = typeof this.settings.highlightBorderRadius === "number" ? this.settings.highlightBorderRadius : 8;
+                if (this.settings.enableBorderThickness) {
+                  borderCss = this.generateGlobalBorderStyle(bc);
+                }
+              } else if (this.settings.quickHighlightStyleEnable) {
+                applyStyles = true;
+                hPad = typeof this.settings.quickHighlightHorizontalPadding === "number" ? this.settings.quickHighlightHorizontalPadding : 4;
+                vPad = typeof this.settings.quickHighlightVerticalPadding === "number" ? this.settings.quickHighlightVerticalPadding : 0;
+                radius = typeof this.settings.quickHighlightBorderRadius === "number" ? this.settings.quickHighlightBorderRadius : 8;
+                if (this.settings.quickHighlightEnableBorder) {
+                  borderCss = this.generateOnceBorderStyle(bc);
+                }
+              }
+              if (applyStyles) {
+                styleParts.push(`padding: ${vPad}px ${hPad}px`);
+                styleParts.push(`border-radius: ${radius}px`);
+                if (this.settings.enableBoxDecorationBreak ?? true) {
+                  styleParts.push(`box-decoration-break: clone`);
+                  styleParts.push(`-webkit-box-decoration-break: clone`);
+                }
+                if (borderCss) {
+                  const borderParts = borderCss.split(";").map((s) => s.trim()).filter((s) => s);
+                  borderParts.forEach((bp) => styleParts.push(bp));
+                }
+              }
+            }
+            if (styleParts.length > 0) {
+              const span = `<span style="${styleParts.join("; ")}">${word}</span>`;
+              editor.replaceSelection(span);
+            }
+          }, "text-and-background", word, true).open();
+        }
+      });
+      addTrackedCommand({
         id: "toggle-always-color-text",
-        name: this.settings.enabled ? this.t("command_disable_global", "Disable Always Color Text") : this.t("command_enable_global", "Enable Always Color Text"),
+        name: this.settings.enabled ? this.t("command_disable_global", "Disable Global Coloring") : this.t("command_enable_global", "Enable Global Coloring"),
         callback: async () => {
           this.settings.enabled = !this.settings.enabled;
           await this.saveSettings();
@@ -7916,10 +9553,15 @@ module.exports = class AlwaysColorText extends Plugin {
       try {
         const markElements = element && element.nodeName === "MARK" ? [element] : Array.from(element.querySelectorAll?.("mark") || []);
         for (const mark of markElements) {
+          try {
+            mark.classList.add("always-color-text-highlight-marks");
+          } catch (_) {
+          }
           const styledSpan = mark.querySelector("span.always-color-text-highlight");
           const fallbackSpan = styledSpan || mark.querySelector(".always-color-text-highlight") || mark;
           try {
-            if (fallbackSpan === mark && !styledSpan) {
+            if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) {
+              fallbackSpan.classList.add("always-color-text-highlight-marks");
             }
           } catch (_) {
           }
@@ -7929,14 +9571,6 @@ module.exports = class AlwaysColorText extends Plugin {
             folderForMark = this.getBestFolderEntry(filePath);
           } catch (_) {
           }
-          try {
-            we.forEach((e) => this._patternMatcher && this._patternMatcher.compilePattern(e, this._regexCache));
-          } catch (_) {
-          }
-          let matches = this._patternMatcher ? this._patternMatcher.match(markText, we, folderForMark) : [];
-          try {
-          } catch (_) {
-          }
           const qsEnabled = !!this.settings.quickStylesEnabled;
           const qsArr = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
           const mt = String(markText || "").trim();
@@ -7944,23 +9578,15 @@ module.exports = class AlwaysColorText extends Plugin {
           if (qsEnabled && qsArr.length > 0 && mt.length > 0) {
             const lc = mt.toLowerCase();
             quickStyle = qsArr.find((s) => s && typeof s.name === "string" && s.name.toLowerCase() === lc) || null;
-            try {
-              if (quickStyle) {
-              }
-            } catch (_) {
-            }
           }
-          const presetEntry = we.find((e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements)) || weAll.find((e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements)) || null;
+          const findHighlightEntry = (entries2) => {
+            if (!Array.isArray(entries2)) return null;
+            const reversed = [...entries2].reverse();
+            return reversed.find((e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements || e.styleType === "highlight" && !e.targetElement));
+          };
+          const presetEntry = findHighlightEntry(we) || findHighlightEntry(weAll) || null;
           const highlightRegexEntry = presetEntry || (we.find((e) => e && e.isRegex && typeof e.pattern === "string" && e.pattern.includes("==[\\s\\S]*?==")) || weAll.find((e) => e && e.isRegex && typeof e.pattern === "string" && e.pattern.includes("==[\\s\\S]*?=="))) || null;
           if (quickStyle) {
-            try {
-              mark.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
-            try {
-              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
             const params = this.getHighlightParams(quickStyle);
             const styleType2 = quickStyle.styleType || "both";
             const tc = quickStyle.textColor || quickStyle.color || null;
@@ -7980,7 +9606,6 @@ module.exports = class AlwaysColorText extends Plugin {
                 mark.style.setProperty("--highlight-background", bgRgba);
               } catch (_) {
               }
-            } else {
             }
             if (tc) {
               fallbackSpan.style.setProperty("color", tc, "important");
@@ -7993,7 +9618,6 @@ module.exports = class AlwaysColorText extends Plugin {
                 mark.style.setProperty("--highlight-color", tc);
               } catch (_) {
               }
-            } else {
             }
             fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
             fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
@@ -8012,18 +9636,7 @@ module.exports = class AlwaysColorText extends Plugin {
               }
             } catch (_) {
             }
-            try {
-            } catch (_) {
-            }
           } else if (presetEntry || highlightRegexEntry) {
-            try {
-              mark.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
-            try {
-              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
             const entryForMark = presetEntry || highlightRegexEntry;
             const params = this.getHighlightParams(entryForMark);
             const tc = entryForMark.textColor && entryForMark.textColor !== "currentColor" ? entryForMark.textColor : entryForMark.color || null;
@@ -8043,7 +9656,6 @@ module.exports = class AlwaysColorText extends Plugin {
                 mark.style.setProperty("--highlight-background", bgRgba);
               } catch (_) {
               }
-            } else {
             }
             if (tc) {
               fallbackSpan.style.setProperty("color", tc, "important");
@@ -8056,7 +9668,6 @@ module.exports = class AlwaysColorText extends Plugin {
                 mark.style.setProperty("--highlight-color", tc);
               } catch (_) {
               }
-            } else {
             }
             fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
             fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
@@ -8075,143 +9686,10 @@ module.exports = class AlwaysColorText extends Plugin {
               }
             } catch (_) {
             }
-            try {
-            } catch (_) {
-            }
-          } else if (Array.isArray(matches) && matches.length > 0) {
-            const csFrom = (entry2) => typeof entry2?._caseSensitiveOverride === "boolean" ? entry2._caseSensitiveOverride : typeof entry2?.caseSensitive === "boolean" ? entry2.caseSensitive : this.settings.caseSensitive;
-            const exact = matches.filter((mx) => {
-              const ent = mx.entryRef || mx.entry || {};
-              const pat = String(ent.pattern || "");
-              if (!pat) return false;
-              const cs = csFrom(ent);
-              return cs ? markText === pat : markText.toLowerCase() === pat.toLowerCase();
-            });
-            if (exact.length > 0) {
-              matches = exact;
-            }
-            matches.sort((a, b) => {
-              const pa = String(a.entryRef?.pattern || a.entry?.pattern || "").length;
-              const pb = String(b.entryRef?.pattern || b.entry?.pattern || "").length;
-              if (pb !== pa) return pb - pa;
-              const aBoth = (a.entryRef?.styleType || a.entry?.styleType) === "both";
-              const bBoth = (b.entryRef?.styleType || b.entry?.styleType) === "both";
-              if (aBoth !== bBoth) return bBoth ? 1 : -1;
-              const aText = !!(a.entryRef?.textColor && a.entryRef.textColor !== "currentColor" || a.color);
-              const bText = !!(b.entryRef?.textColor && b.entryRef.textColor !== "currentColor" || b.color);
-              if (aText !== bText) return bText ? 1 : -1;
-              return 0;
-            });
-            const m = matches[0];
-            const entry = m.entryRef || m.entry || null;
-            try {
-            } catch (_) {
-            }
-            try {
-              mark.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
-            try {
-              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) fallbackSpan.classList.add("always-color-text-highlight-marks");
-            } catch (_) {
-            }
-            const params = this.getHighlightParams(entry);
-            let textColor = entry && entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : null;
-            if (!textColor && m && m.color) {
-              textColor = m.color;
-            }
-            const styleType2 = entry?.styleType || "both";
-            const bgColor = entry && entry.backgroundColor ? entry.backgroundColor : null;
-            if (bgColor && (styleType2 === "highlight" || styleType2 === "both")) {
-              const bgRgba = this.hexToRgba(bgColor, params.opacity);
-              fallbackSpan.style.setProperty("background-color", bgRgba, "important");
-              try {
-                mark.style.setProperty("background-color", bgRgba, "important");
-              } catch (_) {
-              }
-              try {
-                fallbackSpan.style.setProperty("--highlight-background", bgRgba);
-              } catch (_) {
-              }
-              try {
-                mark.style.setProperty("--highlight-background", bgRgba);
-              } catch (_) {
-              }
-            } else {
-            }
-            if (textColor && (styleType2 === "text" || styleType2 === "both")) {
-              fallbackSpan.style.setProperty("color", textColor, "important");
-              fallbackSpan.style.setProperty("--highlight-color", textColor);
-              try {
-                mark.style.setProperty("color", textColor, "important");
-              } catch (_) {
-              }
-              try {
-                mark.style.setProperty("--highlight-color", textColor);
-              } catch (_) {
-              }
-            } else {
-            }
-            fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
-            fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
-            const vpad = params.vPad;
-            fallbackSpan.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
-            fallbackSpan.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
-            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
-            fallbackSpan.style.setProperty("border-radius", br + "px", "important");
-            try {
-              const borderCss = this.generateBorderStyle(textColor, bgColor, entry);
-              if (borderCss) {
-                fallbackSpan.style.cssText += borderCss;
-              }
-              if (borderCss) {
-                mark.style.cssText += borderCss;
-              }
-            } catch (_) {
-            }
-            try {
-            } catch (_) {
-            }
-          } else if (quickStyle) {
-            const params = this.getHighlightParams(quickStyle);
-            const styleType2 = quickStyle.styleType || "both";
-            const tc = quickStyle.textColor || quickStyle.color || null;
-            const bc = quickStyle.backgroundColor || null;
-            if (bc && (styleType2 === "highlight" || styleType2 === "both")) {
-              const bgRgba = this.hexToRgba(bc, params.opacity);
-              fallbackSpan.style.setProperty("background-color", bgRgba, "important");
-              try {
-                fallbackSpan.style.setProperty("--highlight-background", bgRgba);
-              } catch (_) {
-              }
-            } else {
-            }
-            if (tc && (styleType2 === "text" || styleType2 === "both")) {
-              fallbackSpan.style.setProperty("color", tc, "important");
-              fallbackSpan.style.setProperty("--highlight-color", tc);
-            } else {
-            }
-            fallbackSpan.style.setProperty("padding-left", params.hPad + "px", "important");
-            fallbackSpan.style.setProperty("padding-right", params.hPad + "px", "important");
-            const vpad = params.vPad;
-            fallbackSpan.style.setProperty("padding-top", (vpad >= 0 ? vpad : 0) + "px", "important");
-            fallbackSpan.style.setProperty("padding-bottom", (vpad >= 0 ? vpad : 0) + "px", "important");
-            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
-            fallbackSpan.style.setProperty("border-radius", br + "px", "important");
-            try {
-              const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
-              if (borderCss) {
-                fallbackSpan.style.cssText += borderCss;
-              }
-            } catch (_) {
-            }
-            try {
-            } catch (_) {
-            }
-          } else {
           }
         }
       } catch (e) {
+        console.error("Always Color Text: Error handling mark elements", e);
       }
       const taskCheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Checked)");
       const taskUncheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Unchecked)");
@@ -8397,11 +9875,11 @@ module.exports = class AlwaysColorText extends Plugin {
           style.id = "act-list-marker-style";
           style.textContent = `
             .act-colored-list-item { position: relative; }
-            li.act-colored-list-item::marker { color: var(--act-marker-color, inherit) !important; }
+            li.act-colored-list-item::marker { color: var(--act-marker-color, inherit); }
             li.act-colored-list-item .list-bullet,
-            li.act-colored-list-item .list-number { color: var(--act-marker-color, inherit) !important; }
-            .markdown-preview-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit) !important; }
-            .markdown-reading-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit) !important; }
+            li.act-colored-list-item .list-number { color: var(--act-marker-color, inherit); }
+            .markdown-preview-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit); }
+            .markdown-reading-view li.act-colored-list-item::marker { color: var(--act-marker-color, inherit); }
           `;
           try {
             document.head.appendChild(style);
@@ -8568,6 +10046,9 @@ module.exports = class AlwaysColorText extends Plugin {
         const hideBg = this.settings.hideHighlights === true;
         const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : null;
         const resolvedTextColor = textColor || entry.color || null;
+        if (resolvedTextColor && this.isDarkColor(resolvedTextColor)) {
+          span.classList.add("act-dark-color");
+        }
         if (styleType2 === "text") {
           if (resolvedTextColor && !hideText) {
             try {
@@ -8952,6 +10433,9 @@ module.exports = class AlwaysColorText extends Plugin {
         if (!text.trim()) continue;
         const span = document.createElement("span");
         span.className = "always-color-text-highlight";
+        if (color && this.isDarkColor(color) || bgColor && this.isDarkColor(bgColor)) {
+          span.classList.add("act-dark-color");
+        }
         span.textContent = text;
         if (styleType2 === "text" && color) {
           try {
@@ -9170,7 +10654,32 @@ module.exports = class AlwaysColorText extends Plugin {
     this.disablePluginFeatures();
   }
   // --- Register CodeMirror, markdown, and listeners ---
+  updateLightModeFixer() {
+    try {
+      if (this.settings.enabled && this.settings.lightModeFixer) {
+        document.body.classList.add("act-light-mode-fix");
+      } else {
+        document.body.classList.remove("act-light-mode-fix");
+      }
+    } catch (e) {
+    }
+  }
+  updateDarkModeFixer() {
+    try {
+      if (this.settings.enabled && this.settings.darkModeFixer) {
+        document.body.classList.add("act-dark-mode-fix");
+      } else {
+        document.body.classList.remove("act-dark-mode-fix");
+      }
+    } catch (e) {
+    }
+  }
   enablePluginFeatures() {
+    this.updateLightModeFixer();
+    this.updateDarkModeFixer();
+    this.applyFormattingPresetStyles();
+    this.applyFormattingStyles();
+    this.applyHighlightPresetTransparency();
     if (!this.cmExtensionRegistered) {
       this.extension = this.buildEditorExtension();
       this.registerEditorExtension(this.extension);
@@ -9385,6 +10894,21 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // --- Remove all CodeMirror extensions & listeners ---
   disablePluginFeatures() {
+    this.removeHighlightPresetTransparency();
+    this.removeFormattingPresetStyles();
+    try {
+      const s = document.getElementById("act-formatting-styles");
+      if (s) s.remove();
+    } catch (_) {
+    }
+    try {
+      document.body.classList.remove("act-light-mode-fix");
+    } catch (_) {
+    }
+    try {
+      document.body.classList.remove("act-dark-mode-fix");
+    } catch (_) {
+    }
     if (this.cmExtensionRegistered && this.extension) {
       this.app.workspace.unregisterEditorExtension(this.extension);
       this.cmExtensionRegistered = false;
@@ -9613,6 +11137,26 @@ module.exports = class AlwaysColorText extends Plugin {
       let pos = 0;
       for (const m of matches) {
         if (m.start > pos) appendRange(frag, pos, m.start);
+        const entry = m.entryRef || m.entry;
+        const presetLabel = entry?.presetLabel || "";
+        const isBoldItalicPreset = /bold|italic/i.test(presetLabel);
+        let skipWrapper = false;
+        if (isBoldItalicPreset) {
+          for (const b of segBounds) {
+            if (b.end <= m.start) continue;
+            if (b.start >= m.end) break;
+            const parent = b.seg.node.parentElement;
+            if (parent && (parent.closest(".cm-strong, .cm-em, .markdown-rendered strong, .markdown-rendered em") || parent.matches && parent.matches(".cm-strong, .cm-em, .markdown-rendered strong, .markdown-rendered em"))) {
+              skipWrapper = true;
+              break;
+            }
+          }
+        }
+        if (skipWrapper) {
+          appendRange(frag, m.start, m.end);
+          pos = m.end;
+          continue;
+        }
         const span = document.createElement("span");
         span.className = "always-color-text-highlight";
         const styleType2 = m.isTextBg ? "both" : m.styleType || "text";
@@ -9757,7 +11301,6 @@ module.exports = class AlwaysColorText extends Plugin {
     if ((entry.textColor === void 0 || entry.textColor === null) && entry.color) {
       entry.textColor = entry.color;
     }
-    delete entry.color;
     delete entry._savedtextcolor;
     delete entry._savedbackgroundcolor;
     delete entry._savedTextColor;
@@ -9771,7 +11314,6 @@ module.exports = class AlwaysColorText extends Plugin {
     if ((e.textColor === void 0 || e.textColor === null) && e.color) {
       e.textColor = e.color;
     }
-    delete e.color;
     delete e._savedtextcolor;
     delete e._savedbackgroundcolor;
     delete e._savedTextColor;
@@ -9907,6 +11449,10 @@ module.exports = class AlwaysColorText extends Plugin {
       forceFullRenderInReading: false,
       // Opt-in: extremely lightweight processing mode (experimental)
       extremeLightweightMode: false,
+      // Opt-in: Smart Updates (Freeze non-active lines)
+      enableSmartUpdates: false,
+      // Opt-in: Word Completion Coloring (Wait for space)
+      enableWordCompletionColoring: false,
       // Disable coloring in reading/preview mode (editor remains colored)
       disableReadingModeColoring: false,
       disableLivePreviewColoring: false,
@@ -9922,6 +11468,7 @@ module.exports = class AlwaysColorText extends Plugin {
       pathRules: [],
       // Allow disabling regex safety checks (dangerous)
       disableRegexSafety: false,
+      enableQuickColorHighlightOnce: false,
       enableQuickColorOnce: false,
       enableQuickHighlightOnce: false,
       quickHighlightStyleEnable: false,
@@ -9952,8 +11499,10 @@ module.exports = class AlwaysColorText extends Plugin {
       entriesSearchLimit: 0,
       blacklistSearchLimit: 0,
       pathSearchLimit: 0,
-      showColoringReasonOnHover: false
+      showColoringReasonOnHover: false,
       // Show tooltip on hover explaining why text is colored
+      lightModeFixer: false,
+      darkModeFixer: false
     }, loadedData);
     try {
       if (typeof loadedData.quickColorsEnabled === "boolean") {
@@ -10113,6 +11662,8 @@ module.exports = class AlwaysColorText extends Plugin {
           groupedPatterns: e.groupedPatterns || null,
           matchType: typeof e.matchType === "string" && (/* @__PURE__ */ new Set(["exact", "contains", "startswith", "endswith"])).has(e.matchType.toLowerCase()) ? e.matchType.toLowerCase() : this.settings.partialMatch ? "contains" : "exact",
           presetLabel: e.presetLabel || void 0,
+          // PRESERVE targetElement (Critical for reading mode formatting)
+          targetElement: e.targetElement || (e.presetLabel && /bold\s*italic/i.test(e.presetLabel) ? "strong-em" : e.presetLabel && /bold/i.test(e.presetLabel) ? "strong" : e.presetLabel && /italic/i.test(e.presetLabel) ? "em" : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" ? "strong" : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" ? "em" : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" ? "strong-em" : void 0),
           // PRESERVE custom styling properties from original entry
           backgroundOpacity: e.backgroundOpacity,
           highlightBorderRadius: e.highlightBorderRadius,
@@ -10352,6 +11903,76 @@ module.exports = class AlwaysColorText extends Plugin {
     return allReleases;
   }
   // --- Save settings and refresh plugin state ---
+  applyFormattingStyles() {
+    try {
+      const styleId = "act-formatting-styles";
+      let styleEl = document.getElementById(styleId);
+      const we = this.settings.wordEntries || [];
+      const weAll2 = (this.settings.wordEntryGroups || []).reduce((acc, g) => acc.concat(g.entries || []), []).concat(we);
+      const hasBoldItalic = we.some((e) => e.targetElement === "strong-em") || weAll2.some((e) => e.targetElement === "strong-em");
+      const targets = [
+        {
+          type: "strong",
+          selector: hasBoldItalic ? ".cm-strong:not(.cm-em), .markdown-rendered strong:not(:has(em)), .cm-s-obsidian span.cm-strong:not(.cm-em)" : ".cm-strong, .markdown-rendered strong, .cm-s-obsidian span.cm-strong"
+        },
+        {
+          type: "em",
+          selector: hasBoldItalic ? ".cm-em:not(.cm-strong), .markdown-rendered em:not(:has(strong)), .cm-s-obsidian span.cm-em:not(.cm-strong)" : ".cm-em, .markdown-rendered em, .cm-s-obsidian span.cm-em"
+        },
+        {
+          type: "strong-em",
+          selector: ".cm-strong.cm-em, .cm-strong .cm-em, .cm-em .cm-strong, .markdown-rendered strong em, .markdown-rendered em strong, .cm-s-obsidian span.cm-strong.cm-em"
+        }
+      ];
+      let css = "";
+      targets.forEach((t) => {
+        const reversedWe = [...we].reverse();
+        const reversedWeAll = [...weAll2].reverse();
+        const entry = reversedWe.find((e) => e && e.targetElement === t.type) || reversedWeAll.find((e) => e && e.targetElement === t.type);
+        if (entry) {
+          const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
+          const bgColor = entry.backgroundColor || null;
+          css += `${t.selector} {`;
+          if (textColor || bgColor) {
+            if (textColor) css += ` color: ${textColor} !important;`;
+            if (bgColor) {
+              const opacityRaw = typeof entry.backgroundOpacity === "number" ? entry.backgroundOpacity : this.settings.backgroundOpacity ?? 25;
+              const opacity = opacityRaw <= 1 && opacityRaw > 0 ? opacityRaw * 100 : opacityRaw;
+              const bgRgba = this.hexToRgba(bgColor, opacity);
+              css += ` background-color: ${bgRgba} !important;`;
+            }
+          }
+          {
+            const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
+            const vPad = typeof entry.highlightVerticalPadding === "number" ? entry.highlightVerticalPadding : this.settings.highlightVerticalPadding ?? 0;
+            const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
+            const borderCSS = this.generateBorderStyle(textColor, bgColor, entry);
+            css += ` padding-left: ${hPad}px !important; padding-right: ${hPad}px !important;`;
+            css += ` padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`;
+            css += ` border-radius: ${radius}px !important;`;
+            if (borderCSS) css += borderCSS;
+            if (this.settings.enableBoxDecorationBreak !== false) {
+              css += ` box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+            }
+          }
+          css += ` } 
+`;
+        }
+      });
+      if (css) {
+        if (!styleEl) {
+          styleEl = document.createElement("style");
+          styleEl.id = styleId;
+          document.head.appendChild(styleEl);
+        }
+        styleEl.textContent = css;
+      } else {
+        if (styleEl) styleEl.remove();
+      }
+    } catch (e) {
+      console.error("ACT: Error applying formatting styles", e);
+    }
+  }
   async saveSettings() {
     try {
       this.sanitizeSettings();
@@ -11095,6 +12716,7 @@ module.exports = class AlwaysColorText extends Plugin {
           return containsMatch;
         case "startswith":
           try {
+            if (this._isTyping) throw new Error("Skip strict check");
             const flags = this.settings.caseSensitive ? "" : "i";
             const re = new RegExp(`^${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[A-Za-z]*$`, flags);
             return re.test(fullWord);
@@ -11104,6 +12726,7 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         case "endswith":
           try {
+            if (this._isTyping) throw new Error("Skip strict check");
             const flags = this.settings.caseSensitive ? "" : "i";
             const re = new RegExp(`^[A-Za-z]*${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}$`, flags);
             return re.test(fullWord);
@@ -11158,8 +12781,10 @@ module.exports = class AlwaysColorText extends Plugin {
     let lastIndex = 0;
     let safetyCounter = 0;
     const maxIterations = Math.min(EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN, 100);
+    const startTime = Date.now();
     try {
       while (safetyCounter < maxIterations) {
+        if (safetyCounter > 10 && Date.now() - startTime > 10) break;
         const match = regex.exec(text);
         if (!match) break;
         matches.push(match);
@@ -11335,6 +12960,10 @@ module.exports = class AlwaysColorText extends Plugin {
         }).filter(Boolean);
       }
       filtered.sort((a, b) => {
+        const aIsRegex = !!a.isRegex;
+        const bIsRegex = !!b.isRegex;
+        if (!aIsRegex && bIsRegex) return -1;
+        if (aIsRegex && !bIsRegex) return 1;
         const sa = typeof a.specificity === "number" ? a.specificity : String(a.pattern || "").replace(/\*/g, "").length;
         const sb = typeof b.specificity === "number" ? b.specificity : String(b.pattern || "").replace(/\*/g, "").length;
         const specDiff = sb - sa;
@@ -11354,6 +12983,33 @@ module.exports = class AlwaysColorText extends Plugin {
     if (hex.includes(";") || hex.toLowerCase().includes("!important") || /\s/.test(hex)) return false;
     const hexRegex = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/;
     return hexRegex.test(hex);
+  }
+  // Helper: Check if a color is "dark" (low luminance)
+  isDarkColor(color) {
+    if (!color) return false;
+    try {
+      let r, g, b;
+      if (color.startsWith("#")) {
+        let hex = color.substring(1);
+        if (hex.length === 3) hex = hex.split("").map((x) => x + x).join("");
+        if (hex.length !== 6) return false;
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+      } else if (color.startsWith("rgb")) {
+        const parts = color.match(/\d+/g);
+        if (!parts || parts.length < 3) return false;
+        r = parseInt(parts[0]);
+        g = parseInt(parts[1]);
+        b = parseInt(parts[2]);
+      } else {
+        return false;
+      }
+      const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+      return luma < 60;
+    } catch (e) {
+      return false;
+    }
   }
   hexToRgba(hex, opacityPercent) {
     if (!this.isValidHexColor(hex)) {
@@ -11579,6 +13235,45 @@ module.exports = class AlwaysColorText extends Plugin {
       return "";
     }
   }
+  generateGlobalBorderStyle(backgroundColor) {
+    try {
+      if (this.settings.hideHighlights === true) return "";
+      if (!this.settings.enableBorderThickness) return "";
+      const thickness = this.settings.borderThickness ?? 1;
+      const opacity = this.settings.borderOpacity ?? 100;
+      const borderColor = this.hexToRgba(backgroundColor, opacity);
+      const type = this.settings.borderStyle ?? "full";
+      const lineStyle = this.settings.borderLineStyle ?? "solid";
+      const css = `${thickness}px ${lineStyle} ${borderColor}`;
+      switch (type) {
+        case "bottom":
+          return ` border-bottom: ${css};`;
+        case "top":
+          return ` border-top: ${css};`;
+        case "left":
+          return ` border-left: ${css};`;
+        case "right":
+          return ` border-right: ${css};`;
+        case "top-bottom":
+          return ` border-top: ${css}; border-bottom: ${css};`;
+        case "left-right":
+          return ` border-left: ${css}; border-right: ${css};`;
+        case "top-right":
+          return ` border-top: ${css}; border-right: ${css};`;
+        case "top-left":
+          return ` border-top: ${css}; border-left: ${css};`;
+        case "bottom-right":
+          return ` border-bottom: ${css}; border-right: ${css};`;
+        case "bottom-left":
+          return ` border-bottom: ${css}; border-left: ${css};`;
+        case "full":
+        default:
+          return ` border: ${css};`;
+      }
+    } catch (_) {
+      return "";
+    }
+  }
   async _applyQuickColorACT(selectedText, textColor, backgroundColor, view, styleEntry = null) {
     if (this.isWordBlacklisted(selectedText, view?.file?.path)) {
       new Notice(this.t("notice_blacklisted_cannot_color", `"${selectedText}" is blacklisted and cannot be colored.`, { word: selectedText }));
@@ -11738,10 +13433,10 @@ module.exports = class AlwaysColorText extends Plugin {
     }
     const bg = bc ? this.hexToHexWithAlpha(bc, params.opacity ?? 25) : null;
     let styleStr = "";
-    if (tc) styleStr += `color: ${tc} !important; `;
+    if (tc) styleStr += `color: ${tc}; `;
     if (bg) styleStr += `background-color: ${bg}; `;
     styleStr += `border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-    const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
+    const html = `<span style="${styleStr}">${selectedText}</span>`;
     editor.replaceSelection(html);
   }
   // Helper: Extract color and background from selected HTML text in editor
@@ -12405,6 +14100,19 @@ module.exports = class AlwaysColorText extends Plugin {
               const copy = Object.assign({}, e);
               if (groupMatch) copy.matchType = groupMatch;
               if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+              if (group.styleType) copy.styleType = group.styleType;
+              if (group.textColor) copy.textColor = group.textColor;
+              if (group.color) copy.color = group.color;
+              if (group.backgroundColor) copy.backgroundColor = group.backgroundColor;
+              if (typeof group.backgroundOpacity !== "undefined") copy.backgroundOpacity = group.backgroundOpacity;
+              if (typeof group.highlightBorderRadius !== "undefined") copy.highlightBorderRadius = group.highlightBorderRadius;
+              if (typeof group.highlightHorizontalPadding !== "undefined") copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
+              if (typeof group.highlightVerticalPadding !== "undefined") copy.highlightVerticalPadding = group.highlightVerticalPadding;
+              if (typeof group.enableBorderThickness !== "undefined") copy.enableBorderThickness = group.enableBorderThickness;
+              if (group.borderStyle) copy.borderStyle = group.borderStyle;
+              if (group.borderLineStyle) copy.borderLineStyle = group.borderLineStyle;
+              if (typeof group.borderOpacity !== "undefined") copy.borderOpacity = group.borderOpacity;
+              if (typeof group.borderThickness !== "undefined") copy.borderThickness = group.borderThickness;
               copy._groupUid = group.uid || null;
               copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
               copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
@@ -12464,6 +14172,7 @@ module.exports = class AlwaysColorText extends Plugin {
             entryRef: e,
             // Keep reference to original entry for highlight styling parameters
             caseSensitive: effectiveCaseSensitive,
+            targetElement: e.targetElement || (e.presetLabel && /bold\s*italic/i.test(e.presetLabel) ? "strong-em" : e.presetLabel && /bold/i.test(e.presetLabel) ? "strong" : e.presetLabel && /italic/i.test(e.presetLabel) ? "em" : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" ? "strong" : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" ? "em" : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" ? "strong-em" : void 0),
             // Copy per-entry include/exclude rules so filtering still works after reload
             inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
             exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
@@ -12580,6 +14289,19 @@ module.exports = class AlwaysColorText extends Plugin {
               const copy = Object.assign({}, e);
               if (groupMatch) copy.matchType = groupMatch;
               if (groupCase !== void 0) copy._caseSensitiveOverride = groupCase;
+              if (group.styleType) copy.styleType = group.styleType;
+              if (group.textColor) copy.textColor = group.textColor;
+              if (group.color) copy.color = group.color;
+              if (group.backgroundColor) copy.backgroundColor = group.backgroundColor;
+              if (typeof group.backgroundOpacity !== "undefined") copy.backgroundOpacity = group.backgroundOpacity;
+              if (typeof group.highlightBorderRadius !== "undefined") copy.highlightBorderRadius = group.highlightBorderRadius;
+              if (typeof group.highlightHorizontalPadding !== "undefined") copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
+              if (typeof group.highlightVerticalPadding !== "undefined") copy.highlightVerticalPadding = group.highlightVerticalPadding;
+              if (typeof group.enableBorderThickness !== "undefined") copy.enableBorderThickness = group.enableBorderThickness;
+              if (group.borderStyle) copy.borderStyle = group.borderStyle;
+              if (group.borderLineStyle) copy.borderLineStyle = group.borderLineStyle;
+              if (typeof group.borderOpacity !== "undefined") copy.borderOpacity = group.borderOpacity;
+              if (typeof group.borderThickness !== "undefined") copy.borderThickness = group.borderThickness;
               copy._groupUid = group.uid || null;
               copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
               copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
@@ -12594,6 +14316,10 @@ module.exports = class AlwaysColorText extends Plugin {
       debugLog("[TBG_COMPILE_START]", `Starting with ${source.length} source entries from wordEntries`);
       for (const e of source) {
         if (!e || !e.backgroundColor) continue;
+        if (e.presetLabel) {
+          const label = String(e.presetLabel).toLowerCase();
+          if (label.includes("bold") || label.includes("italic")) continue;
+        }
         if (e.pattern === "hello") {
           debugLog("[TBG_SOURCE_ENTRY]", `Source entry 'hello': opacity=${e.backgroundOpacity}, radius=${e.highlightBorderRadius}, bg=${e.backgroundColor}`);
         }
@@ -12892,12 +14618,68 @@ module.exports = class AlwaysColorText extends Plugin {
       debugError("BLACKLIST_COMPILE", "Failed to compile blacklist", e);
     }
   }
+  // NEW METHOD: Apply highlights to specific HTML elements (for logic-based coloring)
+  applyElementHighlights(el, entries, folderEntry = null) {
+    if (!el || !entries || entries.length === 0) return;
+    for (const entry of entries) {
+      if (!entry || !entry.targetElement) continue;
+      let selector = entry.targetElement;
+      if (selector === "strong-em") selector = "strong > em, em > strong";
+      let elements;
+      try {
+        elements = el.querySelectorAll(selector);
+      } catch (e) {
+        continue;
+      }
+      if (elements.length === 0) continue;
+      const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
+      const backgroundColor = entry.backgroundColor || null;
+      const finalTextColor = folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : textColor;
+      const hideText = this.settings.hideTextColors === true;
+      const hideBg = this.settings.hideHighlights === true;
+      for (const element of elements) {
+        if (!hideText && finalTextColor) {
+          element.style.setProperty("color", finalTextColor, "important");
+          element.style.setProperty("--highlight-color", finalTextColor);
+        }
+        if (!hideBg && backgroundColor) {
+          const params = this.getHighlightParams(entry);
+          const bgRgba = this.hexToRgba(backgroundColor, params.opacity);
+          element.style.setProperty("background-color", bgRgba, "important");
+          element.style.setProperty("border-radius", params.radius + "px", "important");
+          element.style.setProperty("padding-left", params.hPad + "px", "important");
+          element.style.setProperty("padding-right", params.hPad + "px", "important");
+          const vPad = params.vPad;
+          if (vPad >= 0) {
+            element.style.setProperty("padding-top", vPad + "px", "important");
+            element.style.setProperty("padding-bottom", vPad + "px", "important");
+          } else {
+            element.style.setProperty("padding-top", "0px", "important");
+            element.style.setProperty("padding-bottom", "0px", "important");
+            element.style.setProperty("margin-top", vPad + "px", "important");
+            element.style.setProperty("margin-bottom", vPad + "px", "important");
+          }
+          if (this.settings.enableBoxDecorationBreak ?? true) {
+            element.style.boxDecorationBreak = "clone";
+            element.style.WebkitBoxDecorationBreak = "clone";
+          }
+        }
+      }
+    }
+  }
   // Apply Highlights in Reading View (Markdown Post Processor) - optional folderEntry may override match colors
   applyHighlights(el, folderEntry = null, options = {}) {
     const entries = options && Array.isArray(options.entries) ? options.entries : this.getSortedWordEntries();
     if (entries.length === 0) return;
     if (!el.isConnected) return;
-    this._wrapMatchesRecursive(el, entries, folderEntry, options || {});
+    const elementEntries = entries.filter((e) => e && e.targetElement);
+    const regexEntries = entries.filter((e) => e && !e.targetElement);
+    if (elementEntries.length > 0) {
+      this.applyElementHighlights(el, elementEntries, folderEntry);
+    }
+    if (regexEntries.length > 0) {
+      this._wrapMatchesRecursive(el, regexEntries, folderEntry, options || {});
+    }
   }
   // NEW METHOD: Apply highlights for simple patterns (ultra-fast version)
   applySimpleHighlights(textNode, matches, text, filePath = null) {
@@ -13251,6 +15033,30 @@ module.exports = class AlwaysColorText extends Plugin {
     const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
     const allEntries = this.getSortedWordEntries();
     const allowedEntries = this.filterEntriesByAdvancedRules(ctx.sourcePath, allEntries);
+    for (const entry of allowedEntries) {
+      if (!entry.targetElement && entry.isRegex) {
+        if (entry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") entry.targetElement = "strong";
+        else if (entry.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") entry.targetElement = "em";
+        else if (entry.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") entry.targetElement = "strong-em";
+      }
+    }
+    try {
+      if (el && el.querySelectorAll) {
+        const strongs = el.querySelectorAll("strong");
+        for (let i = 0; i < strongs.length; i++) {
+          const strong = strongs[i];
+          const ems = strong.getElementsByTagName("em");
+          if (ems.length > 0) {
+            let allEmText = "";
+            for (let j = 0; j < ems.length; j++) allEmText += ems[j].textContent;
+            if (strong.textContent.trim() === allEmText.trim()) {
+              strong.classList.add("act-transparent-strong");
+            }
+          }
+        }
+      }
+    } catch (e) {
+    }
     const isExcludedByPathRules = pr.excluded || this.hasGlobalExclude() && pr.hasIncludes && !pr.included;
     if (isExcludedByPathRules && allowedEntries.length === 0) {
       debugLog("ACT", "Skipping: excluded by path rules with no advanced rule exceptions");
@@ -13274,43 +15080,23 @@ module.exports = class AlwaysColorText extends Plugin {
       return;
     }
     try {
-      if (el && el.textContent && this.shouldUseLightweightMode(el.textContent.length)) {
-        this.processLargeDocument(el, ctx, folderEntry);
-        return;
-      }
-    } catch (e) {
-    }
-    const immediateBlocks = 20;
-    const isReadingRoot = (() => {
-      try {
-        if (!el) return false;
-        if (el.classList && (el.classList.contains("markdown-reading-view") || el.classList.contains("markdown-preview-view"))) return true;
-        if (el.closest && el.closest(".markdown-reading-view, .markdown-preview-view")) return true;
-        return false;
-      } catch (_) {
-        return false;
-      }
-    })();
-    try {
       if (this.shouldUseLightweightMode && this.shouldUseLightweightMode(el.textContent ? el.textContent.length : 0)) {
         debugLog("ACT", "Large doc detected -> using viewport-based rendering");
-        if (isReadingRoot) {
+        try {
+          this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
+          this._processBasesViews();
           try {
-            this.processInChunks(el, allowedEntries, folderEntry || null, { skipFirstN: 0, batchSize: 30, clearExisting: true, forceProcess: true, maxMatches: Infinity, filePath: ctx.sourcePath });
-          } catch (e) {
-            debugError("ACT", "processInChunks immediate failed", e);
-            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
+            const pseudoView = { dom: el, file: { path: ctx.sourcePath } };
+            this._processLivePreviewCallouts(pseudoView);
+            this._processLivePreviewTables(pseudoView);
+          } catch (err) {
+            debugError("ACT", "lightweight mode element processing failed", err);
           }
-          return;
-        } else {
-          try {
-            this.setupViewportObserver(el, folderEntry || null, { clearExisting: true, entries: allowedEntries });
-          } catch (e) {
-            debugError("ACT", "setupViewportObserver failed", e);
-            this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
-          }
-          return;
+        } catch (e) {
+          debugError("ACT", "setupViewportObserver failed", e);
+          this.applyHighlights(el, folderEntry || null, { immediateBlocks, clearExisting: true, entries: allowedEntries, filePath: ctx.sourcePath });
         }
+        return;
       }
     } catch (e) {
     }
@@ -13391,8 +15177,17 @@ module.exports = class AlwaysColorText extends Plugin {
         try {
           this.processInChunks(el, entries, folderEntry, {
             batchSize: 30,
-            clearExisting: false
+            clearExisting: false,
+            forceProcess: true
+            // Force full render even in lightweight mode as per user request
           });
+          this._processBasesViews();
+          try {
+            const pseudoView = { dom: el, file: { path: ctx.sourcePath } };
+            this._processLivePreviewCallouts(pseudoView, true);
+            this._processLivePreviewTables(pseudoView, true);
+          } catch (_) {
+          }
         } catch (e) {
           debugError("LARGE", "deferred processing failed", e);
         }
@@ -13494,9 +15289,9 @@ module.exports = class AlwaysColorText extends Plugin {
               const bg = m.backgroundColor || m.textColor;
               if (bg) {
                 try {
-                  span.style.setProperty("background-color", this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25), "important");
+                  span.style.setProperty("background-color", this.hexToRgba(bg, this.settings.backgroundOpacity ?? 0.3), "important");
                 } catch (_) {
-                  span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25);
+                  span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 0.3);
                 }
                 try {
                   span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
@@ -13545,9 +15340,9 @@ module.exports = class AlwaysColorText extends Plugin {
             }
             if (!hideBg && bg) {
               try {
-                span.style.setProperty("background-color", this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25), "important");
+                span.style.setProperty("background-color", this.hexToRgba(bg, this.settings.backgroundOpacity ?? 0.3), "important");
               } catch (_) {
-                span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 25);
+                span.style.backgroundColor = this.hexToRgba(bg, this.settings.backgroundOpacity ?? 0.3);
               }
               try {
                 span.style.setProperty("padding-left", (this.settings.highlightHorizontalPadding ?? 4) + "px", "important");
@@ -13778,6 +15573,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // Extracted helper: process a single block element (previously inlined inside _wrapMatchesRecursive)
   _processBlock(block, entries, folderEntry, opts = {}) {
+    if (block.matches && block.matches(".inline_spoilers-spoiler")) return;
     try {
       try {
         this._domRefs.set(block, { processedAt: Date.now(), matchCount: 0 });
@@ -13839,6 +15635,9 @@ module.exports = class AlwaysColorText extends Plugin {
           if (node.parentElement?.closest("mark")) {
             return NodeFilter.FILTER_REJECT;
           }
+          if (node.parentElement?.closest(".inline_spoilers-spoiler")) {
+            return NodeFilter.FILTER_REJECT;
+          }
           if (node.parentElement?.closest(".always-color-text-highlight")) {
             return NodeFilter.FILTER_REJECT;
           }
@@ -13885,6 +15684,9 @@ module.exports = class AlwaysColorText extends Plugin {
             if (node.parentElement?.closest(".always-color-text-highlight")) {
               return NodeFilter.FILTER_REJECT;
             }
+            if (node.parentElement?.closest(".inline_spoilers-spoiler")) {
+              return NodeFilter.FILTER_REJECT;
+            }
             try {
               if (node.parentElement?.closest(".act-skip-coloring")) {
                 return NodeFilter.FILTER_REJECT;
@@ -13924,6 +15726,9 @@ module.exports = class AlwaysColorText extends Plugin {
             return NodeFilter.FILTER_REJECT;
           }
           if (node.parentElement?.closest(".always-color-text-highlight")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (node.parentElement?.closest(".inline_spoilers-spoiler")) {
             return NodeFilter.FILTER_REJECT;
           }
           try {
@@ -14052,8 +15857,23 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       };
       const isForced = opts && opts.forceProcess || this.settings.forceFullRenderInReading;
-      const maxMatches = typeof opts.maxMatches === "number" ? opts.maxMatches : isForced ? Infinity : this.settings && this.settings.extremeLightweightMode ? 250 : 500;
+      const maxMatches = typeof opts.maxMatches === "number" ? opts.maxMatches : isForced ? Infinity : this.settings && this.settings.extremeLightweightMode ? 200 : 500;
       let matches = [];
+      try {
+        const spoilerRegex = /\|\|.*?\|\|/g;
+        let sMatch;
+        while ((sMatch = spoilerRegex.exec(text)) !== null) {
+          matches.push({
+            start: sMatch.index,
+            end: sMatch.index + sMatch[0].length,
+            skip: true,
+            // Dummy props for sorting/merging compatibility
+            color: void 0,
+            styleType: "text"
+          });
+        }
+      } catch (e) {
+      }
       let textBgEntries = entries.filter((e) => e && e.isTextBg === true);
       const TEXT_BG_CHUNK_SIZE = 10;
       try {
@@ -14236,6 +16056,9 @@ module.exports = class AlwaysColorText extends Plugin {
           const lenA = a.end - a.start;
           const lenB = b.end - b.start;
           if (lenA !== lenB) return lenB - lenA;
+          const pLenA = String((a.entryRef || a.entry || {}).pattern || "").length;
+          const pLenB = String((b.entryRef || b.entry || {}).pattern || "").length;
+          if (pLenA !== pLenB) return pLenB - pLenA;
           if (a.start !== b.start) return a.start - b.start;
           const aHasText = a.isTextBg ? !!(a.textColor && a.textColor !== "currentColor") : !!a.color;
           const bHasText = b.isTextBg ? !!(b.textColor && b.textColor !== "currentColor") : !!b.color;
@@ -14267,6 +16090,10 @@ module.exports = class AlwaysColorText extends Plugin {
           const w = match[0];
           const start = match.index;
           const end = start + w.length;
+          if (this.settings.enableWordCompletionColoring) {
+            const nextChar = text[end];
+            if (!nextChar || nextChar === "\n" || nextChar === "\r") continue;
+          }
           if (isBlacklisted(w)) continue;
           for (const entry of textBgEntries.filter((e) => ["contains", "startswith", "endswith"].includes(String(e.matchType || "").toLowerCase()))) {
             if (!entry || entry.invalid) continue;
@@ -14501,6 +16328,9 @@ module.exports = class AlwaysColorText extends Plugin {
           const lenA = a.end - a.start;
           const lenB = b.end - b.start;
           if (lenA !== lenB) return lenB - lenA;
+          const pLenA = String((a.entryRef || a.entry || {}).pattern || "").length;
+          const pLenB = String((b.entryRef || b.entry || {}).pattern || "").length;
+          if (pLenA !== pLenB) return pLenB - pLenA;
           if (a.start !== b.start) return a.start - b.start;
           const aHasText = a.isTextBg ? !!(a.textColor && a.textColor !== "currentColor") : !!a.color;
           const bHasText = b.isTextBg ? !!(b.textColor && b.textColor !== "currentColor") : !!b.color;
@@ -14554,13 +16384,35 @@ module.exports = class AlwaysColorText extends Plugin {
           let m = nonOverlapping[i];
           let j = i + 1;
           while (j < nonOverlapping.length && nonOverlapping[j].start === nonOverlapping[j - 1].end && !m.isTextBg && !nonOverlapping[j].isTextBg && (nonOverlapping[j].color === m.color || nonOverlapping[j].textColor === m.textColor && nonOverlapping[j].backgroundColor === m.backgroundColor || nonOverlapping[j].styleType === m.styleType)) {
-            m = { start: m.start, end: nonOverlapping[j].end, color: m.color, styleType: m.styleType, textColor: m.textColor, backgroundColor: m.backgroundColor };
+            m = { start: m.start, end: nonOverlapping[j].end, color: m.color, styleType: m.styleType, textColor: m.textColor, backgroundColor: m.backgroundColor, skip: m.skip };
             j++;
           }
           if (m.start > pos) frag.appendChild(document.createTextNode(text.slice(pos, m.start)));
+          if (m.skip) {
+            frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
+            pos = m.end;
+            i = j;
+            continue;
+          }
           if (effectiveStyle === "none") {
             frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
           } else {
+            const entry = m.entryRef || m.entry;
+            const presetLabel = entry?.presetLabel || "";
+            const isBoldItalicPreset = /bold|italic/i.test(presetLabel);
+            let skipWrapper = false;
+            if (isBoldItalicPreset) {
+              const parent = node.parentElement;
+              if (parent && (parent.closest(".cm-strong, .cm-em, .markdown-rendered strong, .markdown-rendered em") || parent.matches && parent.matches(".cm-strong, .cm-em, .markdown-rendered strong, .markdown-rendered em"))) {
+                skipWrapper = true;
+              }
+            }
+            if (skipWrapper) {
+              frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
+              pos = m.end;
+              i = j;
+              continue;
+            }
             const span = document.createElement("span");
             span.className = "always-color-text-highlight";
             span.textContent = text.slice(m.start, m.end);
@@ -14745,6 +16597,9 @@ module.exports = class AlwaysColorText extends Plugin {
     const batch = Number(options.batchSize) || 20;
     const blocks = [];
     const tags = new Set(selector.split(",").map((s) => s.trim().toUpperCase()));
+    if (options.includeSelf && element && tags.has(element.nodeName)) {
+      blocks.push(element);
+    }
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT, {
       acceptNode(node) {
         return tags.has(node.nodeName) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
@@ -14790,21 +16645,21 @@ module.exports = class AlwaysColorText extends Plugin {
     debugLog("CHUNK", `done: ${blocks.length} blocks processed`);
     blocks.length = 0;
   }
-  _processLivePreviewCallouts(view) {
+  _processLivePreviewCallouts(view, force = false) {
     try {
-      if (this.settings.disableLivePreviewColoring || this.settings.extremeLightweightMode) return;
+      if (this.settings.disableLivePreviewColoring) return;
       const now = Date.now();
-      if (this._lpLastRun && now - this._lpLastRun < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
+      if (!force && this._lpLastRun && now - this._lpLastRun < EDITOR_PERFORMANCE_CONSTANTS.CALLOUT_THROTTLE_MS) return;
       this._lpLastRun = now;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest(".is-live-preview");
+      const isLP = root.closest && root.closest(".is-live-preview") || root.closest && root.closest(".canvas-node") || root.closest && root.closest(".markdown-embed") || force;
       if (!isLP) return;
-      if (this._isTyping && now - this._lastTypingTime < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
+      if (!force && this._isTyping && now - this._lastTypingTime < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
       if (this._lpCalloutRaf) return;
       this._lpCalloutRaf = requestAnimationFrame(() => {
         this._lpCalloutRaf = null;
-        this._processLivePreviewCalloutsInternal(view);
+        this._processLivePreviewCalloutsInternal(view, force);
       });
       return;
     } catch (e) {
@@ -14814,11 +16669,11 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     }
   }
-  _processLivePreviewCalloutsInternal(view) {
+  _processLivePreviewCalloutsInternal(view, force = false) {
     try {
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest(".is-live-preview");
+      const isLP = root.closest && root.closest(".is-live-preview") || root.closest && root.closest(".canvas-node") || root.closest && root.closest(".markdown-embed") || force;
       if (!isLP) return;
       const viewport = {
         top: window.scrollY || 0,
@@ -14881,21 +16736,21 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     }
   }
-  _processLivePreviewTables(view) {
+  _processLivePreviewTables(view, force = false) {
     try {
-      if (this.settings.disableLivePreviewColoring || this.settings.extremeLightweightMode) return;
+      if (this.settings.disableLivePreviewColoring) return;
       const now = Date.now();
-      if (this._lpTablesLastRun && now - this._lpTablesLastRun < EDITOR_PERFORMANCE_CONSTANTS.TABLE_THROTTLE_MS) return;
+      if (!force && this._lpTablesLastRun && now - this._lpTablesLastRun < EDITOR_PERFORMANCE_CONSTANTS.TABLE_THROTTLE_MS) return;
       this._lpTablesLastRun = now;
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest(".is-live-preview");
+      const isLP = root.closest && root.closest(".is-live-preview") || root.closest && root.closest(".canvas-node") || root.closest && root.closest(".markdown-embed") || force;
       if (!isLP) return;
-      if (this._isTyping && now - this._lastTypingTime < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
-      if (this._lpTableRaf) return;
+      if (!force && this._isTyping && now - this._lastTypingTime < EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS) return;
+      if (this._lpTableRaf) cancelAnimationFrame(this._lpTableRaf);
       this._lpTableRaf = requestAnimationFrame(() => {
         this._lpTableRaf = null;
-        this._processLivePreviewTablesInternal(view);
+        this._processLivePreviewTablesInternal(view, force);
       });
       return;
     } catch (e) {
@@ -14905,11 +16760,11 @@ module.exports = class AlwaysColorText extends Plugin {
       }
     }
   }
-  _processLivePreviewTablesInternal(view) {
+  _processLivePreviewTablesInternal(view, force = false) {
     try {
       const root = view && view.dom ? view.dom : null;
       if (!root) return;
-      const isLP = root.closest && root.closest(".is-live-preview");
+      const isLP = root.closest && root.closest(".is-live-preview") || root.closest && root.closest(".canvas-node") || root.closest && root.closest(".markdown-embed") || force;
       if (!isLP) return;
       const cells = root.querySelectorAll(".cm-content table td, .cm-content table th");
       if (!cells || cells.length === 0) return;
@@ -14952,7 +16807,7 @@ module.exports = class AlwaysColorText extends Plugin {
       } catch (_) {
       }
       let processedCount = 0;
-      const maxProcessPerFrame = 10;
+      const maxProcessPerFrame = 100;
       for (const cell of cells) {
         try {
           if (processedCount >= maxProcessPerFrame) {
@@ -15393,7 +17248,8 @@ module.exports = class AlwaysColorText extends Plugin {
               clearExisting: true,
               batchSize: 10,
               forceProcess: true,
-              maxMatches: Infinity
+              maxMatches: Infinity,
+              includeSelf: true
             });
           } catch (_) {
           }
@@ -15794,11 +17650,13 @@ module.exports = class AlwaysColorText extends Plugin {
         const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
         const br = hPad > 0 && radius === 0 ? 0 : radius;
         const boxDecoBreak = this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : "";
-        style = `background: none !important; background-color: ${this.hexToRgba(m.color, opacity)} !important; border-radius: ${br}px !important; padding-left: ${hPad}px !important; padding-right: ${hPad}px !important; ${vPadCss}${boxDecoBreak}`;
+        style = `background: none; background-color: ${this.hexToRgba(m.color, opacity)} !important; border-radius: ${br}px !important; padding-left: ${hPad}px !important; padding-right: ${hPad}px !important; ${vPadCss}${boxDecoBreak}`;
       }
+      const isDark = m.color && this.isDarkColor(m.color);
       const deco = Decoration.mark({
         attributes: {
           style,
+          class: isDark ? "always-color-text-highlight act-dark-color" : "always-color-text-highlight",
           title: this.settings.showColoringReasonOnHover && m.color ? `matches "${m.entry?.pattern || ""}"` : ""
         }
       });
@@ -15815,6 +17673,17 @@ module.exports = class AlwaysColorText extends Plugin {
         this.decorations = this.buildDeco(view);
         this.lastFilePath = view.file ? view.file.path : null;
         this._typingDebounceTimer = null;
+        this.wasInTable = false;
+        try {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0) {
+            const node = sel.anchorNode;
+            if (node && (node.nodeType === 1 ? node : node.parentElement)?.closest(".cm-content table")) {
+              this.wasInTable = true;
+            }
+          }
+        } catch (_) {
+        }
         try {
           if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewCallouts(view);
         } catch (_) {
@@ -15833,6 +17702,26 @@ module.exports = class AlwaysColorText extends Plugin {
         }
       }
       update(update) {
+        if (update.selectionSet) {
+          let isInTable = false;
+          try {
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0) {
+              const node = sel.anchorNode;
+              if (node && (node.nodeType === 1 ? node : node.parentElement)?.closest(".cm-content table")) {
+                isInTable = true;
+              }
+            }
+          } catch (_) {
+          }
+          if (this.wasInTable && !isInTable) {
+            try {
+              plugin._processLivePreviewTables(this.view, true);
+            } catch (_) {
+            }
+          }
+          this.wasInTable = isInTable;
+        }
         const currentFilePath = plugin.app.workspace.getActiveFile()?.path;
         const fileChanged = this.lastFilePath !== currentFilePath;
         this.lastFilePath = currentFilePath;
@@ -15846,8 +17735,73 @@ module.exports = class AlwaysColorText extends Plugin {
           }, EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS);
         }
         if (update.docChanged || update.viewportChanged || fileChanged || forceRebuild) {
-          this.decorations = this.buildDeco(update.view);
+          let skipRebuildForWordCompletion = false;
+          if (plugin.settings.enableWordCompletionColoring && plugin._isTyping && update.docChanged && !forceRebuild && !fileChanged) {
+            let hasWordBoundary = false;
+            let isInsertion = true;
+            update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+              if (fromA !== toA) isInsertion = false;
+              if (inserted.length > 0) {
+                const text = inserted.toString();
+                if (text.includes(" ") || text.includes("\n")) hasWordBoundary = true;
+              }
+            });
+            if (isInsertion && !hasWordBoundary) {
+              skipRebuildForWordCompletion = true;
+            }
+          }
+          if (skipRebuildForWordCompletion) {
+            this.decorations = this.decorations.map(update.changes);
+          } else if (plugin.settings.enableSmartUpdates && update.docChanged && !forceRebuild && !fileChanged && !update.viewportChanged) {
+            try {
+              this.decorations = this.decorations.map(update.changes);
+              const dirtyRanges = [];
+              let totalDirtyLength = 0;
+              const viewport = update.view.viewport;
+              const selection = update.view.state.selection.main;
+              const activeLine = update.view.state.doc.lineAt(selection.head);
+              update.changes.iterChanges((fromA, toA, fromB, toB) => {
+                const startLine = update.view.state.doc.lineAt(fromB);
+                const endLine = update.view.state.doc.lineAt(toB);
+                if (endLine.to < viewport.from || startLine.from > viewport.to) return;
+                if (plugin._isTyping) {
+                  const isActiveLine = startLine.from <= activeLine.to && endLine.to >= activeLine.from;
+                  if (!isActiveLine) return;
+                }
+                const range = { from: startLine.from, to: endLine.to };
+                dirtyRanges.push(range);
+                totalDirtyLength += range.to - range.from;
+              });
+              if (totalDirtyLength > 5e3) {
+                this.decorations = this.buildDeco(update.view);
+              } else if (dirtyRanges.length > 0) {
+                const { entries, folderEntry } = this.getApplicableEntries(update.view);
+                if (entries && entries.length > 0) {
+                  for (const range of dirtyRanges) {
+                    this.decorations = this.decorations.update({
+                      filter: (from, to) => to < range.from || from > range.to
+                    });
+                    const builder = new RangeSetBuilder();
+                    const text = update.view.state.doc.sliceString(range.from, range.to);
+                    const chunkDecos = plugin.buildDecoChunked(update.view, builder, range.from, range.to, text, entries, folderEntry, currentFilePath);
+                    const newRanges = [];
+                    chunkDecos.between(range.from, range.to, (f, t, v) => {
+                      newRanges.push({ from: f, to: t, value: v });
+                    });
+                    this.decorations = this.decorations.update({
+                      add: newRanges
+                    });
+                  }
+                }
+              }
+            } catch (e) {
+              this.decorations = this.buildDeco(update.view);
+            }
+          } else {
+            this.decorations = this.buildDeco(update.view);
+          }
           clearTimeout(this._typingDebounceTimer);
+          const debounceMs = plugin.settings.extremeLightweightMode ? 1e3 : EDITOR_PERFORMANCE_CONSTANTS.TYPING_DEBOUNCE_MS;
           this._typingDebounceTimer = setTimeout(() => {
             try {
               if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewCallouts(this.view);
@@ -15857,7 +17811,7 @@ module.exports = class AlwaysColorText extends Plugin {
               if (plugin.settings.enabled && !plugin.settings.disableLivePreviewColoring) plugin._processLivePreviewTables(this.view);
             } catch (_) {
             }
-          }, 300);
+          }, debounceMs);
         }
       }
       destroy() {
@@ -15874,30 +17828,44 @@ module.exports = class AlwaysColorText extends Plugin {
         } catch (_) {
         }
       }
+      getApplicableEntries(view) {
+        if (!plugin.settings.enabled) return { entries: [], folderEntry: null };
+        let entries = plugin.getSortedWordEntries();
+        const fileForView = view.file || plugin.app.workspace.getActiveFile();
+        if (fileForView) {
+          const prb = plugin.evaluatePathRules(fileForView.path);
+          if (plugin.settings.disabledFiles.includes(fileForView.path)) return { entries: [], folderEntry: null };
+          if (plugin.isFrontmatterColoringDisabled(fileForView.path)) return { entries: [], folderEntry: null };
+          let previewEntries = entries;
+          if (fileForView && fileForView.path) previewEntries = plugin.filterEntriesByAdvancedRules(fileForView.path, entries);
+          if ((prb.excluded || plugin.hasGlobalExclude() && prb.hasIncludes && !prb.included) && previewEntries.length === 0) return { entries: [], folderEntry: null };
+          entries = previewEntries;
+        }
+        for (const entry of entries) {
+          if (!entry.targetElement && entry.isRegex) {
+            const pattern = entry.pattern;
+            const label = (entry.presetLabel || "").toLowerCase();
+            if (pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" || label === "bold" || label.includes("bold (")) entry.targetElement = "strong";
+            else if (pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" || label === "italic" || label.includes("italic (")) entry.targetElement = "em";
+            else if (pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" || label === "bold italic" || label.includes("bold italic")) entry.targetElement = "strong-em";
+          }
+        }
+        const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
+        return { entries, folderEntry };
+      }
       buildDeco(view) {
         const builder = new RangeSetBuilder();
         const root = view && view.dom ? view.dom : null;
         const isLivePreview = root && root.closest && root.closest(".is-live-preview");
         if (plugin.settings.disableLivePreviewColoring && isLivePreview) return builder.finish();
-        let entries = plugin.getSortedWordEntries();
+        const { entries, folderEntry } = this.getApplicableEntries(view);
+        if (entries.length === 0) return builder.finish();
         const { from, to } = view.viewport;
         const docLength = view.state.doc.length;
         const extendedTo = Math.min(to + EDITOR_PERFORMANCE_CONSTANTS.VIEWPORT_EXTENSION, docLength);
         const text = view.state.doc.sliceString(from, extendedTo);
         const fileForView = view.file || plugin.app.workspace.getActiveFile();
-        if (!plugin.settings.enabled) return builder.finish();
-        if (fileForView) {
-          const prb = plugin.evaluatePathRules(fileForView.path);
-          if (plugin.settings.disabledFiles.includes(fileForView.path)) return builder.finish();
-          if (plugin.isFrontmatterColoringDisabled(fileForView.path)) return builder.finish();
-          let previewEntries = entries;
-          if (fileForView && fileForView.path) previewEntries = plugin.filterEntriesByAdvancedRules(fileForView.path, entries);
-          if ((prb.excluded || plugin.hasGlobalExclude() && prb.hasIncludes && !prb.included) && previewEntries.length === 0) return builder.finish();
-          entries = previewEntries;
-        }
-        const folderEntry = fileForView ? plugin.getBestFolderEntry(fileForView.path) : null;
-        if (entries.length === 0) return builder.finish();
-        return plugin.buildDecoChunked(view, builder, from, extendedTo, text, entries, folderEntry, fileForView ? fileForView.path : null);
+        return plugin.buildDecoChunked(view, builder, from, extendedTo, text, entries, folderEntry, fileForView ? fileForView.path : null, syntaxTree);
       }
     }, {
       decorations: (v) => v.decorations
@@ -16104,6 +18072,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // NEW METHOD: Get all text ranges that are within blacklisted list items
   getBlacklistedListItemRanges(text, baseOffset = 0, filePath = null) {
+    if (this._isTyping) return [];
     const ranges = [];
     try {
       let pos = 0;
@@ -16150,6 +18119,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (this.isWordBlacklisted(token, filePath)) return true;
         }
       }
+      if (this._isTyping) return false;
       let ls = matchStart;
       while (ls > 0 && text[ls - 1] !== "\n") ls--;
       let le = matchEnd;
@@ -16181,6 +18151,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // NEW METHOD: Standard editor processing for small/medium pattern/text sizes
   buildDecoStandard(view, builder, from, to, text, entries, folderEntry, filePath = null) {
+    const MAX_MATCHES_LIMIT = this._isTyping ? 500 : 3e3;
     const entries_copy = entries || this.getSortedWordEntries();
     const allTimeEntries = entries_copy.filter((e) => e && e.presetLabel && (e.presetLabel.includes("Times") || e.pattern.includes("am")));
     debugLog("TIMEPM_ENTRY", `Total entries=${entries_copy.length}, Time entries found=${allTimeEntries.length}`);
@@ -16232,176 +18203,152 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {
     }
     try {
-      headingRanges = [];
-      let posScan = 0;
-      while (posScan <= text.length) {
-        const lineStartScan = posScan;
-        const nextNLScan = text.indexOf("\n", posScan);
-        const lineEndScan = nextNLScan === -1 ? text.length : nextNLScan;
-        let iScan = lineStartScan;
-        while (iScan < lineEndScan && /\s/.test(text[iScan])) iScan++;
-        let hScan = 0;
-        while (iScan < lineEndScan && text[iScan] === "#" && hScan < 6) {
-          hScan++;
-          iScan++;
-        }
-        if (hScan > 0 && iScan < lineEndScan && text[iScan] === " ") {
-          headingRanges.push({ start: from + lineStartScan, end: from + lineEndScan });
-        }
-        if (nextNLScan === -1) break;
-        posScan = nextNLScan + 1;
-      }
       const we = entries;
-      let pos = 0;
-      while (pos <= text.length) {
-        const lineStart = pos;
-        const nextNL = text.indexOf("\n", pos);
-        const lineEnd = nextNL === -1 ? text.length : nextNL;
-        let i = lineStart;
-        while (i < lineEnd && /\s/.test(text[i])) i++;
-        let hashes = 0;
-        while (i < lineEnd && text[i] === "#" && hashes < 6) {
-          hashes++;
-          i++;
-        }
-        if (hashes > 0 && i < lineEnd && text[i] === " ") {
-          while (i < lineEnd && text[i] === " ") i++;
-          const start = from + i;
+      const headingRegex = /^(#{1,6})\s+(.*)$/gm;
+      let match;
+      while ((match = headingRegex.exec(text)) !== null) {
+        const lineStart = match.index;
+        const lineEnd = match.index + match[0].length;
+        headingRanges.push({ start: from + lineStart, end: from + lineEnd });
+        const hashes = match[1].length;
+        const entryToUse = getEntryForHeadingLevel(we, hashes);
+        if (entryToUse) {
+          const contentStart = lineStart + hashes + 1;
+          let contentStartOffset = hashes;
+          while (contentStartOffset < match[0].length && /\s/.test(match[0][contentStartOffset])) contentStartOffset++;
+          const start = from + match.index + contentStartOffset;
           const end = from + lineEnd;
-          const entryToUse = hashes > 0 ? getEntryForHeadingLevel(we, hashes) : null;
-          if (entryToUse) {
-            if (entryToUse.backgroundColor) {
-              const tc = entryToUse.textColor || "currentColor";
-              const bc = entryToUse.backgroundColor;
-              matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-            } else {
-              const c = entryToUse.color || entryToUse.textColor;
-              if (c) matches.push({ start, end, color: c });
-            }
+          if (entryToUse.backgroundColor) {
+            const tc = entryToUse.textColor || "currentColor";
+            const bc = entryToUse.backgroundColor;
+            matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+          } else {
+            const c = entryToUse.color || entryToUse.textColor;
+            if (c) matches.push({ start, end, color: c });
           }
         }
-        if (nextNL === -1) break;
-        pos = nextNL + 1;
       }
     } catch (e) {
     }
-    try {
-      const we = entries;
-      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      const taskCheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Checked)");
-      const taskUncheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Unchecked)");
-      const numberedEntry = we.find((e) => e && e.presetLabel === "Numbered Lists");
-      const bulletEntry = we.find((e) => e && e.presetLabel === "Bullet Points");
-      const taskCheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Checked)" && !!e.isRegex);
-      const taskUncheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !!e.isRegex);
-      const numberedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Numbered Lists" && !!e.isRegex);
-      const bulletBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Bullet Points" && !!e.isRegex);
-      const taskCheckedAllowed = !filePath || this.shouldColorText(filePath, taskCheckedEntry ? taskCheckedEntry.pattern : null);
-      const taskUncheckedAllowed = !filePath || this.shouldColorText(filePath, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
-      const numberedAllowed = !filePath || this.shouldColorText(filePath, numberedEntry ? numberedEntry.pattern : null);
-      const bulletAllowed = !filePath || this.shouldColorText(filePath, bulletEntry ? bulletEntry.pattern : null);
-      let pos = 0;
-      while (pos <= text.length) {
-        const lineStart = pos;
-        const nextNL = text.indexOf("\n", pos);
-        const lineEnd = nextNL === -1 ? text.length : nextNL;
-        const line = text.substring(lineStart, lineEnd);
-        let matched = false;
-        if (!matched && !taskCheckedBlacklisted && taskCheckedEntry && taskCheckedAllowed) {
-          const pattern = REGEX_CONSTANTS.TASK_CHECKED;
-          const mdMatch = pattern.exec(line);
-          if (mdMatch) {
-            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
-            const contentEnd = lineEnd;
-            const contentText = mdMatch[6] || "";
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
-              const start = from + contentStart;
-              const end = from + contentEnd;
-              if (taskCheckedEntry.backgroundColor) {
-                const tc = taskCheckedEntry.textColor || "currentColor";
-                const bc = taskCheckedEntry.backgroundColor;
-                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-              } else {
-                const c = taskCheckedEntry.color || taskCheckedEntry.textColor;
-                if (c) matches.push({ start, end, color: c });
+    if (!this._isTyping) {
+      try {
+        const we = entries;
+        const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+        const taskCheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Checked)");
+        const taskUncheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Unchecked)");
+        const numberedEntry = we.find((e) => e && e.presetLabel === "Numbered Lists");
+        const bulletEntry = we.find((e) => e && e.presetLabel === "Bullet Points");
+        const taskCheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Checked)" && !!e.isRegex);
+        const taskUncheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !!e.isRegex);
+        const numberedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Numbered Lists" && !!e.isRegex);
+        const bulletBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Bullet Points" && !!e.isRegex);
+        const taskCheckedAllowed = !filePath || this.shouldColorText(filePath, taskCheckedEntry ? taskCheckedEntry.pattern : null);
+        const taskUncheckedAllowed = !filePath || this.shouldColorText(filePath, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
+        const numberedAllowed = !filePath || this.shouldColorText(filePath, numberedEntry ? numberedEntry.pattern : null);
+        const bulletAllowed = !filePath || this.shouldColorText(filePath, bulletEntry ? bulletEntry.pattern : null);
+        let pos = 0;
+        while (pos <= text.length) {
+          const lineStart = pos;
+          const nextNL = text.indexOf("\n", pos);
+          const lineEnd = nextNL === -1 ? text.length : nextNL;
+          const line = text.substring(lineStart, lineEnd);
+          let matched = false;
+          if (!matched && !taskCheckedBlacklisted && taskCheckedEntry && taskCheckedAllowed) {
+            const pattern = REGEX_CONSTANTS.TASK_CHECKED;
+            const mdMatch = pattern.exec(line);
+            if (mdMatch) {
+              const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
+              const contentEnd = lineEnd;
+              const contentText = mdMatch[6] || "";
+              const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+              if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
+                const start = from + contentStart;
+                const end = from + contentEnd;
+                if (taskCheckedEntry.backgroundColor) {
+                  const tc = taskCheckedEntry.textColor || "currentColor";
+                  const bc = taskCheckedEntry.backgroundColor;
+                  matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                } else {
+                  const c = taskCheckedEntry.color || taskCheckedEntry.textColor;
+                  if (c) matches.push({ start, end, color: c });
+                }
+                matched = true;
               }
-              matched = true;
             }
           }
-        }
-        if (!matched && !taskUncheckedBlacklisted && taskUncheckedEntry && taskUncheckedAllowed) {
-          const pattern = /^(\s*)([\-\*])(\s+)(\[\s\])(\s+)(.*)$/;
-          const mdMatch = pattern.exec(line);
-          if (mdMatch) {
-            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
-            const contentEnd = lineEnd;
-            const contentText = mdMatch[6] || "";
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
-              const start = from + contentStart;
-              const end = from + contentEnd;
-              if (taskUncheckedEntry.backgroundColor) {
-                const tc = taskUncheckedEntry.textColor || "currentColor";
-                const bc = taskUncheckedEntry.backgroundColor;
-                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-              } else {
-                const c = taskUncheckedEntry.color || taskUncheckedEntry.textColor;
-                if (c) matches.push({ start, end, color: c });
+          if (!matched && !taskUncheckedBlacklisted && taskUncheckedEntry && taskUncheckedAllowed) {
+            const pattern = /^(\s*)([\-\*])(\s+)(\[\s\])(\s+)(.*)$/;
+            const mdMatch = pattern.exec(line);
+            if (mdMatch) {
+              const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
+              const contentEnd = lineEnd;
+              const contentText = mdMatch[6] || "";
+              const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+              if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
+                const start = from + contentStart;
+                const end = from + contentEnd;
+                if (taskUncheckedEntry.backgroundColor) {
+                  const tc = taskUncheckedEntry.textColor || "currentColor";
+                  const bc = taskUncheckedEntry.backgroundColor;
+                  matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                } else {
+                  const c = taskUncheckedEntry.color || taskUncheckedEntry.textColor;
+                  if (c) matches.push({ start, end, color: c });
+                }
+                matched = true;
               }
-              matched = true;
             }
           }
-        }
-        if (!matched && !numberedBlacklisted && numberedEntry && numberedAllowed) {
-          const pattern = REGEX_CONSTANTS.NUMBERED_LIST;
-          const mdMatch = pattern.exec(line);
-          if (mdMatch) {
-            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
-            const contentEnd = lineEnd;
-            const contentText = mdMatch[4] || "";
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
-              const start = from + contentStart;
-              const end = from + contentEnd;
-              if (numberedEntry.backgroundColor) {
-                const tc = numberedEntry.textColor || "currentColor";
-                const bc = numberedEntry.backgroundColor;
-                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-              } else {
-                const c = numberedEntry.color || numberedEntry.textColor;
-                if (c) matches.push({ start, end, color: c });
+          if (!matched && !numberedBlacklisted && numberedEntry && numberedAllowed) {
+            const pattern = REGEX_CONSTANTS.NUMBERED_LIST;
+            const mdMatch = pattern.exec(line);
+            if (mdMatch) {
+              const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
+              const contentEnd = lineEnd;
+              const contentText = mdMatch[4] || "";
+              const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+              if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
+                const start = from + contentStart;
+                const end = from + contentEnd;
+                if (numberedEntry.backgroundColor) {
+                  const tc = numberedEntry.textColor || "currentColor";
+                  const bc = numberedEntry.backgroundColor;
+                  matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                } else {
+                  const c = numberedEntry.color || numberedEntry.textColor;
+                  if (c) matches.push({ start, end, color: c });
+                }
+                matched = true;
               }
-              matched = true;
             }
           }
-        }
-        if (!matched && !bulletBlacklisted && bulletEntry && bulletAllowed) {
-          const mdMatch = REGEX_CONSTANTS.BULLET_POINT.exec(line);
-          if (mdMatch) {
-            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
-            const contentEnd = lineEnd;
-            const contentText = mdMatch[4] || "";
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
-              const start = from + contentStart;
-              const end = from + contentEnd;
-              if (bulletEntry.backgroundColor) {
-                const tc = bulletEntry.textColor || "currentColor";
-                const bc = bulletEntry.backgroundColor;
-                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-              } else {
-                const c = bulletEntry.color || bulletEntry.textColor;
-                if (c) matches.push({ start, end, color: c });
+          if (!matched && !bulletBlacklisted && bulletEntry && bulletAllowed) {
+            const mdMatch = REGEX_CONSTANTS.BULLET_POINT.exec(line);
+            if (mdMatch) {
+              const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
+              const contentEnd = lineEnd;
+              const contentText = mdMatch[4] || "";
+              const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+              if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
+                const start = from + contentStart;
+                const end = from + contentEnd;
+                if (bulletEntry.backgroundColor) {
+                  const tc = bulletEntry.textColor || "currentColor";
+                  const bc = bulletEntry.backgroundColor;
+                  matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                } else {
+                  const c = bulletEntry.color || bulletEntry.textColor;
+                  if (c) matches.push({ start, end, color: c });
+                }
+                matched = true;
               }
-              matched = true;
             }
           }
+          if (nextNL === -1) break;
+          pos = nextNL + 1;
         }
-        if (nextNL === -1) break;
-        pos = nextNL + 1;
+      } catch (e) {
       }
-    } catch (e) {
     }
     const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from, filePath);
     let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
@@ -16480,9 +18427,9 @@ module.exports = class AlwaysColorText extends Plugin {
           isTextBg: true,
           entryRef: entry
         });
-        if (matches.length > 3e3) break;
+        if (matches.length > MAX_MATCHES_LIMIT) break;
       }
-      if (matches.length > 3e3) break;
+      if (matches.length > MAX_MATCHES_LIMIT) break;
     }
     for (const entry of entries_copy) {
       if (!entry || entry.invalid) continue;
@@ -16655,11 +18602,13 @@ module.exports = class AlwaysColorText extends Plugin {
             try {
               const flags = cs ? "" : "i";
               const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(patRaw) : patRaw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-              const re = new RegExp(`^[A-Za-z]*${esc}$`, flags);
+              const re = new RegExp(`^[A-Za-z0-9'\\-]*${esc}$`, flags);
               ok = re.test(fullWord);
             } catch (_) {
               ok = word.endsWith(pat);
             }
+          } else if (mt === "exact") {
+            ok = word === pat;
           }
           if (!ok) {
             try {
@@ -16749,7 +18698,7 @@ module.exports = class AlwaysColorText extends Plugin {
             if (ok) {
               let expandedWStart = wStart;
               let expandedWEnd = wEnd;
-              if (!this.isSentenceLikePattern(entry.pattern)) {
+              if (!this.settings.extremeLightweightMode && !this.isSentenceLikePattern(entry.pattern)) {
                 while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(text[expandedWStart - 1]) || text[expandedWStart - 1] === "-" || text[expandedWStart - 1] === "'")) {
                   expandedWStart--;
                 }
@@ -16886,6 +18835,25 @@ module.exports = class AlwaysColorText extends Plugin {
       toApply = merged;
     }
     for (const m of toApply) {
+      if (tree) {
+        try {
+          const checkPos = Math.min(m.end - 1, Math.max(m.start, Math.floor((m.start + m.end) / 2)));
+          const node = tree.resolve(checkPos, 1);
+          let curr = node;
+          let isInsideFormat = false;
+          while (curr) {
+            if (curr.name === "Strong" || curr.name === "Emphasis" || curr.name === "StrongEmphasis") {
+              isInsideFormat = true;
+              break;
+            }
+            curr = curr.parent;
+          }
+          if (isInsideFormat) {
+            continue;
+          }
+        } catch (e) {
+        }
+      }
       let style;
       if (m.isTextBg) {
         const hideText = this.settings.hideTextColors === true;
@@ -16910,7 +18878,7 @@ module.exports = class AlwaysColorText extends Plugin {
           const borderStyle = this.generateBorderStyle(null, bgColor, m.entryRef);
           const vPadH = params.vPad;
           const vPadCssH = vPadH >= 0 ? `padding-top: ${vPadH}px !important; padding-bottom: ${vPadH}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadH}px !important; margin-bottom: ${vPadH}px !important;`;
-          style = `background: none !important; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssH}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+          style = `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssH}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
         } else if (styleType2 === "both") {
           const textColor = m.textColor && m.textColor !== "currentColor" ? m.textColor : m.color || null;
           const bgColor = m.backgroundColor || m.color;
@@ -16929,10 +18897,12 @@ module.exports = class AlwaysColorText extends Plugin {
           style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         }
       }
+      const isDark = (m.color || m.textColor || m.backgroundColor) && this.isDarkColor(m.color || m.textColor || m.backgroundColor);
+      const baseClass = m.entryRef && m.entryRef.affectMarkElements ? "always-color-text-highlight always-color-text-highlight-marks" : "always-color-text-highlight";
       const deco = Decoration.mark({
         attributes: {
           style,
-          class: m.entryRef && m.entryRef.affectMarkElements ? "always-color-text-highlight always-color-text-highlight-marks" : "always-color-text-highlight",
+          class: isDark ? `${baseClass} act-dark-color` : baseClass,
           title: this.settings.showColoringReasonOnHover && m.entry ? this.getColoringReasonTooltip(m) : ""
         }
       });
@@ -16950,10 +18920,21 @@ module.exports = class AlwaysColorText extends Plugin {
     return builder.finish();
   }
   // NEW METHOD: Chunked editor processing for large pattern sets or large text
-  buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath = null) {
+  buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath = null, syntaxTreeFn = null) {
+    const startTime = performance.now();
+    const TIME_BUDGET_MS = 12;
+    const tree2 = syntaxTreeFn && view && view.state ? syntaxTreeFn(view.state) : null;
+    const activeLineRanges = [];
+    if (view && view.state && view.state.selection) {
+      const ranges = view.state.selection.ranges;
+      for (const range of ranges) {
+        const line = view.state.doc.lineAt(range.head);
+        activeLineRanges.push({ start: line.from, end: line.to });
+      }
+    }
     const CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
-    const MAX_MATCHES = this.settings.extremeLightweightMode ? 250 : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
+    const MAX_MATCHES = this._isTyping ? 500 : this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.LIGHTWEIGHT_MAX_TOTAL_MATCHES : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
     try {
       const we = entries;
@@ -16966,7 +18947,16 @@ module.exports = class AlwaysColorText extends Plugin {
           const end = from + cbMatch.index + cbMatch[0].length;
           allMatches.push({ start, end, skip: true });
         }
-      } else if (codeblockEntry) {
+      }
+      try {
+        for (const spoilerMatch of text.matchAll(/\|\|[\s\S]*?\|\|/g)) {
+          const start = from + spoilerMatch.index;
+          const end = from + spoilerMatch.index + spoilerMatch[0].length;
+          allMatches.push({ start, end, skip: true });
+        }
+      } catch (e) {
+      }
+      if (codeblockEntry && !hasCodeblockBlacklist) {
         for (const cbMatch of text.matchAll(/```[\s\S]*?```/g)) {
           const start = from + cbMatch.index;
           const end = from + cbMatch.index + cbMatch[0].length;
@@ -16985,55 +18975,27 @@ module.exports = class AlwaysColorText extends Plugin {
     let headingRanges = [];
     let hasHeadingBlacklist = false;
     try {
-      headingRanges = [];
-      let posScan = 0;
-      while (posScan <= text.length) {
-        const lineStartScan = posScan;
-        const nextNLScan = text.indexOf("\n", posScan);
-        const lineEndScan = nextNLScan === -1 ? text.length : nextNLScan;
-        let iScan = lineStartScan;
-        while (iScan < lineEndScan && /\s/.test(text[iScan])) iScan++;
-        let hScan = 0;
-        while (iScan < lineEndScan && text[iScan] === "#" && hScan < 6) {
-          hScan++;
-          iScan++;
-        }
-        if (hScan > 0 && iScan < lineEndScan && text[iScan] === " ") {
-          headingRanges.push({ start: from + lineStartScan, end: from + lineEndScan });
-        }
-        if (nextNLScan === -1) break;
-        posScan = nextNLScan + 1;
-      }
       const we = entries;
-      let pos = 0;
-      while (pos <= text.length) {
-        const lineStart = pos;
-        const nextNL = text.indexOf("\n", pos);
-        const lineEnd = nextNL === -1 ? text.length : nextNL;
-        let i = lineStart;
-        while (i < lineEnd && /\s/.test(text[i])) i++;
-        let hashes = 0;
-        while (i < lineEnd && text[i] === "#" && hashes < 6) {
-          hashes++;
-          i++;
-        }
-        if (hashes > 0 && i < lineEnd && text[i] === " ") {
+      const headingRegex = /^(#{1,6})\s+(.*)$/gm;
+      let match;
+      while ((match = headingRegex.exec(text)) !== null) {
+        const lineStart = match.index;
+        const lineEnd = match.index + match[0].length;
+        headingRanges.push({ start: from + lineStart, end: from + lineEnd });
+        const hashes = match[1].length;
+        const entryToUse = getEntryForHeadingLevel(we, hashes);
+        if (entryToUse) {
           const start = from + lineStart;
           const end = from + lineEnd;
-          const entryToUse = hashes > 0 ? getEntryForHeadingLevel(we, hashes) : null;
-          if (entryToUse) {
-            if (entryToUse.backgroundColor) {
-              const tc = entryToUse.textColor || "currentColor";
-              const bc = entryToUse.backgroundColor;
-              allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: entryToUse });
-            } else {
-              const c = entryToUse.color || entryToUse.textColor;
-              if (c) allMatches.push({ start, end, color: c, entryRef: entryToUse });
-            }
+          if (entryToUse.backgroundColor) {
+            const tc = entryToUse.textColor || "currentColor";
+            const bc = entryToUse.backgroundColor;
+            allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: entryToUse });
+          } else {
+            const c = entryToUse.color || entryToUse.textColor;
+            if (c) allMatches.push({ start, end, color: c, entryRef: entryToUse });
           }
         }
-        if (nextNL === -1) break;
-        pos = nextNL + 1;
       }
     } catch (e) {
     }
@@ -17178,6 +19140,10 @@ module.exports = class AlwaysColorText extends Plugin {
         while (match = regex.exec(text)) {
           const matchStart = match.index;
           const matchEnd = match.index + match[0].length;
+          if (this.settings.enableWordCompletionColoring) {
+            const nextChar = text[matchEnd];
+            if (!nextChar || !/[\s]/.test(nextChar)) continue;
+          }
           if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry)) {
             try {
               if (typeof regex.lastIndex === "number" && regex.lastIndex === match.index) regex.lastIndex++;
@@ -17233,11 +19199,22 @@ module.exports = class AlwaysColorText extends Plugin {
         if (allMatches.length > MAX_MATCHES) break;
       }
     }
-    if (entries.length > CHUNK_SIZE) {
-      debugLog("PATTERN_PROCESSING", `Starting pattern processing for ${entries.length} patterns`);
-      for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
-        const chunk = entries.slice(i, i + CHUNK_SIZE);
-        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
+    const regexEntries = entries.filter((e) => {
+      if (e.targetElement) return false;
+      if (e.presetLabel) {
+        const label = String(e.presetLabel).toLowerCase();
+        if (label.includes("bold") || label.includes("italic")) return false;
+      }
+      if (e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") return false;
+      if (e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") return false;
+      if (e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") return false;
+      return true;
+    });
+    if (regexEntries.length > CHUNK_SIZE) {
+      debugLog("PATTERN_PROCESSING", `Starting pattern processing for ${regexEntries.length} patterns`);
+      for (let i = 0; i < regexEntries.length; i += CHUNK_SIZE) {
+        const chunk = regexEntries.slice(i, i + CHUNK_SIZE);
+        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath, activeLineRanges);
         allMatches = allMatches.concat(chunkMatches);
         if (allMatches.length > MAX_MATCHES) {
           break;
@@ -17252,25 +19229,25 @@ module.exports = class AlwaysColorText extends Plugin {
         const chunkEnd = Math.min(pos + TEXT_CHUNK_SIZE, text.length);
         const chunkText = text.slice(pos, chunkEnd);
         const chunkFrom = from + pos;
-        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
+        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, regexEntries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath, activeLineRanges);
         allMatches = allMatches.concat(chunkMatches);
         if (allMatches.length > MAX_MATCHES) {
           break;
         }
       }
     } else {
-      const chunkMatches = this.processPatternChunk(text, from, entries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
+      const chunkMatches = this.processPatternChunk(text, from, regexEntries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath, activeLineRanges);
       allMatches = allMatches.concat(chunkMatches);
     }
-    return this.applyDecorationsFromMatches(builder, allMatches, folderEntry);
+    return this.applyDecorationsFromMatches(builder, allMatches, folderEntry, tree2);
   }
   // NEW METHOD: Process a chunk of patterns
-  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null) {
-    const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? 10 : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
+  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null, activeLineRanges = []) {
+    const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     const matches = [];
     for (const entry of patternChunk) {
       if (!entry || entry.invalid) continue;
-      const isPartialEntry = !entry.isRegex && !entry.isTextBg && (!entry.styleType || entry.styleType === "text") && ["contains", "startswith", "endswith"].includes(String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern);
+      const isPartialEntry = !entry.isRegex && ["contains", "startswith", "endswith"].includes(String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern);
       if (isPartialEntry) continue;
       if (entry.fastTest && !entry.fastTest(text)) continue;
       const regex = entry.regex;
@@ -17285,6 +19262,25 @@ module.exports = class AlwaysColorText extends Plugin {
         const matchedText = match[0];
         const matchStart = baseFrom + match.index;
         const matchEnd = baseFrom + match.index + matchedText.length;
+        if (this.settings.enableWordCompletionColoring) {
+          let isActiveLine = false;
+          if (activeLineRanges.length > 0) {
+            for (const range of activeLineRanges) {
+              if (matchStart >= range.start && matchStart <= range.end) {
+                isActiveLine = true;
+                break;
+              }
+            }
+          }
+          if (isActiveLine) {
+            let fullWordEnd = match.index + matchedText.length;
+            while (fullWordEnd < text.length && (/[A-Za-z0-9]/.test(text[fullWordEnd]) || text[fullWordEnd] === "-" || text[fullWordEnd] === "'")) {
+              fullWordEnd++;
+            }
+            const nextChar = text[fullWordEnd];
+            if (!nextChar || !/[\s]/.test(nextChar)) continue;
+          }
+        }
         if (this.isMatchInBlacklistedRange(matchStart, matchEnd, blacklistedListRanges)) {
           continue;
         }
@@ -17335,14 +19331,14 @@ module.exports = class AlwaysColorText extends Plugin {
           entryRef: entry
         });
         matchCount++;
-        if (matches.length > 200) break;
+        if (matches.length > 2e3) break;
       }
-      if (matches.length > 200) break;
+      if (matches.length > 2e3) break;
     }
-    const partialEntries = patternChunk.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
+    const partialEntries = patternChunk.filter((e) => e && !e.invalid && !e.isRegex && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
     const wordPartialEntries = partialEntries.filter((e) => this.isLatinWordPattern(e.pattern));
     const phrasePartialEntries = partialEntries.filter((e) => !this.isLatinWordPattern(e.pattern));
-    if (partialEntries.length > 0 && matches.length < 200) {
+    if (partialEntries.length > 0 && matches.length < 2e3) {
       for (const entry of wordPartialEntries) {
         const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
         if (mt === "startswith" || mt === "endswith") {
@@ -17352,8 +19348,8 @@ module.exports = class AlwaysColorText extends Plugin {
             const flags = cs ? "" : "i";
             const esc = this.escapeRegex(pat);
             try {
-              if (mt === "startswith") entry._startswithRegex = new RegExp(`^${esc}[A-Za-z]*$`, flags);
-              else entry._endswithRegex = new RegExp(`^[A-Za-z]*${esc}$`, flags);
+              if (mt === "startswith") entry._startswithRegex = new RegExp(`^${esc}[A-Za-z0-9'\\-]*$`, flags);
+              else entry._endswithRegex = new RegExp(`^[A-Za-z0-9'\\-]*${esc}$`, flags);
               entry._lastCs = cs;
             } catch (_) {
             }
@@ -17366,6 +19362,22 @@ module.exports = class AlwaysColorText extends Plugin {
         const w = match[0];
         const wStart = match.index;
         const wEnd = wStart + w.length;
+        if (this.settings.enableWordCompletionColoring) {
+          let isActiveLine = false;
+          const absStart = baseFrom + wStart;
+          if (activeLineRanges.length > 0) {
+            for (const range of activeLineRanges) {
+              if (absStart >= range.start && absStart <= range.end) {
+                isActiveLine = true;
+                break;
+              }
+            }
+          }
+          if (isActiveLine) {
+            const nextChar = text[wEnd];
+            if (!nextChar || !/[\s]/.test(nextChar)) continue;
+          }
+        }
         if (this.isMatchInBlacklistedRange(baseFrom + wStart, baseFrom + wEnd, blacklistedListRanges)) continue;
         for (const entry of wordPartialEntries) {
           if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
@@ -17415,20 +19427,21 @@ module.exports = class AlwaysColorText extends Plugin {
                 color: folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color,
                 styleType: entry.styleType,
                 textColor: entry.textColor,
-                backgroundColor: entry.backgroundColor
+                backgroundColor: entry.backgroundColor,
+                entryRef: entry
               });
-              if (matches.length > 200) break;
+              if (matches.length > 2e3) break;
             }
             break;
           }
         }
-        if (matches.length > 200) break;
+        if (matches.length > 2e3) break;
         try {
           if (typeof wordRegex.lastIndex === "number" && wordRegex.lastIndex === match.index) wordRegex.lastIndex++;
         } catch (e) {
         }
       }
-      if (phrasePartialEntries.length > 0 && matches.length < 200) {
+      if (phrasePartialEntries.length > 0 && matches.length < 2e3) {
         let textLower = null;
         const getTextForCase = (cs) => {
           if (cs) return text;
@@ -17446,7 +19459,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (!pat) continue;
           let fromIndex = 0;
           let localMatchCount = 0;
-          while (matches.length < 200 && localMatchCount < MAX_MATCHES_PER_PATTERN) {
+          while (matches.length < 2e3 && localMatchCount < MAX_MATCHES_PER_PATTERN) {
             const idx = textForSearch.indexOf(pat, fromIndex);
             if (idx === -1) break;
             const mStart = idx;
@@ -17498,29 +19511,30 @@ module.exports = class AlwaysColorText extends Plugin {
                   color: folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color,
                   styleType: entry.styleType,
                   textColor: entry.textColor,
-                  backgroundColor: entry.backgroundColor
+                  backgroundColor: entry.backgroundColor,
+                  entryRef: entry
                 });
-                if (matches.length > 200) break;
+                if (matches.length > 2e3) break;
               }
               localMatchCount++;
             }
             fromIndex = mStart + 1;
           }
-          if (matches.length > 200) break;
+          if (matches.length > 2e3) break;
         }
       }
     }
     return matches;
   }
   // NEW METHOD: Process a chunk of text
-  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null) {
+  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null, activeLineRanges = []) {
     const matches = [];
+    const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     for (const entry of entries) {
       if (!entry || entry.invalid) continue;
-      const isTextOnly = !entry.isTextBg && (!entry.styleType || entry.styleType === "text");
       const actualMatchType = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
       const isPartialMatch = ["contains", "startswith", "endswith"].includes(actualMatchType);
-      if (!entry.isRegex && isTextOnly && isPartialMatch) continue;
+      if (!entry.isRegex && isPartialMatch && this.isLatinWordPattern(entry.pattern)) continue;
       if (entry.fastTest && !entry.fastTest(chunkText)) continue;
       const regex = entry.regex;
       if (!regex) continue;
@@ -17530,10 +19544,29 @@ module.exports = class AlwaysColorText extends Plugin {
         regex.lastIndex = 0;
       } catch (e) {
       }
-      while ((match = regex.exec(chunkText)) && matchCount < 5) {
+      while ((match = regex.exec(chunkText)) && matchCount < MAX_MATCHES_PER_PATTERN) {
         const matchedText = match[0];
         const matchStart = chunkFrom + match.index;
         const matchEnd = chunkFrom + match.index + matchedText.length;
+        if (this.settings.enableWordCompletionColoring) {
+          let isActiveLine = false;
+          if (activeLineRanges.length > 0) {
+            for (const range of activeLineRanges) {
+              if (matchStart >= range.start && matchStart <= range.end) {
+                isActiveLine = true;
+                break;
+              }
+            }
+          }
+          if (isActiveLine) {
+            let fullWordEnd = match.index + matchedText.length;
+            while (fullWordEnd < chunkText.length && (/[A-Za-z0-9]/.test(chunkText[fullWordEnd]) || chunkText[fullWordEnd] === "-" || chunkText[fullWordEnd] === "'")) {
+              fullWordEnd++;
+            }
+            const nextChar = chunkText[fullWordEnd];
+            if (!nextChar || !/[\s]/.test(nextChar)) continue;
+          }
+        }
         if (this.isMatchInBlacklistedRange(matchStart, matchEnd, blacklistedListRanges)) {
           continue;
         }
@@ -17582,12 +19615,12 @@ module.exports = class AlwaysColorText extends Plugin {
           entryRef: entry
         });
         matchCount++;
-        if (matches.length > 100) break;
+        if (matches.length > 2e3) break;
       }
-      if (matches.length > 30) break;
+      if (matches.length > 2e3) break;
     }
-    if (matches.length < 100) {
-      const textOnlyEntries = entries.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
+    if (matches.length < 2e3) {
+      const textOnlyEntries = entries.filter((e) => e && !e.invalid && !e.isRegex && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
       if (textOnlyEntries.length > 0) {
         for (const entry of textOnlyEntries) {
           const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
@@ -17598,8 +19631,8 @@ module.exports = class AlwaysColorText extends Plugin {
               const flags = cs ? "" : "i";
               const esc = this.escapeRegex(pat);
               try {
-                if (mt === "startswith") entry._startswithRegex = new RegExp(`^${esc}[A-Za-z]*$`, flags);
-                else entry._endswithRegex = new RegExp(`^[A-Za-z]*${esc}$`, flags);
+                if (mt === "startswith") entry._startswithRegex = new RegExp(`^${esc}[A-Za-z0-9'\\-]*$`, flags);
+                else entry._endswithRegex = new RegExp(`^[A-Za-z0-9'\\-]*${esc}$`, flags);
                 entry._lastCs = cs;
               } catch (_) {
               }
@@ -17612,6 +19645,22 @@ module.exports = class AlwaysColorText extends Plugin {
           const w = match[0];
           const wStart = match.index;
           const wEnd = wStart + w.length;
+          if (this.settings.enableWordCompletionColoring) {
+            let isActiveLine = false;
+            const absStart = chunkFrom + wStart;
+            if (activeLineRanges.length > 0) {
+              for (const range of activeLineRanges) {
+                if (absStart >= range.start && absStart <= range.end) {
+                  isActiveLine = true;
+                  break;
+                }
+              }
+            }
+            if (isActiveLine) {
+              const nextChar = chunkText[wEnd];
+              if (!nextChar || !/[\s]/.test(nextChar)) continue;
+            }
+          }
           if (this.isWordBlacklisted(w, filePath)) continue;
           if (this.isMatchInBlacklistedRange(chunkFrom + wStart, chunkFrom + wEnd, blacklistedListRanges)) continue;
           for (const entry of textOnlyEntries) {
@@ -17665,7 +19714,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   styleType: "text",
                   entryRef: entry
                 });
-                if (matches.length > 100) break;
+                if (matches.length > 2e3) break;
               } else {
                 for (let i = matches.length - 1; i >= 0; i--) {
                   const m = matches[i];
@@ -17681,12 +19730,12 @@ module.exports = class AlwaysColorText extends Plugin {
                   styleType: "text",
                   entryRef: entry
                 });
-                if (matches.length > 100) break;
+                if (matches.length > 2e3) break;
               }
               break;
             }
           }
-          if (matches.length > 100) break;
+          if (matches.length > 2e3) break;
           try {
             if (typeof wordRegex.lastIndex === "number" && wordRegex.lastIndex === match.index) wordRegex.lastIndex++;
           } catch (e) {
@@ -17756,8 +19805,11 @@ module.exports = class AlwaysColorText extends Plugin {
           let overlapsTextBg = false;
           for (const f of fullTextBg) {
             if (m.start < f.end && m.end > f.start) {
-              overlapsTextBg = true;
-              break;
+              const fStyle = f.styleType || (f.entryRef ? f.entryRef.styleType : null);
+              if (fStyle !== "highlight") {
+                overlapsTextBg = true;
+                break;
+              }
             }
           }
           if (overlapsTextBg) continue;
@@ -17768,6 +19820,7 @@ module.exports = class AlwaysColorText extends Plugin {
       for (const m of filtered) limited.push(m);
     }
     for (const m of limited) {
+      if (m.skip) continue;
       let style;
       const hideText = this.settings.hideTextColors === true;
       const hideBg = this.settings.hideHighlights === true;
@@ -17794,7 +19847,7 @@ module.exports = class AlwaysColorText extends Plugin {
           style = (() => {
             const vPad = params.vPad;
             const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-            return `background: none !important; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+            return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
           })();
         } else if (styleType2 === "both") {
           const textColor = m.textColor && m.textColor !== "currentColor" ? m.textColor : m.color || null;
@@ -17815,10 +19868,11 @@ module.exports = class AlwaysColorText extends Plugin {
           style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
         }
       }
+      const isDark = (m.color || m.textColor || m.backgroundColor) && this.isDarkColor(m.color || m.textColor || m.backgroundColor);
       const deco = Decoration.mark({
         attributes: {
           style,
-          class: m.entryRef && m.entryRef.affectMarkElements ? "always-color-text-highlight always-color-text-highlight-marks" : "always-color-text-highlight",
+          class: (m.entryRef && m.entryRef.affectMarkElements ? "always-color-text-highlight always-color-text-highlight-marks" : "always-color-text-highlight") + (isDark ? " act-dark-color" : ""),
           title: this.settings.showColoringReasonOnHover && m.entry ? this.getColoringReasonTooltip(m) : ""
         }
       });
@@ -17912,6 +19966,36 @@ module.exports = class AlwaysColorText extends Plugin {
       } catch (e) {
       }
       try {
+        if (this._basesObservers && typeof this._basesObservers.forEach === "function") {
+          this._basesObservers.forEach((obs, key) => {
+            try {
+              obs.disconnect();
+            } catch (e) {
+            }
+          });
+          try {
+            this._basesObservers.clear();
+          } catch (e) {
+          }
+        }
+      } catch (e) {
+      }
+      try {
+        if (this._lpObservers && typeof this._lpObservers.forEach === "function") {
+          this._lpObservers.forEach((obs, key) => {
+            try {
+              obs.disconnect();
+            } catch (e) {
+            }
+          });
+          try {
+            this._lpObservers.clear();
+          } catch (e) {
+          }
+        }
+      } catch (e) {
+      }
+      try {
         if (this._eventManager && typeof this._eventManager.clear === "function") this._eventManager.clear();
       } catch (e) {
       }
@@ -17972,6 +20056,9 @@ var PresetModal = class extends Modal {
     }
     contentEl.style.maxWidth = "1200px !important";
     const presets = [
+      { label: this.plugin.t("preset_bold", "Bold"), pattern: "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1", flags: "", examples: ["**bold**"], group: "markdown", isFormatting: true, targetElement: "strong" },
+      { label: this.plugin.t("preset_italic", "Italic"), pattern: "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1", flags: "", examples: ["*italic*"], group: "markdown", isFormatting: true, targetElement: "em" },
+      { label: this.plugin.t("preset_bold_italic", "Bold Italic"), pattern: "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1", flags: "", examples: ["***bold_italic***"], group: "markdown", isFormatting: true, targetElement: "strong-em" },
       { label: this.plugin.t("preset_all_headings", "All Headings (H1-H6)"), pattern: "^\\s*#{1,6}\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_heading", "# Heading")] },
       { label: this.plugin.t("preset_headings_h3", "Headings (H3)"), pattern: "^\\s*#{3}\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_heading_h3", "### Heading")], group: "markdown" },
       { label: this.plugin.t("preset_bullet_points", "Bullet Points"), pattern: "^\\s*[\\-\\*]\\s+.*$", flags: "m", examples: [this.plugin.t("preset_example_bullet", "- Bullet point")], group: "markdown" },
@@ -17987,7 +20074,7 @@ var PresetModal = class extends Modal {
       { label: this.plugin.t("preset_basic_urls", "Basic URLs"), pattern: "\\bhttps?://\\S+\\b", flags: "", examples: [this.plugin.t("preset_example_url", "https://example.com")], group: "markdown" },
       { label: this.plugin.t("preset_markdown_links", "Markdown links"), pattern: "\\[[^\\]]+\\]\\(https?://[^)]+\\)", flags: "", examples: [this.plugin.t("preset_example_markdown_link", "[Link](https://example.com)")], group: "markdown" },
       { label: this.plugin.t("preset_inline_comments", "Comments (%%\u2026%%)"), pattern: "%%\\s*[\\s\\S]*?\\s*%%", flags: "s", examples: [this.plugin.t("preset_example_comment", "%% comment %%")], group: "markdown" },
-      { label: this.plugin.t("preset_highlighted_text", "Highlighted Text (==...)"), pattern: "==[\\s\\S]*?==", flags: "s", examples: [this.plugin.t("preset_example_highlight", "==highlighted text==")], group: "markdown" },
+      { label: this.plugin.t("preset_highlighted_text", "Highlighted Text (==...)"), pattern: "==[\\s\\S]*?==", flags: "s", examples: [this.plugin.t("preset_example_highlight", "==highlighted text==")], group: "markdown", affectMarkElements: true },
       { label: this.plugin.t("preset_domain_names", "Domain names"), pattern: "\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b", flags: "", examples: [this.plugin.t("preset_example_domain", "example.com")] },
       { label: this.plugin.t("preset_email_addresses", "Email addresses"), pattern: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", flags: "", examples: [this.plugin.t("preset_example_email", "name@example.com")] },
       { label: this.plugin.t("preset_at_username", "@username"), pattern: "@[a-zA-Z0-9_]+", flags: "", examples: [this.plugin.t("preset_example_username", "@username")] },
@@ -18004,11 +20091,12 @@ var PresetModal = class extends Modal {
       { label: this.plugin.t("preset_single_quotes_word_bounded", "Single Quotes '' (word-bounded)"), pattern: "'\\b[^'\\r\\n]*\\b'", flags: "", examples: [this.plugin.t("preset_example_single_quotes_word", "'word'")], group: "brackets", disableRegexSafety: true },
       { label: this.plugin.t("preset_all_texts", "All texts"), pattern: ".+", flags: "", examples: [this.plugin.t("preset_example_all_text", "This will target all texts.")], group: "markdown" }
     ];
-    const markdownPresets = presets.filter((p) => p.group === "markdown" || [
+    const formattingPresets = presets.filter((p) => p.isFormatting);
+    const markdownPresets = presets.filter((p) => (p.group === "markdown" || [
       this.plugin.t("preset_all_headings", "All Headings (H1-H6)")
-    ].includes(p.label));
+    ].includes(p.label)) && !p.isFormatting);
     const bracketPresets = presets.filter((p) => p.group === "brackets");
-    const otherPresets = presets.filter((p) => !markdownPresets.includes(p) && !bracketPresets.includes(p));
+    const otherPresets = presets.filter((p) => !markdownPresets.includes(p) && !bracketPresets.includes(p) && !formattingPresets.includes(p));
     const container = contentEl.createDiv();
     container.style.display = "grid";
     container.style.gridTemplateColumns = "1fr 1fr 1fr";
@@ -18034,6 +20122,29 @@ var PresetModal = class extends Modal {
     leftTitle.style.fontWeight = "600";
     leftTitle.style.opacity = "0.8";
     const leftList = leftCol.createDiv();
+    if (formattingPresets.length > 0) {
+      const row = leftList.createDiv();
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.marginBottom = "8px";
+      formattingPresets.forEach((p) => {
+        const btn = row.createEl("button", { text: p.label });
+        btn.style.fontSize = "12px";
+        btn.style.padding = "6px 10px";
+        btn.style.flex = "1";
+        btn.title = p.examples && p.examples[0] ? p.examples[0] : "";
+        const handler = () => {
+          try {
+            this.onChoose && this.onChoose(p);
+          } finally {
+            this.close();
+          }
+        };
+        btn.addEventListener("click", handler);
+        this._listeners.push({ el: btn, h: handler });
+      });
+    }
     markdownPresets.forEach((p) => {
       const row = leftList.createDiv();
       row.style.display = "flex";
@@ -18731,120 +20842,141 @@ var HighlightStylingModal = class extends Modal {
   }
   onOpen() {
     const { contentEl } = this;
+    const clearResetFlag = () => {
+      this._resetAllApplied = false;
+    };
+    contentEl.addEventListener("input", clearResetFlag, true);
+    contentEl.addEventListener("change", clearResetFlag, true);
+    this._handlers.push({ el: contentEl, ev: "input", fn: clearResetFlag });
+    this._handlers.push({ el: contentEl, ev: "change", fn: clearResetFlag });
     contentEl.empty();
     try {
       this.modalEl.addClass("act-highlight-styling-modal");
       this.modalEl.addClass("act-highlight-modal");
-      this.modalEl.style.maxWidth = "900px !important";
-      this.modalEl.style.width = "900px !important";
       this.modalEl.style.padding = "20px";
-      contentEl.style.maxWidth = "900px !important";
     } catch (e) {
     }
+    const isGroup = this.entry && Array.isArray(this.entry.entries);
     const headerRow = contentEl.createDiv();
     headerRow.style.display = "flex";
     headerRow.style.alignItems = "center";
     headerRow.style.gap = "8px";
     headerRow.style.marginBottom = "12px";
     headerRow.style.flexWrap = "wrap";
-    const title = headerRow.createEl("h2", { text: this.plugin.t("highlight_styling_header", "Edit Highlight Styling") });
+    const headerTitle = isGroup ? this.plugin.t("edit_group_highlight_styling", "Edit Group Highlight Styling") : this.plugin.t("highlight_styling_header", "Edit Highlight Styling");
+    const title = headerRow.createEl("h2", { text: headerTitle });
     title.style.margin = "0";
     const spacer = headerRow.createDiv();
     spacer.style.flex = "1";
-    const groupSelect = headerRow.createEl("select");
-    groupSelect.style.minWidth = "120px";
-    groupSelect.style.border = "1px solid var(--background-modifier-border)";
-    groupSelect.style.borderRadius = "4px";
-    groupSelect.style.background = "var(--background-modifier-form-field)";
-    groupSelect.style.textAlign = "center";
-    const defaultOpt = groupSelect.createEl("option", { text: this.plugin.t("default") });
-    defaultOpt.value = "";
-    const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
-    groupsList.forEach((g) => {
-      const name = g && g.name && String(g.name).trim().length > 0 ? g.name : "(unnamed group)";
-      const opt = groupSelect.createEl("option", { text: name });
-      opt.value = g.uid || "";
-    });
-    let currentGroupUid = null;
-    if (this.entry) {
-      if (this.entry.groupUid) {
-        currentGroupUid = this.entry.groupUid;
-      } else {
-        for (const g of groupsList) {
-          if (g.entries && g.entries.includes(this.entry)) {
-            currentGroupUid = g.uid;
-            break;
+    if (!isGroup) {
+      const groupSelect = headerRow.createEl("select");
+      groupSelect.style.minWidth = "120px";
+      groupSelect.style.border = "1px solid var(--background-modifier-border)";
+      groupSelect.style.borderRadius = "4px";
+      groupSelect.style.background = "var(--background-modifier-form-field)";
+      groupSelect.style.textAlign = "center";
+      const defaultOpt = groupSelect.createEl("option", { text: this.plugin.t("default") });
+      defaultOpt.value = "";
+      const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+      groupsList.forEach((g) => {
+        const name = g && g.name && String(g.name).trim().length > 0 ? g.name : "(unnamed group)";
+        const opt = groupSelect.createEl("option", { text: name });
+        opt.value = g.uid || "";
+      });
+      let currentGroupUid = null;
+      if (this.entry) {
+        if (this.entry.groupUid) {
+          currentGroupUid = this.entry.groupUid;
+        } else {
+          for (const g of groupsList) {
+            if (g.entries && g.entries.includes(this.entry)) {
+              currentGroupUid = g.uid;
+              break;
+            }
           }
         }
       }
-    }
-    groupSelect.value = currentGroupUid || "";
-    groupSelect.addEventListener("change", async () => {
-      const toUid = groupSelect.value || "";
-      const fromUid = currentGroupUid || "";
-      if (toUid === fromUid) return;
-      if (this.plugin.settings.quickStyles.includes(this.entry)) {
-        this.entry.groupUid = toUid;
-        currentGroupUid = toUid;
-        await this.plugin.saveSettings();
-        return;
-      }
-      const settings = this.plugin.settings;
-      if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
-      if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
-      const wordEntriesIdx = settings.wordEntries.indexOf(this.entry);
-      if (wordEntriesIdx !== -1) {
-        settings.wordEntries.splice(wordEntriesIdx, 1);
-      }
-      for (const group of settings.wordEntryGroups) {
-        if (group && Array.isArray(group.entries)) {
-          const groupIdx = group.entries.indexOf(this.entry);
-          if (groupIdx !== -1) {
-            group.entries.splice(groupIdx, 1);
+      groupSelect.value = currentGroupUid || "";
+      groupSelect.addEventListener("change", async () => {
+        const toUid = groupSelect.value || "";
+        const fromUid = currentGroupUid || "";
+        if (toUid === fromUid) return;
+        if (this.plugin.settings.quickStyles.includes(this.entry)) {
+          this.entry.groupUid = toUid;
+          currentGroupUid = toUid;
+          await this.plugin.saveSettings();
+          return;
+        }
+        const settings = this.plugin.settings;
+        if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
+        if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
+        const wordEntriesIdx = settings.wordEntries.indexOf(this.entry);
+        if (wordEntriesIdx !== -1) {
+          settings.wordEntries.splice(wordEntriesIdx, 1);
+        }
+        for (const group of settings.wordEntryGroups) {
+          if (group && Array.isArray(group.entries)) {
+            const groupIdx = group.entries.indexOf(this.entry);
+            if (groupIdx !== -1) {
+              group.entries.splice(groupIdx, 1);
+            }
           }
         }
-      }
-      if (toUid === "") {
-        try {
-          delete this.entry.groupUid;
-        } catch (_) {
-        }
-        settings.wordEntries.push(this.entry);
-      } else {
-        const tgtGroup = settings.wordEntryGroups.find((g) => g && g.uid === toUid);
-        if (tgtGroup) {
-          if (!Array.isArray(tgtGroup.entries)) tgtGroup.entries = [];
+        if (toUid === "") {
           try {
-            this.entry.groupUid = toUid;
+            delete this.entry.groupUid;
           } catch (_) {
           }
-          tgtGroup.entries.push(this.entry);
+          settings.wordEntries.push(this.entry);
+        } else {
+          const tgtGroup = settings.wordEntryGroups.find((g) => g && g.uid === toUid);
+          if (tgtGroup) {
+            if (!Array.isArray(tgtGroup.entries)) tgtGroup.entries = [];
+            try {
+              this.entry.groupUid = toUid;
+            } catch (_) {
+            }
+            tgtGroup.entries.push(this.entry);
+          }
         }
-      }
-      currentGroupUid = toUid;
-      await this.plugin.saveSettings();
-      this.plugin.compileWordEntries();
-      this.plugin.compileTextBgColoringEntries();
-      this.plugin.reconfigureEditorExtensions();
-      this.plugin.forceRefreshAllEditors();
-      this.plugin.triggerActiveDocumentRerender();
-    });
+        currentGroupUid = toUid;
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.triggerActiveDocumentRerender();
+      });
+    }
     const matchSelect = headerRow.createEl("select");
     matchSelect.style.minWidth = "120px";
     matchSelect.style.border = "1px solid var(--background-modifier-border)";
     matchSelect.style.borderRadius = "4px";
     matchSelect.style.background = "var(--background-modifier-form-field)";
     matchSelect.style.textAlign = "center";
-    matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
-    if (this.entry) {
-      if (this.entry.isRegex) {
-        matchSelect.disabled = true;
-        matchSelect.style.opacity = "0.5";
-      } else {
-        let defaultMatch = typeof this.entry.matchType === "string" && this.entry.matchType ? this.entry.matchType.toLowerCase() : "exact";
-        if (defaultMatch === "startswith" || defaultMatch === "starts with") defaultMatch = "startswith";
-        if (defaultMatch === "endswith" || defaultMatch === "ends with") defaultMatch = "endswith";
-        matchSelect.value = defaultMatch === "startswith" ? "startsWith" : defaultMatch === "endswith" ? "endsWith" : defaultMatch;
+    if (isGroup) {
+      matchSelect.innerHTML = `<option value="per-entry">${this.plugin.t("opt_match_all", "Match Type (All)")}</option>
+        <option value="exact">${this.plugin.t("match_option_exact", "exact")}</option>
+        <option value="contains">${this.plugin.t("match_option_contains", "contains")}</option>
+        <option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option>
+        <option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
+      const currentOverride = this.entry.matchTypeOverride;
+      matchSelect.value = typeof currentOverride === "string" && currentOverride ? currentOverride : "per-entry";
+    } else {
+      matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option>
+        <option value="contains">${this.plugin.t("match_option_contains", "contains")}</option>
+        <option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option>
+        <option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
+      if (this.entry) {
+        if (this.entry.isRegex) {
+          matchSelect.disabled = true;
+          matchSelect.style.opacity = "0.5";
+        } else {
+          let defaultMatch = typeof this.entry.matchType === "string" && this.entry.matchType ? this.entry.matchType.toLowerCase() : "exact";
+          if (defaultMatch === "startswith" || defaultMatch === "starts with") defaultMatch = "startswith";
+          if (defaultMatch === "endswith" || defaultMatch === "ends with") defaultMatch = "endswith";
+          matchSelect.value = defaultMatch === "startswith" ? "startsWith" : defaultMatch === "endswith" ? "endsWith" : defaultMatch;
+        }
       }
     }
     matchSelect.addEventListener("change", async () => {
@@ -18852,7 +20984,11 @@ var HighlightStylingModal = class extends Modal {
       let value = matchSelect.value;
       if (value === "startsWith") value = "startswith";
       if (value === "endsWith") value = "endswith";
-      this.entry.matchType = value;
+      if (isGroup) {
+        this.entry.matchTypeOverride = value === "per-entry" ? null : value;
+      } else {
+        this.entry.matchType = value;
+      }
       await this.plugin.saveSettings();
       this.plugin.compileWordEntries();
       this.plugin.compileTextBgColoringEntries();
@@ -18867,11 +21003,15 @@ var HighlightStylingModal = class extends Modal {
     const words = previewWrap.createDiv();
     words.style.textAlign = "center";
     words.style.opacity = "0.8";
-    words.textContent = this.previewTextOverride ? this.previewTextOverride : this.entry ? this.entry.isRegex ? String(this.entry.pattern || "") : Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0 ? this.entry.groupedPatterns.join(", ") : String(this.entry.pattern || "") : "";
+    words.textContent = this.previewTextOverride ? this.previewTextOverride : isGroup ? this.entry.name || "Group" : this.entry ? this.entry.isRegex ? String(this.entry.pattern || "") : Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0 ? this.entry.groupedPatterns.join(", ") : String(this.entry.pattern || "") : "";
     const styleCol = topRow.createDiv();
     styleCol.addClass("act-highlight-style-col");
     const styleSelect = styleCol.createEl("select");
     styleSelect.addClass("act-highlight-style-select");
+    if (isGroup) {
+      const defaultOpt = styleSelect.createEl("option", { text: this.plugin.t("opt_style_default", "Default (Per-Entry)") });
+      defaultOpt.value = "";
+    }
     ["text", "highlight", "both"].forEach((val) => {
       const opt = styleSelect.createEl("option", { text: this.plugin.t("style_type_" + val, val === "text" ? "color" : val) });
       opt.value = val;
@@ -18880,9 +21020,10 @@ var HighlightStylingModal = class extends Modal {
     styleSelect.style.borderRadius = "4px";
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.textAlign = "center";
-    styleSelect.value = this.entry && this.entry.styleType ? this.entry.styleType : "both";
+    styleSelect.value = this.entry && this.entry.styleType ? this.entry.styleType : isGroup ? "" : "both";
     const pickerRow = styleCol.createDiv();
     pickerRow.addClass("act-highlight-picker-row");
+    if (isGroup && !styleSelect.value) pickerRow.style.display = "none";
     const tColor = pickerRow.createEl("input", { type: "color" });
     const bColor = pickerRow.createEl("input", { type: "color" });
     tColor.value = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "#ffffff") || "#ffffff";
@@ -19148,6 +21289,19 @@ var HighlightStylingModal = class extends Modal {
     });
     const renderPreview = () => {
       const style = styleSelect.value;
+      if (isGroup && !style) {
+        const txt2 = words.textContent || "";
+        try {
+          while (previewWrap.firstChild) previewWrap.removeChild(previewWrap.firstChild);
+          const div = document.createElement("div");
+          div.textContent = txt2;
+          div.style.opacity = "1";
+          previewWrap.appendChild(div);
+        } catch (_) {
+          previewWrap.innerHTML = `<div>${escapeHtml(txt2)}</div>`;
+        }
+        return;
+      }
       const t = tColor.value;
       const b = bColor.value;
       const p = this.plugin.getHighlightParams(this.entry);
@@ -19199,6 +21353,7 @@ var HighlightStylingModal = class extends Modal {
     actions.style.marginTop = "12px";
     const resetAllBtn = actions.createEl("button", { text: this.plugin.t("btn_reset_all", "Reset Highlight Style") });
     const resetAllHandler = () => {
+      const isGroup2 = this.entry && Array.isArray(this.entry.entries);
       if (this.entry) {
         this.entry.backgroundOpacity = void 0;
         this.entry.highlightBorderRadius = void 0;
@@ -19209,6 +21364,12 @@ var HighlightStylingModal = class extends Modal {
         this.entry.borderLineStyle = void 0;
         this.entry.borderOpacity = void 0;
         this.entry.borderThickness = void 0;
+        if (isGroup2) {
+          this.entry.styleType = void 0;
+          this.entry.color = void 0;
+          this.entry.textColor = void 0;
+          this.entry.backgroundColor = void 0;
+        }
       }
       this._resetAllApplied = true;
       try {
@@ -19221,6 +21382,10 @@ var HighlightStylingModal = class extends Modal {
         lineSel.value = this.plugin.settings.borderLineStyle ?? "solid";
         bOpSlider.value = String(this.plugin.settings.borderOpacity ?? 100);
         thickInput.value = String(this.plugin.settings.borderThickness ?? 1);
+        if (isGroup2) {
+          styleSelect.value = "";
+          pickerRow.style.display = "none";
+        }
       } catch (_) {
       }
       renderPreview();
@@ -19329,41 +21494,61 @@ var HighlightStylingModal = class extends Modal {
     styleSelect.addEventListener("change", () => {
       if (this.entry) {
         const st = styleSelect.value;
-        this.entry.styleType = st;
-        if (st === "text") {
-          this.entry.color = tColor.value || "";
-          this.entry.textColor = null;
-          this.entry.backgroundColor = null;
-        } else if (st === "highlight") {
-          this.entry.color = "";
-          this.entry.textColor = "currentColor";
-          this.entry.backgroundColor = bColor.value || "";
+        if (isGroup && !st) {
+          this.entry.styleType = void 0;
+          this.entry.color = void 0;
+          this.entry.textColor = void 0;
+          this.entry.backgroundColor = void 0;
+          pickerRow.style.display = "none";
         } else {
-          this.entry.color = "";
-          this.entry.textColor = tColor.value || "";
-          this.entry.backgroundColor = bColor.value || "";
+          this.entry.styleType = st;
+          pickerRow.style.display = "";
+          try {
+            updatePickerVisibility();
+          } catch (_) {
+          }
+          if (st === "text") {
+            this.entry.color = tColor.value || "";
+            this.entry.textColor = null;
+            this.entry.backgroundColor = null;
+          } else if (st === "highlight") {
+            this.entry.color = "";
+            this.entry.textColor = "currentColor";
+            this.entry.backgroundColor = bColor.value || "";
+          } else {
+            this.entry.color = "";
+            this.entry.textColor = tColor.value || "";
+            this.entry.backgroundColor = bColor.value || "";
+          }
         }
       }
       renderPreview();
     });
     const saveBtn = actions.createEl("button", { text: this.plugin.t("btn_save_style", "Save Style") });
     saveBtn.addClass("mod-cta");
-    const saveHandler = async () => {
+    const saveData = async (shouldClose = true) => {
       if (this.entry) {
         const st = styleSelect.value;
-        this.entry.styleType = st;
-        if (st === "text") {
-          this.entry.color = tColor.value || "";
-          this.entry.textColor = null;
-          this.entry.backgroundColor = null;
-        } else if (st === "highlight") {
-          this.entry.color = "";
-          this.entry.textColor = "currentColor";
-          this.entry.backgroundColor = bColor.value || "";
+        if (isGroup && !st) {
+          this.entry.styleType = void 0;
+          this.entry.color = void 0;
+          this.entry.textColor = void 0;
+          this.entry.backgroundColor = void 0;
         } else {
-          this.entry.color = "";
-          this.entry.textColor = tColor.value || "";
-          this.entry.backgroundColor = bColor.value || "";
+          this.entry.styleType = st;
+          if (st === "text") {
+            this.entry.color = tColor.value || "";
+            this.entry.textColor = null;
+            this.entry.backgroundColor = null;
+          } else if (st === "highlight") {
+            this.entry.color = "";
+            this.entry.textColor = "currentColor";
+            this.entry.backgroundColor = bColor.value || "";
+          } else {
+            this.entry.color = "";
+            this.entry.textColor = tColor.value || "";
+            this.entry.backgroundColor = bColor.value || "";
+          }
         }
         if (this._resetAllApplied) {
           this.entry.backgroundOpacity = void 0;
@@ -19411,7 +21596,21 @@ var HighlightStylingModal = class extends Modal {
             }
           }
         }
-        if (foundArray && foundIdx !== -1) {
+        if (foundIdx === -1 && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+          for (const group of this.plugin.settings.wordEntryGroups) {
+            if (group && Array.isArray(group.entries)) {
+              for (let i = 0; i < group.entries.length; i++) {
+                if (group.entries[i].uid === entryUid) {
+                  foundArray = group.entries;
+                  foundIdx = i;
+                  break;
+                }
+              }
+            }
+            if (foundIdx !== -1) break;
+          }
+        }
+        if (foundIdx !== -1 && foundArray) {
           foundArray[foundIdx].styleType = this.entry.styleType;
           foundArray[foundIdx].color = this.entry.color;
           foundArray[foundIdx].textColor = this.entry.textColor;
@@ -19425,12 +21624,8 @@ var HighlightStylingModal = class extends Modal {
           foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
           foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
           foundArray[foundIdx].borderThickness = this.entry.borderThickness;
-          debugLog("[SAVE_DEBUG]", `Entry at [${foundIdx}] in ${foundArray === this.plugin.settings.wordEntries ? "wordEntries" : "textBgColoringEntries"}: ${JSON.stringify({ pattern: foundArray[foundIdx].pattern, opacity: foundArray[foundIdx].backgroundOpacity, radius: foundArray[foundIdx].highlightBorderRadius, hPad: foundArray[foundIdx].highlightHorizontalPadding })}`);
         }
         await this.plugin.saveSettings();
-        if (foundArray && foundIdx !== -1) {
-          debugLog("[AFTER_SAVE]", `Memory check: entry still has opacity=${foundArray[foundIdx].backgroundOpacity}, radius=${foundArray[foundIdx].highlightBorderRadius}`);
-        }
         this.plugin.compileWordEntries();
         this.plugin.compileTextBgColoringEntries();
         this.plugin.reconfigureEditorExtensions();
@@ -19468,12 +21663,20 @@ var HighlightStylingModal = class extends Modal {
         } catch (e) {
         }
       }
-      this.close();
+      if (shouldClose) this.close();
     };
+    const saveHandler = () => saveData(true);
     saveBtn.addEventListener("click", saveHandler);
     this._handlers.push({ el: saveBtn, ev: "click", fn: saveHandler });
+    this._saveData = saveData;
   }
   onClose() {
+    try {
+      if (this._saveData) {
+        this._saveData(false);
+      }
+    } catch (e) {
+    }
     try {
       this._handlers.forEach((h) => {
         try {
@@ -19787,7 +21990,7 @@ var EditEntryModal = class extends Modal {
     controls.style.flexWrap = "wrap";
     controls.style.gap = "8px";
     controls.style.marginTop = "12px";
-    controls.style.alignItems = "stretch";
+    controls.style.alignItems = "center";
     controls.style.width = "100%";
     controls.style.boxSizing = "border-box";
     const groupSelect = controls.createEl("select");
@@ -19796,6 +21999,8 @@ var EditEntryModal = class extends Modal {
     groupSelect.style.minWidth = "max-content";
     groupSelect.style.maxWidth = "100%";
     groupSelect.style.width = "auto";
+    groupSelect.style.height = "32px";
+    groupSelect.style.padding = "0 10px";
     groupSelect.style.boxSizing = "border-box";
     groupSelect.style.border = "1px solid var(--background-modifier-border)";
     groupSelect.style.borderRadius = "4px";
@@ -19811,6 +22016,9 @@ var EditEntryModal = class extends Modal {
     groupSelect.value = currentGroupUid || "";
     if (!currentGroupUid && this.fromPickColorModal && this.entry && this.entry._preselectedGroupUid) {
       groupSelect.value = this.entry._preselectedGroupUid || "";
+    }
+    if (!groupsList || groupsList.length === 0) {
+      groupSelect.style.display = "none";
     }
     const groupChangeHandler = async () => {
       const newGroupUid = groupSelect.value || "";
@@ -19872,18 +22080,22 @@ var EditEntryModal = class extends Modal {
     groupSelect.addEventListener("change", groupChangeHandler);
     this._handlers.push({ el: groupSelect, ev: "change", fn: groupChangeHandler });
     const matchSelect = controls.createEl("select");
-    matchSelect.style.display = "none";
     matchSelect.style.flex = "0.5 0 auto";
     matchSelect.style.minWidth = "160px";
+    matchSelect.style.height = "32px";
+    matchSelect.style.padding = "0 10px";
+    matchSelect.style.boxSizing = "border-box";
     matchSelect.style.border = "1px solid var(--background-modifier-border)";
     matchSelect.style.borderRadius = "4px";
     matchSelect.style.background = "var(--background-modifier-form-field)";
     matchSelect.style.textAlign = "center";
     matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
     const caseSel = controls.createEl("select");
-    caseSel.style.display = "none";
     caseSel.style.flex = "0.5 0 auto";
     caseSel.style.minWidth = "160px";
+    caseSel.style.height = "32px";
+    caseSel.style.padding = "0 10px";
+    caseSel.style.boxSizing = "border-box";
     caseSel.style.border = "1px solid var(--background-modifier-border)";
     caseSel.style.borderRadius = "4px";
     caseSel.style.background = "var(--background-modifier-form-field)";
@@ -19896,6 +22108,8 @@ var EditEntryModal = class extends Modal {
       openRegexBtn.style.minWidth = "max-content";
       openRegexBtn.style.maxWidth = "100%";
       openRegexBtn.style.width = "auto";
+      openRegexBtn.style.height = "32px";
+      openRegexBtn.style.padding = "0 10px";
       openRegexBtn.style.boxSizing = "border-box";
       openRegexBtn.style.whiteSpace = "nowrap";
     }
@@ -19904,6 +22118,8 @@ var EditEntryModal = class extends Modal {
     hlBtn.style.minWidth = "max-content";
     hlBtn.style.maxWidth = "100%";
     hlBtn.style.width = "auto";
+    hlBtn.style.height = "32px";
+    hlBtn.style.padding = "0 10px";
     hlBtn.style.boxSizing = "border-box";
     hlBtn.style.whiteSpace = "nowrap";
     const rulesHeader = contentEl.createEl("h3", { text: this.plugin.t("inclusion_exclusion_header", "Inclusion / Exclusion Rules") });
@@ -19937,7 +22153,8 @@ var EditEntryModal = class extends Modal {
       if (defaultMatch === "endswith" || defaultMatch === "ends with") defaultMatch = "endswith";
       matchSelect.value = defaultMatch === "startswith" ? "startsWith" : defaultMatch === "endswith" ? "endsWith" : defaultMatch;
     }
-    caseSel.value = this.plugin.settings.caseSensitive ? "case" : "nocase";
+    const isCase = typeof this.entry.caseSensitive === "boolean" ? this.entry.caseSensitive : !!this.plugin.settings.caseSensitive;
+    caseSel.value = isCase ? "case" : "nocase";
     const renderPreview = () => {
       const raw = String(textInput.value || "");
       const style = styleSelect.value;
@@ -20065,8 +22282,16 @@ var EditEntryModal = class extends Modal {
     }
     const caseFn = async () => {
       const v = caseSel.value;
-      this.plugin.settings.caseSensitive = v === "case";
+      this.entry.caseSensitive = v === "case";
+      const idx = this.plugin.settings.wordEntries.indexOf(this.entry);
+      if (idx !== -1) this.plugin.settings.wordEntries[idx].caseSensitive = v === "case";
       await this.plugin.saveSettings();
+      this.plugin.compileWordEntries();
+      this.plugin.compileTextBgColoringEntries();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this.plugin.forceRefreshAllReadingViews();
+      this.plugin.triggerActiveDocumentRerender();
     };
     caseSel.addEventListener("change", caseFn);
     this._handlers.push({ el: caseSel, ev: "change", fn: caseFn });
@@ -20336,7 +22561,7 @@ var EditEntryModal = class extends Modal {
     saveRow.style.marginTop = "14px";
     const saveBtn = saveRow.createEl("button", { text: this.plugin.t("btn_save_entry", "Save Entry") });
     saveBtn.addClass("mod-cta");
-    const saveHandler = async () => {
+    const saveHandler = async (shouldClose = true) => {
       const st = styleSelect.value;
       let matchTypeVal = isRegex ? "regex" : matchSelect.value;
       if (matchTypeVal === "startsWith") matchTypeVal = "startswith";
@@ -20349,7 +22574,7 @@ var EditEntryModal = class extends Modal {
         const originalState = this.entry._originalState;
         const hasChanges = patternVal !== originalState.pattern || st !== originalState.styleType || textColorVal !== originalState.color || bgColorVal !== originalState.backgroundColor || matchTypeVal !== originalState.matchType;
         if (!hasChanges) {
-          this.close();
+          if (shouldClose) this.close();
           return;
         }
       }
@@ -20536,13 +22761,19 @@ var EditEntryModal = class extends Modal {
         } catch (e) {
         }
       }
-      this.close();
+      if (shouldClose) this.close();
     };
-    saveBtn.addEventListener("click", saveHandler);
-    this._handlers.push({ el: saveBtn, ev: "click", fn: saveHandler });
+    const boundSave = () => saveHandler(true);
+    saveBtn.addEventListener("click", boundSave);
+    this._handlers.push({ el: saveBtn, ev: "click", fn: boundSave });
+    this._saveData = saveHandler;
     this._refreshPreview = renderPreview;
   }
   onClose() {
+    try {
+      if (this._saveData) this._saveData(false);
+    } catch (e) {
+    }
     try {
       this._handlers.forEach((h) => {
         try {
@@ -21141,6 +23372,26 @@ var EditWordGroupModal = class extends Modal {
     };
     matchTypeSelect.addEventListener("change", matchTypeHandler);
     this._cleanupHandlers.push(() => matchTypeSelect.removeEventListener("change", matchTypeHandler));
+    const editBtn = topRow.createEl("button");
+    try {
+      setIcon(editBtn, "edit-3");
+    } catch (e) {
+    }
+    editBtn.title = this.plugin.t("edit_group_highlight_styling", "Edit Group Highlight Styling");
+    editBtn.style.flex = "0 0 auto";
+    editBtn.style.display = "flex";
+    editBtn.style.alignItems = "center";
+    editBtn.style.justifyContent = "center";
+    editBtn.style.padding = "6px";
+    editBtn.style.borderRadius = "4px";
+    editBtn.style.border = "1px solid var(--background-modifier-border)";
+    editBtn.style.background = "var(--background-modifier-form-field)";
+    editBtn.style.cursor = "pointer";
+    const editHandler = () => {
+      new HighlightStylingModal(this.app, this.plugin, this.group, this, this.group.name).open();
+    };
+    editBtn.addEventListener("click", editHandler);
+    this._cleanupHandlers.push(() => editBtn.removeEventListener("click", editHandler));
     const enableDisableRow = contentEl.createDiv();
     enableDisableRow.style.display = "grid";
     enableDisableRow.style.gridTemplateColumns = "auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)";
@@ -21342,31 +23593,43 @@ var EditWordGroupModal = class extends Modal {
     };
     addWordsBtn.addEventListener("click", addWordsHandler);
     this._cleanupHandlers.push(() => addWordsBtn.removeEventListener("click", addWordsHandler));
-    const addRegexBtn = buttonRow.createEl("button");
-    addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
-    addRegexBtn.style.cursor = "pointer";
-    addRegexBtn.style.padding = "6px 12px";
-    addRegexBtn.style.borderRadius = "4px";
-    addRegexBtn.style.flex = "1";
-    addRegexBtn.addClass("mod-cta");
-    const addRegexHandler = () => {
-      this._sortMode = "last-added";
-      const onAdded = (entry) => {
-        if (entry) {
-          this.group.entries.push(entry);
-        }
-        this._refreshGroupEntries();
+    if (this.plugin.settings.enableRegexSupport) {
+      const addRegexBtn = buttonRow.createEl("button");
+      addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
+      addRegexBtn.style.cursor = "pointer";
+      addRegexBtn.style.padding = "6px 12px";
+      addRegexBtn.style.borderRadius = "4px";
+      addRegexBtn.style.flex = "1";
+      addRegexBtn.addClass("mod-cta");
+      const addRegexHandler = () => {
+        this._sortMode = "last-added";
+        const onAdded = (entry) => {
+          if (entry) {
+            this.group.entries.push(entry);
+          }
+          this._refreshGroupEntries();
+        };
+        new RealTimeRegexTesterModal(this.app, this.plugin, onAdded, null, true).open();
       };
-      new RealTimeRegexTesterModal(this.app, this.plugin, onAdded, null, true).open();
-    };
-    addRegexBtn.addEventListener("click", addRegexHandler);
-    this._cleanupHandlers.push(() => addRegexBtn.removeEventListener("click", addRegexHandler));
+      addRegexBtn.addEventListener("click", addRegexHandler);
+      this._cleanupHandlers.push(() => addRegexBtn.removeEventListener("click", addRegexHandler));
+    }
     const presetsBtn = buttonRow.createEl("button");
     presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
     presetsBtn.style.cursor = "pointer";
     presetsBtn.style.padding = "6px 12px";
     presetsBtn.style.borderRadius = "4px";
     const presetsHandler = () => {
+      if (!this.plugin.settings.enableRegexSupport) {
+        new AlertModal(this.app, this.plugin, this.plugin.t("regex_support", "Regex Support"), this.plugin.t("notice_regex_support_disabled"), {
+          text: this.plugin.t("btn_take_me_there", "Take me there"),
+          callback: () => {
+            this.close();
+            this.plugin.openSettingsAndFocusRegex();
+          }
+        }).open();
+        return;
+      }
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
         new ColorPickerModal(this.app, this.plugin, async (color, result) => {
@@ -21376,6 +23639,7 @@ var EditWordGroupModal = class extends Modal {
           if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
           const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", styleType: "text", matchType: "contains", presetLabel: preset.label };
           if (preset.affectMarkElements) entry.affectMarkElements = true;
+          if (preset.targetElement) entry.targetElement = preset.targetElement;
           if (tc && bc) {
             entry.textColor = tc;
             entry.backgroundColor = bc;
@@ -22161,34 +24425,54 @@ var EditBlacklistGroupModal = class extends Modal {
     };
     addWordsBtn.addEventListener("click", addWordsHandler);
     this._cleanupHandlers.push(() => addWordsBtn.removeEventListener("click", addWordsHandler));
-    const addRegexBtn = buttonRow.createEl("button");
-    addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
-    addRegexBtn.style.cursor = "pointer";
-    addRegexBtn.style.padding = "6px 12px";
-    addRegexBtn.style.borderRadius = "4px";
-    addRegexBtn.style.flex = "1";
-    addRegexBtn.addClass("mod-cta");
-    const addRegexHandler = () => {
-      this._sortMode = "last-added";
-      const onAdded = (entry) => {
-        if (entry) {
-          this.group.entries.push(entry);
-        }
-        this._refreshGroupEntries();
+    if (this.plugin.settings.enableRegexSupport) {
+      const addRegexBtn = buttonRow.createEl("button");
+      addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
+      addRegexBtn.style.cursor = "pointer";
+      addRegexBtn.style.padding = "6px 12px";
+      addRegexBtn.style.borderRadius = "4px";
+      addRegexBtn.style.flex = "1";
+      addRegexBtn.addClass("mod-cta");
+      const addRegexHandler = () => {
+        this._sortMode = "last-added";
+        const onAdded = (entry) => {
+          if (entry) {
+            this.group.entries.push(entry);
+          }
+          this._refreshGroupEntries();
+        };
+        new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
       };
-      new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
-    };
-    addRegexBtn.addEventListener("click", addRegexHandler);
-    this._cleanupHandlers.push(() => addRegexBtn.removeEventListener("click", addRegexHandler));
+      addRegexBtn.addEventListener("click", addRegexHandler);
+      this._cleanupHandlers.push(() => addRegexBtn.removeEventListener("click", addRegexHandler));
+    }
     const presetsBtn = buttonRow.createEl("button");
     presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
     presetsBtn.style.cursor = "pointer";
     presetsBtn.style.padding = "6px 12px";
     presetsBtn.style.borderRadius = "4px";
     const presetsHandler = () => {
+      if (!this.plugin.settings.enableRegexSupport) {
+        new AlertModal(this.app, this.plugin, this.plugin.t("regex_support", "Regex Support"), this.plugin.t("notice_regex_support_disabled"), {
+          text: this.plugin.t("btn_take_me_there", "Take me there"),
+          callback: () => {
+            this.close();
+            this.plugin.openSettingsAndFocusRegex();
+          }
+        }).open();
+        return;
+      }
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
-        const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", matchType: "contains", presetLabel: preset.label };
+        const entry = {
+          pattern: preset.pattern,
+          isRegex: true,
+          flags: preset.flags || "",
+          matchType: "contains",
+          presetLabel: preset.label,
+          targetElement: preset.targetElement
+          // Preserve targetElement for logic-based coloring
+        };
         this.group.entries.push(entry);
         this._sortMode = "last-added";
         this._refreshGroupEntries();
@@ -22754,6 +25038,18 @@ var ColorSettingTab = class extends PluginSettingTab {
               this.plugin.settings.wordEntries[idx].groupedPatterns = null;
               entry.pattern = newPattern;
               entry.groupedPatterns = null;
+              const p = newPattern;
+              let te = void 0;
+              if (p === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") te = "strong";
+              else if (p === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") te = "em";
+              else if (p === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") te = "strong-em";
+              if (te) {
+                this.plugin.settings.wordEntries[idx].targetElement = te;
+                entry.targetElement = te;
+              } else if (entry.targetElement && (entry.targetElement === "strong" || entry.targetElement === "em" || entry.targetElement === "strong-em")) {
+                delete this.plugin.settings.wordEntries[idx].targetElement;
+                delete entry.targetElement;
+              }
             } else {
               const patterns = newPattern.split(",").map((p) => String(p).trim()).filter((p) => p.length > 0);
               this.plugin.settings.wordEntries[idx].pattern = patterns[0];
@@ -22981,7 +25277,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         if (idx !== -1) this.plugin.settings.wordEntries[idx].isRegex = regexChk.checked;
         flagsInput.style.display = regexChk.checked ? "" : "none";
         if (regexChk.checked && !this.plugin.settings.enableRegexSupport) {
-          new Notice(this.plugin.t("notice_regex_support_disabled", "Regex support is disabled. Enable it in settings to use regex patterns."));
+          new Notice(this.plugin.t("notice_regex_support_disabled", "To use Presets, enable Regex Support from the General tab in Settings."));
         }
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -23348,7 +25644,6 @@ var ColorSettingTab = class extends PluginSettingTab {
         this._disabledFilesSearchContainer.style.margin = "8px 0";
         this._disabledFilesSearchContainer.style.display = "flex";
         this._disabledFilesSearchContainer.style.alignItems = "center";
-        this._disabledFilesSearchContainer.style.gap = "8px";
         this._disabledFilesSearchInput = this._disabledFilesSearchContainer.createEl("input", { type: "text" });
         try {
           this._disabledFilesSearchInput.addClass("act-search-input");
@@ -23365,8 +25660,7 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (_) {
         }
         this._disabledFilesSearchInput.style.flex = "1 1 auto";
-        this._disabledFilesSearchInput.style.padding = "6px";
-        this._disabledFilesSearchInput.style.marginBottom = "6px";
+        this._disabledFilesSearchInput.style.padding = "6px 6px 6px 30px";
         this._disabledFilesSearchInput.style.border = "1px solid var(--background-modifier-border)";
         this._disabledFilesSearchInput.value = String(this._disabledFilesSearchQuery || "");
         this._disabledFilesSearchIcon = this._disabledFilesSearchContainer.createDiv();
@@ -23530,7 +25824,6 @@ var ColorSettingTab = class extends PluginSettingTab {
         const del = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
         del.addClass("mod-warning");
         del.style.padding = "4px 8px";
-        del.style.borderRadius = "4px";
         del.style.cursor = "pointer";
         if (!entry.uid) {
           try {
@@ -24065,23 +26358,6 @@ var ColorSettingTab = class extends PluginSettingTab {
     try {
       if (!this._customSwatchesContainer) return;
       this._customSwatchesContainer.empty();
-      new Setting(this._customSwatchesContainer).setName(this.plugin.t("replace_default_swatches", "Replace default swatches")).setDesc(this.plugin.t("replace_default_swatches_desc", "If this is on, only your custom colors will show up in the color picker. No default ones!")).addToggle((t) => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async (v) => {
-        this.plugin.settings.replaceDefaultSwatches = v;
-        await this.plugin.saveSettings();
-      }));
-      new Setting(this._customSwatchesContainer).setName(this.plugin.t("use_swatch_names", "Use swatch names for coloring text")).setDesc(this.plugin.t("use_swatch_names_desc", "Show a dropdown of swatch names next to word/pattern inputs")).addToggle((t) => t.setValue(this.plugin.settings.useSwatchNamesForText).onChange(async (v) => {
-        this.plugin.settings.useSwatchNamesForText = v;
-        await this.plugin.saveSettings();
-        this._initializedSettingsUI = false;
-        try {
-          this.display();
-        } catch (e) {
-        }
-      }));
-      new Setting(this._customSwatchesContainer).setName(this.plugin.t("link_swatches_to_entries", "Link swatch updates to text colors")).setDesc(this.plugin.t("link_swatches_to_entries_desc", "When a custom swatch color changes, update all entries using that color")).addToggle((t) => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async (v) => {
-        this.plugin.settings.linkSwatchUpdatesToEntries = v;
-        await this.plugin.saveSettings();
-      }));
       if (typeof this._defaultColorsFolded === "undefined") {
         this._defaultColorsFolded = true;
       }
@@ -24101,7 +26377,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       defaultColorsToggle.style.fontWeight = "bold";
       defaultColorsToggle.style.display = "inline-block";
       defaultColorsToggle.style.width = "16px";
-      const defaultColorsTitle = defaultColorsHeaderDiv.createEl("h5", { text: this.plugin.t("default_colors_header", "Default Colors") });
+      const defaultColorsTitle = defaultColorsHeaderDiv.createEl("h5", { text: this.plugin.t("default_colors_header", "Default Swatches") });
       defaultColorsTitle.style.margin = "0";
       defaultColorsTitle.style.padding = "0";
       defaultColorsTitle.style.flex = "1";
@@ -24545,7 +26821,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           const delBtn = row.createEl("button", { text: this.plugin.t("delete_button_text", "\u2715") });
           delBtn.addClass("mod-warning");
           delBtn.style.padding = "4px 8px";
-          delBtn.style.borderRadius = "4px";
+          delBtn.style.borderRadius = "var(--button-radius)";
           delBtn.style.cursor = "pointer";
           delBtn.style.flexShrink = "0";
           delBtn.addEventListener("click", async () => {
@@ -25126,6 +27402,49 @@ var ColorSettingTab = class extends PluginSettingTab {
           if (this.plugin.settings.showWordGroupsInCommands) this.plugin.reregisterCommandsWithLanguage();
         };
         activeSelect.onchange = activeHandler;
+        if (group.textColor || group.backgroundColor || typeof group.enableBorderThickness !== "undefined" && group.enableBorderThickness) {
+          const preview = row.createDiv();
+          try {
+            preview.addClass("act-group-styling-preview");
+          } catch (e) {
+            try {
+              preview.classList.add("act-group-styling-preview");
+            } catch (_) {
+            }
+          }
+          preview.style.flexShrink = "0";
+          preview.style.display = "flex";
+          preview.style.alignItems = "center";
+          preview.style.justifyContent = "center";
+          preview.style.fontSize = "12px";
+          preview.style.fontWeight = "bold";
+          preview.style.cursor = "default";
+          preview.textContent = "Text";
+          const t = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
+          const b = group.backgroundColor || "";
+          const p = this.plugin.getHighlightParams(group);
+          const rgba = b ? this.plugin.hexToRgba(b, p.opacity ?? 25) : "transparent";
+          if (t) preview.style.color = t;
+          else preview.style.color = "var(--text-normal)";
+          if (b) {
+            preview.style.backgroundColor = rgba;
+          } else {
+            preview.style.backgroundColor = "transparent";
+          }
+          preview.style.borderRadius = (p.radius ?? 8) + "px";
+          preview.style.paddingLeft = (p.hPad ?? 4) + "px";
+          preview.style.paddingRight = (p.hPad ?? 4) + "px";
+          preview.style.paddingTop = (p.vPad ?? 0) + "px";
+          preview.style.paddingBottom = (p.vPad ?? 0) + "px";
+          if (p.enableBorder) {
+            const borderStyle = this.plugin.generateBorderStyle(t, b, group);
+            if (borderStyle) {
+              preview.style.cssText += borderStyle;
+            }
+          } else {
+            preview.style.border = "1px solid var(--background-modifier-border)";
+          }
+        }
         const nameInput = row.createEl("input", { type: "text", value: group.name || "" });
         nameInput.style.flex = "1";
         nameInput.placeholder = this.plugin.t("group_name_placeholder", "Name your group");
@@ -25726,7 +28045,81 @@ var ColorSettingTab = class extends PluginSettingTab {
         });
         return d;
       });
-      new Setting(containerEl2).setName(this.plugin.t("enable_document_color", "Enable document color")).addToggle((t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
+      new Setting(containerEl2).setName(this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
+        this.plugin.settings.disableToggleModes.statusBar = !v;
+        await this.plugin.saveSettings();
+        try {
+          if (v && !this.plugin.statusBar) {
+            this.plugin.statusBar = this.plugin.addStatusBarItem();
+            this.plugin.updateStatusBar();
+            this.plugin.statusBar.onclick = () => {
+              this.plugin.settings.enabled = !this.plugin.settings.enabled;
+              this.plugin.saveSettings();
+              this.plugin.updateStatusBar();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+            };
+          } else if (!v && this.plugin.statusBar) {
+            try {
+              this.plugin.statusBar.remove();
+            } catch (e) {
+            }
+            this.plugin.statusBar = null;
+          }
+        } catch (e) {
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
+        this.plugin.settings.disableToggleModes.ribbon = !v;
+        await this.plugin.saveSettings();
+        try {
+          if (v && !this.ribbonIcon) {
+            this.ribbonIcon = this.addRibbonIcon("palette", this.t("ribbon_title", "Always color text"), async () => {
+              this.settings.enabled = !this.settings.enabled;
+              await this.saveSettings();
+              this.updateStatusBar();
+              this.reconfigureEditorExtensions();
+              this.forceRefreshAllEditors();
+              this.forceRefreshAllReadingViews();
+              if (this.settings.enabled) new Notice(this.t("notice_enabled", "Always color text enabled"));
+              else new Notice(this.t("notice_disabled", "Always color text disabled"));
+            });
+          } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
+            try {
+              this.ribbonIcon.remove();
+            } catch (e) {
+            }
+            this.ribbonIcon = null;
+          }
+        } catch (e) {
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.command).onChange(async (v) => {
+        this.plugin.settings.disableToggleModes.command = !v;
+        await this.plugin.saveSettings();
+        try {
+          if (v) {
+            if (!this.plugin._commandsRegistered) {
+              try {
+                this.plugin.registerCommandPalette?.();
+              } catch (e) {
+              }
+              this.plugin._commandsRegistered = true;
+            }
+          } else {
+            new ConfirmationModal(this.app, this.plugin, this.plugin.t("restart_required_title", "Restart required"), this.plugin.t("restart_required_desc", "Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?"), () => {
+              try {
+                location.reload();
+              } catch (e) {
+              }
+            }).open();
+          }
+        } catch (e) {
+        }
+      }));
+      containerEl2.createEl("h3", { text: this.plugin.t("color_rendering_header", "Color Rendering & Performance") });
+      new Setting(containerEl2).setName(this.plugin.t("enable_document_color", "Enable Global Color")).addToggle((t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
         this.plugin.settings.enabled = v;
         await this.debouncedSaveSettings();
       }));
@@ -25835,7 +28228,7 @@ var ColorSettingTab = class extends PluginSettingTab {
           debugError("SETTINGS", "forceFullRenderInReading handler failed", e);
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("lightweight_mode", "Experimental: Lightweight mode")).setDesc(this.plugin.t("lightweight_mode_desc", "")).addToggle((t) => t.setValue(this.plugin.settings.extremeLightweightMode).onChange(async (v) => {
+      new Setting(containerEl2).setName(this.plugin.t("lightweight_mode", "Lightweight mode (Experimental)")).setDesc(this.plugin.t("lightweight_mode_desc", "")).addToggle((t) => t.setValue(this.plugin.settings.extremeLightweightMode).onChange(async (v) => {
         this.plugin.settings.extremeLightweightMode = v;
         await this.debouncedSaveSettings();
         try {
@@ -25851,94 +28244,40 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (e) {
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
-        this.plugin.settings.disableToggleModes.statusBar = !v;
-        await this.plugin.saveSettings();
+      new Setting(containerEl2).setName(this.plugin.t("smart_update_mode", "Smart Updates (Experimental)")).setDesc(this.plugin.t("smart_update_mode_desc", "Only updates coloring for active line while typing and freezes other lines to improve performance.")).addToggle((t) => t.setValue(this.plugin.settings.enableSmartUpdates).onChange(async (v) => {
+        this.plugin.settings.enableSmartUpdates = v;
+        await this.debouncedSaveSettings();
         try {
-          if (v && !this.plugin.statusBar) {
-            this.plugin.statusBar = this.plugin.addStatusBarItem();
-            this.plugin.updateStatusBar();
-            this.plugin.statusBar.onclick = () => {
-              this.plugin.settings.enabled = !this.plugin.settings.enabled;
-              this.plugin.saveSettings();
-              this.plugin.updateStatusBar();
-              this.plugin.reconfigureEditorExtensions();
-              this.plugin.forceRefreshAllEditors();
-              this.plugin.forceRefreshAllReadingViews();
-            };
-          } else if (!v && this.plugin.statusBar) {
-            try {
-              this.plugin.statusBar.remove();
-            } catch (e) {
-            }
-            this.plugin.statusBar = null;
-          }
+          this.plugin.reconfigureEditorExtensions();
+        } catch (e) {
+        }
+        try {
+          this.plugin.forceRefreshAllEditors();
         } catch (e) {
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
-        this.plugin.settings.disableToggleModes.ribbon = !v;
-        await this.plugin.saveSettings();
+      new Setting(containerEl2).setName(this.plugin.t("word_completion_coloring", "Word Completion Coloring (Experimental)")).setDesc(this.plugin.t("word_completion_coloring_desc", "Only color words after a space is typed. Prevents partial matches from being colored while typing.")).addToggle((t) => t.setValue(this.plugin.settings.enableWordCompletionColoring).onChange(async (v) => {
+        this.plugin.settings.enableWordCompletionColoring = v;
+        await this.debouncedSaveSettings();
         try {
-          if (v && !this.ribbonIcon) {
-            this.ribbonIcon = this.addRibbonIcon("palette", this.t("ribbon_title", "Always color text"), async () => {
-              this.settings.enabled = !this.settings.enabled;
-              await this.saveSettings();
-              this.updateStatusBar();
-              this.reconfigureEditorExtensions();
-              this.forceRefreshAllEditors();
-              this.forceRefreshAllReadingViews();
-              if (this.settings.enabled) new Notice(this.t("notice_enabled", "Always color text enabled"));
-              else new Notice(this.t("notice_disabled", "Always color text disabled"));
-            });
-          } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
-            try {
-              this.ribbonIcon.remove();
-            } catch (e) {
-            }
-            this.ribbonIcon = null;
-          }
+          this.plugin.reconfigureEditorExtensions();
+        } catch (e) {
+        }
+        try {
+          this.plugin.forceRefreshAllEditors();
         } catch (e) {
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle((t) => t.setValue(!this.plugin.settings.disableToggleModes.command).onChange(async (v) => {
-        this.plugin.settings.disableToggleModes.command = !v;
-        await this.plugin.saveSettings();
-        try {
-          if (v) {
-            if (!this.plugin._commandsRegistered) {
-              try {
-                this.plugin.registerCommandPalette?.();
-              } catch (e) {
-              }
-              this.plugin._commandsRegistered = true;
-            }
-          } else {
-            new ConfirmationModal(this.app, this.plugin, this.plugin.t("restart_required_title", "Restart required"), this.plugin.t("restart_required_desc", "Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?"), () => {
-              try {
-                location.reload();
-              } catch (e) {
-              }
-            }).open();
-          }
-        } catch (e) {
-        }
+      containerEl2.createEl("h3", { text: this.plugin.t("matching_behavior_header", "Matching Behavior") });
+      new Setting(containerEl2).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(this.plugin.t("case_sensitive_desc", `If this is on, "word" and "Word" are treated as different. If it's off, they're colored the same.`)).addToggle((t) => t.setValue(this.plugin.settings.caseSensitive).onChange(async (v) => {
+        this.plugin.settings.caseSensitive = v;
+        await this.debouncedSaveSettings();
       }));
-      containerEl2.createEl("h2", { text: this.plugin.t("menu_options_header", "Menu Options") });
-      new Setting(containerEl2).setName(this.plugin.t("show_add_to_existing_menu", 'Show "Add to Existing Entry" in right-click menu')).setDesc(this.plugin.t("show_add_to_existing_menu_desc", "Adds a right-click menu item to add selected text to an existing entry.")).addToggle((t) => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async (v) => {
-        this.plugin.settings.enableAddToExistingMenu = v;
-        await this.plugin.saveSettings();
+      new Setting(containerEl2).setName(this.plugin.t("partial_match", "Partial match")).setDesc(this.plugin.t("partial_match_desc", 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')).addToggle((t) => t.setValue(this.plugin.settings.partialMatch).onChange(async (v) => {
+        this.plugin.settings.partialMatch = v;
+        await this.debouncedSaveSettings();
       }));
-      new Setting(containerEl2).setName(this.plugin.t("show_always_color_text_menu", 'Show "Always Color Text" in right-click menu')).setDesc(this.plugin.t("show_always_color_text_menu_desc", "Adds a right-click menu item to color selected text.")).addToggle((t) => t.setValue(this.plugin.settings.enableAlwaysColorTextMenu).onChange(async (v) => {
-        this.plugin.settings.enableAlwaysColorTextMenu = v;
-        await this.plugin.saveSettings();
-      }));
-      new Setting(containerEl2).setName(this.plugin.t("show_blacklist_menu", 'Show "Blacklist Word" in right-click menu')).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
-        this.plugin.settings.enableBlacklistMenu = v;
-        await this.plugin.saveSettings();
-      }));
-      containerEl2.createEl("h3", { text: this.plugin.t("coloring_settings_header", "Coloring Settings") });
-      new Setting(containerEl2).setName(this.plugin.t("regex_support", "Regex support")).setDesc(this.plugin.t("regex_support_desc", "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.")).addToggle((t) => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async (v) => {
+      new Setting(containerEl2).setName(this.plugin.t("regex_support", "Regex support")).setDesc(this.plugin.t("regex_support_desc", "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.")).setClass("act-regex-support-setting").addToggle((t) => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async (v) => {
         this.plugin.settings.enableRegexSupport = v;
         await this.plugin.saveSettings();
         this._initializedSettingsUI = false;
@@ -25960,13 +28299,29 @@ var ColorSettingTab = class extends PluginSettingTab {
         } catch (e) {
         }
       }));
-      new Setting(containerEl2).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(this.plugin.t("case_sensitive_desc", `If this is on, "word" and "Word" are treated as different. If it's off, they're colored the same.`)).addToggle((t) => t.setValue(this.plugin.settings.caseSensitive).onChange(async (v) => {
-        this.plugin.settings.caseSensitive = v;
+      containerEl2.createEl("h3", { text: this.plugin.t("theme_support_header", "Theme Support") });
+      new Setting(containerEl2).setName(this.plugin.t("light_mode_fixer", "Light Mode Text Color Fixer")).setDesc(this.plugin.t("light_mode_fixer_desc", "Automatically darkens colored text when using Light theme to improve visibility.")).addToggle((t) => t.setValue(this.plugin.settings.lightModeFixer).onChange(async (v) => {
+        this.plugin.settings.lightModeFixer = v;
         await this.debouncedSaveSettings();
+        this.plugin.updateLightModeFixer();
       }));
-      new Setting(containerEl2).setName(this.plugin.t("partial_match", "Partial match")).setDesc(this.plugin.t("partial_match_desc", 'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").')).addToggle((t) => t.setValue(this.plugin.settings.partialMatch).onChange(async (v) => {
-        this.plugin.settings.partialMatch = v;
+      new Setting(containerEl2).setName(this.plugin.t("dark_mode_fixer", "Dark Mode Text Color Fixer")).setDesc(this.plugin.t("dark_mode_fixer_desc", "Automatically lightens colored text when using Dark theme to improve visibility.")).addToggle((t) => t.setValue(this.plugin.settings.darkModeFixer).onChange(async (v) => {
+        this.plugin.settings.darkModeFixer = v;
         await this.debouncedSaveSettings();
+        this.plugin.updateDarkModeFixer();
+      }));
+      containerEl2.createEl("h3", { text: this.plugin.t("menu_options_header", "Menu Options") });
+      new Setting(containerEl2).setName(this.plugin.t("show_always_color_text_menu", 'Show "Always Color Text" in right-click menu')).setDesc(this.plugin.t("show_always_color_text_menu_desc", "Adds a right-click menu item to color selected text.")).addToggle((t) => t.setValue(this.plugin.settings.enableAlwaysColorTextMenu).onChange(async (v) => {
+        this.plugin.settings.enableAlwaysColorTextMenu = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_add_to_existing_menu", 'Show "Add to Existing Entry" in right-click menu')).setDesc(this.plugin.t("show_add_to_existing_menu_desc", "Adds a right-click menu item to add selected text to an existing entry.")).addToggle((t) => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async (v) => {
+        this.plugin.settings.enableAddToExistingMenu = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("show_blacklist_menu", 'Show "Blacklist Word" in right-click menu')).setDesc(this.plugin.t("show_blacklist_menu_desc", "Adds a right-click menu item to blacklist selected text from coloring.")).addToggle((t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
+        this.plugin.settings.enableBlacklistMenu = v;
+        await this.plugin.saveSettings();
       }));
       const otaHeaderDiv = containerEl2.createDiv();
       otaHeaderDiv.style.display = "flex";
@@ -26008,7 +28363,11 @@ var ColorSettingTab = class extends PluginSettingTab {
         this._initializedSettingsUI = false;
         this.display();
       }));
-      if (this.plugin.settings.enableQuickHighlightOnce) {
+      new Setting(otaContainer).setName(this.plugin.t("setting_color_highlight_once", "Color & Highlight Once")).setDesc(this.plugin.t("setting_color_highlight_once_desc", "Opens the unified color picker to apply both text color and background highlight inline. Uses Unified Menu.")).addToggle((t) => t.setValue(this.plugin.settings.enableQuickColorHighlightOnce).onChange(async (v) => {
+        this.plugin.settings.enableQuickColorHighlightOnce = v;
+        await this.plugin.saveSettings();
+      }));
+      if (this.plugin.settings.enableQuickHighlightOnce || this.plugin.settings.enableQuickColorHighlightOnce) {
         new Setting(otaContainer).setName(this.plugin.t("use_global_highlight_style", "Use Global Highlight Style for Highlight Once")).setDesc(this.plugin.t("use_global_highlight_style_desc", "Uses your global inline style. The added HTML/CSS may be long.")).addToggle((t) => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async (v) => {
           this.plugin.settings.quickHighlightUseGlobalStyle = v;
           await this.plugin.saveSettings();
@@ -26439,7 +28798,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       swToggle.style.display = "inline-block";
       swToggle.style.width = "16px";
       swToggle.style.marginTop = "-8px";
-      const swTitle = swHeaderDiv.createEl("h2", { text: this.plugin.t("color_swatches_header", "Color Swatches") });
+      const swTitle = swHeaderDiv.createEl("h2", { text: this.plugin.t("color_swatches_header", "Color Management") });
       swTitle.style.margin = "0";
       swTitle.style.marginTop = "-8px";
       swTitle.style.padding = "0";
@@ -26482,6 +28841,18 @@ var ColorSettingTab = class extends PluginSettingTab {
         this.plugin.settings.customSwatchesEnabled = v;
         await this.plugin.saveSettings();
         this._refreshCustomSwatches();
+      }));
+      new Setting(swContainer).setName(this.plugin.t("replace_default_swatches", "Replace default swatches")).setDesc(this.plugin.t("replace_default_swatches_desc", "If enabled, only your custom swatches will be shown. If disabled, they will be appended to the default ones.")).addToggle((t) => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async (v) => {
+        this.plugin.settings.replaceDefaultSwatches = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(swContainer).setName(this.plugin.t("use_swatch_names", "Use swatch names for coloring text")).setDesc(this.plugin.t("use_swatch_names_desc", 'If enabled, the text will be colored using the name of the swatch (e.g., "Red") instead of the hex code.')).addToggle((t) => t.setValue(this.plugin.settings.useSwatchNamesForText).onChange(async (v) => {
+        this.plugin.settings.useSwatchNamesForText = v;
+        await this.plugin.saveSettings();
+      }));
+      new Setting(swContainer).setName(this.plugin.t("link_swatch_updates", "Link swatch updates to text colors")).setDesc(this.plugin.t("link_swatch_updates_desc", "If enabled, updating a swatch color will update all text colored with that swatch.")).addToggle((t) => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async (v) => {
+        this.plugin.settings.linkSwatchUpdatesToEntries = v;
+        await this.plugin.saveSettings();
       }));
       this._customSwatchesContainer = swContainer.createDiv();
       this._refreshCustomSwatches();
@@ -26687,6 +29058,15 @@ var ColorSettingTab = class extends PluginSettingTab {
       presetsBtn.style.cursor = "pointer";
       presetsBtn.style.flex = "0 0 auto";
       const presetsHandler = () => {
+        if (!this.plugin.settings.enableRegexSupport) {
+          new AlertModal(this.app, this.plugin, this.plugin.t("regex_support", "Regex Support"), this.plugin.t("notice_regex_support_disabled"), {
+            text: this.plugin.t("btn_take_me_there", "Take me there"),
+            callback: () => {
+              this.plugin.openSettingsAndFocusRegex();
+            }
+          }).open();
+          return;
+        }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
           new ColorPickerModal(this.app, this.plugin, async (color, result) => {
@@ -26696,6 +29076,7 @@ var ColorSettingTab = class extends PluginSettingTab {
             if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color))) return;
             const entry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true, matchType: this.plugin.settings.partialMatch ? "contains" : "exact" };
             if (preset.affectMarkElements) entry.affectMarkElements = true;
+            if (preset.targetElement) entry.targetElement = preset.targetElement;
             try {
               entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
             } catch (e) {
@@ -27042,9 +29423,18 @@ var ColorSettingTab = class extends PluginSettingTab {
       blacklistPresetsBtn.style.cursor = "pointer";
       blacklistPresetsBtn.style.flex = "0 0 auto";
       const blacklistPresetsHandler = () => {
+        if (!this.plugin.settings.enableRegexSupport) {
+          new AlertModal(this.app, this.plugin, this.plugin.t("regex_support", "Regex Support"), this.plugin.t("notice_regex_support_disabled"), {
+            text: this.plugin.t("btn_take_me_there", "Take me there"),
+            callback: () => {
+              this.plugin.openSettingsAndFocusRegex();
+            }
+          }).open();
+          return;
+        }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
-          const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true };
+          const newEntry = { pattern: preset.pattern, isRegex: true, flags: preset.flags || "", groupedPatterns: null, presetLabel: preset.label, persistAtEnd: true, targetElement: preset.targetElement };
           try {
             newEntry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
           } catch (e) {
@@ -27476,7 +29866,7 @@ var ColorPickerModal = class extends Modal {
     h2.style.marginTop = "0";
     h2.style.marginBottom = "0px";
     h2.style.flex = "1 1 auto";
-    const hideControls = !!this._hideHeaderControls;
+    const hideControls = !!this._hideHeaderControls || this.isQuickOnce;
     const groupsRaw = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
     const groups = this.plugin.settings.hideInactiveGroupsInDropdowns ? groupsRaw.filter((g) => g && g.active) : groupsRaw;
     if (!hideControls && groups.length > 0) {
@@ -27750,6 +30140,7 @@ var ColorPickerModal = class extends Modal {
               preview.style.paddingLeft = preview.style.paddingRight = "";
               preview.style.paddingTop = preview.style.paddingBottom = "";
             }
+            this._hasUserChanges = true;
           } else {
             const op = matchedEntry && typeof matchedEntry.backgroundOpacity === "number" ? matchedEntry.backgroundOpacity : this.plugin.settings.backgroundOpacity ?? 25;
             const rgba = this.plugin.hexToRgba(val, op);
@@ -27821,7 +30212,7 @@ var ColorPickerModal = class extends Modal {
         btn.style.aspectRatio = "1 / 1";
         btn.style.minWidth = "44px";
         btn.style.minHeight = "44px";
-        btn.style.border = "1px solid var(--background-modifier-border)";
+        btn.style.setProperty("border", "transparent", "important");
         btn.style.borderRadius = "12px";
         btn.style.cursor = "pointer";
         btn.style.opacity = "1";
@@ -28345,6 +30736,9 @@ var ColorPickerModal = class extends Modal {
               styleType: "both",
               matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")
             };
+            if (newEntry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong";
+            else if (newEntry.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "em";
+            else if (newEntry.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong-em";
             targetArr.push(newEntry);
             debugLog("MODAL", "create both", newEntry);
           }
@@ -28396,6 +30790,9 @@ var ColorPickerModal = class extends Modal {
           if (!updated) {
             if (selectedGroup) {
               const newEntry = { pattern: word, color: textColor, isRegex: false, flags: "", styleType: "text", matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact") };
+              if (newEntry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong";
+              else if (newEntry.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "em";
+              else if (newEntry.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong-em";
               targetArr.push(newEntry);
               await this.plugin.saveSettings();
               this.plugin.compileWordEntries();
@@ -28450,6 +30847,9 @@ var ColorPickerModal = class extends Modal {
               styleType: "highlight",
               matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")
             };
+            if (newEntry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong";
+            else if (newEntry.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "em";
+            else if (newEntry.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1") newEntry.targetElement = "strong-em";
             targetArr.push(newEntry);
             debugLog("MODAL", "create highlight", newEntry);
           }
@@ -28490,6 +30890,55 @@ var ColorPickerModal = class extends Modal {
       if (this._hasUserChanges && typeof this._submitFn === "function") this._submitFn();
     } catch (e) {
     }
+    this._eventListeners.forEach(({ el, event, handler }) => {
+      el.removeEventListener(event, handler);
+    });
+    this._eventListeners = [];
+    this.contentEl.empty();
+  }
+};
+var AlertModal = class extends Modal {
+  constructor(app, plugin, title, message, customAction) {
+    super(app);
+    this.plugin = plugin;
+    this.title = title;
+    this.message = message;
+    this.customAction = customAction;
+    this._eventListeners = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this._eventListeners = [];
+    const h2 = contentEl.createEl("h2", { text: this.title });
+    h2.style.marginTop = "0";
+    try {
+      h2.style.color = "var(--text-warning)";
+    } catch (e) {
+    }
+    contentEl.createEl("p", { text: this.message });
+    const buttonDiv = contentEl.createDiv();
+    buttonDiv.style.display = "flex";
+    buttonDiv.style.justifyContent = "flex-end";
+    buttonDiv.style.marginTop = "20px";
+    buttonDiv.style.gap = "10px";
+    if (this.customAction) {
+      const actionBtn = buttonDiv.createEl("button", { text: this.customAction.text });
+      actionBtn.addClass("mod-cta");
+      const actionHandler = () => {
+        this.close();
+        if (this.customAction.callback) this.customAction.callback();
+      };
+      actionBtn.addEventListener("click", actionHandler);
+      this._eventListeners.push({ el: actionBtn, event: "click", handler: actionHandler });
+    }
+    const okButton = buttonDiv.createEl("button", { text: this.plugin.t("btn_ok", "OK") });
+    if (!this.customAction) okButton.addClass("mod-cta");
+    const okHandler = () => this.close();
+    okButton.addEventListener("click", okHandler);
+    this._eventListeners.push({ el: okButton, event: "click", handler: okHandler });
+  }
+  onClose() {
     this._eventListeners.forEach(({ el, event, handler }) => {
       el.removeEventListener(event, handler);
     });

@@ -33,6 +33,8 @@ module.exports = {
   "file_menu_disable": "Desactivar always color text para este archivo",
   "menu_color_once": "Colorear Una Vez",
   "menu_highlight_once": "Resaltar Una Vez",
+  "menu_color_highlight_once": "Color / Resaltar Una Vez",
+  "menu_remove_inline_color": "Eliminar Color Inline",
   "menu_always_color_text": "Always color text",
   "menu_remove_always_color_text": "Eliminar Always Color Text",
   "menu_blacklist_word": "Añadir Palabra a la Lista Negra",
@@ -61,11 +63,22 @@ module.exports = {
   // Commands
   "command_color_selected": "Colorear Texto Seleccionado",
   "command_toggle_current": "Activar/Desactivar coloreado para el documento actual",
-  "command_toggle_global": "Activar/Desactivar Always Color Text",
   "command_enable_current": "Activar coloreado para el documento actual",
   "command_disable_current": "Desactivar coloreado para el documento actual",
-  "command_enable_global": "Activar Always Color Text",
-  "command_disable_global": "Desactivar Always Color Text",
+  "command_toggle_global": "Activar/Desactivar coloración global",
+  "command_enable_global": "Activar coloración global",
+  "command_disable_global": "Desactivar coloración global",
+  "enable_document_color": "Activar color global",
+  "color_swatches_header": "Gestión del color",
+  "color_rendering_header": "Renderizado de color y rendimiento",
+  "theme_support_header": "Soporte de temas",
+  "matching_behavior_header": "Comportamiento de coincidencia",
+  "smart_update_mode": "Actualizaciones inteligentes (Experimental)",
+  "smart_update_mode_desc": "Solo actualiza el coloreado de la línea activa mientras se escribe y congela otras líneas para mejorar el rendimiento.",
+  "word_completion_coloring": "Coloreado al completar palabra (Experimental)",
+  "word_completion_coloring_desc": "Solo colorea palabras después de escribir un espacio. Evita que las coincidencias parciales se coloreen mientras se escribe.",
+  "light_mode_fixer": "Corrector de color de texto en modo claro",
+  "dark_mode_fixer": "Corrector de color de texto en modo oscuro",
   "command_manage_advanced_rules": "gestionar reglas específicas de inclusión/exclusión",
   "command_open_regex_tester": "Añadir Regex (Abrir Probador de Regex)",
   "command_open_blacklist_regex_tester": "Agregar Expresión Regular de Lista Negra",
@@ -76,10 +89,16 @@ module.exports = {
   "command_unhide_text_colors": "Mostrar colores de texto",
   "command_hide_highlights": "Ocultar resaltados",
   "command_unhide_highlights": "Mostrar resaltados",
+  "command_enable_lightweight_mode": "Activar Modo Ligero",
+  "command_disable_lightweight_mode": "Desactivar Modo Ligero",
+  "command_color_highlight_once": "Colorear / Resaltar Texto Seleccionado (Una vez)",
+  "notice_select_text_first_once": "Por favor seleccione texto primero para colorear/resaltar.",
   "command_activate_word_group": "Activar el grupo de palabras {groupName}",
   "command_deactivate_word_group": "Desactivar el grupo de palabras {groupName}",
   
   // Notifications
+  "notice_lightweight_mode_enabled": "Modo Ligero activado",
+  "notice_lightweight_mode_disabled": "Modo Ligero desactivado",
   "notice_enabled": "Always color text activado",
   "notice_disabled": "Always color text desactivado",
   "notice_blacklisted_cannot_color": "\"{word}\" está en la lista negra y no puede colorearse.",
@@ -118,7 +137,9 @@ module.exports = {
   "notice_text_colors_visible": "Colores de texto visibles",
   "notice_highlights_hidden": "Resaltados ocultos",
   "notice_highlights_visible": "Resaltados visibles",
-  "notice_regex_support_disabled": "El soporte de regex está desactivado. Actívalo en la configuración para usar patrones regex.",
+  "notice_regex_support_disabled": "Para usar ajustes preestablecidos, habilite el soporte de Regex en la pestaña General de Configuración.",
+  "btn_take_me_there": "Llévame allí",
+  "btn_ok": "Aceptar",
   "notice_no_active_file_to_disable": "No hay archivo activo para desactivar el coloreado.",
   "notice_already_disabled_for_path": "El coloreado ya está desactivado para {path}",
   "notice_filter_disabled": "Filtro desactivado",
@@ -134,13 +155,13 @@ module.exports = {
   "restart_required_desc": "Desactivar la alternancia en la paleta de comandos requiere reiniciar Obsidian para eliminar completamente el comando de la paleta. ¿Reiniciar ahora?",
   
   // Basic Settings
-  "enable_document_color": "Activar color en el documento",
+
   "color_in_live_preview_mode": "Colorear en Modo Vista Previa",
   "color_in_reading_mode": "Colorear en Modo Lectura",
   "force_full_render_reading": "Forzar renderizado completo en Modo Lectura",
   "force_full_render_reading_desc": "Si está activado, el Modo Lectura intentará colorear todo el documento a la vez. ¡Puede causar retrasos en documentos grandes, úsalo con cuidado!",
-  "lightweight_mode": "Experimental: modo extremadamente ligero",
-  "lightweight_mode_desc": "Reduce mucho el procesamiento mientras escribes. Puede saltarse algunas coincidencias.",
+  "lightweight_mode": "Modo ligero (Experimental)",
+  "lightweight_mode_desc": "Reduce enormemente el procesamiento al escribir. Puede omitir algunas coincidencias.",
   "disable_coloring_current_file": "Desactivar coloreado para el archivo actual",
   "disable_coloring_current_file_desc": "Añade una regla de exclusión para el archivo activo en Reglas de Coloreado para Archivos y Carpetas.",
   "btn_disable_for_this_file": "Desactivar para este archivo",
@@ -162,6 +183,8 @@ module.exports = {
   "setting_color_once_desc": "Insertar estilo HTML inline para el texto seleccionado. Persiste incluso si el plugin está desactivado.",
   "setting_highlight_once": "Resaltar Una Vez",
   "setting_highlight_once_desc": "Insertar estilo HTML inline con fondo. Persiste incluso si el plugin está desactivado.",
+  "setting_color_highlight_once": "Color y Resaltar una vez",
+  "setting_color_highlight_once_desc": "Abre el selector de color unificado para aplicar tanto el color del texto como el resaltado de fondo en línea. Utiliza el menú unificado.",
   "highlight_once_preview": "Vista previa de Resaltar Una Vez",
   "highlight_once_preview_text": "¡Así se ve el resaltado una vez!",
   
@@ -231,7 +254,7 @@ module.exports = {
   "opt_line_outset": "Relieve",
   
   // Color Swatches
-  "color_swatches_header": "Muestras de Color",
+
   "color_picker_layout": "Diseño del Selector de Color",
   "color_picker_layout_desc": "Elige qué tipos de color mostrar al elegir un color para una palabra",
   "opt_both_text_left": "Ambos: Texto Izquierda, Resaltado Derecha",
@@ -248,7 +271,7 @@ module.exports = {
   "use_swatch_names_desc": "Mostrar un menú desplegable de nombres de muestras junto a la entrada de palabra/patrón",
   "link_swatches_to_entries": "Vincular actualizaciones de muestras a textos coloreados",
   "link_swatches_to_entries_desc": "Actualizar todas las entradas que usan una muestra personalizada cuando cambia el color de esa muestra",
-  "default_colors_header": "Colores Predeterminados",
+  "default_colors_header": "Muestras predeterminadas",
   "custom_swatches_header": "Muestras Personalizadas",
   "btn_add_color": "+ Añadir Color",
   "no_custom_swatches_yet": "Aún no hay muestras personalizadas. Haz clic en \"+ Añadir Color\" para crear una.",
@@ -487,6 +510,7 @@ module.exports = {
   "btn_save_style": "Guardar estilo",
   
   // Quick Colors / Styles
+  "quick_actions_header": "Quick Actions",
   "quick_colors_header": "Colores Rápidos",
   "quick_colors_desc": "Permite resaltar o colorear texto rápidamente mostrando colores en el menú contextual. Si Colores Rápidos está desactivado, se usarán los colores por estilo en Estilos Rápidos.",
   "quick_colors_apply_mode_label": "El coloreado de texto se aplicará como",
@@ -523,5 +547,11 @@ module.exports = {
   "share_export_title": "Always Color Text exportación",
   "delete_button_text": "✕",
   "style_name_placeholder": "Nombre del estilo",
-  "preview_text": "Texto"
+  "preview_text": "Texto",
+  "edit_group_highlight_styling": "Editar estilo de resaltado del grupo",
+  "light_mode_fixer_desc": "Oscurece automáticamente el texto coloreado al usar el tema claro para mejorar la visibilidad.",
+  "dark_mode_fixer_desc": "Aclara automáticamente el texto coloreado al usar el tema oscuro para mejorar la visibilidad.",
+  "preset_bold": "Negrita",
+  "preset_italic": "Cursiva",
+  "preset_bold_italic": "Negrita Cursiva"
 };
