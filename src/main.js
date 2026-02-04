@@ -11118,6 +11118,12 @@ module.exports = class AlwaysColorText extends Plugin {
           const lenA = (a.end - a.start);
           const lenB = (b.end - b.start);
           if (lenA !== lenB) return lenB - lenA;
+
+          // Prioritize by pattern length (longer pattern/specificity wins)
+          const pLenA = String((a.entryRef || a.entry || {}).pattern || '').length;
+          const pLenB = String((b.entryRef || b.entry || {}).pattern || '').length;
+          if (pLenA !== pLenB) return pLenB - pLenA;
+
           // Then by start position (earlier wins)
           if (a.start !== b.start) return a.start - b.start;
           // Then by style (text+bg before text-only)
@@ -11443,6 +11449,12 @@ module.exports = class AlwaysColorText extends Plugin {
           const lenA = (a.end - a.start);
           const lenB = (b.end - b.start);
           if (lenA !== lenB) return lenB - lenA;
+
+          // Prioritize by pattern length (longer pattern/specificity wins)
+          const pLenA = String((a.entryRef || a.entry || {}).pattern || '').length;
+          const pLenB = String((b.entryRef || b.entry || {}).pattern || '').length;
+          if (pLenA !== pLenB) return pLenB - pLenA;
+
           // Then by start position (earlier wins)
           if (a.start !== b.start) return a.start - b.start;
           // Then by style (text+bg before text-only)
@@ -19153,25 +19165,27 @@ class EditWordGroupModal extends Modal {
     addWordsBtn.addEventListener('click', addWordsHandler);
     this._cleanupHandlers.push(() => addWordsBtn.removeEventListener('click', addWordsHandler));
 
-    const addRegexBtn = buttonRow.createEl('button');
-    addRegexBtn.textContent = this.plugin.t('btn_add_regex', '+ Add Regex');
-    addRegexBtn.style.cursor = 'pointer';
-    addRegexBtn.style.padding = '6px 12px';
-    addRegexBtn.style.borderRadius = '4px';
-    addRegexBtn.style.flex = '1';
-    addRegexBtn.addClass('mod-cta');
-    const addRegexHandler = () => {
-      this._sortMode = 'last-added';
-      const onAdded = (entry) => {
-        if (entry) {
-          this.group.entries.push(entry);
-        }
-        this._refreshGroupEntries();
+    if (this.plugin.settings.enableRegexSupport) {
+      const addRegexBtn = buttonRow.createEl('button');
+      addRegexBtn.textContent = this.plugin.t('btn_add_regex', '+ Add Regex');
+      addRegexBtn.style.cursor = 'pointer';
+      addRegexBtn.style.padding = '6px 12px';
+      addRegexBtn.style.borderRadius = '4px';
+      addRegexBtn.style.flex = '1';
+      addRegexBtn.addClass('mod-cta');
+      const addRegexHandler = () => {
+        this._sortMode = 'last-added';
+        const onAdded = (entry) => {
+          if (entry) {
+            this.group.entries.push(entry);
+          }
+          this._refreshGroupEntries();
+        };
+        new RealTimeRegexTesterModal(this.app, this.plugin, onAdded, null, true).open();
       };
-      new RealTimeRegexTesterModal(this.app, this.plugin, onAdded, null, true).open();
-    };
-    addRegexBtn.addEventListener('click', addRegexHandler);
-    this._cleanupHandlers.push(() => addRegexBtn.removeEventListener('click', addRegexHandler));
+      addRegexBtn.addEventListener('click', addRegexHandler);
+      this._cleanupHandlers.push(() => addRegexBtn.removeEventListener('click', addRegexHandler));
+    }
 
     const presetsBtn = buttonRow.createEl('button');
     presetsBtn.textContent = this.plugin.t('btn_presets', 'Presets');
@@ -19183,6 +19197,7 @@ class EditWordGroupModal extends Modal {
         new AlertModal(this.app, this.plugin, this.plugin.t('regex_support', 'Regex Support'), this.plugin.t('notice_regex_support_disabled'), {
           text: this.plugin.t('btn_take_me_there', 'Take me there'),
           callback: () => {
+            this.close();
             this.plugin.openSettingsAndFocusRegex();
           }
         }).open();
@@ -19977,25 +19992,27 @@ class EditBlacklistGroupModal extends Modal {
     addWordsBtn.addEventListener('click', addWordsHandler);
     this._cleanupHandlers.push(() => addWordsBtn.removeEventListener('click', addWordsHandler));
 
-    const addRegexBtn = buttonRow.createEl('button');
-    addRegexBtn.textContent = this.plugin.t('btn_add_regex', '+ Add Regex');
-    addRegexBtn.style.cursor = 'pointer';
-    addRegexBtn.style.padding = '6px 12px';
-    addRegexBtn.style.borderRadius = '4px';
-    addRegexBtn.style.flex = '1';
-    addRegexBtn.addClass('mod-cta');
-    const addRegexHandler = () => {
-      this._sortMode = 'last-added';
-      const onAdded = (entry) => {
-        if (entry) {
-          this.group.entries.push(entry);
-        }
-        this._refreshGroupEntries();
+    if (this.plugin.settings.enableRegexSupport) {
+      const addRegexBtn = buttonRow.createEl('button');
+      addRegexBtn.textContent = this.plugin.t('btn_add_regex', '+ Add Regex');
+      addRegexBtn.style.cursor = 'pointer';
+      addRegexBtn.style.padding = '6px 12px';
+      addRegexBtn.style.borderRadius = '4px';
+      addRegexBtn.style.flex = '1';
+      addRegexBtn.addClass('mod-cta');
+      const addRegexHandler = () => {
+        this._sortMode = 'last-added';
+        const onAdded = (entry) => {
+          if (entry) {
+            this.group.entries.push(entry);
+          }
+          this._refreshGroupEntries();
+        };
+        new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
       };
-      new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
-    };
-    addRegexBtn.addEventListener('click', addRegexHandler);
-    this._cleanupHandlers.push(() => addRegexBtn.removeEventListener('click', addRegexHandler));
+      addRegexBtn.addEventListener('click', addRegexHandler);
+      this._cleanupHandlers.push(() => addRegexBtn.removeEventListener('click', addRegexHandler));
+    }
 
     const presetsBtn = buttonRow.createEl('button');
     presetsBtn.textContent = this.plugin.t('btn_presets', 'Presets');
@@ -20007,6 +20024,7 @@ class EditBlacklistGroupModal extends Modal {
         new AlertModal(this.app, this.plugin, this.plugin.t('regex_support', 'Regex Support'), this.plugin.t('notice_regex_support_disabled'), {
           text: this.plugin.t('btn_take_me_there', 'Take me there'),
           callback: () => {
+            this.close();
             this.plugin.openSettingsAndFocusRegex();
           }
         }).open();
