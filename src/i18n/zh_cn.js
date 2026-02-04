@@ -79,6 +79,8 @@ module.exports = {
   "matching_behavior_header": "匹配行为",
   "smart_update_mode": "智能更新 (实验性)",
   "smart_update_mode_desc": "仅在输入时更新当前行的着色，并冻结其他行以提高性能。",
+    "word_completion_coloring": "单词完成着色 (实验性)",
+    "word_completion_coloring_desc": "仅在输入空格后着色单词。防止在打字时着色部分匹配项。",
   "light_mode_fixer": "亮色模式文本颜色修复器",
   "dark_mode_fixer": "暗色模式文本颜色修复器",
   "command_manage_advanced_rules": "管理特定包含/排除规则",

@@ -79,6 +79,8 @@ module.exports = {
   "matching_behavior_header": "Comportement de correspondance",
   "smart_update_mode": "Mises à jour intelligentes (Expérimental)",
   "smart_update_mode_desc": "Met à jour la coloration uniquement pour la ligne active lors de la frappe et fige les autres lignes pour améliorer les performances.",
+    "word_completion_coloring": "Coloration après mot complet (Expérimental)",
+    "word_completion_coloring_desc": "Ne colore les mots qu'après la saisie d'un espace. Empêche la coloration des correspondances partielles pendant la frappe.",
   "light_mode_fixer": "Correcteur de couleur de texte en mode clair",
   "dark_mode_fixer": "Correcteur de couleur de texte en mode sombre",
   "command_manage_advanced_rules": "gérer les règles spécifiques d’inclusion/exclusion",

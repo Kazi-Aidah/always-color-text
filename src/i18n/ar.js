@@ -162,6 +162,8 @@ module.exports = {
   "matching_behavior_header": "سلوك المطابقة",
   "smart_update_mode": "التحديثات الذكية (تجريبي)",
   "smart_update_mode_desc": "يقوم بتحديث الأسطر المرئية والمتغيرة فقط بذكاء أثناء الكتابة. يحسن أداء الكتابة بشكل كبير.",
+  "word_completion_coloring": "تلوين إكمال الكلمات (تجريبي)",
+  "word_completion_coloring_desc": "تلوين الكلمات فقط بعد كتابة مسافة. يمنع تلوين التطابقات الجزئية أثناء الكتابة.",
   "light_mode_fixer": "مصحح لون النص في الوضع الفاتح",
   "dark_mode_fixer": "مصحح لون النص في الوضع الداكن",
   "color_in_live_preview_mode": "تلوين في وضع المعاينة الحية",

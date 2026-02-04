@@ -163,6 +163,8 @@ var require_en = __commonJS({
       "matching_behavior_header": "Matching Behavior",
       "smart_update_mode": "Smart Updates (Experimental)",
       "smart_update_mode_desc": "Intelligently updates only visible, changed lines while typing. Significantly improves typing performance.",
+      "word_completion_coloring": "Word Completion Coloring (Experimental)",
+      "word_completion_coloring_desc": "Only color words after a space is typed. Prevents partial matches from being colored while typing.",
       "light_mode_fixer": "Light Mode Text Color Fixer",
       "dark_mode_fixer": "Dark Mode Text Color Fixer",
       "color_in_live_preview_mode": "Color in Live Preview Mode",
@@ -614,6 +616,8 @@ var require_es = __commonJS({
       "matching_behavior_header": "Comportamiento de coincidencia",
       "smart_update_mode": "Actualizaciones inteligentes (Experimental)",
       "smart_update_mode_desc": "Solo actualiza el coloreado de la l\xEDnea activa mientras se escribe y congela otras l\xEDneas para mejorar el rendimiento.",
+      "word_completion_coloring": "Coloreado al completar palabra (Experimental)",
+      "word_completion_coloring_desc": "Solo colorea palabras despu\xE9s de escribir un espacio. Evita que las coincidencias parciales se coloreen mientras se escribe.",
       "light_mode_fixer": "Corrector de color de texto en modo claro",
       "dark_mode_fixer": "Corrector de color de texto en modo oscuro",
       "command_manage_advanced_rules": "gestionar reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
@@ -1148,6 +1152,8 @@ var require_fr = __commonJS({
       "matching_behavior_header": "Comportement de correspondance",
       "smart_update_mode": "Mises \xE0 jour intelligentes (Exp\xE9rimental)",
       "smart_update_mode_desc": "Met \xE0 jour la coloration uniquement pour la ligne active lors de la frappe et fige les autres lignes pour am\xE9liorer les performances.",
+      "word_completion_coloring": "Coloration apr\xE8s mot complet (Exp\xE9rimental)",
+      "word_completion_coloring_desc": "Ne colore les mots qu'apr\xE8s la saisie d'un espace. Emp\xEAche la coloration des correspondances partielles pendant la frappe.",
       "light_mode_fixer": "Correcteur de couleur de texte en mode clair",
       "dark_mode_fixer": "Correcteur de couleur de texte en mode sombre",
       "command_manage_advanced_rules": "g\xE9rer les r\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
@@ -1676,7 +1682,10 @@ var require_hi = __commonJS({
       "color_rendering_header": "\u0930\u0902\u0917 \u092A\u094D\u0930\u0924\u093F\u092A\u093E\u0926\u0928 \u0914\u0930 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928",
       "theme_support_header": "\u0925\u0940\u092E \u0938\u092E\u0930\u094D\u0925\u0928",
       "matching_behavior_header": "\u092E\u093F\u0932\u093E\u0928 \u0935\u094D\u092F\u0935\u0939\u093E\u0930",
-      "smart_updates": "\u0938\u094D\u092E\u093E\u0930\u094D\u091F \u0905\u092A\u0921\u0947\u091F (\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915)",
+      "smart_update_mode": "\u0938\u094D\u092E\u093E\u0930\u094D\u091F \u0905\u092A\u0921\u0947\u091F\u094D\u0938 (\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915)",
+      "smart_update_mode_desc": "\u091F\u093E\u0907\u092A \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0915\u0947\u0935\u0932 \u0926\u093F\u0916\u093E\u0908 \u0926\u0947\u0928\u0947 \u0935\u093E\u0932\u0940, \u092C\u0926\u0932\u0940 \u0939\u0941\u0908 \u092A\u0902\u0915\u094D\u0924\u093F\u092F\u094B\u0902 \u0915\u094B \u092C\u0941\u0926\u094D\u0927\u093F\u092E\u093E\u0928\u0940 \u0938\u0947 \u0905\u092A\u0921\u0947\u091F \u0915\u0930\u0924\u093E \u0939\u0948\u0964 \u091F\u093E\u0907\u092A\u093F\u0902\u0917 \u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928 \u0915\u094B \u0915\u093E\u092B\u0940 \u092C\u0947\u0939\u0924\u0930 \u092C\u0928\u093E\u0924\u093E \u0939\u0948\u0964",
+      "word_completion_coloring": "\u0936\u092C\u094D\u0926 \u092A\u0942\u0930\u094D\u0923 \u0939\u094B\u0928\u0947 \u092A\u0930 \u0930\u0902\u0917 \u092D\u0930\u0928\u093E (\u092A\u094D\u0930\u092F\u094B\u0917\u093E\u0924\u094D\u092E\u0915)",
+      "word_completion_coloring_desc": "\u0938\u094D\u092A\u0947\u0938 \u091F\u093E\u0907\u092A \u0915\u0930\u0928\u0947 \u0915\u0947 \u092C\u093E\u0926 \u0939\u0940 \u0936\u092C\u094D\u0926\u094B\u0902 \u092E\u0947\u0902 \u0930\u0902\u0917 \u092D\u0930\u0947\u0902\u0964 \u091F\u093E\u0907\u092A \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0906\u0902\u0936\u093F\u0915 \u092E\u0947\u0932\u094B\u0902 \u092E\u0947\u0902 \u0930\u0902\u0917 \u092D\u0930\u0928\u0947 \u0938\u0947 \u0930\u094B\u0915\u0924\u093E \u0939\u0948\u0964",
       "light_mode_fixer": "\u0932\u093E\u0907\u091F \u092E\u094B\u0921 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0932\u0930 \u092B\u093F\u0915\u094D\u0938\u0930",
       "dark_mode_fixer": "\u0921\u093E\u0930\u094D\u0915 \u092E\u094B\u0921 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u0932\u0930 \u092B\u093F\u0915\u094D\u0938\u0930",
       "command_manage_advanced_rules": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
@@ -2204,6 +2213,8 @@ var require_it = __commonJS({
       "matching_behavior_header": "Comportamento di corrispondenza",
       "smart_update_mode": "Aggiornamenti intelligenti (Sperimentale)",
       "smart_update_mode_desc": "Aggiorna la colorazione solo per la riga attiva durante la digitazione e blocca le altre righe per migliorare le prestazioni.",
+      "word_completion_coloring": "Colorazione al completamento della parola (Sperimentale)",
+      "word_completion_coloring_desc": "Colora le parole solo dopo aver digitato uno spazio. Impedisce che le corrispondenze parziali vengano colorate durante la digitazione.",
       "light_mode_fixer": "Correttore colore testo modalit\xE0 chiara",
       "dark_mode_fixer": "Correttore colore testo modalit\xE0 scura",
       "command_manage_advanced_rules": "gestisci regole specifiche di inclusione/esclusione",
@@ -2812,6 +2823,8 @@ var require_bn = __commonJS({
       "force_full_render_reading_desc": "\u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u09B0\u09BF\u09A1\u09BF\u0982-\u09AE\u09CB\u09A1 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3 \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F \u098F\u0995 \u09AA\u09BE\u09B8\u09C7 \u09B0\u0999 \u0995\u09B0\u09BE\u09B0 \u099A\u09C7\u09B7\u09CD\u099F\u09BE \u0995\u09B0\u09AC\u09C7\u0964 \u09AC\u09A1\u09BC \u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F\u09C7 \u09AA\u09BE\u09B0\u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u09A8\u09CD\u09B8 \u0987\u09B8\u09CD\u09AF\u09C1 \u09B9\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964 \u09B8\u09A4\u09B0\u09CD\u0995\u09A4\u09BE\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8!",
       "smart_update_mode": "\u09B8\u09CD\u09AE\u09BE\u09B0\u09CD\u099F \u0986\u09AA\u09A1\u09C7\u099F (\u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u09BE\u09AE\u09C2\u09B2\u0995)",
       "smart_update_mode_desc": "\u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09B6\u09C1\u09A7\u09C1\u09AE\u09BE\u09A4\u09CD\u09B0 \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09B2\u09BE\u0987\u09A8\u09C7\u09B0 \u09B0\u0999 \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09C7 \u098F\u09AC\u0982 \u09AA\u09BE\u09B0\u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u09A8\u09CD\u09B8 \u0989\u09A8\u09CD\u09A8\u09A4 \u0995\u09B0\u09A4\u09C7 \u0985\u09A8\u09CD\u09AF\u09BE\u09A8\u09CD\u09AF \u09B2\u09BE\u0987\u09A8\u0997\u09C1\u09B2\u09BF \u09AB\u09CD\u09B0\u09BF\u099C \u0995\u09B0\u09C7\u0964",
+      "word_completion_coloring": "\u09B6\u09AC\u09CD\u09A6 \u09AA\u09C2\u09B0\u09CD\u09A3 \u09B9\u0993\u09DF\u09BE\u09B0 \u09AA\u09B0 \u09B0\u0999 \u0995\u09B0\u09BE (\u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u09BE\u09AE\u09C2\u09B2\u0995)",
+      "word_completion_coloring_desc": "\u09B6\u09C1\u09A7\u09C1\u09AE\u09BE\u09A4\u09CD\u09B0 \u09B8\u09CD\u09AA\u09C7\u09B8 \u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09AA\u09B0\u09C7 \u09B6\u09AC\u09CD\u09A6\u0997\u09C1\u09B2\u09BF \u09B0\u0999 \u0995\u09B0\u09C1\u09A8\u0964 \u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u0986\u0982\u09B6\u09BF\u0995 \u09AE\u09BF\u09B2\u0997\u09C1\u09B2\u09BF\u09A4\u09C7 \u09B0\u0999 \u0995\u09B0\u09BE \u09AA\u09CD\u09B0\u09A4\u09BF\u09B0\u09CB\u09A7 \u0995\u09B0\u09C7\u0964",
       "lightweight_mode": "\u09B2\u09BE\u0987\u099F\u0993\u09AF\u09BC\u09C7\u099F \u09AE\u09CB\u09A1 (\u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u09BE\u09AE\u09C2\u09B2\u0995)",
       "lightweight_mode_desc": "\u099F\u09BE\u0987\u09AA \u0995\u09B0\u09BE\u09B0 \u09B8\u09AE\u09AF\u09BC \u09AA\u09CD\u09B0\u09B8\u09C7\u09B8\u09BF\u0982 \u0985\u09A8\u09C7\u0995 \u0995\u09AE\u09BF\u09AF\u09BC\u09C7 \u09A6\u09C7\u09AF\u09BC\u0964 \u0995\u09BF\u099B\u09C1 \u09AE\u09CD\u09AF\u09BE\u099A \u09AC\u09BE\u09A6 \u09AA\u09A1\u09BC\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964",
       "disable_coloring_current_file": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
@@ -3276,6 +3289,8 @@ var require_ru = __commonJS({
       "smart_update_mode": "\u0423\u043C\u043D\u044B\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F (\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0439)",
       // added
       "smart_update_mode_desc": "\u041E\u0431\u043D\u043E\u0432\u043B\u044F\u0435\u0442 \u0440\u0430\u0441\u043A\u0440\u0430\u0441\u043A\u0443 \u0442\u043E\u043B\u044C\u043A\u043E \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0439 \u0441\u0442\u0440\u043E\u043A\u0438 \u043F\u0440\u0438 \u043D\u0430\u0431\u043E\u0440\u0435 \u0442\u0435\u043A\u0441\u0442\u0430 \u0438 \u0437\u0430\u043C\u043E\u0440\u0430\u0436\u0438\u0432\u0430\u0435\u0442 \u0434\u0440\u0443\u0433\u0438\u0435 \u0441\u0442\u0440\u043E\u043A\u0438 \u0434\u043B\u044F \u043F\u043E\u0432\u044B\u0448\u0435\u043D\u0438\u044F \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u0438.",
+      "word_completion_coloring": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u043F\u0440\u0438 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u0438 \u0441\u043B\u043E\u0432\u0430 (\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u043E)",
+      "word_completion_coloring_desc": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0441\u043B\u043E\u0432\u0430 \u0442\u043E\u043B\u044C\u043A\u043E \u043F\u043E\u0441\u043B\u0435 \u0432\u0432\u043E\u0434\u0430 \u043F\u0440\u043E\u0431\u0435\u043B\u0430. \u041F\u0440\u0435\u0434\u043E\u0442\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0447\u0430\u0441\u0442\u0438\u0447\u043D\u044B\u0445 \u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u0439 \u043F\u0440\u0438 \u043D\u0430\u0431\u043E\u0440\u0435 \u0442\u0435\u043A\u0441\u0442\u0430.",
       "light_mode_fixer": "\u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432 \u0441\u0432\u0435\u0442\u043B\u043E\u043C \u0440\u0435\u0436\u0438\u043C\u0435",
       // added
       "dark_mode_fixer": "\u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432 \u0442\u0435\u043C\u043D\u043E\u043C \u0440\u0435\u0436\u0438\u043C\u0435",
@@ -3821,6 +3836,8 @@ var require_zh_cn = __commonJS({
       "matching_behavior_header": "\u5339\u914D\u884C\u4E3A",
       "smart_update_mode": "\u667A\u80FD\u66F4\u65B0 (\u5B9E\u9A8C\u6027)",
       "smart_update_mode_desc": "\u4EC5\u5728\u8F93\u5165\u65F6\u66F4\u65B0\u5F53\u524D\u884C\u7684\u7740\u8272\uFF0C\u5E76\u51BB\u7ED3\u5176\u4ED6\u884C\u4EE5\u63D0\u9AD8\u6027\u80FD\u3002",
+      "word_completion_coloring": "\u5355\u8BCD\u5B8C\u6210\u7740\u8272 (\u5B9E\u9A8C\u6027)",
+      "word_completion_coloring_desc": "\u4EC5\u5728\u8F93\u5165\u7A7A\u683C\u540E\u7740\u8272\u5355\u8BCD\u3002\u9632\u6B62\u5728\u6253\u5B57\u65F6\u7740\u8272\u90E8\u5206\u5339\u914D\u9879\u3002",
       "light_mode_fixer": "\u4EAE\u8272\u6A21\u5F0F\u6587\u672C\u989C\u8272\u4FEE\u590D\u5668",
       "dark_mode_fixer": "\u6697\u8272\u6A21\u5F0F\u6587\u672C\u989C\u8272\u4FEE\u590D\u5668",
       "command_manage_advanced_rules": "\u7BA1\u7406\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
@@ -4427,6 +4444,8 @@ var require_de = __commonJS({
       "matching_behavior_header": "\xDCbereinstimmungsverhalten",
       "smart_update_mode": "Intelligente Aktualisierungen (Experimentell)",
       "smart_update_mode_desc": "Aktualisiert intelligent nur sichtbare, ge\xE4nderte Zeilen w\xE4hrend des Tippens. Verbessert die Tippleistung erheblich.",
+      "word_completion_coloring": "Wortvervollst\xE4ndigungs-F\xE4rbung (Experimentell)",
+      "word_completion_coloring_desc": "F\xE4rbt W\xF6rter erst nach Eingabe eines Leerzeichens. Verhindert das F\xE4rben von Teil\xFCbereinstimmungen w\xE4hrend des Tippens.",
       "light_mode_fixer": "Textfarbkorrektur f\xFCr hellen Modus",
       "dark_mode_fixer": "Textfarbkorrektur f\xFCr dunklen Modus",
       "color_in_live_preview_mode": "Im Live-Vorschau-Modus f\xE4rben",
@@ -4962,6 +4981,8 @@ var require_ar = __commonJS({
       "matching_behavior_header": "\u0633\u0644\u0648\u0643 \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0629",
       "smart_update_mode": "\u0627\u0644\u062A\u062D\u062F\u064A\u062B\u0627\u062A \u0627\u0644\u0630\u0643\u064A\u0629 (\u062A\u062C\u0631\u064A\u0628\u064A)",
       "smart_update_mode_desc": "\u064A\u0642\u0648\u0645 \u0628\u062A\u062D\u062F\u064A\u062B \u0627\u0644\u0623\u0633\u0637\u0631 \u0627\u0644\u0645\u0631\u0626\u064A\u0629 \u0648\u0627\u0644\u0645\u062A\u063A\u064A\u0631\u0629 \u0641\u0642\u0637 \u0628\u0630\u0643\u0627\u0621 \u0623\u062B\u0646\u0627\u0621 \u0627\u0644\u0643\u062A\u0627\u0628\u0629. \u064A\u062D\u0633\u0646 \u0623\u062F\u0627\u0621 \u0627\u0644\u0643\u062A\u0627\u0628\u0629 \u0628\u0634\u0643\u0644 \u0643\u0628\u064A\u0631.",
+      "word_completion_coloring": "\u062A\u0644\u0648\u064A\u0646 \u0625\u0643\u0645\u0627\u0644 \u0627\u0644\u0643\u0644\u0645\u0627\u062A (\u062A\u062C\u0631\u064A\u0628\u064A)",
+      "word_completion_coloring_desc": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0643\u0644\u0645\u0627\u062A \u0641\u0642\u0637 \u0628\u0639\u062F \u0643\u062A\u0627\u0628\u0629 \u0645\u0633\u0627\u0641\u0629. \u064A\u0645\u0646\u0639 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u062A\u0637\u0627\u0628\u0642\u0627\u062A \u0627\u0644\u062C\u0632\u0626\u064A\u0629 \u0623\u062B\u0646\u0627\u0621 \u0627\u0644\u0643\u062A\u0627\u0628\u0629.",
       "light_mode_fixer": "\u0645\u0635\u062D\u062D \u0644\u0648\u0646 \u0627\u0644\u0646\u0635 \u0641\u064A \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0641\u0627\u062A\u062D",
       "dark_mode_fixer": "\u0645\u0635\u062D\u062D \u0644\u0648\u0646 \u0627\u0644\u0646\u0635 \u0641\u064A \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062F\u0627\u0643\u0646",
       "color_in_live_preview_mode": "\u062A\u0644\u0648\u064A\u0646 \u0641\u064A \u0648\u0636\u0639 \u0627\u0644\u0645\u0639\u0627\u064A\u0646\u0629 \u0627\u0644\u062D\u064A\u0629",
@@ -11429,6 +11450,8 @@ module.exports = class AlwaysColorText extends Plugin {
       extremeLightweightMode: false,
       // Opt-in: Smart Updates (Freeze non-active lines)
       enableSmartUpdates: false,
+      // Opt-in: Word Completion Coloring (Wait for space)
+      enableWordCompletionColoring: false,
       // Disable coloring in reading/preview mode (editor remains colored)
       disableReadingModeColoring: false,
       disableLivePreviewColoring: false,
@@ -12692,6 +12715,7 @@ module.exports = class AlwaysColorText extends Plugin {
           return containsMatch;
         case "startswith":
           try {
+            if (this._isTyping) throw new Error("Skip strict check");
             const flags = this.settings.caseSensitive ? "" : "i";
             const re = new RegExp(`^${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[A-Za-z]*$`, flags);
             return re.test(fullWord);
@@ -12701,6 +12725,7 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         case "endswith":
           try {
+            if (this._isTyping) throw new Error("Skip strict check");
             const flags = this.settings.caseSensitive ? "" : "i";
             const re = new RegExp(`^[A-Za-z]*${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}$`, flags);
             return re.test(fullWord);
@@ -12755,8 +12780,10 @@ module.exports = class AlwaysColorText extends Plugin {
     let lastIndex = 0;
     let safetyCounter = 0;
     const maxIterations = Math.min(EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN, 100);
+    const startTime = Date.now();
     try {
       while (safetyCounter < maxIterations) {
+        if (safetyCounter > 10 && Date.now() - startTime > 10) break;
         const match = regex.exec(text);
         if (!match) break;
         matches.push(match);
@@ -12932,6 +12959,10 @@ module.exports = class AlwaysColorText extends Plugin {
         }).filter(Boolean);
       }
       filtered.sort((a, b) => {
+        const aIsRegex = !!a.isRegex;
+        const bIsRegex = !!b.isRegex;
+        if (!aIsRegex && bIsRegex) return -1;
+        if (aIsRegex && !bIsRegex) return 1;
         const sa = typeof a.specificity === "number" ? a.specificity : String(a.pattern || "").replace(/\*/g, "").length;
         const sb = typeof b.specificity === "number" ? b.specificity : String(b.pattern || "").replace(/\*/g, "").length;
         const specDiff = sb - sa;
@@ -16055,6 +16086,10 @@ module.exports = class AlwaysColorText extends Plugin {
           const w = match[0];
           const start = match.index;
           const end = start + w.length;
+          if (this.settings.enableWordCompletionColoring) {
+            const nextChar = text[end];
+            if (!nextChar || nextChar === "\n" || nextChar === "\r") continue;
+          }
           if (isBlacklisted(w)) continue;
           for (const entry of textBgEntries.filter((e) => ["contains", "startswith", "endswith"].includes(String(e.matchType || "").toLowerCase()))) {
             if (!entry || entry.invalid) continue;
@@ -17693,16 +17728,39 @@ module.exports = class AlwaysColorText extends Plugin {
           }, EDITOR_PERFORMANCE_CONSTANTS.TYPING_GRACE_PERIOD_MS);
         }
         if (update.docChanged || update.viewportChanged || fileChanged || forceRebuild) {
-          if (plugin.settings.enableSmartUpdates && update.docChanged && !forceRebuild && !fileChanged && !update.viewportChanged) {
+          let skipRebuildForWordCompletion = false;
+          if (plugin.settings.enableWordCompletionColoring && plugin._isTyping && update.docChanged && !forceRebuild && !fileChanged) {
+            let hasWordBoundary = false;
+            let isInsertion = true;
+            update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+              if (fromA !== toA) isInsertion = false;
+              if (inserted.length > 0) {
+                const text = inserted.toString();
+                if (text.includes(" ") || text.includes("\n")) hasWordBoundary = true;
+              }
+            });
+            if (isInsertion && !hasWordBoundary) {
+              skipRebuildForWordCompletion = true;
+            }
+          }
+          if (skipRebuildForWordCompletion) {
+            this.decorations = this.decorations.map(update.changes);
+          } else if (plugin.settings.enableSmartUpdates && update.docChanged && !forceRebuild && !fileChanged && !update.viewportChanged) {
             try {
               this.decorations = this.decorations.map(update.changes);
               const dirtyRanges = [];
               let totalDirtyLength = 0;
               const viewport = update.view.viewport;
+              const selection = update.view.state.selection.main;
+              const activeLine = update.view.state.doc.lineAt(selection.head);
               update.changes.iterChanges((fromA, toA, fromB, toB) => {
                 const startLine = update.view.state.doc.lineAt(fromB);
                 const endLine = update.view.state.doc.lineAt(toB);
                 if (endLine.to < viewport.from || startLine.from > viewport.to) return;
+                if (plugin._isTyping) {
+                  const isActiveLine = startLine.from <= activeLine.to && endLine.to >= activeLine.from;
+                  if (!isActiveLine) return;
+                }
                 const range = { from: startLine.from, to: endLine.to };
                 dirtyRanges.push(range);
                 totalDirtyLength += range.to - range.from;
@@ -18007,6 +18065,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // NEW METHOD: Get all text ranges that are within blacklisted list items
   getBlacklistedListItemRanges(text, baseOffset = 0, filePath = null) {
+    if (this._isTyping) return [];
     const ranges = [];
     try {
       let pos = 0;
@@ -18053,6 +18112,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (this.isWordBlacklisted(token, filePath)) return true;
         }
       }
+      if (this._isTyping) return false;
       let ls = matchStart;
       while (ls > 0 && text[ls - 1] !== "\n") ls--;
       let le = matchEnd;
@@ -18084,6 +18144,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // NEW METHOD: Standard editor processing for small/medium pattern/text sizes
   buildDecoStandard(view, builder, from, to, text, entries, folderEntry, filePath = null) {
+    const MAX_MATCHES_LIMIT = this._isTyping ? 500 : 3e3;
     const entries_copy = entries || this.getSortedWordEntries();
     const allTimeEntries = entries_copy.filter((e) => e && e.presetLabel && (e.presetLabel.includes("Times") || e.pattern.includes("am")));
     debugLog("TIMEPM_ENTRY", `Total entries=${entries_copy.length}, Time entries found=${allTimeEntries.length}`);
@@ -18135,176 +18196,152 @@ module.exports = class AlwaysColorText extends Plugin {
     } catch (e) {
     }
     try {
-      headingRanges = [];
-      let posScan = 0;
-      while (posScan <= text.length) {
-        const lineStartScan = posScan;
-        const nextNLScan = text.indexOf("\n", posScan);
-        const lineEndScan = nextNLScan === -1 ? text.length : nextNLScan;
-        let iScan = lineStartScan;
-        while (iScan < lineEndScan && /\s/.test(text[iScan])) iScan++;
-        let hScan = 0;
-        while (iScan < lineEndScan && text[iScan] === "#" && hScan < 6) {
-          hScan++;
-          iScan++;
-        }
-        if (hScan > 0 && iScan < lineEndScan && text[iScan] === " ") {
-          headingRanges.push({ start: from + lineStartScan, end: from + lineEndScan });
-        }
-        if (nextNLScan === -1) break;
-        posScan = nextNLScan + 1;
-      }
       const we = entries;
-      let pos = 0;
-      while (pos <= text.length) {
-        const lineStart = pos;
-        const nextNL = text.indexOf("\n", pos);
-        const lineEnd = nextNL === -1 ? text.length : nextNL;
-        let i = lineStart;
-        while (i < lineEnd && /\s/.test(text[i])) i++;
-        let hashes = 0;
-        while (i < lineEnd && text[i] === "#" && hashes < 6) {
-          hashes++;
-          i++;
-        }
-        if (hashes > 0 && i < lineEnd && text[i] === " ") {
-          while (i < lineEnd && text[i] === " ") i++;
-          const start = from + i;
+      const headingRegex = /^(#{1,6})\s+(.*)$/gm;
+      let match;
+      while ((match = headingRegex.exec(text)) !== null) {
+        const lineStart = match.index;
+        const lineEnd = match.index + match[0].length;
+        headingRanges.push({ start: from + lineStart, end: from + lineEnd });
+        const hashes = match[1].length;
+        const entryToUse = getEntryForHeadingLevel(we, hashes);
+        if (entryToUse) {
+          const contentStart = lineStart + hashes + 1;
+          let contentStartOffset = hashes;
+          while (contentStartOffset < match[0].length && /\s/.test(match[0][contentStartOffset])) contentStartOffset++;
+          const start = from + match.index + contentStartOffset;
           const end = from + lineEnd;
-          const entryToUse = hashes > 0 ? getEntryForHeadingLevel(we, hashes) : null;
-          if (entryToUse) {
-            if (entryToUse.backgroundColor) {
-              const tc = entryToUse.textColor || "currentColor";
-              const bc = entryToUse.backgroundColor;
-              matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-            } else {
-              const c = entryToUse.color || entryToUse.textColor;
-              if (c) matches.push({ start, end, color: c });
-            }
+          if (entryToUse.backgroundColor) {
+            const tc = entryToUse.textColor || "currentColor";
+            const bc = entryToUse.backgroundColor;
+            matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+          } else {
+            const c = entryToUse.color || entryToUse.textColor;
+            if (c) matches.push({ start, end, color: c });
           }
         }
-        if (nextNL === -1) break;
-        pos = nextNL + 1;
       }
     } catch (e) {
     }
-    try {
-      const we = entries;
-      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      const taskCheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Checked)");
-      const taskUncheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Unchecked)");
-      const numberedEntry = we.find((e) => e && e.presetLabel === "Numbered Lists");
-      const bulletEntry = we.find((e) => e && e.presetLabel === "Bullet Points");
-      const taskCheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Checked)" && !!e.isRegex);
-      const taskUncheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !!e.isRegex);
-      const numberedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Numbered Lists" && !!e.isRegex);
-      const bulletBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Bullet Points" && !!e.isRegex);
-      const taskCheckedAllowed = !filePath || this.shouldColorText(filePath, taskCheckedEntry ? taskCheckedEntry.pattern : null);
-      const taskUncheckedAllowed = !filePath || this.shouldColorText(filePath, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
-      const numberedAllowed = !filePath || this.shouldColorText(filePath, numberedEntry ? numberedEntry.pattern : null);
-      const bulletAllowed = !filePath || this.shouldColorText(filePath, bulletEntry ? bulletEntry.pattern : null);
-      let pos = 0;
-      while (pos <= text.length) {
-        const lineStart = pos;
-        const nextNL = text.indexOf("\n", pos);
-        const lineEnd = nextNL === -1 ? text.length : nextNL;
-        const line = text.substring(lineStart, lineEnd);
-        let matched = false;
-        if (!matched && !taskCheckedBlacklisted && taskCheckedEntry && taskCheckedAllowed) {
-          const pattern = REGEX_CONSTANTS.TASK_CHECKED;
-          const mdMatch = pattern.exec(line);
-          if (mdMatch) {
-            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
-            const contentEnd = lineEnd;
-            const contentText = mdMatch[6] || "";
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
-              const start = from + contentStart;
-              const end = from + contentEnd;
-              if (taskCheckedEntry.backgroundColor) {
-                const tc = taskCheckedEntry.textColor || "currentColor";
-                const bc = taskCheckedEntry.backgroundColor;
-                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-              } else {
-                const c = taskCheckedEntry.color || taskCheckedEntry.textColor;
-                if (c) matches.push({ start, end, color: c });
+    if (!this._isTyping) {
+      try {
+        const we = entries;
+        const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+        const taskCheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Checked)");
+        const taskUncheckedEntry = we.find((e) => e && e.presetLabel === "Task List (Unchecked)");
+        const numberedEntry = we.find((e) => e && e.presetLabel === "Numbered Lists");
+        const bulletEntry = we.find((e) => e && e.presetLabel === "Bullet Points");
+        const taskCheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Checked)" && !!e.isRegex);
+        const taskUncheckedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !!e.isRegex);
+        const numberedBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Numbered Lists" && !!e.isRegex);
+        const bulletBlacklisted = !!blEntries.find((e) => e && e.presetLabel === "Bullet Points" && !!e.isRegex);
+        const taskCheckedAllowed = !filePath || this.shouldColorText(filePath, taskCheckedEntry ? taskCheckedEntry.pattern : null);
+        const taskUncheckedAllowed = !filePath || this.shouldColorText(filePath, taskUncheckedEntry ? taskUncheckedEntry.pattern : null);
+        const numberedAllowed = !filePath || this.shouldColorText(filePath, numberedEntry ? numberedEntry.pattern : null);
+        const bulletAllowed = !filePath || this.shouldColorText(filePath, bulletEntry ? bulletEntry.pattern : null);
+        let pos = 0;
+        while (pos <= text.length) {
+          const lineStart = pos;
+          const nextNL = text.indexOf("\n", pos);
+          const lineEnd = nextNL === -1 ? text.length : nextNL;
+          const line = text.substring(lineStart, lineEnd);
+          let matched = false;
+          if (!matched && !taskCheckedBlacklisted && taskCheckedEntry && taskCheckedAllowed) {
+            const pattern = REGEX_CONSTANTS.TASK_CHECKED;
+            const mdMatch = pattern.exec(line);
+            if (mdMatch) {
+              const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
+              const contentEnd = lineEnd;
+              const contentText = mdMatch[6] || "";
+              const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+              if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
+                const start = from + contentStart;
+                const end = from + contentEnd;
+                if (taskCheckedEntry.backgroundColor) {
+                  const tc = taskCheckedEntry.textColor || "currentColor";
+                  const bc = taskCheckedEntry.backgroundColor;
+                  matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                } else {
+                  const c = taskCheckedEntry.color || taskCheckedEntry.textColor;
+                  if (c) matches.push({ start, end, color: c });
+                }
+                matched = true;
               }
-              matched = true;
             }
           }
-        }
-        if (!matched && !taskUncheckedBlacklisted && taskUncheckedEntry && taskUncheckedAllowed) {
-          const pattern = /^(\s*)([\-\*])(\s+)(\[\s\])(\s+)(.*)$/;
-          const mdMatch = pattern.exec(line);
-          if (mdMatch) {
-            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
-            const contentEnd = lineEnd;
-            const contentText = mdMatch[6] || "";
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
-              const start = from + contentStart;
-              const end = from + contentEnd;
-              if (taskUncheckedEntry.backgroundColor) {
-                const tc = taskUncheckedEntry.textColor || "currentColor";
-                const bc = taskUncheckedEntry.backgroundColor;
-                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-              } else {
-                const c = taskUncheckedEntry.color || taskUncheckedEntry.textColor;
-                if (c) matches.push({ start, end, color: c });
+          if (!matched && !taskUncheckedBlacklisted && taskUncheckedEntry && taskUncheckedAllowed) {
+            const pattern = /^(\s*)([\-\*])(\s+)(\[\s\])(\s+)(.*)$/;
+            const mdMatch = pattern.exec(line);
+            if (mdMatch) {
+              const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length + mdMatch[4].length + mdMatch[5].length);
+              const contentEnd = lineEnd;
+              const contentText = mdMatch[6] || "";
+              const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+              if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
+                const start = from + contentStart;
+                const end = from + contentEnd;
+                if (taskUncheckedEntry.backgroundColor) {
+                  const tc = taskUncheckedEntry.textColor || "currentColor";
+                  const bc = taskUncheckedEntry.backgroundColor;
+                  matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                } else {
+                  const c = taskUncheckedEntry.color || taskUncheckedEntry.textColor;
+                  if (c) matches.push({ start, end, color: c });
+                }
+                matched = true;
               }
-              matched = true;
             }
           }
-        }
-        if (!matched && !numberedBlacklisted && numberedEntry && numberedAllowed) {
-          const pattern = REGEX_CONSTANTS.NUMBERED_LIST;
-          const mdMatch = pattern.exec(line);
-          if (mdMatch) {
-            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
-            const contentEnd = lineEnd;
-            const contentText = mdMatch[4] || "";
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
-              const start = from + contentStart;
-              const end = from + contentEnd;
-              if (numberedEntry.backgroundColor) {
-                const tc = numberedEntry.textColor || "currentColor";
-                const bc = numberedEntry.backgroundColor;
-                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-              } else {
-                const c = numberedEntry.color || numberedEntry.textColor;
-                if (c) matches.push({ start, end, color: c });
+          if (!matched && !numberedBlacklisted && numberedEntry && numberedAllowed) {
+            const pattern = REGEX_CONSTANTS.NUMBERED_LIST;
+            const mdMatch = pattern.exec(line);
+            if (mdMatch) {
+              const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
+              const contentEnd = lineEnd;
+              const contentText = mdMatch[4] || "";
+              const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+              if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
+                const start = from + contentStart;
+                const end = from + contentEnd;
+                if (numberedEntry.backgroundColor) {
+                  const tc = numberedEntry.textColor || "currentColor";
+                  const bc = numberedEntry.backgroundColor;
+                  matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                } else {
+                  const c = numberedEntry.color || numberedEntry.textColor;
+                  if (c) matches.push({ start, end, color: c });
+                }
+                matched = true;
               }
-              matched = true;
             }
           }
-        }
-        if (!matched && !bulletBlacklisted && bulletEntry && bulletAllowed) {
-          const mdMatch = REGEX_CONSTANTS.BULLET_POINT.exec(line);
-          if (mdMatch) {
-            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
-            const contentEnd = lineEnd;
-            const contentText = mdMatch[4] || "";
-            const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
-              const start = from + contentStart;
-              const end = from + contentEnd;
-              if (bulletEntry.backgroundColor) {
-                const tc = bulletEntry.textColor || "currentColor";
-                const bc = bulletEntry.backgroundColor;
-                matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
-              } else {
-                const c = bulletEntry.color || bulletEntry.textColor;
-                if (c) matches.push({ start, end, color: c });
+          if (!matched && !bulletBlacklisted && bulletEntry && bulletAllowed) {
+            const mdMatch = REGEX_CONSTANTS.BULLET_POINT.exec(line);
+            if (mdMatch) {
+              const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
+              const contentEnd = lineEnd;
+              const contentText = mdMatch[4] || "";
+              const lineBlacklisted = this.isLineBlacklistedByRegex(line, filePath);
+              if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
+                const start = from + contentStart;
+                const end = from + contentEnd;
+                if (bulletEntry.backgroundColor) {
+                  const tc = bulletEntry.textColor || "currentColor";
+                  const bc = bulletEntry.backgroundColor;
+                  matches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true });
+                } else {
+                  const c = bulletEntry.color || bulletEntry.textColor;
+                  if (c) matches.push({ start, end, color: c });
+                }
+                matched = true;
               }
-              matched = true;
             }
           }
+          if (nextNL === -1) break;
+          pos = nextNL + 1;
         }
-        if (nextNL === -1) break;
-        pos = nextNL + 1;
+      } catch (e) {
       }
-    } catch (e) {
     }
     const blacklistedListRanges = this.getBlacklistedListItemRanges(text, from, filePath);
     let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
@@ -18383,9 +18420,9 @@ module.exports = class AlwaysColorText extends Plugin {
           isTextBg: true,
           entryRef: entry
         });
-        if (matches.length > 3e3) break;
+        if (matches.length > MAX_MATCHES_LIMIT) break;
       }
-      if (matches.length > 3e3) break;
+      if (matches.length > MAX_MATCHES_LIMIT) break;
     }
     for (const entry of entries_copy) {
       if (!entry || entry.invalid) continue;
@@ -18880,9 +18917,17 @@ module.exports = class AlwaysColorText extends Plugin {
     const startTime = performance.now();
     const TIME_BUDGET_MS = 12;
     const tree2 = syntaxTreeFn && view && view.state ? syntaxTreeFn(view.state) : null;
+    const activeLineRanges = [];
+    if (view && view.state && view.state.selection) {
+      const ranges = view.state.selection.ranges;
+      for (const range of ranges) {
+        const line = view.state.doc.lineAt(range.head);
+        activeLineRanges.push({ start: line.from, end: line.to });
+      }
+    }
     const CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
     const TEXT_CHUNK_SIZE = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
-    const MAX_MATCHES = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.LIGHTWEIGHT_MAX_TOTAL_MATCHES : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
+    const MAX_MATCHES = this._isTyping ? 500 : this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.LIGHTWEIGHT_MAX_TOTAL_MATCHES : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
     let allMatches = [];
     try {
       const we = entries;
@@ -18923,55 +18968,27 @@ module.exports = class AlwaysColorText extends Plugin {
     let headingRanges = [];
     let hasHeadingBlacklist = false;
     try {
-      headingRanges = [];
-      let posScan = 0;
-      while (posScan <= text.length) {
-        const lineStartScan = posScan;
-        const nextNLScan = text.indexOf("\n", posScan);
-        const lineEndScan = nextNLScan === -1 ? text.length : nextNLScan;
-        let iScan = lineStartScan;
-        while (iScan < lineEndScan && /\s/.test(text[iScan])) iScan++;
-        let hScan = 0;
-        while (iScan < lineEndScan && text[iScan] === "#" && hScan < 6) {
-          hScan++;
-          iScan++;
-        }
-        if (hScan > 0 && iScan < lineEndScan && text[iScan] === " ") {
-          headingRanges.push({ start: from + lineStartScan, end: from + lineEndScan });
-        }
-        if (nextNLScan === -1) break;
-        posScan = nextNLScan + 1;
-      }
       const we = entries;
-      let pos = 0;
-      while (pos <= text.length) {
-        const lineStart = pos;
-        const nextNL = text.indexOf("\n", pos);
-        const lineEnd = nextNL === -1 ? text.length : nextNL;
-        let i = lineStart;
-        while (i < lineEnd && /\s/.test(text[i])) i++;
-        let hashes = 0;
-        while (i < lineEnd && text[i] === "#" && hashes < 6) {
-          hashes++;
-          i++;
-        }
-        if (hashes > 0 && i < lineEnd && text[i] === " ") {
+      const headingRegex = /^(#{1,6})\s+(.*)$/gm;
+      let match;
+      while ((match = headingRegex.exec(text)) !== null) {
+        const lineStart = match.index;
+        const lineEnd = match.index + match[0].length;
+        headingRanges.push({ start: from + lineStart, end: from + lineEnd });
+        const hashes = match[1].length;
+        const entryToUse = getEntryForHeadingLevel(we, hashes);
+        if (entryToUse) {
           const start = from + lineStart;
           const end = from + lineEnd;
-          const entryToUse = hashes > 0 ? getEntryForHeadingLevel(we, hashes) : null;
-          if (entryToUse) {
-            if (entryToUse.backgroundColor) {
-              const tc = entryToUse.textColor || "currentColor";
-              const bc = entryToUse.backgroundColor;
-              allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: entryToUse });
-            } else {
-              const c = entryToUse.color || entryToUse.textColor;
-              if (c) allMatches.push({ start, end, color: c, entryRef: entryToUse });
-            }
+          if (entryToUse.backgroundColor) {
+            const tc = entryToUse.textColor || "currentColor";
+            const bc = entryToUse.backgroundColor;
+            allMatches.push({ start, end, textColor: tc, backgroundColor: bc, isTextBg: true, entryRef: entryToUse });
+          } else {
+            const c = entryToUse.color || entryToUse.textColor;
+            if (c) allMatches.push({ start, end, color: c, entryRef: entryToUse });
           }
         }
-        if (nextNL === -1) break;
-        pos = nextNL + 1;
       }
     } catch (e) {
     }
@@ -19116,6 +19133,10 @@ module.exports = class AlwaysColorText extends Plugin {
         while (match = regex.exec(text)) {
           const matchStart = match.index;
           const matchEnd = match.index + match[0].length;
+          if (this.settings.enableWordCompletionColoring) {
+            const nextChar = text[matchEnd];
+            if (!nextChar || !/[\s]/.test(nextChar)) continue;
+          }
           if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry)) {
             try {
               if (typeof regex.lastIndex === "number" && regex.lastIndex === match.index) regex.lastIndex++;
@@ -19186,7 +19207,7 @@ module.exports = class AlwaysColorText extends Plugin {
       debugLog("PATTERN_PROCESSING", `Starting pattern processing for ${regexEntries.length} patterns`);
       for (let i = 0; i < regexEntries.length; i += CHUNK_SIZE) {
         const chunk = regexEntries.slice(i, i + CHUNK_SIZE);
-        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
+        const chunkMatches = this.processPatternChunk(text, from, chunk, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath, activeLineRanges);
         allMatches = allMatches.concat(chunkMatches);
         if (allMatches.length > MAX_MATCHES) {
           break;
@@ -19201,25 +19222,25 @@ module.exports = class AlwaysColorText extends Plugin {
         const chunkEnd = Math.min(pos + TEXT_CHUNK_SIZE, text.length);
         const chunkText = text.slice(pos, chunkEnd);
         const chunkFrom = from + pos;
-        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, regexEntries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
+        const chunkMatches = this.processTextChunk(chunkText, chunkFrom, regexEntries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath, activeLineRanges);
         allMatches = allMatches.concat(chunkMatches);
         if (allMatches.length > MAX_MATCHES) {
           break;
         }
       }
     } else {
-      const chunkMatches = this.processPatternChunk(text, from, regexEntries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath);
+      const chunkMatches = this.processPatternChunk(text, from, regexEntries, folderEntry, allMatches, hasHeadingBlacklist ? headingRanges : [], blacklistedListRanges, filePath, activeLineRanges);
       allMatches = allMatches.concat(chunkMatches);
     }
     return this.applyDecorationsFromMatches(builder, allMatches, folderEntry, tree2);
   }
   // NEW METHOD: Process a chunk of patterns
-  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null) {
+  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null, activeLineRanges = []) {
     const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     const matches = [];
     for (const entry of patternChunk) {
       if (!entry || entry.invalid) continue;
-      const isPartialEntry = !entry.isRegex && !entry.isTextBg && (!entry.styleType || entry.styleType === "text") && ["contains", "startswith", "endswith"].includes(String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern);
+      const isPartialEntry = !entry.isRegex && ["contains", "startswith", "endswith"].includes(String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(entry.pattern);
       if (isPartialEntry) continue;
       if (entry.fastTest && !entry.fastTest(text)) continue;
       const regex = entry.regex;
@@ -19234,6 +19255,25 @@ module.exports = class AlwaysColorText extends Plugin {
         const matchedText = match[0];
         const matchStart = baseFrom + match.index;
         const matchEnd = baseFrom + match.index + matchedText.length;
+        if (this.settings.enableWordCompletionColoring) {
+          let isActiveLine = false;
+          if (activeLineRanges.length > 0) {
+            for (const range of activeLineRanges) {
+              if (matchStart >= range.start && matchStart <= range.end) {
+                isActiveLine = true;
+                break;
+              }
+            }
+          }
+          if (isActiveLine) {
+            let fullWordEnd = match.index + matchedText.length;
+            while (fullWordEnd < text.length && (/[A-Za-z0-9]/.test(text[fullWordEnd]) || text[fullWordEnd] === "-" || text[fullWordEnd] === "'")) {
+              fullWordEnd++;
+            }
+            const nextChar = text[fullWordEnd];
+            if (!nextChar || !/[\s]/.test(nextChar)) continue;
+          }
+        }
         if (this.isMatchInBlacklistedRange(matchStart, matchEnd, blacklistedListRanges)) {
           continue;
         }
@@ -19288,7 +19328,7 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       if (matches.length > 2e3) break;
     }
-    const partialEntries = patternChunk.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
+    const partialEntries = patternChunk.filter((e) => e && !e.invalid && !e.isRegex && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern));
     const wordPartialEntries = partialEntries.filter((e) => this.isLatinWordPattern(e.pattern));
     const phrasePartialEntries = partialEntries.filter((e) => !this.isLatinWordPattern(e.pattern));
     if (partialEntries.length > 0 && matches.length < 2e3) {
@@ -19315,6 +19355,22 @@ module.exports = class AlwaysColorText extends Plugin {
         const w = match[0];
         const wStart = match.index;
         const wEnd = wStart + w.length;
+        if (this.settings.enableWordCompletionColoring) {
+          let isActiveLine = false;
+          const absStart = baseFrom + wStart;
+          if (activeLineRanges.length > 0) {
+            for (const range of activeLineRanges) {
+              if (absStart >= range.start && absStart <= range.end) {
+                isActiveLine = true;
+                break;
+              }
+            }
+          }
+          if (isActiveLine) {
+            const nextChar = text[wEnd];
+            if (!nextChar || !/[\s]/.test(nextChar)) continue;
+          }
+        }
         if (this.isMatchInBlacklistedRange(baseFrom + wStart, baseFrom + wEnd, blacklistedListRanges)) continue;
         for (const entry of wordPartialEntries) {
           if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
@@ -19464,15 +19520,14 @@ module.exports = class AlwaysColorText extends Plugin {
     return matches;
   }
   // NEW METHOD: Process a chunk of text
-  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null) {
+  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null, activeLineRanges = []) {
     const matches = [];
     const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     for (const entry of entries) {
       if (!entry || entry.invalid) continue;
-      const isTextOnly = !entry.isTextBg && (!entry.styleType || entry.styleType === "text");
       const actualMatchType = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
       const isPartialMatch = ["contains", "startswith", "endswith"].includes(actualMatchType);
-      if (!entry.isRegex && isTextOnly && isPartialMatch && this.isLatinWordPattern(entry.pattern)) continue;
+      if (!entry.isRegex && isPartialMatch && this.isLatinWordPattern(entry.pattern)) continue;
       if (entry.fastTest && !entry.fastTest(chunkText)) continue;
       const regex = entry.regex;
       if (!regex) continue;
@@ -19486,6 +19541,25 @@ module.exports = class AlwaysColorText extends Plugin {
         const matchedText = match[0];
         const matchStart = chunkFrom + match.index;
         const matchEnd = chunkFrom + match.index + matchedText.length;
+        if (this.settings.enableWordCompletionColoring) {
+          let isActiveLine = false;
+          if (activeLineRanges.length > 0) {
+            for (const range of activeLineRanges) {
+              if (matchStart >= range.start && matchStart <= range.end) {
+                isActiveLine = true;
+                break;
+              }
+            }
+          }
+          if (isActiveLine) {
+            let fullWordEnd = match.index + matchedText.length;
+            while (fullWordEnd < chunkText.length && (/[A-Za-z0-9]/.test(chunkText[fullWordEnd]) || chunkText[fullWordEnd] === "-" || chunkText[fullWordEnd] === "'")) {
+              fullWordEnd++;
+            }
+            const nextChar = chunkText[fullWordEnd];
+            if (!nextChar || !/[\s]/.test(nextChar)) continue;
+          }
+        }
         if (this.isMatchInBlacklistedRange(matchStart, matchEnd, blacklistedListRanges)) {
           continue;
         }
@@ -19539,7 +19613,7 @@ module.exports = class AlwaysColorText extends Plugin {
       if (matches.length > 2e3) break;
     }
     if (matches.length < 2e3) {
-      const textOnlyEntries = entries.filter((e) => e && !e.invalid && !e.isRegex && (!e.styleType || e.styleType === "text") && !e.isTextBg && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
+      const textOnlyEntries = entries.filter((e) => e && !e.invalid && !e.isRegex && ["contains", "startswith", "endswith"].includes(String(e.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase()) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern));
       if (textOnlyEntries.length > 0) {
         for (const entry of textOnlyEntries) {
           const mt = String(entry.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
@@ -19564,6 +19638,22 @@ module.exports = class AlwaysColorText extends Plugin {
           const w = match[0];
           const wStart = match.index;
           const wEnd = wStart + w.length;
+          if (this.settings.enableWordCompletionColoring) {
+            let isActiveLine = false;
+            const absStart = chunkFrom + wStart;
+            if (activeLineRanges.length > 0) {
+              for (const range of activeLineRanges) {
+                if (absStart >= range.start && absStart <= range.end) {
+                  isActiveLine = true;
+                  break;
+                }
+              }
+            }
+            if (isActiveLine) {
+              const nextChar = chunkText[wEnd];
+              if (!nextChar || !/[\s]/.test(nextChar)) continue;
+            }
+          }
           if (this.isWordBlacklisted(w, filePath)) continue;
           if (this.isMatchInBlacklistedRange(chunkFrom + wStart, chunkFrom + wEnd, blacklistedListRanges)) continue;
           for (const entry of textOnlyEntries) {
@@ -28113,6 +28203,18 @@ var ColorSettingTab = class extends PluginSettingTab {
       }));
       new Setting(containerEl2).setName(this.plugin.t("smart_update_mode", "Smart Updates (Experimental)")).setDesc(this.plugin.t("smart_update_mode_desc", "Only updates coloring for active line while typing and freezes other lines to improve performance.")).addToggle((t) => t.setValue(this.plugin.settings.enableSmartUpdates).onChange(async (v) => {
         this.plugin.settings.enableSmartUpdates = v;
+        await this.debouncedSaveSettings();
+        try {
+          this.plugin.reconfigureEditorExtensions();
+        } catch (e) {
+        }
+        try {
+          this.plugin.forceRefreshAllEditors();
+        } catch (e) {
+        }
+      }));
+      new Setting(containerEl2).setName(this.plugin.t("word_completion_coloring", "Word Completion Coloring (Experimental)")).setDesc(this.plugin.t("word_completion_coloring_desc", "Only color words after a space is typed. Prevents partial matches from being colored while typing.")).addToggle((t) => t.setValue(this.plugin.settings.enableWordCompletionColoring).onChange(async (v) => {
+        this.plugin.settings.enableWordCompletionColoring = v;
         await this.debouncedSaveSettings();
         try {
           this.plugin.reconfigureEditorExtensions();

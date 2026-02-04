@@ -75,6 +75,8 @@ module.exports = {
   "matching_behavior_header": "Comportamento di corrispondenza",
   "smart_update_mode": "Aggiornamenti intelligenti (Sperimentale)",
   "smart_update_mode_desc": "Aggiorna la colorazione solo per la riga attiva durante la digitazione e blocca le altre righe per migliorare le prestazioni.",
+    "word_completion_coloring": "Colorazione al completamento della parola (Sperimentale)",
+    "word_completion_coloring_desc": "Colora le parole solo dopo aver digitato uno spazio. Impedisce che le corrispondenze parziali vengano colorate durante la digitazione.",
   "light_mode_fixer": "Correttore colore testo modalità chiara",
   "dark_mode_fixer": "Correttore colore testo modalità scura",
   "command_manage_advanced_rules": "gestisci regole specifiche di inclusione/esclusione",

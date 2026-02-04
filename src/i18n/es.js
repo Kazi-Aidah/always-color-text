@@ -75,6 +75,8 @@ module.exports = {
   "matching_behavior_header": "Comportamiento de coincidencia",
   "smart_update_mode": "Actualizaciones inteligentes (Experimental)",
   "smart_update_mode_desc": "Solo actualiza el coloreado de la línea activa mientras se escribe y congela otras líneas para mejorar el rendimiento.",
+  "word_completion_coloring": "Coloreado al completar palabra (Experimental)",
+  "word_completion_coloring_desc": "Solo colorea palabras después de escribir un espacio. Evita que las coincidencias parciales se coloreen mientras se escribe.",
   "light_mode_fixer": "Corrector de color de texto en modo claro",
   "dark_mode_fixer": "Corrector de color de texto en modo oscuro",
   "command_manage_advanced_rules": "gestionar reglas específicas de inclusión/exclusión",

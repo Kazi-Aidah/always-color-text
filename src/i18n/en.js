@@ -162,6 +162,8 @@ module.exports = {
   "matching_behavior_header": "Matching Behavior",
   "smart_update_mode": "Smart Updates (Experimental)",
   "smart_update_mode_desc": "Intelligently updates only visible, changed lines while typing. Significantly improves typing performance.",
+  "word_completion_coloring": "Word Completion Coloring (Experimental)",
+  "word_completion_coloring_desc": "Only color words after a space is typed. Prevents partial matches from being colored while typing.",
   "light_mode_fixer": "Light Mode Text Color Fixer",
   "dark_mode_fixer": "Dark Mode Text Color Fixer",
   "color_in_live_preview_mode": "Color in Live Preview Mode",

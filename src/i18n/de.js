@@ -156,6 +156,8 @@ module.exports = {
   "matching_behavior_header": "Übereinstimmungsverhalten",
   "smart_update_mode": "Intelligente Aktualisierungen (Experimentell)",
   "smart_update_mode_desc": "Aktualisiert intelligent nur sichtbare, geänderte Zeilen während des Tippens. Verbessert die Tippleistung erheblich.",
+    "word_completion_coloring": "Wortvervollständigungs-Färbung (Experimentell)",
+    "word_completion_coloring_desc": "Färbt Wörter erst nach Eingabe eines Leerzeichens. Verhindert das Färben von Teilübereinstimmungen während des Tippens.",
   "light_mode_fixer": "Textfarbkorrektur für hellen Modus",
   "dark_mode_fixer": "Textfarbkorrektur für dunklen Modus",
   "color_in_live_preview_mode": "Im Live-Vorschau-Modus färben",
