@@ -181,8 +181,9 @@ Ensure your colors look great in any theme!
 ### Optimization Settings
 - **Lightweight Mode**: Skips partial match expansion and uses a stricter match limit for maximum performance.
 - **Smart Updates**: Only updates active lines of the document to keep the editor responsive.
+- **Word Completion Color:** Renders text colors only after a space has been inputted, helps significantly with typing performance. *(This improves typing performance the most!)*
 
-### Reading Mode Note
+### Reading Mode Note:
 For best results in Reading mode, enable **"Force full render"** in settings. This ensures smooth coloring but is disabled by default to prevent potential performance issues.
 
 ---

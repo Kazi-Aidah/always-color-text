@@ -5518,7 +5518,7 @@ function getEntryForHeadingLevel(entries, level) {
   }
   return null;
 }
-var IS_DEVELOPMENT = true;
+var IS_DEVELOPMENT = false;
 var debugLog = (tag, ...args) => {
 };
 var debugError = (tag, ...args) => {
@@ -6244,6 +6244,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
     } catch (_) {
     }
     this._isRightClick = false;
+    super.onClose();
   }
   getItems() {
     const we = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
@@ -19953,6 +19954,36 @@ module.exports = class AlwaysColorText extends Plugin {
           });
           try {
             this._viewportObservers.clear();
+          } catch (e) {
+          }
+        }
+      } catch (e) {
+      }
+      try {
+        if (this._basesObservers && typeof this._basesObservers.forEach === "function") {
+          this._basesObservers.forEach((obs, key) => {
+            try {
+              obs.disconnect();
+            } catch (e) {
+            }
+          });
+          try {
+            this._basesObservers.clear();
+          } catch (e) {
+          }
+        }
+      } catch (e) {
+      }
+      try {
+        if (this._lpObservers && typeof this._lpObservers.forEach === "function") {
+          this._lpObservers.forEach((obs, key) => {
+            try {
+              obs.disconnect();
+            } catch (e) {
+            }
+          });
+          try {
+            this._lpObservers.clear();
           } catch (e) {
           }
         }

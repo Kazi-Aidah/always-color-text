@@ -131,7 +131,7 @@ function getEntryForHeadingLevel(entries, level) {
 }
 
 // Development mode flag
-const IS_DEVELOPMENT = true;
+const IS_DEVELOPMENT = false;
 
 // Helper function for conditional debug logging
 const debugLog = (tag, ...args) => {
@@ -955,6 +955,7 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
       }
     } catch (_) { }
     this._isRightClick = false;
+    super.onClose();
   }
   getItems() {
     const we = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
@@ -15402,6 +15403,26 @@ module.exports = class AlwaysColorText extends Plugin {
             try { obs.disconnect(); } catch (e) { }
           });
           try { this._viewportObservers.clear(); } catch (e) { }
+        }
+      } catch (e) { }
+
+      // Disconnect bases observers
+      try {
+        if (this._basesObservers && typeof this._basesObservers.forEach === 'function') {
+          this._basesObservers.forEach((obs, key) => {
+            try { obs.disconnect(); } catch (e) { }
+          });
+          try { this._basesObservers.clear(); } catch (e) { }
+        }
+      } catch (e) { }
+
+      // Disconnect LP observers
+      try {
+        if (this._lpObservers && typeof this._lpObservers.forEach === 'function') {
+          this._lpObservers.forEach((obs, key) => {
+            try { obs.disconnect(); } catch (e) { }
+          });
+          try { this._lpObservers.clear(); } catch (e) { }
         }
       } catch (e) { }
 
