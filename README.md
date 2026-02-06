@@ -61,7 +61,7 @@ Customize the styling and rules for each colored entry via "Edit Entry Details":
 
 - **Highlight Styling**  
   Adjust borders, rounded corners, transparency, and more per entry. Customize the look of individual entries without affecting others.
-  ![Edit Highlight Styling Modal](assets/edit-highlight-styling-modal.png)
+  ![Edit Highlight Styling Modal](assets/modal-highlight-styling.png)
 
 - **Inclusion / Exclusion Rules**  
   Exclude specific folders, files, or **files with specific tags** from coloring, or limit coloring to specific folders.
