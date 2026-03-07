@@ -3908,12 +3908,12 @@ module.exports = class AlwaysColorText extends Plugin {
             });
           }
 
-          // Check if selected text is wrapped in HTML span with color or class
-          const isHtmlColor =
-            /^<span\s+(?:style="[^"]*(?:color|background-color):[^"]*"|class="always-color-text-highlight"[^>]*)(?:>)(.*)<\/span>$/s.test(
+          // Check if selection contains any colored/highlighted span(s)
+          const hasColorSpan =
+            /<span\b[^>]*(?:style="[^"]*(?:color|background-color)[^"]*"|class="[^"]*\balways-color-text-highlight\b[^"]*")[^>]*>/i.test(
               selectedText,
             );
-          if (isHtmlColor) {
+          if (hasColorSpan) {
             menu.addItem((item) => {
               item
                 .setTitle(
@@ -3921,14 +3921,11 @@ module.exports = class AlwaysColorText extends Plugin {
                 )
                 .setIcon("trash")
                 .onClick(() => {
-                  // Extract inner text using regex to be safe, or just DOM parser if needed,
-                  // but regex is faster for this specific format
-                  const match = selectedText.match(
-                    /^<span\s+(?:[^>]+)>(.*)<\/span>$/s,
-                  );
-                  if (match && match[1]) {
-                    editor.replaceSelection(match[1]);
-                  }
+                  // Remove ALL span wrappers within the selection, preserving inner text
+                  const stripped = String(selectedText)
+                    .replace(/<span\b[^>]*>/gi, "")
+                    .replace(/<\/span>/gi, "");
+                  editor.replaceSelection(stripped);
                 });
             });
           }

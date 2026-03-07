@@ -8685,20 +8685,16 @@ module.exports = class AlwaysColorText extends Plugin {
               });
             });
           }
-          const isHtmlColor = /^<span\s+(?:style="[^"]*(?:color|background-color):[^"]*"|class="always-color-text-highlight"[^>]*)(?:>)(.*)<\/span>$/s.test(
+          const hasColorSpan = /<span\b[^>]*(?:style="[^"]*(?:color|background-color)[^"]*"|class="[^"]*\balways-color-text-highlight\b[^"]*")[^>]*>/i.test(
             selectedText
           );
-          if (isHtmlColor) {
+          if (hasColorSpan) {
             menu.addItem((item) => {
               item.setTitle(
                 this.t("menu_remove_inline_color", "Remove Inline Color")
               ).setIcon("trash").onClick(() => {
-                const match = selectedText.match(
-                  /^<span\s+(?:[^>]+)>(.*)<\/span>$/s
-                );
-                if (match && match[1]) {
-                  editor.replaceSelection(match[1]);
-                }
+                const stripped = String(selectedText).replace(/<span\b[^>]*>/gi, "").replace(/<\/span>/gi, "");
+                editor.replaceSelection(stripped);
               });
             });
           }
