@@ -3818,32 +3818,48 @@ module.exports = class AlwaysColorText extends Plugin {
                             : null;
                       if (!bg) return;
                       let style = "";
-                      if (this.settings.quickHighlightUseGlobalStyle) {
-                        const rgba = this.hexToRgba(
-                          bg,
-                          this.settings.backgroundOpacity ?? 25,
-                        );
-                        const radius = this.settings.highlightBorderRadius ?? 8;
-                        const pad =
-                          this.settings.highlightHorizontalPadding ?? 4;
-                        const border = this.generateBorderStyle(null, bg);
-                        style = `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
-                      } else if (this.settings.quickHighlightStyleEnable) {
-                        const hexWithAlpha = this.hexToHexWithAlpha(
-                          bg,
-                          this.settings.quickHighlightOpacity ?? 25,
-                        );
-                        const radius =
-                          this.settings.quickHighlightBorderRadius ?? 8;
-                        const pad =
-                          this.settings.quickHighlightHorizontalPadding ?? 4;
-                        const vpad =
-                          this.settings.quickHighlightVerticalPadding ?? 0;
-                        const border = this.generateOnceBorderStyle(bg);
-                        style = `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px; padding-top: ${vpad}px; padding-bottom: ${vpad}px;${border}`;
+                      const qo = result && result.quickOnceStyle;
+                      if (qo) {
+                        const params = this.getHighlightParams(qo);
+                        const rgba = this.hexToRgba(bg, params.opacity ?? 25);
+                        const border = this.generateBorderStyle(null, bg, qo);
+                        const hPad = params.hPad ?? 4;
+                        const vPad = params.vPad ?? 0;
+                        const radius = params.radius ?? 8;
+                        const bdb =
+                          this.settings.enableBoxDecorationBreak ?? true
+                            ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;"
+                            : "";
+                        style = `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
                       } else {
-                        const rgba = this.hexToRgba(bg, 25);
-                        style = `background-color: ${rgba};`;
+                        if (this.settings.quickHighlightUseGlobalStyle) {
+                          const rgba = this.hexToRgba(
+                            bg,
+                            this.settings.backgroundOpacity ?? 25,
+                          );
+                          const radius =
+                            this.settings.highlightBorderRadius ?? 8;
+                          const pad =
+                            this.settings.highlightHorizontalPadding ?? 4;
+                          const border = this.generateBorderStyle(null, bg);
+                          style = `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
+                        } else if (this.settings.quickHighlightStyleEnable) {
+                          const hexWithAlpha = this.hexToHexWithAlpha(
+                            bg,
+                            this.settings.quickHighlightOpacity ?? 25,
+                          );
+                          const radius =
+                            this.settings.quickHighlightBorderRadius ?? 8;
+                          const pad =
+                            this.settings.quickHighlightHorizontalPadding ?? 4;
+                          const vpad =
+                            this.settings.quickHighlightVerticalPadding ?? 0;
+                          const border = this.generateOnceBorderStyle(bg);
+                          style = `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px; padding-top: ${vpad}px; padding-bottom: ${vpad}px;${border}`;
+                        } else {
+                          const rgba = this.hexToRgba(bg, 25);
+                          style = `background-color: ${rgba};`;
+                        }
                       }
                       const html = `<span style="${style}">${selectedText}</span>`;
                       editor.replaceSelection(html);
@@ -3890,36 +3906,61 @@ module.exports = class AlwaysColorText extends Plugin {
                       if (!tc && !bg) return;
 
                       let style = "";
-                      if (tc) style += `color: ${tc}; `;
-
-                      if (bg) {
-                        if (this.settings.quickHighlightUseGlobalStyle) {
+                      const qo = result && result.quickOnceStyle;
+                      if (qo) {
+                        if (tc) style += `color: ${tc}; `;
+                        if (bg) {
+                          const params = this.getHighlightParams(qo);
                           const rgba = this.hexToRgba(
                             bg,
-                            this.settings.backgroundOpacity ?? 25,
+                            params.opacity ?? 25,
                           );
-                          const radius =
-                            this.settings.highlightBorderRadius ?? 8;
-                          const pad =
-                            this.settings.highlightHorizontalPadding ?? 4;
-                          const border = this.generateBorderStyle(null, bg);
-                          style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
-                        } else if (this.settings.quickHighlightStyleEnable) {
-                          const hexWithAlpha = this.hexToHexWithAlpha(
+                          const border = this.generateBorderStyle(
+                            null,
                             bg,
-                            this.settings.quickHighlightOpacity ?? 25,
+                            qo,
                           );
-                          const radius =
-                            this.settings.quickHighlightBorderRadius ?? 8;
-                          const pad =
-                            this.settings.quickHighlightHorizontalPadding ?? 4;
-                          const vpad =
-                            this.settings.quickHighlightVerticalPadding ?? 0;
-                          const border = this.generateOnceBorderStyle(bg);
-                          style += `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px; padding-top: ${vpad}px; padding-bottom: ${vpad}px;${border}`;
-                        } else {
-                          const rgba = this.hexToRgba(bg, 25);
-                          style += `background-color: ${rgba};`;
+                          const hPad = params.hPad ?? 4;
+                          const vPad = params.vPad ?? 0;
+                          const radius = params.radius ?? 8;
+                          const bdb =
+                            this.settings.enableBoxDecorationBreak ?? true
+                              ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;"
+                              : "";
+                          style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
+                        }
+                      } else {
+                        if (tc) style += `color: ${tc}; `;
+                        if (bg) {
+                          if (this.settings.quickHighlightUseGlobalStyle) {
+                            const rgba = this.hexToRgba(
+                              bg,
+                              this.settings.backgroundOpacity ?? 25,
+                            );
+                            const radius =
+                              this.settings.highlightBorderRadius ?? 8;
+                            const pad =
+                              this.settings.highlightHorizontalPadding ?? 4;
+                            const border = this.generateBorderStyle(null, bg);
+                            style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
+                          } else if (this.settings.quickHighlightStyleEnable) {
+                            const hexWithAlpha = this.hexToHexWithAlpha(
+                              bg,
+                              this.settings.quickHighlightOpacity ?? 25,
+                            );
+                            const radius =
+                              this.settings.quickHighlightBorderRadius ?? 8;
+                            const pad =
+                              this.settings.quickHighlightHorizontalPadding ??
+                              4;
+                            const vpad =
+                              this.settings.quickHighlightVerticalPadding ?? 0;
+                            const border = this.generateOnceBorderStyle(bg);
+                            style += `background-color: ${hexWithAlpha}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px; padding-top: ${vpad}px; padding-bottom: ${vpad}px;${border}`;
+                          } else {
+                            const rgba = this.hexToRgba(bg, 25);
+                            style += `background-color: ${rgba};`;
+                          }
                         }
                       }
 
@@ -24935,6 +24976,8 @@ class HighlightStylingModal extends Modal {
     headerRow.style.gap = "8px";
     headerRow.style.marginBottom = "12px";
     headerRow.style.flexWrap = "wrap";
+    const fromQuickOnce =
+      !!(this._fromQuickOnce || (this.entry && this.entry._quickOnce));
 
     const headerTitle = isGroup
       ? this.plugin.t(
@@ -24949,8 +24992,8 @@ class HighlightStylingModal extends Modal {
     const spacer = headerRow.createDiv();
     spacer.style.flex = "1";
 
-    // Group Select (Only show if NOT editing a group)
-    if (!isGroup) {
+    // Group Select (Only show if NOT editing a group and not from Quick Once)
+    if (!isGroup && !fromQuickOnce) {
       const groupSelect = headerRow.createEl("select");
       groupSelect.style.minWidth = "120px";
       groupSelect.style.border = "1px solid var(--background-modifier-border)";
@@ -25055,15 +25098,18 @@ class HighlightStylingModal extends Modal {
       });
     }
 
-    // Match Select
-    const matchSelect = headerRow.createEl("select");
-    matchSelect.style.minWidth = "120px";
-    matchSelect.style.border = "1px solid var(--background-modifier-border)";
-    matchSelect.style.borderRadius = "4px";
-    matchSelect.style.background = "var(--background-modifier-form-field)";
-    matchSelect.style.textAlign = "center";
+    // Match Select (hide for Quick Once)
+    let matchSelect = null;
+    if (!fromQuickOnce) {
+      matchSelect = headerRow.createEl("select");
+      matchSelect.style.minWidth = "120px";
+      matchSelect.style.border = "1px solid var(--background-modifier-border)";
+      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.background = "var(--background-modifier-form-field)";
+      matchSelect.style.textAlign = "center";
+    }
 
-    if (isGroup) {
+    if (!fromQuickOnce && isGroup) {
       // Group Mode: Include "Match Type (All)" option
       matchSelect.innerHTML = `<option value="per-entry">${this.plugin.t("opt_match_all", "Match Type (All)")}</option>
         <option value="exact">${this.plugin.t("match_option_exact", "exact")}</option>
@@ -25076,7 +25122,7 @@ class HighlightStylingModal extends Modal {
         typeof currentOverride === "string" && currentOverride
           ? currentOverride
           : "per-entry";
-    } else {
+    } else if (!fromQuickOnce) {
       // Entry Mode
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option>
         <option value="contains">${this.plugin.t("match_option_contains", "contains")}</option>
@@ -25106,25 +25152,27 @@ class HighlightStylingModal extends Modal {
       }
     }
 
-    matchSelect.addEventListener("change", async () => {
-      if (!this.entry) return;
-      let value = matchSelect.value;
-      if (value === "startsWith") value = "startswith";
-      if (value === "endsWith") value = "endswith";
+    if (matchSelect) {
+      matchSelect.addEventListener("change", async () => {
+        if (!this.entry) return;
+        let value = matchSelect.value;
+        if (value === "startsWith") value = "startswith";
+        if (value === "endsWith") value = "endswith";
 
-      if (isGroup) {
-        this.entry.matchTypeOverride = value === "per-entry" ? null : value;
-      } else {
-        this.entry.matchType = value;
-      }
+        if (isGroup) {
+          this.entry.matchTypeOverride = value === "per-entry" ? null : value;
+        } else {
+          this.entry.matchType = value;
+        }
 
-      await this.plugin.saveSettings();
-      this.plugin.compileWordEntries();
-      this.plugin.compileTextBgColoringEntries();
-      this.plugin.reconfigureEditorExtensions();
-      this.plugin.forceRefreshAllEditors();
-      this.plugin.triggerActiveDocumentRerender();
-    });
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.triggerActiveDocumentRerender();
+      });
+    }
 
     const topRow = contentEl.createDiv();
     topRow.addClass("act-highlight-top-row");
@@ -25132,6 +25180,7 @@ class HighlightStylingModal extends Modal {
     previewWrap.addClass("act-highlight-preview-wrap");
 
     const words = previewWrap.createDiv();
+    previewWrap.style.display = "block";
     words.style.textAlign = "center";
     words.style.opacity = "0.8";
     words.textContent = this.previewTextOverride
@@ -25562,13 +25611,16 @@ class HighlightStylingModal extends Modal {
         try {
           while (previewWrap.firstChild)
             previewWrap.removeChild(previewWrap.firstChild);
-          const div = document.createElement("div");
-          div.textContent = txt;
-          // Apply opacity if needed, or just plain
-          div.style.opacity = "1";
-          previewWrap.appendChild(div);
+          const span = document.createElement("span");
+          span.textContent = txt;
+          span.style.display = "inline";
+          span.style.opacity = "1";
+          // Keep spans inline so multi-line wrapping can clone highlights correctly
+          previewWrap.appendChild(span);
         } catch (_) {
-          previewWrap.innerHTML = `<div>${escapeHtml(txt)}</div>`;
+          previewWrap.innerHTML = `<span style="display:inline">${escapeHtml(
+            txt,
+          )}</span>`;
         }
         return;
       }
@@ -25590,19 +25642,20 @@ class HighlightStylingModal extends Modal {
         style === "text"
           ? `color:${t};background:transparent;`
           : style === "highlight"
-            ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`
-            : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
+            ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}box-decoration-break: clone; -webkit-box-decoration-break: clone;`
+            : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
       const txt = words.textContent || "";
       while (previewWrap.firstChild)
         previewWrap.removeChild(previewWrap.firstChild);
-      const div = document.createElement("div");
-      div.setAttribute("style", matchStyle);
+      const span = document.createElement("span");
+      span.setAttribute("style", matchStyle);
+      span.style.display = "inline";
       const displayText =
         !isGroup && this.entry && this.entry.isRegex && this.entry.presetLabel
           ? this.entry.presetLabel
           : words.textContent || "";
-      div.textContent = displayText;
-      previewWrap.appendChild(div);
+      span.textContent = displayText;
+      previewWrap.appendChild(span);
     };
     const updatePickerVisibility = () => {
       const style = styleSelect.value;
@@ -26337,6 +26390,7 @@ class EditEntryModal extends Modal {
 
     const preview = row2.createDiv();
     preview.addClass("act-edit-entry-preview");
+    preview.style.display = "block";
     preview.style.flex = "1";
     preview.style.border = "1px dashed var(--background-modifier-border)";
     preview.style.borderRadius = "4px";
@@ -26344,7 +26398,7 @@ class EditEntryModal extends Modal {
     preview.style.background = "var(--background-modifier-form-field)";
     preview.style.whiteSpace = "pre-wrap";
     preview.style.wordWrap = "break-word";
-    preview.style.minHeight = "60px";
+    // preview.style.minHeight = "60px";
 
     // Right column: controls
     const rightColumn = mainContainer.createDiv();
@@ -26833,9 +26887,10 @@ class EditEntryModal extends Modal {
           : style === "highlight"
             ? this.plugin.generateBorderStyle(null, b, this.entry)
             : this.plugin.generateBorderStyle(t, b, this.entry);
+      const bdb = `box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
       const sText = `color:${t};background:transparent;`;
-      const sHighlight = `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`;
-      const sBoth = `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
+      const sHighlight = `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}${bdb}`;
+      const sBoth = `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}${bdb}`;
       const styleStr =
         style === "text" ? sText : style === "highlight" ? sHighlight : sBoth;
 
@@ -26845,21 +26900,14 @@ class EditEntryModal extends Modal {
         this.entry && this.entry.isRegex && this.entry.presetLabel
           ? this.entry.presetLabel
           : raw;
-      const words = displayText
-        .split(",")
-        .map((w) => w.trim())
-        .filter(Boolean);
-      const makeDiv = (text) => {
-        const div = document.createElement("div");
-        div.setAttribute("style", styleStr);
-        div.textContent = text;
-        return div;
+      const makeSpan = (text) => {
+        const span = document.createElement("span");
+        span.setAttribute("style", styleStr);
+        span.style.display = "inline";
+        span.textContent = text;
+        return span;
       };
-      if (words.length > 1) {
-        words.forEach((w) => preview.appendChild(makeDiv(w)));
-      } else {
-        preview.appendChild(makeDiv(displayText));
-      }
+      preview.appendChild(makeSpan(displayText));
     };
     if (openRegexBtn) {
       const openRegexFn = async () => {
@@ -38825,14 +38873,18 @@ class ColorPickerModal extends Modal {
     h2.style.marginTop = "0";
     h2.style.marginBottom = "0px";
     h2.style.flex = "1 1 auto";
-    const hideControls = !!this._hideHeaderControls || this.isQuickOnce;
+    const hideControls = !!this._hideHeaderControls;
+    const isQuick = !!this.isQuickOnce;
+    const quickColor = isQuick && this.mode === "text";
+    const quickHighlight = isQuick && this.mode === "background";
+    const quickBoth = isQuick && this.mode === "text-and-background";
     const groupsRaw = Array.isArray(this.plugin.settings.wordEntryGroups)
       ? this.plugin.settings.wordEntryGroups
       : [];
     const groups = this.plugin.settings.hideInactiveGroupsInDropdowns
       ? groupsRaw.filter((g) => g && g.active)
       : groupsRaw;
-    if (!hideControls && groups.length > 0) {
+    if (!hideControls && !isQuick && groups.length > 0) {
       const groupSelect = headerRow.createEl("select");
       groupSelect.style.padding = "6px";
       groupSelect.style.borderRadius = "4px";
@@ -38869,7 +38921,7 @@ class ColorPickerModal extends Modal {
       });
       this._groupSelect = groupSelect;
     }
-    if (!hideControls) {
+    if (!hideControls && !isQuick) {
       const matchSelect = headerRow.createEl("select");
       matchSelect.style.padding = "6px";
       matchSelect.style.borderRadius = "4px";
@@ -38901,7 +38953,9 @@ class ColorPickerModal extends Modal {
     }
 
     let editBtn = null;
-    if (!hideControls) {
+    const shouldShowEdit =
+      (!hideControls && !isQuick) || quickHighlight || quickBoth;
+    if (shouldShowEdit) {
       editBtn = headerRow.createEl("button");
       try {
         setIcon(editBtn, "edit-3");
@@ -38927,20 +38981,18 @@ class ColorPickerModal extends Modal {
     previewWrap.style.borderRadius = "14px";
     previewWrap.style.padding = "14px";
     previewWrap.style.marginBottom = "0";
-    previewWrap.style.display = "flex";
-    previewWrap.style.alignItems = "center";
-    previewWrap.style.justifyContent = "center";
+    previewWrap.style.display = "block";
     previewWrap.style.gridColumn = "1 / -1";
     // previewWrap.style.backgroundColor = 'var(--background-primary-alt)';
 
-    const preview = previewWrap.createDiv();
+    const preview = previewWrap.createEl("span");
     const displayText = String(
       this._selectedText || this._preFillPattern || this._preFillName || "",
     ).trim();
     preview.textContent = displayText
       ? displayText
       : this.plugin.t("selected_text_preview", "Selected Text");
-    preview.style.display = "inline-block";
+    preview.style.display = "inline";
     preview.style.borderRadius = "8px";
     // preview.style.padding = '6px 12px';
     preview.style.fontWeight = "600";
@@ -39528,24 +39580,46 @@ class ColorPickerModal extends Modal {
     if (editBtn) {
       // Resolve original entry reference from settings arrays (not a clone)
       let originalEntry = null;
-      if (matchedEntry) {
-        try {
-          const word = this._selectedText || "";
-          const caseSensitive2 = !!this.plugin.settings.caseSensitive;
-          const eq2 = (a, b) =>
-            caseSensitive2
-              ? String(a) === String(b)
-              : String(a).toLowerCase() === String(b).toLowerCase();
-          if (matchedGroupUid) {
-            const group = (
-              Array.isArray(this.plugin.settings.wordEntryGroups)
-                ? this.plugin.settings.wordEntryGroups
-                : []
-            ).find((g) => g && g.uid === matchedGroupUid);
-            if (group && Array.isArray(group.entries)) {
-              // Prefer exact/grouped match; fallback to regex if needed
+      if (!this.isQuickOnce) {
+        if (matchedEntry) {
+          try {
+            const word = this._selectedText || "";
+            const caseSensitive2 = !!this.plugin.settings.caseSensitive;
+            const eq2 = (a, b) =>
+              caseSensitive2
+                ? String(a) === String(b)
+                : String(a).toLowerCase() === String(b).toLowerCase();
+            if (matchedGroupUid) {
+              const group = (
+                Array.isArray(this.plugin.settings.wordEntryGroups)
+                  ? this.plugin.settings.wordEntryGroups
+                  : []
+              ).find((g) => g && g.uid === matchedGroupUid);
+              if (group && Array.isArray(group.entries)) {
+                originalEntry =
+                  group.entries.find((e) => {
+                    if (!e) return false;
+                    if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                      try {
+                        const re = new RegExp(e.pattern, e.flags || "");
+                        return re.test(word);
+                      } catch (_) {
+                        return false;
+                      }
+                    }
+                    return (
+                      eq2(e.pattern || "", word) ||
+                      (Array.isArray(e.groupedPatterns) &&
+                        e.groupedPatterns.some((p) => eq2(p, word)))
+                    );
+                  }) || null;
+              }
+            } else {
+              const arr = Array.isArray(this.plugin.settings.wordEntries)
+                ? this.plugin.settings.wordEntries
+                : [];
               originalEntry =
-                group.entries.find((e) => {
+                arr.find((e) => {
                   if (!e) return false;
                   if (e.isRegex && this.plugin.settings.enableRegexSupport) {
                     try {
@@ -39562,37 +39636,133 @@ class ColorPickerModal extends Modal {
                   );
                 }) || null;
             }
-          } else {
-            const arr = Array.isArray(this.plugin.settings.wordEntries)
-              ? this.plugin.settings.wordEntries
-              : [];
-            originalEntry =
-              arr.find((e) => {
-                if (!e) return false;
-                if (e.isRegex && this.plugin.settings.enableRegexSupport) {
-                  try {
-                    const re = new RegExp(e.pattern, e.flags || "");
-                    return re.test(word);
-                  } catch (_) {
-                    return false;
-                  }
-                }
-                return (
-                  eq2(e.pattern || "", word) ||
-                  (Array.isArray(e.groupedPatterns) &&
-                    e.groupedPatterns.some((p) => eq2(p, word)))
-                );
-              }) || null;
+          } catch (_) {
+            originalEntry = null;
           }
-        } catch (_) {
-          originalEntry = null;
         }
       }
       editBtn.disabled = false;
       const editHandler = () => {
         try {
+          if (this.isQuickOnce) {
+            const defaultStyleType =
+              this.mode === "text"
+                ? "text"
+                : this.mode === "background"
+                  ? "highlight"
+                  : "both";
+            if (!this._quickOnceEntry) {
+              this._quickOnceEntry = {
+                uid:
+                  "quick-once-" +
+                  Date.now().toString(36) +
+                  Math.random().toString(36).slice(2),
+                _quickOnce: true,
+                styleType: defaultStyleType,
+                color: "",
+                textColor:
+                  (this.selectedTextColor &&
+                    this.plugin.isValidHexColor(this.selectedTextColor) &&
+                    this.selectedTextColor) ||
+                  initText ||
+                  "",
+                backgroundColor:
+                  (this.selectedBgColor &&
+                    this.plugin.isValidHexColor(this.selectedBgColor) &&
+                    this.selectedBgColor) ||
+                  initBg ||
+                  "",
+                backgroundOpacity: this.plugin.settings.backgroundOpacity ?? 25,
+                highlightBorderRadius:
+                  this.plugin.settings.highlightBorderRadius ?? 8,
+                highlightHorizontalPadding:
+                  this.plugin.settings.highlightHorizontalPadding ?? 4,
+                highlightVerticalPadding:
+                  this.plugin.settings.highlightVerticalPadding ?? 0,
+                enableBorderThickness:
+                  this.plugin.settings.enableBorderThickness ?? false,
+                borderStyle: this.plugin.settings.borderStyle ?? "full",
+                borderLineStyle:
+                  this.plugin.settings.borderLineStyle ?? "solid",
+                borderOpacity: this.plugin.settings.borderOpacity ?? 100,
+                borderThickness: this.plugin.settings.borderThickness ?? 1,
+              };
+            }
+            const tempEntry = this._quickOnceEntry;
+            const modal = new HighlightStylingModal(
+              this.app,
+              this.plugin,
+              tempEntry,
+              null,
+              this._selectedText ||
+                this.plugin.t("selected_text_preview", "Selected Text"),
+            );
+            modal._fromQuickOnce = true;
+            const orig = modal.onClose.bind(modal);
+            modal.onClose = () => {
+              try {
+                orig();
+              } catch (_) {}
+              this._quickOnceEntry = tempEntry;
+              try {
+                const params = this.plugin.getHighlightParams(tempEntry);
+                if (tempEntry.styleType === "text") {
+                  if (
+                    tempEntry.textColor &&
+                    this.plugin.isValidHexColor(tempEntry.textColor)
+                  ) {
+                    preview.style.color = tempEntry.textColor;
+                    this.selectedTextColor = tempEntry.textColor;
+                  }
+                } else {
+                  if (
+                    tempEntry.backgroundColor &&
+                    this.plugin.isValidHexColor(tempEntry.backgroundColor)
+                  ) {
+                    const rgba = this.plugin.hexToRgba(
+                      tempEntry.backgroundColor,
+                      params.opacity ?? 25,
+                    );
+                    preview.style.backgroundColor = rgba;
+                    preview.style.borderRadius = (params.radius ?? 8) + "px";
+                    preview.style.paddingLeft = preview.style.paddingRight =
+                      (params.hPad ?? 4) + "px";
+                    try {
+                      preview.style.setProperty(
+                        "padding-top",
+                        (params.vPad ?? 0) + "px",
+                      );
+                      preview.style.setProperty(
+                        "padding-bottom",
+                        (params.vPad ?? 0) + "px",
+                      );
+                    } catch (e) {
+                      preview.style.paddingTop = (params.vPad ?? 0) + "px";
+                      preview.style.paddingBottom = (params.vPad ?? 0) + "px";
+                    }
+                    this.plugin.applyBorderStyleToElement(
+                      preview,
+                      tempEntry.textColor || null,
+                      tempEntry.backgroundColor || null,
+                      tempEntry,
+                    );
+                    this.selectedBgColor = tempEntry.backgroundColor;
+                  }
+                  if (
+                    tempEntry.textColor &&
+                    this.plugin.isValidHexColor(tempEntry.textColor)
+                  ) {
+                    preview.style.color = tempEntry.textColor;
+                    this.selectedTextColor = tempEntry.textColor;
+                  }
+                }
+                this._hasUserChanges = true;
+              } catch (_) {}
+            };
+            modal.open();
+            return;
+          }
           let entryToEdit = originalEntry;
-          // If no entry was matched, create a new entry prefilled with selected text
           if (!entryToEdit) {
             const ts = this.selectedTextColor;
             const bs = this.selectedBgColor;
@@ -40016,6 +40186,31 @@ class ColorPickerModal extends Modal {
       try {
         if (typeof this.callback === "function") {
           try {
+            const qo =
+              this.isQuickOnce && this._quickOnceEntry
+                ? {
+                    styleType: this._quickOnceEntry.styleType || null,
+                    backgroundOpacity:
+                      this._quickOnceEntry.backgroundOpacity ?? null,
+                    highlightBorderRadius:
+                      this._quickOnceEntry.highlightBorderRadius ?? null,
+                    highlightHorizontalPadding:
+                      this._quickOnceEntry.highlightHorizontalPadding ?? null,
+                    highlightVerticalPadding:
+                      this._quickOnceEntry.highlightVerticalPadding ?? null,
+                    enableBorderThickness:
+                      typeof this._quickOnceEntry.enableBorderThickness !==
+                      "undefined"
+                        ? !!this._quickOnceEntry.enableBorderThickness
+                        : null,
+                    borderStyle: this._quickOnceEntry.borderStyle || null,
+                    borderLineStyle:
+                      this._quickOnceEntry.borderLineStyle || null,
+                    borderOpacity: this._quickOnceEntry.borderOpacity ?? null,
+                    borderThickness:
+                      this._quickOnceEntry.borderThickness ?? null,
+                  }
+                : null;
             this.callback(
               textSelected ? textColor : bgSelected ? bgColor : null,
               {
@@ -40026,6 +40221,7 @@ class ColorPickerModal extends Modal {
                 matchType:
                   this._matchType ||
                   (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                quickOnceStyle: qo || undefined,
               },
             );
           } catch (e) {}

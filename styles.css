@@ -334,9 +334,7 @@ li.act-color-marker::marker {
 
 .act-edit-entry-preview {
   flex: 2.5 1 0%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   border: 1px dashed var(--background-modifier-border);
   border-radius: var(--radius-m);
   padding: 10px;
@@ -344,6 +342,7 @@ li.act-color-marker::marker {
   white-space: pre-wrap;
   word-wrap: break-word;
   min-height: 40px;
+  text-align: center;
 }
 
 .act-edit-entry-pickers {
@@ -368,9 +367,7 @@ li.act-color-marker::marker {
 
 .act-highlight-preview-wrap {
   flex: 5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-m);
   padding: 12px;
