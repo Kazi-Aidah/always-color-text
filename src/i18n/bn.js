@@ -433,6 +433,7 @@ module.exports = {
   "label_disable_in": "এতে নিষ্ক্রিয় করুন",
   "enter_path_or_pattern": "পাথ, প্যাটার্ন বা ট্যাগ লিখুন",
   "label_regex": "রেজেক্স",
+  "label_regex_name": "রেজেক্স নাম",
   
   // Advanced Rules
   "advanced_rules_header": "নির্দিষ্ট অন্তর্ভুক্তি/বর্জন নিয়ম",

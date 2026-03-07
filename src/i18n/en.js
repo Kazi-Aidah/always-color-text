@@ -444,6 +444,7 @@ module.exports = {
   "label_disable_in": "Disable in",
   "enter_path_or_pattern": "Enter path, pattern or tags",
   "label_regex": "Regex",
+  "label_regex_name": "Regex Name",
   
   // Advanced Rules
   "advanced_rules_header": "Specific Include/Exclude Rules",
