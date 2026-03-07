@@ -414,7 +414,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "文件和文件夹着色规则",
-  "file_folder_rules_desc": "通过名称匹配、精确路径或正则表达式模式控制着色。留空排除条目以在整个库中禁用着色。",
+  "file_folder_rules_desc": "通过名称匹配、路径、正则模式或标签控制文件中的着色。",
   "search_file_folder_rules_placeholder": "搜索文件/文件夹规则…",
   "path_sort_label_last-added": "排序：最后添加",
   "path_sort_label_a-z": "排序：A-Z",
@@ -514,12 +514,12 @@ module.exports = {
   // Quick Colors / Styles
   "quick_actions_header": "Quick Actions",
   "quick_colors_header": "快速颜色",
-  "quick_colors_desc": "允许通过在右键菜单中显示颜色来快速高亮或着色文本。如果关闭快速颜色，将使用快速样式中的每种样式颜色。",
+  "quick_colors_desc": "在右键菜单中显示颜色圆点。",
   "quick_colors_apply_mode_label": "文本着色将应用为",
   "quick_colors_apply_mode_act": "始终为文本着色",
   "quick_colors_apply_mode_html": "内联 HTML",
   "quick_styles_header": "快速样式",
-  "quick_styles_desc": "定义用于应用文本颜色和高亮显示的命名样式。如果关闭快速颜色，将使用此处的每种样式颜色。",
+  "quick_styles_desc": "可从右键菜单应用样式。",
   "btn_add_style": "+ 添加样式",
   "quick_styles_menu_option": "快速样式",
   

@@ -413,7 +413,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "Règles de coloriage des fichiers et dossiers",
-  "file_folder_rules_desc": "Contrôlez le coloriage par correspondance de nom, chemins exacts ou motifs regex. Laissez une entrée d'exclusion vide pour désactiver le coloriage dans l'ensemble du coffre.",
+  "file_folder_rules_desc": "Contrôle la coloration des fichiers via correspondance de nom, chemins, motifs regex ou balises.",
   "search_file_folder_rules_placeholder": "Rechercher des règles de fichier/dossier…",
   "path_sort_label_last-added": "Trier : Dernier ajout",
   "path_sort_label_a-z": "Trier : A-Z",
@@ -513,12 +513,12 @@ module.exports = {
   // Quick Colors / Styles
   "quick_actions_header": "Quick Actions",
   "quick_colors_header": "Couleurs Rapides",
-  "quick_colors_desc": "Permet de surligner ou colorer rapidement du texte en affichant des couleurs dans le menu contextuel. Si Couleurs Rapides est désactivé, les couleurs par style dans Styles Rapides seront utilisées.",
+  "quick_colors_desc": "Affiche des pastilles de couleur dans le menu contextuel.",
   "quick_colors_apply_mode_label": "La coloration du texte s'appliquera comme",
   "quick_colors_apply_mode_act": "Toujours colorer le texte",
   "quick_colors_apply_mode_html": "HTML en ligne",
   "quick_styles_header": "Styles Rapides",
-  "quick_styles_desc": "Définir des styles nommés pour appliquer la couleur du texte et les surlignages. Si Couleurs Rapides est désactivé, les couleurs par style ici seront utilisées.",
+  "quick_styles_desc": "Permet d’appliquer des styles depuis le menu contextuel.",
   "btn_add_style": "+ Ajouter un style",
   "quick_styles_menu_option": "Styles Rapides",
   

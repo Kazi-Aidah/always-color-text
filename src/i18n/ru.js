@@ -421,7 +421,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "Правила окрашивания файлов и папок",
-  "file_folder_rules_desc": "Управляйте окрашиванием с помощью совпадений по именам, точных путей или regex шаблонов. Оставьте пустое поле ввода с параметром исключение, чтобы отключить окрашивание по всему хранилищу.",
+  "file_folder_rules_desc": "Управляет окрашиванием в файлах с помощью совпадения по имени, путей, шаблонов regex или тегов.",
   "search_file_folder_rules_placeholder": "Поиск правил для файлов/папок…",
   "path_sort_label_last-added": "Сортировать: Последние добавленные",
   "path_sort_label_a-z": "Сортировать: А-Я",
@@ -519,14 +519,14 @@ module.exports = {
   "btn_save_style": "Сохранить стиль",
   
   // Quick Colors / Styles
-  "quick_actions_header": "Быстрые действия", // added
+  "quick_actions_header": "Быстрые действия",
   "quick_colors_header": "Быстрые цвета",
-  "quick_colors_desc": "Позволяет быстро подсвечивать или окрашивать текст, показывая цвета в контекстном меню. Если Быстрые цвета отключены, будут использоваться цвета стилей из Быстрых стилей.",
+  "quick_colors_desc": "Показывает цветные точки в контекстном меню.",
   "quick_colors_apply_mode_label": "Окрашивать текст с помощью",
   "quick_colors_apply_mode_act": "Функционала плагина",
   "quick_colors_apply_mode_html": "При помощи HTML кода",
   "quick_styles_header": "Быстрые стили",
-  "quick_styles_desc": "Определите именованные стили для применения цвета текста и выделения. Если Быстрые цвета отключены, будут использоваться цвета стилей здесь.",
+  "quick_styles_desc": "Позволяет применять стили из контекстного меню.",
   "btn_add_style": "+ Добавить стиль",
   "quick_styles_menu_option": "Быстрые стили",
   
@@ -542,7 +542,7 @@ module.exports = {
   "btn_open_in_regex_tester": "Открыть в конфигураторе Regex",
   "move_to_blacklist_group": "Перенести в сгруппированный чёрный список",
   "btn_delete_entry": "Удалить запись",
-  "edit_group_highlight_styling": "Редактировать стиль выделения группы", // added
+  "edit_group_highlight_styling": "Редактировать стиль выделения группы",
   "light_mode_fixer_desc": "Автоматически затемняет цветной текст при использовании светлой темы для улучшения видимости.", // added
   "dark_mode_fixer_desc": "Автоматически осветляет цветной текст при использовании темной темы для улучшения видимости.", // added
   "preset_bold": "Жирный", // added

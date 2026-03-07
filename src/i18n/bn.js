@@ -412,7 +412,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "ফাইল ও ফোল্ডার রঙায়ন রুলস",
-  "file_folder_rules_desc": "নাম ম্যাচিং, সঠিক পাথ, বা রেগেক্স প্যাটার্ন দিয়ে রঙায়ন কন্ট্রোল করুন। ভল্ট-ওয়াইড রঙায়ন অক্ষম করতে একটি ফাঁকা এক্সক্লুড এন্ট্রি রাখুন।",
+  "file_folder_rules_desc": "নাম মেলানো, পাথ, রেগেক্স প্যাটার্ন বা ট্যাগ দিয়ে ফাইলে রঙায়ন নিয়ন্ত্রণ করুন।",
   "search_file_folder_rules_placeholder": "ফাইল/ফোল্ডার রুলস অনুসন্ধান করুন…",
   "path_sort_label_last-added": "সর্ট: সর্বশেষ যোগ",
   "path_sort_label_a-z": "সর্ট: A-Z",
@@ -513,12 +513,12 @@ module.exports = {
   // Quick Colors / Styles
   "quick_actions_header": "Quick Actions",
   "quick_colors_header": "দ্রুত রং",
-  "quick_colors_desc": "ডান-ক্লিক মেনুতে রং প্রদর্শন করে দ্রুত টেক্সট হাইলাইট বা রঙ করার অনুমতি দেয়। যদি দ্রুত রং বন্ধ থাকে, তবে দ্রুত স্টাইলগুলিতে প্রতি-স্টাইল রং ব্যবহার করা হবে।",
+  "quick_colors_desc": "রাইট‑ক্লিক মেনুতে রঙের ডট দেখায়।",
   "quick_colors_apply_mode_label": "টেক্সট রঙায়ন এইভাবে প্রয়োগ হবে",
   "quick_colors_apply_mode_act": "সবসময় টেক্সট রঙ করুন",
   "quick_colors_apply_mode_html": "ইনলাইন HTML",
   "quick_styles_header": "দ্রুত স্টাইল",
-  "quick_styles_desc": "টেক্সট রঙ এবং হাইলাইট প্রয়োগ করার জন্য নামযুক্ত স্টাইল সংজ্ঞায়িত করুন। যদি দ্রুত রং বন্ধ থাকে, তবে এখানে প্রতি-স্টাইল রং ব্যবহার করা হবে।",
+  "quick_styles_desc": "রাইট‑ক্লিক মেনু থেকে স্টাইল প্রয়োগ করতে দেয়।",
   "btn_add_style": "+ স্টাইল যোগ করুন",
   "quick_styles_menu_option": "দ্রুত স্টাইল",
   

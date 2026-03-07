@@ -417,7 +417,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "फ़ाइल और फ़ोल्डर रंगाई नियम",
-  "file_folder_rules_desc": "नाम मिलान, सटीक पथ या रेगेक्स पैटर्न के साथ रंगाई नियंत्रित करें। वॉल्ट-वाइड रंगाई बंद करने के लिए एक खाली बहिष्करण एंट्री छोड़ें।",
+  "file_folder_rules_desc": "नाम मिलान, पथ, regex पैटर्न या टैग के साथ फ़ाइलों में रंगाई नियंत्रित करें।",
   "search_file_folder_rules_placeholder": "फ़ाइल/फ़ोल्डर नियम खोजें…",
   "path_sort_label_last-added": "क्रम: अंतिम जोड़ा हुआ",
   "path_sort_label_a-z": "क्रम: A-Z",
@@ -521,12 +521,12 @@ module.exports = {
   // Quick Colors / Styles
   "quick_actions_header": "Quick Actions",
   "quick_colors_header": "त्वरित रंग",
-  "quick_colors_desc": "राइट-क्लिक मेनू में रंग दिखाकर टेक्स्ट को जल्दी से हाइलाइट या रंगने की अनुमति देता है। यदि त्वरित रंग बंद हैं, तो त्वरित शैलियों में प्रति-शैली रंगों का उपयोग किया जाएगा।",
+  "quick_colors_desc": "राइट‑क्लिक मेनू में रंग बिंदु दिखाता है।",
   "quick_colors_apply_mode_label": "टेक्स्ट रंगाई इस रूप में लागू होगी",
   "quick_colors_apply_mode_act": "हमेशा टेक्स्ट को रंगें",
   "quick_colors_apply_mode_html": "इनलाइन HTML",
   "quick_styles_header": "त्वरित शैलियाँ",
-  "quick_styles_desc": "टेक्स्ट रंग और हाइलाइट लागू करने के लिए नामित शैलियाँ परिभाषित करें। यदि त्वरित रंग बंद हैं, तो यहां प्रति-शैली रंगों का उपयोग किया जाएगा।",
+  "quick_styles_desc": "राइट‑क्लिक मेनू से स्टाइल लागू करने देता है।",
   "btn_add_style": "+ शैली जोड़ें",
   "quick_styles_menu_option": "त्वरित शैलियाँ",
   

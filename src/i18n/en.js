@@ -423,7 +423,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "File & Folder Coloring Rules",
-  "file_folder_rules_desc": "Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.",
+  "file_folder_rules_desc": "Control coloring in files using name matching, paths, regex patterns, or tags.",
   "search_file_folder_rules_placeholder": "Search file/folder rules…",
   "path_sort_label_last-added": "Sort: Last Added",
   "path_sort_label_a-z": "Sort: A-Z",
@@ -528,12 +528,12 @@ module.exports = {
   // Quick Colors / Styles
   "quick_actions_header": "Quick Actions",
   "quick_colors_header": "Quick Colors",
-  "quick_colors_desc": "Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used.",
+  "quick_colors_desc": "Shows color dots in the right-click menu.",
   "quick_colors_apply_mode_label": "The text coloring will apply as",
   "quick_colors_apply_mode_act": "Always Color Text",
   "quick_colors_apply_mode_html": "Inline HTML",
   "quick_styles_header": "Quick Styles",
-  "quick_styles_desc": "Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used.",
+  "quick_styles_desc": "Allows styles to be applied from the right-click menu.",
   "btn_add_style": "+ Add Style",
   "quick_styles_menu_option": "Quick Styles",
   

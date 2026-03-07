@@ -423,7 +423,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "قواعد تلوين الملفات والمجلدات",
-  "file_folder_rules_desc": "التحكم في التلوين بمطابقة الاسم، المسارات الدقيقة، أو أنماط regex. اترك إدخال الاستبعاد فارغاً لتعطيل التلوين على مستوى المخزن بالكامل.",
+  "file_folder_rules_desc": "يُتحكم في التلوين داخل الملفات عبر مطابقة الاسم، المسارات، أنماط regex أو الوسوم.",
   "search_file_folder_rules_placeholder": "بحث في قواعد الملفات/المجلدات...",
   "path_sort_label_last-added": "فرز: آخر إضافة",
   "path_sort_label_a-z": "فرز: أ-ي",
@@ -527,12 +527,12 @@ module.exports = {
   // Quick Colors / Styles
   "quick_actions_header": "إجراءات سريعة",
   "quick_colors_header": "ألوان سريعة",
-  "quick_colors_desc": "يسمح لك بتمييز أو تلوين النص بسرعة عن طريق إظهار الألوان في قائمة النقر بزر الماوس الأيمن. إذا تم إيقاف الألوان السريعة، سيتم استخدام ألوان كل نمط في الأنماط السريعة.",
+  "quick_colors_desc": "يعرض نقاط ألوان في قائمة النقر بزر الماوس الأيمن.",
   "quick_colors_apply_mode_label": "سيتم تطبيق تلوين النص كـ",
   "quick_colors_apply_mode_act": "Always Color Text",
   "quick_colors_apply_mode_html": "HTML مضمن",
   "quick_styles_header": "أنماط سريعة",
-  "quick_styles_desc": "تحديد أنماط مسماة لتطبيق لون النص والتمييز. إذا تم إيقاف الألوان السريعة، سيتم استخدام ألوان كل نمط هنا.",
+  "quick_styles_desc": "يسمح بتطبيق الأنماط من قائمة النقر بزر الماوس الأيمن.",
   "btn_add_style": "+ إضافة نمط",
   "quick_styles_menu_option": "أنماط سريعة",
   

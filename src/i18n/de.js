@@ -417,7 +417,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "Datei & Ordner Färbungsregeln",
-  "file_folder_rules_desc": "Steuern Sie die Färbung mit Namensübereinstimmung, exakten Pfaden oder Regex-Mustern. Lassen Sie einen leeren Ausschlusseintrag, um die Färbung tresorweit zu deaktivieren.",
+  "file_folder_rules_desc": "Steuert die Färbung in Dateien anhand von Namensabgleich, Pfaden, Regex-Mustern oder Tags.",
   "search_file_folder_rules_placeholder": "Suche Datei/Ordner Regeln…",
   "path_sort_label_last-added": "Sortierung: Zuletzt hinzugefügt",
   "path_sort_label_a-z": "Sortierung: A-Z",
@@ -521,12 +521,12 @@ module.exports = {
   // Quick Colors / Styles
   "quick_actions_header": "Schnellaktionen",
   "quick_colors_header": "Schnellfarben",
-  "quick_colors_desc": "Erlaubt es Ihnen, Text schnell hervorzuheben oder zu färben, indem Farben im Rechtsklick-Menü angezeigt werden. Wenn Schnellfarben deaktiviert sind, werden Farben pro Stil in Schnellstilen verwendet.",
+  "quick_colors_desc": "Zeigt Farbpunkte im Rechtsklickmenü an.",
   "quick_colors_apply_mode_label": "Die Textfärbung wird angewendet als",
   "quick_colors_apply_mode_act": "Always Color Text",
   "quick_colors_apply_mode_html": "Inline HTML",
   "quick_styles_header": "Schnellstile",
-  "quick_styles_desc": "Definieren Sie benannte Stile zum Anwenden von Textfarbe und Hervorhebungen. Wenn Schnellfarben deaktiviert sind, werden Farben pro Stil hier verwendet.",
+  "quick_styles_desc": "Ermöglicht das Anwenden von Stilen über das Rechtsklickmenü.",
   "btn_add_style": "+ Stil hinzufügen",
   "quick_styles_menu_option": "Schnellstile",
   

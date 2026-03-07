@@ -414,7 +414,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "Reglas de Coloreado para Archivos y Carpetas",
-  "file_folder_rules_desc": "Controla el coloreado mediante coincidencia de nombres, rutas exactas o patrones regex. Deja una entrada de exclusión vacía para desactivar el coloreado en toda la bóveda.",
+  "file_folder_rules_desc": "Controla el coloreado en archivos usando coincidencia por nombre, rutas, patrones regex o etiquetas.",
   "search_file_folder_rules_placeholder": "Buscar reglas de archivo/carpeta…",
   "path_sort_label_last-added": "Ordenar: Último Añadido",
   "path_sort_label_a-z": "Ordenar: A-Z",
@@ -514,12 +514,12 @@ module.exports = {
   // Quick Colors / Styles
   "quick_actions_header": "Quick Actions",
   "quick_colors_header": "Colores Rápidos",
-  "quick_colors_desc": "Permite resaltar o colorear texto rápidamente mostrando colores en el menú contextual. Si Colores Rápidos está desactivado, se usarán los colores por estilo en Estilos Rápidos.",
+  "quick_colors_desc": "Muestra puntos de color en el menú contextual.",
   "quick_colors_apply_mode_label": "El coloreado de texto se aplicará como",
   "quick_colors_apply_mode_act": "Siempre colorear texto",
   "quick_colors_apply_mode_html": "HTML en línea",
   "quick_styles_header": "Estilos Rápidos",
-  "quick_styles_desc": "Define estilos con nombre para aplicar color de texto y resaltados. Si Colores Rápidos está desactivado, se usarán los colores por estilo aquí.",
+  "quick_styles_desc": "Permite aplicar estilos desde el menú contextual.",
   "btn_add_style": "+ Añadir Estilo",
   "quick_styles_menu_option": "Estilos Rápidos",
   

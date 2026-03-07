@@ -414,7 +414,7 @@ module.exports = {
   
   // File & Folder Rules
   "file_folder_rules_header": "Regole colorazione file e cartelle",
-  "file_folder_rules_desc": "Gestisci la colorazione usando nomi, percorsi esatti o pattern regex. Lascia una voce di esclusione vuota per disabilitare la colorazione in tutta la vault.",
+  "file_folder_rules_desc": "Controlla la colorazione nei file tramite corrispondenza del nome, percorsi, pattern regex o tag.",
   "search_file_folder_rules_placeholder": "Cerca regole file/cartella…",
   "path_sort_label_last-added": "Ordina: ultimi aggiunti",
   "path_sort_label_a-z": "Ordina: A-Z",
@@ -514,12 +514,12 @@ module.exports = {
   // Quick Colors / Styles
   "quick_actions_header": "Quick Actions",
   "quick_colors_header": "Colori Rapidi",
-  "quick_colors_desc": "Consente di evidenziare o colorare rapidamente il testo mostrando i colori nel menu contestuale. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile in Stili Rapidi.",
+  "quick_colors_desc": "Mostra pallini di colore nel menu contestuale.",
   "quick_colors_apply_mode_label": "La colorazione del testo verrà applicata come",
   "quick_colors_apply_mode_act": "Colora sempre il testo",
   "quick_colors_apply_mode_html": "HTML in linea",
   "quick_styles_header": "Stili Rapidi",
-  "quick_styles_desc": "Definisci stili con nome per applicare colore del testo ed evidenziazioni. Se i Colori Rapidi sono disattivati, verranno utilizzati i colori per stile qui.",
+  "quick_styles_desc": "Consente di applicare stili dal menu contestuale.",
   "btn_add_style": "+ Aggiungi Stile",
   "quick_styles_menu_option": "Stili Rapidi",
   

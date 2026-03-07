@@ -33053,46 +33053,32 @@ class ColorSettingTab extends PluginSettingTab {
       if (!this._quickColorsContainer) return;
       this._quickColorsContainer.empty();
 
-      // Header and Toggle
-      const headerDiv = this._quickColorsContainer.createDiv();
-      headerDiv.style.display = "flex";
-      headerDiv.style.alignItems = "center";
-      headerDiv.style.justifyContent = "space-between";
-      headerDiv.style.marginTop = "30px";
-      headerDiv.style.marginBottom = "8px";
+      // Header, Description and Toggle in a unified heading setting
+      const quickColorsSetting = new Setting(this._quickColorsContainer)
+        .setName(this.plugin.t("quick_colors_header", "Quick Colors"))
+        .setDesc(
+          this.plugin.t(
+            "quick_colors_desc",
+            "Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used.",
+          ),
+        )
+        .setHeading()
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.quickColorsEnabled)
+            .onChange(async (v) => {
+              this.plugin.settings.quickColorsEnabled = v;
+              await this.plugin.saveSettings();
+              this._refreshQuickColors();
+            }),
+        );
 
-      const leftDiv = headerDiv.createDiv();
-      leftDiv.style.display = "flex";
-      leftDiv.style.alignItems = "center";
-      leftDiv.style.gap = "10px";
-
-      leftDiv.createEl("h3", {
-        text: this.plugin.t("quick_colors_header", "Quick Colors"),
-        style: "margin: 0;",
-      });
-
-      const toggle = new Setting(leftDiv).addToggle((t) =>
-        t
-          .setValue(this.plugin.settings.quickColorsEnabled)
-          .onChange(async (v) => {
-            this.plugin.settings.quickColorsEnabled = v;
-            await this.plugin.saveSettings();
-            this._refreshQuickColors();
-          }),
-      );
-      toggle.settingEl.style.border = "none";
-      toggle.settingEl.style.padding = "0";
-      toggle.settingEl.style.background = "none";
-      toggle.settingEl.addClass("act-toggle");
-
-      // Description
-      const desc = this._quickColorsContainer.createDiv();
-      desc.addClass("act-desc");
-      desc.style.margin = "-16px 0 14px";
-      desc.textContent = this.plugin.t(
-        "quick_colors_desc",
-        "Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used.",
-      );
+      try {
+        quickColorsSetting.settingEl.style.marginTop = "30px";
+        quickColorsSetting.settingEl.style.marginBottom = "8px";
+        quickColorsSetting.settingEl.style.borderTop = "none";
+        quickColorsSetting.controlEl.style.marginLeft = "10px";
+      } catch (e) {}
 
       // Keep UI visible even when Quick Colors are disabled
 
@@ -33440,41 +33426,32 @@ class ColorSettingTab extends PluginSettingTab {
       if (!this._quickStylesContainer) return;
       this._quickStylesContainer.empty();
 
-      const headerDiv = this._quickStylesContainer.createDiv();
-      headerDiv.style.display = "flex";
-      headerDiv.style.alignItems = "center";
-      headerDiv.style.justifyContent = "space-between";
-      headerDiv.style.marginTop = "30px";
-      headerDiv.style.marginBottom = "8px";
-      const leftDiv = headerDiv.createDiv();
-      leftDiv.style.display = "flex";
-      leftDiv.style.alignItems = "center";
-      leftDiv.style.gap = "10px";
-      leftDiv.createEl("h3", {
-        text: this.plugin.t("quick_styles_header", "Quick Styles"),
-        style: "margin: 0;",
-      });
-      const toggle = new Setting(leftDiv).addToggle((t) =>
-        t
-          .setValue(!!this.plugin.settings.quickStylesEnabled)
-          .onChange(async (v) => {
-            this.plugin.settings.quickStylesEnabled = !!v;
-            await this.plugin.saveSettings();
-            this._refreshQuickStyles();
-          }),
-      );
-      toggle.settingEl.style.border = "none";
-      toggle.settingEl.style.padding = "0";
-      toggle.settingEl.style.background = "none";
-      toggle.settingEl.addClass("act-toggle");
+      // Header, Description and Toggle in a unified heading setting
+      const quickStylesSetting = new Setting(this._quickStylesContainer)
+        .setName(this.plugin.t("quick_styles_header", "Quick Styles"))
+        .setDesc(
+          this.plugin.t(
+            "quick_styles_desc",
+            "Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used.",
+          ),
+        )
+        .setHeading()
+        .addToggle((t) =>
+          t
+            .setValue(!!this.plugin.settings.quickStylesEnabled)
+            .onChange(async (v) => {
+              this.plugin.settings.quickStylesEnabled = !!v;
+              await this.plugin.saveSettings();
+              this._refreshQuickStyles();
+            }),
+        );
 
-      const desc = this._quickStylesContainer.createDiv();
-      desc.addClass("act-desc");
-      desc.style.margin = "-16px 0 14px";
-      desc.textContent = this.plugin.t(
-        "quick_styles_desc",
-        "Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used.",
-      );
+      try {
+        quickStylesSetting.settingEl.style.marginTop = "30px";
+        quickStylesSetting.settingEl.style.marginBottom = "8px";
+        quickStylesSetting.settingEl.style.borderTop = "none";
+        quickStylesSetting.controlEl.style.marginLeft = "10px";
+      } catch (e) {}
 
       // if (!this.plugin.settings.quickStylesEnabled) return;
 
@@ -36951,23 +36928,21 @@ class ColorSettingTab extends PluginSettingTab {
     }
     if (this._activeTab === "always-color-texts") {
       // --- Always Colored Texts / patterns ---
-      const headerEl = containerEl.createEl("h3", {
-        text: this.plugin.t("colored_texts_header", "Colored Texts"),
-      });
+      const coloredTextsHeading = new Setting(containerEl)
+        .setName(this.plugin.t("colored_texts_header", "Colored Texts"))
+        .setDesc(
+          this.plugin.t(
+            "always_colored_texts_desc",
+            "This is where you manage your words/patterns and their colors.",
+          ),
+        )
+        .setHeading();
+
       try {
-        headerEl.className = "always-colored-texts-header";
+        coloredTextsHeading.settingEl.style.marginTop = "30px";
+        coloredTextsHeading.settingEl.style.borderTop = "none";
       } catch (e) {}
-      try {
-        headerEl.style.marginTop = "30px !important";
-      } catch (e) {}
-      const desc = containerEl.createEl("p", {
-        text: this.plugin.t(
-          "always_colored_texts_desc",
-          "Here's where you manage your word / patterns and their colors.",
-        ),
-      });
-      desc.addClass("act-desc");
-      desc.style.marginTop = "-7px";
+
       const dividerSetting = new Setting(containerEl);
       try {
         dividerSetting.settingEl.classList.add("act-section-divider");
@@ -37559,17 +37534,20 @@ class ColorSettingTab extends PluginSettingTab {
     }
     if (this._activeTab === "blacklist") {
       // Blacklist words
-      containerEl.createEl("h3", {
-        text: this.plugin.t("blacklist_words_header", "Blacklist words"),
-      });
-      const desc = containerEl.createEl("p", {
-        text: this.plugin.t(
-          "blacklist_words_desc",
-          "Keywords or patterns here will never be colored, even for partial matches.",
-        ),
-      });
-      desc.addClass("act-desc");
-      desc.style.marginTop = "-7px";
+      const blacklistsHeading = new Setting(containerEl)
+        .setName(this.plugin.t("blacklist_words_header", "Blacklists"))
+        .setDesc(
+          this.plugin.t(
+            "blacklist_words_desc",
+            "Keywords or patterns here will never be colored, even for partial matches.",
+          ),
+        )
+        .setHeading();
+
+      try {
+        blacklistsHeading.settingEl.style.marginTop = "30px";
+        blacklistsHeading.settingEl.style.borderTop = "none";
+      } catch (e) {}
 
       // Search bar for Blacklist entries
       const blSearchContainer = containerEl.createDiv();
@@ -38069,20 +38047,25 @@ class ColorSettingTab extends PluginSettingTab {
         });
     }
     if (this._activeTab === "file-folder-rules") {
-      containerEl.createEl("h3", {
-        text: this.plugin.t(
-          "file_folder_rules_header",
-          "File & Folder Coloring Rules",
-        ),
-      });
-      const desc = containerEl.createEl("p", {
-        text: this.plugin.t(
-          "file_folder_rules_desc",
-          "Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.",
-        ),
-      });
-      desc.addClass("act-desc");
-      desc.style.marginTop = "-7px";
+      const pathRulesHeading = new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "file_folder_rules_header",
+            "File & Folder Coloring Rules",
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "file_folder_rules_desc",
+            "Control coloring with name matching, exact paths, or regex patterns. Leave an empty exclude entry to disable coloring vault-wide.",
+          ),
+        )
+        .setHeading();
+
+      try {
+        pathRulesHeading.settingEl.style.marginTop = "30px";
+        pathRulesHeading.settingEl.style.borderTop = "none";
+      } catch (e) {}
       // Search bar for Path rules
       const prSearchContainer = containerEl.createDiv();
       try {
