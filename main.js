@@ -5927,14 +5927,27 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
                 ) : null;
                 if (group) {
                   if (!Array.isArray(group.entries)) group.entries = [];
-                  group.entries.push({
+                  const newEntry = {
                     pattern: word,
                     color: selColor,
                     isRegex: false,
                     flags: "",
                     styleType: "text",
                     matchType
-                  });
+                  };
+                  try {
+                    newEntry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+                  } catch (_) {
+                    newEntry.uid = Date.now();
+                  }
+                  group.entries.push(newEntry);
+                  this._lastAddedEntryUid = newEntry.uid;
+                  try {
+                    this.inputEl.dispatchEvent(
+                      new Event("input", { bubbles: true })
+                    );
+                  } catch (_) {
+                  }
                   await this.plugin.saveSettings();
                   this.plugin.compileWordEntries();
                 } else {
@@ -6539,11 +6552,10 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
     super.onClose();
   }
   getItems() {
-    const we = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
     const items = [];
     const lastUid = this._lastAddedEntryUid;
-    for (const e of we) {
-      if (!e) continue;
+    const pushEntry = (e, extra) => {
+      if (!e) return;
       if (!e.uid) {
         try {
           e.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -6556,7 +6568,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
         const patRaw = String(e.pattern || "");
         const patTrim = patRaw.trim();
         if (!patTrim) {
-          if (e.uid !== lastUid) continue;
+          if (e.uid !== lastUid) return;
           label = e.presetLabel ? String(e.presetLabel) : "[new regex]";
         } else {
           const name = e.presetLabel ? String(e.presetLabel) : "regex";
@@ -6566,14 +6578,14 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
         const patsArr = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || "").trim()];
         const pats = patsArr.map((x) => String(x || "").trim()).filter((x) => x.length > 0);
         if (pats.length === 0) {
-          if (e.uid !== lastUid) continue;
+          if (e.uid !== lastUid) return;
           label = "[new entry]";
         } else {
           label = pats.join(", ");
         }
       }
       label = String(label || "").trim();
-      if (!label) continue;
+      if (!label) return;
       let st = "color";
       if (e.styleType === "text") st = "color";
       else if (e.styleType === "highlight") st = "highlight";
@@ -6583,7 +6595,19 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends FuzzySugges
         const hasText = !!e.color && String(e.color).trim() !== "" || !!e.textColor && e.textColor && e.textColor !== "currentColor";
         st = hasBg && hasText ? "both" : hasBg ? "highlight" : "color";
       }
-      items.push({ entry: e, label, style: st });
+      items.push({ entry: e, label, style: st, ...extra });
+    };
+    const we = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+    for (const e of we) pushEntry(e, null);
+    const hideInactive = !!this.plugin.settings.hideInactiveGroupsInDropdowns;
+    const groups = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+    for (const g of groups) {
+      if (!g) continue;
+      if (hideInactive && g.active === false) continue;
+      if (!Array.isArray(g.entries)) continue;
+      for (const ge of g.entries) {
+        pushEntry(ge, { _groupUid: g.uid || null });
+      }
     }
     items.sort(
       (a, b) => String(a.label).toLowerCase().localeCompare(String(b.label).toLowerCase())
@@ -12121,17 +12145,7 @@ module.exports = class AlwaysColorText extends Plugin {
           if (leaf && leaf.view instanceof MarkdownView) {
             try {
               if (leaf.view.getMode && leaf.view.getMode() === "preview") {
-                try {
-                  if (leaf.view.previewMode && typeof leaf.view.previewMode.rerender === "function") {
-                    leaf.view.previewMode.rerender(true);
-                  } else if (typeof leaf.view.rerender === "function") {
-                    leaf.view.rerender();
-                  } else {
-                    this.forceRefreshAllReadingViews();
-                  }
-                } catch (e) {
-                  this.forceRefreshAllReadingViews();
-                }
+                this.forceRefreshAllReadingViews();
                 setTimeout(() => {
                   try {
                     const active = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -14141,6 +14155,27 @@ module.exports = class AlwaysColorText extends Plugin {
   forceRefreshAllReadingViews() {
     this.app.workspace.iterateAllLeaves((leaf) => {
       if (leaf.view instanceof MarkdownView && leaf.view.getMode && leaf.view.getMode() === "preview") {
+        const root = leaf.view.previewMode && leaf.view.previewMode.containerEl || leaf.view.contentEl || leaf.view.containerEl;
+        let scroller = null;
+        try {
+          let cur = root;
+          for (let i = 0; i < 8 && cur; i++) {
+            if (cur.scrollHeight && cur.clientHeight && cur.scrollHeight - cur.clientHeight > 4) {
+              scroller = cur;
+              break;
+            }
+            cur = cur.parentElement;
+          }
+        } catch (_) {
+        }
+        if (!scroller) {
+          try {
+            scroller = document.scrollingElement || document.documentElement || document.body || null;
+          } catch (_) {
+          }
+        }
+        const prevTop = scroller ? scroller.scrollTop : 0;
+        const prevLeft = scroller ? scroller.scrollLeft : 0;
         if (typeof leaf.view.previewMode?.rerender === "function") {
           leaf.view.previewMode.rerender(true);
         } else if (typeof leaf.view.previewMode?.render === "function") {
@@ -14148,9 +14183,21 @@ module.exports = class AlwaysColorText extends Plugin {
         } else if (typeof leaf.view?.rerender === "function") {
           leaf.view.rerender();
         }
+        if (scroller) {
+          setTimeout(() => {
+            try {
+              if (typeof scroller.scrollTo === "function") {
+                scroller.scrollTo({ top: prevTop, left: prevLeft, behavior: "auto" });
+              } else {
+                scroller.scrollTop = prevTop;
+                scroller.scrollLeft = prevLeft;
+              }
+            } catch (_) {
+            }
+          }, 0);
+        }
         try {
           if (this.settings.enabled) {
-            const root = leaf.view.previewMode && leaf.view.previewMode.containerEl || leaf.view.contentEl || leaf.view.containerEl;
             const path = leaf.view.file && leaf.view.file.path ? leaf.view.file.path : null;
             if (root && path) {
               try {
@@ -25846,7 +25893,6 @@ var EditEntryModal = class extends Modal {
     preview.style.background = "var(--background-modifier-form-field)";
     preview.style.whiteSpace = "pre-wrap";
     preview.style.wordWrap = "break-word";
-    preview.style.minHeight = "60px";
     const rightColumn = mainContainer.createDiv();
     rightColumn.addClass("act-edit-entry-right-column");
     rightColumn.style.flex = "0 0 auto";

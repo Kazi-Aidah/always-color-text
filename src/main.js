@@ -620,14 +620,28 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
                   : null;
                 if (group) {
                   if (!Array.isArray(group.entries)) group.entries = [];
-                  group.entries.push({
+                  const newEntry = {
                     pattern: word,
                     color: selColor,
                     isRegex: false,
                     flags: "",
                     styleType: "text",
                     matchType,
-                  });
+                  };
+                  try {
+                    newEntry.uid =
+                      Date.now().toString(36) +
+                      Math.random().toString(36).slice(2);
+                  } catch (_) {
+                    newEntry.uid = Date.now();
+                  }
+                  group.entries.push(newEntry);
+                  this._lastAddedEntryUid = newEntry.uid;
+                  try {
+                    this.inputEl.dispatchEvent(
+                      new Event("input", { bubbles: true }),
+                    );
+                  } catch (_) {}
                   await this.plugin.saveSettings();
                   this.plugin.compileWordEntries();
                 } else {
@@ -1350,31 +1364,25 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
     super.onClose();
   }
   getItems() {
-    const we = Array.isArray(this.plugin.settings.wordEntries)
-      ? this.plugin.settings.wordEntries
-      : [];
     const items = [];
     const lastUid = this._lastAddedEntryUid;
 
-    for (const e of we) {
-      if (!e) continue;
-
-      // Ensure entry has a uid
+    const pushEntry = (e, extra) => {
+      if (!e) return;
       if (!e.uid) {
         try {
-          e.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+          e.uid =
+            Date.now().toString(36) + Math.random().toString(36).slice(2);
         } catch (_) {
           e.uid = Date.now();
         }
       }
-
       let label = "";
       if (e.isRegex) {
         const patRaw = String(e.pattern || "");
         const patTrim = patRaw.trim();
         if (!patTrim) {
-          // Include regex entries with empty patterns if they're the last added entry
-          if (e.uid !== lastUid) continue;
+          if (e.uid !== lastUid) return;
           label = e.presetLabel ? String(e.presetLabel) : "[new regex]";
         } else {
           const name = e.presetLabel ? String(e.presetLabel) : "regex";
@@ -1389,16 +1397,14 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
           .map((x) => String(x || "").trim())
           .filter((x) => x.length > 0);
         if (pats.length === 0) {
-          // Include word entries with empty patterns if they're the last added entry
-          if (e.uid !== lastUid) continue;
+          if (e.uid !== lastUid) return;
           label = "[new entry]";
         } else {
           label = pats.join(", ");
         }
       }
-      // Final validation: ensure label is not empty
       label = String(label || "").trim();
-      if (!label) continue;
+      if (!label) return;
       let st = "color";
       if (e.styleType === "text") st = "color";
       else if (e.styleType === "highlight") st = "highlight";
@@ -1410,7 +1416,27 @@ class AddToExistingEntryModal extends FuzzySuggestModal {
           (!!e.textColor && e.textColor && e.textColor !== "currentColor");
         st = hasBg && hasText ? "both" : hasBg ? "highlight" : "color";
       }
-      items.push({ entry: e, label, style: st });
+      items.push({ entry: e, label, style: st, ...extra });
+    };
+
+    // Add entries from main word list
+    const we = Array.isArray(this.plugin.settings.wordEntries)
+      ? this.plugin.settings.wordEntries
+      : [];
+    for (const e of we) pushEntry(e, null);
+
+    // Add entries from active word groups (show their texts in the list)
+    const hideInactive = !!this.plugin.settings.hideInactiveGroupsInDropdowns;
+    const groups = Array.isArray(this.plugin.settings.wordEntryGroups)
+      ? this.plugin.settings.wordEntryGroups
+      : [];
+    for (const g of groups) {
+      if (!g) continue;
+      if (hideInactive && g.active === false) continue;
+      if (!Array.isArray(g.entries)) continue;
+      for (const ge of g.entries) {
+        pushEntry(ge, { _groupUid: g.uid || null });
+      }
     }
     // Sort items alphabetically by label (case-insensitive)
     items.sort((a, b) =>
@@ -8020,24 +8046,8 @@ module.exports = class AlwaysColorText extends Plugin {
         (leaf) => {
           if (leaf && leaf.view instanceof MarkdownView) {
             try {
-              // Trigger rerender in preview mode or fallback to refresh all reading views
               if (leaf.view.getMode && leaf.view.getMode() === "preview") {
-                try {
-                  if (
-                    leaf.view.previewMode &&
-                    typeof leaf.view.previewMode.rerender === "function"
-                  ) {
-                    leaf.view.previewMode.rerender(true);
-                  } else if (typeof leaf.view.rerender === "function") {
-                    leaf.view.rerender();
-                  } else {
-                    // Fallback: refresh all reading views (less ideal but safe)
-                    this.forceRefreshAllReadingViews();
-                  }
-                } catch (e) {
-                  // If the above fails, fallback to global refresh
-                  this.forceRefreshAllReadingViews();
-                }
+                this.forceRefreshAllReadingViews();
 
                 // Fallback: try to process the rendered preview root directly
                 setTimeout(() => {
@@ -10642,7 +10652,36 @@ module.exports = class AlwaysColorText extends Plugin {
         leaf.view.getMode &&
         leaf.view.getMode() === "preview"
       ) {
-        // Re-render reading mode
+        const root =
+          (leaf.view.previewMode && leaf.view.previewMode.containerEl) ||
+          leaf.view.contentEl ||
+          leaf.view.containerEl;
+        let scroller = null;
+        try {
+          let cur = root;
+          for (let i = 0; i < 8 && cur; i++) {
+            if (
+              cur.scrollHeight &&
+              cur.clientHeight &&
+              cur.scrollHeight - cur.clientHeight > 4
+            ) {
+              scroller = cur;
+              break;
+            }
+            cur = cur.parentElement;
+          }
+        } catch (_) {}
+        if (!scroller) {
+          try {
+            scroller =
+              document.scrollingElement ||
+              document.documentElement ||
+              document.body ||
+              null;
+          } catch (_) {}
+        }
+        const prevTop = scroller ? scroller.scrollTop : 0;
+        const prevLeft = scroller ? scroller.scrollLeft : 0;
         if (typeof leaf.view.previewMode?.rerender === "function") {
           leaf.view.previewMode.rerender(true);
         } else if (typeof leaf.view.previewMode?.render === "function") {
@@ -10650,13 +10689,21 @@ module.exports = class AlwaysColorText extends Plugin {
         } else if (typeof leaf.view?.rerender === "function") {
           leaf.view.rerender();
         }
+        if (scroller) {
+          setTimeout(() => {
+            try {
+              if (typeof scroller.scrollTo === "function") {
+                scroller.scrollTo({ top: prevTop, left: prevLeft, behavior: "auto" });
+              } else {
+                scroller.scrollTop = prevTop;
+                scroller.scrollLeft = prevLeft;
+              }
+            } catch (_) {}
+          }, 0);
+        }
 
         try {
           if (this.settings.enabled) {
-            const root =
-              (leaf.view.previewMode && leaf.view.previewMode.containerEl) ||
-              leaf.view.contentEl ||
-              leaf.view.containerEl;
             const path =
               leaf.view.file && leaf.view.file.path
                 ? leaf.view.file.path
