@@ -335,6 +335,7 @@ var require_en = __commonJS({
       "preset_task_unchecked": "Task Lists (Unchecked)",
       "preset_dates_yyyy_mm_dd": "Dates (YYYY-MM-DD)",
       "preset_times_am_pm": "Times (AM/PM)",
+      "preset_times_short_am_pm": "Time (AM/PM)",
       "preset_times_24h": "Times (24h)",
       "preset_dates_yyyy_mmm_dd": "Dates (YYYY-MMM-DD)",
       "preset_relative_dates": "Relative Dates",
@@ -375,6 +376,7 @@ var require_en = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-Jan-19",
       "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_short_ampm": "2pm, 10am",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "today, tomorrow",
       "preset_example_url": "https://example.com",
@@ -866,6 +868,7 @@ var require_es = __commonJS({
       "preset_task_unchecked": "Listas de Tareas (Sin Marcar)",
       "preset_dates_yyyy_mm_dd": "Fechas (AAAA-MM-DD)",
       "preset_times_am_pm": "Horas (AM/PM)",
+      "preset_times_short_am_pm": "Hora (AM/PM)",
       "preset_times_24h": "Horas (24h)",
       "preset_dates_yyyy_mmm_dd": "Fechas (AAAA-MMM-DD)",
       "preset_relative_dates": "Fechas Relativas",
@@ -902,6 +905,7 @@ var require_es = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-Jan-19",
       "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_short_ampm": "2pm, 10am",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "today, tomorrow",
       "preset_example_url": "https://example.com",
@@ -1398,6 +1402,7 @@ var require_fr = __commonJS({
       "preset_task_unchecked": "Listes de t\xE2ches (Non coch\xE9es)",
       "preset_dates_yyyy_mm_dd": "Dates (AAAA-MM-JJ)",
       "preset_times_am_pm": "Heures (AM/PM)",
+      "preset_times_short_am_pm": "Heure (AM/PM)",
       "preset_times_24h": "Heures (24h)",
       "preset_dates_yyyy_mmm_dd": "Dates (AAAA-MMM-JJ)",
       "preset_relative_dates": "Dates relatives",
@@ -1434,6 +1439,7 @@ var require_fr = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-Jan-19",
       "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_short_ampm": "2pm, 10am",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "today, tomorrow",
       "preset_example_url": "https://example.com",
@@ -1934,6 +1940,7 @@ var require_hi = __commonJS({
       "preset_task_unchecked": "\u091F\u093E\u0938\u094D\u0915 \u0932\u093F\u0938\u094D\u091F (\u0905\u0928\u091A\u0947\u0915 \u0915\u093F\u092F\u093E \u0939\u0941\u0906)",
       "preset_dates_yyyy_mm_dd": "\u0924\u093F\u0925\u093F\u092F\u093E\u0901 (YYYY-MM-DD)",
       "preset_times_am_pm": "\u0938\u092E\u092F (AM/PM)",
+      "preset_times_short_am_pm": "\u0938\u092E\u092F (AM/PM)",
       "preset_times_24h": "\u0938\u092E\u092F (24h)",
       "preset_dates_yyyy_mmm_dd": "\u0924\u093F\u0925\u093F\u092F\u093E\u0901 (YYYY-MMM-DD)",
       "preset_relative_dates": "\u0938\u093E\u092A\u0947\u0915\u094D\u0937 \u0924\u093F\u0925\u093F\u092F\u093E\u0901",
@@ -1970,6 +1977,7 @@ var require_hi = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-Jan-19",
       "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_short_ampm": "2pm, 10am",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "today, tomorrow",
       "preset_example_url": "https://example.com",
@@ -2464,6 +2472,7 @@ var require_it = __commonJS({
       "preset_task_unchecked": "Elenco attivit\xE0 (non selezionato)",
       "preset_dates_yyyy_mm_dd": "Date (AAAA-MM-GG)",
       "preset_times_am_pm": "Orari (AM/PM)",
+      "preset_times_short_am_pm": "Ora (AM/PM)",
       "preset_times_24h": "Orari (24h)",
       "preset_dates_yyyy_mmm_dd": "Date (AAAA-MMM-GG)",
       "preset_relative_dates": "Date relative",
@@ -2500,6 +2509,7 @@ var require_it = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-Jan-19",
       "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_short_ampm": "2pm, 10am",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "today, tomorrow",
       "preset_example_url": "https://example.com",
@@ -2996,6 +3006,7 @@ var require_bn = __commonJS({
       "preset_task_unchecked": "\u099F\u09BE\u09B8\u09CD\u0995 \u09B2\u09BF\u09B8\u09CD\u099F (\u0985\u099A\u09C7\u0995 \u0995\u09B0\u09BE)",
       "preset_dates_yyyy_mm_dd": "\u09A4\u09BE\u09B0\u09BF\u0996 (YYYY-MM-DD)",
       "preset_times_am_pm": "\u09B8\u09AE\u09AF\u09BC (AM/PM)",
+      "preset_times_short_am_pm": "\u09B8\u09AE\u09AF\u09BC (AM/PM)",
       "preset_times_24h": "\u09B8\u09AE\u09AF\u09BC (24h)",
       "preset_dates_yyyy_mmm_dd": "\u09A4\u09BE\u09B0\u09BF\u0996 (YYYY-MMM-DD)",
       "preset_relative_dates": "\u0986\u09AA\u09C7\u0995\u09CD\u09B7\u09BF\u0995 \u09A4\u09BE\u09B0\u09BF\u0996",
@@ -3032,6 +3043,7 @@ var require_bn = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-Jan-19",
       "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_short_ampm": "2pm, 10am",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "today, tomorrow",
       "preset_example_url": "https://example.com",
@@ -3555,6 +3567,7 @@ var require_ru = __commonJS({
       "preset_task_unchecked": "\u0421\u043F\u0438\u0441\u043A\u0438 \u0437\u0430\u0434\u0430\u0447 (\u041D\u0435\u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u043D\u044B\u0435)",
       "preset_dates_yyyy_mm_dd": "\u0414\u0430\u0442\u044B (\u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414)",
       "preset_times_am_pm": "\u0412\u0440\u0435\u043C\u044F (AM/PM)",
+      "preset_times_short_am_pm": "\u0412\u0440\u0435\u043C\u044F (AM/PM)",
       "preset_times_24h": "\u0412\u0440\u0435\u043C\u044F (24h)",
       "preset_dates_yyyy_mmm_dd": "\u0414\u0430\u0442\u044B (\u0413\u0413\u0413\u0413-\u041C\u041C\u041C-\u0414\u0414)",
       "preset_relative_dates": "\u041E\u0442\u043D\u043E\u0441\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0435 \u0434\u0430\u0442\u044B",
@@ -3591,6 +3604,7 @@ var require_ru = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-Jan-19",
       "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_short_ampm": "2pm, 10am",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "today, tomorrow",
       "preset_example_url": "https://example.com",
@@ -4085,6 +4099,7 @@ var require_zh_cn = __commonJS({
       "preset_task_unchecked": "\u4EFB\u52A1\u5217\u8868\uFF08\u672A\u9009\uFF09",
       "preset_dates_yyyy_mm_dd": "\u65E5\u671F (YYYY-MM-DD)",
       "preset_times_am_pm": "\u65F6\u95F4 (AM/PM)",
+      "preset_times_short_am_pm": "\u65F6\u95F4 (AM/PM)",
       "preset_times_24h": "\u65F6\u95F4 (24h)",
       "preset_dates_yyyy_mmm_dd": "\u65E5\u671F (YYYY-MMM-DD)",
       "preset_relative_dates": "\u76F8\u5BF9\u65E5\u671F",
@@ -4121,6 +4136,7 @@ var require_zh_cn = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-Jan-19",
       "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_short_ampm": "2pm, 10am",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "today, tomorrow",
       "preset_example_url": "https://example.com",
@@ -4618,6 +4634,7 @@ var require_de = __commonJS({
       "preset_task_unchecked": "Aufgabenlisten (Unerledigt)",
       "preset_dates_yyyy_mm_dd": "Daten (JJJJ-MM-TT)",
       "preset_times_am_pm": "Zeiten (AM/PM)",
+      "preset_times_short_am_pm": "Zeit (AM/PM)",
       "preset_times_24h": "Zeiten (24h)",
       "preset_dates_yyyy_mmm_dd": "Daten (JJJJ-MMM-TT)",
       "preset_relative_dates": "Relative Daten",
@@ -4658,6 +4675,7 @@ var require_de = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-Jan-19",
       "preset_example_time_ampm": "9:05pm",
+      "preset_example_time_short_ampm": "2pm, 10am",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "heute, morgen",
       "preset_example_url": "https://beispiel.de",
@@ -5155,6 +5173,7 @@ var require_ar = __commonJS({
       "preset_task_unchecked": "\u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0645\u0647\u0627\u0645 (\u063A\u064A\u0631 \u0645\u0643\u062A\u0645\u0644\u0629)",
       "preset_dates_yyyy_mm_dd": "\u0627\u0644\u062A\u0648\u0627\u0631\u064A\u062E (YYYY-MM-DD)",
       "preset_times_am_pm": "\u0627\u0644\u0623\u0648\u0642\u0627\u062A (\u0635/\u0645)",
+      "preset_times_short_am_pm": "\u0627\u0644\u0648\u0642\u062A (\u0635/\u0645)",
       "preset_times_24h": "\u0627\u0644\u0623\u0648\u0642\u0627\u062A (24 \u0633\u0627\u0639\u0629)",
       "preset_dates_yyyy_mmm_dd": "\u0627\u0644\u062A\u0648\u0627\u0631\u064A\u062E (YYYY-MMM-DD)",
       "preset_relative_dates": "\u0627\u0644\u062A\u0648\u0627\u0631\u064A\u062E \u0627\u0644\u0646\u0633\u0628\u064A\u0629",
@@ -5195,6 +5214,7 @@ var require_ar = __commonJS({
       "preset_example_date_iso": "2009-01-19",
       "preset_example_date_text": "2025-\u064A\u0646\u0627\u064A\u0631-19",
       "preset_example_time_ampm": "9:05\u0645",
+      "preset_example_time_short_ampm": "2 \u0645\u0633\u0627\u0621\u064B\u060C 10 \u0635\u0628\u0627\u062D\u0627\u064B",
       "preset_example_time_24h": "13:00",
       "preset_example_relative": "\u0627\u0644\u064A\u0648\u0645\u060C \u063A\u062F\u0627\u064B",
       "preset_example_url": "https://example.com",
@@ -5520,10 +5540,16 @@ function getEntryForHeadingLevel(entries, level) {
   }
   return null;
 }
-var IS_DEVELOPMENT = false;
+var IS_DEVELOPMENT = true;
 var debugLog = (tag, ...args) => {
+  if (IS_DEVELOPMENT) {
+    console.log(`[ACT][${tag}]`, ...args);
+  }
 };
 var debugError = (tag, ...args) => {
+  if (IS_DEVELOPMENT) {
+    console.error(`[ACT][ERROR][${tag}]`, ...args);
+  }
 };
 var debugWarn = (tag, ...args) => {
 };
@@ -7246,9 +7272,21 @@ var BloomFilter = class {
     const p = String(pattern).toLowerCase();
     let base = p;
     if (isRegex) {
-      const m = p.match(/[a-z0-9\u4e00-\u9fa5]{1,}/i);
-      base = m ? m[0].toLowerCase() : "";
+      const literals = p.match(/[a-z0-9\u4e00-\u9fa5]{1,}/gi);
+      if (literals && literals.length > 0) {
+        for (const lit of literals) {
+          if (lit.length === 1 && /[bdswrtn]/.test(lit)) {
+            const idx = p.indexOf("\\" + lit);
+            if (idx !== -1) continue;
+          }
+          this._addLiteralToBase(lit);
+        }
+        return;
+      }
     }
+    this._addLiteralToBase(base);
+  }
+  _addLiteralToBase(base) {
     if (!base) return;
     if (base.length === 1) {
       if (!this._singleChars.includes(base)) {
@@ -7344,6 +7382,9 @@ var PatternMatcher = class {
     return text.substring(wordStart, wordEnd);
   }
   matchSatisfiesType(text, start, end, entry) {
+    if (entry && entry.isRegex) {
+      return true;
+    }
     const matchType = String(
       entry?.matchType || (this.settings.partialMatch ? "contains" : "exact")
     ).toLowerCase();
@@ -14269,6 +14310,9 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   matchSatisfiesType(text, start, end, entry) {
     try {
+      if (entry && entry.isRegex) {
+        return true;
+      }
       const matchType = String(
         entry?.matchType || (this.settings.partialMatch ? "contains" : "exact")
       ).toLowerCase();
@@ -14389,9 +14433,15 @@ module.exports = class AlwaysColorText extends Plugin {
           if (bloom2 && !bloom2.mightContain(text)) return false;
           return true;
         };
-      const isPresetPattern = pattern && (pattern.includes("am") || pattern.includes("@[a-zA-Z"));
+      const isPresetPattern = pattern && (pattern.includes("am") || pattern.includes("pm") || pattern.includes("[ap]m") || pattern.includes(":[0-5][0-9]") || pattern.includes("@[a-zA-Z") || /am|pm|\[ap\]m|:[0-5][0-9]|@\[a-zA-Z/.test(pattern));
+      if (isPresetPattern) {
+        if (pattern && (pattern.includes("pm") || pattern.includes("[ap]m"))) {
+          debugLog("FASTTEST_PRESET_BYPASS", `Pattern: ${pattern}, bypassing ALL filters`);
+        }
+        return (text) => true;
+      }
       const bloom = this._bloomFilter;
-      const withBloom = isPresetPattern ? (fn) => fn : (fn) => (text) => {
+      const withBloom = (fn) => (text) => {
         if (bloom && !bloom.mightContain(text)) return false;
         return fn(text);
       };
@@ -14425,10 +14475,14 @@ module.exports = class AlwaysColorText extends Plugin {
             (text) => typeof text === "string" && (text.includes("$") || text.includes("\u20AC") || text.includes("\xA3"))
           );
         }
-        if (pattern.includes(":")) {
-          return withBloom(
-            (text) => typeof text === "string" && text.includes(":")
-          );
+        if (pattern.includes(":") && (!isRegex || (pattern.includes(" :") || pattern.includes(": ") || /\\:/.test(pattern) || /[^?]:/.test(pattern)))) {
+          const isNonCapturing = isRegex && /\(\?:/.test(pattern);
+          const hasLiteralColon = isRegex && /\\:/.test(pattern);
+          if (!isRegex || hasLiteralColon || !isNonCapturing) {
+            return withBloom(
+              (text) => typeof text === "string" && text.includes(":")
+            );
+          }
         }
         if (pattern.includes("@")) {
           return withBloom(
@@ -16901,6 +16955,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // Process only the active file: immediate visible blocks then deferred idle processing
   processActiveFileOnly(el, ctx) {
+    debugLog("PROC_ACTIVE", `Path: ${ctx?.sourcePath}`);
     if (!el || !ctx || !ctx.sourcePath) return;
     if (!this.settings.enabled) return;
     try {
@@ -17117,6 +17172,8 @@ module.exports = class AlwaysColorText extends Plugin {
       entries: allowedEntries,
       filePath: ctx.sourcePath
     });
+    const isReadingRoot = el && (el.classList.contains("markdown-rendered") || el.closest(".markdown-reading-view"));
+    const immediateBlocks = isReadingRoot ? 100 : 10;
     const t0 = performance.now();
     processNow();
     debugLog("ACT", `immediate pass: ${(performance.now() - t0).toFixed(1)}ms`);
@@ -17795,10 +17852,17 @@ module.exports = class AlwaysColorText extends Plugin {
   _processBlock(block, entries, folderEntry, opts = {}) {
     if (block.matches && block.matches(".inline_spoilers-spoiler")) return;
     try {
-      try {
-        this._domRefs.set(block, { processedAt: Date.now(), matchCount: 0 });
-      } catch (e) {
+      const blockText = block.textContent || "";
+      if (blockText.toLowerCase().includes("pm") || blockText.toLowerCase().includes("am")) {
+        debugLog(
+          "BLOCK_PROC_START",
+          `Block: ${block.nodeName}.${block.className}, text snippet: "${blockText.substring(0, 30)}"`
+        );
       }
+    } catch (e) {
+    }
+    try {
+      this._domRefs.set(block, { processedAt: Date.now(), matchCount: 0 });
     } catch (e) {
     }
     const clearExisting = opts.clearExisting !== false;
@@ -17982,6 +18046,9 @@ module.exports = class AlwaysColorText extends Plugin {
     let refreshNode;
     while (refreshNode = refreshWalker.nextNode()) {
       textNodes.push(refreshNode);
+      if (refreshNode.textContent.toLowerCase().includes("pm")) {
+        debugLog("TEXT_NODE_FOUND", `Found text node with 'pm': "${refreshNode.textContent}"`);
+      }
     }
     for (const node of textNodes) {
       let text = node.textContent;
@@ -18144,19 +18211,29 @@ module.exports = class AlwaysColorText extends Plugin {
       } catch (_) {
       }
       if (textBgEntries.length > TEXT_BG_CHUNK_SIZE) {
+        debugLog("TEXTBG_CHUNK", `Processing ${textBgEntries.length} entries in chunks`);
         for (let i = 0; i < textBgEntries.length && matches.length < maxMatches; i += TEXT_BG_CHUNK_SIZE) {
           const chunk = textBgEntries.slice(i, i + TEXT_BG_CHUNK_SIZE);
           for (const entry of chunk) {
             if (!entry || entry.invalid) continue;
             try {
               if (entry.fastTest && typeof entry.fastTest === "function") {
-                if (!entry.fastTest(text)) continue;
+                const fastTestResult = entry.fastTest(text);
+                if (!fastTestResult) {
+                  if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+                    debugLog("FASTTEST_SKIP", `Skipped '${entry.presetLabel}' for text: "${text}"`);
+                  }
+                  continue;
+                }
               }
             } catch (e) {
             }
             const regex = entry.regex;
             if (!regex) continue;
             const _matches = this.safeMatchLoop(regex, text);
+            if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+              debugLog("TIME_MATCH_CHECK", `Entry: ${entry.presetLabel}, pattern: ${entry.pattern}, matches: ${_matches.length}, text: "${text}"`);
+            }
             for (const match of _matches) {
               const matchedText = match[0];
               const matchStart = match.index;
@@ -18206,17 +18283,27 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
       } else {
+        debugLog("TEXTBG_SMALL", `Processing ${textBgEntries.length} entries directly`);
         for (const entry of textBgEntries) {
           if (!entry || entry.invalid) continue;
           try {
             if (entry.fastTest && typeof entry.fastTest === "function") {
-              if (!entry.fastTest(text)) continue;
+              const fastTestResult = entry.fastTest(text);
+              if (!fastTestResult) {
+                if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+                  debugLog("FASTTEST_SKIP_SMALL", `Skipped '${entry.presetLabel}' for text: "${text}"`);
+                }
+                continue;
+              }
             }
           } catch (e) {
           }
           const regex = entry.regex;
           if (!regex) continue;
           const _matches = this.safeMatchLoop(regex, text);
+          if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+            debugLog("TIME_MATCH_CHECK_SMALL", `Entry: ${entry.presetLabel}, matches: ${_matches.length}, text: "${text}"`);
+          }
           for (const match of _matches) {
             const matchedText = match[0];
             const matchStart = match.index;
@@ -19055,6 +19142,7 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // Async chunked processing to prevent UI freezes on large documents
   async processInChunks(element, entries, folderEntry = null, options = {}) {
+    debugLog("CHUNK_START", `Processing ${element.nodeName}.${element.className}, entries: ${entries.length}`);
     const selector = "p, li, div, span, td, th, blockquote, h1, h2, h3, h4, h5, h6";
     const batch = Number(options.batchSize) || 20;
     const blocks = [];
@@ -22104,7 +22192,12 @@ module.exports = class AlwaysColorText extends Plugin {
     if (textBgEntries.length > 0) {
       for (const entry of textBgEntries) {
         if (!entry || entry.invalid) continue;
-        if (entry.fastTest && !entry.fastTest(text)) continue;
+        if (entry.fastTest && !entry.fastTest(text)) {
+          if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+            debugLog("TBG_FASTTEST_SKIP", `Skipped '${entry.presetLabel}' for text snippet: "${text.substring(0, 30)}"`);
+          }
+          continue;
+        }
         const regex = entry.regex;
         if (!regex) continue;
         let match;
@@ -22112,7 +22205,13 @@ module.exports = class AlwaysColorText extends Plugin {
           regex.lastIndex = 0;
         } catch (e) {
         }
+        if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+          debugLog("TBG_REGEX_CHECK", `Entry: ${entry.presetLabel}, pattern: ${entry.pattern}, text length: ${text.length}`);
+        }
         while (match = regex.exec(text)) {
+          if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+            debugLog("TBG_MATCH_FOUND", `Found match: "${match[0]}" at ${match.index}`);
+          }
           const matchStart = match.index;
           const matchEnd = match.index + match[0].length;
           if (this.settings.enableWordCompletionColoring) {
@@ -22276,7 +22375,12 @@ module.exports = class AlwaysColorText extends Plugin {
         ).toLowerCase()
       ) && !this.isSentenceLikePattern(entry.pattern);
       if (isPartialEntry) continue;
-      if (entry.fastTest && !entry.fastTest(text)) continue;
+      if (entry.fastTest && !entry.fastTest(text)) {
+        if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+          debugLog("LP_FASTTEST_SKIP", `Skipped '${entry.presetLabel}' for text snippet: "${text.substring(0, 30)}"`);
+        }
+        continue;
+      }
       const regex = entry.regex;
       if (!regex) continue;
       let match;
@@ -22285,7 +22389,13 @@ module.exports = class AlwaysColorText extends Plugin {
         regex.lastIndex = 0;
       } catch (e) {
       }
+      if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+        debugLog("LP_REGEX_CHECK", `Entry: ${entry.presetLabel}, pattern: ${entry.pattern}, text length: ${text.length}`);
+      }
       while ((match = regex.exec(text)) && matchCount < MAX_MATCHES_PER_PATTERN) {
+        if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+          debugLog("LP_MATCH_FOUND", `Found match: "${match[0]}" at ${match.index}`);
+        }
         const matchedText = match[0];
         const matchStart = baseFrom + match.index;
         const matchEnd = baseFrom + match.index + matchedText.length;
@@ -23298,9 +23408,17 @@ var PresetModal = class extends Modal {
       },
       {
         label: this.plugin.t("preset_times_am_pm", "Times (AM/PM)"),
-        pattern: "\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b",
+        pattern: "(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)",
         flags: "i",
         examples: [this.plugin.t("preset_example_time_ampm", "9:05pm")]
+      },
+      {
+        label: this.plugin.t("preset_times_short_am_pm", "Times (2pm, 10pm)"),
+        pattern: "(?:1[0-2]|0?[1-9])(?:\\s?[ap]m)",
+        flags: "i",
+        examples: [
+          this.plugin.t("preset_example_time_short_ampm", "2pm, 10pm")
+        ]
       },
       {
         label: this.plugin.t("preset_times_24h", "Times (24h)"),

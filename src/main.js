@@ -1,4 +1,4 @@
-const {
+﻿const {
   Plugin,
   PluginSettingTab,
   Setting,
@@ -135,15 +135,19 @@ function getEntryForHeadingLevel(entries, level) {
 }
 
 // Development mode flag
-const IS_DEVELOPMENT = false;
+const IS_DEVELOPMENT = true;
 
 // Helper function for conditional debug logging
 const debugLog = (tag, ...args) => {
-  // Disabled for production
+  if (IS_DEVELOPMENT) {
+    console.log(`[ACT][${tag}]`, ...args);
+  }
 };
 
 const debugError = (tag, ...args) => {
-  // Disabled for production
+  if (IS_DEVELOPMENT) {
+    console.error(`[ACT][ERROR][${tag}]`, ...args);
+  }
 };
 
 const debugWarn = (tag, ...args) => {
@@ -2267,9 +2271,24 @@ class BloomFilter {
     const p = String(pattern).toLowerCase();
     let base = p;
     if (isRegex) {
-      const m = p.match(/[a-z0-9\u4e00-\u9fa5]{1,}/i);
-      base = m ? m[0].toLowerCase() : "";
+      // Improved literal extraction: find sequences of characters that are likely literal
+      const literals = p.match(/[a-z0-9\u4e00-\u9fa5]{1,}/gi);
+      if (literals && literals.length > 0) {
+        for (const lit of literals) {
+          // Skip common regex meta-characters if they are escaped
+          if (lit.length === 1 && /[bdswrtn]/.test(lit)) {
+            const idx = p.indexOf("\\" + lit);
+            if (idx !== -1) continue;
+          }
+          this._addLiteralToBase(lit);
+        }
+        return; // Already added all tokens
+      }
     }
+    this._addLiteralToBase(base);
+  }
+
+  _addLiteralToBase(base) {
     if (!base) return;
     if (base.length === 1) {
       if (!this._singleChars.includes(base)) {
@@ -2396,6 +2415,13 @@ class PatternMatcher {
   }
 
   matchSatisfiesType(text, start, end, entry) {
+    // CRITICAL: For regex patterns, the regex itself defines the matching logic
+    // (including boundaries via \b). We should always return true here to avoid
+    // incorrectly comparing the regex pattern string with the matched text.
+    if (entry && entry.isRegex) {
+      return true;
+    }
+
     const matchType = String(
       entry?.matchType || (this.settings.partialMatch ? "contains" : "exact"),
     ).toLowerCase();
@@ -10829,6 +10855,13 @@ module.exports = class AlwaysColorText extends Plugin {
 
   matchSatisfiesType(text, start, end, entry) {
     try {
+      // CRITICAL: For regex patterns, the regex itself defines the matching logic
+      // (including boundaries via \b). We should always return true here to avoid
+      // incorrectly comparing the regex pattern string with the matched text.
+      if (entry && entry.isRegex) {
+        return true;
+      }
+
       const matchType = String(
         entry?.matchType || (this.settings.partialMatch ? "contains" : "exact"),
       ).toLowerCase();
@@ -10992,15 +11025,26 @@ module.exports = class AlwaysColorText extends Plugin {
       // IMPORTANT: For preset patterns (Times, @username, etc.), bypass bloom filter
       // Presets are always-on and should not be filtered by content-based checks
       const isPresetPattern =
-        pattern && (pattern.includes("am") || pattern.includes("@[a-zA-Z"));
+        pattern &&
+        (pattern.includes("am") ||
+          pattern.includes("pm") ||
+          pattern.includes("[ap]m") ||
+          pattern.includes(":[0-5][0-9]") ||
+          pattern.includes("@[a-zA-Z") ||
+          /am|pm|\[ap\]m|:[0-5][0-9]|@\[a-zA-Z/.test(pattern));
+
+      if (isPresetPattern) {
+        if (pattern && (pattern.includes("pm") || pattern.includes("[ap]m"))) {
+          debugLog("FASTTEST_PRESET_BYPASS", `Pattern: ${pattern}, bypassing ALL filters`);
+        }
+        return (text) => true; // Presets ALWAYS bypass performance filters
+      }
 
       const bloom = this._bloomFilter;
-      const withBloom = isPresetPattern
-        ? (fn) => fn // Bypass bloom filter for presets
-        : (fn) => (text) => {
-            if (bloom && !bloom.mightContain(text)) return false;
-            return fn(text);
-          };
+      const withBloom = (fn) => (text) => {
+        if (bloom && !bloom.mightContain(text)) return false;
+        return fn(text);
+      };
 
       // NON-ROMAN CHARACTERS - SIMPLE HANDLING
       if (this.containsNonRomanCharacters(pattern)) {
@@ -11048,10 +11092,25 @@ module.exports = class AlwaysColorText extends Plugin {
               (text.includes("$") || text.includes("€") || text.includes("£")),
           );
         }
-        if (pattern.includes(":")) {
-          return withBloom(
-            (text) => typeof text === "string" && text.includes(":"),
-          );
+        // Smarter colon check: only if it's likely a literal colon, not part of (?: or (?<= or (?<!
+        if (
+          pattern.includes(":") &&
+          (!isRegex ||
+            (pattern.includes(" :") ||
+              pattern.includes(": ") ||
+              /\\:/.test(pattern) ||
+              /[^?]:/.test(pattern)))
+        ) {
+          // If it's a regex and contains (?: we should be careful.
+          // For now, if it's a regex and contains (?:, we bypass the colon check unless it's a literal \:
+          const isNonCapturing = isRegex && /\(\?:/.test(pattern);
+          const hasLiteralColon = isRegex && /\\:/.test(pattern);
+
+          if (!isRegex || hasLiteralColon || !isNonCapturing) {
+            return withBloom(
+              (text) => typeof text === "string" && text.includes(":"),
+            );
+          }
         }
         if (pattern.includes("@")) {
           return withBloom(
@@ -14203,6 +14262,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // Process only the active file: immediate visible blocks then deferred idle processing
   processActiveFileOnly(el, ctx) {
+    debugLog("PROC_ACTIVE", `Path: ${ctx?.sourcePath}`);
     if (!el || !ctx || !ctx.sourcePath) return;
     if (!this.settings.enabled) return;
     try {
@@ -14484,6 +14544,12 @@ module.exports = class AlwaysColorText extends Plugin {
         entries: allowedEntries,
         filePath: ctx.sourcePath,
       });
+
+    const isReadingRoot =
+      el &&
+      (el.classList.contains("markdown-rendered") ||
+        el.closest(".markdown-reading-view"));
+    const immediateBlocks = isReadingRoot ? 100 : 10;
 
     // Fast-path immediate pass for visible content
     const t0 = performance.now();
@@ -15306,11 +15372,21 @@ module.exports = class AlwaysColorText extends Plugin {
   _processBlock(block, entries, folderEntry, opts = {}) {
     if (block.matches && block.matches(".inline_spoilers-spoiler")) return;
     try {
-      // Track lightweight metadata about this block without attaching to DOM
-      try {
-        this._domRefs.set(block, { processedAt: Date.now(), matchCount: 0 });
-      } catch (e) {}
+      const blockText = block.textContent || "";
+      if (
+        blockText.toLowerCase().includes("pm") ||
+        blockText.toLowerCase().includes("am")
+      ) {
+        debugLog(
+          "BLOCK_PROC_START",
+          `Block: ${block.nodeName}.${block.className}, text snippet: "${blockText.substring(0, 30)}"`,
+        );
+      }
     } catch (e) {}
+    try {
+      this._domRefs.set(block, { processedAt: Date.now(), matchCount: 0 });
+    } catch (e) {}
+
     const clearExisting = opts.clearExisting !== false;
     // Resolve effectiveStyle safely: prefer explicit option, then folderEntry, then global setting
     let effectiveStyle;
@@ -15539,6 +15615,9 @@ module.exports = class AlwaysColorText extends Plugin {
     let refreshNode;
     while ((refreshNode = refreshWalker.nextNode())) {
       textNodes.push(refreshNode);
+      if (refreshNode.textContent.toLowerCase().includes("pm")) {
+        debugLog("TEXT_NODE_FOUND", `Found text node with 'pm': "${refreshNode.textContent}"`);
+      }
     }
 
     for (const node of textNodes) {
@@ -15736,6 +15815,7 @@ module.exports = class AlwaysColorText extends Plugin {
       } catch (_) {}
 
       if (textBgEntries.length > TEXT_BG_CHUNK_SIZE) {
+        debugLog("TEXTBG_CHUNK", `Processing ${textBgEntries.length} entries in chunks`);
         // Process in chunks
         for (
           let i = 0;
@@ -15748,7 +15828,13 @@ module.exports = class AlwaysColorText extends Plugin {
 
             try {
               if (entry.fastTest && typeof entry.fastTest === "function") {
-                if (!entry.fastTest(text)) continue;
+                const fastTestResult = entry.fastTest(text);
+                if (!fastTestResult) {
+                  if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+                    debugLog("FASTTEST_SKIP", `Skipped '${entry.presetLabel}' for text: "${text}"`);
+                  }
+                  continue;
+                }
               }
             } catch (e) {}
 
@@ -15756,6 +15842,9 @@ module.exports = class AlwaysColorText extends Plugin {
             if (!regex) continue;
 
             const _matches = this.safeMatchLoop(regex, text);
+            if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+              debugLog("TIME_MATCH_CHECK", `Entry: ${entry.presetLabel}, pattern: ${entry.pattern}, matches: ${_matches.length}, text: "${text}"`);
+            }
             for (const match of _matches) {
               const matchedText = match[0];
               const matchStart = match.index;
@@ -15829,13 +15918,20 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
       } else {
+        debugLog("TEXTBG_SMALL", `Processing ${textBgEntries.length} entries directly`);
         // Process all at once if fewer than chunk size
         for (const entry of textBgEntries) {
           if (!entry || entry.invalid) continue;
 
           try {
             if (entry.fastTest && typeof entry.fastTest === "function") {
-              if (!entry.fastTest(text)) continue;
+              const fastTestResult = entry.fastTest(text);
+              if (!fastTestResult) {
+                if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+                  debugLog("FASTTEST_SKIP_SMALL", `Skipped '${entry.presetLabel}' for text: "${text}"`);
+                }
+                continue;
+              }
             }
           } catch (e) {}
 
@@ -15843,6 +15939,9 @@ module.exports = class AlwaysColorText extends Plugin {
           if (!regex) continue;
 
           const _matches = this.safeMatchLoop(regex, text);
+          if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+            debugLog("TIME_MATCH_CHECK_SMALL", `Entry: ${entry.presetLabel}, matches: ${_matches.length}, text: "${text}"`);
+          }
           for (const match of _matches) {
             const matchedText = match[0];
             const matchStart = match.index;
@@ -16951,6 +17050,7 @@ module.exports = class AlwaysColorText extends Plugin {
 
   // Async chunked processing to prevent UI freezes on large documents
   async processInChunks(element, entries, folderEntry = null, options = {}) {
+    debugLog("CHUNK_START", `Processing ${element.nodeName}.${element.className}, entries: ${entries.length}`);
     // Use TreeWalker to avoid materializing large array of DOM references
     const selector =
       "p, li, div, span, td, th, blockquote, h1, h2, h3, h4, h5, h6";
@@ -21083,7 +21183,12 @@ module.exports = class AlwaysColorText extends Plugin {
       for (const entry of textBgEntries) {
         if (!entry || entry.invalid) continue;
 
-        if (entry.fastTest && !entry.fastTest(text)) continue;
+        if (entry.fastTest && !entry.fastTest(text)) {
+          if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+            debugLog("TBG_FASTTEST_SKIP", `Skipped '${entry.presetLabel}' for text snippet: "${text.substring(0, 30)}"`);
+          }
+          continue;
+        }
 
         const regex = entry.regex;
         if (!regex) continue;
@@ -21093,7 +21198,14 @@ module.exports = class AlwaysColorText extends Plugin {
           regex.lastIndex = 0;
         } catch (e) {}
 
+        if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+          debugLog("TBG_REGEX_CHECK", `Entry: ${entry.presetLabel}, pattern: ${entry.pattern}, text length: ${text.length}`);
+        }
+
         while ((match = regex.exec(text))) {
+          if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+            debugLog("TBG_MATCH_FOUND", `Found match: "${match[0]}" at ${match.index}`);
+          }
           const matchStart = match.index;
           const matchEnd = match.index + match[0].length;
 
@@ -21350,7 +21462,12 @@ module.exports = class AlwaysColorText extends Plugin {
       if (isPartialEntry) continue;
 
       // Fast pre-check
-      if (entry.fastTest && !entry.fastTest(text)) continue;
+      if (entry.fastTest && !entry.fastTest(text)) {
+        if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+          debugLog("LP_FASTTEST_SKIP", `Skipped '${entry.presetLabel}' for text snippet: "${text.substring(0, 30)}"`);
+        }
+        continue;
+      }
 
       const regex = entry.regex;
       if (!regex) continue;
@@ -21363,10 +21480,17 @@ module.exports = class AlwaysColorText extends Plugin {
         regex.lastIndex = 0;
       } catch (e) {}
 
+      if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+        debugLog("LP_REGEX_CHECK", `Entry: ${entry.presetLabel}, pattern: ${entry.pattern}, text length: ${text.length}`);
+      }
+
       while (
         (match = regex.exec(text)) &&
         matchCount < MAX_MATCHES_PER_PATTERN
       ) {
+        if (entry.presetLabel && entry.presetLabel.includes("Time")) {
+          debugLog("LP_MATCH_FOUND", `Found match: "${match[0]}" at ${match.index}`);
+        }
         const matchedText = match[0];
         const matchStart = baseFrom + match.index;
         const matchEnd = baseFrom + match.index + matchedText.length;
@@ -22757,9 +22881,17 @@ class PresetModal extends Modal {
       },
       {
         label: this.plugin.t("preset_times_am_pm", "Times (AM/PM)"),
-        pattern: "\\b(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)\\b",
+        pattern: "(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)",
         flags: "i",
         examples: [this.plugin.t("preset_example_time_ampm", "9:05pm")],
+      },
+      {
+        label: this.plugin.t("preset_times_short_am_pm", "Times (2pm, 10pm)"),
+        pattern: "(?:1[0-2]|0?[1-9])(?:\\s?[ap]m)",
+        flags: "i",
+        examples: [
+          this.plugin.t("preset_example_time_short_ampm", "2pm, 10pm"),
+        ],
       },
       {
         label: this.plugin.t("preset_times_24h", "Times (24h)"),
