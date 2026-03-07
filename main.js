@@ -12829,7 +12829,7 @@ module.exports = class AlwaysColorText extends Plugin {
         // Enable/disable regex support in the settings UI/runtime
         enableRegexSupport: false,
         // Opt-in: force full reading-mode render (WARNING: may freeze UI on large notes)
-        forceFullRenderInReading: false,
+        forceFullRenderInReading: true,
         // Opt-in: extremely lightweight processing mode (experimental)
         extremeLightweightMode: false,
         // Opt-in: Smart Updates (Freeze non-active lines)
@@ -13874,6 +13874,11 @@ module.exports = class AlwaysColorText extends Plugin {
         parseInt(s.blacklistSearchLimit ?? 0) || 0
       );
       s.pathSearchLimit = Math.max(0, parseInt(s.pathSearchLimit ?? 0) || 0);
+      if (!s.disableReadingModeColoring) {
+        s.forceFullRenderInReading = true;
+      } else {
+        s.forceFullRenderInReading = false;
+      }
       this.settings = s;
     } catch (e) {
     }
@@ -33275,6 +33280,7 @@ var ColorSettingTab = class extends PluginSettingTab {
       ).addToggle(
         (t) => t.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async (v) => {
           this.plugin.settings.disableReadingModeColoring = !v;
+          this.plugin.settings.forceFullRenderInReading = v;
           await this.debouncedSaveSettings();
           try {
             if (!v) {
@@ -33316,31 +33322,6 @@ var ColorSettingTab = class extends PluginSettingTab {
             debugError(
               "SETTINGS",
               "disableReadingModeColoring handler failed",
-              e
-            );
-          }
-        })
-      );
-      new Setting(containerEl2).setName(
-        this.plugin.t(
-          "force_full_render_reading",
-          "Force full render in Reading mode"
-        )
-      ).setDesc(
-        this.plugin.t(
-          "force_full_render_reading_desc",
-          "When ON, reading-mode will attempt to color the entire document in one pass. May cause performance issues on large documents. Use with caution!"
-        )
-      ).addToggle(
-        (t) => t.setValue(this.plugin.settings.forceFullRenderInReading).onChange(async (v) => {
-          this.plugin.settings.forceFullRenderInReading = v;
-          await this.debouncedSaveSettings();
-          try {
-            this.plugin.forceRefreshAllReadingViews();
-          } catch (e) {
-            debugError(
-              "SETTINGS",
-              "forceFullRenderInReading handler failed",
               e
             );
           }
