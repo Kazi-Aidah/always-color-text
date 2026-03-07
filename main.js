@@ -7371,11 +7371,22 @@ var PatternMatcher = class {
   extractFullWordAtPosition(text, start, end) {
     let wordStart = start;
     let wordEnd = end;
-    while (wordStart > 0 && this.isWordCharacter(text[wordStart - 1])) {
-      wordStart--;
-    }
-    while (wordEnd < text.length && this.isWordCharacter(text[wordEnd])) {
-      wordEnd++;
+    const slice = text.substring(start, end);
+    const hasNonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(slice);
+    if (hasNonRoman) {
+      while (wordStart > 0 && this.isCJKChar(text[wordStart - 1])) {
+        wordStart--;
+      }
+      while (wordEnd < text.length && this.isCJKChar(text[wordEnd])) {
+        wordEnd++;
+      }
+    } else {
+      while (wordStart > 0 && this.isWordCharacter(text[wordStart - 1])) {
+        wordStart--;
+      }
+      while (wordEnd < text.length && this.isWordCharacter(text[wordEnd])) {
+        wordEnd++;
+      }
     }
     return text.substring(wordStart, wordEnd);
   }
@@ -7402,6 +7413,11 @@ var PatternMatcher = class {
         return containsMatch;
       case "startswith":
         try {
+          const isNonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern);
+          if (isNonRoman) {
+            const startsWithMatch = cs ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
+            return startsWithMatch;
+          }
           const flags = cs ? "" : "i";
           const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           const re = new RegExp(`^${esc}[A-Za-z]*$`, flags);
@@ -7412,6 +7428,11 @@ var PatternMatcher = class {
         }
       case "endswith":
         try {
+          const isNonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern);
+          if (isNonRoman) {
+            const endsWithMatch = cs ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
+            return endsWithMatch;
+          }
           const flags = cs ? "" : "i";
           const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           const re = new RegExp(`${esc}(?:[^A-Za-z0-9_]|$)`, flags);
@@ -10322,6 +10343,16 @@ module.exports = class AlwaysColorText extends Plugin {
   containsNonRomanCharacters(text) {
     if (!text) return false;
     return /[^\u0000-\u007F\u00A0-\u00FF\u0100-\u017F\u0180-\u024F]/.test(text);
+  }
+  isCJKChar(ch) {
+    try {
+      return /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(
+        ch || ""
+      );
+    } catch (e) {
+      const code = ch && ch.charCodeAt ? ch.charCodeAt(0) : 0;
+      return code > 127 && !/\s/.test(ch);
+    }
   }
   // NEW HELPER: Count non-Roman characters
   countNonRomanCharacters(text) {
@@ -14221,6 +14252,13 @@ module.exports = class AlwaysColorText extends Plugin {
   isWholeWordMatch(text, matchStart, matchEnd) {
     const leftChar = matchStart > 0 ? text[matchStart - 1] : "";
     const rightChar = matchEnd < text.length ? text[matchEnd] : "";
+    const slice = text.substring(matchStart, matchEnd);
+    const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(slice);
+    if (nonRoman) {
+      const leftOk2 = matchStart === 0 || !this.isCJKChar(leftChar);
+      const rightOk2 = matchEnd === text.length || !this.isCJKChar(rightChar);
+      return leftOk2 && rightOk2;
+    }
     const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === "-" || ch === "'";
     const leftOk = matchStart === 0 || !isWordChar(leftChar);
     const rightOk = matchEnd === text.length || !isWordChar(rightChar);
@@ -14299,11 +14337,14 @@ module.exports = class AlwaysColorText extends Plugin {
   extractFullWordAtPosition(text, start, end) {
     let wordStart = start;
     let wordEnd = end;
-    while (wordStart > 0 && this._isWordChar(text[wordStart - 1])) {
-      wordStart--;
-    }
-    while (wordEnd < text.length && this._isWordChar(text[wordEnd])) {
-      wordEnd++;
+    const slice = text.substring(start, end);
+    const hasNonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(slice);
+    if (hasNonRoman) {
+      while (wordStart > 0 && this.isCJKChar(text[wordStart - 1])) wordStart--;
+      while (wordEnd < text.length && this.isCJKChar(text[wordEnd])) wordEnd++;
+    } else {
+      while (wordStart > 0 && this._isWordChar(text[wordStart - 1])) wordStart--;
+      while (wordEnd < text.length && this._isWordChar(text[wordEnd])) wordEnd++;
     }
     return text.substring(wordStart, wordEnd);
   }
@@ -14329,6 +14370,10 @@ module.exports = class AlwaysColorText extends Plugin {
           return containsMatch;
         case "startswith":
           try {
+            if (this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern)) {
+              const startsWithMatch = this.settings.caseSensitive ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
+              return startsWithMatch;
+            }
             if (this._isTyping) throw new Error("Skip strict check");
             const flags = this.settings.caseSensitive ? "" : "i";
             const re = new RegExp(
@@ -14342,6 +14387,10 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         case "endswith":
           try {
+            if (this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern)) {
+              const endsWithMatch = this.settings.caseSensitive ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
+              return endsWithMatch;
+            }
             if (this._isTyping) throw new Error("Skip strict check");
             const flags = this.settings.caseSensitive ? "" : "i";
             const re = new RegExp(
@@ -16013,13 +16062,14 @@ module.exports = class AlwaysColorText extends Plugin {
                 compiled.matchType || "exact"
               ).toLowerCase();
               const isSentence = this.isSentenceLikePattern(pattern);
+              const isNonRoman = this.containsNonRomanCharacters ? this.containsNonRomanCharacters(pattern) : false;
               let finalPattern = esc;
               if (!isSentence && matchTypeLower === "startswith") {
-                finalPattern = "\\b" + esc;
+                finalPattern = isNonRoman ? esc : "\\b" + esc;
               } else if (!isSentence && matchTypeLower === "endswith") {
-                finalPattern = esc + "\\b";
+                finalPattern = isNonRoman ? esc : esc + "\\b";
               } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
-                finalPattern = "\\b" + esc + "\\b";
+                finalPattern = isNonRoman ? esc : "\\b" + esc + "\\b";
               }
               const literalFlags = effectiveCaseSensitive ? "g" : "gi";
               compiled.regex = this._regexCache.getOrCreate(
@@ -16262,13 +16312,14 @@ module.exports = class AlwaysColorText extends Plugin {
                 compiled.matchType || "exact"
               ).toLowerCase();
               const isSentence = this.isSentenceLikePattern(pattern);
+              const isNonRoman = this.containsNonRomanCharacters ? this.containsNonRomanCharacters(pattern) : false;
               let finalPattern = esc;
               if (!isSentence && matchTypeLower === "startswith") {
-                finalPattern = "\\b" + esc;
+                finalPattern = isNonRoman ? esc : "\\b" + esc;
               } else if (!isSentence && matchTypeLower === "endswith") {
-                finalPattern = esc + "\\b";
+                finalPattern = isNonRoman ? esc : esc + "\\b";
               } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
-                finalPattern = "\\b" + esc + "\\b";
+                finalPattern = isNonRoman ? esc : "\\b" + esc + "\\b";
               }
               const literalFlags = effectiveCaseSensitive ? "g" : "gi";
               compiled.regex = this._regexCache.getOrCreate(
@@ -16401,7 +16452,8 @@ module.exports = class AlwaysColorText extends Plugin {
         if (!word) continue;
         try {
           const flags = this.settings.caseSensitive ? "" : "i";
-          const pattern = `\\b${this.escapeRegex(String(word))}\\b`;
+          const isNonRoman = this.containsNonRomanCharacters ? this.containsNonRomanCharacters(String(word)) : false;
+          const pattern = isNonRoman ? `${this.escapeRegex(String(word))}` : `\\b${this.escapeRegex(String(word))}\\b`;
           const regex = this._regexCache.getOrCreate(pattern, flags);
           if (regex) {
             this._compiledBlacklistWords.push({ word, regex, flags });
@@ -16425,7 +16477,8 @@ module.exports = class AlwaysColorText extends Plugin {
             for (const p of patterns) {
               if (!p) continue;
               const flags = this.settings.caseSensitive ? "" : "i";
-              const pattern = `\\b${this.escapeRegex(String(p))}\\b`;
+              const isNonRoman = this.containsNonRomanCharacters ? this.containsNonRomanCharacters(String(p)) : false;
+              const pattern = isNonRoman ? `${this.escapeRegex(String(p))}` : `\\b${this.escapeRegex(String(p))}\\b`;
               const regex = this._regexCache.getOrCreate(pattern, flags);
               if (regex) {
                 compiled.patterns.push({
@@ -16467,7 +16520,8 @@ module.exports = class AlwaysColorText extends Plugin {
               const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
               for (const p of patterns) {
                 if (!p) continue;
-                const pattern = `\\b${this.escapeRegex(String(p))}\\b`;
+                const isNonRoman = this.containsNonRomanCharacters ? this.containsNonRomanCharacters(String(p)) : false;
+                const pattern = isNonRoman ? `${this.escapeRegex(String(p))}` : `\\b${this.escapeRegex(String(p))}\\b`;
                 const regex = this._regexCache.getOrCreate(
                   pattern,
                   compiled.isCaseSensitive ? "" : "i"
@@ -18481,7 +18535,8 @@ module.exports = class AlwaysColorText extends Plugin {
             )
           )) {
             if (!entry || entry.invalid) continue;
-            if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+            if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
+              continue;
             if (isBlacklisted(entry.pattern)) continue;
             const mt = String(entry.matchType || "").toLowerCase();
             const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
@@ -18546,7 +18601,10 @@ module.exports = class AlwaysColorText extends Plugin {
             if (isBlacklisted(w)) continue;
             for (const entry of textOnlyEntries) {
               if (!entry || entry.invalid) continue;
-              if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+              if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(
+                entry.pattern
+              ))
+                continue;
               if (isBlacklisted(entry.pattern)) continue;
               const mt = String(
                 entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
@@ -18652,7 +18710,7 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       for (const entry of entries) {
         if (!entry || entry.invalid) continue;
-        if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) {
+        if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern)) {
           const regex = entry.regex;
           if (!regex) continue;
           const _matches = this.safeMatchLoop(regex, text);
@@ -18694,7 +18752,9 @@ module.exports = class AlwaysColorText extends Plugin {
       }
       if (this.settings.symbolWordColoring) {
         const symbolEntries = entries.filter(
-          (entry) => entry && !entry.invalid && /^[^a-zA-Z0-9]+$/.test(entry.pattern)
+          (entry) => entry && !entry.invalid && /^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(
+            entry.pattern
+          )
         );
         if (symbolEntries.length > 0) {
           const wordRegex = /\b\w+[^\s]*\b/g;
@@ -20400,14 +20460,33 @@ module.exports = class AlwaysColorText extends Plugin {
             if (plugin.settings.enableWordCompletionColoring && plugin._isTyping && update.docChanged && !forceRebuild && !fileChanged) {
               let hasWordBoundary = false;
               let isInsertion = true;
+              let hasNonRomanInsert = false;
               update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
                 if (fromA !== toA) isInsertion = false;
                 if (inserted.length > 0) {
                   const text = inserted.toString();
                   if (text.includes(" ") || text.includes("\n"))
                     hasWordBoundary = true;
+                  try {
+                    if (/[^\u0000-\u007F\u00A0-\u00FF\u0100-\u017F\u0180-\u024F]/.test(
+                      text
+                    )) {
+                      hasNonRomanInsert = true;
+                    }
+                  } catch (_) {
+                  }
                 }
               });
+              if (hasNonRomanInsert) {
+                hasWordBoundary = true;
+                try {
+                  debugLog(
+                    "CJK",
+                    "LP word-completion bypass: non-Roman insertion detected"
+                  );
+                } catch (_) {
+                }
+              }
               if (isInsertion && !hasWordBoundary) {
                 skipRebuildForWordCompletion = true;
               }
@@ -21568,7 +21647,8 @@ module.exports = class AlwaysColorText extends Plugin {
           }
           for (const entry of textOnlyEntries) {
             if (!entry || entry.invalid) continue;
-            if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+            if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
+              continue;
             if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
             const mt = String(
               entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
@@ -21589,11 +21669,17 @@ module.exports = class AlwaysColorText extends Plugin {
               let expandedWStart = wStart;
               let expandedWEnd = wEnd;
               if (!this.settings.extremeLightweightMode && !this.isSentenceLikePattern(entry.pattern)) {
-                while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(text[expandedWStart - 1]) || text[expandedWStart - 1] === "-" || text[expandedWStart - 1] === "'")) {
-                  expandedWStart--;
-                }
-                while (expandedWEnd < text.length && (/[A-Za-z0-9]/.test(text[expandedWEnd]) || text[expandedWEnd] === "-" || text[expandedWEnd] === "'")) {
-                  expandedWEnd++;
+                const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(entry.pattern);
+                if (nonRoman) {
+                  while (expandedWStart > 0 && this.isCJKChar(text[expandedWStart - 1]))
+                    expandedWStart--;
+                  while (expandedWEnd < text.length && this.isCJKChar(text[expandedWEnd]))
+                    expandedWEnd++;
+                } else {
+                  while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(text[expandedWStart - 1]) || text[expandedWStart - 1] === "-" || text[expandedWStart - 1] === "'"))
+                    expandedWStart--;
+                  while (expandedWEnd < text.length && (/[A-Za-z0-9]/.test(text[expandedWEnd]) || text[expandedWEnd] === "-" || text[expandedWEnd] === "'"))
+                    expandedWEnd++;
                 }
               }
               debugLog(
@@ -21862,6 +21948,16 @@ module.exports = class AlwaysColorText extends Plugin {
   }
   // NEW METHOD: Chunked editor processing for large pattern sets or large text
   buildDecoChunked(view, builder, from, to, text, entries, folderEntry, filePath = null, syntaxTreeFn = null) {
+    try {
+      const nonRomanCount = Array.isArray(entries) ? entries.filter(
+        (e) => e && e.pattern && this.containsNonRomanCharacters && this.containsNonRomanCharacters(String(e.pattern))
+      ).length : 0;
+      debugLog(
+        "CJK",
+        `LP buildDecoChunked: entries=${entries?.length || 0}, nonRomanEntries=${nonRomanCount}, textLen=${String(text || "").length}`
+      );
+    } catch (_) {
+    }
     const startTime = performance.now();
     const TIME_BUDGET_MS = 12;
     const tree2 = syntaxTreeFn && view && view.state ? syntaxTreeFn(view.state) : null;
@@ -22256,13 +22352,19 @@ module.exports = class AlwaysColorText extends Plugin {
           {
             const mt = String(entry.matchType || "").toLowerCase();
             if ((mt === "contains" || mt === "startswith" || mt === "endswith") && !this.isSentenceLikePattern(entry.pattern)) {
+              const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(entry.pattern);
               colorStart = matchStart;
               colorEnd = matchEnd;
-              while (colorStart > 0 && (/[A-Za-z0-9]/.test(text[colorStart - 1]) || text[colorStart - 1] === "-" || text[colorStart - 1] === "'")) {
-                colorStart--;
-              }
-              while (colorEnd < text.length && (/[A-Za-z0-9]/.test(text[colorEnd]) || text[colorEnd] === "-" || text[colorEnd] === "'")) {
-                colorEnd++;
+              if (nonRoman) {
+                while (colorStart > 0 && this.isCJKChar(text[colorStart - 1]))
+                  colorStart--;
+                while (colorEnd < text.length && this.isCJKChar(text[colorEnd]))
+                  colorEnd++;
+              } else {
+                while (colorStart > 0 && (/[A-Za-z0-9]/.test(text[colorStart - 1]) || text[colorStart - 1] === "-" || text[colorStart - 1] === "'"))
+                  colorStart--;
+                while (colorEnd < text.length && (/[A-Za-z0-9]/.test(text[colorEnd]) || text[colorEnd] === "-" || text[colorEnd] === "'"))
+                  colorEnd++;
               }
             }
           }
@@ -22368,13 +22470,45 @@ module.exports = class AlwaysColorText extends Plugin {
     const matches = [];
     for (const entry of patternChunk) {
       if (!entry || entry.invalid) continue;
+      try {
+        const isCjk = entry && entry.pattern && this.containsNonRomanCharacters && this.containsNonRomanCharacters(String(entry.pattern));
+        if (isCjk) {
+          debugLog(
+            "CJK",
+            `LP entry: pat="${entry.pattern}", mt="${entry.matchType}", regex=${!!entry.isRegex}, cs=${!!entry.caseSensitive}`
+          );
+        }
+      } catch (_) {
+      }
       const isPartialEntry = !entry.isRegex && ["contains", "startswith", "endswith"].includes(
         String(
           entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
         ).toLowerCase()
       ) && !this.isSentenceLikePattern(entry.pattern);
-      if (isPartialEntry) continue;
+      if (isPartialEntry) {
+        try {
+          const isCjk = entry && entry.pattern && this.containsNonRomanCharacters && this.containsNonRomanCharacters(String(entry.pattern));
+          if (isCjk) {
+            debugLog("CJK", `LP skip regex pass (partial): "${entry.pattern}"`);
+          }
+        } catch (_) {
+        }
+        continue;
+      }
       if (entry.fastTest && !entry.fastTest(text)) {
+        try {
+          const isCjk = entry && entry.pattern && this.containsNonRomanCharacters && this.containsNonRomanCharacters(String(entry.pattern));
+          if (isCjk) {
+            debugLog(
+              "CJK",
+              `LP fastTest=false: pat="${entry.pattern}", textSnippet="${String(text).substring(
+                0,
+                40
+              )}"`
+            );
+          }
+        } catch (_) {
+        }
         if (entry.presetLabel && entry.presetLabel.includes("Time")) {
           debugLog("LP_FASTTEST_SKIP", `Skipped '${entry.presetLabel}' for text snippet: "${text.substring(0, 30)}"`);
         }
@@ -22392,6 +22526,16 @@ module.exports = class AlwaysColorText extends Plugin {
         debugLog("LP_REGEX_CHECK", `Entry: ${entry.presetLabel}, pattern: ${entry.pattern}, text length: ${text.length}`);
       }
       while ((match = regex.exec(text)) && matchCount < MAX_MATCHES_PER_PATTERN) {
+        try {
+          const isCjk = entry && entry.pattern && this.containsNonRomanCharacters && this.containsNonRomanCharacters(String(entry.pattern));
+          if (isCjk) {
+            debugLog(
+              "CJK",
+              `LP regex hit: "${match[0]}" at ${match.index} for pat="${entry.pattern}"`
+            );
+          }
+        } catch (_) {
+        }
         if (entry.presetLabel && entry.presetLabel.includes("Time")) {
           debugLog("LP_MATCH_FOUND", `Found match: "${match[0]}" at ${match.index}`);
         }
@@ -22465,6 +22609,16 @@ module.exports = class AlwaysColorText extends Plugin {
             match.index,
             match.index + matchedText.length
           )) {
+            try {
+              const isCjk = entry && entry.pattern && this.containsNonRomanCharacters && this.containsNonRomanCharacters(String(entry.pattern));
+              if (isCjk) {
+                debugLog(
+                  "CJK",
+                  `LP wholeWord rejected: "${matchedText}" for pat="${entry.pattern}"`
+                );
+              }
+            } catch (_) {
+            }
             continue;
           }
         }
@@ -22559,7 +22713,8 @@ module.exports = class AlwaysColorText extends Plugin {
         ))
           continue;
         for (const entry of wordPartialEntries) {
-          if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+          if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
+            continue;
           if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
           const mt = String(
             entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
@@ -22581,11 +22736,17 @@ module.exports = class AlwaysColorText extends Plugin {
             let expandedWStart = wStart;
             let expandedWEnd = wEnd;
             if (!this.isSentenceLikePattern(entry.pattern)) {
-              while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(text[expandedWStart - 1]) || text[expandedWStart - 1] === "-" || text[expandedWStart - 1] === "'")) {
-                expandedWStart--;
-              }
-              while (expandedWEnd < text.length && (/[A-Za-z0-9]/.test(text[expandedWEnd]) || text[expandedWEnd] === "-" || text[expandedWEnd] === "'")) {
-                expandedWEnd++;
+              const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(entry.pattern);
+              if (nonRoman) {
+                while (expandedWStart > 0 && this.isCJKChar(text[expandedWStart - 1]))
+                  expandedWStart--;
+                while (expandedWEnd < text.length && this.isCJKChar(text[expandedWEnd]))
+                  expandedWEnd++;
+              } else {
+                while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(text[expandedWStart - 1]) || text[expandedWStart - 1] === "-" || text[expandedWStart - 1] === "'"))
+                  expandedWStart--;
+                while (expandedWEnd < text.length && (/[A-Za-z0-9]/.test(text[expandedWEnd]) || text[expandedWEnd] === "-" || text[expandedWEnd] === "'"))
+                  expandedWEnd++;
               }
             }
             let overlapsWithExisting = false;
@@ -22631,7 +22792,8 @@ module.exports = class AlwaysColorText extends Plugin {
           return textLower;
         };
         for (const entry of phrasePartialEntries) {
-          if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+          if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
+            continue;
           if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
           const mt = String(
             entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
@@ -22655,10 +22817,30 @@ module.exports = class AlwaysColorText extends Plugin {
               const leftChar = mStart > 0 ? text[mStart - 1] : "";
               const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === "-" || ch === "'";
               ok = mStart === 0 || !isWordChar(leftChar);
+              try {
+                const isCjk = entry && entry.pattern && this.containsNonRomanCharacters && this.containsNonRomanCharacters(String(entry.pattern));
+                if (isCjk && !ok) {
+                  debugLog(
+                    "CJK",
+                    `LP startswith boundary reject at ${mStart} for pat="${entry.pattern}", leftChar="${leftChar}"`
+                  );
+                }
+              } catch (_) {
+              }
             } else if (mt === "endswith") {
               const rightChar = mEnd < text.length ? text[mEnd] : "";
               const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === "-" || ch === "'";
               ok = mEnd === text.length || !isWordChar(rightChar);
+              try {
+                const isCjk = entry && entry.pattern && this.containsNonRomanCharacters && this.containsNonRomanCharacters(String(entry.pattern));
+                if (isCjk && !ok) {
+                  debugLog(
+                    "CJK",
+                    `LP endswith boundary reject at ${mEnd} for pat="${entry.pattern}", rightChar="${rightChar}"`
+                  );
+                }
+              } catch (_) {
+              }
             }
             if (ok) {
               const absStart = baseFrom + mStart;
@@ -22897,7 +23079,8 @@ module.exports = class AlwaysColorText extends Plugin {
             continue;
           for (const entry of textOnlyEntries) {
             if (!entry || entry.invalid) continue;
-            if (/^[^a-zA-Z0-9]+$/.test(entry.pattern)) continue;
+            if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
+              continue;
             if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
             const mt = String(
               entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
@@ -22920,11 +23103,17 @@ module.exports = class AlwaysColorText extends Plugin {
               let expandedWStart = wStart;
               let expandedWEnd = wEnd;
               if (!this.isSentenceLikePattern(entry.pattern)) {
-                while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(chunkText[expandedWStart - 1]) || chunkText[expandedWStart - 1] === "-" || chunkText[expandedWStart - 1] === "'")) {
-                  expandedWStart--;
-                }
-                while (expandedWEnd < chunkText.length && (/[A-Za-z0-9]/.test(chunkText[expandedWEnd]) || chunkText[expandedWEnd] === "-" || chunkText[expandedWEnd] === "'")) {
-                  expandedWEnd++;
+                const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(entry.pattern);
+                if (nonRoman) {
+                  while (expandedWStart > 0 && this.isCJKChar(chunkText[expandedWStart - 1]))
+                    expandedWStart--;
+                  while (expandedWEnd < chunkText.length && this.isCJKChar(chunkText[expandedWEnd]))
+                    expandedWEnd++;
+                } else {
+                  while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(chunkText[expandedWStart - 1]) || chunkText[expandedWStart - 1] === "-" || chunkText[expandedWStart - 1] === "'"))
+                    expandedWStart--;
+                  while (expandedWEnd < chunkText.length && (/[A-Za-z0-9]/.test(chunkText[expandedWEnd]) || chunkText[expandedWEnd] === "-" || chunkText[expandedWEnd] === "'"))
+                    expandedWEnd++;
                 }
               }
               let overlapsWithExisting = false;
