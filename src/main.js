@@ -6913,6 +6913,8 @@ module.exports = class AlwaysColorText extends Plugin {
         let matchStart = m.index;
         let matchEnd = m.index + m.length;
 
+        debugLog("READING_MATCH", `Found match: "${text.slice(matchStart, matchEnd)}" at ${matchStart}-${matchEnd}`);
+
         // Check if this match satisfies the match type requirement
         if (!this.matchSatisfiesType(text, matchStart, matchEnd, entry))
           continue;
@@ -7160,6 +7162,7 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
 
+        this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
         lastEnd = r.end;
       }
@@ -7457,6 +7460,7 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
 
+        this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
         lastEnd = r.end;
       }
@@ -7624,6 +7628,7 @@ module.exports = class AlwaysColorText extends Plugin {
           }
         }
 
+        this.applyCustomCssToElement(span, entry);
         textNode.replaceWith(span);
       }
 
@@ -9016,6 +9021,7 @@ module.exports = class AlwaysColorText extends Plugin {
         showColoringReasonOnHover: false, // Show tooltip on hover explaining why text is colored
         lightModeFixer: false,
         darkModeFixer: false,
+        enableCustomCss: false,
       },
       loadedData,
     );
@@ -9333,6 +9339,10 @@ module.exports = class AlwaysColorText extends Plugin {
             borderOpacity: e.borderOpacity,
             borderThickness: e.borderThickness,
             uid: e.uid, // Also preserve UID
+            customCss:
+              typeof e.customCss === "string" && e.customCss.trim().length > 0
+                ? e.customCss
+                : undefined,
           };
           // Preserve per-entry inclusion/exclusion rules on load
           try {
@@ -9500,6 +9510,10 @@ module.exports = class AlwaysColorText extends Plugin {
               backgroundColor,
               styleType,
               matchType: this.settings.partialMatch ? "contains" : "exact",
+              customCss:
+                typeof e.customCss === "string" && e.customCss.trim().length > 0
+                  ? e.customCss
+                  : undefined,
             };
             // Preserve custom styling properties when creating new entry from textBgColoringEntries
             if (typeof e.backgroundOpacity === "number")
@@ -9820,6 +9834,12 @@ module.exports = class AlwaysColorText extends Plugin {
             if (this.settings.enableBoxDecorationBreak !== false) {
               css += ` box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
             }
+          }
+          {
+            const extra = this.settings.enableCustomCss
+              ? this.sanitizeCssDeclarations(entry.customCss || "")
+              : "";
+            if (extra) css += ` ${extra}`;
           }
           css += ` } \n`;
         }
@@ -10175,6 +10195,11 @@ module.exports = class AlwaysColorText extends Plugin {
           typeof e.affectMarkElements === "boolean"
             ? e.affectMarkElements
             : undefined;
+        // Preserve custom CSS text for per-entry styling
+        x.customCss =
+          typeof e.customCss === "string" && e.customCss.trim().length > 0
+            ? e.customCss
+            : undefined;
 
         return x;
       });
@@ -10295,6 +10320,11 @@ module.exports = class AlwaysColorText extends Plugin {
           x.borderThickness =
             typeof e.borderThickness === "number"
               ? e.borderThickness
+              : undefined;
+          // Preserve custom CSS for text+bg entries as well (future-proof)
+          x.customCss =
+            typeof e.customCss === "string" && e.customCss.trim().length > 0
+              ? e.customCss
               : undefined;
           return x;
         });
@@ -11644,6 +11674,91 @@ module.exports = class AlwaysColorText extends Plugin {
       default:
         element.style.border = borderCSS;
         break;
+    }
+  }
+
+  sanitizeCssDeclarations(input) {
+    try {
+      if (!input || typeof input !== "string") return "";
+      debugLog("SANITIZE_CSS_START", `Input: "${input}"`);
+      const normalized = String(input).replace(/\r/g, "\n");
+      const parts = normalized
+        .split(/;|\n/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      const out = [];
+      for (const p of parts) {
+        const idx = p.indexOf(":");
+        if (idx === -1) {
+          debugLog("SANITIZE_CSS_SKIP", `No colon in: "${p}"`);
+          continue;
+        }
+        const prop = p.slice(0, idx).trim().toLowerCase();
+        let val = p.slice(idx + 1).trim();
+        if (!/^[a-z\-]+$/.test(prop)) {
+          debugLog("SANITIZE_CSS_SKIP", `Invalid prop name: "${prop}"`);
+          continue;
+        }
+
+        // Remove !important if user added it, we will add it ourselves
+        val = val.replace(/!important/gi, "").trim();
+
+        const safeVal = val.replace(/[{}<>]/g, "");
+        if (safeVal.length === 0) {
+          debugLog("SANITIZE_CSS_SKIP", `Empty value for: "${prop}"`);
+          continue;
+        }
+        out.push(`${prop}: ${safeVal}`);
+      }
+      const result = out.join("; ") + (out.length > 0 ? ";" : "");
+      debugLog("SANITIZE_CSS_RESULT", `Output: "${result}"`);
+      return result;
+    } catch (e) {
+      debugError("SANITIZE_CSS_ERROR", e);
+      return "";
+    }
+  }
+
+  applyCustomCssToElement(element, entry = null) {
+    try {
+      if (!this.settings || !this.settings.enableCustomCss) {
+        debugLog("APPLY_CSS_SKIP", "Feature disabled");
+        return;
+      }
+      if (!entry || !entry.customCss) {
+        debugLog("APPLY_CSS_SKIP", "No entry or no customCss");
+        return;
+      }
+      const decl = this.sanitizeCssDeclarations(entry.customCss);
+      if (!decl) {
+        debugLog("APPLY_CSS_SKIP", "Sanitized decl is empty");
+        return;
+      }
+
+      debugLog("APPLY_CSS_START", `Applying to element: ${element.nodeName}, decl: ${decl}`);
+
+      // Split declarations and apply them with !important
+      const parts = decl
+        .split(";")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      for (const p of parts) {
+        const idx = p.indexOf(":");
+        if (idx === -1) continue;
+        const prop = p.slice(0, idx).trim();
+        const val = p.slice(idx + 1).trim();
+        try {
+          debugLog("APPLY_CSS_PROP", `Setting ${prop}: ${val}`);
+          // Use setProperty with 'important' to override Obsidian's defaults
+          element.style.setProperty(prop, val, "important");
+        } catch (e) {
+          debugLog("APPLY_CSS_FALLBACK", `Setting ${prop}: ${val} via fallback`);
+          // Fallback if setProperty fails
+          element.style[prop] = val;
+        }
+      }
+    } catch (e) {
+      debugError("APPLY_CSS_ERROR", e);
     }
   }
 
@@ -16944,17 +17059,28 @@ module.exports = class AlwaysColorText extends Plugin {
 
             if (styleType === "text") {
               if (hideText) {
-                frag.appendChild(
-                  document.createTextNode(text.slice(m.start, m.end)),
-                );
-                shouldAppendSpan = false; // Don't append the span if we're hiding text
-              } else {
+                // If text is hidden but we have custom CSS, we should still use a span
+                if (
+                  this.settings.enableCustomCss &&
+                  m.entryRef &&
+                  m.entryRef.customCss
+                ) {
+                  // Keep span, don't set shouldAppendSpan to false
+                } else {
+                  frag.appendChild(
+                    document.createTextNode(text.slice(m.start, m.end)),
+                  );
+                  shouldAppendSpan = false; // Don't append the span if we're hiding text
+                }
+              }
+
+              if (shouldAppendSpan) {
                 const textColor =
                   m.color ||
                   (m.textColor && m.textColor !== "currentColor"
                     ? m.textColor
                     : null);
-                if (textColor) {
+                if (textColor && !hideText) {
                   try {
                     span.style.setProperty("color", textColor, "important");
                   } catch (_) {
@@ -16973,11 +17099,22 @@ module.exports = class AlwaysColorText extends Plugin {
               }
             } else if (styleType === "highlight") {
               if (hideBg) {
-                frag.appendChild(
-                  document.createTextNode(text.slice(m.start, m.end)),
-                );
-                shouldAppendSpan = false; // Don't append the span if we're hiding highlights
-              } else {
+                // If bg is hidden but we have custom CSS, we should still use a span
+                if (
+                  this.settings.enableCustomCss &&
+                  m.entryRef &&
+                  m.entryRef.customCss
+                ) {
+                  // Keep span, don't set shouldAppendSpan to false
+                } else {
+                  frag.appendChild(
+                    document.createTextNode(text.slice(m.start, m.end)),
+                  );
+                  shouldAppendSpan = false; // Don't append the span if we're hiding highlights
+                }
+              }
+
+              if (shouldAppendSpan) {
                 const bgColor =
                   m.backgroundColor ||
                   m.color ||
@@ -16997,7 +17134,7 @@ module.exports = class AlwaysColorText extends Plugin {
                 } catch (_) {
                   span.style.display = "inline-block";
                 }
-                {
+                if (!hideBg) {
                   const entryRef = m.entryRef || m.entry || null;
                   const params = this.getHighlightParams(entryRef);
                   try {
@@ -17111,83 +17248,81 @@ module.exports = class AlwaysColorText extends Plugin {
               }
               if (!hideBg) {
                 span.style.background = "";
-                {
-                  const entryRef = m.entryRef || m.entry || null;
-                  const params = this.getHighlightParams(entryRef);
-                  try {
-                    span.style.setProperty(
-                      "background-color",
-                      this.hexToRgba(bgColor, params.opacity ?? 25),
-                      "important",
-                    );
-                  } catch (_) {
-                    span.style.backgroundColor = this.hexToRgba(
-                      bgColor,
-                      params.opacity ?? 25,
-                    );
-                  }
-                  try {
-                    const vpad = params.vPad;
-                    span.style.setProperty(
-                      "padding-left",
-                      params.hPad + "px",
-                      "important",
-                    );
-                    span.style.setProperty(
-                      "padding-right",
-                      params.hPad + "px",
-                      "important",
-                    );
-                    span.style.setProperty(
-                      "padding-top",
-                      (vpad >= 0 ? vpad : 0) + "px",
-                      "important",
-                    );
-                    span.style.setProperty(
-                      "padding-bottom",
-                      (vpad >= 0 ? vpad : 0) + "px",
-                      "important",
-                    );
-                    if (vpad < 0) {
-                      span.style.setProperty(
-                        "margin-top",
-                        vpad + "px",
-                        "important",
-                      );
-                      span.style.setProperty(
-                        "margin-bottom",
-                        vpad + "px",
-                        "important",
-                      );
-                    }
-                  } catch (_) {
-                    const vpad = params.vPad;
-                    span.style.paddingLeft = span.style.paddingRight =
-                      params.hPad + "px";
-                    span.style.paddingTop = span.style.paddingBottom =
-                      (vpad >= 0 ? vpad : 0) + "px";
-                    if (vpad < 0) {
-                      span.style.marginTop = vpad + "px";
-                      span.style.marginBottom = vpad + "px";
-                    }
-                  }
-                  const br2 =
-                    (params.hPad > 0 && params.radius === 0
-                      ? 0
-                      : params.radius) + "px";
-                  try {
-                    span.style.setProperty("border-radius", br2, "important");
-                  } catch (_) {
-                    span.style.borderRadius = br2;
-                  }
-                  const borderCss = this.generateBorderStyle(
-                    hideText ? null : textColor,
-                    hideBg ? null : bgColor,
-                    entryRef,
+                const entryRef = m.entryRef || m.entry || null;
+                const params = this.getHighlightParams(entryRef);
+                try {
+                  span.style.setProperty(
+                    "background-color",
+                    this.hexToRgba(bgColor, params.opacity ?? 25),
+                    "important",
                   );
-                  if (borderCss) {
-                    span.style.cssText += borderCss;
+                } catch (_) {
+                  span.style.backgroundColor = this.hexToRgba(
+                    bgColor,
+                    params.opacity ?? 25,
+                  );
+                }
+                try {
+                  const vpad = params.vPad;
+                  span.style.setProperty(
+                    "padding-left",
+                    params.hPad + "px",
+                    "important",
+                  );
+                  span.style.setProperty(
+                    "padding-right",
+                    params.hPad + "px",
+                    "important",
+                  );
+                  span.style.setProperty(
+                    "padding-top",
+                    (vpad >= 0 ? vpad : 0) + "px",
+                    "important",
+                  );
+                  span.style.setProperty(
+                    "padding-bottom",
+                    (vpad >= 0 ? vpad : 0) + "px",
+                    "important",
+                  );
+                  if (vpad < 0) {
+                    span.style.setProperty(
+                      "margin-top",
+                      vpad + "px",
+                      "important",
+                    );
+                    span.style.setProperty(
+                      "margin-bottom",
+                      vpad + "px",
+                      "important",
+                    );
                   }
+                } catch (_) {
+                  const vpad = params.vPad;
+                  span.style.paddingLeft = span.style.paddingRight =
+                    params.hPad + "px";
+                  span.style.paddingTop = span.style.paddingBottom =
+                    (vpad >= 0 ? vpad : 0) + "px";
+                  if (vpad < 0) {
+                    span.style.marginTop = vpad + "px";
+                    span.style.marginBottom = vpad + "px";
+                  }
+                }
+                const br2 =
+                  (params.hPad > 0 && params.radius === 0
+                    ? 0
+                    : params.radius) + "px";
+                try {
+                  span.style.setProperty("border-radius", br2, "important");
+                } catch (_) {
+                  span.style.borderRadius = br2;
+                }
+                const borderCss = this.generateBorderStyle(
+                  hideText ? null : textColor,
+                  hideBg ? null : bgColor,
+                  entryRef,
+                );
+                if (borderCss) {
+                  span.style.cssText += borderCss;
                 }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   span.style.boxDecorationBreak = "clone";
@@ -17199,24 +17334,58 @@ module.exports = class AlwaysColorText extends Plugin {
                     `applied text=${textColor || "none"}, bg=${bgColor || "none"}`,
                   );
                 } catch (_) {}
+              } else if (
+                hideBg &&
+                this.settings.enableCustomCss &&
+                m.entryRef &&
+                m.entryRef.customCss
+              ) {
+                // If bg is hidden but we have custom CSS, we should still use a span
+                // and maybe set some default layout for custom CSS
+                try {
+                  span.style.setProperty(
+                    "display",
+                    "inline-block",
+                    "important",
+                  );
+                } catch (_) {
+                  span.style.display = "inline-block";
+                }
               }
+
               if (hideText && hideBg) {
-                // If both text and bg are hidden, just append the raw text
-                frag.appendChild(
-                  document.createTextNode(text.slice(m.start, m.end)),
-                );
-                shouldAppendSpan = false;
-              }
-              {
-                const entryRef = m.entryRef || m.entry || null;
-                this.applyBorderStyleToElement(
-                  span,
-                  hideText ? null : textColor,
-                  hideBg ? null : bgColor,
-                  entryRef,
-                );
+                // Check if we have custom CSS before deciding to hide completely
+                if (
+                  this.settings.enableCustomCss &&
+                  m.entryRef &&
+                  m.entryRef.customCss
+                ) {
+                  // Keep span
+                } else {
+                  // If both text and bg are hidden, just append the raw text
+                  frag.appendChild(
+                    document.createTextNode(text.slice(m.start, m.end)),
+                  );
+                  shouldAppendSpan = false;
+                }
               }
             }
+
+            // Apply custom CSS if enabled and entry has it, regardless of hide flags (as long as span exists)
+            if (shouldAppendSpan) {
+              const entryRef = m.entryRef || m.entry || null;
+              debugLog("READING_RENDER_CSS", `Checking for custom CSS on: ${m.pattern || "unknown"}`);
+              this.applyCustomCssToElement(span, entryRef);
+
+              // Also apply border style if it was skipped due to hideBg
+              this.applyBorderStyleToElement(
+                span,
+                hideText ? null : (m.textColor || m.color),
+                hideBg ? null : (m.backgroundColor || m.color),
+                entryRef,
+              );
+            }
+
             if (shouldAppendSpan) {
               frag.appendChild(span);
             }
@@ -21555,6 +21724,7 @@ module.exports = class AlwaysColorText extends Plugin {
             backgroundColor: entry.backgroundColor,
             isTextBg: true,
             entryRef: entry,
+            customCss: entry.customCss, // Add customCss to match object
           });
 
           if (allMatches.length > MAX_MATCHES) break;
@@ -21934,6 +22104,7 @@ module.exports = class AlwaysColorText extends Plugin {
           textColor: entry.textColor,
           backgroundColor: entry.backgroundColor,
           entryRef: entry,
+          customCss: entry.customCss, // Add customCss
         });
 
         matchCount++;
@@ -22309,6 +22480,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   textColor: entry.textColor,
                   backgroundColor: entry.backgroundColor,
                   entryRef: entry,
+                  customCss: entry.customCss, // Add customCss
                 });
                 if (matches.length > 2000) break;
               }
@@ -22496,6 +22668,7 @@ module.exports = class AlwaysColorText extends Plugin {
           textColor: entry.textColor,
           backgroundColor: entry.backgroundColor,
           entryRef: entry,
+          customCss: entry.customCss, // Add customCss
         });
 
         matchCount++;
@@ -22703,6 +22876,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   color: useColor,
                   styleType: "text",
                   entryRef: entry,
+                  customCss: entry.customCss, // Add customCss
                 });
                 if (matches.length > 2000) break;
               } else {
@@ -22729,6 +22903,7 @@ module.exports = class AlwaysColorText extends Plugin {
                   color: useColor,
                   styleType: "text",
                   entryRef: entry,
+                  customCss: entry.customCss, // Add customCss
                 });
                 if (matches.length > 2000) break;
               }
@@ -22853,76 +23028,164 @@ module.exports = class AlwaysColorText extends Plugin {
       if (m.isTextBg) {
         const textColor = m.textColor;
         const bgColor = m.backgroundColor;
-        if (hideText && hideBg) continue;
+        
+        // If both are hidden, we only proceed if custom CSS is enabled and present
+        if (hideText && hideBg) {
+          if (!(this.settings.enableCustomCss && m.entryRef && m.entryRef.customCss)) {
+            continue;
+          }
+        }
+
         const params = this.getHighlightParams(m.entryRef);
         const borderStyle = this.generateBorderStyle(
           hideText ? null : textColor,
           hideBg ? null : bgColor,
           m.entryRef,
         );
-        const textPart = hideText ? "" : `color: ${textColor} !important; `;
-        const bgPart = hideBg
+        const textPart = hideText || !textColor ? "" : `color: ${textColor} !important; `;
+        const bgPart = hideBg || !bgColor
           ? ""
           : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
+
+        // Apply custom CSS here too
+        if (
+          this.settings.enableCustomCss &&
+          m.entryRef &&
+          m.entryRef.customCss
+        ) {
+          debugLog("LP_TEXTBG_CSS", `Processing custom CSS for TextBG: ${m.pattern || "unknown"}`);
+          const decl = this.sanitizeCssDeclarations(m.entryRef.customCss);
+          if (decl) {
+            const parts = decl
+              .split(";")
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0);
+            for (const p of parts) {
+              const idx = p.indexOf(":");
+              if (idx === -1) continue;
+              const prop = p.slice(0, idx).trim();
+              const val = p.slice(idx + 1).trim();
+              debugLog("LP_TEXTBG_CSS_PROP", `Adding ${prop}: ${val}`);
+              style += `; ${prop}: ${val} !important;`;
+            }
+          }
+        }
       } else {
-        if (effectiveStyle === "none") continue;
-        // If affectMarkElements flag is set, force 'highlight' styleType
-        let styleType =
-          m.entryRef && m.entryRef.affectMarkElements
-            ? "highlight"
-            : m.styleType || "text";
-        if (styleType === "text") {
-          if (hideText) continue;
-          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
-        } else if (styleType === "highlight") {
-          const bgColor = m.backgroundColor || m.color;
-          if (hideBg) continue;
-          const params = this.getHighlightParams(m.entryRef);
-          const borderStyle = this.generateBorderStyle(
-            null,
-            bgColor,
-            m.entryRef,
-          );
-          style = (() => {
-            const vPad = params.vPad;
-            const vPadCss =
-              vPad >= 0
-                ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
-                : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-            return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
-          })();
-        } else if (styleType === "both") {
-          const textColor =
-            m.textColor && m.textColor !== "currentColor"
-              ? m.textColor
-              : m.color || null;
-          const bgColor = m.backgroundColor || m.color;
-          if (hideText && hideBg) continue;
-          const params = this.getHighlightParams(m.entryRef);
-          const borderStyle = this.generateBorderStyle(
-            hideText ? null : textColor,
-            hideBg ? null : bgColor,
-            m.entryRef,
-          );
-          const textPart = hideText
-            ? ""
-            : textColor
-              ? `color: ${textColor} !important; --highlight-color: ${textColor}; `
-              : "";
-          const bgPart = (() => {
-            if (hideBg) return "";
-            const vPad = params.vPad;
-            const vPadCss =
-              vPad >= 0
-                ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
-                : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-            return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
-          })();
-          style = `${textPart}${bgPart}${borderStyle}`;
+        if (effectiveStyle === "none") {
+          // Even if style is none, we might apply custom CSS
+          if (!(this.settings.enableCustomCss && m.entryRef && m.entryRef.customCss)) {
+            continue;
+          }
+          style = "";
         } else {
-          if (hideText) continue;
-          style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
+          // If affectMarkElements flag is set, force 'highlight' styleType
+          let styleType =
+            m.entryRef && m.entryRef.affectMarkElements
+              ? "highlight"
+              : m.styleType || "text";
+
+          if (styleType === "text") {
+            if (hideText) {
+              if (!(this.settings.enableCustomCss && m.entryRef && m.entryRef.customCss)) {
+                continue;
+              }
+              style = "";
+            } else {
+              style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
+            }
+          } else if (styleType === "highlight") {
+            const bgColor = m.backgroundColor || m.color;
+            if (hideBg) {
+              if (!(this.settings.enableCustomCss && m.entryRef && m.entryRef.customCss)) {
+                continue;
+              }
+              style = "";
+            } else {
+              const params = this.getHighlightParams(m.entryRef);
+              const borderStyle = this.generateBorderStyle(
+                null,
+                bgColor,
+                m.entryRef,
+              );
+              style = (() => {
+                const vPad = params.vPad;
+                const vPadCss =
+                  vPad >= 0
+                    ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
+                    : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
+                return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+              })();
+            }
+          } else if (styleType === "both") {
+            const textColor =
+              m.textColor && m.textColor !== "currentColor"
+                ? m.textColor
+                : m.color || null;
+            const bgColor = m.backgroundColor || m.color;
+            
+            if (hideText && hideBg) {
+              if (!(this.settings.enableCustomCss && m.entryRef && m.entryRef.customCss)) {
+                continue;
+              }
+              style = "";
+            } else {
+              const params = this.getHighlightParams(m.entryRef);
+              const borderStyle = this.generateBorderStyle(
+                hideText ? null : textColor,
+                hideBg ? null : bgColor,
+                m.entryRef,
+              );
+              const textPart = hideText
+                ? ""
+                : textColor
+                  ? `color: ${textColor} !important; --highlight-color: ${textColor}; `
+                  : "";
+              const bgPart = (() => {
+                if (hideBg) return "";
+                const vPad = params.vPad;
+                const vPadCss =
+                  vPad >= 0
+                    ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
+                    : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
+                return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+              })();
+              style = `${textPart}${bgPart}${borderStyle}`;
+            }
+          } else {
+            if (hideText) {
+              if (!(this.settings.enableCustomCss && m.entryRef && m.entryRef.customCss)) {
+                continue;
+              }
+              style = "";
+            } else {
+              style = `color: ${m.color} !important; --highlight-color: ${m.color};`;
+            }
+          }
+        }
+
+        // Apply custom CSS here to the style string before creating Decoration
+        if (
+          this.settings.enableCustomCss &&
+          m.entryRef &&
+          m.entryRef.customCss
+        ) {
+          debugLog("LP_RENDER_CSS", `Processing custom CSS for: ${m.pattern || "unknown"}`);
+          const decl = this.sanitizeCssDeclarations(m.entryRef.customCss);
+          if (decl) {
+            const parts = decl
+              .split(";")
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0);
+            for (const p of parts) {
+              const idx = p.indexOf(":");
+              if (idx === -1) continue;
+              const prop = p.slice(0, idx).trim();
+              const val = p.slice(idx + 1).trim();
+              debugLog("LP_RENDER_CSS_PROP", `Adding ${prop}: ${val}`);
+              style += `; ${prop}: ${val} !important;`;
+            }
+          }
         }
       }
       const isDark =
@@ -22942,6 +23205,7 @@ module.exports = class AlwaysColorText extends Plugin {
               : "",
         },
       });
+
       builder.add(m.start, m.end, deco);
     }
 
@@ -26215,6 +26479,107 @@ class HighlightStylingModal extends Modal {
   }
 }
 
+class CustomCssModal extends Modal {
+  constructor(app, plugin, entry) {
+    super(app);
+    this.plugin = plugin;
+    this.entry = entry;
+    this._handlers = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    try {
+      this.modalEl.addClass("act-custom-css-modal");
+      this.modalEl.style.padding = "20px";
+      this.modalEl.style.minWidth = "520px";
+    } catch (e) {}
+    const title = contentEl.createEl("h2", {
+      text: this.plugin.t("custom_css_header", "Edit Custom CSS"),
+    });
+    title.style.margin = "0 0 12px 0";
+    const info = contentEl.createDiv();
+    info.style.marginBottom = "8px";
+    info.textContent = this.plugin.t(
+      "custom_css_instructions",
+      "Enter CSS declarations.",
+    );
+    const box = contentEl.createDiv();
+    box.style.border = "1px solid var(--background-modifier-border)";
+    box.style.borderRadius = "4px";
+    box.style.background = "var(--background-modifier-form-field)";
+    const ta = box.createEl("textarea");
+    ta.style.width = "100%";
+    ta.style.height = "200px";
+    ta.style.resize = "vertical";
+    ta.style.border = "none";
+    ta.style.outline = "none";
+    ta.style.background = "transparent";
+    ta.style.color = "var(--text-normal)";
+    ta.style.padding = "8px";
+    ta.style.boxSizing = "border-box";
+    ta.placeholder =
+      "font-family: 'fontname';\nfont-weight: 600;\nfont-size: 8px;";
+    ta.value = String(this.entry?.customCss || "");
+    const row = contentEl.createDiv();
+    row.style.display = "flex";
+    row.style.gap = "8px";
+    row.style.marginTop = "12px";
+    const saveBtn = row.createEl("button", {
+      text: this.plugin.t("btn_save", "Save"),
+    });
+    saveBtn.addClass("mod-cta");
+    const clearBtn = row.createEl("button", {
+      text: this.plugin.t("btn_reset", "Reset"),
+    });
+    const save = async () => {
+      const raw = String(ta.value || "");
+      const sanitized = this.plugin.sanitizeCssDeclarations(raw);
+      if (this.entry) this.entry.customCss = raw ? raw : undefined;
+      await this.plugin.saveSettings();
+      try {
+        this.plugin.reconfigureEditorExtensions();
+      } catch (_) {}
+      try {
+        this.plugin.forceRefreshAllEditors();
+      } catch (_) {}
+      try {
+        this.plugin.forceRefreshAllReadingViews();
+      } catch (_) {}
+      this.close();
+    };
+    const clear = async () => {
+      ta.value = "";
+      if (this.entry) this.entry.customCss = undefined;
+      await this.plugin.saveSettings();
+      try {
+        this.plugin.reconfigureEditorExtensions();
+      } catch (_) {}
+      try {
+        this.plugin.forceRefreshAllEditors();
+      } catch (_) {}
+      try {
+        this.plugin.forceRefreshAllReadingViews();
+      } catch (_) {}
+      this.close();
+    };
+    saveBtn.addEventListener("click", save);
+    clearBtn.addEventListener("click", clear);
+    this._handlers.push({ el: saveBtn, ev: "click", fn: save });
+    this._handlers.push({ el: clearBtn, ev: "click", fn: clear });
+  }
+  onClose() {
+    try {
+      this._handlers?.forEach((h) => {
+        try {
+          h.el.removeEventListener(h.ev, h.fn);
+        } catch (_) {}
+      });
+    } catch (_) {}
+    this.contentEl.empty();
+  }
+}
+
 class EditEntryModal extends Modal {
   constructor(
     app,
@@ -26837,6 +27202,20 @@ class EditEntryModal extends Modal {
     hlBtn.style.padding = "0 10px";
     hlBtn.style.boxSizing = "border-box";
     hlBtn.style.whiteSpace = "nowrap";
+    let cssBtn = null;
+    if (this.plugin.settings.enableCustomCss) {
+      cssBtn = controls.createEl("button", {
+        text: this.plugin.t("edit_custom_css_btn", "Edit Custom CSS"),
+      });
+      cssBtn.style.flex = "1 1 max-content";
+      cssBtn.style.minWidth = "max-content";
+      cssBtn.style.maxWidth = "100%";
+      cssBtn.style.width = "auto";
+      cssBtn.style.height = "32px";
+      cssBtn.style.padding = "0 10px";
+      cssBtn.style.boxSizing = "border-box";
+      cssBtn.style.whiteSpace = "nowrap";
+    }
     const rulesHeader = contentEl.createEl("h3", {
       text: this.plugin.t(
         "inclusion_exclusion_header",
@@ -27062,6 +27441,13 @@ class EditEntryModal extends Modal {
     };
     hlBtn.addEventListener("click", hlFn);
     this._handlers.push({ el: hlBtn, ev: "click", fn: hlFn });
+    if (cssBtn) {
+      const cssFn = () => {
+        new CustomCssModal(this.app, this.plugin, this.entry).open();
+      };
+      cssBtn.addEventListener("click", cssFn);
+      this._handlers.push({ el: cssBtn, ev: "click", fn: cssFn });
+    }
     try {
       const styleUpdateHandler = () => {
         renderPreview();
@@ -35837,6 +36223,37 @@ class ColorSettingTab extends PluginSettingTab {
             .setValue(this.plugin.settings.disableRegexSafety)
             .onChange(async (v) => {
               this.plugin.settings.disableRegexSafety = v;
+              await this.plugin.saveSettings();
+              try {
+                this.plugin.reconfigureEditorExtensions();
+              } catch (e) {}
+              try {
+                this.plugin.forceRefreshAllEditors();
+              } catch (e) {}
+              try {
+                this.plugin.forceRefreshAllReadingViews();
+              } catch (e) {}
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "enable_custom_css",
+            "Enable Custom CSS for Texts",
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "enable_custom_css_desc",
+            "Allow per-entry custom CSS declarations.",
+          ),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.enableCustomCss)
+            .onChange(async (v) => {
+              this.plugin.settings.enableCustomCss = v;
               await this.plugin.saveSettings();
               try {
                 this.plugin.reconfigureEditorExtensions();
