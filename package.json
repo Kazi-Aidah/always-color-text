@@ -3,7 +3,8 @@
   "version": "1.13.0",
   "private": true,
   "scripts": {
-    "build.js": "node build.js"
+    "build.js": "node build.js",
+    "build": "node build.js"
   },
   "devDependencies": {
     "esbuild": "^0.27.2"
