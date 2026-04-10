@@ -208,18 +208,27 @@ export class EditEntryModal extends Modal {
     const box = row1.createDiv();
     box.addClass("act-edit-entry-textbox");
     box.style.border = "1px solid var(--background-modifier-border)";
-    box.style.borderRadius = "4px";
+    box.style.borderRadius = "var(--button-radius)";
     box.style.background = "var(--background-modifier-form-field)";
-    const textInput = box.createEl("textarea");
+    const textInput = box.createEl("div");
+    textInput.contentEditable = "true";
     textInput.style.width = "100%";
-    textInput.style.height = "40px";
-    textInput.style.resize = "none";
+    textInput.style.minHeight = "40px";
     textInput.style.border = "none";
     textInput.style.outline = "none";
     textInput.style.background = "transparent";
     textInput.style.color = "var(--text-normal)";
     textInput.style.padding = "6px";
     textInput.style.boxSizing = "border-box";
+    textInput.style.lineHeight = "1.5";
+    textInput.style.whiteSpace = "pre-wrap";
+    textInput.style.wordBreak = "break-word";
+    // Helper to get/set text value on the contenteditable div
+    Object.defineProperty(textInput, 'value', {
+      get() { return this.textContent; },
+      set(v) { this.textContent = v; },
+      configurable: true,
+    });
 
     // Row 2: preview
     const row2 = leftColumn.createDiv();
@@ -227,15 +236,16 @@ export class EditEntryModal extends Modal {
 
     const preview = row2.createDiv();
     preview.addClass("act-edit-entry-preview");
-    preview.style.display = "block";
+    preview.style.display = "flex";
+    preview.style.alignItems = "center";
+    preview.style.justifyContent = "center";
     preview.style.flex = "1";
     preview.style.border = "1px dashed var(--background-modifier-border)";
-    preview.style.borderRadius = "4px";
+    preview.style.borderRadius = "var(--button-radius)";
     preview.style.padding = "10px";
     preview.style.background = "var(--background-modifier-form-field)";
     preview.style.whiteSpace = "pre-wrap";
     preview.style.wordWrap = "break-word";
-    // preview.style.minHeight = "60px";
 
     // Right column: controls
     const rightColumn = mainContainer.createDiv();
@@ -755,6 +765,19 @@ export class EditEntryModal extends Modal {
         const span = document.createElement("span");
         span.setAttribute("style", styleStr);
         span.style.display = "inline";
+        // Apply custom CSS on top if present
+        if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
+          try {
+            const decl = this.plugin.sanitizeCssDeclarations(this.entry.customCss);
+            if (decl) {
+              decl.split(";").map(s => s.trim()).filter(Boolean).forEach(p => {
+                const idx = p.indexOf(":");
+                if (idx === -1) return;
+                span.style.setProperty(p.slice(0, idx).trim(), p.slice(idx + 1).trim(), "important");
+              });
+            }
+          } catch (_) {}
+        }
         span.textContent = text;
         return span;
       };
@@ -820,7 +843,6 @@ export class EditEntryModal extends Modal {
         bgColorInput.style.display = "inline-block";
         pickerRow.style.flexDirection = "row";
       }
-      hlBtn.style.display = v === "text" ? "none" : "";
     };
     const onInputImmediate = () => {
       renderPreview();

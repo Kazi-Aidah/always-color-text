@@ -243,7 +243,7 @@ module.exports = {
   "border_thickness": "Grosor del Borde (px)",
   "border_thickness_desc": "Establecer el grosor del borde de 0-5 píxeles (p. ej. 1, 2.5, 5)",
   "highlight_preview": "Vista previa del Resaltado",
-  "highlight_preview_text": "¡Así se ve tu resaltado!",
+  "highlight_preview_text": "¡Así se ve tu resaltado predeterminado!",
   "opt_line_solid": "Sólido",
   "opt_line_dashed": "Discontinuo",
   "opt_line_dotted": "Punteado",

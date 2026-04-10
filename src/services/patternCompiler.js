@@ -452,6 +452,7 @@ export function compileWordEntriesLogic(plugin) {
             if (typeof group.borderThickness !== "undefined")
               copy.borderThickness = group.borderThickness;
             copy._groupUid = group.uid || null;
+            copy._groupRef = group;
             copy.groupEnableFolders = Array.isArray(group.enableFolders)
               ? group.enableFolders.slice()
               : [];
@@ -758,6 +759,7 @@ export function compileTextBgColoringEntriesLogic(plugin) {
             if (typeof group.borderThickness !== "undefined")
               copy.borderThickness = group.borderThickness;
             copy._groupUid = group.uid || null;
+            copy._groupRef = group;
             copy.groupEnableFolders = Array.isArray(group.enableFolders)
               ? group.enableFolders.slice()
               : [];

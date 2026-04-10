@@ -295,6 +295,21 @@ li.act-color-marker::marker {
 }
 
 /* ====== EDIT ENTRY MODAL STYLING ====== */
+
+/* Accent border on focus for all contenteditable divs */
+[contenteditable]:focus {
+  outline: none;
+}
+[contenteditable]:focus-within,
+div[contenteditable="true"]:focus {
+  /* handled by parent wrapper via JS focus/blur — see taBox in CustomCssModal */
+}
+.act-edit-entry-textbox:focus-within,
+.act-subject-wrap:focus-within {
+  border-color: var(--color-accent) !important;
+  border-width: 2px !important;
+}
+
 .act-edit-entry-row1 {
   display: flex;
   gap: 16px;
@@ -304,22 +319,24 @@ li.act-color-marker::marker {
 .act-edit-entry-textbox {
   flex: 3;
   border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-m);
+  border-radius: var(--button-radius);
   background: var(--background-modifier-form-field);
   padding: 0;
   margin-bottom: 12px;
 }
 
-.act-edit-entry-textbox textarea {
+.act-edit-entry-textbox [contenteditable] {
   width: 100%;
-  height: 40px;
-  resize: none;
+  min-height: 40px;
   border: none;
   outline: none;
   background: transparent;
   color: var(--text-normal);
   padding: 6px;
   box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
 }
 
 .act-edit-entry-style-select {
@@ -334,15 +351,16 @@ li.act-color-marker::marker {
 
 .act-edit-entry-preview {
   flex: 2.5 1 0%;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px dashed var(--background-modifier-border);
-  border-radius: var(--radius-m);
+  border-radius: var(--button-radius);
   padding: 10px;
   background: var(--background-modifier-form-field);
   white-space: pre-wrap;
   word-wrap: break-word;
   min-height: 40px;
-  text-align: center;
 }
 
 .act-edit-entry-pickers {
@@ -367,9 +385,11 @@ li.act-color-marker::marker {
 
 .act-highlight-preview-wrap {
   flex: 5;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-m);
+  border-radius: var(--button-radius);
   padding: 12px;
   background: var(--background-modifier-form-field);
 }
@@ -666,4 +686,8 @@ body.theme-dark.act-dark-mode-fix .always-color-text-highlight {
 
 body.theme-dark.act-dark-mode-fix .always-color-text-highlight.act-dark-color {
   filter: brightness(3.0);
+}
+
+.dropdown.act-group-select {
+  background-color: var(--background-modifier-form-field) !important;
 }

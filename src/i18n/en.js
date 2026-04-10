@@ -254,7 +254,7 @@ module.exports = {
   "border_thickness": "Border Thickness (px)",
   "border_thickness_desc": "Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)",
   "highlight_preview": "Highlight Preview",
-  "highlight_preview_text": "This is how your highlight looks!",
+  "highlight_preview_text": "Here's how your default highlight looks!",
   "opt_line_solid": "Solid",
   "opt_line_dashed": "Dashed",
   "opt_line_dotted": "Dotted",

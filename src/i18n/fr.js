@@ -242,7 +242,7 @@ module.exports = {
   "border_thickness": "Épaisseur de la bordure (px)",
   "border_thickness_desc": "Définir l'épaisseur de la bordure de 0 à 5 pixels (par exemple 1, 2.5, 5)",
   "highlight_preview": "Aperçu de la surbrillance",
-  "highlight_preview_text": "Voici à quoi ressemble votre surbrillance !",
+  "highlight_preview_text": "Voici à quoi ressemble votre surbrillance par défaut !",
   "opt_line_solid": "Solide",
   "opt_line_dashed": "Tireté",
   "opt_line_dotted": "Pointillé",

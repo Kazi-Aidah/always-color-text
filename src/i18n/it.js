@@ -242,7 +242,7 @@ module.exports = {
   "border_thickness": "Spessore bordo (px)",
   "border_thickness_desc": "Imposta lo spessore del bordo da 0-5 pixel (es. 1, 2.5, 5)",
   "highlight_preview": "Anteprima evidenziazione",
-  "highlight_preview_text": "Ecco come apparirà la tua evidenziazione!",
+  "highlight_preview_text": "Ecco come appare la tua evidenziazione predefinita!",
   "opt_line_solid": "pieno",
   "opt_line_dashed": "tratteggiato",
   "opt_line_dotted": "puntinato",

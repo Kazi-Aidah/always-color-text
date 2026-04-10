@@ -229,7 +229,7 @@ export class RegexTesterModal extends Modal {
     const editorWrap = splitContainer.createDiv();
     editorWrap.style.flex = "1";
     editorWrap.style.border = "1px solid var(--background-modifier-border)";
-    editorWrap.style.borderRadius = "var(--radius-m)";
+    editorWrap.style.borderRadius = "var(--button-radius)";
     editorWrap.style.overflow = "hidden";
     editorWrap.style.background = "var(--background-modifier-form-field)";
 
@@ -237,7 +237,7 @@ export class RegexTesterModal extends Modal {
     const previewWrap = splitContainer.createDiv();
     previewWrap.style.flex = "1";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
-    previewWrap.style.borderRadius = "var(--radius-m)";
+    previewWrap.style.borderRadius = "var(--button-radius)";
     previewWrap.style.padding = "12px";
     previewWrap.style.overflow = "auto";
     previewWrap.style.background = "var(--background-modifier-form-field)";
@@ -246,6 +246,9 @@ export class RegexTesterModal extends Modal {
     previewWrap.style.fontFamily = "monospace";
     previewWrap.style.fontSize = "var(--font-small)";
     previewWrap.style.lineHeight = "1.5";
+    previewWrap.style.display = "flex";
+    previewWrap.style.alignItems = "center";
+    previewWrap.style.justifyContent = "center";
 
     let cmEditor = null;
     try {

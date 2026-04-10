@@ -75,6 +75,11 @@ class AlwaysColorText extends Plugin {
     this._cachedSortedEntries = null;
     this._cacheDirty = true;
 
+    // PERF: Doc version counter - incremented on every docChanged to invalidate blacklist range cache
+    this._currentDocVersion = 0;
+    this._blacklistRangesCache = null;
+    this._blacklistRangesCacheKey = null;
+
     // WeakMaps to track temporary DOM-related metadata without retaining nodes
     try {
       this._domRefs = new WeakMap();
@@ -4221,6 +4226,9 @@ class AlwaysColorText extends Plugin {
           }
         }
 
+        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
+          this.applyCustomCssToElement(span, entry._groupRef);
+        }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
         lastEnd = r.end;
@@ -4519,6 +4527,9 @@ class AlwaysColorText extends Plugin {
           }
         }
 
+        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
+          this.applyCustomCssToElement(span, entry._groupRef);
+        }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
         lastEnd = r.end;
@@ -4687,6 +4698,9 @@ class AlwaysColorText extends Plugin {
           }
         }
 
+        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
+          this.applyCustomCssToElement(span, entry._groupRef);
+        }
         this.applyCustomCssToElement(span, entry);
         textNode.replaceWith(span);
       }
@@ -5125,7 +5139,10 @@ class AlwaysColorText extends Plugin {
           activeLeaf.getMode &&
           activeLeaf.getMode() === "preview"
         ) {
-          this.forceRefreshAllReadingViews();
+          clearTimeout(this._layoutChangeReadingTimer);
+          this._layoutChangeReadingTimer = setTimeout(() => {
+            this.forceRefreshAllReadingViews();
+          }, 80);
         } else if (
           activeLeaf &&
           activeLeaf.getMode &&
@@ -8563,14 +8580,75 @@ class AlwaysColorText extends Plugin {
     }
   }
 
+  /**
+   * Merges a base inline style string with sanitized custom CSS declarations.
+   * Custom CSS properties take priority — any base property that the custom CSS
+   * also declares is stripped from the base string so the custom value wins.
+   *
+   * @param {string} baseStyle  - The base inline style string (may contain !important)
+   * @param {string} customCss  - Raw custom CSS declarations from entry.customCss
+   * @returns {string} Merged style string with custom CSS winning on conflicts
+   */
+  _mergeStyleWithCustomCss(baseStyle, customCss) {
+    if (!customCss || !customCss.trim()) return baseStyle;
+    const sanitized = this.sanitizeCssDeclarations(customCss);
+    if (!sanitized) return baseStyle;
+
+    // Collect the property names declared in custom CSS
+    const customProps = new Set();
+    const customParts = sanitized.split(";").map(s => s.trim()).filter(Boolean);
+    for (const p of customParts) {
+      const idx = p.indexOf(":");
+      if (idx === -1) continue;
+      const prop = p.slice(0, idx).trim().toLowerCase();
+      customProps.add(prop);
+      // If custom CSS declares `background` shorthand, also strip `background-color`
+      if (prop === "background") customProps.add("background-color");
+      if (prop === "background-color") customProps.add("background");
+      if (prop === "padding") {
+        customProps.add("padding-left"); customProps.add("padding-right");
+        customProps.add("padding-top"); customProps.add("padding-bottom");
+      }
+      if (prop === "border") {
+        customProps.add("border-top"); customProps.add("border-right");
+        customProps.add("border-bottom"); customProps.add("border-left");
+      }
+    }
+
+    // Strip those properties from the base style string
+    // Base style is semicolon-separated; split carefully
+    const baseParts = baseStyle.split(";").map(s => s.trim()).filter(Boolean);
+    const filteredBase = baseParts.filter(p => {
+      const idx = p.indexOf(":");
+      if (idx === -1) return true;
+      const prop = p.slice(0, idx).trim().toLowerCase();
+      return !customProps.has(prop);
+    });
+
+    // Rebuild: filtered base + custom CSS with !important
+    const customWithImportant = customParts
+      .map(p => {
+        const idx = p.indexOf(":");
+        if (idx === -1) return p;
+        return `${p.slice(0, idx).trim()}: ${p.slice(idx + 1).trim()} !important`;
+      })
+      .join("; ");
+
+    const base = filteredBase.join("; ");
+    return base ? `${base}; ${customWithImportant}` : customWithImportant;
+  }
+
   sanitizeCssDeclarations(input) {
     try {
       if (!input || typeof input !== "string") return "";
       debugLog("SANITIZE_CSS_START", `Input: "${input}"`);
-      const normalized = String(input).replace(/\r/g, "\n");
+      // Normalize line endings, then split only on semicolons
+      // (newlines within a value like linear-gradient(...\n...) must be preserved)
+      const normalized = String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+      // Split on semicolons only; collapse newlines inside values to spaces
       const parts = normalized
-        .split(/;|\n/)
-        .map((s) => s.trim())
+        .split(";")
+        .map((s) => s.replace(/\n/g, " ").trim())
         .filter((s) => s.length > 0);
       const out = [];
       for (const p of parts) {
@@ -8589,12 +8667,24 @@ class AlwaysColorText extends Plugin {
         // Remove !important if user added it, we will add it ourselves
         val = val.replace(/!important/gi, "").trim();
 
-        const safeVal = val.replace(/[{}<>]/g, "");
-        if (safeVal.length === 0) {
+        // BLOCKLIST: skip declarations with dangerous value patterns
+        const valLower = val.toLowerCase();
+        if (
+          valLower.includes("url(") ||
+          valLower.includes("expression(") ||
+          valLower.includes("javascript:") ||
+          val.includes("<") ||
+          val.includes(">")
+        ) {
+          debugLog("SANITIZE_CSS_SKIP", `Dangerous value for: "${prop}": "${val}"`);
+          continue;
+        }
+
+        if (val.length === 0) {
           debugLog("SANITIZE_CSS_SKIP", `Empty value for: "${prop}"`);
           continue;
         }
-        out.push(`${prop}: ${safeVal}`);
+        out.push(`${prop}: ${val}`);
       }
       const result = out.join("; ") + (out.length > 0 ? ";" : "");
       debugLog("SANITIZE_CSS_RESULT", `Output: "${result}"`);
@@ -13077,7 +13167,13 @@ class AlwaysColorText extends Plugin {
                     entryRef,
                   );
                   if (borderCss) {
-                    span.style.cssText += borderCss;
+                    borderCss.trim().split(";").map(s => s.trim()).filter(Boolean).forEach(decl => {
+                      const ci = decl.indexOf(":");
+                      if (ci === -1) return;
+                      const bp = decl.slice(0, ci).trim();
+                      const bv = decl.slice(ci + 1).replace(/!important/gi, "").trim();
+                      try { span.style.setProperty(bp, bv, "important"); } catch (_) {}
+                    });
                   }
                 }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
@@ -13190,7 +13286,13 @@ class AlwaysColorText extends Plugin {
                   entryRef,
                 );
                 if (borderCss) {
-                  span.style.cssText += borderCss;
+                  borderCss.trim().split(";").map(s => s.trim()).filter(Boolean).forEach(decl => {
+                    const ci = decl.indexOf(":");
+                    if (ci === -1) return;
+                    const bp = decl.slice(0, ci).trim();
+                    const bv = decl.slice(ci + 1).replace(/!important/gi, "").trim();
+                    try { span.style.setProperty(bp, bv, "important"); } catch (_) {}
+                  });
                 }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   span.style.boxDecorationBreak = "clone";
@@ -13243,15 +13345,21 @@ class AlwaysColorText extends Plugin {
             if (shouldAppendSpan) {
               const entryRef = m.entryRef || m.entry || null;
               debugLog("READING_RENDER_CSS", `Checking for custom CSS on: ${m.pattern || "unknown"}`);
+              if (this.settings.enableCustomCss && entryRef?._groupRef?.customCss) {
+                this.applyCustomCssToElement(span, entryRef._groupRef);
+              }
               this.applyCustomCssToElement(span, entryRef);
 
-              // Also apply border style if it was skipped due to hideBg
-              this.applyBorderStyleToElement(
-                span,
-                hideText ? null : (m.textColor || m.color),
-                hideBg ? null : (m.backgroundColor || m.color),
-                entryRef,
-              );
+              // Also apply border style if it was skipped due to hideBg (only for non-text styleType)
+              const entryStyleType = (m.entryRef || m.entry)?.styleType || 'text';
+              if (entryStyleType !== 'text') {
+                this.applyBorderStyleToElement(
+                  span,
+                  hideText ? null : (m.textColor || m.color),
+                  hideBg ? null : (m.backgroundColor || m.color),
+                  entryRef,
+                );
+              }
             }
 
             if (shouldAppendSpan) {
@@ -15008,6 +15116,12 @@ class AlwaysColorText extends Plugin {
     // OPTIMIZATION: Skip heavy blacklist scanning while typing to prevent lag
     if (this._isTyping) return [];
 
+    // PERF FIX: Cache result keyed on doc version + filePath to avoid re-scanning on every viewport change
+    const cacheKey = `${this._currentDocVersion || 0}:${baseOffset}:${filePath || ""}`;
+    if (this._blacklistRangesCache && this._blacklistRangesCacheKey === cacheKey) {
+      return this._blacklistRangesCache;
+    }
+
     const ranges = [];
     try {
       let pos = 0;
@@ -15030,7 +15144,9 @@ class AlwaysColorText extends Plugin {
         pos = nextNL + 1;
       }
     } catch (e) {}
-    // (no code to fix; the selection was empty)
+    // Store in cache before returning
+    this._blacklistRangesCache = ranges;
+    this._blacklistRangesCacheKey = cacheKey;
     return ranges;
   }
 
@@ -15048,6 +15164,20 @@ class AlwaysColorText extends Plugin {
       }
     } catch (e) {}
     return false;
+  }
+
+  // PERF: Build a Set of blacklisted words for O(1) lookup during a chunk pass.
+  // Call once per buildDecoChunked, pass the result into processPatternChunk/processTextChunk.
+  buildBlacklistWordSet(filePath = null) {
+    try {
+      if (this._blacklistCompilationDirty) this.compileBlacklistEntries();
+      const set = new Set();
+      for (const compiled of this._compiledBlacklistWords) {
+        if (compiled.word) set.add(compiled.word.toLowerCase());
+      }
+      return set;
+    } catch (e) {}
+    return new Set();
   }
 
   // NEW METHOD: Context-aware blacklist check with prefix-aware tokens
@@ -16792,31 +16922,12 @@ class AlwaysColorText extends Plugin {
         (e) => e && e.presetLabel === "Bullet Points" && !!e.isRegex,
       );
 
-      // Check if entries should be colored based on advanced rules
-      const taskCheckedAllowed =
-        !filePath ||
-        this.shouldColorText(
-          filePath,
-          taskCheckedEntry ? taskCheckedEntry.pattern : null,
-        );
-      const taskUncheckedAllowed =
-        !filePath ||
-        this.shouldColorText(
-          filePath,
-          taskUncheckedEntry ? taskUncheckedEntry.pattern : null,
-        );
-      const numberedAllowed =
-        !filePath ||
-        this.shouldColorText(
-          filePath,
-          numberedEntry ? numberedEntry.pattern : null,
-        );
-      const bulletAllowed =
-        !filePath ||
-        this.shouldColorText(
-          filePath,
-          bulletEntry ? bulletEntry.pattern : null,
-        );
+      // PERF FIX: Entries are already filtered by filterEntriesByAdvancedRules before reaching here.
+      // These shouldColorText calls are redundant and add O(entries) work per rebuild.
+      const taskCheckedAllowed = true;
+      const taskUncheckedAllowed = true;
+      const numberedAllowed = true;
+      const bulletAllowed = true;
 
       // Process each line and check patterns in priority order
       let pos = 0;
@@ -17056,6 +17167,9 @@ class AlwaysColorText extends Plugin {
       filePath,
     );
 
+    // PERF FIX: Build blacklist word set once per rebuild for O(1) per-match lookup
+    const blacklistWordSet = this.buildBlacklistWordSet(filePath);
+
     // FIRST: Process text+bg entries (they have priority)
     // Filter text+bg entries by file rules just like regular entries
     let textBgEntries = Array.isArray(this._compiledTextBgEntries)
@@ -17258,6 +17372,7 @@ class AlwaysColorText extends Plugin {
           blacklistedListRanges,
           filePath,
           activeLineRanges,
+          blacklistWordSet,
         );
         allMatches = allMatches.concat(chunkMatches);
 
@@ -17295,6 +17410,7 @@ class AlwaysColorText extends Plugin {
           blacklistedListRanges,
           filePath,
           activeLineRanges,
+          blacklistWordSet,
         );
         allMatches = allMatches.concat(chunkMatches);
 
@@ -17317,6 +17433,7 @@ class AlwaysColorText extends Plugin {
         blacklistedListRanges,
         filePath,
         activeLineRanges,
+        blacklistWordSet,
       );
       allMatches = allMatches.concat(chunkMatches);
     }
@@ -17343,6 +17460,7 @@ class AlwaysColorText extends Plugin {
     blacklistedListRanges = [],
     filePath = null,
     activeLineRanges = [],
+    blacklistWordSet = null,
   ) {
     const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode
       ? EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN
@@ -17562,15 +17680,13 @@ class AlwaysColorText extends Plugin {
         }
 
         // Context-aware blacklist check
-        if (
-          this.isContextBlacklisted(
-            text,
-            match.index,
-            match.index + matchedText.length,
-            filePath,
-          )
-        )
+        // PERF FIX: Use pre-built word set for O(1) lookup; fall back to full check only when set unavailable
+        if (blacklistWordSet && blacklistWordSet.size > 0) {
+          const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
+          if (blacklistWordSet.has(fullWord.toLowerCase())) continue;
+        } else if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length, filePath)) {
           continue;
+        }
 
         matches.push({
           start: matchStart,
@@ -17693,7 +17809,9 @@ class AlwaysColorText extends Plugin {
         for (const entry of wordPartialEntries) {
           if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
             continue;
-          if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
+          // PERF FIX: Use pre-built set for O(1) lookup
+          if (blacklistWordSet && blacklistWordSet.has(entry.pattern.toLowerCase())) continue;
+          else if (!blacklistWordSet && this.isWordBlacklisted(entry.pattern, filePath)) continue;
 
           const mt = String(
             entry.matchType ||
@@ -17819,7 +17937,9 @@ class AlwaysColorText extends Plugin {
         for (const entry of phrasePartialEntries) {
           if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
             continue;
-          if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
+          // PERF FIX: Use pre-built set for O(1) lookup
+          if (blacklistWordSet && blacklistWordSet.has(entry.pattern.toLowerCase())) continue;
+          else if (!blacklistWordSet && this.isWordBlacklisted(entry.pattern, filePath)) continue;
 
           const mt = String(
             entry.matchType ||
@@ -17991,6 +18111,7 @@ class AlwaysColorText extends Plugin {
     blacklistedListRanges = [],
     filePath = null,
     activeLineRanges = [],
+    blacklistWordSet = null,
   ) {
     const matches = [];
     const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode
@@ -18126,15 +18247,13 @@ class AlwaysColorText extends Plugin {
         }
 
         // Use helper to extract full word and check if blacklisted
-        if (
-          this.isContextBlacklisted(
-            chunkText,
-            match.index,
-            match.index + matchedText.length,
-            filePath,
-          )
-        )
+        // PERF FIX: Use pre-built word set for O(1) lookup; fall back to full check only when set unavailable
+        if (blacklistWordSet && blacklistWordSet.size > 0) {
+          const fullWord = this.extractFullWord(chunkText, match.index, match.index + matchedText.length);
+          if (blacklistWordSet.has(fullWord.toLowerCase())) continue;
+        } else if (this.isContextBlacklisted(chunkText, match.index, match.index + matchedText.length, filePath)) {
           continue;
+        }
 
         matches.push({
           start: matchStart,
@@ -18243,7 +18362,9 @@ class AlwaysColorText extends Plugin {
             }
           }
 
-          if (this.isWordBlacklisted(w, filePath)) continue;
+          // PERF FIX: Use pre-built set for O(1) word blacklist lookup
+          if (blacklistWordSet && blacklistWordSet.has(w.toLowerCase())) continue;
+          else if (!blacklistWordSet && this.isWordBlacklisted(w, filePath)) continue;
           if (
             this.isMatchInBlacklistedRange(
               chunkFrom + wStart,
@@ -18257,7 +18378,9 @@ class AlwaysColorText extends Plugin {
             if (!entry || entry.invalid) continue;
             if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
               continue;
-            if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
+            // PERF FIX: Use pre-built set for O(1) entry pattern blacklist lookup
+            if (blacklistWordSet && blacklistWordSet.has(entry.pattern.toLowerCase())) continue;
+            else if (!blacklistWordSet && this.isWordBlacklisted(entry.pattern, filePath)) continue;
 
             const mt = String(
               entry.matchType ||
@@ -18529,27 +18652,13 @@ class AlwaysColorText extends Plugin {
           : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
 
-        // Apply custom CSS here too
-        if (
-          this.settings.enableCustomCss &&
-          m.entryRef &&
-          m.entryRef.customCss
-        ) {
-          debugLog("LP_TEXTBG_CSS", `Processing custom CSS for TextBG: ${m.pattern || "unknown"}`);
-          const decl = this.sanitizeCssDeclarations(m.entryRef.customCss);
-          if (decl) {
-            const parts = decl
-              .split(";")
-              .map((s) => s.trim())
-              .filter((s) => s.length > 0);
-            for (const p of parts) {
-              const idx = p.indexOf(":");
-              if (idx === -1) continue;
-              const prop = p.slice(0, idx).trim();
-              const val = p.slice(idx + 1).trim();
-              debugLog("LP_TEXTBG_CSS_PROP", `Adding ${prop}: ${val}`);
-              style += `; ${prop}: ${val} !important;`;
-            }
+        // Merge group CSS then entry CSS (custom CSS wins over base styles)
+        if (this.settings.enableCustomCss) {
+          if (m.entryRef?._groupRef?.customCss) {
+            style = this._mergeStyleWithCustomCss(style, m.entryRef._groupRef.customCss);
+          }
+          if (m.entryRef?.customCss) {
+            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
           }
         }
       } else {
@@ -18645,27 +18754,13 @@ class AlwaysColorText extends Plugin {
           }
         }
 
-        // Apply custom CSS here to the style string before creating Decoration
-        if (
-          this.settings.enableCustomCss &&
-          m.entryRef &&
-          m.entryRef.customCss
-        ) {
-          debugLog("LP_RENDER_CSS", `Processing custom CSS for: ${m.pattern || "unknown"}`);
-          const decl = this.sanitizeCssDeclarations(m.entryRef.customCss);
-          if (decl) {
-            const parts = decl
-              .split(";")
-              .map((s) => s.trim())
-              .filter((s) => s.length > 0);
-            for (const p of parts) {
-              const idx = p.indexOf(":");
-              if (idx === -1) continue;
-              const prop = p.slice(0, idx).trim();
-              const val = p.slice(idx + 1).trim();
-              debugLog("LP_RENDER_CSS_PROP", `Adding ${prop}: ${val}`);
-              style += `; ${prop}: ${val} !important;`;
-            }
+        // Merge group CSS then entry CSS (custom CSS wins over base styles)
+        if (this.settings.enableCustomCss) {
+          if (m.entryRef?._groupRef?.customCss) {
+            style = this._mergeStyleWithCustomCss(style, m.entryRef._groupRef.customCss);
+          }
+          if (m.entryRef?.customCss) {
+            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
           }
         }
       }

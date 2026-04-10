@@ -250,7 +250,9 @@ export class HighlightStylingModal extends Modal {
     previewWrap.addClass("act-highlight-preview-wrap");
 
     const words = previewWrap.createDiv();
-    previewWrap.style.display = "block";
+    previewWrap.style.display = "flex";
+    previewWrap.style.alignItems = "center";
+    previewWrap.style.justifyContent = "center";
     words.style.textAlign = "center";
     words.style.opacity = "0.8";
     words.textContent = this.previewTextOverride
@@ -725,6 +727,19 @@ export class HighlightStylingModal extends Modal {
           ? this.entry.presetLabel
           : words.textContent || "";
       span.textContent = displayText;
+      // Apply custom CSS on top if present
+      if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
+        try {
+          const decl = this.plugin.sanitizeCssDeclarations(this.entry.customCss);
+          if (decl) {
+            decl.split(";").map(s => s.trim()).filter(Boolean).forEach(p => {
+              const idx = p.indexOf(":");
+              if (idx === -1) return;
+              span.style.setProperty(p.slice(0, idx).trim(), p.slice(idx + 1).trim(), "important");
+            });
+          }
+        } catch (_) {}
+      }
       previewWrap.appendChild(span);
     };
     const updatePickerVisibility = () => {

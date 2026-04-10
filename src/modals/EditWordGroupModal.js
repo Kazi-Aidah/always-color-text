@@ -1,4 +1,4 @@
-import { Modal, Notice, setIcon } from 'obsidian';
+import { Modal, Notice, setIcon, Menu } from 'obsidian';
 import { debugLog, debugError } from '../utils/debug.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
@@ -7,6 +7,7 @@ import { ColorPickerModal } from './ColorPickerModal.js';
 import { AlertModal } from './AlertModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
 import { EditEntryModal } from './EditEntryModal.js';
+import { CustomCssModal } from './CustomCssModal.js';
 
 export class EditWordGroupModal extends Modal {
   constructor(app, plugin, group, onSave, onDelete) {
@@ -64,6 +65,7 @@ export class EditWordGroupModal extends Modal {
     activeSelect.style.padding = "6px";
     activeSelect.style.borderRadius = "4px";
     activeSelect.style.border = "1px solid var(--background-modifier-border)";
+    activeSelect.style.background = "var(--background-modifier-form-field)";
     activeSelect.style.textAlign = "center";
     activeSelect.style.flex = "0 0 auto";
     activeSelect.style.width = "fit-content";
@@ -108,6 +110,7 @@ export class EditWordGroupModal extends Modal {
     caseSelect.style.padding = "6px";
     caseSelect.style.borderRadius = "4px";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
+    caseSelect.style.background = "var(--background-modifier-form-field)";
     caseSelect.style.textAlign = "center";
     caseSelect.style.flex = "0 0 auto";
     caseSelect.style.width = "fit-content";
@@ -144,6 +147,7 @@ export class EditWordGroupModal extends Modal {
     matchTypeSelect.style.borderRadius = "4px";
     matchTypeSelect.style.border =
       "1px solid var(--background-modifier-border)";
+    matchTypeSelect.style.background = "var(--background-modifier-form-field)";
     matchTypeSelect.style.textAlign = "center";
     matchTypeSelect.style.flex = "0 0 auto";
     matchTypeSelect.style.width = "fit-content";
@@ -210,6 +214,30 @@ export class EditWordGroupModal extends Modal {
     this._cleanupHandlers.push(() =>
       editBtn.removeEventListener("click", editHandler),
     );
+
+    if (this.plugin.settings.enableCustomCss) {
+      const cssBtn = topRow.createEl("button");
+      try {
+        setIcon(cssBtn, "code");
+      } catch (e) {}
+      cssBtn.title = this.plugin.t("edit_custom_css_btn", "Edit Custom CSS");
+      cssBtn.style.flex = "0 0 auto";
+      cssBtn.style.display = "flex";
+      cssBtn.style.alignItems = "center";
+      cssBtn.style.justifyContent = "center";
+      cssBtn.style.padding = "6px";
+      cssBtn.style.borderRadius = "4px";
+      cssBtn.style.border = "1px solid var(--background-modifier-border)";
+      cssBtn.style.background = "var(--background-modifier-form-field)";
+      cssBtn.style.cursor = "pointer";
+      const cssHandler = () => {
+        new CustomCssModal(this.app, this.plugin, this.group).open();
+      };
+      cssBtn.addEventListener("click", cssHandler);
+      this._cleanupHandlers.push(() =>
+        cssBtn.removeEventListener("click", cssHandler),
+      );
+    }
 
     const enableDisableRow = contentEl.createDiv();
     enableDisableRow.style.display = "grid";
@@ -824,6 +852,7 @@ export class EditWordGroupModal extends Modal {
       styleSelect.style.padding = "6px";
       styleSelect.style.borderRadius = "4px";
       styleSelect.style.border = "1px solid var(--background-modifier-border)";
+      styleSelect.style.background = "var(--background-modifier-form-field)";
       styleSelect.style.textAlign = "center";
       // removed transparent background styling per request
       styleSelect.style.maxWidth = "90px";
@@ -849,6 +878,7 @@ export class EditWordGroupModal extends Modal {
       matchSelect.style.padding = "6px";
       matchSelect.style.borderRadius = "4px";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
+      matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.textAlign = "center";
       // removed transparent background styling per request
       matchSelect.style.maxWidth = "110px";
@@ -1085,14 +1115,14 @@ export class EditWordGroupModal extends Modal {
         cpBg.addEventListener("contextmenu", cpBgContextHandler);
       }
 
-      // 8. DELETE BUTTON (X)
-      const btnDel = row.createEl("button", {
+      // 8. DELETE BUTTON (commented out — use right-click context menu to delete)
+      /* const btnDel = row.createEl("button", {
         text: this.plugin.t("delete_button_text", "✕"),
       });
       btnDel.addClass("mod-warning");
       btnDel.style.cursor = "pointer";
       btnDel.style.padding = "6px 10px";
-      btnDel.style.border = "none";
+      btnDel.style.border = "none"; */
       const delHandler = () => {
         const idx = this.group.entries.indexOf(entry);
         if (idx > -1) {
@@ -1100,7 +1130,7 @@ export class EditWordGroupModal extends Modal {
           this._refreshGroupEntries();
         }
       };
-      btnDel.addEventListener("click", delHandler);
+      // btnDel.addEventListener("click", delHandler);
 
       // RIGHT-CLICK CONTEXT MENU ON ROW
       const contextMenuHandler = (ev) => {
@@ -1132,7 +1162,7 @@ export class EditWordGroupModal extends Modal {
                 .setTitle(
                   this.plugin.t("open_in_regex_tester", "Open in Regex Tester"),
                 )
-                .setIcon("code")
+                .setIcon("regex")
                 .onClick(() => {
                   const modal = new RealTimeRegexTesterModal(
                     this.app,

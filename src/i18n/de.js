@@ -248,7 +248,7 @@ module.exports = {
   "border_thickness": "Rahmendicke (px)",
   "border_thickness_desc": "Stellen Sie die Rahmendicke von 0-5 Pixeln ein (z.B. 1, 2.5, 5)",
   "highlight_preview": "Hervorhebungsvorschau",
-  "highlight_preview_text": "So sieht Ihre Hervorhebung aus!",
+  "highlight_preview_text": "So sieht Ihre Standard-Hervorhebung aus!",
   "opt_line_solid": "Durchgezogen",
   "opt_line_dashed": "Gestrichelt",
   "opt_line_dotted": "Gepunktet",

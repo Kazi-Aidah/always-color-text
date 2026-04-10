@@ -166,12 +166,12 @@ export class BlacklistRegexTesterModal extends Modal {
       let out = "";
       let count = 0;
       const matchStyle =
-        "background:rgba(255, 68, 68, 0.5);border-radius:4px;padding:0 4px;";
+        "background:rgba(255, 68, 68, 0.25);border-radius:2px;padding:0 4px;";
       for (const m of raw.matchAll(re)) {
         const s = m.index ?? 0;
         const e = s + (m[0] ? m[0].length : 0);
         out += escapeHtml(raw.slice(lastIndex, s));
-        out += `<mark style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</mark>`;
+        out += `<span style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</span>`;
         lastIndex = e;
         count++;
       }

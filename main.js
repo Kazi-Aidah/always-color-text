@@ -275,7 +275,7 @@ var require_en = __commonJS({
       "border_thickness": "Border Thickness (px)",
       "border_thickness_desc": "Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)",
       "highlight_preview": "Highlight Preview",
-      "highlight_preview_text": "This is how your highlight looks!",
+      "highlight_preview_text": "Here's how your default highlight looks!",
       "opt_line_solid": "Solid",
       "opt_line_dashed": "Dashed",
       "opt_line_dotted": "Dotted",
@@ -803,7 +803,7 @@ var require_es = __commonJS({
       "border_thickness": "Grosor del Borde (px)",
       "border_thickness_desc": "Establecer el grosor del borde de 0-5 p\xEDxeles (p. ej. 1, 2.5, 5)",
       "highlight_preview": "Vista previa del Resaltado",
-      "highlight_preview_text": "\xA1As\xED se ve tu resaltado!",
+      "highlight_preview_text": "\xA1As\xED se ve tu resaltado predeterminado!",
       "opt_line_solid": "S\xF3lido",
       "opt_line_dashed": "Discontinuo",
       "opt_line_dotted": "Punteado",
@@ -1337,7 +1337,7 @@ var require_fr = __commonJS({
       "border_thickness": "\xC9paisseur de la bordure (px)",
       "border_thickness_desc": "D\xE9finir l'\xE9paisseur de la bordure de 0 \xE0 5 pixels (par exemple 1, 2.5, 5)",
       "highlight_preview": "Aper\xE7u de la surbrillance",
-      "highlight_preview_text": "Voici \xE0 quoi ressemble votre surbrillance !",
+      "highlight_preview_text": "Voici \xE0 quoi ressemble votre surbrillance par d\xE9faut !",
       "opt_line_solid": "Solide",
       "opt_line_dashed": "Tiret\xE9",
       "opt_line_dotted": "Pointill\xE9",
@@ -1874,7 +1874,7 @@ var require_hi = __commonJS({
       "border_thickness": "\u092C\u0949\u0930\u094D\u0921\u0930 \u092E\u094B\u091F\u093E\u0908 (px)",
       "border_thickness_desc": "\u092C\u0949\u0930\u094D\u0921\u0930 \u092E\u094B\u091F\u093E\u0908 0-5 \u092A\u093F\u0915\u094D\u0938\u0947\u0932 \u0938\u0947 \u0938\u0947\u091F \u0915\u0930\u0947\u0902 (\u091C\u0948\u0938\u0947 1, 2.5, 5)",
       "highlight_preview": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F \u092A\u094D\u0930\u0940\u0935\u094D\u092F\u0942",
-      "highlight_preview_text": "\u0926\u0947\u0916\u0947\u0902 \u0915\u093F \u0906\u092A\u0915\u093E \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0948\u0938\u093E \u0926\u093F\u0916\u0947\u0917\u093E!",
+      "highlight_preview_text": "\u0926\u0947\u0916\u0947\u0902 \u0915\u093F \u0906\u092A\u0915\u093E \u0921\u093F\u092B\u093C\u0949\u0932\u094D\u091F \u0939\u093E\u0907\u0932\u093E\u0907\u091F \u0915\u0948\u0938\u093E \u0926\u093F\u0916\u0947\u0917\u093E!",
       "opt_line_solid": "\u0920\u094B\u0938",
       "opt_line_dashed": "\u0921\u0948\u0936\u094D\u0921",
       "opt_line_dotted": "\u0921\u0949\u091F\u0947\u0921",
@@ -2406,7 +2406,7 @@ var require_it = __commonJS({
       "border_thickness": "Spessore bordo (px)",
       "border_thickness_desc": "Imposta lo spessore del bordo da 0-5 pixel (es. 1, 2.5, 5)",
       "highlight_preview": "Anteprima evidenziazione",
-      "highlight_preview_text": "Ecco come apparir\xE0 la tua evidenziazione!",
+      "highlight_preview_text": "Ecco come appare la tua evidenziazione predefinita!",
       "opt_line_solid": "pieno",
       "opt_line_dashed": "tratteggiato",
       "opt_line_dotted": "puntinato",
@@ -2939,7 +2939,7 @@ var require_bn = __commonJS({
       "border_thickness": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09A5\u09BF\u0995\u09A8\u09C7\u09B8 (px)",
       "border_thickness_desc": "\u09AC\u09B0\u09CD\u09A1\u09BE\u09B0 \u09A5\u09BF\u0995\u09A8\u09C7\u09B8 0-5 \u09AA\u09BF\u0995\u09CD\u09B8\u09C7\u09B2 \u09A5\u09C7\u0995\u09C7 \u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8 (\u09AF\u09C7\u09AE\u09A8 1, 2.5, 5)",
       "highlight_preview": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09AA\u09CD\u09B0\u09BF\u09AD\u09BF\u0989",
-      "highlight_preview_text": "\u0986\u09AA\u09A8\u09BE\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09C7\u09AE\u09A8 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7 \u09A4\u09BE \u09A6\u09C7\u0996\u09C1\u09A8!",
+      "highlight_preview_text": "\u0986\u09AA\u09A8\u09BE\u09B0 \u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u0995\u09C7\u09AE\u09A8 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7 \u09A4\u09BE \u09A6\u09C7\u0996\u09C1\u09A8!",
       "opt_line_solid": "\u09B8\u09B2\u09BF\u09A1",
       "opt_line_dashed": "\u09A1\u09CD\u09AF\u09BE\u09B6\u09A1",
       "opt_line_dotted": "\u09A1\u099F\u09C7\u09A1",
@@ -3500,7 +3500,7 @@ var require_ru = __commonJS({
       "border_thickness": "\u0422\u043E\u043B\u0449\u0438\u043D\u0430 \u0440\u0430\u043C\u043A\u0438 (px)",
       "border_thickness_desc": "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0442\u043E\u043B\u0449\u0438\u043D\u0443 \u0440\u0430\u043C\u043A\u0438 \u043E\u0442 0 \u0434\u043E 5 \u043F\u0438\u043A\u0441\u0435\u043B\u0435\u0439 (\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, 1, 2.5, 5)",
       "highlight_preview": "\u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
-      "highlight_preview_text": "\u0422\u0430\u043A \u0431\u0443\u0434\u0435\u0442 \u0432\u044B\u0433\u043B\u044F\u0434\u0435\u0442\u044C \u0432\u0430\u0448\u0430 \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0430!",
+      "highlight_preview_text": "\u0422\u0430\u043A \u0431\u0443\u0434\u0435\u0442 \u0432\u044B\u0433\u043B\u044F\u0434\u0435\u0442\u044C \u0432\u0430\u0448 \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0439 \u0445\u0430\u0439\u043B\u0430\u0439\u0442!",
       "opt_line_solid": "\u0421\u043F\u043B\u043E\u0448\u043D\u0430\u044F",
       "opt_line_dashed": "\u0428\u0442\u0440\u0438\u0445\u043E\u0432\u0430\u044F",
       "opt_line_dotted": "\u0422\u043E\u0447\u0435\u0447\u043D\u0430\u044F",
@@ -4030,7 +4030,7 @@ var require_zh_cn = __commonJS({
       "border_thickness": "\u8FB9\u6846\u7C97\u7EC6 (px)",
       "border_thickness_desc": "\u8BBE\u7F6E\u8FB9\u6846\u7C97\u7EC6\u4ECE 0 \u5230 5 \u50CF\u7D20\uFF08\u4F8B\u5982 1, 2.5, 5\uFF09",
       "highlight_preview": "\u9AD8\u4EAE\u9884\u89C8",
-      "highlight_preview_text": "\u8FD9\u5C31\u662F\u60A8\u7684\u9AD8\u4EAE\u6837\u5B50\u7684\uFF01",
+      "highlight_preview_text": "\u8FD9\u5C31\u662F\u60A8\u7684\u9ED8\u8BA4\u9AD8\u4EAE\u6837\u5B50\uFF01",
       "opt_line_solid": "\u5B9E\u7EBF",
       "opt_line_dashed": "\u865A\u7EBF",
       "opt_line_dotted": "\u70B9\u7EBF",
@@ -4572,7 +4572,7 @@ var require_de = __commonJS({
       "border_thickness": "Rahmendicke (px)",
       "border_thickness_desc": "Stellen Sie die Rahmendicke von 0-5 Pixeln ein (z.B. 1, 2.5, 5)",
       "highlight_preview": "Hervorhebungsvorschau",
-      "highlight_preview_text": "So sieht Ihre Hervorhebung aus!",
+      "highlight_preview_text": "So sieht Ihre Standard-Hervorhebung aus!",
       "opt_line_solid": "Durchgezogen",
       "opt_line_dashed": "Gestrichelt",
       "opt_line_dotted": "Gepunktet",
@@ -5111,7 +5111,7 @@ var require_ar = __commonJS({
       "border_thickness": "\u0633\u0645\u0627\u0643\u0629 \u0627\u0644\u062D\u062F\u0648\u062F (px)",
       "border_thickness_desc": "\u062A\u0639\u064A\u064A\u0646 \u0633\u0645\u0627\u0643\u0629 \u0627\u0644\u062D\u062F\u0648\u062F \u0645\u0646 0-5 \u0628\u0643\u0633\u0644 (\u0645\u062B\u0644 1\u060C 2.5\u060C 5)",
       "highlight_preview": "\u0645\u0639\u0627\u064A\u0646\u0629 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
-      "highlight_preview_text": "\u0647\u0643\u0630\u0627 \u064A\u0628\u062F\u0648 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u062E\u0627\u0635 \u0628\u0643!",
+      "highlight_preview_text": "\u0647\u0643\u0630\u0627 \u064A\u0628\u062F\u0648 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u0627\u0641\u062A\u0631\u0627\u0636\u064A \u0627\u0644\u062E\u0627\u0635 \u0628\u0643!",
       "opt_line_solid": "\u0645\u062A\u0635\u0644",
       "opt_line_dashed": "\u0645\u062A\u0642\u0637\u0639",
       "opt_line_dotted": "\u0645\u0646\u0642\u0637",
@@ -6654,27 +6654,31 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     const subjectWrap = contentEl.createDiv();
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
-    subjectWrap.style.borderRadius = "var(--radius-m)";
+    subjectWrap.addClass("act-subject-wrap");
+    subjectWrap.style.borderRadius = "var(--button-radius)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
-    const testInput = subjectWrap.createEl("textarea");
-    testInput.placeholder = this.plugin.t(
+    const testInput = subjectWrap.createEl("div");
+    testInput.contentEditable = "true";
+    testInput.dataset.placeholder = this.plugin.t(
       "regex_subject_placeholder",
       "type your subject / test string here..."
     );
     testInput.style.width = "100%";
-    testInput.style.height = "120px";
+    testInput.style.minHeight = "120px";
     testInput.style.padding = "12px";
     testInput.style.border = "none";
     testInput.style.outline = "none";
     testInput.style.background = "transparent";
     testInput.style.color = "var(--text-normal)";
     testInput.style.fontFamily = "var(--font-ui-medium)";
-    testInput.style.resize = "none";
+    testInput.style.whiteSpace = "pre-wrap";
+    testInput.style.wordBreak = "break-word";
+    testInput.style.boxSizing = "border-box";
     const previewWrap = contentEl.createDiv();
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
-    previewWrap.style.borderRadius = "var(--radius-m)";
+    previewWrap.style.borderRadius = "var(--button-radius)";
     previewWrap.style.padding = "12px";
     previewWrap.style.background = "var(--background-modifier-form-field)";
     previewWrap.style.whiteSpace = "pre-wrap";
@@ -6682,6 +6686,9 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     previewWrap.style.fontFamily = "var(--font-ui-medium)";
     previewWrap.style.fontSize = "var(--font-small)";
     previewWrap.style.lineHeight = "1.5";
+    previewWrap.style.display = "flex";
+    previewWrap.style.alignItems = "center";
+    previewWrap.style.justifyContent = "center";
     const nameInput = contentEl.createEl("input", { type: "text" });
     nameInput.placeholder = this.plugin.t(
       "regex_name_placeholder",
@@ -6722,7 +6729,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
       return out;
     };
     const renderPreview = () => {
-      const raw = String(testInput.value || "");
+      const raw = String(testInput.textContent || "");
       const patRaw = String(regexInput2.value || "").trim();
       const flags = Object.keys(flagButtons).filter((k) => flagButtons[k].dataset.on === "1").join("");
       const f = flags.includes("g") ? flags : flags + "g";
@@ -6773,7 +6780,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
         const s = m.index ?? 0;
         const e = s + (m[0] ? m[0].length : 0);
         out += escapeHtml(raw.slice(lastIndex, s));
-        out += `<mark style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</mark>`;
+        out += `<span style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</span>`;
         lastIndex = e;
         count++;
       }
@@ -7142,64 +7149,215 @@ var import_obsidian6 = require("obsidian");
 
 // src/modals/CustomCssModal.js
 var import_obsidian3 = require("obsidian");
+function deriveHighlightCssFromEntry(entry, plugin) {
+  const lines = [];
+  const settings = plugin.settings;
+  const styleType2 = entry.styleType || (entry.backgroundColor ? "highlight" : "text");
+  const isTextOnly = styleType2 === "text";
+  const tc = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color;
+  if (tc) lines.push(`color: ${tc}`);
+  const bg = entry.backgroundColor;
+  if (bg && !isTextOnly) {
+    const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
+    lines.push(`background-color: ${plugin.hexToRgba(bg, opacity)}`);
+  }
+  if (!isTextOnly) {
+    const radius = entry.highlightBorderRadius ?? settings.highlightBorderRadius ?? 4;
+    lines.push(`border-radius: ${radius}px`);
+    const hpad = entry.highlightHorizontalPadding ?? settings.highlightHorizontalPadding ?? 4;
+    const vpad = entry.highlightVerticalPadding ?? settings.highlightVerticalPadding ?? 0;
+    lines.push(`padding: ${vpad}px ${hpad}px`);
+    const enableBorder = entry.enableBorderThickness ?? settings.enableBorderThickness ?? false;
+    if (enableBorder) {
+      const thickness = entry.borderThickness ?? settings.borderThickness ?? 1;
+      const lineStyle = entry.borderLineStyle ?? settings.borderLineStyle ?? "solid";
+      const borderSide = entry.borderStyle ?? settings.borderStyle ?? "full";
+      const borderColor = tc || "currentColor";
+      const borderVal = `${thickness}px ${lineStyle} ${borderColor}`;
+      switch (borderSide) {
+        case "top":
+          lines.push(`border-top: ${borderVal}`);
+          break;
+        case "bottom":
+          lines.push(`border-bottom: ${borderVal}`);
+          break;
+        case "left":
+          lines.push(`border-left: ${borderVal}`);
+          break;
+        case "right":
+          lines.push(`border-right: ${borderVal}`);
+          break;
+        case "top-bottom":
+          lines.push(`border-top: ${borderVal}`);
+          lines.push(`border-bottom: ${borderVal}`);
+          break;
+        case "left-right":
+          lines.push(`border-left: ${borderVal}`);
+          lines.push(`border-right: ${borderVal}`);
+          break;
+        case "top-right":
+          lines.push(`border-top: ${borderVal}`);
+          lines.push(`border-right: ${borderVal}`);
+          break;
+        case "top-left":
+          lines.push(`border-top: ${borderVal}`);
+          lines.push(`border-left: ${borderVal}`);
+          break;
+        case "bottom-right":
+          lines.push(`border-bottom: ${borderVal}`);
+          lines.push(`border-right: ${borderVal}`);
+          break;
+        case "bottom-left":
+          lines.push(`border-bottom: ${borderVal}`);
+          lines.push(`border-left: ${borderVal}`);
+          break;
+        case "full":
+        default:
+          lines.push(`border: ${borderVal}`);
+          break;
+      }
+    }
+  }
+  return lines.join(";\n") + ";";
+}
+var DANGEROUS_PATTERNS = ["url(", "expression(", "javascript:", "<", ">"];
 var CustomCssModal = class extends import_obsidian3.Modal {
   constructor(app, plugin, entry) {
     super(app);
     this.plugin = plugin;
     this.entry = entry;
     this._handlers = [];
+    this._debounceTimer = null;
+    this._previewSpan = null;
+    this._validationEl = null;
+    this._textarea = null;
   }
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
+    if (!this.entry) {
+      contentEl.createEl("p", { text: "Error: no entry provided to CustomCssModal." });
+      return;
+    }
     try {
       this.modalEl.addClass("act-custom-css-modal");
-      this.modalEl.style.padding = "20px";
-      this.modalEl.style.minWidth = "520px";
-    } catch (e) {
+      this.modalEl.style.minWidth = "540px";
+    } catch (_) {
     }
-    const title = contentEl.createEl("h2", {
+    const heading = contentEl.createEl("h2", {
       text: this.plugin.t("custom_css_header", "Edit Custom CSS")
     });
-    title.style.margin = "0 0 12px 0";
-    const info = contentEl.createDiv();
-    info.style.marginBottom = "8px";
-    info.textContent = this.plugin.t(
-      "custom_css_instructions",
-      "Enter CSS declarations."
-    );
-    const box = contentEl.createDiv();
-    box.style.border = "1px solid var(--background-modifier-border)";
-    box.style.borderRadius = "4px";
-    box.style.background = "var(--background-modifier-form-field)";
-    const ta = box.createEl("textarea");
-    ta.style.width = "100%";
-    ta.style.height = "200px";
-    ta.style.resize = "vertical";
-    ta.style.border = "none";
-    ta.style.outline = "none";
-    ta.style.background = "transparent";
-    ta.style.color = "var(--text-normal)";
-    ta.style.padding = "8px";
-    ta.style.boxSizing = "border-box";
-    ta.placeholder = "font-family: 'fontname';\nfont-weight: 600;\nfont-size: 8px;";
-    ta.value = String(this.entry?.customCss || "");
+    heading.style.margin = "0 0 12px 0";
+    const previewWrap = contentEl.createDiv();
+    previewWrap.style.marginBottom = "12px";
+    previewWrap.style.padding = "10px 12px";
+    previewWrap.style.border = "1px solid var(--background-modifier-border)";
+    previewWrap.style.borderRadius = "var(--button-radius)";
+    previewWrap.style.background = "var(--background-modifier-form-field)";
+    const previewArea = previewWrap.createDiv();
+    previewArea.style.minHeight = "2.5em";
+    previewArea.style.display = "flex";
+    previewArea.style.alignItems = "center";
+    previewArea.style.justifyContent = "center";
+    const sampleText = this.entry.isRegex ? this.entry.presetLabel || this.entry.pattern || "Sample Text" : this.entry.pattern || "Sample Text";
+    this._previewSpan = previewArea.createEl("span", { text: sampleText });
+    this._previewSpan.style.display = "inline-block";
+    this._previewSpan.style.padding = "4px 8px";
+    this._previewSpan.style.minHeight = "1.5em";
+    this._previewSpan.style.borderRadius = "var(--button-radius)";
+    const textareaWrap = contentEl.createDiv();
+    textareaWrap.style.marginBottom = "10px";
+    const textareaLabel = textareaWrap.createEl("div", { text: "CSS Declarations" });
+    textareaLabel.style.fontSize = "11px";
+    textareaLabel.style.color = "var(--text-muted)";
+    textareaLabel.style.marginBottom = "4px";
+    textareaLabel.style.textTransform = "uppercase";
+    textareaLabel.style.letterSpacing = "0.05em";
+    const taBox = textareaWrap.createDiv();
+    taBox.style.border = "1px solid var(--background-modifier-border)";
+    taBox.style.borderRadius = "var(--button-radius)";
+    taBox.style.background = "var(--background-modifier-form-field)";
+    taBox.style.transition = "border-color 0.15s";
+    this._textarea = taBox.createEl("div");
+    this._textarea.contentEditable = "true";
+    this._textarea.style.width = "100%";
+    this._textarea.style.minHeight = "160px";
+    this._textarea.style.border = "none";
+    this._textarea.style.outline = "none";
+    this._textarea.style.background = "transparent";
+    this._textarea.style.color = "var(--text-normal)";
+    this._textarea.style.padding = "8px";
+    this._textarea.style.boxSizing = "border-box";
+    this._textarea.style.fontFamily = "var(--font-monospace)";
+    this._textarea.style.fontSize = "13px";
+    this._textarea.style.whiteSpace = "pre-wrap";
+    this._textarea.style.wordBreak = "break-word";
+    this._textarea.style.lineHeight = "1.6";
+    const focusHandler = () => {
+      taBox.style.borderColor = "var(--color-accent)";
+      taBox.style.borderWidth = "2px";
+    };
+    const blurHandler = () => {
+      taBox.style.borderColor = "";
+      taBox.style.borderWidth = "";
+    };
+    this._textarea.addEventListener("focus", focusHandler);
+    this._textarea.addEventListener("blur", blurHandler);
+    this._handlers.push({ el: this._textarea, ev: "focus", fn: focusHandler });
+    this._handlers.push({ el: this._textarea, ev: "blur", fn: blurHandler });
+    Object.defineProperty(this._textarea, "value", {
+      get() {
+        return this.textContent;
+      },
+      set(v) {
+        this.textContent = v;
+      },
+      configurable: true
+    });
+    if (this.entry.customCss && this.entry.customCss.trim().length > 0) {
+      this._textarea.value = this.entry.customCss;
+    } else {
+      this._textarea.value = deriveHighlightCssFromEntry(this.entry, this.plugin);
+    }
+    this._validationEl = contentEl.createDiv();
+    this._validationEl.style.display = "none";
+    this._validationEl.style.marginBottom = "8px";
+    this._validationEl.style.padding = "6px 10px";
+    this._validationEl.style.borderRadius = "4px";
+    this._validationEl.style.background = "var(--background-modifier-error)";
+    this._validationEl.style.color = "var(--text-error)";
+    this._validationEl.style.fontSize = "12px";
+    this._validationEl.style.whiteSpace = "pre-wrap";
     const row = contentEl.createDiv();
     row.style.display = "flex";
     row.style.gap = "8px";
-    row.style.marginTop = "12px";
+    row.style.marginTop = "4px";
+    row.style.justifyContent = "space-between";
+    const clearBtn = row.createEl("button", {
+      text: this.plugin.t("btn_reset", "Clear")
+    });
     const saveBtn = row.createEl("button", {
       text: this.plugin.t("btn_save", "Save")
     });
     saveBtn.addClass("mod-cta");
-    const clearBtn = row.createEl("button", {
-      text: this.plugin.t("btn_reset", "Reset")
-    });
+    const inputHandler = () => {
+      clearTimeout(this._debounceTimer);
+      this._debounceTimer = setTimeout(() => {
+        this._updatePreview();
+        this._validateInput();
+      }, 300);
+    };
+    this._textarea.addEventListener("input", inputHandler);
+    this._handlers.push({ el: this._textarea, ev: "input", fn: inputHandler });
     const save = async () => {
-      const raw = String(ta.value || "");
-      const sanitized = this.plugin.sanitizeCssDeclarations(raw);
-      if (this.entry) this.entry.customCss = raw ? raw : void 0;
+      if (this.entry) {
+        this.entry.customCss = this._textarea.value.trim() || void 0;
+      }
       await this.plugin.saveSettings();
+      try {
+        window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
+      } catch (_) {
+      }
       try {
         this.plugin.reconfigureEditorExtensions();
       } catch (_) {
@@ -7215,9 +7373,12 @@ var CustomCssModal = class extends import_obsidian3.Modal {
       this.close();
     };
     const clear = async () => {
-      ta.value = "";
       if (this.entry) this.entry.customCss = void 0;
       await this.plugin.saveSettings();
+      try {
+        window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
+      } catch (_) {
+      }
       try {
         this.plugin.reconfigureEditorExtensions();
       } catch (_) {
@@ -7236,8 +7397,87 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     clearBtn.addEventListener("click", clear);
     this._handlers.push({ el: saveBtn, ev: "click", fn: save });
     this._handlers.push({ el: clearBtn, ev: "click", fn: clear });
+    this._updatePreview();
+    this._validateInput();
+  }
+  _updatePreview() {
+    if (!this._previewSpan || !this.entry) return;
+    this._previewSpan.removeAttribute("style");
+    this._previewSpan.style.display = "inline-block";
+    this._previewSpan.style.padding = "4px 8px";
+    this._previewSpan.style.minHeight = "1.5em";
+    this._previewSpan.style.borderRadius = "var(--button-radius)";
+    const tc = this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.entry.color;
+    if (tc) this._previewSpan.style.setProperty("color", tc, "important");
+    const styleType2 = this.entry.styleType || (this.entry.backgroundColor ? "highlight" : "text");
+    if (styleType2 !== "text" && this.entry.backgroundColor) {
+      const opacity = this.entry.backgroundOpacity ?? this.plugin.settings.backgroundOpacity ?? 35;
+      const rgba = this.plugin.hexToRgba(this.entry.backgroundColor, opacity);
+      this._previewSpan.style.setProperty("background-color", rgba, "important");
+    }
+    const raw = this._textarea ? this._textarea.value : "";
+    if (raw.trim()) {
+      const sanitized = this.plugin.sanitizeCssDeclarations(raw);
+      if (sanitized) {
+        const parts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
+        for (const p of parts) {
+          const idx = p.indexOf(":");
+          if (idx === -1) continue;
+          const prop = p.slice(0, idx).trim();
+          const val = p.slice(idx + 1).trim();
+          try {
+            this._previewSpan.style.setProperty(prop, val, "important");
+          } catch (_) {
+            this._previewSpan.style[prop] = val;
+          }
+        }
+      }
+    }
+  }
+  _validateInput() {
+    if (!this._validationEl || !this._textarea) return;
+    const raw = this._textarea.value;
+    if (!raw.trim()) {
+      this._validationEl.style.display = "none";
+      return;
+    }
+    const warnings = [];
+    const parts = raw.split(";").map((s) => s.replace(/\n/g, " ").trim()).filter(Boolean);
+    for (const part of parts) {
+      const idx = part.indexOf(":");
+      if (idx === -1) continue;
+      const prop = part.slice(0, idx).trim().toLowerCase();
+      const val = part.slice(idx + 1).trim();
+      if (!/^[a-z\-]+$/.test(prop)) {
+        warnings.push(`Invalid property name: "${prop}" (must match /^[a-z\\-]+$/)`);
+      }
+      for (const d of DANGEROUS_PATTERNS) {
+        if (val.toLowerCase().includes(d)) {
+          warnings.push(`Dangerous value in "${prop}": contains "${d}"`);
+          break;
+        }
+      }
+    }
+    if (warnings.length > 0) {
+      this._validationEl.textContent = warnings.join("\n");
+      this._validationEl.style.display = "block";
+    } else {
+      this._validationEl.style.display = "none";
+    }
+  }
+  _insertAtCursor(text) {
+    const ta = this._textarea;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const before = ta.value.slice(0, start);
+    const after = ta.value.slice(end);
+    ta.value = before + text + after;
+    ta.selectionStart = ta.selectionEnd = start + text.length;
+    ta.focus();
   }
   onClose() {
+    clearTimeout(this._debounceTimer);
     try {
       this._handlers?.forEach((h) => {
         try {
@@ -7247,6 +7487,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
       });
     } catch (_) {
     }
+    this._handlers = [];
     this.contentEl.empty();
   }
 };
@@ -7412,12 +7653,12 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
       let lastIndex = 0;
       let out = "";
       let count = 0;
-      const matchStyle = "background:rgba(255, 68, 68, 0.5);border-radius:4px;padding:0 4px;";
+      const matchStyle = "background:rgba(255, 68, 68, 0.25);border-radius:2px;padding:0 4px;";
       for (const m of raw.matchAll(re)) {
         const s = m.index ?? 0;
         const e = s + (m[0] ? m[0].length : 0);
         out += escapeHtml(raw.slice(lastIndex, s));
-        out += `<mark style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</mark>`;
+        out += `<span style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</span>`;
         lastIndex = e;
         count++;
       }
@@ -9447,26 +9688,40 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     const box = row1.createDiv();
     box.addClass("act-edit-entry-textbox");
     box.style.border = "1px solid var(--background-modifier-border)";
-    box.style.borderRadius = "4px";
+    box.style.borderRadius = "var(--button-radius)";
     box.style.background = "var(--background-modifier-form-field)";
-    const textInput = box.createEl("textarea");
+    const textInput = box.createEl("div");
+    textInput.contentEditable = "true";
     textInput.style.width = "100%";
-    textInput.style.height = "40px";
-    textInput.style.resize = "none";
+    textInput.style.minHeight = "40px";
     textInput.style.border = "none";
     textInput.style.outline = "none";
     textInput.style.background = "transparent";
     textInput.style.color = "var(--text-normal)";
     textInput.style.padding = "6px";
     textInput.style.boxSizing = "border-box";
+    textInput.style.lineHeight = "1.5";
+    textInput.style.whiteSpace = "pre-wrap";
+    textInput.style.wordBreak = "break-word";
+    Object.defineProperty(textInput, "value", {
+      get() {
+        return this.textContent;
+      },
+      set(v) {
+        this.textContent = v;
+      },
+      configurable: true
+    });
     const row2 = leftColumn.createDiv();
     row2.addClass("act-edit-entry-row2");
     const preview = row2.createDiv();
     preview.addClass("act-edit-entry-preview");
-    preview.style.display = "block";
+    preview.style.display = "flex";
+    preview.style.alignItems = "center";
+    preview.style.justifyContent = "center";
     preview.style.flex = "1";
     preview.style.border = "1px dashed var(--background-modifier-border)";
-    preview.style.borderRadius = "4px";
+    preview.style.borderRadius = "var(--button-radius)";
     preview.style.padding = "10px";
     preview.style.background = "var(--background-modifier-form-field)";
     preview.style.whiteSpace = "pre-wrap";
@@ -9856,6 +10111,19 @@ var EditEntryModal = class extends import_obsidian6.Modal {
         const span = document.createElement("span");
         span.setAttribute("style", styleStr);
         span.style.display = "inline";
+        if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
+          try {
+            const decl = this.plugin.sanitizeCssDeclarations(this.entry.customCss);
+            if (decl) {
+              decl.split(";").map((s) => s.trim()).filter(Boolean).forEach((p2) => {
+                const idx = p2.indexOf(":");
+                if (idx === -1) return;
+                span.style.setProperty(p2.slice(0, idx).trim(), p2.slice(idx + 1).trim(), "important");
+              });
+            }
+          } catch (_) {
+          }
+        }
         span.textContent = text;
         return span;
       };
@@ -9923,7 +10191,6 @@ var EditEntryModal = class extends import_obsidian6.Modal {
         bgColorInput.style.display = "inline-block";
         pickerRow.style.flexDirection = "row";
       }
-      hlBtn.style.display = v === "text" ? "none" : "";
     };
     const onInputImmediate = () => {
       renderPreview();
@@ -10769,7 +11036,9 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     previewWrap.style.borderRadius = "14px";
     previewWrap.style.padding = "14px";
     previewWrap.style.marginBottom = "0";
-    previewWrap.style.display = "block";
+    previewWrap.style.display = "flex";
+    previewWrap.style.alignItems = "center";
+    previewWrap.style.justifyContent = "center";
     previewWrap.style.gridColumn = "1 / -1";
     const preview = previewWrap.createEl("span");
     const displayText = String(
@@ -12152,7 +12421,9 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
     const previewWrap = topRow.createDiv();
     previewWrap.addClass("act-highlight-preview-wrap");
     const words = previewWrap.createDiv();
-    previewWrap.style.display = "block";
+    previewWrap.style.display = "flex";
+    previewWrap.style.alignItems = "center";
+    previewWrap.style.justifyContent = "center";
     words.style.textAlign = "center";
     words.style.opacity = "0.8";
     words.textContent = this.previewTextOverride ? this.previewTextOverride : isGroup ? this.entry.name || "Group" : this.entry ? this.entry.isRegex ? this.entry.presetLabel || String(this.entry.pattern || "") : Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0 ? this.entry.groupedPatterns.join(", ") : String(this.entry.pattern || "") : "";
@@ -12555,6 +12826,19 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       span.style.display = "inline";
       const displayText = !isGroup && this.entry && this.entry.isRegex && this.entry.presetLabel ? this.entry.presetLabel : words.textContent || "";
       span.textContent = displayText;
+      if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
+        try {
+          const decl = this.plugin.sanitizeCssDeclarations(this.entry.customCss);
+          if (decl) {
+            decl.split(";").map((s) => s.trim()).filter(Boolean).forEach((p2) => {
+              const idx = p2.indexOf(":");
+              if (idx === -1) return;
+              span.style.setProperty(p2.slice(0, idx).trim(), p2.slice(idx + 1).trim(), "important");
+            });
+          }
+        } catch (_) {
+        }
+      }
       previewWrap.appendChild(span);
     };
     const updatePickerVisibility = () => {
@@ -13305,6 +13589,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     activeSelect.style.padding = "6px";
     activeSelect.style.borderRadius = "4px";
     activeSelect.style.border = "1px solid var(--background-modifier-border)";
+    activeSelect.style.background = "var(--background-modifier-form-field)";
     activeSelect.style.textAlign = "center";
     activeSelect.style.flex = "0 0 auto";
     activeSelect.style.width = "fit-content";
@@ -13347,6 +13632,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     caseSelect.style.padding = "6px";
     caseSelect.style.borderRadius = "4px";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
+    caseSelect.style.background = "var(--background-modifier-form-field)";
     caseSelect.style.textAlign = "center";
     caseSelect.style.flex = "0 0 auto";
     caseSelect.style.width = "fit-content";
@@ -13376,6 +13662,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     matchTypeSelect.style.padding = "6px";
     matchTypeSelect.style.borderRadius = "4px";
     matchTypeSelect.style.border = "1px solid var(--background-modifier-border)";
+    matchTypeSelect.style.background = "var(--background-modifier-form-field)";
     matchTypeSelect.style.textAlign = "center";
     matchTypeSelect.style.flex = "0 0 auto";
     matchTypeSelect.style.width = "fit-content";
@@ -13439,6 +13726,30 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     this._cleanupHandlers.push(
       () => editBtn.removeEventListener("click", editHandler)
     );
+    if (this.plugin.settings.enableCustomCss) {
+      const cssBtn = topRow.createEl("button");
+      try {
+        (0, import_obsidian12.setIcon)(cssBtn, "code");
+      } catch (e) {
+      }
+      cssBtn.title = this.plugin.t("edit_custom_css_btn", "Edit Custom CSS");
+      cssBtn.style.flex = "0 0 auto";
+      cssBtn.style.display = "flex";
+      cssBtn.style.alignItems = "center";
+      cssBtn.style.justifyContent = "center";
+      cssBtn.style.padding = "6px";
+      cssBtn.style.borderRadius = "4px";
+      cssBtn.style.border = "1px solid var(--background-modifier-border)";
+      cssBtn.style.background = "var(--background-modifier-form-field)";
+      cssBtn.style.cursor = "pointer";
+      const cssHandler = () => {
+        new CustomCssModal(this.app, this.plugin, this.group).open();
+      };
+      cssBtn.addEventListener("click", cssHandler);
+      this._cleanupHandlers.push(
+        () => cssBtn.removeEventListener("click", cssHandler)
+      );
+    }
     const enableDisableRow = contentEl.createDiv();
     enableDisableRow.style.display = "grid";
     enableDisableRow.style.gridTemplateColumns = "auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)";
@@ -13963,6 +14274,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       styleSelect.style.padding = "6px";
       styleSelect.style.borderRadius = "4px";
       styleSelect.style.border = "1px solid var(--background-modifier-border)";
+      styleSelect.style.background = "var(--background-modifier-form-field)";
       styleSelect.style.textAlign = "center";
       styleSelect.style.maxWidth = "90px";
       styleSelect.style.minWidth = "70px";
@@ -13985,6 +14297,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       matchSelect.style.padding = "6px";
       matchSelect.style.borderRadius = "4px";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
+      matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.textAlign = "center";
       matchSelect.style.maxWidth = "110px";
       matchSelect.style.minWidth = "90px";
@@ -14185,13 +14498,6 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         };
         cpBg.addEventListener("contextmenu", cpBgContextHandler);
       }
-      const btnDel = row.createEl("button", {
-        text: this.plugin.t("delete_button_text", "\u2715")
-      });
-      btnDel.addClass("mod-warning");
-      btnDel.style.cursor = "pointer";
-      btnDel.style.padding = "6px 10px";
-      btnDel.style.border = "none";
       const delHandler = () => {
         const idx = this.group.entries.indexOf(entry);
         if (idx > -1) {
@@ -14199,12 +14505,11 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
           this._refreshGroupEntries();
         }
       };
-      btnDel.addEventListener("click", delHandler);
       const contextMenuHandler = (ev) => {
         try {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
-          const menu = new Menu(this.app);
+          const menu = new import_obsidian12.Menu(this.app);
           menu.addItem((item) => {
             item.setTitle(
               this.plugin.t("edit_entry_details", "Edit Entry Details")
@@ -14224,7 +14529,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
             menu.addItem((item) => {
               item.setTitle(
                 this.plugin.t("open_in_regex_tester", "Open in Regex Tester")
-              ).setIcon("code").onClick(() => {
+              ).setIcon("regex").onClick(() => {
                 const modal = new RealTimeRegexTesterModal(
                   this.app,
                   this.plugin,
@@ -14377,6 +14682,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     activeSelect.style.padding = "6px";
     activeSelect.style.borderRadius = "4px";
     activeSelect.style.border = "1px solid var(--background-modifier-border)";
+    activeSelect.style.background = "var(--background-modifier-form-field)";
     activeSelect.style.textAlign = "center";
     activeSelect.style.flex = "0 0 auto";
     activeSelect.style.width = "fit-content";
@@ -14419,6 +14725,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     caseSelect.style.padding = "6px";
     caseSelect.style.borderRadius = "4px";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
+    caseSelect.style.background = "var(--background-modifier-form-field)";
     caseSelect.style.textAlign = "center";
     caseSelect.style.flex = "0 0 auto";
     caseSelect.style.width = "fit-content";
@@ -14448,6 +14755,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     matchTypeSelect.style.padding = "6px";
     matchTypeSelect.style.borderRadius = "4px";
     matchTypeSelect.style.border = "1px solid var(--background-modifier-border)";
+    matchTypeSelect.style.background = "var(--background-modifier-form-field)";
     matchTypeSelect.style.textAlign = "center";
     matchTypeSelect.style.flex = "0 0 auto";
     matchTypeSelect.style.width = "fit-content";
@@ -14897,6 +15205,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
       matchSelect.style.padding = "6px";
       matchSelect.style.borderRadius = "4px";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
+      matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.textAlign = "center";
       matchSelect.style.maxWidth = "110px";
       matchSelect.style.minWidth = "90px";
@@ -14963,14 +15272,6 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
         this._refreshGroupEntries();
       };
       regexChk.addEventListener("change", regexChkHandler);
-      const btnDelete = row.createEl("button", {
-        text: this.plugin.t("delete_button_text", "\u2715")
-      });
-      btnDelete.addClass("mod-warning");
-      btnDelete.style.padding = "4px 8px";
-      btnDelete.style.borderRadius = "4px";
-      btnDelete.style.cursor = "pointer";
-      btnDelete.style.flex = "0 0 auto";
       const deleteHandler = () => {
         const idx = this.group.entries.indexOf(entry);
         if (idx !== -1) {
@@ -14978,7 +15279,6 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
           this._refreshGroupEntries();
         }
       };
-      btnDelete.addEventListener("click", deleteHandler);
       const contextMenuHandler = (ev) => {
         try {
           ev && ev.preventDefault && ev.preventDefault();
@@ -14988,7 +15288,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
             menu.addItem((item) => {
               item.setTitle(
                 this.plugin.t("open_in_regex_tester", "Open in Regex Tester")
-              ).setIcon("code").onClick(() => {
+              ).setIcon("regex").onClick(() => {
                 const modal = new BlacklistRegexTesterModal(
                   this.app,
                   this.plugin,
@@ -15358,14 +15658,9 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           opt.value = sw.name || "";
         });
       }
-      const del = row.createEl("button", {
-        text: this.plugin.t("delete_button_text", "\u2715")
-      });
-      del.addClass("mod-warning");
-      del.style.padding = "4px 8px";
-      del.style.borderRadius = "4px";
-      del.style.cursor = "pointer";
-      del.style.flex = "0 0 auto";
+      const del = { addEventListener: () => {
+      }, removeEventListener: () => {
+      } };
       const initBgEntry = entry;
       const initialStyle = initBgEntry && initBgEntry.styleType ? initBgEntry.styleType : null;
       if (initialStyle) {
@@ -15595,6 +15890,13 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const menu = new import_obsidian15.Menu(this.app);
+          if (entry.isRegex) {
+            menu.addItem((item) => {
+              item.setTitle(
+                this.plugin.t("open_in_regex_tester", "Open in Regex Tester")
+              ).setIcon("regex").onClick(openInRegexTesterHandler);
+            });
+          }
           menu.addItem((item) => {
             item.setTitle(
               this.plugin.t("edit_entry_details", "Edit Entry Details")
@@ -15617,18 +15919,8 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
             item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(duplicateHandler);
           });
           menu.addItem((item) => {
-            item.setTitle(this.plugin.t("reset_text_color", "Reset Text Color")).setIcon("text").onClick(resetTextColorHandler);
+            item.setTitle(this.plugin.t("context_delete_entry", "Delete entry")).setIcon("trash").onClick(delHandler);
           });
-          menu.addItem((item) => {
-            item.setTitle(this.plugin.t("reset_highlight", "Reset Highlight")).setIcon("rectangle-horizontal").onClick(resetHighlightHandler);
-          });
-          if (entry.isRegex) {
-            menu.addItem((item) => {
-              item.setTitle(
-                this.plugin.t("open_in_regex_tester", "Open in Regex Tester")
-              ).setIcon("pencil").onClick(openInRegexTesterHandler);
-            });
-          }
           menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
         } catch (e) {
           debugError("SETTINGS", "context menu error", e);
@@ -16364,12 +16656,9 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         flagsInput.style.borderRadius = "4px";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
         if (!entry.isRegex) flagsInput.style.display = "none";
-        const del = row.createEl("button", {
-          text: this.plugin.t("delete_button_text", "\u2715")
-        });
-        del.addClass("mod-warning");
-        del.style.padding = "4px 8px";
-        del.style.cursor = "pointer";
+        const del = { addEventListener: () => {
+        }, removeEventListener: () => {
+        } };
         if (!entry.uid) {
           try {
             entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -16531,77 +16820,6 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
             ev && ev.preventDefault && ev.preventDefault();
             if (ev && ev.stopPropagation) ev.stopPropagation();
             const menu = new import_obsidian15.Menu(this.app);
-            menu.addItem((item) => {
-              item.setTitle(
-                this.plugin.t(
-                  "move_to_blacklist_group",
-                  "Move to blacklist group"
-                )
-              ).setIcon("arrow-right").onClick(() => {
-                const blacklistGroups = Array.isArray(
-                  this.plugin.settings.blacklistEntryGroups
-                ) ? this.plugin.settings.blacklistEntryGroups : [];
-                if (blacklistGroups.length === 0) {
-                  new import_obsidian15.Notice(
-                    this.plugin.t(
-                      "no_blacklist_groups_available",
-                      "No blacklist groups available"
-                    )
-                  );
-                  return;
-                }
-                const modal = new SelectBlacklistGroupModal(
-                  this.app,
-                  this.plugin,
-                  async (selectedGroup) => {
-                    if (!selectedGroup) return;
-                    try {
-                      const entryToMove = JSON.parse(JSON.stringify(entry));
-                      let entryIdx = resolveBlacklistIndex();
-                      if (entryIdx !== -1) {
-                        this.plugin.settings.blacklistEntries.splice(
-                          entryIdx,
-                          1
-                        );
-                      }
-                      if (!Array.isArray(selectedGroup.entries))
-                        selectedGroup.entries = [];
-                      entryToMove.groupUid = selectedGroup.uid;
-                      selectedGroup.entries.push(entryToMove);
-                      await this.plugin.saveSettings();
-                      this.plugin.compileBlacklistEntries();
-                      this.plugin.reconfigureEditorExtensions();
-                      this.plugin.forceRefreshAllEditors();
-                      this.plugin.triggerActiveDocumentRerender();
-                      this._refreshBlacklistWords();
-                      const groupName = selectedGroup && selectedGroup.name && String(selectedGroup.name).trim().length > 0 ? selectedGroup.name : "(unnamed group)";
-                      new import_obsidian15.Notice(
-                        this.plugin.t(
-                          "entry_moved_to_group",
-                          'Entry moved to "{groupName}"'
-                        ).replace("{groupName}", groupName)
-                      );
-                    } catch (e) {
-                      debugError(
-                        "SETTINGS",
-                        "Error moving entry to blacklist group:",
-                        e
-                      );
-                      new import_obsidian15.Notice(
-                        this.plugin.t(
-                          "notice_error_moving_entry",
-                          "Error moving entry. Please try again."
-                        )
-                      );
-                    }
-                  }
-                );
-                modal.open();
-              });
-            });
-            menu.addItem((item) => {
-              item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(duplicateHandler);
-            });
             if (entry.isRegex) {
               menu.addItem((item) => {
                 item.setTitle(
@@ -16609,9 +16827,12 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
                     "open_in_regex_tester",
                     "Open in Regex Tester"
                   )
-                ).setIcon("pencil").onClick(openInRegexTesterHandler);
+                ).setIcon("regex").onClick(openInRegexTesterHandler);
               });
             }
+            menu.addItem((item) => {
+              item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(duplicateHandler);
+            });
             menu.addItem((item) => {
               item.setTitle(this.plugin.t("context_delete_entry", "Delete entry")).setIcon("trash").onClick(delHandler);
             });
@@ -19405,15 +19626,18 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           }
         })
       );
+      containerEl2.createEl("h3", {
+        text: this.plugin.t("custom_css_header", "Custom CSS")
+      });
       new import_obsidian15.Setting(containerEl2).setName(
         this.plugin.t(
           "enable_custom_css",
-          "Enable Custom CSS for Texts"
+          "Enable custom CSS for text styling"
         )
       ).setDesc(
         this.plugin.t(
           "enable_custom_css_desc",
-          "Allow per-entry custom CSS declarations."
+          "Add per-entry CSS via the 'Edit Custom CSS' button in entry and group editors."
         )
       ).addToggle(
         (t) => t.setValue(this.plugin.settings.enableCustomCss).onChange(async (v) => {
@@ -20058,7 +20282,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       previewText.style.wordWrap = "break-word";
       previewText.textContent = this.plugin.t(
         "highlight_preview_text",
-        "This is how your highlight will look like!"
+        "Here's how your default highlight looks!"
       );
       const updatePreview2 = () => {
         const color = "#01c8ff";
@@ -22019,6 +22243,7 @@ function buildEditorExtension(plugin) {
         if (update.docChanged) {
           plugin._isTyping = true;
           plugin._lastTypingTime = Date.now();
+          plugin._currentDocVersion = (plugin._currentDocVersion || 0) + 1;
           clearTimeout(plugin._typingFlagTimer);
           plugin._typingFlagTimer = setTimeout(() => {
             plugin._isTyping = false;
@@ -22665,6 +22890,7 @@ function compileWordEntriesLogic(plugin) {
             if (typeof group.borderThickness !== "undefined")
               copy.borderThickness = group.borderThickness;
             copy._groupUid = group.uid || null;
+            copy._groupRef = group;
             copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
             copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
             copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
@@ -22886,6 +23112,7 @@ function compileTextBgColoringEntriesLogic(plugin) {
             if (typeof group.borderThickness !== "undefined")
               copy.borderThickness = group.borderThickness;
             copy._groupUid = group.uid || null;
+            copy._groupRef = group;
             copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
             copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
             copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
@@ -23467,6 +23694,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     this.getPerfCounters = () => Object.assign({}, this._perfCounters);
     this._cachedSortedEntries = null;
     this._cacheDirty = true;
+    this._currentDocVersion = 0;
+    this._blacklistRangesCache = null;
+    this._blacklistRangesCacheKey = null;
     try {
       this._domRefs = /* @__PURE__ */ new WeakMap();
     } catch (e) {
@@ -26960,6 +27190,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             span.style.borderRadius = "";
           }
         }
+        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
+          this.applyCustomCssToElement(span, entry._groupRef);
+        }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
         lastEnd = r.end;
@@ -27218,6 +27451,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             span.style.borderRadius = "";
           }
         }
+        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
+          this.applyCustomCssToElement(span, entry._groupRef);
+        }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
         lastEnd = r.end;
@@ -27348,6 +27584,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
               span.style.WebkitBoxDecorationBreak = "clone";
             }
           }
+        }
+        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
+          this.applyCustomCssToElement(span, entry._groupRef);
         }
         this.applyCustomCssToElement(span, entry);
         textNode.replaceWith(span);
@@ -27725,7 +27964,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       this.app.workspace.on("layout-change", () => {
         const activeLeaf = this.app.workspace.getActiveViewOfType(import_obsidian17.MarkdownView);
         if (activeLeaf && activeLeaf.getMode && activeLeaf.getMode() === "preview") {
-          this.forceRefreshAllReadingViews();
+          clearTimeout(this._layoutChangeReadingTimer);
+          this._layoutChangeReadingTimer = setTimeout(() => {
+            this.forceRefreshAllReadingViews();
+          }, 80);
         } else if (activeLeaf && activeLeaf.getMode && activeLeaf.getMode() === "source") {
           try {
             this.refreshAllLivePreviewCallouts();
@@ -30322,12 +30564,62 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         break;
     }
   }
+  /**
+   * Merges a base inline style string with sanitized custom CSS declarations.
+   * Custom CSS properties take priority — any base property that the custom CSS
+   * also declares is stripped from the base string so the custom value wins.
+   *
+   * @param {string} baseStyle  - The base inline style string (may contain !important)
+   * @param {string} customCss  - Raw custom CSS declarations from entry.customCss
+   * @returns {string} Merged style string with custom CSS winning on conflicts
+   */
+  _mergeStyleWithCustomCss(baseStyle, customCss) {
+    if (!customCss || !customCss.trim()) return baseStyle;
+    const sanitized = this.sanitizeCssDeclarations(customCss);
+    if (!sanitized) return baseStyle;
+    const customProps = /* @__PURE__ */ new Set();
+    const customParts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
+    for (const p of customParts) {
+      const idx = p.indexOf(":");
+      if (idx === -1) continue;
+      const prop = p.slice(0, idx).trim().toLowerCase();
+      customProps.add(prop);
+      if (prop === "background") customProps.add("background-color");
+      if (prop === "background-color") customProps.add("background");
+      if (prop === "padding") {
+        customProps.add("padding-left");
+        customProps.add("padding-right");
+        customProps.add("padding-top");
+        customProps.add("padding-bottom");
+      }
+      if (prop === "border") {
+        customProps.add("border-top");
+        customProps.add("border-right");
+        customProps.add("border-bottom");
+        customProps.add("border-left");
+      }
+    }
+    const baseParts = baseStyle.split(";").map((s) => s.trim()).filter(Boolean);
+    const filteredBase = baseParts.filter((p) => {
+      const idx = p.indexOf(":");
+      if (idx === -1) return true;
+      const prop = p.slice(0, idx).trim().toLowerCase();
+      return !customProps.has(prop);
+    });
+    const customWithImportant = customParts.map((p) => {
+      const idx = p.indexOf(":");
+      if (idx === -1) return p;
+      return `${p.slice(0, idx).trim()}: ${p.slice(idx + 1).trim()} !important`;
+    }).join("; ");
+    const base = filteredBase.join("; ");
+    return base ? `${base}; ${customWithImportant}` : customWithImportant;
+  }
   sanitizeCssDeclarations(input) {
     try {
       if (!input || typeof input !== "string") return "";
       debugLog("SANITIZE_CSS_START", `Input: "${input}"`);
-      const normalized = String(input).replace(/\r/g, "\n");
-      const parts = normalized.split(/;|\n/).map((s) => s.trim()).filter((s) => s.length > 0);
+      const normalized = String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+      const parts = normalized.split(";").map((s) => s.replace(/\n/g, " ").trim()).filter((s) => s.length > 0);
       const out = [];
       for (const p of parts) {
         const idx = p.indexOf(":");
@@ -30342,12 +30634,16 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           continue;
         }
         val = val.replace(/!important/gi, "").trim();
-        const safeVal = val.replace(/[{}<>]/g, "");
-        if (safeVal.length === 0) {
+        const valLower = val.toLowerCase();
+        if (valLower.includes("url(") || valLower.includes("expression(") || valLower.includes("javascript:") || val.includes("<") || val.includes(">")) {
+          debugLog("SANITIZE_CSS_SKIP", `Dangerous value for: "${prop}": "${val}"`);
+          continue;
+        }
+        if (val.length === 0) {
           debugLog("SANITIZE_CSS_SKIP", `Empty value for: "${prop}"`);
           continue;
         }
-        out.push(`${prop}: ${safeVal}`);
+        out.push(`${prop}: ${val}`);
       }
       const result = out.join("; ") + (out.length > 0 ? ";" : "");
       debugLog("SANITIZE_CSS_RESULT", `Output: "${result}"`);
@@ -33844,7 +34140,16 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                     entryRef
                   );
                   if (borderCss) {
-                    span.style.cssText += borderCss;
+                    borderCss.trim().split(";").map((s) => s.trim()).filter(Boolean).forEach((decl) => {
+                      const ci = decl.indexOf(":");
+                      if (ci === -1) return;
+                      const bp = decl.slice(0, ci).trim();
+                      const bv = decl.slice(ci + 1).replace(/!important/gi, "").trim();
+                      try {
+                        span.style.setProperty(bp, bv, "important");
+                      } catch (_) {
+                      }
+                    });
                   }
                 }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
@@ -33945,7 +34250,16 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                   entryRef
                 );
                 if (borderCss) {
-                  span.style.cssText += borderCss;
+                  borderCss.trim().split(";").map((s) => s.trim()).filter(Boolean).forEach((decl) => {
+                    const ci = decl.indexOf(":");
+                    if (ci === -1) return;
+                    const bp = decl.slice(0, ci).trim();
+                    const bv = decl.slice(ci + 1).replace(/!important/gi, "").trim();
+                    try {
+                      span.style.setProperty(bp, bv, "important");
+                    } catch (_) {
+                    }
+                  });
                 }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   span.style.boxDecorationBreak = "clone";
@@ -33982,13 +34296,19 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             if (shouldAppendSpan) {
               const entryRef = m.entryRef || m.entry || null;
               debugLog("READING_RENDER_CSS", `Checking for custom CSS on: ${m.pattern || "unknown"}`);
+              if (this.settings.enableCustomCss && entryRef?._groupRef?.customCss) {
+                this.applyCustomCssToElement(span, entryRef._groupRef);
+              }
               this.applyCustomCssToElement(span, entryRef);
-              this.applyBorderStyleToElement(
-                span,
-                hideText ? null : m.textColor || m.color,
-                hideBg ? null : m.backgroundColor || m.color,
-                entryRef
-              );
+              const entryStyleType = (m.entryRef || m.entry)?.styleType || "text";
+              if (entryStyleType !== "text") {
+                this.applyBorderStyleToElement(
+                  span,
+                  hideText ? null : m.textColor || m.color,
+                  hideBg ? null : m.backgroundColor || m.color,
+                  entryRef
+                );
+              }
             }
             if (shouldAppendSpan) {
               frag.appendChild(span);
@@ -35393,6 +35713,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
   // NEW METHOD: Get all text ranges that are within blacklisted list items
   getBlacklistedListItemRanges(text, baseOffset = 0, filePath = null) {
     if (this._isTyping) return [];
+    const cacheKey = `${this._currentDocVersion || 0}:${baseOffset}:${filePath || ""}`;
+    if (this._blacklistRangesCache && this._blacklistRangesCacheKey === cacheKey) {
+      return this._blacklistRangesCache;
+    }
     const ranges = [];
     try {
       let pos = 0;
@@ -35412,6 +35736,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       }
     } catch (e) {
     }
+    this._blacklistRangesCache = ranges;
+    this._blacklistRangesCacheKey = cacheKey;
     return ranges;
   }
   // NEW METHOD: Check if a match position falls within blacklisted ranges
@@ -35426,6 +35752,20 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     } catch (e) {
     }
     return false;
+  }
+  // PERF: Build a Set of blacklisted words for O(1) lookup during a chunk pass.
+  // Call once per buildDecoChunked, pass the result into processPatternChunk/processTextChunk.
+  buildBlacklistWordSet(filePath = null) {
+    try {
+      if (this._blacklistCompilationDirty) this.compileBlacklistEntries();
+      const set = /* @__PURE__ */ new Set();
+      for (const compiled of this._compiledBlacklistWords) {
+        if (compiled.word) set.add(compiled.word.toLowerCase());
+      }
+      return set;
+    } catch (e) {
+    }
+    return /* @__PURE__ */ new Set();
   }
   // NEW METHOD: Context-aware blacklist check with prefix-aware tokens
   isContextBlacklisted(text, matchStart, matchEnd, filePath = null) {
@@ -36620,22 +36960,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       const bulletBlacklisted = !!blEntries.find(
         (e) => e && e.presetLabel === "Bullet Points" && !!e.isRegex
       );
-      const taskCheckedAllowed = !filePath || this.shouldColorText(
-        filePath,
-        taskCheckedEntry ? taskCheckedEntry.pattern : null
-      );
-      const taskUncheckedAllowed = !filePath || this.shouldColorText(
-        filePath,
-        taskUncheckedEntry ? taskUncheckedEntry.pattern : null
-      );
-      const numberedAllowed = !filePath || this.shouldColorText(
-        filePath,
-        numberedEntry ? numberedEntry.pattern : null
-      );
-      const bulletAllowed = !filePath || this.shouldColorText(
-        filePath,
-        bulletEntry ? bulletEntry.pattern : null
-      );
+      const taskCheckedAllowed = true;
+      const taskUncheckedAllowed = true;
+      const numberedAllowed = true;
+      const bulletAllowed = true;
       let pos = 0;
       while (pos <= text.length) {
         const lineStart = pos;
@@ -36809,6 +37137,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       from,
       filePath
     );
+    const blacklistWordSet = this.buildBlacklistWordSet(filePath);
     let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
     if (filePath) {
       textBgEntries = textBgEntries.filter((entry) => {
@@ -36942,7 +37271,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           hasHeadingBlacklist ? headingRanges : [],
           blacklistedListRanges,
           filePath,
-          activeLineRanges
+          activeLineRanges,
+          blacklistWordSet
         );
         allMatches = allMatches.concat(chunkMatches);
         if (allMatches.length > MAX_MATCHES) {
@@ -36970,7 +37300,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           hasHeadingBlacklist ? headingRanges : [],
           blacklistedListRanges,
           filePath,
-          activeLineRanges
+          activeLineRanges,
+          blacklistWordSet
         );
         allMatches = allMatches.concat(chunkMatches);
         if (allMatches.length > MAX_MATCHES) {
@@ -36987,7 +37318,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         hasHeadingBlacklist ? headingRanges : [],
         blacklistedListRanges,
         filePath,
-        activeLineRanges
+        activeLineRanges,
+        blacklistWordSet
       );
       allMatches = allMatches.concat(chunkMatches);
     }
@@ -36999,7 +37331,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     );
   }
   // NEW METHOD: Process a chunk of patterns
-  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null, activeLineRanges = []) {
+  processPatternChunk(text, baseFrom, patternChunk, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null, activeLineRanges = [], blacklistWordSet = null) {
     const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     const matches = [];
     for (const entry of patternChunk) {
@@ -37156,13 +37488,12 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             continue;
           }
         }
-        if (this.isContextBlacklisted(
-          text,
-          match.index,
-          match.index + matchedText.length,
-          filePath
-        ))
+        if (blacklistWordSet && blacklistWordSet.size > 0) {
+          const fullWord = this.extractFullWord(text, match.index, match.index + matchedText.length);
+          if (blacklistWordSet.has(fullWord.toLowerCase())) continue;
+        } else if (this.isContextBlacklisted(text, match.index, match.index + matchedText.length, filePath)) {
           continue;
+        }
         matches.push({
           start: matchStart,
           end: matchEnd,
@@ -37251,7 +37582,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         for (const entry of wordPartialEntries) {
           if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
             continue;
-          if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
+          if (blacklistWordSet && blacklistWordSet.has(entry.pattern.toLowerCase())) continue;
+          else if (!blacklistWordSet && this.isWordBlacklisted(entry.pattern, filePath)) continue;
           const mt = String(
             entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
           ).toLowerCase();
@@ -37330,7 +37662,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         for (const entry of phrasePartialEntries) {
           if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
             continue;
-          if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
+          if (blacklistWordSet && blacklistWordSet.has(entry.pattern.toLowerCase())) continue;
+          else if (!blacklistWordSet && this.isWordBlacklisted(entry.pattern, filePath)) continue;
           const mt = String(
             entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
           ).toLowerCase();
@@ -37435,7 +37768,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     return matches;
   }
   // NEW METHOD: Process a chunk of text
-  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null, activeLineRanges = []) {
+  processTextChunk(chunkText, chunkFrom, entries, folderEntry, existingMatches = [], headingRanges = [], blacklistedListRanges = [], filePath = null, activeLineRanges = [], blacklistWordSet = null) {
     const matches = [];
     const MAX_MATCHES_PER_PATTERN = this.settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN : EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
     for (const entry of entries) {
@@ -37529,13 +37862,12 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             continue;
           }
         }
-        if (this.isContextBlacklisted(
-          chunkText,
-          match.index,
-          match.index + matchedText.length,
-          filePath
-        ))
+        if (blacklistWordSet && blacklistWordSet.size > 0) {
+          const fullWord = this.extractFullWord(chunkText, match.index, match.index + matchedText.length);
+          if (blacklistWordSet.has(fullWord.toLowerCase())) continue;
+        } else if (this.isContextBlacklisted(chunkText, match.index, match.index + matchedText.length, filePath)) {
           continue;
+        }
         matches.push({
           start: matchStart,
           end: matchEnd,
@@ -37610,7 +37942,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
               if (!nextChar || !/[\s]/.test(nextChar)) continue;
             }
           }
-          if (this.isWordBlacklisted(w, filePath)) continue;
+          if (blacklistWordSet && blacklistWordSet.has(w.toLowerCase())) continue;
+          else if (!blacklistWordSet && this.isWordBlacklisted(w, filePath)) continue;
           if (this.isMatchInBlacklistedRange(
             chunkFrom + wStart,
             chunkFrom + wEnd,
@@ -37621,7 +37954,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             if (!entry || entry.invalid) continue;
             if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
               continue;
-            if (this.isWordBlacklisted(entry.pattern, filePath)) continue;
+            if (blacklistWordSet && blacklistWordSet.has(entry.pattern.toLowerCase())) continue;
+            else if (!blacklistWordSet && this.isWordBlacklisted(entry.pattern, filePath)) continue;
             const mt = String(
               entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
             ).toLowerCase();
@@ -37810,19 +38144,12 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         const textPart = hideText || !textColor ? "" : `color: ${textColor} !important; `;
         const bgPart = hideBg || !bgColor ? "" : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
-        if (this.settings.enableCustomCss && m.entryRef && m.entryRef.customCss) {
-          debugLog("LP_TEXTBG_CSS", `Processing custom CSS for TextBG: ${m.pattern || "unknown"}`);
-          const decl = this.sanitizeCssDeclarations(m.entryRef.customCss);
-          if (decl) {
-            const parts = decl.split(";").map((s) => s.trim()).filter((s) => s.length > 0);
-            for (const p of parts) {
-              const idx = p.indexOf(":");
-              if (idx === -1) continue;
-              const prop = p.slice(0, idx).trim();
-              const val = p.slice(idx + 1).trim();
-              debugLog("LP_TEXTBG_CSS_PROP", `Adding ${prop}: ${val}`);
-              style += `; ${prop}: ${val} !important;`;
-            }
+        if (this.settings.enableCustomCss) {
+          if (m.entryRef?._groupRef?.customCss) {
+            style = this._mergeStyleWithCustomCss(style, m.entryRef._groupRef.customCss);
+          }
+          if (m.entryRef?.customCss) {
+            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
           }
         }
       } else {
@@ -37897,19 +38224,12 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             }
           }
         }
-        if (this.settings.enableCustomCss && m.entryRef && m.entryRef.customCss) {
-          debugLog("LP_RENDER_CSS", `Processing custom CSS for: ${m.pattern || "unknown"}`);
-          const decl = this.sanitizeCssDeclarations(m.entryRef.customCss);
-          if (decl) {
-            const parts = decl.split(";").map((s) => s.trim()).filter((s) => s.length > 0);
-            for (const p of parts) {
-              const idx = p.indexOf(":");
-              if (idx === -1) continue;
-              const prop = p.slice(0, idx).trim();
-              const val = p.slice(idx + 1).trim();
-              debugLog("LP_RENDER_CSS_PROP", `Adding ${prop}: ${val}`);
-              style += `; ${prop}: ${val} !important;`;
-            }
+        if (this.settings.enableCustomCss) {
+          if (m.entryRef?._groupRef?.customCss) {
+            style = this._mergeStyleWithCustomCss(style, m.entryRef._groupRef.customCss);
+          }
+          if (m.entryRef?.customCss) {
+            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
           }
         }
       }

@@ -182,27 +182,31 @@ export class RealTimeRegexTesterModal extends Modal {
     const subjectWrap = contentEl.createDiv();
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
-    subjectWrap.style.borderRadius = "var(--radius-m)";
+    subjectWrap.addClass("act-subject-wrap");
+    subjectWrap.style.borderRadius = "var(--button-radius)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
-    const testInput = subjectWrap.createEl("textarea");
-    testInput.placeholder = this.plugin.t(
+    const testInput = subjectWrap.createEl("div");
+    testInput.contentEditable = "true";
+    testInput.dataset.placeholder = this.plugin.t(
       "regex_subject_placeholder",
       "type your subject / test string here...",
     );
     testInput.style.width = "100%";
-    testInput.style.height = "120px";
+    testInput.style.minHeight = "120px";
     testInput.style.padding = "12px";
     testInput.style.border = "none";
     testInput.style.outline = "none";
     testInput.style.background = "transparent";
     testInput.style.color = "var(--text-normal)";
     testInput.style.fontFamily = "var(--font-ui-medium)";
-    testInput.style.resize = "none";
+    testInput.style.whiteSpace = "pre-wrap";
+    testInput.style.wordBreak = "break-word";
+    testInput.style.boxSizing = "border-box";
     const previewWrap = contentEl.createDiv();
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
-    previewWrap.style.borderRadius = "var(--radius-m)";
+    previewWrap.style.borderRadius = "var(--button-radius)";
     previewWrap.style.padding = "12px";
     previewWrap.style.background = "var(--background-modifier-form-field)";
     previewWrap.style.whiteSpace = "pre-wrap";
@@ -210,6 +214,9 @@ export class RealTimeRegexTesterModal extends Modal {
     previewWrap.style.fontFamily = "var(--font-ui-medium)";
     previewWrap.style.fontSize = "var(--font-small)";
     previewWrap.style.lineHeight = "1.5";
+    previewWrap.style.display = "flex";
+    previewWrap.style.alignItems = "center";
+    previewWrap.style.justifyContent = "center";
     const nameInput = contentEl.createEl("input", { type: "text" });
     nameInput.placeholder = this.plugin.t(
       "regex_name_placeholder",
@@ -255,7 +262,7 @@ export class RealTimeRegexTesterModal extends Modal {
     };
 
     const renderPreview = () => {
-      const raw = String(testInput.value || "");
+      const raw = String(testInput.textContent || "");
       const patRaw = String(regexInput.value || "").trim();
       const flags = Object.keys(flagButtons)
         .filter((k) => flagButtons[k].dataset.on === "1")
@@ -321,7 +328,7 @@ export class RealTimeRegexTesterModal extends Modal {
         const s = m.index ?? 0;
         const e = s + (m[0] ? m[0].length : 0);
         out += escapeHtml(raw.slice(lastIndex, s));
-        out += `<mark style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</mark>`;
+        out += `<span style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</span>`;
         lastIndex = e;
         count++;
       }

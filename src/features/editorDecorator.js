@@ -95,6 +95,7 @@ export function buildEditorExtension(plugin) {
         if (update.docChanged) {
           plugin._isTyping = true;
           plugin._lastTypingTime = Date.now();
+          plugin._currentDocVersion = (plugin._currentDocVersion || 0) + 1;
           // Clear typing flag after a longer delay
           clearTimeout(plugin._typingFlagTimer);
           plugin._typingFlagTimer = setTimeout(() => {

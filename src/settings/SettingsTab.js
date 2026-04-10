@@ -307,15 +307,16 @@ export class ColorSettingTab extends PluginSettingTab {
         });
       }
 
-      // ELEMENT 5: Delete button
-      const del = row.createEl("button", {
+      // ELEMENT 5: Delete button (commented out — use right-click context menu to delete)
+      /* const del = row.createEl("button", {
         text: this.plugin.t("delete_button_text", "✕"),
       });
       del.addClass("mod-warning");
       del.style.padding = "4px 8px";
       del.style.borderRadius = "4px";
       del.style.cursor = "pointer";
-      del.style.flex = "0 0 auto";
+      del.style.flex = "0 0 auto"; */
+      const del = { addEventListener: () => {}, removeEventListener: () => {} };
 
       const initBgEntry = entry;
       const initialStyle =
@@ -610,6 +611,16 @@ export class ColorSettingTab extends PluginSettingTab {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const menu = new Menu(this.app);
+          if (entry.isRegex) {
+            menu.addItem((item) => {
+              item
+                .setTitle(
+                  this.plugin.t("open_in_regex_tester", "Open in Regex Tester"),
+                )
+                .setIcon("regex")
+                .onClick(openInRegexTesterHandler);
+            });
+          }
           menu.addItem((item) => {
             item
               .setTitle(
@@ -638,26 +649,10 @@ export class ColorSettingTab extends PluginSettingTab {
           });
           menu.addItem((item) => {
             item
-              .setTitle(this.plugin.t("reset_text_color", "Reset Text Color"))
-              .setIcon("text")
-              .onClick(resetTextColorHandler);
+              .setTitle(this.plugin.t("context_delete_entry", "Delete entry"))
+              .setIcon("trash")
+              .onClick(delHandler);
           });
-          menu.addItem((item) => {
-            item
-              .setTitle(this.plugin.t("reset_highlight", "Reset Highlight"))
-              .setIcon("rectangle-horizontal")
-              .onClick(resetHighlightHandler);
-          });
-          if (entry.isRegex) {
-            menu.addItem((item) => {
-              item
-                .setTitle(
-                  this.plugin.t("open_in_regex_tester", "Open in Regex Tester"),
-                )
-                .setIcon("pencil")
-                .onClick(openInRegexTesterHandler);
-            });
-          }
           menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
         } catch (e) {
           debugError("SETTINGS", "context menu error", e);
@@ -1569,12 +1564,14 @@ export class ColorSettingTab extends PluginSettingTab {
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
         if (!entry.isRegex) flagsInput.style.display = "none";
 
-        const del = row.createEl("button", {
+        // Delete button (commented out — use right-click context menu to delete)
+        /* const del = row.createEl("button", {
           text: this.plugin.t("delete_button_text", "✕"),
         });
         del.addClass("mod-warning");
         del.style.padding = "4px 8px";
-        del.style.cursor = "pointer";
+        del.style.cursor = "pointer"; */
+        const del = { addEventListener: () => {}, removeEventListener: () => {} };
 
         if (!entry.uid) {
           try {
@@ -1800,106 +1797,6 @@ export class ColorSettingTab extends PluginSettingTab {
             if (ev && ev.stopPropagation) ev.stopPropagation();
             const menu = new Menu(this.app);
 
-            // Add "Move to blacklist group" option
-            menu.addItem((item) => {
-              item
-                .setTitle(
-                  this.plugin.t(
-                    "move_to_blacklist_group",
-                    "Move to blacklist group",
-                  ),
-                )
-                .setIcon("arrow-right")
-                .onClick(() => {
-                  const blacklistGroups = Array.isArray(
-                    this.plugin.settings.blacklistEntryGroups,
-                  )
-                    ? this.plugin.settings.blacklistEntryGroups
-                    : [];
-                  if (blacklistGroups.length === 0) {
-                    new Notice(
-                      this.plugin.t(
-                        "no_blacklist_groups_available",
-                        "No blacklist groups available",
-                      ),
-                    );
-                    return;
-                  }
-
-                  // Use the FuzzySuggestModal for searchable selection
-                  const modal = new SelectBlacklistGroupModal(
-                    this.app,
-                    this.plugin,
-                    async (selectedGroup) => {
-                      if (!selectedGroup) return; // Already in Default/Main Blacklist
-
-                      try {
-                        const entryToMove = JSON.parse(JSON.stringify(entry));
-
-                        // Remove from main blacklist
-                        let entryIdx = resolveBlacklistIndex();
-                        if (entryIdx !== -1) {
-                          this.plugin.settings.blacklistEntries.splice(
-                            entryIdx,
-                            1,
-                          );
-                        }
-
-                        // Add to blacklist group
-                        if (!Array.isArray(selectedGroup.entries))
-                          selectedGroup.entries = [];
-                        entryToMove.groupUid = selectedGroup.uid;
-                        selectedGroup.entries.push(entryToMove);
-
-                        // Save settings
-                        await this.plugin.saveSettings();
-                        this.plugin.compileBlacklistEntries();
-                        this.plugin.reconfigureEditorExtensions();
-                        this.plugin.forceRefreshAllEditors();
-                        this.plugin.triggerActiveDocumentRerender();
-
-                        // Refresh the blacklist display
-                        this._refreshBlacklistWords();
-
-                        const groupName =
-                          selectedGroup &&
-                          selectedGroup.name &&
-                          String(selectedGroup.name).trim().length > 0
-                            ? selectedGroup.name
-                            : "(unnamed group)";
-                        new Notice(
-                          this.plugin
-                            .t(
-                              "entry_moved_to_group",
-                              'Entry moved to "{groupName}"',
-                            )
-                            .replace("{groupName}", groupName),
-                        );
-                      } catch (e) {
-                        debugError(
-                          "SETTINGS",
-                          "Error moving entry to blacklist group:",
-                          e,
-                        );
-                        new Notice(
-                          this.plugin.t(
-                            "notice_error_moving_entry",
-                            "Error moving entry. Please try again.",
-                          ),
-                        );
-                      }
-                    },
-                  );
-                  modal.open();
-                });
-            });
-
-            menu.addItem((item) => {
-              item
-                .setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry"))
-                .setIcon("copy")
-                .onClick(duplicateHandler);
-            });
             if (entry.isRegex) {
               menu.addItem((item) => {
                 item
@@ -1909,12 +1806,18 @@ export class ColorSettingTab extends PluginSettingTab {
                       "Open in Regex Tester",
                     ),
                   )
-                  .setIcon("pencil")
+                  .setIcon("regex")
                   .onClick(openInRegexTesterHandler);
               });
             }
 
-            // Add Delete option
+            menu.addItem((item) => {
+              item
+                .setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry"))
+                .setIcon("copy")
+                .onClick(duplicateHandler);
+            });
+
             menu.addItem((item) => {
               item
                 .setTitle(this.plugin.t("context_delete_entry", "Delete entry"))
@@ -5321,17 +5224,21 @@ export class ColorSettingTab extends PluginSettingTab {
             }),
         );
 
+      containerEl.createEl("h3", {
+        text: this.plugin.t("custom_css_header", "Custom CSS"),
+      });
+
       new Setting(containerEl)
         .setName(
           this.plugin.t(
             "enable_custom_css",
-            "Enable Custom CSS for Texts",
+            "Enable custom CSS for text styling",
           ),
         )
         .setDesc(
           this.plugin.t(
             "enable_custom_css_desc",
-            "Allow per-entry custom CSS declarations.",
+            "Add per-entry CSS via the 'Edit Custom CSS' button in entry and group editors.",
           ),
         )
         .addToggle((t) =>
@@ -6168,7 +6075,7 @@ export class ColorSettingTab extends PluginSettingTab {
       previewText.style.wordWrap = "break-word";
       previewText.textContent = this.plugin.t(
         "highlight_preview_text",
-        "This is how your highlight will look like!",
+        "Here's how your default highlight looks!",
       );
 
       const updatePreview = () => {

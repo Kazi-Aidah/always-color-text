@@ -240,7 +240,7 @@ module.exports = {
   "border_thickness": "বর্ডার থিকনেস (px)",
   "border_thickness_desc": "বর্ডার থিকনেস 0-5 পিক্সেল থেকে সেট করুন (যেমন 1, 2.5, 5)",
   "highlight_preview": "হাইলাইট প্রিভিউ",
-  "highlight_preview_text": "আপনার হাইলাইট কেমন দেখাবে তা দেখুন!",
+  "highlight_preview_text": "আপনার ডিফল্ট হাইলাইট কেমন দেখাবে তা দেখুন!",
   "opt_line_solid": "সলিড",
   "opt_line_dashed": "ড্যাশড",
   "opt_line_dotted": "ডটেড",

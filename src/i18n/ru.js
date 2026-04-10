@@ -249,7 +249,7 @@ module.exports = {
   "border_thickness": "Толщина рамки (px)",
   "border_thickness_desc": "Установить толщину рамки от 0 до 5 пикселей (например, 1, 2.5, 5)",
   "highlight_preview": "Предпросмотр подсветки",
-  "highlight_preview_text": "Так будет выглядеть ваша подсветка!",
+  "highlight_preview_text": "Так будет выглядеть ваш стандартный хайлайт!",
   "opt_line_solid": "Сплошная",
   "opt_line_dashed": "Штриховая",
   "opt_line_dotted": "Точечная",

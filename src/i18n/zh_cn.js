@@ -242,7 +242,7 @@ module.exports = {
   "border_thickness": "边框粗细 (px)",
   "border_thickness_desc": "设置边框粗细从 0 到 5 像素（例如 1, 2.5, 5）",
   "highlight_preview": "高亮预览",
-  "highlight_preview_text": "这就是您的高亮样子的！",
+  "highlight_preview_text": "这就是您的默认高亮样子！",
   "opt_line_solid": "实线",
   "opt_line_dashed": "虚线",
   "opt_line_dotted": "点线",

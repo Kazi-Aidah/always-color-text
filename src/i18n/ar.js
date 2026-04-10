@@ -254,7 +254,7 @@ module.exports = {
   "border_thickness": "سماكة الحدود (px)",
   "border_thickness_desc": "تعيين سماكة الحدود من 0-5 بكسل (مثل 1، 2.5، 5)",
   "highlight_preview": "معاينة التمييز",
-  "highlight_preview_text": "هكذا يبدو التمييز الخاص بك!",
+  "highlight_preview_text": "هكذا يبدو التمييز الافتراضي الخاص بك!",
   "opt_line_solid": "متصل",
   "opt_line_dashed": "متقطع",
   "opt_line_dotted": "منقط",

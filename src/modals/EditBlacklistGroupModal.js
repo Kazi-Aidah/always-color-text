@@ -63,6 +63,7 @@ export class EditBlacklistGroupModal extends Modal {
     activeSelect.style.padding = "6px";
     activeSelect.style.borderRadius = "4px";
     activeSelect.style.border = "1px solid var(--background-modifier-border)";
+    activeSelect.style.background = "var(--background-modifier-form-field)";
     activeSelect.style.textAlign = "center";
     activeSelect.style.flex = "0 0 auto";
     activeSelect.style.width = "fit-content";
@@ -107,6 +108,7 @@ export class EditBlacklistGroupModal extends Modal {
     caseSelect.style.padding = "6px";
     caseSelect.style.borderRadius = "4px";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
+    caseSelect.style.background = "var(--background-modifier-form-field)";
     caseSelect.style.textAlign = "center";
     caseSelect.style.flex = "0 0 auto";
     caseSelect.style.width = "fit-content";
@@ -143,6 +145,7 @@ export class EditBlacklistGroupModal extends Modal {
     matchTypeSelect.style.borderRadius = "4px";
     matchTypeSelect.style.border =
       "1px solid var(--background-modifier-border)";
+    matchTypeSelect.style.background = "var(--background-modifier-form-field)";
     matchTypeSelect.style.textAlign = "center";
     matchTypeSelect.style.flex = "0 0 auto";
     matchTypeSelect.style.width = "fit-content";
@@ -657,6 +660,7 @@ export class EditBlacklistGroupModal extends Modal {
       matchSelect.style.padding = "6px";
       matchSelect.style.borderRadius = "4px";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
+      matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.textAlign = "center";
       matchSelect.style.maxWidth = "110px";
       matchSelect.style.minWidth = "90px";
@@ -740,15 +744,15 @@ export class EditBlacklistGroupModal extends Modal {
       };
       regexChk.addEventListener("change", regexChkHandler);
 
-      // 5. DELETE BUTTON (X button like main blacklist entries)
-      const btnDelete = row.createEl("button", {
+      // 5. DELETE BUTTON (commented out — use right-click context menu to delete)
+      /* const btnDelete = row.createEl("button", {
         text: this.plugin.t("delete_button_text", "✕"),
       });
       btnDelete.addClass("mod-warning");
       btnDelete.style.padding = "4px 8px";
       btnDelete.style.borderRadius = "4px";
       btnDelete.style.cursor = "pointer";
-      btnDelete.style.flex = "0 0 auto";
+      btnDelete.style.flex = "0 0 auto"; */
       const deleteHandler = () => {
         const idx = this.group.entries.indexOf(entry);
         if (idx !== -1) {
@@ -756,7 +760,7 @@ export class EditBlacklistGroupModal extends Modal {
           this._refreshGroupEntries();
         }
       };
-      btnDelete.addEventListener("click", deleteHandler);
+      // btnDelete.addEventListener("click", deleteHandler);
 
       // RIGHT-CLICK CONTEXT MENU ON ROW
       const contextMenuHandler = (ev) => {
@@ -770,7 +774,7 @@ export class EditBlacklistGroupModal extends Modal {
                 .setTitle(
                   this.plugin.t("open_in_regex_tester", "Open in Regex Tester"),
                 )
-                .setIcon("code")
+                .setIcon("regex")
                 .onClick(() => {
                   const modal = new BlacklistRegexTesterModal(
                     this.app,

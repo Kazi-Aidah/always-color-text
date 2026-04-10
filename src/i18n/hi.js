@@ -245,7 +245,7 @@ module.exports = {
   "border_thickness": "बॉर्डर मोटाई (px)",
   "border_thickness_desc": "बॉर्डर मोटाई 0-5 पिक्सेल से सेट करें (जैसे 1, 2.5, 5)",
   "highlight_preview": "हाइलाइट प्रीव्यू",
-  "highlight_preview_text": "देखें कि आपका हाइलाइट कैसा दिखेगा!",
+  "highlight_preview_text": "देखें कि आपका डिफ़ॉल्ट हाइलाइट कैसा दिखेगा!",
   "opt_line_solid": "ठोस",
   "opt_line_dashed": "डैश्ड",
   "opt_line_dotted": "डॉटेड",

@@ -185,9 +185,10 @@ export class ColorPickerModal extends Modal {
     previewWrap.style.borderRadius = "14px";
     previewWrap.style.padding = "14px";
     previewWrap.style.marginBottom = "0";
-    previewWrap.style.display = "block";
+    previewWrap.style.display = "flex";
+    previewWrap.style.alignItems = "center";
+    previewWrap.style.justifyContent = "center";
     previewWrap.style.gridColumn = "1 / -1";
-    // previewWrap.style.backgroundColor = 'var(--background-primary-alt)';
 
     const preview = previewWrap.createEl("span");
     const displayText = String(
