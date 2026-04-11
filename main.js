@@ -17651,6 +17651,81 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
             document.addEventListener("mousemove", onMove);
             document.addEventListener("mouseup", onEnd);
           });
+          dragHandle.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const touch = e.touches[0];
+            const startX = touch.clientX;
+            const startY = touch.clientY;
+            const rect = row.getBoundingClientRect();
+            const offsetX = startX - rect.left;
+            const offsetY = startY - rect.top;
+            if (navigator.vibrate) navigator.vibrate(100);
+            const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+            const clone = row.cloneNode(true);
+            const originalInputs = row.querySelectorAll("input, select, textarea");
+            const clonedInputs = clone.querySelectorAll("input, select, textarea");
+            originalInputs.forEach((el, idx) => {
+              if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+            });
+            ghost.appendChild(clone);
+            ghost.style.width = `${rect.width}px`;
+            ghost.style.height = `${rect.height}px`;
+            ghost.style.left = `${rect.left}px`;
+            ghost.style.top = `${rect.top}px`;
+            row.classList.add("drag-ghost-hidden");
+            const onTouchMove = (moveEvent) => {
+              moveEvent.preventDefault();
+              const t = moveEvent.touches[0];
+              const currentX = t.clientX;
+              const currentY = t.clientY;
+              ghost.style.left = `${currentX - offsetX}px`;
+              ghost.style.top = `${currentY - offsetY}px`;
+              const children = Array.from(customSwatchesContent.querySelectorAll("div[data-swatch-index]"));
+              const currentIndex = children.indexOf(row);
+              if (currentIndex === -1) return;
+              if (currentIndex > 0) {
+                const prevRow = children[currentIndex - 1];
+                const prevRect = prevRow.getBoundingClientRect();
+                if (currentY < prevRect.bottom - prevRect.height * 0.25) {
+                  if (navigator.vibrate) navigator.vibrate(100);
+                  customSwatchesContent.insertBefore(row, prevRow);
+                  const item = userCustomSwatches.splice(currentIndex, 1)[0];
+                  userCustomSwatches.splice(currentIndex - 1, 0, item);
+                  Array.from(customSwatchesContent.querySelectorAll("div[data-swatch-index]")).forEach((r, idx) => {
+                    r.setAttribute("data-swatch-index", idx.toString());
+                  });
+                  return;
+                }
+              }
+              if (currentIndex < children.length - 1) {
+                const nextRow = children[currentIndex + 1];
+                const nextRect = nextRow.getBoundingClientRect();
+                if (currentY > nextRect.top + nextRect.height * 0.25) {
+                  if (navigator.vibrate) navigator.vibrate(100);
+                  nextRow.after(row);
+                  const item = userCustomSwatches.splice(currentIndex, 1)[0];
+                  userCustomSwatches.splice(currentIndex + 1, 0, item);
+                  Array.from(customSwatchesContent.querySelectorAll("div[data-swatch-index]")).forEach((r, idx) => {
+                    r.setAttribute("data-swatch-index", idx.toString());
+                  });
+                  return;
+                }
+              }
+            };
+            const onTouchEnd = async () => {
+              document.removeEventListener("touchmove", onTouchMove);
+              document.removeEventListener("touchend", onTouchEnd);
+              ghost.remove();
+              row.classList.remove("drag-ghost-hidden");
+              this.plugin.settings.userCustomSwatches = userCustomSwatches;
+              this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map((s) => s.color);
+              await this.plugin.saveSettings();
+              this._refreshCustomSwatches();
+            };
+            document.addEventListener("touchmove", onTouchMove, { passive: false });
+            document.addEventListener("touchend", onTouchEnd);
+          }, { passive: false });
           nameInput.addEventListener("change", nameHandler);
           colorPicker.addEventListener("input", colorHandler);
           colorPicker.addEventListener(
@@ -17926,6 +18001,75 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
             document.addEventListener("mousemove", onMove);
             document.addEventListener("mouseup", onEnd);
           });
+          dragHandle.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const touch = e.touches[0];
+            const startX = touch.clientX;
+            const startY = touch.clientY;
+            const rect = row.getBoundingClientRect();
+            const offsetX = startX - rect.left;
+            const offsetY = startY - rect.top;
+            if (navigator.vibrate) navigator.vibrate(100);
+            const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+            const clone = row.cloneNode(true);
+            const originalInputs = row.querySelectorAll("input, select, textarea");
+            const clonedInputs = clone.querySelectorAll("input, select, textarea");
+            originalInputs.forEach((el, idx) => {
+              if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+            });
+            ghost.appendChild(clone);
+            ghost.style.width = `${rect.width}px`;
+            ghost.style.height = `${rect.height}px`;
+            ghost.style.left = `${rect.left}px`;
+            ghost.style.top = `${rect.top}px`;
+            row.classList.add("drag-ghost-hidden");
+            const onTouchMove = (moveEvent) => {
+              moveEvent.preventDefault();
+              const t = moveEvent.touches[0];
+              const currentX = t.clientX;
+              const currentY = t.clientY;
+              ghost.style.left = `${currentX - offsetX}px`;
+              ghost.style.top = `${currentY - offsetY}px`;
+              const target = document.elementFromPoint(currentX, currentY);
+              const targetRow = target ? target.closest("div[data-qc-index]") : null;
+              if (targetRow && targetRow !== row && targetRow.parentNode === listDiv) {
+                const children = Array.from(listDiv.querySelectorAll("div[data-qc-index]"));
+                const currentIndex = children.indexOf(row);
+                const targetIndex = children.indexOf(targetRow);
+                if (currentIndex !== -1 && targetIndex !== -1) {
+                  if (currentIndex < targetIndex) {
+                    if (navigator.vibrate) navigator.vibrate(100);
+                    targetRow.after(row);
+                    const item = colors.splice(currentIndex, 1)[0];
+                    colors.splice(targetIndex, 0, item);
+                    Array.from(listDiv.querySelectorAll("div[data-qc-index]")).forEach((r, idx) => {
+                      r.setAttribute("data-qc-index", idx.toString());
+                    });
+                  } else if (currentIndex > targetIndex) {
+                    if (navigator.vibrate) navigator.vibrate(100);
+                    listDiv.insertBefore(row, targetRow);
+                    const item = colors.splice(currentIndex, 1)[0];
+                    colors.splice(targetIndex, 0, item);
+                    Array.from(listDiv.querySelectorAll("div[data-qc-index]")).forEach((r, idx) => {
+                      r.setAttribute("data-qc-index", idx.toString());
+                    });
+                  }
+                }
+              }
+            };
+            const onTouchEnd = async () => {
+              document.removeEventListener("touchmove", onTouchMove);
+              document.removeEventListener("touchend", onTouchEnd);
+              ghost.remove();
+              row.classList.remove("drag-ghost-hidden");
+              this.plugin.settings.quickColors = colors;
+              await this.plugin.saveSettings();
+              this._refreshQuickColors();
+            };
+            document.addEventListener("touchmove", onTouchMove, { passive: false });
+            document.addEventListener("touchend", onTouchEnd);
+          }, { passive: false });
         });
       }
       const btnRow = this._quickColorsContainer.createDiv();
@@ -18184,6 +18328,73 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           document.addEventListener("mousemove", onMove);
           document.addEventListener("mouseup", onEnd);
         });
+        dragHandle.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const touch = e.touches[0];
+          const startX = touch.clientX;
+          const startY = touch.clientY;
+          const rect = row.getBoundingClientRect();
+          const offsetX = startX - rect.left;
+          const offsetY = startY - rect.top;
+          if (navigator.vibrate) navigator.vibrate(100);
+          const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+          const clone = row.cloneNode(true);
+          const originalInputs = row.querySelectorAll("input, select, textarea");
+          const clonedInputs = clone.querySelectorAll("input, select, textarea");
+          originalInputs.forEach((el, idx) => {
+            if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+          });
+          ghost.appendChild(clone);
+          ghost.style.width = `${rect.width}px`;
+          ghost.style.height = `${rect.height}px`;
+          ghost.style.left = `${rect.left}px`;
+          ghost.style.top = `${rect.top}px`;
+          row.classList.add("drag-ghost-hidden");
+          const onTouchMove = (moveEvent) => {
+            moveEvent.preventDefault();
+            const t = moveEvent.touches[0];
+            const currentX = t.clientX;
+            const currentY = t.clientY;
+            ghost.style.left = `${currentX - offsetX}px`;
+            ghost.style.top = `${currentY - offsetY}px`;
+            const children = Array.from(listDiv.children);
+            const currentIndex = children.indexOf(row);
+            if (currentIndex === -1) return;
+            if (currentIndex > 0) {
+              const prevRow = children[currentIndex - 1];
+              const prevRect = prevRow.getBoundingClientRect();
+              if (currentY < prevRect.bottom - prevRect.height * 0.25) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                listDiv.insertBefore(row, prevRow);
+                const item = styles.splice(currentIndex, 1)[0];
+                styles.splice(currentIndex - 1, 0, item);
+                return;
+              }
+            }
+            if (currentIndex < children.length - 1) {
+              const nextRow = children[currentIndex + 1];
+              const nextRect = nextRow.getBoundingClientRect();
+              if (currentY > nextRect.top + nextRect.height * 0.25) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                nextRow.after(row);
+                const item = styles.splice(currentIndex, 1)[0];
+                styles.splice(currentIndex + 1, 0, item);
+                return;
+              }
+            }
+          };
+          const onTouchEnd = async () => {
+            document.removeEventListener("touchmove", onTouchMove);
+            document.removeEventListener("touchend", onTouchEnd);
+            ghost.remove();
+            row.classList.remove("drag-ghost-hidden");
+            await this.plugin.saveSettings();
+            this._refreshQuickStyles();
+          };
+          document.addEventListener("touchmove", onTouchMove, { passive: false });
+          document.addEventListener("touchend", onTouchEnd);
+        }, { passive: false });
       });
       const btnRow = this._quickStylesContainer.createDiv();
       btnRow.style.display = "flex";
@@ -18711,6 +18922,77 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           document.addEventListener("mousemove", onMove);
           document.addEventListener("mouseup", onEnd);
         });
+        dragHandle.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const touch = e.touches[0];
+          const startX = touch.clientX;
+          const startY = touch.clientY;
+          const rect = row.getBoundingClientRect();
+          const offsetX = startX - rect.left;
+          const offsetY = startY - rect.top;
+          if (navigator.vibrate) navigator.vibrate(100);
+          const originalDisabled = [];
+          const allInteractive = row.querySelectorAll("input, select, button");
+          allInteractive.forEach((el) => {
+            originalDisabled.push(el.disabled);
+            el.disabled = true;
+          });
+          const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+          const clone = row.cloneNode(true);
+          const originalInputs = row.querySelectorAll("input, select, textarea");
+          const clonedInputs = clone.querySelectorAll("input, select, textarea");
+          originalInputs.forEach((el, idx) => {
+            if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+          });
+          ghost.appendChild(clone);
+          ghost.style.width = `${rect.width}px`;
+          ghost.style.height = `${rect.height}px`;
+          ghost.style.left = `${rect.left}px`;
+          ghost.style.top = `${rect.top}px`;
+          row.classList.add("drag-ghost-hidden");
+          const onTouchMove = (moveEvent) => {
+            moveEvent.preventDefault();
+            const t = moveEvent.touches[0];
+            const currentX = t.clientX;
+            const currentY = t.clientY;
+            ghost.style.left = `${currentX - offsetX}px`;
+            ghost.style.top = `${currentY - offsetY}px`;
+            const children = Array.from(container.querySelectorAll("div[data-group-uid]"));
+            const currentIndex = children.indexOf(row);
+            if (currentIndex === -1) return;
+            if (currentIndex > 0) {
+              const prevRow = children[currentIndex - 1];
+              const prevRect = prevRow.getBoundingClientRect();
+              if (currentY < prevRect.bottom - prevRect.height * 0.25) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                container.insertBefore(row, prevRow);
+                return;
+              }
+            }
+            if (currentIndex < children.length - 1) {
+              const nextRow = children[currentIndex + 1];
+              const nextRect = nextRow.getBoundingClientRect();
+              if (currentY > nextRect.top + nextRect.height * 0.25) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                nextRow.after(row);
+                return;
+              }
+            }
+          };
+          const onTouchEnd = async () => {
+            document.removeEventListener("touchmove", onTouchMove);
+            document.removeEventListener("touchend", onTouchEnd);
+            ghost.remove();
+            row.classList.remove("drag-ghost-hidden");
+            allInteractive.forEach((el, idx) => {
+              el.disabled = originalDisabled[idx];
+            });
+            await saveDragReorder();
+          };
+          document.addEventListener("touchmove", onTouchMove, { passive: false });
+          document.addEventListener("touchend", onTouchEnd);
+        }, { passive: false });
       });
     } catch (e) {
     }
@@ -18976,6 +19258,77 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           document.addEventListener("mousemove", onMove);
           document.addEventListener("mouseup", onEnd);
         });
+        dragHandle.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const touch = e.touches[0];
+          const startX = touch.clientX;
+          const startY = touch.clientY;
+          const rect = row.getBoundingClientRect();
+          const offsetX = startX - rect.left;
+          const offsetY = startY - rect.top;
+          if (navigator.vibrate) navigator.vibrate(100);
+          const originalDisabled = [];
+          const allInteractive = row.querySelectorAll("input, select, button");
+          allInteractive.forEach((el) => {
+            originalDisabled.push(el.disabled);
+            el.disabled = true;
+          });
+          const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+          const clone = row.cloneNode(true);
+          const originalInputs = row.querySelectorAll("input, select, textarea");
+          const clonedInputs = clone.querySelectorAll("input, select, textarea");
+          originalInputs.forEach((el, idx) => {
+            if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
+          });
+          ghost.appendChild(clone);
+          ghost.style.width = `${rect.width}px`;
+          ghost.style.height = `${rect.height}px`;
+          ghost.style.left = `${rect.left}px`;
+          ghost.style.top = `${rect.top}px`;
+          row.classList.add("drag-ghost-hidden");
+          const onTouchMove = (moveEvent) => {
+            moveEvent.preventDefault();
+            const t = moveEvent.touches[0];
+            const currentX = t.clientX;
+            const currentY = t.clientY;
+            ghost.style.left = `${currentX - offsetX}px`;
+            ghost.style.top = `${currentY - offsetY}px`;
+            const children = Array.from(container.querySelectorAll("div[data-group-uid]"));
+            const currentIndex = children.indexOf(row);
+            if (currentIndex === -1) return;
+            if (currentIndex > 0) {
+              const prevRow = children[currentIndex - 1];
+              const prevRect = prevRow.getBoundingClientRect();
+              if (currentY < prevRect.bottom - prevRect.height * 0.25) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                container.insertBefore(row, prevRow);
+                return;
+              }
+            }
+            if (currentIndex < children.length - 1) {
+              const nextRow = children[currentIndex + 1];
+              const nextRect = nextRow.getBoundingClientRect();
+              if (currentY > nextRect.top + nextRect.height * 0.25) {
+                if (navigator.vibrate) navigator.vibrate(100);
+                nextRow.after(row);
+                return;
+              }
+            }
+          };
+          const onTouchEnd = async () => {
+            document.removeEventListener("touchmove", onTouchMove);
+            document.removeEventListener("touchend", onTouchEnd);
+            ghost.remove();
+            row.classList.remove("drag-ghost-hidden");
+            allInteractive.forEach((el, idx) => {
+              el.disabled = originalDisabled[idx];
+            });
+            await saveDragReorder();
+          };
+          document.addEventListener("touchmove", onTouchMove, { passive: false });
+          document.addEventListener("touchend", onTouchEnd);
+        }, { passive: false });
       });
     } catch (e) {
     }
