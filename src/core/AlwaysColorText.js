@@ -632,6 +632,11 @@ class AlwaysColorText extends Plugin {
       } catch (_) {}
     }
 
+    // Start automatic backup timer if enabled
+    try {
+      this.rescheduleAutoBackup();
+    } catch (_) {}
+
     if (this.settings.enabled) {
       this.removeDisabledNeutralizerStyles();
       if (!this.settings.disableLivePreviewColoring) {
@@ -4226,8 +4231,9 @@ class AlwaysColorText extends Plugin {
           }
         }
 
-        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
-          this.applyCustomCssToElement(span, entry._groupRef);
+        if (this.settings.enableCustomCss) {
+          const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -4527,8 +4533,9 @@ class AlwaysColorText extends Plugin {
           }
         }
 
-        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
-          this.applyCustomCssToElement(span, entry._groupRef);
+        if (this.settings.enableCustomCss) {
+          const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -4698,8 +4705,9 @@ class AlwaysColorText extends Plugin {
           }
         }
 
-        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
-          this.applyCustomCssToElement(span, entry._groupRef);
+        if (this.settings.enableCustomCss) {
+          const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
         }
         this.applyCustomCssToElement(span, entry);
         textNode.replaceWith(span);
@@ -4767,6 +4775,10 @@ class AlwaysColorText extends Plugin {
       if (this._editorRefreshTimeout) {
         clearTimeout(this._editorRefreshTimeout);
         this._editorRefreshTimeout = null;
+      }
+      if (this._autoBackupTimer) {
+        clearInterval(this._autoBackupTimer);
+        this._autoBackupTimer = null;
       }
     } catch (e) {}
 
@@ -6878,6 +6890,60 @@ class AlwaysColorText extends Plugin {
     };
   }
 
+  // --- Automatic Backup ---
+
+  _getAutoBackupIntervalMs() {
+    const n = Math.max(1, parseInt(this.settings.autoBackupInterval, 10) || 1);
+    const unit = this.settings.autoBackupUnit || "day";
+    const unitMs = { hour: 3600000, day: 86400000, week: 604800000 };
+    return n * (unitMs[unit] || 86400000);
+  }
+
+  rescheduleAutoBackup() {
+    // Clear existing timer
+    if (this._autoBackupTimer) {
+      clearInterval(this._autoBackupTimer);
+      this._autoBackupTimer = null;
+    }
+    if (!this.settings.autoBackupEnabled) return;
+    const ms = this._getAutoBackupIntervalMs();
+    this._autoBackupTimer = setInterval(() => {
+      this.runAutoBackup().catch((e) => {
+        try { new Notice(`Always Color Text: Auto backup failed — ${e?.message || e}`); } catch (_) {}
+      });
+    }, ms);
+  }
+
+  async runAutoBackup() {
+    const payload = this.buildExportPayload();
+    const json = JSON.stringify(payload, null, 2);
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    let vaultName = "vault";
+    try {
+      const n = this.app?.vault?.getName?.();
+      vaultName = String(n || "vault").trim();
+    } catch (e) {}
+    const safeVault = vaultName.replace(/[^a-z0-9-_]+/gi, "_");
+
+    const overwrite = !!this.settings.autoBackupOverwrite;
+    const fname = overwrite
+      ? `act-backup-${safeVault}.json`
+      : `act-backup-${safeVault}-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+
+    const folder = (this.settings.autoBackupFolder || "").trim();
+    const dir = folder
+      ? folder.replace(/\\/g, "/").replace(/\/$/, "")
+      : `.obsidian/plugins/always-color-text/backups`;
+
+    const exists = await this.app.vault.adapter.exists(dir);
+    if (!exists) await this.app.vault.adapter.mkdir(dir);
+
+    const path = `${dir}/${fname}`;
+    await this.app.vault.adapter.write(path, json);
+    return path;
+  }
+
   async exportSettingsToPickedLocation() {
     const payload = this.buildExportPayload();
     const json = JSON.stringify(payload, null, 2);
@@ -8701,11 +8767,17 @@ class AlwaysColorText extends Plugin {
         debugLog("APPLY_CSS_SKIP", "Feature disabled");
         return;
       }
-      if (!entry || !entry.customCss) {
-        debugLog("APPLY_CSS_SKIP", "No entry or no customCss");
+      if (!entry) {
+        debugLog("APPLY_CSS_SKIP", "No entry");
         return;
       }
-      const decl = this.sanitizeCssDeclarations(entry.customCss);
+      // customCss may be on the entry directly, or on the original entry via entryRef
+      const css = entry.customCss || entry.entryRef?.customCss;
+      if (!css) {
+        debugLog("APPLY_CSS_SKIP", "No customCss");
+        return;
+      }
+      const decl = this.sanitizeCssDeclarations(css);
       if (!decl) {
         debugLog("APPLY_CSS_SKIP", "Sanitized decl is empty");
         return;
@@ -13345,8 +13417,9 @@ class AlwaysColorText extends Plugin {
             if (shouldAppendSpan) {
               const entryRef = m.entryRef || m.entry || null;
               debugLog("READING_RENDER_CSS", `Checking for custom CSS on: ${m.pattern || "unknown"}`);
-              if (this.settings.enableCustomCss && entryRef?._groupRef?.customCss) {
-                this.applyCustomCssToElement(span, entryRef._groupRef);
+              if (this.settings.enableCustomCss) {
+                const groupRef = entryRef?._groupRef || entryRef?.entryRef?._groupRef;
+                if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
               }
               this.applyCustomCssToElement(span, entryRef);
 

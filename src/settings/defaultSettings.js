@@ -116,4 +116,10 @@ export const defaultSettings = {
   lightModeFixer: false,
   darkModeFixer: false,
   enableCustomCss: false,
+  // Automatic backups
+  autoBackupEnabled: false,
+  autoBackupFolder: "",
+  autoBackupInterval: 1,
+  autoBackupUnit: "day", // "hour" | "day" | "week"
+  autoBackupOverwrite: false, // true = keep one rolling file, false = timestamped files
 };

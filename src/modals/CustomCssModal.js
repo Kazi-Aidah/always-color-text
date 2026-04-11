@@ -243,6 +243,8 @@ export class CustomCssModal extends Modal {
         this.entry.customCss = this._textarea.value.trim() || undefined;
       }
       await this.plugin.saveSettings();
+      try { this.plugin.compileWordEntries(); } catch (_) {}
+      try { this.plugin.compileTextBgColoringEntries(); } catch (_) {}
       try {
         window.dispatchEvent(new CustomEvent('act-colors-changed', { detail: { entry: this.entry } }));
       } catch (_) {}
@@ -256,6 +258,8 @@ export class CustomCssModal extends Modal {
     const clear = async () => {
       if (this.entry) this.entry.customCss = undefined;
       await this.plugin.saveSettings();
+      try { this.plugin.compileWordEntries(); } catch (_) {}
+      try { this.plugin.compileTextBgColoringEntries(); } catch (_) {}
       try {
         window.dispatchEvent(new CustomEvent('act-colors-changed', { detail: { entry: this.entry } }));
       } catch (_) {}

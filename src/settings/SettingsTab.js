@@ -8090,6 +8090,134 @@ export class ColorSettingTab extends PluginSettingTab {
       this._refreshDisabledFiles();
     }
     if (this._activeTab === "data") {
+      // --- Automatic Backups ---
+      containerEl.createEl("h2", {
+        text: this.plugin.t("auto_backup_header", "Automatic Backups"),
+      });
+
+      new Setting(containerEl)
+        .setName(this.plugin.t("auto_backup_toggle", "Enable automatic backups"))
+        .setDesc(this.plugin.t("auto_backup_toggle_desc", "Periodically back up all plugin data to a folder inside your vault."))
+        .addToggle((toggle) =>
+          toggle
+            .setValue(this.plugin.settings.autoBackupEnabled)
+            .onChange(async (value) => {
+              this.plugin.settings.autoBackupEnabled = value;
+              await this.plugin.saveSettings();
+              this.plugin.rescheduleAutoBackup();
+              this._initializedSettingsUI = false;
+              this.display();
+            }),
+        );
+
+      if (this.plugin.settings.autoBackupEnabled) {
+        // Backup folder — button shows current folder name, click to change, reset button to clear
+        const folderSetting = new Setting(containerEl)
+          .setName(this.plugin.t("auto_backup_folder", "Backup folder"))
+          .setDesc(this.plugin.t("auto_backup_folder_desc", "Folder path inside your vault where backups are saved (e.g. backups/act)."));
+
+        let folderPickBtn;
+        folderSetting.addButton((btn) => {
+          folderPickBtn = btn;
+          const cur = (this.plugin.settings.autoBackupFolder || "").trim();
+          btn.setButtonText(cur || this.plugin.t("auto_backup_folder_pick", "Choose folder"));
+          btn.buttonEl.addEventListener("click", async () => {
+            const prev = (this.plugin.settings.autoBackupFolder || "").trim();
+            const input = window.prompt(
+              this.plugin.t("auto_backup_folder_prompt", "Enter a vault-relative folder path (e.g. backups/act):"),
+              prev,
+            );
+            if (input !== null) {
+              const val = input.trim();
+              this.plugin.settings.autoBackupFolder = val;
+              await this.plugin.saveSettings();
+              btn.setButtonText(val || this.plugin.t("auto_backup_folder_pick", "Choose folder"));
+            }
+          });
+        });
+
+        folderSetting.addExtraButton((btn) => {
+          btn.setIcon("reset");
+          btn.setTooltip(this.plugin.t("auto_backup_folder_reset", "Reset to default"));
+          btn.onClick(async () => {
+            this.plugin.settings.autoBackupFolder = "";
+            await this.plugin.saveSettings();
+            if (folderPickBtn) folderPickBtn.setButtonText(this.plugin.t("auto_backup_folder_pick", "Choose folder"));
+          });
+        });
+
+        const intervalSetting = new Setting(containerEl)
+          .setName(this.plugin.t("auto_backup_interval", "Backup interval"))
+          .setDesc(this.plugin.t("auto_backup_interval_desc", "How often to save a backup."));
+
+        intervalSetting.addText((text) => {
+          text.inputEl.type = "number";
+          text.inputEl.min = "1";
+          text.inputEl.style.width = "64px";
+          text
+            .setValue(String(this.plugin.settings.autoBackupInterval || 1))
+            .onChange(async (value) => {
+              const n = parseInt(value, 10);
+              if (!isNaN(n) && n >= 1) {
+                this.plugin.settings.autoBackupInterval = n;
+                await this.plugin.saveSettings();
+                this.plugin.rescheduleAutoBackup();
+              }
+            });
+        });
+
+        intervalSetting.addDropdown((drop) =>
+          drop
+            .addOption("hour", this.plugin.t("auto_backup_unit_hour", "Hour(s)"))
+            .addOption("day", this.plugin.t("auto_backup_unit_day", "Day(s)"))
+            .addOption("week", this.plugin.t("auto_backup_unit_week", "Week(s)"))
+            .setValue(this.plugin.settings.autoBackupUnit || "day")
+            .onChange(async (value) => {
+              this.plugin.settings.autoBackupUnit = value;
+              await this.plugin.saveSettings();
+              this.plugin.rescheduleAutoBackup();
+            }),
+        );
+
+        new Setting(containerEl)
+          .setName(this.plugin.t("auto_backup_overwrite", "Overwrite previous backup"))
+          .setDesc(this.plugin.t("auto_backup_overwrite_desc", "Replace the last backup file instead of creating a new one each time."))
+          .addToggle((toggle) =>
+            toggle
+              .setValue(this.plugin.settings.autoBackupOverwrite || false)
+              .onChange(async (value) => {
+                this.plugin.settings.autoBackupOverwrite = value;
+                await this.plugin.saveSettings();
+              }),
+          );
+
+        new Setting(containerEl)
+          .setName(this.plugin.t("auto_backup_now", "Backup now"))
+          .setDesc(this.plugin.t("auto_backup_now_desc", "Save a backup immediately."))
+          .addButton((btn) =>
+            btn
+              .setButtonText(this.plugin.t("btn_backup_now", "Backup now"))
+              .setCta()
+              .onClick(async () => {
+                btn.setButtonText(this.plugin.t("btn_backup_now_running", "Saving..."));
+                btn.setDisabled(true);
+                try {
+                  const path = await this.plugin.runAutoBackup();
+                  btn.setButtonText(this.plugin.t("btn_backup_now_done", "Saved!"));
+                  new Notice(`Backup saved: ${path}`);
+                } catch (e) {
+                  btn.setButtonText(this.plugin.t("btn_backup_now_failed", "Failed"));
+                  new Notice(`Backup failed: ${e?.message || e}`);
+                } finally {
+                  setTimeout(() => {
+                    btn.setButtonText(this.plugin.t("btn_backup_now", "Backup now"));
+                    btn.setDisabled(false);
+                  }, 2500);
+                }
+              }),
+          );
+      }
+
       containerEl.createEl("h2", {
         text: this.plugin.t("data_export_import_header", "Data Export/Import"),
       });

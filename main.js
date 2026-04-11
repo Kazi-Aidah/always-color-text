@@ -5900,7 +5900,15 @@ var defaultSettings = {
   // Show tooltip on hover explaining why text is colored
   lightModeFixer: false,
   darkModeFixer: false,
-  enableCustomCss: false
+  enableCustomCss: false,
+  // Automatic backups
+  autoBackupEnabled: false,
+  autoBackupFolder: "",
+  autoBackupInterval: 1,
+  autoBackupUnit: "day",
+  // "hour" | "day" | "week"
+  autoBackupOverwrite: false
+  // true = keep one rolling file, false = timestamped files
 };
 
 // src/settings/SettingsTab.js
@@ -7355,6 +7363,14 @@ var CustomCssModal = class extends import_obsidian3.Modal {
       }
       await this.plugin.saveSettings();
       try {
+        this.plugin.compileWordEntries();
+      } catch (_) {
+      }
+      try {
+        this.plugin.compileTextBgColoringEntries();
+      } catch (_) {
+      }
+      try {
         window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
       } catch (_) {
       }
@@ -7375,6 +7391,14 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     const clear = async () => {
       if (this.entry) this.entry.customCss = void 0;
       await this.plugin.saveSettings();
+      try {
+        this.plugin.compileWordEntries();
+      } catch (_) {
+      }
+      try {
+        this.plugin.compileTextBgColoringEntries();
+      } catch (_) {
+      }
       try {
         window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
       } catch (_) {
@@ -22018,6 +22042,95 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
     }
     if (this._activeTab === "data") {
       containerEl2.createEl("h2", {
+        text: this.plugin.t("auto_backup_header", "Automatic Backups")
+      });
+      new import_obsidian15.Setting(containerEl2).setName(this.plugin.t("auto_backup_toggle", "Enable automatic backups")).setDesc(this.plugin.t("auto_backup_toggle_desc", "Periodically back up all plugin data to a folder inside your vault.")).addToggle(
+        (toggle) => toggle.setValue(this.plugin.settings.autoBackupEnabled).onChange(async (value) => {
+          this.plugin.settings.autoBackupEnabled = value;
+          await this.plugin.saveSettings();
+          this.plugin.rescheduleAutoBackup();
+          this._initializedSettingsUI = false;
+          this.display();
+        })
+      );
+      if (this.plugin.settings.autoBackupEnabled) {
+        const folderSetting = new import_obsidian15.Setting(containerEl2).setName(this.plugin.t("auto_backup_folder", "Backup folder")).setDesc(this.plugin.t("auto_backup_folder_desc", "Folder path inside your vault where backups are saved (e.g. backups/act)."));
+        let folderPickBtn;
+        folderSetting.addButton((btn) => {
+          folderPickBtn = btn;
+          const cur = (this.plugin.settings.autoBackupFolder || "").trim();
+          btn.setButtonText(cur || this.plugin.t("auto_backup_folder_pick", "Choose folder"));
+          btn.buttonEl.addEventListener("click", async () => {
+            const prev = (this.plugin.settings.autoBackupFolder || "").trim();
+            const input = window.prompt(
+              this.plugin.t("auto_backup_folder_prompt", "Enter a vault-relative folder path (e.g. backups/act):"),
+              prev
+            );
+            if (input !== null) {
+              const val = input.trim();
+              this.plugin.settings.autoBackupFolder = val;
+              await this.plugin.saveSettings();
+              btn.setButtonText(val || this.plugin.t("auto_backup_folder_pick", "Choose folder"));
+            }
+          });
+        });
+        folderSetting.addExtraButton((btn) => {
+          btn.setIcon("reset");
+          btn.setTooltip(this.plugin.t("auto_backup_folder_reset", "Reset to default"));
+          btn.onClick(async () => {
+            this.plugin.settings.autoBackupFolder = "";
+            await this.plugin.saveSettings();
+            if (folderPickBtn) folderPickBtn.setButtonText(this.plugin.t("auto_backup_folder_pick", "Choose folder"));
+          });
+        });
+        const intervalSetting = new import_obsidian15.Setting(containerEl2).setName(this.plugin.t("auto_backup_interval", "Backup interval")).setDesc(this.plugin.t("auto_backup_interval_desc", "How often to save a backup."));
+        intervalSetting.addText((text) => {
+          text.inputEl.type = "number";
+          text.inputEl.min = "1";
+          text.inputEl.style.width = "64px";
+          text.setValue(String(this.plugin.settings.autoBackupInterval || 1)).onChange(async (value) => {
+            const n = parseInt(value, 10);
+            if (!isNaN(n) && n >= 1) {
+              this.plugin.settings.autoBackupInterval = n;
+              await this.plugin.saveSettings();
+              this.plugin.rescheduleAutoBackup();
+            }
+          });
+        });
+        intervalSetting.addDropdown(
+          (drop) => drop.addOption("hour", this.plugin.t("auto_backup_unit_hour", "Hour(s)")).addOption("day", this.plugin.t("auto_backup_unit_day", "Day(s)")).addOption("week", this.plugin.t("auto_backup_unit_week", "Week(s)")).setValue(this.plugin.settings.autoBackupUnit || "day").onChange(async (value) => {
+            this.plugin.settings.autoBackupUnit = value;
+            await this.plugin.saveSettings();
+            this.plugin.rescheduleAutoBackup();
+          })
+        );
+        new import_obsidian15.Setting(containerEl2).setName(this.plugin.t("auto_backup_overwrite", "Overwrite previous backup")).setDesc(this.plugin.t("auto_backup_overwrite_desc", "Replace the last backup file instead of creating a new one each time.")).addToggle(
+          (toggle) => toggle.setValue(this.plugin.settings.autoBackupOverwrite || false).onChange(async (value) => {
+            this.plugin.settings.autoBackupOverwrite = value;
+            await this.plugin.saveSettings();
+          })
+        );
+        new import_obsidian15.Setting(containerEl2).setName(this.plugin.t("auto_backup_now", "Backup now")).setDesc(this.plugin.t("auto_backup_now_desc", "Save a backup immediately.")).addButton(
+          (btn) => btn.setButtonText(this.plugin.t("btn_backup_now", "Backup now")).setCta().onClick(async () => {
+            btn.setButtonText(this.plugin.t("btn_backup_now_running", "Saving..."));
+            btn.setDisabled(true);
+            try {
+              const path = await this.plugin.runAutoBackup();
+              btn.setButtonText(this.plugin.t("btn_backup_now_done", "Saved!"));
+              new import_obsidian15.Notice(`Backup saved: ${path}`);
+            } catch (e) {
+              btn.setButtonText(this.plugin.t("btn_backup_now_failed", "Failed"));
+              new import_obsidian15.Notice(`Backup failed: ${e?.message || e}`);
+            } finally {
+              setTimeout(() => {
+                btn.setButtonText(this.plugin.t("btn_backup_now", "Backup now"));
+                btn.setDisabled(false);
+              }, 2500);
+            }
+          })
+        );
+      }
+      containerEl2.createEl("h2", {
         text: this.plugin.t("data_export_import_header", "Data Export/Import")
       });
       new import_obsidian15.Setting(containerEl2).setName(this.plugin.t("export_plugin_data", "Export plugin data")).setDesc(
@@ -24191,6 +24304,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         debugError("SETTINGS_TAB", "Failed to initialize settings tab", e);
       } catch (_) {
       }
+    }
+    try {
+      this.rescheduleAutoBackup();
+    } catch (_) {
     }
     if (this.settings.enabled) {
       this.removeDisabledNeutralizerStyles();
@@ -27190,8 +27307,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             span.style.borderRadius = "";
           }
         }
-        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
-          this.applyCustomCssToElement(span, entry._groupRef);
+        if (this.settings.enableCustomCss) {
+          const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -27451,8 +27569,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             span.style.borderRadius = "";
           }
         }
-        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
-          this.applyCustomCssToElement(span, entry._groupRef);
+        if (this.settings.enableCustomCss) {
+          const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -27585,8 +27704,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             }
           }
         }
-        if (this.settings.enableCustomCss && entry?._groupRef?.customCss) {
-          this.applyCustomCssToElement(span, entry._groupRef);
+        if (this.settings.enableCustomCss) {
+          const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
         }
         this.applyCustomCssToElement(span, entry);
         textNode.replaceWith(span);
@@ -27642,6 +27762,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       if (this._editorRefreshTimeout) {
         clearTimeout(this._editorRefreshTimeout);
         this._editorRefreshTimeout = null;
+      }
+      if (this._autoBackupTimer) {
+        clearInterval(this._autoBackupTimer);
+        this._autoBackupTimer = null;
       }
     } catch (e) {
     }
@@ -29311,6 +29435,51 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       // - backgroundOpacity, highlightBorderRadius, highlightHorizontalPadding, etc. (individual entry customizations)
     };
   }
+  // --- Automatic Backup ---
+  _getAutoBackupIntervalMs() {
+    const n = Math.max(1, parseInt(this.settings.autoBackupInterval, 10) || 1);
+    const unit = this.settings.autoBackupUnit || "day";
+    const unitMs = { hour: 36e5, day: 864e5, week: 6048e5 };
+    return n * (unitMs[unit] || 864e5);
+  }
+  rescheduleAutoBackup() {
+    if (this._autoBackupTimer) {
+      clearInterval(this._autoBackupTimer);
+      this._autoBackupTimer = null;
+    }
+    if (!this.settings.autoBackupEnabled) return;
+    const ms = this._getAutoBackupIntervalMs();
+    this._autoBackupTimer = setInterval(() => {
+      this.runAutoBackup().catch((e) => {
+        try {
+          new import_obsidian17.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
+        } catch (_) {
+        }
+      });
+    }, ms);
+  }
+  async runAutoBackup() {
+    const payload = this.buildExportPayload();
+    const json = JSON.stringify(payload, null, 2);
+    const d = /* @__PURE__ */ new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    let vaultName = "vault";
+    try {
+      const n = this.app?.vault?.getName?.();
+      vaultName = String(n || "vault").trim();
+    } catch (e) {
+    }
+    const safeVault = vaultName.replace(/[^a-z0-9-_]+/gi, "_");
+    const overwrite = !!this.settings.autoBackupOverwrite;
+    const fname = overwrite ? `act-backup-${safeVault}.json` : `act-backup-${safeVault}-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+    const folder = (this.settings.autoBackupFolder || "").trim();
+    const dir = folder ? folder.replace(/\\/g, "/").replace(/\/$/, "") : `.obsidian/plugins/always-color-text/backups`;
+    const exists = await this.app.vault.adapter.exists(dir);
+    if (!exists) await this.app.vault.adapter.mkdir(dir);
+    const path = `${dir}/${fname}`;
+    await this.app.vault.adapter.write(path, json);
+    return path;
+  }
   async exportSettingsToPickedLocation() {
     const payload = this.buildExportPayload();
     const json = JSON.stringify(payload, null, 2);
@@ -30659,11 +30828,16 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         debugLog("APPLY_CSS_SKIP", "Feature disabled");
         return;
       }
-      if (!entry || !entry.customCss) {
-        debugLog("APPLY_CSS_SKIP", "No entry or no customCss");
+      if (!entry) {
+        debugLog("APPLY_CSS_SKIP", "No entry");
         return;
       }
-      const decl = this.sanitizeCssDeclarations(entry.customCss);
+      const css = entry.customCss || entry.entryRef?.customCss;
+      if (!css) {
+        debugLog("APPLY_CSS_SKIP", "No customCss");
+        return;
+      }
+      const decl = this.sanitizeCssDeclarations(css);
       if (!decl) {
         debugLog("APPLY_CSS_SKIP", "Sanitized decl is empty");
         return;
@@ -34296,8 +34470,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             if (shouldAppendSpan) {
               const entryRef = m.entryRef || m.entry || null;
               debugLog("READING_RENDER_CSS", `Checking for custom CSS on: ${m.pattern || "unknown"}`);
-              if (this.settings.enableCustomCss && entryRef?._groupRef?.customCss) {
-                this.applyCustomCssToElement(span, entryRef._groupRef);
+              if (this.settings.enableCustomCss) {
+                const groupRef = entryRef?._groupRef || entryRef?.entryRef?._groupRef;
+                if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
               }
               this.applyCustomCssToElement(span, entryRef);
               const entryStyleType = (m.entryRef || m.entry)?.styleType || "text";
