@@ -2532,14 +2532,13 @@ export class ColorSettingTab extends PluginSettingTab {
             } catch (_) {}
           };
 
-          const delBtn = row.createEl("button", {
-            text: this.plugin.t("delete_button_text", "✕"),
-          });
-          delBtn.addClass("mod-warning");
-          delBtn.style.padding = "4px 8px";
-          delBtn.style.borderRadius = "4px";
+          const delBtn = row.createDiv();
+          setIcon(delBtn, "x");
           delBtn.style.cursor = "pointer";
           delBtn.style.flexShrink = "0";
+          delBtn.style.display = "flex";
+          delBtn.style.alignItems = "center";
+          delBtn.style.color = "var(--text-muted)";
 
           const nameHandler = async () => {
             const val = nameInput.value.trim();
@@ -2925,7 +2924,7 @@ export class ColorSettingTab extends PluginSettingTab {
           row.style.border = "1px solid var(--background-modifier-border)";
           row.style.borderRadius = "var(--setting-items-radius)"; // BORDER RADIUS OF CUSTOM COLOR ENTRIES
           row.style.backgroundColor = "var(--setting-items-background)";
-          row.style.padding = "6px";
+          row.style.padding = "6px 10px";
           row.style.flex = "0 0 auto";
           row.setAttribute("data-qc-index", String(i));
 
@@ -3052,14 +3051,13 @@ export class ColorSettingTab extends PluginSettingTab {
           });
 
           // Delete button
-          const delBtn = row.createEl("button", {
-            text: this.plugin.t("delete_button_text", "✕"),
-          });
-          delBtn.addClass("mod-warning");
-          delBtn.style.padding = "4px 8px";
-          delBtn.style.borderRadius = "var(--button-radius)";
+          const delBtn = row.createDiv();
+          setIcon(delBtn, "x");
           delBtn.style.cursor = "pointer";
           delBtn.style.flexShrink = "0";
+          delBtn.style.display = "flex";
+          delBtn.style.alignItems = "center";
+          delBtn.style.color = "var(--text-muted)";
           delBtn.addEventListener("click", async () => {
             this.plugin.settings.quickColors.splice(i, 1);
             await this.plugin.saveSettings();
@@ -3350,22 +3348,29 @@ export class ColorSettingTab extends PluginSettingTab {
         row.style.alignItems = "center";
         row.style.gap = "8px";
         row.style.marginBottom = "8px";
-        row.style.padding = "4px";
+        row.style.padding = "4px 8px";
         row.style.border = "1px solid var(--background-modifier-border)";
         row.style.borderRadius = "var(--setting-items-radius)"; // BORDER RADIUS OF QUICK STYLES ENTRIES
         row.style.background = "var(--setting-items-background)";
         // row.draggable = true;
 
         // Drag Handle
-        const dragHandle = row.createDiv();
-        dragHandle.innerHTML =
-          '<svg viewBox="0 0 100 100" width="30" height="20" fill="currentColor"><path d="M30 20h40v10H30zM30 45h40v10H30zM30 70h40v10H30z"/></svg>';
+        const dragHandle = row.createEl("button");
+        setIcon(dragHandle, "menu");
+        dragHandle.style.padding = "0";
+        dragHandle.style.border = "none";
+        dragHandle.style.background = "transparent";
+        dragHandle.style.boxShadow = "none";
         dragHandle.style.cursor = "grab";
-        dragHandle.style.opacity = "0.6";
-        // dragHandle.style.width = '30px';
+        dragHandle.style.color = "var(--text-muted)";
+        dragHandle.style.flexShrink = "0";
         dragHandle.style.display = "flex";
         dragHandle.style.alignItems = "center";
         dragHandle.style.justifyContent = "center";
+        dragHandle.setAttribute(
+          "aria-label",
+          this.plugin.t("drag_to_reorder", "Drag to reorder"),
+        );
 
         // Preview sample text
         const previewEl = row.createDiv();
