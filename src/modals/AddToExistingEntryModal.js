@@ -1,4 +1,4 @@
-﻿import { FuzzySuggestModal, Menu, Notice } from 'obsidian';
+import { FuzzySuggestModal, Menu, Notice } from 'obsidian';
 import { debugLog, debugError } from '../utils/debug.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { BlacklistRegexTesterModal } from './BlacklistRegexTesterModal.js';
@@ -396,6 +396,7 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                     isRegex: false,
                     flags: "",
                     styleType: "text",
+                    markTarget: result && result.markTarget ? result.markTarget : "text",
                     matchType,
                   };
                   try {
@@ -415,10 +416,10 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                   await this.plugin.saveSettings();
                   this.plugin.compileWordEntries();
                 } else {
-                  await this.plugin.addNewEntry(word, selColor, false);
+                  await this.plugin.addNewEntry(word, selColor, false, "", "", result && result.markTarget ? result.markTarget : "text");
                 }
               } else {
-                await this.plugin.addNewEntry(word, selColor, false);
+                await this.plugin.addNewEntry(word, selColor, false, "", "", result && result.markTarget ? result.markTarget : "text");
               }
               try {
                 this.plugin.refreshEditor(this.view, true);

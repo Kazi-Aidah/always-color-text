@@ -75,6 +75,24 @@ export class RealTimeRegexTesterModal extends Modal {
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.textAlign = "center";
     styleSelect.style.marginTop = "0";
+
+    const markTargetSelect = controlsRow.createEl("select");
+    [
+      ["text", this.plugin.t("mark_target_text", "Color Text")],
+      ["line", this.plugin.t("mark_target_line", "Color Line")],
+      ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+    ].forEach(([val, label]) => {
+      const opt = markTargetSelect.createEl("option", { text: label });
+      opt.value = val;
+    });
+    markTargetSelect.value =
+      (this._editingEntry && this._editingEntry.markTarget) || "text";
+    markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
+    markTargetSelect.style.borderRadius = "var(--radius-m)";
+    markTargetSelect.style.background = "var(--background-modifier-form-field)";
+    markTargetSelect.style.textAlign = "center";
+    markTargetSelect.style.marginTop = "0";
+
     const textColorInput = controlsRow.createEl("input", { type: "color" });
     textColorInput.value = this._preFillTextColor || "#87c760";
     textColorInput.style.width = "48px";
@@ -104,6 +122,9 @@ export class RealTimeRegexTesterModal extends Modal {
           },
           "text",
           regexInput.value || "",
+          false,
+          this._editingEntry ? this._editingEntry.markTarget : "text",
+          this._editingEntry,
         );
         modal._hideHeaderControls = true;
         modal._preFillTextColor = textColorInput.value;
@@ -134,6 +155,9 @@ export class RealTimeRegexTesterModal extends Modal {
           },
           "background",
           regexInput.value || "",
+          false,
+          this._editingEntry ? this._editingEntry.markTarget : "text",
+          this._editingEntry,
         );
         modal._hideHeaderControls = true;
         modal._preFillBgColor = bgColorInput.value;
@@ -474,11 +498,13 @@ export class RealTimeRegexTesterModal extends Modal {
       if (this._editingEntry) {
         try {
           const style = styleSelect.value;
+          const markTarget = markTargetSelect.value;
           const updated = Object.assign({}, this._editingEntry, {
             pattern: pat,
             flags,
             presetLabel: label || undefined,
             styleType: style,
+            markTarget: markTarget,
             isRegex: true,
           });
           if (style === "text") {
@@ -545,6 +571,7 @@ export class RealTimeRegexTesterModal extends Modal {
           this._editingEntry.flags = updated.flags;
           this._editingEntry.presetLabel = updated.presetLabel;
           this._editingEntry.styleType = updated.styleType;
+          this._editingEntry.markTarget = updated.markTarget;
           this._editingEntry.color = updated.color;
           this._editingEntry.textColor = updated.textColor;
           this._editingEntry.backgroundColor = updated.backgroundColor;
@@ -594,6 +621,7 @@ export class RealTimeRegexTesterModal extends Modal {
           }
         })();
         const style = styleSelect.value;
+        const markTarget = markTargetSelect.value;
         const entry = {
           uid,
           isRegex: true,
@@ -601,6 +629,7 @@ export class RealTimeRegexTesterModal extends Modal {
           flags,
           presetLabel: label || undefined,
           styleType: style,
+          markTarget: markTarget,
           persistAtEnd: true,
         };
         if (style === "text") {
@@ -643,12 +672,14 @@ export class RealTimeRegexTesterModal extends Modal {
 
       // Always call the onAdded callback with the entry object
       const style = styleSelect.value;
+      const markTarget = markTargetSelect.value;
       const entry = {
         isRegex: true,
         pattern: pat,
         flags,
         presetLabel: label || undefined,
         styleType: style,
+        markTarget: markTarget,
       };
       if (style === "text") {
         entry.color = textColorInput.value || "";

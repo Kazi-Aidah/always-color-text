@@ -122,4 +122,5 @@ export const defaultSettings = {
   autoBackupInterval: 1,
   autoBackupUnit: "day", // "hour" | "day" | "week"
   autoBackupOverwrite: false, // true = keep one rolling file, false = timestamped files
+  autoBackupLastRun: 0, // Unix timestamp (ms) of last successful backup
 };

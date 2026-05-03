@@ -107,7 +107,7 @@ export class ChangelogModal extends Modal {
             dateEl.style.display = "block";
             dateEl.style.opacity = "0.8";
             dateEl.style.fontSize = "0.9em";
-            dateEl.style.marginTop = "-4px";
+            dateEl.style.marginTop = "-8px";
             dateEl.style.marginBottom = "16px";
           }
         } catch (_) {}

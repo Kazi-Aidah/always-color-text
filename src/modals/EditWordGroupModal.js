@@ -605,6 +605,7 @@ export class EditWordGroupModal extends Modal {
               styleType: "text",
               matchType: "contains",
               presetLabel: preset.label,
+              markTarget: sel.markTarget || "text",
             };
             // Copy preset properties like affectMarkElements and targetElement
             if (preset.affectMarkElements) entry.affectMarkElements = true;
@@ -896,6 +897,23 @@ export class EditWordGroupModal extends Modal {
       };
       updateVisibility();
 
+      // REGEX NAME INPUT (only for regex entries)
+      if (entry.isRegex) {
+        const nameInput = row.createEl("input", {
+          type: "text",
+          value: String(entry.presetLabel || ""),
+        });
+        nameInput.style.flex = "0 0 80px";
+        nameInput.style.padding = "6px";
+        nameInput.style.borderRadius = "4px";
+        nameInput.style.border = "1px solid var(--background-modifier-border)";
+        nameInput.placeholder = this.plugin.t("regex_name_placeholder", "name your regex");
+        const nameHandler = () => {
+          entry.presetLabel = nameInput.value;
+        };
+        nameInput.addEventListener("input", nameHandler);
+      }
+
       // 3. PATTERN INPUT (with same placeholder as Always Colored Texts)
       const patternInput = row.createEl("input", {
         type: "text",
@@ -1014,12 +1032,17 @@ export class EditWordGroupModal extends Modal {
                   entry.backgroundColor = null;
                   entry._savedTextColor = tc;
                 }
+                if (result && result.markTarget) {
+                  entry.markTarget = result.markTarget;
+                }
                 cp.value = tc;
                 this._refreshGroupEntries();
               },
               "text",
               displayText,
               false,
+              entry ? entry.markTarget : "text",
+              entry,
             );
             try {
               modal._preFillTextColor = preFillText;
@@ -1097,12 +1120,17 @@ export class EditWordGroupModal extends Modal {
                 }
                 entry.color = "";
                 entry._savedBackgroundColor = bc;
+                if (result && result.markTarget) {
+                  entry.markTarget = result.markTarget;
+                }
                 cpBg.value = bc;
                 this._refreshGroupEntries();
               },
               "background",
               displayText,
               false,
+              entry ? entry.markTarget : "text",
+              entry,
             );
             try {
               modal._preFillBgColor = preFillBg;
@@ -1152,6 +1180,7 @@ export class EditWordGroupModal extends Modal {
                   () => {
                     this._refreshGroupEntries();
                   },
+                  this,   // parentModal — enables EditEntryModal to call _refreshEntries() after save
                 );
                 modal.open();
               });
@@ -1212,6 +1241,10 @@ export class EditWordGroupModal extends Modal {
       };
       row.addEventListener("contextmenu", contextMenuHandler);
     });
+  }
+
+  _refreshEntries() {
+    this._refreshGroupEntries();
   }
 
   onClose() {

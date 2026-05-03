@@ -1160,12 +1160,64 @@ class AlwaysColorText extends Plugin {
                       const matchType =
                         sel.matchType ||
                         (this.settings.partialMatch ? "contains" : "exact");
+                      const markTarget = sel.markTarget || "text";
+
+                      // Improved entry finding logic to match what the modal uses
+                      const findEntry = (arr) => {
+                        const caseSensitive = !!this.settings.caseSensitive;
+                        const eq = (a, b) =>
+                          caseSensitive
+                            ? String(a) === String(b)
+                            : String(a).toLowerCase() ===
+                              String(b).toLowerCase();
+
+                        return arr.findIndex((e) => {
+                          if (!e) return false;
+                          if (e.isRegex) {
+                            if (!this.settings.enableRegexSupport) return false;
+                            try {
+                              const re = new RegExp(e.pattern, e.flags || "");
+                              return re.test(selectedText);
+                            } catch (_) {
+                              return false;
+                            }
+                          }
+
+                          const entryMatchType = (
+                            e.matchType ||
+                            (this.settings.partialMatch ? "contains" : "exact")
+                          ).toLowerCase();
+                          const a = caseSensitive
+                            ? String(selectedText)
+                            : String(selectedText).toLowerCase();
+                          const b = caseSensitive
+                            ? String(e.pattern || "")
+                            : String(e.pattern || "").toLowerCase();
+
+                          if (entryMatchType === "exact") {
+                            return (
+                              eq(e.pattern || "", selectedText) ||
+                              (Array.isArray(e.groupedPatterns) &&
+                                e.groupedPatterns.some((p) =>
+                                  eq(p, selectedText),
+                                ))
+                            );
+                          } else if (entryMatchType === "startswith") {
+                            return b && a.startsWith(b);
+                          } else if (entryMatchType === "endswith") {
+                            return b && a.endsWith(b);
+                          } else if (entryMatchType === "contains") {
+                            return b && a.includes(b);
+                          }
+                          return eq(e.pattern || "", selectedText);
+                        });
+                      };
+
                       const applyToArr = (arr) => {
-                        const idx = arr.findIndex(
-                          (e) => e && e.pattern === selectedText && !e.isRegex,
-                        );
+                        const idx = findEntry(arr);
                         if (idx !== -1) {
                           const entry = arr[idx];
+                          entry.markTarget = markTarget;
                           if (tc && bc) {
                             entry.textColor = tc;
                             entry.backgroundColor = bc;
@@ -1202,6 +1254,7 @@ class AlwaysColorText extends Plugin {
                               flags: "",
                               styleType: "both",
                               matchType,
+                              markTarget,
                               _savedTextColor: tc,
                               _savedBackgroundColor: bc,
                             });
@@ -1213,6 +1266,7 @@ class AlwaysColorText extends Plugin {
                               flags: "",
                               styleType: "text",
                               matchType,
+                              markTarget,
                               _savedTextColor: tc,
                             });
                           } else if (bc) {
@@ -1225,6 +1279,7 @@ class AlwaysColorText extends Plugin {
                               flags: "",
                               styleType: "highlight",
                               matchType,
+                              markTarget,
                               _savedBackgroundColor: bc,
                             });
                           } else if (color && this.isValidHexColor(color)) {
@@ -1235,6 +1290,7 @@ class AlwaysColorText extends Plugin {
                               flags: "",
                               styleType: "text",
                               matchType,
+                              markTarget,
                               _savedTextColor: color,
                             });
                           }
@@ -2050,6 +2106,137 @@ class AlwaysColorText extends Plugin {
                   ? this.settings.wordEntryGroups.find(
                       (g) => g && g.uid === selGroupUid,
                     )
+                  : null;
+                if (group) {
+                  if (!Array.isArray(group.entries)) group.entries = [];
+                  applyToArr(group.entries);
+                } else {
+                  applyToArr(this.settings.wordEntries);
+                }
+              } else {
+                applyToArr(this.settings.wordEntries);
+              }
+              await this.saveSettings();
+              this.compileWordEntries();
+              this.compileTextBgColoringEntries();
+              this.reconfigureEditorExtensions();
+              this.forceRefreshAllEditors();
+            },
+            "text-and-background",
+            word,
+            false,
+          ).open();
+        },
+      });
+      addTrackedCommand({
+        id: "color-text-for-current-file",
+        name: this.t("command_color_text_for_file", "Color Text for Current File"),
+        editorCallback: (editor, view) => {
+          const word = editor.getSelection().trim();
+          if (!word) {
+            new Notice(
+              this.t("notice_select_text_first", "Please select some text first."),
+            );
+            return;
+          }
+          const activeFile = this.app.workspace.getActiveFile();
+          if (!activeFile) {
+            new Notice(
+              this.t("notice_no_active_file", "No active file found."),
+            );
+            return;
+          }
+          const filePath = activeFile.path;
+          new ColorPickerModal(
+            this.app,
+            this,
+            async (color, result) => {
+              const sel = result || {};
+              const tc =
+                sel.textColor && this.isValidHexColor(sel.textColor)
+                  ? sel.textColor
+                  : null;
+              const bc =
+                sel.backgroundColor && this.isValidHexColor(sel.backgroundColor)
+                  ? sel.backgroundColor
+                  : null;
+              // No color picked at all — do nothing
+              if (!tc && !bc && !(color && this.isValidHexColor(color))) return;
+              const selGroupUid = sel.selectedGroupUid || null;
+              const matchType =
+                sel.matchType ||
+                (this.settings.partialMatch ? "contains" : "exact");
+              const fileInclusionRule = { path: filePath, mode: "include", isRegex: false, flags: "" };
+              const applyToArr = (arr) => {
+                const idx = arr.findIndex(
+                  (e) => e && e.pattern === word && !e.isRegex,
+                );
+                let entry;
+                if (idx !== -1) {
+                  entry = arr[idx];
+                  if (tc && bc) {
+                    entry.textColor = tc;
+                    entry.backgroundColor = bc;
+                    entry.color = "";
+                    entry.styleType = "both";
+                    entry._savedTextColor = tc;
+                    entry._savedBackgroundColor = bc;
+                  } else if (tc) {
+                    entry.color = tc;
+                    entry.styleType = "text";
+                    entry.textColor = null;
+                    entry.backgroundColor = null;
+                    entry._savedTextColor = tc;
+                  } else if (bc) {
+                    entry.color = "";
+                    entry.textColor = "currentColor";
+                    entry.backgroundColor = bc;
+                    entry.styleType = "highlight";
+                    entry._savedBackgroundColor = bc;
+                  } else if (color && this.isValidHexColor(color)) {
+                    entry.color = color;
+                    entry.styleType = "text";
+                    entry._savedTextColor = color;
+                  }
+                  if (!entry.isRegex) entry.matchType = matchType;
+                } else {
+                  if (tc && bc) {
+                    entry = {
+                      pattern: word, color: "", textColor: tc, backgroundColor: bc,
+                      isRegex: false, flags: "", styleType: "both", matchType,
+                      _savedTextColor: tc, _savedBackgroundColor: bc,
+                    };
+                  } else if (tc) {
+                    entry = {
+                      pattern: word, color: tc, isRegex: false, flags: "",
+                      styleType: "text", matchType, _savedTextColor: tc,
+                    };
+                  } else if (bc) {
+                    entry = {
+                      pattern: word, color: "", textColor: "currentColor", backgroundColor: bc,
+                      isRegex: false, flags: "", styleType: "highlight", matchType,
+                      _savedBackgroundColor: bc,
+                    };
+                  } else if (color && this.isValidHexColor(color)) {
+                    entry = {
+                      pattern: word, color: color, isRegex: false, flags: "",
+                      styleType: "text", matchType, _savedTextColor: color,
+                    };
+                  }
+                  if (entry) arr.push(entry);
+                }
+                // Add the file inclusion rule if not already present
+                if (entry) {
+                  if (!Array.isArray(entry.inclusionRules)) entry.inclusionRules = [];
+                  const alreadyHasRule = entry.inclusionRules.some(
+                    (r) => r && r.path === filePath && r.mode === "include",
+                  );
+                  if (!alreadyHasRule) entry.inclusionRules.push(fileInclusionRule);
+                }
+              };
+              if (selGroupUid) {
+                const group = Array.isArray(this.settings.wordEntryGroups)
+                  ? this.settings.wordEntryGroups.find((g) => g && g.uid === selGroupUid)
                   : null;
                 if (group) {
                   if (!Array.isArray(group.entries)) group.entries = [];
@@ -3210,10 +3397,11 @@ class AlwaysColorText extends Plugin {
   ) {
     try {
       let we;
+      let weAll;
       if (Array.isArray(entries) && entries.length > 0) {
         we = entries;
       } else {
-        let weAll = Array.isArray(this.settings.wordEntries)
+        weAll = Array.isArray(this.settings.wordEntries)
           ? this.settings.wordEntries.slice()
           : [];
         if (Array.isArray(this.settings.wordEntryGroups)) {
@@ -3253,11 +3441,8 @@ class AlwaysColorText extends Plugin {
             : Array.from(element.querySelectorAll?.("mark") || []);
 
         for (const mark of markElements) {
-          // ALWAYS add the identifier class to mark elements so they aren't hidden by our CSS
-          try {
-            mark.classList.add("always-color-text-highlight-marks");
-          } catch (_) {}
-
+          // Identifier class will be added only if a match is found to avoid overriding theme styles unnecessarily
+          
           const styledSpan = mark.querySelector(
             "span.always-color-text-highlight",
           );
@@ -3265,16 +3450,7 @@ class AlwaysColorText extends Plugin {
             styledSpan ||
             mark.querySelector(".always-color-text-highlight") ||
             mark;
-          try {
-            if (
-              fallbackSpan &&
-              fallbackSpan !== mark &&
-              fallbackSpan.classList
-            ) {
-              fallbackSpan.classList.add("always-color-text-highlight-marks");
-            }
-          } catch (_) {}
-
+          
           const markText = mark.textContent || "";
 
           let folderForMark = null;
@@ -3335,6 +3511,19 @@ class AlwaysColorText extends Plugin {
                 e.pattern.includes("==[\\s\\S]*?=="),
             ) ||
             null;
+
+          // If we found a style to apply, add the class and apply styles
+          if (quickStyle || presetEntry || highlightRegexEntry || styledSpan) {
+            try {
+              mark.classList.add("always-color-text-highlight-marks");
+              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) {
+                fallbackSpan.classList.add("always-color-text-highlight-marks");
+              }
+            } catch (_) {}
+          } else {
+            // No match found - skip this mark to preserve theme styling
+            continue;
+          }
 
           if (quickStyle) {
             const params = this.getHighlightParams(quickStyle);
@@ -4766,6 +4955,11 @@ class AlwaysColorText extends Plugin {
 
   // --- When the plugin is UNLOADING, remove all its UI and features ---
   onunload() {
+    // Remove injected line-highlight style tags
+    try {
+      document.querySelectorAll("style[data-act-line-style]").forEach(el => el.remove());
+    } catch (e) {}
+
     // Clear any pending timers
     try {
       if (this._refreshTimeout) {
@@ -5784,8 +5978,11 @@ class AlwaysColorText extends Plugin {
     ) {
       entry.textColor = entry.color;
     }
+    // Ensure markTarget exists
+    if (!entry.markTarget) {
+      entry.markTarget = "text";
+    }
     // Remove legacy fields
-    // delete entry.color; // Kept for compatibility with 'both' style background color fallback
     delete entry._savedtextcolor;
     delete entry._savedbackgroundcolor;
     delete entry._savedTextColor;
@@ -5846,6 +6043,15 @@ class AlwaysColorText extends Plugin {
     if (e.borderStyle === s.borderStyle) delete e.borderStyle;
     if (e.borderLineStyle === s.borderLineStyle) delete e.borderLineStyle;
 
+    // 3. Preserve markTarget explicitly
+    if (entry.markTarget) {
+      e.markTarget = entry.markTarget;
+    }
+
+    if (e.markTarget) {
+      console.log(`[ACT-DEBUG] compressEntry: ${e.pattern} -> markTarget: ${e.markTarget}`);
+    }
+
     return e;
   }
 
@@ -5867,6 +6073,11 @@ class AlwaysColorText extends Plugin {
   // --- Load plugin settings from disk, with defaults ---
   async loadSettings() {
     const loadedData = (await this.loadData()) || {};
+    console.log("[ACT-DEBUG] loadData raw result wordEntries count:", loadedData.wordEntries ? loadedData.wordEntries.length : 0);
+    if (loadedData.wordEntries && loadedData.wordEntries.length > 0) {
+        const sample = loadedData.wordEntries.find(e => e && e.markTarget && e.markTarget !== 'text');
+        if (sample) console.log(`[ACT-DEBUG] loadData: found entry with markTarget: ${sample.pattern} -> ${sample.markTarget}`);
+    }
 
     // --- REFACTOR MIGRATION: Flatten globalStyles back to root for runtime compatibility ---
     if (
@@ -5888,6 +6099,15 @@ class AlwaysColorText extends Plugin {
 
     // Validate that critical arrays exist before assignment
     if (!Array.isArray(loadedData.wordEntries)) loadedData.wordEntries = [];
+
+    // DEBUG: Check for markTarget on load
+    const mtSample = loadedData.wordEntries.filter(e => e && e.markTarget && e.markTarget !== 'text');
+    if (mtSample.length > 0) {
+      console.log(`[ACT-DEBUG] loadSettings: Found ${mtSample.length} entries with non-default markTarget on disk`);
+    } else {
+      console.log(`[ACT-DEBUG] loadSettings: No entries with non-default markTarget found in loadedData`);
+    }
+
     if (!Array.isArray(loadedData.wordEntryGroups))
       loadedData.wordEntryGroups = [];
     if (!Array.isArray(loadedData.blacklistEntries))
@@ -5937,6 +6157,7 @@ class AlwaysColorText extends Plugin {
     } catch (e) {}
 
     this.settings = Object.assign(
+      {},
       defaultSettings,
       loadedData,
     );
@@ -6254,6 +6475,7 @@ class AlwaysColorText extends Plugin {
             borderOpacity: e.borderOpacity,
             borderThickness: e.borderThickness,
             uid: e.uid, // Also preserve UID
+            markTarget: e.markTarget || "text",
             customCss:
               typeof e.customCss === "string" && e.customCss.trim().length > 0
                 ? e.customCss
@@ -6365,6 +6587,7 @@ class AlwaysColorText extends Plugin {
                 we.borderOpacity = e.borderOpacity;
               if (typeof e.borderThickness === "number")
                 we.borderThickness = e.borderThickness;
+              if (e.markTarget) we.markTarget = e.markTarget;
               // Preserve per-entry inclusion/exclusion rules
               try {
                 if (Array.isArray(e.inclusionRules)) {
@@ -6795,6 +7018,7 @@ class AlwaysColorText extends Plugin {
 
     // Compress wordEntries
     if (Array.isArray(data.wordEntries)) {
+      console.log(`[ACT-DEBUG] saveSettings: compressing ${data.wordEntries.length} entries`);
       data.wordEntries = data.wordEntries.map((e) => this.compressEntry(e));
     }
 
@@ -6815,6 +7039,22 @@ class AlwaysColorText extends Plugin {
     }
     if (Array.isArray(data.quickColors)) {
       data.quickColors = data.quickColors.map((e) => this.compressEntry(e));
+    }
+
+    // Final debug log before write
+    if (data.wordEntries && data.wordEntries.length > 0) {
+      const we = data.wordEntries.find(e => e && e.markTarget && e.markTarget !== 'text');
+      if (we) {
+        console.log(`[ACT-DEBUG] saveData: entry ${we.pattern} HAS markTarget: ${we.markTarget}`);
+        const jsonStr = JSON.stringify(data);
+        if (jsonStr.includes('"markTarget":"line"') || jsonStr.includes('"markTarget":"childLine"')) {
+           console.log("[ACT-DEBUG] saveData: markTarget found in JSON string!");
+        } else {
+           console.log("[ACT-DEBUG] saveData: markTarget NOT FOUND in JSON string!");
+        }
+      } else {
+        console.log(`[ACT-DEBUG] saveData: NO entries have non-default markTarget!`);
+      }
     }
 
     await this.saveData(data);
@@ -6907,11 +7147,34 @@ class AlwaysColorText extends Plugin {
     }
     if (!this.settings.autoBackupEnabled) return;
     const ms = this._getAutoBackupIntervalMs();
-    this._autoBackupTimer = setInterval(() => {
+    const last = this.settings.autoBackupLastRun || 0;
+    const elapsed = Date.now() - last;
+    const remaining = Math.max(0, ms - elapsed);
+
+    // If overdue (or never run), fire immediately then set up the recurring interval
+    const startTimer = () => {
+      this._autoBackupTimer = setInterval(() => {
+        this.runAutoBackup().catch((e) => {
+          try { new Notice(`Always Color Text: Auto backup failed — ${e?.message || e}`); } catch (_) {}
+        });
+      }, ms);
+    };
+
+    if (remaining === 0) {
+      // Overdue — run now, then start the interval
       this.runAutoBackup().catch((e) => {
         try { new Notice(`Always Color Text: Auto backup failed — ${e?.message || e}`); } catch (_) {}
       });
-    }, ms);
+      startTimer();
+    } else {
+      // Wait for the remaining time, then run and start the recurring interval
+      this._autoBackupTimer = setTimeout(() => {
+        this.runAutoBackup().catch((e) => {
+          try { new Notice(`Always Color Text: Auto backup failed — ${e?.message || e}`); } catch (_) {}
+        });
+        startTimer();
+      }, remaining);
+    }
   }
 
   async runAutoBackup() {
@@ -6941,6 +7204,9 @@ class AlwaysColorText extends Plugin {
 
     const path = `${dir}/${fname}`;
     await this.app.vault.adapter.write(path, json);
+    // Persist the timestamp so the interval survives restarts
+    this.settings.autoBackupLastRun = Date.now();
+    await this.saveSettings();
     return path;
   }
 
@@ -7071,6 +7337,17 @@ class AlwaysColorText extends Plugin {
             : x.color
               ? "text"
               : "text");
+        // PRESERVE markTarget (coloring target mode)
+        if (e.markTarget && e.markTarget !== 'text') {
+           console.log(`[ACT-DEBUG] sanitizeSettings PRESERVE: ${e.pattern} has markTarget: ${e.markTarget}`);
+        }
+        x.markTarget =
+          typeof e.markTarget === "string" && e.markTarget
+            ? e.markTarget
+            : "text";
+        if (x.markTarget !== "text") {
+          console.log(`[ACT-DEBUG] sanitizeSettings: ${x.pattern} -> markTarget: ${x.markTarget}`);
+        }
         const rawMt = String(x.matchType || "").trim();
         const mtLower = rawMt.toLowerCase();
         const normalized =
@@ -7182,7 +7459,14 @@ class AlwaysColorText extends Plugin {
         if (!Array.isArray(group.disableFolders)) group.disableFolders = [];
         if (!Array.isArray(group.enableTags)) group.enableTags = [];
         if (!Array.isArray(group.disableTags)) group.disableTags = [];
-        group.entries = group.entries.map((e) => Object.assign({}, e || {}));
+        group.entries = group.entries.map((e) => {
+          const entryCopy = Object.assign({}, e || {});
+          entryCopy.markTarget =
+            typeof e.markTarget === "string" && e.markTarget
+              ? e.markTarget
+              : "text";
+          return entryCopy;
+        });
         return group;
       });
 
@@ -7295,6 +7579,11 @@ class AlwaysColorText extends Plugin {
             typeof e.customCss === "string" && e.customCss.trim().length > 0
               ? e.customCss
               : undefined;
+          // PRESERVE markTarget (coloring target mode)
+          x.markTarget =
+            typeof e.markTarget === "string" && e.markTarget
+              ? e.markTarget
+              : "text";
           return x;
         });
       }
@@ -7399,17 +7688,18 @@ class AlwaysColorText extends Plugin {
   }
 
   // --- Save a persistent color for a word ---
-  async saveEntry(word, color) {
+  async saveEntry(word, color, markTarget = "text") {
     // Save or update a literal (non-regex) entry in the new wordEntries model
     const pattern = String(word);
     const col = String(color);
-    debugLog("SAVE", "saveEntry", { pattern, color: col });
+    debugLog("SAVE", "saveEntry", { pattern, color: col, markTarget });
     const idx = this.settings.wordEntries.findIndex(
       (e) => e && e.pattern === pattern && !e.isRegex,
     );
     if (idx !== -1) {
       this.settings.wordEntries[idx].color = col;
       this.settings.wordEntries[idx].styleType = "text"; // EXPLICITLY SET TO TEXT
+      this.settings.wordEntries[idx].markTarget = markTarget;
       // Clear any background/text color fields to ensure it's pure text coloring
       this.settings.wordEntries[idx].textColor = null;
       this.settings.wordEntries[idx].backgroundColor = null;
@@ -7422,6 +7712,7 @@ class AlwaysColorText extends Plugin {
         styleType: "text",
         textColor: null,
         backgroundColor: null,
+        markTarget: markTarget,
         matchType: this.settings.partialMatch ? "contains" : "exact",
       });
     }
@@ -7430,9 +7721,9 @@ class AlwaysColorText extends Plugin {
   }
 
   // Add a new entry (word or regex)
-  async addNewEntry(pattern, color, isRegex, flags = "", name = "") {
+  async addNewEntry(pattern, color, isRegex, flags = "", name = "", markTarget = "text") {
     try {
-      // Input validation for security and sanity
+      // ... existing validation ...
       const patternStr = String(pattern || "").trim();
       if (!patternStr) {
         debugWarn("ADD_ENTRY", "Pattern is empty");
@@ -7469,6 +7760,7 @@ class AlwaysColorText extends Plugin {
         flags: String(flags || "").replace(/[^gimsuy]/g, ""),
         styleType: "text",
         backgroundColor: null,
+        markTarget: markTarget,
         matchType: !isRegex
           ? this.settings.partialMatch
             ? "contains"
@@ -16812,6 +17104,7 @@ class AlwaysColorText extends Plugin {
     folderEntry,
     filePath = null,
     syntaxTreeFn = null,
+    lineBuilder = null,
   ) {
     try {
       const nonRomanCount = Array.isArray(entries)
@@ -17515,10 +17808,12 @@ class AlwaysColorText extends Plugin {
 
     // Apply decorations from collected matches
     return this.applyDecorationsFromMatches(
+      view,
       builder,
       allMatches,
       folderEntry,
       tree,
+      lineBuilder,
     );
   }
 
@@ -18604,7 +18899,7 @@ class AlwaysColorText extends Plugin {
   }
 
   // NEW METHOD: Apply decorations from collected matches
-  applyDecorationsFromMatches(builder, matches, folderEntry) {
+  applyDecorationsFromMatches(view, builder, matches, folderEntry, tree, lineBuilder) {
     const all = matches.slice().sort((a, b) => {
       if (a.start !== b.start) return a.start - b.start;
       const lenDiff = b.end - b.start - (a.end - a.start);
@@ -18840,22 +19135,83 @@ class AlwaysColorText extends Plugin {
       const isDark =
         (m.color || m.textColor || m.backgroundColor) &&
         this.isDarkColor(m.color || m.textColor || m.backgroundColor);
-      const deco = Decoration.mark({
-        attributes: {
-          style,
-          class:
-            (m.entryRef && m.entryRef.affectMarkElements
-              ? "always-color-text-highlight always-color-text-highlight-marks"
-              : "always-color-text-highlight") +
-            (isDark ? " act-dark-color" : ""),
-          title:
-            this.settings.showColoringReasonOnHover && m.entry
-              ? this.getColoringReasonTooltip(m)
-              : "",
-        },
-      });
 
-      builder.add(m.start, m.end, deco);
+      const markTarget = m.entryRef && m.entryRef.markTarget;
+
+      if (markTarget === "line" || markTarget === "childLine") {
+        // --- Line coloring: CSS class on .cm-line div only (no span wrapper) ---
+        // Uses inheritance so child spans with their own inline styles keep their colors
+        const rawPattern = (m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern)) || "";
+        const cssClass = String(rawPattern)
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9_-]/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
+
+        // Build a permissive style: color without !important so children can override
+        // Other properties (background, border, padding) still apply to the line div
+        let colorProp = "";
+        const lineStyleParts = [];
+        for (const decl of style.split(";")) {
+          const trimmed = decl.trim();
+          if (!trimmed) continue;
+          const colonIdx = trimmed.indexOf(":");
+          if (colonIdx === -1) continue;
+          const prop = trimmed.slice(0, colonIdx).trim();
+          if (prop === "color" && !trimmed.includes("!important")) {
+            colorProp = `${trimmed};`;
+          } else if (prop === "color") {
+            // Strip !important from color so children can override
+            colorProp = trimmed.replace(/\s*!important/g, "") + ";";
+          } else if (prop !== "--highlight-color") {
+            lineStyleParts.push(trimmed);
+          }
+        }
+
+        const styleId = `act-line-style-${cssClass}`;
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) {
+          styleEl = document.createElement("style");
+          styleEl.id = styleId;
+          styleEl.setAttribute("data-act-line-style", "1");
+          document.head.appendChild(styleEl);
+        }
+        // Apply color with lower specificity (no !important) so inline child spans override
+        const rule = `div.cm-line.${cssClass}{${colorProp}${lineStyleParts.join("; ")}}`;
+        if (styleEl.textContent !== rule) styleEl.textContent = rule;
+
+        // Determine target line position
+        let lineStart;
+        if (markTarget === "childLine") {
+          const matchLine = view.state.doc.lineAt(m.start);
+          lineStart = matchLine.number < view.state.doc.lines
+            ? view.state.doc.line(matchLine.number + 1).from
+            : matchLine.from;
+        } else {
+          lineStart = view.state.doc.lineAt(m.start).from;
+        }
+
+        if (lineBuilder) lineBuilder.add(lineStart, lineStart, Decoration.line({
+          attributes: { class: cssClass },
+        }));
+
+        // No mark decoration — the whole line gets colored via CSS on .cm-line
+      } else {
+        // --- Text coloring: inline style on the matched span only ---
+        builder.add(m.start, m.end, Decoration.mark({
+          attributes: {
+            style,
+            class: "always-color-text-highlight" + (isDark ? " act-dark-color" : ""),
+            "data-contents": view.state.doc.sliceString(m.start, m.end),
+            title:
+              this.settings.showColoringReasonOnHover && m.entry
+                ? this.getColoringReasonTooltip(m)
+                : "",
+          },
+        }));
+      }
+      continue;
     }
 
     return builder.finish();

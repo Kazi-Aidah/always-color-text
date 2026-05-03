@@ -92,6 +92,22 @@ export class RegexTesterModal extends Modal {
       styleSelect.addClass("act-regex-style");
     } catch (e) {}
 
+    const markTargetSelect = rowStyle.createEl("select");
+    [
+      ["text", this.plugin.t("mark_target_text", "Color Text")],
+      ["line", this.plugin.t("mark_target_line", "Color Line")],
+      ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+    ].forEach(([val, label]) => {
+      const opt = markTargetSelect.createEl("option", { text: label });
+      opt.value = val;
+    });
+    markTargetSelect.value = "text";
+    markTargetSelect.style.flex = "0 0 stretch";
+    markTargetSelect.style.borderRadius = "var(--radius-m)";
+    markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
+    markTargetSelect.style.background = "var(--background-modifier-form-field)";
+    markTargetSelect.style.textAlign = "center";
+
     const textColorInput = rowStyle.createEl("input", { type: "color" });
     textColorInput.value = "#58bc54";
     textColorInput.style.width = "48px";
@@ -509,6 +525,7 @@ export class RegexTesterModal extends Modal {
         }
       })();
       const style = styleSelect.value;
+      const markTarget = markTargetSelect.value;
       const entry = {
         uid,
         isRegex: true,
@@ -516,6 +533,7 @@ export class RegexTesterModal extends Modal {
         flags,
         presetLabel: label || undefined,
         styleType: style,
+        markTarget: markTarget,
         _savedTextColor: textColorInput.value || "",
         _savedBackgroundColor: bgColorInput.value || "",
       };

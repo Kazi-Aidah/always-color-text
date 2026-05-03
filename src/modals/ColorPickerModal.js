@@ -11,6 +11,8 @@ export class ColorPickerModal extends Modal {
     mode = "text",
     selectedText = "",
     isQuickOnce = false,
+    preFillMarkTarget = "text",
+    entry = null,
   ) {
     super(app);
     this.plugin = plugin;
@@ -18,8 +20,72 @@ export class ColorPickerModal extends Modal {
     this.mode =
       mode === "background" || mode === "text-and-background" ? mode : "text";
     this._selectedText = selectedText || "";
+    this._markTarget = preFillMarkTarget || "text";
     this._eventListeners = []; // Track event listeners for cleanup
     this.isQuickOnce = !!isQuickOnce;
+    this._entry = entry;
+  }
+
+  _applyCustomCss() {
+    if (!this._previewSpan) return;
+    let entry = this._entry;
+
+    // If no entry was passed, try to find one by pattern
+    if (!entry && this._selectedText && !this.isQuickOnce) {
+      const s = this._selectedText;
+      const caseSensitive = !!this.plugin.settings.caseSensitive;
+      const eq = (a, b) =>
+        caseSensitive
+          ? String(a) === String(b)
+          : String(a).toLowerCase() === String(b).toLowerCase();
+
+      // Search in wordEntries
+      entry = this.plugin.settings.wordEntries.find(
+        (e) =>
+          e &&
+          !e.isRegex &&
+          (eq(e.pattern, s) ||
+            (Array.isArray(e.groupedPatterns) &&
+              e.groupedPatterns.some((p) => eq(p, s)))),
+      );
+
+      // Search in groups if still not found
+      if (!entry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+        for (const g of this.plugin.settings.wordEntryGroups) {
+          if (!g || !Array.isArray(g.entries)) continue;
+          entry = g.entries.find(
+            (e) =>
+              e &&
+              !e.isRegex &&
+              (eq(e.pattern, s) ||
+                (Array.isArray(e.groupedPatterns) &&
+                  e.groupedPatterns.some((p) => eq(p, s)))),
+          );
+          if (entry) break;
+        }
+      }
+    }
+
+    if (entry && entry.customCss && this.plugin.settings.enableCustomCss) {
+      try {
+        const decl = this.plugin.sanitizeCssDeclarations(entry.customCss);
+        if (decl) {
+          decl
+            .split(";")
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .forEach((p) => {
+              const idx = p.indexOf(":");
+              if (idx === -1) return;
+              this._previewSpan.style.setProperty(
+                p.slice(0, idx).trim(),
+                p.slice(idx + 1).trim(),
+                "important",
+              );
+            });
+        }
+      } catch (_) {}
+    }
   }
 
   onOpen() {
@@ -156,6 +222,42 @@ export class ColorPickerModal extends Modal {
       this._matchSelect = matchSelect;
     }
 
+    if (!hideControls && !isQuick) {
+      const markTargetSelect = headerRow.createEl("select");
+      markTargetSelect.style.padding = "6px";
+      markTargetSelect.style.borderRadius = "4px";
+      markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
+      markTargetSelect.style.textAlign = "center";
+      markTargetSelect.style.maxWidth = "120px";
+      try {
+        markTargetSelect.style.setProperty("max-width", "120px", "important");
+        markTargetSelect.style.setProperty("width", "120px", "important");
+        markTargetSelect.style.setProperty("min-width", "120px", "important");
+      } catch (e) {}
+      markTargetSelect.style.flex = "0 0 auto";
+      [
+        ["text", this.plugin.t("mark_target_text", "Color Text")],
+        ["line", this.plugin.t("mark_target_line", "Color Line")],
+        ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+      ].forEach(([val, label]) => {
+        const opt = markTargetSelect.createEl("option", { text: label });
+        opt.value = val;
+      });
+      markTargetSelect.value = this._markTarget || "text";
+      const mtHandler = () => {
+        console.log(`[ACT-DEBUG] ColorPickerModal: UI markTarget changed to ${markTargetSelect.value}`);
+        this._markTarget = markTargetSelect.value;
+        this._hasUserChanges = true;
+      };
+      markTargetSelect.addEventListener("change", mtHandler);
+      this._eventListeners.push({
+        el: markTargetSelect,
+        event: "change",
+        handler: mtHandler,
+      });
+      this._markTargetSelect = markTargetSelect;
+    }
+
     let editBtn = null;
     const shouldShowEdit =
       (!hideControls && !isQuick) || quickHighlight || quickBoth;
@@ -181,16 +283,11 @@ export class ColorPickerModal extends Modal {
     this.selectedBgColor = null;
 
     const previewWrap = contentEl.createDiv();
-    previewWrap.style.border = "1px solid var(--background-modifier-border)";
-    previewWrap.style.borderRadius = "14px";
-    previewWrap.style.padding = "14px";
-    previewWrap.style.marginBottom = "0";
-    previewWrap.style.display = "flex";
-    previewWrap.style.alignItems = "center";
-    previewWrap.style.justifyContent = "center";
-    previewWrap.style.gridColumn = "1 / -1";
+    previewWrap.addClass("act-color-picker-preview-wrap");
+    // Most styling moved to CSS to allow user overrides
 
     const preview = previewWrap.createEl("span");
+    this._previewSpan = preview;
     const displayText = String(
       this._selectedText || this._preFillPattern || this._preFillName || "",
     ).trim();
@@ -198,11 +295,7 @@ export class ColorPickerModal extends Modal {
       ? displayText
       : this.plugin.t("selected_text_preview", "Selected Text");
     preview.style.display = "inline";
-    preview.style.borderRadius = "8px";
-    // preview.style.padding = '6px 12px';
-    preview.style.fontWeight = "600";
-    preview.style.backgroundColor = "";
-    preview.style.color = "";
+    this._applyCustomCss();
 
     // For Highlight Once: show no styling until a color is picked
     if (this.isQuickOnce) {
@@ -216,6 +309,7 @@ export class ColorPickerModal extends Modal {
         preview.style.borderRadius = "";
         preview.style.paddingLeft = "";
         preview.style.paddingRight = "";
+        this._applyCustomCss();
       } catch (e) {}
     }
 
@@ -370,6 +464,25 @@ export class ColorPickerModal extends Modal {
       grid.addClass("color-swatch-grid");
 
       const apply = (val) => {
+        // Find entry again in case it wasn't passed initially but now we have context
+        let entry = this._entry;
+        if (!entry && this._selectedText && !this.isQuickOnce) {
+          const s = this._selectedText;
+          const caseSensitive = !!this.plugin.settings.caseSensitive;
+          const eq = (a, b) =>
+            caseSensitive
+              ? String(a) === String(b)
+              : String(a).toLowerCase() === String(b).toLowerCase();
+          entry = this.plugin.settings.wordEntries.find(
+            (e) =>
+              e &&
+              !e.isRegex &&
+              (eq(e.pattern, s) ||
+                (Array.isArray(e.groupedPatterns) &&
+                  e.groupedPatterns.some((p) => eq(p, s)))),
+          );
+        }
+
         if (type === "text") {
           this.selectedTextColor = val;
           preview.style.color = val;
@@ -385,115 +498,34 @@ export class ColorPickerModal extends Modal {
           preview.style.borderBottom = "";
           preview.style.borderLeft = "";
           preview.style.borderRight = "";
-          // Use quick-highlight styling only when invoked for Highlight Once
-          if (this.isQuickOnce) {
-            if (this.plugin.settings.quickHighlightUseGlobalStyle) {
-              const rgba = this.plugin.hexToRgba(
-                val,
-                this.plugin.settings.backgroundOpacity ?? 25,
-              );
-              const radius = this.plugin.settings.highlightBorderRadius ?? 8;
-              const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
-              const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
-              preview.style.backgroundColor = rgba;
-              preview.style.borderRadius = radius + "px";
-              preview.style.paddingLeft = preview.style.paddingRight =
-                pad + "px";
-              try {
-                preview.style.setProperty("padding-top", vpad + "px");
-                preview.style.setProperty("padding-bottom", vpad + "px");
-              } catch (e) {
-                preview.style.paddingTop = preview.style.paddingBottom =
-                  vpad + "px";
-              }
-              if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
-                preview.style.boxDecorationBreak = "clone";
-                preview.style.WebkitBoxDecorationBreak = "clone";
-              }
-              this.plugin.applyBorderStyleToElement(preview, null, val);
-            } else if (this.plugin.settings.quickHighlightStyleEnable) {
-              const hexWithAlpha = this.plugin.hexToHexWithAlpha(
-                val,
-                this.plugin.settings.quickHighlightOpacity ?? 25,
-              );
-              const radius =
-                this.plugin.settings.quickHighlightBorderRadius ?? 8;
-              const pad =
-                this.plugin.settings.quickHighlightHorizontalPadding ?? 4;
-              const vpad =
-                this.plugin.settings.quickHighlightVerticalPadding ?? 0;
-              preview.style.backgroundColor = hexWithAlpha;
-              preview.style.borderRadius = radius + "px";
-              preview.style.paddingLeft = preview.style.paddingRight =
-                pad + "px";
-              try {
-                preview.style.setProperty("padding-top", vpad + "px");
-                preview.style.setProperty("padding-bottom", vpad + "px");
-              } catch (e) {
-                preview.style.paddingTop = preview.style.paddingBottom =
-                  vpad + "px";
-              }
-              // Apply once-style border using generated CSS
-              const borderCss = this.plugin.generateOnceBorderStyle(val);
-              try {
-                preview.style.cssText += borderCss;
-              } catch (e) {}
-            } else {
-              // Default simple highlight
-              const rgba = this.plugin.hexToRgba(val, 25);
-              preview.style.backgroundColor = rgba;
-              preview.style.borderRadius = "";
-              preview.style.paddingLeft = preview.style.paddingRight = "";
-              preview.style.paddingTop = preview.style.paddingBottom = "";
-            }
-            this._hasUserChanges = true;
-          } else {
-            const op =
-              matchedEntry && typeof matchedEntry.backgroundOpacity === "number"
-                ? matchedEntry.backgroundOpacity
-                : (this.plugin.settings.backgroundOpacity ?? 25);
-            const rgba = this.plugin.hexToRgba(val, op);
-            preview.style.backgroundColor = rgba;
-            this.plugin.applyBorderStyleToElement(
-              preview,
-              null,
-              val,
-              matchedEntry,
-            );
-            const hPad =
-              matchedEntry &&
-              typeof matchedEntry.highlightHorizontalPadding === "number"
-                ? matchedEntry.highlightHorizontalPadding
-                : (this.plugin.settings.highlightHorizontalPadding ?? 4);
-            const vPad =
-              matchedEntry &&
-              typeof matchedEntry.highlightVerticalPadding === "number"
-                ? matchedEntry.highlightVerticalPadding
-                : (this.plugin.settings.highlightVerticalPadding ?? 0);
-            const radius =
-              matchedEntry &&
-              typeof matchedEntry.highlightBorderRadius === "number"
-                ? matchedEntry.highlightBorderRadius
-                : (this.plugin.settings.highlightBorderRadius ?? 8);
-            preview.style.paddingLeft = preview.style.paddingRight =
-              hPad + "px";
-            try {
-              preview.style.setProperty("padding-top", vPad + "px");
-              preview.style.setProperty("padding-bottom", vPad + "px");
-            } catch (e) {
-              preview.style.paddingTop = preview.style.paddingBottom =
-                vPad + "px";
-            }
-            preview.style.borderRadius = radius + "px";
-            if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
-              preview.style.boxDecorationBreak = "clone";
-              preview.style.WebkitBoxDecorationBreak = "clone";
-            }
-            this._hasUserChanges = true;
+
+          const params = this.plugin.getHighlightParams(entry);
+          const rgba = this.plugin.hexToRgba(val, params.opacity ?? 25);
+          const radius = params.radius ?? 8;
+          const hPad = params.hPad ?? 4;
+          const vPad = params.vPad ?? 0;
+
+          preview.style.backgroundColor = rgba;
+          preview.style.borderRadius = radius + "px";
+          preview.style.paddingLeft = preview.style.paddingRight = hPad + "px";
+          try {
+            preview.style.setProperty("padding-top", vPad + "px");
+            preview.style.setProperty("padding-bottom", vPad + "px");
+          } catch (e) {
+            preview.style.paddingTop = preview.style.paddingBottom = vPad + "px";
           }
+
+          if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
+            preview.style.boxDecorationBreak = "clone";
+            preview.style.WebkitBoxDecorationBreak = "clone";
+          }
+
+          this.plugin.applyBorderStyleToElement(preview, null, val, entry);
+          this._hasUserChanges = true;
         }
         hex.value = val;
         colorInput.value = val;
+        this._applyCustomCss();
       };
 
       const colorChange = () => {
@@ -551,6 +583,7 @@ export class ColorPickerModal extends Modal {
         hex.value = "";
         colorInput.value = "#000000";
         this._hasUserChanges = true;
+        this._applyCustomCss();
       };
       resetBtn.addEventListener("click", resetHandler);
       this._eventListeners.push({
@@ -707,6 +740,10 @@ export class ColorPickerModal extends Modal {
 
       if (!matches) continue;
 
+      matchedEntry = e;
+      matchedGroupUid = e._groupUid || null;
+      matchedMatchType = e.matchType || matchedMatchType;
+
       if (e.backgroundColor) {
         if (
           e.textColor &&
@@ -723,16 +760,10 @@ export class ColorPickerModal extends Modal {
             : e.backgroundColor
               ? "highlight"
               : "text");
-        matchedGroupUid = e._groupUid || null;
-        matchedMatchType = e.matchType || matchedMatchType;
-        matchedEntry = e;
         break;
       } else if (e.color && this.plugin.isValidHexColor(e.color)) {
         initText = e.color;
         existingStyle = existingStyle || "text";
-        matchedGroupUid = e._groupUid || null;
-        matchedMatchType = e.matchType || matchedMatchType;
-        matchedEntry = e;
         break;
       }
     }
@@ -742,6 +773,10 @@ export class ColorPickerModal extends Modal {
         try {
           const re = new RegExp(e.pattern, e.flags || "");
           if (re.test(s)) {
+            matchedEntry = e;
+            matchedGroupUid = e._groupUid || null;
+            matchedMatchType = e.matchType || matchedMatchType;
+
             if (e.backgroundColor) {
               if (
                 e.textColor &&
@@ -764,9 +799,6 @@ export class ColorPickerModal extends Modal {
               initText = e.color;
               existingStyle = existingStyle || "text";
             }
-            matchedGroupUid = e._groupUid || null;
-            matchedMatchType = e.matchType || matchedMatchType;
-            matchedEntry = e;
             break;
           }
         } catch (err) {}
@@ -781,6 +813,13 @@ export class ColorPickerModal extends Modal {
         matchedMatchType ||
         (this.plugin.settings.partialMatch ? "contains" : "exact");
       this._matchSelect.value = this._matchType;
+    }
+    if (this._markTargetSelect) {
+      const entryMarkTarget = (this._entry && this._entry.markTarget) || (matchedEntry && matchedEntry.markTarget);
+      if (entryMarkTarget) {
+        this._markTarget = entryMarkTarget;
+      }
+      this._markTargetSelect.value = this._markTarget || "text";
     }
 
     if (editBtn) {
@@ -963,6 +1002,7 @@ export class ColorPickerModal extends Modal {
                   }
                 }
                 this._hasUserChanges = true;
+                this._applyCustomCss();
               } catch (_) {}
             };
             modal.open();
@@ -1227,6 +1267,7 @@ export class ColorPickerModal extends Modal {
       // prefill does not count as a change; do not set selectedBgColor
       // border style already applied via applyBorderStyleToElement using _preFillBorderColor when available
     }
+    this._applyCustomCss();
     // Also update the mode handling to properly detect text-and-background
     const actionRow = contentEl.createDiv();
     actionRow.style.display = "flex";
@@ -1427,6 +1468,7 @@ export class ColorPickerModal extends Modal {
                 matchType:
                   this._matchType ||
                   (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                markTarget: this._markTarget || "text",
                 quickOnceStyle: qo || undefined,
               },
             );
@@ -1465,6 +1507,7 @@ export class ColorPickerModal extends Modal {
               e.backgroundColor = bgColor;
               e.color = ""; // Clear plain color field
               e.styleType = "both"; // EXPLICITLY SET TO BOTH
+              e.markTarget = this._markTarget || "text";
               debugLog("MODAL", "update both", e);
               updated = true;
               break;
@@ -1482,6 +1525,7 @@ export class ColorPickerModal extends Modal {
               matchType:
                 this._matchType ||
                 (this.plugin.settings.partialMatch ? "contains" : "exact"),
+              markTarget: this._markTarget || "text",
             };
 
             // Add targetElement for formatting patterns
@@ -1516,6 +1560,7 @@ export class ColorPickerModal extends Modal {
                   e.textColor = null; // Clear textColor field
                   e.backgroundColor = null; // Clear background field
                   e.styleType = "text"; // EXPLICITLY SET TO TEXT
+                  e.markTarget = this._markTarget || "text";
                   updated = true;
                   if (!e.isRegex)
                     e.matchType =
@@ -1533,6 +1578,7 @@ export class ColorPickerModal extends Modal {
                 e.textColor = null; // Clear textColor field
                 e.backgroundColor = null; // Clear background field
                 e.styleType = "text"; // EXPLICITLY SET TO TEXT
+                e.markTarget = this._markTarget || "text";
                 updated = true;
                 if (!e.isRegex)
                   e.matchType =
@@ -1549,6 +1595,7 @@ export class ColorPickerModal extends Modal {
                 e.textColor = null; // Clear textColor field
                 e.backgroundColor = null; // Clear background field
                 e.styleType = "text"; // EXPLICITLY SET TO TEXT
+                e.markTarget = this._markTarget || "text";
                 updated = true;
                 if (!e.isRegex)
                   e.matchType =
@@ -1570,6 +1617,7 @@ export class ColorPickerModal extends Modal {
                 matchType:
                   this._matchType ||
                   (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                markTarget: this._markTarget || "text",
               };
 
               // Add targetElement for formatting patterns
@@ -1586,12 +1634,13 @@ export class ColorPickerModal extends Modal {
               await this.plugin.saveSettings();
               this.plugin.compileWordEntries();
             } else {
-              await this.plugin.saveEntry(word, textColor);
+              await this.plugin.saveEntry(word, textColor, this._markTarget || "text");
               const ne = this.plugin.settings.wordEntries.find(
                 (e) => e && e.pattern === word && !e.isRegex,
               );
               if (ne) {
                 ne.styleType = "text";
+                ne.markTarget = this._markTarget || "text";
               }
             }
           } else {
@@ -1603,11 +1652,8 @@ export class ColorPickerModal extends Modal {
           debugLog("MODAL", "text-only", { word, textColor });
         } else if (bgSelected) {
           // BACKGROUND ONLY: highlight only
-          const arr = Array.isArray(this.plugin.settings.wordEntries)
-            ? this.plugin.settings.wordEntries
-            : [];
-          for (let i = 0; i < arr.length; i++) {
-            const e = arr[i];
+          for (let i = 0; i < targetArr.length; i++) {
+            const e = targetArr[i];
             if (!e) continue;
             let match = false;
             if (e.isRegex && this.plugin.settings.enableRegexSupport) {
@@ -1629,6 +1675,7 @@ export class ColorPickerModal extends Modal {
               e.textColor = "currentColor";
               e.color = ""; // Clear plain color field
               e.styleType = "highlight"; // EXPLICITLY SET TO HIGHLIGHT
+              e.markTarget = this._markTarget || "text";
               debugLog("MODAL", "update highlight", e);
               updated = true;
               break;
@@ -1646,6 +1693,7 @@ export class ColorPickerModal extends Modal {
               matchType:
                 this._matchType ||
                 (this.plugin.settings.partialMatch ? "contains" : "exact"),
+              markTarget: this._markTarget || "text",
             };
 
             // Add targetElement for formatting patterns
@@ -1690,6 +1738,7 @@ export class ColorPickerModal extends Modal {
         }
       };
     } catch (e) {}
+    this._applyCustomCss();
   }
 
   onClose() {

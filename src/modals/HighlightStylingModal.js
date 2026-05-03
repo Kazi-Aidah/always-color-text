@@ -168,6 +168,41 @@ export class HighlightStylingModal extends Modal {
       });
     }
 
+    // --- markTarget select (Color Text / Color Line / Color Child) ---
+    if (!fromQuickOnce) {
+      const markTargetSelect = headerRow.createEl("select");
+      this._markTargetSelect = markTargetSelect;
+      markTargetSelect.style.minWidth = "120px";
+      markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
+      markTargetSelect.style.borderRadius = "4px";
+      markTargetSelect.style.background = "var(--background-modifier-form-field)";
+      markTargetSelect.style.textAlign = "center";
+
+      [
+        ["text", this.plugin.t("mark_target_text", "Color Text")],
+        ["line", this.plugin.t("mark_target_line", "Color Line")],
+        ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+      ].forEach(([val, label]) => {
+        const opt = markTargetSelect.createEl("option", { text: label });
+        opt.value = val;
+      });
+
+      // Initialise from entry
+      markTargetSelect.value =
+        this.entry && this.entry.markTarget ? this.entry.markTarget : "text";
+
+      markTargetSelect.addEventListener("change", async () => {
+        if (!this.entry) return;
+        this.entry.markTarget = markTargetSelect.value;
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.triggerActiveDocumentRerender();
+      });
+    }
+
     // Match Select (hide for Quick Once)
     let matchSelect = null;
     if (!fromQuickOnce) {
@@ -726,6 +761,9 @@ export class HighlightStylingModal extends Modal {
         !isGroup && this.entry && this.entry.isRegex && this.entry.presetLabel
           ? this.entry.presetLabel
           : words.textContent || "";
+      
+      // Clear out the span's content before adding text to avoid doubling up
+      span.textContent = "";
       span.textContent = displayText;
       // Apply custom CSS on top if present
       if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
@@ -873,7 +911,7 @@ export class HighlightStylingModal extends Modal {
         const modal = new ColorPickerModal(
           this.app,
           this.plugin,
-          (color, result) => {
+          async (color, result) => {
             const tc =
               result &&
               result.textColor &&
@@ -907,6 +945,19 @@ export class HighlightStylingModal extends Modal {
               changed = true;
             }
 
+            if (result && result.markTarget) {
+              if (this._markTargetSelect) this._markTargetSelect.value = result.markTarget;
+              if (this.entry) {
+                this.entry.markTarget = result.markTarget;
+                await this.plugin.saveSettings();
+                this.plugin.compileWordEntries();
+                this.plugin.compileTextBgColoringEntries();
+                this.plugin.reconfigureEditorExtensions();
+                this.plugin.forceRefreshAllEditors();
+                this.plugin.triggerActiveDocumentRerender();
+              }
+            }
+
             if (!changed) {
               if (currentColor && this.plugin.isValidHexColor(currentColor)) {
                 if (isTextPicker) tColor.value = currentColor;
@@ -920,6 +971,8 @@ export class HighlightStylingModal extends Modal {
           isTextPicker ? "text" : "background",
           this.previewTextOverride || currentColor,
           false,
+          this.entry ? this.entry.markTarget : "text",
+          this.entry,
         );
         modal._hideHeaderControls = true;
         if (tColor.value) modal._preFillTextColor = tColor.value;

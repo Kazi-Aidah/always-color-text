@@ -295,6 +295,7 @@ export class PatternMatcher {
           borderLineStyle: entry.borderLineStyle,
           borderOpacity: entry.borderOpacity,
           borderThickness: entry.borderThickness,
+          markTarget: entry.markTarget || "text",
         });
         iters++;
       }
@@ -545,6 +546,7 @@ export function compileWordEntriesLogic(plugin) {
           textColor: e.textColor || e.color || color,
           backgroundColor: e.backgroundColor || null,
           styleType: e.styleType || "text",
+          markTarget: e.markTarget || "text",
           matchType:
             e.matchType ||
             (plugin.settings.partialMatch ? "contains" : "exact"),
@@ -600,6 +602,7 @@ export function compileWordEntriesLogic(plugin) {
           borderLineStyle: e.borderLineStyle,
           borderOpacity: e.borderOpacity,
           borderThickness: e.borderThickness,
+          customCss: e.customCss || null,
           execs: 0,
           avoidedExecs: 0,
           matchesFound: 0,
@@ -816,6 +819,7 @@ export function compileTextBgColoringEntriesLogic(plugin) {
             pattern,
             textColor,
             backgroundColor,
+            markTarget: e.markTarget || "text",
             matchType:
               e.matchType ||
               (plugin.settings.partialMatch ? "contains" : "exact"),
@@ -843,24 +847,25 @@ export function compileTextBgColoringEntriesLogic(plugin) {
               : plugin.settings.caseSensitive;
         if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
 
-        const compiled = {
-          pattern,
-          textColor,
-          backgroundColor,
-          styleType: e.styleType || "both",
-          matchType:
-            e.matchType ||
-            (plugin.settings.partialMatch ? "contains" : "exact"),
-          isRegex,
-          flags,
-          regex: null,
-          testRegex: null,
-          invalid: false,
-          specificity: pattern.replace(/\*/g, "").length,
-          isTextBg: true,
-          presetLabel: e.presetLabel || undefined,
-          entryRef: e,
-          caseSensitive: effectiveCaseSensitive,
+          const compiled = {
+            pattern,
+            textColor,
+            backgroundColor,
+            styleType: e.styleType || "both",
+            markTarget: e.markTarget || "text",
+            matchType:
+              e.matchType ||
+              (plugin.settings.partialMatch ? "contains" : "exact"),
+            isRegex,
+            flags,
+            regex: null,
+            testRegex: null,
+            invalid: false,
+            specificity: pattern.replace(/\*/g, "").length,
+            isTextBg: true,
+            presetLabel: e.presetLabel || undefined,
+            entryRef: e,
+            caseSensitive: effectiveCaseSensitive,
           inclusionRules: Array.isArray(e.inclusionRules)
             ? e.inclusionRules.slice()
             : [],
@@ -889,6 +894,7 @@ export function compileTextBgColoringEntriesLogic(plugin) {
           borderLineStyle: e.borderLineStyle,
           borderOpacity: e.borderOpacity,
           borderThickness: e.borderThickness,
+          customCss: e.customCss || null,
         };
 
         try {

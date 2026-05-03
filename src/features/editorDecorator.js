@@ -217,26 +217,37 @@ export function buildEditorExtension(plugin) {
                         to < range.from || from > range.to,
                     });
 
-                    const builder = new RangeSetBuilder();
+                    const markBuilder = new RangeSetBuilder();
+                    const lineDecos = [];
+                    const lineCollector = { add: (pos, _p2, deco) => lineDecos.push({ pos, deco }) };
                     const text = update.view.state.doc.sliceString(
                       range.from,
                       range.to,
                     );
-                    const chunkDecos = plugin.buildDecoChunked(
+                    const markSet = plugin.buildDecoChunked(
                       update.view,
-                      builder,
+                      markBuilder,
                       range.from,
                       range.to,
                       text,
                       entries,
                       folderEntry,
                       currentFilePath,
+                      null,
+                      lineCollector,
                     );
 
                     const newRanges = [];
-                    chunkDecos.between(range.from, range.to, (f, t, v) => {
+                    markSet.between(range.from, range.to, (f, t, v) => {
                       newRanges.push({ from: f, to: t, value: v });
                     });
+                    // Add line decos (from=to=lineStart) into the same set
+                    for (const { pos, deco } of lineDecos) {
+                      if (pos >= range.from && pos <= range.to) {
+                        newRanges.push({ from: pos, to: pos, value: deco });
+                      }
+                    }
+                    newRanges.sort((a, b) => a.from - b.from || (a.to === a.from ? -1 : 1));
 
                     this.decorations = this.decorations.update({
                       add: newRanges,
@@ -350,21 +361,18 @@ export function buildEditorExtension(plugin) {
         return { entries, folderEntry };
       }
       buildDeco(view) {
-        const builder = new RangeSetBuilder();
-
         const root = view && view.dom ? view.dom : null;
         const isLivePreview =
           root && root.closest && root.closest(".is-live-preview");
         if (plugin.settings.disableLivePreviewColoring && isLivePreview)
-          return builder.finish();
+          return new RangeSetBuilder().finish();
 
         const { entries, folderEntry } = this.getApplicableEntries(view);
-        if (entries.length === 0) return builder.finish();
+        if (entries.length === 0) return new RangeSetBuilder().finish();
 
         const { from, to } = view.viewport;
         const docLength = view.state.doc.length;
 
-        // OPTIMIZATION: Use extended buffer for pattern matching at boundaries
         const extendedTo = Math.min(
           to + EDITOR_PERFORMANCE_CONSTANTS.VIEWPORT_EXTENSION,
           docLength,
@@ -372,11 +380,15 @@ export function buildEditorExtension(plugin) {
         const text = view.state.doc.sliceString(from, extendedTo);
         const fileForView = view.file || plugin.app.workspace.getActiveFile();
 
-        // OPTIMIZATION: Always use chunked processing for aggressive optimization
-        // This ensures we never process too many matches at once
-        return plugin.buildDecoChunked(
+        // Collect line decorations via a simple collector (not a RangeSetBuilder).
+        const lineDecos = [];
+        const lineCollector = { add: (pos, _p2, deco) => lineDecos.push({ pos, deco }) };
+
+        // buildDecoChunked owns the builder and calls builder.finish() internally.
+        // We capture the returned DecorationSet.
+        const markSet = plugin.buildDecoChunked(
           view,
-          builder,
+          new RangeSetBuilder(),
           from,
           extendedTo,
           text,
@@ -384,7 +396,37 @@ export function buildEditorExtension(plugin) {
           folderEntry,
           fileForView ? fileForView.path : null,
           syntaxTree,
+          lineCollector,
         );
+
+        if (!lineDecos.length) return markSet;
+
+        // Merge mark ranges and line decos into one sorted RangeSetBuilder.
+        const markRanges = [];
+        markSet.between(from, extendedTo, (f, t, v) => {
+          markRanges.push({ from: f, to: t, value: v });
+        });
+
+        // Deduplicate line decos (same pos + class)
+        const seen = new Set();
+        const uniqueLines = lineDecos.filter(({ pos, deco }) => {
+          const key = `${pos}::${deco.spec?.attributes?.class || ""}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        // Sort: line decos (from=to) before mark decos at the same position
+        const all = [
+          ...uniqueLines.map(({ pos, deco }) => ({ from: pos, to: pos, value: deco, line: true })),
+          ...markRanges.map((r) => ({ ...r, line: false })),
+        ].sort((a, b) => a.from - b.from || (a.line ? -1 : 1));
+
+        const merged = new RangeSetBuilder();
+        for (const item of all) {
+          merged.add(item.from, item.to, item.value);
+        }
+        return merged.finish();
       }
     },
     {

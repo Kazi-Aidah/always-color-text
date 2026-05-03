@@ -1,4 +1,4 @@
-﻿import { Modal, Notice } from 'obsidian';
+import { Modal, Notice } from 'obsidian';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
@@ -345,7 +345,7 @@ export class EditEntryModal extends Modal {
         const modal = new ColorPickerModal(
           this.app,
           this.plugin,
-          (color, result) => {
+          async (color, result) => {
             const tc =
               result &&
               result.textColor &&
@@ -378,6 +378,20 @@ export class EditEntryModal extends Modal {
               changed = true;
             }
 
+            if (result && result.markTarget) {
+              markTargetSelect.value = result.markTarget;
+              if (this.entry) {
+                this.entry.markTarget = result.markTarget;
+                await this.plugin.saveSettings();
+                this.plugin.compileWordEntries();
+                this.plugin.compileTextBgColoringEntries();
+                this.plugin.reconfigureEditorExtensions();
+                this.plugin.forceRefreshAllEditors();
+                this.plugin.forceRefreshAllReadingViews();
+                this.plugin.triggerActiveDocumentRerender();
+              }
+            }
+
             if (!changed) {
               if (currentColor && this.plugin.isValidHexColor(currentColor)) {
                 if (isTextPicker) textColorInput.value = currentColor;
@@ -392,6 +406,8 @@ export class EditEntryModal extends Modal {
           isTextPicker ? "text" : "background",
           displayText,
           false,
+          this.entry ? this.entry.markTarget : "text",
+          this.entry,
         );
         modal._hideHeaderControls = true;
         if (textColorInput.value)
@@ -403,6 +419,61 @@ export class EditEntryModal extends Modal {
 
     setupColorPickerRightClick(textColorInput, applyTextColorToEntry);
     setupColorPickerRightClick(bgColorInput, applyBgColorToEntry);
+
+    // --- markTarget select (Color Text / Color Line / Color Next Line) ---
+    const markTargetRow = rightColumn.createDiv();
+    markTargetRow.style.display = "flex";
+    markTargetRow.style.flexDirection = "column";
+    markTargetRow.style.gap = "2px";
+
+    // const markTargetLabel = markTargetRow.createEl("span", {
+    //   text: this.plugin.t("mark_target_label", "Apply to"),
+    // });
+    // markTargetLabel.style.fontSize = "0.8em";
+    // markTargetLabel.style.color = "var(--text-muted)";
+    // markTargetLabel.style.textAlign = "center";
+
+    const markTargetSelect = markTargetRow.createEl("select");
+    markTargetSelect.addClass("act-edit-entry-mark-target");
+    markTargetSelect.style.minWidth = "140px";
+    markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
+    markTargetSelect.style.borderRadius = "4px";
+    markTargetSelect.style.background = "var(--background-modifier-form-field)";
+    markTargetSelect.style.textAlign = "center";
+
+    [
+      ["text",      this.plugin.t("mark_target_text",       "Color Text")],
+      ["line",      this.plugin.t("mark_target_line",       "Color Line")],
+      ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+    ].forEach(([val, label]) => {
+      const opt = markTargetSelect.createEl("option", { text: label });
+      opt.value = val;
+    });
+
+    // Initialise from entry
+    markTargetSelect.value =
+      (this.entry && this.entry.markTarget) ? this.entry.markTarget : "text";
+
+    const markTargetFn = async () => {
+      if (this.entry) {
+        console.log(`[ACT-DEBUG] EditEntryModal: setting markTarget to ${markTargetSelect.value} for ${this.entry.pattern}`);
+        this.entry.markTarget = markTargetSelect.value;
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        this.plugin.triggerActiveDocumentRerender();
+      }
+    };
+
+    markTargetSelect.addEventListener("change", markTargetFn);
+    this._handlers.push({
+      el: markTargetSelect,
+      ev: "change",
+      fn: markTargetFn,
+    });
 
     // Add real-time syncing to this.entry when colors change
     textColorInput.addEventListener("input", applyTextColorToEntry);
@@ -1288,12 +1359,28 @@ export class EditEntryModal extends Modal {
       // Check if this is a new entry from pick modal and if anything was actually changed
       if (this.entry._isNewFromPickModal && this.entry._originalState) {
         const originalState = this.entry._originalState;
+
+        // Treat #000000 as "no color" when the original had no color set —
+        // this prevents saving a black entry when the user opened edit without
+        // picking a color first (browser color inputs default to #000000).
+        const noOriginalText = !originalState.color && !originalState.textColor;
+        const noOriginalBg   = !originalState.backgroundColor;
+        const effectiveText  = (noOriginalText && textColorVal === "#000000") ? "" : textColorVal;
+        const effectiveBg    = (noOriginalBg   && bgColorVal   === "#000000") ? "" : bgColorVal;
+
+        // If both effective colors are empty and the original had none, block save entirely
+        if (noOriginalText && noOriginalBg && !effectiveText && !effectiveBg) {
+          if (shouldClose) this.close();
+          return;
+        }
+
         const hasChanges =
           patternVal !== originalState.pattern ||
           st !== originalState.styleType ||
-          textColorVal !== originalState.color ||
-          bgColorVal !== originalState.backgroundColor ||
-          matchTypeVal !== originalState.matchType;
+          effectiveText !== (originalState.color || "") ||
+          effectiveBg !== (originalState.backgroundColor || "") ||
+          matchTypeVal !== originalState.matchType ||
+          markTargetSelect.value !== (originalState.markTarget || "text");
 
         // If no changes were made, just close the modal without saving
         if (!hasChanges) {
@@ -1371,6 +1458,7 @@ export class EditEntryModal extends Modal {
         // Save entry properties
         foundArray[foundIdx].matchType = matchTypeVal;
         foundArray[foundIdx].styleType = st;
+        foundArray[foundIdx].markTarget = markTargetSelect.value || "text";
 
         // Save color values based on style type
         if (st === "text") {
@@ -1478,6 +1566,7 @@ export class EditEntryModal extends Modal {
           isRegex: false,
           flags: "",
           styleType: st,
+          markTarget: markTargetSelect.value || "text",
           matchType: matchTypeVal,
           uid: this.entry.uid,
         };
@@ -1559,6 +1648,7 @@ export class EditEntryModal extends Modal {
 
         this.entry.matchType = matchTypeVal;
         this.entry.styleType = st;
+        this.entry.markTarget = markTargetSelect.value || "text";
 
         if (st === "text") {
           this.entry.color = textColorVal;

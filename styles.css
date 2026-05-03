@@ -375,6 +375,24 @@ div[contenteditable="true"]:focus {
   height: 40px;
 }
 
+/* ====== COLOR PICKER MODAL STYLING ====== */
+.act-color-picker-preview-wrap {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--button-radius, 8px);
+  margin-bottom: 16px;
+  padding: 10px;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
 /* ====== HIGHLIGHT STYLING MODAL CSS ====== */
 .act-highlight-top-row {
   display: flex;

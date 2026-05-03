@@ -122,27 +122,24 @@ export class CustomCssModal extends Modal {
 
     // 2. Preview wrap
     const previewWrap = contentEl.createDiv();
+    previewWrap.addClass('act-custom-css-preview-wrap');
     previewWrap.style.marginBottom = '12px';
     previewWrap.style.padding = '10px 12px';
     previewWrap.style.border = '1px solid var(--background-modifier-border)';
     previewWrap.style.borderRadius = 'var(--button-radius)';
     previewWrap.style.background = 'var(--background-modifier-form-field)';
-
-    const previewArea = previewWrap.createDiv();
-    previewArea.style.minHeight = '2.5em';
-    previewArea.style.display = 'flex';
-    previewArea.style.alignItems = 'center';
-    previewArea.style.justifyContent = 'center';
+    previewWrap.style.minHeight = '2.5em';
+    previewWrap.style.display = 'flex';
+    previewWrap.style.alignItems = 'center';
+    previewWrap.style.justifyContent = 'center';
 
     const sampleText = this.entry.isRegex
       ? (this.entry.presetLabel || this.entry.pattern || 'Sample Text')
       : (this.entry.pattern || 'Sample Text');
 
-    this._previewSpan = previewArea.createEl('span', { text: sampleText });
-    this._previewSpan.style.display = 'inline-block';
-    this._previewSpan.style.padding = '4px 8px';
-    this._previewSpan.style.minHeight = '1.5em';
-    this._previewSpan.style.borderRadius = 'var(--button-radius)';
+    this._previewSpan = previewWrap.createEl('span');
+    this._previewSpan.style.display = 'inline';
+    this._previewSpan.textContent = sampleText;
 
     // 3. CSS editor
     const textareaWrap = contentEl.createDiv();
@@ -185,10 +182,21 @@ export class CustomCssModal extends Modal {
     this._handlers.push({ el: this._textarea, ev: 'focus', fn: focusHandler });
     this._handlers.push({ el: this._textarea, ev: 'blur', fn: blurHandler });
 
-    // value shim: get/set via textContent
+    // value shim: get/set via textContent with newline preservation
     Object.defineProperty(this._textarea, 'value', {
-      get() { return this.textContent; },
-      set(v) { this.textContent = v; },
+      get() {
+        // Use innerText to get rendered text without HTML tags; <br> becomes \n automatically
+        return (this.innerText || '').replace(/\r\n/g, '\n');
+      },
+      set(v) {
+        // Convert newlines to <br> elements for proper display in contentEditable
+        const div = document.createElement('div');
+        v.split('\n').forEach((line, i) => {
+          if (i > 0) div.appendChild(document.createElement('br'));
+          div.appendChild(document.createTextNode(line));
+        });
+        this.innerHTML = div.innerHTML;
+      },
       configurable: true,
     });
 
@@ -284,10 +292,7 @@ export class CustomCssModal extends Modal {
 
     // Reset inline styles
     this._previewSpan.removeAttribute('style');
-    this._previewSpan.style.display = 'inline-block';
-    this._previewSpan.style.padding = '4px 8px';
-    this._previewSpan.style.minHeight = '1.5em';
-    this._previewSpan.style.borderRadius = 'var(--button-radius)';
+    this._previewSpan.style.display = 'inline';
 
     // Apply base text color
     const tc = (this.entry.textColor && this.entry.textColor !== 'currentColor')
@@ -297,11 +302,30 @@ export class CustomCssModal extends Modal {
     // Apply base background color (skip for text-only entries)
     const styleType = this.entry.styleType || (this.entry.backgroundColor ? 'highlight' : 'text');
     if (styleType !== 'text' && this.entry.backgroundColor) {
-      const opacity = this.entry.backgroundOpacity
-        ?? this.plugin.settings.backgroundOpacity
-        ?? 35;
-      const rgba = this.plugin.hexToRgba(this.entry.backgroundColor, opacity);
+      const p = this.plugin.getHighlightParams(this.entry);
+      const rgba = this.plugin.hexToRgba(this.entry.backgroundColor, p.opacity ?? 35);
+      const radius = p.radius ?? 4;
+      const hpad = p.hPad ?? 4;
+      const vpad = p.vPad ?? 0;
+
       this._previewSpan.style.setProperty('background-color', rgba, 'important');
+      this._previewSpan.style.setProperty('border-radius', `${radius}px`, 'important');
+      this._previewSpan.style.setProperty('padding', `${vpad}px ${hpad}px`, 'important');
+      this._previewSpan.style.setProperty('box-decoration-break', 'clone', 'important');
+      this._previewSpan.style.setProperty('-webkit-box-decoration-break', 'clone', 'important');
+
+      // Add border if enabled
+      if (this.entry.enableBorderThickness || this.plugin.settings.enableBorderThickness) {
+        const borderStyle = this.plugin.generateBorderStyle(tc, this.entry.backgroundColor, this.entry);
+        if (borderStyle) {
+          const parts = borderStyle.split(';').map(s => s.trim()).filter(Boolean);
+          for (const part of parts) {
+            const idx = part.indexOf(':');
+            if (idx === -1) continue;
+            this._previewSpan.style.setProperty(part.slice(0, idx).trim(), part.slice(idx + 1).trim(), 'important');
+          }
+        }
+      }
     }
 
     // Apply sanitized custom CSS on top (directly, bypassing enableCustomCss gate)

@@ -1,4 +1,4 @@
-﻿import { PluginSettingTab, Setting, Modal, Notice, setIcon, setTooltip, Menu, FuzzySuggestModal, normalizePath, debounce } from 'obsidian';
+import { PluginSettingTab, Setting, Modal, Notice, setIcon, setTooltip, Menu, FuzzySuggestModal, TFolder, normalizePath, debounce } from 'obsidian';
 import { PresetModal } from '../modals/PresetModal.js';
 import { RealTimeRegexTesterModal } from '../modals/RealTimeRegexTesterModal.js';
 import { HighlightStylingModal } from '../modals/HighlightStylingModal.js';
@@ -870,6 +870,9 @@ export class ColorSettingTab extends PluginSettingTab {
                   s.styleType = "text";
                   s._savedTextColor = tc;
                 }
+                if (result && result.markTarget) {
+                  s.markTarget = result.markTarget;
+                }
                 await this.plugin.saveSettings();
                 cp.value = tc;
                 styleSelect.value = s.styleType || "text";
@@ -880,6 +883,8 @@ export class ColorSettingTab extends PluginSettingTab {
             "text",
             displayText,
             false,
+            preExisting ? preExisting.markTarget : "text",
+            preExisting,
           );
           try {
             modal._preFillTextColor = preFillText || cp.value;
@@ -927,6 +932,9 @@ export class ColorSettingTab extends PluginSettingTab {
                 );
                 s.styleType = hasText ? "both" : "highlight";
                 s._savedBackgroundColor = bc;
+                if (result && result.markTarget) {
+                  s.markTarget = result.markTarget;
+                }
                 await this.plugin.saveSettings();
                 cpBg.value = bc;
                 styleSelect.value = s.styleType || "highlight";
@@ -937,6 +945,8 @@ export class ColorSettingTab extends PluginSettingTab {
             "background",
             displayText,
             false,
+            preExisting ? preExisting.markTarget : "text",
+            preExisting,
           );
           try {
             modal._preFillBgColor = preFillBg || cpBg.value;
@@ -8449,25 +8459,30 @@ export class ColorSettingTab extends PluginSettingTab {
         // Backup folder — button shows current folder name, click to change, reset button to clear
         const folderSetting = new Setting(containerEl)
           .setName(this.plugin.t("auto_backup_folder", "Backup folder"))
-          .setDesc(this.plugin.t("auto_backup_folder_desc", "Folder path inside your vault where backups are saved (e.g. backups/act)."));
+          .setDesc(this.plugin.t("auto_backup_folder_desc", "Folder path inside your vault where backups are saved."));
 
         let folderPickBtn;
         folderSetting.addButton((btn) => {
           folderPickBtn = btn;
           const cur = (this.plugin.settings.autoBackupFolder || "").trim();
           btn.setButtonText(cur || this.plugin.t("auto_backup_folder_pick", "Choose folder"));
-          btn.buttonEl.addEventListener("click", async () => {
-            const prev = (this.plugin.settings.autoBackupFolder || "").trim();
-            const input = window.prompt(
-              this.plugin.t("auto_backup_folder_prompt", "Enter a vault-relative folder path (e.g. backups/act):"),
-              prev,
+          btn.buttonEl.addEventListener("click", () => {
+            const folders = this.plugin.app.vault
+              .getAllLoadedFiles()
+              .filter((f) => f instanceof TFolder)
+              .map((f) => f.path)
+              .sort();
+            const modal = new FolderPickerModal(
+              this.plugin.app,
+              folders,
+              async (val) => {
+                this.plugin.settings.autoBackupFolder = val;
+                await this.plugin.saveSettings();
+                btn.setButtonText(val || this.plugin.t("auto_backup_folder_pick", "Choose folder"));
+              },
             );
-            if (input !== null) {
-              const val = input.trim();
-              this.plugin.settings.autoBackupFolder = val;
-              await this.plugin.saveSettings();
-              btn.setButtonText(val || this.plugin.t("auto_backup_folder_pick", "Choose folder"));
-            }
+            modal.setPlaceholder(this.plugin.t("auto_backup_folder_prompt", "Select backup folder..."));
+            modal.open();
           });
         });
 
@@ -8714,5 +8729,25 @@ export class ColorSettingTab extends PluginSettingTab {
     } catch (e) {
       debugError("FOCUS_TEXTBG", "Failed to focus text bg entry", e);
     }
+  }
+}
+
+class FolderPickerModal extends FuzzySuggestModal {
+  constructor(app, folders, onChoose) {
+    super(app);
+    this.folders = folders;
+    this.onChoose = onChoose;
+  }
+
+  getItems() {
+    return this.folders;
+  }
+
+  getItemText(item) {
+    return item;
+  }
+
+  onChooseItem(item) {
+    Promise.resolve(this.onChoose(item));
   }
 }
