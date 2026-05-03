@@ -30,13 +30,19 @@ export class BloomFilter {
     let base = p;
     if (isRegex) {
       // Improved literal extraction: find sequences of characters that are likely literal
+      // We skip single characters that are common regex meta-characters preceded by a backslash
       const literals = p.match(/[a-z0-9\u4e00-\u9fa5]{1,}/gi);
       if (literals && literals.length > 0) {
-        for (const lit of literals) {
-          // Skip common regex meta-characters if they are escaped
-          if (lit.length === 1 && /[bdswrtn]/.test(lit)) {
-            const idx = p.indexOf("\\" + lit);
-            if (idx !== -1) continue;
+        for (let i = 0; i < literals.length; i++) {
+          const lit = literals[i];
+          
+          // If it's a single character, check if THIS specific occurrence is escaped
+          if (lit.length === 1 && /[bdswDWSWrtn]/.test(lit)) {
+            // Find the position of this literal in the original pattern
+            // This is a bit complex due to multiple occurrences, but we can approximate
+            // by checking if any occurrence is NOT escaped.
+            const regex = new RegExp("(?<!\\\\)" + lit, "i");
+            if (!regex.test(p)) continue;
           }
           this._addLiteralToBase(lit);
         }

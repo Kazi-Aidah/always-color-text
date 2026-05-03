@@ -268,6 +268,12 @@ module.exports = {
   "color_swatches_header": "Color Management",
   "color_picker_layout": "Color Picker Layout",
   "color_picker_layout_desc": "Choose which color types to show when picking colors for text",
+  "opt_both_text_left": "Both: Text Left, Highlight Right",
+  "opt_both_bg_left": "Both: Highlight Left, Text Right",
+  "opt_both_text_top": "Both (Vertical): Text Top, Highlight Bottom",
+  "opt_both_bg_top": "Both (Vertical): Highlight Top, Text Bottom",
+  "opt_text_only": "Text Color Only",
+  "opt_background_only": "Highlight Color Only",
   "enable_custom_swatches": "Enable custom swatches",
   "enable_custom_swatches_desc": "Turn this on if you want to pick your own colors for the color picker.",
   "replace_default_swatches": "Replace default swatches",
@@ -276,6 +282,8 @@ module.exports = {
   "use_swatch_names_desc": "If enabled, the text will be colored using the name of the swatch (e.g., 'Red') instead of the hex code.",
   "link_swatch_updates": "Link swatch updates to text colors",
   "link_swatch_updates_desc": "If enabled, updating a swatch color will update all text colored with that swatch.",
+  "link_swatches_to_entries": "Link swatch updates to colored texts",
+  "link_swatches_to_entries_desc": "When a custom swatch's color changes, update all entries using that swatch",
   "default_colors_header": "Default Swatches",
   "custom_swatches_header": "Custom Swatches",
   "btn_add_color": "+ Add Color",
@@ -296,6 +304,7 @@ module.exports = {
   "settings_tab_data": "Data",
   
   // Always Colored Texts
+  "always_colored_texts_header": "Always Colored Texts",
   "colored_texts_header": "Colored Texts",
   "always_colored_texts_desc": "This is where you manage your words/patterns and their colors.",
   "grouped_entries_header": "Grouped Entries",
@@ -559,5 +568,44 @@ module.exports = {
   "btn_delete_entry": "Delete Entry",
   "edit_group_highlight_styling": "Edit Group Highlight Styling",
   "light_mode_fixer_desc": "Automatically darkens colored text when using Light theme to improve visibility.",
-  "dark_mode_fixer_desc": "Automatically lightens colored text when using Dark theme to improve visibility."
+  "dark_mode_fixer_desc": "Automatically lightens colored text when using Dark theme to improve visibility.",
+
+  // Automatic Backups
+  "auto_backup_header": "Automatic Backups",
+  "auto_backup_toggle": "Enable automatic backups",
+  "auto_backup_toggle_desc": "Periodically back up all plugin data to a folder inside your vault.",
+  "auto_backup_folder": "Backup folder",
+  "auto_backup_folder_desc": "Folder path inside your vault where backups are saved.",
+  "auto_backup_folder_pick": "Choose folder",
+  "auto_backup_folder_prompt": "Select backup folder...",
+  "auto_backup_folder_reset": "Reset to default",
+  "auto_backup_interval": "Backup interval",
+  "auto_backup_interval_desc": "How often to save a backup.",
+  "auto_backup_unit_hour": "Hour(s)",
+  "auto_backup_unit_day": "Day(s)",
+  "auto_backup_unit_week": "Week(s)",
+  "auto_backup_overwrite": "Overwrite previous backup",
+  "auto_backup_overwrite_desc": "Replace the last backup file instead of creating a new one each time.",
+  "auto_backup_now": "Backup now",
+  "auto_backup_now_desc": "Save a backup immediately.",
+  "btn_backup_now": "Backup now",
+  "btn_backup_now_running": "Saving...",
+  "btn_backup_now_done": "Saved!",
+  "btn_backup_now_failed": "Failed",
+
+  // Custom CSS
+  "custom_css_header": "Custom CSS",
+  "enable_custom_css": "Enable custom CSS for text styling",
+  "enable_custom_css_desc": "Add per-entry CSS via the 'Edit Custom CSS' button in entry and group editors.",
+  "edit_custom_css_btn": "Edit Custom CSS",
+
+  // Color Text/Line/Child
+  "mark_target_text": "Color Text",
+  "mark_target_line": "Color Line",
+  "mark_target_child_line": "Color Child",
+  "mark_target_label": "Apply to",
+
+  // Group Select & Commands
+  "no_group": "No Group",
+  "command_color_text_for_file": "Color Selected Text for Current File"
 };

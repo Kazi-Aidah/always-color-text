@@ -13,6 +13,12 @@ module.exports = {
   "language_fr": "Français",
   "language_eu": "Baskisch",
   "language_ru": "Russisch",
+  "language_de": "Deutsch",
+  "language_hi": "Hindi",
+  "language_bn": "Bengalisch",
+  "language_it": "Italienisch",
+  "language_zh_cn": "Vereinfachtes Chinesisch",
+  "language_ar": "Arabisch",
   "language_auto": "Systemstandard",
   "default": "Standard",
   
@@ -262,6 +268,12 @@ module.exports = {
   "color_swatches_header": "Farbverwaltung",
   "color_picker_layout": "Farbwähler-Layout",
   "color_picker_layout_desc": "Wählen Sie, welche Farbtypen beim Auswählen von Farben für Text angezeigt werden sollen",
+  "opt_both_text_left": "Beides: Text Links, Hervorhebung Rechts",
+  "opt_both_bg_left": "Beides: Hervorhebung Links, Text Rechts",
+  "opt_both_text_top": "Beides (Vertikal): Text Oben, Hervorhebung Unten",
+  "opt_both_bg_top": "Beides (Vertikal): Hervorhebung Oben, Text Unten",
+  "opt_text_only": "Nur Textfarbe",
+  "opt_background_only": "Nur Hervorhebungsfarbe",
   "enable_custom_swatches": "Benutzerdefinierte Farbfelder aktivieren",
   "enable_custom_swatches_desc": "Aktivieren Sie dies, wenn Sie Ihre eigenen Farben für den Farbwähler auswählen möchten.",
   "replace_default_swatches": "Standard-Farbfelder ersetzen",
@@ -270,6 +282,8 @@ module.exports = {
   "use_swatch_names_desc": "Wenn aktiviert, wird der Text unter Verwendung des Namens des Farbfelds (z.B. 'Rot') anstelle des Hex-Codes gefärbt.",
   "link_swatch_updates": "Farbfeldaktualisierungen mit Textfarben verknüpfen",
   "link_swatch_updates_desc": "Wenn aktiviert, aktualisiert eine Änderung der Farbfeldfarbe alle mit diesem Farbfeld gefärbten Texte.",
+  "link_swatches_to_entries": "Farbfeldaktualisierungen mit gefärbten Texten verknüpfen",
+  "link_swatches_to_entries_desc": "Wenn sich die Farbe eines benutzerdefinierten Farbfelds ändert, werden alle Einträge aktualisiert, die dieses Farbfeld verwenden",
   "default_colors_header": "Standard-Farbfelder",
   "custom_swatches_header": "Benutzerdefinierte Farbfelder",
   "btn_add_color": "+ Farbe hinzufügen",
@@ -290,6 +304,7 @@ module.exports = {
   "settings_tab_data": "Daten",
   
   // Always Colored Texts
+  "always_colored_texts_header": "Immer gefärbte Texte",
   "colored_texts_header": "Gefärbte Texte",
   "always_colored_texts_desc": "Hier verwalten Sie Ihre Wörter/Muster und deren Farben.",
   "grouped_entries_header": "Gruppierte Einträge",
@@ -440,6 +455,7 @@ module.exports = {
   "label_disable_in": "Deaktivieren in",
   "enter_path_or_pattern": "Pfad, Muster oder Tags eingeben",
   "label_regex": "Regex",
+  "label_regex_name": "Regex-Name",
   
   // Advanced Rules
   "advanced_rules_header": "Spezifische Einschluss-/Ausschlussregeln",
@@ -552,5 +568,44 @@ module.exports = {
   "btn_delete_entry": "Eintrag löschen",
   "edit_group_highlight_styling": "Gruppen-Hervorhebungsstyling bearbeiten",
   "light_mode_fixer_desc": "Dunkelt gefärbten Text automatisch ab, wenn das helle Design verwendet wird, um die Lesbarkeit zu verbessern.",
-  "dark_mode_fixer_desc": "Hellt gefärbten Text automatisch auf, wenn das dunkle Design verwendet wird, um die Lesbarkeit zu verbessern."
+  "dark_mode_fixer_desc": "Hellt gefärbten Text automatisch auf, wenn das dunkle Design verwendet wird, um die Lesbarkeit zu verbessern.",
+
+  // Automatic Backups
+  "auto_backup_header": "Automatische Sicherungen",
+  "auto_backup_toggle": "Automatische Sicherungen aktivieren",
+  "auto_backup_toggle_desc": "Alle Plugin-Daten regelmäßig in einem Ordner im Tresor sichern.",
+  "auto_backup_folder": "Sicherungsordner",
+  "auto_backup_folder_desc": "Ordnerpfad im Tresor, in dem Sicherungen gespeichert werden.",
+  "auto_backup_folder_pick": "Ordner wählen",
+  "auto_backup_folder_prompt": "Sicherungsordner auswählen...",
+  "auto_backup_folder_reset": "Auf Standard zurücksetzen",
+  "auto_backup_interval": "Sicherungsintervall",
+  "auto_backup_interval_desc": "Wie oft eine Sicherung gespeichert werden soll.",
+  "auto_backup_unit_hour": "Stunde(n)",
+  "auto_backup_unit_day": "Tag(e)",
+  "auto_backup_unit_week": "Woche(n)",
+  "auto_backup_overwrite": "Vorherige Sicherung überschreiben",
+  "auto_backup_overwrite_desc": "Die letzte Sicherungsdatei ersetzen, anstatt jedes Mal eine neue zu erstellen.",
+  "auto_backup_now": "Jetzt sichern",
+  "auto_backup_now_desc": "Sofort eine Sicherung speichern.",
+  "btn_backup_now": "Jetzt sichern",
+  "btn_backup_now_running": "Wird gespeichert...",
+  "btn_backup_now_done": "Gespeichert!",
+  "btn_backup_now_failed": "Fehlgeschlagen",
+
+  // Custom CSS
+  "custom_css_header": "Benutzerdefiniertes CSS",
+  "enable_custom_css": "Benutzerdefiniertes CSS für Textstile aktivieren",
+  "enable_custom_css_desc": "CSS pro Eintrag über die Schaltfläche 'Benutzerdefiniertes CSS bearbeiten' in Eintrags- und Gruppenbearbeitern hinzufügen.",
+  "edit_custom_css_btn": "Benutzerdefiniertes CSS bearbeiten",
+
+  // Color Text/Line/Child
+  "mark_target_text": "Text färben",
+  "mark_target_line": "Zeile färben",
+  "mark_target_child_line": "Untergeordnetes färben",
+  "mark_target_label": "Anwenden auf",
+
+  // Group Select & Commands
+  "no_group": "Keine Gruppe",
+  "command_color_text_for_file": "Ausgewählten Text für aktuelle Datei färben"
 };

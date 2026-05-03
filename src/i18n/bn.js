@@ -13,6 +13,12 @@ module.exports = {
   "language_fr": "ফ্রেঞ্চ",
   "language_eu": "বাস্ক",
   "language_ru": "রাশিয়ান",
+  "language_de": "জার্মান",
+  "language_hi": "হিন্দি",
+  "language_bn": "বাংলা",
+  "language_it": "ইতালিয়ান",
+  "language_zh_cn": "সরলীকৃত চীনা",
+  "language_ar": "আরবি",
   "language_auto": "সিস্টেম ডিফল্ট",
   "default": "ডিফল্ট",
   
@@ -146,6 +152,8 @@ module.exports = {
   "confirm_delete_all_groups_desc": "আপনি কি নিশ্চিত যে আপনি সব শব্দ গ্রুপ মুছতে চান? আপনি এটি পূর্বাবস্থায় ফিরিয়ে আনতে পারবেন না!",
   "restart_required_title": "রিস্টার্ট প্রয়োজন",
   "restart_required_desc": "কমান্ড প্যালেট টগল অক্ষম করতে প্যালেট থেকে কমান্ডগুলি সম্পূর্ণভাবে সরানোর জন্য অবসিডিয়ান রিস্টার্ট করতে হবে। এখনই রিস্টার্ট করবেন?",
+  "btn_cancel": "বাতিল",
+  "btn_confirm": "নিশ্চিত করুন",
   
   // Basic Settings
   "enable_document_color": "ডকুমেন্ট রঙ সক্ষম করুন",
@@ -169,6 +177,7 @@ module.exports = {
   "regex_support_desc": "প্যাটার্নগুলিকে রেগুলার এক্সপ্রেশন হতে অনুমতি দিন। নিরাপত্তার জন্য অবৈধ রেগেক্স উপেক্ষা করা হয়।",
   "disable_regex_safety": "রেগেক্স নিরাপত্তা অক্ষম করুন",
   "disable_regex_safety_desc": "জটিল বা সম্ভাব্য বিপজ্জনক এক্সপ্রেশন অনুমতি দিন। পারফরম্যান্স ইস্যু বা ফ্রিজ হতে পারে।",
+  "requires_regex_safety_disabled": "রেজেক্স নিরাপত্তা অক্ষম করা প্রয়োজন",
   "case_sensitive": "কেস সেন্সিটিভ",
   "case_sensitive_desc": "এটি চালু থাকলে, \"word\" এবং \"Word\" আলাদা হিসেবে বিবেচিত হবে। বন্ধ থাকলে, তারা একইভাবে রঙ করা হবে।",
   "partial_match": "আংশিক ম্যাচ",
@@ -268,6 +277,8 @@ module.exports = {
   "use_swatch_names_desc": "শব্দ/প্যাটার্ন ইনপুটের পাশে সোয়াচ নামের ড্রপডাউন দেখান",
   "link_swatches_to_entries": "সোয়াচ আপডেটকে টেক্সট রঙের সাথে লিংক করুন",
   "link_swatches_to_entries_desc": "কাস্টম সোয়াচের রঙ পরিবর্তন হলে, সেই রঙ ব্যবহার করা সব এন্ট্রি আপডেট করুন",
+  "link_swatch_updates": "সোয়াচ আপডেটকে টেক্সট রঙের সাথে লিংক করুন",
+  "link_swatch_updates_desc": "সক্ষম থাকলে, সোয়াচ রঙ আপডেট করলে সেই সোয়াচ দিয়ে রঙ করা সব টেক্সট আপডেট হবে।",
   "default_colors_header": "ডিফল্ট সোয়াচ",
   "custom_swatches_header": "কাস্টম সোয়াচগুলি",
   "btn_add_color": "+ রঙ যোগ করুন",
@@ -295,10 +306,13 @@ module.exports = {
   "grouped_entries_desc": "শব্দ গ্রুপগুলিকে পরিচালনা করুন। অনুসন্ধান নাম দ্বারা ফিল্টার করে।",
   "search_groups_placeholder": "গ্রুপ অনুসন্ধান করুন…",
   "edit_word_group_modal_title": "শব্দ গ্রুপ সম্পাদনা",
+  "group_name_placeholder": "আপনার গ্রুপের নাম দিন",
   "btn_save_group": "গ্রুপ সংরক্ষণ করুন",
   "btn_delete_group": "গ্রুপ মুছুন",
   "group_active_label": "সক্রিয়",
   "group_inactive_label": "নিষ্ক্রিয়",
+  "confirm_delete_group_title": "গ্রুপ মুছুন",
+  "confirm_delete_group_desc": "আপনি কি নিশ্চিত যে আপনি এই গ্রুপটি মুছতে চান? এটি পূর্বাবস্থায় ফিরিয়ে আনা যাবে না।",
   "tooltip_duplicate_group": "গ্রুপ ডুপ্লিকেট করুন",
   "tooltip_edit_group_settings": "গ্রুপ সেটিংস সম্পাদনা করুন",
   "tooltip_delete_all_groups": "সব শব্দ গ্রুপ মুছে ফেলুন",
@@ -331,6 +345,7 @@ module.exports = {
   // Presets
   "btn_presets": "প্রিসেটগুলি",
   "preset_all_headings": "সব শিরোনাম (H1-H6)",
+  "preset_headings_h3": "শিরোনাম (H3)",
   "preset_bullet_points": "বুলেট পয়েন্টগুলি",
   "preset_numbered_lists": "সংখ্যায়িত তালিকাগুলি",
   "preset_task_checked": "টাস্ক লিস্ট (চেক করা)",
@@ -367,6 +382,7 @@ module.exports = {
 
   // Preset Examples
   "preset_example_heading": "# শিরোনাম",
+  "preset_example_heading_h3": "### শিরোনাম",
   "preset_example_bullet": "- পয়েন্ট",
   "preset_example_numbered": "1. প্রথম আইটেম",
   "preset_example_task_checked": "- [x] সম্পন্ন",
@@ -552,5 +568,44 @@ module.exports = {
   "preset_bold_italic": "বোল্ড ইটালিক",
   "theme_support_header": "থিম সমর্থন",
   "matching_behavior_header": "ম্যাচিং আচরণ",
-  "color_rendering_header": "রঙ রেন্ডারিং এবং কর্মক্ষমতা"
+  "color_rendering_header": "রঙ রেন্ডারিং এবং কর্মক্ষমতা",
+
+  // Automatic Backups
+  "auto_backup_header": "স্বয়ংক্রিয় ব্যাকআপ",
+  "auto_backup_toggle": "স্বয়ংক্রিয় ব্যাকআপ সক্ষম করুন",
+  "auto_backup_toggle_desc": "আপনার ভল্টের ভেতরে একটি ফোল্ডারে সমস্ত প্লাগইন ডেটা পর্যায়ক্রমে ব্যাকআপ করুন।",
+  "auto_backup_folder": "ব্যাকআপ ফোল্ডার",
+  "auto_backup_folder_desc": "আপনার ভল্টের ভেতরে ফোল্ডার পাথ যেখানে ব্যাকআপ সংরক্ষিত হয়।",
+  "auto_backup_folder_pick": "ফোল্ডার বেছে নিন",
+  "auto_backup_folder_prompt": "ব্যাকআপ ফোল্ডার নির্বাচন করুন...",
+  "auto_backup_folder_reset": "ডিফল্টে রিসেট করুন",
+  "auto_backup_interval": "ব্যাকআপ ব্যবধান",
+  "auto_backup_interval_desc": "কত ঘন ঘন ব্যাকআপ সংরক্ষণ করতে হবে।",
+  "auto_backup_unit_hour": "ঘণ্টা",
+  "auto_backup_unit_day": "দিন",
+  "auto_backup_unit_week": "সপ্তাহ",
+  "auto_backup_overwrite": "পূর্ববর্তী ব্যাকআপ ওভাররাইট করুন",
+  "auto_backup_overwrite_desc": "প্রতিবার নতুন তৈরি করার পরিবর্তে শেষ ব্যাকআপ ফাইলটি প্রতিস্থাপন করুন।",
+  "auto_backup_now": "এখনই ব্যাকআপ করুন",
+  "auto_backup_now_desc": "অবিলম্বে একটি ব্যাকআপ সংরক্ষণ করুন।",
+  "btn_backup_now": "এখনই ব্যাকআপ করুন",
+  "btn_backup_now_running": "সংরক্ষণ হচ্ছে...",
+  "btn_backup_now_done": "সংরক্ষিত!",
+  "btn_backup_now_failed": "ব্যর্থ",
+
+  // Custom CSS
+  "custom_css_header": "কাস্টম CSS",
+  "enable_custom_css": "টেক্সট স্টাইলিংয়ের জন্য কাস্টম CSS সক্ষম করুন",
+  "enable_custom_css_desc": "এন্ট্রি এবং গ্রুপ এডিটরে 'কাস্টম CSS সম্পাদনা করুন' বোতামের মাধ্যমে প্রতি-এন্ট্রি CSS যোগ করুন।",
+  "edit_custom_css_btn": "কাস্টম CSS সম্পাদনা করুন",
+
+  // Color Text/Line/Child
+  "mark_target_text": "টেক্সট রঙ করুন",
+  "mark_target_line": "লাইন রঙ করুন",
+  "mark_target_child_line": "চাইল্ড রঙ করুন",
+  "mark_target_label": "প্রয়োগ করুন",
+
+  // Group Select & Commands
+  "no_group": "কোনো গ্রুপ নেই",
+  "command_color_text_for_file": "বর্তমান ফাইলের জন্য নির্বাচিত টেক্সট রঙ করুন"
 };

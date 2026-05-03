@@ -13,6 +13,12 @@ module.exports = {
   "language_fr": "法语",
   "language_eu": "巴斯克语",
   "language_ru": "俄语",
+  "language_de": "德语",
+  "language_hi": "印地语",
+  "language_bn": "孟加拉语",
+  "language_it": "意大利语",
+  "language_zh_cn": "简体中文",
+  "language_ar": "阿拉伯语",
   "language_auto": "系统默认",
   "default": "默认",
   
@@ -270,6 +276,8 @@ module.exports = {
   "use_swatch_names_desc": "在单词/模式输入旁边显示色板名称下拉列表",
   "link_swatches_to_entries": "将色板更新链接到着色文本",
   "link_swatches_to_entries_desc": "当自定义色板的颜色更改时，更新所有使用该色板的条目",
+  "link_swatch_updates": "将色板更新链接到文本颜色",
+  "link_swatch_updates_desc": "如果启用，更新色板颜色将更新所有使用该色板着色的文本。",
   "default_colors_header": "默认色板",
   "custom_swatches_header": "自定义色板",
   "btn_add_color": "+ 添加颜色",
@@ -297,10 +305,13 @@ module.exports = {
   "grouped_entries_desc": "管理词组。搜索按名称筛选。",
   "search_groups_placeholder": "搜索分组…",
   "edit_word_group_modal_title": "编辑词组",
+  "group_name_placeholder": "为您的组命名",
   "btn_save_group": "保存组",
   "btn_delete_group": "删除组",
   "group_active_label": "启用",
   "group_inactive_label": "停用",
+  "confirm_delete_group_title": "删除组",
+  "confirm_delete_group_desc": "确定要删除此组吗？此操作无法撤销。",
   "tooltip_duplicate_group": "复制组",
   "tooltip_edit_group_settings": "编辑组设置",
   "tooltip_delete_all_groups": "删除所有词组",
@@ -333,6 +344,7 @@ module.exports = {
   // Presets
   "btn_presets": "预设",
   "preset_all_headings": "所有标题 (H1-H6)",
+  "preset_headings_h3": "标题 (H3)",
   "preset_bullet_points": "项目符号",
   "preset_numbered_lists": "编号列表",
   "preset_task_checked": "任务列表（已选）",
@@ -369,6 +381,7 @@ module.exports = {
 
   // Preset Examples
   "preset_example_heading": "# 标题",
+  "preset_example_heading_h3": "### 标题",
   "preset_example_bullet": "- 列表项",
   "preset_example_numbered": "1. 第一项",
   "preset_example_task_checked": "- [x] 已完成",
@@ -437,6 +450,7 @@ module.exports = {
   "label_disable_in": "禁用范围",
   "enter_path_or_pattern": "输入路径、模式或标签",
   "label_regex": "正则表达式",
+  "label_regex_name": "正则表达式名称",
   
   // Advanced Rules
   "advanced_rules_header": "特定包含/排除规则",
@@ -555,5 +569,44 @@ module.exports = {
   "dark_mode_fixer_desc": "使用深色主题时自动变浅彩色文本以提高可见性。",
   "preset_bold": "粗体",
   "preset_italic": "斜体",
-  "preset_bold_italic": "粗斜体"
+  "preset_bold_italic": "粗斜体",
+
+  // Automatic Backups
+  "auto_backup_header": "自动备份",
+  "auto_backup_toggle": "启用自动备份",
+  "auto_backup_toggle_desc": "定期将所有插件数据备份到库内的文件夹。",
+  "auto_backup_folder": "备份文件夹",
+  "auto_backup_folder_desc": "库内保存备份的文件夹路径。",
+  "auto_backup_folder_pick": "选择文件夹",
+  "auto_backup_folder_prompt": "选择备份文件夹...",
+  "auto_backup_folder_reset": "重置为默认",
+  "auto_backup_interval": "备份间隔",
+  "auto_backup_interval_desc": "备份保存的频率。",
+  "auto_backup_unit_hour": "小时",
+  "auto_backup_unit_day": "天",
+  "auto_backup_unit_week": "周",
+  "auto_backup_overwrite": "覆盖上一个备份",
+  "auto_backup_overwrite_desc": "替换最后一个备份文件，而不是每次创建新文件。",
+  "auto_backup_now": "立即备份",
+  "auto_backup_now_desc": "立即保存备份。",
+  "btn_backup_now": "立即备份",
+  "btn_backup_now_running": "保存中...",
+  "btn_backup_now_done": "已保存！",
+  "btn_backup_now_failed": "失败",
+
+  // Custom CSS
+  "custom_css_header": "自定义 CSS",
+  "enable_custom_css": "启用文本样式的自定义 CSS",
+  "enable_custom_css_desc": "通过条目和组编辑器中的'编辑自定义 CSS'按钮为每个条目添加 CSS。",
+  "edit_custom_css_btn": "编辑自定义 CSS",
+
+  // Color Text/Line/Child
+  "mark_target_text": "着色文本",
+  "mark_target_line": "着色行",
+  "mark_target_child_line": "着色子项",
+  "mark_target_label": "应用于",
+
+  // Group Select & Commands
+  "no_group": "无分组",
+  "command_color_text_for_file": "为当前文件着色选中文本"
 };

@@ -454,6 +454,8 @@ export function compileWordEntriesLogic(plugin) {
               copy.borderThickness = group.borderThickness;
             copy._groupUid = group.uid || null;
             copy._groupRef = group;
+            // Inherit group-level customCss only if the entry doesn't have its own
+            if (group.customCss && !copy.customCss) copy.customCss = group.customCss;
             copy.groupEnableFolders = Array.isArray(group.enableFolders)
               ? group.enableFolders.slice()
               : [];
@@ -763,6 +765,8 @@ export function compileTextBgColoringEntriesLogic(plugin) {
               copy.borderThickness = group.borderThickness;
             copy._groupUid = group.uid || null;
             copy._groupRef = group;
+            // Inherit group-level customCss only if the entry doesn't have its own
+            if (group.customCss && !copy.customCss) copy.customCss = group.customCss;
             copy.groupEnableFolders = Array.isArray(group.enableFolders)
               ? group.enableFolders.slice()
               : [];

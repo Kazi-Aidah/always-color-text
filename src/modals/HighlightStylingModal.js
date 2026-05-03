@@ -1,6 +1,7 @@
 import { Modal, setIcon } from 'obsidian';
 import { escapeHtml } from '../utils/debug.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
+import { deriveHighlightCssFromEntry, parseCssIntoEntry, patchCssLayoutFromEntry } from './CustomCssModal.js';
 
 export class HighlightStylingModal extends Modal {
   constructor(
@@ -39,6 +40,12 @@ export class HighlightStylingModal extends Modal {
 
     const isGroup = this.entry && Array.isArray(this.entry.entries);
 
+    // If the entry has customCss, parse it into structured fields first so
+    // sliders/inputs below read the correct values (makes CSS ↔ UI interchangeable)
+    if (this.entry && this.entry.customCss && !isGroup) {
+      try { parseCssIntoEntry(this.entry.customCss, this.entry, this.plugin); } catch (_) {}
+    }
+
     // Header Row with Selects
     const headerRow = contentEl.createDiv();
     headerRow.style.display = "flex";
@@ -71,7 +78,7 @@ export class HighlightStylingModal extends Modal {
       groupSelect.style.background = "var(--background-modifier-form-field)";
       groupSelect.style.textAlign = "center";
       const defaultOpt = groupSelect.createEl("option", {
-        text: this.plugin.t("default"),
+        text: this.plugin.t("no_group", "No Group"),
       });
       defaultOpt.value = "";
       const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups)
@@ -765,10 +772,18 @@ export class HighlightStylingModal extends Modal {
       // Clear out the span's content before adding text to avoid doubling up
       span.textContent = "";
       span.textContent = displayText;
-      // Apply custom CSS on top if present
+      // Apply custom CSS on top if present — use current picker colors, not stored entry colors
       if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
         try {
-          const decl = this.plugin.sanitizeCssDeclarations(this.entry.customCss);
+          // Build a temporary patched CSS using the current picker values so the
+          // preview reflects the color the user is currently hovering over
+          const tempEntry = Object.assign({}, this.entry, {
+            color: style === 'text' ? t : '',
+            textColor: (style === 'both') ? t : (style === 'highlight' ? 'currentColor' : null),
+            backgroundColor: (style === 'highlight' || style === 'both') ? b : null,
+          });
+          const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
+          const decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
           if (decl) {
             decl.split(";").map(s => s.trim()).filter(Boolean).forEach(p => {
               const idx = p.indexOf(":");
@@ -1208,6 +1223,17 @@ export class HighlightStylingModal extends Modal {
           foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
           foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
           foundArray[foundIdx].borderThickness = this.entry.borderThickness;
+          // If entry has customCss, patch only the color/layout properties that
+          // HighlightStylingModal controls — preserve any user-added custom properties
+          if (this.entry.customCss) {
+            try { this.plugin.syncEntryCssFromColors(this.entry); } catch (_) {}
+            // Also patch padding/radius/border from the updated structured fields
+            try {
+              const patched = patchCssLayoutFromEntry(this.entry.customCss, this.entry, this.plugin);
+              this.entry.customCss = patched;
+            } catch (_) {}
+            foundArray[foundIdx].customCss = this.entry.customCss;
+          }
         }
 
         await this.plugin.saveSettings();

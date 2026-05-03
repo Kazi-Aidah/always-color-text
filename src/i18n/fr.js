@@ -13,6 +13,12 @@ module.exports = {
   "language_fr": "Français",
   "language_eu": "Basque",
   "language_ru": "Russe",
+  "language_de": "Allemand",
+  "language_hi": "Hindi",
+  "language_bn": "Bengali",
+  "language_it": "Italien",
+  "language_zh_cn": "Chinois simplifié",
+  "language_ar": "Arabe",
   "language_auto": "Par défaut du système",
   "default": "Par défaut",
   
@@ -270,6 +276,8 @@ module.exports = {
   "use_swatch_names_desc": "Afficher une liste déroulante des noms de nuanciers à côté de l'entrée mot/motif",
   "link_swatches_to_entries": "Lier les mises à jour des nuanciers aux textes colorés",
   "link_swatches_to_entries_desc": "Mettre à jour toutes les entrées utilisant un nuancier personnalisé lorsque la couleur de ce nuancier change",
+  "link_swatch_updates": "Lier les mises à jour des nuanciers aux couleurs du texte",
+  "link_swatch_updates_desc": "Si activé, la mise à jour d'une couleur de nuancier mettra à jour tous les textes colorés avec ce nuancier.",
   "default_colors_header": "Nuanciers par défaut",
   "custom_swatches_header": "Nuanciers personnalisés",
   "btn_add_color": "+ Ajouter une couleur",
@@ -290,16 +298,20 @@ module.exports = {
   "settings_tab_data": "Données",
   
   // Always Colored Texts
+  "always_colored_texts_header": "Textes toujours colorés",
   "colored_texts_header": "Textes colorés",
   "always_colored_texts_desc": "C'est ici que vous gérez vos mots/motifs et leurs couleurs.",
   "grouped_entries_header": "Entrées groupées",
   "grouped_entries_desc": "Gérez des groupes de mots. La recherche filtre par nom.",
   "search_groups_placeholder": "Rechercher des groupes…",
   "edit_word_group_modal_title": "Modifier le groupe de mots",
+  "group_name_placeholder": "Nommez votre groupe",
   "btn_save_group": "Enregistrer le groupe",
   "btn_delete_group": "Supprimer le groupe",
   "group_active_label": "Actif",
   "group_inactive_label": "Inactif",
+  "confirm_delete_group_title": "Supprimer le groupe",
+  "confirm_delete_group_desc": "Êtes-vous sûr de vouloir supprimer ce groupe ? Cela ne peut pas être annulé.",
   "tooltip_duplicate_group": "Dupliquer le groupe",
   "tooltip_edit_group_settings": "Modifier les paramètres du groupe",
   "tooltip_delete_all_groups": "Supprimer tous les groupes de mots",
@@ -332,6 +344,7 @@ module.exports = {
   // Presets
   "btn_presets": "Préréglages",
   "preset_all_headings": "Tous les titres (H1-H6)",
+  "preset_headings_h3": "Titres (H3)",
   "preset_bullet_points": "Puces",
   "preset_numbered_lists": "Listes numérotées",
   "preset_task_checked": "Listes de tâches (Cochées)",
@@ -368,6 +381,7 @@ module.exports = {
 
   // Preset Examples
   "preset_example_heading": "# Titre",
+  "preset_example_heading_h3": "### Titre",
   "preset_example_bullet": "- Puce",
   "preset_example_numbered": "1. Premier élément",
   "preset_example_task_checked": "- [x] Terminé",
@@ -436,6 +450,7 @@ module.exports = {
   "label_disable_in": "Désactiver dans",
   "enter_path_or_pattern": "Entrer un chemin, un motif ou des balises",
   "label_regex": "Expression régulière",
+  "label_regex_name": "Nom de l'expression régulière",
   
   // Advanced Rules
   "advanced_rules_header": "Règles spécifiques d’inclusion/exclusion",
@@ -554,5 +569,44 @@ module.exports = {
   "preset_bold": "Gras",
   "preset_italic": "Italique",
   "preset_bold_italic": "Gras Italique",
-  "preview_text": "Texte"
+  "preview_text": "Texte",
+
+  // Automatic Backups
+  "auto_backup_header": "Sauvegardes automatiques",
+  "auto_backup_toggle": "Activer les sauvegardes automatiques",
+  "auto_backup_toggle_desc": "Sauvegarder périodiquement toutes les données du plugin dans un dossier de votre coffre.",
+  "auto_backup_folder": "Dossier de sauvegarde",
+  "auto_backup_folder_desc": "Chemin du dossier dans votre coffre où les sauvegardes sont enregistrées.",
+  "auto_backup_folder_pick": "Choisir un dossier",
+  "auto_backup_folder_prompt": "Sélectionner le dossier de sauvegarde...",
+  "auto_backup_folder_reset": "Réinitialiser par défaut",
+  "auto_backup_interval": "Intervalle de sauvegarde",
+  "auto_backup_interval_desc": "À quelle fréquence enregistrer une sauvegarde.",
+  "auto_backup_unit_hour": "Heure(s)",
+  "auto_backup_unit_day": "Jour(s)",
+  "auto_backup_unit_week": "Semaine(s)",
+  "auto_backup_overwrite": "Écraser la sauvegarde précédente",
+  "auto_backup_overwrite_desc": "Remplacer le dernier fichier de sauvegarde au lieu d'en créer un nouveau à chaque fois.",
+  "auto_backup_now": "Sauvegarder maintenant",
+  "auto_backup_now_desc": "Enregistrer une sauvegarde immédiatement.",
+  "btn_backup_now": "Sauvegarder maintenant",
+  "btn_backup_now_running": "Enregistrement...",
+  "btn_backup_now_done": "Enregistré !",
+  "btn_backup_now_failed": "Échec",
+
+  // Custom CSS
+  "custom_css_header": "CSS personnalisé",
+  "enable_custom_css": "Activer le CSS personnalisé pour le style de texte",
+  "enable_custom_css_desc": "Ajouter du CSS par entrée via le bouton 'Modifier le CSS personnalisé' dans les éditeurs d'entrée et de groupe.",
+  "edit_custom_css_btn": "Modifier le CSS personnalisé",
+
+  // Color Text/Line/Child
+  "mark_target_text": "Colorier le texte",
+  "mark_target_line": "Colorier la ligne",
+  "mark_target_child_line": "Colorier l'enfant",
+  "mark_target_label": "Appliquer à",
+
+  // Group Select & Commands
+  "no_group": "Aucun groupe",
+  "command_color_text_for_file": "Colorier le texte sélectionné pour le fichier actuel"
 };

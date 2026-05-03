@@ -13,6 +13,12 @@ module.exports = {
   "language_fr": "फ्रेंच",
   "language_eu": "बास्क",
   "language_ru": "रूसी",
+  "language_de": "जर्मन",
+  "language_hi": "हिन्दी",
+  "language_bn": "बंगाली",
+  "language_it": "इतालवी",
+  "language_zh_cn": "सरलीकृत चीनी",
+  "language_ar": "अरबी",
   "language_auto": "सिस्टम डिफॉल्ट",
   "default": "डिफ़ॉल्ट",
   
@@ -273,6 +279,8 @@ module.exports = {
   "use_swatch_names_desc": "शब्द/पैटर्न इनपुट्स के बगल में स्वैच नामों का ड्रॉपडाउन दिखाएँ",
   "link_swatches_to_entries": "स्वैच अपडेट्स को टेक्स्ट रंगों से लिंक करें",
   "link_swatches_to_entries_desc": "जब कस्टम स्वैच का रंग बदलता है, उस रंग का उपयोग करने वाले सभी एंट्रीज़ अपडेट करें",
+  "link_swatch_updates": "स्वैच अपडेट्स को टेक्स्ट रंगों से लिंक करें",
+  "link_swatch_updates_desc": "यदि सक्षम है, तो स्वैच रंग अपडेट करने से उस स्वैच से रंगे सभी टेक्स्ट अपडेट होंगे।",
   "default_colors_header": "डिफ़ॉल्ट नमूने",
   "custom_swatches_header": "कस्टम स्वैचेस",
   "btn_add_color": "+ रंग जोड़ें",
@@ -300,10 +308,13 @@ module.exports = {
   "grouped_entries_desc": "शब्द समूहों को प्रबंधित करें। खोज नाम के अनुसार फ़िल्टर करती है।",
   "search_groups_placeholder": "समूह खोजें…",
   "edit_word_group_modal_title": "शब्द समूह संपादित करें",
+  "group_name_placeholder": "अपने समूह का नाम दें",
   "btn_save_group": "समूह सहेजें",
   "btn_delete_group": "समूह हटाएँ",
   "group_active_label": "सक्रिय",
   "group_inactive_label": "निष्क्रिय",
+  "confirm_delete_group_title": "समूह हटाएँ",
+  "confirm_delete_group_desc": "क्या आप वाकई इस समूह को हटाना चाहते हैं? यह पूर्ववत नहीं किया जा सकता।",
   "tooltip_duplicate_group": "समूह डुप्लिकेट करें",
   "tooltip_edit_group_settings": "समूह सेटिंग्स संपादित करें",
   "tooltip_delete_all_groups": "सभी शब्द समूह हटाएं",
@@ -336,6 +347,7 @@ module.exports = {
   // Presets
   "btn_presets": "प्रीसेट्स",
   "preset_all_headings": "सभी हेडिंग्स (H1-H6)",
+  "preset_headings_h3": "हेडिंग्स (H3)",
   "preset_bullet_points": "बुलेट पॉइंट्स",
   "preset_numbered_lists": "संख्यायित सूचियाँ",
   "preset_task_checked": "टास्क लिस्ट (चेक किया हुआ)",
@@ -372,6 +384,7 @@ module.exports = {
 
   // Preset Examples
   "preset_example_heading": "# शीर्षक",
+  "preset_example_heading_h3": "### शीर्षक",
   "preset_example_bullet": "- बिंदु",
   "preset_example_numbered": "1. पहली वस्तु",
   "preset_example_task_checked": "- [x] पूरा हुआ",
@@ -440,6 +453,7 @@ module.exports = {
   "label_disable_in": "यहाँ अक्षम करें",
   "enter_path_or_pattern": "पथ, पैटर्न या टैग दर्ज करें",
   "label_regex": "रेजेक्स",
+  "label_regex_name": "रेजेक्स नाम",
   
   // Advanced Rules
   "advanced_rules_header": "विशिष्ट समावेशन/बहिष्करण नियम",
@@ -555,5 +569,44 @@ module.exports = {
   "dark_mode_fixer_desc": "दृश्यता में सुधार के लिए डार्क थीम का उपयोग करते समय रंगीन टेक्स्ट को स्वचालित रूप से हल्का करता है।",
   "preset_bold": "बोल्ड",
   "preset_italic": "इटालिक",
-  "preset_bold_italic": "बोल्ड इटालिक"
+  "preset_bold_italic": "बोल्ड इटालिक",
+
+  // Automatic Backups
+  "auto_backup_header": "स्वचालित बैकअप",
+  "auto_backup_toggle": "स्वचालित बैकअप सक्षम करें",
+  "auto_backup_toggle_desc": "अपने वॉल्ट के अंदर एक फ़ोल्डर में सभी प्लगइन डेटा का समय-समय पर बैकअप लें।",
+  "auto_backup_folder": "बैकअप फ़ोल्डर",
+  "auto_backup_folder_desc": "आपके वॉल्ट के अंदर फ़ोल्डर पथ जहाँ बैकअप सहेजे जाते हैं।",
+  "auto_backup_folder_pick": "फ़ोल्डर चुनें",
+  "auto_backup_folder_prompt": "बैकअप फ़ोल्डर चुनें...",
+  "auto_backup_folder_reset": "डिफ़ॉल्ट पर रीसेट करें",
+  "auto_backup_interval": "बैकअप अंतराल",
+  "auto_backup_interval_desc": "बैकअप कितनी बार सहेजना है।",
+  "auto_backup_unit_hour": "घंटा(घंटे)",
+  "auto_backup_unit_day": "दिन",
+  "auto_backup_unit_week": "सप्ताह",
+  "auto_backup_overwrite": "पिछले बैकअप को ओवरराइट करें",
+  "auto_backup_overwrite_desc": "हर बार नया बनाने के बजाय अंतिम बैकअप फ़ाइल को बदलें।",
+  "auto_backup_now": "अभी बैकअप करें",
+  "auto_backup_now_desc": "तुरंत बैकअप सहेजें।",
+  "btn_backup_now": "अभी बैकअप करें",
+  "btn_backup_now_running": "सहेजा जा रहा है...",
+  "btn_backup_now_done": "सहेजा गया!",
+  "btn_backup_now_failed": "विफल",
+
+  // Custom CSS
+  "custom_css_header": "कस्टम CSS",
+  "enable_custom_css": "टेक्स्ट स्टाइलिंग के लिए कस्टम CSS सक्षम करें",
+  "enable_custom_css_desc": "प्रविष्टि और समूह संपादकों में 'कस्टम CSS संपादित करें' बटन के माध्यम से प्रति-प्रविष्टि CSS जोड़ें।",
+  "edit_custom_css_btn": "कस्टम CSS संपादित करें",
+
+  // Color Text/Line/Child
+  "mark_target_text": "टेक्स्ट रंगें",
+  "mark_target_line": "लाइन रंगें",
+  "mark_target_child_line": "चाइल्ड रंगें",
+  "mark_target_label": "इस पर लागू करें",
+
+  // Group Select & Commands
+  "no_group": "कोई समूह नहीं",
+  "command_color_text_for_file": "वर्तमान फ़ाइल के लिए चयनित टेक्स्ट रंगें"
 };

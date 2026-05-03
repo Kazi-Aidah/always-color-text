@@ -13,6 +13,12 @@ module.exports = {
   "language_fr": "Французский",
   "language_eu": "Баскский",
   "language_ru": "Русский",
+  "language_de": "Немецкий",
+  "language_hi": "Хинди",
+  "language_bn": "Бенгальский",
+  "language_it": "Итальянский",
+  "language_zh_cn": "Упрощённый китайский",
+  "language_ar": "Арабский",
   "language_auto": "Системный",
   "default": "По умолчанию",
   
@@ -160,6 +166,8 @@ module.exports = {
   "confirm_delete_blacklist_group_desc": "Вы уверены, что хотите удалить этот сгруппированный чёрный список? Это действие невозможно отменить.",
   "restart_required_title": "Требуется перезагрузка",
   "restart_required_desc": "Для полного удаления команды из палитры команд требуется перезагрузка Obsidian. Перезагрузить сейчас?",
+  "btn_cancel": "Отмена",
+  "btn_confirm": "Подтвердить",
   
   // Basic Settings
   "color_in_live_preview_mode": "Окрашивать в режиме Live Preview",
@@ -178,6 +186,7 @@ module.exports = {
   "regex_support_desc": "Разрешить использование регулярных выражений в качестве шаблонов. Некорректные regex будут проигнорированы в целях безопасности.",
   "disable_regex_safety": "Отключить проверку безопасности Regex",
   "disable_regex_safety_desc": "Разрешить сложные или потенциально опасные выражения. Может вызвать замедление или зависание.",
+  "requires_regex_safety_disabled": "Требуется отключение безопасности regex",
   "case_sensitive": "Чувствительность к регистру",
   "case_sensitive_desc": "Если включено, «Слово» и «слово» считаются разными. Если отключено, они окрашиваются одинаково.",
   "partial_match": "Частичное совпадение",
@@ -277,6 +286,8 @@ module.exports = {
   "use_swatch_names_desc": "Показывать выпадающий список имен палитр рядом с вводом слова/шаблона",
   "link_swatches_to_entries": "Связать обновления палитр с окрашенными текстами",
   "link_swatches_to_entries_desc": "Обновлять все записи, использующие пользовательскую палитру, когда цвет этой палитры меняется",
+  "link_swatch_updates": "Связать обновления палитр с цветами текста",
+  "link_swatch_updates_desc": "Если включено, обновление цвета палитры обновит все тексты, окрашенные этой палитрой.",
   "default_colors_header": "Цвета по умолчанию",
   "custom_swatches_header": "Пользовательские палитры",
   "btn_add_color": "+ Добавить цвет",
@@ -304,10 +315,13 @@ module.exports = {
   "grouped_entries_desc": "Управляйте группами слов. Поиск фильтрует по названию.",
   "search_groups_placeholder": "Поиск групп…",
   "edit_word_group_modal_title": "Редактировать группу слов",
+  "group_name_placeholder": "Назовите вашу группу",
   "btn_save_group": "Сохранить группу",
   "btn_delete_group": "Удалить группу",
   "group_active_label": "Активна",
   "group_inactive_label": "Неактивна",
+  "confirm_delete_group_title": "Удалить группу",
+  "confirm_delete_group_desc": "Вы уверены, что хотите удалить эту группу? Это действие необратимо.",
   "tooltip_duplicate_group": "Дублировать группу",
   "tooltip_edit_group_settings": "Редактировать настройки группы",
   "tooltip_delete_all_groups": "Удалить все группы слов",
@@ -340,6 +354,7 @@ module.exports = {
   // Presets
   "btn_presets": "Пресеты",
   "preset_all_headings": "Все заголовки (H1-H6)",
+  "preset_headings_h3": "Заголовки (H3)",
   "preset_bullet_points": "Маркеры списка",
   "preset_numbered_lists": "Нумерованные списки",
   "preset_task_checked": "Списки задач (Выполненные)",
@@ -376,6 +391,7 @@ module.exports = {
 
   // Preset Examples
   "preset_example_heading": "# Заголовок",
+  "preset_example_heading_h3": "### Заголовок",
   "preset_example_bullet": "- Пункт",
   "preset_example_numbered": "1. Первый элемент",
   "preset_example_task_checked": "- [x] Выполнено",
@@ -444,6 +460,7 @@ module.exports = {
   "label_disable_in": "Отключить в",
   "enter_path_or_pattern": "Введите путь, шаблон или теги",
   "label_regex": "Regex",
+  "label_regex_name": "Имя Regex",
   
   // Advanced Rules
   "advanced_rules_header": "Специфические правила включения/исключения",
@@ -553,7 +570,46 @@ module.exports = {
   "notice_blacklist_group_activated": "Сгруппированный чёрный список активирован",
   "notice_blacklist_group_deactivated": "Сгруппированный чёрный список деактивирован",
   "command_activate_blacklist_group": "Активировать сгруппированный чёрный список {groupName}",
-  "command_deactivate_blacklist_group": "Деактивировать сгруппированный чёрный список {groupName}"
+  "command_deactivate_blacklist_group": "Деактивировать сгруппированный чёрный список {groupName}",
+
+  // Automatic Backups
+  "auto_backup_header": "Автоматические резервные копии",
+  "auto_backup_toggle": "Включить автоматические резервные копии",
+  "auto_backup_toggle_desc": "Периодически создавать резервные копии всех данных плагина в папке внутри хранилища.",
+  "auto_backup_folder": "Папка резервных копий",
+  "auto_backup_folder_desc": "Путь к папке внутри хранилища, где сохраняются резервные копии.",
+  "auto_backup_folder_pick": "Выбрать папку",
+  "auto_backup_folder_prompt": "Выберите папку для резервных копий...",
+  "auto_backup_folder_reset": "Сбросить до значения по умолчанию",
+  "auto_backup_interval": "Интервал резервного копирования",
+  "auto_backup_interval_desc": "Как часто сохранять резервную копию.",
+  "auto_backup_unit_hour": "Час(ов)",
+  "auto_backup_unit_day": "День(дней)",
+  "auto_backup_unit_week": "Неделя(недель)",
+  "auto_backup_overwrite": "Перезаписывать предыдущую резервную копию",
+  "auto_backup_overwrite_desc": "Заменять последний файл резервной копии вместо создания нового каждый раз.",
+  "auto_backup_now": "Создать резервную копию сейчас",
+  "auto_backup_now_desc": "Немедленно сохранить резервную копию.",
+  "btn_backup_now": "Создать резервную копию сейчас",
+  "btn_backup_now_running": "Сохранение...",
+  "btn_backup_now_done": "Сохранено!",
+  "btn_backup_now_failed": "Ошибка",
+
+  // Custom CSS
+  "custom_css_header": "Пользовательский CSS",
+  "enable_custom_css": "Включить пользовательский CSS для стилизации текста",
+  "enable_custom_css_desc": "Добавляйте CSS для каждой записи через кнопку 'Редактировать пользовательский CSS' в редакторах записей и групп.",
+  "edit_custom_css_btn": "Редактировать пользовательский CSS",
+
+  // Color Text/Line/Child
+  "mark_target_text": "Окрасить текст",
+  "mark_target_line": "Окрасить строку",
+  "mark_target_child_line": "Окрасить дочерний элемент",
+  "mark_target_label": "Применить к",
+
+  // Group Select & Commands
+  "no_group": "Без группы",
+  "command_color_text_for_file": "Окрасить выделенный текст для текущего файла"
 };
 
 // Thanks @Frumkin13 for the translation <3

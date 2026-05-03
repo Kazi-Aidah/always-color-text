@@ -1243,6 +1243,7 @@ class AlwaysColorText extends Plugin {
                             entry._savedTextColor = color;
                           }
                           if (!entry.isRegex) entry.matchType = matchType;
+                          this.syncEntryCssFromColors(entry);
                         } else {
                           if (tc && bc) {
                             arr.push({
@@ -2052,6 +2053,7 @@ class AlwaysColorText extends Plugin {
                     entry._savedTextColor = color;
                   }
                   if (!entry.isRegex) entry.matchType = matchType;
+                  this.syncEntryCssFromColors(entry);
                 } else {
                   if (tc && bc) {
                     arr.push({
@@ -2130,7 +2132,7 @@ class AlwaysColorText extends Plugin {
       });
       addTrackedCommand({
         id: "color-text-for-current-file",
-        name: this.t("command_color_text_for_file", "Color Text for Current File"),
+        name: this.t("command_color_text_for_file", "Color Selected Text for Current File"),
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
@@ -2199,6 +2201,7 @@ class AlwaysColorText extends Plugin {
                     entry._savedTextColor = color;
                   }
                   if (!entry.isRegex) entry.matchType = matchType;
+                  this.syncEntryCssFromColors(entry);
                 } else {
                   if (tc && bc) {
                     entry = {
@@ -8531,50 +8534,56 @@ class AlwaysColorText extends Plugin {
       // For regex patterns, attempt to extract obvious required literals
       try {
         // Quick checks for some punctuation-heavy patterns
-        if (
-          pattern.includes("$") ||
-          pattern.includes("€") ||
-          pattern.includes("£")
-        ) {
-          return withBloom(
-            (text) =>
-              typeof text === "string" &&
-              (text.includes("$") || text.includes("€") || text.includes("£")),
-          );
+        // FOR REGEX: Only perform these checks if the character is escaped or clearly a literal.
+        // If it's a regex, we should be much more conservative to avoid the "required character" bug.
+        
+        if (pattern.includes("$") || pattern.includes("€") || pattern.includes("£")) {
+          // Only check if it's not a regex, or if it has an escaped version or is a clearly literal part
+          if (!isRegex || /\\\$|\\€|\\£/.test(pattern)) {
+            return withBloom(
+              (text) =>
+                typeof text === "string" &&
+                (text.includes("$") || text.includes("€") || text.includes("£")),
+            );
+          }
         }
+
         // Smarter colon check: only if it's likely a literal colon, not part of (?: or (?<= or (?<!
-        if (
-          pattern.includes(":") &&
-          (!isRegex ||
-            (pattern.includes(" :") ||
-              pattern.includes(": ") ||
-              /\\:/.test(pattern) ||
-              /[^?]:/.test(pattern)))
-        ) {
-          // If it's a regex and contains (?: we should be careful.
-          // For now, if it's a regex and contains (?:, we bypass the colon check unless it's a literal \:
+        if (pattern.includes(":")) {
           const isNonCapturing = isRegex && /\(\?:/.test(pattern);
           const hasLiteralColon = isRegex && /\\:/.test(pattern);
+          const isLookaround = isRegex && /\(\?<?[=!]:/.test(pattern);
 
-          if (!isRegex || hasLiteralColon || !isNonCapturing) {
+          if (!isRegex || (hasLiteralColon && !isNonCapturing && !isLookaround)) {
             return withBloom(
               (text) => typeof text === "string" && text.includes(":"),
             );
           }
         }
+
         if (pattern.includes("@")) {
-          return withBloom(
-            (text) => typeof text === "string" && text.includes("@"),
-          );
+          if (!isRegex || /\\@/.test(pattern) || !/\[[^\]]*@[^\]]*\]/.test(pattern)) {
+            return withBloom(
+              (text) => typeof text === "string" && text.includes("@"),
+            );
+          }
         }
+
+        // The "-" character is very common in ranges [a-z], so only check if it's escaped or not a regex
         if (pattern.includes("-")) {
-          return withBloom(
-            (text) => typeof text === "string" && text.includes("-"),
-          );
+          if (!isRegex || /\\-/.test(pattern)) {
+            return withBloom(
+              (text) => typeof text === "string" && text.includes("-"),
+            );
+          }
         }
 
         // Look for a reasonably long literal sequence inside the regex
-        const literalMatch = pattern.match(/[A-Za-z]{3,}/);
+        // We only extract literals that are NOT part of common regex constructs
+        const literalMatch = isRegex 
+          ? pattern.replace(/\\[bdswDWSWrtn]/g, " ").match(/[A-Za-z]{3,}/)
+          : pattern.match(/[A-Za-z]{3,}/);
+        
         if (literalMatch) {
           const literal = literalMatch[0];
           if (caseSensitive) {
@@ -8947,6 +8956,128 @@ class AlwaysColorText extends Plugin {
    * @param {string} customCss  - Raw custom CSS declarations from entry.customCss
    * @returns {string} Merged style string with custom CSS winning on conflicts
    */
+
+  /**
+   * Same as syncEntryCssFromColors but returns the patched CSS string without
+   * mutating the entry. Used for live preview rendering.
+   */
+  syncEntryCssFromColorsForPreview(entry) {
+    if (!entry || !entry.customCss) return entry ? entry.customCss : '';
+    try {
+      const settings = this.settings;
+      const styleType = entry.styleType || (entry.backgroundColor ? 'highlight' : 'text');
+      const isTextOnly = styleType === 'text';
+      const tc = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color;
+      const bg = entry.backgroundColor;
+
+      const updates = {};
+      if (tc) updates['color'] = tc;
+      if (bg && !isTextOnly) {
+        const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
+        updates['background-color'] = this.hexToRgba(bg, opacity);
+      }
+
+      const sanitized = this.sanitizeCssDeclarations(entry.customCss);
+      if (!sanitized) return entry.customCss;
+      const parts = sanitized.split(';').map(s => s.trim()).filter(Boolean);
+      const parsed = parts.map(p => {
+        const idx = p.indexOf(':');
+        if (idx === -1) return { prop: p, val: '' };
+        return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
+      });
+
+      const found = new Set();
+      const rebuilt = parsed.map(({ prop, val }) => {
+        if (updates.hasOwnProperty(prop)) {
+          found.add(prop);
+          return `${prop}: ${updates[prop]}`;
+        }
+        if (tc && (prop === 'border' || prop === 'border-top' || prop === 'border-bottom' ||
+                   prop === 'border-left' || prop === 'border-right')) {
+          const patched = val
+            .replace(/#[0-9a-fA-F]{3,8}\b/g, tc)
+            .replace(/rgba?\s*\([^)]+\)/gi, tc);
+          return `${prop}: ${patched}`;
+        }
+        return `${prop}: ${val}`;
+      });
+
+      for (const [prop, val] of Object.entries(updates)) {
+        if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
+      }
+
+      return rebuilt.join(';\n') + ';';
+    } catch (_) {
+      return entry.customCss;
+    }
+  }
+
+  /**
+   * If an entry has customCss, patch only the color/background/border-color values
+   * in the existing CSS string to reflect the entry's current color fields.
+   * All other user-defined properties (font-size, font-weight, etc.) are preserved.
+   * Call this immediately after mutating entry.color / entry.textColor / entry.backgroundColor.
+   */
+  syncEntryCssFromColors(entry) {
+    if (!entry || !entry.customCss) return;
+    try {
+      const settings = this.settings;
+      const styleType = entry.styleType || (entry.backgroundColor ? 'highlight' : 'text');
+      const isTextOnly = styleType === 'text';
+      const tc = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color;
+      const bg = entry.backgroundColor;
+
+      // Build a map of properties we want to update/insert
+      const updates = {};
+      if (tc) updates['color'] = tc;
+      if (bg && !isTextOnly) {
+        const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
+        updates['background-color'] = this.hexToRgba(bg, opacity);
+      }
+      // Update border-color inside any border declarations if they exist in the CSS
+      // (we only patch the color part, not the whole border value)
+
+      // Parse existing CSS into an ordered list of [prop, value] pairs
+      const sanitized = this.sanitizeCssDeclarations(entry.customCss);
+      if (!sanitized) return;
+      const parts = sanitized.split(';').map(s => s.trim()).filter(Boolean);
+      const parsed = parts.map(p => {
+        const idx = p.indexOf(':');
+        if (idx === -1) return { prop: p, val: '' };
+        return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
+      });
+
+      // Track which update keys were found in the existing CSS
+      const found = new Set();
+
+      const rebuilt = parsed.map(({ prop, val }) => {
+        if (updates.hasOwnProperty(prop)) {
+          found.add(prop);
+          return `${prop}: ${updates[prop]}`;
+        }
+        // Patch border-color inside border shorthand values (e.g. "1px solid #oldcolor")
+        if (tc && (prop === 'border' || prop === 'border-top' || prop === 'border-bottom' ||
+                   prop === 'border-left' || prop === 'border-right')) {
+          // Replace the color token (hex or rgb/rgba) in the border value
+          const patched = val
+            .replace(/#[0-9a-fA-F]{3,8}\b/g, tc)
+            .replace(/rgba?\s*\([^)]+\)/gi, tc);
+          return `${prop}: ${patched}`;
+        }
+        return `${prop}: ${val}`;
+      });
+
+      // Append any update properties that weren't already in the CSS
+      for (const [prop, val] of Object.entries(updates)) {
+        if (!found.has(prop)) {
+          rebuilt.push(`${prop}: ${val}`);
+        }
+      }
+
+      entry.customCss = rebuilt.join(';\n') + ';';
+    } catch (_) {}
+  }
+
   _mergeStyleWithCustomCss(baseStyle, customCss) {
     if (!customCss || !customCss.trim()) return baseStyle;
     const sanitized = this.sanitizeCssDeclarations(customCss);

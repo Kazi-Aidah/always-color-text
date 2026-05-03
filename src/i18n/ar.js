@@ -268,6 +268,12 @@ module.exports = {
   "color_swatches_header": "إدارة الألوان",
   "color_picker_layout": "تخطيط منتقي الألوان",
   "color_picker_layout_desc": "اختر أنواع الألوان التي ستظهر عند اختيار ألوان للنص",
+  "opt_both_text_left": "كلاهما: النص يسار، التمييز يمين",
+  "opt_both_bg_left": "كلاهما: التمييز يسار، النص يمين",
+  "opt_both_text_top": "كلاهما (عمودي): النص أعلى، التمييز أسفل",
+  "opt_both_bg_top": "كلاهما (عمودي): التمييز أعلى، النص أسفل",
+  "opt_text_only": "لون النص فقط",
+  "opt_background_only": "لون التمييز فقط",
   "enable_custom_swatches": "تفعيل العينات المخصصة",
   "enable_custom_swatches_desc": "قم بتشغيل هذا إذا كنت تريد اختيار ألوانك الخاصة لمنتقي الألوان.",
   "replace_default_swatches": "استبدال العينات الافتراضية",
@@ -276,6 +282,8 @@ module.exports = {
   "use_swatch_names_desc": "إذا تم تفعيله، سيتم تلوين النص باستخدام اسم العينة (مثل 'Red') بدلاً من كود hex.",
   "link_swatch_updates": "ربط تحديثات العينة بألوان النص",
   "link_swatch_updates_desc": "إذا تم تفعيله، فإن تحديث لون العينة سيحدث جميع النصوص الملونة بتلك العينة.",
+  "link_swatches_to_entries": "ربط تحديثات العينة بالنصوص الملونة",
+  "link_swatches_to_entries_desc": "عند تغيير لون عينة مخصصة، يتم تحديث جميع الإدخالات التي تستخدم تلك العينة",
   "default_colors_header": "العينات الافتراضية",
   "custom_swatches_header": "العينات المخصصة",
   "btn_add_color": "+ إضافة لون",
@@ -296,6 +304,7 @@ module.exports = {
   "settings_tab_data": "البيانات",
   
   // Always Colored Texts
+  "always_colored_texts_header": "النصوص الملونة دائماً",
   "colored_texts_header": "النصوص الملونة",
   "always_colored_texts_desc": "هنا تدير كلماتك/أنماطك وألوانها.",
   "grouped_entries_header": "الإدخالات المجمعة",
@@ -446,6 +455,7 @@ module.exports = {
   "label_disable_in": "تعطيل في",
   "enter_path_or_pattern": "أدخل المسار، النمط أو الوسوم",
   "label_regex": "Regex",
+  "label_regex_name": "اسم Regex",
   
   // Advanced Rules
   "advanced_rules_header": "قواعد التضمين/الاستبعاد المحددة",
@@ -558,5 +568,44 @@ module.exports = {
   "btn_delete_entry": "حذف الإدخال",
   "edit_group_highlight_styling": "تعديل تنسيق تمييز المجموعة",
   "light_mode_fixer_desc": "يقوم بتغميق النص الملون تلقائياً عند استخدام السمة الفاتحة لتحسين الرؤية.",
-  "dark_mode_fixer_desc": "يقوم بتفتيح النص الملون تلقائياً عند استخدام السمة الداكنة لتحسين الرؤية."
+  "dark_mode_fixer_desc": "يقوم بتفتيح النص الملون تلقائياً عند استخدام السمة الداكنة لتحسين الرؤية.",
+
+  // Automatic Backups
+  "auto_backup_header": "النسخ الاحتياطي التلقائي",
+  "auto_backup_toggle": "تفعيل النسخ الاحتياطي التلقائي",
+  "auto_backup_toggle_desc": "نسخ احتياطي دوري لجميع بيانات الإضافة إلى مجلد داخل الخزنة.",
+  "auto_backup_folder": "مجلد النسخ الاحتياطي",
+  "auto_backup_folder_desc": "مسار المجلد داخل الخزنة حيث يتم حفظ النسخ الاحتياطية.",
+  "auto_backup_folder_pick": "اختر مجلداً",
+  "auto_backup_folder_prompt": "اختر مجلد النسخ الاحتياطي...",
+  "auto_backup_folder_reset": "إعادة تعيين إلى الافتراضي",
+  "auto_backup_interval": "فترة النسخ الاحتياطي",
+  "auto_backup_interval_desc": "مدة الانتظار بين كل نسخة احتياطية.",
+  "auto_backup_unit_hour": "ساعة(ات)",
+  "auto_backup_unit_day": "يوم(أيام)",
+  "auto_backup_unit_week": "أسبوع(أسابيع)",
+  "auto_backup_overwrite": "الكتابة فوق النسخة الاحتياطية السابقة",
+  "auto_backup_overwrite_desc": "استبدال ملف النسخ الاحتياطي الأخير بدلاً من إنشاء ملف جديد في كل مرة.",
+  "auto_backup_now": "نسخ احتياطي الآن",
+  "auto_backup_now_desc": "حفظ نسخة احتياطية فوراً.",
+  "btn_backup_now": "نسخ احتياطي الآن",
+  "btn_backup_now_running": "جاري الحفظ...",
+  "btn_backup_now_done": "تم الحفظ!",
+  "btn_backup_now_failed": "فشل",
+
+  // Custom CSS
+  "custom_css_header": "CSS مخصص",
+  "enable_custom_css": "تفعيل CSS المخصص لتنسيق النص",
+  "enable_custom_css_desc": "إضافة CSS لكل إدخال عبر زر 'تعديل CSS المخصص' في محرري الإدخال والمجموعة.",
+  "edit_custom_css_btn": "تعديل CSS المخصص",
+
+  // Color Text/Line/Child
+  "mark_target_text": "تلوين النص",
+  "mark_target_line": "تلوين السطر",
+  "mark_target_child_line": "تلوين الفرع",
+  "mark_target_label": "تطبيق على",
+
+  // Group Select & Commands
+  "no_group": "بدون مجموعة",
+  "command_color_text_for_file": "تلوين النص المحدد للملف الحالي"
 };

@@ -7,7 +7,7 @@ import { Modal, setIcon } from 'obsidian';
  * @param {object} plugin - AlwaysColorText plugin instance
  * @returns {string} CSS declarations string
  */
-function deriveHighlightCssFromEntry(entry, plugin) {
+export function deriveHighlightCssFromEntry(entry, plugin) {
   const lines = [];
   const settings = plugin.settings;
 
@@ -87,6 +87,194 @@ function deriveHighlightCssFromEntry(entry, plugin) {
 
 const DANGEROUS_PATTERNS = ['url(', 'expression(', 'javascript:', '<', '>'];
 
+/**
+ * Parses a CSS declarations string back into an entry's structured fields.
+ * This makes CustomCssModal and HighlightStylingModal interchangeable.
+ * Only updates fields that are explicitly present in the CSS.
+ * @param {string} css - CSS declarations string
+ * @param {object} entry - Entry object to update in-place
+ * @param {object} plugin - Plugin instance (for isValidHexColor)
+ */
+export function parseCssIntoEntry(css, entry, plugin) {
+  if (!css || !entry) return;
+  const parts = css.split(';').map(s => s.trim()).filter(Boolean);
+  for (const part of parts) {
+    const idx = part.indexOf(':');
+    if (idx === -1) continue;
+    const prop = part.slice(0, idx).trim().toLowerCase();
+    const val = part.slice(idx + 1).trim();
+
+    switch (prop) {
+      case 'color': {
+        // Extract hex from rgba/rgb/hex
+        const hex = extractHex(val, plugin);
+        if (hex) {
+          const styleType = entry.styleType || 'text';
+          if (styleType === 'both') {
+            entry.textColor = hex;
+            entry.color = '';
+          } else if (styleType === 'text') {
+            entry.color = hex;
+            entry.textColor = null;
+          }
+        }
+        break;
+      }
+      case 'background-color': {
+        const hex = extractHex(val, plugin);
+        if (hex) {
+          entry.backgroundColor = hex;
+          // Also try to back-calculate opacity from rgba
+          const opacityMatch = val.match(/rgba\s*\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\s*\)/i);
+          if (opacityMatch) {
+            const alpha = parseFloat(opacityMatch[1]);
+            if (!isNaN(alpha)) entry.backgroundOpacity = Math.round(alpha * 100);
+          }
+        }
+        break;
+      }
+      case 'border-radius': {
+        const n = parseFloat(val);
+        if (!isNaN(n)) entry.highlightBorderRadius = n;
+        break;
+      }
+      case 'padding': {
+        // "Vpx Hpx" or "Vpx Hpx Vpx Hpx" etc.
+        const nums = val.match(/[\d.]+/g);
+        if (nums && nums.length >= 2) {
+          entry.highlightVerticalPadding = parseFloat(nums[0]);
+          entry.highlightHorizontalPadding = parseFloat(nums[1]);
+        } else if (nums && nums.length === 1) {
+          entry.highlightVerticalPadding = parseFloat(nums[0]);
+          entry.highlightHorizontalPadding = parseFloat(nums[0]);
+        }
+        break;
+      }
+      case 'padding-top':
+      case 'padding-bottom': {
+        const n = parseFloat(val);
+        if (!isNaN(n)) entry.highlightVerticalPadding = n;
+        break;
+      }
+      case 'padding-left':
+      case 'padding-right': {
+        const n = parseFloat(val);
+        if (!isNaN(n)) entry.highlightHorizontalPadding = n;
+        break;
+      }
+      // border shorthand: "1px solid #color"
+      case 'border':
+      case 'border-top':
+      case 'border-bottom':
+      case 'border-left':
+      case 'border-right': {
+        entry.enableBorderThickness = true;
+        const thicknessMatch = val.match(/^([\d.]+)px/);
+        if (thicknessMatch) entry.borderThickness = parseFloat(thicknessMatch[1]);
+        const lineStyles = ['solid','dashed','dotted','double','groove','ridge','inset','outset'];
+        for (const ls of lineStyles) {
+          if (val.includes(ls)) { entry.borderLineStyle = ls; break; }
+        }
+        // Map property to borderStyle side
+        const sideMap = {
+          'border': 'full', 'border-top': 'top', 'border-bottom': 'bottom',
+          'border-left': 'left', 'border-right': 'right',
+        };
+        if (sideMap[prop]) entry.borderStyle = sideMap[prop];
+        break;
+      }
+    }
+  }
+}
+
+/**
+ * Patches layout properties (padding, border-radius, border thickness/style)
+ * in an existing CSS string from the entry's structured fields.
+ * Color properties are handled separately by syncEntryCssFromColors.
+ * User-defined properties not managed by HighlightStylingModal are preserved.
+ */
+export function patchCssLayoutFromEntry(css, entry, plugin) {
+  if (!css || !entry) return css;
+  const settings = plugin.settings;
+  const styleType = entry.styleType || (entry.backgroundColor ? 'highlight' : 'text');
+  const isTextOnly = styleType === 'text';
+
+  // Build map of layout properties to update
+  const updates = {};
+  if (!isTextOnly) {
+    const radius = entry.highlightBorderRadius ?? settings.highlightBorderRadius ?? 4;
+    updates['border-radius'] = `${radius}px`;
+
+    const hpad = entry.highlightHorizontalPadding ?? settings.highlightHorizontalPadding ?? 4;
+    const vpad = entry.highlightVerticalPadding ?? settings.highlightVerticalPadding ?? 0;
+    updates['padding'] = `${vpad}px ${hpad}px`;
+
+    const enableBorder = entry.enableBorderThickness ?? settings.enableBorderThickness ?? false;
+    if (enableBorder) {
+      const thickness = entry.borderThickness ?? settings.borderThickness ?? 1;
+      const lineStyle = entry.borderLineStyle ?? settings.borderLineStyle ?? 'solid';
+      const tc = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color;
+      const borderColor = tc || 'currentColor';
+      const borderVal = `${thickness}px ${lineStyle} ${borderColor}`;
+      const borderSide = entry.borderStyle ?? settings.borderStyle ?? 'full';
+      const borderProps = {
+        'full': ['border'],
+        'top': ['border-top'], 'bottom': ['border-bottom'],
+        'left': ['border-left'], 'right': ['border-right'],
+        'top-bottom': ['border-top', 'border-bottom'],
+        'left-right': ['border-left', 'border-right'],
+        'top-right': ['border-top', 'border-right'],
+        'top-left': ['border-top', 'border-left'],
+        'bottom-right': ['border-bottom', 'border-right'],
+        'bottom-left': ['border-bottom', 'border-left'],
+      };
+      for (const p of (borderProps[borderSide] || ['border'])) {
+        updates[p] = borderVal;
+      }
+    }
+  }
+
+  // Parse, patch, rebuild
+  const sanitized = plugin.sanitizeCssDeclarations(css);
+  if (!sanitized) return css;
+  const parts = sanitized.split(';').map(s => s.trim()).filter(Boolean);
+  const parsed = parts.map(p => {
+    const idx = p.indexOf(':');
+    if (idx === -1) return { prop: p, val: '' };
+    return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
+  });
+
+  const found = new Set();
+  const rebuilt = parsed.map(({ prop, val }) => {
+    if (updates.hasOwnProperty(prop)) {
+      found.add(prop);
+      return `${prop}: ${updates[prop]}`;
+    }
+    return `${prop}: ${val}`;
+  });
+
+  for (const [prop, val] of Object.entries(updates)) {
+    if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
+  }
+
+  return rebuilt.join(';\n') + ';';
+}
+
+/** Extract a hex color from a CSS value (handles #hex, rgb(), rgba()) */
+function extractHex(val, plugin) {
+  // Direct hex
+  if (/^#[0-9a-f]{3,8}$/i.test(val.trim())) return val.trim();
+  // rgb(r,g,b) or rgba(r,g,b,a)
+  const rgbMatch = val.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0');
+    const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0');
+    const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0');
+    return `#${r}${g}${b}`;
+  }
+  return null;
+}
+
 export class CustomCssModal extends Modal {
   constructor(app, plugin, entry) {
     super(app);
@@ -133,9 +321,11 @@ export class CustomCssModal extends Modal {
     previewWrap.style.alignItems = 'center';
     previewWrap.style.justifyContent = 'center';
 
-    const sampleText = this.entry.isRegex
-      ? (this.entry.presetLabel || this.entry.pattern || 'Sample Text')
-      : (this.entry.pattern || 'Sample Text');
+    const sampleText = this.entry.name
+      ? this.entry.name
+      : this.entry.isRegex
+        ? (this.entry.presetLabel || this.entry.pattern || 'Sample Text')
+        : (this.entry.pattern || 'Sample Text');
 
     this._previewSpan = previewWrap.createEl('span');
     this._previewSpan.style.display = 'inline';
@@ -226,7 +416,7 @@ export class CustomCssModal extends Modal {
     row.style.justifyContent = 'space-between';
 
     const clearBtn = row.createEl('button', {
-      text: this.plugin.t('btn_reset', 'Clear'),
+      text: this.plugin.t('btn_reset', 'Reset'),
     });
 
     const saveBtn = row.createEl('button', {
@@ -248,7 +438,10 @@ export class CustomCssModal extends Modal {
     // Save handler
     const save = async () => {
       if (this.entry) {
-        this.entry.customCss = this._textarea.value.trim() || undefined;
+        const css = this._textarea.value.trim() || undefined;
+        this.entry.customCss = css;
+        // Parse CSS back into structured fields so HighlightStylingModal stays in sync
+        if (css) parseCssIntoEntry(css, this.entry, this.plugin);
       }
       await this.plugin.saveSettings();
       try { this.plugin.compileWordEntries(); } catch (_) {}
@@ -262,19 +455,11 @@ export class CustomCssModal extends Modal {
       this.close();
     };
 
-    // Clear handler
-    const clear = async () => {
-      if (this.entry) this.entry.customCss = undefined;
-      await this.plugin.saveSettings();
-      try { this.plugin.compileWordEntries(); } catch (_) {}
-      try { this.plugin.compileTextBgColoringEntries(); } catch (_) {}
-      try {
-        window.dispatchEvent(new CustomEvent('act-colors-changed', { detail: { entry: this.entry } }));
-      } catch (_) {}
-      try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
-      try { this.plugin.forceRefreshAllEditors(); } catch (_) {}
-      try { this.plugin.forceRefreshAllReadingViews(); } catch (_) {}
-      this.close();
+    // Reset handler — restores textarea to the derived CSS (discards any custom CSS)
+    const clear = () => {
+      this._textarea.value = deriveHighlightCssFromEntry(this.entry, this.plugin);
+      this._updatePreview();
+      this._validateInput();
     };
 
     saveBtn.addEventListener('click', save);

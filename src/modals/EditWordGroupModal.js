@@ -8,6 +8,7 @@ import { AlertModal } from './AlertModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
 import { EditEntryModal } from './EditEntryModal.js';
 import { CustomCssModal } from './CustomCssModal.js';
+import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
 
 export class EditWordGroupModal extends Modal {
   constructor(app, plugin, group, onSave, onDelete) {
@@ -994,6 +995,7 @@ export class EditWordGroupModal extends Modal {
             entry._savedTextColor = newColor;
           }
           styleSelect.value = entry.styleType;
+          if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
         };
         cp.addEventListener("input", cpHandler);
         cp.title = "Text color";
@@ -1035,6 +1037,7 @@ export class EditWordGroupModal extends Modal {
                 if (result && result.markTarget) {
                   entry.markTarget = result.markTarget;
                 }
+                if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
                 cp.value = tc;
                 this._refreshGroupEntries();
               },
@@ -1089,6 +1092,7 @@ export class EditWordGroupModal extends Modal {
           }
           entry._savedBackgroundColor = newColor;
           styleSelect.value = entry.styleType;
+          if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
         };
         cpBg.addEventListener("input", cpBgHandler);
         cpBg.title = "Highlight color";
@@ -1123,6 +1127,7 @@ export class EditWordGroupModal extends Modal {
                 if (result && result.markTarget) {
                   entry.markTarget = result.markTarget;
                 }
+                if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
                 cpBg.value = bc;
                 this._refreshGroupEntries();
               },
@@ -1143,7 +1148,6 @@ export class EditWordGroupModal extends Modal {
         cpBg.addEventListener("contextmenu", cpBgContextHandler);
       }
 
-      // 8. DELETE BUTTON (commented out — use right-click context menu to delete)
       /* const btnDel = row.createEl("button", {
         text: this.plugin.t("delete_button_text", "✕"),
       });
@@ -1262,3 +1266,4 @@ export class EditWordGroupModal extends Modal {
     } catch (e) {}
   }
 }
+

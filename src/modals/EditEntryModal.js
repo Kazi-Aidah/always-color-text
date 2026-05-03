@@ -3,6 +3,7 @@ import { ColorPickerModal } from './ColorPickerModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
 import { CustomCssModal } from './CustomCssModal.js';
+import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
 import { AddToExistingEntryModal } from './AddToExistingEntryModal.js';
 
 export class EditEntryModal extends Modal {
@@ -308,6 +309,9 @@ export class EditEntryModal extends Modal {
       } else if (style === "both") {
         this.entry.textColor = textColorInput.value || "";
       }
+      if (this.entry && this.entry.customCss) {
+        this.plugin.syncEntryCssFromColors(this.entry);
+      }
       if (dispatch) dispatchColorsChanged();
     };
     const applyBgColorToEntry = (dispatch = true) => {
@@ -322,6 +326,9 @@ export class EditEntryModal extends Modal {
         this.entry.backgroundColor = bgColorInput.value || "";
       } else if (style === "both") {
         this.entry.backgroundColor = bgColorInput.value || "";
+      }
+      if (this.entry && this.entry.customCss) {
+        this.plugin.syncEntryCssFromColors(this.entry);
       }
       if (dispatch) dispatchColorsChanged();
     };
@@ -548,7 +555,7 @@ export class EditEntryModal extends Modal {
     groupSelect.style.background = "var(--background-modifier-form-field)";
     groupSelect.style.textAlign = "center";
     const defaultOpt = groupSelect.createEl("option", {
-      text: this.plugin.t("default"),
+      text: this.plugin.t("no_group", "No Group"),
     });
     defaultOpt.value = "";
     groupsList.forEach((g) => {
@@ -836,10 +843,16 @@ export class EditEntryModal extends Modal {
         const span = document.createElement("span");
         span.setAttribute("style", styleStr);
         span.style.display = "inline";
-        // Apply custom CSS on top if present
+        // Apply custom CSS on top if present — use current picker colors for immediate preview
         if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
           try {
-            const decl = this.plugin.sanitizeCssDeclarations(this.entry.customCss);
+            const tempEntry = Object.assign({}, this.entry, {
+              color: style === 'text' ? t : '',
+              textColor: style === 'both' ? t : (style === 'highlight' ? 'currentColor' : null),
+              backgroundColor: (style === 'highlight' || style === 'both') ? b : null,
+            });
+            const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
+            const decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
             if (decl) {
               decl.split(";").map(s => s.trim()).filter(Boolean).forEach(p => {
                 const idx = p.indexOf(":");
@@ -1503,6 +1516,9 @@ export class EditEntryModal extends Modal {
           foundArray[foundIdx].inclusionRules = this.entry.inclusionRules;
         if (this.entry.exclusionRules)
           foundArray[foundIdx].exclusionRules = this.entry.exclusionRules;
+        // Persist custom CSS
+        if (this.entry.customCss !== undefined)
+          foundArray[foundIdx].customCss = this.entry.customCss;
         // Leave undefined values as-is to inherit global defaults
 
         await this.plugin.saveSettings();
@@ -1598,6 +1614,9 @@ export class EditEntryModal extends Modal {
           newEntry.inclusionRules = this.entry.inclusionRules;
         if (this.entry.exclusionRules)
           newEntry.exclusionRules = this.entry.exclusionRules;
+        // Persist custom CSS
+        if (this.entry.customCss !== undefined)
+          newEntry.customCss = this.entry.customCss;
 
         const toGroupUid = groupSelect.value || "";
         if (toGroupUid) {
@@ -1664,6 +1683,10 @@ export class EditEntryModal extends Modal {
           this.entry.backgroundColor = bgColorVal;
         }
 
+        if (this.entry.customCss) {
+          this.plugin.syncEntryCssFromColors(this.entry);
+        }
+
         try {
           this.onSaved && this.onSaved(this.entry);
         } catch (e) {}
@@ -1704,4 +1727,5 @@ export class EditEntryModal extends Modal {
     } catch (e) {}
   }
 }
+
 

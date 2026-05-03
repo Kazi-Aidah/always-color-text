@@ -13,6 +13,12 @@ module.exports = {
   "language_fr": "Francese",
   "language_eu": "Basco",
   "language_ru": "Russo",
+  "language_de": "Tedesco",
+  "language_hi": "Hindi",
+  "language_bn": "Bengalese",
+  "language_it": "Italiano",
+  "language_zh_cn": "Cinese semplificato",
+  "language_ar": "Arabo",
   "language_auto": "Predefinito di sistema",
   "default": "Predefinito",
   
@@ -270,6 +276,8 @@ module.exports = {
   "use_swatch_names_desc": "Mostra un menu a tendina con i nomi dei campioni accanto ai campi di inserimento parole/pattern",
   "link_swatches_to_entries": "Collega aggiornamenti dei campioni ai colori del testo",
   "link_swatches_to_entries_desc": "Quando cambia il colore di un campione personalizzato, aggiorna tutte le voci che usano quel colore",
+  "link_swatch_updates": "Collega aggiornamenti dei campioni ai colori del testo",
+  "link_swatch_updates_desc": "Se abilitato, aggiornare il colore di un campione aggiornerà tutti i testi colorati con quel campione.",
   "default_colors_header": "Campioni predefiniti",
   "custom_swatches_header": "Campioni personalizzati",
   "btn_add_color": "+ Aggiungi colore",
@@ -297,10 +305,13 @@ module.exports = {
   "grouped_entries_desc": "Gestisci gruppi di parole. La ricerca filtra per nome.",
   "search_groups_placeholder": "Cerca gruppi…",
   "edit_word_group_modal_title": "Modifica gruppo di parole",
+  "group_name_placeholder": "Dai un nome al tuo gruppo",
   "btn_save_group": "Salva gruppo",
   "btn_delete_group": "Elimina gruppo",
   "group_active_label": "Attivo",
   "group_inactive_label": "Inattivo",
+  "confirm_delete_group_title": "Elimina gruppo",
+  "confirm_delete_group_desc": "Sei sicuro di voler eliminare questo gruppo? Non può essere annullato.",
   "tooltip_duplicate_group": "Duplica gruppo",
   "tooltip_edit_group_settings": "Modifica impostazioni del gruppo",
   "tooltip_delete_all_groups": "Elimina tutti i gruppi di parole",
@@ -333,6 +344,7 @@ module.exports = {
   // Presets
   "btn_presets": "Preset",
   "preset_all_headings": "Tutti i titoli (H1-H6)",
+  "preset_headings_h3": "Titoli (H3)",
   "preset_bullet_points": "Punti elenco",
   "preset_numbered_lists": "Elenchi numerati",
   "preset_task_checked": "Elenco attività (selezionato)",
@@ -369,6 +381,7 @@ module.exports = {
 
   // Preset Examples
   "preset_example_heading": "# Titolo",
+  "preset_example_heading_h3": "### Titolo",
   "preset_example_bullet": "- Punto elenco",
   "preset_example_numbered": "1. Primo elemento",
   "preset_example_task_checked": "- [x] Completato",
@@ -437,6 +450,7 @@ module.exports = {
   "label_disable_in": "Disabilita in",
   "enter_path_or_pattern": "Inserisci percorso, modello o tag",
   "label_regex": "Espressione regolare",
+  "label_regex_name": "Nome espressione regolare",
   
   // Advanced Rules
   "advanced_rules_header": "Regole specifiche di inclusione/esclusione",
@@ -555,5 +569,44 @@ module.exports = {
   "dark_mode_fixer_desc": "Schiarisce automaticamente il testo colorato quando si utilizza il tema scuro per migliorare la visibilità.",
   "preset_bold": "Grassetto",
   "preset_italic": "Corsivo",
-  "preset_bold_italic": "Grassetto Corsivo"
+  "preset_bold_italic": "Grassetto Corsivo",
+
+  // Automatic Backups
+  "auto_backup_header": "Backup automatici",
+  "auto_backup_toggle": "Abilita backup automatici",
+  "auto_backup_toggle_desc": "Esegui periodicamente il backup di tutti i dati del plugin in una cartella all'interno del tuo vault.",
+  "auto_backup_folder": "Cartella di backup",
+  "auto_backup_folder_desc": "Percorso della cartella all'interno del vault dove vengono salvati i backup.",
+  "auto_backup_folder_pick": "Scegli cartella",
+  "auto_backup_folder_prompt": "Seleziona cartella di backup...",
+  "auto_backup_folder_reset": "Ripristina predefinito",
+  "auto_backup_interval": "Intervallo di backup",
+  "auto_backup_interval_desc": "Con quale frequenza salvare un backup.",
+  "auto_backup_unit_hour": "Ora/e",
+  "auto_backup_unit_day": "Giorno/i",
+  "auto_backup_unit_week": "Settimana/e",
+  "auto_backup_overwrite": "Sovrascrivi backup precedente",
+  "auto_backup_overwrite_desc": "Sostituire l'ultimo file di backup invece di crearne uno nuovo ogni volta.",
+  "auto_backup_now": "Esegui backup ora",
+  "auto_backup_now_desc": "Salva un backup immediatamente.",
+  "btn_backup_now": "Esegui backup ora",
+  "btn_backup_now_running": "Salvataggio...",
+  "btn_backup_now_done": "Salvato!",
+  "btn_backup_now_failed": "Fallito",
+
+  // Custom CSS
+  "custom_css_header": "CSS personalizzato",
+  "enable_custom_css": "Abilita CSS personalizzato per lo stile del testo",
+  "enable_custom_css_desc": "Aggiungi CSS per voce tramite il pulsante 'Modifica CSS personalizzato' negli editor di voci e gruppi.",
+  "edit_custom_css_btn": "Modifica CSS personalizzato",
+
+  // Color Text/Line/Child
+  "mark_target_text": "Colora testo",
+  "mark_target_line": "Colora riga",
+  "mark_target_child_line": "Colora figlio",
+  "mark_target_label": "Applica a",
+
+  // Group Select & Commands
+  "no_group": "Nessun gruppo",
+  "command_color_text_for_file": "Colora testo selezionato per il file corrente"
 };

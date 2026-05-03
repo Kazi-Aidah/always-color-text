@@ -2,6 +2,7 @@ import { Modal, Notice, setIcon } from 'obsidian';
 import { EditEntryModal } from './EditEntryModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { debugLog } from '../utils/debug.js';
+import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
 
 export class ColorPickerModal extends Modal {
   constructor(
@@ -26,7 +27,7 @@ export class ColorPickerModal extends Modal {
     this._entry = entry;
   }
 
-  _applyCustomCss() {
+  _applyCustomCss(currentTextColor, currentBgColor) {
     if (!this._previewSpan) return;
     let entry = this._entry;
 
@@ -68,7 +69,21 @@ export class ColorPickerModal extends Modal {
 
     if (entry && entry.customCss && this.plugin.settings.enableCustomCss) {
       try {
-        const decl = this.plugin.sanitizeCssDeclarations(entry.customCss);
+        // Build a temporary entry with the current picker colors so the preview
+        // reflects the color being hovered/selected, not the last-saved value
+        let cssToApply = entry.customCss;
+        if (currentTextColor || currentBgColor) {
+          const styleType = entry.styleType || (entry.backgroundColor ? 'highlight' : 'text');
+          const tempEntry = Object.assign({}, entry, {
+            color: styleType === 'text' ? (currentTextColor || entry.color) : '',
+            textColor: styleType === 'both' ? (currentTextColor || entry.textColor)
+                     : styleType === 'highlight' ? 'currentColor' : null,
+            backgroundColor: (styleType === 'highlight' || styleType === 'both')
+                             ? (currentBgColor || entry.backgroundColor) : null,
+          });
+          cssToApply = this.plugin.syncEntryCssFromColorsForPreview(tempEntry) || entry.customCss;
+        }
+        const decl = this.plugin.sanitizeCssDeclarations(cssToApply);
         if (decl) {
           decl
             .split(";")
@@ -169,7 +184,7 @@ export class ColorPickerModal extends Modal {
       groupSelect.style.flex = "0 0 auto";
       groupSelect.style.marginLeft = "auto";
       groupSelect.createEl("option", {
-        text: this.plugin.t("default", "Default"),
+        text: this.plugin.t("no_group", "No Group"),
         value: "",
       });
       groups.forEach((g) => {
@@ -525,7 +540,10 @@ export class ColorPickerModal extends Modal {
         }
         hex.value = val;
         colorInput.value = val;
-        this._applyCustomCss();
+        // Pass current picker colors so the preview reflects the new color immediately
+        const curText = type === 'text' ? val : (this.selectedTextColor || null);
+        const curBg   = type === 'background' ? val : (this.selectedBgColor || null);
+        this._applyCustomCss(curText, curBg);
       };
 
       const colorChange = () => {
@@ -1121,6 +1139,8 @@ export class ColorPickerModal extends Modal {
           }
           const onSaved = async () => {
             try {
+              // Signal ColorPickerModal that changes were made so it applies on close
+              this._hasUserChanges = true;
               await this.plugin.saveSettings();
               this.plugin.compileWordEntries();
               this.plugin.reconfigureEditorExtensions();
@@ -1480,6 +1500,10 @@ export class ColorPickerModal extends Modal {
           caseSensitive
             ? String(a) === String(b)
             : String(a).toLowerCase() === String(b).toLowerCase();
+        // If an entry already has customCss, patch only the color values — preserve user's custom properties
+        const syncCustomCss = (e) => {
+          if (e && e.customCss) this.plugin.syncEntryCssFromColors(e);
+        };
         let updated = false;
 
         // FIXED LOGIC: Clear logic for each case
@@ -1508,6 +1532,7 @@ export class ColorPickerModal extends Modal {
               e.color = ""; // Clear plain color field
               e.styleType = "both"; // EXPLICITLY SET TO BOTH
               e.markTarget = this._markTarget || "text";
+              syncCustomCss(e);
               debugLog("MODAL", "update both", e);
               updated = true;
               break;
@@ -1561,6 +1586,7 @@ export class ColorPickerModal extends Modal {
                   e.backgroundColor = null; // Clear background field
                   e.styleType = "text"; // EXPLICITLY SET TO TEXT
                   e.markTarget = this._markTarget || "text";
+                  syncCustomCss(e);
                   updated = true;
                   if (!e.isRegex)
                     e.matchType =
@@ -1579,6 +1605,7 @@ export class ColorPickerModal extends Modal {
                 e.backgroundColor = null; // Clear background field
                 e.styleType = "text"; // EXPLICITLY SET TO TEXT
                 e.markTarget = this._markTarget || "text";
+                syncCustomCss(e);
                 updated = true;
                 if (!e.isRegex)
                   e.matchType =
@@ -1596,6 +1623,7 @@ export class ColorPickerModal extends Modal {
                 e.backgroundColor = null; // Clear background field
                 e.styleType = "text"; // EXPLICITLY SET TO TEXT
                 e.markTarget = this._markTarget || "text";
+                syncCustomCss(e);
                 updated = true;
                 if (!e.isRegex)
                   e.matchType =
@@ -1676,6 +1704,7 @@ export class ColorPickerModal extends Modal {
               e.color = ""; // Clear plain color field
               e.styleType = "highlight"; // EXPLICITLY SET TO HIGHLIGHT
               e.markTarget = this._markTarget || "text";
+              syncCustomCss(e);
               debugLog("MODAL", "update highlight", e);
               updated = true;
               break;

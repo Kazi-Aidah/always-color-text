@@ -147,6 +147,11 @@ Use the **limit input** beside the search bar (also available in the "Add to Exi
 - `sw` → starts-with match-type entries
 - `ew` → ends-with match-type entries
 
+<!-- **Filter by Color Target:**
+- `ct` → color-text targeting entries (colors only the matched text)
+- `cl` → color-line targeting entries (colors the entire line)
+- `cc` → color-child targeting entries (colors child elements) -->
+
 ### Add to Existing Entry
 Right-click any entry and choose "Add to Existing Entry" to add the selected text to that entry:
 ![Add to Existing Entry Modal](assets/add-to-existing-entry.png)
@@ -185,6 +190,36 @@ Ensure your colors look great in any theme!
 
 ### Reading Mode Note:
 For best results in Reading mode, enable **"Force full render"** in settings. This ensures smooth coloring but is disabled by default to prevent potential performance issues.
+<!-- 
+---
+
+## Advanced Features
+
+### Automatic Backups
+Never lose your color settings! The plugin can automatically back up all your configuration, colored words, and rules to a folder inside your vault.
+
+- **Scheduled Backups**: Set automatic backups to run hourly, daily, or weekly
+- **Custom Backup Folder**: Choose where backups are saved in your vault
+- **One-Click Backup**: Manually trigger a backup anytime
+- **Overwrite Option**: Replace the previous backup or keep multiple versions
+
+Backups include all plugin data: colored texts, blacklists, file/folder rules, word groups, and settings. These files must be imported through the "Import Data" button in case of a data loss.
+
+### Custom CSS Styling
+Take styling to the next level with per-entry custom CSS! When enabled, you can add advanced CSS styling to individual entries or word groups.
+
+![](assets/custom-css.png)
+
+Use this for advanced effects like gradients, advanced animations, or custom font properties beyond the standard options.
+
+### Color Targeting Modes
+Choose exactly how your colors are applied with three targeting modes:
+
+- **Color Text**: Colors only the matched text (default)
+- **Color Line**: Colors the entire line containing the matched text
+- **Color Child**: Colors text within child elements (useful for nested content)
+
+These modes give you precise control over how colors are applied, especially useful for complex documents with nested structures. -->
 
 ---
 

@@ -76,6 +76,11 @@ export class ColorSettingTab extends PluginSettingTab {
       Number(this.plugin.settings?.entriesSearchLimit ?? 0) || 0;
     this._entriesRegexOnly = false;
     this._entriesSearchMatch = "contains";
+    // Color targeting mode filter (null = no filter, 'text', 'line', 'child')
+    this._colorTargetFilter = null;
+    // Word groups limit and filter state
+    this._groupLimit = 0;
+    this._groupColorTargetFilter = null;
     this._blacklistLimit =
       Number(this.plugin.settings?.blacklistSearchLimit ?? 0) || 0;
     this._blacklistSearchMatchStarts = false;
@@ -150,6 +155,23 @@ export class ColorSettingTab extends PluginSettingTab {
         } catch (_) {}
       }
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
+
+      // ELEMENT 1c: Color target selector (text / line / child)
+      const colorTargetSelect = row.createEl("select");
+      colorTargetSelect.style.padding = "6px";
+      colorTargetSelect.style.borderRadius = "4px";
+      colorTargetSelect.style.border = "1px solid var(--background-modifier-border)";
+      colorTargetSelect.style.background = "var(--background-modifier-form-field)";
+      colorTargetSelect.style.color = "var(--text-normal)";
+      colorTargetSelect.style.flex = "0 0 auto";
+      colorTargetSelect.style.maxWidth = "80px";
+      colorTargetSelect.style.width = "stretch";
+      colorTargetSelect.style.minWidth = "60px";
+      colorTargetSelect.style.textAlign = "center";
+      colorTargetSelect.title = this.plugin.t("color_target_tooltip", "Color target: text = matched text only, line = entire line, child = child elements");
+      try { colorTargetSelect.addClass("act-color-target-select"); } catch (e) {}
+      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("color_target_text", "text")}</option><option value="line">${this.plugin.t("color_target_line", "line")}</option><option value="child">${this.plugin.t("color_target_child", "child")}</option>`;
+      colorTargetSelect.value = entry.colorTarget || "text";
 
       // ELEMENT 2a: Regex name input (only for regex)
       let nameInput = null;
@@ -1169,6 +1191,21 @@ export class ColorSettingTab extends PluginSettingTab {
       // Also listen to input to catch programmatic value changes
       matchSelect.addEventListener("input", matchChangeHandler);
 
+      const colorTargetChangeHandler = async () => {
+        const idx = resolveIdx();
+        if (idx !== -1) {
+          this.plugin.settings.wordEntries[idx].colorTarget = colorTargetSelect.value;
+          entry.colorTarget = colorTargetSelect.value;
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this.plugin.compileTextBgColoringEntries();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
+        }
+      };
+      colorTargetSelect.addEventListener("change", colorTargetChangeHandler);
+
       const cleanup = () => {
         try {
           textInput.removeEventListener("change", textInputHandler);
@@ -1215,6 +1252,9 @@ export class ColorSettingTab extends PluginSettingTab {
           matchSelect.removeEventListener("change", matchChangeHandler);
         } catch (e) {}
         try {
+          colorTargetSelect.removeEventListener("change", colorTargetChangeHandler);
+        } catch (e) {}
+        try {
           row.remove();
         } catch (e) {}
       };
@@ -1226,6 +1266,7 @@ export class ColorSettingTab extends PluginSettingTab {
           textInput,
           styleSelect,
           matchSelect,
+          colorTargetSelect,
           cp,
           cpBg,
           regexChk,
@@ -3786,6 +3827,14 @@ export class ColorSettingTab extends PluginSettingTab {
       if (this._entriesWordsOnly) {
         finalFiltered = finalFiltered.filter((e) => !e.isRegex);
       }
+      // Apply color targeting mode filter (ct=text, cl=line, cc=child)
+      if (this._colorTargetFilter) {
+        finalFiltered = finalFiltered.filter(
+          (e) =>
+            String(e.colorTarget || "text").toLowerCase() ===
+            this._colorTargetFilter,
+        );
+      }
 
       if (!this._suspendSorting && this._wordsSortMode === "a-z") {
         finalFiltered.sort((a, b) => {
@@ -4014,7 +4063,24 @@ export class ColorSettingTab extends PluginSettingTab {
         this._refreshGroups();
       };
 
-      groups.forEach((group, index) => {
+      // Apply colorTarget filter on groups (filter groups that have at least one entry matching the target)
+      let filteredGroups = groups;
+      if (this._groupColorTargetFilter) {
+        filteredGroups = groups.filter((g) =>
+          (Array.isArray(g.entries) ? g.entries : []).some(
+            (e) =>
+              String(e.colorTarget || "text").toLowerCase() ===
+              this._groupColorTargetFilter,
+          ),
+        );
+      }
+      // Apply limit (last N groups)
+      const limitedGroups =
+        this._groupLimit && this._groupLimit > 0
+          ? filteredGroups.slice(-this._groupLimit)
+          : filteredGroups;
+
+      limitedGroups.forEach((group, index) => {
         const row = container.createDiv();
         try {
           row.addClass("act-group-row");
@@ -4095,7 +4161,8 @@ export class ColorSettingTab extends PluginSettingTab {
           group.textColor ||
           group.backgroundColor ||
           (typeof group.enableBorderThickness !== "undefined" &&
-            group.enableBorderThickness)
+            group.enableBorderThickness) ||
+          group.customCss
         ) {
           const preview = row.createDiv();
           try {
@@ -4148,6 +4215,20 @@ export class ColorSettingTab extends PluginSettingTab {
           } else {
             preview.style.border =
               "1px solid var(--background-modifier-border)";
+          }
+
+          // Apply custom CSS on top
+          if (group.customCss) {
+            try {
+              const decl = this.plugin.sanitizeCssDeclarations(group.customCss);
+              if (decl) {
+                decl.split(";").map(s => s.trim()).filter(Boolean).forEach(part => {
+                  const idx = part.indexOf(":");
+                  if (idx === -1) return;
+                  preview.style.setProperty(part.slice(0, idx).trim(), part.slice(idx + 1).trim(), "important");
+                });
+              }
+            } catch (_) {}
           }
         }
 
@@ -7136,7 +7217,7 @@ export class ColorSettingTab extends PluginSettingTab {
       );
       entriesLimitInput.title = this.plugin.t(
         "limit_input_tooltip",
-        "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact",
+        "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child",
       );
       entriesLimitInput.style.width = "64px";
       entriesLimitInput.style.padding = "6px";
@@ -7158,21 +7239,25 @@ export class ColorSettingTab extends PluginSettingTab {
         this._entriesRegexOnly = false;
         this._entriesWordsOnly = false;
         this._filterMode = null;
+        this._colorTargetFilter = null;
         this._entriesSearchMatch = "contains";
         this._entriesMatchTypeStartsWith = false;
         this._entriesMatchTypeEndsWith = false;
         this._entriesMatchTypeExact = false;
         for (const tok of parts) {
-          if (tok === "r") this._entriesRegexOnly = true;
+          // Check longer tokens first to avoid partial matches
+          if (tok === "ct") this._colorTargetFilter = "text";
+          else if (tok === "cl") this._colorTargetFilter = "line";
+          else if (tok === "cc") this._colorTargetFilter = "child";
+          else if (tok === "sw") this._entriesMatchTypeStartsWith = true;
+          else if (tok === "ew") this._entriesMatchTypeEndsWith = true;
+          else if (tok === "r") this._entriesRegexOnly = true;
           else if (tok === "w") this._entriesWordsOnly = true;
           else if (tok === "h") this._filterMode = "highlight";
           else if (tok === "c") this._filterMode = "text";
           else if (tok === "b") this._filterMode = "both";
-          else if (tok === "sw") this._entriesMatchTypeStartsWith = true;
-          else if (tok === "ew") this._entriesMatchTypeEndsWith = true;
           else if (tok === "e") this._entriesMatchTypeExact = true;
-        }
-        try {
+        }        try {
           this._refreshEntries();
         } catch (e) {}
       };
@@ -7533,6 +7618,45 @@ export class ColorSettingTab extends PluginSettingTab {
         this._groupSearch = groupSearch.value || "";
         this._refreshGroups();
       });
+
+      // Limit/filter input beside group search
+      const groupLimitInput = groupSearchContainer.createEl("input", {
+        type: "text",
+      });
+      groupLimitInput.value = String(this._groupLimit || 0);
+      groupLimitInput.placeholder = this.plugin.t(
+        "limit_input_placeholder",
+        "limit",
+      );
+      groupLimitInput.title = this.plugin.t(
+        "group_limit_input_tooltip",
+        "0=all; number=last N; ct=color-text; cl=color-line; cc=color-child",
+      );
+      groupLimitInput.style.width = "64px";
+      groupLimitInput.style.padding = "6px";
+      groupLimitInput.style.border = "1px solid var(--background-modifier-border)";
+      groupLimitInput.style.borderRadius = "var(--input-radius)";
+      const groupLimitHandler = () => {
+        const raw = String(groupLimitInput.value || "").trim().toLowerCase();
+        const parts = raw.split(/\s+/).filter(Boolean);
+        const numPart = parts.find((p) => /^\d+$/.test(p));
+        const num = numPart ? parseInt(numPart, 10) : NaN;
+        this._groupLimit = !isNaN(num) && num >= 0 ? num : 0;
+        this._groupColorTargetFilter = null;
+        for (const tok of parts) {
+          if (tok === "ct") this._groupColorTargetFilter = "text";
+          else if (tok === "cl") this._groupColorTargetFilter = "line";
+          else if (tok === "cc") this._groupColorTargetFilter = "child";
+        }
+        try {
+          this._refreshGroups();
+        } catch (e) {}
+      };
+      groupLimitInput.addEventListener("input", groupLimitHandler);
+      this._cleanupHandlers.push(() =>
+        groupLimitInput.removeEventListener("input", groupLimitHandler),
+      );
+
       const groupIcon = groupSearchContainer.createDiv();
       try {
         groupIcon.addClass("act-search-icon");

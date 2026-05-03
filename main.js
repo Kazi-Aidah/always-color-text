@@ -288,6 +288,12 @@ var require_en = __commonJS({
       "color_swatches_header": "Color Management",
       "color_picker_layout": "Color Picker Layout",
       "color_picker_layout_desc": "Choose which color types to show when picking colors for text",
+      "opt_both_text_left": "Both: Text Left, Highlight Right",
+      "opt_both_bg_left": "Both: Highlight Left, Text Right",
+      "opt_both_text_top": "Both (Vertical): Text Top, Highlight Bottom",
+      "opt_both_bg_top": "Both (Vertical): Highlight Top, Text Bottom",
+      "opt_text_only": "Text Color Only",
+      "opt_background_only": "Highlight Color Only",
       "enable_custom_swatches": "Enable custom swatches",
       "enable_custom_swatches_desc": "Turn this on if you want to pick your own colors for the color picker.",
       "replace_default_swatches": "Replace default swatches",
@@ -296,6 +302,8 @@ var require_en = __commonJS({
       "use_swatch_names_desc": "If enabled, the text will be colored using the name of the swatch (e.g., 'Red') instead of the hex code.",
       "link_swatch_updates": "Link swatch updates to text colors",
       "link_swatch_updates_desc": "If enabled, updating a swatch color will update all text colored with that swatch.",
+      "link_swatches_to_entries": "Link swatch updates to colored texts",
+      "link_swatches_to_entries_desc": "When a custom swatch's color changes, update all entries using that swatch",
       "default_colors_header": "Default Swatches",
       "custom_swatches_header": "Custom Swatches",
       "btn_add_color": "+ Add Color",
@@ -314,6 +322,7 @@ var require_en = __commonJS({
       "settings_tab_file_folder_rules": "File / Folder Rules",
       "settings_tab_data": "Data",
       // Always Colored Texts
+      "always_colored_texts_header": "Always Colored Texts",
       "colored_texts_header": "Colored Texts",
       "always_colored_texts_desc": "This is where you manage your words/patterns and their colors.",
       "grouped_entries_header": "Grouped Entries",
@@ -564,7 +573,42 @@ var require_en = __commonJS({
       "btn_delete_entry": "Delete Entry",
       "edit_group_highlight_styling": "Edit Group Highlight Styling",
       "light_mode_fixer_desc": "Automatically darkens colored text when using Light theme to improve visibility.",
-      "dark_mode_fixer_desc": "Automatically lightens colored text when using Dark theme to improve visibility."
+      "dark_mode_fixer_desc": "Automatically lightens colored text when using Dark theme to improve visibility.",
+      // Automatic Backups
+      "auto_backup_header": "Automatic Backups",
+      "auto_backup_toggle": "Enable automatic backups",
+      "auto_backup_toggle_desc": "Periodically back up all plugin data to a folder inside your vault.",
+      "auto_backup_folder": "Backup folder",
+      "auto_backup_folder_desc": "Folder path inside your vault where backups are saved.",
+      "auto_backup_folder_pick": "Choose folder",
+      "auto_backup_folder_prompt": "Select backup folder...",
+      "auto_backup_folder_reset": "Reset to default",
+      "auto_backup_interval": "Backup interval",
+      "auto_backup_interval_desc": "How often to save a backup.",
+      "auto_backup_unit_hour": "Hour(s)",
+      "auto_backup_unit_day": "Day(s)",
+      "auto_backup_unit_week": "Week(s)",
+      "auto_backup_overwrite": "Overwrite previous backup",
+      "auto_backup_overwrite_desc": "Replace the last backup file instead of creating a new one each time.",
+      "auto_backup_now": "Backup now",
+      "auto_backup_now_desc": "Save a backup immediately.",
+      "btn_backup_now": "Backup now",
+      "btn_backup_now_running": "Saving...",
+      "btn_backup_now_done": "Saved!",
+      "btn_backup_now_failed": "Failed",
+      // Custom CSS
+      "custom_css_header": "Custom CSS",
+      "enable_custom_css": "Enable custom CSS for text styling",
+      "enable_custom_css_desc": "Add per-entry CSS via the 'Edit Custom CSS' button in entry and group editors.",
+      "edit_custom_css_btn": "Edit Custom CSS",
+      // Color Text/Line/Child
+      "mark_target_text": "Color Text",
+      "mark_target_line": "Color Line",
+      "mark_target_child_line": "Color Child",
+      "mark_target_label": "Apply to",
+      // Group Select & Commands
+      "no_group": "No Group",
+      "command_color_text_for_file": "Color Selected Text for Current File"
     };
   }
 });
@@ -586,6 +630,12 @@ var require_es = __commonJS({
       "language_fr": "Franc\xE9s",
       "language_eu": "Euskera",
       "language_ru": "Ruso",
+      "language_de": "Alem\xE1n",
+      "language_hi": "Hindi",
+      "language_bn": "Bengal\xED",
+      "language_it": "Italiano",
+      "language_zh_cn": "Chino simplificado",
+      "language_ar": "\xC1rabe",
       "language_auto": "Predeterminado del Sistema",
       "default": "Predeterminado",
       // Release Notes
@@ -829,6 +879,8 @@ var require_es = __commonJS({
       "use_swatch_names_desc": "Mostrar un men\xFA desplegable de nombres de muestras junto a la entrada de palabra/patr\xF3n",
       "link_swatches_to_entries": "Vincular actualizaciones de muestras a textos coloreados",
       "link_swatches_to_entries_desc": "Actualizar todas las entradas que usan una muestra personalizada cuando cambia el color de esa muestra",
+      "link_swatch_updates": "Vincular actualizaciones de muestras a colores de texto",
+      "link_swatch_updates_desc": "Si est\xE1 activado, actualizar el color de una muestra actualizar\xE1 todos los textos coloreados con esa muestra.",
       "default_colors_header": "Muestras predeterminadas",
       "custom_swatches_header": "Muestras Personalizadas",
       "btn_add_color": "+ A\xF1adir Color",
@@ -847,16 +899,20 @@ var require_es = __commonJS({
       "settings_tab_file_folder_rules": "Reglas de Archivo / Carpeta",
       "settings_tab_data": "Datos",
       // Always Colored Texts
+      "always_colored_texts_header": "Textos Siempre Coloreados",
       "colored_texts_header": "Textos Coloreados",
       "always_colored_texts_desc": "Aqu\xED es donde gestionas tus palabras/patrones y sus colores.",
       "grouped_entries_header": "Entradas Agrupadas",
       "grouped_entries_desc": "Gestiona grupos de palabras. La b\xFAsqueda filtra por nombre.",
       "search_groups_placeholder": "Buscar grupos\u2026",
       "edit_word_group_modal_title": "Editar Grupo de Palabras",
+      "group_name_placeholder": "Nombra tu grupo",
       "btn_save_group": "Guardar Grupo",
       "btn_delete_group": "Eliminar Grupo",
       "group_active_label": "Activo",
       "group_inactive_label": "Inactivo",
+      "confirm_delete_group_title": "Eliminar grupo",
+      "confirm_delete_group_desc": "\xBFEst\xE1s seguro de que quieres eliminar este grupo? Esto no se puede deshacer.",
       "tooltip_duplicate_group": "Duplicar Grupo",
       "tooltip_edit_group_settings": "Editar configuraci\xF3n del grupo",
       "tooltip_delete_all_groups": "Eliminar todos los grupos de palabras",
@@ -888,6 +944,7 @@ var require_es = __commonJS({
       // Presets
       "btn_presets": "Preajustes",
       "preset_all_headings": "Todos los Encabezados (H1-H6)",
+      "preset_headings_h3": "Encabezados (H3)",
       "preset_bullet_points": "Vi\xF1etas",
       "preset_numbered_lists": "Listas Numeradas",
       "preset_task_checked": "Listas de Tareas (Marcadas)",
@@ -923,6 +980,7 @@ var require_es = __commonJS({
       "preset_group_brackets": "Par\xE9ntesis y Corchetes",
       // Preset Examples
       "preset_example_heading": "# T\xEDtulo",
+      "preset_example_heading_h3": "### T\xEDtulo",
       "preset_example_bullet": "- Vi\xF1eta",
       "preset_example_numbered": "1. Primer elemento",
       "preset_example_task_checked": "- [x] Completado",
@@ -988,6 +1046,7 @@ var require_es = __commonJS({
       "label_disable_in": "Deshabilitar en",
       "enter_path_or_pattern": "Ingrese ruta, patr\xF3n o etiquetas",
       "label_regex": "Expresi\xF3n regular",
+      "label_regex_name": "Nombre de expresi\xF3n regular",
       // Advanced Rules
       "advanced_rules_header": "Reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
       "advanced_rules_modal_header": "Reglas espec\xEDficas de inclusi\xF3n/exclusi\xF3n",
@@ -1098,7 +1157,42 @@ var require_es = __commonJS({
       "dark_mode_fixer_desc": "Aclara autom\xE1ticamente el texto coloreado al usar el tema oscuro para mejorar la visibilidad.",
       "preset_bold": "Negrita",
       "preset_italic": "Cursiva",
-      "preset_bold_italic": "Negrita Cursiva"
+      "preset_bold_italic": "Negrita Cursiva",
+      // Automatic Backups
+      "auto_backup_header": "Copias de seguridad autom\xE1ticas",
+      "auto_backup_toggle": "Activar copias de seguridad autom\xE1ticas",
+      "auto_backup_toggle_desc": "Hacer copias de seguridad peri\xF3dicas de todos los datos del plugin en una carpeta dentro de tu b\xF3veda.",
+      "auto_backup_folder": "Carpeta de copia de seguridad",
+      "auto_backup_folder_desc": "Ruta de la carpeta dentro de tu b\xF3veda donde se guardan las copias de seguridad.",
+      "auto_backup_folder_pick": "Elegir carpeta",
+      "auto_backup_folder_prompt": "Seleccionar carpeta de copia de seguridad...",
+      "auto_backup_folder_reset": "Restablecer al valor predeterminado",
+      "auto_backup_interval": "Intervalo de copia de seguridad",
+      "auto_backup_interval_desc": "Con qu\xE9 frecuencia guardar una copia de seguridad.",
+      "auto_backup_unit_hour": "Hora(s)",
+      "auto_backup_unit_day": "D\xEDa(s)",
+      "auto_backup_unit_week": "Semana(s)",
+      "auto_backup_overwrite": "Sobrescribir copia de seguridad anterior",
+      "auto_backup_overwrite_desc": "Reemplazar el \xFAltimo archivo de copia de seguridad en lugar de crear uno nuevo cada vez.",
+      "auto_backup_now": "Hacer copia de seguridad ahora",
+      "auto_backup_now_desc": "Guardar una copia de seguridad inmediatamente.",
+      "btn_backup_now": "Hacer copia de seguridad ahora",
+      "btn_backup_now_running": "Guardando...",
+      "btn_backup_now_done": "\xA1Guardado!",
+      "btn_backup_now_failed": "Fallido",
+      // Custom CSS
+      "custom_css_header": "CSS personalizado",
+      "enable_custom_css": "Activar CSS personalizado para el estilo de texto",
+      "enable_custom_css_desc": "A\xF1adir CSS por entrada mediante el bot\xF3n 'Editar CSS personalizado' en los editores de entrada y grupo.",
+      "edit_custom_css_btn": "Editar CSS personalizado",
+      // Color Text/Line/Child
+      "mark_target_text": "Colorear texto",
+      "mark_target_line": "Colorear l\xEDnea",
+      "mark_target_child_line": "Colorear hijo",
+      "mark_target_label": "Aplicar a",
+      // Group Select & Commands
+      "no_group": "Sin grupo",
+      "command_color_text_for_file": "Colorear texto seleccionado para el archivo actual"
     };
   }
 });
@@ -1120,6 +1214,12 @@ var require_fr = __commonJS({
       "language_fr": "Fran\xE7ais",
       "language_eu": "Basque",
       "language_ru": "Russe",
+      "language_de": "Allemand",
+      "language_hi": "Hindi",
+      "language_bn": "Bengali",
+      "language_it": "Italien",
+      "language_zh_cn": "Chinois simplifi\xE9",
+      "language_ar": "Arabe",
       "language_auto": "Par d\xE9faut du syst\xE8me",
       "default": "Par d\xE9faut",
       // Release Notes
@@ -1363,6 +1463,8 @@ var require_fr = __commonJS({
       "use_swatch_names_desc": "Afficher une liste d\xE9roulante des noms de nuanciers \xE0 c\xF4t\xE9 de l'entr\xE9e mot/motif",
       "link_swatches_to_entries": "Lier les mises \xE0 jour des nuanciers aux textes color\xE9s",
       "link_swatches_to_entries_desc": "Mettre \xE0 jour toutes les entr\xE9es utilisant un nuancier personnalis\xE9 lorsque la couleur de ce nuancier change",
+      "link_swatch_updates": "Lier les mises \xE0 jour des nuanciers aux couleurs du texte",
+      "link_swatch_updates_desc": "Si activ\xE9, la mise \xE0 jour d'une couleur de nuancier mettra \xE0 jour tous les textes color\xE9s avec ce nuancier.",
       "default_colors_header": "Nuanciers par d\xE9faut",
       "custom_swatches_header": "Nuanciers personnalis\xE9s",
       "btn_add_color": "+ Ajouter une couleur",
@@ -1381,16 +1483,20 @@ var require_fr = __commonJS({
       "settings_tab_file_folder_rules": "R\xE8gles Fichier / Dossier",
       "settings_tab_data": "Donn\xE9es",
       // Always Colored Texts
+      "always_colored_texts_header": "Textes toujours color\xE9s",
       "colored_texts_header": "Textes color\xE9s",
       "always_colored_texts_desc": "C'est ici que vous g\xE9rez vos mots/motifs et leurs couleurs.",
       "grouped_entries_header": "Entr\xE9es group\xE9es",
       "grouped_entries_desc": "G\xE9rez des groupes de mots. La recherche filtre par nom.",
       "search_groups_placeholder": "Rechercher des groupes\u2026",
       "edit_word_group_modal_title": "Modifier le groupe de mots",
+      "group_name_placeholder": "Nommez votre groupe",
       "btn_save_group": "Enregistrer le groupe",
       "btn_delete_group": "Supprimer le groupe",
       "group_active_label": "Actif",
       "group_inactive_label": "Inactif",
+      "confirm_delete_group_title": "Supprimer le groupe",
+      "confirm_delete_group_desc": "\xCAtes-vous s\xFBr de vouloir supprimer ce groupe ? Cela ne peut pas \xEAtre annul\xE9.",
       "tooltip_duplicate_group": "Dupliquer le groupe",
       "tooltip_edit_group_settings": "Modifier les param\xE8tres du groupe",
       "tooltip_delete_all_groups": "Supprimer tous les groupes de mots",
@@ -1422,6 +1528,7 @@ var require_fr = __commonJS({
       // Presets
       "btn_presets": "Pr\xE9r\xE9glages",
       "preset_all_headings": "Tous les titres (H1-H6)",
+      "preset_headings_h3": "Titres (H3)",
       "preset_bullet_points": "Puces",
       "preset_numbered_lists": "Listes num\xE9rot\xE9es",
       "preset_task_checked": "Listes de t\xE2ches (Coch\xE9es)",
@@ -1457,6 +1564,7 @@ var require_fr = __commonJS({
       "preset_group_brackets": "Crochets et Parenth\xE8ses",
       // Preset Examples
       "preset_example_heading": "# Titre",
+      "preset_example_heading_h3": "### Titre",
       "preset_example_bullet": "- Puce",
       "preset_example_numbered": "1. Premier \xE9l\xE9ment",
       "preset_example_task_checked": "- [x] Termin\xE9",
@@ -1522,6 +1630,7 @@ var require_fr = __commonJS({
       "label_disable_in": "D\xE9sactiver dans",
       "enter_path_or_pattern": "Entrer un chemin, un motif ou des balises",
       "label_regex": "Expression r\xE9guli\xE8re",
+      "label_regex_name": "Nom de l'expression r\xE9guli\xE8re",
       // Advanced Rules
       "advanced_rules_header": "R\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
       "advanced_rules_modal_header": "R\xE8gles sp\xE9cifiques d\u2019inclusion/exclusion",
@@ -1632,7 +1741,42 @@ var require_fr = __commonJS({
       "preset_bold": "Gras",
       "preset_italic": "Italique",
       "preset_bold_italic": "Gras Italique",
-      "preview_text": "Texte"
+      "preview_text": "Texte",
+      // Automatic Backups
+      "auto_backup_header": "Sauvegardes automatiques",
+      "auto_backup_toggle": "Activer les sauvegardes automatiques",
+      "auto_backup_toggle_desc": "Sauvegarder p\xE9riodiquement toutes les donn\xE9es du plugin dans un dossier de votre coffre.",
+      "auto_backup_folder": "Dossier de sauvegarde",
+      "auto_backup_folder_desc": "Chemin du dossier dans votre coffre o\xF9 les sauvegardes sont enregistr\xE9es.",
+      "auto_backup_folder_pick": "Choisir un dossier",
+      "auto_backup_folder_prompt": "S\xE9lectionner le dossier de sauvegarde...",
+      "auto_backup_folder_reset": "R\xE9initialiser par d\xE9faut",
+      "auto_backup_interval": "Intervalle de sauvegarde",
+      "auto_backup_interval_desc": "\xC0 quelle fr\xE9quence enregistrer une sauvegarde.",
+      "auto_backup_unit_hour": "Heure(s)",
+      "auto_backup_unit_day": "Jour(s)",
+      "auto_backup_unit_week": "Semaine(s)",
+      "auto_backup_overwrite": "\xC9craser la sauvegarde pr\xE9c\xE9dente",
+      "auto_backup_overwrite_desc": "Remplacer le dernier fichier de sauvegarde au lieu d'en cr\xE9er un nouveau \xE0 chaque fois.",
+      "auto_backup_now": "Sauvegarder maintenant",
+      "auto_backup_now_desc": "Enregistrer une sauvegarde imm\xE9diatement.",
+      "btn_backup_now": "Sauvegarder maintenant",
+      "btn_backup_now_running": "Enregistrement...",
+      "btn_backup_now_done": "Enregistr\xE9 !",
+      "btn_backup_now_failed": "\xC9chec",
+      // Custom CSS
+      "custom_css_header": "CSS personnalis\xE9",
+      "enable_custom_css": "Activer le CSS personnalis\xE9 pour le style de texte",
+      "enable_custom_css_desc": "Ajouter du CSS par entr\xE9e via le bouton 'Modifier le CSS personnalis\xE9' dans les \xE9diteurs d'entr\xE9e et de groupe.",
+      "edit_custom_css_btn": "Modifier le CSS personnalis\xE9",
+      // Color Text/Line/Child
+      "mark_target_text": "Colorier le texte",
+      "mark_target_line": "Colorier la ligne",
+      "mark_target_child_line": "Colorier l'enfant",
+      "mark_target_label": "Appliquer \xE0",
+      // Group Select & Commands
+      "no_group": "Aucun groupe",
+      "command_color_text_for_file": "Colorier le texte s\xE9lectionn\xE9 pour le fichier actuel"
     };
   }
 });
@@ -1654,6 +1798,12 @@ var require_hi = __commonJS({
       "language_fr": "\u092B\u094D\u0930\u0947\u0902\u091A",
       "language_eu": "\u092C\u093E\u0938\u094D\u0915",
       "language_ru": "\u0930\u0942\u0938\u0940",
+      "language_de": "\u091C\u0930\u094D\u092E\u0928",
+      "language_hi": "\u0939\u093F\u0928\u094D\u0926\u0940",
+      "language_bn": "\u092C\u0902\u0917\u093E\u0932\u0940",
+      "language_it": "\u0907\u0924\u093E\u0932\u0935\u0940",
+      "language_zh_cn": "\u0938\u0930\u0932\u0940\u0915\u0943\u0924 \u091A\u0940\u0928\u0940",
+      "language_ar": "\u0905\u0930\u092C\u0940",
       "language_auto": "\u0938\u093F\u0938\u094D\u091F\u092E \u0921\u093F\u092B\u0949\u0932\u094D\u091F",
       "default": "\u0921\u093F\u092B\u093C\u0949\u0932\u094D\u091F",
       // Release Notes
@@ -1900,6 +2050,8 @@ var require_hi = __commonJS({
       "use_swatch_names_desc": "\u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0907\u0928\u092A\u0941\u091F\u094D\u0938 \u0915\u0947 \u092C\u0917\u0932 \u092E\u0947\u0902 \u0938\u094D\u0935\u0948\u091A \u0928\u093E\u092E\u094B\u0902 \u0915\u093E \u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u0926\u093F\u0916\u093E\u090F\u0901",
       "link_swatches_to_entries": "\u0938\u094D\u0935\u0948\u091A \u0905\u092A\u0921\u0947\u091F\u094D\u0938 \u0915\u094B \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u094B\u0902 \u0938\u0947 \u0932\u093F\u0902\u0915 \u0915\u0930\u0947\u0902",
       "link_swatches_to_entries_desc": "\u091C\u092C \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A \u0915\u093E \u0930\u0902\u0917 \u092C\u0926\u0932\u0924\u093E \u0939\u0948, \u0909\u0938 \u0930\u0902\u0917 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0928\u0947 \u0935\u093E\u0932\u0947 \u0938\u092D\u0940 \u090F\u0902\u091F\u094D\u0930\u0940\u091C\u093C \u0905\u092A\u0921\u0947\u091F \u0915\u0930\u0947\u0902",
+      "link_swatch_updates": "\u0938\u094D\u0935\u0948\u091A \u0905\u092A\u0921\u0947\u091F\u094D\u0938 \u0915\u094B \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u094B\u0902 \u0938\u0947 \u0932\u093F\u0902\u0915 \u0915\u0930\u0947\u0902",
+      "link_swatch_updates_desc": "\u092F\u0926\u093F \u0938\u0915\u094D\u0937\u092E \u0939\u0948, \u0924\u094B \u0938\u094D\u0935\u0948\u091A \u0930\u0902\u0917 \u0905\u092A\u0921\u0947\u091F \u0915\u0930\u0928\u0947 \u0938\u0947 \u0909\u0938 \u0938\u094D\u0935\u0948\u091A \u0938\u0947 \u0930\u0902\u0917\u0947 \u0938\u092D\u0940 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0905\u092A\u0921\u0947\u091F \u0939\u094B\u0902\u0917\u0947\u0964",
       "default_colors_header": "\u0921\u093F\u092B\u093C\u0949\u0932\u094D\u091F \u0928\u092E\u0942\u0928\u0947",
       "custom_swatches_header": "\u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938",
       "btn_add_color": "+ \u0930\u0902\u0917 \u091C\u094B\u0921\u093C\u0947\u0902",
@@ -1925,10 +2077,13 @@ var require_hi = __commonJS({
       "grouped_entries_desc": "\u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939\u094B\u0902 \u0915\u094B \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902\u0964 \u0916\u094B\u091C \u0928\u093E\u092E \u0915\u0947 \u0905\u0928\u0941\u0938\u093E\u0930 \u092B\u093C\u093F\u0932\u094D\u091F\u0930 \u0915\u0930\u0924\u0940 \u0939\u0948\u0964",
       "search_groups_placeholder": "\u0938\u092E\u0942\u0939 \u0916\u094B\u091C\u0947\u0902\u2026",
       "edit_word_group_modal_title": "\u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+      "group_name_placeholder": "\u0905\u092A\u0928\u0947 \u0938\u092E\u0942\u0939 \u0915\u093E \u0928\u093E\u092E \u0926\u0947\u0902",
       "btn_save_group": "\u0938\u092E\u0942\u0939 \u0938\u0939\u0947\u091C\u0947\u0902",
       "btn_delete_group": "\u0938\u092E\u0942\u0939 \u0939\u091F\u093E\u090F\u0901",
       "group_active_label": "\u0938\u0915\u094D\u0930\u093F\u092F",
       "group_inactive_label": "\u0928\u093F\u0937\u094D\u0915\u094D\u0930\u093F\u092F",
+      "confirm_delete_group_title": "\u0938\u092E\u0942\u0939 \u0939\u091F\u093E\u090F\u0901",
+      "confirm_delete_group_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0935\u093E\u0915\u0908 \u0907\u0938 \u0938\u092E\u0942\u0939 \u0915\u094B \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902? \u092F\u0939 \u092A\u0942\u0930\u094D\u0935\u0935\u0924 \u0928\u0939\u0940\u0902 \u0915\u093F\u092F\u093E \u091C\u093E \u0938\u0915\u0924\u093E\u0964",
       "tooltip_duplicate_group": "\u0938\u092E\u0942\u0939 \u0921\u0941\u092A\u094D\u0932\u093F\u0915\u0947\u091F \u0915\u0930\u0947\u0902",
       "tooltip_edit_group_settings": "\u0938\u092E\u0942\u0939 \u0938\u0947\u091F\u093F\u0902\u0917\u094D\u0938 \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
       "tooltip_delete_all_groups": "\u0938\u092D\u0940 \u0936\u092C\u094D\u0926 \u0938\u092E\u0942\u0939 \u0939\u091F\u093E\u090F\u0902",
@@ -1960,6 +2115,7 @@ var require_hi = __commonJS({
       // Presets
       "btn_presets": "\u092A\u094D\u0930\u0940\u0938\u0947\u091F\u094D\u0938",
       "preset_all_headings": "\u0938\u092D\u0940 \u0939\u0947\u0921\u093F\u0902\u0917\u094D\u0938 (H1-H6)",
+      "preset_headings_h3": "\u0939\u0947\u0921\u093F\u0902\u0917\u094D\u0938 (H3)",
       "preset_bullet_points": "\u092C\u0941\u0932\u0947\u091F \u092A\u0949\u0907\u0902\u091F\u094D\u0938",
       "preset_numbered_lists": "\u0938\u0902\u0916\u094D\u092F\u093E\u092F\u093F\u0924 \u0938\u0942\u091A\u093F\u092F\u093E\u0901",
       "preset_task_checked": "\u091F\u093E\u0938\u094D\u0915 \u0932\u093F\u0938\u094D\u091F (\u091A\u0947\u0915 \u0915\u093F\u092F\u093E \u0939\u0941\u0906)",
@@ -1995,6 +2151,7 @@ var require_hi = __commonJS({
       "preset_group_brackets": "\u0915\u094B\u0937\u094D\u0920\u0915",
       // Preset Examples
       "preset_example_heading": "# \u0936\u0940\u0930\u094D\u0937\u0915",
+      "preset_example_heading_h3": "### \u0936\u0940\u0930\u094D\u0937\u0915",
       "preset_example_bullet": "- \u092C\u093F\u0902\u0926\u0941",
       "preset_example_numbered": "1. \u092A\u0939\u0932\u0940 \u0935\u0938\u094D\u0924\u0941",
       "preset_example_task_checked": "- [x] \u092A\u0942\u0930\u093E \u0939\u0941\u0906",
@@ -2060,6 +2217,7 @@ var require_hi = __commonJS({
       "label_disable_in": "\u092F\u0939\u093E\u0901 \u0905\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
       "enter_path_or_pattern": "\u092A\u0925, \u092A\u0948\u091F\u0930\u094D\u0928 \u092F\u093E \u091F\u0948\u0917 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902",
       "label_regex": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938",
+      "label_regex_name": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u0928\u093E\u092E",
       // Advanced Rules
       "advanced_rules_header": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E",
       "advanced_rules_modal_header": "\u0935\u093F\u0936\u093F\u0937\u094D\u091F \u0938\u092E\u093E\u0935\u0947\u0936\u0928/\u092C\u0939\u093F\u0937\u094D\u0915\u0930\u0923 \u0928\u093F\u092F\u092E",
@@ -2167,7 +2325,42 @@ var require_hi = __commonJS({
       "dark_mode_fixer_desc": "\u0926\u0943\u0936\u094D\u092F\u0924\u093E \u092E\u0947\u0902 \u0938\u0941\u0927\u093E\u0930 \u0915\u0947 \u0932\u093F\u090F \u0921\u093E\u0930\u094D\u0915 \u0925\u0940\u092E \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0924\u0947 \u0938\u092E\u092F \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0938\u094D\u0935\u091A\u093E\u0932\u093F\u0924 \u0930\u0942\u092A \u0938\u0947 \u0939\u0932\u094D\u0915\u093E \u0915\u0930\u0924\u093E \u0939\u0948\u0964",
       "preset_bold": "\u092C\u094B\u0932\u094D\u0921",
       "preset_italic": "\u0907\u091F\u093E\u0932\u093F\u0915",
-      "preset_bold_italic": "\u092C\u094B\u0932\u094D\u0921 \u0907\u091F\u093E\u0932\u093F\u0915"
+      "preset_bold_italic": "\u092C\u094B\u0932\u094D\u0921 \u0907\u091F\u093E\u0932\u093F\u0915",
+      // Automatic Backups
+      "auto_backup_header": "\u0938\u094D\u0935\u091A\u093E\u0932\u093F\u0924 \u092C\u0948\u0915\u0905\u092A",
+      "auto_backup_toggle": "\u0938\u094D\u0935\u091A\u093E\u0932\u093F\u0924 \u092C\u0948\u0915\u0905\u092A \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "auto_backup_toggle_desc": "\u0905\u092A\u0928\u0947 \u0935\u0949\u0932\u094D\u091F \u0915\u0947 \u0905\u0902\u0926\u0930 \u090F\u0915 \u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u092E\u0947\u0902 \u0938\u092D\u0940 \u092A\u094D\u0932\u0917\u0907\u0928 \u0921\u0947\u091F\u093E \u0915\u093E \u0938\u092E\u092F-\u0938\u092E\u092F \u092A\u0930 \u092C\u0948\u0915\u0905\u092A \u0932\u0947\u0902\u0964",
+      "auto_backup_folder": "\u092C\u0948\u0915\u0905\u092A \u092B\u093C\u094B\u0932\u094D\u0921\u0930",
+      "auto_backup_folder_desc": "\u0906\u092A\u0915\u0947 \u0935\u0949\u0932\u094D\u091F \u0915\u0947 \u0905\u0902\u0926\u0930 \u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u092A\u0925 \u091C\u0939\u093E\u0901 \u092C\u0948\u0915\u0905\u092A \u0938\u0939\u0947\u091C\u0947 \u091C\u093E\u0924\u0947 \u0939\u0948\u0902\u0964",
+      "auto_backup_folder_pick": "\u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u091A\u0941\u0928\u0947\u0902",
+      "auto_backup_folder_prompt": "\u092C\u0948\u0915\u0905\u092A \u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u091A\u0941\u0928\u0947\u0902...",
+      "auto_backup_folder_reset": "\u0921\u093F\u092B\u093C\u0949\u0932\u094D\u091F \u092A\u0930 \u0930\u0940\u0938\u0947\u091F \u0915\u0930\u0947\u0902",
+      "auto_backup_interval": "\u092C\u0948\u0915\u0905\u092A \u0905\u0902\u0924\u0930\u093E\u0932",
+      "auto_backup_interval_desc": "\u092C\u0948\u0915\u0905\u092A \u0915\u093F\u0924\u0928\u0940 \u092C\u093E\u0930 \u0938\u0939\u0947\u091C\u0928\u093E \u0939\u0948\u0964",
+      "auto_backup_unit_hour": "\u0918\u0902\u091F\u093E(\u0918\u0902\u091F\u0947)",
+      "auto_backup_unit_day": "\u0926\u093F\u0928",
+      "auto_backup_unit_week": "\u0938\u092A\u094D\u0924\u093E\u0939",
+      "auto_backup_overwrite": "\u092A\u093F\u091B\u0932\u0947 \u092C\u0948\u0915\u0905\u092A \u0915\u094B \u0913\u0935\u0930\u0930\u093E\u0907\u091F \u0915\u0930\u0947\u0902",
+      "auto_backup_overwrite_desc": "\u0939\u0930 \u092C\u093E\u0930 \u0928\u092F\u093E \u092C\u0928\u093E\u0928\u0947 \u0915\u0947 \u092C\u091C\u093E\u092F \u0905\u0902\u0924\u093F\u092E \u092C\u0948\u0915\u0905\u092A \u092B\u093C\u093E\u0907\u0932 \u0915\u094B \u092C\u0926\u0932\u0947\u0902\u0964",
+      "auto_backup_now": "\u0905\u092D\u0940 \u092C\u0948\u0915\u0905\u092A \u0915\u0930\u0947\u0902",
+      "auto_backup_now_desc": "\u0924\u0941\u0930\u0902\u0924 \u092C\u0948\u0915\u0905\u092A \u0938\u0939\u0947\u091C\u0947\u0902\u0964",
+      "btn_backup_now": "\u0905\u092D\u0940 \u092C\u0948\u0915\u0905\u092A \u0915\u0930\u0947\u0902",
+      "btn_backup_now_running": "\u0938\u0939\u0947\u091C\u093E \u091C\u093E \u0930\u0939\u093E \u0939\u0948...",
+      "btn_backup_now_done": "\u0938\u0939\u0947\u091C\u093E \u0917\u092F\u093E!",
+      "btn_backup_now_failed": "\u0935\u093F\u092B\u0932",
+      // Custom CSS
+      "custom_css_header": "\u0915\u0938\u094D\u091F\u092E CSS",
+      "enable_custom_css": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0938\u094D\u091F\u093E\u0907\u0932\u093F\u0902\u0917 \u0915\u0947 \u0932\u093F\u090F \u0915\u0938\u094D\u091F\u092E CSS \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "enable_custom_css_desc": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0914\u0930 \u0938\u092E\u0942\u0939 \u0938\u0902\u092A\u093E\u0926\u0915\u094B\u0902 \u092E\u0947\u0902 '\u0915\u0938\u094D\u091F\u092E CSS \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902' \u092C\u091F\u0928 \u0915\u0947 \u092E\u093E\u0927\u094D\u092F\u092E \u0938\u0947 \u092A\u094D\u0930\u0924\u093F-\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F CSS \u091C\u094B\u0921\u093C\u0947\u0902\u0964",
+      "edit_custom_css_btn": "\u0915\u0938\u094D\u091F\u092E CSS \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+      // Color Text/Line/Child
+      "mark_target_text": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u0947\u0902",
+      "mark_target_line": "\u0932\u093E\u0907\u0928 \u0930\u0902\u0917\u0947\u0902",
+      "mark_target_child_line": "\u091A\u093E\u0907\u0932\u094D\u0921 \u0930\u0902\u0917\u0947\u0902",
+      "mark_target_label": "\u0907\u0938 \u092A\u0930 \u0932\u093E\u0917\u0942 \u0915\u0930\u0947\u0902",
+      // Group Select & Commands
+      "no_group": "\u0915\u094B\u0908 \u0938\u092E\u0942\u0939 \u0928\u0939\u0940\u0902",
+      "command_color_text_for_file": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u0947\u0902"
     };
   }
 });
@@ -2189,6 +2382,12 @@ var require_it = __commonJS({
       "language_fr": "Francese",
       "language_eu": "Basco",
       "language_ru": "Russo",
+      "language_de": "Tedesco",
+      "language_hi": "Hindi",
+      "language_bn": "Bengalese",
+      "language_it": "Italiano",
+      "language_zh_cn": "Cinese semplificato",
+      "language_ar": "Arabo",
       "language_auto": "Predefinito di sistema",
       "default": "Predefinito",
       // Release Notes
@@ -2432,6 +2631,8 @@ var require_it = __commonJS({
       "use_swatch_names_desc": "Mostra un menu a tendina con i nomi dei campioni accanto ai campi di inserimento parole/pattern",
       "link_swatches_to_entries": "Collega aggiornamenti dei campioni ai colori del testo",
       "link_swatches_to_entries_desc": "Quando cambia il colore di un campione personalizzato, aggiorna tutte le voci che usano quel colore",
+      "link_swatch_updates": "Collega aggiornamenti dei campioni ai colori del testo",
+      "link_swatch_updates_desc": "Se abilitato, aggiornare il colore di un campione aggiorner\xE0 tutti i testi colorati con quel campione.",
       "default_colors_header": "Campioni predefiniti",
       "custom_swatches_header": "Campioni personalizzati",
       "btn_add_color": "+ Aggiungi colore",
@@ -2457,10 +2658,13 @@ var require_it = __commonJS({
       "grouped_entries_desc": "Gestisci gruppi di parole. La ricerca filtra per nome.",
       "search_groups_placeholder": "Cerca gruppi\u2026",
       "edit_word_group_modal_title": "Modifica gruppo di parole",
+      "group_name_placeholder": "Dai un nome al tuo gruppo",
       "btn_save_group": "Salva gruppo",
       "btn_delete_group": "Elimina gruppo",
       "group_active_label": "Attivo",
       "group_inactive_label": "Inattivo",
+      "confirm_delete_group_title": "Elimina gruppo",
+      "confirm_delete_group_desc": "Sei sicuro di voler eliminare questo gruppo? Non pu\xF2 essere annullato.",
       "tooltip_duplicate_group": "Duplica gruppo",
       "tooltip_edit_group_settings": "Modifica impostazioni del gruppo",
       "tooltip_delete_all_groups": "Elimina tutti i gruppi di parole",
@@ -2492,6 +2696,7 @@ var require_it = __commonJS({
       // Presets
       "btn_presets": "Preset",
       "preset_all_headings": "Tutti i titoli (H1-H6)",
+      "preset_headings_h3": "Titoli (H3)",
       "preset_bullet_points": "Punti elenco",
       "preset_numbered_lists": "Elenchi numerati",
       "preset_task_checked": "Elenco attivit\xE0 (selezionato)",
@@ -2527,6 +2732,7 @@ var require_it = __commonJS({
       "preset_group_brackets": "Parentesi",
       // Preset Examples
       "preset_example_heading": "# Titolo",
+      "preset_example_heading_h3": "### Titolo",
       "preset_example_bullet": "- Punto elenco",
       "preset_example_numbered": "1. Primo elemento",
       "preset_example_task_checked": "- [x] Completato",
@@ -2592,6 +2798,7 @@ var require_it = __commonJS({
       "label_disable_in": "Disabilita in",
       "enter_path_or_pattern": "Inserisci percorso, modello o tag",
       "label_regex": "Espressione regolare",
+      "label_regex_name": "Nome espressione regolare",
       // Advanced Rules
       "advanced_rules_header": "Regole specifiche di inclusione/esclusione",
       "advanced_rules_modal_header": "Regole specifiche di inclusione/esclusione",
@@ -2702,7 +2909,42 @@ var require_it = __commonJS({
       "dark_mode_fixer_desc": "Schiarisce automaticamente il testo colorato quando si utilizza il tema scuro per migliorare la visibilit\xE0.",
       "preset_bold": "Grassetto",
       "preset_italic": "Corsivo",
-      "preset_bold_italic": "Grassetto Corsivo"
+      "preset_bold_italic": "Grassetto Corsivo",
+      // Automatic Backups
+      "auto_backup_header": "Backup automatici",
+      "auto_backup_toggle": "Abilita backup automatici",
+      "auto_backup_toggle_desc": "Esegui periodicamente il backup di tutti i dati del plugin in una cartella all'interno del tuo vault.",
+      "auto_backup_folder": "Cartella di backup",
+      "auto_backup_folder_desc": "Percorso della cartella all'interno del vault dove vengono salvati i backup.",
+      "auto_backup_folder_pick": "Scegli cartella",
+      "auto_backup_folder_prompt": "Seleziona cartella di backup...",
+      "auto_backup_folder_reset": "Ripristina predefinito",
+      "auto_backup_interval": "Intervallo di backup",
+      "auto_backup_interval_desc": "Con quale frequenza salvare un backup.",
+      "auto_backup_unit_hour": "Ora/e",
+      "auto_backup_unit_day": "Giorno/i",
+      "auto_backup_unit_week": "Settimana/e",
+      "auto_backup_overwrite": "Sovrascrivi backup precedente",
+      "auto_backup_overwrite_desc": "Sostituire l'ultimo file di backup invece di crearne uno nuovo ogni volta.",
+      "auto_backup_now": "Esegui backup ora",
+      "auto_backup_now_desc": "Salva un backup immediatamente.",
+      "btn_backup_now": "Esegui backup ora",
+      "btn_backup_now_running": "Salvataggio...",
+      "btn_backup_now_done": "Salvato!",
+      "btn_backup_now_failed": "Fallito",
+      // Custom CSS
+      "custom_css_header": "CSS personalizzato",
+      "enable_custom_css": "Abilita CSS personalizzato per lo stile del testo",
+      "enable_custom_css_desc": "Aggiungi CSS per voce tramite il pulsante 'Modifica CSS personalizzato' negli editor di voci e gruppi.",
+      "edit_custom_css_btn": "Modifica CSS personalizzato",
+      // Color Text/Line/Child
+      "mark_target_text": "Colora testo",
+      "mark_target_line": "Colora riga",
+      "mark_target_child_line": "Colora figlio",
+      "mark_target_label": "Applica a",
+      // Group Select & Commands
+      "no_group": "Nessun gruppo",
+      "command_color_text_for_file": "Colora testo selezionato per il file corrente"
     };
   }
 });
@@ -2724,6 +2966,12 @@ var require_bn = __commonJS({
       "language_fr": "\u09AB\u09CD\u09B0\u09C7\u099E\u09CD\u099A",
       "language_eu": "\u09AC\u09BE\u09B8\u09CD\u0995",
       "language_ru": "\u09B0\u09BE\u09B6\u09BF\u09AF\u09BC\u09BE\u09A8",
+      "language_de": "\u099C\u09BE\u09B0\u09CD\u09AE\u09BE\u09A8",
+      "language_hi": "\u09B9\u09BF\u09A8\u09CD\u09A6\u09BF",
+      "language_bn": "\u09AC\u09BE\u0982\u09B2\u09BE",
+      "language_it": "\u0987\u09A4\u09BE\u09B2\u09BF\u09AF\u09BC\u09BE\u09A8",
+      "language_zh_cn": "\u09B8\u09B0\u09B2\u09C0\u0995\u09C3\u09A4 \u099A\u09C0\u09A8\u09BE",
+      "language_ar": "\u0986\u09B0\u09AC\u09BF",
       "language_auto": "\u09B8\u09BF\u09B8\u09CD\u099F\u09C7\u09AE \u09A1\u09BF\u09AB\u09B2\u09CD\u099F",
       "default": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F",
       // Release Notes
@@ -2852,6 +3100,8 @@ var require_bn = __commonJS({
       "confirm_delete_all_groups_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u09AF\u09C7 \u0986\u09AA\u09A8\u09BF \u09B8\u09AC \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8? \u0986\u09AA\u09A8\u09BF \u098F\u099F\u09BF \u09AA\u09C2\u09B0\u09CD\u09AC\u09BE\u09AC\u09B8\u09CD\u09A5\u09BE\u09AF\u09BC \u09AB\u09BF\u09B0\u09BF\u09AF\u09BC\u09C7 \u0986\u09A8\u09A4\u09C7 \u09AA\u09BE\u09B0\u09AC\u09C7\u09A8 \u09A8\u09BE!",
       "restart_required_title": "\u09B0\u09BF\u09B8\u09CD\u099F\u09BE\u09B0\u09CD\u099F \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u099C\u09A8",
       "restart_required_desc": "\u0995\u09AE\u09BE\u09A8\u09CD\u09A1 \u09AA\u09CD\u09AF\u09BE\u09B2\u09C7\u099F \u099F\u0997\u09B2 \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09A4\u09C7 \u09AA\u09CD\u09AF\u09BE\u09B2\u09C7\u099F \u09A5\u09C7\u0995\u09C7 \u0995\u09AE\u09BE\u09A8\u09CD\u09A1\u0997\u09C1\u09B2\u09BF \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3\u09AD\u09BE\u09AC\u09C7 \u09B8\u09B0\u09BE\u09A8\u09CB\u09B0 \u099C\u09A8\u09CD\u09AF \u0985\u09AC\u09B8\u09BF\u09A1\u09BF\u09AF\u09BC\u09BE\u09A8 \u09B0\u09BF\u09B8\u09CD\u099F\u09BE\u09B0\u09CD\u099F \u0995\u09B0\u09A4\u09C7 \u09B9\u09AC\u09C7\u0964 \u098F\u0996\u09A8\u0987 \u09B0\u09BF\u09B8\u09CD\u099F\u09BE\u09B0\u09CD\u099F \u0995\u09B0\u09AC\u09C7\u09A8?",
+      "btn_cancel": "\u09AC\u09BE\u09A4\u09BF\u09B2",
+      "btn_confirm": "\u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u0995\u09B0\u09C1\u09A8",
       // Basic Settings
       "enable_document_color": "\u09A1\u0995\u09C1\u09AE\u09C7\u09A8\u09CD\u099F \u09B0\u0999 \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "color_in_live_preview_mode": "\u09B2\u09BE\u0987\u09AD \u09AA\u09CD\u09B0\u09BF\u09AD\u09BF\u0989 \u09AE\u09CB\u09A1\u09C7 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
@@ -2873,6 +3123,7 @@ var require_bn = __commonJS({
       "regex_support_desc": "\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8\u0997\u09C1\u09B2\u09BF\u0995\u09C7 \u09B0\u09C7\u0997\u09C1\u09B2\u09BE\u09B0 \u098F\u0995\u09CD\u09B8\u09AA\u09CD\u09B0\u09C7\u09B6\u09A8 \u09B9\u09A4\u09C7 \u0985\u09A8\u09C1\u09AE\u09A4\u09BF \u09A6\u09BF\u09A8\u0964 \u09A8\u09BF\u09B0\u09BE\u09AA\u09A4\u09CD\u09A4\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u0985\u09AC\u09C8\u09A7 \u09B0\u09C7\u0997\u09C7\u0995\u09CD\u09B8 \u0989\u09AA\u09C7\u0995\u09CD\u09B7\u09BE \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u0964",
       "disable_regex_safety": "\u09B0\u09C7\u0997\u09C7\u0995\u09CD\u09B8 \u09A8\u09BF\u09B0\u09BE\u09AA\u09A4\u09CD\u09A4\u09BE \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "disable_regex_safety_desc": "\u099C\u099F\u09BF\u09B2 \u09AC\u09BE \u09B8\u09AE\u09CD\u09AD\u09BE\u09AC\u09CD\u09AF \u09AC\u09BF\u09AA\u099C\u09CD\u099C\u09A8\u0995 \u098F\u0995\u09CD\u09B8\u09AA\u09CD\u09B0\u09C7\u09B6\u09A8 \u0985\u09A8\u09C1\u09AE\u09A4\u09BF \u09A6\u09BF\u09A8\u0964 \u09AA\u09BE\u09B0\u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u09A8\u09CD\u09B8 \u0987\u09B8\u09CD\u09AF\u09C1 \u09AC\u09BE \u09AB\u09CD\u09B0\u09BF\u099C \u09B9\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7\u0964",
+      "requires_regex_safety_disabled": "\u09B0\u09C7\u099C\u09C7\u0995\u09CD\u09B8 \u09A8\u09BF\u09B0\u09BE\u09AA\u09A4\u09CD\u09A4\u09BE \u0985\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09BE \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u099C\u09A8",
       "case_sensitive": "\u0995\u09C7\u09B8 \u09B8\u09C7\u09A8\u09CD\u09B8\u09BF\u099F\u09BF\u09AD",
       "case_sensitive_desc": '\u098F\u099F\u09BF \u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, "word" \u098F\u09AC\u0982 "Word" \u0986\u09B2\u09BE\u09A6\u09BE \u09B9\u09BF\u09B8\u09C7\u09AC\u09C7 \u09AC\u09BF\u09AC\u09C7\u099A\u09BF\u09A4 \u09B9\u09AC\u09C7\u0964 \u09AC\u09A8\u09CD\u09A7 \u09A5\u09BE\u0995\u09B2\u09C7, \u09A4\u09BE\u09B0\u09BE \u098F\u0995\u0987\u09AD\u09BE\u09AC\u09C7 \u09B0\u0999 \u0995\u09B0\u09BE \u09B9\u09AC\u09C7\u0964',
       "partial_match": "\u0986\u0982\u09B6\u09BF\u0995 \u09AE\u09CD\u09AF\u09BE\u099A",
@@ -2966,6 +3217,8 @@ var require_bn = __commonJS({
       "use_swatch_names_desc": "\u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u0987\u09A8\u09AA\u09C1\u099F\u09C7\u09B0 \u09AA\u09BE\u09B6\u09C7 \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BE\u09AE\u09C7\u09B0 \u09A1\u09CD\u09B0\u09AA\u09A1\u09BE\u0989\u09A8 \u09A6\u09C7\u0996\u09BE\u09A8",
       "link_swatches_to_entries": "\u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u0986\u09AA\u09A1\u09C7\u099F\u0995\u09C7 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09C7\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09B2\u09BF\u0982\u0995 \u0995\u09B0\u09C1\u09A8",
       "link_swatches_to_entries_desc": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u09C7\u09B0 \u09B0\u0999 \u09AA\u09B0\u09BF\u09AC\u09B0\u09CD\u09A4\u09A8 \u09B9\u09B2\u09C7, \u09B8\u09C7\u0987 \u09B0\u0999 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B8\u09AC \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
+      "link_swatch_updates": "\u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u0986\u09AA\u09A1\u09C7\u099F\u0995\u09C7 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09C7\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09B2\u09BF\u0982\u0995 \u0995\u09B0\u09C1\u09A8",
+      "link_swatch_updates_desc": "\u09B8\u0995\u09CD\u09B7\u09AE \u09A5\u09BE\u0995\u09B2\u09C7, \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09B0\u0999 \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09B2\u09C7 \u09B8\u09C7\u0987 \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A6\u09BF\u09AF\u09BC\u09C7 \u09B0\u0999 \u0995\u09B0\u09BE \u09B8\u09AC \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0986\u09AA\u09A1\u09C7\u099F \u09B9\u09AC\u09C7\u0964",
       "default_colors_header": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B8\u09CB\u09AF\u09BC\u09BE\u099A",
       "custom_swatches_header": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF",
       "btn_add_color": "+ \u09B0\u0999 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
@@ -2991,10 +3244,13 @@ var require_bn = __commonJS({
       "grouped_entries_desc": "\u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA\u0997\u09C1\u09B2\u09BF\u0995\u09C7 \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8\u0964 \u0985\u09A8\u09C1\u09B8\u09A8\u09CD\u09A7\u09BE\u09A8 \u09A8\u09BE\u09AE \u09A6\u09CD\u09AC\u09BE\u09B0\u09BE \u09AB\u09BF\u09B2\u09CD\u099F\u09BE\u09B0 \u0995\u09B0\u09C7\u0964",
       "search_groups_placeholder": "\u0997\u09CD\u09B0\u09C1\u09AA \u0985\u09A8\u09C1\u09B8\u09A8\u09CD\u09A7\u09BE\u09A8 \u0995\u09B0\u09C1\u09A8\u2026",
       "edit_word_group_modal_title": "\u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE",
+      "group_name_placeholder": "\u0986\u09AA\u09A8\u09BE\u09B0 \u0997\u09CD\u09B0\u09C1\u09AA\u09C7\u09B0 \u09A8\u09BE\u09AE \u09A6\u09BF\u09A8",
       "btn_save_group": "\u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09C1\u09A8",
       "btn_delete_group": "\u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09C1\u09A8",
       "group_active_label": "\u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
       "group_inactive_label": "\u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
+      "confirm_delete_group_title": "\u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09C1\u09A8",
+      "confirm_delete_group_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u09AF\u09C7 \u0986\u09AA\u09A8\u09BF \u098F\u0987 \u0997\u09CD\u09B0\u09C1\u09AA\u099F\u09BF \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8? \u098F\u099F\u09BF \u09AA\u09C2\u09B0\u09CD\u09AC\u09BE\u09AC\u09B8\u09CD\u09A5\u09BE\u09AF\u09BC \u09AB\u09BF\u09B0\u09BF\u09AF\u09BC\u09C7 \u0986\u09A8\u09BE \u09AF\u09BE\u09AC\u09C7 \u09A8\u09BE\u0964",
       "tooltip_duplicate_group": "\u0997\u09CD\u09B0\u09C1\u09AA \u09A1\u09C1\u09AA\u09CD\u09B2\u09BF\u0995\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
       "tooltip_edit_group_settings": "\u0997\u09CD\u09B0\u09C1\u09AA \u09B8\u09C7\u099F\u09BF\u0982\u09B8 \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "tooltip_delete_all_groups": "\u09B8\u09AC \u09B6\u09AC\u09CD\u09A6 \u0997\u09CD\u09B0\u09C1\u09AA \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09C1\u09A8",
@@ -3026,6 +3282,7 @@ var require_bn = __commonJS({
       // Presets
       "btn_presets": "\u09AA\u09CD\u09B0\u09BF\u09B8\u09C7\u099F\u0997\u09C1\u09B2\u09BF",
       "preset_all_headings": "\u09B8\u09AC \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE (H1-H6)",
+      "preset_headings_h3": "\u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE (H3)",
       "preset_bullet_points": "\u09AC\u09C1\u09B2\u09C7\u099F \u09AA\u09AF\u09BC\u09C7\u09A8\u09CD\u099F\u0997\u09C1\u09B2\u09BF",
       "preset_numbered_lists": "\u09B8\u0982\u0996\u09CD\u09AF\u09BE\u09AF\u09BC\u09BF\u09A4 \u09A4\u09BE\u09B2\u09BF\u0995\u09BE\u0997\u09C1\u09B2\u09BF",
       "preset_task_checked": "\u099F\u09BE\u09B8\u09CD\u0995 \u09B2\u09BF\u09B8\u09CD\u099F (\u099A\u09C7\u0995 \u0995\u09B0\u09BE)",
@@ -3061,6 +3318,7 @@ var require_bn = __commonJS({
       "preset_group_brackets": "\u09AC\u09A8\u09CD\u09A7\u09A8\u09C0",
       // Preset Examples
       "preset_example_heading": "# \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE",
+      "preset_example_heading_h3": "### \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE",
       "preset_example_bullet": "- \u09AA\u09AF\u09BC\u09C7\u09A8\u09CD\u099F",
       "preset_example_numbered": "1. \u09AA\u09CD\u09B0\u09A5\u09AE \u0986\u0987\u099F\u09C7\u09AE",
       "preset_example_task_checked": "- [x] \u09B8\u09AE\u09CD\u09AA\u09A8\u09CD\u09A8",
@@ -3235,7 +3493,42 @@ var require_bn = __commonJS({
       "preset_bold_italic": "\u09AC\u09CB\u09B2\u09CD\u09A1 \u0987\u099F\u09BE\u09B2\u09BF\u0995",
       "theme_support_header": "\u09A5\u09BF\u09AE \u09B8\u09AE\u09B0\u09CD\u09A5\u09A8",
       "matching_behavior_header": "\u09AE\u09CD\u09AF\u09BE\u099A\u09BF\u0982 \u0986\u099A\u09B0\u09A3",
-      "color_rendering_header": "\u09B0\u0999 \u09B0\u09C7\u09A8\u09CD\u09A1\u09BE\u09B0\u09BF\u0982 \u098F\u09AC\u0982 \u0995\u09B0\u09CD\u09AE\u0995\u09CD\u09B7\u09AE\u09A4\u09BE"
+      "color_rendering_header": "\u09B0\u0999 \u09B0\u09C7\u09A8\u09CD\u09A1\u09BE\u09B0\u09BF\u0982 \u098F\u09AC\u0982 \u0995\u09B0\u09CD\u09AE\u0995\u09CD\u09B7\u09AE\u09A4\u09BE",
+      // Automatic Backups
+      "auto_backup_header": "\u09B8\u09CD\u09AC\u09AF\u09BC\u0982\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA",
+      "auto_backup_toggle": "\u09B8\u09CD\u09AC\u09AF\u09BC\u0982\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "auto_backup_toggle_desc": "\u0986\u09AA\u09A8\u09BE\u09B0 \u09AD\u09B2\u09CD\u099F\u09C7\u09B0 \u09AD\u09C7\u09A4\u09B0\u09C7 \u098F\u0995\u099F\u09BF \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0\u09C7 \u09B8\u09AE\u09B8\u09CD\u09A4 \u09AA\u09CD\u09B2\u09BE\u0997\u0987\u09A8 \u09A1\u09C7\u099F\u09BE \u09AA\u09B0\u09CD\u09AF\u09BE\u09AF\u09BC\u0995\u09CD\u09B0\u09AE\u09C7 \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u0995\u09B0\u09C1\u09A8\u0964",
+      "auto_backup_folder": "\u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0",
+      "auto_backup_folder_desc": "\u0986\u09AA\u09A8\u09BE\u09B0 \u09AD\u09B2\u09CD\u099F\u09C7\u09B0 \u09AD\u09C7\u09A4\u09B0\u09C7 \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0 \u09AA\u09BE\u09A5 \u09AF\u09C7\u0996\u09BE\u09A8\u09C7 \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09BF\u09A4 \u09B9\u09AF\u09BC\u0964",
+      "auto_backup_folder_pick": "\u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0 \u09AC\u09C7\u099B\u09C7 \u09A8\u09BF\u09A8",
+      "auto_backup_folder_prompt": "\u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0 \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8...",
+      "auto_backup_folder_reset": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F\u09C7 \u09B0\u09BF\u09B8\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
+      "auto_backup_interval": "\u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u09AC\u09CD\u09AF\u09AC\u09A7\u09BE\u09A8",
+      "auto_backup_interval_desc": "\u0995\u09A4 \u0998\u09A8 \u0998\u09A8 \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09A4\u09C7 \u09B9\u09AC\u09C7\u0964",
+      "auto_backup_unit_hour": "\u0998\u09A3\u09CD\u099F\u09BE",
+      "auto_backup_unit_day": "\u09A6\u09BF\u09A8",
+      "auto_backup_unit_week": "\u09B8\u09AA\u09CD\u09A4\u09BE\u09B9",
+      "auto_backup_overwrite": "\u09AA\u09C2\u09B0\u09CD\u09AC\u09AC\u09B0\u09CD\u09A4\u09C0 \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u0993\u09AD\u09BE\u09B0\u09B0\u09BE\u0987\u099F \u0995\u09B0\u09C1\u09A8",
+      "auto_backup_overwrite_desc": "\u09AA\u09CD\u09B0\u09A4\u09BF\u09AC\u09BE\u09B0 \u09A8\u09A4\u09C1\u09A8 \u09A4\u09C8\u09B0\u09BF \u0995\u09B0\u09BE\u09B0 \u09AA\u09B0\u09BF\u09AC\u09B0\u09CD\u09A4\u09C7 \u09B6\u09C7\u09B7 \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u09AB\u09BE\u0987\u09B2\u099F\u09BF \u09AA\u09CD\u09B0\u09A4\u09BF\u09B8\u09CD\u09A5\u09BE\u09AA\u09A8 \u0995\u09B0\u09C1\u09A8\u0964",
+      "auto_backup_now": "\u098F\u0996\u09A8\u0987 \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u0995\u09B0\u09C1\u09A8",
+      "auto_backup_now_desc": "\u0985\u09AC\u09BF\u09B2\u09AE\u09CD\u09AC\u09C7 \u098F\u0995\u099F\u09BF \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09C1\u09A8\u0964",
+      "btn_backup_now": "\u098F\u0996\u09A8\u0987 \u09AC\u09CD\u09AF\u09BE\u0995\u0986\u09AA \u0995\u09B0\u09C1\u09A8",
+      "btn_backup_now_running": "\u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u09B9\u099A\u09CD\u099B\u09C7...",
+      "btn_backup_now_done": "\u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09BF\u09A4!",
+      "btn_backup_now_failed": "\u09AC\u09CD\u09AF\u09B0\u09CD\u09A5",
+      // Custom CSS
+      "custom_css_header": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE CSS",
+      "enable_custom_css": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u09BF\u0982\u09AF\u09BC\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u0995\u09BE\u09B8\u09CD\u099F\u09AE CSS \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "enable_custom_css_desc": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u098F\u09AC\u0982 \u0997\u09CD\u09B0\u09C1\u09AA \u098F\u09A1\u09BF\u099F\u09B0\u09C7 '\u0995\u09BE\u09B8\u09CD\u099F\u09AE CSS \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8' \u09AC\u09CB\u09A4\u09BE\u09AE\u09C7\u09B0 \u09AE\u09BE\u09A7\u09CD\u09AF\u09AE\u09C7 \u09AA\u09CD\u09B0\u09A4\u09BF-\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF CSS \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8\u0964",
+      "edit_custom_css_btn": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE CSS \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      // Color Text/Line/Child
+      "mark_target_text": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
+      "mark_target_line": "\u09B2\u09BE\u0987\u09A8 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
+      "mark_target_child_line": "\u099A\u09BE\u0987\u09B2\u09CD\u09A1 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
+      "mark_target_label": "\u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
+      // Group Select & Commands
+      "no_group": "\u0995\u09CB\u09A8\u09CB \u0997\u09CD\u09B0\u09C1\u09AA \u09A8\u09C7\u0987",
+      "command_color_text_for_file": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09C1\u09A8"
     };
   }
 });
@@ -3257,6 +3550,12 @@ var require_ru = __commonJS({
       "language_fr": "\u0424\u0440\u0430\u043D\u0446\u0443\u0437\u0441\u043A\u0438\u0439",
       "language_eu": "\u0411\u0430\u0441\u043A\u0441\u043A\u0438\u0439",
       "language_ru": "\u0420\u0443\u0441\u0441\u043A\u0438\u0439",
+      "language_de": "\u041D\u0435\u043C\u0435\u0446\u043A\u0438\u0439",
+      "language_hi": "\u0425\u0438\u043D\u0434\u0438",
+      "language_bn": "\u0411\u0435\u043D\u0433\u0430\u043B\u044C\u0441\u043A\u0438\u0439",
+      "language_it": "\u0418\u0442\u0430\u043B\u044C\u044F\u043D\u0441\u043A\u0438\u0439",
+      "language_zh_cn": "\u0423\u043F\u0440\u043E\u0449\u0451\u043D\u043D\u044B\u0439 \u043A\u0438\u0442\u0430\u0439\u0441\u043A\u0438\u0439",
+      "language_ar": "\u0410\u0440\u0430\u0431\u0441\u043A\u0438\u0439",
       "language_auto": "\u0421\u0438\u0441\u0442\u0435\u043C\u043D\u044B\u0439",
       "default": "\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E",
       // Release Notes
@@ -3416,6 +3715,8 @@ var require_ru = __commonJS({
       "confirm_delete_blacklist_group_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u043E\u0442 \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C.",
       "restart_required_title": "\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430",
       "restart_required_desc": "\u0414\u043B\u044F \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0438\u0437 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043A\u043E\u043C\u0430\u043D\u0434 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 Obsidian. \u041F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0441\u0435\u0439\u0447\u0430\u0441?",
+      "btn_cancel": "\u041E\u0442\u043C\u0435\u043D\u0430",
+      "btn_confirm": "\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044C",
       // Basic Settings
       "color_in_live_preview_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 Live Preview",
       "color_in_reading_mode": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0447\u0442\u0435\u043D\u0438\u044F",
@@ -3432,6 +3733,7 @@ var require_ru = __commonJS({
       "regex_support_desc": "\u0420\u0430\u0437\u0440\u0435\u0448\u0438\u0442\u044C \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0435 \u0440\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u044B\u0445 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0439 \u0432 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u043E\u0432. \u041D\u0435\u043A\u043E\u0440\u0440\u0435\u043A\u0442\u043D\u044B\u0435 regex \u0431\u0443\u0434\u0443\u0442 \u043F\u0440\u043E\u0438\u0433\u043D\u043E\u0440\u0438\u0440\u043E\u0432\u0430\u043D\u044B \u0432 \u0446\u0435\u043B\u044F\u0445 \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E\u0441\u0442\u0438.",
       "disable_regex_safety": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0443 \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E\u0441\u0442\u0438 Regex",
       "disable_regex_safety_desc": "\u0420\u0430\u0437\u0440\u0435\u0448\u0438\u0442\u044C \u0441\u043B\u043E\u0436\u043D\u044B\u0435 \u0438\u043B\u0438 \u043F\u043E\u0442\u0435\u043D\u0446\u0438\u0430\u043B\u044C\u043D\u043E \u043E\u043F\u0430\u0441\u043D\u044B\u0435 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u044F. \u041C\u043E\u0436\u0435\u0442 \u0432\u044B\u0437\u0432\u0430\u0442\u044C \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u0438\u043B\u0438 \u0437\u0430\u0432\u0438\u0441\u0430\u043D\u0438\u0435.",
+      "requires_regex_safety_disabled": "\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435 \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E\u0441\u0442\u0438 regex",
       "case_sensitive": "\u0427\u0443\u0432\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u044C \u043A \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0443",
       "case_sensitive_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \xAB\u0421\u043B\u043E\u0432\u043E\xBB \u0438 \xAB\u0441\u043B\u043E\u0432\u043E\xBB \u0441\u0447\u0438\u0442\u0430\u044E\u0442\u0441\u044F \u0440\u0430\u0437\u043D\u044B\u043C\u0438. \u0415\u0441\u043B\u0438 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u043E\u043D\u0438 \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u044E\u0442\u0441\u044F \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u043E.",
       "partial_match": "\u0427\u0430\u0441\u0442\u0438\u0447\u043D\u043E\u0435 \u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u0435",
@@ -3527,6 +3829,8 @@ var require_ru = __commonJS({
       "use_swatch_names_desc": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0432\u044B\u043F\u0430\u0434\u0430\u044E\u0449\u0438\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0438\u043C\u0435\u043D \u043F\u0430\u043B\u0438\u0442\u0440 \u0440\u044F\u0434\u043E\u043C \u0441 \u0432\u0432\u043E\u0434\u043E\u043C \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u0430",
       "link_swatches_to_entries": "\u0421\u0432\u044F\u0437\u0430\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u043F\u0430\u043B\u0438\u0442\u0440 \u0441 \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430\u043C\u0438",
       "link_swatches_to_entries_desc": "\u041E\u0431\u043D\u043E\u0432\u043B\u044F\u0442\u044C \u0432\u0441\u0435 \u0437\u0430\u043F\u0438\u0441\u0438, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044E\u0449\u0438\u0435 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0443\u044E \u043F\u0430\u043B\u0438\u0442\u0440\u0443, \u043A\u043E\u0433\u0434\u0430 \u0446\u0432\u0435\u0442 \u044D\u0442\u043E\u0439 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043C\u0435\u043D\u044F\u0435\u0442\u0441\u044F",
+      "link_swatch_updates": "\u0421\u0432\u044F\u0437\u0430\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u043F\u0430\u043B\u0438\u0442\u0440 \u0441 \u0446\u0432\u0435\u0442\u0430\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430",
+      "link_swatch_updates_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0446\u0432\u0435\u0442\u0430 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043E\u0431\u043D\u043E\u0432\u0438\u0442 \u0432\u0441\u0435 \u0442\u0435\u043A\u0441\u0442\u044B, \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u0435 \u044D\u0442\u043E\u0439 \u043F\u0430\u043B\u0438\u0442\u0440\u043E\u0439.",
       "default_colors_header": "\u0426\u0432\u0435\u0442\u0430 \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E",
       "custom_swatches_header": "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u043B\u0438\u0442\u0440\u044B",
       "btn_add_color": "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0446\u0432\u0435\u0442",
@@ -3552,10 +3856,13 @@ var require_ru = __commonJS({
       "grouped_entries_desc": "\u0423\u043F\u0440\u0430\u0432\u043B\u044F\u0439\u0442\u0435 \u0433\u0440\u0443\u043F\u043F\u0430\u043C\u0438 \u0441\u043B\u043E\u0432. \u041F\u043E\u0438\u0441\u043A \u0444\u0438\u043B\u044C\u0442\u0440\u0443\u0435\u0442 \u043F\u043E \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u044E.",
       "search_groups_placeholder": "\u041F\u043E\u0438\u0441\u043A \u0433\u0440\u0443\u043F\u043F\u2026",
       "edit_word_group_modal_title": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443 \u0441\u043B\u043E\u0432",
+      "group_name_placeholder": "\u041D\u0430\u0437\u043E\u0432\u0438\u0442\u0435 \u0432\u0430\u0448\u0443 \u0433\u0440\u0443\u043F\u043F\u0443",
       "btn_save_group": "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443",
       "btn_delete_group": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443",
       "group_active_label": "\u0410\u043A\u0442\u0438\u0432\u043D\u0430",
       "group_inactive_label": "\u041D\u0435\u0430\u043A\u0442\u0438\u0432\u043D\u0430",
+      "confirm_delete_group_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443",
+      "confirm_delete_group_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u0443 \u0433\u0440\u0443\u043F\u043F\u0443? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E.",
       "tooltip_duplicate_group": "\u0414\u0443\u0431\u043B\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0433\u0440\u0443\u043F\u043F\u0443",
       "tooltip_edit_group_settings": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0433\u0440\u0443\u043F\u043F\u044B",
       "tooltip_delete_all_groups": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0433\u0440\u0443\u043F\u043F\u044B \u0441\u043B\u043E\u0432",
@@ -3587,6 +3894,7 @@ var require_ru = __commonJS({
       // Presets
       "btn_presets": "\u041F\u0440\u0435\u0441\u0435\u0442\u044B",
       "preset_all_headings": "\u0412\u0441\u0435 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043A\u0438 (H1-H6)",
+      "preset_headings_h3": "\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043A\u0438 (H3)",
       "preset_bullet_points": "\u041C\u0430\u0440\u043A\u0435\u0440\u044B \u0441\u043F\u0438\u0441\u043A\u0430",
       "preset_numbered_lists": "\u041D\u0443\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0441\u043F\u0438\u0441\u043A\u0438",
       "preset_task_checked": "\u0421\u043F\u0438\u0441\u043A\u0438 \u0437\u0430\u0434\u0430\u0447 (\u0412\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u043D\u044B\u0435)",
@@ -3622,6 +3930,7 @@ var require_ru = __commonJS({
       "preset_group_brackets": "\u0421\u043A\u043E\u0431\u043A\u0438",
       // Preset Examples
       "preset_example_heading": "# \u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A",
+      "preset_example_heading_h3": "### \u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A",
       "preset_example_bullet": "- \u041F\u0443\u043D\u043A\u0442",
       "preset_example_numbered": "1. \u041F\u0435\u0440\u0432\u044B\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442",
       "preset_example_task_checked": "- [x] \u0412\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u043E",
@@ -3687,6 +3996,7 @@ var require_ru = __commonJS({
       "label_disable_in": "\u041E\u0442\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0432",
       "enter_path_or_pattern": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043F\u0443\u0442\u044C, \u0448\u0430\u0431\u043B\u043E\u043D \u0438\u043B\u0438 \u0442\u0435\u0433\u0438",
       "label_regex": "Regex",
+      "label_regex_name": "\u0418\u043C\u044F Regex",
       // Advanced Rules
       "advanced_rules_header": "\u0421\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
       "advanced_rules_modal_header": "\u0421\u043F\u0435\u0446\u0438\u0444\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F/\u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
@@ -3792,7 +4102,42 @@ var require_ru = __commonJS({
       "notice_blacklist_group_activated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
       "notice_blacklist_group_deactivated": "\u0421\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0434\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D",
       "command_activate_blacklist_group": "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}",
-      "command_deactivate_blacklist_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}"
+      "command_deactivate_blacklist_group": "\u0414\u0435\u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0433\u0440\u0443\u043F\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A {groupName}",
+      // Automatic Backups
+      "auto_backup_header": "\u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u044B\u0435 \u043A\u043E\u043F\u0438\u0438",
+      "auto_backup_toggle": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u044B\u0435 \u043A\u043E\u043F\u0438\u0438",
+      "auto_backup_toggle_desc": "\u041F\u0435\u0440\u0438\u043E\u0434\u0438\u0447\u0435\u0441\u043A\u0438 \u0441\u043E\u0437\u0434\u0430\u0432\u0430\u0442\u044C \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u044B\u0435 \u043A\u043E\u043F\u0438\u0438 \u0432\u0441\u0435\u0445 \u0434\u0430\u043D\u043D\u044B\u0445 \u043F\u043B\u0430\u0433\u0438\u043D\u0430 \u0432 \u043F\u0430\u043F\u043A\u0435 \u0432\u043D\u0443\u0442\u0440\u0438 \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0430.",
+      "auto_backup_folder": "\u041F\u0430\u043F\u043A\u0430 \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u044B\u0445 \u043A\u043E\u043F\u0438\u0439",
+      "auto_backup_folder_desc": "\u041F\u0443\u0442\u044C \u043A \u043F\u0430\u043F\u043A\u0435 \u0432\u043D\u0443\u0442\u0440\u0438 \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0430, \u0433\u0434\u0435 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u044B\u0435 \u043A\u043E\u043F\u0438\u0438.",
+      "auto_backup_folder_pick": "\u0412\u044B\u0431\u0440\u0430\u0442\u044C \u043F\u0430\u043F\u043A\u0443",
+      "auto_backup_folder_prompt": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0430\u043F\u043A\u0443 \u0434\u043B\u044F \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u044B\u0445 \u043A\u043E\u043F\u0438\u0439...",
+      "auto_backup_folder_reset": "\u0421\u0431\u0440\u043E\u0441\u0438\u0442\u044C \u0434\u043E \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E",
+      "auto_backup_interval": "\u0418\u043D\u0442\u0435\u0440\u0432\u0430\u043B \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u043E\u0433\u043E \u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F",
+      "auto_backup_interval_desc": "\u041A\u0430\u043A \u0447\u0430\u0441\u0442\u043E \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u0442\u044C \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u0443\u044E \u043A\u043E\u043F\u0438\u044E.",
+      "auto_backup_unit_hour": "\u0427\u0430\u0441(\u043E\u0432)",
+      "auto_backup_unit_day": "\u0414\u0435\u043D\u044C(\u0434\u043D\u0435\u0439)",
+      "auto_backup_unit_week": "\u041D\u0435\u0434\u0435\u043B\u044F(\u043D\u0435\u0434\u0435\u043B\u044C)",
+      "auto_backup_overwrite": "\u041F\u0435\u0440\u0435\u0437\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0442\u044C \u043F\u0440\u0435\u0434\u044B\u0434\u0443\u0449\u0443\u044E \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u0443\u044E \u043A\u043E\u043F\u0438\u044E",
+      "auto_backup_overwrite_desc": "\u0417\u0430\u043C\u0435\u043D\u044F\u0442\u044C \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439 \u0444\u0430\u0439\u043B \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u043E\u0439 \u043A\u043E\u043F\u0438\u0438 \u0432\u043C\u0435\u0441\u0442\u043E \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u043D\u043E\u0432\u043E\u0433\u043E \u043A\u0430\u0436\u0434\u044B\u0439 \u0440\u0430\u0437.",
+      "auto_backup_now": "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u0443\u044E \u043A\u043E\u043F\u0438\u044E \u0441\u0435\u0439\u0447\u0430\u0441",
+      "auto_backup_now_desc": "\u041D\u0435\u043C\u0435\u0434\u043B\u0435\u043D\u043D\u043E \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u0443\u044E \u043A\u043E\u043F\u0438\u044E.",
+      "btn_backup_now": "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0440\u0435\u0437\u0435\u0440\u0432\u043D\u0443\u044E \u043A\u043E\u043F\u0438\u044E \u0441\u0435\u0439\u0447\u0430\u0441",
+      "btn_backup_now_running": "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435...",
+      "btn_backup_now_done": "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u043E!",
+      "btn_backup_now_failed": "\u041E\u0448\u0438\u0431\u043A\u0430",
+      // Custom CSS
+      "custom_css_header": "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0439 CSS",
+      "enable_custom_css": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0439 CSS \u0434\u043B\u044F \u0441\u0442\u0438\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u0442\u0435\u043A\u0441\u0442\u0430",
+      "enable_custom_css_desc": "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0439\u0442\u0435 CSS \u0434\u043B\u044F \u043A\u0430\u0436\u0434\u043E\u0439 \u0437\u0430\u043F\u0438\u0441\u0438 \u0447\u0435\u0440\u0435\u0437 \u043A\u043D\u043E\u043F\u043A\u0443 '\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0439 CSS' \u0432 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0430\u0445 \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u0438 \u0433\u0440\u0443\u043F\u043F.",
+      "edit_custom_css_btn": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0439 CSS",
+      // Color Text/Line/Child
+      "mark_target_text": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0442\u0435\u043A\u0441\u0442",
+      "mark_target_line": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0441\u0442\u0440\u043E\u043A\u0443",
+      "mark_target_child_line": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0434\u043E\u0447\u0435\u0440\u043D\u0438\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442",
+      "mark_target_label": "\u041F\u0440\u0438\u043C\u0435\u043D\u0438\u0442\u044C \u043A",
+      // Group Select & Commands
+      "no_group": "\u0411\u0435\u0437 \u0433\u0440\u0443\u043F\u043F\u044B",
+      "command_color_text_for_file": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0444\u0430\u0439\u043B\u0430"
     };
   }
 });
@@ -3814,6 +4159,12 @@ var require_zh_cn = __commonJS({
       "language_fr": "\u6CD5\u8BED",
       "language_eu": "\u5DF4\u65AF\u514B\u8BED",
       "language_ru": "\u4FC4\u8BED",
+      "language_de": "\u5FB7\u8BED",
+      "language_hi": "\u5370\u5730\u8BED",
+      "language_bn": "\u5B5F\u52A0\u62C9\u8BED",
+      "language_it": "\u610F\u5927\u5229\u8BED",
+      "language_zh_cn": "\u7B80\u4F53\u4E2D\u6587",
+      "language_ar": "\u963F\u62C9\u4F2F\u8BED",
       "language_auto": "\u7CFB\u7EDF\u9ED8\u8BA4",
       "default": "\u9ED8\u8BA4",
       // Release Notes
@@ -4057,6 +4408,8 @@ var require_zh_cn = __commonJS({
       "use_swatch_names_desc": "\u5728\u5355\u8BCD/\u6A21\u5F0F\u8F93\u5165\u65C1\u8FB9\u663E\u793A\u8272\u677F\u540D\u79F0\u4E0B\u62C9\u5217\u8868",
       "link_swatches_to_entries": "\u5C06\u8272\u677F\u66F4\u65B0\u94FE\u63A5\u5230\u7740\u8272\u6587\u672C",
       "link_swatches_to_entries_desc": "\u5F53\u81EA\u5B9A\u4E49\u8272\u677F\u7684\u989C\u8272\u66F4\u6539\u65F6\uFF0C\u66F4\u65B0\u6240\u6709\u4F7F\u7528\u8BE5\u8272\u677F\u7684\u6761\u76EE",
+      "link_swatch_updates": "\u5C06\u8272\u677F\u66F4\u65B0\u94FE\u63A5\u5230\u6587\u672C\u989C\u8272",
+      "link_swatch_updates_desc": "\u5982\u679C\u542F\u7528\uFF0C\u66F4\u65B0\u8272\u677F\u989C\u8272\u5C06\u66F4\u65B0\u6240\u6709\u4F7F\u7528\u8BE5\u8272\u677F\u7740\u8272\u7684\u6587\u672C\u3002",
       "default_colors_header": "\u9ED8\u8BA4\u8272\u677F",
       "custom_swatches_header": "\u81EA\u5B9A\u4E49\u8272\u677F",
       "btn_add_color": "+ \u6DFB\u52A0\u989C\u8272",
@@ -4082,10 +4435,13 @@ var require_zh_cn = __commonJS({
       "grouped_entries_desc": "\u7BA1\u7406\u8BCD\u7EC4\u3002\u641C\u7D22\u6309\u540D\u79F0\u7B5B\u9009\u3002",
       "search_groups_placeholder": "\u641C\u7D22\u5206\u7EC4\u2026",
       "edit_word_group_modal_title": "\u7F16\u8F91\u8BCD\u7EC4",
+      "group_name_placeholder": "\u4E3A\u60A8\u7684\u7EC4\u547D\u540D",
       "btn_save_group": "\u4FDD\u5B58\u7EC4",
       "btn_delete_group": "\u5220\u9664\u7EC4",
       "group_active_label": "\u542F\u7528",
       "group_inactive_label": "\u505C\u7528",
+      "confirm_delete_group_title": "\u5220\u9664\u7EC4",
+      "confirm_delete_group_desc": "\u786E\u5B9A\u8981\u5220\u9664\u6B64\u7EC4\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\u3002",
       "tooltip_duplicate_group": "\u590D\u5236\u7EC4",
       "tooltip_edit_group_settings": "\u7F16\u8F91\u7EC4\u8BBE\u7F6E",
       "tooltip_delete_all_groups": "\u5220\u9664\u6240\u6709\u8BCD\u7EC4",
@@ -4117,6 +4473,7 @@ var require_zh_cn = __commonJS({
       // Presets
       "btn_presets": "\u9884\u8BBE",
       "preset_all_headings": "\u6240\u6709\u6807\u9898 (H1-H6)",
+      "preset_headings_h3": "\u6807\u9898 (H3)",
       "preset_bullet_points": "\u9879\u76EE\u7B26\u53F7",
       "preset_numbered_lists": "\u7F16\u53F7\u5217\u8868",
       "preset_task_checked": "\u4EFB\u52A1\u5217\u8868\uFF08\u5DF2\u9009\uFF09",
@@ -4152,6 +4509,7 @@ var require_zh_cn = __commonJS({
       "preset_group_brackets": "\u62EC\u53F7",
       // Preset Examples
       "preset_example_heading": "# \u6807\u9898",
+      "preset_example_heading_h3": "### \u6807\u9898",
       "preset_example_bullet": "- \u5217\u8868\u9879",
       "preset_example_numbered": "1. \u7B2C\u4E00\u9879",
       "preset_example_task_checked": "- [x] \u5DF2\u5B8C\u6210",
@@ -4217,6 +4575,7 @@ var require_zh_cn = __commonJS({
       "label_disable_in": "\u7981\u7528\u8303\u56F4",
       "enter_path_or_pattern": "\u8F93\u5165\u8DEF\u5F84\u3001\u6A21\u5F0F\u6216\u6807\u7B7E",
       "label_regex": "\u6B63\u5219\u8868\u8FBE\u5F0F",
+      "label_regex_name": "\u6B63\u5219\u8868\u8FBE\u5F0F\u540D\u79F0",
       // Advanced Rules
       "advanced_rules_header": "\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
       "advanced_rules_modal_header": "\u7279\u5B9A\u5305\u542B/\u6392\u9664\u89C4\u5219",
@@ -4327,7 +4686,42 @@ var require_zh_cn = __commonJS({
       "dark_mode_fixer_desc": "\u4F7F\u7528\u6DF1\u8272\u4E3B\u9898\u65F6\u81EA\u52A8\u53D8\u6D45\u5F69\u8272\u6587\u672C\u4EE5\u63D0\u9AD8\u53EF\u89C1\u6027\u3002",
       "preset_bold": "\u7C97\u4F53",
       "preset_italic": "\u659C\u4F53",
-      "preset_bold_italic": "\u7C97\u659C\u4F53"
+      "preset_bold_italic": "\u7C97\u659C\u4F53",
+      // Automatic Backups
+      "auto_backup_header": "\u81EA\u52A8\u5907\u4EFD",
+      "auto_backup_toggle": "\u542F\u7528\u81EA\u52A8\u5907\u4EFD",
+      "auto_backup_toggle_desc": "\u5B9A\u671F\u5C06\u6240\u6709\u63D2\u4EF6\u6570\u636E\u5907\u4EFD\u5230\u5E93\u5185\u7684\u6587\u4EF6\u5939\u3002",
+      "auto_backup_folder": "\u5907\u4EFD\u6587\u4EF6\u5939",
+      "auto_backup_folder_desc": "\u5E93\u5185\u4FDD\u5B58\u5907\u4EFD\u7684\u6587\u4EF6\u5939\u8DEF\u5F84\u3002",
+      "auto_backup_folder_pick": "\u9009\u62E9\u6587\u4EF6\u5939",
+      "auto_backup_folder_prompt": "\u9009\u62E9\u5907\u4EFD\u6587\u4EF6\u5939...",
+      "auto_backup_folder_reset": "\u91CD\u7F6E\u4E3A\u9ED8\u8BA4",
+      "auto_backup_interval": "\u5907\u4EFD\u95F4\u9694",
+      "auto_backup_interval_desc": "\u5907\u4EFD\u4FDD\u5B58\u7684\u9891\u7387\u3002",
+      "auto_backup_unit_hour": "\u5C0F\u65F6",
+      "auto_backup_unit_day": "\u5929",
+      "auto_backup_unit_week": "\u5468",
+      "auto_backup_overwrite": "\u8986\u76D6\u4E0A\u4E00\u4E2A\u5907\u4EFD",
+      "auto_backup_overwrite_desc": "\u66FF\u6362\u6700\u540E\u4E00\u4E2A\u5907\u4EFD\u6587\u4EF6\uFF0C\u800C\u4E0D\u662F\u6BCF\u6B21\u521B\u5EFA\u65B0\u6587\u4EF6\u3002",
+      "auto_backup_now": "\u7ACB\u5373\u5907\u4EFD",
+      "auto_backup_now_desc": "\u7ACB\u5373\u4FDD\u5B58\u5907\u4EFD\u3002",
+      "btn_backup_now": "\u7ACB\u5373\u5907\u4EFD",
+      "btn_backup_now_running": "\u4FDD\u5B58\u4E2D...",
+      "btn_backup_now_done": "\u5DF2\u4FDD\u5B58\uFF01",
+      "btn_backup_now_failed": "\u5931\u8D25",
+      // Custom CSS
+      "custom_css_header": "\u81EA\u5B9A\u4E49 CSS",
+      "enable_custom_css": "\u542F\u7528\u6587\u672C\u6837\u5F0F\u7684\u81EA\u5B9A\u4E49 CSS",
+      "enable_custom_css_desc": "\u901A\u8FC7\u6761\u76EE\u548C\u7EC4\u7F16\u8F91\u5668\u4E2D\u7684'\u7F16\u8F91\u81EA\u5B9A\u4E49 CSS'\u6309\u94AE\u4E3A\u6BCF\u4E2A\u6761\u76EE\u6DFB\u52A0 CSS\u3002",
+      "edit_custom_css_btn": "\u7F16\u8F91\u81EA\u5B9A\u4E49 CSS",
+      // Color Text/Line/Child
+      "mark_target_text": "\u7740\u8272\u6587\u672C",
+      "mark_target_line": "\u7740\u8272\u884C",
+      "mark_target_child_line": "\u7740\u8272\u5B50\u9879",
+      "mark_target_label": "\u5E94\u7528\u4E8E",
+      // Group Select & Commands
+      "no_group": "\u65E0\u5206\u7EC4",
+      "command_color_text_for_file": "\u4E3A\u5F53\u524D\u6587\u4EF6\u7740\u8272\u9009\u4E2D\u6587\u672C"
     };
   }
 });
@@ -4349,6 +4743,12 @@ var require_de = __commonJS({
       "language_fr": "Fran\xE7ais",
       "language_eu": "Baskisch",
       "language_ru": "Russisch",
+      "language_de": "Deutsch",
+      "language_hi": "Hindi",
+      "language_bn": "Bengalisch",
+      "language_it": "Italienisch",
+      "language_zh_cn": "Vereinfachtes Chinesisch",
+      "language_ar": "Arabisch",
       "language_auto": "Systemstandard",
       "default": "Standard",
       // Release Notes
@@ -4585,6 +4985,12 @@ var require_de = __commonJS({
       "color_swatches_header": "Farbverwaltung",
       "color_picker_layout": "Farbw\xE4hler-Layout",
       "color_picker_layout_desc": "W\xE4hlen Sie, welche Farbtypen beim Ausw\xE4hlen von Farben f\xFCr Text angezeigt werden sollen",
+      "opt_both_text_left": "Beides: Text Links, Hervorhebung Rechts",
+      "opt_both_bg_left": "Beides: Hervorhebung Links, Text Rechts",
+      "opt_both_text_top": "Beides (Vertikal): Text Oben, Hervorhebung Unten",
+      "opt_both_bg_top": "Beides (Vertikal): Hervorhebung Oben, Text Unten",
+      "opt_text_only": "Nur Textfarbe",
+      "opt_background_only": "Nur Hervorhebungsfarbe",
       "enable_custom_swatches": "Benutzerdefinierte Farbfelder aktivieren",
       "enable_custom_swatches_desc": "Aktivieren Sie dies, wenn Sie Ihre eigenen Farben f\xFCr den Farbw\xE4hler ausw\xE4hlen m\xF6chten.",
       "replace_default_swatches": "Standard-Farbfelder ersetzen",
@@ -4593,6 +4999,8 @@ var require_de = __commonJS({
       "use_swatch_names_desc": "Wenn aktiviert, wird der Text unter Verwendung des Namens des Farbfelds (z.B. 'Rot') anstelle des Hex-Codes gef\xE4rbt.",
       "link_swatch_updates": "Farbfeldaktualisierungen mit Textfarben verkn\xFCpfen",
       "link_swatch_updates_desc": "Wenn aktiviert, aktualisiert eine \xC4nderung der Farbfeldfarbe alle mit diesem Farbfeld gef\xE4rbten Texte.",
+      "link_swatches_to_entries": "Farbfeldaktualisierungen mit gef\xE4rbten Texten verkn\xFCpfen",
+      "link_swatches_to_entries_desc": "Wenn sich die Farbe eines benutzerdefinierten Farbfelds \xE4ndert, werden alle Eintr\xE4ge aktualisiert, die dieses Farbfeld verwenden",
       "default_colors_header": "Standard-Farbfelder",
       "custom_swatches_header": "Benutzerdefinierte Farbfelder",
       "btn_add_color": "+ Farbe hinzuf\xFCgen",
@@ -4611,6 +5019,7 @@ var require_de = __commonJS({
       "settings_tab_file_folder_rules": "Datei / Ordner Regeln",
       "settings_tab_data": "Daten",
       // Always Colored Texts
+      "always_colored_texts_header": "Immer gef\xE4rbte Texte",
       "colored_texts_header": "Gef\xE4rbte Texte",
       "always_colored_texts_desc": "Hier verwalten Sie Ihre W\xF6rter/Muster und deren Farben.",
       "grouped_entries_header": "Gruppierte Eintr\xE4ge",
@@ -4756,6 +5165,7 @@ var require_de = __commonJS({
       "label_disable_in": "Deaktivieren in",
       "enter_path_or_pattern": "Pfad, Muster oder Tags eingeben",
       "label_regex": "Regex",
+      "label_regex_name": "Regex-Name",
       // Advanced Rules
       "advanced_rules_header": "Spezifische Einschluss-/Ausschlussregeln",
       "advanced_rules_modal_header": "Spezifische Einschluss-/Ausschlussregeln",
@@ -4860,7 +5270,42 @@ var require_de = __commonJS({
       "btn_delete_entry": "Eintrag l\xF6schen",
       "edit_group_highlight_styling": "Gruppen-Hervorhebungsstyling bearbeiten",
       "light_mode_fixer_desc": "Dunkelt gef\xE4rbten Text automatisch ab, wenn das helle Design verwendet wird, um die Lesbarkeit zu verbessern.",
-      "dark_mode_fixer_desc": "Hellt gef\xE4rbten Text automatisch auf, wenn das dunkle Design verwendet wird, um die Lesbarkeit zu verbessern."
+      "dark_mode_fixer_desc": "Hellt gef\xE4rbten Text automatisch auf, wenn das dunkle Design verwendet wird, um die Lesbarkeit zu verbessern.",
+      // Automatic Backups
+      "auto_backup_header": "Automatische Sicherungen",
+      "auto_backup_toggle": "Automatische Sicherungen aktivieren",
+      "auto_backup_toggle_desc": "Alle Plugin-Daten regelm\xE4\xDFig in einem Ordner im Tresor sichern.",
+      "auto_backup_folder": "Sicherungsordner",
+      "auto_backup_folder_desc": "Ordnerpfad im Tresor, in dem Sicherungen gespeichert werden.",
+      "auto_backup_folder_pick": "Ordner w\xE4hlen",
+      "auto_backup_folder_prompt": "Sicherungsordner ausw\xE4hlen...",
+      "auto_backup_folder_reset": "Auf Standard zur\xFCcksetzen",
+      "auto_backup_interval": "Sicherungsintervall",
+      "auto_backup_interval_desc": "Wie oft eine Sicherung gespeichert werden soll.",
+      "auto_backup_unit_hour": "Stunde(n)",
+      "auto_backup_unit_day": "Tag(e)",
+      "auto_backup_unit_week": "Woche(n)",
+      "auto_backup_overwrite": "Vorherige Sicherung \xFCberschreiben",
+      "auto_backup_overwrite_desc": "Die letzte Sicherungsdatei ersetzen, anstatt jedes Mal eine neue zu erstellen.",
+      "auto_backup_now": "Jetzt sichern",
+      "auto_backup_now_desc": "Sofort eine Sicherung speichern.",
+      "btn_backup_now": "Jetzt sichern",
+      "btn_backup_now_running": "Wird gespeichert...",
+      "btn_backup_now_done": "Gespeichert!",
+      "btn_backup_now_failed": "Fehlgeschlagen",
+      // Custom CSS
+      "custom_css_header": "Benutzerdefiniertes CSS",
+      "enable_custom_css": "Benutzerdefiniertes CSS f\xFCr Textstile aktivieren",
+      "enable_custom_css_desc": "CSS pro Eintrag \xFCber die Schaltfl\xE4che 'Benutzerdefiniertes CSS bearbeiten' in Eintrags- und Gruppenbearbeitern hinzuf\xFCgen.",
+      "edit_custom_css_btn": "Benutzerdefiniertes CSS bearbeiten",
+      // Color Text/Line/Child
+      "mark_target_text": "Text f\xE4rben",
+      "mark_target_line": "Zeile f\xE4rben",
+      "mark_target_child_line": "Untergeordnetes f\xE4rben",
+      "mark_target_label": "Anwenden auf",
+      // Group Select & Commands
+      "no_group": "Keine Gruppe",
+      "command_color_text_for_file": "Ausgew\xE4hlten Text f\xFCr aktuelle Datei f\xE4rben"
     };
   }
 });
@@ -5124,6 +5569,12 @@ var require_ar = __commonJS({
       "color_swatches_header": "\u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u0623\u0644\u0648\u0627\u0646",
       "color_picker_layout": "\u062A\u062E\u0637\u064A\u0637 \u0645\u0646\u062A\u0642\u064A \u0627\u0644\u0623\u0644\u0648\u0627\u0646",
       "color_picker_layout_desc": "\u0627\u062E\u062A\u0631 \u0623\u0646\u0648\u0627\u0639 \u0627\u0644\u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u062A\u064A \u0633\u062A\u0638\u0647\u0631 \u0639\u0646\u062F \u0627\u062E\u062A\u064A\u0627\u0631 \u0623\u0644\u0648\u0627\u0646 \u0644\u0644\u0646\u0635",
+      "opt_both_text_left": "\u0643\u0644\u0627\u0647\u0645\u0627: \u0627\u0644\u0646\u0635 \u064A\u0633\u0627\u0631\u060C \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u064A\u0645\u064A\u0646",
+      "opt_both_bg_left": "\u0643\u0644\u0627\u0647\u0645\u0627: \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u064A\u0633\u0627\u0631\u060C \u0627\u0644\u0646\u0635 \u064A\u0645\u064A\u0646",
+      "opt_both_text_top": "\u0643\u0644\u0627\u0647\u0645\u0627 (\u0639\u0645\u0648\u062F\u064A): \u0627\u0644\u0646\u0635 \u0623\u0639\u0644\u0649\u060C \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0623\u0633\u0641\u0644",
+      "opt_both_bg_top": "\u0643\u0644\u0627\u0647\u0645\u0627 (\u0639\u0645\u0648\u062F\u064A): \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0623\u0639\u0644\u0649\u060C \u0627\u0644\u0646\u0635 \u0623\u0633\u0641\u0644",
+      "opt_text_only": "\u0644\u0648\u0646 \u0627\u0644\u0646\u0635 \u0641\u0642\u0637",
+      "opt_background_only": "\u0644\u0648\u0646 \u0627\u0644\u062A\u0645\u064A\u064A\u0632 \u0641\u0642\u0637",
       "enable_custom_swatches": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0645\u062E\u0635\u0635\u0629",
       "enable_custom_swatches_desc": "\u0642\u0645 \u0628\u062A\u0634\u063A\u064A\u0644 \u0647\u0630\u0627 \u0625\u0630\u0627 \u0643\u0646\u062A \u062A\u0631\u064A\u062F \u0627\u062E\u062A\u064A\u0627\u0631 \u0623\u0644\u0648\u0627\u0646\u0643 \u0627\u0644\u062E\u0627\u0635\u0629 \u0644\u0645\u0646\u062A\u0642\u064A \u0627\u0644\u0623\u0644\u0648\u0627\u0646.",
       "replace_default_swatches": "\u0627\u0633\u062A\u0628\u062F\u0627\u0644 \u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0627\u0641\u062A\u0631\u0627\u0636\u064A\u0629",
@@ -5132,6 +5583,8 @@ var require_ar = __commonJS({
       "use_swatch_names_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0633\u064A\u062A\u0645 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0633\u0645 \u0627\u0644\u0639\u064A\u0646\u0629 (\u0645\u062B\u0644 'Red') \u0628\u062F\u0644\u0627\u064B \u0645\u0646 \u0643\u0648\u062F hex.",
       "link_swatch_updates": "\u0631\u0628\u0637 \u062A\u062D\u062F\u064A\u062B\u0627\u062A \u0627\u0644\u0639\u064A\u0646\u0629 \u0628\u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635",
       "link_swatch_updates_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0641\u0625\u0646 \u062A\u062D\u062F\u064A\u062B \u0644\u0648\u0646 \u0627\u0644\u0639\u064A\u0646\u0629 \u0633\u064A\u062D\u062F\u062B \u062C\u0645\u064A\u0639 \u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629 \u0628\u062A\u0644\u0643 \u0627\u0644\u0639\u064A\u0646\u0629.",
+      "link_swatches_to_entries": "\u0631\u0628\u0637 \u062A\u062D\u062F\u064A\u062B\u0627\u062A \u0627\u0644\u0639\u064A\u0646\u0629 \u0628\u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629",
+      "link_swatches_to_entries_desc": "\u0639\u0646\u062F \u062A\u063A\u064A\u064A\u0631 \u0644\u0648\u0646 \u0639\u064A\u0646\u0629 \u0645\u062E\u0635\u0635\u0629\u060C \u064A\u062A\u0645 \u062A\u062D\u062F\u064A\u062B \u062C\u0645\u064A\u0639 \u0627\u0644\u0625\u062F\u062E\u0627\u0644\u0627\u062A \u0627\u0644\u062A\u064A \u062A\u0633\u062A\u062E\u062F\u0645 \u062A\u0644\u0643 \u0627\u0644\u0639\u064A\u0646\u0629",
       "default_colors_header": "\u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0627\u0641\u062A\u0631\u0627\u0636\u064A\u0629",
       "custom_swatches_header": "\u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0645\u062E\u0635\u0635\u0629",
       "btn_add_color": "+ \u0625\u0636\u0627\u0641\u0629 \u0644\u0648\u0646",
@@ -5150,6 +5603,7 @@ var require_ar = __commonJS({
       "settings_tab_file_folder_rules": "\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u0645\u0644\u0641\u0627\u062A / \u0627\u0644\u0645\u062C\u0644\u062F\u0627\u062A",
       "settings_tab_data": "\u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A",
       // Always Colored Texts
+      "always_colored_texts_header": "\u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629 \u062F\u0627\u0626\u0645\u0627\u064B",
       "colored_texts_header": "\u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629",
       "always_colored_texts_desc": "\u0647\u0646\u0627 \u062A\u062F\u064A\u0631 \u0643\u0644\u0645\u0627\u062A\u0643/\u0623\u0646\u0645\u0627\u0637\u0643 \u0648\u0623\u0644\u0648\u0627\u0646\u0647\u0627.",
       "grouped_entries_header": "\u0627\u0644\u0625\u062F\u062E\u0627\u0644\u0627\u062A \u0627\u0644\u0645\u062C\u0645\u0639\u0629",
@@ -5295,6 +5749,7 @@ var require_ar = __commonJS({
       "label_disable_in": "\u062A\u0639\u0637\u064A\u0644 \u0641\u064A",
       "enter_path_or_pattern": "\u0623\u062F\u062E\u0644 \u0627\u0644\u0645\u0633\u0627\u0631\u060C \u0627\u0644\u0646\u0645\u0637 \u0623\u0648 \u0627\u0644\u0648\u0633\u0648\u0645",
       "label_regex": "Regex",
+      "label_regex_name": "\u0627\u0633\u0645 Regex",
       // Advanced Rules
       "advanced_rules_header": "\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u062A\u0636\u0645\u064A\u0646/\u0627\u0644\u0627\u0633\u062A\u0628\u0639\u0627\u062F \u0627\u0644\u0645\u062D\u062F\u062F\u0629",
       "advanced_rules_modal_header": "\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u062A\u0636\u0645\u064A\u0646/\u0627\u0644\u0627\u0633\u062A\u0628\u0639\u0627\u062F \u0627\u0644\u0645\u062D\u062F\u062F\u0629",
@@ -5399,7 +5854,42 @@ var require_ar = __commonJS({
       "btn_delete_entry": "\u062D\u0630\u0641 \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
       "edit_group_highlight_styling": "\u062A\u0639\u062F\u064A\u0644 \u062A\u0646\u0633\u064A\u0642 \u062A\u0645\u064A\u064A\u0632 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629",
       "light_mode_fixer_desc": "\u064A\u0642\u0648\u0645 \u0628\u062A\u063A\u0645\u064A\u0642 \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u0644\u0648\u0646 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B \u0639\u0646\u062F \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0644\u0633\u0645\u0629 \u0627\u0644\u0641\u0627\u062A\u062D\u0629 \u0644\u062A\u062D\u0633\u064A\u0646 \u0627\u0644\u0631\u0624\u064A\u0629.",
-      "dark_mode_fixer_desc": "\u064A\u0642\u0648\u0645 \u0628\u062A\u0641\u062A\u064A\u062D \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u0644\u0648\u0646 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B \u0639\u0646\u062F \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0644\u0633\u0645\u0629 \u0627\u0644\u062F\u0627\u0643\u0646\u0629 \u0644\u062A\u062D\u0633\u064A\u0646 \u0627\u0644\u0631\u0624\u064A\u0629."
+      "dark_mode_fixer_desc": "\u064A\u0642\u0648\u0645 \u0628\u062A\u0641\u062A\u064A\u062D \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u0644\u0648\u0646 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B \u0639\u0646\u062F \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0644\u0633\u0645\u0629 \u0627\u0644\u062F\u0627\u0643\u0646\u0629 \u0644\u062A\u062D\u0633\u064A\u0646 \u0627\u0644\u0631\u0624\u064A\u0629.",
+      // Automatic Backups
+      "auto_backup_header": "\u0627\u0644\u0646\u0633\u062E \u0627\u0644\u0627\u062D\u062A\u064A\u0627\u0637\u064A \u0627\u0644\u062A\u0644\u0642\u0627\u0626\u064A",
+      "auto_backup_toggle": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0646\u0633\u062E \u0627\u0644\u0627\u062D\u062A\u064A\u0627\u0637\u064A \u0627\u0644\u062A\u0644\u0642\u0627\u0626\u064A",
+      "auto_backup_toggle_desc": "\u0646\u0633\u062E \u0627\u062D\u062A\u064A\u0627\u0637\u064A \u062F\u0648\u0631\u064A \u0644\u062C\u0645\u064A\u0639 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0625\u0636\u0627\u0641\u0629 \u0625\u0644\u0649 \u0645\u062C\u0644\u062F \u062F\u0627\u062E\u0644 \u0627\u0644\u062E\u0632\u0646\u0629.",
+      "auto_backup_folder": "\u0645\u062C\u0644\u062F \u0627\u0644\u0646\u0633\u062E \u0627\u0644\u0627\u062D\u062A\u064A\u0627\u0637\u064A",
+      "auto_backup_folder_desc": "\u0645\u0633\u0627\u0631 \u0627\u0644\u0645\u062C\u0644\u062F \u062F\u0627\u062E\u0644 \u0627\u0644\u062E\u0632\u0646\u0629 \u062D\u064A\u062B \u064A\u062A\u0645 \u062D\u0641\u0638 \u0627\u0644\u0646\u0633\u062E \u0627\u0644\u0627\u062D\u062A\u064A\u0627\u0637\u064A\u0629.",
+      "auto_backup_folder_pick": "\u0627\u062E\u062A\u0631 \u0645\u062C\u0644\u062F\u0627\u064B",
+      "auto_backup_folder_prompt": "\u0627\u062E\u062A\u0631 \u0645\u062C\u0644\u062F \u0627\u0644\u0646\u0633\u062E \u0627\u0644\u0627\u062D\u062A\u064A\u0627\u0637\u064A...",
+      "auto_backup_folder_reset": "\u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0625\u0644\u0649 \u0627\u0644\u0627\u0641\u062A\u0631\u0627\u0636\u064A",
+      "auto_backup_interval": "\u0641\u062A\u0631\u0629 \u0627\u0644\u0646\u0633\u062E \u0627\u0644\u0627\u062D\u062A\u064A\u0627\u0637\u064A",
+      "auto_backup_interval_desc": "\u0645\u062F\u0629 \u0627\u0644\u0627\u0646\u062A\u0638\u0627\u0631 \u0628\u064A\u0646 \u0643\u0644 \u0646\u0633\u062E\u0629 \u0627\u062D\u062A\u064A\u0627\u0637\u064A\u0629.",
+      "auto_backup_unit_hour": "\u0633\u0627\u0639\u0629(\u0627\u062A)",
+      "auto_backup_unit_day": "\u064A\u0648\u0645(\u0623\u064A\u0627\u0645)",
+      "auto_backup_unit_week": "\u0623\u0633\u0628\u0648\u0639(\u0623\u0633\u0627\u0628\u064A\u0639)",
+      "auto_backup_overwrite": "\u0627\u0644\u0643\u062A\u0627\u0628\u0629 \u0641\u0648\u0642 \u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0627\u062D\u062A\u064A\u0627\u0637\u064A\u0629 \u0627\u0644\u0633\u0627\u0628\u0642\u0629",
+      "auto_backup_overwrite_desc": "\u0627\u0633\u062A\u0628\u062F\u0627\u0644 \u0645\u0644\u0641 \u0627\u0644\u0646\u0633\u062E \u0627\u0644\u0627\u062D\u062A\u064A\u0627\u0637\u064A \u0627\u0644\u0623\u062E\u064A\u0631 \u0628\u062F\u0644\u0627\u064B \u0645\u0646 \u0625\u0646\u0634\u0627\u0621 \u0645\u0644\u0641 \u062C\u062F\u064A\u062F \u0641\u064A \u0643\u0644 \u0645\u0631\u0629.",
+      "auto_backup_now": "\u0646\u0633\u062E \u0627\u062D\u062A\u064A\u0627\u0637\u064A \u0627\u0644\u0622\u0646",
+      "auto_backup_now_desc": "\u062D\u0641\u0638 \u0646\u0633\u062E\u0629 \u0627\u062D\u062A\u064A\u0627\u0637\u064A\u0629 \u0641\u0648\u0631\u0627\u064B.",
+      "btn_backup_now": "\u0646\u0633\u062E \u0627\u062D\u062A\u064A\u0627\u0637\u064A \u0627\u0644\u0622\u0646",
+      "btn_backup_now_running": "\u062C\u0627\u0631\u064A \u0627\u0644\u062D\u0641\u0638...",
+      "btn_backup_now_done": "\u062A\u0645 \u0627\u0644\u062D\u0641\u0638!",
+      "btn_backup_now_failed": "\u0641\u0634\u0644",
+      // Custom CSS
+      "custom_css_header": "CSS \u0645\u062E\u0635\u0635",
+      "enable_custom_css": "\u062A\u0641\u0639\u064A\u0644 CSS \u0627\u0644\u0645\u062E\u0635\u0635 \u0644\u062A\u0646\u0633\u064A\u0642 \u0627\u0644\u0646\u0635",
+      "enable_custom_css_desc": "\u0625\u0636\u0627\u0641\u0629 CSS \u0644\u0643\u0644 \u0625\u062F\u062E\u0627\u0644 \u0639\u0628\u0631 \u0632\u0631 '\u062A\u0639\u062F\u064A\u0644 CSS \u0627\u0644\u0645\u062E\u0635\u0635' \u0641\u064A \u0645\u062D\u0631\u0631\u064A \u0627\u0644\u0625\u062F\u062E\u0627\u0644 \u0648\u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629.",
+      "edit_custom_css_btn": "\u062A\u0639\u062F\u064A\u0644 CSS \u0627\u0644\u0645\u062E\u0635\u0635",
+      // Color Text/Line/Child
+      "mark_target_text": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635",
+      "mark_target_line": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0633\u0637\u0631",
+      "mark_target_child_line": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0641\u0631\u0639",
+      "mark_target_label": "\u062A\u0637\u0628\u064A\u0642 \u0639\u0644\u0649",
+      // Group Select & Commands
+      "no_group": "\u0628\u062F\u0648\u0646 \u0645\u062C\u0645\u0648\u0639\u0629",
+      "command_color_text_for_file": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u062D\u062F\u062F \u0644\u0644\u0645\u0644\u0641 \u0627\u0644\u062D\u0627\u0644\u064A"
     };
   }
 });
@@ -5474,10 +5964,11 @@ var BloomFilter = class {
     if (isRegex) {
       const literals = p.match(/[a-z0-9\u4e00-\u9fa5]{1,}/gi);
       if (literals && literals.length > 0) {
-        for (const lit of literals) {
-          if (lit.length === 1 && /[bdswrtn]/.test(lit)) {
-            const idx = p.indexOf("\\" + lit);
-            if (idx !== -1) continue;
+        for (let i = 0; i < literals.length; i++) {
+          const lit = literals[i];
+          if (lit.length === 1 && /[bdswDWSWrtn]/.test(lit)) {
+            const regex = new RegExp("(?<!\\\\)" + lit, "i");
+            if (!regex.test(p)) continue;
           }
           this._addLiteralToBase(lit);
         }
@@ -7259,6 +7750,168 @@ function deriveHighlightCssFromEntry(entry, plugin) {
   return lines.join(";\n") + ";";
 }
 var DANGEROUS_PATTERNS = ["url(", "expression(", "javascript:", "<", ">"];
+function parseCssIntoEntry(css, entry, plugin) {
+  if (!css || !entry) return;
+  const parts = css.split(";").map((s) => s.trim()).filter(Boolean);
+  for (const part of parts) {
+    const idx = part.indexOf(":");
+    if (idx === -1) continue;
+    const prop = part.slice(0, idx).trim().toLowerCase();
+    const val = part.slice(idx + 1).trim();
+    switch (prop) {
+      case "color": {
+        const hex = extractHex(val, plugin);
+        if (hex) {
+          const styleType2 = entry.styleType || "text";
+          if (styleType2 === "both") {
+            entry.textColor = hex;
+            entry.color = "";
+          } else if (styleType2 === "text") {
+            entry.color = hex;
+            entry.textColor = null;
+          }
+        }
+        break;
+      }
+      case "background-color": {
+        const hex = extractHex(val, plugin);
+        if (hex) {
+          entry.backgroundColor = hex;
+          const opacityMatch = val.match(/rgba\s*\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\s*\)/i);
+          if (opacityMatch) {
+            const alpha = parseFloat(opacityMatch[1]);
+            if (!isNaN(alpha)) entry.backgroundOpacity = Math.round(alpha * 100);
+          }
+        }
+        break;
+      }
+      case "border-radius": {
+        const n = parseFloat(val);
+        if (!isNaN(n)) entry.highlightBorderRadius = n;
+        break;
+      }
+      case "padding": {
+        const nums = val.match(/[\d.]+/g);
+        if (nums && nums.length >= 2) {
+          entry.highlightVerticalPadding = parseFloat(nums[0]);
+          entry.highlightHorizontalPadding = parseFloat(nums[1]);
+        } else if (nums && nums.length === 1) {
+          entry.highlightVerticalPadding = parseFloat(nums[0]);
+          entry.highlightHorizontalPadding = parseFloat(nums[0]);
+        }
+        break;
+      }
+      case "padding-top":
+      case "padding-bottom": {
+        const n = parseFloat(val);
+        if (!isNaN(n)) entry.highlightVerticalPadding = n;
+        break;
+      }
+      case "padding-left":
+      case "padding-right": {
+        const n = parseFloat(val);
+        if (!isNaN(n)) entry.highlightHorizontalPadding = n;
+        break;
+      }
+      // border shorthand: "1px solid #color"
+      case "border":
+      case "border-top":
+      case "border-bottom":
+      case "border-left":
+      case "border-right": {
+        entry.enableBorderThickness = true;
+        const thicknessMatch = val.match(/^([\d.]+)px/);
+        if (thicknessMatch) entry.borderThickness = parseFloat(thicknessMatch[1]);
+        const lineStyles = ["solid", "dashed", "dotted", "double", "groove", "ridge", "inset", "outset"];
+        for (const ls of lineStyles) {
+          if (val.includes(ls)) {
+            entry.borderLineStyle = ls;
+            break;
+          }
+        }
+        const sideMap = {
+          "border": "full",
+          "border-top": "top",
+          "border-bottom": "bottom",
+          "border-left": "left",
+          "border-right": "right"
+        };
+        if (sideMap[prop]) entry.borderStyle = sideMap[prop];
+        break;
+      }
+    }
+  }
+}
+function patchCssLayoutFromEntry(css, entry, plugin) {
+  if (!css || !entry) return css;
+  const settings = plugin.settings;
+  const styleType2 = entry.styleType || (entry.backgroundColor ? "highlight" : "text");
+  const isTextOnly = styleType2 === "text";
+  const updates = {};
+  if (!isTextOnly) {
+    const radius = entry.highlightBorderRadius ?? settings.highlightBorderRadius ?? 4;
+    updates["border-radius"] = `${radius}px`;
+    const hpad = entry.highlightHorizontalPadding ?? settings.highlightHorizontalPadding ?? 4;
+    const vpad = entry.highlightVerticalPadding ?? settings.highlightVerticalPadding ?? 0;
+    updates["padding"] = `${vpad}px ${hpad}px`;
+    const enableBorder = entry.enableBorderThickness ?? settings.enableBorderThickness ?? false;
+    if (enableBorder) {
+      const thickness = entry.borderThickness ?? settings.borderThickness ?? 1;
+      const lineStyle = entry.borderLineStyle ?? settings.borderLineStyle ?? "solid";
+      const tc = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color;
+      const borderColor = tc || "currentColor";
+      const borderVal = `${thickness}px ${lineStyle} ${borderColor}`;
+      const borderSide = entry.borderStyle ?? settings.borderStyle ?? "full";
+      const borderProps = {
+        "full": ["border"],
+        "top": ["border-top"],
+        "bottom": ["border-bottom"],
+        "left": ["border-left"],
+        "right": ["border-right"],
+        "top-bottom": ["border-top", "border-bottom"],
+        "left-right": ["border-left", "border-right"],
+        "top-right": ["border-top", "border-right"],
+        "top-left": ["border-top", "border-left"],
+        "bottom-right": ["border-bottom", "border-right"],
+        "bottom-left": ["border-bottom", "border-left"]
+      };
+      for (const p of borderProps[borderSide] || ["border"]) {
+        updates[p] = borderVal;
+      }
+    }
+  }
+  const sanitized = plugin.sanitizeCssDeclarations(css);
+  if (!sanitized) return css;
+  const parts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
+  const parsed = parts.map((p) => {
+    const idx = p.indexOf(":");
+    if (idx === -1) return { prop: p, val: "" };
+    return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
+  });
+  const found = /* @__PURE__ */ new Set();
+  const rebuilt = parsed.map(({ prop, val }) => {
+    if (updates.hasOwnProperty(prop)) {
+      found.add(prop);
+      return `${prop}: ${updates[prop]}`;
+    }
+    return `${prop}: ${val}`;
+  });
+  for (const [prop, val] of Object.entries(updates)) {
+    if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
+  }
+  return rebuilt.join(";\n") + ";";
+}
+function extractHex(val, plugin) {
+  if (/^#[0-9a-f]{3,8}$/i.test(val.trim())) return val.trim();
+  const rgbMatch = val.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]).toString(16).padStart(2, "0");
+    const g = parseInt(rgbMatch[2]).toString(16).padStart(2, "0");
+    const b = parseInt(rgbMatch[3]).toString(16).padStart(2, "0");
+    return `#${r}${g}${b}`;
+  }
+  return null;
+}
 var CustomCssModal = class extends import_obsidian3.Modal {
   constructor(app, plugin, entry) {
     super(app);
@@ -7297,7 +7950,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     previewWrap.style.display = "flex";
     previewWrap.style.alignItems = "center";
     previewWrap.style.justifyContent = "center";
-    const sampleText = this.entry.isRegex ? this.entry.presetLabel || this.entry.pattern || "Sample Text" : this.entry.pattern || "Sample Text";
+    const sampleText = this.entry.name ? this.entry.name : this.entry.isRegex ? this.entry.presetLabel || this.entry.pattern || "Sample Text" : this.entry.pattern || "Sample Text";
     this._previewSpan = previewWrap.createEl("span");
     this._previewSpan.style.display = "inline";
     this._previewSpan.textContent = sampleText;
@@ -7375,7 +8028,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     row.style.marginTop = "4px";
     row.style.justifyContent = "space-between";
     const clearBtn = row.createEl("button", {
-      text: this.plugin.t("btn_reset", "Clear")
+      text: this.plugin.t("btn_reset", "Reset")
     });
     const saveBtn = row.createEl("button", {
       text: this.plugin.t("btn_save", "Save")
@@ -7392,7 +8045,9 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     this._handlers.push({ el: this._textarea, ev: "input", fn: inputHandler });
     const save = async () => {
       if (this.entry) {
-        this.entry.customCss = this._textarea.value.trim() || void 0;
+        const css = this._textarea.value.trim() || void 0;
+        this.entry.customCss = css;
+        if (css) parseCssIntoEntry(css, this.entry, this.plugin);
       }
       await this.plugin.saveSettings();
       try {
@@ -7421,34 +8076,10 @@ var CustomCssModal = class extends import_obsidian3.Modal {
       }
       this.close();
     };
-    const clear = async () => {
-      if (this.entry) this.entry.customCss = void 0;
-      await this.plugin.saveSettings();
-      try {
-        this.plugin.compileWordEntries();
-      } catch (_) {
-      }
-      try {
-        this.plugin.compileTextBgColoringEntries();
-      } catch (_) {
-      }
-      try {
-        window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
-      } catch (_) {
-      }
-      try {
-        this.plugin.reconfigureEditorExtensions();
-      } catch (_) {
-      }
-      try {
-        this.plugin.forceRefreshAllEditors();
-      } catch (_) {
-      }
-      try {
-        this.plugin.forceRefreshAllReadingViews();
-      } catch (_) {
-      }
-      this.close();
+    const clear = () => {
+      this._textarea.value = deriveHighlightCssFromEntry(this.entry, this.plugin);
+      this._updatePreview();
+      this._validateInput();
     };
     saveBtn.addEventListener("click", save);
     clearBtn.addEventListener("click", clear);
@@ -9851,6 +10482,9 @@ var EditEntryModal = class extends import_obsidian6.Modal {
       } else if (style === "both") {
         this.entry.textColor = textColorInput.value || "";
       }
+      if (this.entry && this.entry.customCss) {
+        this.plugin.syncEntryCssFromColors(this.entry);
+      }
       if (dispatch) dispatchColorsChanged();
     };
     const applyBgColorToEntry = (dispatch = true) => {
@@ -9861,6 +10495,9 @@ var EditEntryModal = class extends import_obsidian6.Modal {
         this.entry.backgroundColor = bgColorInput.value || "";
       } else if (style === "both") {
         this.entry.backgroundColor = bgColorInput.value || "";
+      }
+      if (this.entry && this.entry.customCss) {
+        this.plugin.syncEntryCssFromColors(this.entry);
       }
       if (dispatch) dispatchColorsChanged();
     };
@@ -10025,7 +10662,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     groupSelect.style.background = "var(--background-modifier-form-field)";
     groupSelect.style.textAlign = "center";
     const defaultOpt = groupSelect.createEl("option", {
-      text: this.plugin.t("default")
+      text: this.plugin.t("no_group", "No Group")
     });
     defaultOpt.value = "";
     groupsList.forEach((g) => {
@@ -10240,7 +10877,13 @@ var EditEntryModal = class extends import_obsidian6.Modal {
         span.style.display = "inline";
         if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
           try {
-            const decl = this.plugin.sanitizeCssDeclarations(this.entry.customCss);
+            const tempEntry = Object.assign({}, this.entry, {
+              color: style === "text" ? t : "",
+              textColor: style === "both" ? t : style === "highlight" ? "currentColor" : null,
+              backgroundColor: style === "highlight" || style === "both" ? b : null
+            });
+            const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
+            const decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
             if (decl) {
               decl.split(";").map((s) => s.trim()).filter(Boolean).forEach((p2) => {
                 const idx = p2.indexOf(":");
@@ -10843,6 +11486,8 @@ var EditEntryModal = class extends import_obsidian6.Modal {
           foundArray[foundIdx].inclusionRules = this.entry.inclusionRules;
         if (this.entry.exclusionRules)
           foundArray[foundIdx].exclusionRules = this.entry.exclusionRules;
+        if (this.entry.customCss !== void 0)
+          foundArray[foundIdx].customCss = this.entry.customCss;
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
         this.plugin.compileTextBgColoringEntries();
@@ -10913,6 +11558,8 @@ var EditEntryModal = class extends import_obsidian6.Modal {
           newEntry.inclusionRules = this.entry.inclusionRules;
         if (this.entry.exclusionRules)
           newEntry.exclusionRules = this.entry.exclusionRules;
+        if (this.entry.customCss !== void 0)
+          newEntry.customCss = this.entry.customCss;
         const toGroupUid = groupSelect.value || "";
         if (toGroupUid) {
           const groupsList2 = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
@@ -10967,6 +11614,9 @@ var EditEntryModal = class extends import_obsidian6.Modal {
           this.entry.color = "";
           this.entry.textColor = textColorVal;
           this.entry.backgroundColor = bgColorVal;
+        }
+        if (this.entry.customCss) {
+          this.plugin.syncEntryCssFromColors(this.entry);
         }
         try {
           this.onSaved && this.onSaved(this.entry);
@@ -11026,7 +11676,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     this.isQuickOnce = !!isQuickOnce;
     this._entry = entry;
   }
-  _applyCustomCss() {
+  _applyCustomCss(currentTextColor, currentBgColor) {
     if (!this._previewSpan) return;
     let entry = this._entry;
     if (!entry && this._selectedText && !this.isQuickOnce) {
@@ -11048,7 +11698,17 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     }
     if (entry && entry.customCss && this.plugin.settings.enableCustomCss) {
       try {
-        const decl = this.plugin.sanitizeCssDeclarations(entry.customCss);
+        let cssToApply = entry.customCss;
+        if (currentTextColor || currentBgColor) {
+          const styleType2 = entry.styleType || (entry.backgroundColor ? "highlight" : "text");
+          const tempEntry = Object.assign({}, entry, {
+            color: styleType2 === "text" ? currentTextColor || entry.color : "",
+            textColor: styleType2 === "both" ? currentTextColor || entry.textColor : styleType2 === "highlight" ? "currentColor" : null,
+            backgroundColor: styleType2 === "highlight" || styleType2 === "both" ? currentBgColor || entry.backgroundColor : null
+          });
+          cssToApply = this.plugin.syncEntryCssFromColorsForPreview(tempEntry) || entry.customCss;
+        }
+        const decl = this.plugin.sanitizeCssDeclarations(cssToApply);
         if (decl) {
           decl.split(";").map((s) => s.trim()).filter(Boolean).forEach((p) => {
             const idx = p.indexOf(":");
@@ -11136,7 +11796,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
       groupSelect.style.flex = "0 0 auto";
       groupSelect.style.marginLeft = "auto";
       groupSelect.createEl("option", {
-        text: this.plugin.t("default", "Default"),
+        text: this.plugin.t("no_group", "No Group"),
         value: ""
       });
       groups.forEach((g) => {
@@ -11437,7 +12097,9 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
         }
         hex.value = val;
         colorInput.value = val;
-        this._applyCustomCss();
+        const curText = type === "text" ? val : this.selectedTextColor || null;
+        const curBg = type === "background" ? val : this.selectedBgColor || null;
+        this._applyCustomCss(curText, curBg);
       };
       const colorChange = () => {
         const v = colorInput.value;
@@ -11921,6 +12583,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
           }
           const onSaved = async () => {
             try {
+              this._hasUserChanges = true;
               await this.plugin.saveSettings();
               this.plugin.compileWordEntries();
               this.plugin.reconfigureEditorExtensions();
@@ -12176,6 +12839,9 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
         }
         const caseSensitive2 = !!this.plugin.settings.caseSensitive;
         const eq2 = (a, b) => caseSensitive2 ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+        const syncCustomCss = (e) => {
+          if (e && e.customCss) this.plugin.syncEntryCssFromColors(e);
+        };
         let updated = false;
         if (textSelected && bgSelected) {
           for (let i = 0; i < targetArr.length; i++) {
@@ -12198,6 +12864,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
               e.color = "";
               e.styleType = "both";
               e.markTarget = this._markTarget || "text";
+              syncCustomCss(e);
               debugLog("MODAL", "update both", e);
               updated = true;
               break;
@@ -12243,6 +12910,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                   e.backgroundColor = null;
                   e.styleType = "text";
                   e.markTarget = this._markTarget || "text";
+                  syncCustomCss(e);
                   updated = true;
                   if (!e.isRegex)
                     e.matchType = this._matchType || e.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact");
@@ -12257,6 +12925,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                 e.backgroundColor = null;
                 e.styleType = "text";
                 e.markTarget = this._markTarget || "text";
+                syncCustomCss(e);
                 updated = true;
                 if (!e.isRegex)
                   e.matchType = this._matchType || e.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact");
@@ -12268,6 +12937,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                 e.backgroundColor = null;
                 e.styleType = "text";
                 e.markTarget = this._markTarget || "text";
+                syncCustomCss(e);
                 updated = true;
                 if (!e.isRegex)
                   e.matchType = this._matchType || e.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact");
@@ -12333,6 +13003,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
               e.color = "";
               e.styleType = "highlight";
               e.markTarget = this._markTarget || "text";
+              syncCustomCss(e);
               debugLog("MODAL", "update highlight", e);
               updated = true;
               break;
@@ -12434,6 +13105,12 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
     } catch (e) {
     }
     const isGroup = this.entry && Array.isArray(this.entry.entries);
+    if (this.entry && this.entry.customCss && !isGroup) {
+      try {
+        parseCssIntoEntry(this.entry.customCss, this.entry, this.plugin);
+      } catch (_) {
+      }
+    }
     const headerRow = contentEl.createDiv();
     headerRow.style.display = "flex";
     headerRow.style.alignItems = "center";
@@ -12457,7 +13134,7 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       groupSelect.style.background = "var(--background-modifier-form-field)";
       groupSelect.style.textAlign = "center";
       const defaultOpt = groupSelect.createEl("option", {
-        text: this.plugin.t("default")
+        text: this.plugin.t("no_group", "No Group")
       });
       defaultOpt.value = "";
       const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
@@ -13030,7 +13707,13 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       span.textContent = displayText;
       if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
         try {
-          const decl = this.plugin.sanitizeCssDeclarations(this.entry.customCss);
+          const tempEntry = Object.assign({}, this.entry, {
+            color: style === "text" ? t : "",
+            textColor: style === "both" ? t : style === "highlight" ? "currentColor" : null,
+            backgroundColor: style === "highlight" || style === "both" ? b : null
+          });
+          const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
+          const decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
           if (decl) {
             decl.split(";").map((s) => s.trim()).filter(Boolean).forEach((p2) => {
               const idx = p2.indexOf(":");
@@ -13388,6 +14071,18 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
           foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
           foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
           foundArray[foundIdx].borderThickness = this.entry.borderThickness;
+          if (this.entry.customCss) {
+            try {
+              this.plugin.syncEntryCssFromColors(this.entry);
+            } catch (_) {
+            }
+            try {
+              const patched = patchCssLayoutFromEntry(this.entry.customCss, this.entry, this.plugin);
+              this.entry.customCss = patched;
+            } catch (_) {
+            }
+            foundArray[foundIdx].customCss = this.entry.customCss;
+          }
         }
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -14613,6 +15308,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
             entry._savedTextColor = newColor;
           }
           styleSelect.value = entry.styleType;
+          if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
         };
         cp.addEventListener("input", cpHandler);
         cp.title = "Text color";
@@ -14642,6 +15338,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
                 if (result && result.markTarget) {
                   entry.markTarget = result.markTarget;
                 }
+                if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
                 cp.value = tc;
                 this._refreshGroupEntries();
               },
@@ -14694,6 +15391,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
           }
           entry._savedBackgroundColor = newColor;
           styleSelect.value = entry.styleType;
+          if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
         };
         cpBg.addEventListener("input", cpBgHandler);
         cpBg.title = "Highlight color";
@@ -14718,6 +15416,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
                 if (result && result.markTarget) {
                   entry.markTarget = result.markTarget;
                 }
+                if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
                 cpBg.value = bc;
                 this._refreshGroupEntries();
               },
@@ -15711,6 +16410,9 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
     this._entriesLimit = Number(this.plugin.settings?.entriesSearchLimit ?? 0) || 0;
     this._entriesRegexOnly = false;
     this._entriesSearchMatch = "contains";
+    this._colorTargetFilter = null;
+    this._groupLimit = 0;
+    this._groupColorTargetFilter = null;
     this._blacklistLimit = Number(this.plugin.settings?.blacklistSearchLimit ?? 0) || 0;
     this._blacklistSearchMatchStarts = false;
     this._blacklistSearchMatchEnds = false;
@@ -15781,6 +16483,24 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         }
       }
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
+      const colorTargetSelect = row.createEl("select");
+      colorTargetSelect.style.padding = "6px";
+      colorTargetSelect.style.borderRadius = "4px";
+      colorTargetSelect.style.border = "1px solid var(--background-modifier-border)";
+      colorTargetSelect.style.background = "var(--background-modifier-form-field)";
+      colorTargetSelect.style.color = "var(--text-normal)";
+      colorTargetSelect.style.flex = "0 0 auto";
+      colorTargetSelect.style.maxWidth = "80px";
+      colorTargetSelect.style.width = "stretch";
+      colorTargetSelect.style.minWidth = "60px";
+      colorTargetSelect.style.textAlign = "center";
+      colorTargetSelect.title = this.plugin.t("color_target_tooltip", "Color target: text = matched text only, line = entire line, child = child elements");
+      try {
+        colorTargetSelect.addClass("act-color-target-select");
+      } catch (e) {
+      }
+      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("color_target_text", "text")}</option><option value="line">${this.plugin.t("color_target_line", "line")}</option><option value="child">${this.plugin.t("color_target_child", "child")}</option>`;
+      colorTargetSelect.value = entry.colorTarget || "text";
       let nameInput = null;
       if (entry.isRegex) {
         nameInput = row.createEl("input", {
@@ -16571,6 +17291,20 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       };
       matchSelect.addEventListener("change", matchChangeHandler);
       matchSelect.addEventListener("input", matchChangeHandler);
+      const colorTargetChangeHandler = async () => {
+        const idx = resolveIdx();
+        if (idx !== -1) {
+          this.plugin.settings.wordEntries[idx].colorTarget = colorTargetSelect.value;
+          entry.colorTarget = colorTargetSelect.value;
+          await this.plugin.saveSettings();
+          this.plugin.compileWordEntries();
+          this.plugin.compileTextBgColoringEntries();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
+        }
+      };
+      colorTargetSelect.addEventListener("change", colorTargetChangeHandler);
       const cleanup = () => {
         try {
           textInput.removeEventListener("change", textInputHandler);
@@ -16631,6 +17365,10 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         } catch (e) {
         }
         try {
+          colorTargetSelect.removeEventListener("change", colorTargetChangeHandler);
+        } catch (e) {
+        }
+        try {
           row.remove();
         } catch (e) {
         }
@@ -16642,6 +17380,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           textInput,
           styleSelect,
           matchSelect,
+          colorTargetSelect,
           cp,
           cpBg,
           regexChk,
@@ -18740,6 +19479,11 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       if (this._entriesWordsOnly) {
         finalFiltered = finalFiltered.filter((e) => !e.isRegex);
       }
+      if (this._colorTargetFilter) {
+        finalFiltered = finalFiltered.filter(
+          (e) => String(e.colorTarget || "text").toLowerCase() === this._colorTargetFilter
+        );
+      }
       if (!this._suspendSorting && this._wordsSortMode === "a-z") {
         finalFiltered.sort((a, b) => {
           const patternA = Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0 ? a.groupedPatterns[0] : a.pattern || "";
@@ -18877,7 +19621,16 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           this.plugin.reregisterCommandsWithLanguage();
         this._refreshGroups();
       };
-      groups.forEach((group, index) => {
+      let filteredGroups = groups;
+      if (this._groupColorTargetFilter) {
+        filteredGroups = groups.filter(
+          (g) => (Array.isArray(g.entries) ? g.entries : []).some(
+            (e) => String(e.colorTarget || "text").toLowerCase() === this._groupColorTargetFilter
+          )
+        );
+      }
+      const limitedGroups = this._groupLimit && this._groupLimit > 0 ? filteredGroups.slice(-this._groupLimit) : filteredGroups;
+      limitedGroups.forEach((group, index) => {
         const row = container.createDiv();
         try {
           row.addClass("act-group-row");
@@ -18952,7 +19705,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
             this.plugin.reregisterCommandsWithLanguage();
         };
         activeSelect.onchange = activeHandler;
-        if (group.textColor || group.backgroundColor || typeof group.enableBorderThickness !== "undefined" && group.enableBorderThickness) {
+        if (group.textColor || group.backgroundColor || typeof group.enableBorderThickness !== "undefined" && group.enableBorderThickness || group.customCss) {
           const preview = row.createDiv();
           try {
             preview.addClass("act-group-styling-preview");
@@ -18993,6 +19746,19 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
             }
           } else {
             preview.style.border = "1px solid var(--background-modifier-border)";
+          }
+          if (group.customCss) {
+            try {
+              const decl = this.plugin.sanitizeCssDeclarations(group.customCss);
+              if (decl) {
+                decl.split(";").map((s) => s.trim()).filter(Boolean).forEach((part) => {
+                  const idx = part.indexOf(":");
+                  if (idx === -1) return;
+                  preview.style.setProperty(part.slice(0, idx).trim(), part.slice(idx + 1).trim(), "important");
+                });
+              }
+            } catch (_) {
+            }
           }
         }
         const nameInput = row.createEl("input", {
@@ -21445,7 +22211,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       );
       entriesLimitInput.title = this.plugin.t(
         "limit_input_tooltip",
-        "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact"
+        "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child"
       );
       entriesLimitInput.style.width = "64px";
       entriesLimitInput.style.padding = "6px";
@@ -21465,18 +22231,22 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         this._entriesRegexOnly = false;
         this._entriesWordsOnly = false;
         this._filterMode = null;
+        this._colorTargetFilter = null;
         this._entriesSearchMatch = "contains";
         this._entriesMatchTypeStartsWith = false;
         this._entriesMatchTypeEndsWith = false;
         this._entriesMatchTypeExact = false;
         for (const tok of parts) {
-          if (tok === "r") this._entriesRegexOnly = true;
+          if (tok === "ct") this._colorTargetFilter = "text";
+          else if (tok === "cl") this._colorTargetFilter = "line";
+          else if (tok === "cc") this._colorTargetFilter = "child";
+          else if (tok === "sw") this._entriesMatchTypeStartsWith = true;
+          else if (tok === "ew") this._entriesMatchTypeEndsWith = true;
+          else if (tok === "r") this._entriesRegexOnly = true;
           else if (tok === "w") this._entriesWordsOnly = true;
           else if (tok === "h") this._filterMode = "highlight";
           else if (tok === "c") this._filterMode = "text";
           else if (tok === "b") this._filterMode = "both";
-          else if (tok === "sw") this._entriesMatchTypeStartsWith = true;
-          else if (tok === "ew") this._entriesMatchTypeEndsWith = true;
           else if (tok === "e") this._entriesMatchTypeExact = true;
         }
         try {
@@ -21800,6 +22570,43 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         this._groupSearch = groupSearch.value || "";
         this._refreshGroups();
       });
+      const groupLimitInput = groupSearchContainer.createEl("input", {
+        type: "text"
+      });
+      groupLimitInput.value = String(this._groupLimit || 0);
+      groupLimitInput.placeholder = this.plugin.t(
+        "limit_input_placeholder",
+        "limit"
+      );
+      groupLimitInput.title = this.plugin.t(
+        "group_limit_input_tooltip",
+        "0=all; number=last N; ct=color-text; cl=color-line; cc=color-child"
+      );
+      groupLimitInput.style.width = "64px";
+      groupLimitInput.style.padding = "6px";
+      groupLimitInput.style.border = "1px solid var(--background-modifier-border)";
+      groupLimitInput.style.borderRadius = "var(--input-radius)";
+      const groupLimitHandler = () => {
+        const raw = String(groupLimitInput.value || "").trim().toLowerCase();
+        const parts = raw.split(/\s+/).filter(Boolean);
+        const numPart = parts.find((p) => /^\d+$/.test(p));
+        const num = numPart ? parseInt(numPart, 10) : NaN;
+        this._groupLimit = !isNaN(num) && num >= 0 ? num : 0;
+        this._groupColorTargetFilter = null;
+        for (const tok of parts) {
+          if (tok === "ct") this._groupColorTargetFilter = "text";
+          else if (tok === "cl") this._groupColorTargetFilter = "line";
+          else if (tok === "cc") this._groupColorTargetFilter = "child";
+        }
+        try {
+          this._refreshGroups();
+        } catch (e) {
+        }
+      };
+      groupLimitInput.addEventListener("input", groupLimitHandler);
+      this._cleanupHandlers.push(
+        () => groupLimitInput.removeEventListener("input", groupLimitHandler)
+      );
       const groupIcon = groupSearchContainer.createDiv();
       try {
         groupIcon.addClass("act-search-icon");
@@ -23649,6 +24456,7 @@ function compileWordEntriesLogic(plugin) {
               copy.borderThickness = group.borderThickness;
             copy._groupUid = group.uid || null;
             copy._groupRef = group;
+            if (group.customCss && !copy.customCss) copy.customCss = group.customCss;
             copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
             copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
             copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
@@ -23873,6 +24681,7 @@ function compileTextBgColoringEntriesLogic(plugin) {
               copy.borderThickness = group.borderThickness;
             copy._groupUid = group.uid || null;
             copy._groupRef = group;
+            if (group.customCss && !copy.customCss) copy.customCss = group.customCss;
             copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
             copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
             copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
@@ -25461,6 +26270,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                           entry._savedTextColor = color;
                         }
                         if (!entry.isRegex) entry.matchType = matchType;
+                        this.syncEntryCssFromColors(entry);
                       } else {
                         if (tc && bc) {
                           arr.push({
@@ -26168,6 +26978,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                     entry._savedTextColor = color;
                   }
                   if (!entry.isRegex) entry.matchType = matchType;
+                  this.syncEntryCssFromColors(entry);
                 } else {
                   if (tc && bc) {
                     arr.push({
@@ -26244,7 +27055,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       });
       addTrackedCommand({
         id: "color-text-for-current-file",
-        name: this.t("command_color_text_for_file", "Color Text for Current File"),
+        name: this.t("command_color_text_for_file", "Color Selected Text for Current File"),
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
@@ -26304,6 +27115,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                     entry._savedTextColor = color;
                   }
                   if (!entry.isRegex) entry.matchType = matchType;
+                  this.syncEntryCssFromColors(entry);
                 } else {
                   if (tc && bc) {
                     entry = {
@@ -31338,30 +32150,37 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       }
       try {
         if (pattern.includes("$") || pattern.includes("\u20AC") || pattern.includes("\xA3")) {
-          return withBloom(
-            (text) => typeof text === "string" && (text.includes("$") || text.includes("\u20AC") || text.includes("\xA3"))
-          );
+          if (!isRegex || /\\\$|\\€|\\£/.test(pattern)) {
+            return withBloom(
+              (text) => typeof text === "string" && (text.includes("$") || text.includes("\u20AC") || text.includes("\xA3"))
+            );
+          }
         }
-        if (pattern.includes(":") && (!isRegex || (pattern.includes(" :") || pattern.includes(": ") || /\\:/.test(pattern) || /[^?]:/.test(pattern)))) {
+        if (pattern.includes(":")) {
           const isNonCapturing = isRegex && /\(\?:/.test(pattern);
           const hasLiteralColon = isRegex && /\\:/.test(pattern);
-          if (!isRegex || hasLiteralColon || !isNonCapturing) {
+          const isLookaround = isRegex && /\(\?<?[=!]:/.test(pattern);
+          if (!isRegex || hasLiteralColon && !isNonCapturing && !isLookaround) {
             return withBloom(
               (text) => typeof text === "string" && text.includes(":")
             );
           }
         }
         if (pattern.includes("@")) {
-          return withBloom(
-            (text) => typeof text === "string" && text.includes("@")
-          );
+          if (!isRegex || /\\@/.test(pattern) || !/\[[^\]]*@[^\]]*\]/.test(pattern)) {
+            return withBloom(
+              (text) => typeof text === "string" && text.includes("@")
+            );
+          }
         }
         if (pattern.includes("-")) {
-          return withBloom(
-            (text) => typeof text === "string" && text.includes("-")
-          );
+          if (!isRegex || /\\-/.test(pattern)) {
+            return withBloom(
+              (text) => typeof text === "string" && text.includes("-")
+            );
+          }
         }
-        const literalMatch = pattern.match(/[A-Za-z]{3,}/);
+        const literalMatch = isRegex ? pattern.replace(/\\[bdswDWSWrtn]/g, " ").match(/[A-Za-z]{3,}/) : pattern.match(/[A-Za-z]{3,}/);
         if (literalMatch) {
           const literal = literalMatch[0];
           if (caseSensitive) {
@@ -31654,6 +32473,101 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
    * @param {string} customCss  - Raw custom CSS declarations from entry.customCss
    * @returns {string} Merged style string with custom CSS winning on conflicts
    */
+  /**
+   * Same as syncEntryCssFromColors but returns the patched CSS string without
+   * mutating the entry. Used for live preview rendering.
+   */
+  syncEntryCssFromColorsForPreview(entry) {
+    if (!entry || !entry.customCss) return entry ? entry.customCss : "";
+    try {
+      const settings = this.settings;
+      const styleType2 = entry.styleType || (entry.backgroundColor ? "highlight" : "text");
+      const isTextOnly = styleType2 === "text";
+      const tc = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color;
+      const bg = entry.backgroundColor;
+      const updates = {};
+      if (tc) updates["color"] = tc;
+      if (bg && !isTextOnly) {
+        const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
+        updates["background-color"] = this.hexToRgba(bg, opacity);
+      }
+      const sanitized = this.sanitizeCssDeclarations(entry.customCss);
+      if (!sanitized) return entry.customCss;
+      const parts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
+      const parsed = parts.map((p) => {
+        const idx = p.indexOf(":");
+        if (idx === -1) return { prop: p, val: "" };
+        return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
+      });
+      const found = /* @__PURE__ */ new Set();
+      const rebuilt = parsed.map(({ prop, val }) => {
+        if (updates.hasOwnProperty(prop)) {
+          found.add(prop);
+          return `${prop}: ${updates[prop]}`;
+        }
+        if (tc && (prop === "border" || prop === "border-top" || prop === "border-bottom" || prop === "border-left" || prop === "border-right")) {
+          const patched = val.replace(/#[0-9a-fA-F]{3,8}\b/g, tc).replace(/rgba?\s*\([^)]+\)/gi, tc);
+          return `${prop}: ${patched}`;
+        }
+        return `${prop}: ${val}`;
+      });
+      for (const [prop, val] of Object.entries(updates)) {
+        if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
+      }
+      return rebuilt.join(";\n") + ";";
+    } catch (_) {
+      return entry.customCss;
+    }
+  }
+  /**
+   * If an entry has customCss, patch only the color/background/border-color values
+   * in the existing CSS string to reflect the entry's current color fields.
+   * All other user-defined properties (font-size, font-weight, etc.) are preserved.
+   * Call this immediately after mutating entry.color / entry.textColor / entry.backgroundColor.
+   */
+  syncEntryCssFromColors(entry) {
+    if (!entry || !entry.customCss) return;
+    try {
+      const settings = this.settings;
+      const styleType2 = entry.styleType || (entry.backgroundColor ? "highlight" : "text");
+      const isTextOnly = styleType2 === "text";
+      const tc = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color;
+      const bg = entry.backgroundColor;
+      const updates = {};
+      if (tc) updates["color"] = tc;
+      if (bg && !isTextOnly) {
+        const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
+        updates["background-color"] = this.hexToRgba(bg, opacity);
+      }
+      const sanitized = this.sanitizeCssDeclarations(entry.customCss);
+      if (!sanitized) return;
+      const parts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
+      const parsed = parts.map((p) => {
+        const idx = p.indexOf(":");
+        if (idx === -1) return { prop: p, val: "" };
+        return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
+      });
+      const found = /* @__PURE__ */ new Set();
+      const rebuilt = parsed.map(({ prop, val }) => {
+        if (updates.hasOwnProperty(prop)) {
+          found.add(prop);
+          return `${prop}: ${updates[prop]}`;
+        }
+        if (tc && (prop === "border" || prop === "border-top" || prop === "border-bottom" || prop === "border-left" || prop === "border-right")) {
+          const patched = val.replace(/#[0-9a-fA-F]{3,8}\b/g, tc).replace(/rgba?\s*\([^)]+\)/gi, tc);
+          return `${prop}: ${patched}`;
+        }
+        return `${prop}: ${val}`;
+      });
+      for (const [prop, val] of Object.entries(updates)) {
+        if (!found.has(prop)) {
+          rebuilt.push(`${prop}: ${val}`);
+        }
+      }
+      entry.customCss = rebuilt.join(";\n") + ";";
+    } catch (_) {
+    }
+  }
   _mergeStyleWithCustomCss(baseStyle, customCss) {
     if (!customCss || !customCss.trim()) return baseStyle;
     const sanitized = this.sanitizeCssDeclarations(customCss);
