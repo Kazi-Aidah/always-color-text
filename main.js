@@ -23807,6 +23807,21 @@ function buildEditorExtension(plugin) {
         this.lastFilePath = view.file ? view.file.path : null;
         this._typingDebounceTimer = null;
         this.wasInTable = false;
+        setTimeout(() => {
+          try {
+            this.view.dispatch({ effects: forceRebuildEffect.of(true) });
+          } catch (_) {
+          }
+        }, 100);
+        this._initialBuildDone = false;
+        setTimeout(() => {
+          try {
+            if (this.view && this.view.dispatch) {
+              this.view.dispatch({ effects: forceRebuildEffect.of(true) });
+            }
+          } catch (_) {
+          }
+        }, 100);
         try {
           const sel = window.getSelection();
           if (sel && sel.rangeCount > 0) {
@@ -24070,8 +24085,7 @@ function buildEditorExtension(plugin) {
         );
         const text = view.state.doc.sliceString(from, extendedTo);
         const fileForView = view.file || plugin.app.workspace.getActiveFile();
-        const lineDecos = [];
-        const lineCollector = { add: (pos, _p2, deco) => lineDecos.push({ pos, deco }) };
+        const lineBuilder = new RangeSetBuilder();
         const markSet = plugin.buildDecoChunked(
           view,
           new RangeSetBuilder(),
@@ -24082,22 +24096,20 @@ function buildEditorExtension(plugin) {
           folderEntry,
           fileForView ? fileForView.path : null,
           syntaxTree,
-          lineCollector
+          lineBuilder
         );
-        if (!lineDecos.length) return markSet;
+        const lineSet = lineBuilder.finish();
+        if (lineSet.length === 0) return markSet;
         const markRanges = [];
         markSet.between(from, extendedTo, (f, t, v) => {
           markRanges.push({ from: f, to: t, value: v });
         });
-        const seen = /* @__PURE__ */ new Set();
-        const uniqueLines = lineDecos.filter(({ pos, deco }) => {
-          const key = `${pos}::${deco.spec?.attributes?.class || ""}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
+        const lineRanges = [];
+        lineSet.between(from, extendedTo, (f, t, v) => {
+          lineRanges.push({ from: f, to: t, value: v, line: true });
         });
         const all = [
-          ...uniqueLines.map(({ pos, deco }) => ({ from: pos, to: pos, value: deco, line: true })),
+          ...lineRanges,
           ...markRanges.map((r) => ({ ...r, line: false }))
         ].sort((a, b) => a.from - b.from || (a.line ? -1 : 1));
         const merged = new RangeSetBuilder();
@@ -36104,6 +36116,89 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
               frag.appendChild(
                 document.createTextNode(text.slice(m.start, m.end))
               );
+              pos = m.end;
+              i = j;
+              continue;
+            }
+            const markTarget = m.entryRef && m.entryRef.markTarget;
+            if (markTarget === "line" || markTarget === "childLine") {
+              const rawPattern = m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern) || "";
+              const cssClass = String(rawPattern).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
+              let targetBlock = block;
+              if (markTarget === "childLine") {
+                try {
+                  const walker2 = document.createTreeWalker(
+                    block,
+                    NodeFilter.SHOW_TEXT,
+                    null,
+                    false
+                  );
+                  let n;
+                  while (n = walker2.nextNode()) {
+                    const idx = text.indexOf(text.slice(m.start, m.end));
+                    if (n.textContent.includes(text.slice(m.start, m.end))) {
+                      targetBlock = n.parentElement || block;
+                      break;
+                    }
+                  }
+                } catch (e) {
+                }
+              }
+              if (targetBlock && targetBlock !== block) {
+                targetBlock.classList.add(cssClass);
+              }
+              block.classList.add(cssClass);
+              try {
+                const parent = block.parentElement;
+                if (parent && parent.className && /\bel-/.test(parent.className)) {
+                  parent.classList.add(cssClass);
+                }
+              } catch (e) {
+              }
+              let colorProp = "";
+              const lineStyleParts = [];
+              const resolvedTextColor = m.textColor || m.color || m.entryRef && (m.entryRef.textColor || m.entryRef.color) || null;
+              if (resolvedTextColor) {
+                colorProp = `color: ${resolvedTextColor};`;
+              }
+              if (m.backgroundColor || m.entryRef && m.entryRef.backgroundColor) {
+                const bg = m.backgroundColor || m.entryRef.backgroundColor;
+                const params = this.getHighlightParams(m.entryRef || {});
+                lineStyleParts.push(`background-color: ${this.hexToRgba(bg, params.opacity ?? 25)}`);
+                lineStyleParts.push(`padding-left: ${params.hPad ?? 4}px`);
+                lineStyleParts.push(`padding-right: ${params.hPad ?? 4}px`);
+                const vpad = params.vPad ?? 0;
+                lineStyleParts.push(`padding-top: ${vpad >= 0 ? vpad : 0}px`);
+                lineStyleParts.push(`padding-bottom: ${vpad >= 0 ? vpad : 0}px`);
+                if (vpad < 0) {
+                  lineStyleParts.push(`margin-top: ${vpad}px`);
+                  lineStyleParts.push(`margin-bottom: ${vpad}px`);
+                }
+                lineStyleParts.push(`border-radius: ${params.radius ?? 4}px`);
+                const entryRef = m.entryRef || {};
+                const borderCss = this.generateBorderStyle(
+                  resolvedTextColor && resolvedTextColor !== "currentColor" ? resolvedTextColor : null,
+                  bg,
+                  entryRef
+                );
+                if (borderCss) {
+                  borderCss.trim().split(";").map((s) => s.trim()).filter(Boolean).forEach((decl) => {
+                    if (decl) lineStyleParts.push(decl);
+                  });
+                }
+              }
+              const styleId = `act-line-style-reading-${cssClass}`;
+              let styleEl = document.getElementById(styleId);
+              if (!styleEl) {
+                styleEl = document.createElement("style");
+                styleEl.id = styleId;
+                styleEl.setAttribute("data-act-line-style", "reading");
+                document.head.appendChild(styleEl);
+              }
+              const tagName = (block.tagName || "div").toLowerCase();
+              const rule = `${tagName}.${cssClass}{box-sizing: border-box; ${colorProp}${lineStyleParts.join("; ")}}`;
+              if (styleEl.textContent !== rule) styleEl.textContent = rule;
+              frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
               pos = m.end;
               i = j;
               continue;

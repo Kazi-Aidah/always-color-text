@@ -8014,7 +8014,7 @@ class AlwaysColorText extends Plugin {
   }
 
   // --- Reconfigure CodeMirror extensions for all editors ---
-  reconfigureEditorExtensions() {
+   reconfigureEditorExtensions() {
     if (this.extension) {
       this.app.workspace.unregisterEditorExtension(this.extension);
       this.app.workspace.registerEditorExtension(this.extension);
@@ -13494,6 +13494,112 @@ class AlwaysColorText extends Plugin {
               frag.appendChild(
                 document.createTextNode(text.slice(m.start, m.end)),
               );
+              pos = m.end;
+              i = j;
+              continue;
+            }
+
+            // --- Line coloring for Reading Mode: CSS class on block element ---
+            const markTarget = m.entryRef && m.entryRef.markTarget;
+            if (markTarget === "line" || markTarget === "childLine") {
+              // Generate CSS class from pattern/label (same as Live Preview logic)
+              const rawPattern = (m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern)) || "";
+              const cssClass = String(rawPattern)
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9_-]/g, "-")
+                .replace(/^-+|-+$/g, "")
+                .replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
+
+              // Determine target block element
+              let targetBlock = block;
+              if (markTarget === "childLine") {
+                // For childLine, try to find the child element containing the match
+                try {
+                  const walker = document.createTreeWalker(
+                    block,
+                    NodeFilter.SHOW_TEXT,
+                    null,
+                    false
+                  );
+                  let n;
+                  while ((n = walker.nextNode())) {
+                    const idx = text.indexOf(text.slice(m.start, m.end));
+                    if (n.textContent.includes(text.slice(m.start, m.end))) {
+                      targetBlock = n.parentElement || block;
+                      break;
+                    }
+                  }
+                } catch (e) {}
+              }
+
+              // Add CSS class to the target block element
+              if (targetBlock && targetBlock !== block) {
+                targetBlock.classList.add(cssClass);
+              }
+              block.classList.add(cssClass);
+
+              // Also add class to the parent wrapper (el-p, el-h1, etc.) for Reading Mode
+              try {
+                const parent = block.parentElement;
+                if (parent && parent.className && /\bel-/.test(parent.className)) {
+                  parent.classList.add(cssClass);
+                }
+              } catch (e) {}
+
+              // Build line style CSS (same as Live Preview)
+              let colorProp = "";
+              const lineStyleParts = [];
+              const resolvedTextColor = m.textColor || m.color || (m.entryRef && (m.entryRef.textColor || m.entryRef.color)) || null;
+              if (resolvedTextColor) {
+                colorProp = `color: ${resolvedTextColor};`;
+              }
+              if (m.backgroundColor || (m.entryRef && m.entryRef.backgroundColor)) {
+                const bg = m.backgroundColor || m.entryRef.backgroundColor;
+                const params = this.getHighlightParams(m.entryRef || {});
+                lineStyleParts.push(`background-color: ${this.hexToRgba(bg, params.opacity ?? 25)}`);
+                lineStyleParts.push(`padding-left: ${params.hPad ?? 4}px`);
+                lineStyleParts.push(`padding-right: ${params.hPad ?? 4}px`);
+                const vpad = params.vPad ?? 0;
+                lineStyleParts.push(`padding-top: ${vpad >= 0 ? vpad : 0}px`);
+                lineStyleParts.push(`padding-bottom: ${vpad >= 0 ? vpad : 0}px`);
+                if (vpad < 0) {
+                  lineStyleParts.push(`margin-top: ${vpad}px`);
+                  lineStyleParts.push(`margin-bottom: ${vpad}px`);
+                }
+                lineStyleParts.push(`border-radius: ${params.radius ?? 4}px`);
+
+                // Add border styles for Reading Mode
+                const entryRef = m.entryRef || {};
+                const borderCss = this.generateBorderStyle(
+                  resolvedTextColor && resolvedTextColor !== "currentColor" ? resolvedTextColor : null,
+                  bg,
+                  entryRef
+                );
+                if (borderCss) {
+                  // Keep !important for borders to override Obsidian's default styles
+                  borderCss.trim().split(";").map(s => s.trim()).filter(Boolean).forEach(decl => {
+                    if (decl) lineStyleParts.push(decl);
+                  });
+                }
+              }
+
+              const styleId = `act-line-style-reading-${cssClass}`;
+              let styleEl = document.getElementById(styleId);
+              if (!styleEl) {
+                styleEl = document.createElement("style");
+                styleEl.id = styleId;
+                styleEl.setAttribute("data-act-line-style", "reading");
+                document.head.appendChild(styleEl);
+              }
+              // Reading Mode uses block elements (p, h1, etc.) instead of .cm-line
+              const tagName = (block.tagName || "div").toLowerCase();
+              // Add box-sizing so borders don't affect layout
+              const rule = `${tagName}.${cssClass}{box-sizing: border-box; ${colorProp}${lineStyleParts.join("; ")}}`;
+              if (styleEl.textContent !== rule) styleEl.textContent = rule;
+
+              // Skip span creation for line mode (block already styled via CSS)
+              frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
               pos = m.end;
               i = j;
               continue;

@@ -11,6 +11,23 @@ export function buildEditorExtension(plugin) {
         this.lastFilePath = view.file ? view.file.path : null;
         this._typingDebounceTimer = null;
         this.wasInTable = false;
+
+        // Force rebuild after initialization (fixes line/childLine not appearing after mode switch)
+        setTimeout(() => {
+          try {
+            this.view.dispatch({ effects: forceRebuildEffect.of(true) });
+          } catch (_) {}
+        }, 100);
+        this._initialBuildDone = false;
+
+        // Force rebuild after initialization (fixes line/childLine not appearing after mode switch)
+        setTimeout(() => {
+          try {
+            if (this.view && this.view.dispatch) {
+              this.view.dispatch({ effects: forceRebuildEffect.of(true) });
+            }
+          } catch (_) {}
+        }, 100);
         try {
           const sel = window.getSelection();
           if (sel && sel.rangeCount > 0) {
@@ -380,9 +397,8 @@ export function buildEditorExtension(plugin) {
         const text = view.state.doc.sliceString(from, extendedTo);
         const fileForView = view.file || plugin.app.workspace.getActiveFile();
 
-        // Collect line decorations via a simple collector (not a RangeSetBuilder).
-        const lineDecos = [];
-        const lineCollector = { add: (pos, _p2, deco) => lineDecos.push({ pos, deco }) };
+        // Build a separate RangeSetBuilder for line decorations
+        const lineBuilder = new RangeSetBuilder();
 
         // buildDecoChunked owns the builder and calls builder.finish() internally.
         // We capture the returned DecorationSet.
@@ -396,29 +412,28 @@ export function buildEditorExtension(plugin) {
           folderEntry,
           fileForView ? fileForView.path : null,
           syntaxTree,
-          lineCollector,
+          lineBuilder,
         );
 
-        if (!lineDecos.length) return markSet;
+        // Finish the lineBuilder to get line decorations
+        const lineSet = lineBuilder.finish();
 
-        // Merge mark ranges and line decos into one sorted RangeSetBuilder.
+        if (lineSet.length === 0) return markSet;
+
+        // Merge mark ranges and line decorations into one sorted RangeSetBuilder.
         const markRanges = [];
         markSet.between(from, extendedTo, (f, t, v) => {
           markRanges.push({ from: f, to: t, value: v });
         });
 
-        // Deduplicate line decos (same pos + class)
-        const seen = new Set();
-        const uniqueLines = lineDecos.filter(({ pos, deco }) => {
-          const key = `${pos}::${deco.spec?.attributes?.class || ""}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
+        const lineRanges = [];
+        lineSet.between(from, extendedTo, (f, t, v) => {
+          lineRanges.push({ from: f, to: t, value: v, line: true });
         });
 
-        // Sort: line decos (from=to) before mark decos at the same position
+        // Sort: line decorations (from=to) before mark decorations at the same position
         const all = [
-          ...uniqueLines.map(({ pos, deco }) => ({ from: pos, to: pos, value: deco, line: true })),
+          ...lineRanges,
           ...markRanges.map((r) => ({ ...r, line: false })),
         ].sort((a, b) => a.from - b.from || (a.line ? -1 : 1));
 
