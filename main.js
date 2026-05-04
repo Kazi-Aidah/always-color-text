@@ -14467,6 +14467,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     this._limitMatchStarts = false;
     this._limitMatchEnds = false;
     this._limitMatchExact = false;
+    this._limitColorTarget = null;
     this._listDiv = null;
     this._cleanupHandlers = [];
     this._sortMode = "last-added";
@@ -14787,7 +14788,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     limitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
     limitInput.title = this.plugin.t(
       "limit_input_tooltip",
-      "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact"
+      "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child"
     );
     limitInput.style.width = "80px";
     limitInput.style.padding = "6px";
@@ -14805,16 +14806,53 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       this._limitMatchStarts = false;
       this._limitMatchEnds = false;
       this._limitMatchExact = false;
+      this._limitColorTarget = null;
+      console.log("[DEBUG limitHandler] raw input:", raw);
+      console.log("[DEBUG limitHandler] parts:", parts);
+      console.log("[DEBUG limitHandler] num:", this._limit);
       for (const tok of parts) {
-        if (tok === "r") this._limitRegexOnly = true;
-        else if (tok === "w") this._limitWordsOnly = true;
-        else if (tok === "h") this._limitStyle = "highlight";
-        else if (tok === "c") this._limitStyle = "text";
-        else if (tok === "b") this._limitStyle = "both";
-        else if (tok === "sw") this._limitMatchStarts = true;
-        else if (tok === "ew") this._limitMatchEnds = true;
-        else if (tok === "e") this._limitMatchExact = true;
+        console.log("[DEBUG limitHandler] processing token:", tok);
+        if (tok === "r") {
+          this._limitRegexOnly = true;
+          console.log("[DEBUG] Set _limitRegexOnly = true");
+        } else if (tok === "w") {
+          this._limitWordsOnly = true;
+          console.log("[DEBUG] Set _limitWordsOnly = true");
+        } else if (tok === "h") {
+          this._limitStyle = "highlight";
+          console.log("[DEBUG] Set _limitStyle = highlight");
+        } else if (tok === "c") {
+          this._limitStyle = "text";
+          console.log("[DEBUG] Set _limitStyle = text");
+        } else if (tok === "b") {
+          this._limitStyle = "both";
+          console.log("[DEBUG] Set _limitStyle = both");
+        } else if (tok === "sw") {
+          this._limitMatchStarts = true;
+          console.log("[DEBUG] Set _limitMatchStarts = true");
+        } else if (tok === "ew") {
+          this._limitMatchEnds = true;
+          console.log("[DEBUG] Set _limitMatchEnds = true");
+        } else if (tok === "e") {
+          this._limitMatchExact = true;
+          console.log("[DEBUG] Set _limitMatchExact = true");
+        } else if (tok === "ct") {
+          this._limitColorTarget = "text";
+          console.log("[DEBUG] Set _limitColorTarget = text");
+        } else if (tok === "cl") {
+          this._limitColorTarget = "line";
+          console.log("[DEBUG] Set _limitColorTarget = line");
+        } else if (tok === "cc") {
+          this._limitColorTarget = "childLine";
+          console.log("[DEBUG] Set _limitColorTarget = childLine");
+        } else {
+          console.log("[DEBUG] Unknown token:", tok);
+        }
       }
+      console.log("[DEBUG limitHandler] _limitColorTarget:", this._limitColorTarget);
+      console.log("[DEBUG limitHandler] _limitStyle:", this._limitStyle);
+      console.log("[DEBUG limitHandler] _limitRegexOnly:", this._limitRegexOnly);
+      console.log("[DEBUG limitHandler] _limitWordsOnly:", this._limitWordsOnly);
       this._refreshGroupEntries();
     };
     limitInput.addEventListener("input", limitHandler);
@@ -15085,6 +15123,9 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     if (!this._listDiv) return;
     this._listDiv.empty();
     let entries = [...this.group.entries];
+    console.log("[DEBUG _refreshGroupEntries] Total entries in group:", entries.length);
+    console.log("[DEBUG _refreshGroupEntries] ALL entries with markTarget:", JSON.stringify(entries.map((e) => ({ pattern: e.pattern, markTarget: e.markTarget || "text" }))));
+    console.log("[DEBUG _refreshGroupEntries] Current _limitColorTarget:", this._limitColorTarget);
     if (this._searchQuery) {
       const q = this._searchQuery.toLowerCase();
       entries = entries.filter((e) => {
@@ -15100,18 +15141,36 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         if (this._limitMatchEnds) return text.endsWith(q);
         return text.includes(q);
       });
+      console.log("[DEBUG _refreshGroupEntries] After search filter:", entries.length);
     }
     if (this._limitStyle === "highlight") {
       entries = entries.filter((e) => (e.styleType || "text") === "highlight");
+      console.log("[DEBUG _refreshGroupEntries] After style=highlight filter:", entries.length);
     } else if (this._limitStyle === "text") {
       entries = entries.filter((e) => (e.styleType || "text") === "text");
+      console.log("[DEBUG _refreshGroupEntries] After style=text filter:", entries.length);
     } else if (this._limitStyle === "both") {
       entries = entries.filter((e) => (e.styleType || "text") === "both");
+      console.log("[DEBUG _refreshGroupEntries] After style=both filter:", entries.length);
     }
     if (this._limitRegexOnly) {
       entries = entries.filter((e) => !!e.isRegex);
+      console.log("[DEBUG _refreshGroupEntries] After regexOnly filter:", entries.length);
     } else if (this._limitWordsOnly) {
       entries = entries.filter((e) => !e.isRegex);
+      console.log("[DEBUG _refreshGroupEntries] After wordsOnly filter:", entries.length);
+    }
+    if (this._limitColorTarget) {
+      console.log("[DEBUG _refreshGroupEntries] Applying markTarget filter:", this._limitColorTarget);
+      console.log("[DEBUG _refreshGroupEntries] Entry markTargets:", entries.map((e) => e.markTarget || "text"));
+      entries = entries.filter(
+        (e) => {
+          const match = (e.markTarget || "text") === this._limitColorTarget;
+          console.log("[DEBUG _refreshGroupEntries] Entry:", e.pattern, "markTarget:", e.markTarget || "text", "match:", match);
+          return match;
+        }
+      );
+      console.log("[DEBUG _refreshGroupEntries] After markTarget filter:", entries.length);
     }
     if (this._sortMode === "a-z") {
       entries.sort((a, b) => {
@@ -19480,9 +19539,17 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         finalFiltered = finalFiltered.filter((e) => !e.isRegex);
       }
       if (this._colorTargetFilter) {
+        console.log("[DEBUG SettingsTab filter] Applying markTarget filter:", this._colorTargetFilter);
+        console.log("[DEBUG SettingsTab filter] Entry markTargets:", finalFiltered.map((e) => e.markTarget || "text"));
         finalFiltered = finalFiltered.filter(
-          (e) => String(e.colorTarget || "text").toLowerCase() === this._colorTargetFilter
+          (e) => {
+            const entryTarget = e.markTarget || "text";
+            const match = entryTarget === this._colorTargetFilter;
+            console.log("[DEBUG SettingsTab filter] Entry:", e.pattern || e.groupedPatterns?.join(", "), "markTarget:", entryTarget, "filter:", this._colorTargetFilter, "match:", match);
+            return match;
+          }
         );
+        console.log("[DEBUG SettingsTab filter] After markTarget filter:", finalFiltered.length);
       }
       if (!this._suspendSorting && this._wordsSortMode === "a-z") {
         finalFiltered.sort((a, b) => {
@@ -22236,19 +22303,50 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         this._entriesMatchTypeStartsWith = false;
         this._entriesMatchTypeEndsWith = false;
         this._entriesMatchTypeExact = false;
+        console.log("[DEBUG SettingsTab limitHandler] raw:", raw);
+        console.log("[DEBUG SettingsTab limitHandler] parts:", parts);
         for (const tok of parts) {
-          if (tok === "ct") this._colorTargetFilter = "text";
-          else if (tok === "cl") this._colorTargetFilter = "line";
-          else if (tok === "cc") this._colorTargetFilter = "child";
-          else if (tok === "sw") this._entriesMatchTypeStartsWith = true;
-          else if (tok === "ew") this._entriesMatchTypeEndsWith = true;
-          else if (tok === "r") this._entriesRegexOnly = true;
-          else if (tok === "w") this._entriesWordsOnly = true;
-          else if (tok === "h") this._filterMode = "highlight";
-          else if (tok === "c") this._filterMode = "text";
-          else if (tok === "b") this._filterMode = "both";
-          else if (tok === "e") this._entriesMatchTypeExact = true;
+          console.log("[DEBUG SettingsTab limitHandler] processing token:", tok);
+          if (tok === "ct") {
+            this._colorTargetFilter = "text";
+            console.log("[DEBUG] Set _colorTargetFilter = text");
+          } else if (tok === "cl") {
+            this._colorTargetFilter = "line";
+            console.log("[DEBUG] Set _colorTargetFilter = line");
+          } else if (tok === "cc") {
+            this._colorTargetFilter = "childLine";
+            console.log("[DEBUG] Set _colorTargetFilter = childLine");
+          } else if (tok === "sw") {
+            this._entriesMatchTypeStartsWith = true;
+            console.log("[DEBUG] Set _entriesMatchTypeStartsWith = true");
+          } else if (tok === "ew") {
+            this._entriesMatchTypeEndsWith = true;
+            console.log("[DEBUG] Set _entriesMatchTypeEndsWith = true");
+          } else if (tok === "r") {
+            this._entriesRegexOnly = true;
+            console.log("[DEBUG] Set _entriesRegexOnly = true");
+          } else if (tok === "w") {
+            this._entriesWordsOnly = true;
+            console.log("[DEBUG] Set _entriesWordsOnly = true");
+          } else if (tok === "h") {
+            this._filterMode = "highlight";
+            console.log("[DEBUG] Set _filterMode = highlight");
+          } else if (tok === "c") {
+            this._filterMode = "text";
+            console.log("[DEBUG] Set _filterMode = text");
+          } else if (tok === "b") {
+            this._filterMode = "both";
+            console.log("[DEBUG] Set _filterMode = both");
+          } else if (tok === "e") {
+            this._entriesMatchTypeExact = true;
+            console.log("[DEBUG] Set _entriesMatchTypeExact = true");
+          } else {
+            console.log("[DEBUG] Unknown token:", tok);
+          }
         }
+        console.log("[DEBUG SettingsTab limitHandler] _colorTargetFilter:", this._colorTargetFilter);
+        console.log("[DEBUG SettingsTab limitHandler] _filterMode:", this._filterMode);
+        console.log("[DEBUG SettingsTab limitHandler] _entriesRegexOnly:", this._entriesRegexOnly);
         try {
           this._refreshEntries();
         } catch (e) {
