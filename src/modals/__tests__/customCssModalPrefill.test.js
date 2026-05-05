@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Feature: custom-css-per-entry
  * Property 6: Pre-fill uses existing `customCss` when present
  * Property 7: Pre-fill derives `background-color` as `rgba()`

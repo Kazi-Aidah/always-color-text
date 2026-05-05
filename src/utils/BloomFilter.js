@@ -1,4 +1,4 @@
-export class BloomFilter {
+﻿﻿export class BloomFilter {
   constructor(size = 2048) {
     this.size = size;
     this.bits = new Uint8Array(size);

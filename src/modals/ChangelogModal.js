@@ -1,4 +1,4 @@
-import { Modal, Component, MarkdownRenderer } from 'obsidian';
+﻿import { Modal, Component, MarkdownRenderer } from 'obsidian';
 
 export class ChangelogModal extends Modal {
   constructor(app, plugin) {

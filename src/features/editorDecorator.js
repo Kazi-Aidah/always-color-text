@@ -1,4 +1,4 @@
-import { RangeSetBuilder, Decoration, ViewPlugin, StateEffect, syntaxTree, forceRebuildEffect } from '../core/cmSetup.js';
+﻿import { RangeSetBuilder, Decoration, ViewPlugin, StateEffect, syntaxTree, forceRebuildEffect } from '../core/cmSetup.js';
 import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS } from '../core/constants.js';
 import { debugLog, debugError, debugWarn } from '../utils/debug.js';
 
@@ -268,6 +268,7 @@ export function buildEditorExtension(plugin) {
 
                     this.decorations = this.decorations.update({
                       add: newRanges,
+                      sort: true,
                     });
                   }
                 }
@@ -418,7 +419,7 @@ export function buildEditorExtension(plugin) {
         // Finish the lineBuilder to get line decorations
         const lineSet = lineBuilder.finish();
 
-        if (lineSet.length === 0) return markSet;
+        if (lineSet.size === 0) return markSet;
 
         // Merge mark ranges and line decorations into one sorted RangeSetBuilder.
         const markRanges = [];
@@ -426,8 +427,10 @@ export function buildEditorExtension(plugin) {
           markRanges.push({ from: f, to: t, value: v });
         });
 
+        // Use 0 as the lower bound so line decorations on the first line (position 0)
+        // are never excluded when view.viewport.from > 0.
         const lineRanges = [];
-        lineSet.between(from, extendedTo, (f, t, v) => {
+        lineSet.between(0, extendedTo, (f, t, v) => {
           lineRanges.push({ from: f, to: t, value: v, line: true });
         });
 

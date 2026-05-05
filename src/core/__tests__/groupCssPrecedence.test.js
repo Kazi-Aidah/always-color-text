@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Feature: custom-css-per-entry
  * Property 12: Entry CSS takes precedence over group CSS
  *

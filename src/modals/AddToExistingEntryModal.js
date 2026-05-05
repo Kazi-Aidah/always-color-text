@@ -1,4 +1,4 @@
-import { FuzzySuggestModal, Menu, Notice } from 'obsidian';
+﻿import { FuzzySuggestModal, Menu, Notice } from 'obsidian';
 import { debugLog, debugError } from '../utils/debug.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { BlacklistRegexTesterModal } from './BlacklistRegexTesterModal.js';

@@ -1,4 +1,4 @@
-import { IS_DEVELOPMENT } from '../core/constants.js';
+﻿import { IS_DEVELOPMENT } from '../core/constants.js';
 
 // Helper function for conditional debug logging
 export const debugLog = (tag, ...args) => {

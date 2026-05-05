@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Bugfix spec: word-group-modal-entry-bugs
  * Task 1: Bug condition exploration test
  *

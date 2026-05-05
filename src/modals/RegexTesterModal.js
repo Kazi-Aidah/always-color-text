@@ -13,7 +13,9 @@ export class RegexTesterModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
-      this.modalEl.style.maxWidth = "720px";
+      this.modalEl.style.setProperty("--dialog-width", "820px");
+      this.modalEl.style.width = "820px";
+      this.modalEl.style.maxWidth = "95vw";
       this.modalEl.style.padding = "20px";
     } catch (e) {}
 
@@ -96,7 +98,7 @@ export class RegexTesterModal extends Modal {
     [
       ["text", this.plugin.t("mark_target_text", "Color Text")],
       ["line", this.plugin.t("mark_target_line", "Color Line")],
-      ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+      ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")],
     ].forEach(([val, label]) => {
       const opt = markTargetSelect.createEl("option", { text: label });
       opt.value = val;
@@ -337,12 +339,7 @@ export class RegexTesterModal extends Modal {
           "notice_invalid_regex",
           "Invalid regular expression",
         );
-        const escaped = String(raw)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/\n/g, "<br>");
-        previewWrap.innerHTML = escaped;
+        previewWrap.innerHTML = escapeHtml(String(raw)).replace(/\n/g, "<br>");
         return;
       }
       if (this.plugin.settings.enableRegexSupport === false) {
@@ -358,12 +355,7 @@ export class RegexTesterModal extends Modal {
           "notice_pattern_too_complex",
           "Pattern too complex",
         );
-        const escaped = String(raw)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/\n/g, "<br>");
-        previewWrap.innerHTML = escaped;
+        previewWrap.innerHTML = escapeHtml(String(raw)).replace(/\n/g, "<br>");
         return;
       }
 
@@ -375,8 +367,8 @@ export class RegexTesterModal extends Modal {
         let out = "";
         const applyStyle = (txt) => {
           const style = styleSelect.value;
-          const t = textColorInput.value;
-          const b = bgColorInput.value;
+          const t = this.plugin.isValidHexColor(textColorInput.value) ? textColorInput.value : "#58bc54";
+          const b = this.plugin.isValidHexColor(bgColorInput.value) ? bgColorInput.value : "#205613";
           if (style === "text") {
             return `<span style="color:${t}">${txt}</span>`;
           } else if (style === "highlight") {

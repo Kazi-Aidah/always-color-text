@@ -1,4 +1,4 @@
-// CodeMirror utilities
+﻿// CodeMirror utilities
 let RangeSetBuilder, Decoration, ViewPlugin, StateEffect, syntaxTree;
 try {
   const cmState = require("@codemirror/state");

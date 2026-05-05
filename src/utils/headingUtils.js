@@ -1,4 +1,4 @@
-export function getHeadingLevelsFromPattern(pattern) {
+﻿export function getHeadingLevelsFromPattern(pattern) {
   try {
     if (!pattern || typeof pattern !== "string") return [];
     const levels = new Set();

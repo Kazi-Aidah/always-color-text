@@ -1,4 +1,4 @@
-export class RegexCache {
+﻿export class RegexCache {
   constructor(maxSize = 100) {
     this.maxSize = maxSize;
     this.map = new Map();

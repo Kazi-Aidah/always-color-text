@@ -1,4 +1,4 @@
-import { Modal, setIcon } from 'obsidian';
+﻿import { Modal, setIcon } from 'obsidian';
 
 /**
  * Derives a CSS string from an entry's highlight styling properties,
@@ -85,7 +85,7 @@ export function deriveHighlightCssFromEntry(entry, plugin) {
   return lines.join(';\n') + ';';
 }
 
-const DANGEROUS_PATTERNS = ['url(', 'expression(', 'javascript:', '<', '>'];
+const DANGEROUS_PATTERNS = ['url(', 'expression(', 'javascript:', 'vbscript:', 'data:', '@import', '@charset', '@namespace', '<', '>', '{', '}', ';'];
 
 /**
  * Parses a CSS declarations string back into an entry's structured fields.
@@ -304,7 +304,7 @@ export class CustomCssModal extends Modal {
 
     // 1. Heading
     const heading = contentEl.createEl('h2', {
-      text: this.plugin.t('custom_css_header', 'Edit Custom CSS'),
+      text: this.plugin.t('edit_custom_css_btn', 'Edit Custom CSS'),
     });
     heading.style.margin = '0 0 12px 0';
 
@@ -335,7 +335,7 @@ export class CustomCssModal extends Modal {
     const textareaWrap = contentEl.createDiv();
     textareaWrap.style.marginBottom = '10px';
 
-    const textareaLabel = textareaWrap.createEl('div', { text: 'CSS Declarations' });
+    const textareaLabel = textareaWrap.createEl('div', { text: this.plugin.t('css_declarations_label', 'CSS Declarations') });
     textareaLabel.style.fontSize = '11px';
     textareaLabel.style.color = 'var(--text-muted)';
     textareaLabel.style.marginBottom = '4px';
@@ -423,8 +423,6 @@ export class CustomCssModal extends Modal {
       text: this.plugin.t('btn_save', 'Save'),
     });
     saveBtn.addClass('mod-cta');
-
-    // Wire textarea input event (debounced 300ms)
     const inputHandler = () => {
       clearTimeout(this._debounceTimer);
       this._debounceTimer = setTimeout(() => {

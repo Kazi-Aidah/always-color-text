@@ -1,4 +1,4 @@
-import { Modal, Notice, setIcon } from 'obsidian';
+﻿import { Modal, Notice, setIcon } from 'obsidian';
 import { EditEntryModal } from './EditEntryModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { debugLog } from '../utils/debug.js';
@@ -120,7 +120,7 @@ export class ColorPickerModal extends Modal {
       !forcedSingle && (cpm === "both" || cpm === "both-bg-left");
     const isVerticalBoth =
       !forcedSingle && (cpm === "both-v-text-top" || cpm === "both-v-bg-top");
-    this.modalEl.style.maxWidth = isHorizontalBoth ? "650px" : "480px";
+    this.modalEl.style.maxWidth = isHorizontalBoth ? "650px" : "560px";
     this.modalEl.style.width = "100%";
     this.modalEl.style.margin = "0";
     this.modalEl.style.padding = "0";
@@ -253,7 +253,7 @@ export class ColorPickerModal extends Modal {
       [
         ["text", this.plugin.t("mark_target_text", "Color Text")],
         ["line", this.plugin.t("mark_target_line", "Color Line")],
-        ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+        ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")],
       ].forEach(([val, label]) => {
         const opt = markTargetSelect.createEl("option", { text: label });
         opt.value = val;
@@ -789,7 +789,14 @@ export class ColorPickerModal extends Modal {
       for (const e of allEntries) {
         if (!e || !e.isRegex) continue;
         try {
-          const re = new RegExp(e.pattern, e.flags || "");
+          // Use pre-validated testRegex first, or validate before creating
+          let re;
+          if (e.testRegex && e.testRegex instanceof RegExp) {
+            re = e.testRegex;
+          } else {
+            if (!this.plugin.validateAndSanitizeRegex(e.pattern)) continue;
+            re = new RegExp(e.pattern, e.flags || "");
+          }
           if (re.test(s)) {
             matchedEntry = e;
             matchedGroupUid = e._groupUid || null;
@@ -863,12 +870,15 @@ export class ColorPickerModal extends Modal {
                   group.entries.find((e) => {
                     if (!e) return false;
                     if (e.isRegex && this.plugin.settings.enableRegexSupport) {
-                      try {
-                        const re = new RegExp(e.pattern, e.flags || "");
-                        return re.test(word);
-                      } catch (_) {
-                        return false;
+                      // Use pre-validated testRegex or validate before creating
+                      let re;
+                      if (e.testRegex && e.testRegex instanceof RegExp) {
+                        re = e.testRegex;
+                      } else {
+                        if (!this.plugin.validateAndSanitizeRegex(e.pattern)) return false;
+                        try { re = new RegExp(e.pattern, e.flags || ""); } catch (_) { return false; }
                       }
+                      try { return re.test(word); } catch (_) { return false; }
                     }
                     return (
                       eq2(e.pattern || "", word) ||

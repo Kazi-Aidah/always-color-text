@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Feature: custom-css-per-entry
  * Property 11: Reference chip insertion
  *

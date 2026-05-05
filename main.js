@@ -298,8 +298,8 @@ var require_en = __commonJS({
       "enable_custom_swatches_desc": "Turn this on if you want to pick your own colors for the color picker.",
       "replace_default_swatches": "Replace default swatches",
       "replace_default_swatches_desc": "If enabled, only your custom swatches will be shown. If disabled, they will be appended to the default ones.",
-      "use_swatch_names": "Use swatch names for coloring text",
-      "use_swatch_names_desc": "If enabled, the text will be colored using the name of the swatch (e.g., 'Red') instead of the hex code.",
+      // "use_swatch_names": "Use swatch names for coloring text",
+      // "use_swatch_names_desc": "If enabled, the text will be colored using the name of the swatch (e.g., 'Red') instead of the hex code.",
       "link_swatch_updates": "Link swatch updates to text colors",
       "link_swatch_updates_desc": "If enabled, updating a swatch color will update all text colored with that swatch.",
       "link_swatches_to_entries": "Link swatch updates to colored texts",
@@ -547,6 +547,9 @@ var require_en = __commonJS({
       "quick_colors_apply_mode_label": "The text coloring will apply as",
       "quick_colors_apply_mode_act": "Always Color Text",
       "quick_colors_apply_mode_html": "Inline HTML",
+      "enable_individual_quick_style_apply_mode": "Enable individual application",
+      "enable_individual_quick_style_apply_mode_desc": "Allow each quick style to have its own 'text coloring will apply as' setting.",
+      "setting_ignored_individual_mode": "This setting is ignored because individual application is enabled.",
       "quick_styles_header": "Quick Styles",
       "quick_styles_desc": "Allows styles to be applied from the right-click menu.",
       "btn_add_style": "+ Add Style",
@@ -601,11 +604,16 @@ var require_en = __commonJS({
       "enable_custom_css": "Enable custom CSS for text styling",
       "enable_custom_css_desc": "Add per-entry CSS via the 'Edit Custom CSS' button in entry and group editors.",
       "edit_custom_css_btn": "Edit Custom CSS",
+      "css_declarations_label": "CSS Declarations",
+      "btn_save": "Save",
       // Color Text/Line/Child
       "mark_target_text": "Color Text",
       "mark_target_line": "Color Line",
-      "mark_target_child_line": "Color Child",
+      "mark_target_child_line": "Color Next Line",
       "mark_target_label": "Apply to",
+      "color_target_text": "text",
+      "color_target_line": "line",
+      "color_target_child": "next line",
       // Group Select & Commands
       "no_group": "No Group",
       "command_color_text_for_file": "Color Selected Text for Current File"
@@ -875,8 +883,8 @@ var require_es = __commonJS({
       "replace_default_swatches_desc": "Si est\xE1 activado, solo se muestran tus colores personalizados en el selector, \xA1sin los predeterminados!",
       "enable_custom_swatches": "Habilitar muestras personalizadas",
       "enable_custom_swatches_desc": "Si est\xE1 activado, tus muestras personalizadas aparecer\xE1n en el selector de color.",
-      "use_swatch_names": "Colorear texto usando nombres de muestras",
-      "use_swatch_names_desc": "Mostrar un men\xFA desplegable de nombres de muestras junto a la entrada de palabra/patr\xF3n",
+      // "use_swatch_names": "Colorear texto usando nombres de muestras",
+      // "use_swatch_names_desc": "Mostrar un menú desplegable de nombres de muestras junto a la entrada de palabra/patrón",
       "link_swatches_to_entries": "Vincular actualizaciones de muestras a textos coloreados",
       "link_swatches_to_entries_desc": "Actualizar todas las entradas que usan una muestra personalizada cuando cambia el color de esa muestra",
       "link_swatch_updates": "Vincular actualizaciones de muestras a colores de texto",
@@ -1121,6 +1129,9 @@ var require_es = __commonJS({
       "quick_colors_apply_mode_label": "El coloreado de texto se aplicar\xE1 como",
       "quick_colors_apply_mode_act": "Siempre colorear texto",
       "quick_colors_apply_mode_html": "HTML en l\xEDnea",
+      "enable_individual_quick_style_apply_mode": "Habilitar aplicaci\xF3n individual",
+      "enable_individual_quick_style_apply_mode_desc": "Permite que cada estilo r\xE1pido tenga su propia configuraci\xF3n de 'el coloreado de texto se aplicar\xE1 como'.",
+      "setting_ignored_individual_mode": "Esta configuraci\xF3n se ignora porque la aplicaci\xF3n individual est\xE1 habilitada.",
       "quick_styles_header": "Estilos R\xE1pidos",
       "quick_styles_desc": "Permite aplicar estilos desde el men\xFA contextual.",
       "btn_add_style": "+ A\xF1adir Estilo",
@@ -1185,11 +1196,16 @@ var require_es = __commonJS({
       "enable_custom_css": "Activar CSS personalizado para el estilo de texto",
       "enable_custom_css_desc": "A\xF1adir CSS por entrada mediante el bot\xF3n 'Editar CSS personalizado' en los editores de entrada y grupo.",
       "edit_custom_css_btn": "Editar CSS personalizado",
+      "css_declarations_label": "Declaraciones CSS",
+      "btn_save": "Guardar",
       // Color Text/Line/Child
       "mark_target_text": "Colorear texto",
       "mark_target_line": "Colorear l\xEDnea",
-      "mark_target_child_line": "Colorear hijo",
+      "mark_target_child_line": "Colorear l\xEDnea siguiente",
       "mark_target_label": "Aplicar a",
+      "color_target_text": "texto",
+      "color_target_line": "l\xEDnea",
+      "color_target_child": "l\xEDnea siguiente",
       // Group Select & Commands
       "no_group": "Sin grupo",
       "command_color_text_for_file": "Colorear texto seleccionado para el archivo actual"
@@ -1459,8 +1475,8 @@ var require_fr = __commonJS({
       "replace_default_swatches_desc": "Si activ\xE9, seules vos couleurs personnalis\xE9es s'affichent dans le s\xE9lecteur, pas celles par d\xE9faut !",
       "enable_custom_swatches": "Activer les nuanciers personnalis\xE9s",
       "enable_custom_swatches_desc": "Si activ\xE9, vos nuanciers personnalis\xE9s appara\xEEtront dans le s\xE9lecteur de couleurs.",
-      "use_swatch_names": "Colorer le texte en utilisant les noms de nuanciers",
-      "use_swatch_names_desc": "Afficher une liste d\xE9roulante des noms de nuanciers \xE0 c\xF4t\xE9 de l'entr\xE9e mot/motif",
+      // "use_swatch_names": "Colorer le texte en utilisant les noms de nuanciers",
+      // "use_swatch_names_desc": "Afficher une liste déroulante des noms de nuanciers à côté de l'entrée mot/motif",
       "link_swatches_to_entries": "Lier les mises \xE0 jour des nuanciers aux textes color\xE9s",
       "link_swatches_to_entries_desc": "Mettre \xE0 jour toutes les entr\xE9es utilisant un nuancier personnalis\xE9 lorsque la couleur de ce nuancier change",
       "link_swatch_updates": "Lier les mises \xE0 jour des nuanciers aux couleurs du texte",
@@ -1705,6 +1721,9 @@ var require_fr = __commonJS({
       "quick_colors_apply_mode_label": "La coloration du texte s'appliquera comme",
       "quick_colors_apply_mode_act": "Toujours colorer le texte",
       "quick_colors_apply_mode_html": "HTML en ligne",
+      "enable_individual_quick_style_apply_mode": "Activer l'application individuelle",
+      "enable_individual_quick_style_apply_mode_desc": "Permettre \xE0 chaque style rapide d'avoir son propre r\xE9glage 'la coloration du texte s'appliquera comme'.",
+      "setting_ignored_individual_mode": "Ce r\xE9glage est ignor\xE9 car l'application individuelle est activ\xE9e.",
       "quick_styles_header": "Styles Rapides",
       "quick_styles_desc": "Permet d\u2019appliquer des styles depuis le menu contextuel.",
       "btn_add_style": "+ Ajouter un style",
@@ -1769,11 +1788,16 @@ var require_fr = __commonJS({
       "enable_custom_css": "Activer le CSS personnalis\xE9 pour le style de texte",
       "enable_custom_css_desc": "Ajouter du CSS par entr\xE9e via le bouton 'Modifier le CSS personnalis\xE9' dans les \xE9diteurs d'entr\xE9e et de groupe.",
       "edit_custom_css_btn": "Modifier le CSS personnalis\xE9",
+      "css_declarations_label": "D\xE9clarations CSS",
+      "btn_save": "Enregistrer",
       // Color Text/Line/Child
       "mark_target_text": "Colorier le texte",
       "mark_target_line": "Colorier la ligne",
-      "mark_target_child_line": "Colorier l'enfant",
+      "mark_target_child_line": "Colorier la ligne suivante",
       "mark_target_label": "Appliquer \xE0",
+      "color_target_text": "texte",
+      "color_target_line": "ligne",
+      "color_target_child": "ligne suivante",
       // Group Select & Commands
       "no_group": "Aucun groupe",
       "command_color_text_for_file": "Colorier le texte s\xE9lectionn\xE9 pour le fichier actuel"
@@ -2046,8 +2070,8 @@ var require_hi = __commonJS({
       "replace_default_swatches_desc": "\u092F\u0926\u093F \u092F\u0939 \u091A\u093E\u0932\u0942 \u0939\u0948, \u0924\u094B \u0915\u0947\u0935\u0932 \u0906\u092A\u0915\u0947 \u0915\u0938\u094D\u091F\u092E \u0930\u0902\u0917 \u0939\u0940 \u0915\u0932\u0930 \u092A\u093F\u0915\u0930 \u092E\u0947\u0902 \u0926\u093F\u0916\u0947\u0902\u0917\u0947\u0964 \u0915\u094B\u0908 \u0921\u093F\u092B\u0949\u0932\u094D\u091F \u0928\u0939\u0940\u0902!",
       "enable_custom_swatches": "\u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902",
       "enable_custom_swatches_desc": "\u092F\u0926\u093F \u092F\u0939 \u091A\u093E\u0932\u0942 \u0939\u0948, \u0924\u094B \u0906\u092A\u0915\u0947 \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A\u0947\u0938 \u0915\u0932\u0930 \u092A\u093F\u0915\u0930 \u092E\u0947\u0902 \u0926\u093F\u0916\u0947\u0902\u0917\u0947\u0964",
-      "use_swatch_names": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u093E\u0908 \u0915\u0947 \u0932\u093F\u090F \u0938\u094D\u0935\u0948\u091A \u0928\u093E\u092E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0947\u0902",
-      "use_swatch_names_desc": "\u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0907\u0928\u092A\u0941\u091F\u094D\u0938 \u0915\u0947 \u092C\u0917\u0932 \u092E\u0947\u0902 \u0938\u094D\u0935\u0948\u091A \u0928\u093E\u092E\u094B\u0902 \u0915\u093E \u0921\u094D\u0930\u0949\u092A\u0921\u093E\u0909\u0928 \u0926\u093F\u0916\u093E\u090F\u0901",
+      // "use_swatch_names": "टेक्स्ट रंगाई के लिए स्वैच नाम उपयोग करें",
+      // "use_swatch_names_desc": "शब्द/पैटर्न इनपुट्स के बगल में स्वैच नामों का ड्रॉपडाउन दिखाएँ",
       "link_swatches_to_entries": "\u0938\u094D\u0935\u0948\u091A \u0905\u092A\u0921\u0947\u091F\u094D\u0938 \u0915\u094B \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u094B\u0902 \u0938\u0947 \u0932\u093F\u0902\u0915 \u0915\u0930\u0947\u0902",
       "link_swatches_to_entries_desc": "\u091C\u092C \u0915\u0938\u094D\u091F\u092E \u0938\u094D\u0935\u0948\u091A \u0915\u093E \u0930\u0902\u0917 \u092C\u0926\u0932\u0924\u093E \u0939\u0948, \u0909\u0938 \u0930\u0902\u0917 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0928\u0947 \u0935\u093E\u0932\u0947 \u0938\u092D\u0940 \u090F\u0902\u091F\u094D\u0930\u0940\u091C\u093C \u0905\u092A\u0921\u0947\u091F \u0915\u0930\u0947\u0902",
       "link_swatch_updates": "\u0938\u094D\u0935\u0948\u091A \u0905\u092A\u0921\u0947\u091F\u094D\u0938 \u0915\u094B \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u094B\u0902 \u0938\u0947 \u0932\u093F\u0902\u0915 \u0915\u0930\u0947\u0902",
@@ -2296,6 +2320,9 @@ var require_hi = __commonJS({
       "quick_colors_apply_mode_label": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u093E\u0908 \u0907\u0938 \u0930\u0942\u092A \u092E\u0947\u0902 \u0932\u093E\u0917\u0942 \u0939\u094B\u0917\u0940",
       "quick_colors_apply_mode_act": "\u0939\u092E\u0947\u0936\u093E \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u0930\u0902\u0917\u0947\u0902",
       "quick_colors_apply_mode_html": "\u0907\u0928\u0932\u093E\u0907\u0928 HTML",
+      "enable_individual_quick_style_apply_mode": "\u0935\u094D\u092F\u0915\u094D\u0924\u093F\u0917\u0924 \u0905\u0928\u0941\u092A\u094D\u0930\u092F\u094B\u0917 \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
+      "enable_individual_quick_style_apply_mode_desc": "\u092A\u094D\u0930\u0924\u094D\u092F\u0947\u0915 \u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u0940 \u0915\u094B \u0905\u092A\u0928\u0940 \u0938\u094D\u0935\u092F\u0902 \u0915\u0940 '\u092A\u093E\u0920 \u0930\u0902\u0917\u093E\u0908 \u0907\u0938 \u0930\u0942\u092A \u092E\u0947\u0902 \u0932\u093E\u0917\u0942 \u0939\u094B\u0917\u0940' \u0938\u0947\u091F\u093F\u0902\u0917 \u0930\u0916\u0928\u0947 \u0915\u0940 \u0905\u0928\u0941\u092E\u0924\u093F \u0926\u0947\u0902\u0964",
+      "setting_ignored_individual_mode": "\u092F\u0939 \u0938\u0947\u091F\u093F\u0902\u0917 \u0905\u0928\u0926\u0947\u0916\u0940 \u0915\u0940 \u0917\u0908 \u0939\u0948 \u0915\u094D\u092F\u094B\u0902\u0915\u093F \u0935\u094D\u092F\u0915\u094D\u0924\u093F\u0917\u0924 \u0905\u0928\u0941\u092A\u094D\u0930\u092F\u094B\u0917 \u0938\u0915\u094D\u0937\u092E \u0939\u0948\u0964",
       "quick_styles_header": "\u0924\u094D\u0935\u0930\u093F\u0924 \u0936\u0948\u0932\u093F\u092F\u093E\u0901",
       "quick_styles_desc": "\u0930\u093E\u0907\u091F\u2011\u0915\u094D\u0932\u093F\u0915 \u092E\u0947\u0928\u0942 \u0938\u0947 \u0938\u094D\u091F\u093E\u0907\u0932 \u0932\u093E\u0917\u0942 \u0915\u0930\u0928\u0947 \u0926\u0947\u0924\u093E \u0939\u0948\u0964",
       "btn_add_style": "+ \u0936\u0948\u0932\u0940 \u091C\u094B\u0921\u093C\u0947\u0902",
@@ -2353,11 +2380,16 @@ var require_hi = __commonJS({
       "enable_custom_css": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0938\u094D\u091F\u093E\u0907\u0932\u093F\u0902\u0917 \u0915\u0947 \u0932\u093F\u090F \u0915\u0938\u094D\u091F\u092E CSS \u0938\u0915\u094D\u0937\u092E \u0915\u0930\u0947\u0902",
       "enable_custom_css_desc": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0914\u0930 \u0938\u092E\u0942\u0939 \u0938\u0902\u092A\u093E\u0926\u0915\u094B\u0902 \u092E\u0947\u0902 '\u0915\u0938\u094D\u091F\u092E CSS \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902' \u092C\u091F\u0928 \u0915\u0947 \u092E\u093E\u0927\u094D\u092F\u092E \u0938\u0947 \u092A\u094D\u0930\u0924\u093F-\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F CSS \u091C\u094B\u0921\u093C\u0947\u0902\u0964",
       "edit_custom_css_btn": "\u0915\u0938\u094D\u091F\u092E CSS \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+      "css_declarations_label": "CSS \u0918\u094B\u0937\u0923\u093E\u090F\u0901",
+      "btn_save": "\u0938\u0939\u0947\u091C\u0947\u0902",
       // Color Text/Line/Child
       "mark_target_text": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u0947\u0902",
       "mark_target_line": "\u0932\u093E\u0907\u0928 \u0930\u0902\u0917\u0947\u0902",
-      "mark_target_child_line": "\u091A\u093E\u0907\u0932\u094D\u0921 \u0930\u0902\u0917\u0947\u0902",
+      "mark_target_child_line": "\u0905\u0917\u0932\u0940 \u0932\u093E\u0907\u0928 \u0930\u0902\u0917\u0947\u0902",
       "mark_target_label": "\u0907\u0938 \u092A\u0930 \u0932\u093E\u0917\u0942 \u0915\u0930\u0947\u0902",
+      "color_target_text": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F",
+      "color_target_line": "\u0932\u093E\u0907\u0928",
+      "color_target_child": "\u0905\u0917\u0932\u0940 \u0932\u093E\u0907\u0928",
       // Group Select & Commands
       "no_group": "\u0915\u094B\u0908 \u0938\u092E\u0942\u0939 \u0928\u0939\u0940\u0902",
       "command_color_text_for_file": "\u0935\u0930\u094D\u0924\u092E\u093E\u0928 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u091A\u092F\u0928\u093F\u0924 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917\u0947\u0902"
@@ -2627,8 +2659,8 @@ var require_it = __commonJS({
       "replace_default_swatches_desc": "Se attivo, nel selettore colori appariranno solo i tuoi colori personalizzati. Nessuno predefinito!",
       "enable_custom_swatches": "Abilita campioni personalizzati",
       "enable_custom_swatches_desc": "Se attivo, i tuoi campioni personalizzati appariranno nel selettore colori.",
-      "use_swatch_names": "Usa nomi campioni per colorare il testo",
-      "use_swatch_names_desc": "Mostra un menu a tendina con i nomi dei campioni accanto ai campi di inserimento parole/pattern",
+      // "use_swatch_names": "Usa nomi campioni per colorare il testo",
+      // "use_swatch_names_desc": "Mostra un menu a tendina con i nomi dei campioni accanto ai campi di inserimento parole/pattern",
       "link_swatches_to_entries": "Collega aggiornamenti dei campioni ai colori del testo",
       "link_swatches_to_entries_desc": "Quando cambia il colore di un campione personalizzato, aggiorna tutte le voci che usano quel colore",
       "link_swatch_updates": "Collega aggiornamenti dei campioni ai colori del testo",
@@ -2873,6 +2905,9 @@ var require_it = __commonJS({
       "quick_colors_apply_mode_label": "La colorazione del testo verr\xE0 applicata come",
       "quick_colors_apply_mode_act": "Colora sempre il testo",
       "quick_colors_apply_mode_html": "HTML in linea",
+      "enable_individual_quick_style_apply_mode": "Abilita applicazione individuale",
+      "enable_individual_quick_style_apply_mode_desc": "Consente a ogni stile rapido di avere la propria impostazione 'la colorazione del testo verr\xE0 applicata come'.",
+      "setting_ignored_individual_mode": "Questa impostazione viene ignorata perch\xE9 l'applicazione individuale \xE8 abilitata.",
       "quick_styles_header": "Stili Rapidi",
       "quick_styles_desc": "Consente di applicare stili dal menu contestuale.",
       "btn_add_style": "+ Aggiungi Stile",
@@ -2937,11 +2972,16 @@ var require_it = __commonJS({
       "enable_custom_css": "Abilita CSS personalizzato per lo stile del testo",
       "enable_custom_css_desc": "Aggiungi CSS per voce tramite il pulsante 'Modifica CSS personalizzato' negli editor di voci e gruppi.",
       "edit_custom_css_btn": "Modifica CSS personalizzato",
+      "css_declarations_label": "Dichiarazioni CSS",
+      "btn_save": "Salva",
       // Color Text/Line/Child
       "mark_target_text": "Colora testo",
       "mark_target_line": "Colora riga",
-      "mark_target_child_line": "Colora figlio",
+      "mark_target_child_line": "Colora riga successiva",
       "mark_target_label": "Applica a",
+      "color_target_text": "testo",
+      "color_target_line": "riga",
+      "color_target_child": "riga successiva",
       // Group Select & Commands
       "no_group": "Nessun gruppo",
       "command_color_text_for_file": "Colora testo selezionato per il file corrente"
@@ -3211,10 +3251,10 @@ var require_bn = __commonJS({
       "opt_background_only": "\u09B6\u09C1\u09A7\u09C1\u09AE\u09BE\u09A4\u09CD\u09B0 \u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B0\u0999",
       "replace_default_swatches": "\u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u09AA\u09CD\u09B0\u09A4\u09BF\u09B8\u09CD\u09A5\u09BE\u09AA\u09A8 \u0995\u09B0\u09C1\u09A8",
       "replace_default_swatches_desc": "\u098F\u099F\u09BF \u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u0995\u09C7\u09AC\u09B2 \u0986\u09AA\u09A8\u09BE\u09B0 \u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B0\u0999\u0997\u09C1\u09B2\u09BF \u0995\u09BE\u09B2\u09BE\u09B0 \u09AA\u09BF\u0995\u09BE\u09B0\u09C7 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7\u0964 \u0995\u09CB\u09A8\u09CB \u09A1\u09BF\u09AB\u09B2\u09CD\u099F \u09B0\u0999 \u09A8\u09AF\u09BC!",
-      "enable_custom_swatches": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09C1\u09A8",
-      "enable_custom_swatches_desc": "\u098F\u099F\u09BF \u099A\u09BE\u09B2\u09C1 \u09A5\u09BE\u0995\u09B2\u09C7, \u0986\u09AA\u09A8\u09BE\u09B0 \u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u0995\u09BE\u09B2\u09BE\u09B0 \u09AA\u09BF\u0995\u09BE\u09B0\u09C7 \u09A6\u09C7\u0996\u09BE\u09AC\u09C7\u0964",
-      "use_swatch_names": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09BE\u09AF\u09BC\u09A8\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BE\u09AE \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8",
-      "use_swatch_names_desc": "\u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u0987\u09A8\u09AA\u09C1\u099F\u09C7\u09B0 \u09AA\u09BE\u09B6\u09C7 \u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u09A8\u09BE\u09AE\u09C7\u09B0 \u09A1\u09CD\u09B0\u09AA\u09A1\u09BE\u0989\u09A8 \u09A6\u09C7\u0996\u09BE\u09A8",
+      "enable_custom_swatches": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "enable_custom_swatches_desc": "\u09B8\u0995\u09CD\u09B7\u09AE \u09A5\u09BE\u0995\u09B2\u09C7, \u0986\u09AA\u09A8\u09BE\u09B0 \u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u0997\u09C1\u09B2\u09BF \u0995\u09BE\u09B2\u09BE\u09B0 \u09AA\u09BF\u0995\u09BE\u09B0\u09C7 \u0989\u09AA\u09B8\u09CD\u09A5\u09BF\u09A4 \u09B9\u09AC\u09C7\u0964",
+      // "use_swatch_names": "টেক্সট রঙায়নের জন্য সোয়াচ নাম ব্যবহার করুন",
+      // "use_swatch_names_desc": "শব্দ/প্যাটার্ন ইনপুটের পাশে সোয়াচ নামের ড্রপডাউন দেখান",
       "link_swatches_to_entries": "\u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u0986\u09AA\u09A1\u09C7\u099F\u0995\u09C7 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09C7\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09B2\u09BF\u0982\u0995 \u0995\u09B0\u09C1\u09A8",
       "link_swatches_to_entries_desc": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE \u09B8\u09CB\u09AF\u09BC\u09BE\u099A\u09C7\u09B0 \u09B0\u0999 \u09AA\u09B0\u09BF\u09AC\u09B0\u09CD\u09A4\u09A8 \u09B9\u09B2\u09C7, \u09B8\u09C7\u0987 \u09B0\u0999 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09BE \u09B8\u09AC \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u0986\u09AA\u09A1\u09C7\u099F \u0995\u09B0\u09C1\u09A8",
       "link_swatch_updates": "\u09B8\u09CB\u09AF\u09BC\u09BE\u099A \u0986\u09AA\u09A1\u09C7\u099F\u0995\u09C7 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09C7\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09B2\u09BF\u0982\u0995 \u0995\u09B0\u09C1\u09A8",
@@ -3459,6 +3499,9 @@ var require_bn = __commonJS({
       "quick_colors_apply_mode_label": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u098F\u0987\u09AD\u09BE\u09AC\u09C7 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u09B9\u09AC\u09C7",
       "quick_colors_apply_mode_act": "\u09B8\u09AC\u09B8\u09AE\u09DF \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
       "quick_colors_apply_mode_html": "\u0987\u09A8\u09B2\u09BE\u0987\u09A8 HTML",
+      "enable_individual_quick_style_apply_mode": "\u09AC\u09CD\u09AF\u0995\u09CD\u09A4\u09BF\u0997\u09A4 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
+      "enable_individual_quick_style_apply_mode_desc": "\u09AA\u09CD\u09B0\u09A4\u09BF\u099F\u09BF \u09A6\u09CD\u09B0\u09C1\u09A4 \u09B6\u09C8\u09B2\u09C0\u0995\u09C7 \u09A4\u09BE\u09B0 \u09A8\u09BF\u099C\u09B8\u09CD\u09AC '\u099F\u09C7\u0995\u09CD\u09B8\u099F \u0995\u09BE\u09B2\u09BE\u09B0\u09BF\u0982 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09AC\u09C7' \u09B8\u09C7\u099F\u09BF\u0982 \u09A5\u09BE\u0995\u09A4\u09C7 \u0985\u09A8\u09C1\u09AE\u09A4\u09BF \u09A6\u09BF\u09A8\u0964",
+      "setting_ignored_individual_mode": "\u098F\u0987 \u09B8\u09C7\u099F\u09BF\u0982\u099F\u09BF \u0989\u09AA\u09C7\u0995\u09CD\u09B7\u09BE \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7 \u0995\u09BE\u09B0\u09A3 \u09AC\u09CD\u09AF\u0995\u09CD\u09A4\u09BF\u0997\u09A4 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09BE \u0986\u099B\u09C7\u0964",
       "quick_styles_header": "\u09A6\u09CD\u09B0\u09C1\u09A4 \u09B8\u09CD\u099F\u09BE\u0987\u09B2",
       "quick_styles_desc": "\u09B0\u09BE\u0987\u099F\u2011\u0995\u09CD\u09B2\u09BF\u0995 \u09AE\u09C7\u09A8\u09C1 \u09A5\u09C7\u0995\u09C7 \u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u0995\u09B0\u09A4\u09C7 \u09A6\u09C7\u09AF\u09BC\u0964",
       "btn_add_style": "+ \u09B8\u09CD\u099F\u09BE\u0987\u09B2 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
@@ -3521,11 +3564,16 @@ var require_bn = __commonJS({
       "enable_custom_css": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u09CD\u099F\u09BE\u0987\u09B2\u09BF\u0982\u09AF\u09BC\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u0995\u09BE\u09B8\u09CD\u099F\u09AE CSS \u09B8\u0995\u09CD\u09B7\u09AE \u0995\u09B0\u09C1\u09A8",
       "enable_custom_css_desc": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u098F\u09AC\u0982 \u0997\u09CD\u09B0\u09C1\u09AA \u098F\u09A1\u09BF\u099F\u09B0\u09C7 '\u0995\u09BE\u09B8\u09CD\u099F\u09AE CSS \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8' \u09AC\u09CB\u09A4\u09BE\u09AE\u09C7\u09B0 \u09AE\u09BE\u09A7\u09CD\u09AF\u09AE\u09C7 \u09AA\u09CD\u09B0\u09A4\u09BF-\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF CSS \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8\u0964",
       "edit_custom_css_btn": "\u0995\u09BE\u09B8\u09CD\u099F\u09AE CSS \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      "css_declarations_label": "CSS \u0998\u09CB\u09B7\u09A3\u09BE",
+      "btn_save": "\u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09C1\u09A8",
       // Color Text/Line/Child
-      "mark_target_text": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
-      "mark_target_line": "\u09B2\u09BE\u0987\u09A8 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
-      "mark_target_child_line": "\u099A\u09BE\u0987\u09B2\u09CD\u09A1 \u09B0\u0999 \u0995\u09B0\u09C1\u09A8",
+      "mark_target_text": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0982",
+      "mark_target_line": "\u09B2\u09BE\u0987\u09A8 \u09B0\u0982",
+      "mark_target_child_line": "\u09AA\u09B0\u09AC\u09B0\u09CD\u09A4\u09C0 \u09B2\u09BE\u0987\u09A8 \u09B0\u0982",
       "mark_target_label": "\u09AA\u09CD\u09B0\u09AF\u09BC\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
+      "color_target_text": "\u099F\u09C7\u0995\u09CD\u09B8\u099F",
+      "color_target_line": "\u09B2\u09BE\u0987\u09A8",
+      "color_target_child": "\u09AA\u09B0\u09AC\u09B0\u09CD\u09A4\u09C0 \u09B2\u09BE\u0987\u09A8",
       // Group Select & Commands
       "no_group": "\u0995\u09CB\u09A8\u09CB \u0997\u09CD\u09B0\u09C1\u09AA \u09A8\u09C7\u0987",
       "command_color_text_for_file": "\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u0995\u09B0\u09C1\u09A8"
@@ -3825,8 +3873,8 @@ var require_ru = __commonJS({
       "replace_default_swatches_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u0432 \u0432\u044B\u0431\u043E\u0440\u0435 \u0431\u0443\u0434\u0443\u0442 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0442\u044C\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u0432\u0430\u0448\u0438 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u0446\u0432\u0435\u0442\u0430, \u0430 \u043D\u0435 \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0435!",
       "enable_custom_swatches": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u043B\u0438\u0442\u0440\u044B",
       "enable_custom_swatches_desc": "\u0415\u0441\u043B\u0438 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u0432\u0430\u0448\u0438 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0435 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u0432 \u0432\u044B\u0431\u043E\u0440\u0435 \u0446\u0432\u0435\u0442\u0430.",
-      "use_swatch_names": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044F \u0438\u043C\u0435\u043D\u0430 \u043F\u0430\u043B\u0438\u0442\u0440",
-      "use_swatch_names_desc": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0432\u044B\u043F\u0430\u0434\u0430\u044E\u0449\u0438\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u0438\u043C\u0435\u043D \u043F\u0430\u043B\u0438\u0442\u0440 \u0440\u044F\u0434\u043E\u043C \u0441 \u0432\u0432\u043E\u0434\u043E\u043C \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u0430",
+      // "use_swatch_names": "Окрашивать текст используя имена палитр",
+      // "use_swatch_names_desc": "Показывать выпадающий список имен палитр рядом с вводом слова/шаблона",
       "link_swatches_to_entries": "\u0421\u0432\u044F\u0437\u0430\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u043F\u0430\u043B\u0438\u0442\u0440 \u0441 \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430\u043C\u0438",
       "link_swatches_to_entries_desc": "\u041E\u0431\u043D\u043E\u0432\u043B\u044F\u0442\u044C \u0432\u0441\u0435 \u0437\u0430\u043F\u0438\u0441\u0438, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044E\u0449\u0438\u0435 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0443\u044E \u043F\u0430\u043B\u0438\u0442\u0440\u0443, \u043A\u043E\u0433\u0434\u0430 \u0446\u0432\u0435\u0442 \u044D\u0442\u043E\u0439 \u043F\u0430\u043B\u0438\u0442\u0440\u044B \u043C\u0435\u043D\u044F\u0435\u0442\u0441\u044F",
       "link_swatch_updates": "\u0421\u0432\u044F\u0437\u0430\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u043F\u0430\u043B\u0438\u0442\u0440 \u0441 \u0446\u0432\u0435\u0442\u0430\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430",
@@ -4071,6 +4119,9 @@ var require_ru = __commonJS({
       "quick_colors_apply_mode_label": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442 \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E",
       "quick_colors_apply_mode_act": "\u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u0430 \u043F\u043B\u0430\u0433\u0438\u043D\u0430",
       "quick_colors_apply_mode_html": "\u041F\u0440\u0438 \u043F\u043E\u043C\u043E\u0449\u0438 HTML \u043A\u043E\u0434\u0430",
+      "enable_individual_quick_style_apply_mode": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0438\u043D\u0434\u0438\u0432\u0438\u0434\u0443\u0430\u043B\u044C\u043D\u043E\u0435 \u043F\u0440\u0438\u043C\u0435\u043D\u0435\u043D\u0438\u0435",
+      "enable_individual_quick_style_apply_mode_desc": "\u041F\u043E\u0437\u0432\u043E\u043B\u044F\u0435\u0442 \u043A\u0430\u0436\u0434\u043E\u043C\u0443 \u0431\u044B\u0441\u0442\u0440\u043E\u043C\u0443 \u0441\u0442\u0438\u043B\u044E \u0438\u043C\u0435\u0442\u044C \u0441\u043E\u0431\u0441\u0442\u0432\u0435\u043D\u043D\u0443\u044E \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0443 '\u0440\u0430\u0441\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0442\u0435\u043A\u0441\u0442\u0430 \u0431\u0443\u0434\u0435\u0442 \u043F\u0440\u0438\u043C\u0435\u043D\u044F\u0442\u044C\u0441\u044F \u043A\u0430\u043A'.",
+      "setting_ignored_individual_mode": "\u042D\u0442\u0430 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u0438\u0433\u043D\u043E\u0440\u0438\u0440\u0443\u0435\u0442\u0441\u044F, \u0442\u0430\u043A \u043A\u0430\u043A \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E \u0438\u043D\u0434\u0438\u0432\u0438\u0434\u0443\u0430\u043B\u044C\u043D\u043E\u0435 \u043F\u0440\u0438\u043C\u0435\u043D\u0435\u043D\u0438\u0435.",
       "quick_styles_header": "\u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0441\u0442\u0438\u043B\u0438",
       "quick_styles_desc": "\u041F\u043E\u0437\u0432\u043E\u043B\u044F\u0435\u0442 \u043F\u0440\u0438\u043C\u0435\u043D\u044F\u0442\u044C \u0441\u0442\u0438\u043B\u0438 \u0438\u0437 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442\u043D\u043E\u0433\u043E \u043C\u0435\u043D\u044E.",
       "btn_add_style": "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u0442\u0438\u043B\u044C",
@@ -4130,11 +4181,16 @@ var require_ru = __commonJS({
       "enable_custom_css": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0439 CSS \u0434\u043B\u044F \u0441\u0442\u0438\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u0442\u0435\u043A\u0441\u0442\u0430",
       "enable_custom_css_desc": "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0439\u0442\u0435 CSS \u0434\u043B\u044F \u043A\u0430\u0436\u0434\u043E\u0439 \u0437\u0430\u043F\u0438\u0441\u0438 \u0447\u0435\u0440\u0435\u0437 \u043A\u043D\u043E\u043F\u043A\u0443 '\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0439 CSS' \u0432 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0430\u0445 \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u0438 \u0433\u0440\u0443\u043F\u043F.",
       "edit_custom_css_btn": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0439 CSS",
+      "css_declarations_label": "CSS-\u043E\u0431\u044A\u044F\u0432\u043B\u0435\u043D\u0438\u044F",
+      "btn_save": "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C",
       // Color Text/Line/Child
       "mark_target_text": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0442\u0435\u043A\u0441\u0442",
       "mark_target_line": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0441\u0442\u0440\u043E\u043A\u0443",
-      "mark_target_child_line": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0434\u043E\u0447\u0435\u0440\u043D\u0438\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442",
+      "mark_target_child_line": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0443\u044E \u0441\u0442\u0440\u043E\u043A\u0443",
       "mark_target_label": "\u041F\u0440\u0438\u043C\u0435\u043D\u0438\u0442\u044C \u043A",
+      "color_target_text": "\u0442\u0435\u043A\u0441\u0442",
+      "color_target_line": "\u0441\u0442\u0440\u043E\u043A\u0430",
+      "color_target_child": "\u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0430\u044F \u0441\u0442\u0440\u043E\u043A\u0430",
       // Group Select & Commands
       "no_group": "\u0411\u0435\u0437 \u0433\u0440\u0443\u043F\u043F\u044B",
       "command_color_text_for_file": "\u041E\u043A\u0440\u0430\u0441\u0438\u0442\u044C \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0433\u043E \u0444\u0430\u0439\u043B\u0430"
@@ -4404,8 +4460,8 @@ var require_zh_cn = __commonJS({
       "replace_default_swatches_desc": "\u5982\u679C\u542F\u7528\uFF0C\u9009\u62E9\u5668\u4E2D\u53EA\u4F1A\u663E\u793A\u60A8\u7684\u81EA\u5B9A\u4E49\u989C\u8272\uFF0C\u800C\u4E0D\u4F1A\u663E\u793A\u9ED8\u8BA4\u989C\u8272\uFF01",
       "enable_custom_swatches": "\u542F\u7528\u81EA\u5B9A\u4E49\u8272\u677F",
       "enable_custom_swatches_desc": "\u5982\u679C\u542F\u7528\uFF0C\u60A8\u7684\u81EA\u5B9A\u4E49\u8272\u677F\u5C06\u51FA\u73B0\u5728\u989C\u8272\u9009\u62E9\u5668\u4E2D\u3002",
-      "use_swatch_names": "\u4F7F\u7528\u8272\u677F\u540D\u79F0\u7740\u8272\u6587\u672C",
-      "use_swatch_names_desc": "\u5728\u5355\u8BCD/\u6A21\u5F0F\u8F93\u5165\u65C1\u8FB9\u663E\u793A\u8272\u677F\u540D\u79F0\u4E0B\u62C9\u5217\u8868",
+      // "use_swatch_names": "使用色板名称着色文本",
+      // "use_swatch_names_desc": "在单词/模式输入旁边显示色板名称下拉列表",
       "link_swatches_to_entries": "\u5C06\u8272\u677F\u66F4\u65B0\u94FE\u63A5\u5230\u7740\u8272\u6587\u672C",
       "link_swatches_to_entries_desc": "\u5F53\u81EA\u5B9A\u4E49\u8272\u677F\u7684\u989C\u8272\u66F4\u6539\u65F6\uFF0C\u66F4\u65B0\u6240\u6709\u4F7F\u7528\u8BE5\u8272\u677F\u7684\u6761\u76EE",
       "link_swatch_updates": "\u5C06\u8272\u677F\u66F4\u65B0\u94FE\u63A5\u5230\u6587\u672C\u989C\u8272",
@@ -4650,6 +4706,9 @@ var require_zh_cn = __commonJS({
       "quick_colors_apply_mode_label": "\u6587\u672C\u7740\u8272\u5C06\u5E94\u7528\u4E3A",
       "quick_colors_apply_mode_act": "\u59CB\u7EC8\u4E3A\u6587\u672C\u7740\u8272",
       "quick_colors_apply_mode_html": "\u5185\u8054 HTML",
+      "enable_individual_quick_style_apply_mode": "\u542F\u7528\u4E2A\u4EBA\u5E94\u7528",
+      "enable_individual_quick_style_apply_mode_desc": "\u5141\u8BB8\u6BCF\u4E2A\u5FEB\u901F\u6837\u5F0F\u62E5\u6709\u81EA\u5DF1\u7684\u201C\u6587\u672C\u7740\u8272\u5C06\u5E94\u7528\u4E8E\u201D\u8BBE\u7F6E\u3002",
+      "setting_ignored_individual_mode": "\u6B64\u8BBE\u7F6E\u5DF2\u88AB\u5FFD\u7565\uFF0C\u56E0\u4E3A\u5DF2\u542F\u7528\u4E2A\u4EBA\u5E94\u7528\u3002",
       "quick_styles_header": "\u5FEB\u901F\u6837\u5F0F",
       "quick_styles_desc": "\u53EF\u4ECE\u53F3\u952E\u83DC\u5355\u5E94\u7528\u6837\u5F0F\u3002",
       "btn_add_style": "+ \u6DFB\u52A0\u6837\u5F0F",
@@ -4714,11 +4773,16 @@ var require_zh_cn = __commonJS({
       "enable_custom_css": "\u542F\u7528\u6587\u672C\u6837\u5F0F\u7684\u81EA\u5B9A\u4E49 CSS",
       "enable_custom_css_desc": "\u901A\u8FC7\u6761\u76EE\u548C\u7EC4\u7F16\u8F91\u5668\u4E2D\u7684'\u7F16\u8F91\u81EA\u5B9A\u4E49 CSS'\u6309\u94AE\u4E3A\u6BCF\u4E2A\u6761\u76EE\u6DFB\u52A0 CSS\u3002",
       "edit_custom_css_btn": "\u7F16\u8F91\u81EA\u5B9A\u4E49 CSS",
+      "css_declarations_label": "CSS \u58F0\u660E",
+      "btn_save": "\u4FDD\u5B58",
       // Color Text/Line/Child
       "mark_target_text": "\u7740\u8272\u6587\u672C",
       "mark_target_line": "\u7740\u8272\u884C",
-      "mark_target_child_line": "\u7740\u8272\u5B50\u9879",
+      "mark_target_child_line": "\u7740\u8272\u4E0B\u4E00\u884C",
       "mark_target_label": "\u5E94\u7528\u4E8E",
+      "color_target_text": "\u6587\u672C",
+      "color_target_line": "\u884C",
+      "color_target_child": "\u4E0B\u4E00\u884C",
       // Group Select & Commands
       "no_group": "\u65E0\u5206\u7EC4",
       "command_color_text_for_file": "\u4E3A\u5F53\u524D\u6587\u4EF6\u7740\u8272\u9009\u4E2D\u6587\u672C"
@@ -4994,9 +5058,9 @@ var require_de = __commonJS({
       "enable_custom_swatches": "Benutzerdefinierte Farbfelder aktivieren",
       "enable_custom_swatches_desc": "Aktivieren Sie dies, wenn Sie Ihre eigenen Farben f\xFCr den Farbw\xE4hler ausw\xE4hlen m\xF6chten.",
       "replace_default_swatches": "Standard-Farbfelder ersetzen",
-      "replace_default_swatches_desc": "Wenn aktiviert, werden nur Ihre benutzerdefinierten Farbfelder angezeigt. Wenn deaktiviert, werden sie an die Standardfelder angeh\xE4ngt.",
-      "use_swatch_names": "Farbfeldnamen zum F\xE4rben von Text verwenden",
-      "use_swatch_names_desc": "Wenn aktiviert, wird der Text unter Verwendung des Namens des Farbfelds (z.B. 'Rot') anstelle des Hex-Codes gef\xE4rbt.",
+      "replace_default_swatches_desc": "Wenn aktiviert, wird nur Ihre benutzerdefinierten Farbfelder angezeigt. Wenn deaktiviert, werden sie an die Standardfelder angeh\xE4ngt.",
+      // "use_swatch_names": "Farbfeldnamen zum Färben von Text verwenden",
+      // "use_swatch_names_desc": "Wenn aktiviert, wird der Text unter Verwendung des Namens des Farbfelds (z.B. 'Rot') anstelle des Hex-Codes gefärbt.",
       "link_swatch_updates": "Farbfeldaktualisierungen mit Textfarben verkn\xFCpfen",
       "link_swatch_updates_desc": "Wenn aktiviert, aktualisiert eine \xC4nderung der Farbfeldfarbe alle mit diesem Farbfeld gef\xE4rbten Texte.",
       "link_swatches_to_entries": "Farbfeldaktualisierungen mit gef\xE4rbten Texten verkn\xFCpfen",
@@ -5244,6 +5308,9 @@ var require_de = __commonJS({
       "quick_colors_apply_mode_label": "Die Textf\xE4rbung wird angewendet als",
       "quick_colors_apply_mode_act": "Always Color Text",
       "quick_colors_apply_mode_html": "Inline HTML",
+      "enable_individual_quick_style_apply_mode": "Individuelle Anwendung aktivieren",
+      "enable_individual_quick_style_apply_mode_desc": "Erm\xF6glicht jedem Schnellstil eine eigene Einstellung f\xFCr 'die Textf\xE4rbung wird angewendet als'.",
+      "setting_ignored_individual_mode": "Diese Einstellung wird ignoriert, da die individuelle Anwendung aktiviert ist.",
       "quick_styles_header": "Schnellstile",
       "quick_styles_desc": "Erm\xF6glicht das Anwenden von Stilen \xFCber das Rechtsklickmen\xFC.",
       "btn_add_style": "+ Stil hinzuf\xFCgen",
@@ -5298,11 +5365,16 @@ var require_de = __commonJS({
       "enable_custom_css": "Benutzerdefiniertes CSS f\xFCr Textstile aktivieren",
       "enable_custom_css_desc": "CSS pro Eintrag \xFCber die Schaltfl\xE4che 'Benutzerdefiniertes CSS bearbeiten' in Eintrags- und Gruppenbearbeitern hinzuf\xFCgen.",
       "edit_custom_css_btn": "Benutzerdefiniertes CSS bearbeiten",
+      "css_declarations_label": "CSS-Deklarationen",
+      "btn_save": "Speichern",
       // Color Text/Line/Child
       "mark_target_text": "Text f\xE4rben",
       "mark_target_line": "Zeile f\xE4rben",
-      "mark_target_child_line": "Untergeordnetes f\xE4rben",
+      "mark_target_child_line": "N\xE4chste Zeile f\xE4rben",
       "mark_target_label": "Anwenden auf",
+      "color_target_text": "Text",
+      "color_target_line": "Zeile",
+      "color_target_child": "n\xE4chste Zeile",
       // Group Select & Commands
       "no_group": "Keine Gruppe",
       "command_color_text_for_file": "Ausgew\xE4hlten Text f\xFCr aktuelle Datei f\xE4rben"
@@ -5579,8 +5651,8 @@ var require_ar = __commonJS({
       "enable_custom_swatches_desc": "\u0642\u0645 \u0628\u062A\u0634\u063A\u064A\u0644 \u0647\u0630\u0627 \u0625\u0630\u0627 \u0643\u0646\u062A \u062A\u0631\u064A\u062F \u0627\u062E\u062A\u064A\u0627\u0631 \u0623\u0644\u0648\u0627\u0646\u0643 \u0627\u0644\u062E\u0627\u0635\u0629 \u0644\u0645\u0646\u062A\u0642\u064A \u0627\u0644\u0623\u0644\u0648\u0627\u0646.",
       "replace_default_swatches": "\u0627\u0633\u062A\u0628\u062F\u0627\u0644 \u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0627\u0641\u062A\u0631\u0627\u0636\u064A\u0629",
       "replace_default_swatches_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0633\u062A\u0638\u0647\u0631 \u0639\u064A\u0646\u0627\u062A\u0643 \u0627\u0644\u0645\u062E\u0635\u0635\u0629 \u0641\u0642\u0637. \u0625\u0630\u0627 \u062A\u0645 \u062A\u0639\u0637\u064A\u0644\u0647\u060C \u0633\u064A\u062A\u0645 \u0625\u0644\u062D\u0627\u0642\u0647\u0627 \u0628\u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0627\u0644\u0627\u0641\u062A\u0631\u0627\u0636\u064A\u0629.",
-      "use_swatch_names": "\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0639\u064A\u0646\u0627\u062A \u0644\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635",
-      "use_swatch_names_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0633\u064A\u062A\u0645 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0633\u0645 \u0627\u0644\u0639\u064A\u0646\u0629 (\u0645\u062B\u0644 'Red') \u0628\u062F\u0644\u0627\u064B \u0645\u0646 \u0643\u0648\u062F hex.",
+      // "use_swatch_names": "استخدام أسماء العينات لتلوين النص",
+      // "use_swatch_names_desc": "إذا تم تفعيله، سيتم تلوين النص باستخدام اسم العينة (مثل 'Red') بدلاً من كود hex.",
       "link_swatch_updates": "\u0631\u0628\u0637 \u062A\u062D\u062F\u064A\u062B\u0627\u062A \u0627\u0644\u0639\u064A\u0646\u0629 \u0628\u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635",
       "link_swatch_updates_desc": "\u0625\u0630\u0627 \u062A\u0645 \u062A\u0641\u0639\u064A\u0644\u0647\u060C \u0641\u0625\u0646 \u062A\u062D\u062F\u064A\u062B \u0644\u0648\u0646 \u0627\u0644\u0639\u064A\u0646\u0629 \u0633\u064A\u062D\u062F\u062B \u062C\u0645\u064A\u0639 \u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629 \u0628\u062A\u0644\u0643 \u0627\u0644\u0639\u064A\u0646\u0629.",
       "link_swatches_to_entries": "\u0631\u0628\u0637 \u062A\u062D\u062F\u064A\u062B\u0627\u062A \u0627\u0644\u0639\u064A\u0646\u0629 \u0628\u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629",
@@ -5828,6 +5900,9 @@ var require_ar = __commonJS({
       "quick_colors_apply_mode_label": "\u0633\u064A\u062A\u0645 \u062A\u0637\u0628\u064A\u0642 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0643\u0640",
       "quick_colors_apply_mode_act": "Always Color Text",
       "quick_colors_apply_mode_html": "HTML \u0645\u0636\u0645\u0646",
+      "enable_individual_quick_style_apply_mode": "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062A\u0637\u0628\u064A\u0642 \u0627\u0644\u0641\u0631\u062F\u064A",
+      "enable_individual_quick_style_apply_mode_desc": "\u0627\u0644\u0633\u0645\u0627\u062D \u0644\u0643\u0644 \u0646\u0645\u0637 \u0633\u0631\u064A\u0639 \u0628\u0623\u0646 \u064A\u0643\u0648\u0646 \u0644\u0647 \u0625\u0639\u062F\u0627\u062F '\u0633\u064A\u062A\u0645 \u062A\u0637\u0628\u064A\u0642 \u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0643\u0640' \u0627\u0644\u062E\u0627\u0635 \u0628\u0647.",
+      "setting_ignored_individual_mode": "\u064A\u062A\u0645 \u062A\u062C\u0627\u0647\u0644 \u0647\u0630\u0627 \u0627\u0644\u0625\u0639\u062F\u0627\u062F \u0644\u0623\u0646 \u0627\u0644\u062A\u0637\u0628\u064A\u0642 \u0627\u0644\u0641\u0631\u062F\u064A \u0645\u0641\u0639\u0644.",
       "quick_styles_header": "\u0623\u0646\u0645\u0627\u0637 \u0633\u0631\u064A\u0639\u0629",
       "quick_styles_desc": "\u064A\u0633\u0645\u062D \u0628\u062A\u0637\u0628\u064A\u0642 \u0627\u0644\u0623\u0646\u0645\u0627\u0637 \u0645\u0646 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0646\u0642\u0631 \u0628\u0632\u0631 \u0627\u0644\u0645\u0627\u0648\u0633 \u0627\u0644\u0623\u064A\u0645\u0646.",
       "btn_add_style": "+ \u0625\u0636\u0627\u0641\u0629 \u0646\u0645\u0637",
@@ -5882,11 +5957,16 @@ var require_ar = __commonJS({
       "enable_custom_css": "\u062A\u0641\u0639\u064A\u0644 CSS \u0627\u0644\u0645\u062E\u0635\u0635 \u0644\u062A\u0646\u0633\u064A\u0642 \u0627\u0644\u0646\u0635",
       "enable_custom_css_desc": "\u0625\u0636\u0627\u0641\u0629 CSS \u0644\u0643\u0644 \u0625\u062F\u062E\u0627\u0644 \u0639\u0628\u0631 \u0632\u0631 '\u062A\u0639\u062F\u064A\u0644 CSS \u0627\u0644\u0645\u062E\u0635\u0635' \u0641\u064A \u0645\u062D\u0631\u0631\u064A \u0627\u0644\u0625\u062F\u062E\u0627\u0644 \u0648\u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0629.",
       "edit_custom_css_btn": "\u062A\u0639\u062F\u064A\u0644 CSS \u0627\u0644\u0645\u062E\u0635\u0635",
+      "css_declarations_label": "\u062A\u0639\u0631\u064A\u0641\u0627\u062A CSS",
+      "btn_save": "\u062D\u0641\u0638",
       // Color Text/Line/Child
       "mark_target_text": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635",
       "mark_target_line": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0633\u0637\u0631",
-      "mark_target_child_line": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0641\u0631\u0639",
+      "mark_target_child_line": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0633\u0637\u0631 \u0627\u0644\u062A\u0627\u0644\u064A",
       "mark_target_label": "\u062A\u0637\u0628\u064A\u0642 \u0639\u0644\u0649",
+      "color_target_text": "\u0646\u0635",
+      "color_target_line": "\u0633\u0637\u0631",
+      "color_target_child": "\u0627\u0644\u0633\u0637\u0631 \u0627\u0644\u062A\u0627\u0644\u064A",
       // Group Select & Commands
       "no_group": "\u0628\u062F\u0648\u0646 \u0645\u062C\u0645\u0648\u0639\u0629",
       "command_color_text_for_file": "\u062A\u0644\u0648\u064A\u0646 \u0627\u0644\u0646\u0635 \u0627\u0644\u0645\u062D\u062F\u062F \u0644\u0644\u0645\u0644\u0641 \u0627\u0644\u062D\u0627\u0644\u064A"
@@ -6349,7 +6429,7 @@ var defaultSettings = {
   // Enable/disable Text & Background Coloring option in right-click menu
   enableTextBgMenu: true,
   // Use swatch names for coloring entries
-  useSwatchNamesForText: false,
+  // useSwatchNamesForText: false,
   linkSwatchUpdatesToEntries: false,
   colorPickerMode: "both",
   advancedRules: [],
@@ -6362,6 +6442,7 @@ var defaultSettings = {
   quickHighlightStyleEnable: false,
   quickColorsEnabled: false,
   quickColorsApplyMode: "html",
+  enableIndividualQuickStyleApplyMode: false,
   quickColors: [],
   // Array of { textColor, backgroundColor, uid }
   quickStyles: [],
@@ -7008,7 +7089,9 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
-      this.modalEl.style.maxWidth = "820px";
+      this.modalEl.style.setProperty("--dialog-width", "760px");
+      this.modalEl.style.width = "760px";
+      this.modalEl.style.maxWidth = "95vw";
       this.modalEl.style.padding = "20px";
     } catch (e) {
     }
@@ -7058,7 +7141,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     [
       ["text", this.plugin.t("mark_target_text", "Color Text")],
       ["line", this.plugin.t("mark_target_line", "Color Line")],
-      ["childLine", this.plugin.t("mark_target_child_line", "Color Child")]
+      ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")]
     ].forEach(([val, label]) => {
       const opt = markTargetSelect.createEl("option", { text: label });
       opt.value = val;
@@ -7287,8 +7370,8 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
       let out = "";
       let count = 0;
       const style = styleSelect.value;
-      const t = textColorInput.value;
-      const b = bgColorInput.value;
+      const t = this.plugin.isValidHexColor(textColorInput.value) ? textColorInput.value : "#58bc54";
+      const b = this.plugin.isValidHexColor(bgColorInput.value) ? bgColorInput.value : "#205613";
       const rgba = this.plugin.hexToRgba(
         b,
         this.plugin.settings.backgroundOpacity ?? 25
@@ -7749,7 +7832,7 @@ function deriveHighlightCssFromEntry(entry, plugin) {
   }
   return lines.join(";\n") + ";";
 }
-var DANGEROUS_PATTERNS = ["url(", "expression(", "javascript:", "<", ">"];
+var DANGEROUS_PATTERNS = ["url(", "expression(", "javascript:", "vbscript:", "data:", "@import", "@charset", "@namespace", "<", ">", "{", "}", ";"];
 function parseCssIntoEntry(css, entry, plugin) {
   if (!css || !entry) return;
   const parts = css.split(";").map((s) => s.trim()).filter(Boolean);
@@ -7936,7 +8019,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     } catch (_) {
     }
     const heading = contentEl.createEl("h2", {
-      text: this.plugin.t("custom_css_header", "Edit Custom CSS")
+      text: this.plugin.t("edit_custom_css_btn", "Edit Custom CSS")
     });
     heading.style.margin = "0 0 12px 0";
     const previewWrap = contentEl.createDiv();
@@ -7956,7 +8039,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     this._previewSpan.textContent = sampleText;
     const textareaWrap = contentEl.createDiv();
     textareaWrap.style.marginBottom = "10px";
-    const textareaLabel = textareaWrap.createEl("div", { text: "CSS Declarations" });
+    const textareaLabel = textareaWrap.createEl("div", { text: this.plugin.t("css_declarations_label", "CSS Declarations") });
     textareaLabel.style.fontSize = "11px";
     textareaLabel.style.color = "var(--text-muted)";
     textareaLabel.style.marginBottom = "4px";
@@ -10582,7 +10665,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     [
       ["text", this.plugin.t("mark_target_text", "Color Text")],
       ["line", this.plugin.t("mark_target_line", "Color Line")],
-      ["childLine", this.plugin.t("mark_target_child_line", "Color Child")]
+      ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")]
     ].forEach(([val, label]) => {
       const opt = markTargetSelect.createEl("option", { text: label });
       opt.value = val;
@@ -11734,7 +11817,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     const isBoth = !forcedSingle && (cpm === "both" || cpm === "both-bg-left" || cpm === "both-v-text-top" || cpm === "both-v-bg-top");
     const isHorizontalBoth = !forcedSingle && (cpm === "both" || cpm === "both-bg-left");
     const isVerticalBoth = !forcedSingle && (cpm === "both-v-text-top" || cpm === "both-v-bg-top");
-    this.modalEl.style.maxWidth = isHorizontalBoth ? "650px" : "480px";
+    this.modalEl.style.maxWidth = isHorizontalBoth ? "650px" : "560px";
     this.modalEl.style.width = "100%";
     this.modalEl.style.margin = "0";
     this.modalEl.style.padding = "0";
@@ -11864,7 +11947,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
       [
         ["text", this.plugin.t("mark_target_text", "Color Text")],
         ["line", this.plugin.t("mark_target_line", "Color Line")],
-        ["childLine", this.plugin.t("mark_target_child_line", "Color Child")]
+        ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")]
       ].forEach(([val, label]) => {
         const opt = markTargetSelect.createEl("option", { text: label });
         opt.value = val;
@@ -12306,7 +12389,13 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
       for (const e of allEntries) {
         if (!e || !e.isRegex) continue;
         try {
-          const re = new RegExp(e.pattern, e.flags || "");
+          let re;
+          if (e.testRegex && e.testRegex instanceof RegExp) {
+            re = e.testRegex;
+          } else {
+            if (!this.plugin.validateAndSanitizeRegex(e.pattern)) continue;
+            re = new RegExp(e.pattern, e.flags || "");
+          }
           if (re.test(s)) {
             matchedEntry = e;
             matchedGroupUid = e._groupUid || null;
@@ -12356,8 +12445,18 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                 originalEntry = group.entries.find((e) => {
                   if (!e) return false;
                   if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                    let re;
+                    if (e.testRegex && e.testRegex instanceof RegExp) {
+                      re = e.testRegex;
+                    } else {
+                      if (!this.plugin.validateAndSanitizeRegex(e.pattern)) return false;
+                      try {
+                        re = new RegExp(e.pattern, e.flags || "");
+                      } catch (_) {
+                        return false;
+                      }
+                    }
                     try {
-                      const re = new RegExp(e.pattern, e.flags || "");
                       return re.test(word);
                     } catch (_) {
                       return false;
@@ -13222,7 +13321,7 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       [
         ["text", this.plugin.t("mark_target_text", "Color Text")],
         ["line", this.plugin.t("mark_target_line", "Color Line")],
-        ["childLine", this.plugin.t("mark_target_child_line", "Color Child")]
+        ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")]
       ].forEach(([val, label]) => {
         const opt = markTargetSelect.createEl("option", { text: label });
         opt.value = val;
@@ -13357,6 +13456,42 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
     });
     const paneRow = contentEl.createDiv();
     paneRow.addClass("act-highlight-pane-row");
+    const isQuickStyle = this.plugin.settings.quickStyles && this.plugin.settings.quickStyles.includes(this.entry);
+    const showIndividualApplyMode = isQuickStyle && this.plugin.settings.enableIndividualQuickStyleApplyMode;
+    if (showIndividualApplyMode) {
+      const applyModeRow = contentEl.createDiv();
+      applyModeRow.style.display = "flex";
+      applyModeRow.style.alignItems = "center";
+      applyModeRow.style.gap = "12px";
+      applyModeRow.style.marginTop = "12px";
+      applyModeRow.style.padding = "0 4px";
+      applyModeRow.createEl("span", {
+        text: this.plugin.t("quick_colors_apply_mode_label", "The text coloring will apply as")
+      });
+      const applyModeSelect = applyModeRow.createEl("select");
+      applyModeSelect.style.minWidth = "150px";
+      applyModeSelect.style.border = "1px solid var(--background-modifier-border)";
+      applyModeSelect.style.borderRadius = "4px";
+      applyModeSelect.style.background = "var(--background-modifier-form-field)";
+      applyModeSelect.style.textAlign = "center";
+      [
+        ["act", this.plugin.t("quick_colors_apply_mode_act", "Always Color Text")],
+        ["html", this.plugin.t("quick_colors_apply_mode_html", "Inline HTML")]
+      ].forEach(([val, label]) => {
+        const opt = applyModeSelect.createEl("option", { text: label });
+        opt.value = val;
+      });
+      const currentVal = this.entry.applyMode || this.plugin.settings.quickColorsApplyMode || "html";
+      applyModeSelect.value = currentVal;
+      if (!this.entry.applyMode) {
+        this.entry.applyMode = currentVal;
+        this.plugin.saveSettings();
+      }
+      applyModeSelect.addEventListener("change", async () => {
+        this.entry.applyMode = applyModeSelect.value;
+        await this.plugin.saveSettings();
+      });
+    }
     const hlWrap = paneRow.createDiv();
     hlWrap.addClass("act-highlight-pane");
     const borderWrap = paneRow.createDiv();
@@ -13687,8 +13822,8 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
         }
         return;
       }
-      const t = tColor.value;
-      const b = bColor.value;
+      const t = this.plugin.isValidHexColor(tColor.value) ? tColor.value : "#58bc54";
+      const b = this.plugin.isValidHexColor(bColor.value) ? bColor.value : "#205613";
       const p = this.plugin.getHighlightParams(this.entry);
       const rgba = this.plugin.hexToRgba(b, p.opacity ?? 25);
       const radius = p.radius ?? 8;
@@ -14843,7 +14978,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
           this._limitColorTarget = "line";
           console.log("[DEBUG] Set _limitColorTarget = line");
         } else if (tok === "cc") {
-          this._limitColorTarget = "childLine";
+          this._limitColorTarget = "nextLine";
           console.log("[DEBUG] Set _limitColorTarget = childLine");
         } else {
           console.log("[DEBUG] Unknown token:", tok);
@@ -16553,12 +16688,12 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       colorTargetSelect.style.width = "stretch";
       colorTargetSelect.style.minWidth = "60px";
       colorTargetSelect.style.textAlign = "center";
-      colorTargetSelect.title = this.plugin.t("color_target_tooltip", "Color target: text = matched text only, line = entire line, child = child elements");
+      colorTargetSelect.title = this.plugin.t("color_target_tooltip", "Color target: text = matched text only, line = entire line, next line = next line");
       try {
         colorTargetSelect.addClass("act-color-target-select");
       } catch (e) {
       }
-      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("color_target_text", "text")}</option><option value="line">${this.plugin.t("color_target_line", "line")}</option><option value="child">${this.plugin.t("color_target_child", "child")}</option>`;
+      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("color_target_text", "text")}</option><option value="line">${this.plugin.t("color_target_line", "line")}</option><option value="child">${this.plugin.t("color_target_child", "next line")}</option>`;
       colorTargetSelect.value = entry.colorTarget || "text";
       let nameInput = null;
       if (entry.isRegex) {
@@ -16632,27 +16767,6 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       cp.style.cursor = "pointer";
       cp.style.flex = "0 0 auto";
       let swatchSelect = null;
-      if (this.plugin.settings.useSwatchNamesForText && swatchesArr.length > 0) {
-        swatchSelect = row.createEl("select");
-        swatchSelect.style.padding = "6px";
-        swatchSelect.style.borderRadius = "4px";
-        swatchSelect.style.border = "1px solid var(--background-modifier-border)";
-        swatchSelect.style.background = "var(--background-modifier-form-field)";
-        swatchSelect.style.color = "var(--text-normal)";
-        swatchSelect.style.flex = "0 0 auto";
-        swatchSelect.style.textAlign = "center";
-        const defaultOpt = swatchSelect.createEl("option", {
-          text: this.plugin.t("select_swatch", "Select swatch\u2026")
-        });
-        defaultOpt.value = "";
-        swatchesArr.forEach((sw) => {
-          const opt = swatchSelect.createEl("option", { text: sw.name || "" });
-          opt.value = sw.name || "";
-          if (sw.color && (entry.color || "").toLowerCase() === sw.color.toLowerCase()) {
-            swatchSelect.value = opt.value;
-          }
-        });
-      }
       const cpBg = row.createEl("input", { type: "color" });
       cpBg.title = this.plugin.t("highlight_color_title", "Highlight color");
       cpBg.value = entry.backgroundColor || "#000000";
@@ -16663,27 +16777,6 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       cpBg.style.cursor = "pointer";
       cpBg.style.flex = "0 0 auto";
       let swatchSelect2 = null;
-      if (this.plugin.settings.useSwatchNamesForText && swatchesArr.length > 0) {
-        swatchSelect2 = row.createEl("select");
-        swatchSelect2.style.padding = "6px";
-        swatchSelect2.style.borderRadius = "4px";
-        swatchSelect2.style.border = "1px solid var(--background-modifier-border)";
-        swatchSelect2.style.background = "var(--background-modifier-form-field)";
-        swatchSelect2.style.color = "var(--text-normal)";
-        swatchSelect2.style.flex = "0 0 auto";
-        swatchSelect2.style.textAlign = "center";
-        const defaultOpt2 = swatchSelect2.createEl("option", {
-          text: this.plugin.t(
-            "select_highlight_swatch",
-            "Select highlight swatch\u2026"
-          )
-        });
-        defaultOpt2.value = "";
-        swatchesArr.forEach((sw) => {
-          const opt = swatchSelect2.createEl("option", { text: sw.name || "" });
-          opt.value = sw.name || "";
-        });
-      }
       const del = { addEventListener: () => {
       }, removeEventListener: () => {
       } };
@@ -19147,6 +19240,13 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         modeSetting.settingEl.style.marginTop = "10px";
       } catch (e) {
       }
+      new import_obsidian15.Setting(this._quickColorsContainer).setName(this.plugin.t("enable_individual_quick_style_apply_mode", "Enable individual application")).setDesc(this.plugin.t("enable_individual_quick_style_apply_mode_desc", "Allow each quick style to have its own 'text coloring will apply as' setting.")).addToggle(
+        (t) => t.setValue(!!this.plugin.settings.enableIndividualQuickStyleApplyMode).onChange(async (v) => {
+          this.plugin.settings.enableIndividualQuickStyleApplyMode = v;
+          await this.plugin.saveSettings();
+          this._refreshQuickColors();
+        })
+      );
     } catch (e) {
       debugError("SETTINGS", e);
     }
@@ -22160,22 +22260,6 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       );
       new import_obsidian15.Setting(swContainer).setName(
         this.plugin.t(
-          "use_swatch_names",
-          "Use swatch names for coloring text"
-        )
-      ).setDesc(
-        this.plugin.t(
-          "use_swatch_names_desc",
-          'If enabled, the text will be colored using the name of the swatch (e.g., "Red") instead of the hex code.'
-        )
-      ).addToggle(
-        (t) => t.setValue(this.plugin.settings.useSwatchNamesForText).onChange(async (v) => {
-          this.plugin.settings.useSwatchNamesForText = v;
-          await this.plugin.saveSettings();
-        })
-      );
-      new import_obsidian15.Setting(swContainer).setName(
-        this.plugin.t(
           "link_swatch_updates",
           "Link swatch updates to text colors"
         )
@@ -22314,7 +22398,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
             this._colorTargetFilter = "line";
             console.log("[DEBUG] Set _colorTargetFilter = line");
           } else if (tok === "cc") {
-            this._colorTargetFilter = "childLine";
+            this._colorTargetFilter = "nextLine";
             console.log("[DEBUG] Set _colorTargetFilter = childLine");
           } else if (tok === "sw") {
             this._entriesMatchTypeStartsWith = true;
@@ -23993,7 +24077,8 @@ function buildEditorExtension(plugin) {
                     }
                     newRanges.sort((a, b) => a.from - b.from || (a.to === a.from ? -1 : 1));
                     this.decorations = this.decorations.update({
-                      add: newRanges
+                      add: newRanges,
+                      sort: true
                     });
                   }
                 }
@@ -24099,13 +24184,13 @@ function buildEditorExtension(plugin) {
           lineBuilder
         );
         const lineSet = lineBuilder.finish();
-        if (lineSet.length === 0) return markSet;
+        if (lineSet.size === 0) return markSet;
         const markRanges = [];
         markSet.between(from, extendedTo, (f, t, v) => {
           markRanges.push({ from: f, to: t, value: v });
         });
         const lineRanges = [];
-        lineSet.between(from, extendedTo, (f, t, v) => {
+        lineSet.between(0, extendedTo, (f, t, v) => {
           lineRanges.push({ from: f, to: t, value: v, line: true });
         });
         const all = [
@@ -25505,42 +25590,169 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
   }
   applyHighlightPresetTransparency() {
     try {
-      const hasHighlightPreset = Array.isArray(this.settings.wordEntries) && this.settings.wordEntries.some(
-        (e) => e.pattern === "==[\\s\\S]*?==" || e.pattern === "==.*?=="
-      );
-      let style = document.getElementById("act-highlight-preset-transparency");
-      if (hasHighlightPreset) {
-        if (!style) {
-          style = document.createElement("style");
-          style.id = "act-highlight-preset-transparency";
-          style.textContent = `
-            .markdown-rendered mark:not(.always-color-text-highlight-marks) {
-              background-color: transparent !important;
-              color: inherit !important;
-            }
-            .cm-highlight {
-              background-color: transparent !important;
-              color: inherit !important;
-            }
-            .cm-s-obsidian span.cm-highlight {
-              background-color: transparent !important;
-              color: inherit !important;
-            }
-          `;
-          document.head.appendChild(style);
+      const presetEntry = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries.find(
+        (e) => e && e.isRegex === true && (e.pattern === "==[\\s\\S]*?==" || e.pattern === "==.*?==")
+      ) : null;
+      const hasHighlightPreset = !!presetEntry;
+      const oldStyle = document.getElementById("act-highlight-preset-transparency");
+      if (oldStyle) oldStyle.remove();
+      try {
+        document.querySelectorAll(".cm-editor, .CodeMirror").forEach((el) => {
+          el.style.removeProperty("--text-highlight-bg");
+          el.style.removeProperty("--text-highlight-fg");
+        });
+      } catch (_) {
+      }
+      if (!hasHighlightPreset) {
+        try {
+          document.body.classList.remove("act-highlight-preset-active");
+        } catch (_) {
         }
-      } else {
-        if (style) style.remove();
+        return;
+      }
+      const params = this.getHighlightParams(presetEntry);
+      const tc = presetEntry.textColor && presetEntry.textColor !== "currentColor" ? presetEntry.textColor : presetEntry.color || null;
+      const bc = presetEntry.backgroundColor || null;
+      let bgRgba = "transparent";
+      if (bc && this.isValidHexColor(bc)) {
+        bgRgba = this.hexToRgba(bc, params.opacity);
+      }
+      const colorValue = tc && this.isValidHexColor(tc) ? tc : "inherit";
+      const radius = params.radius ?? 4;
+      const hPad = params.hPad ?? 4;
+      const vPad = params.vPad ?? 0;
+      let borderRule = "";
+      if (params.enableBorder && (bc || tc)) {
+        const borderColor = tc && this.isValidHexColor(tc) ? this.hexToRgba(tc, params.borderOpacity) : bc && this.isValidHexColor(bc) ? this.hexToRgba(bc, params.borderOpacity) : null;
+        if (borderColor) {
+          const bStyle = `${params.borderThickness}px ${params.borderLineStyle} ${borderColor}`;
+          switch (params.borderStyle) {
+            case "top":
+              borderRule = `border-top: ${bStyle} !important;`;
+              break;
+            case "bottom":
+              borderRule = `border-bottom: ${bStyle} !important;`;
+              break;
+            case "left":
+              borderRule = `border-left: ${bStyle} !important;`;
+              break;
+            case "right":
+              borderRule = `border-right: ${bStyle} !important;`;
+              break;
+            case "top-bottom":
+              borderRule = `border-top: ${bStyle} !important; border-bottom: ${bStyle} !important;`;
+              break;
+            case "left-right":
+              borderRule = `border-left: ${bStyle} !important; border-right: ${bStyle} !important;`;
+              break;
+            default:
+              borderRule = `border: ${bStyle} !important;`;
+              break;
+          }
+        }
+      }
+      try {
+        document.querySelectorAll(".cm-editor").forEach((el) => {
+          el.style.setProperty("--text-highlight-bg", "transparent");
+        });
+      } catch (_) {
+      }
+      const sharedMarkRules = `
+        background-color: ${bgRgba} !important;
+        color: ${colorValue} !important;
+        border-radius: ${radius}px !important;
+        padding: ${vPad}px ${hPad}px !important;
+        ${borderRule}
+      `;
+      const style = document.createElement("style");
+      style.id = "act-highlight-preset-transparency";
+      style.textContent = `
+        body .cm-editor .cm-highlight,
+        body .cm-s-obsidian .cm-highlight,
+        body .cm-highlight {
+          background-color: transparent !important;
+          color: inherit !important;
+          border: none !important;
+          padding: 0 !important;
+          border-radius: 0 !important;
+        }
+        .markdown-rendered mark:not(.always-color-text-highlight-marks),
+        .markdown-rendered mark.always-color-text-highlight-marks {
+          ${sharedMarkRules}
+        }
+      `;
+      document.head.appendChild(style);
+      try {
+        document.body.classList.add("act-highlight-preset-active");
+      } catch (_) {
+      }
+      const patchHighlights = () => {
+        try {
+          document.querySelectorAll(".cm-highlight").forEach((el) => {
+            if (el.querySelector(".always-color-text-highlight")) {
+              el.style.setProperty("background-color", "transparent", "important");
+              el.style.setProperty("color", "inherit", "important");
+              el.style.setProperty("border", "none", "important");
+              el.style.setProperty("padding", "0", "important");
+              el.style.setProperty("border-radius", "0", "important");
+            }
+          });
+        } catch (_) {
+        }
+        try {
+          document.querySelectorAll(
+            ".markdown-rendered mark.always-color-text-highlight-marks"
+          ).forEach((el) => {
+            el.style.cssText = "";
+          });
+        } catch (_) {
+        }
+      };
+      patchHighlights();
+      try {
+        if (this._highlightVarObserver) {
+          this._highlightVarObserver.disconnect();
+          this._highlightVarObserver = null;
+        }
+        this._highlightVarObserver = new MutationObserver(patchHighlights);
+        this._highlightVarObserver.observe(document.body, { childList: true, subtree: true });
+      } catch (_) {
       }
     } catch (_) {
     }
   }
   removeHighlightPresetTransparency() {
     try {
-      const style = document.getElementById(
-        "act-highlight-preset-transparency"
-      );
+      const style = document.getElementById("act-highlight-preset-transparency");
       if (style) style.remove();
+    } catch (_) {
+    }
+    try {
+      document.body.classList.remove("act-highlight-preset-active");
+    } catch (_) {
+    }
+    try {
+      if (this._highlightVarObserver) {
+        this._highlightVarObserver.disconnect();
+        this._highlightVarObserver = null;
+      }
+    } catch (_) {
+    }
+    try {
+      document.querySelectorAll(".cm-highlight").forEach((el) => {
+        el.style.removeProperty("background-color");
+        el.style.removeProperty("color");
+        el.style.removeProperty("border");
+        el.style.removeProperty("padding");
+        el.style.removeProperty("border-radius");
+      });
+    } catch (_) {
+    }
+    try {
+      document.querySelectorAll(".cm-editor, .CodeMirror").forEach((el) => {
+        el.style.removeProperty("--text-highlight-bg");
+        el.style.removeProperty("--text-highlight-fg");
+      });
     } catch (_) {
     }
   }
@@ -26118,7 +26330,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                   this,
                   async (color) => {
                     if (color && this.isValidHexColor(color)) {
-                      const html = `<span style="color: ${color}">${selectedText}</span>`;
+                      const safeText = escapeHtml(selectedText);
+                      const html = `<span style="color: ${color}">${safeText}</span>`;
                       editor.replaceSelection(html);
                     }
                   },
@@ -26174,7 +26387,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                         style = `background-color: ${rgba};`;
                       }
                     }
-                    const html = `<span style="${style}">${selectedText}</span>`;
+                    const html = `<span style="${style}">${escapeHtml(selectedText)}</span>`;
                     editor.replaceSelection(html);
                   },
                   "background",
@@ -26247,7 +26460,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                         }
                       }
                     }
-                    const html = `<span style="${style.trim()}">${selectedText}</span>`;
+                    const html = `<span style="${style.trim()}">${escapeHtml(selectedText)}</span>`;
                     editor.replaceSelection(html);
                   },
                   "text-and-background",
@@ -26265,7 +26478,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
               item.setTitle(
                 this.t("menu_remove_inline_color", "Remove Inline Color")
               ).setIcon("trash").onClick(() => {
-                const stripped = String(selectedText).replace(/<span\b[^>]*>/gi, "").replace(/<\/span>/gi, "");
+                const doc = new DOMParser().parseFromString(selectedText, "text/html");
+                const stripped = doc.body.textContent || doc.body.innerText || "";
                 editor.replaceSelection(stripped);
               });
             });
@@ -26326,7 +26540,15 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                         if (!e) return false;
                         if (e.isRegex) {
                           if (!this.settings.enableRegexSupport) return false;
+                          if (e.testRegex && e.testRegex instanceof RegExp) {
+                            try {
+                              return e.testRegex.test(selectedText);
+                            } catch (_) {
+                              return false;
+                            }
+                          }
                           try {
+                            if (!this.validateAndSanitizeRegex(e.pattern)) return false;
                             const re = new RegExp(e.pattern, e.flags || "");
                             return re.test(selectedText);
                           } catch (_) {
@@ -26518,13 +26740,14 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                   } catch (_) {
                   }
                   this._openQuickStylesSubmenu = null;
+                  const currentApplyMode = this.settings.enableIndividualQuickStyleApplyMode && style && style.applyMode ? style.applyMode : this.settings.quickColorsApplyMode || "html";
                   await this._applyQuickStyleToSelection(
                     style,
                     this._lastSelectedQuickColor || null,
                     selectedText,
                     editor,
                     view,
-                    this.settings.quickColorsApplyMode !== "act" && !(style && (style.groupUid || style.matchType))
+                    currentApplyMode !== "act" && !(style && (style.groupUid || style.matchType))
                   );
                 });
               });
@@ -26684,16 +26907,18 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                     } else {
                       const firstStyle = stylesArr[0] || null;
                       if (firstStyle) {
+                        const currentApplyMode = this.settings.enableIndividualQuickStyleApplyMode && firstStyle && firstStyle.applyMode ? firstStyle.applyMode : this.settings.quickColorsApplyMode || "html";
                         await this._applyQuickStyleToSelection(
                           firstStyle,
                           this._lastSelectedQuickColor,
                           selectedText,
                           editor,
                           view,
-                          this.settings.quickColorsApplyMode !== "act" && !(firstStyle && (firstStyle.groupUid || firstStyle.matchType))
+                          currentApplyMode !== "act" && !(firstStyle && (firstStyle.groupUid || firstStyle.matchType))
                         );
                       } else {
-                        if (this.settings.quickColorsApplyMode === "act") {
+                        const currentApplyMode = this.settings.quickColorsApplyMode || "html";
+                        if (currentApplyMode === "act") {
                           await this._applyQuickColorACT(
                             selectedText,
                             null,
@@ -26712,7 +26937,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                             null
                           );
                           const styleStr = `background-color: ${hexWithAlpha}; border-radius: ${p.radius ?? 8}px; padding: ${p.vPad ?? 0}px ${p.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-                          const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
+                          const html = `<span class="always-color-text-highlight" style="${styleStr}">${escapeHtml(selectedText)}</span>`;
                           editor.replaceSelection(html);
                         }
                       }
@@ -28034,6 +28259,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     let p = String(pattern).trim();
     p = this.decodeHtmlEntities(p);
     if (isRegex && p.length > 200) throw new Error("Pattern too long");
+    if (!isRegex && p.length > 500) throw new Error("Pattern too long");
     return p;
   }
   decodeHtmlEntities(text) {
@@ -31149,7 +31375,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       if (we) {
         console.log(`[ACT-DEBUG] saveData: entry ${we.pattern} HAS markTarget: ${we.markTarget}`);
         const jsonStr = JSON.stringify(data);
-        if (jsonStr.includes('"markTarget":"line"') || jsonStr.includes('"markTarget":"childLine"')) {
+        if (jsonStr.includes('"markTarget":"line"') || jsonStr.includes('"markTarget":"nextLine"')) {
           console.log("[ACT-DEBUG] saveData: markTarget found in JSON string!");
         } else {
           console.log("[ACT-DEBUG] saveData: markTarget NOT FOUND in JSON string!");
@@ -32740,8 +32966,12 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         }
         val = val.replace(/!important/gi, "").trim();
         const valLower = val.toLowerCase();
-        if (valLower.includes("url(") || valLower.includes("expression(") || valLower.includes("javascript:") || val.includes("<") || val.includes(">")) {
+        if (valLower.includes("url(") || valLower.includes("expression(") || valLower.includes("javascript:") || valLower.includes("data:") || valLower.includes("vbscript:") || valLower.includes("@import") || valLower.includes("@charset") || valLower.includes("@namespace") || val.includes("<") || val.includes(">") || val.includes("{") || val.includes("}") || val.includes(";")) {
           debugLog("SANITIZE_CSS_SKIP", `Dangerous value for: "${prop}": "${val}"`);
+          continue;
+        }
+        if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(val)) {
+          debugLog("SANITIZE_CSS_SKIP", `Control character in value: "${prop}"`);
           continue;
         }
         if (val.length === 0) {
@@ -33139,7 +33369,11 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     const styleType2 = style && style.styleType ? style.styleType : "both";
     const tc = selectedPair && selectedPair.textColor ? selectedPair.textColor : style.textColor || style.color || null;
     const bc = selectedPair && selectedPair.backgroundColor ? selectedPair.backgroundColor : style.backgroundColor || null;
-    if (this.settings.quickColorsApplyMode === "act" && !forceInline) {
+    let applyMode = this.settings.quickColorsApplyMode || "html";
+    if (this.settings.enableIndividualQuickStyleApplyMode && style && style.applyMode) {
+      applyMode = style.applyMode;
+    }
+    if (applyMode === "act" && !forceInline) {
       await this._applyQuickColorACT(
         selectedText,
         styleType2 === "text" ? tc : styleType2 === "both" ? tc : null,
@@ -33152,14 +33386,14 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     const params = this.getHighlightParams(style);
     const borderCss = this.generateBorderStyle(tc, bc, style);
     if (styleType2 === "text") {
-      const html2 = `<span style="color: ${tc || ""}">${selectedText}</span>`;
+      const html2 = `<span style="color: ${tc || ""}">${escapeHtml(selectedText)}</span>`;
       editor.replaceSelection(html2);
       return;
     }
     if (styleType2 === "highlight") {
       const bg2 = bc ? this.hexToHexWithAlpha(bc, params.opacity ?? 25) : null;
       const styleStr2 = `${bg2 ? `background-color: ${bg2}; ` : ""}border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-      const html2 = `<span class="always-color-text-highlight" style="${styleStr2}">${selectedText}</span>`;
+      const html2 = `<span class="always-color-text-highlight" style="${styleStr2}">${escapeHtml(selectedText)}</span>`;
       editor.replaceSelection(html2);
       return;
     }
@@ -33168,7 +33402,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     if (tc) styleStr += `color: ${tc}; `;
     if (bg) styleStr += `background-color: ${bg}; `;
     styleStr += `border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-    const html = `<span style="${styleStr}">${selectedText}</span>`;
+    const html = `<span style="${styleStr}">${escapeHtml(selectedText)}</span>`;
     editor.replaceSelection(html);
   }
   // Helper: Extract color and background from selected HTML text in editor
@@ -36121,11 +36355,11 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
               continue;
             }
             const markTarget = m.entryRef && m.entryRef.markTarget;
-            if (markTarget === "line" || markTarget === "childLine") {
+            if (markTarget === "line" || markTarget === "nextLine") {
               const rawPattern = m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern) || "";
               const cssClass = String(rawPattern).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
               let targetBlock = block;
-              if (markTarget === "childLine") {
+              if (markTarget === "nextLine") {
                 try {
                   const walker2 = document.createTreeWalker(
                     block,
@@ -40431,7 +40665,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       }
       const isDark = (m.color || m.textColor || m.backgroundColor) && this.isDarkColor(m.color || m.textColor || m.backgroundColor);
       const markTarget = m.entryRef && m.entryRef.markTarget;
-      if (markTarget === "line" || markTarget === "childLine") {
+      if (markTarget === "line" || markTarget === "nextLine") {
         const rawPattern = m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern) || "";
         const cssClass = String(rawPattern).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
         let colorProp = "";
@@ -40461,7 +40695,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         const rule = `div.cm-line.${cssClass}{${colorProp}${lineStyleParts.join("; ")}}`;
         if (styleEl.textContent !== rule) styleEl.textContent = rule;
         let lineStart;
-        if (markTarget === "childLine") {
+        if (markTarget === "nextLine") {
           const matchLine = view.state.doc.lineAt(m.start);
           lineStart = matchLine.number < view.state.doc.lines ? view.state.doc.line(matchLine.number + 1).from : matchLine.from;
         } else {

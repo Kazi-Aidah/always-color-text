@@ -220,46 +220,179 @@ class AlwaysColorText extends Plugin {
 
   applyHighlightPresetTransparency() {
     try {
-      const hasHighlightPreset =
-        Array.isArray(this.settings.wordEntries) &&
-        this.settings.wordEntries.some(
-          (e) => e.pattern === "==[\\s\\S]*?==" || e.pattern === "==.*?==",
-        );
+      // Find the highlight preset entry (==...== regex) only when it is
+      // actively enabled as a regex. If isRegex is false (user toggled it off),
+      // treat it as absent so the original mark styling is restored.
+      const presetEntry =
+        Array.isArray(this.settings.wordEntries)
+          ? this.settings.wordEntries.find(
+              (e) => e && e.isRegex === true &&
+                (e.pattern === "==[\\s\\S]*?==" || e.pattern === "==.*?=="),
+            )
+          : null;
+      const hasHighlightPreset = !!presetEntry;
 
-      let style = document.getElementById("act-highlight-preset-transparency");
+      // Clean up any previously injected style and variable overrides
+      const oldStyle = document.getElementById("act-highlight-preset-transparency");
+      if (oldStyle) oldStyle.remove();
+      // Remove previously set variable overrides from editor roots
+      try {
+        document.querySelectorAll(".cm-editor, .CodeMirror").forEach((el) => {
+          el.style.removeProperty("--text-highlight-bg");
+          el.style.removeProperty("--text-highlight-fg");
+        });
+      } catch (_) {}
 
-      if (hasHighlightPreset) {
-        if (!style) {
-          style = document.createElement("style");
-          style.id = "act-highlight-preset-transparency";
-          style.textContent = `
-            .markdown-rendered mark:not(.always-color-text-highlight-marks) {
-              background-color: transparent !important;
-              color: inherit !important;
-            }
-            .cm-highlight {
-              background-color: transparent !important;
-              color: inherit !important;
-            }
-            .cm-s-obsidian span.cm-highlight {
-              background-color: transparent !important;
-              color: inherit !important;
-            }
-          `;
-          document.head.appendChild(style);
-        }
-      } else {
-        if (style) style.remove();
+      if (!hasHighlightPreset) {
+        try { document.body.classList.remove("act-highlight-preset-active"); } catch (_) {}
+        return;
       }
+
+      // Build the entry's colors
+      const params = this.getHighlightParams(presetEntry);
+      const tc =
+        presetEntry.textColor && presetEntry.textColor !== "currentColor"
+          ? presetEntry.textColor
+          : presetEntry.color || null;
+      const bc = presetEntry.backgroundColor || null;
+
+      let bgRgba = "transparent";
+      if (bc && this.isValidHexColor(bc)) {
+        bgRgba = this.hexToRgba(bc, params.opacity);
+      }
+      const colorValue = tc && this.isValidHexColor(tc) ? tc : "inherit";
+      const radius = params.radius ?? 4;
+      const hPad = params.hPad ?? 4;
+      const vPad = params.vPad ?? 0;
+
+      // Build border CSS if enabled
+      let borderRule = "";
+      if (params.enableBorder && (bc || tc)) {
+        const borderColor = tc && this.isValidHexColor(tc)
+          ? this.hexToRgba(tc, params.borderOpacity)
+          : bc && this.isValidHexColor(bc)
+            ? this.hexToRgba(bc, params.borderOpacity)
+            : null;
+        if (borderColor) {
+          const bStyle = `${params.borderThickness}px ${params.borderLineStyle} ${borderColor}`;
+          switch (params.borderStyle) {
+            case "top":    borderRule = `border-top: ${bStyle} !important;`; break;
+            case "bottom": borderRule = `border-bottom: ${bStyle} !important;`; break;
+            case "left":   borderRule = `border-left: ${bStyle} !important;`; break;
+            case "right":  borderRule = `border-right: ${bStyle} !important;`; break;
+            case "top-bottom": borderRule = `border-top: ${bStyle} !important; border-bottom: ${bStyle} !important;`; break;
+            case "left-right": borderRule = `border-left: ${bStyle} !important; border-right: ${bStyle} !important;`; break;
+            default: borderRule = `border: ${bStyle} !important;`; break;
+          }
+        }
+      }
+
+      // Strategy 1: Override Obsidian's --text-highlight-bg CSS variable directly on
+      // every .cm-editor root, as a belt-and-suspenders alongside the stylesheet.
+      try {
+        document.querySelectorAll(".cm-editor").forEach((el) => {
+          el.style.setProperty("--text-highlight-bg", "transparent");
+        });
+      } catch (_) {}
+
+      // Strategy 2: Inject a stylesheet that strips the cm-highlight wrapper's own
+      // background/padding/border so only the inner always-color-text-highlight span
+      // shows through. Also apply entry colors to reading mode mark elements.
+      const sharedMarkRules = `
+        background-color: ${bgRgba} !important;
+        color: ${colorValue} !important;
+        border-radius: ${radius}px !important;
+        padding: ${vPad}px ${hPad}px !important;
+        ${borderRule}
+      `;
+
+      const style = document.createElement("style");
+      style.id = "act-highlight-preset-transparency";
+      style.textContent = `
+        body .cm-editor .cm-highlight,
+        body .cm-s-obsidian .cm-highlight,
+        body .cm-highlight {
+          background-color: transparent !important;
+          color: inherit !important;
+          border: none !important;
+          padding: 0 !important;
+          border-radius: 0 !important;
+        }
+        .markdown-rendered mark:not(.always-color-text-highlight-marks),
+        .markdown-rendered mark.always-color-text-highlight-marks {
+          ${sharedMarkRules}
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Add body class so the static CSS rule in styles.css takes effect immediately.
+      // This is the most reliable way — static CSS can't be wiped by CM re-renders.
+      try { document.body.classList.add("act-highlight-preset-active"); } catch (_) {}
+
+      // Strategy 3: MutationObserver that directly patches cm-highlight elements
+      // with inline background: transparent when they contain a plugin span.
+      // Also clears stale inline styles from reading mode mark elements so the
+      // injected stylesheet (with current entry colors) can take effect.
+      const patchHighlights = () => {
+        try {
+          document.querySelectorAll(".cm-highlight").forEach((el) => {
+            if (el.querySelector(".always-color-text-highlight")) {
+              el.style.setProperty("background-color", "transparent", "important");
+              el.style.setProperty("color", "inherit", "important");
+              el.style.setProperty("border", "none", "important");
+              el.style.setProperty("padding", "0", "important");
+              el.style.setProperty("border-radius", "0", "important");
+            }
+          });
+        } catch (_) {}
+        try {
+          document.querySelectorAll(
+            ".markdown-rendered mark.always-color-text-highlight-marks"
+          ).forEach((el) => {
+            el.style.cssText = "";
+          });
+        } catch (_) {}
+      };
+      patchHighlights();
+      try {
+        if (this._highlightVarObserver) {
+          this._highlightVarObserver.disconnect();
+          this._highlightVarObserver = null;
+        }
+        this._highlightVarObserver = new MutationObserver(patchHighlights);
+        this._highlightVarObserver.observe(document.body, { childList: true, subtree: true });
+      } catch (_) {}
+
     } catch (_) {}
   }
 
   removeHighlightPresetTransparency() {
     try {
-      const style = document.getElementById(
-        "act-highlight-preset-transparency",
-      );
+      const style = document.getElementById("act-highlight-preset-transparency");
       if (style) style.remove();
+    } catch (_) {}
+    try { document.body.classList.remove("act-highlight-preset-active"); } catch (_) {}
+    try {
+      if (this._highlightVarObserver) {
+        this._highlightVarObserver.disconnect();
+        this._highlightVarObserver = null;
+      }
+    } catch (_) {}
+    // Remove inline patches from cm-highlight elements so native styling returns
+    try {
+      document.querySelectorAll(".cm-highlight").forEach((el) => {
+        el.style.removeProperty("background-color");
+        el.style.removeProperty("color");
+        el.style.removeProperty("border");
+        el.style.removeProperty("padding");
+        el.style.removeProperty("border-radius");
+      });
+    } catch (_) {}
+    try {
+      document.querySelectorAll(".cm-editor, .CodeMirror").forEach((el) => {
+        el.style.removeProperty("--text-highlight-bg");
+        el.style.removeProperty("--text-highlight-fg");
+      });
     } catch (_) {}
   }
 
@@ -881,7 +1014,8 @@ class AlwaysColorText extends Plugin {
                     this,
                     async (color) => {
                       if (color && this.isValidHexColor(color)) {
-                        const html = `<span style="color: ${color}">${selectedText}</span>`;
+                        const safeText = escapeHtml(selectedText);
+                        const html = `<span style="color: ${color}">${safeText}</span>`;
                         editor.replaceSelection(html);
                       }
                     },
@@ -956,7 +1090,7 @@ class AlwaysColorText extends Plugin {
                           style = `background-color: ${rgba};`;
                         }
                       }
-                      const html = `<span style="${style}">${selectedText}</span>`;
+                      const html = `<span style="${style}">${escapeHtml(selectedText)}</span>`;
                       editor.replaceSelection(html);
                     },
                     "background",
@@ -1059,7 +1193,7 @@ class AlwaysColorText extends Plugin {
                         }
                       }
 
-                      const html = `<span style="${style.trim()}">${selectedText}</span>`;
+                      const html = `<span style="${style.trim()}">${escapeHtml(selectedText)}</span>`;
                       editor.replaceSelection(html);
                     },
                     "text-and-background",
@@ -1083,10 +1217,9 @@ class AlwaysColorText extends Plugin {
                 )
                 .setIcon("trash")
                 .onClick(() => {
-                  // Remove ALL span wrappers within the selection, preserving inner text
-                  const stripped = String(selectedText)
-                    .replace(/<span\b[^>]*>/gi, "")
-                    .replace(/<\/span>/gi, "");
+                  // Safely extract text content from HTML spans, preserving only the text
+                  const doc = new DOMParser().parseFromString(selectedText, 'text/html');
+                  const stripped = doc.body.textContent || doc.body.innerText || '';
                   editor.replaceSelection(stripped);
                 });
             });
@@ -1175,7 +1308,17 @@ class AlwaysColorText extends Plugin {
                           if (!e) return false;
                           if (e.isRegex) {
                             if (!this.settings.enableRegexSupport) return false;
+                            // Use pre-validated testRegex instead of creating new RegExp
+                            if (e.testRegex && e.testRegex instanceof RegExp) {
+                              try {
+                                return e.testRegex.test(selectedText);
+                              } catch (_) {
+                                return false;
+                              }
+                            }
+                            // Fallback: validate before creating regex
                             try {
+                              if (!this.validateAndSanitizeRegex(e.pattern)) return false;
                               const re = new RegExp(e.pattern, e.flags || "");
                               return re.test(selectedText);
                             } catch (_) {
@@ -1400,6 +1543,10 @@ class AlwaysColorText extends Plugin {
                     sub.hide();
                   } catch (_) {}
                   this._openQuickStylesSubmenu = null;
+                  const currentApplyMode = (this.settings.enableIndividualQuickStyleApplyMode && style && style.applyMode)
+                    ? style.applyMode
+                    : (this.settings.quickColorsApplyMode || "html");
+
                   // Apply the quick style with the selected pair colors
                   await this._applyQuickStyleToSelection(
                     style,
@@ -1407,7 +1554,7 @@ class AlwaysColorText extends Plugin {
                     selectedText,
                     editor,
                     view,
-                    this.settings.quickColorsApplyMode !== "act" &&
+                    currentApplyMode !== "act" &&
                       !(style && (style.groupUid || style.matchType)),
                   );
                 });
@@ -1598,20 +1745,25 @@ class AlwaysColorText extends Plugin {
                     } else {
                       const firstStyle = stylesArr[0] || null;
                       if (firstStyle) {
+                        const currentApplyMode = (this.settings.enableIndividualQuickStyleApplyMode && firstStyle && firstStyle.applyMode)
+                          ? firstStyle.applyMode
+                          : (this.settings.quickColorsApplyMode || "html");
+
                         await this._applyQuickStyleToSelection(
                           firstStyle,
                           this._lastSelectedQuickColor,
                           selectedText,
                           editor,
                           view,
-                          this.settings.quickColorsApplyMode !== "act" &&
+                          currentApplyMode !== "act" &&
                             !(
                               firstStyle &&
                               (firstStyle.groupUid || firstStyle.matchType)
                             ),
                         );
                       } else {
-                        if (this.settings.quickColorsApplyMode === "act") {
+                        const currentApplyMode = this.settings.quickColorsApplyMode || "html";
+                        if (currentApplyMode === "act") {
                           await this._applyQuickColorACT(
                             selectedText,
                             null,
@@ -1630,7 +1782,7 @@ class AlwaysColorText extends Plugin {
                             null,
                           );
                           const styleStr = `background-color: ${hexWithAlpha}; border-radius: ${p.radius ?? 8}px; padding: ${p.vPad ?? 0}px ${p.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-                          const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
+                          const html = `<span class="always-color-text-highlight" style="${styleStr}">${escapeHtml(selectedText)}</span>`;
                           editor.replaceSelection(html);
                         }
                       }
@@ -3123,7 +3275,9 @@ class AlwaysColorText extends Plugin {
     if (typeof pattern !== "string") return "";
     let p = String(pattern).trim();
     p = this.decodeHtmlEntities(p);
+    // Add length limits to prevent ReDoS
     if (isRegex && p.length > 200) throw new Error("Pattern too long");
+    if (!isRegex && p.length > 500) throw new Error("Pattern too long");
     return p;
   }
 
@@ -7050,7 +7204,7 @@ class AlwaysColorText extends Plugin {
       if (we) {
         console.log(`[ACT-DEBUG] saveData: entry ${we.pattern} HAS markTarget: ${we.markTarget}`);
         const jsonStr = JSON.stringify(data);
-        if (jsonStr.includes('"markTarget":"line"') || jsonStr.includes('"markTarget":"childLine"')) {
+        if (jsonStr.includes('"markTarget":"line"') || jsonStr.includes('"markTarget":"nextLine"')) {
            console.log("[ACT-DEBUG] saveData: markTarget found in JSON string!");
         } else {
            console.log("[ACT-DEBUG] saveData: markTarget NOT FOUND in JSON string!");
@@ -9127,62 +9281,76 @@ class AlwaysColorText extends Plugin {
     return base ? `${base}; ${customWithImportant}` : customWithImportant;
   }
 
-  sanitizeCssDeclarations(input) {
-    try {
-      if (!input || typeof input !== "string") return "";
-      debugLog("SANITIZE_CSS_START", `Input: "${input}"`);
-      // Normalize line endings, then split only on semicolons
-      // (newlines within a value like linear-gradient(...\n...) must be preserved)
-      const normalized = String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-      // Split on semicolons only; collapse newlines inside values to spaces
-      const parts = normalized
-        .split(";")
-        .map((s) => s.replace(/\n/g, " ").trim())
-        .filter((s) => s.length > 0);
-      const out = [];
-      for (const p of parts) {
-        const idx = p.indexOf(":");
-        if (idx === -1) {
-          debugLog("SANITIZE_CSS_SKIP", `No colon in: "${p}"`);
-          continue;
-        }
-        const prop = p.slice(0, idx).trim().toLowerCase();
-        let val = p.slice(idx + 1).trim();
-        if (!/^[a-z\-]+$/.test(prop)) {
-          debugLog("SANITIZE_CSS_SKIP", `Invalid prop name: "${prop}"`);
-          continue;
-        }
+   sanitizeCssDeclarations(input) {
+     try {
+       if (!input || typeof input !== "string") return "";
+       debugLog("SANITIZE_CSS_START", `Input: "${input}"`);
+       // Normalize line endings, then split only on semicolons
+       // (newlines within a value like linear-gradient(...\n...) must be preserved)
+       const normalized = String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+       // Split on semicolons only; collapse newlines inside values to spaces
+       const parts = normalized
+         .split(";")
+         .map((s) => s.replace(/\n/g, " ").trim())
+         .filter((s) => s.length > 0);
+       const out = [];
+       for (const p of parts) {
+         const idx = p.indexOf(":");
+         if (idx === -1) {
+           debugLog("SANITIZE_CSS_SKIP", `No colon in: "${p}"`);
+           continue;
+         }
+         const prop = p.slice(0, idx).trim().toLowerCase();
+         let val = p.slice(idx + 1).trim();
+         if (!/^[a-z\-]+$/.test(prop)) {
+           debugLog("SANITIZE_CSS_SKIP", `Invalid prop name: "${prop}"`);
+           continue;
+         }
 
-        // Remove !important if user added it, we will add it ourselves
-        val = val.replace(/!important/gi, "").trim();
+         // Remove !important if user added it, we will add it ourselves
+         val = val.replace(/!important/gi, "").trim();
 
-        // BLOCKLIST: skip declarations with dangerous value patterns
-        const valLower = val.toLowerCase();
-        if (
-          valLower.includes("url(") ||
-          valLower.includes("expression(") ||
-          valLower.includes("javascript:") ||
-          val.includes("<") ||
-          val.includes(">")
-        ) {
-          debugLog("SANITIZE_CSS_SKIP", `Dangerous value for: "${prop}": "${val}"`);
-          continue;
-        }
+         // BLOCKLIST: skip declarations with dangerous value patterns
+         const valLower = val.toLowerCase();
+         if (
+           valLower.includes("url(") ||
+           valLower.includes("expression(") ||
+           valLower.includes("javascript:") ||
+           valLower.includes("data:") ||
+           valLower.includes("vbscript:") ||
+           valLower.includes("@import") ||
+           valLower.includes("@charset") ||
+           valLower.includes("@namespace") ||
+           val.includes("<") ||
+           val.includes(">") ||
+           val.includes("{") ||
+           val.includes("}") ||
+           val.includes(";") // Prevent nested declarations
+         ) {
+           debugLog("SANITIZE_CSS_SKIP", `Dangerous value for: "${prop}": "${val}"`);
+           continue;
+         }
 
-        if (val.length === 0) {
-          debugLog("SANITIZE_CSS_SKIP", `Empty value for: "${prop}"`);
-          continue;
-        }
-        out.push(`${prop}: ${val}`);
-      }
-      const result = out.join("; ") + (out.length > 0 ? ";" : "");
-      debugLog("SANITIZE_CSS_RESULT", `Output: "${result}"`);
-      return result;
-    } catch (e) {
-      debugError("SANITIZE_CSS_ERROR", e);
-      return "";
-    }
-  }
+         // Validate value doesn't contain control characters
+         if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(val)) {
+           debugLog("SANITIZE_CSS_SKIP", `Control character in value: "${prop}"`);
+           continue;
+         }
+
+         if (val.length === 0) {
+           debugLog("SANITIZE_CSS_SKIP", `Empty value for: "${prop}"`);
+           continue;
+         }
+         out.push(`${prop}: ${val}`);
+       }
+       const result = out.join("; ") + (out.length > 0 ? ";" : "");
+       debugLog("SANITIZE_CSS_RESULT", `Output: "${result}"`);
+       return result;
+     } catch (e) {
+       debugError("SANITIZE_CSS_ERROR", e);
+       return "";
+     }
+   }
 
   applyCustomCssToElement(element, entry = null) {
     try {
@@ -9671,7 +9839,14 @@ class AlwaysColorText extends Plugin {
       selectedPair && selectedPair.backgroundColor
         ? selectedPair.backgroundColor
         : style.backgroundColor || null;
-    if (this.settings.quickColorsApplyMode === "act" && !forceInline) {
+
+    // Determine the apply mode (ACT or HTML)
+    let applyMode = this.settings.quickColorsApplyMode || "html";
+    if (this.settings.enableIndividualQuickStyleApplyMode && style && style.applyMode) {
+      applyMode = style.applyMode;
+    }
+
+    if (applyMode === "act" && !forceInline) {
       // When using ACT mode, pass the style object so custom settings are preserved
       await this._applyQuickColorACT(
         selectedText,
@@ -9685,14 +9860,14 @@ class AlwaysColorText extends Plugin {
     const params = this.getHighlightParams(style);
     const borderCss = this.generateBorderStyle(tc, bc, style);
     if (styleType === "text") {
-      const html = `<span style="color: ${tc || ""}">${selectedText}</span>`;
+      const html = `<span style="color: ${tc || ""}">${escapeHtml(selectedText)}</span>`;
       editor.replaceSelection(html);
       return;
     }
     if (styleType === "highlight") {
       const bg = bc ? this.hexToHexWithAlpha(bc, params.opacity ?? 25) : null;
       const styleStr = `${bg ? `background-color: ${bg}; ` : ""}border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-      const html = `<span class="always-color-text-highlight" style="${styleStr}">${selectedText}</span>`;
+      const html = `<span class="always-color-text-highlight" style="${styleStr}">${escapeHtml(selectedText)}</span>`;
       editor.replaceSelection(html);
       return;
     }
@@ -9702,7 +9877,7 @@ class AlwaysColorText extends Plugin {
     if (tc) styleStr += `color: ${tc}; `;
     if (bg) styleStr += `background-color: ${bg}; `;
     styleStr += `border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-    const html = `<span style="${styleStr}">${selectedText}</span>`;
+    const html = `<span style="${styleStr}">${escapeHtml(selectedText)}</span>`;
     editor.replaceSelection(html);
   }
 
@@ -13501,7 +13676,7 @@ class AlwaysColorText extends Plugin {
 
             // --- Line coloring for Reading Mode: CSS class on block element ---
             const markTarget = m.entryRef && m.entryRef.markTarget;
-            if (markTarget === "line" || markTarget === "childLine") {
+            if (markTarget === "line" || markTarget === "nextLine") {
               // Generate CSS class from pattern/label (same as Live Preview logic)
               const rawPattern = (m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern)) || "";
               const cssClass = String(rawPattern)
@@ -13513,7 +13688,7 @@ class AlwaysColorText extends Plugin {
 
               // Determine target block element
               let targetBlock = block;
-              if (markTarget === "childLine") {
+              if (markTarget === "nextLine") {
                 // For childLine, try to find the child element containing the match
                 try {
                   const walker = document.createTreeWalker(
@@ -19375,7 +19550,7 @@ class AlwaysColorText extends Plugin {
 
       const markTarget = m.entryRef && m.entryRef.markTarget;
 
-      if (markTarget === "line" || markTarget === "childLine") {
+      if (markTarget === "line" || markTarget === "nextLine") {
         // --- Line coloring: CSS class on .cm-line div only (no span wrapper) ---
         // Uses inheritance so child spans with their own inline styles keep their colors
         const rawPattern = (m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern)) || "";
@@ -19420,7 +19595,7 @@ class AlwaysColorText extends Plugin {
 
         // Determine target line position
         let lineStart;
-        if (markTarget === "childLine") {
+        if (markTarget === "nextLine") {
           const matchLine = view.state.doc.lineAt(m.start);
           lineStart = matchLine.number < view.state.doc.lines
             ? view.state.doc.line(matchLine.number + 1).from

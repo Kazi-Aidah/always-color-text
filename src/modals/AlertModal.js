@@ -1,4 +1,4 @@
-import { Modal } from 'obsidian';
+﻿import { Modal } from 'obsidian';
 
 export class AlertModal extends Modal {
   constructor(app, plugin, title, message, customAction) {

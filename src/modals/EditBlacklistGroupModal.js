@@ -1,4 +1,4 @@
-import { Modal, Menu, Notice } from 'obsidian';
+﻿import { Modal, Menu, Notice } from 'obsidian';
 import { debugError } from '../utils/debug.js';
 import { BlacklistRegexTesterModal } from './BlacklistRegexTesterModal.js';
 import { SelectBlacklistGroupModal } from './SelectBlacklistGroupModal.js';

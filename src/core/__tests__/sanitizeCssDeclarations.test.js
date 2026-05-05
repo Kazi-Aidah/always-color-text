@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Feature: custom-css-per-entry
  * Property 1: Sanitizer idempotence
  *

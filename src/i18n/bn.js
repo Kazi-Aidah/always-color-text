@@ -271,10 +271,10 @@ module.exports = {
   "opt_background_only": "শুধুমাত্র হাইলাইট রঙ",
   "replace_default_swatches": "ডিফল্ট সোয়াচগুলি প্রতিস্থাপন করুন",
   "replace_default_swatches_desc": "এটি চালু থাকলে, কেবল আপনার কাস্টম রঙগুলি কালার পিকারে দেখাবে। কোনো ডিফল্ট রঙ নয়!",
-  "enable_custom_swatches": "কাস্টম সোয়াচগুলি সক্রিয় করুন",
-  "enable_custom_swatches_desc": "এটি চালু থাকলে, আপনার কাস্টম সোয়াচগুলি কালার পিকারে দেখাবে।",
-  "use_swatch_names": "টেক্সট রঙায়নের জন্য সোয়াচ নাম ব্যবহার করুন",
-  "use_swatch_names_desc": "শব্দ/প্যাটার্ন ইনপুটের পাশে সোয়াচ নামের ড্রপডাউন দেখান",
+  "enable_custom_swatches": "কাস্টম সোয়াচগুলি সক্ষম করুন",
+  "enable_custom_swatches_desc": "সক্ষম থাকলে, আপনার কাস্টম সোয়াচগুলি কালার পিকারে উপস্থিত হবে।",
+  // "use_swatch_names": "টেক্সট রঙায়নের জন্য সোয়াচ নাম ব্যবহার করুন",
+  // "use_swatch_names_desc": "শব্দ/প্যাটার্ন ইনপুটের পাশে সোয়াচ নামের ড্রপডাউন দেখান",
   "link_swatches_to_entries": "সোয়াচ আপডেটকে টেক্সট রঙের সাথে লিংক করুন",
   "link_swatches_to_entries_desc": "কাস্টম সোয়াচের রঙ পরিবর্তন হলে, সেই রঙ ব্যবহার করা সব এন্ট্রি আপডেট করুন",
   "link_swatch_updates": "সোয়াচ আপডেটকে টেক্সট রঙের সাথে লিংক করুন",
@@ -533,6 +533,9 @@ module.exports = {
   "quick_colors_apply_mode_label": "টেক্সট রঙায়ন এইভাবে প্রয়োগ হবে",
   "quick_colors_apply_mode_act": "সবসময় টেক্সট রঙ করুন",
   "quick_colors_apply_mode_html": "ইনলাইন HTML",
+  "enable_individual_quick_style_apply_mode": "ব্যক্তিগত প্রয়োগ সক্ষম করুন",
+  "enable_individual_quick_style_apply_mode_desc": "প্রতিটি দ্রুত শৈলীকে তার নিজস্ব 'টেক্সট কালারিং প্রয়োগ করা হবে' সেটিং থাকতে অনুমতি দিন।",
+  "setting_ignored_individual_mode": "এই সেটিংটি উপেক্ষা করা হয়েছে কারণ ব্যক্তিগত প্রয়োগ সক্ষম করা আছে।",
   "quick_styles_header": "দ্রুত স্টাইল",
   "quick_styles_desc": "রাইট‑ক্লিক মেনু থেকে স্টাইল প্রয়োগ করতে দেয়।",
   "btn_add_style": "+ স্টাইল যোগ করুন",
@@ -598,14 +601,21 @@ module.exports = {
   "enable_custom_css": "টেক্সট স্টাইলিংয়ের জন্য কাস্টম CSS সক্ষম করুন",
   "enable_custom_css_desc": "এন্ট্রি এবং গ্রুপ এডিটরে 'কাস্টম CSS সম্পাদনা করুন' বোতামের মাধ্যমে প্রতি-এন্ট্রি CSS যোগ করুন।",
   "edit_custom_css_btn": "কাস্টম CSS সম্পাদনা করুন",
+  "css_declarations_label": "CSS ঘোষণা",
+  "btn_save": "সংরক্ষণ করুন",
 
   // Color Text/Line/Child
-  "mark_target_text": "টেক্সট রঙ করুন",
-  "mark_target_line": "লাইন রঙ করুন",
-  "mark_target_child_line": "চাইল্ড রঙ করুন",
+  "mark_target_text": "টেক্সট রং",
+  "mark_target_line": "লাইন রং",
+  "mark_target_child_line": "পরবর্তী লাইন রং",
   "mark_target_label": "প্রয়োগ করুন",
+  "color_target_text": "টেক্সট",
+  "color_target_line": "লাইন",
+  "color_target_child": "পরবর্তী লাইন",
 
   // Group Select & Commands
   "no_group": "কোনো গ্রুপ নেই",
   "command_color_text_for_file": "বর্তমান ফাইলের জন্য নির্বাচিত টেক্সট রঙ করুন"
 };
+
+

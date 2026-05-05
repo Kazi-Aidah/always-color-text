@@ -188,7 +188,7 @@ export class HighlightStylingModal extends Modal {
       [
         ["text", this.plugin.t("mark_target_text", "Color Text")],
         ["line", this.plugin.t("mark_target_line", "Color Line")],
-        ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+        ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")],
       ].forEach(([val, label]) => {
         const opt = markTargetSelect.createEl("option", { text: label });
         opt.value = val;
@@ -391,6 +391,51 @@ export class HighlightStylingModal extends Modal {
 
     const paneRow = contentEl.createDiv();
     paneRow.addClass("act-highlight-pane-row");
+
+    // Individual Apply Mode for Quick Styles
+    const isQuickStyle = this.plugin.settings.quickStyles && this.plugin.settings.quickStyles.includes(this.entry);
+    const showIndividualApplyMode = isQuickStyle && this.plugin.settings.enableIndividualQuickStyleApplyMode;
+    if (showIndividualApplyMode) {
+      const applyModeRow = contentEl.createDiv();
+      applyModeRow.style.display = "flex";
+      applyModeRow.style.alignItems = "center";
+      applyModeRow.style.gap = "12px";
+      applyModeRow.style.marginTop = "12px";
+      applyModeRow.style.padding = "0 4px";
+
+      applyModeRow.createEl("span", {
+        text: this.plugin.t("quick_colors_apply_mode_label", "The text coloring will apply as")
+      });
+
+      const applyModeSelect = applyModeRow.createEl("select");
+      applyModeSelect.style.minWidth = "150px";
+      applyModeSelect.style.border = "1px solid var(--background-modifier-border)";
+      applyModeSelect.style.borderRadius = "4px";
+      applyModeSelect.style.background = "var(--background-modifier-form-field)";
+      applyModeSelect.style.textAlign = "center";
+
+      [
+        ["act", this.plugin.t("quick_colors_apply_mode_act", "Always Color Text")],
+        ["html", this.plugin.t("quick_colors_apply_mode_html", "Inline HTML")]
+      ].forEach(([val, label]) => {
+        const opt = applyModeSelect.createEl("option", { text: label });
+        opt.value = val;
+      });
+
+      const currentVal = this.entry.applyMode || this.plugin.settings.quickColorsApplyMode || "html";
+      applyModeSelect.value = currentVal;
+      
+      // Ensure it's set on the entry if it was missing
+       if (!this.entry.applyMode) {
+         this.entry.applyMode = currentVal;
+         this.plugin.saveSettings();
+       }
+
+      applyModeSelect.addEventListener("change", async () => {
+        this.entry.applyMode = applyModeSelect.value;
+        await this.plugin.saveSettings();
+      });
+    }
     const hlWrap = paneRow.createDiv();
     hlWrap.addClass("act-highlight-pane");
     const borderWrap = paneRow.createDiv();
@@ -739,8 +784,8 @@ export class HighlightStylingModal extends Modal {
         return;
       }
 
-      const t = tColor.value;
-      const b = bColor.value;
+      const t = this.plugin.isValidHexColor(tColor.value) ? tColor.value : "#58bc54";
+      const b = this.plugin.isValidHexColor(bColor.value) ? bColor.value : "#205613";
       const p = this.plugin.getHighlightParams(this.entry);
       const rgba = this.plugin.hexToRgba(b, p.opacity ?? 25);
       const radius = p.radius ?? 8;

@@ -1,4 +1,4 @@
-import { Modal, Notice, setIcon, Menu } from 'obsidian';
+﻿import { Modal, Notice, setIcon, Menu } from 'obsidian';
 import { debugLog, debugError } from '../utils/debug.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
@@ -437,7 +437,7 @@ export class EditWordGroupModal extends Modal {
         else if (tok === "e") { this._limitMatchExact = true; console.log("[DEBUG] Set _limitMatchExact = true"); }
         else if (tok === "ct") { this._limitColorTarget = "text"; console.log("[DEBUG] Set _limitColorTarget = text"); }
         else if (tok === "cl") { this._limitColorTarget = "line"; console.log("[DEBUG] Set _limitColorTarget = line"); }
-        else if (tok === "cc") { this._limitColorTarget = "childLine"; console.log("[DEBUG] Set _limitColorTarget = childLine"); }
+        else if (tok === "cc") { this._limitColorTarget = "nextLine"; console.log("[DEBUG] Set _limitColorTarget = childLine"); }
         else { console.log("[DEBUG] Unknown token:", tok); }
       }
       console.log("[DEBUG limitHandler] _limitColorTarget:", this._limitColorTarget);

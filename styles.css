@@ -40,13 +40,24 @@ mark.always-color-text-highlight-marks {
   color: var(--highlight-color, currentColor) !important;
 }
 
-/* Override native mark styling in reading mode, but preserve plugin-mark styles */
-/* 
-.markdown-rendered mark:not(.always-color-text-highlight-marks) {
+/* When the ==...== highlight preset is active, the plugin adds
+   act-highlight-preset-active to <body>. This neutralises the
+   cm-highlight wrapper so only the inner always-color-text-highlight
+   span's inline styles are visible. Static CSS beats any timing
+   issue with MutationObserver patching.
+   Specificity must beat interfering rules like:
+   body .cm-s-obsidian span.cm-highlight { background-color: ... !important }
+   which is (0,0,2,2). We use (0,0,3,2) to win. */
+body.act-highlight-preset-active .cm-s-obsidian span.cm-highlight,
+body.act-highlight-preset-active .cm-editor .cm-highlight,
+body.act-highlight-preset-active .cm-highlight {
   background-color: transparent !important;
   color: inherit !important;
+  border: none !important;
+  border-bottom: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
 }
-*/
 
 /* Hide cm-highlight background in live preview to show only inner styled span */
 /* 
@@ -506,6 +517,28 @@ div[contenteditable="true"]:focus {
   }
 }
 
+/* ====== COLOR PICKER MODAL - HEADER CONTROLS ====== */
+
+/* On mobile, let the header controls row wrap so selects/buttons
+   don't get cut off in the narrower single-column (vertical) modal. */
+@media (max-width: 600px) {
+  .act-modal-header-controls {
+    flex-wrap: wrap !important;
+    row-gap: 6px !important;
+  }
+  /* Each control takes a natural width and wraps to the next line */
+  .act-modal-header-controls select,
+  .act-modal-header-controls button {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+  }
+  /* Title takes full width so controls sit on their own row below */
+  .act-modal-header-controls h2 {
+    flex: 1 1 100% !important;
+    margin-bottom: 4px !important;
+  }
+}
+
 /* Regex Tester Modal - Prevent responsive wrapping of rows */
 .act-regex-row-expr,
 .act-regex-row-style {
@@ -708,4 +741,8 @@ body.theme-dark.act-dark-mode-fix .always-color-text-highlight.act-dark-color {
 
 .dropdown.act-group-select {
   background-color: var(--background-modifier-form-field) !important;
+}
+
+.act-color-target-select {
+  text-transform: capitalize;
 }

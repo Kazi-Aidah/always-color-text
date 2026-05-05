@@ -77,7 +77,7 @@ export const defaultSettings = {
   // Enable/disable Text & Background Coloring option in right-click menu
   enableTextBgMenu: true,
   // Use swatch names for coloring entries
-  useSwatchNamesForText: false,
+  // useSwatchNamesForText: false,
   linkSwatchUpdatesToEntries: false,
   colorPickerMode: "both",
   advancedRules: [],
@@ -90,6 +90,7 @@ export const defaultSettings = {
   quickHighlightStyleEnable: false,
   quickColorsEnabled: false,
   quickColorsApplyMode: "html",
+  enableIndividualQuickStyleApplyMode: false,
   quickColors: [], // Array of { textColor, backgroundColor, uid }
   quickStyles: [], // Array of objects { id, name, style }
   quickHighlightUseGlobalStyle: false,

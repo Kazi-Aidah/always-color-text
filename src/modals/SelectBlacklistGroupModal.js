@@ -1,4 +1,4 @@
-import { FuzzySuggestModal } from 'obsidian';
+﻿import { FuzzySuggestModal } from 'obsidian';
 
 export class SelectBlacklistGroupModal extends FuzzySuggestModal {
   constructor(app, plugin, onSelected) {

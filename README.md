@@ -148,9 +148,9 @@ Use the **limit input** beside the search bar (also available in the "Add to Exi
 - `ew` → ends-with match-type entries
 
 <!-- **Filter by Color Target:**
-- `ct` → color-text targeting entries (colors only the matched text)
-- `cl` → color-line targeting entries (colors the entire line)
-- `cc` → color-child targeting entries (colors child elements) -->
+- `ct` → color text targeting entries
+- `cl` → color line targeting entries
+- `cn` → color next line targeting entries -->
 
 ### Add to Existing Entry
 Right-click any entry and choose "Add to Existing Entry" to add the selected text to that entry:
@@ -217,7 +217,7 @@ Choose exactly how your colors are applied with three targeting modes:
 
 - **Color Text**: Colors only the matched text (default)
 - **Color Line**: Colors the entire line containing the matched text
-- **Color Child**: Colors text within child elements (useful for nested content)
+- **Color Next Line:** Colors the line under the matched text
 
 These modes give you precise control over how colors are applied, especially useful for complex documents with nested structures. -->
 

@@ -1,4 +1,4 @@
-import { Modal, Notice } from 'obsidian';
+﻿import { Modal, Notice } from 'obsidian';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
@@ -451,7 +451,7 @@ export class EditEntryModal extends Modal {
     [
       ["text",      this.plugin.t("mark_target_text",       "Color Text")],
       ["line",      this.plugin.t("mark_target_line",       "Color Line")],
-      ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+      ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")],
     ].forEach(([val, label]) => {
       const opt = markTargetSelect.createEl("option", { text: label });
       opt.value = val;

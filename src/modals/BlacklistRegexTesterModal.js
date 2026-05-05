@@ -1,4 +1,4 @@
-import { Modal, Notice } from 'obsidian';
+﻿import { Modal, Notice } from 'obsidian';
 import { escapeHtml, debugError } from '../utils/debug.js';
 
 export class BlacklistRegexTesterModal extends Modal {

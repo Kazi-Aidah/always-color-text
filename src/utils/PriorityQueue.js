@@ -1,4 +1,4 @@
-export class PriorityQueue {
+﻿export class PriorityQueue {
   constructor() {
     this.a = [];
   }

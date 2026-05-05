@@ -1,4 +1,4 @@
-import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS } from '../core/constants.js';
+﻿import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS } from '../core/constants.js';
 import { debugLog, debugWarn } from '../utils/debug.js';
 
 /**

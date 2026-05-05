@@ -1,4 +1,4 @@
-export const EDITOR_PERFORMANCE_CONSTANTS = {
+﻿export const EDITOR_PERFORMANCE_CONSTANTS = {
   MAX_PATTERNS_STANDARD: 20, // Use standard processing for <= 20 patterns (reduced)
   MAX_TEXT_LENGTH_STANDARD: 5000, // Use standard processing for <= 5k chars (reduced)
   PATTERN_CHUNK_SIZE: 20, // INCREASED: Process 20 patterns per chunk (better throughput)

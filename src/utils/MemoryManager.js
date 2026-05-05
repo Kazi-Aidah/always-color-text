@@ -1,4 +1,4 @@
-export class MemoryManager {
+﻿export class MemoryManager {
   constructor(plugin) {
     this.plugin = plugin;
     this.interval = 2000;

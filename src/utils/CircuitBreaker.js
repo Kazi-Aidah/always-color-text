@@ -1,4 +1,4 @@
-export class CircuitBreaker {
+﻿export class CircuitBreaker {
   constructor(threshold = 5, timeoutMs = 5000) {
     this.threshold = threshold;
     this.timeoutMs = timeoutMs;

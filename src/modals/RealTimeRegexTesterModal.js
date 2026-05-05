@@ -31,7 +31,9 @@ export class RealTimeRegexTesterModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
-      this.modalEl.style.maxWidth = "820px";
+      this.modalEl.style.setProperty("--dialog-width", "760px");
+      this.modalEl.style.width = "760px";
+      this.modalEl.style.maxWidth = "95vw";
       this.modalEl.style.padding = "20px";
     } catch (e) {}
     const title = contentEl.createEl("h2", {
@@ -80,7 +82,7 @@ export class RealTimeRegexTesterModal extends Modal {
     [
       ["text", this.plugin.t("mark_target_text", "Color Text")],
       ["line", this.plugin.t("mark_target_line", "Color Line")],
-      ["childLine", this.plugin.t("mark_target_child_line", "Color Child")],
+      ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")],
     ].forEach(([val, label]) => {
       const opt = markTargetSelect.createEl("option", { text: label });
       opt.value = val;
@@ -327,8 +329,8 @@ export class RealTimeRegexTesterModal extends Modal {
       let out = "";
       let count = 0;
       const style = styleSelect.value;
-      const t = textColorInput.value;
-      const b = bgColorInput.value;
+      const t = this.plugin.isValidHexColor(textColorInput.value) ? textColorInput.value : "#58bc54";
+      const b = this.plugin.isValidHexColor(bgColorInput.value) ? bgColorInput.value : "#205613";
       const rgba = this.plugin.hexToRgba(
         b,
         this.plugin.settings.backgroundOpacity ?? 25,

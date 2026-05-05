@@ -168,9 +168,9 @@ export class ColorSettingTab extends PluginSettingTab {
       colorTargetSelect.style.width = "stretch";
       colorTargetSelect.style.minWidth = "60px";
       colorTargetSelect.style.textAlign = "center";
-      colorTargetSelect.title = this.plugin.t("color_target_tooltip", "Color target: text = matched text only, line = entire line, child = child elements");
+      colorTargetSelect.title = this.plugin.t("color_target_tooltip", "Color target: text = matched text only, line = entire line, next line = next line");
       try { colorTargetSelect.addClass("act-color-target-select"); } catch (e) {}
-      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("color_target_text", "text")}</option><option value="line">${this.plugin.t("color_target_line", "line")}</option><option value="child">${this.plugin.t("color_target_child", "child")}</option>`;
+      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("color_target_text", "text")}</option><option value="line">${this.plugin.t("color_target_line", "line")}</option><option value="child">${this.plugin.t("color_target_child", "next line")}</option>`;
       colorTargetSelect.value = entry.colorTarget || "text";
 
       // ELEMENT 2a: Regex name input (only for regex)
@@ -261,7 +261,7 @@ export class ColorSettingTab extends PluginSettingTab {
       cp.style.flex = "0 0 auto";
 
       let swatchSelect = null;
-      if (
+      /* if (
         this.plugin.settings.useSwatchNamesForText &&
         swatchesArr.length > 0
       ) {
@@ -288,7 +288,7 @@ export class ColorSettingTab extends PluginSettingTab {
             swatchSelect.value = opt.value;
           }
         });
-      }
+      } */
 
       // Background color and swatch
       const cpBg = row.createEl("input", { type: "color" });
@@ -302,7 +302,7 @@ export class ColorSettingTab extends PluginSettingTab {
       cpBg.style.flex = "0 0 auto";
 
       let swatchSelect2 = null;
-      if (
+      /* if (
         this.plugin.settings.useSwatchNamesForText &&
         swatchesArr.length > 0
       ) {
@@ -327,7 +327,7 @@ export class ColorSettingTab extends PluginSettingTab {
           const opt = swatchSelect2.createEl("option", { text: sw.name || "" });
           opt.value = sw.name || "";
         });
-      }
+      } */
 
       // ELEMENT 5: Delete button (commented out — use right-click context menu to delete)
       /* const del = row.createEl("button", {
@@ -3343,6 +3343,22 @@ export class ColorSettingTab extends PluginSettingTab {
       try {
         modeSetting.settingEl.style.marginTop = "10px";
       } catch (e) {}
+
+      // New toggle: Enable individual application
+      new Setting(this._quickColorsContainer)
+        .setName(this.plugin.t("enable_individual_quick_style_apply_mode", "Enable individual application"))
+        .setDesc(this.plugin.t("enable_individual_quick_style_apply_mode_desc", "Allow each quick style to have its own 'text coloring will apply as' setting."))
+        .addToggle((t) =>
+          t
+            .setValue(!!this.plugin.settings.enableIndividualQuickStyleApplyMode)
+            .onChange(async (v) => {
+              this.plugin.settings.enableIndividualQuickStyleApplyMode = v;
+              await this.plugin.saveSettings();
+              this._refreshQuickColors();
+            }),
+        );
+
+      // Fade away the global setting if individual application is enabled
     } catch (e) {
       debugError("SETTINGS", e);
     }
@@ -7083,7 +7099,7 @@ export class ColorSettingTab extends PluginSettingTab {
             }),
         );
 
-      new Setting(swContainer)
+      /* new Setting(swContainer)
         .setName(
           this.plugin.t(
             "use_swatch_names",
@@ -7103,7 +7119,7 @@ export class ColorSettingTab extends PluginSettingTab {
               this.plugin.settings.useSwatchNamesForText = v;
               await this.plugin.saveSettings();
             }),
-        );
+        ); */
 
       new Setting(swContainer)
         .setName(
@@ -7257,7 +7273,7 @@ export class ColorSettingTab extends PluginSettingTab {
           console.log("[DEBUG SettingsTab limitHandler] processing token:", tok);
           if (tok === "ct") { this._colorTargetFilter = "text"; console.log("[DEBUG] Set _colorTargetFilter = text"); }
           else if (tok === "cl") { this._colorTargetFilter = "line"; console.log("[DEBUG] Set _colorTargetFilter = line"); }
-          else if (tok === "cc") { this._colorTargetFilter = "childLine"; console.log("[DEBUG] Set _colorTargetFilter = childLine"); }
+          else if (tok === "cc") { this._colorTargetFilter = "nextLine"; console.log("[DEBUG] Set _colorTargetFilter = childLine"); }
           else if (tok === "sw") { this._entriesMatchTypeStartsWith = true; console.log("[DEBUG] Set _entriesMatchTypeStartsWith = true"); }
           else if (tok === "ew") { this._entriesMatchTypeEndsWith = true; console.log("[DEBUG] Set _entriesMatchTypeEndsWith = true"); }
           else if (tok === "r") { this._entriesRegexOnly = true; console.log("[DEBUG] Set _entriesRegexOnly = true"); }

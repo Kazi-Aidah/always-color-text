@@ -1,4 +1,4 @@
-const en = require('./i18n/en.js');
+﻿const en = require('./i18n/en.js');
 const es = require('./i18n/es.js');
 const fr = require('./i18n/fr.js');
 const hi = require('./i18n/hi.js');

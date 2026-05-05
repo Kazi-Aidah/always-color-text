@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Feature: custom-css-per-entry
  * Property 9: Validation warns on invalid property names
  *
