@@ -1,4 +1,4 @@
-﻿import { Modal, Notice, setIcon } from 'obsidian';
+import { Modal, Notice, setIcon } from 'obsidian';
 import { EditEntryModal } from './EditEntryModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { debugLog } from '../utils/debug.js';
@@ -34,34 +34,45 @@ export class ColorPickerModal extends Modal {
     // If no entry was passed, try to find one by pattern
     if (!entry && this._selectedText && !this.isQuickOnce) {
       const s = this._selectedText;
-      const caseSensitive = !!this.plugin.settings.caseSensitive;
-      const eq = (a, b) =>
-        caseSensitive
-          ? String(a) === String(b)
-          : String(a).toLowerCase() === String(b).toLowerCase();
 
       // Search in wordEntries
-      entry = this.plugin.settings.wordEntries.find(
-        (e) =>
-          e &&
-          !e.isRegex &&
-          (eq(e.pattern, s) ||
-            (Array.isArray(e.groupedPatterns) &&
-              e.groupedPatterns.some((p) => eq(p, s)))),
-      );
+      entry = this.plugin.settings.wordEntries.find((e) => {
+        if (!e || e.isRegex) return false;
+        const cs =
+          typeof e.caseSensitive === "boolean"
+            ? e.caseSensitive
+            : !!this.plugin.settings.caseSensitive;
+        const eq = (a, b) =>
+          cs
+            ? String(a) === String(b)
+            : String(a).toLowerCase() === String(b).toLowerCase();
+        return (
+          eq(e.pattern, s) ||
+          (Array.isArray(e.groupedPatterns) &&
+            e.groupedPatterns.some((p) => eq(p, s)))
+        );
+      });
 
       // Search in groups if still not found
       if (!entry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
         for (const g of this.plugin.settings.wordEntryGroups) {
           if (!g || !Array.isArray(g.entries)) continue;
-          entry = g.entries.find(
-            (e) =>
-              e &&
-              !e.isRegex &&
-              (eq(e.pattern, s) ||
-                (Array.isArray(e.groupedPatterns) &&
-                  e.groupedPatterns.some((p) => eq(p, s)))),
-          );
+          entry = g.entries.find((e) => {
+            if (!e || e.isRegex) return false;
+            const cs =
+              typeof e.caseSensitive === "boolean"
+                ? e.caseSensitive
+                : !!this.plugin.settings.caseSensitive;
+            const eq = (a, b) =>
+              cs
+                ? String(a) === String(b)
+                : String(a).toLowerCase() === String(b).toLowerCase();
+            return (
+              eq(e.pattern, s) ||
+              (Array.isArray(e.groupedPatterns) &&
+                e.groupedPatterns.some((p) => eq(p, s)))
+            );
+          });
           if (entry) break;
         }
       }
@@ -260,7 +271,6 @@ export class ColorPickerModal extends Modal {
       });
       markTargetSelect.value = this._markTarget || "text";
       const mtHandler = () => {
-        console.log(`[ACT-DEBUG] ColorPickerModal: UI markTarget changed to ${markTargetSelect.value}`);
         this._markTarget = markTargetSelect.value;
         this._hasUserChanges = true;
       };
@@ -427,7 +437,8 @@ export class ColorPickerModal extends Modal {
     const buildPanel = (titleText, type) => {
       const col = contentEl.createDiv();
       col.style.border = "1px solid var(--background-modifier-border)";
-      col.style.borderRadius = "12px";
+      col.style.borderRadius = "var(--input-radius)";
+      col.style.cornerShape = "var(--corner-shape)";
       col.style.padding = "12px";
       col.addClass("color-picker-panel");
       col.style.marginBottom = "0";
@@ -483,19 +494,22 @@ export class ColorPickerModal extends Modal {
         let entry = this._entry;
         if (!entry && this._selectedText && !this.isQuickOnce) {
           const s = this._selectedText;
-          const caseSensitive = !!this.plugin.settings.caseSensitive;
-          const eq = (a, b) =>
-            caseSensitive
-              ? String(a) === String(b)
-              : String(a).toLowerCase() === String(b).toLowerCase();
-          entry = this.plugin.settings.wordEntries.find(
-            (e) =>
-              e &&
-              !e.isRegex &&
-              (eq(e.pattern, s) ||
-                (Array.isArray(e.groupedPatterns) &&
-                  e.groupedPatterns.some((p) => eq(p, s)))),
-          );
+          entry = this.plugin.settings.wordEntries.find((e) => {
+            if (!e || e.isRegex) return false;
+            const cs =
+              typeof e.caseSensitive === "boolean"
+                ? e.caseSensitive
+                : !!this.plugin.settings.caseSensitive;
+            const eq = (a, b) =>
+              cs
+                ? String(a) === String(b)
+                : String(a).toLowerCase() === String(b).toLowerCase();
+            return (
+              eq(e.pattern, s) ||
+              (Array.isArray(e.groupedPatterns) &&
+                e.groupedPatterns.some((p) => eq(p, s)))
+            );
+          });
         }
 
         if (type === "text") {
@@ -701,11 +715,17 @@ export class ColorPickerModal extends Modal {
     let matchedEntry = null;
     let matchedGroupUid = null;
     let matchedMatchType = null;
-    const caseSensitive = !!this.plugin.settings.caseSensitive;
-    const eq = (a, b) =>
-      caseSensitive
-        ? String(a) === String(b)
-        : String(a).toLowerCase() === String(b).toLowerCase();
+    const getEq = (e) => {
+      const cs =
+        typeof e?.caseSensitive === "boolean"
+          ? e.caseSensitive
+          : !!this.plugin.settings.caseSensitive;
+      return (a, b) =>
+        cs
+          ? String(a) === String(b)
+          : String(a).toLowerCase() === String(b).toLowerCase();
+    };
+
     let allEntries = Array.isArray(this.plugin.settings.wordEntries)
       ? this.plugin.settings.wordEntries.map((e) =>
           Object.assign({}, e, { _groupUid: null }),
@@ -723,8 +743,13 @@ export class ColorPickerModal extends Modal {
     for (const e of allEntries) {
       if (!e || e.isRegex) continue;
       const entryMatchType = (e.matchType || "").toLowerCase();
-      const a = caseSensitive ? String(s) : String(s).toLowerCase();
-      const b = caseSensitive
+      const eq = getEq(e);
+      const cs =
+        typeof e.caseSensitive === "boolean"
+          ? e.caseSensitive
+          : !!this.plugin.settings.caseSensitive;
+      const a = cs ? String(s) : String(s).toLowerCase();
+      const b = cs
         ? String(e.pattern || "")
         : String(e.pattern || "").toLowerCase();
 
@@ -1149,8 +1174,8 @@ export class ColorPickerModal extends Modal {
           }
           const onSaved = async () => {
             try {
-              // Signal ColorPickerModal that changes were made so it applies on close
-              this._hasUserChanges = true;
+              // Do NOT set _hasUserChanges = true here — EditEntryModal already saved the entry.
+              // Setting it true would cause onClose to run _submitFn which may delete the entry.
               await this.plugin.saveSettings();
               this.plugin.compileWordEntries();
               this.plugin.reconfigureEditorExtensions();
@@ -1560,6 +1585,7 @@ export class ColorPickerModal extends Modal {
               matchType:
                 this._matchType ||
                 (this.plugin.settings.partialMatch ? "contains" : "exact"),
+              caseSensitive: !!this.plugin.settings.caseSensitive,
               markTarget: this._markTarget || "text",
             };
 
@@ -1655,6 +1681,7 @@ export class ColorPickerModal extends Modal {
                 matchType:
                   this._matchType ||
                   (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                caseSensitive: !!this.plugin.settings.caseSensitive,
                 markTarget: this._markTarget || "text",
               };
 
@@ -1732,6 +1759,7 @@ export class ColorPickerModal extends Modal {
               matchType:
                 this._matchType ||
                 (this.plugin.settings.partialMatch ? "contains" : "exact"),
+              caseSensitive: !!this.plugin.settings.caseSensitive,
               markTarget: this._markTarget || "text",
             };
 

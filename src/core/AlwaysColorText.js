@@ -3479,7 +3479,15 @@ class AlwaysColorText extends Plugin {
         pattern = this.decodeHtmlEntities(pattern);
         let pos = 0;
 
-        while ((pos = text.indexOf(pattern, pos)) !== -1) {
+        // Respect per-entry case sensitivity, fall back to global setting
+        const caseSensitive =
+          typeof entry.caseSensitive === "boolean"
+            ? entry.caseSensitive
+            : !!this.settings.caseSensitive;
+        const searchText = caseSensitive ? text : text.toLowerCase();
+        const searchPattern = caseSensitive ? pattern : pattern.toLowerCase();
+
+        while ((pos = searchText.indexOf(searchPattern, pos)) !== -1) {
           matches.push({
             start: pos,
             end: pos + pattern.length,
@@ -6205,9 +6213,7 @@ class AlwaysColorText extends Plugin {
       e.markTarget = entry.markTarget;
     }
 
-    if (e.markTarget) {
-      console.log(`[ACT-DEBUG] compressEntry: ${e.pattern} -> markTarget: ${e.markTarget}`);
-    }
+    // [ACT-DEBUG] compressEntry markTarget log muted
 
     return e;
   }
@@ -6230,10 +6236,11 @@ class AlwaysColorText extends Plugin {
   // --- Load plugin settings from disk, with defaults ---
   async loadSettings() {
     const loadedData = (await this.loadData()) || {};
-    console.log("[ACT-DEBUG] loadData raw result wordEntries count:", loadedData.wordEntries ? loadedData.wordEntries.length : 0);
+    // [ACT-DEBUG] loadData/loadSettings markTarget logs muted
+    // console.log("[ACT-DEBUG] loadData raw result wordEntries count:", loadedData.wordEntries ? loadedData.wordEntries.length : 0);
     if (loadedData.wordEntries && loadedData.wordEntries.length > 0) {
         const sample = loadedData.wordEntries.find(e => e && e.markTarget && e.markTarget !== 'text');
-        if (sample) console.log(`[ACT-DEBUG] loadData: found entry with markTarget: ${sample.pattern} -> ${sample.markTarget}`);
+        // [ACT-DEBUG] muted: if (sample) console.log(`[ACT-DEBUG] loadData: found entry with markTarget: ${sample.pattern} -> ${sample.markTarget}`);
     }
 
     // --- REFACTOR MIGRATION: Flatten globalStyles back to root for runtime compatibility ---
@@ -6257,13 +6264,13 @@ class AlwaysColorText extends Plugin {
     // Validate that critical arrays exist before assignment
     if (!Array.isArray(loadedData.wordEntries)) loadedData.wordEntries = [];
 
-    // DEBUG: Check for markTarget on load
+    // DEBUG: Check for markTarget on load (muted)
     const mtSample = loadedData.wordEntries.filter(e => e && e.markTarget && e.markTarget !== 'text');
-    if (mtSample.length > 0) {
-      console.log(`[ACT-DEBUG] loadSettings: Found ${mtSample.length} entries with non-default markTarget on disk`);
-    } else {
-      console.log(`[ACT-DEBUG] loadSettings: No entries with non-default markTarget found in loadedData`);
-    }
+    // if (mtSample.length > 0) {
+    //   console.log(`[ACT-DEBUG] loadSettings: Found ${mtSample.length} entries with non-default markTarget on disk`);
+    // } else {
+    //   console.log(`[ACT-DEBUG] loadSettings: No entries with non-default markTarget found in loadedData`);
+    // }
 
     if (!Array.isArray(loadedData.wordEntryGroups))
       loadedData.wordEntryGroups = [];
@@ -7175,7 +7182,7 @@ class AlwaysColorText extends Plugin {
 
     // Compress wordEntries
     if (Array.isArray(data.wordEntries)) {
-      console.log(`[ACT-DEBUG] saveSettings: compressing ${data.wordEntries.length} entries`);
+      // [ACT-DEBUG] muted: console.log(`[ACT-DEBUG] saveSettings: compressing ${data.wordEntries.length} entries`);
       data.wordEntries = data.wordEntries.map((e) => this.compressEntry(e));
     }
 
@@ -7198,21 +7205,7 @@ class AlwaysColorText extends Plugin {
       data.quickColors = data.quickColors.map((e) => this.compressEntry(e));
     }
 
-    // Final debug log before write
-    if (data.wordEntries && data.wordEntries.length > 0) {
-      const we = data.wordEntries.find(e => e && e.markTarget && e.markTarget !== 'text');
-      if (we) {
-        console.log(`[ACT-DEBUG] saveData: entry ${we.pattern} HAS markTarget: ${we.markTarget}`);
-        const jsonStr = JSON.stringify(data);
-        if (jsonStr.includes('"markTarget":"line"') || jsonStr.includes('"markTarget":"nextLine"')) {
-           console.log("[ACT-DEBUG] saveData: markTarget found in JSON string!");
-        } else {
-           console.log("[ACT-DEBUG] saveData: markTarget NOT FOUND in JSON string!");
-        }
-      } else {
-        console.log(`[ACT-DEBUG] saveData: NO entries have non-default markTarget!`);
-      }
-    }
+    // [ACT-DEBUG] saveData markTarget logs muted
 
     await this.saveData(data);
 
@@ -7496,15 +7489,13 @@ class AlwaysColorText extends Plugin {
               : "text");
         // PRESERVE markTarget (coloring target mode)
         if (e.markTarget && e.markTarget !== 'text') {
-           console.log(`[ACT-DEBUG] sanitizeSettings PRESERVE: ${e.pattern} has markTarget: ${e.markTarget}`);
+           // [ACT-DEBUG] muted: console.log(`[ACT-DEBUG] sanitizeSettings PRESERVE: ${e.pattern} has markTarget: ${e.markTarget}`);
         }
         x.markTarget =
           typeof e.markTarget === "string" && e.markTarget
             ? e.markTarget
             : "text";
-        if (x.markTarget !== "text") {
-          console.log(`[ACT-DEBUG] sanitizeSettings: ${x.pattern} -> markTarget: ${x.markTarget}`);
-        }
+        // [ACT-DEBUG] muted: if (x.markTarget !== "text") console.log(`[ACT-DEBUG] sanitizeSettings: ${x.pattern} -> markTarget: ${x.markTarget}`);
         const rawMt = String(x.matchType || "").trim();
         const mtLower = rawMt.toLowerCase();
         const normalized =
@@ -7871,6 +7862,7 @@ class AlwaysColorText extends Plugin {
         backgroundColor: null,
         markTarget: markTarget,
         matchType: this.settings.partialMatch ? "contains" : "exact",
+        caseSensitive: !!this.settings.caseSensitive,
       });
     }
     await this.saveSettings();
@@ -7923,6 +7915,7 @@ class AlwaysColorText extends Plugin {
             ? "contains"
             : "exact"
           : "regex",
+        caseSensitive: !!this.settings.caseSensitive,
         presetLabel: name ? String(name) : undefined,
         persistAtEnd: true,
         groupedPatterns: null,
@@ -8456,6 +8449,12 @@ class AlwaysColorText extends Plugin {
       ).toLowerCase();
       const pattern = entry?.pattern || "";
 
+      // Use per-entry caseSensitive if available, fall back to global setting
+      const caseSensitive =
+        typeof entry?.caseSensitive === "boolean"
+          ? entry.caseSensitive
+          : this.settings.caseSensitive;
+
       // For sentence-like patterns (containing spaces/punctuation), always match
       if (this.isSentenceLikePattern(pattern)) {
         return true;
@@ -8467,14 +8466,14 @@ class AlwaysColorText extends Plugin {
       switch (matchType) {
         case "exact":
           // Exact match: pattern must exactly equal the full word
-          const exactMatch = this.settings.caseSensitive
+          const exactMatch = caseSensitive
             ? fullWord === pattern
             : fullWord.toLowerCase() === pattern.toLowerCase();
           return exactMatch;
 
         case "contains":
           // Contains: pattern must be found anywhere within the full word
-          const containsMatch = this.settings.caseSensitive
+          const containsMatch = caseSensitive
             ? fullWord.includes(pattern)
             : fullWord.toLowerCase().includes(pattern.toLowerCase());
           return containsMatch;
@@ -8486,21 +8485,21 @@ class AlwaysColorText extends Plugin {
               this.containsNonRomanCharacters &&
               this.containsNonRomanCharacters(pattern)
             ) {
-              const startsWithMatch = this.settings.caseSensitive
+              const startsWithMatch = caseSensitive
                 ? fullWord.startsWith(pattern)
                 : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
               return startsWithMatch;
             }
             // OPTIMIZATION: Skip RegExp creation while typing
             if (this._isTyping) throw new Error("Skip strict check");
-            const flags = this.settings.caseSensitive ? "" : "i";
+            const flags = caseSensitive ? "" : "i";
             const re = new RegExp(
               `^${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[A-Za-z]*$`,
               flags,
             );
             return re.test(fullWord);
           } catch (_) {
-            const startsWithMatch = this.settings.caseSensitive
+            const startsWithMatch = caseSensitive
               ? fullWord.startsWith(pattern)
               : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
             return startsWithMatch;
@@ -8513,21 +8512,21 @@ class AlwaysColorText extends Plugin {
               this.containsNonRomanCharacters &&
               this.containsNonRomanCharacters(pattern)
             ) {
-              const endsWithMatch = this.settings.caseSensitive
+              const endsWithMatch = caseSensitive
                 ? fullWord.endsWith(pattern)
                 : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
               return endsWithMatch;
             }
             // OPTIMIZATION: Skip RegExp creation while typing
             if (this._isTyping) throw new Error("Skip strict check");
-            const flags = this.settings.caseSensitive ? "" : "i";
+            const flags = caseSensitive ? "" : "i";
             const re = new RegExp(
               `^[A-Za-z]*${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}$`,
               flags,
             );
             return re.test(fullWord);
           } catch (_) {
-            const endsWithMatch = this.settings.caseSensitive
+            const endsWithMatch = caseSensitive
               ? fullWord.endsWith(pattern)
               : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
             return endsWithMatch;
@@ -9677,6 +9676,7 @@ class AlwaysColorText extends Plugin {
       if (styleEntry) {
         if (styleEntry.groupUid) entry.groupUid = styleEntry.groupUid;
         if (styleEntry.matchType) entry.matchType = styleEntry.matchType;
+        if (styleEntry.markTarget) entry.markTarget = styleEntry.markTarget;
         if (typeof styleEntry.backgroundOpacity === "number")
           entry.backgroundOpacity = styleEntry.backgroundOpacity;
         if (typeof styleEntry.highlightBorderRadius === "number")
@@ -9787,6 +9787,7 @@ class AlwaysColorText extends Plugin {
       if (styleEntry) {
         if (styleEntry.groupUid) newEntry.groupUid = styleEntry.groupUid;
         if (styleEntry.matchType) newEntry.matchType = styleEntry.matchType;
+        if (styleEntry.markTarget) newEntry.markTarget = styleEntry.markTarget;
         if (typeof styleEntry.backgroundOpacity === "number")
           newEntry.backgroundOpacity = styleEntry.backgroundOpacity;
         if (typeof styleEntry.highlightBorderRadius === "number")
@@ -13759,6 +13760,19 @@ class AlwaysColorText extends Plugin {
                 }
               }
 
+              // Merge group customCss then entry customCss — same as live preview line coloring
+              let lineStyleStr = `box-sizing: border-box; ${colorProp}${lineStyleParts.join("; ")}`;
+              if (this.settings.enableCustomCss) {
+                const entryRef = m.entryRef || {};
+                const groupRef = entryRef._groupRef || entryRef.entryRef?._groupRef;
+                if (groupRef?.customCss) {
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, groupRef.customCss);
+                }
+                if (entryRef.customCss) {
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss);
+                }
+              }
+
               const styleId = `act-line-style-reading-${cssClass}`;
               let styleEl = document.getElementById(styleId);
               if (!styleEl) {
@@ -13769,8 +13783,7 @@ class AlwaysColorText extends Plugin {
               }
               // Reading Mode uses block elements (p, h1, etc.) instead of .cm-line
               const tagName = (block.tagName || "div").toLowerCase();
-              // Add box-sizing so borders don't affect layout
-              const rule = `${tagName}.${cssClass}{box-sizing: border-box; ${colorProp}${lineStyleParts.join("; ")}}`;
+              const rule = `${tagName}.${cssClass}{${lineStyleStr}}`;
               if (styleEl.textContent !== rule) styleEl.textContent = rule;
 
               // Skip span creation for line mode (block already styled via CSS)

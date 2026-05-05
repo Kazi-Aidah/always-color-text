@@ -7036,7 +7036,7 @@ var REGEX_CONSTANTS = {
   NUMBERED_LIST: /^(\s*)(\d+\.)(\s+)(.*)$/,
   BULLET_POINT: /^(\s*)([\-\*])(\s+)(.*)$/
 };
-var IS_DEVELOPMENT = true;
+var IS_DEVELOPMENT = false;
 var GLOBAL_STYLE_KEYS = [
   "borderLineStyle",
   "borderOpacity",
@@ -7260,7 +7260,8 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
     subjectWrap.addClass("act-subject-wrap");
-    subjectWrap.style.borderRadius = "var(--button-radius)";
+    subjectWrap.style.borderRadius = "var(--input-radius)";
+    subjectWrap.style.cornerShape = "var(--corner-shape)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("div");
@@ -7283,7 +7284,8 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     const previewWrap = contentEl.createDiv();
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
-    previewWrap.style.borderRadius = "var(--button-radius)";
+    previewWrap.style.borderRadius = "var(--input-radius)";
+    previewWrap.style.cornerShape = "var(--corner-shape)";
     previewWrap.style.padding = "12px";
     previewWrap.style.background = "var(--background-modifier-form-field)";
     previewWrap.style.whiteSpace = "pre-wrap";
@@ -7679,7 +7681,8 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
         flags,
         presetLabel: label || void 0,
         styleType: style,
-        markTarget
+        markTarget,
+        caseSensitive: !!this.plugin.settings.caseSensitive
       };
       if (style === "text") {
         entry.color = textColorInput.value || "";
@@ -7846,10 +7849,10 @@ function parseCssIntoEntry(css, entry, plugin) {
         const hex = extractHex(val, plugin);
         if (hex) {
           const styleType2 = entry.styleType || "text";
-          if (styleType2 === "both") {
+          if (styleType2 === "both" || styleType2 === "highlight") {
             entry.textColor = hex;
             entry.color = "";
-          } else if (styleType2 === "text") {
+          } else {
             entry.color = hex;
             entry.textColor = null;
           }
@@ -7860,10 +7863,18 @@ function parseCssIntoEntry(css, entry, plugin) {
         const hex = extractHex(val, plugin);
         if (hex) {
           entry.backgroundColor = hex;
-          const opacityMatch = val.match(/rgba\s*\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\s*\)/i);
-          if (opacityMatch) {
-            const alpha = parseFloat(opacityMatch[1]);
+          const rgbaMatch = val.match(/rgba\s*\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\s*\)/i);
+          if (rgbaMatch) {
+            const alpha = parseFloat(rgbaMatch[1]);
             if (!isNaN(alpha)) entry.backgroundOpacity = Math.round(alpha * 100);
+          }
+          const hexAlphaMatch = val.trim().match(/^#[0-9a-f]{6}([0-9a-f]{2})$/i);
+          if (hexAlphaMatch) {
+            const alpha = parseInt(hexAlphaMatch[1], 16) / 255;
+            entry.backgroundOpacity = Math.round(alpha * 100);
+          }
+          if (!entry.styleType || entry.styleType === "text") {
+            entry.styleType = "highlight";
           }
         }
         break;
@@ -7923,6 +7934,22 @@ function parseCssIntoEntry(css, entry, plugin) {
         break;
       }
     }
+  }
+  const hasText = !!(entry.color || entry.textColor && entry.textColor !== "currentColor");
+  const hasBg = !!entry.backgroundColor;
+  if (hasText && hasBg) {
+    entry.styleType = "both";
+    if (entry.color && !entry.textColor) {
+      entry.textColor = entry.color;
+      entry.color = "";
+    }
+  } else if (hasBg) {
+    entry.styleType = "highlight";
+    if (!entry.textColor) entry.textColor = "currentColor";
+  } else if (hasText) {
+    entry.styleType = "text";
+    entry.textColor = null;
+    entry.backgroundColor = null;
   }
 }
 function patchCssLayoutFromEntry(css, entry, plugin) {
@@ -7985,7 +8012,9 @@ function patchCssLayoutFromEntry(css, entry, plugin) {
   return rebuilt.join(";\n") + ";";
 }
 function extractHex(val, plugin) {
-  if (/^#[0-9a-f]{3,8}$/i.test(val.trim())) return val.trim();
+  const trimmed = val.trim();
+  if (/^#[0-9a-f]{8}$/i.test(trimmed)) return trimmed.slice(0, 7);
+  if (/^#[0-9a-f]{3,6}$/i.test(trimmed)) return trimmed;
   const rgbMatch = val.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
   if (rgbMatch) {
     const r = parseInt(rgbMatch[1]).toString(16).padStart(2, "0");
@@ -9458,9 +9487,9 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
                 const entry = actualItem.entry;
                 const matchesWord = () => {
                   if (entry.isRegex) return false;
+                  const cs = typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : !!this.plugin.settings.caseSensitive;
                   const cmp = (a, b) => {
-                    if (this.plugin.settings.caseSensitive)
-                      return String(a) === String(b);
+                    if (cs) return String(a) === String(b);
                     return String(a).toLowerCase() === String(b).toLowerCase();
                   };
                   if (cmp(entry.pattern, this.selectedText)) return true;
@@ -9862,9 +9891,9 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
         const entry = actualItem.entry;
         const matchesWord = () => {
           if (entry.isRegex) return false;
+          const cs = typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : !!this.plugin.settings.caseSensitive;
           const cmp = (a, b) => {
-            if (this.plugin.settings.caseSensitive)
-              return String(a) === String(b);
+            if (cs) return String(a) === String(b);
             return String(a).toLowerCase() === String(b).toLowerCase();
           };
           if (cmp(entry.pattern, this.selectedText)) return true;
@@ -10673,7 +10702,6 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     markTargetSelect.value = this.entry && this.entry.markTarget ? this.entry.markTarget : "text";
     const markTargetFn = async () => {
       if (this.entry) {
-        console.log(`[ACT-DEBUG] EditEntryModal: setting markTarget to ${markTargetSelect.value} for ${this.entry.pattern}`);
         this.entry.markTarget = markTargetSelect.value;
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -10711,6 +10739,10 @@ var EditEntryModal = class extends import_obsidian6.Modal {
             textColorInput.value = initTextColor2;
           if (this.plugin.isValidHexColor(initBgColor2))
             bgColorInput.value = initBgColor2;
+          if (this.entry && this.entry.styleType) {
+            styleSelect.value = this.entry.styleType;
+            updatePickerVisibility();
+          }
           renderPreview();
         }
       } catch (_) {
@@ -11480,13 +11512,13 @@ var EditEntryModal = class extends import_obsidian6.Modal {
           if (shouldClose) this.close();
           return;
         }
-        const hasChanges = patternVal !== originalState.pattern || st !== originalState.styleType || effectiveText !== (originalState.color || "") || effectiveBg !== (originalState.backgroundColor || "") || matchTypeVal !== originalState.matchType || markTargetSelect.value !== (originalState.markTarget || "text");
+        const hasChanges = patternVal !== originalState.pattern || st !== originalState.styleType || effectiveText !== (originalState.color || "") || effectiveBg !== (originalState.backgroundColor || "") || matchTypeVal !== originalState.matchType || markTargetSelect.value !== (originalState.markTarget || "text") || this.entry.customCss !== void 0;
         if (!hasChanges) {
           if (shouldClose) this.close();
           return;
         }
       }
-      this.plugin.settings.caseSensitive = caseSensitiveVal;
+      this.entry.caseSensitive = caseSensitiveVal;
       const entryUid = this.entry.uid;
       let foundEntry = null;
       let foundIdx = -1;
@@ -11532,6 +11564,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
           }
         }
         foundArray[foundIdx].matchType = matchTypeVal;
+        foundArray[foundIdx].caseSensitive = caseSensitiveVal;
         foundArray[foundIdx].styleType = st;
         foundArray[foundIdx].markTarget = markTargetSelect.value || "text";
         if (st === "text") {
@@ -11584,6 +11617,9 @@ var EditEntryModal = class extends import_obsidian6.Modal {
         }
         if (this.parentModal) {
           try {
+            if (this.fromPickColorModal) {
+              this.parentModal._hasUserChanges = false;
+            }
             this.parentModal.close();
             if (!this.fromPickColorModal && this.parentModal instanceof AddToExistingEntryModal) {
               setTimeout(() => {
@@ -11617,6 +11653,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
           styleType: st,
           markTarget: markTargetSelect.value || "text",
           matchType: matchTypeVal,
+          caseSensitive: caseSensitiveVal,
           uid: this.entry.uid
         };
         if (typeof this.entry.backgroundOpacity === "number")
@@ -11656,7 +11693,6 @@ var EditEntryModal = class extends import_obsidian6.Modal {
         } else {
           this.plugin.settings.wordEntries.push(newEntry);
         }
-        this.plugin.settings.caseSensitive = caseSensitiveVal;
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
         this.plugin.compileTextBgColoringEntries();
@@ -11670,6 +11706,9 @@ var EditEntryModal = class extends import_obsidian6.Modal {
         }
         if (this.parentModal) {
           try {
+            if (this.fromPickColorModal) {
+              this.parentModal._hasUserChanges = false;
+            }
             this.parentModal.close();
           } catch (e) {
           }
@@ -11764,17 +11803,21 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     let entry = this._entry;
     if (!entry && this._selectedText && !this.isQuickOnce) {
       const s = this._selectedText;
-      const caseSensitive = !!this.plugin.settings.caseSensitive;
-      const eq = (a, b) => caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
-      entry = this.plugin.settings.wordEntries.find(
-        (e) => e && !e.isRegex && (eq(e.pattern, s) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s)))
-      );
+      entry = this.plugin.settings.wordEntries.find((e) => {
+        if (!e || e.isRegex) return false;
+        const cs = typeof e.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
+        const eq = (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+        return eq(e.pattern, s) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s));
+      });
       if (!entry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
         for (const g of this.plugin.settings.wordEntryGroups) {
           if (!g || !Array.isArray(g.entries)) continue;
-          entry = g.entries.find(
-            (e) => e && !e.isRegex && (eq(e.pattern, s) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s)))
-          );
+          entry = g.entries.find((e) => {
+            if (!e || e.isRegex) return false;
+            const cs = typeof e.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
+            const eq = (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+            return eq(e.pattern, s) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s));
+          });
           if (entry) break;
         }
       }
@@ -11954,7 +11997,6 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
       });
       markTargetSelect.value = this._markTarget || "text";
       const mtHandler = () => {
-        console.log(`[ACT-DEBUG] ColorPickerModal: UI markTarget changed to ${markTargetSelect.value}`);
         this._markTarget = markTargetSelect.value;
         this._hasUserChanges = true;
       };
@@ -12089,7 +12131,8 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     const buildPanel = (titleText, type) => {
       const col = contentEl.createDiv();
       col.style.border = "1px solid var(--background-modifier-border)";
-      col.style.borderRadius = "12px";
+      col.style.borderRadius = "var(--input-radius)";
+      col.style.cornerShape = "var(--corner-shape)";
       col.style.padding = "12px";
       col.addClass("color-picker-panel");
       col.style.marginBottom = "0";
@@ -12136,11 +12179,12 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
         let entry = this._entry;
         if (!entry && this._selectedText && !this.isQuickOnce) {
           const s2 = this._selectedText;
-          const caseSensitive2 = !!this.plugin.settings.caseSensitive;
-          const eq2 = (a, b) => caseSensitive2 ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
-          entry = this.plugin.settings.wordEntries.find(
-            (e) => e && !e.isRegex && (eq2(e.pattern, s2) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq2(p, s2)))
-          );
+          entry = this.plugin.settings.wordEntries.find((e) => {
+            if (!e || e.isRegex) return false;
+            const cs = typeof e.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
+            const eq = (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+            return eq(e.pattern, s2) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s2));
+          });
         }
         if (type === "text") {
           this.selectedTextColor = val;
@@ -12330,8 +12374,10 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     let matchedEntry = null;
     let matchedGroupUid = null;
     let matchedMatchType = null;
-    const caseSensitive = !!this.plugin.settings.caseSensitive;
-    const eq = (a, b) => caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+    const getEq = (e) => {
+      const cs = typeof e?.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
+      return (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+    };
     let allEntries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries.map(
       (e) => Object.assign({}, e, { _groupUid: null })
     ) : [];
@@ -12347,8 +12393,10 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     for (const e of allEntries) {
       if (!e || e.isRegex) continue;
       const entryMatchType = (e.matchType || "").toLowerCase();
-      const a = caseSensitive ? String(s) : String(s).toLowerCase();
-      const b = caseSensitive ? String(e.pattern || "") : String(e.pattern || "").toLowerCase();
+      const eq = getEq(e);
+      const cs = typeof e.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
+      const a = cs ? String(s) : String(s).toLowerCase();
+      const b = cs ? String(e.pattern || "") : String(e.pattern || "").toLowerCase();
       let matches = false;
       if (entryMatchType === "exact") {
         matches = eq(e.pattern || "", s) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s));
@@ -12682,7 +12730,6 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
           }
           const onSaved = async () => {
             try {
-              this._hasUserChanges = true;
               await this.plugin.saveSettings();
               this.plugin.compileWordEntries();
               this.plugin.reconfigureEditorExtensions();
@@ -12818,8 +12865,8 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
         const toGroupUid = this._selectedGroupUid || null;
         if (matchedEntry && fromGroupUid !== toGroupUid) {
           const word2 = this._selectedText || "";
-          const caseSensitive2 = !!this.plugin.settings.caseSensitive;
-          const eq2 = (a, b) => caseSensitive2 ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+          const caseSensitive = !!this.plugin.settings.caseSensitive;
+          const eq = (a, b) => caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
           let sourceArr = null;
           if (fromGroupUid) {
             const srcGroup = groupsList.find(
@@ -12843,7 +12890,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                   match = false;
                 }
               } else {
-                match = eq2(e.pattern || "", word2) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq2(p, word2));
+                match = eq(e.pattern || "", word2) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, word2));
               }
               if (match) {
                 srcIdx = i;
@@ -12862,7 +12909,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                     return false;
                   }
                 }
-                return eq2(e.pattern || "", word2) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq2(p, word2));
+                return eq(e.pattern || "", word2) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, word2));
               });
               if (!existsInTarget) {
                 targetArr.push(moved);
@@ -12875,8 +12922,8 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
       }
       if (!textSelected && !bgSelected) {
         const word2 = this._selectedText || "";
-        const caseSensitive2 = !!this.plugin.settings.caseSensitive;
-        const eq2 = (a, b) => caseSensitive2 ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+        const caseSensitive = !!this.plugin.settings.caseSensitive;
+        const eq = (a, b) => caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
         for (let i = targetArr.length - 1; i >= 0; i--) {
           const e = targetArr[i];
           if (!e) continue;
@@ -12889,7 +12936,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
               match = false;
             }
           } else {
-            match = eq2(e.pattern || "", word2) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq2(p, word2));
+            match = eq(e.pattern || "", word2) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, word2));
           }
           if (match) {
             targetArr.splice(i, 1);
@@ -12936,8 +12983,8 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
           }
           return;
         }
-        const caseSensitive2 = !!this.plugin.settings.caseSensitive;
-        const eq2 = (a, b) => caseSensitive2 ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+        const caseSensitive = !!this.plugin.settings.caseSensitive;
+        const eq = (a, b) => caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
         const syncCustomCss = (e) => {
           if (e && e.customCss) this.plugin.syncEntryCssFromColors(e);
         };
@@ -12955,7 +13002,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                 match = false;
               }
             } else {
-              match = eq2(e.pattern || "", word) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq2(p, word));
+              match = eq(e.pattern || "", word) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, word));
             }
             if (match) {
               e.textColor = textColor;
@@ -12979,6 +13026,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
               flags: "",
               styleType: "both",
               matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"),
+              caseSensitive: !!this.plugin.settings.caseSensitive,
               markTarget: this._markTarget || "text"
             };
             if (newEntry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1")
@@ -13018,7 +13066,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
               } catch (err) {
               }
             } else {
-              if (eq2(e.pattern || "", word)) {
+              if (eq(e.pattern || "", word)) {
                 e.color = textColor;
                 e.textColor = null;
                 e.backgroundColor = null;
@@ -13030,7 +13078,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                   e.matchType = this._matchType || e.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact");
                 break;
               }
-              if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq2(p, word))) {
+              if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, word))) {
                 e.color = textColor;
                 e.textColor = null;
                 e.backgroundColor = null;
@@ -13053,6 +13101,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                 flags: "",
                 styleType: "text",
                 matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                caseSensitive: !!this.plugin.settings.caseSensitive,
                 markTarget: this._markTarget || "text"
               };
               if (newEntry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1")
@@ -13094,7 +13143,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
                 match = false;
               }
             } else {
-              match = eq2(e.pattern || "", word) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq2(p, word));
+              match = eq(e.pattern || "", word) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, word));
             }
             if (match) {
               e.backgroundColor = bgColor;
@@ -13118,6 +13167,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
               flags: "",
               styleType: "highlight",
               matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"),
+              caseSensitive: !!this.plugin.settings.caseSensitive,
               markTarget: this._markTarget || "text"
             };
             if (newEntry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1")
@@ -14942,52 +14992,31 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       this._limitMatchEnds = false;
       this._limitMatchExact = false;
       this._limitColorTarget = null;
-      console.log("[DEBUG limitHandler] raw input:", raw);
-      console.log("[DEBUG limitHandler] parts:", parts);
-      console.log("[DEBUG limitHandler] num:", this._limit);
       for (const tok of parts) {
-        console.log("[DEBUG limitHandler] processing token:", tok);
         if (tok === "r") {
           this._limitRegexOnly = true;
-          console.log("[DEBUG] Set _limitRegexOnly = true");
         } else if (tok === "w") {
           this._limitWordsOnly = true;
-          console.log("[DEBUG] Set _limitWordsOnly = true");
         } else if (tok === "h") {
           this._limitStyle = "highlight";
-          console.log("[DEBUG] Set _limitStyle = highlight");
         } else if (tok === "c") {
           this._limitStyle = "text";
-          console.log("[DEBUG] Set _limitStyle = text");
         } else if (tok === "b") {
           this._limitStyle = "both";
-          console.log("[DEBUG] Set _limitStyle = both");
         } else if (tok === "sw") {
           this._limitMatchStarts = true;
-          console.log("[DEBUG] Set _limitMatchStarts = true");
         } else if (tok === "ew") {
           this._limitMatchEnds = true;
-          console.log("[DEBUG] Set _limitMatchEnds = true");
         } else if (tok === "e") {
           this._limitMatchExact = true;
-          console.log("[DEBUG] Set _limitMatchExact = true");
         } else if (tok === "ct") {
           this._limitColorTarget = "text";
-          console.log("[DEBUG] Set _limitColorTarget = text");
         } else if (tok === "cl") {
           this._limitColorTarget = "line";
-          console.log("[DEBUG] Set _limitColorTarget = line");
         } else if (tok === "cc") {
           this._limitColorTarget = "nextLine";
-          console.log("[DEBUG] Set _limitColorTarget = childLine");
-        } else {
-          console.log("[DEBUG] Unknown token:", tok);
         }
       }
-      console.log("[DEBUG limitHandler] _limitColorTarget:", this._limitColorTarget);
-      console.log("[DEBUG limitHandler] _limitStyle:", this._limitStyle);
-      console.log("[DEBUG limitHandler] _limitRegexOnly:", this._limitRegexOnly);
-      console.log("[DEBUG limitHandler] _limitWordsOnly:", this._limitWordsOnly);
       this._refreshGroupEntries();
     };
     limitInput.addEventListener("input", limitHandler);
@@ -15067,7 +15096,8 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         isRegex: false,
         flags: "",
         styleType: "text",
-        matchType: "contains"
+        matchType: "contains",
+        caseSensitive: !!this.plugin.settings.caseSensitive
       });
       this._sortMode = "last-added";
       this._refreshGroupEntries();
@@ -15147,6 +15177,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
               flags: preset.flags || "",
               styleType: "text",
               matchType: "contains",
+              caseSensitive: !!this.plugin.settings.caseSensitive,
               presetLabel: preset.label,
               markTarget: sel.markTarget || "text"
             };
@@ -15234,6 +15265,8 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         if (!entry.hasOwnProperty("flags")) entry.flags = "";
         if (!entry.hasOwnProperty("styleType")) entry.styleType = "text";
         if (!entry.hasOwnProperty("matchType")) entry.matchType = "contains";
+        if (!entry.hasOwnProperty("caseSensitive"))
+          entry.caseSensitive = !!this.plugin.settings.caseSensitive;
         if (!entry.hasOwnProperty("textColor")) entry.textColor = null;
         if (!entry.hasOwnProperty("backgroundColor"))
           entry.backgroundColor = null;
@@ -15258,9 +15291,6 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     if (!this._listDiv) return;
     this._listDiv.empty();
     let entries = [...this.group.entries];
-    console.log("[DEBUG _refreshGroupEntries] Total entries in group:", entries.length);
-    console.log("[DEBUG _refreshGroupEntries] ALL entries with markTarget:", JSON.stringify(entries.map((e) => ({ pattern: e.pattern, markTarget: e.markTarget || "text" }))));
-    console.log("[DEBUG _refreshGroupEntries] Current _limitColorTarget:", this._limitColorTarget);
     if (this._searchQuery) {
       const q = this._searchQuery.toLowerCase();
       entries = entries.filter((e) => {
@@ -15276,36 +15306,23 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         if (this._limitMatchEnds) return text.endsWith(q);
         return text.includes(q);
       });
-      console.log("[DEBUG _refreshGroupEntries] After search filter:", entries.length);
     }
     if (this._limitStyle === "highlight") {
       entries = entries.filter((e) => (e.styleType || "text") === "highlight");
-      console.log("[DEBUG _refreshGroupEntries] After style=highlight filter:", entries.length);
     } else if (this._limitStyle === "text") {
       entries = entries.filter((e) => (e.styleType || "text") === "text");
-      console.log("[DEBUG _refreshGroupEntries] After style=text filter:", entries.length);
     } else if (this._limitStyle === "both") {
       entries = entries.filter((e) => (e.styleType || "text") === "both");
-      console.log("[DEBUG _refreshGroupEntries] After style=both filter:", entries.length);
     }
     if (this._limitRegexOnly) {
       entries = entries.filter((e) => !!e.isRegex);
-      console.log("[DEBUG _refreshGroupEntries] After regexOnly filter:", entries.length);
     } else if (this._limitWordsOnly) {
       entries = entries.filter((e) => !e.isRegex);
-      console.log("[DEBUG _refreshGroupEntries] After wordsOnly filter:", entries.length);
     }
     if (this._limitColorTarget) {
-      console.log("[DEBUG _refreshGroupEntries] Applying markTarget filter:", this._limitColorTarget);
-      console.log("[DEBUG _refreshGroupEntries] Entry markTargets:", entries.map((e) => e.markTarget || "text"));
       entries = entries.filter(
-        (e) => {
-          const match = (e.markTarget || "text") === this._limitColorTarget;
-          console.log("[DEBUG _refreshGroupEntries] Entry:", e.pattern, "markTarget:", e.markTarget || "text", "match:", match);
-          return match;
-        }
+        (e) => (e.markTarget || "text") === this._limitColorTarget
       );
-      console.log("[DEBUG _refreshGroupEntries] After markTarget filter:", entries.length);
     }
     if (this._sortMode === "a-z") {
       entries.sort((a, b) => {
@@ -15413,6 +15430,39 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         entry.matchType = matchSelect.value;
       };
       matchSelect.addEventListener("change", matchSelectHandler);
+      const markTargetSelect = row.createEl("select");
+      markTargetSelect.style.padding = "6px";
+      markTargetSelect.style.borderRadius = "4px";
+      markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
+      markTargetSelect.style.background = "var(--background-modifier-form-field)";
+      markTargetSelect.style.textAlign = "center";
+      markTargetSelect.style.minWidth = "80px";
+      markTargetSelect.style.maxWidth = "100px";
+      [
+        ["text", this.plugin.t("mark_target_text", "Color Text")],
+        ["line", this.plugin.t("mark_target_line", "Color Line")],
+        ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")]
+      ].forEach(([val, label]) => {
+        const opt = markTargetSelect.createEl("option", { text: label });
+        opt.value = val;
+      });
+      markTargetSelect.value = entry.markTarget || "text";
+      const markTargetHandler = async () => {
+        entry.markTarget = markTargetSelect.value;
+        const liveGroup = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups.find((g) => g && g.uid === this.group.uid) : null;
+        if (liveGroup && Array.isArray(liveGroup.entries)) {
+          const liveEntry = liveGroup.entries.find((e) => e && (e.uid && entry.uid && e.uid === entry.uid || e.pattern === entry.pattern && !!e.isRegex === !!entry.isRegex));
+          if (liveEntry) liveEntry.markTarget = markTargetSelect.value;
+        }
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        this.plugin.triggerActiveDocumentRerender();
+      };
+      markTargetSelect.addEventListener("change", markTargetHandler);
       const updateVisibility = () => {
         matchSelect.style.display = entry.isRegex ? "none" : "";
       };
@@ -16684,16 +16734,16 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       colorTargetSelect.style.background = "var(--background-modifier-form-field)";
       colorTargetSelect.style.color = "var(--text-normal)";
       colorTargetSelect.style.flex = "0 0 auto";
-      colorTargetSelect.style.maxWidth = "80px";
+      colorTargetSelect.style.maxWidth = "100px";
       colorTargetSelect.style.width = "stretch";
-      colorTargetSelect.style.minWidth = "60px";
+      colorTargetSelect.style.minWidth = "80px";
       colorTargetSelect.style.textAlign = "center";
       colorTargetSelect.title = this.plugin.t("color_target_tooltip", "Color target: text = matched text only, line = entire line, next line = next line");
       try {
         colorTargetSelect.addClass("act-color-target-select");
       } catch (e) {
       }
-      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("color_target_text", "text")}</option><option value="line">${this.plugin.t("color_target_line", "line")}</option><option value="child">${this.plugin.t("color_target_child", "next line")}</option>`;
+      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("mark_target_text", "Color Text")}</option><option value="line">${this.plugin.t("mark_target_line", "Color Line")}</option><option value="child">${this.plugin.t("mark_target_child_line", "Color Next Line")}</option>`;
       colorTargetSelect.value = entry.colorTarget || "text";
       let nameInput = null;
       if (entry.isRegex) {
@@ -19639,17 +19689,9 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         finalFiltered = finalFiltered.filter((e) => !e.isRegex);
       }
       if (this._colorTargetFilter) {
-        console.log("[DEBUG SettingsTab filter] Applying markTarget filter:", this._colorTargetFilter);
-        console.log("[DEBUG SettingsTab filter] Entry markTargets:", finalFiltered.map((e) => e.markTarget || "text"));
         finalFiltered = finalFiltered.filter(
-          (e) => {
-            const entryTarget = e.markTarget || "text";
-            const match = entryTarget === this._colorTargetFilter;
-            console.log("[DEBUG SettingsTab filter] Entry:", e.pattern || e.groupedPatterns?.join(", "), "markTarget:", entryTarget, "filter:", this._colorTargetFilter, "match:", match);
-            return match;
-          }
+          (e) => (e.markTarget || "text") === this._colorTargetFilter
         );
-        console.log("[DEBUG SettingsTab filter] After markTarget filter:", finalFiltered.length);
       }
       if (!this._suspendSorting && this._wordsSortMode === "a-z") {
         finalFiltered.sort((a, b) => {
@@ -22387,50 +22429,31 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         this._entriesMatchTypeStartsWith = false;
         this._entriesMatchTypeEndsWith = false;
         this._entriesMatchTypeExact = false;
-        console.log("[DEBUG SettingsTab limitHandler] raw:", raw);
-        console.log("[DEBUG SettingsTab limitHandler] parts:", parts);
         for (const tok of parts) {
-          console.log("[DEBUG SettingsTab limitHandler] processing token:", tok);
           if (tok === "ct") {
             this._colorTargetFilter = "text";
-            console.log("[DEBUG] Set _colorTargetFilter = text");
           } else if (tok === "cl") {
             this._colorTargetFilter = "line";
-            console.log("[DEBUG] Set _colorTargetFilter = line");
           } else if (tok === "cc") {
             this._colorTargetFilter = "nextLine";
-            console.log("[DEBUG] Set _colorTargetFilter = childLine");
           } else if (tok === "sw") {
             this._entriesMatchTypeStartsWith = true;
-            console.log("[DEBUG] Set _entriesMatchTypeStartsWith = true");
           } else if (tok === "ew") {
             this._entriesMatchTypeEndsWith = true;
-            console.log("[DEBUG] Set _entriesMatchTypeEndsWith = true");
           } else if (tok === "r") {
             this._entriesRegexOnly = true;
-            console.log("[DEBUG] Set _entriesRegexOnly = true");
           } else if (tok === "w") {
             this._entriesWordsOnly = true;
-            console.log("[DEBUG] Set _entriesWordsOnly = true");
           } else if (tok === "h") {
             this._filterMode = "highlight";
-            console.log("[DEBUG] Set _filterMode = highlight");
           } else if (tok === "c") {
             this._filterMode = "text";
-            console.log("[DEBUG] Set _filterMode = text");
           } else if (tok === "b") {
             this._filterMode = "both";
-            console.log("[DEBUG] Set _filterMode = both");
           } else if (tok === "e") {
             this._entriesMatchTypeExact = true;
-            console.log("[DEBUG] Set _entriesMatchTypeExact = true");
-          } else {
-            console.log("[DEBUG] Unknown token:", tok);
           }
         }
-        console.log("[DEBUG SettingsTab limitHandler] _colorTargetFilter:", this._colorTargetFilter);
-        console.log("[DEBUG SettingsTab limitHandler] _filterMode:", this._filterMode);
-        console.log("[DEBUG SettingsTab limitHandler] _entriesRegexOnly:", this._entriesRegexOnly);
         try {
           this._refreshEntries();
         } catch (e) {
@@ -22514,7 +22537,8 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           styleType: "text",
           uid,
           persistAtEnd: true,
-          matchType: this.plugin.settings.partialMatch ? "contains" : "exact"
+          matchType: this.plugin.settings.partialMatch ? "contains" : "exact",
+          caseSensitive: !!this.plugin.settings.caseSensitive
         });
         this._suspendSorting = this._wordsSortMode === "last-added";
         try {
@@ -24330,7 +24354,7 @@ var PatternMatcher = class {
     const rawFlags = String(entry.flags || "").replace(/[^gimsuy]/g, "");
     let flags = rawFlags || "";
     if (!flags.includes("g")) flags += "g";
-    const effectiveCS = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
+    const effectiveCS = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : false;
     if (!effectiveCS && !flags.includes("i")) flags += "i";
     try {
       if (isRegex && this.settings.enableRegexSupport) {
@@ -24389,7 +24413,7 @@ var PatternMatcher = class {
     ).toLowerCase();
     const pattern = entry?.pattern || "";
     const isSentence = this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(pattern) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(pattern || "");
-    const cs = typeof entry?._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry?.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
+    const cs = typeof entry?._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry?.caseSensitive === "boolean" ? entry.caseSensitive : false;
     if (isSentence) {
       return true;
     }
@@ -24706,7 +24730,7 @@ function compileWordEntriesLogic(plugin) {
         const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
         let flags = rawFlags || "";
         if (!flags.includes("g")) flags += "g";
-        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : plugin.settings.caseSensitive;
+        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : false;
         if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
         const compiled = {
           pattern,
@@ -24930,7 +24954,7 @@ function compileTextBgColoringEntriesLogic(plugin) {
         const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
         let flags = rawFlags || "";
         if (!flags.includes("g")) flags += "g";
-        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : plugin.settings.caseSensitive;
+        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : false;
         if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
         const compiled = {
           pattern,
@@ -28414,7 +28438,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         let pattern = entry.pattern;
         pattern = this.decodeHtmlEntities(pattern);
         let pos = 0;
-        while ((pos = text.indexOf(pattern, pos)) !== -1) {
+        const caseSensitive = typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : !!this.settings.caseSensitive;
+        const searchText = caseSensitive ? text : text.toLowerCase();
+        const searchPattern = caseSensitive ? pattern : pattern.toLowerCase();
+        while ((pos = searchText.indexOf(searchPattern, pos)) !== -1) {
           matches.push({
             start: pos,
             end: pos + pattern.length,
@@ -30665,9 +30692,6 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     if (entry.markTarget) {
       e.markTarget = entry.markTarget;
     }
-    if (e.markTarget) {
-      console.log(`[ACT-DEBUG] compressEntry: ${e.pattern} -> markTarget: ${e.markTarget}`);
-    }
     return e;
   }
   // Helper to merge entry styles with global defaults
@@ -30683,10 +30707,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
   // --- Load plugin settings from disk, with defaults ---
   async loadSettings() {
     const loadedData = await this.loadData() || {};
-    console.log("[ACT-DEBUG] loadData raw result wordEntries count:", loadedData.wordEntries ? loadedData.wordEntries.length : 0);
     if (loadedData.wordEntries && loadedData.wordEntries.length > 0) {
       const sample = loadedData.wordEntries.find((e) => e && e.markTarget && e.markTarget !== "text");
-      if (sample) console.log(`[ACT-DEBUG] loadData: found entry with markTarget: ${sample.pattern} -> ${sample.markTarget}`);
     }
     if (loadedData.globalStyles && typeof loadedData.globalStyles === "object") {
       Object.assign(loadedData, loadedData.globalStyles);
@@ -30695,11 +30717,6 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     }
     if (!Array.isArray(loadedData.wordEntries)) loadedData.wordEntries = [];
     const mtSample = loadedData.wordEntries.filter((e) => e && e.markTarget && e.markTarget !== "text");
-    if (mtSample.length > 0) {
-      console.log(`[ACT-DEBUG] loadSettings: Found ${mtSample.length} entries with non-default markTarget on disk`);
-    } else {
-      console.log(`[ACT-DEBUG] loadSettings: No entries with non-default markTarget found in loadedData`);
-    }
     if (!Array.isArray(loadedData.wordEntryGroups))
       loadedData.wordEntryGroups = [];
     if (!Array.isArray(loadedData.blacklistEntries))
@@ -31352,7 +31369,6 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     });
     data.globalStyles = globalStyles;
     if (Array.isArray(data.wordEntries)) {
-      console.log(`[ACT-DEBUG] saveSettings: compressing ${data.wordEntries.length} entries`);
       data.wordEntries = data.wordEntries.map((e) => this.compressEntry(e));
     }
     if (Array.isArray(data.wordEntryGroups)) {
@@ -31369,20 +31385,6 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     }
     if (Array.isArray(data.quickColors)) {
       data.quickColors = data.quickColors.map((e) => this.compressEntry(e));
-    }
-    if (data.wordEntries && data.wordEntries.length > 0) {
-      const we = data.wordEntries.find((e) => e && e.markTarget && e.markTarget !== "text");
-      if (we) {
-        console.log(`[ACT-DEBUG] saveData: entry ${we.pattern} HAS markTarget: ${we.markTarget}`);
-        const jsonStr = JSON.stringify(data);
-        if (jsonStr.includes('"markTarget":"line"') || jsonStr.includes('"markTarget":"nextLine"')) {
-          console.log("[ACT-DEBUG] saveData: markTarget found in JSON string!");
-        } else {
-          console.log("[ACT-DEBUG] saveData: markTarget NOT FOUND in JSON string!");
-        }
-      } else {
-        console.log(`[ACT-DEBUG] saveData: NO entries have non-default markTarget!`);
-      }
     }
     await this.saveData(data);
     this.compileWordEntries();
@@ -31629,12 +31631,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         x.isRegex = !!x.isRegex;
         x.styleType = x.styleType || (x.backgroundColor ? x.textColor && x.textColor !== "currentColor" ? "both" : "highlight" : x.color ? "text" : "text");
         if (e.markTarget && e.markTarget !== "text") {
-          console.log(`[ACT-DEBUG] sanitizeSettings PRESERVE: ${e.pattern} has markTarget: ${e.markTarget}`);
         }
         x.markTarget = typeof e.markTarget === "string" && e.markTarget ? e.markTarget : "text";
-        if (x.markTarget !== "text") {
-          console.log(`[ACT-DEBUG] sanitizeSettings: ${x.pattern} -> markTarget: ${x.markTarget}`);
-        }
         const rawMt = String(x.matchType || "").trim();
         const mtLower = rawMt.toLowerCase();
         const normalized = mtLower === "startswith" || rawMt === "startsWith" || mtLower === "starts with" ? "startswith" : mtLower === "endswith" || rawMt === "endsWith" || mtLower === "ends with" ? "endswith" : mtLower === "exact" ? "exact" : mtLower === "contains" ? "contains" : this.settings.partialMatch ? "contains" : "exact";
@@ -31863,7 +31861,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         textColor: null,
         backgroundColor: null,
         markTarget,
-        matchType: this.settings.partialMatch ? "contains" : "exact"
+        matchType: this.settings.partialMatch ? "contains" : "exact",
+        caseSensitive: !!this.settings.caseSensitive
       });
     }
     await this.saveSettings();
@@ -31907,6 +31906,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         backgroundColor: null,
         markTarget,
         matchType: !isRegex ? this.settings.partialMatch ? "contains" : "exact" : "regex",
+        caseSensitive: !!this.settings.caseSensitive,
         presetLabel: name ? String(name) : void 0,
         persistAtEnd: true,
         groupedPatterns: null,
@@ -32324,49 +32324,50 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         entry?.matchType || (this.settings.partialMatch ? "contains" : "exact")
       ).toLowerCase();
       const pattern = entry?.pattern || "";
+      const caseSensitive = typeof entry?.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
       if (this.isSentenceLikePattern(pattern)) {
         return true;
       }
       const fullWord = this.extractFullWordAtPosition(text, start, end);
       switch (matchType) {
         case "exact":
-          const exactMatch = this.settings.caseSensitive ? fullWord === pattern : fullWord.toLowerCase() === pattern.toLowerCase();
+          const exactMatch = caseSensitive ? fullWord === pattern : fullWord.toLowerCase() === pattern.toLowerCase();
           return exactMatch;
         case "contains":
-          const containsMatch = this.settings.caseSensitive ? fullWord.includes(pattern) : fullWord.toLowerCase().includes(pattern.toLowerCase());
+          const containsMatch = caseSensitive ? fullWord.includes(pattern) : fullWord.toLowerCase().includes(pattern.toLowerCase());
           return containsMatch;
         case "startswith":
           try {
             if (this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern)) {
-              const startsWithMatch = this.settings.caseSensitive ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
+              const startsWithMatch = caseSensitive ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
               return startsWithMatch;
             }
             if (this._isTyping) throw new Error("Skip strict check");
-            const flags = this.settings.caseSensitive ? "" : "i";
+            const flags = caseSensitive ? "" : "i";
             const re = new RegExp(
               `^${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[A-Za-z]*$`,
               flags
             );
             return re.test(fullWord);
           } catch (_) {
-            const startsWithMatch = this.settings.caseSensitive ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
+            const startsWithMatch = caseSensitive ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
             return startsWithMatch;
           }
         case "endswith":
           try {
             if (this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern)) {
-              const endsWithMatch = this.settings.caseSensitive ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
+              const endsWithMatch = caseSensitive ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
               return endsWithMatch;
             }
             if (this._isTyping) throw new Error("Skip strict check");
-            const flags = this.settings.caseSensitive ? "" : "i";
+            const flags = caseSensitive ? "" : "i";
             const re = new RegExp(
               `^[A-Za-z]*${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}$`,
               flags
             );
             return re.test(fullWord);
           } catch (_) {
-            const endsWithMatch = this.settings.caseSensitive ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
+            const endsWithMatch = caseSensitive ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
             return endsWithMatch;
           }
         default:
@@ -33229,6 +33230,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       if (styleEntry) {
         if (styleEntry.groupUid) entry.groupUid = styleEntry.groupUid;
         if (styleEntry.matchType) entry.matchType = styleEntry.matchType;
+        if (styleEntry.markTarget) entry.markTarget = styleEntry.markTarget;
         if (typeof styleEntry.backgroundOpacity === "number")
           entry.backgroundOpacity = styleEntry.backgroundOpacity;
         if (typeof styleEntry.highlightBorderRadius === "number")
@@ -33333,6 +33335,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       if (styleEntry) {
         if (styleEntry.groupUid) newEntry.groupUid = styleEntry.groupUid;
         if (styleEntry.matchType) newEntry.matchType = styleEntry.matchType;
+        if (styleEntry.markTarget) newEntry.markTarget = styleEntry.markTarget;
         if (typeof styleEntry.backgroundOpacity === "number")
           newEntry.backgroundOpacity = styleEntry.backgroundOpacity;
         if (typeof styleEntry.highlightBorderRadius === "number")
@@ -36421,6 +36424,17 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                   });
                 }
               }
+              let lineStyleStr = `box-sizing: border-box; ${colorProp}${lineStyleParts.join("; ")}`;
+              if (this.settings.enableCustomCss) {
+                const entryRef = m.entryRef || {};
+                const groupRef = entryRef._groupRef || entryRef.entryRef?._groupRef;
+                if (groupRef?.customCss) {
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, groupRef.customCss);
+                }
+                if (entryRef.customCss) {
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss);
+                }
+              }
               const styleId = `act-line-style-reading-${cssClass}`;
               let styleEl = document.getElementById(styleId);
               if (!styleEl) {
@@ -36430,7 +36444,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                 document.head.appendChild(styleEl);
               }
               const tagName = (block.tagName || "div").toLowerCase();
-              const rule = `${tagName}.${cssClass}{box-sizing: border-box; ${colorProp}${lineStyleParts.join("; ")}}`;
+              const rule = `${tagName}.${cssClass}{${lineStyleStr}}`;
               if (styleEl.textContent !== rule) styleEl.textContent = rule;
               frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
               pos = m.end;

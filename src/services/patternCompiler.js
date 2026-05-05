@@ -1,4 +1,4 @@
-﻿import { REGEX_CONSTANTS, EDITOR_PERFORMANCE_CONSTANTS } from '../core/constants.js';
+import { REGEX_CONSTANTS, EDITOR_PERFORMANCE_CONSTANTS } from '../core/constants.js';
 import { debugLog, debugError, debugWarn } from '../utils/debug.js';
 import { RegexCache } from '../utils/RegexCache.js';
 
@@ -19,7 +19,7 @@ export class PatternMatcher {
         ? entry._caseSensitiveOverride
         : typeof entry.caseSensitive === "boolean"
           ? entry.caseSensitive
-          : this.settings.caseSensitive;
+          : false;
     if (!effectiveCS && !flags.includes("i")) flags += "i";
     try {
       if (isRegex && this.settings.enableRegexSupport) {
@@ -112,7 +112,7 @@ export class PatternMatcher {
         ? entry._caseSensitiveOverride
         : typeof entry?.caseSensitive === "boolean"
           ? entry.caseSensitive
-          : this.settings.caseSensitive;
+          : false;
 
     // For sentence-like patterns, always match
     if (isSentence) {
@@ -539,7 +539,7 @@ export function compileWordEntriesLogic(plugin) {
             ? e._caseSensitiveOverride
             : typeof e.caseSensitive === "boolean"
               ? e.caseSensitive
-              : plugin.settings.caseSensitive;
+              : false;
         if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
 
         const compiled = {
@@ -848,7 +848,7 @@ export function compileTextBgColoringEntriesLogic(plugin) {
             ? e._caseSensitiveOverride
             : typeof e.caseSensitive === "boolean"
               ? e.caseSensitive
-              : plugin.settings.caseSensitive;
+              : false;
         if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
 
           const compiled = {

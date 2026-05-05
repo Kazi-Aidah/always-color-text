@@ -110,10 +110,10 @@ export function parseCssIntoEntry(css, entry, plugin) {
         const hex = extractHex(val, plugin);
         if (hex) {
           const styleType = entry.styleType || 'text';
-          if (styleType === 'both') {
+          if (styleType === 'both' || styleType === 'highlight') {
             entry.textColor = hex;
             entry.color = '';
-          } else if (styleType === 'text') {
+          } else {
             entry.color = hex;
             entry.textColor = null;
           }
@@ -124,11 +124,21 @@ export function parseCssIntoEntry(css, entry, plugin) {
         const hex = extractHex(val, plugin);
         if (hex) {
           entry.backgroundColor = hex;
-          // Also try to back-calculate opacity from rgba
-          const opacityMatch = val.match(/rgba\s*\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\s*\)/i);
-          if (opacityMatch) {
-            const alpha = parseFloat(opacityMatch[1]);
+          // Back-calculate opacity from rgba(r,g,b,a)
+          const rgbaMatch = val.match(/rgba\s*\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\s*\)/i);
+          if (rgbaMatch) {
+            const alpha = parseFloat(rgbaMatch[1]);
             if (!isNaN(alpha)) entry.backgroundOpacity = Math.round(alpha * 100);
+          }
+          // Back-calculate opacity from 8-digit hex (#rrggbbaa)
+          const hexAlphaMatch = val.trim().match(/^#[0-9a-f]{6}([0-9a-f]{2})$/i);
+          if (hexAlphaMatch) {
+            const alpha = parseInt(hexAlphaMatch[1], 16) / 255;
+            entry.backgroundOpacity = Math.round(alpha * 100);
+          }
+          // Promote styleType: text → highlight, keep both as both
+          if (!entry.styleType || entry.styleType === 'text') {
+            entry.styleType = 'highlight';
           }
         }
         break;
@@ -184,6 +194,25 @@ export function parseCssIntoEntry(css, entry, plugin) {
         break;
       }
     }
+  }
+
+  // After parsing all declarations, derive the correct styleType from populated fields
+  const hasText = !!(entry.color || (entry.textColor && entry.textColor !== 'currentColor'));
+  const hasBg = !!entry.backgroundColor;
+  if (hasText && hasBg) {
+    entry.styleType = 'both';
+    // Ensure textColor is set correctly for 'both'
+    if (entry.color && !entry.textColor) {
+      entry.textColor = entry.color;
+      entry.color = '';
+    }
+  } else if (hasBg) {
+    entry.styleType = 'highlight';
+    if (!entry.textColor) entry.textColor = 'currentColor';
+  } else if (hasText) {
+    entry.styleType = 'text';
+    entry.textColor = null;
+    entry.backgroundColor = null;
   }
 }
 
@@ -262,8 +291,11 @@ export function patchCssLayoutFromEntry(css, entry, plugin) {
 
 /** Extract a hex color from a CSS value (handles #hex, rgb(), rgba()) */
 function extractHex(val, plugin) {
-  // Direct hex
-  if (/^#[0-9a-f]{3,8}$/i.test(val.trim())) return val.trim();
+  const trimmed = val.trim();
+  // 8-digit hex (#rrggbbaa) — strip alpha, return 6-digit base color
+  if (/^#[0-9a-f]{8}$/i.test(trimmed)) return trimmed.slice(0, 7);
+  // Direct hex (3 or 6 digit)
+  if (/^#[0-9a-f]{3,6}$/i.test(trimmed)) return trimmed;
   // rgb(r,g,b) or rgba(r,g,b,a)
   const rgbMatch = val.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
   if (rgbMatch) {

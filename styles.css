@@ -330,7 +330,8 @@ div[contenteditable="true"]:focus {
 .act-edit-entry-textbox {
   flex: 3;
   border: 1px solid var(--background-modifier-border);
-  border-radius: var(--button-radius);
+  border-radius: var(--input-radius);
+  corner-shape: var(--corner-shape);
   background: var(--background-modifier-form-field);
   padding: 0;
   margin-bottom: 12px;
@@ -366,7 +367,8 @@ div[contenteditable="true"]:focus {
   align-items: center;
   justify-content: center;
   border: 1px dashed var(--background-modifier-border);
-  border-radius: var(--button-radius);
+  border-radius: var(--input-radius);
+  corner-shape: var(--corner-shape);
   padding: 10px;
   background: var(--background-modifier-form-field);
   white-space: pre-wrap;
@@ -396,7 +398,8 @@ div[contenteditable="true"]:focus {
   justify-content: center;
   background-color: transparent;
   border: 1px solid var(--background-modifier-border);
-  border-radius: var(--button-radius, 8px);
+  border-radius: var(--input-radius);
+  corner-shape: var(--corner-shape);
   margin-bottom: 16px;
   padding: 10px;
   box-sizing: border-box;
@@ -418,7 +421,8 @@ div[contenteditable="true"]:focus {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--background-modifier-border);
-  border-radius: var(--button-radius);
+  border-radius: var(--input-radius);
+  corner-shape: var(--corner-shape);
   padding: 12px;
   background: var(--background-modifier-form-field);
 }

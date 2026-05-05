@@ -164,13 +164,13 @@ export class ColorSettingTab extends PluginSettingTab {
       colorTargetSelect.style.background = "var(--background-modifier-form-field)";
       colorTargetSelect.style.color = "var(--text-normal)";
       colorTargetSelect.style.flex = "0 0 auto";
-      colorTargetSelect.style.maxWidth = "80px";
+      colorTargetSelect.style.maxWidth = "100px";
       colorTargetSelect.style.width = "stretch";
-      colorTargetSelect.style.minWidth = "60px";
+      colorTargetSelect.style.minWidth = "80px";
       colorTargetSelect.style.textAlign = "center";
       colorTargetSelect.title = this.plugin.t("color_target_tooltip", "Color target: text = matched text only, line = entire line, next line = next line");
       try { colorTargetSelect.addClass("act-color-target-select"); } catch (e) {}
-      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("color_target_text", "text")}</option><option value="line">${this.plugin.t("color_target_line", "line")}</option><option value="child">${this.plugin.t("color_target_child", "next line")}</option>`;
+      colorTargetSelect.innerHTML = `<option value="text">${this.plugin.t("mark_target_text", "Color Text")}</option><option value="line">${this.plugin.t("mark_target_line", "Color Line")}</option><option value="child">${this.plugin.t("mark_target_child_line", "Color Next Line")}</option>`;
       colorTargetSelect.value = entry.colorTarget || "text";
 
       // ELEMENT 2a: Regex name input (only for regex)
@@ -3845,17 +3845,9 @@ export class ColorSettingTab extends PluginSettingTab {
       }
       // Apply color targeting mode filter (ct=text, cl=line, cc=childLine)
       if (this._colorTargetFilter) {
-        console.log("[DEBUG SettingsTab filter] Applying markTarget filter:", this._colorTargetFilter);
-        console.log("[DEBUG SettingsTab filter] Entry markTargets:", finalFiltered.map(e => e.markTarget || "text"));
         finalFiltered = finalFiltered.filter(
-          (e) => {
-            const entryTarget = (e.markTarget || "text");
-            const match = entryTarget === this._colorTargetFilter;
-            console.log("[DEBUG SettingsTab filter] Entry:", e.pattern || e.groupedPatterns?.join(", "), "markTarget:", entryTarget, "filter:", this._colorTargetFilter, "match:", match);
-            return match;
-          },
+          (e) => (e.markTarget || "text") === this._colorTargetFilter,
         );
-        console.log("[DEBUG SettingsTab filter] After markTarget filter:", finalFiltered.length);
       }
 
       if (!this._suspendSorting && this._wordsSortMode === "a-z") {
@@ -7266,27 +7258,20 @@ export class ColorSettingTab extends PluginSettingTab {
         this._entriesMatchTypeStartsWith = false;
         this._entriesMatchTypeEndsWith = false;
         this._entriesMatchTypeExact = false;
-        console.log("[DEBUG SettingsTab limitHandler] raw:", raw);
-        console.log("[DEBUG SettingsTab limitHandler] parts:", parts);
         for (const tok of parts) {
           // Check longer tokens first to avoid partial matches
-          console.log("[DEBUG SettingsTab limitHandler] processing token:", tok);
-          if (tok === "ct") { this._colorTargetFilter = "text"; console.log("[DEBUG] Set _colorTargetFilter = text"); }
-          else if (tok === "cl") { this._colorTargetFilter = "line"; console.log("[DEBUG] Set _colorTargetFilter = line"); }
-          else if (tok === "cc") { this._colorTargetFilter = "nextLine"; console.log("[DEBUG] Set _colorTargetFilter = childLine"); }
-          else if (tok === "sw") { this._entriesMatchTypeStartsWith = true; console.log("[DEBUG] Set _entriesMatchTypeStartsWith = true"); }
-          else if (tok === "ew") { this._entriesMatchTypeEndsWith = true; console.log("[DEBUG] Set _entriesMatchTypeEndsWith = true"); }
-          else if (tok === "r") { this._entriesRegexOnly = true; console.log("[DEBUG] Set _entriesRegexOnly = true"); }
-          else if (tok === "w") { this._entriesWordsOnly = true; console.log("[DEBUG] Set _entriesWordsOnly = true"); }
-          else if (tok === "h") { this._filterMode = "highlight"; console.log("[DEBUG] Set _filterMode = highlight"); }
-          else if (tok === "c") { this._filterMode = "text"; console.log("[DEBUG] Set _filterMode = text"); }
-          else if (tok === "b") { this._filterMode = "both"; console.log("[DEBUG] Set _filterMode = both"); }
-          else if (tok === "e") { this._entriesMatchTypeExact = true; console.log("[DEBUG] Set _entriesMatchTypeExact = true"); }
-          else { console.log("[DEBUG] Unknown token:", tok); }
+          if (tok === "ct") { this._colorTargetFilter = "text"; }
+          else if (tok === "cl") { this._colorTargetFilter = "line"; }
+          else if (tok === "cc") { this._colorTargetFilter = "nextLine"; }
+          else if (tok === "sw") { this._entriesMatchTypeStartsWith = true; }
+          else if (tok === "ew") { this._entriesMatchTypeEndsWith = true; }
+          else if (tok === "r") { this._entriesRegexOnly = true; }
+          else if (tok === "w") { this._entriesWordsOnly = true; }
+          else if (tok === "h") { this._filterMode = "highlight"; }
+          else if (tok === "c") { this._filterMode = "text"; }
+          else if (tok === "b") { this._filterMode = "both"; }
+          else if (tok === "e") { this._entriesMatchTypeExact = true; }
         }
-        console.log("[DEBUG SettingsTab limitHandler] _colorTargetFilter:", this._colorTargetFilter);
-        console.log("[DEBUG SettingsTab limitHandler] _filterMode:", this._filterMode);
-        console.log("[DEBUG SettingsTab limitHandler] _entriesRegexOnly:", this._entriesRegexOnly);
         try {
           this._refreshEntries();
         } catch (e) {}
@@ -7379,6 +7364,7 @@ export class ColorSettingTab extends PluginSettingTab {
           uid,
           persistAtEnd: true,
           matchType: this.plugin.settings.partialMatch ? "contains" : "exact",
+          caseSensitive: !!this.plugin.settings.caseSensitive,
         });
         this._suspendSorting = this._wordsSortMode === "last-added";
         try {

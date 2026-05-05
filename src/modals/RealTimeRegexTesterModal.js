@@ -209,7 +209,8 @@ export class RealTimeRegexTesterModal extends Modal {
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
     subjectWrap.addClass("act-subject-wrap");
-    subjectWrap.style.borderRadius = "var(--button-radius)";
+    subjectWrap.style.borderRadius = "var(--input-radius)";
+    subjectWrap.style.cornerShape = "var(--corner-shape)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("div");
@@ -232,7 +233,8 @@ export class RealTimeRegexTesterModal extends Modal {
     const previewWrap = contentEl.createDiv();
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
-    previewWrap.style.borderRadius = "var(--button-radius)";
+    previewWrap.style.borderRadius = "var(--input-radius)";
+    previewWrap.style.cornerShape = "var(--corner-shape)";
     previewWrap.style.padding = "12px";
     previewWrap.style.background = "var(--background-modifier-form-field)";
     previewWrap.style.whiteSpace = "pre-wrap";
@@ -682,6 +684,7 @@ export class RealTimeRegexTesterModal extends Modal {
         presetLabel: label || undefined,
         styleType: style,
         markTarget: markTarget,
+        caseSensitive: !!this.plugin.settings.caseSensitive,
       };
       if (style === "text") {
         entry.color = textColorInput.value || "";

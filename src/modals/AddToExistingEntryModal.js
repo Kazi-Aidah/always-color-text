@@ -1,4 +1,4 @@
-﻿import { FuzzySuggestModal, Menu, Notice } from 'obsidian';
+import { FuzzySuggestModal, Menu, Notice } from 'obsidian';
 import { debugLog, debugError } from '../utils/debug.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { BlacklistRegexTesterModal } from './BlacklistRegexTesterModal.js';
@@ -971,9 +971,12 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                 const entry = actualItem.entry;
                 const matchesWord = () => {
                   if (entry.isRegex) return false;
+                  const cs =
+                    typeof entry.caseSensitive === "boolean"
+                      ? entry.caseSensitive
+                      : !!this.plugin.settings.caseSensitive;
                   const cmp = (a, b) => {
-                    if (this.plugin.settings.caseSensitive)
-                      return String(a) === String(b);
+                    if (cs) return String(a) === String(b);
                     return String(a).toLowerCase() === String(b).toLowerCase();
                   };
                   if (cmp(entry.pattern, this.selectedText)) return true;
@@ -1477,9 +1480,12 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
         const entry = actualItem.entry;
         const matchesWord = () => {
           if (entry.isRegex) return false;
+          const cs =
+            typeof entry.caseSensitive === "boolean"
+              ? entry.caseSensitive
+              : !!this.plugin.settings.caseSensitive;
           const cmp = (a, b) => {
-            if (this.plugin.settings.caseSensitive)
-              return String(a) === String(b);
+            if (cs) return String(a) === String(b);
             return String(a).toLowerCase() === String(b).toLowerCase();
           };
           // Check if selectedText matches any pattern in this entry

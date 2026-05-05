@@ -463,7 +463,6 @@ export class EditEntryModal extends Modal {
 
     const markTargetFn = async () => {
       if (this.entry) {
-        console.log(`[ACT-DEBUG] EditEntryModal: setting markTarget to ${markTargetSelect.value} for ${this.entry.pattern}`);
         this.entry.markTarget = markTargetSelect.value;
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -519,6 +518,11 @@ export class EditEntryModal extends Modal {
             textColorInput.value = initTextColor;
           if (this.plugin.isValidHexColor(initBgColor))
             bgColorInput.value = initBgColor;
+          // Sync styleType dropdown from entry (CustomCssModal may have updated it)
+          if (this.entry && this.entry.styleType) {
+            styleSelect.value = this.entry.styleType;
+            updatePickerVisibility();
+          }
           renderPreview();
         }
       } catch (_) {}
@@ -1393,7 +1397,8 @@ export class EditEntryModal extends Modal {
           effectiveText !== (originalState.color || "") ||
           effectiveBg !== (originalState.backgroundColor || "") ||
           matchTypeVal !== originalState.matchType ||
-          markTargetSelect.value !== (originalState.markTarget || "text");
+          markTargetSelect.value !== (originalState.markTarget || "text") ||
+          this.entry.customCss !== undefined;
 
         // If no changes were made, just close the modal without saving
         if (!hasChanges) {
@@ -1402,8 +1407,8 @@ export class EditEntryModal extends Modal {
         }
       }
 
-      // Update global settings
-      this.plugin.settings.caseSensitive = caseSensitiveVal;
+      // Update per-entry case sensitivity (do NOT write to global settings)
+      this.entry.caseSensitive = caseSensitiveVal;
 
       // Find entry by uid - more reliable than reference comparison
       const entryUid = this.entry.uid;
@@ -1470,6 +1475,7 @@ export class EditEntryModal extends Modal {
 
         // Save entry properties
         foundArray[foundIdx].matchType = matchTypeVal;
+        foundArray[foundIdx].caseSensitive = caseSensitiveVal;
         foundArray[foundIdx].styleType = st;
         foundArray[foundIdx].markTarget = markTargetSelect.value || "text";
 
@@ -1535,6 +1541,11 @@ export class EditEntryModal extends Modal {
         // Close parent modal; reopen only when appropriate
         if (this.parentModal) {
           try {
+            // Prevent ColorPickerModal.onClose from running its submit/delete logic
+            // since we've already saved the entry correctly here
+            if (this.fromPickColorModal) {
+              this.parentModal._hasUserChanges = false;
+            }
             this.parentModal.close();
             if (
               !this.fromPickColorModal &&
@@ -1584,6 +1595,7 @@ export class EditEntryModal extends Modal {
           styleType: st,
           markTarget: markTargetSelect.value || "text",
           matchType: matchTypeVal,
+          caseSensitive: caseSensitiveVal,
           uid: this.entry.uid,
         };
 
@@ -1633,7 +1645,6 @@ export class EditEntryModal extends Modal {
         } else {
           this.plugin.settings.wordEntries.push(newEntry);
         }
-        this.plugin.settings.caseSensitive = caseSensitiveVal;
 
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -1649,6 +1660,10 @@ export class EditEntryModal extends Modal {
         // Close parent modal
         if (this.parentModal) {
           try {
+            // Prevent ColorPickerModal.onClose from running its submit/delete logic
+            if (this.fromPickColorModal) {
+              this.parentModal._hasUserChanges = false;
+            }
             this.parentModal.close();
           } catch (e) {}
         }

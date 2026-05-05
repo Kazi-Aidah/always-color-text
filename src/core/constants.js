@@ -29,7 +29,7 @@ export const REGEX_CONSTANTS = {
 };
 
 // Development mode flag
-export const IS_DEVELOPMENT = true;
+export const IS_DEVELOPMENT = false;
 
 // Keys that are considered "Global Styles" and should be extracted to globalStyles object in JSON
 export const GLOBAL_STYLE_KEYS = [

@@ -1,4 +1,4 @@
-﻿import { Modal, Notice, setIcon, Menu } from 'obsidian';
+import { Modal, Notice, setIcon, Menu } from 'obsidian';
 import { debugLog, debugError } from '../utils/debug.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
@@ -422,28 +422,19 @@ export class EditWordGroupModal extends Modal {
       this._limitMatchEnds = false;
       this._limitMatchExact = false;
       this._limitColorTarget = null; // 'text' | 'line' | 'child' | null
-      console.log("[DEBUG limitHandler] raw input:", raw);
-      console.log("[DEBUG limitHandler] parts:", parts);
-      console.log("[DEBUG limitHandler] num:", this._limit);
       for (const tok of parts) {
-        console.log("[DEBUG limitHandler] processing token:", tok);
-        if (tok === "r") { this._limitRegexOnly = true; console.log("[DEBUG] Set _limitRegexOnly = true"); }
-        else if (tok === "w") { this._limitWordsOnly = true; console.log("[DEBUG] Set _limitWordsOnly = true"); }
-        else if (tok === "h") { this._limitStyle = "highlight"; console.log("[DEBUG] Set _limitStyle = highlight"); }
-        else if (tok === "c") { this._limitStyle = "text"; console.log("[DEBUG] Set _limitStyle = text"); }
-        else if (tok === "b") { this._limitStyle = "both"; console.log("[DEBUG] Set _limitStyle = both"); }
-        else if (tok === "sw") { this._limitMatchStarts = true; console.log("[DEBUG] Set _limitMatchStarts = true"); }
-        else if (tok === "ew") { this._limitMatchEnds = true; console.log("[DEBUG] Set _limitMatchEnds = true"); }
-        else if (tok === "e") { this._limitMatchExact = true; console.log("[DEBUG] Set _limitMatchExact = true"); }
-        else if (tok === "ct") { this._limitColorTarget = "text"; console.log("[DEBUG] Set _limitColorTarget = text"); }
-        else if (tok === "cl") { this._limitColorTarget = "line"; console.log("[DEBUG] Set _limitColorTarget = line"); }
-        else if (tok === "cc") { this._limitColorTarget = "nextLine"; console.log("[DEBUG] Set _limitColorTarget = childLine"); }
-        else { console.log("[DEBUG] Unknown token:", tok); }
+        if (tok === "r") { this._limitRegexOnly = true; }
+        else if (tok === "w") { this._limitWordsOnly = true; }
+        else if (tok === "h") { this._limitStyle = "highlight"; }
+        else if (tok === "c") { this._limitStyle = "text"; }
+        else if (tok === "b") { this._limitStyle = "both"; }
+        else if (tok === "sw") { this._limitMatchStarts = true; }
+        else if (tok === "ew") { this._limitMatchEnds = true; }
+        else if (tok === "e") { this._limitMatchExact = true; }
+        else if (tok === "ct") { this._limitColorTarget = "text"; }
+        else if (tok === "cl") { this._limitColorTarget = "line"; }
+        else if (tok === "cc") { this._limitColorTarget = "nextLine"; }
       }
-      console.log("[DEBUG limitHandler] _limitColorTarget:", this._limitColorTarget);
-      console.log("[DEBUG limitHandler] _limitStyle:", this._limitStyle);
-      console.log("[DEBUG limitHandler] _limitRegexOnly:", this._limitRegexOnly);
-      console.log("[DEBUG limitHandler] _limitWordsOnly:", this._limitWordsOnly);
       this._refreshGroupEntries();
     };
     limitInput.addEventListener("input", limitHandler);
@@ -531,6 +522,7 @@ export class EditWordGroupModal extends Modal {
         flags: "",
         styleType: "text",
         matchType: "contains",
+        caseSensitive: !!this.plugin.settings.caseSensitive,
       });
       this._sortMode = "last-added";
       this._refreshGroupEntries();
@@ -619,6 +611,7 @@ export class EditWordGroupModal extends Modal {
               flags: preset.flags || "",
               styleType: "text",
               matchType: "contains",
+              caseSensitive: !!this.plugin.settings.caseSensitive,
               presetLabel: preset.label,
               markTarget: sel.markTarget || "text",
             };
@@ -712,6 +705,8 @@ export class EditWordGroupModal extends Modal {
         if (!entry.hasOwnProperty("flags")) entry.flags = "";
         if (!entry.hasOwnProperty("styleType")) entry.styleType = "text";
         if (!entry.hasOwnProperty("matchType")) entry.matchType = "contains";
+        if (!entry.hasOwnProperty("caseSensitive"))
+          entry.caseSensitive = !!this.plugin.settings.caseSensitive;
         if (!entry.hasOwnProperty("textColor")) entry.textColor = null;
         if (!entry.hasOwnProperty("backgroundColor"))
           entry.backgroundColor = null;
@@ -745,9 +740,6 @@ export class EditWordGroupModal extends Modal {
 
     // Filter entries
     let entries = [...this.group.entries];
-    console.log("[DEBUG _refreshGroupEntries] Total entries in group:", entries.length);
-    console.log("[DEBUG _refreshGroupEntries] ALL entries with markTarget:", JSON.stringify(entries.map(e => ({pattern: e.pattern, markTarget: e.markTarget || "text"}))));
-    console.log("[DEBUG _refreshGroupEntries] Current _limitColorTarget:", this._limitColorTarget);
     if (this._searchQuery) {
       const q = this._searchQuery.toLowerCase();
       entries = entries.filter((e) => {
@@ -766,37 +758,24 @@ export class EditWordGroupModal extends Modal {
         if (this._limitMatchEnds) return text.endsWith(q);
         return text.includes(q);
       });
-      console.log("[DEBUG _refreshGroupEntries] After search filter:", entries.length);
     }
     if (this._limitStyle === "highlight") {
       entries = entries.filter((e) => (e.styleType || "text") === "highlight");
-      console.log("[DEBUG _refreshGroupEntries] After style=highlight filter:", entries.length);
     } else if (this._limitStyle === "text") {
       entries = entries.filter((e) => (e.styleType || "text") === "text");
-      console.log("[DEBUG _refreshGroupEntries] After style=text filter:", entries.length);
     } else if (this._limitStyle === "both") {
       entries = entries.filter((e) => (e.styleType || "text") === "both");
-      console.log("[DEBUG _refreshGroupEntries] After style=both filter:", entries.length);
     }
     if (this._limitRegexOnly) {
       entries = entries.filter((e) => !!e.isRegex);
-      console.log("[DEBUG _refreshGroupEntries] After regexOnly filter:", entries.length);
     } else if (this._limitWordsOnly) {
       entries = entries.filter((e) => !e.isRegex);
-      console.log("[DEBUG _refreshGroupEntries] After wordsOnly filter:", entries.length);
     }
     // Apply color target filter (ct=text, cl=line, cc=childLine)
     if (this._limitColorTarget) {
-      console.log("[DEBUG _refreshGroupEntries] Applying markTarget filter:", this._limitColorTarget);
-      console.log("[DEBUG _refreshGroupEntries] Entry markTargets:", entries.map(e => e.markTarget || "text"));
       entries = entries.filter(
-        (e) => {
-          const match = (e.markTarget || "text") === this._limitColorTarget;
-          console.log("[DEBUG _refreshGroupEntries] Entry:", e.pattern, "markTarget:", e.markTarget || "text", "match:", match);
-          return match;
-        },
+        (e) => (e.markTarget || "text") === this._limitColorTarget,
       );
-      console.log("[DEBUG _refreshGroupEntries] After markTarget filter:", entries.length);
     }
 
     // Sort entries
@@ -927,6 +906,47 @@ export class EditWordGroupModal extends Modal {
         entry.matchType = matchSelect.value;
       };
       matchSelect.addEventListener("change", matchSelectHandler);
+
+      // 2b. MARK TARGET SELECT (Color Text / Color Line / Color Next Line)
+      const markTargetSelect = row.createEl("select");
+      markTargetSelect.style.padding = "6px";
+      markTargetSelect.style.borderRadius = "4px";
+      markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
+      markTargetSelect.style.background = "var(--background-modifier-form-field)";
+      markTargetSelect.style.textAlign = "center";
+      markTargetSelect.style.minWidth = "80px";
+      markTargetSelect.style.maxWidth = "100px";
+      [
+        ["text",     this.plugin.t("mark_target_text",       "Color Text")],
+        ["line",     this.plugin.t("mark_target_line",       "Color Line")],
+        ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")],
+      ].forEach(([val, label]) => {
+        const opt = markTargetSelect.createEl("option", { text: label });
+        opt.value = val;
+      });
+      markTargetSelect.value = entry.markTarget || "text";
+      const markTargetHandler = async () => {
+        entry.markTarget = markTargetSelect.value;
+        // Also update the live settings entry so the change applies immediately
+        const liveGroup = Array.isArray(this.plugin.settings.wordEntryGroups)
+          ? this.plugin.settings.wordEntryGroups.find(g => g && g.uid === this.group.uid)
+          : null;
+        if (liveGroup && Array.isArray(liveGroup.entries)) {
+          const liveEntry = liveGroup.entries.find(e => e && (
+            (e.uid && entry.uid && e.uid === entry.uid) ||
+            (e.pattern === entry.pattern && !!e.isRegex === !!entry.isRegex)
+          ));
+          if (liveEntry) liveEntry.markTarget = markTargetSelect.value;
+        }
+        await this.plugin.saveSettings();
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        this.plugin.triggerActiveDocumentRerender();
+      };
+      markTargetSelect.addEventListener("change", markTargetHandler);
 
       // Update visibility based on regex status
       const updateVisibility = () => {
