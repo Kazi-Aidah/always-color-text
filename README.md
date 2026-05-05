@@ -15,7 +15,7 @@ Whether you're a writer tracking characters, a student highlighting key terms, o
 ## Color Anything, Exactly How You Want
 
 ### Unified Color Picker
-Color text, add highlights, or both, right from a simple modal. 
+Color text, add highlights, or both, right from a simple modal.
 ![color picker modal with both panels](assets/color-picker-modal.png)
 
 Customize your interface by hiding panels you don't need.
@@ -25,15 +25,20 @@ Customize your interface by hiding panels you don't need.
 Make highlights look exactly how you imagine: adjust borders, rounded corners, transparency, and more.
 ![Plugin Settings Highlight Appearance Section](assets/highlight-appearance.png)
 
+### Custom CSS Styling
+Take styling to the next level with per-entry and per-group custom CSS. When enabled, you can add advanced CSS to individual entries or entire word groups, including font size adjustments, gradients, and more. Works in both Live Preview and Reading Mode.
+
+![](assets/custom-css-bevel-font-size.png)
+
 ### Your Color Palette
 Replace default swatches with your favorite colors for instant access!
 ![Custom Swatches in Color Picker](assets/custom-swatches.png)
 
 ### Quick Actions
-- **Quick Colors**: Choose a text color and background color group that appears directly in the right click menu.
+- **Quick Colors**: Choose a text color and background color group that appears directly in the right-click menu.
   ![Quick Colors with Quick Styles](assets/quick-color+quick-styles.png)
 
-- **Quick Styles**: Apply a highlight style to selected text.
+- **Quick Styles**: Apply a highlight style to selected text. Each Quick Style can be set to apply as either **Always Color Text** or **Inline HTML** — name them differently to tell them apart.
   ![Quick Colors and Quick Styles](assets/quick-color-AND-quick-styles.png)
 
 If **Quick Colors** are enabled, the style uses the selected Quick Color. If they are disabled, the style falls back to its own colors and inherits the styling from the first Quick Style entry. If no Quick Style exists, the default styling is applied.
@@ -52,25 +57,29 @@ Control *how* text is matched with flexible, per-entry options:
 - **Starts with** – matches text that begins with the entry
 - **Ends with** – matches text that ends with the entry
 
+### Color Targeting Modes
+Choose exactly how your colors are applied with three targeting modes:
+
+- **Color Text** – Colors only the matched text (default)
+- **Color Line** – Colors the entire line containing the matched text
+- **Color Next Line** – Colors the line directly after the matched text
+
+These modes give you precise control over how colors are applied, especially useful for complex documents with nested structures.
+
 ### Per-Entry Configuration
 Customize the styling and rules for each colored entry via "Edit Entry Details":
 
-- **Case Sensitivity**  
-  When enabled, matches respect letter casing.  
+- **Case Sensitivity**
+  When enabled, matches respect letter casing.
   `"art"` matches `"art"` but not `"Art"` or `"ART"`.
 
-- **Highlight Styling**  
-  Adjust borders, rounded corners, transparency, and more per entry. Customize the look of individual entries without affecting others.
+- **Highlight Styling**
+  Adjust borders, rounded corners, transparency, and more per entry.
   ![Edit Highlight Styling Modal](assets/modal-highlight-styling.png)
 
-- **Inclusion / Exclusion Rules**  
-  Exclude specific folders, files, or **files with specific tags** from coloring, or limit coloring to specific folders.
+- **Inclusion / Exclusion Rules**
+  Exclude specific folders, files, or files with specific tags from coloring, or limit coloring to specific folders.
   ![Edit Entry Modal with Paths](assets/edit-entry-modal-w-paths.png)
-
-<!-- - **Partial Match**  
-  This setting controls the default match type when creating new entries:
-  - **Disabled** → new entries are added as **Exact** matches
-  - **Enabled** → new entries are added as **Contains** matches -->
 
 ### Advanced Pattern Matching with Regex
 Color complex patterns like dates, currencies, or specific text structures automatically:
@@ -93,11 +102,6 @@ Jumpstart your coloring with curated pattern collections:
 
 ![Blue Dates Example](assets/blue-dates.png)
 
-**Quick tips:**
-- Enable "Use Regex" in your color entry settings
-- Test patterns in the built-in **Regex Tester** before applying them
-- Apply **presets** for common patterns with one click
-
 ---
 
 ## Organize Your Colors
@@ -105,26 +109,25 @@ Jumpstart your coloring with curated pattern collections:
 ### Centralized Word Management
 All colored texts appear in settings with search and multiple sort options.
 ![Plugin Settings Always Colored Texts](assets/always-colored-texts.png)
-Tip: Right-click on any color picker to bring the Color Picker Modal.
+Tip: Right-click on any color picker to bring up the Color Picker Modal.
 
-Switch styles seamlessly, changing from "Both" to "Highlight" and back retains your original colors. Right-click any entry to **edit it**, **duplicate it** or **open in Regex Tester** for quick adjustments.
+Switch styles seamlessly — changing from "Both" to "Highlight" and back retains your original colors. Right-click any entry to **edit it**, **duplicate it**, or **open in Regex Tester** for quick adjustments.
 
 ### Word Groups
-Entries can be added to a word group right from the Pick Color modal, and the word group can be set as active when you need it, otherwise kept inactive. Your wish.
+Entries can be added to a word group right from the Pick Color modal, and the word group can be set as active when you need it, otherwise kept inactive.
 
-You can also set a **match type** and **case sensitivity** for all the entries in a word group.
-Also, **enable or disable entire word groups** for specific folders or files containing specific tags!
+You can also set a **match type** and **case sensitivity** for all entries in a word group, and **enable or disable entire word groups** for specific folders or files with specific tags.
 
 ![](assets/word-group-selects.png)
 
-**Note:** Use `/` to target root folder (whole vault) for the Enable in/Disable in.
+**Note:** Use `/` to target the root folder (whole vault) for Enable in/Disable in.
 
 ### Word Group Styling
-You can style the word group itself! This styling will be applied to all entries within that group.
+Style the word group itself — this styling applies to all entries within that group, including Custom CSS.
 ![Word Group Styling](assets/word-group-styling.png)
 
 ### Entry Filtering (Limit Input)
-Use the **limit input** beside the search bar (also available in the "Add to Existing Entry" modal) to instantly filter entries by type, match type, or count.
+Use the **limit input** beside the search bar to instantly filter entries by type, match type, color target, or count.
 
 ![Limit Input Example 1](assets/limit-input-1.png)
 ![Limit Input Example 2](assets/limit-input-2.png)
@@ -132,7 +135,7 @@ Use the **limit input** beside the search bar (also available in the "Add to Exi
 **Available limit filters:**
 
 **Count & Display:**
-- `0` (zero) → show all entries
+- `0` → show all entries
 - `N` (number) → show only the last N entries
 
 **Filter by Type:**
@@ -140,17 +143,17 @@ Use the **limit input** beside the search bar (also available in the "Add to Exi
 - `w` → word entries only
 - `c` → colored text entries
 - `h` → highlighted entries
-- `b` → both, text + highlight entries
+- `b` → both text + highlight entries
 
 **Filter by Match Type:**
 - `e` → exact match-type entries
 - `sw` → starts-with match-type entries
 - `ew` → ends-with match-type entries
 
-<!-- **Filter by Color Target:**
+**Filter by Color Target:**
 - `ct` → color text targeting entries
 - `cl` → color line targeting entries
-- `cn` → color next line targeting entries -->
+- `cc` → color next line targeting entries
 
 ### Add to Existing Entry
 Right-click any entry and choose "Add to Existing Entry" to add the selected text to that entry:
@@ -158,7 +161,7 @@ Right-click any entry and choose "Add to Existing Entry" to add the selected tex
 
 ### File & Folder Control
 Use "Include" to color specific documents or "Exclude" to disable coloring in entire folders.
-You can now create rules based on tags! Include or exclude files that contain specific tags (e.g., `#private`, `#draft`).
+Create rules based on tags — include or exclude files that contain specific tags (e.g., `#private`, `#draft`).
 
 ![File & Folder Coloring Rules](assets/file-folder-rules.png)
 
@@ -166,12 +169,23 @@ You can now create rules based on tags! Include or exclude files that contain sp
 
 ---
 
+## Automatic Backups
+Never lose your color settings! The plugin can automatically back up all your configuration to a folder inside your vault.
+
+- **Scheduled Backups**: Hourly, daily, or weekly
+- **One-Click Backup**: Manually trigger a backup anytime
+- **Overwrite Option**: Replace the previous backup or keep multiple versions
+
+Backups include all plugin data: colored texts, blacklists, file/folder rules, word groups, and settings. Restore via the "Import Data" button in settings.
+
+---
+
 ## Theme Compatibility
 
 ### Light & Dark Mode Text Fixers
 Ensure your colors look great in any theme!
-- **Dark Mode Text Fixer**: If you usually set colors in **Light Mode**, turn this on. It automatically adjusts dark text colors to be readable in Dark Mode.
-- **Light Mode Text Fixer**: If you set colors in **Dark Mode**, turning this on will adjust light text colors to be visible in Light Mode.
+- **Dark Mode Text Fixer**: If you usually set colors in Light Mode, turn this on to automatically adjust dark text for readability in Dark Mode.
+- **Light Mode Text Fixer**: If you set colors in Dark Mode, turn this on to adjust light text for visibility in Light Mode.
 
 ---
 
@@ -186,40 +200,7 @@ Ensure your colors look great in any theme!
 ### Optimization Settings
 - **Lightweight Mode**: Skips partial match expansion and uses a stricter match limit for maximum performance.
 - **Smart Updates**: Only updates active lines of the document to keep the editor responsive.
-- **Word Completion Color:** Renders text colors only after a space has been inputted, helps significantly with typing performance. *(This improves typing performance the most!)*
-
-### Reading Mode Note:
-For best results in Reading mode, enable **"Force full render"** in settings. This ensures smooth coloring but is disabled by default to prevent potential performance issues.
-<!-- 
----
-
-## Advanced Features
-
-### Automatic Backups
-Never lose your color settings! The plugin can automatically back up all your configuration, colored words, and rules to a folder inside your vault.
-
-- **Scheduled Backups**: Set automatic backups to run hourly, daily, or weekly
-- **Custom Backup Folder**: Choose where backups are saved in your vault
-- **One-Click Backup**: Manually trigger a backup anytime
-- **Overwrite Option**: Replace the previous backup or keep multiple versions
-
-Backups include all plugin data: colored texts, blacklists, file/folder rules, word groups, and settings. These files must be imported through the "Import Data" button in case of a data loss.
-
-### Custom CSS Styling
-Take styling to the next level with per-entry custom CSS! When enabled, you can add advanced CSS styling to individual entries or word groups.
-
-![](assets/custom-css.png)
-
-Use this for advanced effects like gradients, advanced animations, or custom font properties beyond the standard options.
-
-### Color Targeting Modes
-Choose exactly how your colors are applied with three targeting modes:
-
-- **Color Text**: Colors only the matched text (default)
-- **Color Line**: Colors the entire line containing the matched text
-- **Color Next Line:** Colors the line under the matched text
-
-These modes give you precise control over how colors are applied, especially useful for complex documents with nested structures. -->
+- **Word Completion Color**: Renders text colors only after a space is typed, helps significantly with typing performance.
 
 ---
 
@@ -244,7 +225,6 @@ Available in Obsidian Community Plugins. Check [Release Notes](https://github.co
 ### Questions or Suggestions?
 Create a new issue [here](https://github.com/Kazi-Aidah/always-color-text/issues) to report bugs or request new features! I love seeing new issues for me to fix \\(≧ᗜ≦)/ and this plugin wouldn't have advanced so far without the feedback from users!!
 
-
 ---
 
 ## Contributing Translations
@@ -262,7 +242,6 @@ Want to add your language to Always Color Text?
 ```
 
 4. Go to `src/i18n.js` and add your language code to the list of supported languages.
-
 5. Submit a pull request with your translation file in `src/i18n/`.
 
 That's it! Your language will be available to all users.
