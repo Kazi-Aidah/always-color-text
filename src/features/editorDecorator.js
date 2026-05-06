@@ -1,4 +1,4 @@
-﻿import { RangeSetBuilder, Decoration, ViewPlugin, StateEffect, syntaxTree, forceRebuildEffect } from '../core/cmSetup.js';
+import { RangeSetBuilder, Decoration, ViewPlugin, StateEffect, syntaxTree, forceRebuildEffect } from '../core/cmSetup.js';
 import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS } from '../core/constants.js';
 import { debugLog, debugError, debugWarn } from '../utils/debug.js';
 
@@ -264,7 +264,21 @@ export function buildEditorExtension(plugin) {
                         newRanges.push({ from: pos, to: pos, value: deco });
                       }
                     }
-                    newRanges.sort((a, b) => a.from - b.from || (a.to === a.from ? -1 : 1));
+                    newRanges.sort((a, b) => {
+                      const byFrom = a.from - b.from;
+                      if (byFrom !== 0) return byFrom;
+                      const aSide =
+                        a.value && typeof a.value.startSide === "number"
+                          ? a.value.startSide
+                          : 0;
+                      const bSide =
+                        b.value && typeof b.value.startSide === "number"
+                          ? b.value.startSide
+                          : 0;
+                      const bySide = aSide - bSide;
+                      if (bySide !== 0) return bySide;
+                      return a.to - b.to;
+                    });
 
                     this.decorations = this.decorations.update({
                       add: newRanges,
@@ -438,7 +452,18 @@ export function buildEditorExtension(plugin) {
         const all = [
           ...lineRanges,
           ...markRanges.map((r) => ({ ...r, line: false })),
-        ].sort((a, b) => a.from - b.from || (a.line ? -1 : 1));
+        ].sort((a, b) => {
+          const byFrom = a.from - b.from;
+          if (byFrom !== 0) return byFrom;
+          const aSide =
+            a.value && typeof a.value.startSide === "number" ? a.value.startSide : 0;
+          const bSide =
+            b.value && typeof b.value.startSide === "number" ? b.value.startSide : 0;
+          const bySide = aSide - bSide;
+          if (bySide !== 0) return bySide;
+          if (a.line !== b.line) return a.line ? -1 : 1;
+          return a.to - b.to;
+        });
 
         const merged = new RangeSetBuilder();
         for (const item of all) {

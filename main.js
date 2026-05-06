@@ -24099,7 +24099,15 @@ function buildEditorExtension(plugin) {
                         newRanges.push({ from: pos, to: pos, value: deco });
                       }
                     }
-                    newRanges.sort((a, b) => a.from - b.from || (a.to === a.from ? -1 : 1));
+                    newRanges.sort((a, b) => {
+                      const byFrom = a.from - b.from;
+                      if (byFrom !== 0) return byFrom;
+                      const aSide = a.value && typeof a.value.startSide === "number" ? a.value.startSide : 0;
+                      const bSide = b.value && typeof b.value.startSide === "number" ? b.value.startSide : 0;
+                      const bySide = aSide - bSide;
+                      if (bySide !== 0) return bySide;
+                      return a.to - b.to;
+                    });
                     this.decorations = this.decorations.update({
                       add: newRanges,
                       sort: true
@@ -24220,7 +24228,16 @@ function buildEditorExtension(plugin) {
         const all = [
           ...lineRanges,
           ...markRanges.map((r) => ({ ...r, line: false }))
-        ].sort((a, b) => a.from - b.from || (a.line ? -1 : 1));
+        ].sort((a, b) => {
+          const byFrom = a.from - b.from;
+          if (byFrom !== 0) return byFrom;
+          const aSide = a.value && typeof a.value.startSide === "number" ? a.value.startSide : 0;
+          const bSide = b.value && typeof b.value.startSide === "number" ? b.value.startSide : 0;
+          const bySide = aSide - bSide;
+          if (bySide !== 0) return bySide;
+          if (a.line !== b.line) return a.line ? -1 : 1;
+          return a.to - b.to;
+        });
         const merged = new RangeSetBuilder();
         for (const item of all) {
           merged.add(item.from, item.to, item.value);
@@ -40544,9 +40561,11 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       return merged;
     })();
     const effectiveStyle = "text";
+    const pendingLineDecos = lineBuilder ? [] : null;
     if (limited.some((m) => m.isTextBg)) {
       const fullTextBg = limited.filter((m) => m.isTextBg);
       const filtered = [];
+      limited.sort((a, b) => a.start - b.start || a.end - b.end);
       for (const m of limited) {
         if (!m.isTextBg) {
           let overlapsTextBg = false;
@@ -40566,8 +40585,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       limited.length = 0;
       for (const m of filtered) limited.push(m);
     }
+    limited.sort((a, b) => a.start - b.start || a.end - b.end);
     for (const m of limited) {
-      if (m.skip) continue;
+      if (m.skip || m.start >= m.end) continue;
       let style;
       const hideText = this.settings.hideTextColors === true;
       const hideBg = this.settings.hideHighlights === true;
@@ -40715,9 +40735,13 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         } else {
           lineStart = view.state.doc.lineAt(m.start).from;
         }
-        if (lineBuilder) lineBuilder.add(lineStart, lineStart, Decoration.line({
-          attributes: { class: cssClass }
-        }));
+        if (pendingLineDecos) pendingLineDecos.push({
+          from: lineStart,
+          to: lineStart,
+          value: Decoration.line({
+            attributes: { class: cssClass }
+          })
+        });
       } else {
         builder.add(m.start, m.end, Decoration.mark({
           attributes: {
@@ -40729,6 +40753,18 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         }));
       }
       continue;
+    }
+    if (pendingLineDecos && pendingLineDecos.length) {
+      pendingLineDecos.sort((a, b) => {
+        const byFrom = a.from - b.from;
+        if (byFrom !== 0) return byFrom;
+        const aSide = a.value && typeof a.value.startSide === "number" ? a.value.startSide : 0;
+        const bSide = b.value && typeof b.value.startSide === "number" ? b.value.startSide : 0;
+        const bySide = aSide - bSide;
+        if (bySide !== 0) return bySide;
+        return a.to - b.to;
+      });
+      for (const r of pendingLineDecos) lineBuilder.add(r.from, r.to, r.value);
     }
     return builder.finish();
   }

@@ -19390,11 +19390,15 @@ class AlwaysColorText extends Plugin {
 
     // Apply decorations
     const effectiveStyle = "text";
+    const pendingLineDecos = lineBuilder ? [] : null;
 
     if (limited.some((m) => m.isTextBg)) {
       const fullTextBg = limited.filter((m) => m.isTextBg);
       const filtered = [];
-      for (const m of limited) {
+      // Re-sort limited to ensure absolute order for RangeSetBuilder
+    limited.sort((a, b) => a.start - b.start || a.end - b.end);
+
+    for (const m of limited) {
         if (!m.isTextBg) {
           let overlapsTextBg = false;
           for (const f of fullTextBg) {
@@ -19417,8 +19421,12 @@ class AlwaysColorText extends Plugin {
       for (const m of filtered) limited.push(m);
     }
 
+    // Final safety sort to ensure absolute order for RangeSetBuilder.add
+    // This prevents "Ranges must be added sorted by from position" errors
+    limited.sort((a, b) => a.start - b.start || a.end - b.end);
+
     for (const m of limited) {
-      if (m.skip) continue;
+      if (m.skip || m.start >= m.end) continue;
       let style;
       const hideText = this.settings.hideTextColors === true;
       const hideBg = this.settings.hideHighlights === true;
@@ -19617,9 +19625,13 @@ class AlwaysColorText extends Plugin {
           lineStart = view.state.doc.lineAt(m.start).from;
         }
 
-        if (lineBuilder) lineBuilder.add(lineStart, lineStart, Decoration.line({
-          attributes: { class: cssClass },
-        }));
+        if (pendingLineDecos) pendingLineDecos.push({
+          from: lineStart,
+          to: lineStart,
+          value: Decoration.line({
+            attributes: { class: cssClass },
+          }),
+        });
 
         // No mark decoration — the whole line gets colored via CSS on .cm-line
       } else {
@@ -19637,6 +19649,19 @@ class AlwaysColorText extends Plugin {
         }));
       }
       continue;
+    }
+
+    if (pendingLineDecos && pendingLineDecos.length) {
+      pendingLineDecos.sort((a, b) => {
+        const byFrom = a.from - b.from;
+        if (byFrom !== 0) return byFrom;
+        const aSide = (a.value && typeof a.value.startSide === "number") ? a.value.startSide : 0;
+        const bSide = (b.value && typeof b.value.startSide === "number") ? b.value.startSide : 0;
+        const bySide = aSide - bSide;
+        if (bySide !== 0) return bySide;
+        return a.to - b.to;
+      });
+      for (const r of pendingLineDecos) lineBuilder.add(r.from, r.to, r.value);
     }
 
     return builder.finish();
