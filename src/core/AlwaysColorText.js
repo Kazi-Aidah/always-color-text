@@ -13771,8 +13771,10 @@ class AlwaysColorText extends Plugin {
                 }
               }
 
-              // Filter out layout-breaking properties for line coloring (e.g. list indentation)
-              const filteredParts = [];
+              // Handle layout-critical properties: use !important for non-list elements to win over Obsidian defaults,
+              // but keep it weak for list items (li) so Obsidian's default indentation/padding wins.
+              const baseParts = [];
+              const strongLayoutParts = [];
               for (const decl of lineStyleStr.split(";")) {
                 const trimmed = decl.trim();
                 if (!trimmed) continue;
@@ -13780,22 +13782,25 @@ class AlwaysColorText extends Plugin {
                 if (colonIdx === -1) continue;
                 const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
                 if (
-                   prop !== "padding-left" &&
-                   prop !== "padding-right" &&
-                   prop !== "margin-left" &&
-                   prop !== "margin-right" &&
-                   prop !== "padding" &&
-                   prop !== "margin" &&
-                   prop !== "text-indent" &&
-                   prop !== "padding-inline-start" &&
-                   prop !== "padding-inline-end" &&
-                   prop !== "margin-inline-start" &&
-                   prop !== "margin-inline-end"
-                 ) {
-                  filteredParts.push(trimmed);
+                  prop === "padding-left" ||
+                  prop === "padding-right" ||
+                  prop === "margin-left" ||
+                  prop === "margin-right" ||
+                  prop === "padding" ||
+                  prop === "margin" ||
+                  prop === "text-indent" ||
+                  prop === "padding-inline-start" ||
+                  prop === "padding-inline-end" ||
+                  prop === "margin-inline-start" ||
+                  prop === "margin-inline-end"
+                ) {
+                  const val = trimmed.replace(/\s*!important/gi, "");
+                  strongLayoutParts.push(val + " !important");
+                  baseParts.push(val);
+                } else {
+                  baseParts.push(trimmed);
                 }
               }
-              lineStyleStr = filteredParts.join("; ");
 
               const styleId = `act-line-style-reading-${cssClass}`;
               let styleEl = document.getElementById(styleId);
@@ -13807,7 +13812,12 @@ class AlwaysColorText extends Plugin {
               }
               // Reading Mode uses block elements (p, h1, etc.) instead of .cm-line
               const tagName = (block.tagName || "div").toLowerCase();
-              const rule = `${tagName}.${cssClass}{${lineStyleStr}}`;
+              const baseRule = `${tagName}.${cssClass}{${baseParts.join("; ")}}`;
+              // Apply strong layout styles only if it's not a list item
+              const strongRule = (strongLayoutParts.length && tagName !== "li")
+                ? `${tagName}.${cssClass}{${strongLayoutParts.join("; ")}}`
+                : "";
+              const rule = `${baseRule}\n${strongRule}`;
               if (styleEl.textContent !== rule) styleEl.textContent = rule;
 
               // Skip span creation for line mode (block already styled via CSS)
@@ -19610,6 +19620,7 @@ class AlwaysColorText extends Plugin {
         // Other properties (background, border, padding) still apply to the line div
         let colorProp = "";
         const lineStyleParts = [];
+        const layoutStyleParts = [];
         for (const decl of style.split(";")) {
           const trimmed = decl.trim();
           if (!trimmed) continue;
@@ -19622,19 +19633,24 @@ class AlwaysColorText extends Plugin {
             // Strip !important from color so children can override
             colorProp = trimmed.replace(/\s*!important/g, "") + ";";
           } else if (
-            prop !== "--highlight-color" &&
-            prop !== "padding-left" &&
-            prop !== "padding-right" &&
-            prop !== "margin-left" &&
-            prop !== "margin-right" &&
-            prop !== "padding" &&
-            prop !== "margin" &&
-            prop !== "text-indent" &&
-            prop !== "padding-inline-start" &&
-            prop !== "padding-inline-end" &&
-            prop !== "margin-inline-start" &&
-            prop !== "margin-inline-end"
+            prop === "padding-left" ||
+            prop === "padding-right" ||
+            prop === "margin-left" ||
+            prop === "margin-right" ||
+            prop === "padding" ||
+            prop === "margin" ||
+            prop === "text-indent" ||
+            prop === "padding-inline-start" ||
+            prop === "padding-inline-end" ||
+            prop === "margin-inline-start" ||
+            prop === "margin-inline-end"
           ) {
+            // Horizontal layout: use !important for non-list lines to win over Obsidian defaults,
+            // but keep it weak for list lines so Obsidian's inline indentation wins.
+            const val = trimmed.replace(/\s*!important/gi, "");
+            layoutStyleParts.push(val + " !important");
+            lineStyleParts.push(val); 
+          } else if (prop !== "--highlight-color") {
             lineStyleParts.push(trimmed);
           }
         }
@@ -19647,8 +19663,13 @@ class AlwaysColorText extends Plugin {
           styleEl.setAttribute("data-act-line-style", "1");
           document.head.appendChild(styleEl);
         }
-        // Apply color with lower specificity (no !important) so inline child spans override
-        const rule = `div.cm-line.${cssClass}{${colorProp}${lineStyleParts.join("; ")}}`;
+        // Apply base styles (including color with lower specificity so inline child spans override)
+        const baseRule = `div.cm-line.${cssClass}{${colorProp}${lineStyleParts.join("; ")}}`;
+        // Apply strong layout styles ONLY to non-list lines
+        const strongLayoutRule = layoutStyleParts.length 
+          ? `div.cm-line.${cssClass}:not(.HyperMD-list-line){${layoutStyleParts.join("; ")}}` 
+          : "";
+        const rule = `${baseRule}\n${strongLayoutRule}`;
         if (styleEl.textContent !== rule) styleEl.textContent = rule;
 
         // Determine target line position

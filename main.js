@@ -36450,18 +36450,22 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                   lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss);
                 }
               }
-              const filteredParts = [];
+              const baseParts = [];
+              const strongLayoutParts = [];
               for (const decl of lineStyleStr.split(";")) {
                 const trimmed = decl.trim();
                 if (!trimmed) continue;
                 const colonIdx = trimmed.indexOf(":");
                 if (colonIdx === -1) continue;
                 const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
-                if (prop !== "padding-left" && prop !== "padding-right" && prop !== "margin-left" && prop !== "margin-right" && prop !== "padding" && prop !== "margin" && prop !== "text-indent" && prop !== "padding-inline-start" && prop !== "padding-inline-end" && prop !== "margin-inline-start" && prop !== "margin-inline-end") {
-                  filteredParts.push(trimmed);
+                if (prop === "padding-left" || prop === "padding-right" || prop === "margin-left" || prop === "margin-right" || prop === "padding" || prop === "margin" || prop === "text-indent" || prop === "padding-inline-start" || prop === "padding-inline-end" || prop === "margin-inline-start" || prop === "margin-inline-end") {
+                  const val = trimmed.replace(/\s*!important/gi, "");
+                  strongLayoutParts.push(val + " !important");
+                  baseParts.push(val);
+                } else {
+                  baseParts.push(trimmed);
                 }
               }
-              lineStyleStr = filteredParts.join("; ");
               const styleId = `act-line-style-reading-${cssClass}`;
               let styleEl = document.getElementById(styleId);
               if (!styleEl) {
@@ -36471,7 +36475,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                 document.head.appendChild(styleEl);
               }
               const tagName = (block.tagName || "div").toLowerCase();
-              const rule = `${tagName}.${cssClass}{${lineStyleStr}}`;
+              const baseRule = `${tagName}.${cssClass}{${baseParts.join("; ")}}`;
+              const strongRule = strongLayoutParts.length && tagName !== "li" ? `${tagName}.${cssClass}{${strongLayoutParts.join("; ")}}` : "";
+              const rule = `${baseRule}
+${strongRule}`;
               if (styleEl.textContent !== rule) styleEl.textContent = rule;
               frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
               pos = m.end;
@@ -40714,6 +40721,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         const cssClass = String(rawPattern).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
         let colorProp = "";
         const lineStyleParts = [];
+        const layoutStyleParts = [];
         for (const decl of style.split(";")) {
           const trimmed = decl.trim();
           if (!trimmed) continue;
@@ -40724,7 +40732,11 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             colorProp = `${trimmed};`;
           } else if (prop === "color") {
             colorProp = trimmed.replace(/\s*!important/g, "") + ";";
-          } else if (prop !== "--highlight-color" && prop !== "padding-left" && prop !== "padding-right" && prop !== "margin-left" && prop !== "margin-right" && prop !== "padding" && prop !== "margin" && prop !== "text-indent" && prop !== "padding-inline-start" && prop !== "padding-inline-end" && prop !== "margin-inline-start" && prop !== "margin-inline-end") {
+          } else if (prop === "padding-left" || prop === "padding-right" || prop === "margin-left" || prop === "margin-right" || prop === "padding" || prop === "margin" || prop === "text-indent" || prop === "padding-inline-start" || prop === "padding-inline-end" || prop === "margin-inline-start" || prop === "margin-inline-end") {
+            const val = trimmed.replace(/\s*!important/gi, "");
+            layoutStyleParts.push(val + " !important");
+            lineStyleParts.push(val);
+          } else if (prop !== "--highlight-color") {
             lineStyleParts.push(trimmed);
           }
         }
@@ -40736,7 +40748,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           styleEl.setAttribute("data-act-line-style", "1");
           document.head.appendChild(styleEl);
         }
-        const rule = `div.cm-line.${cssClass}{${colorProp}${lineStyleParts.join("; ")}}`;
+        const baseRule = `div.cm-line.${cssClass}{${colorProp}${lineStyleParts.join("; ")}}`;
+        const strongLayoutRule = layoutStyleParts.length ? `div.cm-line.${cssClass}:not(.HyperMD-list-line){${layoutStyleParts.join("; ")}}` : "";
+        const rule = `${baseRule}
+${strongLayoutRule}`;
         if (styleEl.textContent !== rule) styleEl.textContent = rule;
         let lineStart;
         if (markTarget === "nextLine") {
