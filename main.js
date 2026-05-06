@@ -36419,8 +36419,6 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                 const bg = m.backgroundColor || m.entryRef.backgroundColor;
                 const params = this.getHighlightParams(m.entryRef || {});
                 lineStyleParts.push(`background-color: ${this.hexToRgba(bg, params.opacity ?? 25)}`);
-                lineStyleParts.push(`padding-left: ${params.hPad ?? 4}px`);
-                lineStyleParts.push(`padding-right: ${params.hPad ?? 4}px`);
                 const vpad = params.vPad ?? 0;
                 lineStyleParts.push(`padding-top: ${vpad >= 0 ? vpad : 0}px`);
                 lineStyleParts.push(`padding-bottom: ${vpad >= 0 ? vpad : 0}px`);
@@ -36452,6 +36450,18 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
                   lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss);
                 }
               }
+              const filteredParts = [];
+              for (const decl of lineStyleStr.split(";")) {
+                const trimmed = decl.trim();
+                if (!trimmed) continue;
+                const colonIdx = trimmed.indexOf(":");
+                if (colonIdx === -1) continue;
+                const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
+                if (prop !== "padding-left" && prop !== "padding-right" && prop !== "margin-left" && prop !== "margin-right" && prop !== "padding" && prop !== "margin" && prop !== "text-indent" && prop !== "padding-inline-start" && prop !== "padding-inline-end" && prop !== "margin-inline-start" && prop !== "margin-inline-end") {
+                  filteredParts.push(trimmed);
+                }
+              }
+              lineStyleStr = filteredParts.join("; ");
               const styleId = `act-line-style-reading-${cssClass}`;
               let styleEl = document.getElementById(styleId);
               if (!styleEl) {
@@ -40709,12 +40719,12 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           if (!trimmed) continue;
           const colonIdx = trimmed.indexOf(":");
           if (colonIdx === -1) continue;
-          const prop = trimmed.slice(0, colonIdx).trim();
+          const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
           if (prop === "color" && !trimmed.includes("!important")) {
             colorProp = `${trimmed};`;
           } else if (prop === "color") {
             colorProp = trimmed.replace(/\s*!important/g, "") + ";";
-          } else if (prop !== "--highlight-color") {
+          } else if (prop !== "--highlight-color" && prop !== "padding-left" && prop !== "padding-right" && prop !== "margin-left" && prop !== "margin-right" && prop !== "padding" && prop !== "margin" && prop !== "text-indent" && prop !== "padding-inline-start" && prop !== "padding-inline-end" && prop !== "margin-inline-start" && prop !== "margin-inline-end") {
             lineStyleParts.push(trimmed);
           }
         }
