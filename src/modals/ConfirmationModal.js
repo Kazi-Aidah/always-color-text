@@ -14,6 +14,7 @@ export class ConfirmationModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     this._eventListeners = []; // Reset listeners
+    try { this.modalEl.addClass("act-modal"); } catch (e) {}
 
     const h2 = contentEl.createEl("h2", { text: this.title });
     h2.style.marginTop = "0"; // Remove top margin

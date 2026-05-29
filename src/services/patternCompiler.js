@@ -36,17 +36,19 @@ export class PatternMatcher {
         const esc = this.helpers.escapeRegex
           ? this.helpers.escapeRegex(entry.pattern)
           : entry.pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const lf = effectiveCS ? "g" : "gi";
+        const lf = effectiveCS
+          ? "g" + (flags.includes("u") ? "u" : "")
+          : "gi" + (flags.includes("u") ? "u" : "");
         entry.regex = cache
           ? cache.getOrCreate(esc, lf)
           : this._createRegexSafe(esc, lf);
         entry.testRegex = effectiveCS
           ? cache
-            ? cache.getOrCreate(esc, "")
-            : this._createRegexSafe(esc, "")
+            ? cache.getOrCreate(esc, flags.includes("u") ? "u" : "")
+            : this._createRegexSafe(esc, flags.includes("u") ? "u" : "")
           : cache
-            ? cache.getOrCreate(esc, "i")
-            : this._createRegexSafe(esc, "i");
+            ? cache.getOrCreate(esc, flags.includes("u") ? "iu" : "i")
+            : this._createRegexSafe(esc, flags.includes("u") ? "iu" : "i");
       }
     } catch (_) {
       entry.invalid = true;
@@ -63,7 +65,31 @@ export class PatternMatcher {
   }
 
   isWordCharacter(char) {
-    return /[A-Za-z0-9]/.test(char) || char === "-" || char === "'";
+    if (!char) return false;
+    // Use \p{L} (Unicode letter) and \p{N} (Unicode number) via the u flag,
+    // which covers all scripts including supplementary plane characters.
+    // Hyphen and apostrophe are also treated as word-internal characters.
+    try {
+      if (char === "-" || char === "'") return true;
+      return /[\p{L}\p{N}]/u.test(char);
+    } catch (_) {
+      // Fallback for environments without Unicode property escapes
+      if (/[A-Za-z0-9]/.test(char) || char === "-" || char === "'") return true;
+      const code = char.codePointAt(0);
+      return (
+        (code >= 0x00C0 && code <= 0x024F) ||
+        (code >= 0x0250 && code <= 0x02AF) ||
+        (code >= 0x0370 && code <= 0x03FF) ||
+        (code >= 0x0400 && code <= 0x052F) ||
+        (code >= 0x0600 && code <= 0x06FF) ||
+        (code >= 0x0900 && code <= 0x0DFF) ||
+        (code >= 0x0E00 && code <= 0x0E7F) ||
+        (code >= 0x1E00 && code <= 0x1EFF) ||
+        (code >= 0x4E00 && code <= 0x9FFF) ||
+        (code >= 0xAC00 && code <= 0xD7AF) ||
+        (code >= 0xF900 && code <= 0xFAFF)
+      );
+    }
   }
 
   extractFullWordAtPosition(text, start, end) {
@@ -141,52 +167,17 @@ export class PatternMatcher {
         return containsMatch;
 
       case "startswith":
-        try {
-          const isNonRoman =
-            this.containsNonRomanCharacters &&
-            this.containsNonRomanCharacters(pattern);
-          if (isNonRoman) {
-            const startsWithMatch = cs
-              ? fullWord.startsWith(pattern)
-              : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
-            return startsWithMatch;
-          }
-          const flags = cs ? "" : "i";
-          const esc = this.helpers.escapeRegex
-            ? this.helpers.escapeRegex(pattern)
-            : pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const re = new RegExp(`^${esc}[A-Za-z]*$`, flags);
-          return re.test(fullWord);
-        } catch (_) {
-          const startsWithMatch = cs
-            ? fullWord.startsWith(pattern)
-            : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
-          return startsWithMatch;
-        }
+        // Use native startsWith — it correctly handles all Unicode codepoints
+        // including supplementary characters (emoji, CJK extensions, etc.)
+        return cs
+          ? fullWord.startsWith(pattern)
+          : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
 
       case "endswith":
-        try {
-          const isNonRoman =
-            this.containsNonRomanCharacters &&
-            this.containsNonRomanCharacters(pattern);
-          if (isNonRoman) {
-            const endsWithMatch = cs
-              ? fullWord.endsWith(pattern)
-              : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
-            return endsWithMatch;
-          }
-          const flags = cs ? "" : "i";
-          const esc = this.helpers.escapeRegex
-            ? this.helpers.escapeRegex(pattern)
-            : pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const re = new RegExp(`${esc}(?:[^A-Za-z0-9_]|$)`, flags);
-          return re.test(fullWord);
-        } catch (_) {
-          const endsWithMatch = cs
-            ? fullWord.endsWith(pattern)
-            : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
-          return endsWithMatch;
-        }
+        // Use native endsWith for the same Unicode-correctness reasons
+        return cs
+          ? fullWord.endsWith(pattern)
+          : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
 
       default:
         return true;
@@ -202,7 +193,7 @@ export class PatternMatcher {
     const wholeWord = (t, s, e) => {
       const lc = s > 0 ? t[s - 1] : "";
       const rc = e < t.length ? t[e] : "";
-      const isW = (ch) => /[A-Za-z0-9]/.test(ch) || ch === "-" || ch === "'";
+      const isW = (ch) => this.isWordCharacter(ch);
       return (s === 0 || !isW(lc)) && (e === t.length || !isW(rc));
     };
     for (const entry of entries) {
@@ -232,22 +223,9 @@ export class PatternMatcher {
         let fws = ms;
         let fwe = me;
         if (!isSentence(entry.pattern)) {
-          while (
-            fws > 0 &&
-            (/[A-Za-z0-9]/.test(text[fws - 1]) ||
-              text[fws - 1] === "-" ||
-              text[fws - 1] === "'")
-          )
-            fws--;
-          while (
-            fwe < text.length &&
-            (/[A-Za-z0-9]/.test(text[fwe]) ||
-              text[fwe] === "-" ||
-              text[fwe] === "'")
-          )
-            fwe++;
-        }
-        const mtLower = String(
+          while (fws > 0 && this.isWordCharacter(text[fws - 1])) fws--;
+          while (fwe < text.length && this.isWordCharacter(text[fwe])) fwe++;
+        }        const mtLower = String(
           (entry && entry.matchType) ||
             (this.settings.partialMatch ? "contains" : "exact"),
         ).toLowerCase();
@@ -635,29 +613,32 @@ export function compileWordEntriesLogic(plugin) {
               compiled.matchType || "exact",
             ).toLowerCase();
             const isSentence = plugin.isSentenceLikePattern(pattern);
-            const isNonRoman = plugin.containsNonRomanCharacters
-              ? plugin.containsNonRomanCharacters(pattern)
-              : false;
+            // Use \p{L}\p{N} with the u flag — covers every Unicode letter and digit
+            // including supplementary plane characters (emoji, historic scripts, etc.)
+            // that a manual code-point range list would miss.
+            const UWC = "\\p{L}\\p{N}\\-'";
             let finalPattern = esc;
             if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = isNonRoman ? esc : "\\b" + esc;
+              finalPattern = `(?<![${UWC}])` + esc;
             } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = isNonRoman ? esc : esc + "\\b";
+              finalPattern = esc + `(?![${UWC}])`;
             } else if (
               !isSentence &&
               matchTypeLower === "exact" &&
               String(pattern).length === 1
             ) {
-              finalPattern = isNonRoman ? esc : "\\b" + esc + "\\b";
+              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
             }
-            const literalFlags = effectiveCaseSensitive ? "g" : "gi";
+            // Always include the u flag so \p{L}/\p{N} and supplementary-plane
+            // characters are handled correctly.
+            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
             compiled.regex = plugin._regexCache.getOrCreate(
               finalPattern,
               literalFlags,
             );
             compiled.testRegex = effectiveCaseSensitive
-              ? plugin._regexCache.getOrCreate(finalPattern, "")
-              : plugin._regexCache.getOrCreate(finalPattern, "i");
+              ? plugin._regexCache.getOrCreate(finalPattern, "u")
+              : plugin._regexCache.getOrCreate(finalPattern, "iu");
           }
         } catch (err) {
           compiled.invalid = true;
@@ -920,29 +901,32 @@ export function compileTextBgColoringEntriesLogic(plugin) {
               compiled.matchType || "exact",
             ).toLowerCase();
             const isSentence = plugin.isSentenceLikePattern(pattern);
-            const isNonRoman = plugin.containsNonRomanCharacters
-              ? plugin.containsNonRomanCharacters(pattern)
-              : false;
+            // Use \p{L}\p{N} with the u flag — covers every Unicode letter and digit
+            // including supplementary plane characters (emoji, historic scripts, etc.)
+            // that a manual code-point range list would miss.
+            const UWC = "\\p{L}\\p{N}\\-'";
             let finalPattern = esc;
             if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = isNonRoman ? esc : "\\b" + esc;
+              finalPattern = `(?<![${UWC}])` + esc;
             } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = isNonRoman ? esc : esc + "\\b";
+              finalPattern = esc + `(?![${UWC}])`;
             } else if (
               !isSentence &&
               matchTypeLower === "exact" &&
               String(pattern).length === 1
             ) {
-              finalPattern = isNonRoman ? esc : "\\b" + esc + "\\b";
+              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
             }
-            const literalFlags = effectiveCaseSensitive ? "g" : "gi";
+            // Always include the u flag so \p{L}/\p{N} and supplementary-plane
+            // characters are handled correctly.
+            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
             compiled.regex = plugin._regexCache.getOrCreate(
               finalPattern,
               literalFlags,
             );
             compiled.testRegex = effectiveCaseSensitive
-              ? plugin._regexCache.getOrCreate(finalPattern, "")
-              : plugin._regexCache.getOrCreate(finalPattern, "i");
+              ? plugin._regexCache.getOrCreate(finalPattern, "u")
+              : plugin._regexCache.getOrCreate(finalPattern, "iu");
           }
           try {
             compiled.fastTest = plugin.createFastTester(
@@ -1025,13 +1009,11 @@ export function compileBlacklistEntriesLogic(plugin) {
     for (const word of blacklistWords) {
       if (!word) continue;
       try {
-        const flags = plugin.settings.caseSensitive ? "" : "i";
-        const isNonRoman = plugin.containsNonRomanCharacters
-          ? plugin.containsNonRomanCharacters(String(word))
-          : false;
-        const pattern = isNonRoman
-          ? `${plugin.escapeRegex(String(word))}`
-          : `\\b${plugin.escapeRegex(String(word))}\\b`;
+        const flags = plugin.settings.caseSensitive ? "u" : "iu";
+        // Use \p{L}\p{N} with the u flag for correct Unicode word boundaries
+        const UWC = "\\p{L}\\p{N}\\-'";
+        const esc = plugin.escapeRegex(String(word));
+        const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
         const regex = plugin._regexCache.getOrCreate(pattern, flags);
         if (regex) {
           plugin._compiledBlacklistWords.push({ word, regex, flags });
@@ -1061,13 +1043,11 @@ export function compileBlacklistEntriesLogic(plugin) {
               : [entry.pattern];
           for (const p of patterns) {
             if (!p) continue;
-            const flags = plugin.settings.caseSensitive ? "" : "i";
-            const isNonRoman = plugin.containsNonRomanCharacters
-              ? plugin.containsNonRomanCharacters(String(p))
-              : false;
-            const pattern = isNonRoman
-              ? `${plugin.escapeRegex(String(p))}`
-              : `\\b${plugin.escapeRegex(String(p))}\\b`;
+            const flags = plugin.settings.caseSensitive ? "u" : "iu";
+            // Use \p{L}\p{N} with the u flag for correct Unicode word boundaries
+            const UWC = "\\p{L}\\p{N}\\-'";
+            const esc = plugin.escapeRegex(String(p));
+            const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
             const regex = plugin._regexCache.getOrCreate(pattern, flags);
             if (regex) {
               compiled.patterns.push({
@@ -1122,15 +1102,14 @@ export function compileBlacklistEntriesLogic(plugin) {
                 : [entry.pattern];
             for (const p of patterns) {
               if (!p) continue;
-              const isNonRoman = plugin.containsNonRomanCharacters
-                ? plugin.containsNonRomanCharacters(String(p))
-                : false;
-              const pattern = isNonRoman
-                ? `${plugin.escapeRegex(String(p))}`
-                : `\\b${plugin.escapeRegex(String(p))}\\b`;
+              // Use \p{L}\p{N} with the u flag for correct Unicode word boundaries
+              const UWC = "\\p{L}\\p{N}\\-'";
+              const esc = plugin.escapeRegex(String(p));
+              const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
+              const flags = compiled.isCaseSensitive ? "u" : "iu";
               const regex = plugin._regexCache.getOrCreate(
                 pattern,
-                compiled.isCaseSensitive ? "" : "i",
+                flags,
               );
               if (regex) {
                 entryCompiled.patterns.push({

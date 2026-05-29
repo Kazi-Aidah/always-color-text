@@ -10,6 +10,7 @@ export class ChangelogModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.style.maxWidth = "900px";
       this.modalEl.style.width = "900px";
       this.modalEl.style.padding = "25px";

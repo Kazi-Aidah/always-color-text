@@ -330,6 +330,7 @@ export class CustomCssModal extends Modal {
     }
 
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass('act-custom-css-modal');
       this.modalEl.style.minWidth = '540px';
     } catch (_) {}

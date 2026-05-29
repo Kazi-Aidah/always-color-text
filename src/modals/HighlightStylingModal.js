@@ -33,6 +33,7 @@ export class HighlightStylingModal extends Modal {
 
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-highlight-styling-modal");
       this.modalEl.addClass("act-highlight-modal");
       this.modalEl.style.padding = "20px";
@@ -76,7 +77,6 @@ export class HighlightStylingModal extends Modal {
       groupSelect.style.border = "1px solid var(--background-modifier-border)";
       groupSelect.style.borderRadius = "4px";
       groupSelect.style.background = "var(--background-modifier-form-field)";
-      groupSelect.style.textAlign = "center";
       const defaultOpt = groupSelect.createEl("option", {
         text: this.plugin.t("no_group", "No Group"),
       });
@@ -183,7 +183,6 @@ export class HighlightStylingModal extends Modal {
       markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
       markTargetSelect.style.borderRadius = "4px";
       markTargetSelect.style.background = "var(--background-modifier-form-field)";
-      markTargetSelect.style.textAlign = "center";
 
       [
         ["text", this.plugin.t("mark_target_text", "Color Text")],
@@ -218,7 +217,6 @@ export class HighlightStylingModal extends Modal {
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.borderRadius = "4px";
       matchSelect.style.background = "var(--background-modifier-form-field)";
-      matchSelect.style.textAlign = "center";
     }
 
     if (!fromQuickOnce && isGroup) {
@@ -331,7 +329,6 @@ export class HighlightStylingModal extends Modal {
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
     styleSelect.style.borderRadius = "4px";
     styleSelect.style.background = "var(--background-modifier-form-field)";
-    styleSelect.style.textAlign = "center";
     styleSelect.value =
       this.entry && this.entry.styleType
         ? this.entry.styleType
@@ -412,7 +409,6 @@ export class HighlightStylingModal extends Modal {
       applyModeSelect.style.border = "1px solid var(--background-modifier-border)";
       applyModeSelect.style.borderRadius = "4px";
       applyModeSelect.style.background = "var(--background-modifier-form-field)";
-      applyModeSelect.style.textAlign = "center";
 
       [
         ["act", this.plugin.t("quick_colors_apply_mode_act", "Always Color Text")],

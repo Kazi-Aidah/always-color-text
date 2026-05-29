@@ -6500,6 +6500,7 @@ var PresetModal = class extends import_obsidian.Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
+    this.modalEl.addClass("act-modal");
     this.modalEl.addClass("act-preset-modal");
     try {
       this.modalEl.style.maxWidth = "1200px !important";
@@ -7089,6 +7090,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.style.setProperty("--dialog-width", "760px");
       this.modalEl.style.width = "760px";
       this.modalEl.style.maxWidth = "95vw";
@@ -7135,7 +7137,6 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
     styleSelect.style.borderRadius = "var(--radius-m)";
     styleSelect.style.background = "var(--background-modifier-form-field)";
-    styleSelect.style.textAlign = "center";
     styleSelect.style.marginTop = "0";
     const markTargetSelect = controlsRow.createEl("select");
     [
@@ -7150,7 +7151,6 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
     markTargetSelect.style.borderRadius = "var(--radius-m)";
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
-    markTargetSelect.style.textAlign = "center";
     markTargetSelect.style.marginTop = "0";
     const textColorInput = controlsRow.createEl("input", { type: "color" });
     textColorInput.value = this._preFillTextColor || "#87c760";
@@ -8043,6 +8043,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
       return;
     }
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-custom-css-modal");
       this.modalEl.style.minWidth = "540px";
     } catch (_) {
@@ -8329,6 +8330,7 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.style.maxWidth = "820px";
       this.modalEl.style.padding = "20px";
     } catch (e) {
@@ -10367,6 +10369,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-edit-entry-modal");
       this.modalEl.style.maxWidth = "900px";
       this.modalEl.style.padding = "20px";
@@ -10563,7 +10566,6 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
     styleSelect.style.borderRadius = "4px";
     styleSelect.style.background = "var(--background-modifier-form-field)";
-    styleSelect.style.textAlign = "center";
     styleSelect.style.flex = "1 0%";
     const pickerRow = rightColumn.createDiv();
     pickerRow.addClass("act-edit-entry-pickers");
@@ -10690,7 +10692,6 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
     markTargetSelect.style.borderRadius = "4px";
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
-    markTargetSelect.style.textAlign = "center";
     [
       ["text", this.plugin.t("mark_target_text", "Color Text")],
       ["line", this.plugin.t("mark_target_line", "Color Line")],
@@ -10775,7 +10776,6 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     groupSelect.style.border = "1px solid var(--background-modifier-border)";
     groupSelect.style.borderRadius = "4px";
     groupSelect.style.background = "var(--background-modifier-form-field)";
-    groupSelect.style.textAlign = "center";
     const defaultOpt = groupSelect.createEl("option", {
       text: this.plugin.t("no_group", "No Group")
     });
@@ -10869,7 +10869,6 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     matchSelect.style.border = "1px solid var(--background-modifier-border)";
     matchSelect.style.borderRadius = "4px";
     matchSelect.style.background = "var(--background-modifier-form-field)";
-    matchSelect.style.textAlign = "center";
     matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
     const caseSel = controls.createEl("select");
     caseSel.style.flex = "0.5 0 auto";
@@ -10880,7 +10879,6 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     caseSel.style.border = "1px solid var(--background-modifier-border)";
     caseSel.style.borderRadius = "4px";
     caseSel.style.background = "var(--background-modifier-form-field)";
-    caseSel.style.textAlign = "center";
     caseSel.innerHTML = `<option value="case">${this.plugin.t("opt_case_sensitive", "is case sensitive")}</option><option value="nocase">${this.plugin.t("opt_not_case_sensitive", "not case sensitive")}</option>`;
     let openRegexBtn = null;
     if (isRegex) {
@@ -11865,6 +11863,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     this.modalEl.style.margin = "0";
     this.modalEl.style.padding = "0";
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-color-picker-modal");
     } catch (e) {
     }
@@ -13248,6 +13247,7 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
     this._handlers.push({ el: contentEl, ev: "change", fn: clearResetFlag });
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-highlight-styling-modal");
       this.modalEl.addClass("act-highlight-modal");
       this.modalEl.style.padding = "20px";
@@ -13281,7 +13281,6 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       groupSelect.style.border = "1px solid var(--background-modifier-border)";
       groupSelect.style.borderRadius = "4px";
       groupSelect.style.background = "var(--background-modifier-form-field)";
-      groupSelect.style.textAlign = "center";
       const defaultOpt = groupSelect.createEl("option", {
         text: this.plugin.t("no_group", "No Group")
       });
@@ -13367,7 +13366,6 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
       markTargetSelect.style.borderRadius = "4px";
       markTargetSelect.style.background = "var(--background-modifier-form-field)";
-      markTargetSelect.style.textAlign = "center";
       [
         ["text", this.plugin.t("mark_target_text", "Color Text")],
         ["line", this.plugin.t("mark_target_line", "Color Line")],
@@ -13395,7 +13393,6 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.borderRadius = "4px";
       matchSelect.style.background = "var(--background-modifier-form-field)";
-      matchSelect.style.textAlign = "center";
     }
     if (!fromQuickOnce && isGroup) {
       matchSelect.innerHTML = `<option value="per-entry">${this.plugin.t("opt_match_all", "Match Type (All)")}</option>
@@ -13476,7 +13473,6 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
     styleSelect.style.borderRadius = "4px";
     styleSelect.style.background = "var(--background-modifier-form-field)";
-    styleSelect.style.textAlign = "center";
     styleSelect.value = this.entry && this.entry.styleType ? this.entry.styleType : isGroup ? "" : "both";
     const pickerRow = styleCol.createDiv();
     pickerRow.addClass("act-highlight-picker-row");
@@ -13523,7 +13519,6 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       applyModeSelect.style.border = "1px solid var(--background-modifier-border)";
       applyModeSelect.style.borderRadius = "4px";
       applyModeSelect.style.background = "var(--background-modifier-form-field)";
-      applyModeSelect.style.textAlign = "center";
       [
         ["act", this.plugin.t("quick_colors_apply_mode_act", "Always Color Text")],
         ["html", this.plugin.t("quick_colors_apply_mode_html", "Inline HTML")]
@@ -14352,6 +14347,7 @@ var ChangelogModal = class extends import_obsidian9.Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.style.maxWidth = "900px";
       this.modalEl.style.width = "900px";
       this.modalEl.style.padding = "25px";
@@ -14529,6 +14525,10 @@ var AlertModal = class extends import_obsidian10.Modal {
     const { contentEl } = this;
     contentEl.empty();
     this._eventListeners = [];
+    try {
+      this.modalEl.addClass("act-modal");
+    } catch (e) {
+    }
     const h2 = contentEl.createEl("h2", { text: this.title });
     h2.style.marginTop = "0";
     try {
@@ -14593,6 +14593,10 @@ var ConfirmationModal = class extends import_obsidian11.Modal {
     const { contentEl } = this;
     contentEl.empty();
     this._eventListeners = [];
+    try {
+      this.modalEl.addClass("act-modal");
+    } catch (e) {
+    }
     const h2 = contentEl.createEl("h2", { text: this.title });
     h2.style.marginTop = "0";
     contentEl.createEl("p", { text: this.message });
@@ -14663,6 +14667,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     this.modalEl.style.width = "1000px";
     this.modalEl.style.maxWidth = "95vw";
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-edit-word-group-modal");
     } catch (e) {
       try {
@@ -15847,6 +15852,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     this.modalEl.style.width = "900px";
     this.modalEl.style.maxWidth = "95vw";
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-edit-blacklist-group-modal");
     } catch (e) {
       try {
@@ -23917,19 +23923,12 @@ function buildEditorExtension(plugin) {
         this.wasInTable = false;
         setTimeout(() => {
           try {
-            this.view.dispatch({ effects: forceRebuildEffect.of(true) });
-          } catch (_) {
-          }
-        }, 100);
-        this._initialBuildDone = false;
-        setTimeout(() => {
-          try {
             if (this.view && this.view.dispatch) {
               this.view.dispatch({ effects: forceRebuildEffect.of(true) });
             }
           } catch (_) {
           }
-        }, 100);
+        }, 0);
         try {
           const sel = window.getSelection();
           if (sel && sel.rangeCount > 0) {
@@ -24380,9 +24379,9 @@ var PatternMatcher = class {
         entry.testRegex = cache ? cache.getOrCreate(entry.pattern, tf) : tf === "" ? this._createRegexSafe(entry.pattern, "") : this._createRegexSafe(entry.pattern, tf);
       } else {
         const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(entry.pattern) : entry.pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const lf = effectiveCS ? "g" : "gi";
+        const lf = effectiveCS ? "g" + (flags.includes("u") ? "u" : "") : "gi" + (flags.includes("u") ? "u" : "");
         entry.regex = cache ? cache.getOrCreate(esc, lf) : this._createRegexSafe(esc, lf);
-        entry.testRegex = effectiveCS ? cache ? cache.getOrCreate(esc, "") : this._createRegexSafe(esc, "") : cache ? cache.getOrCreate(esc, "i") : this._createRegexSafe(esc, "i");
+        entry.testRegex = effectiveCS ? cache ? cache.getOrCreate(esc, flags.includes("u") ? "u" : "") : this._createRegexSafe(esc, flags.includes("u") ? "u" : "") : cache ? cache.getOrCreate(esc, flags.includes("u") ? "iu" : "i") : this._createRegexSafe(esc, flags.includes("u") ? "iu" : "i");
       }
     } catch (_) {
       entry.invalid = true;
@@ -24397,7 +24396,15 @@ var PatternMatcher = class {
     }
   }
   isWordCharacter(char) {
-    return /[A-Za-z0-9]/.test(char) || char === "-" || char === "'";
+    if (!char) return false;
+    try {
+      if (char === "-" || char === "'") return true;
+      return /[\p{L}\p{N}]/u.test(char);
+    } catch (_) {
+      if (/[A-Za-z0-9]/.test(char) || char === "-" || char === "'") return true;
+      const code = char.codePointAt(0);
+      return code >= 192 && code <= 591 || code >= 592 && code <= 687 || code >= 880 && code <= 1023 || code >= 1024 && code <= 1327 || code >= 1536 && code <= 1791 || code >= 2304 && code <= 3583 || code >= 3584 && code <= 3711 || code >= 7680 && code <= 7935 || code >= 19968 && code <= 40959 || code >= 44032 && code <= 55215 || code >= 63744 && code <= 64255;
+    }
   }
   extractFullWordAtPosition(text, start, end) {
     let wordStart = start;
@@ -24443,35 +24450,9 @@ var PatternMatcher = class {
         const containsMatch = cs ? fullWord.includes(pattern) : fullWord.toLowerCase().includes(pattern.toLowerCase());
         return containsMatch;
       case "startswith":
-        try {
-          const isNonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern);
-          if (isNonRoman) {
-            const startsWithMatch = cs ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
-            return startsWithMatch;
-          }
-          const flags = cs ? "" : "i";
-          const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const re = new RegExp(`^${esc}[A-Za-z]*$`, flags);
-          return re.test(fullWord);
-        } catch (_) {
-          const startsWithMatch = cs ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
-          return startsWithMatch;
-        }
+        return cs ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
       case "endswith":
-        try {
-          const isNonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern);
-          if (isNonRoman) {
-            const endsWithMatch = cs ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
-            return endsWithMatch;
-          }
-          const flags = cs ? "" : "i";
-          const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const re = new RegExp(`${esc}(?:[^A-Za-z0-9_]|$)`, flags);
-          return re.test(fullWord);
-        } catch (_) {
-          const endsWithMatch = cs ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
-          return endsWithMatch;
-        }
+        return cs ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
       default:
         return true;
     }
@@ -24482,7 +24463,7 @@ var PatternMatcher = class {
     const wholeWord = (t, s, e) => {
       const lc = s > 0 ? t[s - 1] : "";
       const rc = e < t.length ? t[e] : "";
-      const isW = (ch) => /[A-Za-z0-9]/.test(ch) || ch === "-" || ch === "'";
+      const isW = (ch) => this.isWordCharacter(ch);
       return (s === 0 || !isW(lc)) && (e === t.length || !isW(rc));
     };
     for (const entry of entries) {
@@ -24511,10 +24492,8 @@ var PatternMatcher = class {
         let fws = ms;
         let fwe = me;
         if (!isSentence(entry.pattern)) {
-          while (fws > 0 && (/[A-Za-z0-9]/.test(text[fws - 1]) || text[fws - 1] === "-" || text[fws - 1] === "'"))
-            fws--;
-          while (fwe < text.length && (/[A-Za-z0-9]/.test(text[fwe]) || text[fwe] === "-" || text[fwe] === "'"))
-            fwe++;
+          while (fws > 0 && this.isWordCharacter(text[fws - 1])) fws--;
+          while (fwe < text.length && this.isWordCharacter(text[fwe])) fwe++;
         }
         const mtLower = String(
           entry && entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
@@ -24814,21 +24793,21 @@ function compileWordEntriesLogic(plugin) {
               compiled.matchType || "exact"
             ).toLowerCase();
             const isSentence = plugin.isSentenceLikePattern(pattern);
-            const isNonRoman = plugin.containsNonRomanCharacters ? plugin.containsNonRomanCharacters(pattern) : false;
+            const UWC = "\\p{L}\\p{N}\\-'";
             let finalPattern = esc;
             if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = isNonRoman ? esc : "\\b" + esc;
+              finalPattern = `(?<![${UWC}])` + esc;
             } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = isNonRoman ? esc : esc + "\\b";
+              finalPattern = esc + `(?![${UWC}])`;
             } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
-              finalPattern = isNonRoman ? esc : "\\b" + esc + "\\b";
+              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
             }
-            const literalFlags = effectiveCaseSensitive ? "g" : "gi";
+            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
             compiled.regex = plugin._regexCache.getOrCreate(
               finalPattern,
               literalFlags
             );
-            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "") : plugin._regexCache.getOrCreate(finalPattern, "i");
+            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "u") : plugin._regexCache.getOrCreate(finalPattern, "iu");
           }
         } catch (err) {
           compiled.invalid = true;
@@ -25027,21 +25006,21 @@ function compileTextBgColoringEntriesLogic(plugin) {
               compiled.matchType || "exact"
             ).toLowerCase();
             const isSentence = plugin.isSentenceLikePattern(pattern);
-            const isNonRoman = plugin.containsNonRomanCharacters ? plugin.containsNonRomanCharacters(pattern) : false;
+            const UWC = "\\p{L}\\p{N}\\-'";
             let finalPattern = esc;
             if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = isNonRoman ? esc : "\\b" + esc;
+              finalPattern = `(?<![${UWC}])` + esc;
             } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = isNonRoman ? esc : esc + "\\b";
+              finalPattern = esc + `(?![${UWC}])`;
             } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
-              finalPattern = isNonRoman ? esc : "\\b" + esc + "\\b";
+              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
             }
-            const literalFlags = effectiveCaseSensitive ? "g" : "gi";
+            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
             compiled.regex = plugin._regexCache.getOrCreate(
               finalPattern,
               literalFlags
             );
-            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "") : plugin._regexCache.getOrCreate(finalPattern, "i");
+            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "u") : plugin._regexCache.getOrCreate(finalPattern, "iu");
           }
           try {
             compiled.fastTest = plugin.createFastTester(
@@ -25111,9 +25090,10 @@ function compileBlacklistEntriesLogic(plugin) {
     for (const word of blacklistWords) {
       if (!word) continue;
       try {
-        const flags = plugin.settings.caseSensitive ? "" : "i";
-        const isNonRoman = plugin.containsNonRomanCharacters ? plugin.containsNonRomanCharacters(String(word)) : false;
-        const pattern = isNonRoman ? `${plugin.escapeRegex(String(word))}` : `\\b${plugin.escapeRegex(String(word))}\\b`;
+        const flags = plugin.settings.caseSensitive ? "u" : "iu";
+        const UWC = "\\p{L}\\p{N}\\-'";
+        const esc = plugin.escapeRegex(String(word));
+        const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
         const regex = plugin._regexCache.getOrCreate(pattern, flags);
         if (regex) {
           plugin._compiledBlacklistWords.push({ word, regex, flags });
@@ -25136,9 +25116,10 @@ function compileBlacklistEntriesLogic(plugin) {
           const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
           for (const p of patterns) {
             if (!p) continue;
-            const flags = plugin.settings.caseSensitive ? "" : "i";
-            const isNonRoman = plugin.containsNonRomanCharacters ? plugin.containsNonRomanCharacters(String(p)) : false;
-            const pattern = isNonRoman ? `${plugin.escapeRegex(String(p))}` : `\\b${plugin.escapeRegex(String(p))}\\b`;
+            const flags = plugin.settings.caseSensitive ? "u" : "iu";
+            const UWC = "\\p{L}\\p{N}\\-'";
+            const esc = plugin.escapeRegex(String(p));
+            const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
             const regex = plugin._regexCache.getOrCreate(pattern, flags);
             if (regex) {
               compiled.patterns.push({
@@ -25183,11 +25164,13 @@ function compileBlacklistEntriesLogic(plugin) {
             const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
             for (const p of patterns) {
               if (!p) continue;
-              const isNonRoman = plugin.containsNonRomanCharacters ? plugin.containsNonRomanCharacters(String(p)) : false;
-              const pattern = isNonRoman ? `${plugin.escapeRegex(String(p))}` : `\\b${plugin.escapeRegex(String(p))}\\b`;
+              const UWC = "\\p{L}\\p{N}\\-'";
+              const esc = plugin.escapeRegex(String(p));
+              const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
+              const flags = compiled.isCaseSensitive ? "u" : "iu";
               const regex = plugin._regexCache.getOrCreate(
                 pattern,
-                compiled.isCaseSensitive ? "" : "i"
+                flags
               );
               if (regex) {
                 entryCompiled.patterns.push({
@@ -28362,7 +28345,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
   // NEW HELPER METHOD: Detect non-Roman characters
   containsNonRomanCharacters(text) {
     if (!text) return false;
-    return /[^\u0000-\u007F\u00A0-\u00FF\u0100-\u017F\u0180-\u024F]/.test(text);
+    return /[^\u0000-\u007F]/.test(text);
   }
   isCJKChar(ch) {
     try {
@@ -32232,20 +32215,38 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
   escapeRegex(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
+  // Unicode-aware word character check.
+  // Returns true for ASCII word chars, hyphens, apostrophes, and a broad range
+  // of Unicode letters/digits (Latin Extended, Cyrillic, Arabic, Devanagari,
+  // CJK, Hangul, etc.) so that word expansion and boundary detection work
+  // correctly for non-Latin scripts.
+  isWordCharacter(char) {
+    if (!char) return false;
+    try {
+      if (char === "-" || char === "'") return true;
+      return /[\p{L}\p{N}]/u.test(char);
+    } catch (_) {
+      if (/[A-Za-z0-9]/.test(char) || char === "-" || char === "'") return true;
+      const code = char.codePointAt(0);
+      return code >= 192 && code <= 591 || // Latin Extended-A/B
+      code >= 592 && code <= 687 || // IPA Extensions
+      code >= 880 && code <= 1023 || // Greek/Coptic
+      code >= 1024 && code <= 1327 || // Cyrillic + Supplement
+      code >= 1536 && code <= 1791 || // Arabic
+      code >= 2304 && code <= 3583 || // Devanagari–Malayalam
+      code >= 3584 && code <= 3711 || // Thai
+      code >= 7680 && code <= 7935 || // Latin Extended Additional
+      code >= 19968 && code <= 40959 || // CJK Unified Ideographs
+      code >= 44032 && code <= 55215 || // Hangul Syllables
+      code >= 63744 && code <= 64255;
+    }
+  }
   // NEW HELPER: Check if a match is a whole word (word boundaries on both sides)
   isWholeWordMatch(text, matchStart, matchEnd) {
     const leftChar = matchStart > 0 ? text[matchStart - 1] : "";
     const rightChar = matchEnd < text.length ? text[matchEnd] : "";
-    const slice = text.substring(matchStart, matchEnd);
-    const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(slice);
-    if (nonRoman) {
-      const leftOk2 = matchStart === 0 || !this.isCJKChar(leftChar);
-      const rightOk2 = matchEnd === text.length || !this.isCJKChar(rightChar);
-      return leftOk2 && rightOk2;
-    }
-    const isWordChar = (ch) => /[A-Za-z0-9]/.test(ch) || ch === "-" || ch === "'";
-    const leftOk = matchStart === 0 || !isWordChar(leftChar);
-    const rightOk = matchEnd === text.length || !isWordChar(rightChar);
+    const leftOk = matchStart === 0 || !this.isWordCharacter(leftChar);
+    const rightOk = matchEnd === text.length || !this.isWordCharacter(rightChar);
     return leftOk && rightOk;
   }
   isSentenceLikePattern(p) {
@@ -32278,7 +32279,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     return (idx === text.length || !isWordChar(rightChar)) && isWordChar(leftChar);
   }
   _isWordChar(ch) {
-    return /[A-Za-z0-9]/.test(ch) || ch === "-" || ch === "'";
+    return this.isWordCharacter(ch);
   }
   findWordStart(text, position) {
     let start = position;
@@ -32321,15 +32322,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
   extractFullWordAtPosition(text, start, end) {
     let wordStart = start;
     let wordEnd = end;
-    const slice = text.substring(start, end);
-    const hasNonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(slice);
-    if (hasNonRoman) {
-      while (wordStart > 0 && this.isCJKChar(text[wordStart - 1])) wordStart--;
-      while (wordEnd < text.length && this.isCJKChar(text[wordEnd])) wordEnd++;
-    } else {
-      while (wordStart > 0 && this._isWordChar(text[wordStart - 1])) wordStart--;
-      while (wordEnd < text.length && this._isWordChar(text[wordEnd])) wordEnd++;
-    }
+    while (wordStart > 0 && this.isWordCharacter(text[wordStart - 1])) wordStart--;
+    while (wordEnd < text.length && this.isWordCharacter(text[wordEnd])) wordEnd++;
     return text.substring(wordStart, wordEnd);
   }
   matchSatisfiesType(text, start, end, entry) {
@@ -32354,39 +32348,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           const containsMatch = caseSensitive ? fullWord.includes(pattern) : fullWord.toLowerCase().includes(pattern.toLowerCase());
           return containsMatch;
         case "startswith":
-          try {
-            if (this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern)) {
-              const startsWithMatch = caseSensitive ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
-              return startsWithMatch;
-            }
-            if (this._isTyping) throw new Error("Skip strict check");
-            const flags = caseSensitive ? "" : "i";
-            const re = new RegExp(
-              `^${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[A-Za-z]*$`,
-              flags
-            );
-            return re.test(fullWord);
-          } catch (_) {
-            const startsWithMatch = caseSensitive ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
-            return startsWithMatch;
-          }
+          return caseSensitive ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
         case "endswith":
-          try {
-            if (this.containsNonRomanCharacters && this.containsNonRomanCharacters(pattern)) {
-              const endsWithMatch = caseSensitive ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
-              return endsWithMatch;
-            }
-            if (this._isTyping) throw new Error("Skip strict check");
-            const flags = caseSensitive ? "" : "i";
-            const re = new RegExp(
-              `^[A-Za-z]*${this.helpers.escapeRegex ? this.helpers.escapeRegex(pattern) : pattern.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}$`,
-              flags
-            );
-            return re.test(fullWord);
-          } catch (_) {
-            const endsWithMatch = caseSensitive ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
-            return endsWithMatch;
-          }
+          return caseSensitive ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
         default:
           return true;
       }
@@ -35786,10 +35750,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
               let fullWordStart = matchStart;
               let fullWordEnd = matchEnd;
               if (!this.isSentenceLikePattern(entry.pattern)) {
-                while (fullWordStart > 0 && (/[A-Za-z0-9]/.test(text[fullWordStart - 1]) || text[fullWordStart - 1] === "-" || text[fullWordStart - 1] === "'")) {
+                while (fullWordStart > 0 && this.isWordCharacter(text[fullWordStart - 1])) {
                   fullWordStart--;
                 }
-                while (fullWordEnd < text.length && (/[A-Za-z0-9]/.test(text[fullWordEnd]) || text[fullWordEnd] === "-" || text[fullWordEnd] === "'")) {
+                while (fullWordEnd < text.length && this.isWordCharacter(text[fullWordEnd])) {
                   fullWordEnd++;
                 }
               }
@@ -35856,10 +35820,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             let fullWordStart = matchStart;
             let fullWordEnd = matchEnd;
             if (!this.isSentenceLikePattern(entry.pattern)) {
-              while (fullWordStart > 0 && (/[A-Za-z0-9]/.test(text[fullWordStart - 1]) || text[fullWordStart - 1] === "-" || text[fullWordStart - 1] === "'")) {
+              while (fullWordStart > 0 && this.isWordCharacter(text[fullWordStart - 1])) {
                 fullWordStart--;
               }
-              while (fullWordEnd < text.length && (/[A-Za-z0-9]/.test(text[fullWordEnd]) || text[fullWordEnd] === "-" || text[fullWordEnd] === "'")) {
+              while (fullWordEnd < text.length && this.isWordCharacter(text[fullWordEnd])) {
                 fullWordEnd++;
               }
             }
@@ -36008,7 +35972,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           String(e.matchType || "").toLowerCase()
         )
       )) {
-        const wordRegex = /[A-Za-z0-9'\-]+/g;
+        const wordRegex = /[\p{L}\p{N}'\-]+/gu;
         let match;
         while (match = wordRegex.exec(text)) {
           const w = match[0];
@@ -36082,7 +36046,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           )
         );
         if (textOnlyEntries.length > 0) {
-          const wordRegex = /[A-Za-z0-9'\-]+/g;
+          const wordRegex = /[\p{L}\p{N}'\-]+/gu;
           let match;
           while (match = wordRegex.exec(text)) {
             const w = match[0];
@@ -38732,10 +38696,10 @@ ${strongRule}`;
           if ((mt === "contains" || mt === "startswith" || mt === "endswith") && !this.isSentenceLikePattern(entry.pattern)) {
             colorStart = matchStart;
             colorEnd = matchEnd;
-            while (colorStart > 0 && (/[A-Za-z0-9]/.test(text[colorStart - 1]) || text[colorStart - 1] === "-" || text[colorStart - 1] === "'")) {
+            while (colorStart > 0 && this.isWordCharacter(text[colorStart - 1])) {
               colorStart--;
             }
-            while (colorEnd < text.length && (/[A-Za-z0-9]/.test(text[colorEnd]) || text[colorEnd] === "-" || text[colorEnd] === "'")) {
+            while (colorEnd < text.length && this.isWordCharacter(text[colorEnd])) {
               colorEnd++;
             }
             const fullWord = text.substring(colorStart, colorEnd);
@@ -38791,20 +38755,6 @@ ${strongRule}`;
       const isSentenceLike = this.isSentenceLikePattern(entry.pattern);
       let startswithRegex = null;
       let endswithRegex = null;
-      if (isSentenceLike && (actualMatchType === "startswith" || actualMatchType === "endswith")) {
-        try {
-          const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
-          const patRaw = String(entry.pattern || "");
-          const flags = cs ? "" : "i";
-          const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(patRaw) : patRaw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          if (actualMatchType === "startswith") {
-            startswithRegex = new RegExp(`^${esc}[A-Za-z]*$`, flags);
-          } else if (actualMatchType === "endswith") {
-            endswithRegex = new RegExp(`^[A-Za-z]*${esc}$`, flags);
-          }
-        } catch (_) {
-        }
-      }
       try {
         if (entry.fastTest && typeof entry.fastTest === "function") {
           const fastTestResult = entry.fastTest(text);
@@ -38927,9 +38877,9 @@ ${strongRule}`;
         let colorStart = match.index;
         let colorEnd = match.index + matchedText.length;
         if ((mt === "contains" || mt === "startswith" || mt === "endswith") && !this.isSentenceLikePattern(entry.pattern)) {
-          while (colorStart > 0 && (/[A-Za-z0-9]/.test(text[colorStart - 1]) || text[colorStart - 1] === "-" || text[colorStart - 1] === "'"))
+          while (colorStart > 0 && this.isWordCharacter(text[colorStart - 1]))
             colorStart--;
-          while (colorEnd < text.length && (/[A-Za-z0-9]/.test(text[colorEnd]) || text[colorEnd] === "-" || text[colorEnd] === "'"))
+          while (colorEnd < text.length && this.isWordCharacter(text[colorEnd]))
             colorEnd++;
         }
         if ((mt === "contains" || mt === "startswith" || mt === "endswith") && !this.isSentenceLikePattern(entry.pattern)) {
@@ -38976,23 +38926,9 @@ ${strongRule}`;
           if (mt === "contains") {
             ok = word.includes(pat);
           } else if (mt === "startswith") {
-            try {
-              const flags = cs ? "" : "i";
-              const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(patRaw) : patRaw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-              const re = new RegExp(`^${esc}[A-Za-z]*$`, flags);
-              ok = re.test(fullWord);
-            } catch (_) {
-              ok = word.startsWith(pat);
-            }
+            ok = word.startsWith(pat);
           } else if (mt === "endswith") {
-            try {
-              const flags = cs ? "" : "i";
-              const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(patRaw) : patRaw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-              const re = new RegExp(`^[A-Za-z0-9'\\-]*${esc}$`, flags);
-              ok = re.test(fullWord);
-            } catch (_) {
-              ok = word.endsWith(pat);
-            }
+            ok = word.endsWith(pat);
           } else if (mt === "exact") {
             ok = word === pat;
           }
@@ -39061,7 +38997,7 @@ ${strongRule}`;
         )
       );
       if (textOnlyEntries.length > 0) {
-        const wordRegex = /[A-Za-z0-9'\-]+/g;
+        const wordRegex = /[\p{L}\p{N}'\-]+/gu;
         let match;
         let wordMatchCount = 0;
         while (match = wordRegex.exec(text)) {
@@ -39112,18 +39048,10 @@ ${strongRule}`;
               let expandedWStart = wStart;
               let expandedWEnd = wEnd;
               if (!this.settings.extremeLightweightMode && !this.isSentenceLikePattern(entry.pattern)) {
-                const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(entry.pattern);
-                if (nonRoman) {
-                  while (expandedWStart > 0 && this.isCJKChar(text[expandedWStart - 1]))
-                    expandedWStart--;
-                  while (expandedWEnd < text.length && this.isCJKChar(text[expandedWEnd]))
-                    expandedWEnd++;
-                } else {
-                  while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(text[expandedWStart - 1]) || text[expandedWStart - 1] === "-" || text[expandedWStart - 1] === "'"))
-                    expandedWStart--;
-                  while (expandedWEnd < text.length && (/[A-Za-z0-9]/.test(text[expandedWEnd]) || text[expandedWEnd] === "-" || text[expandedWEnd] === "'"))
-                    expandedWEnd++;
-                }
+                while (expandedWStart > 0 && this.isWordCharacter(text[expandedWStart - 1]))
+                  expandedWStart--;
+                while (expandedWEnd < text.length && this.isWordCharacter(text[expandedWEnd]))
+                  expandedWEnd++;
               }
               debugLog(
                 "PARTIAL_EXPANSION",
@@ -39784,20 +39712,12 @@ ${strongRule}`;
           {
             const mt = String(entry.matchType || "").toLowerCase();
             if ((mt === "contains" || mt === "startswith" || mt === "endswith") && !this.isSentenceLikePattern(entry.pattern)) {
-              const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(entry.pattern);
               colorStart = matchStart;
               colorEnd = matchEnd;
-              if (nonRoman) {
-                while (colorStart > 0 && this.isCJKChar(text[colorStart - 1]))
-                  colorStart--;
-                while (colorEnd < text.length && this.isCJKChar(text[colorEnd]))
-                  colorEnd++;
-              } else {
-                while (colorStart > 0 && (/[A-Za-z0-9]/.test(text[colorStart - 1]) || text[colorStart - 1] === "-" || text[colorStart - 1] === "'"))
-                  colorStart--;
-                while (colorEnd < text.length && (/[A-Za-z0-9]/.test(text[colorEnd]) || text[colorEnd] === "-" || text[colorEnd] === "'"))
-                  colorEnd++;
-              }
+              while (colorStart > 0 && this.isWordCharacter(text[colorStart - 1]))
+                colorStart--;
+              while (colorEnd < text.length && this.isWordCharacter(text[colorEnd]))
+                colorEnd++;
             }
           }
           allMatches.push({
@@ -40097,34 +40017,7 @@ ${strongRule}`;
       (e) => !this.isLatinWordPattern(e.pattern)
     );
     if (partialEntries.length > 0 && matches.length < 2e3) {
-      for (const entry of wordPartialEntries) {
-        const mt = String(
-          entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
-        ).toLowerCase();
-        if (mt === "startswith" || mt === "endswith") {
-          const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
-          if (mt === "startswith" && (!entry._startswithRegex || entry._lastCs !== cs) || mt === "endswith" && (!entry._endswithRegex || entry._lastCs !== cs)) {
-            const pat = cs ? String(entry.pattern || "") : String(entry.pattern || "").toLowerCase();
-            const flags = cs ? "" : "i";
-            const esc = this.escapeRegex(pat);
-            try {
-              if (mt === "startswith")
-                entry._startswithRegex = new RegExp(
-                  `^${esc}[A-Za-z0-9'\\-]*$`,
-                  flags
-                );
-              else
-                entry._endswithRegex = new RegExp(
-                  `^[A-Za-z0-9'\\-]*${esc}$`,
-                  flags
-                );
-              entry._lastCs = cs;
-            } catch (_) {
-            }
-          }
-        }
-      }
-      const wordRegex = /[A-Za-z0-9'\-]+/g;
+      const wordRegex = /[\p{L}\p{N}'\-]+/gu;
       let match;
       while (match = wordRegex.exec(text)) {
         const w = match[0];
@@ -40167,28 +40060,18 @@ ${strongRule}`;
           if (mt === "contains") {
             ok = word.includes(pat);
           } else if (mt === "startswith") {
-            if (entry._startswithRegex) ok = entry._startswithRegex.test(word);
-            else ok = word.startsWith(pat);
+            ok = word.startsWith(pat);
           } else if (mt === "endswith") {
-            if (entry._endswithRegex) ok = entry._endswithRegex.test(word);
-            else ok = word.endsWith(pat);
+            ok = word.endsWith(pat);
           }
           if (ok) {
             let expandedWStart = wStart;
             let expandedWEnd = wEnd;
             if (!this.isSentenceLikePattern(entry.pattern)) {
-              const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(entry.pattern);
-              if (nonRoman) {
-                while (expandedWStart > 0 && this.isCJKChar(text[expandedWStart - 1]))
-                  expandedWStart--;
-                while (expandedWEnd < text.length && this.isCJKChar(text[expandedWEnd]))
-                  expandedWEnd++;
-              } else {
-                while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(text[expandedWStart - 1]) || text[expandedWStart - 1] === "-" || text[expandedWStart - 1] === "'"))
-                  expandedWStart--;
-                while (expandedWEnd < text.length && (/[A-Za-z0-9]/.test(text[expandedWEnd]) || text[expandedWEnd] === "-" || text[expandedWEnd] === "'"))
-                  expandedWEnd++;
-              }
+              while (expandedWStart > 0 && this.isWordCharacter(text[expandedWStart - 1]))
+                expandedWStart--;
+              while (expandedWEnd < text.length && this.isWordCharacter(text[expandedWEnd]))
+                expandedWEnd++;
             }
             let overlapsWithExisting = false;
             for (const existingMatch of matches) {
@@ -40466,34 +40349,7 @@ ${strongRule}`;
         ) && !this.isSentenceLikePattern(e.pattern) && this.isLatinWordPattern(e.pattern)
       );
       if (textOnlyEntries.length > 0) {
-        for (const entry of textOnlyEntries) {
-          const mt = String(
-            entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
-          ).toLowerCase();
-          if (mt === "startswith" || mt === "endswith") {
-            const cs = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : this.settings.caseSensitive;
-            if (mt === "startswith" && (!entry._startswithRegex || entry._lastCs !== cs) || mt === "endswith" && (!entry._endswithRegex || entry._lastCs !== cs)) {
-              const pat = cs ? String(entry.pattern || "") : String(entry.pattern || "").toLowerCase();
-              const flags = cs ? "" : "i";
-              const esc = this.escapeRegex(pat);
-              try {
-                if (mt === "startswith")
-                  entry._startswithRegex = new RegExp(
-                    `^${esc}[A-Za-z0-9'\\-]*$`,
-                    flags
-                  );
-                else
-                  entry._endswithRegex = new RegExp(
-                    `^[A-Za-z0-9'\\-]*${esc}$`,
-                    flags
-                  );
-                entry._lastCs = cs;
-              } catch (_) {
-              }
-            }
-          }
-        }
-        const wordRegex = /[A-Za-z0-9'\-]+/g;
+        const wordRegex = /[\p{L}\p{N}'\-]+/gu;
         let match;
         while (match = wordRegex.exec(chunkText)) {
           const w = match[0];
@@ -40539,29 +40395,18 @@ ${strongRule}`;
             if (mt === "contains") {
               ok = word.includes(pat);
             } else if (mt === "startswith") {
-              if (entry._startswithRegex)
-                ok = entry._startswithRegex.test(word);
-              else ok = word.startsWith(pat);
+              ok = word.startsWith(pat);
             } else if (mt === "endswith") {
-              if (entry._endswithRegex) ok = entry._endswithRegex.test(word);
-              else ok = word.endsWith(pat);
+              ok = word.endsWith(pat);
             }
             if (ok) {
               let expandedWStart = wStart;
               let expandedWEnd = wEnd;
               if (!this.isSentenceLikePattern(entry.pattern)) {
-                const nonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(entry.pattern);
-                if (nonRoman) {
-                  while (expandedWStart > 0 && this.isCJKChar(chunkText[expandedWStart - 1]))
-                    expandedWStart--;
-                  while (expandedWEnd < chunkText.length && this.isCJKChar(chunkText[expandedWEnd]))
-                    expandedWEnd++;
-                } else {
-                  while (expandedWStart > 0 && (/[A-Za-z0-9]/.test(chunkText[expandedWStart - 1]) || chunkText[expandedWStart - 1] === "-" || chunkText[expandedWStart - 1] === "'"))
-                    expandedWStart--;
-                  while (expandedWEnd < chunkText.length && (/[A-Za-z0-9]/.test(chunkText[expandedWEnd]) || chunkText[expandedWEnd] === "-" || chunkText[expandedWEnd] === "'"))
-                    expandedWEnd++;
-                }
+                while (expandedWStart > 0 && this.isWordCharacter(chunkText[expandedWStart - 1]))
+                  expandedWStart--;
+                while (expandedWEnd < chunkText.length && this.isWordCharacter(chunkText[expandedWEnd]))
+                  expandedWEnd++;
               }
               let overlapsWithExisting = false;
               for (const existingMatch of matches) {

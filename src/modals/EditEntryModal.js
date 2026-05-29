@@ -38,6 +38,7 @@ export class EditEntryModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-edit-entry-modal");
       this.modalEl.style.maxWidth = "900px";
       this.modalEl.style.padding = "20px";
@@ -271,7 +272,6 @@ export class EditEntryModal extends Modal {
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
     styleSelect.style.borderRadius = "4px";
     styleSelect.style.background = "var(--background-modifier-form-field)";
-    styleSelect.style.textAlign = "center";
     styleSelect.style.flex = "1 0%";
 
     const pickerRow = rightColumn.createDiv();
@@ -446,7 +446,6 @@ export class EditEntryModal extends Modal {
     markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
     markTargetSelect.style.borderRadius = "4px";
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
-    markTargetSelect.style.textAlign = "center";
 
     [
       ["text",      this.plugin.t("mark_target_text",       "Color Text")],
@@ -557,7 +556,6 @@ export class EditEntryModal extends Modal {
     groupSelect.style.border = "1px solid var(--background-modifier-border)";
     groupSelect.style.borderRadius = "4px";
     groupSelect.style.background = "var(--background-modifier-form-field)";
-    groupSelect.style.textAlign = "center";
     const defaultOpt = groupSelect.createEl("option", {
       text: this.plugin.t("no_group", "No Group"),
     });
@@ -677,7 +675,6 @@ export class EditEntryModal extends Modal {
     matchSelect.style.border = "1px solid var(--background-modifier-border)";
     matchSelect.style.borderRadius = "4px";
     matchSelect.style.background = "var(--background-modifier-form-field)";
-    matchSelect.style.textAlign = "center";
     matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
 
     const caseSel = controls.createEl("select");
@@ -689,7 +686,6 @@ export class EditEntryModal extends Modal {
     caseSel.style.border = "1px solid var(--background-modifier-border)";
     caseSel.style.borderRadius = "4px";
     caseSel.style.background = "var(--background-modifier-form-field)";
-    caseSel.style.textAlign = "center";
     caseSel.innerHTML = `<option value="case">${this.plugin.t("opt_case_sensitive", "is case sensitive")}</option><option value="nocase">${this.plugin.t("opt_not_case_sensitive", "not case sensitive")}</option>`;
     let openRegexBtn = null;
     if (isRegex) {

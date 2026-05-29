@@ -11,6 +11,7 @@ export class PresetModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     // Add class to force styling via CSS
+    this.modalEl.addClass("act-modal");
     this.modalEl.addClass("act-preset-modal");
     // Force wider modal - override Obsidian's default dialog width!!
     try {

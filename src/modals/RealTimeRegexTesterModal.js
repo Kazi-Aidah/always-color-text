@@ -31,6 +31,7 @@ export class RealTimeRegexTesterModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.style.setProperty("--dialog-width", "760px");
       this.modalEl.style.width = "760px";
       this.modalEl.style.maxWidth = "95vw";
@@ -75,7 +76,6 @@ export class RealTimeRegexTesterModal extends Modal {
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
     styleSelect.style.borderRadius = "var(--radius-m)";
     styleSelect.style.background = "var(--background-modifier-form-field)";
-    styleSelect.style.textAlign = "center";
     styleSelect.style.marginTop = "0";
 
     const markTargetSelect = controlsRow.createEl("select");
@@ -92,7 +92,6 @@ export class RealTimeRegexTesterModal extends Modal {
     markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
     markTargetSelect.style.borderRadius = "var(--radius-m)";
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
-    markTargetSelect.style.textAlign = "center";
     markTargetSelect.style.marginTop = "0";
 
     const textColorInput = controlsRow.createEl("input", { type: "color" });

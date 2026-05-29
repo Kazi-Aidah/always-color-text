@@ -136,6 +136,7 @@ export class ColorPickerModal extends Modal {
     this.modalEl.style.margin = "0";
     this.modalEl.style.padding = "0";
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-color-picker-modal");
     } catch (e) {}
 

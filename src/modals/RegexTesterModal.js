@@ -13,6 +13,7 @@ export class RegexTesterModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.style.setProperty("--dialog-width", "820px");
       this.modalEl.style.width = "820px";
       this.modalEl.style.maxWidth = "95vw";
@@ -89,7 +90,6 @@ export class RegexTesterModal extends Modal {
     styleSelect.style.borderRadius = "var(--radius-m)";
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
     styleSelect.style.background = "var(--background-modifier-form-field)";
-    styleSelect.style.textAlign = "center";
     try {
       styleSelect.addClass("act-regex-style");
     } catch (e) {}
@@ -108,7 +108,6 @@ export class RegexTesterModal extends Modal {
     markTargetSelect.style.borderRadius = "var(--radius-m)";
     markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
-    markTargetSelect.style.textAlign = "center";
 
     const textColorInput = rowStyle.createEl("input", { type: "color" });
     textColorInput.value = "#58bc54";

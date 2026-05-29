@@ -12,22 +12,17 @@ export function buildEditorExtension(plugin) {
         this._typingDebounceTimer = null;
         this.wasInTable = false;
 
-        // Force rebuild after initialization (fixes line/childLine not appearing after mode switch)
-        setTimeout(() => {
-          try {
-            this.view.dispatch({ effects: forceRebuildEffect.of(true) });
-          } catch (_) {}
-        }, 100);
-        this._initialBuildDone = false;
-
-        // Force rebuild after initialization (fixes line/childLine not appearing after mode switch)
+        // Force rebuild after initialization so line/childLine decorations are applied
+        // after CodeMirror has finished its first render pass. A 0ms timeout yields
+        // to the event loop without waiting a full 100ms, eliminating the color-line
+        // flash on tab switch and mode switch.
         setTimeout(() => {
           try {
             if (this.view && this.view.dispatch) {
               this.view.dispatch({ effects: forceRebuildEffect.of(true) });
             }
           } catch (_) {}
-        }, 100);
+        }, 0);
         try {
           const sel = window.getSelection();
           if (sel && sel.rangeCount > 0) {

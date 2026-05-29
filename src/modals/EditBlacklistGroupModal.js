@@ -34,6 +34,7 @@ export class EditBlacklistGroupModal extends Modal {
     this.modalEl.style.width = "900px";
     this.modalEl.style.maxWidth = "95vw";
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-edit-blacklist-group-modal");
     } catch (e) {
       try {

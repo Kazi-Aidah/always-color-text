@@ -18,6 +18,7 @@ export class BlacklistRegexTesterModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.style.maxWidth = "820px";
       this.modalEl.style.padding = "20px";
     } catch (e) {}

@@ -40,6 +40,7 @@ export class EditWordGroupModal extends Modal {
     this.modalEl.style.width = "1000px";
     this.modalEl.style.maxWidth = "95vw";
     try {
+      this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-edit-word-group-modal");
     } catch (e) {
       try {

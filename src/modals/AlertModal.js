@@ -14,6 +14,7 @@ export class AlertModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     this._eventListeners = [];
+    try { this.modalEl.addClass("act-modal"); } catch (e) {}
 
     const h2 = contentEl.createEl("h2", { text: this.title });
     h2.style.marginTop = "0";

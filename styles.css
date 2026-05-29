@@ -756,3 +756,11 @@ body.theme-dark.act-dark-mode-fix .always-color-text-highlight.act-dark-color {
 .act-color-target-select {
   text-transform: capitalize;
 }
+
+/* Center-align all select elements inside ACT modals consistently */
+.act-modal select {
+  text-align: center;
+  text-align-last: center;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
