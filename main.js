@@ -25717,7 +25717,6 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           padding: 0 !important;
           border-radius: 0 !important;
         }
-        .markdown-rendered mark:not(.always-color-text-highlight-marks),
         .markdown-rendered mark.always-color-text-highlight-marks {
           ${sharedMarkRules}
         }
@@ -28584,8 +28583,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
             if (!Array.isArray(entries2)) return null;
             const reversed = [...entries2].reverse();
             return reversed.find(
-              (e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements || e.styleType === "highlight" && !e.targetElement)
-            );
+              (e) => e && (e.presetLabel === "Highlighted Text (==...)" || e.presetLabel === "Highlights (====)" || e.affectMarkElements === true)
+            ) || null;
           };
           const presetEntry = findHighlightEntry(we) || findHighlightEntry(weAll) || null;
           const highlightRegexEntry = presetEntry || we.find(
@@ -28593,7 +28592,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           ) || weAll.find(
             (e) => e && e.isRegex && typeof e.pattern === "string" && e.pattern.includes("==[\\s\\S]*?==")
           ) || null;
-          if (quickStyle || presetEntry || highlightRegexEntry || styledSpan) {
+          if (quickStyle || presetEntry || highlightRegexEntry) {
             try {
               mark.classList.add("always-color-text-highlight-marks");
               if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) {

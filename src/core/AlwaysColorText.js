@@ -318,7 +318,6 @@ class AlwaysColorText extends Plugin {
           padding: 0 !important;
           border-radius: 0 !important;
         }
-        .markdown-rendered mark:not(.always-color-text-highlight-marks),
         .markdown-rendered mark.always-color-text-highlight-marks {
           ${sharedMarkRules}
         }
@@ -3675,8 +3674,10 @@ class AlwaysColorText extends Plugin {
               ) || null;
           }
 
-          // Improved preset detection: Look for 'highlight' type, 'affectMarkElements', or label/pattern match
-          // FIX: Search in reverse to find the latest added preset (user's custom one likely overrides default)
+          // Detect entries that are explicitly configured for ==...== mark elements.
+          // IMPORTANT: Do NOT match on (styleType === "highlight" && !targetElement) —
+          // that catches any background-highlight word entry and causes every <mark>
+          // in the document to be re-styled even when the user has no highlight preset.
           const findHighlightEntry = (entries) => {
             if (!Array.isArray(entries)) return null;
             const reversed = [...entries].reverse();
@@ -3685,9 +3686,8 @@ class AlwaysColorText extends Plugin {
                 e &&
                 (e.presetLabel === "Highlighted Text (==...)" ||
                   e.presetLabel === "Highlights (====)" ||
-                  e.affectMarkElements ||
-                  (e.styleType === "highlight" && !e.targetElement)),
-            );
+                  e.affectMarkElements === true),
+            ) || null;
           };
 
           const presetEntry =
@@ -3711,8 +3711,11 @@ class AlwaysColorText extends Plugin {
             ) ||
             null;
 
-          // If we found a style to apply, add the class and apply styles
-          if (quickStyle || presetEntry || highlightRegexEntry || styledSpan) {
+          // If we found a style to apply, add the class and apply styles.
+          // NOTE: styledSpan alone is NOT sufficient — a mark may contain a plugin
+          // span from an unrelated word-color rule. Only add the class when there is
+          // an explicit highlight preset/quickStyle match for this mark.
+          if (quickStyle || presetEntry || highlightRegexEntry) {
             try {
               mark.classList.add("always-color-text-highlight-marks");
               if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) {
@@ -3720,7 +3723,8 @@ class AlwaysColorText extends Plugin {
               }
             } catch (_) {}
           } else {
-            // No match found - skip this mark to preserve theme styling
+            // No highlight preset match — leave this mark completely untouched so
+            // the theme's default highlight color (yellow) is preserved.
             continue;
           }
 
