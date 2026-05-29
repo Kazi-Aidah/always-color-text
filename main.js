@@ -34683,7 +34683,11 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         try {
           this.setupViewportObserver(el, folderEntry || null, {
             clearExisting: true,
-            entries: allowedEntries
+            entries: allowedEntries,
+            // BLANK-TAB FIX: pass a generous immediate batch so the visible viewport
+            // is filled synchronously on tab switch before the observer fires.
+            immediateBlocks: 60,
+            filePath: ctx.sourcePath
           });
           this._processBasesViews();
           try {
@@ -37924,17 +37928,27 @@ ${strongRule}`;
               } catch (e) {
               }
               try {
-                if (b.closest(".act-skip-coloring") || b.classList.contains("act-skip-coloring")) {
-                  continue;
-                }
+                if (b.closest(".act-skip-coloring") || b.classList.contains("act-skip-coloring")) continue;
               } catch (_) {
               }
-              pq.push(b, 1e3);
+              try {
+                const es = options && Array.isArray(options.entries) ? options.entries : this.getSortedWordEntries();
+                this._errorRecovery.wrap(
+                  "PROCESS_BLOCK",
+                  () => this._processBlock(b, es, folderEntry, {
+                    clearExisting: options.clearExisting !== false,
+                    effectiveStyle: "text",
+                    forceProcess: options.forceProcess || this.settings.forceFullRenderInReading,
+                    filePath: options.filePath
+                  }),
+                  () => null
+                );
+              } catch (_) {
+              }
             }
             count++;
           }
         }
-        processNext();
       } catch (e) {
         debugError("VIEWPORT", "Error prefetching visible blocks", e);
       }

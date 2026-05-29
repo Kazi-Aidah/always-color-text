@@ -8,6 +8,12 @@
   --link-external-color-hover: var(--highlight-color, currentColor) !important;
   /* Use important on color to override all theme variables */
   color: var(--highlight-color, inherit) !important;
+  /* OUTLINE-OFFSET FIX: Prevent highlight spans from shifting the line-box height of
+     surrounding text. Without these, a span with padding/background causes the browser
+     to recalculate paragraph height, which moves heading offsetTop values and makes
+     Obsidian's Outline panel scroll to the wrong position. */
+  vertical-align: baseline !important;
+  line-height: inherit !important;
 }
 
 /* Color .markdown-rendered code text when comment coloring is in use (reading view) */

@@ -11494,6 +11494,10 @@ class AlwaysColorText extends Plugin {
           this.setupViewportObserver(el, folderEntry || null, {
             clearExisting: true,
             entries: allowedEntries,
+            // BLANK-TAB FIX: pass a generous immediate batch so the visible viewport
+            // is filled synchronously on tab switch before the observer fires.
+            immediateBlocks: 60,
+            filePath: ctx.sourcePath,
           });
           // Ensure bases are processed for large documents
           this._processBasesViews();
@@ -15562,23 +15566,37 @@ class AlwaysColorText extends Plugin {
           if (rect.top < window.innerHeight + 400 && rect.bottom > -400) {
             if (!processed.has(b)) {
               processed.add(b);
-              try {
-                io.unobserve(b);
-              } catch (e) {}
+              try { io.unobserve(b); } catch (e) {}
               try {
                 if (
                   b.closest(".act-skip-coloring") ||
                   b.classList.contains("act-skip-coloring")
-                ) {
-                  continue;
-                }
+                ) continue;
               } catch (_) {}
-              pq.push(b, 1000);
+              // BLANK-TAB FIX: Process the first visible batch synchronously so the
+              // view is never blank after a tab switch. The IntersectionObserver fires
+              // asynchronously (next frame at earliest), leaving a visible gap. By
+              // running _processBlock directly here we fill the viewport before paint.
+              try {
+                const es = options && Array.isArray(options.entries)
+                  ? options.entries
+                  : this.getSortedWordEntries();
+                this._errorRecovery.wrap(
+                  "PROCESS_BLOCK",
+                  () => this._processBlock(b, es, folderEntry, {
+                    clearExisting: options.clearExisting !== false,
+                    effectiveStyle: "text",
+                    forceProcess: options.forceProcess || this.settings.forceFullRenderInReading,
+                    filePath: options.filePath,
+                  }),
+                  () => null,
+                );
+              } catch (_) {}
             }
             count++;
           }
         }
-        processNext();
+        // Remaining off-screen blocks are handled by the IntersectionObserver above.
       } catch (e) {
         debugError("VIEWPORT", "Error prefetching visible blocks", e);
       }
