@@ -25755,8 +25755,25 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           this._highlightVarObserver.disconnect();
           this._highlightVarObserver = null;
         }
-        this._highlightVarObserver = new MutationObserver(patchHighlights);
-        this._highlightVarObserver.observe(document.body, { childList: true, subtree: true });
+        if (!this._patchHighlightsTimeout) {
+          this._patchHighlightsTimeout = null;
+        }
+        const debouncedPatchHighlights = (mutations) => {
+          clearTimeout(this._patchHighlightsTimeout);
+          this._patchHighlightsTimeout = setTimeout(() => {
+            patchHighlights();
+            this._patchHighlightsTimeout = null;
+          }, 50);
+        };
+        this._highlightVarObserver = new MutationObserver(debouncedPatchHighlights);
+        this._highlightVarObserver.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: false,
+          characterData: false,
+          attributeOldValue: false,
+          characterDataOldValue: false
+        });
       } catch (_) {
       }
     } catch (_) {
@@ -25770,6 +25787,13 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     }
     try {
       document.body.classList.remove("act-highlight-preset-active");
+    } catch (_) {
+    }
+    try {
+      if (this._patchHighlightsTimeout) {
+        clearTimeout(this._patchHighlightsTimeout);
+        this._patchHighlightsTimeout = null;
+      }
     } catch (_) {
     }
     try {
@@ -26355,7 +26379,6 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           } catch (_) {
           }
           this.forceRefreshAllEditors();
-          this.forceRefreshAllReadingViews();
         }
       })
     );
@@ -29960,7 +29983,19 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       this.cmExtensionRegistered = true;
     }
     if (!this.markdownPostProcessorRegistered) {
-      this._unregisterMarkdownPostProcessor = this.registerMarkdownPostProcessor(buildReadingViewProcessor(this));
+      if (!this._postProcCallCount) this._postProcCallCount = 0;
+      const originalProcessor = buildReadingViewProcessor(this);
+      const unregister = this.registerMarkdownPostProcessor((el, ctx) => {
+        this._postProcCallCount++;
+        return originalProcessor(el, ctx);
+      });
+      this._unregisterMarkdownPostProcessor = () => {
+        try {
+          unregister && unregister();
+        } catch (_) {
+        }
+        this._unregisterMarkdownPostProcessor = null;
+      };
       this.markdownPostProcessorRegistered = true;
     }
     try {
@@ -30070,10 +30105,9 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           if (leaf && leaf.view instanceof import_obsidian17.MarkdownView) {
             try {
               if (leaf.view.getMode && leaf.view.getMode() === "preview") {
-                this.forceRefreshAllReadingViews();
                 setTimeout(() => {
                   try {
-                    const active = this.app.workspace.getActiveViewOfType(import_obsidian17.MarkdownView);
+                    const active = leaf.view;
                     if (active && active.getMode && active.getMode() === "preview") {
                       const root = active.previewMode && active.previewMode.containerEl || active.contentEl || active.containerEl;
                       if (root && active.file && active.file.path) {
@@ -30115,7 +30149,14 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         if (activeLeaf && activeLeaf.getMode && activeLeaf.getMode() === "preview") {
           clearTimeout(this._layoutChangeReadingTimer);
           this._layoutChangeReadingTimer = setTimeout(() => {
-            this.forceRefreshAllReadingViews();
+            try {
+              const root = activeLeaf.previewMode && activeLeaf.previewMode.containerEl || activeLeaf.contentEl || activeLeaf.containerEl;
+              const path = activeLeaf.file && activeLeaf.file.path;
+              if (root && path && this.settings.enabled) {
+                this.processActiveFileOnly(root, { sourcePath: path });
+              }
+            } catch (_) {
+            }
           }, 80);
         } else if (activeLeaf && activeLeaf.getMode && activeLeaf.getMode() === "source") {
           try {
@@ -30163,7 +30204,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       this.extension = null;
     }
     if (this.markdownPostProcessorRegistered && this._unregisterMarkdownPostProcessor) {
-      this._unregisterMarkdownPostProcessor();
+      try {
+        this._unregisterMarkdownPostProcessor();
+      } catch (_) {
+      }
       this.markdownPostProcessorRegistered = false;
       this._unregisterMarkdownPostProcessor = null;
     }
@@ -32059,51 +32103,15 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     this.app.workspace.iterateAllLeaves((leaf) => {
       if (leaf.view instanceof import_obsidian17.MarkdownView && leaf.view.getMode && leaf.view.getMode() === "preview") {
         const root = leaf.view.previewMode && leaf.view.previewMode.containerEl || leaf.view.contentEl || leaf.view.containerEl;
-        let scroller = null;
-        try {
-          let cur = root;
-          for (let i = 0; i < 8 && cur; i++) {
-            if (cur.scrollHeight && cur.clientHeight && cur.scrollHeight - cur.clientHeight > 4) {
-              scroller = cur;
-              break;
-            }
-            cur = cur.parentElement;
-          }
-        } catch (_) {
-        }
-        if (!scroller) {
-          try {
-            scroller = document.scrollingElement || document.documentElement || document.body || null;
-          } catch (_) {
-          }
-        }
-        const prevTop = scroller ? scroller.scrollTop : 0;
-        const prevLeft = scroller ? scroller.scrollLeft : 0;
-        if (typeof leaf.view.previewMode?.rerender === "function") {
-          leaf.view.previewMode.rerender(true);
-        } else if (typeof leaf.view.previewMode?.render === "function") {
-          leaf.view.previewMode.render();
-        } else if (typeof leaf.view?.rerender === "function") {
-          leaf.view.rerender();
-        }
-        if (scroller) {
-          setTimeout(() => {
-            try {
-              if (typeof scroller.scrollTo === "function") {
-                scroller.scrollTo({ top: prevTop, left: prevLeft, behavior: "auto" });
-              } else {
-                scroller.scrollTop = prevTop;
-                scroller.scrollLeft = prevLeft;
-              }
-            } catch (_) {
-            }
-          }, 0);
-        }
         try {
           if (this.settings.enabled) {
             const path = leaf.view.file && leaf.view.file.path ? leaf.view.file.path : null;
             if (root && path) {
               try {
+                try {
+                  delete root.dataset.actProcessed;
+                } catch (_) {
+                }
                 this.processActiveFileOnly(root, { sourcePath: path });
               } catch (_) {
               }
@@ -32143,22 +32151,15 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       this.refreshEditor(activeView, true);
       if (activeView.getMode && activeView.getMode() === "preview") {
         try {
-          if (activeView.previewMode && typeof activeView.previewMode.rerender === "function") {
-            activeView.previewMode.rerender(true);
+          const root = activeView.previewMode && activeView.previewMode.containerEl || activeView.contentEl || activeView.containerEl;
+          if (root && activeView.file && activeView.file.path) {
+            try {
+              delete root.dataset.actProcessed;
+            } catch (_) {
+            }
+            this.processActiveFileOnly(root, { sourcePath: activeView.file.path });
           }
         } catch (e) {
-          setTimeout(() => {
-            try {
-              const root = activeView.previewMode && activeView.previewMode.containerEl || activeView.contentEl || activeView.containerEl;
-              if (root && activeView.file && activeView.file.path) {
-                this.processActiveFileOnly(root, {
-                  sourcePath: activeView.file.path
-                });
-              }
-            } catch (err) {
-              this.forceRefreshAllReadingViews();
-            }
-          }, 100);
         }
       }
     }
@@ -32567,7 +32568,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       if (this.settings && this.settings.extremeLightweightMode) {
         return true;
       }
-      const isLargeDoc = Number(textLength) > 5e4;
+      const isLargeDoc = Number(textLength) > 3e3;
       const isNonRomanHeavy = this.getNonRomanCharacterRatio(textContent) > 0.3;
       return isLargeDoc || isNonRomanHeavy;
     } catch (e) {
@@ -33940,11 +33941,35 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
   }
   // Compile word entries into runtime structures (regexes, testRegex, validity)
   compileWordEntries() {
+    try {
+      if (this._filteredEntriesCache) this._filteredEntriesCache.clear();
+    } catch (_) {
+    }
+    this._clearActProcessedStamps();
     return compileWordEntriesLogic(this);
   }
   // Compile text + background coloring entries
   compileTextBgColoringEntries() {
+    try {
+      if (this._filteredEntriesCache) this._filteredEntriesCache.clear();
+    } catch (_) {
+    }
+    this._clearActProcessedStamps();
     return compileTextBgColoringEntriesLogic(this);
+  }
+  // Remove all data-act-processed stamps from the DOM so reading views re-render
+  // after settings changes.
+  _clearActProcessedStamps() {
+    try {
+      const stamped = document.querySelectorAll("[data-act-processed]");
+      for (const el of stamped) {
+        try {
+          delete el.dataset.actProcessed;
+        } catch (_) {
+        }
+      }
+    } catch (_) {
+    }
   }
   // OPTIMIZATION: Pre-compile word pattern regexes for extreme performance
   // This builds lookup table for quick pattern matching without recreating RegExp
@@ -34239,39 +34264,46 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         } catch (_) {
           span.style.backgroundColor = bgRgba;
         }
+        let isInHeading = false;
         try {
-          const vpad = params.vPad;
-          span.style.setProperty(
-            "padding-left",
-            params.hPad + "px",
-            "important"
-          );
-          span.style.setProperty(
-            "padding-right",
-            params.hPad + "px",
-            "important"
-          );
-          span.style.setProperty(
-            "padding-top",
-            (vpad >= 0 ? vpad : 0) + "px",
-            "important"
-          );
-          span.style.setProperty(
-            "padding-bottom",
-            (vpad >= 0 ? vpad : 0) + "px",
-            "important"
-          );
-          if (vpad < 0) {
-            span.style.setProperty("margin-top", vpad + "px", "important");
-            span.style.setProperty("margin-bottom", vpad + "px", "important");
-          }
+          isInHeading = textNode.parentElement?.closest("h1, h2, h3, h4, h5, h6") !== null;
         } catch (_) {
-          const vpad = params.vPad;
-          span.style.paddingLeft = span.style.paddingRight = params.hPad + "px";
-          span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
-          if (vpad < 0) {
-            span.style.marginTop = vpad + "px";
-            span.style.marginBottom = vpad + "px";
+        }
+        if (!isInHeading) {
+          try {
+            const vpad = params.vPad;
+            span.style.setProperty(
+              "padding-left",
+              params.hPad + "px",
+              "important"
+            );
+            span.style.setProperty(
+              "padding-right",
+              params.hPad + "px",
+              "important"
+            );
+            span.style.setProperty(
+              "padding-top",
+              (vpad >= 0 ? vpad : 0) + "px",
+              "important"
+            );
+            span.style.setProperty(
+              "padding-bottom",
+              (vpad >= 0 ? vpad : 0) + "px",
+              "important"
+            );
+            if (vpad < 0) {
+              span.style.setProperty("margin-top", vpad + "px", "important");
+              span.style.setProperty("margin-bottom", vpad + "px", "important");
+            }
+          } catch (_) {
+            const vpad = params.vPad;
+            span.style.paddingLeft = span.style.paddingRight = params.hPad + "px";
+            span.style.paddingTop = span.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
+            if (vpad < 0) {
+              span.style.marginTop = vpad + "px";
+              span.style.marginBottom = vpad + "px";
+            }
           }
         }
         const br = (params.hPad > 0 && params.radius === 0 ? 0 : params.radius) + "px";
@@ -34280,7 +34312,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
         } catch (_) {
           span.style.borderRadius = br;
         }
-        if (this.settings.enableBoxDecorationBreak ?? true) {
+        if ((this.settings.enableBoxDecorationBreak ?? true) && !isInHeading) {
           span.style.boxDecorationBreak = "clone";
           span.style.WebkitBoxDecorationBreak = "clone";
         }
@@ -34461,6 +34493,14 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     if (!el || !ctx || !ctx.sourcePath) return;
     if (!this.settings.enabled) return;
     try {
+      const stamp = el.dataset && el.dataset.actProcessed;
+      if (stamp === ctx.sourcePath) {
+        debugLog("PROC_ACTIVE", "Skipping re-process: element already stamped");
+        return;
+      }
+    } catch (_) {
+    }
+    try {
       this.removeDisabledNeutralizerStyles();
     } catch (_) {
     }
@@ -34576,10 +34616,12 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     if (this.isFrontmatterColoringDisabled(ctx.sourcePath)) return;
     const folderEntry = this.getBestFolderEntry(ctx.sourcePath);
     const allEntries = this.getSortedWordEntries();
-    const allowedEntries = this.filterEntriesByAdvancedRules(
-      ctx.sourcePath,
-      allEntries
-    );
+    if (!this._filteredEntriesCache) this._filteredEntriesCache = /* @__PURE__ */ new Map();
+    let allowedEntries = this._filteredEntriesCache.get(ctx.sourcePath);
+    if (!allowedEntries) {
+      allowedEntries = this.filterEntriesByAdvancedRules(ctx.sourcePath, allEntries);
+      this._filteredEntriesCache.set(ctx.sourcePath, allowedEntries);
+    }
     for (const entry of allowedEntries) {
       if (!entry.targetElement && entry.isRegex) {
         if (entry.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1")
@@ -34730,13 +34772,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
           debugError("ACT", "deferred pass error", e);
         }
       };
-      if (isReadingRoot) {
-        try {
-          runDeferred("reading-immediate");
-        } catch (e) {
-          debugError("DEFERRED", "reading immediate failed", e);
-        }
-      } else if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+      if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
         try {
           window.requestIdleCallback(() => runDeferred("idleCallback"), {
             timeout: 2e3
@@ -34747,9 +34783,7 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       } else {
         setTimeout(() => runDeferred("setTimeout-fallback"), 1200);
       }
-      if (!isReadingRoot) {
-        setTimeout(() => runDeferred("safety-timeout"), 3e3);
-      }
+      setTimeout(() => runDeferred("safety-timeout"), 3e3);
     } catch (e) {
       setTimeout(() => {
         try {
@@ -34773,6 +34807,10 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
       "ACT",
       `scheduled total: ${(performance.now() - startTime).toFixed(1)}ms`
     );
+    try {
+      if (el.dataset) el.dataset.actProcessed = ctx.sourcePath;
+    } catch (_) {
+    }
   }
   // Progressive optimized processing for very large documents
   processLargeDocument(el, ctx, folderEntry) {
@@ -36810,13 +36848,11 @@ ${strongRule}`;
     debugLog("CHUNK_START", `Processing ${element.nodeName}.${element.className}, entries: ${entries.length}`);
     const selector = "p, li, div, span, td, th, blockquote, h1, h2, h3, h4, h5, h6";
     const batch = Number(options.batchSize) || 20;
-    const blocks = [];
     const tags = new Set(
       selector.split(",").map((s) => s.trim().toUpperCase())
     );
-    if (options.includeSelf && element && tags.has(element.nodeName)) {
-      blocks.push(element);
-    }
+    const startIndex = Number(options.skipFirstN) || 0;
+    const forceProcess = !!options.forceProcess;
     const walker = document.createTreeWalker(
       element,
       NodeFilter.SHOW_ELEMENT,
@@ -36827,34 +36863,80 @@ ${strongRule}`;
       },
       false
     );
+    let i = 0;
+    if (options.includeSelf && element && tags.has(element.nodeName)) {
+      if (i >= startIndex) {
+        try {
+          this._errorRecovery.wrap(
+            "PROCESS_BLOCK",
+            () => this._processBlock(element, entries, folderEntry, {
+              clearExisting: options.clearExisting !== false,
+              effectiveStyle: "text",
+              forceProcess: forceProcess || this.settings.forceFullRenderInReading,
+              maxMatches: options && typeof options.maxMatches !== "undefined" ? options.maxMatches : forceProcess || this.settings.forceFullRenderInReading ? Infinity : void 0,
+              filePath: options.filePath
+            }),
+            () => null
+          );
+        } catch (e) {
+          debugError("CHUNK", "block error (self)", e);
+        }
+      }
+      i++;
+    }
+    debugLog("CHUNK", `streaming walker, startIndex=${startIndex}, forceProcess=${forceProcess}`);
     let currentNode;
     while (currentNode = walker.nextNode()) {
-      blocks.push(currentNode);
-    }
-    const startIndex = Number(options.skipFirstN) || 0;
-    const forceProcess = !!options.forceProcess;
-    debugLog(
-      "CHUNK",
-      `start: ${blocks.length} blocks, batch=${batch}, startIndex=${startIndex}, forceProcess=${forceProcess}`
-    );
-    for (let i = startIndex; i < blocks.length; i++) {
       if (!forceProcess && this.performanceMonitor && this.performanceMonitor.isOverloaded && this.performanceMonitor.isOverloaded()) {
-        debugWarn("CHUNK", `paused at block ${i} due to perf overload`);
-        const resumeOpts = Object.assign({}, options, { skipFirstN: i });
+        debugWarn("CHUNK", `paused at node ${i} due to perf overload`);
+        const remaining = [currentNode];
+        let n;
+        while (n = walker.nextNode()) remaining.push(n);
+        const resumeOpts = Object.assign({}, options, { skipFirstN: 0, _resumeNodes: remaining });
         setTimeout(() => {
           try {
-            this.processInChunks(element, entries, folderEntry, resumeOpts);
+            this._processInChunksFromArray(remaining, entries, folderEntry, resumeOpts);
           } catch (e) {
             debugError("CHUNK", "retry failed", e);
           }
         }, 300);
-        blocks.length = 0;
         return;
       }
+      if (i >= startIndex) {
+        try {
+          this._errorRecovery.wrap(
+            "PROCESS_BLOCK",
+            () => this._processBlock(currentNode, entries, folderEntry, {
+              clearExisting: options.clearExisting !== false,
+              effectiveStyle: "text",
+              forceProcess: forceProcess || this.settings.forceFullRenderInReading,
+              maxMatches: options && typeof options.maxMatches !== "undefined" ? options.maxMatches : forceProcess || this.settings.forceFullRenderInReading ? Infinity : void 0,
+              filePath: options.filePath
+            }),
+            () => null
+          );
+        } catch (e) {
+          debugError("CHUNK", "block error", e);
+        }
+      }
+      i++;
+      const yieldInterval = forceProcess ? 50 : batch;
+      if (i % yieldInterval === 0 && i > startIndex) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    }
+    debugLog("CHUNK", `done: ${i} nodes streamed`);
+  }
+  // Fallback helper used when processInChunks needs to resume from a pre-collected array
+  // (only happens when the perf monitor trips mid-walk).
+  async _processInChunksFromArray(nodes, entries, folderEntry, options = {}) {
+    const batch = Number(options.batchSize) || 20;
+    const forceProcess = !!options.forceProcess;
+    for (let i = 0; i < nodes.length; i++) {
       try {
         this._errorRecovery.wrap(
           "PROCESS_BLOCK",
-          () => this._processBlock(blocks[i], entries, folderEntry, {
+          () => this._processBlock(nodes[i], entries, folderEntry, {
             clearExisting: options.clearExisting !== false,
             effectiveStyle: "text",
             forceProcess: forceProcess || this.settings.forceFullRenderInReading,
@@ -36864,15 +36946,15 @@ ${strongRule}`;
           () => null
         );
       } catch (e) {
-        debugError("CHUNK", "block error", e);
+        debugError("CHUNK", "block error (array)", e);
       }
       const yieldInterval = forceProcess ? 50 : batch;
       if (i % yieldInterval === 0 && i > 0) {
         await new Promise((resolve) => setTimeout(resolve, 0));
       }
     }
-    debugLog("CHUNK", `done: ${blocks.length} blocks processed`);
-    blocks.length = 0;
+    nodes.length = 0;
+    debugLog("CHUNK", `done (array resume): ${nodes.length} nodes`);
   }
   _processLivePreviewCallouts(view, force = false) {
     try {

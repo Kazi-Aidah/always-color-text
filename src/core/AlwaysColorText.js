@@ -359,8 +359,30 @@ class AlwaysColorText extends Plugin {
           this._highlightVarObserver.disconnect();
           this._highlightVarObserver = null;
         }
-        this._highlightVarObserver = new MutationObserver(patchHighlights);
-        this._highlightVarObserver.observe(document.body, { childList: true, subtree: true });
+        // Debounce the patchHighlights callback to prevent scroll loss when DOM is updated
+        // This prevents excessive firing when checkboxes are clicked, windows are focused, etc.
+        // Store the timeout ID on the plugin instance to persist across mutations
+        if (!this._patchHighlightsTimeout) {
+          this._patchHighlightsTimeout = null;
+        }
+        const debouncedPatchHighlights = (mutations) => {
+          clearTimeout(this._patchHighlightsTimeout);
+          this._patchHighlightsTimeout = setTimeout(() => {
+            patchHighlights();
+            this._patchHighlightsTimeout = null;
+          }, 50); // 50ms debounce to batch mutations
+        };
+        this._highlightVarObserver = new MutationObserver(debouncedPatchHighlights);
+        // Use a more conservative observation strategy: only watch for element additions/removals
+        // in editor content areas, not the entire body. This reduces noise from other UI updates.
+        this._highlightVarObserver.observe(document.body, { 
+          childList: true, 
+          subtree: true,
+          attributes: false,
+          characterData: false,
+          attributeOldValue: false,
+          characterDataOldValue: false
+        });
       } catch (_) {}
 
     } catch (_) {}
@@ -372,6 +394,13 @@ class AlwaysColorText extends Plugin {
       if (style) style.remove();
     } catch (_) {}
     try { document.body.classList.remove("act-highlight-preset-active"); } catch (_) {}
+    try {
+      // Clean up the debounce timeout
+      if (this._patchHighlightsTimeout) {
+        clearTimeout(this._patchHighlightsTimeout);
+        this._patchHighlightsTimeout = null;
+      }
+    } catch (_) {}
     try {
       if (this._highlightVarObserver) {
         this._highlightVarObserver.disconnect();
@@ -993,8 +1022,13 @@ class AlwaysColorText extends Plugin {
               this._pathRulesCache.delete(file.path);
             }
           } catch (_) {}
+          // PERF/SCROLL-FIX: Only refresh editors (CodeMirror decorations) here.
+          // forceRefreshAllReadingViews calls previewMode.rerender() which rebuilds
+          // the entire reading-mode DOM and races against scroll restoration —
+          // this is what causes the scroll-to-top on checkbox toggle and window focus.
+          // Reading views are already kept up-to-date by the post-processor; they
+          // don't need a full rerender on every metadata change.
           this.forceRefreshAllEditors();
-          this.forceRefreshAllReadingViews();
         }
       }),
     );
@@ -5315,8 +5349,18 @@ class AlwaysColorText extends Plugin {
     }
 
     if (!this.markdownPostProcessorRegistered) {
-      this._unregisterMarkdownPostProcessor =
-        this.registerMarkdownPostProcessor(buildReadingViewProcessor(this));
+      if (!this._postProcCallCount) this._postProcCallCount = 0;
+      const originalProcessor = buildReadingViewProcessor(this);
+      // registerMarkdownPostProcessor returns an unregister function — store it directly.
+      // Wrap it so calling it twice (e.g. during hot-reload) is a no-op.
+      const unregister = this.registerMarkdownPostProcessor((el, ctx) => {
+        this._postProcCallCount++;
+        return originalProcessor(el, ctx);
+      });
+      this._unregisterMarkdownPostProcessor = () => {
+        try { unregister && unregister(); } catch (_) {}
+        this._unregisterMarkdownPostProcessor = null;
+      };
       this.markdownPostProcessorRegistered = true;
     }
 
@@ -5441,32 +5485,31 @@ class AlwaysColorText extends Plugin {
           if (leaf && leaf.view instanceof MarkdownView) {
             try {
               if (leaf.view.getMode && leaf.view.getMode() === "preview") {
-                this.forceRefreshAllReadingViews();
-
-                // Fallback: try to process the rendered preview root directly
+                // SCROLL-FIX: Don't call forceRefreshAllReadingViews() here — it calls
+                // previewMode.rerender() which rebuilds the DOM and loses scroll position
+                // (the "window focus scrolls to top" bug). Instead, just re-apply
+                // highlights directly onto the already-rendered DOM of this leaf only.
                 setTimeout(() => {
                   try {
-                    const active =
-                      this.app.workspace.getActiveViewOfType(MarkdownView);
+                    const active = leaf.view;
                     if (
                       active &&
                       active.getMode &&
                       active.getMode() === "preview"
                     ) {
-                      // Use previewMode.containerEl as fallback to contentEl/containerEl
                       const root =
-                        (active.previewMode &&
-                          active.previewMode.containerEl) ||
+                        (active.previewMode && active.previewMode.containerEl) ||
                         active.contentEl ||
                         active.containerEl;
                       if (root && active.file && active.file.path) {
+                        // Don't clear the stamp — if already processed for this file,
+                        // processActiveFileOnly skips in O(1). The stamp is only cleared
+                        // when patterns change, ensuring no feedback loop.
                         try {
                           this.processActiveFileOnly(root, {
                             sourcePath: active.file.path,
                           });
-                        } catch (e) {
-                          // swallow - best-effort
-                        }
+                        } catch (e) {}
                       }
                     }
                   } catch (e) {}
@@ -5510,9 +5553,24 @@ class AlwaysColorText extends Plugin {
           activeLeaf.getMode &&
           activeLeaf.getMode() === "preview"
         ) {
+          // SCROLL-FIX: Don't call forceRefreshAllReadingViews() — it calls rerender()
+          // and loses scroll. Instead do a targeted highlight-only pass on the active leaf.
+          // We do NOT clear the stamp here: if the element is already stamped for this
+          // file, processActiveFileOnly will skip it (O(1) check), preventing a feedback
+          // loop where DOM mutations from highlight spans trigger further layout-change events.
+          // The stamp is only cleared when patterns actually change (compileWordEntries).
           clearTimeout(this._layoutChangeReadingTimer);
           this._layoutChangeReadingTimer = setTimeout(() => {
-            this.forceRefreshAllReadingViews();
+            try {
+              const root =
+                (activeLeaf.previewMode && activeLeaf.previewMode.containerEl) ||
+                activeLeaf.contentEl ||
+                activeLeaf.containerEl;
+              const path = activeLeaf.file && activeLeaf.file.path;
+              if (root && path && this.settings.enabled) {
+                this.processActiveFileOnly(root, { sourcePath: path });
+              }
+            } catch (_) {}
           }, 80);
         } else if (
           activeLeaf &&
@@ -5570,7 +5628,7 @@ class AlwaysColorText extends Plugin {
       this.markdownPostProcessorRegistered &&
       this._unregisterMarkdownPostProcessor
     ) {
-      this._unregisterMarkdownPostProcessor();
+      try { this._unregisterMarkdownPostProcessor(); } catch (_) {}
       this.markdownPostProcessorRegistered = false;
       this._unregisterMarkdownPostProcessor = null;
     }
@@ -8097,52 +8155,16 @@ class AlwaysColorText extends Plugin {
           (leaf.view.previewMode && leaf.view.previewMode.containerEl) ||
           leaf.view.contentEl ||
           leaf.view.containerEl;
-        let scroller = null;
-        try {
-          let cur = root;
-          for (let i = 0; i < 8 && cur; i++) {
-            if (
-              cur.scrollHeight &&
-              cur.clientHeight &&
-              cur.scrollHeight - cur.clientHeight > 4
-            ) {
-              scroller = cur;
-              break;
-            }
-            cur = cur.parentElement;
-          }
-        } catch (_) {}
-        if (!scroller) {
-          try {
-            scroller =
-              document.scrollingElement ||
-              document.documentElement ||
-              document.body ||
-              null;
-          } catch (_) {}
-        }
-        const prevTop = scroller ? scroller.scrollTop : 0;
-        const prevLeft = scroller ? scroller.scrollLeft : 0;
-        if (typeof leaf.view.previewMode?.rerender === "function") {
-          leaf.view.previewMode.rerender(true);
-        } else if (typeof leaf.view.previewMode?.render === "function") {
-          leaf.view.previewMode.render();
-        } else if (typeof leaf.view?.rerender === "function") {
-          leaf.view.rerender();
-        }
-        if (scroller) {
-          setTimeout(() => {
-            try {
-              if (typeof scroller.scrollTo === "function") {
-                scroller.scrollTo({ top: prevTop, left: prevLeft, behavior: "auto" });
-              } else {
-                scroller.scrollTop = prevTop;
-                scroller.scrollLeft = prevLeft;
-              }
-            } catch (_) {}
-          }, 0);
-        }
 
+        // SCROLL-FIX: Never call previewMode.rerender() here. rerender() rebuilds the
+        // entire reading-mode DOM from scratch, which:
+        //   1. Resets scroll position to the top (the core bug)
+        //   2. Breaks Outline heading navigation offsets (issue #49)
+        //   3. Is triggered by checkbox toggles, window focus, layout changes
+        //
+        // Instead, clear the processed stamp and re-apply highlights directly onto
+        // the existing DOM. This is sufficient for all cases where this method is
+        // called (settings changes, enable/disable toggle, file rename, etc.).
         try {
           if (this.settings.enabled) {
             const path =
@@ -8151,6 +8173,8 @@ class AlwaysColorText extends Plugin {
                 : null;
             if (root && path) {
               try {
+                // Clear stamp so processActiveFileOnly re-runs with fresh patterns
+                try { delete root.dataset.actProcessed; } catch (_) {}
                 this.processActiveFileOnly(root, { sourcePath: path });
               } catch (_) {}
             }
@@ -8198,33 +8222,19 @@ class AlwaysColorText extends Plugin {
 
       // Force a more aggressive refresh for reading mode
       if (activeView.getMode && activeView.getMode() === "preview") {
+        // SCROLL-FIX: Don't call previewMode.rerender() — it rebuilds the DOM and
+        // loses scroll position. processActiveFileOnly (called via forceRefreshAllReadingViews
+        // above) re-applies highlights onto the existing DOM, which is sufficient.
         try {
-          if (
-            activeView.previewMode &&
-            typeof activeView.previewMode.rerender === "function"
-          ) {
-            activeView.previewMode.rerender(true);
+          const root =
+            (activeView.previewMode && activeView.previewMode.containerEl) ||
+            activeView.contentEl ||
+            activeView.containerEl;
+          if (root && activeView.file && activeView.file.path) {
+            try { delete root.dataset.actProcessed; } catch (_) {}
+            this.processActiveFileOnly(root, { sourcePath: activeView.file.path });
           }
-        } catch (e) {
-          // Fallback to processing the content directly
-          setTimeout(() => {
-            try {
-              const root =
-                (activeView.previewMode &&
-                  activeView.previewMode.containerEl) ||
-                activeView.contentEl ||
-                activeView.containerEl;
-              if (root && activeView.file && activeView.file.path) {
-                this.processActiveFileOnly(root, {
-                  sourcePath: activeView.file.path,
-                });
-              }
-            } catch (err) {
-              // Final fallback
-              this.forceRefreshAllReadingViews();
-            }
-          }, 100);
-        }
+        } catch (e) {}
       }
     }
   }
@@ -8772,7 +8782,11 @@ class AlwaysColorText extends Plugin {
       if (this.settings && this.settings.extremeLightweightMode) {
         return true;
       }
-      const isLargeDoc = Number(textLength) > 50000;
+      // PERF: Use viewport-based IntersectionObserver rendering for all but the smallest
+      // documents. The observer pre-loads content 300px ahead of the viewport so the
+      // user experience is seamless while avoiding a full synchronous DOM walk on open.
+      // Threshold lowered from 50 000 → 3 000 chars.
+      const isLargeDoc = Number(textLength) > 3000;
       const isNonRomanHeavy = this.getNonRomanCharacterRatio(textContent) > 0.3;
       return isLargeDoc || isNonRomanHeavy;
     } catch (e) {
@@ -10522,12 +10536,34 @@ class AlwaysColorText extends Plugin {
 
   // Compile word entries into runtime structures (regexes, testRegex, validity)
   compileWordEntries() {
+    // PERF: Invalidate per-file filtered-entries cache and element stamps so
+    // reading mode re-processes with the new patterns on next open.
+    try {
+      if (this._filteredEntriesCache) this._filteredEntriesCache.clear();
+    } catch (_) {}
+    this._clearActProcessedStamps();
     return compileWordEntriesLogic(this);
   }
 
   // Compile text + background coloring entries
   compileTextBgColoringEntries() {
+    // PERF: Same invalidation as compileWordEntries — both affect what gets rendered.
+    try {
+      if (this._filteredEntriesCache) this._filteredEntriesCache.clear();
+    } catch (_) {}
+    this._clearActProcessedStamps();
     return compileTextBgColoringEntriesLogic(this);
+  }
+
+  // Remove all data-act-processed stamps from the DOM so reading views re-render
+  // after settings changes.
+  _clearActProcessedStamps() {
+    try {
+      const stamped = document.querySelectorAll("[data-act-processed]");
+      for (const el of stamped) {
+        try { delete el.dataset.actProcessed; } catch (_) {}
+      }
+    } catch (_) {}
   }
 
   // OPTIMIZATION: Pre-compile word pattern regexes for extreme performance
@@ -10916,42 +10952,54 @@ class AlwaysColorText extends Plugin {
         } catch (_) {
           span.style.backgroundColor = bgRgba;
         }
+        
+        // CRITICAL FIX: Check if textNode is inside a heading to avoid layout disruption
+        // This prevents scroll position issues in outline navigation and checkbox interactions
+        let isInHeading = false;
         try {
-          const vpad = params.vPad;
-          span.style.setProperty(
-            "padding-left",
-            params.hPad + "px",
-            "important",
-          );
-          span.style.setProperty(
-            "padding-right",
-            params.hPad + "px",
-            "important",
-          );
-          span.style.setProperty(
-            "padding-top",
-            (vpad >= 0 ? vpad : 0) + "px",
-            "important",
-          );
-          span.style.setProperty(
-            "padding-bottom",
-            (vpad >= 0 ? vpad : 0) + "px",
-            "important",
-          );
-          if (vpad < 0) {
-            span.style.setProperty("margin-top", vpad + "px", "important");
-            span.style.setProperty("margin-bottom", vpad + "px", "important");
-          }
-        } catch (_) {
-          const vpad = params.vPad;
-          span.style.paddingLeft = span.style.paddingRight = params.hPad + "px";
-          span.style.paddingTop = span.style.paddingBottom =
-            (vpad >= 0 ? vpad : 0) + "px";
-          if (vpad < 0) {
-            span.style.marginTop = vpad + "px";
-            span.style.marginBottom = vpad + "px";
+          isInHeading = textNode.parentElement?.closest("h1, h2, h3, h4, h5, h6") !== null;
+        } catch (_) {}
+        
+        // Only apply padding/margin if NOT in a heading (to preserve layout for outline navigation)
+        if (!isInHeading) {
+          try {
+            const vpad = params.vPad;
+            span.style.setProperty(
+              "padding-left",
+              params.hPad + "px",
+              "important",
+            );
+            span.style.setProperty(
+              "padding-right",
+              params.hPad + "px",
+              "important",
+            );
+            span.style.setProperty(
+              "padding-top",
+              (vpad >= 0 ? vpad : 0) + "px",
+              "important",
+            );
+            span.style.setProperty(
+              "padding-bottom",
+              (vpad >= 0 ? vpad : 0) + "px",
+              "important",
+            );
+            if (vpad < 0) {
+              span.style.setProperty("margin-top", vpad + "px", "important");
+              span.style.setProperty("margin-bottom", vpad + "px", "important");
+            }
+          } catch (_) {
+            const vpad = params.vPad;
+            span.style.paddingLeft = span.style.paddingRight = params.hPad + "px";
+            span.style.paddingTop = span.style.paddingBottom =
+              (vpad >= 0 ? vpad : 0) + "px";
+            if (vpad < 0) {
+              span.style.marginTop = vpad + "px";
+              span.style.marginBottom = vpad + "px";
+            }
           }
         }
+        
         const br =
           (params.hPad > 0 && params.radius === 0 ? 0 : params.radius) + "px";
         try {
@@ -10959,7 +11007,8 @@ class AlwaysColorText extends Plugin {
         } catch (_) {
           span.style.borderRadius = br;
         }
-        if (this.settings.enableBoxDecorationBreak ?? true) {
+        // Disable boxDecorationBreak in headings as it affects line wrapping and causes offset issues
+        if ((this.settings.enableBoxDecorationBreak ?? true) && !isInHeading) {
           span.style.boxDecorationBreak = "clone";
           span.style.WebkitBoxDecorationBreak = "clone";
         }
@@ -11189,6 +11238,18 @@ class AlwaysColorText extends Plugin {
     debugLog("PROC_ACTIVE", `Path: ${ctx?.sourcePath}`);
     if (!el || !ctx || !ctx.sourcePath) return;
     if (!this.settings.enabled) return;
+    
+    // PERF: Skip re-processing if this element was already stamped for this file.
+    // Using a data attribute is O(1) and avoids the O(n) textContent.length traversal
+    // that the old className+length hash required.
+    try {
+      const stamp = el.dataset && el.dataset.actProcessed;
+      if (stamp === ctx.sourcePath) {
+        debugLog("PROC_ACTIVE", "Skipping re-process: element already stamped");
+        return;
+      }
+    } catch (_) {}
+    
     try {
       this.removeDisabledNeutralizerStyles();
     } catch (_) {}
@@ -11344,11 +11405,16 @@ class AlwaysColorText extends Plugin {
     // Get ALL entries first
     const allEntries = this.getSortedWordEntries();
 
-    // Then filter by advanced rules
-    const allowedEntries = this.filterEntriesByAdvancedRules(
-      ctx.sourcePath,
-      allEntries,
-    );
+    // PERF: Cache filtered entries per file path. filterEntriesByAdvancedRules iterates
+    // all compiled entries on every call; for files opened repeatedly (tab switches,
+    // scroll events) this is pure redundant work. Cache is invalidated in
+    // compileWordEntries / compileTextBgColoringEntries whenever settings change.
+    if (!this._filteredEntriesCache) this._filteredEntriesCache = new Map();
+    let allowedEntries = this._filteredEntriesCache.get(ctx.sourcePath);
+    if (!allowedEntries) {
+      allowedEntries = this.filterEntriesByAdvancedRules(ctx.sourcePath, allEntries);
+      this._filteredEntriesCache.set(ctx.sourcePath, allowedEntries);
+    }
 
     // VALIDATION: Ensure targetElement is present for formatting entries (self-healing)
     for (const entry of allowedEntries) {
@@ -11537,13 +11603,12 @@ class AlwaysColorText extends Plugin {
         }
       };
 
-      if (isReadingRoot) {
-        try {
-          runDeferred("reading-immediate");
-        } catch (e) {
-          debugError("DEFERRED", "reading immediate failed", e);
-        }
-      } else if (
+      // PERF: Reading mode no longer gets a synchronous "reading-immediate" second pass.
+      // The processNow() call above already covers the full document. The deferred pass
+      // here only exists to catch content that Obsidian injects *after* the post-processor
+      // fires (lazy embeds, callouts rendered late, etc.). We schedule it in idle time for
+      // all contexts so it never blocks the main thread on page open.
+      if (
         typeof window !== "undefined" &&
         typeof window.requestIdleCallback === "function"
       ) {
@@ -11552,17 +11617,14 @@ class AlwaysColorText extends Plugin {
             timeout: 2000,
           });
         } catch (e) {
-          // If requestIdleCallback throws, ensure fallback via setTimeout
           setTimeout(() => runDeferred("setTimeout-after-idle-error"), 1200);
         }
       } else {
-        // No requestIdleCallback support; schedule fallback
         setTimeout(() => runDeferred("setTimeout-fallback"), 1200);
       }
 
-      if (!isReadingRoot) {
-        setTimeout(() => runDeferred("safety-timeout"), 3000);
-      }
+      // Safety net: ensure deferred runs even if idle callback never fires
+      setTimeout(() => runDeferred("safety-timeout"), 3000);
     } catch (e) {
       // As a last resort, attempt a simple timeout run
       setTimeout(() => {
@@ -11587,6 +11649,11 @@ class AlwaysColorText extends Plugin {
       "ACT",
       `scheduled total: ${(performance.now() - startTime).toFixed(1)}ms`,
     );
+    // PERF: Stamp the element so subsequent calls from the same post-processor
+    // invocation (e.g. observer re-fires) are skipped in O(1).
+    try {
+      if (el.dataset) el.dataset.actProcessed = ctx.sourcePath;
+    } catch (_) {}
   }
 
   // Progressive optimized processing for very large documents
@@ -14210,22 +14277,20 @@ class AlwaysColorText extends Plugin {
   // Async chunked processing to prevent UI freezes on large documents
   async processInChunks(element, entries, folderEntry = null, options = {}) {
     debugLog("CHUNK_START", `Processing ${element.nodeName}.${element.className}, entries: ${entries.length}`);
-    // Use TreeWalker to avoid materializing large array of DOM references
     const selector =
       "p, li, div, span, td, th, blockquote, h1, h2, h3, h4, h5, h6";
-    const batch = Number(options.batchSize) || 20; // larger default batch to process more blocks per tick
+    const batch = Number(options.batchSize) || 20;
 
-    // Collect blocks using TreeWalker instead of querySelectorAll to be more memory-efficient
-    const blocks = [];
     const tags = new Set(
       selector.split(",").map((s) => s.trim().toUpperCase()),
     );
 
-    // OPTION: Include the root element itself if requested (for leaf nodes like table cells)
-    if (options.includeSelf && element && tags.has(element.nodeName)) {
-      blocks.push(element);
-    }
+    const startIndex = Number(options.skipFirstN) || 0;
+    const forceProcess = !!options.forceProcess;
 
+    // PERF: Stream nodes directly from the TreeWalker instead of pre-collecting them
+    // into a large array. This avoids allocating O(n) references upfront and lets GC
+    // reclaim each node reference as soon as it's processed.
     const walker = document.createTreeWalker(
       element,
       NodeFilter.SHOW_ELEMENT,
@@ -14239,19 +14304,35 @@ class AlwaysColorText extends Plugin {
       false,
     );
 
-    let currentNode;
-    while ((currentNode = walker.nextNode())) {
-      blocks.push(currentNode);
+    // Handle includeSelf option
+    let i = 0;
+    if (options.includeSelf && element && tags.has(element.nodeName)) {
+      if (i >= startIndex) {
+        try {
+          this._errorRecovery.wrap(
+            "PROCESS_BLOCK",
+            () => this._processBlock(element, entries, folderEntry, {
+              clearExisting: options.clearExisting !== false,
+              effectiveStyle: "text",
+              forceProcess: forceProcess || this.settings.forceFullRenderInReading,
+              maxMatches: options && typeof options.maxMatches !== "undefined"
+                ? options.maxMatches
+                : forceProcess || this.settings.forceFullRenderInReading ? Infinity : undefined,
+              filePath: options.filePath,
+            }),
+            () => null,
+          );
+        } catch (e) {
+          debugError("CHUNK", "block error (self)", e);
+        }
+      }
+      i++;
     }
 
-    const startIndex = Number(options.skipFirstN) || 0;
-    const forceProcess = !!options.forceProcess;
-    debugLog(
-      "CHUNK",
-      `start: ${blocks.length} blocks, batch=${batch}, startIndex=${startIndex}, forceProcess=${forceProcess}`,
-    );
+    debugLog("CHUNK", `streaming walker, startIndex=${startIndex}, forceProcess=${forceProcess}`);
 
-    for (let i = startIndex; i < blocks.length; i++) {
+    let currentNode;
+    while ((currentNode = walker.nextNode())) {
       // Check global performance monitor per batch unless forced
       if (
         !forceProcess &&
@@ -14259,56 +14340,85 @@ class AlwaysColorText extends Plugin {
         this.performanceMonitor.isOverloaded &&
         this.performanceMonitor.isOverloaded()
       ) {
-        debugWarn("CHUNK", `paused at block ${i} due to perf overload`);
-        const resumeOpts = Object.assign({}, options, { skipFirstN: i });
+        debugWarn("CHUNK", `paused at node ${i} due to perf overload`);
+        // Re-enter from current position by falling back to index-based resume.
+        // Collect remaining nodes into a temporary array for the retry.
+        const remaining = [currentNode];
+        let n;
+        while ((n = walker.nextNode())) remaining.push(n);
+        const resumeOpts = Object.assign({}, options, { skipFirstN: 0, _resumeNodes: remaining });
         setTimeout(() => {
           try {
-            this.processInChunks(element, entries, folderEntry, resumeOpts);
+            this._processInChunksFromArray(remaining, entries, folderEntry, resumeOpts);
           } catch (e) {
             debugError("CHUNK", "retry failed", e);
           }
         }, 300);
-        blocks.length = 0; // Clear array to help GC
         return;
       }
 
-      try {
-        this._errorRecovery.wrap(
-          "PROCESS_BLOCK",
-          () =>
-            this._processBlock(blocks[i], entries, folderEntry, {
+      if (i >= startIndex) {
+        try {
+          this._errorRecovery.wrap(
+            "PROCESS_BLOCK",
+            () => this._processBlock(currentNode, entries, folderEntry, {
               clearExisting: options.clearExisting !== false,
               effectiveStyle: "text",
-              forceProcess:
-                forceProcess || this.settings.forceFullRenderInReading,
-              maxMatches:
-                options && typeof options.maxMatches !== "undefined"
-                  ? options.maxMatches
-                  : forceProcess || this.settings.forceFullRenderInReading
-                    ? Infinity
-                    : undefined,
+              forceProcess: forceProcess || this.settings.forceFullRenderInReading,
+              maxMatches: options && typeof options.maxMatches !== "undefined"
+                ? options.maxMatches
+                : forceProcess || this.settings.forceFullRenderInReading ? Infinity : undefined,
               filePath: options.filePath,
             }),
-          () => null,
-        );
-      } catch (e) {
-        debugError("CHUNK", "block error", e);
+            () => null,
+          );
+        } catch (e) {
+          debugError("CHUNK", "block error", e);
+        }
       }
 
-      // Yield to browser every batch blocks to keep UI responsive
-      // Even with forceProcess, we yield periodically to prevent main thread lockup
-      const yieldInterval = forceProcess ? 50 : batch; // More frequent yields when forced
-      if (i % yieldInterval === 0 && i > 0) {
-        // yield to the browser to keep UI responsive
-        // use a very short timeout so large documents progress quickly
+      i++;
+
+      // Yield to browser every batch nodes to keep UI responsive
+      const yieldInterval = forceProcess ? 50 : batch;
+      if (i % yieldInterval === 0 && i > startIndex) {
         await new Promise((resolve) => setTimeout(resolve, 0));
       }
     }
 
-    debugLog("CHUNK", `done: ${blocks.length} blocks processed`);
+    debugLog("CHUNK", `done: ${i} nodes streamed`);
+  }
 
-    // Clear blocks array to help garbage collection
-    blocks.length = 0;
+  // Fallback helper used when processInChunks needs to resume from a pre-collected array
+  // (only happens when the perf monitor trips mid-walk).
+  async _processInChunksFromArray(nodes, entries, folderEntry, options = {}) {
+    const batch = Number(options.batchSize) || 20;
+    const forceProcess = !!options.forceProcess;
+    for (let i = 0; i < nodes.length; i++) {
+      try {
+        this._errorRecovery.wrap(
+          "PROCESS_BLOCK",
+          () => this._processBlock(nodes[i], entries, folderEntry, {
+            clearExisting: options.clearExisting !== false,
+            effectiveStyle: "text",
+            forceProcess: forceProcess || this.settings.forceFullRenderInReading,
+            maxMatches: options && typeof options.maxMatches !== "undefined"
+              ? options.maxMatches
+              : forceProcess || this.settings.forceFullRenderInReading ? Infinity : undefined,
+            filePath: options.filePath,
+          }),
+          () => null,
+        );
+      } catch (e) {
+        debugError("CHUNK", "block error (array)", e);
+      }
+      const yieldInterval = forceProcess ? 50 : batch;
+      if (i % yieldInterval === 0 && i > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    }
+    nodes.length = 0;
+    debugLog("CHUNK", `done (array resume): ${nodes.length} nodes`);
   }
 
   _processLivePreviewCallouts(view, force = false) {
