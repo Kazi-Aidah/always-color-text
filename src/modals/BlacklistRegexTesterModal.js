@@ -1,4 +1,4 @@
-﻿import { Modal, Notice } from 'obsidian';
+import { Modal, Notice } from 'obsidian';
 import { escapeHtml, debugError } from '../utils/debug.js';
 
 export class BlacklistRegexTesterModal extends Modal {
@@ -41,7 +41,7 @@ export class BlacklistRegexTesterModal extends Modal {
     flagNames.forEach((f) => {
       const b = flagsRow.createEl("button", { text: f });
       b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--radius-m)";
+      b.style.borderRadius = "var(--input-radius)";
       b.style.border = "1px solid var(--background-modifier-border)";
       b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
@@ -55,14 +55,14 @@ export class BlacklistRegexTesterModal extends Modal {
     regexInput.style.marginTop = "10px";
     regexInput.style.width = "100%";
     regexInput.style.padding = "10px 14px";
-    regexInput.style.borderRadius = "var(--radius-m)";
+    regexInput.style.borderRadius = "var(--input-radius)";
     regexInput.style.border = "1px solid var(--background-modifier-border)";
     regexInput.style.background = "var(--background-modifier-form-field)";
     regexInput.style.fontFamily = "var(--font-ui-medium)";
     const subjectWrap = contentEl.createDiv();
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
-    subjectWrap.style.borderRadius = "var(--radius-m)";
+    subjectWrap.style.borderRadius = "var(--input-radius)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("textarea");
@@ -82,7 +82,7 @@ export class BlacklistRegexTesterModal extends Modal {
     const previewWrap = contentEl.createDiv();
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
-    previewWrap.style.borderRadius = "var(--radius-m)";
+    previewWrap.style.borderRadius = "var(--input-radius)";
     previewWrap.style.padding = "12px";
     previewWrap.style.background = "var(--background-modifier-form-field)";
     previewWrap.style.whiteSpace = "pre-wrap";
@@ -98,7 +98,7 @@ export class BlacklistRegexTesterModal extends Modal {
     nameInput.style.marginTop = "10px";
     nameInput.style.width = "100%";
     nameInput.style.padding = "10px 14px";
-    nameInput.style.borderRadius = "var(--radius-m)";
+    nameInput.style.borderRadius = "var(--input-radius)";
     nameInput.style.border = "1px solid var(--background-modifier-border)";
     nameInput.style.background = "var(--background-modifier-form-field)";
     nameInput.style.boxSizing = "border-box";

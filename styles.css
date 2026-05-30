@@ -527,6 +527,53 @@ div[contenteditable="true"]:focus {
   }
 }
 
+/* ====== HIGHLIGHT STYLING MODAL - MOBILE GRID FIX ====== */
+/* On mobile, stack the label on its own row and put the control
+   (slider/input + reset button) on the row below it, preventing overlap. */
+body.is-mobile .act-highlight-grid {
+  grid-template-columns: 1fr;
+}
+
+body.is-mobile .act-highlight-grid > div:nth-child(even) {
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+body.is-mobile .act-highlight-grid > div:nth-child(even) input[type="range"] {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+body.is-mobile .act-highlight-grid > div:nth-child(even) input[type="number"] {
+  flex: 1 1 auto;
+}
+
+body.is-mobile .act-highlight-grid > div:last-child {
+  border-bottom: none;
+}
+
+/* On mobile, header selects take full width so they don't crowd the title */
+body.is-mobile .act-highlight-header-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+body.is-mobile .act-highlight-header-row h2 {
+  width: 100%;
+}
+
+body.is-mobile .act-highlight-header-row > div[style*="flex: 1"] {
+  display: none;
+}
+
+body.is-mobile .act-highlight-header-row select {
+  width: 100%;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
 /* ====== COLOR PICKER MODAL - HEADER CONTROLS ====== */
 
 /* On mobile, let the header controls row wrap so selects/buttons
@@ -566,7 +613,7 @@ div[contenteditable="true"]:focus {
 }
 
 .act-regex-name {
-  min-width: 140px !important;
+  min-width: 0;
 }
 
 /* @media (min-width: 768px) {
@@ -660,6 +707,28 @@ button.mod-cta {
   border: none !important;
 }
 
+/* Disabled files list: keep file name and × button on one line */
+.act-disabled-file {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  padding: 4px 0;
+}
+
+.act-disabled-file-title {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 0.85em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.act-disabled-file button {
+  flex: 0 0 auto;
+  margin-left: 6px;
+}
+
 .act-desc {
    padding-inline-start: 16px;
    font-size: small;
@@ -682,6 +751,11 @@ button.mod-cta {
 
 .act-entry-row button, .act-entry-row select  {
   border-radius: var(--button-radius) !important;
+}
+
+/* Round checkboxes in blacklist entry rows */
+.blacklist-words-list input[type="checkbox"] {
+    border-radius: 100px;
 }
 
 .act-search-input {
@@ -753,8 +827,15 @@ body.theme-dark.act-dark-mode-fix .always-color-text-highlight.act-dark-color {
   background-color: var(--background-modifier-form-field) !important;
 }
 
-.act-color-target-select {
-  text-transform: capitalize;
+/* Hide color-target select (Color Text/Line/Next Line) in entry rows — accessible via Edit Entry modal */
+.act-entry-row .act-color-target-select {
+  display: none !important;
+}
+
+/* Also explicitly hide in word group modal entry rows */
+.act-edit-word-group-modal .act-entry-row .act-color-target-select,
+.color-words-list .act-entry-row .act-color-target-select {
+  display: none !important;
 }
 
 /* Center-align all select elements inside ACT modals consistently */
@@ -764,3 +845,353 @@ body.theme-dark.act-dark-mode-fix .always-color-text-highlight.act-dark-color {
   padding-left: 4px !important;
   padding-right: 4px !important;
 }
+
+/* Word Group Mobile */
+body.is-mobile .act-group-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+/* Center preview */
+body.is-mobile .act-group-styling-preview {
+    margin-left: auto;
+    margin-right: auto;
+
+    transform: scale(1.3);
+}
+
+/* Right-side buttons */
+body.is-mobile .act-group-row [title="Duplicate Group"] {
+    margin-left: auto;
+}
+
+/* Input on second row */
+body.is-mobile .act-group-row input {
+    order: 99;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+}
+
+/* ====== COLORED TEXT ENTRIES — MOBILE LAYOUT (.is-mobile) ====== */
+/* Scoped to .color-words-list — covers settings tab + word group modal,
+   excludes .blacklist-entries in the blacklist group modal              */
+
+/*
+  Row 1: [textInput — full width]
+  Row 2: [styleSelect] [cp] [cpBg] [regexChk] [flagsInput]  ···  [settingsBtn]
+*/
+
+/* Desktop: always hide the settings button */
+.act-entry-settings-btn {
+  display: none !important;
+}
+
+/* Make the entry row wrap on mobile */
+body.is-mobile .color-words-list .act-entry-row {
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+/* Hide match and color-target selects on mobile; keep style select for row 2 */
+body.is-mobile .color-words-list .act-entry-row .act-match-select,
+body.is-mobile .color-words-list .act-entry-row .act-color-target-select {
+  display: none !important;
+}
+
+/* Regex name input — show on mobile (needed for regex entries) */
+/* body.is-mobile .color-words-list .act-entry-row .act-regex-name { display: none !important; } */
+
+/* Regex name input on mobile: full width on its own row above the text input */
+body.is-mobile .color-words-list .act-entry-row .act-regex-name {
+  order: 0 !important;
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Text/pattern input — row 1, full width forces the row break */
+body.is-mobile .color-words-list .act-entry-row input[type="text"]:not(.act-flags-input):not(.act-regex-name) {
+  flex: 1 1 100% !important;
+  min-width: 0 !important;
+  order: 1 !important;
+}
+
+/* Style select — row 2, leftmost */
+body.is-mobile .color-words-list .act-entry-row .act-style-select {
+  order: 2 !important;
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* Color pickers — row 2, after style select */
+body.is-mobile .color-words-list .act-entry-row input[type="color"] {
+  order: 3 !important;
+  flex: 0 0 auto !important;
+  width: 36px !important;
+  height: 36px !important;
+}
+
+/* Regex checkbox — row 2, after color pickers */
+body.is-mobile .color-words-list .act-entry-row input[type="checkbox"] {
+  order: 4 !important;
+  flex: 0 0 auto !important;
+  margin-left: 2px !important;
+  margin-right: 2px !important;
+}
+
+/* Flags input — row 2, beside checkbox */
+body.is-mobile .color-words-list .act-entry-row .act-flags-input {
+  order: 5 !important;
+  flex: 0 0 auto !important;
+  width: 80px !important;
+}
+
+/* Settings button — row 2, pushed to the far right */
+body.is-mobile .color-words-list .act-entry-row .act-entry-settings-btn {
+  display: flex !important;
+  order: 6 !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  padding: 4px !important;
+  margin-left: auto !important;
+}
+
+/* ====== EDIT ENTRY MODAL — MOBILE LAYOUT ====== */
+
+/* Stack columns vertically on mobile */
+body.is-mobile .act-edit-entry-main {
+  flex-direction: column !important;
+}
+
+body.is-mobile .act-edit-entry-left-column,
+body.is-mobile .act-edit-entry-right-column {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Fix style select height and width in right column on mobile */
+body.is-mobile .act-edit-entry-style-select {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  /* height: auto !important; */
+  align-self: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Edit Entry Modal: 100% width selects & buttons */
+body.is-mobile .act-edit-entry-controls > select,
+body.is-mobile .act-edit-entry-controls > button {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+}
+
+/* ====== WORD GROUP & BLACKLIST GROUP MODAL LAYOUT ====== */
+
+/* Desktop: flex column so list grows and buttons stay pinned */
+.act-edit-word-group-modal .modal-content,
+.act-edit-blacklist-group-modal .modal-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 85vh;
+  overflow: hidden;
+}
+
+/* List grows to fill available space on desktop */
+.act-edit-word-group-modal .color-words-list,
+.act-edit-blacklist-group-modal .blacklist-entries-list {
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+/* Mobile: the whole modal scrolls like a page — override Obsidian's fixed-height modal */
+body.is-mobile .act-edit-word-group-modal,
+body.is-mobile .act-edit-blacklist-group-modal {
+  height: auto !important;
+  max-height: 95vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+body.is-mobile .act-edit-word-group-modal .modal-content,
+body.is-mobile .act-edit-blacklist-group-modal .modal-content {
+  display: block !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Entries list: no inner scroll on mobile — content flows naturally */
+body.is-mobile .act-edit-word-group-modal .color-words-list,
+body.is-mobile .act-edit-blacklist-group-modal .blacklist-entries-list {
+  flex: none !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+  margin-bottom: 10px !important;
+}
+
+/* Button row never shrinks — stays at bottom */
+.act-group-button-row {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Each button in the row respects available width */
+.act-group-button-row > button {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Mobile button row ──────────────────────────────────────────
+   Row 1: [ Sort (~66%) ][ Presets (~34%) ]
+   Row 2: [ Add Words (50%) ][ Add Regex (50%) ]
+
+   Strategy: flex-wrap container + per-class width.
+   Each button's flex-basis drives its share of the row.
+   calc() subtracts half the gap (8px) so two items fill exactly
+   one row without overflow.
+   !important overrides any inline flex:1 set by JS.
+──────────────────────────────────────────────────────────────── */
+body.is-mobile .act-group-button-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+
+/* Sort — ~65% of the row (leaves ~35% for Presets) */
+body.is-mobile .act-group-button-row .act-group-btn-sort {
+  order: 1 !important;
+  flex: 0 0 calc(65% - 4px) !important;
+  width: calc(65% - 4px) !important;
+  box-sizing: border-box !important;
+}
+
+/* Presets — fills the remaining ~35% */
+body.is-mobile .act-group-button-row .act-group-btn-presets {
+  order: 2 !important;
+  flex: 1 0 calc(35% - 4px) !important;
+  width: calc(35% - 4px) !important;
+  box-sizing: border-box !important;
+}
+
+/* Add Words — exactly half the row */
+body.is-mobile .act-group-button-row .act-group-btn-add {
+  order: 3 !important;
+  flex: 0 0 calc(50% - 4px) !important;
+  width: calc(50% - 4px) !important;
+  box-sizing: border-box !important;
+}
+
+/* Add Regex — exactly half the row, matches Add Words */
+body.is-mobile .act-group-button-row .act-group-btn-regex {
+  order: 4 !important;
+  flex: 0 0 calc(50% - 4px) !important;
+  width: calc(50% - 4px) !important;
+  box-sizing: border-box !important;
+}
+
+/* Enable/disable grid — desktop: single row of 6 columns */
+.act-group-enable-disable-row {
+  min-width: 0;
+}
+
+/* Mobile: 3-column grid — label | input1 | input2 — two rows */
+body.is-mobile .act-group-enable-disable-row {
+  display: grid !important;
+  grid-template-columns: auto 1fr 1fr !important;
+  gap: 6px !important;
+}
+
+body.is-mobile .act-group-enable-label,
+body.is-mobile .act-group-disable-label {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  align-self: center;
+}
+
+
+
+/* ting ting ting */
+.entries-button-row .mod-cta,
+.blacklist-button-row .mod-cta,
+.path-button-row .mod-cta {
+    min-height: var(--input-height) !important;
+}
+
+.color-words-list {
+    background-color: transparent !important;
+    border-radius: calc(var(--setting-items-radius) + 4px) !important;
+}
+
+
+/* body.is-mobile .act-search-container {
+    margin-top: 16px !important;
+    margin-bottom: 16px !important;
+} */
+
+/* .color-words-list.word-group {
+    padding: 8px;
+    padding-top: 2px;
+} */
+
+.color-words-list .act-entry-row {
+    background-color: var(--setting-items-background);
+    border-radius: var(--setting-items-radius) !important;
+    padding: 10px;
+    margin-top: 6px;
+    border: 1px solid var(--background-modifier-border);
+}
+
+body.is-mobile .color-words-list .act-style-select {
+    border-radius: var(--button-radius);
+}
+
+.act-toprow input {
+    min-width: 150px;
+    width: 100%;
+}
+
+body:not(.is-mobile) .act-edit-word-group-hr {
+    display: none;
+}
+
+
+
+body:not(.is-mobile) .act-group-button-row {
+    margin-top: 16px;
+    margin-bottom: 4px !important;
+}
+
+.act-disabled-file {
+    margin: 4px;
+    margin-inline-start: 10px;
+}
+
+.act-disabled-file .clickable-icon {
+    font-size: 30px;
+    height: 50px;
+}
+/* ting ting ting */
+

@@ -56,7 +56,7 @@ export class RealTimeRegexTesterModal extends Modal {
     flagNames.forEach((f) => {
       const b = flagsRow.createEl("button", { text: f });
       b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--radius-m)";
+      b.style.borderRadius = "var(--input-radius)";
       b.style.border = "1px solid var(--background-modifier-border)";
       b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
@@ -74,7 +74,7 @@ export class RealTimeRegexTesterModal extends Modal {
     });
     styleSelect.value = this._preFillStyleType || "both";
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "var(--radius-m)";
+    styleSelect.style.borderRadius = "var(--input-radius)";
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.marginTop = "0";
 
@@ -90,7 +90,7 @@ export class RealTimeRegexTesterModal extends Modal {
     markTargetSelect.value =
       (this._editingEntry && this._editingEntry.markTarget) || "text";
     markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
-    markTargetSelect.style.borderRadius = "var(--radius-m)";
+    markTargetSelect.style.borderRadius = "var(--input-radius)";
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
     markTargetSelect.style.marginTop = "0";
 
@@ -200,7 +200,7 @@ export class RealTimeRegexTesterModal extends Modal {
     regexInput.style.marginTop = "10px";
     regexInput.style.width = "100%";
     regexInput.style.padding = "10px 14px";
-    regexInput.style.borderRadius = "var(--radius-s)";
+    regexInput.style.borderRadius = "var(--input-radius)";
     regexInput.style.border = "1px solid var(--background-modifier-border)";
     regexInput.style.background = "var(--background-modifier-form-field)";
     regexInput.style.fontFamily = "var(--font-ui-medium)";
@@ -252,7 +252,7 @@ export class RealTimeRegexTesterModal extends Modal {
     nameInput.style.marginTop = "10px";
     nameInput.style.width = "100%";
     nameInput.style.padding = "10px 14px";
-    nameInput.style.borderRadius = "var(--radius-m)";
+    nameInput.style.borderRadius = "var(--input-radius)";
     nameInput.style.border = "1px solid var(--background-modifier-border)";
     nameInput.style.background = "var(--background-modifier-form-field)";
     nameInput.style.boxSizing = "border-box";

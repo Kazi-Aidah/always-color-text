@@ -1,4 +1,4 @@
-﻿import { Modal, Notice } from 'obsidian';
+import { Modal, Notice } from 'obsidian';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
@@ -191,6 +191,7 @@ export class EditEntryModal extends Modal {
 
     // Main layout: two columns (left: input/preview, right: controls)
     const mainContainer = contentEl.createDiv();
+    mainContainer.addClass("act-edit-entry-main");
     mainContainer.style.display = "flex";
     mainContainer.style.gap = "8px";
     mainContainer.style.width = "100%";
@@ -210,7 +211,7 @@ export class EditEntryModal extends Modal {
     const box = row1.createDiv();
     box.addClass("act-edit-entry-textbox");
     box.style.border = "1px solid var(--background-modifier-border)";
-    box.style.borderRadius = "var(--button-radius)";
+    box.style.borderRadius = "var(--input-radius)";
     box.style.background = "var(--background-modifier-form-field)";
     const textInput = box.createEl("div");
     textInput.contentEditable = "true";
@@ -243,7 +244,7 @@ export class EditEntryModal extends Modal {
     preview.style.justifyContent = "center";
     preview.style.flex = "1";
     preview.style.border = "1px dashed var(--background-modifier-border)";
-    preview.style.borderRadius = "var(--button-radius)";
+    preview.style.borderRadius = "var(--input-radius)";
     preview.style.padding = "10px";
     preview.style.background = "var(--background-modifier-form-field)";
     preview.style.whiteSpace = "pre-wrap";
@@ -270,7 +271,7 @@ export class EditEntryModal extends Modal {
       opt.value = val;
     });
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "4px";
+    styleSelect.style.borderRadius = "var(--input-radius)";
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.flex = "1 0%";
 
@@ -444,7 +445,7 @@ export class EditEntryModal extends Modal {
     markTargetSelect.addClass("act-edit-entry-mark-target");
     markTargetSelect.style.minWidth = "140px";
     markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
-    markTargetSelect.style.borderRadius = "4px";
+    markTargetSelect.style.borderRadius = "var(--input-radius)";
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
 
     [
@@ -554,7 +555,7 @@ export class EditEntryModal extends Modal {
     groupSelect.style.padding = "0 10px";
     groupSelect.style.boxSizing = "border-box";
     groupSelect.style.border = "1px solid var(--background-modifier-border)";
-    groupSelect.style.borderRadius = "4px";
+    groupSelect.style.borderRadius = "var(--input-radius)";
     groupSelect.style.background = "var(--background-modifier-form-field)";
     const defaultOpt = groupSelect.createEl("option", {
       text: this.plugin.t("no_group", "No Group"),
@@ -673,7 +674,7 @@ export class EditEntryModal extends Modal {
     matchSelect.style.padding = "0 10px";
     matchSelect.style.boxSizing = "border-box";
     matchSelect.style.border = "1px solid var(--background-modifier-border)";
-    matchSelect.style.borderRadius = "4px";
+    matchSelect.style.borderRadius = "var(--input-radius)";
     matchSelect.style.background = "var(--background-modifier-form-field)";
     matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
 
@@ -684,7 +685,7 @@ export class EditEntryModal extends Modal {
     caseSel.style.padding = "0 10px";
     caseSel.style.boxSizing = "border-box";
     caseSel.style.border = "1px solid var(--background-modifier-border)";
-    caseSel.style.borderRadius = "4px";
+    caseSel.style.borderRadius = "var(--input-radius)";
     caseSel.style.background = "var(--background-modifier-form-field)";
     caseSel.innerHTML = `<option value="case">${this.plugin.t("opt_case_sensitive", "is case sensitive")}</option><option value="nocase">${this.plugin.t("opt_not_case_sensitive", "not case sensitive")}</option>`;
     let openRegexBtn = null;

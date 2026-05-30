@@ -57,6 +57,7 @@ export class EditWordGroupModal extends Modal {
 
     // TOP ROW: Active/Inactive & Group Name
     const topRow = contentEl.createDiv();
+    topRow.addClass("act-toprow");
     topRow.style.display = "flex";
     topRow.style.alignItems = "center";
     topRow.style.gap = "10px";
@@ -66,7 +67,7 @@ export class EditWordGroupModal extends Modal {
     const activeSelect = topRow.createEl("select");
     activeSelect.addClass("act-word-group-active-select");
     activeSelect.style.padding = "6px";
-    activeSelect.style.borderRadius = "4px";
+    activeSelect.style.borderRadius = "var(--input-radius)";
     activeSelect.style.border = "1px solid var(--background-modifier-border)";
     activeSelect.style.background = "var(--background-modifier-form-field)";
     activeSelect.style.textAlign = "center";
@@ -95,7 +96,7 @@ export class EditWordGroupModal extends Modal {
     });
     nameInput.style.flex = "1";
     nameInput.style.padding = "6px";
-    nameInput.style.borderRadius = "4px";
+    nameInput.style.borderRadius = "var(--input-radius)";
     nameInput.style.border = "1px solid var(--background-modifier-border)";
     nameInput.placeholder = this.plugin.t(
       "group_name_placeholder",
@@ -111,7 +112,7 @@ export class EditWordGroupModal extends Modal {
 
     const caseSelect = topRow.createEl("select");
     caseSelect.style.padding = "6px";
-    caseSelect.style.borderRadius = "4px";
+    caseSelect.style.borderRadius = "var(--input-radius)";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
     caseSelect.style.background = "var(--background-modifier-form-field)";
     caseSelect.style.textAlign = "center";
@@ -147,7 +148,7 @@ export class EditWordGroupModal extends Modal {
 
     const matchTypeSelect = topRow.createEl("select");
     matchTypeSelect.style.padding = "6px";
-    matchTypeSelect.style.borderRadius = "4px";
+    matchTypeSelect.style.borderRadius = "var(--input-radius)";
     matchTypeSelect.style.border =
       "1px solid var(--background-modifier-border)";
     matchTypeSelect.style.background = "var(--background-modifier-form-field)";
@@ -199,7 +200,7 @@ export class EditWordGroupModal extends Modal {
     editBtn.style.alignItems = "center";
     editBtn.style.justifyContent = "center";
     editBtn.style.padding = "6px";
-    editBtn.style.borderRadius = "4px";
+    editBtn.style.borderRadius = "var(--input-radius)";
     editBtn.style.border = "1px solid var(--background-modifier-border)";
     editBtn.style.background = "var(--background-modifier-form-field)";
     editBtn.style.cursor = "pointer";
@@ -229,7 +230,7 @@ export class EditWordGroupModal extends Modal {
       cssBtn.style.alignItems = "center";
       cssBtn.style.justifyContent = "center";
       cssBtn.style.padding = "6px";
-      cssBtn.style.borderRadius = "4px";
+      cssBtn.style.borderRadius = "var(--input-radius)";
       cssBtn.style.border = "1px solid var(--background-modifier-border)";
       cssBtn.style.background = "var(--background-modifier-form-field)";
       cssBtn.style.cursor = "pointer";
@@ -243,6 +244,7 @@ export class EditWordGroupModal extends Modal {
     }
 
     const enableDisableRow = contentEl.createDiv();
+    enableDisableRow.addClass("act-group-enable-disable-row");
     enableDisableRow.style.display = "grid";
     enableDisableRow.style.gridTemplateColumns =
       "auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)";
@@ -253,13 +255,15 @@ export class EditWordGroupModal extends Modal {
     const enLabel = enableDisableRow.createEl("div", {
       text: this.plugin.t("label_enable_in", "Enable in"),
     });
+    enLabel.addClass("act-group-enable-label");
     enLabel.style.color = "var(--text-muted)";
 
     const enFoldersInput = enableDisableRow.createEl("input", { type: "text" });
     enFoldersInput.placeholder = "folder1/, folder2/";
     enFoldersInput.style.padding = "6px";
-    enFoldersInput.style.borderRadius = "4px";
+    enFoldersInput.style.borderRadius = "var(--input-radius)";
     enFoldersInput.style.border = "1px solid var(--background-modifier-border)";
+    enFoldersInput.style.minWidth = "0";
     enFoldersInput.value = Array.isArray(this.group.enableFolders)
       ? this.group.enableFolders.join(", ")
       : "";
@@ -267,8 +271,9 @@ export class EditWordGroupModal extends Modal {
     const enTagsInput = enableDisableRow.createEl("input", { type: "text" });
     enTagsInput.placeholder = "#tag1, #tag2";
     enTagsInput.style.padding = "6px";
-    enTagsInput.style.borderRadius = "4px";
+    enTagsInput.style.borderRadius = "var(--input-radius)";
     enTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    enTagsInput.style.minWidth = "0";
     enTagsInput.value = Array.isArray(this.group.enableTags)
       ? this.group.enableTags
           .map((t) => (t.startsWith("#") ? t : `#${t}`))
@@ -278,6 +283,7 @@ export class EditWordGroupModal extends Modal {
     const disLabel = enableDisableRow.createEl("div", {
       text: this.plugin.t("label_disable_in", "Disable in"),
     });
+    disLabel.addClass("act-group-disable-label");
     disLabel.style.color = "var(--text-muted)";
 
     const disFoldersInput = enableDisableRow.createEl("input", {
@@ -285,9 +291,10 @@ export class EditWordGroupModal extends Modal {
     });
     disFoldersInput.placeholder = "folder1/, folder2/";
     disFoldersInput.style.padding = "6px";
-    disFoldersInput.style.borderRadius = "4px";
+    disFoldersInput.style.borderRadius = "var(--input-radius)";
     disFoldersInput.style.border =
       "1px solid var(--background-modifier-border)";
+    disFoldersInput.style.minWidth = "0";
     disFoldersInput.value = Array.isArray(this.group.disableFolders)
       ? this.group.disableFolders.join(", ")
       : "";
@@ -295,8 +302,9 @@ export class EditWordGroupModal extends Modal {
     const disTagsInput = enableDisableRow.createEl("input", { type: "text" });
     disTagsInput.placeholder = "#tag1, #tag2";
     disTagsInput.style.padding = "6px";
-    disTagsInput.style.borderRadius = "4px";
+    disTagsInput.style.borderRadius = "var(--input-radius)";
     disTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    disTagsInput.style.minWidth = "0";
     disTagsInput.value = Array.isArray(this.group.disableTags)
       ? this.group.disableTags
           .map((t) => (t.startsWith("#") ? t : `#${t}`))
@@ -458,17 +466,20 @@ export class EditWordGroupModal extends Modal {
     // ENTRIES LIST CONTAINER
     this._listDiv = contentEl.createDiv();
     this._listDiv.addClass("color-words-list");
-    this._listDiv.style.minHeight = "200px";
-    this._listDiv.style.maxHeight = "350px";
+    this._listDiv.addClass("word-group");
+    this._listDiv.style.flex = "1 1 auto";
+    this._listDiv.style.minHeight = "120px";
     this._listDiv.style.overflowY = "auto";
-    this._listDiv.style.marginBottom = "15px";
-    this._listDiv.style.borderRadius = "4px";
+    this._listDiv.style.marginBottom = "0";
+    this._listDiv.style.borderRadius = "var(--input-radius)";
     this._listDiv.style.backgroundColor = "var(--background-primary)";
     this._refreshGroupEntries();
 
     // BUTTON ROW: Sort | Add Word | Add Regex | Presets
     const buttonRow = contentEl.createDiv();
+    buttonRow.addClass("act-group-button-row");
     buttonRow.style.display = "flex";
+    buttonRow.style.flexWrap = "wrap";
     buttonRow.style.gap = "10px";
     buttonRow.style.marginBottom = "15px";
     buttonRow.style.alignItems = "center";
@@ -492,10 +503,11 @@ export class EditWordGroupModal extends Modal {
     };
 
     const sortBtn = buttonRow.createEl("button");
+    sortBtn.addClass("act-group-btn-sort");
     sortBtn.textContent = sortLabels[this._sortMode] || "Sort: Last Added";
     sortBtn.style.cursor = "pointer";
     sortBtn.style.padding = "6px 12px";
-    sortBtn.style.borderRadius = "4px";
+    sortBtn.style.borderRadius = "var(--input-radius)";
     const sortBtnHandler = () => {
       const currentIndex = sortModes.indexOf(this._sortMode);
       const nextIndex = (currentIndex + 1) % sortModes.length;
@@ -509,10 +521,11 @@ export class EditWordGroupModal extends Modal {
     );
 
     const addWordsBtn = buttonRow.createEl("button");
+    addWordsBtn.addClass("act-group-btn-add");
     addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
     addWordsBtn.style.cursor = "pointer";
     addWordsBtn.style.padding = "6px 12px";
-    addWordsBtn.style.borderRadius = "4px";
+    addWordsBtn.style.borderRadius = "var(--input-radius)";
     addWordsBtn.style.flex = "1";
     addWordsBtn.addClass("mod-cta");
     const addWordsHandler = () => {
@@ -538,10 +551,11 @@ export class EditWordGroupModal extends Modal {
 
     if (this.plugin.settings.enableRegexSupport) {
       const addRegexBtn = buttonRow.createEl("button");
+      addRegexBtn.addClass("act-group-btn-regex");
       addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
       addRegexBtn.style.cursor = "pointer";
       addRegexBtn.style.padding = "6px 12px";
-      addRegexBtn.style.borderRadius = "4px";
+      addRegexBtn.style.borderRadius = "var(--input-radius)";
       addRegexBtn.style.flex = "1";
       addRegexBtn.addClass("mod-cta");
       const addRegexHandler = () => {
@@ -567,10 +581,11 @@ export class EditWordGroupModal extends Modal {
     }
 
     const presetsBtn = buttonRow.createEl("button");
+    presetsBtn.addClass("act-group-btn-presets");
     presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
     presetsBtn.style.cursor = "pointer";
     presetsBtn.style.padding = "6px 12px";
-    presetsBtn.style.borderRadius = "4px";
+    presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
       if (!this.plugin.settings.enableRegexSupport) {
         new AlertModal(
@@ -863,18 +878,21 @@ export class EditWordGroupModal extends Modal {
       row.style.display = "flex";
       row.style.alignItems = "center";
       row.style.gap = "8px";
-      row.style.borderRadius = "4px";
+      row.style.borderRadius = "var(--input-radius)";
 
       // 1. STYLE SELECT (Text/Highlight/Both) - default should be "color" which is "text"
       const styleSelect = row.createEl("select");
       styleSelect.style.padding = "6px";
-      styleSelect.style.borderRadius = "4px";
+      styleSelect.style.borderRadius = "var(--input-radius)";
       styleSelect.style.border = "1px solid var(--background-modifier-border)";
       styleSelect.style.background = "var(--background-modifier-form-field)";
       styleSelect.style.textAlign = "center";
       // removed transparent background styling per request
       styleSelect.style.maxWidth = "90px";
       styleSelect.style.minWidth = "70px";
+      try { styleSelect.addClass("act-style-select"); } catch (e) {
+        try { styleSelect.classList.add("act-style-select"); } catch (_) {}
+      }
       ["text", "highlight", "both"].forEach((val) => {
         const opt = styleSelect.createEl("option", {
           text: this.plugin.t(
@@ -894,13 +912,16 @@ export class EditWordGroupModal extends Modal {
       // 2. MATCH TYPE SELECT
       const matchSelect = row.createEl("select");
       matchSelect.style.padding = "6px";
-      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.borderRadius = "var(--input-radius)";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.textAlign = "center";
       // removed transparent background styling per request
       matchSelect.style.maxWidth = "110px";
       matchSelect.style.minWidth = "90px";
+      try { matchSelect.addClass("act-match-select"); } catch (e) {
+        try { matchSelect.classList.add("act-match-select"); } catch (_) {}
+      }
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "Exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "Contains")}</option><option value="startswith">${this.plugin.t("match_option_starts_with", "Starts with")}</option><option value="endswith">${this.plugin.t("match_option_ends_with", "Ends with")}</option>`;
       matchSelect.value = entry.matchType || "contains";
       const matchSelectHandler = () => {
@@ -911,12 +932,15 @@ export class EditWordGroupModal extends Modal {
       // 2b. MARK TARGET SELECT (Color Text / Color Line / Color Next Line)
       const markTargetSelect = row.createEl("select");
       markTargetSelect.style.padding = "6px";
-      markTargetSelect.style.borderRadius = "4px";
+      markTargetSelect.style.borderRadius = "var(--input-radius)";
       markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
       markTargetSelect.style.background = "var(--background-modifier-form-field)";
       markTargetSelect.style.textAlign = "center";
       markTargetSelect.style.minWidth = "80px";
       markTargetSelect.style.maxWidth = "100px";
+      try { markTargetSelect.addClass("act-color-target-select"); } catch (e) {
+        try { markTargetSelect.classList.add("act-color-target-select"); } catch (_) {}
+      }
       [
         ["text",     this.plugin.t("mark_target_text",       "Color Text")],
         ["line",     this.plugin.t("mark_target_line",       "Color Line")],
@@ -963,7 +987,7 @@ export class EditWordGroupModal extends Modal {
         });
         nameInput.style.flex = "0 0 80px";
         nameInput.style.padding = "6px";
-        nameInput.style.borderRadius = "4px";
+        nameInput.style.borderRadius = "var(--input-radius)";
         nameInput.style.border = "1px solid var(--background-modifier-border)";
         nameInput.placeholder = this.plugin.t("regex_name_placeholder", "name your regex");
         const nameHandler = () => {
@@ -979,7 +1003,7 @@ export class EditWordGroupModal extends Modal {
       });
       patternInput.style.flex = "1";
       patternInput.style.padding = "6px";
-      patternInput.style.borderRadius = "4px";
+      patternInput.style.borderRadius = "var(--input-radius)";
       patternInput.style.border = "1px solid var(--background-modifier-border)";
       patternInput.placeholder = this.plugin.t(
         "word_pattern_placeholder_long",
@@ -1000,10 +1024,13 @@ export class EditWordGroupModal extends Modal {
         });
         flagsInput.style.width = "50px";
         flagsInput.style.padding = "6px";
-        flagsInput.style.borderRadius = "4px";
+        flagsInput.style.borderRadius = "var(--input-radius)";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
         flagsInput.placeholder = this.plugin.t("flags_placeholder", "Flags");
         flagsInput.title = "e.g., i, g, m";
+        try { flagsInput.addClass("act-flags-input"); } catch (e) {
+          try { flagsInput.classList.add("act-flags-input"); } catch (_) {}
+        }
         const flagsHandler = () => {
           entry.flags = flagsInput.value || "";
         };
@@ -1030,7 +1057,7 @@ export class EditWordGroupModal extends Modal {
         cp.style.padding = "0";
         cp.style.border = "none";
         cp.style.cursor = "pointer";
-        cp.style.borderRadius = "4px";
+        cp.style.borderRadius = "var(--input-radius)";
         const textColor =
           entry.textColor && entry.textColor !== "currentColor"
             ? entry.textColor
@@ -1124,7 +1151,7 @@ export class EditWordGroupModal extends Modal {
         cpBg.style.padding = "0";
         cpBg.style.border = "none";
         cpBg.style.cursor = "pointer";
-        cpBg.style.borderRadius = "4px";
+        cpBg.style.borderRadius = "var(--input-radius)";
         const bgColor =
           entry.backgroundColor || entry._savedBackgroundColor || "#000000";
         cpBg.value = bgColor;
@@ -1301,6 +1328,34 @@ export class EditWordGroupModal extends Modal {
         }
       };
       row.addEventListener("contextmenu", contextMenuHandler);
+
+      // Settings button — mobile only (hidden on desktop via CSS)
+      const entrySettingsBtn = row.createEl("button");
+      entrySettingsBtn.style.flex = "0 0 auto";
+      entrySettingsBtn.style.padding = "4px";
+      entrySettingsBtn.style.cursor = "pointer";
+      entrySettingsBtn.style.background = "none";
+      entrySettingsBtn.style.border = "none";
+      entrySettingsBtn.style.boxShadow = "none";
+      entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
+      try { entrySettingsBtn.addClass("act-entry-settings-btn"); } catch (e) {
+        try { entrySettingsBtn.classList.add("act-entry-settings-btn"); } catch (_) {}
+      }
+      try { setIcon(entrySettingsBtn, "settings"); } catch (e) {}
+      entrySettingsBtn.addEventListener("click", () => {
+        try {
+          const modal = new EditEntryModal(
+            this.app,
+            this.plugin,
+            entry,
+            () => { this._refreshGroupEntries(); },
+            this,
+          );
+          modal.open();
+        } catch (e) {
+          debugError("MODAL", "entry settings btn error", e);
+        }
+      });
     });
   }
 

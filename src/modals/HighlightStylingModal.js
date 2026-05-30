@@ -49,6 +49,7 @@ export class HighlightStylingModal extends Modal {
 
     // Header Row with Selects
     const headerRow = contentEl.createDiv();
+    headerRow.addClass("act-highlight-header-row");
     headerRow.style.display = "flex";
     headerRow.style.alignItems = "center";
     headerRow.style.gap = "8px";

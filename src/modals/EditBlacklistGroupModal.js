@@ -1,4 +1,4 @@
-﻿import { Modal, Menu, Notice } from 'obsidian';
+import { Modal, Menu, Notice } from 'obsidian';
 import { debugError } from '../utils/debug.js';
 import { BlacklistRegexTesterModal } from './BlacklistRegexTesterModal.js';
 import { SelectBlacklistGroupModal } from './SelectBlacklistGroupModal.js';
@@ -54,15 +54,17 @@ export class EditBlacklistGroupModal extends Modal {
 
     // TOP ROW: Active/Inactive & Group Name
     const topRow = contentEl.createDiv();
+    topRow.addClass("act-toprow");
     topRow.style.display = "flex";
     topRow.style.alignItems = "center";
     topRow.style.gap = "10px";
     topRow.style.marginBottom = "15px";
+    topRow.style.flexWrap = "wrap";
 
     const activeSelect = topRow.createEl("select");
     activeSelect.addClass("act-blacklist-group-active-select");
     activeSelect.style.padding = "6px";
-    activeSelect.style.borderRadius = "4px";
+    activeSelect.style.borderRadius = "var(--input-radius)";
     activeSelect.style.border = "1px solid var(--background-modifier-border)";
     activeSelect.style.background = "var(--background-modifier-form-field)";
     activeSelect.style.textAlign = "center";
@@ -91,7 +93,7 @@ export class EditBlacklistGroupModal extends Modal {
     });
     nameInput.style.flex = "1";
     nameInput.style.padding = "6px";
-    nameInput.style.borderRadius = "4px";
+    nameInput.style.borderRadius = "var(--input-radius)";
     nameInput.style.border = "1px solid var(--background-modifier-border)";
     nameInput.placeholder = this.plugin.t(
       "group_name_placeholder",
@@ -107,7 +109,7 @@ export class EditBlacklistGroupModal extends Modal {
 
     const caseSelect = topRow.createEl("select");
     caseSelect.style.padding = "6px";
-    caseSelect.style.borderRadius = "4px";
+    caseSelect.style.borderRadius = "var(--input-radius)";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
     caseSelect.style.background = "var(--background-modifier-form-field)";
     caseSelect.style.textAlign = "center";
@@ -143,7 +145,7 @@ export class EditBlacklistGroupModal extends Modal {
 
     const matchTypeSelect = topRow.createEl("select");
     matchTypeSelect.style.padding = "6px";
-    matchTypeSelect.style.borderRadius = "4px";
+    matchTypeSelect.style.borderRadius = "var(--input-radius)";
     matchTypeSelect.style.border =
       "1px solid var(--background-modifier-border)";
     matchTypeSelect.style.background = "var(--background-modifier-form-field)";
@@ -183,6 +185,7 @@ export class EditBlacklistGroupModal extends Modal {
     );
 
     const enableDisableRow = contentEl.createDiv();
+    enableDisableRow.addClass("act-group-enable-disable-row");
     enableDisableRow.style.display = "grid";
     enableDisableRow.style.gridTemplateColumns =
       "auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)";
@@ -193,13 +196,15 @@ export class EditBlacklistGroupModal extends Modal {
     const enLabel = enableDisableRow.createEl("div", {
       text: this.plugin.t("label_enable_in", "Enable in"),
     });
+    enLabel.addClass("act-group-enable-label");
     enLabel.style.color = "var(--text-muted)";
 
     const enFoldersInput = enableDisableRow.createEl("input", { type: "text" });
     enFoldersInput.placeholder = "folder1/, folder2/";
     enFoldersInput.style.padding = "6px";
-    enFoldersInput.style.borderRadius = "4px";
+    enFoldersInput.style.borderRadius = "var(--input-radius)";
     enFoldersInput.style.border = "1px solid var(--background-modifier-border)";
+    enFoldersInput.style.minWidth = "0";
     enFoldersInput.value = Array.isArray(this.group.enableFolders)
       ? this.group.enableFolders.join(", ")
       : "";
@@ -207,8 +212,9 @@ export class EditBlacklistGroupModal extends Modal {
     const enTagsInput = enableDisableRow.createEl("input", { type: "text" });
     enTagsInput.placeholder = "#tag1, #tag2";
     enTagsInput.style.padding = "6px";
-    enTagsInput.style.borderRadius = "4px";
+    enTagsInput.style.borderRadius = "var(--input-radius)";
     enTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    enTagsInput.style.minWidth = "0";
     enTagsInput.value = Array.isArray(this.group.enableTags)
       ? this.group.enableTags
           .map((t) => (t.startsWith("#") ? t : `#${t}`))
@@ -218,6 +224,7 @@ export class EditBlacklistGroupModal extends Modal {
     const disLabel = enableDisableRow.createEl("div", {
       text: this.plugin.t("label_disable_in", "Disable in"),
     });
+    disLabel.addClass("act-group-disable-label");
     disLabel.style.color = "var(--text-muted)";
 
     const disFoldersInput = enableDisableRow.createEl("input", {
@@ -225,9 +232,10 @@ export class EditBlacklistGroupModal extends Modal {
     });
     disFoldersInput.placeholder = "folder1/, folder2/";
     disFoldersInput.style.padding = "6px";
-    disFoldersInput.style.borderRadius = "4px";
+    disFoldersInput.style.borderRadius = "var(--input-radius)";
     disFoldersInput.style.border =
       "1px solid var(--background-modifier-border)";
+    disFoldersInput.style.minWidth = "0";
     disFoldersInput.value = Array.isArray(this.group.disableFolders)
       ? this.group.disableFolders.join(", ")
       : "";
@@ -235,8 +243,9 @@ export class EditBlacklistGroupModal extends Modal {
     const disTagsInput = enableDisableRow.createEl("input", { type: "text" });
     disTagsInput.placeholder = "#tag1, #tag2";
     disTagsInput.style.padding = "6px";
-    disTagsInput.style.borderRadius = "4px";
+    disTagsInput.style.borderRadius = "var(--input-radius)";
     disTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    disTagsInput.style.minWidth = "0";
     disTagsInput.value = Array.isArray(this.group.disableTags)
       ? this.group.disableTags
           .map((t) => (t.startsWith("#") ? t : `#${t}`))
@@ -389,16 +398,18 @@ export class EditBlacklistGroupModal extends Modal {
     // ENTRIES LIST CONTAINER
     this._listDiv = contentEl.createDiv();
     this._listDiv.addClass("blacklist-entries-list");
-    this._listDiv.style.minHeight = "200px";
-    this._listDiv.style.maxHeight = "350px";
+    this._listDiv.style.flex = "1 1 auto";
+    this._listDiv.style.minHeight = "120px";
     this._listDiv.style.overflowY = "auto";
-    this._listDiv.style.marginBottom = "15px";
-    this._listDiv.style.borderRadius = "4px";
+    this._listDiv.style.marginBottom = "0";
+    this._listDiv.style.borderRadius = "var(--input-radius)";
     this._refreshGroupEntries();
 
     // BUTTON ROW: Sort | Add Word | Add Regex | Presets
     const buttonRow = contentEl.createDiv();
+    buttonRow.addClass("act-group-button-row");
     buttonRow.style.display = "flex";
+    buttonRow.style.flexWrap = "wrap";
     buttonRow.style.gap = "10px";
     buttonRow.style.marginBottom = "15px";
     buttonRow.style.alignItems = "center";
@@ -411,10 +422,11 @@ export class EditBlacklistGroupModal extends Modal {
     };
 
     const sortBtn = buttonRow.createEl("button");
+    sortBtn.addClass("act-group-btn-sort");
     sortBtn.textContent = sortLabels[this._sortMode] || "Sort: Last Added";
     sortBtn.style.cursor = "pointer";
     sortBtn.style.padding = "6px 12px";
-    sortBtn.style.borderRadius = "4px";
+    sortBtn.style.borderRadius = "var(--input-radius)";
     const sortBtnHandler = () => {
       const currentIndex = sortModes.indexOf(this._sortMode);
       const nextIndex = (currentIndex + 1) % sortModes.length;
@@ -428,10 +440,11 @@ export class EditBlacklistGroupModal extends Modal {
     );
 
     const addWordsBtn = buttonRow.createEl("button");
+    addWordsBtn.addClass("act-group-btn-add");
     addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
     addWordsBtn.style.cursor = "pointer";
     addWordsBtn.style.padding = "6px 12px";
-    addWordsBtn.style.borderRadius = "4px";
+    addWordsBtn.style.borderRadius = "var(--input-radius)";
     addWordsBtn.style.flex = "1";
     addWordsBtn.addClass("mod-cta");
     const addWordsHandler = () => {
@@ -454,10 +467,11 @@ export class EditBlacklistGroupModal extends Modal {
 
     if (this.plugin.settings.enableRegexSupport) {
       const addRegexBtn = buttonRow.createEl("button");
+      addRegexBtn.addClass("act-group-btn-regex");
       addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
       addRegexBtn.style.cursor = "pointer";
       addRegexBtn.style.padding = "6px 12px";
-      addRegexBtn.style.borderRadius = "4px";
+      addRegexBtn.style.borderRadius = "var(--input-radius)";
       addRegexBtn.style.flex = "1";
       addRegexBtn.addClass("mod-cta");
       const addRegexHandler = () => {
@@ -477,10 +491,11 @@ export class EditBlacklistGroupModal extends Modal {
     }
 
     const presetsBtn = buttonRow.createEl("button");
+    presetsBtn.addClass("act-group-btn-presets");
     presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
     presetsBtn.style.cursor = "pointer";
     presetsBtn.style.padding = "6px 12px";
-    presetsBtn.style.borderRadius = "4px";
+    presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
       if (!this.plugin.settings.enableRegexSupport) {
         new AlertModal(
@@ -653,13 +668,13 @@ export class EditBlacklistGroupModal extends Modal {
       row.style.display = "flex";
       row.style.alignItems = "center";
       row.style.gap = "8px";
-      row.style.borderRadius = "4px";
+      row.style.borderRadius = "var(--input-radius)";
       row.style.paddingTop = "8px";
 
       // 1. MATCH TYPE SELECT
       const matchSelect = row.createEl("select");
       matchSelect.style.padding = "6px";
-      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.borderRadius = "var(--input-radius)";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.textAlign = "center";
@@ -697,7 +712,7 @@ export class EditBlacklistGroupModal extends Modal {
       });
       patternInput.style.flex = "1";
       patternInput.style.padding = "6px";
-      patternInput.style.borderRadius = "4px";
+      patternInput.style.borderRadius = "var(--input-radius)";
       patternInput.style.border = "1px solid var(--background-modifier-border)";
       patternInput.placeholder = this.plugin.t(
         "word_pattern_placeholder_long",
@@ -724,7 +739,7 @@ export class EditBlacklistGroupModal extends Modal {
         });
         flagsInput.style.width = "50px";
         flagsInput.style.padding = "6px";
-        flagsInput.style.borderRadius = "4px";
+        flagsInput.style.borderRadius = "var(--input-radius)";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
         flagsInput.placeholder = this.plugin.t("flags_placeholder", "Flags");
         flagsInput.title = "e.g., i, g, m";
@@ -751,7 +766,7 @@ export class EditBlacklistGroupModal extends Modal {
       });
       btnDelete.addClass("mod-warning");
       btnDelete.style.padding = "4px 8px";
-      btnDelete.style.borderRadius = "4px";
+      btnDelete.style.borderRadius = "var(--input-radius)";
       btnDelete.style.cursor = "pointer";
       btnDelete.style.flex = "0 0 auto"; */
       const deleteHandler = () => {

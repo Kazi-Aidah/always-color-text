@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting, Modal, Notice, setIcon, setTooltip, Menu, FuzzySuggestModal, TFolder, normalizePath, debounce } from 'obsidian';
+import { PluginSettingTab, Setting, Modal, Notice, setIcon, setTooltip, Menu, FuzzySuggestModal, TFolder, normalizePath, debounce, Platform } from 'obsidian';
 import { PresetModal } from '../modals/PresetModal.js';
 import { RealTimeRegexTesterModal } from '../modals/RealTimeRegexTesterModal.js';
 import { HighlightStylingModal } from '../modals/HighlightStylingModal.js';
@@ -117,7 +117,7 @@ export class ColorSettingTab extends PluginSettingTab {
       // ELEMENT 1: Style selector (moved first)
       const styleSelect = row.createEl("select");
       styleSelect.style.padding = "6px";
-      styleSelect.style.borderRadius = "4px";
+      styleSelect.style.borderRadius = "var(--input-radius)";
       styleSelect.style.border = "1px solid var(--background-modifier-border)";
       styleSelect.style.background = "var(--background-modifier-form-field)";
       styleSelect.style.color = "var(--text-normal)";
@@ -138,7 +138,7 @@ export class ColorSettingTab extends PluginSettingTab {
       // ELEMENT 1b: Match selector (exact/contains/starts/ends)
       const matchSelect = row.createEl("select");
       matchSelect.style.padding = "6px";
-      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.borderRadius = "var(--input-radius)";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.color = "var(--text-normal)";
@@ -159,7 +159,7 @@ export class ColorSettingTab extends PluginSettingTab {
       // ELEMENT 1c: Color target selector (text / line / child)
       const colorTargetSelect = row.createEl("select");
       colorTargetSelect.style.padding = "6px";
-      colorTargetSelect.style.borderRadius = "4px";
+      colorTargetSelect.style.borderRadius = "var(--input-radius)";
       colorTargetSelect.style.border = "1px solid var(--background-modifier-border)";
       colorTargetSelect.style.background = "var(--background-modifier-form-field)";
       colorTargetSelect.style.color = "var(--text-normal)";
@@ -182,7 +182,7 @@ export class ColorSettingTab extends PluginSettingTab {
         });
         nameInput.style.flex = "0 0 60px";
         nameInput.style.padding = "6px";
-        nameInput.style.borderRadius = "4px";
+        nameInput.style.borderRadius = "var(--input-radius)";
         nameInput.style.border = "1px solid var(--background-modifier-border)";
         nameInput.placeholder = this.plugin.t(
           "regex_name_placeholder",
@@ -204,7 +204,7 @@ export class ColorSettingTab extends PluginSettingTab {
       textInput.style.flex = "1";
       textInput.style.minWidth = "100px";
       textInput.style.padding = "6px";
-      textInput.style.borderRadius = "4px";
+      textInput.style.borderRadius = "var(--input-radius)";
       textInput.style.border = "1px solid var(--background-modifier-border)";
       textInput.placeholder = this.plugin.t(
         "word_pattern_placeholder_long",
@@ -240,9 +240,12 @@ export class ColorSettingTab extends PluginSettingTab {
       flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
       flagsInput.style.width = "64px";
       flagsInput.style.padding = "6px";
-      flagsInput.style.borderRadius = "4px";
+      flagsInput.style.borderRadius = "var(--input-radius)";
       flagsInput.style.border = "1px solid var(--background-modifier-border)";
       flagsInput.style.flex = "0 0 auto";
+      try { flagsInput.addClass("act-flags-input"); } catch (e) {
+        try { flagsInput.classList.add("act-flags-input"); } catch (_) {}
+      }
 
       // ELEMENT 4: Color pickers (with swatches grouped)
       const swatchesArr = Array.isArray(this.plugin.settings.swatches)
@@ -256,7 +259,7 @@ export class ColorSettingTab extends PluginSettingTab {
       cp.style.width = "30px";
       cp.style.height = "30px";
       cp.style.border = "none";
-      cp.style.borderRadius = "4px";
+      cp.style.borderRadius = "var(--input-radius)";
       cp.style.cursor = "pointer";
       cp.style.flex = "0 0 auto";
 
@@ -267,7 +270,7 @@ export class ColorSettingTab extends PluginSettingTab {
       ) {
         swatchSelect = row.createEl("select");
         swatchSelect.style.padding = "6px";
-        swatchSelect.style.borderRadius = "4px";
+        swatchSelect.style.borderRadius = "var(--input-radius)";
         swatchSelect.style.border =
           "1px solid var(--background-modifier-border)";
         swatchSelect.style.background = "var(--background-modifier-form-field)";
@@ -297,7 +300,7 @@ export class ColorSettingTab extends PluginSettingTab {
       cpBg.style.width = "30px";
       cpBg.style.height = "30px";
       cpBg.style.border = "none";
-      cpBg.style.borderRadius = "4px";
+      cpBg.style.borderRadius = "var(--input-radius)";
       cpBg.style.cursor = "pointer";
       cpBg.style.flex = "0 0 auto";
 
@@ -308,7 +311,7 @@ export class ColorSettingTab extends PluginSettingTab {
       ) {
         swatchSelect2 = row.createEl("select");
         swatchSelect2.style.padding = "6px";
-        swatchSelect2.style.borderRadius = "4px";
+        swatchSelect2.style.borderRadius = "var(--input-radius)";
         swatchSelect2.style.border =
           "1px solid var(--background-modifier-border)";
         swatchSelect2.style.background =
@@ -335,7 +338,7 @@ export class ColorSettingTab extends PluginSettingTab {
       });
       del.addClass("mod-warning");
       del.style.padding = "4px 8px";
-      del.style.borderRadius = "4px";
+      del.style.borderRadius = "var(--input-radius)";
       del.style.cursor = "pointer";
       del.style.flex = "0 0 auto"; */
       const del = { addEventListener: () => {}, removeEventListener: () => {} };
@@ -1255,9 +1258,45 @@ export class ColorSettingTab extends PluginSettingTab {
           colorTargetSelect.removeEventListener("change", colorTargetChangeHandler);
         } catch (e) {}
         try {
+          entrySettingsBtn.removeEventListener("click", entrySettingsBtnHandler);
+        } catch (e) {}
+        try {
           row.remove();
         } catch (e) {}
       };
+
+      // ELEMENT 6: Settings button (opens EditEntryModal) — visible on mobile only
+      const entrySettingsBtn = row.createEl("button");
+      entrySettingsBtn.style.flex = "0 0 auto";
+      entrySettingsBtn.style.padding = "4px";
+      entrySettingsBtn.style.cursor = "pointer";
+      entrySettingsBtn.style.background = "none";
+      entrySettingsBtn.style.border = "none";
+      entrySettingsBtn.style.boxShadow = "none";
+      // Show only on mobile; CSS handles visibility via body.is-mobile
+      // Also guard with Platform so it's hidden on desktop even without the CSS class
+      try {
+        if (!Platform.isMobile) entrySettingsBtn.style.display = "none";
+      } catch (e) {
+        entrySettingsBtn.style.display = "none";
+      }
+      entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
+      try { entrySettingsBtn.addClass("act-entry-settings-btn"); } catch (e) {
+        try { entrySettingsBtn.classList.add("act-entry-settings-btn"); } catch (_) {}
+      }
+      try { setIcon(entrySettingsBtn, "settings"); } catch (e) {}
+
+      const entrySettingsBtnHandler = () => {
+        try {
+          const modal = new EditEntryModal(this.app, this.plugin, entry, () => {
+            try { this._refreshEntries(); } catch (e) {}
+          });
+          modal.open();
+        } catch (e) {
+          debugError("SETTINGS", "entry settings btn error", e);
+        }
+      };
+      entrySettingsBtn.addEventListener("click", entrySettingsBtnHandler);
 
       this._entryRows.set(entry, {
         row,
@@ -1272,6 +1311,7 @@ export class ColorSettingTab extends PluginSettingTab {
           regexChk,
           flagsInput,
           del,
+          entrySettingsBtn,
         },
         cleanup,
       });
@@ -1391,6 +1431,7 @@ export class ColorSettingTab extends PluginSettingTab {
         } catch (_) {}
 
         this._disabledFilesListEl = this._disabledFilesContainer.createDiv();
+        this._disabledFilesListEl.addClass("act-disabled-files-list");
       }
 
       this._disabledFilesHeaderEl.style.display = hasAny ? "" : "none";
@@ -1430,27 +1471,19 @@ export class ColorSettingTab extends PluginSettingTab {
       this.plugin.settings.disabledFiles
         .filter(matchesQuery)
         .forEach((filePath) => {
-          new Setting(this._disabledFilesListEl)
-            .setName(filePath)
-            .addExtraButton((btn) =>
-              btn
-                .setIcon("x")
-                .setTooltip(
-                  this.plugin.t(
-                    "tooltip_enable_for_file",
-                    "Enable for this file",
-                  ),
-                )
-                .onClick(async () => {
-                  const index =
-                    this.plugin.settings.disabledFiles.indexOf(filePath);
-                  if (index > -1) {
-                    this.plugin.settings.disabledFiles.splice(index, 1);
-                  }
-                  await this.plugin.saveSettings();
-                  this._refreshDisabledFiles();
-                }),
-            );
+          const row = this._disabledFilesListEl.createDiv({ cls: "act-disabled-file" });
+          row.createSpan({ cls: "act-disabled-file-title", text: filePath });
+          const btn = row.createEl("button", { cls: "clickable-icon" });
+          btn.setAttribute("aria-label", this.plugin.t("tooltip_enable_for_file", "Enable for this file"));
+          btn.innerHTML = "×";
+          btn.addEventListener("click", async () => {
+            const index = this.plugin.settings.disabledFiles.indexOf(filePath);
+            if (index > -1) {
+              this.plugin.settings.disabledFiles.splice(index, 1);
+            }
+            await this.plugin.saveSettings();
+            this._refreshDisabledFiles();
+          });
         });
     } catch (e) {
       debugError("SETTINGS", "_refreshDisabledFiles error", e);
@@ -1591,7 +1624,7 @@ export class ColorSettingTab extends PluginSettingTab {
         });
         textInput.style.flex = "1";
         textInput.style.padding = "6px";
-        textInput.style.borderRadius = "4px";
+        textInput.style.borderRadius = "var(--input-radius)";
         textInput.style.border = "1px solid var(--background-modifier-border)";
         textInput.placeholder = this.plugin.t(
           "word_pattern_placeholder_short",
@@ -1611,7 +1644,7 @@ export class ColorSettingTab extends PluginSettingTab {
         flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
         flagsInput.style.width = "50px";
         flagsInput.style.padding = "6px";
-        flagsInput.style.borderRadius = "4px";
+        flagsInput.style.borderRadius = "var(--input-radius)";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
         if (!entry.isRegex) flagsInput.style.display = "none";
 
@@ -2043,7 +2076,7 @@ export class ColorSettingTab extends PluginSettingTab {
         const modeSel = row.createEl("select");
         modeSel.style.flex = "0 0 auto";
         modeSel.style.padding = "6px";
-        modeSel.style.borderRadius = "4px";
+        modeSel.style.borderRadius = "var(--input-radius)";
         modeSel.style.border = "1px solid var(--background-modifier-border)";
         modeSel.style.background = "var(--background-modifier-form-field)";
         modeSel.style.textAlign = "center";
@@ -2067,7 +2100,7 @@ export class ColorSettingTab extends PluginSettingTab {
         );
         input.style.flex = "1";
         input.style.padding = "6px";
-        input.style.borderRadius = "4px";
+        input.style.borderRadius = "var(--input-radius)";
         input.style.border = "1px solid var(--background-modifier-border)";
         const del = row.createEl("button", {
           text: this.plugin.t("delete_button_text", "✕"),
@@ -2403,7 +2436,7 @@ export class ColorSettingTab extends PluginSettingTab {
         });
         nameInput.style.flex = "1";
         nameInput.style.padding = "6px";
-        nameInput.style.borderRadius = "4px";
+        nameInput.style.borderRadius = "var(--input-radius)";
         nameInput.style.border = "1px solid var(--background-modifier-border)";
         nameInput.disabled = true; // Can't rename default colors
 
@@ -2412,7 +2445,7 @@ export class ColorSettingTab extends PluginSettingTab {
         colorPicker.style.width = "30px";
         colorPicker.style.height = "30px";
         colorPicker.style.border = "none";
-        colorPicker.style.borderRadius = "4px";
+        colorPicker.style.borderRadius = "var(--input-radius)";
         colorPicker.style.cursor = "pointer";
         colorPicker.disabled = true; // Can't edit default colors
 
@@ -2549,7 +2582,7 @@ export class ColorSettingTab extends PluginSettingTab {
           });
           nameInput.style.flex = "1";
           nameInput.style.padding = "6px";
-          nameInput.style.borderRadius = "4px";
+          nameInput.style.borderRadius = "var(--input-radius)";
           nameInput.style.border =
             "1px solid var(--background-modifier-border)";
 
@@ -2558,7 +2591,7 @@ export class ColorSettingTab extends PluginSettingTab {
           colorPicker.style.width = "30px";
           colorPicker.style.height = "30px";
           colorPicker.style.border = "none";
-          colorPicker.style.borderRadius = "4px";
+          colorPicker.style.borderRadius = "var(--input-radius)";
           colorPicker.style.cursor = "pointer";
           colorPicker.style.flexShrink = "0";
           const colorPickerContextHandler = (ev) => {
@@ -5174,7 +5207,7 @@ export class ColorSettingTab extends PluginSettingTab {
       btn.style.border = "none";
       btn.style.background = "transparent";
       btn.style.boxShadow = "none";
-      btn.style.borderRadius = "4px";
+      btn.style.borderRadius = "var(--input-radius)";
       btn.style.padding = "8px 16px";
 
       if (this._activeTab === tab.id) {

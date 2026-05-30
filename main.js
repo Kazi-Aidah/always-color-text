@@ -7117,7 +7117,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     flagNames.forEach((f) => {
       const b = flagsRow.createEl("button", { text: f });
       b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--radius-m)";
+      b.style.borderRadius = "var(--input-radius)";
       b.style.border = "1px solid var(--background-modifier-border)";
       b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
@@ -7135,7 +7135,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     });
     styleSelect.value = this._preFillStyleType || "both";
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "var(--radius-m)";
+    styleSelect.style.borderRadius = "var(--input-radius)";
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.marginTop = "0";
     const markTargetSelect = controlsRow.createEl("select");
@@ -7149,7 +7149,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     });
     markTargetSelect.value = this._editingEntry && this._editingEntry.markTarget || "text";
     markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
-    markTargetSelect.style.borderRadius = "var(--radius-m)";
+    markTargetSelect.style.borderRadius = "var(--input-radius)";
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
     markTargetSelect.style.marginTop = "0";
     const textColorInput = controlsRow.createEl("input", { type: "color" });
@@ -7252,7 +7252,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     regexInput2.style.marginTop = "10px";
     regexInput2.style.width = "100%";
     regexInput2.style.padding = "10px 14px";
-    regexInput2.style.borderRadius = "var(--radius-s)";
+    regexInput2.style.borderRadius = "var(--input-radius)";
     regexInput2.style.border = "1px solid var(--background-modifier-border)";
     regexInput2.style.background = "var(--background-modifier-form-field)";
     regexInput2.style.fontFamily = "var(--font-ui-medium)";
@@ -7304,7 +7304,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     nameInput.style.marginTop = "10px";
     nameInput.style.width = "100%";
     nameInput.style.padding = "10px 14px";
-    nameInput.style.borderRadius = "var(--radius-m)";
+    nameInput.style.borderRadius = "var(--input-radius)";
     nameInput.style.border = "1px solid var(--background-modifier-border)";
     nameInput.style.background = "var(--background-modifier-form-field)";
     nameInput.style.boxSizing = "border-box";
@@ -8355,7 +8355,7 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
     flagNames.forEach((f) => {
       const b = flagsRow.createEl("button", { text: f });
       b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--radius-m)";
+      b.style.borderRadius = "var(--input-radius)";
       b.style.border = "1px solid var(--background-modifier-border)";
       b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
@@ -8369,14 +8369,14 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
     regexInput2.style.marginTop = "10px";
     regexInput2.style.width = "100%";
     regexInput2.style.padding = "10px 14px";
-    regexInput2.style.borderRadius = "var(--radius-m)";
+    regexInput2.style.borderRadius = "var(--input-radius)";
     regexInput2.style.border = "1px solid var(--background-modifier-border)";
     regexInput2.style.background = "var(--background-modifier-form-field)";
     regexInput2.style.fontFamily = "var(--font-ui-medium)";
     const subjectWrap = contentEl.createDiv();
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
-    subjectWrap.style.borderRadius = "var(--radius-m)";
+    subjectWrap.style.borderRadius = "var(--input-radius)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("textarea");
@@ -8396,7 +8396,7 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
     const previewWrap = contentEl.createDiv();
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
-    previewWrap.style.borderRadius = "var(--radius-m)";
+    previewWrap.style.borderRadius = "var(--input-radius)";
     previewWrap.style.padding = "12px";
     previewWrap.style.background = "var(--background-modifier-form-field)";
     previewWrap.style.whiteSpace = "pre-wrap";
@@ -8412,7 +8412,7 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
     nameInput.style.marginTop = "10px";
     nameInput.style.width = "100%";
     nameInput.style.padding = "10px 14px";
-    nameInput.style.borderRadius = "var(--radius-m)";
+    nameInput.style.borderRadius = "var(--input-radius)";
     nameInput.style.border = "1px solid var(--background-modifier-border)";
     nameInput.style.background = "var(--background-modifier-form-field)";
     nameInput.style.boxSizing = "border-box";
@@ -10492,6 +10492,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     } catch (e) {
     }
     const mainContainer = contentEl.createDiv();
+    mainContainer.addClass("act-edit-entry-main");
     mainContainer.style.display = "flex";
     mainContainer.style.gap = "8px";
     mainContainer.style.width = "100%";
@@ -10507,7 +10508,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     const box = row1.createDiv();
     box.addClass("act-edit-entry-textbox");
     box.style.border = "1px solid var(--background-modifier-border)";
-    box.style.borderRadius = "var(--button-radius)";
+    box.style.borderRadius = "var(--input-radius)";
     box.style.background = "var(--background-modifier-form-field)";
     const textInput = box.createEl("div");
     textInput.contentEditable = "true";
@@ -10540,7 +10541,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     preview.style.justifyContent = "center";
     preview.style.flex = "1";
     preview.style.border = "1px dashed var(--background-modifier-border)";
-    preview.style.borderRadius = "var(--button-radius)";
+    preview.style.borderRadius = "var(--input-radius)";
     preview.style.padding = "10px";
     preview.style.background = "var(--background-modifier-form-field)";
     preview.style.whiteSpace = "pre-wrap";
@@ -10564,7 +10565,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
       opt.value = val;
     });
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "4px";
+    styleSelect.style.borderRadius = "var(--input-radius)";
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.flex = "1 0%";
     const pickerRow = rightColumn.createDiv();
@@ -10690,7 +10691,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     markTargetSelect.addClass("act-edit-entry-mark-target");
     markTargetSelect.style.minWidth = "140px";
     markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
-    markTargetSelect.style.borderRadius = "4px";
+    markTargetSelect.style.borderRadius = "var(--input-radius)";
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
     [
       ["text", this.plugin.t("mark_target_text", "Color Text")],
@@ -10774,7 +10775,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     groupSelect.style.padding = "0 10px";
     groupSelect.style.boxSizing = "border-box";
     groupSelect.style.border = "1px solid var(--background-modifier-border)";
-    groupSelect.style.borderRadius = "4px";
+    groupSelect.style.borderRadius = "var(--input-radius)";
     groupSelect.style.background = "var(--background-modifier-form-field)";
     const defaultOpt = groupSelect.createEl("option", {
       text: this.plugin.t("no_group", "No Group")
@@ -10867,7 +10868,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     matchSelect.style.padding = "0 10px";
     matchSelect.style.boxSizing = "border-box";
     matchSelect.style.border = "1px solid var(--background-modifier-border)";
-    matchSelect.style.borderRadius = "4px";
+    matchSelect.style.borderRadius = "var(--input-radius)";
     matchSelect.style.background = "var(--background-modifier-form-field)";
     matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
     const caseSel = controls.createEl("select");
@@ -10877,7 +10878,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     caseSel.style.padding = "0 10px";
     caseSel.style.boxSizing = "border-box";
     caseSel.style.border = "1px solid var(--background-modifier-border)";
-    caseSel.style.borderRadius = "4px";
+    caseSel.style.borderRadius = "var(--input-radius)";
     caseSel.style.background = "var(--background-modifier-form-field)";
     caseSel.innerHTML = `<option value="case">${this.plugin.t("opt_case_sensitive", "is case sensitive")}</option><option value="nocase">${this.plugin.t("opt_not_case_sensitive", "not case sensitive")}</option>`;
     let openRegexBtn = null;
@@ -13261,6 +13262,7 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       }
     }
     const headerRow = contentEl.createDiv();
+    headerRow.addClass("act-highlight-header-row");
     headerRow.style.display = "flex";
     headerRow.style.alignItems = "center";
     headerRow.style.gap = "8px";
@@ -14681,6 +14683,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     heading.style.marginTop = "0";
     heading.style.marginBottom = "15px";
     const topRow = contentEl.createDiv();
+    topRow.addClass("act-toprow");
     topRow.style.display = "flex";
     topRow.style.alignItems = "center";
     topRow.style.gap = "10px";
@@ -14689,7 +14692,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     const activeSelect = topRow.createEl("select");
     activeSelect.addClass("act-word-group-active-select");
     activeSelect.style.padding = "6px";
-    activeSelect.style.borderRadius = "4px";
+    activeSelect.style.borderRadius = "var(--input-radius)";
     activeSelect.style.border = "1px solid var(--background-modifier-border)";
     activeSelect.style.background = "var(--background-modifier-form-field)";
     activeSelect.style.textAlign = "center";
@@ -14717,7 +14720,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     });
     nameInput.style.flex = "1";
     nameInput.style.padding = "6px";
-    nameInput.style.borderRadius = "4px";
+    nameInput.style.borderRadius = "var(--input-radius)";
     nameInput.style.border = "1px solid var(--background-modifier-border)";
     nameInput.placeholder = this.plugin.t(
       "group_name_placeholder",
@@ -14732,7 +14735,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     );
     const caseSelect = topRow.createEl("select");
     caseSelect.style.padding = "6px";
-    caseSelect.style.borderRadius = "4px";
+    caseSelect.style.borderRadius = "var(--input-radius)";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
     caseSelect.style.background = "var(--background-modifier-form-field)";
     caseSelect.style.textAlign = "center";
@@ -14762,7 +14765,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     );
     const matchTypeSelect = topRow.createEl("select");
     matchTypeSelect.style.padding = "6px";
-    matchTypeSelect.style.borderRadius = "4px";
+    matchTypeSelect.style.borderRadius = "var(--input-radius)";
     matchTypeSelect.style.border = "1px solid var(--background-modifier-border)";
     matchTypeSelect.style.background = "var(--background-modifier-form-field)";
     matchTypeSelect.style.textAlign = "center";
@@ -14811,7 +14814,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     editBtn.style.alignItems = "center";
     editBtn.style.justifyContent = "center";
     editBtn.style.padding = "6px";
-    editBtn.style.borderRadius = "4px";
+    editBtn.style.borderRadius = "var(--input-radius)";
     editBtn.style.border = "1px solid var(--background-modifier-border)";
     editBtn.style.background = "var(--background-modifier-form-field)";
     editBtn.style.cursor = "pointer";
@@ -14840,7 +14843,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       cssBtn.style.alignItems = "center";
       cssBtn.style.justifyContent = "center";
       cssBtn.style.padding = "6px";
-      cssBtn.style.borderRadius = "4px";
+      cssBtn.style.borderRadius = "var(--input-radius)";
       cssBtn.style.border = "1px solid var(--background-modifier-border)";
       cssBtn.style.background = "var(--background-modifier-form-field)";
       cssBtn.style.cursor = "pointer";
@@ -14853,6 +14856,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       );
     }
     const enableDisableRow = contentEl.createDiv();
+    enableDisableRow.addClass("act-group-enable-disable-row");
     enableDisableRow.style.display = "grid";
     enableDisableRow.style.gridTemplateColumns = "auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)";
     enableDisableRow.style.gap = "8px";
@@ -14861,36 +14865,42 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     const enLabel = enableDisableRow.createEl("div", {
       text: this.plugin.t("label_enable_in", "Enable in")
     });
+    enLabel.addClass("act-group-enable-label");
     enLabel.style.color = "var(--text-muted)";
     const enFoldersInput = enableDisableRow.createEl("input", { type: "text" });
     enFoldersInput.placeholder = "folder1/, folder2/";
     enFoldersInput.style.padding = "6px";
-    enFoldersInput.style.borderRadius = "4px";
+    enFoldersInput.style.borderRadius = "var(--input-radius)";
     enFoldersInput.style.border = "1px solid var(--background-modifier-border)";
+    enFoldersInput.style.minWidth = "0";
     enFoldersInput.value = Array.isArray(this.group.enableFolders) ? this.group.enableFolders.join(", ") : "";
     const enTagsInput = enableDisableRow.createEl("input", { type: "text" });
     enTagsInput.placeholder = "#tag1, #tag2";
     enTagsInput.style.padding = "6px";
-    enTagsInput.style.borderRadius = "4px";
+    enTagsInput.style.borderRadius = "var(--input-radius)";
     enTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    enTagsInput.style.minWidth = "0";
     enTagsInput.value = Array.isArray(this.group.enableTags) ? this.group.enableTags.map((t) => t.startsWith("#") ? t : `#${t}`).join(", ") : "";
     const disLabel = enableDisableRow.createEl("div", {
       text: this.plugin.t("label_disable_in", "Disable in")
     });
+    disLabel.addClass("act-group-disable-label");
     disLabel.style.color = "var(--text-muted)";
     const disFoldersInput = enableDisableRow.createEl("input", {
       type: "text"
     });
     disFoldersInput.placeholder = "folder1/, folder2/";
     disFoldersInput.style.padding = "6px";
-    disFoldersInput.style.borderRadius = "4px";
+    disFoldersInput.style.borderRadius = "var(--input-radius)";
     disFoldersInput.style.border = "1px solid var(--background-modifier-border)";
+    disFoldersInput.style.minWidth = "0";
     disFoldersInput.value = Array.isArray(this.group.disableFolders) ? this.group.disableFolders.join(", ") : "";
     const disTagsInput = enableDisableRow.createEl("input", { type: "text" });
     disTagsInput.placeholder = "#tag1, #tag2";
     disTagsInput.style.padding = "6px";
-    disTagsInput.style.borderRadius = "4px";
+    disTagsInput.style.borderRadius = "var(--input-radius)";
     disTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    disTagsInput.style.minWidth = "0";
     disTagsInput.value = Array.isArray(this.group.disableTags) ? this.group.disableTags.map((t) => t.startsWith("#") ? t : `#${t}`).join(", ") : "";
     const parseList = (raw, isTag) => {
       const arr = String(raw || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -15042,15 +15052,18 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     }
     this._listDiv = contentEl.createDiv();
     this._listDiv.addClass("color-words-list");
-    this._listDiv.style.minHeight = "200px";
-    this._listDiv.style.maxHeight = "350px";
+    this._listDiv.addClass("word-group");
+    this._listDiv.style.flex = "1 1 auto";
+    this._listDiv.style.minHeight = "120px";
     this._listDiv.style.overflowY = "auto";
-    this._listDiv.style.marginBottom = "15px";
-    this._listDiv.style.borderRadius = "4px";
+    this._listDiv.style.marginBottom = "0";
+    this._listDiv.style.borderRadius = "var(--input-radius)";
     this._listDiv.style.backgroundColor = "var(--background-primary)";
     this._refreshGroupEntries();
     const buttonRow = contentEl.createDiv();
+    buttonRow.addClass("act-group-button-row");
     buttonRow.style.display = "flex";
+    buttonRow.style.flexWrap = "wrap";
     buttonRow.style.gap = "10px";
     buttonRow.style.marginBottom = "15px";
     buttonRow.style.alignItems = "center";
@@ -15072,10 +15085,11 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       color: this.plugin.t("sort_label_color", "Sort: Color")
     };
     const sortBtn = buttonRow.createEl("button");
+    sortBtn.addClass("act-group-btn-sort");
     sortBtn.textContent = sortLabels[this._sortMode] || "Sort: Last Added";
     sortBtn.style.cursor = "pointer";
     sortBtn.style.padding = "6px 12px";
-    sortBtn.style.borderRadius = "4px";
+    sortBtn.style.borderRadius = "var(--input-radius)";
     const sortBtnHandler = () => {
       const currentIndex = sortModes.indexOf(this._sortMode);
       const nextIndex = (currentIndex + 1) % sortModes.length;
@@ -15088,10 +15102,11 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       () => sortBtn.removeEventListener("click", sortBtnHandler)
     );
     const addWordsBtn = buttonRow.createEl("button");
+    addWordsBtn.addClass("act-group-btn-add");
     addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
     addWordsBtn.style.cursor = "pointer";
     addWordsBtn.style.padding = "6px 12px";
-    addWordsBtn.style.borderRadius = "4px";
+    addWordsBtn.style.borderRadius = "var(--input-radius)";
     addWordsBtn.style.flex = "1";
     addWordsBtn.addClass("mod-cta");
     const addWordsHandler = () => {
@@ -15116,10 +15131,11 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     );
     if (this.plugin.settings.enableRegexSupport) {
       const addRegexBtn = buttonRow.createEl("button");
+      addRegexBtn.addClass("act-group-btn-regex");
       addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
       addRegexBtn.style.cursor = "pointer";
       addRegexBtn.style.padding = "6px 12px";
-      addRegexBtn.style.borderRadius = "4px";
+      addRegexBtn.style.borderRadius = "var(--input-radius)";
       addRegexBtn.style.flex = "1";
       addRegexBtn.addClass("mod-cta");
       const addRegexHandler = () => {
@@ -15144,10 +15160,11 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       );
     }
     const presetsBtn = buttonRow.createEl("button");
+    presetsBtn.addClass("act-group-btn-presets");
     presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
     presetsBtn.style.cursor = "pointer";
     presetsBtn.style.padding = "6px 12px";
-    presetsBtn.style.borderRadius = "4px";
+    presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
       if (!this.plugin.settings.enableRegexSupport) {
         new AlertModal(
@@ -15397,15 +15414,23 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       row.style.display = "flex";
       row.style.alignItems = "center";
       row.style.gap = "8px";
-      row.style.borderRadius = "4px";
+      row.style.borderRadius = "var(--input-radius)";
       const styleSelect = row.createEl("select");
       styleSelect.style.padding = "6px";
-      styleSelect.style.borderRadius = "4px";
+      styleSelect.style.borderRadius = "var(--input-radius)";
       styleSelect.style.border = "1px solid var(--background-modifier-border)";
       styleSelect.style.background = "var(--background-modifier-form-field)";
       styleSelect.style.textAlign = "center";
       styleSelect.style.maxWidth = "90px";
       styleSelect.style.minWidth = "70px";
+      try {
+        styleSelect.addClass("act-style-select");
+      } catch (e) {
+        try {
+          styleSelect.classList.add("act-style-select");
+        } catch (_) {
+        }
+      }
       ["text", "highlight", "both"].forEach((val) => {
         const opt = styleSelect.createEl("option", {
           text: this.plugin.t(
@@ -15423,12 +15448,20 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       styleSelect.addEventListener("change", styleSelectHandler);
       const matchSelect = row.createEl("select");
       matchSelect.style.padding = "6px";
-      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.borderRadius = "var(--input-radius)";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.textAlign = "center";
       matchSelect.style.maxWidth = "110px";
       matchSelect.style.minWidth = "90px";
+      try {
+        matchSelect.addClass("act-match-select");
+      } catch (e) {
+        try {
+          matchSelect.classList.add("act-match-select");
+        } catch (_) {
+        }
+      }
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "Exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "Contains")}</option><option value="startswith">${this.plugin.t("match_option_starts_with", "Starts with")}</option><option value="endswith">${this.plugin.t("match_option_ends_with", "Ends with")}</option>`;
       matchSelect.value = entry.matchType || "contains";
       const matchSelectHandler = () => {
@@ -15437,12 +15470,20 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       matchSelect.addEventListener("change", matchSelectHandler);
       const markTargetSelect = row.createEl("select");
       markTargetSelect.style.padding = "6px";
-      markTargetSelect.style.borderRadius = "4px";
+      markTargetSelect.style.borderRadius = "var(--input-radius)";
       markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
       markTargetSelect.style.background = "var(--background-modifier-form-field)";
       markTargetSelect.style.textAlign = "center";
       markTargetSelect.style.minWidth = "80px";
       markTargetSelect.style.maxWidth = "100px";
+      try {
+        markTargetSelect.addClass("act-color-target-select");
+      } catch (e) {
+        try {
+          markTargetSelect.classList.add("act-color-target-select");
+        } catch (_) {
+        }
+      }
       [
         ["text", this.plugin.t("mark_target_text", "Color Text")],
         ["line", this.plugin.t("mark_target_line", "Color Line")],
@@ -15479,7 +15520,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         });
         nameInput.style.flex = "0 0 80px";
         nameInput.style.padding = "6px";
-        nameInput.style.borderRadius = "4px";
+        nameInput.style.borderRadius = "var(--input-radius)";
         nameInput.style.border = "1px solid var(--background-modifier-border)";
         nameInput.placeholder = this.plugin.t("regex_name_placeholder", "name your regex");
         const nameHandler = () => {
@@ -15493,7 +15534,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
       });
       patternInput.style.flex = "1";
       patternInput.style.padding = "6px";
-      patternInput.style.borderRadius = "4px";
+      patternInput.style.borderRadius = "var(--input-radius)";
       patternInput.style.border = "1px solid var(--background-modifier-border)";
       patternInput.placeholder = this.plugin.t(
         "word_pattern_placeholder_long",
@@ -15512,10 +15553,18 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         });
         flagsInput.style.width = "50px";
         flagsInput.style.padding = "6px";
-        flagsInput.style.borderRadius = "4px";
+        flagsInput.style.borderRadius = "var(--input-radius)";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
         flagsInput.placeholder = this.plugin.t("flags_placeholder", "Flags");
         flagsInput.title = "e.g., i, g, m";
+        try {
+          flagsInput.addClass("act-flags-input");
+        } catch (e) {
+          try {
+            flagsInput.classList.add("act-flags-input");
+          } catch (_) {
+          }
+        }
         const flagsHandler = () => {
           entry.flags = flagsInput.value || "";
         };
@@ -15538,7 +15587,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         cp.style.padding = "0";
         cp.style.border = "none";
         cp.style.cursor = "pointer";
-        cp.style.borderRadius = "4px";
+        cp.style.borderRadius = "var(--input-radius)";
         const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || "#000000";
         cp.value = textColor;
         const cpHandler = () => {
@@ -15618,7 +15667,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         cpBg.style.padding = "0";
         cpBg.style.border = "none";
         cpBg.style.cursor = "pointer";
-        cpBg.style.borderRadius = "4px";
+        cpBg.style.borderRadius = "var(--input-radius)";
         const bgColor = entry.backgroundColor || entry._savedBackgroundColor || "#000000";
         cpBg.value = bgColor;
         const cpBgHandler = () => {
@@ -15763,6 +15812,42 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         }
       };
       row.addEventListener("contextmenu", contextMenuHandler);
+      const entrySettingsBtn = row.createEl("button");
+      entrySettingsBtn.style.flex = "0 0 auto";
+      entrySettingsBtn.style.padding = "4px";
+      entrySettingsBtn.style.cursor = "pointer";
+      entrySettingsBtn.style.background = "none";
+      entrySettingsBtn.style.border = "none";
+      entrySettingsBtn.style.boxShadow = "none";
+      entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
+      try {
+        entrySettingsBtn.addClass("act-entry-settings-btn");
+      } catch (e) {
+        try {
+          entrySettingsBtn.classList.add("act-entry-settings-btn");
+        } catch (_) {
+        }
+      }
+      try {
+        (0, import_obsidian12.setIcon)(entrySettingsBtn, "settings");
+      } catch (e) {
+      }
+      entrySettingsBtn.addEventListener("click", () => {
+        try {
+          const modal = new EditEntryModal(
+            this.app,
+            this.plugin,
+            entry,
+            () => {
+              this._refreshGroupEntries();
+            },
+            this
+          );
+          modal.open();
+        } catch (e) {
+          debugError("MODAL", "entry settings btn error", e);
+        }
+      });
     });
   }
   _refreshEntries() {
@@ -15869,14 +15954,16 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     heading.style.marginTop = "0";
     heading.style.marginBottom = "15px";
     const topRow = contentEl.createDiv();
+    topRow.addClass("act-toprow");
     topRow.style.display = "flex";
     topRow.style.alignItems = "center";
     topRow.style.gap = "10px";
     topRow.style.marginBottom = "15px";
+    topRow.style.flexWrap = "wrap";
     const activeSelect = topRow.createEl("select");
     activeSelect.addClass("act-blacklist-group-active-select");
     activeSelect.style.padding = "6px";
-    activeSelect.style.borderRadius = "4px";
+    activeSelect.style.borderRadius = "var(--input-radius)";
     activeSelect.style.border = "1px solid var(--background-modifier-border)";
     activeSelect.style.background = "var(--background-modifier-form-field)";
     activeSelect.style.textAlign = "center";
@@ -15904,7 +15991,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     });
     nameInput.style.flex = "1";
     nameInput.style.padding = "6px";
-    nameInput.style.borderRadius = "4px";
+    nameInput.style.borderRadius = "var(--input-radius)";
     nameInput.style.border = "1px solid var(--background-modifier-border)";
     nameInput.placeholder = this.plugin.t(
       "group_name_placeholder",
@@ -15919,7 +16006,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     );
     const caseSelect = topRow.createEl("select");
     caseSelect.style.padding = "6px";
-    caseSelect.style.borderRadius = "4px";
+    caseSelect.style.borderRadius = "var(--input-radius)";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
     caseSelect.style.background = "var(--background-modifier-form-field)";
     caseSelect.style.textAlign = "center";
@@ -15949,7 +16036,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     );
     const matchTypeSelect = topRow.createEl("select");
     matchTypeSelect.style.padding = "6px";
-    matchTypeSelect.style.borderRadius = "4px";
+    matchTypeSelect.style.borderRadius = "var(--input-radius)";
     matchTypeSelect.style.border = "1px solid var(--background-modifier-border)";
     matchTypeSelect.style.background = "var(--background-modifier-form-field)";
     matchTypeSelect.style.textAlign = "center";
@@ -15985,6 +16072,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
       () => matchTypeSelect.removeEventListener("change", matchTypeHandler)
     );
     const enableDisableRow = contentEl.createDiv();
+    enableDisableRow.addClass("act-group-enable-disable-row");
     enableDisableRow.style.display = "grid";
     enableDisableRow.style.gridTemplateColumns = "auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)";
     enableDisableRow.style.gap = "8px";
@@ -15993,36 +16081,42 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     const enLabel = enableDisableRow.createEl("div", {
       text: this.plugin.t("label_enable_in", "Enable in")
     });
+    enLabel.addClass("act-group-enable-label");
     enLabel.style.color = "var(--text-muted)";
     const enFoldersInput = enableDisableRow.createEl("input", { type: "text" });
     enFoldersInput.placeholder = "folder1/, folder2/";
     enFoldersInput.style.padding = "6px";
-    enFoldersInput.style.borderRadius = "4px";
+    enFoldersInput.style.borderRadius = "var(--input-radius)";
     enFoldersInput.style.border = "1px solid var(--background-modifier-border)";
+    enFoldersInput.style.minWidth = "0";
     enFoldersInput.value = Array.isArray(this.group.enableFolders) ? this.group.enableFolders.join(", ") : "";
     const enTagsInput = enableDisableRow.createEl("input", { type: "text" });
     enTagsInput.placeholder = "#tag1, #tag2";
     enTagsInput.style.padding = "6px";
-    enTagsInput.style.borderRadius = "4px";
+    enTagsInput.style.borderRadius = "var(--input-radius)";
     enTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    enTagsInput.style.minWidth = "0";
     enTagsInput.value = Array.isArray(this.group.enableTags) ? this.group.enableTags.map((t) => t.startsWith("#") ? t : `#${t}`).join(", ") : "";
     const disLabel = enableDisableRow.createEl("div", {
       text: this.plugin.t("label_disable_in", "Disable in")
     });
+    disLabel.addClass("act-group-disable-label");
     disLabel.style.color = "var(--text-muted)";
     const disFoldersInput = enableDisableRow.createEl("input", {
       type: "text"
     });
     disFoldersInput.placeholder = "folder1/, folder2/";
     disFoldersInput.style.padding = "6px";
-    disFoldersInput.style.borderRadius = "4px";
+    disFoldersInput.style.borderRadius = "var(--input-radius)";
     disFoldersInput.style.border = "1px solid var(--background-modifier-border)";
+    disFoldersInput.style.minWidth = "0";
     disFoldersInput.value = Array.isArray(this.group.disableFolders) ? this.group.disableFolders.join(", ") : "";
     const disTagsInput = enableDisableRow.createEl("input", { type: "text" });
     disTagsInput.placeholder = "#tag1, #tag2";
     disTagsInput.style.padding = "6px";
-    disTagsInput.style.borderRadius = "4px";
+    disTagsInput.style.borderRadius = "var(--input-radius)";
     disTagsInput.style.border = "1px solid var(--background-modifier-border)";
+    disTagsInput.style.minWidth = "0";
     disTagsInput.value = Array.isArray(this.group.disableTags) ? this.group.disableTags.map((t) => t.startsWith("#") ? t : `#${t}`).join(", ") : "";
     const parseList = (raw, isTag) => {
       const arr = String(raw || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -16155,14 +16249,16 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     }
     this._listDiv = contentEl.createDiv();
     this._listDiv.addClass("blacklist-entries-list");
-    this._listDiv.style.minHeight = "200px";
-    this._listDiv.style.maxHeight = "350px";
+    this._listDiv.style.flex = "1 1 auto";
+    this._listDiv.style.minHeight = "120px";
     this._listDiv.style.overflowY = "auto";
-    this._listDiv.style.marginBottom = "15px";
-    this._listDiv.style.borderRadius = "4px";
+    this._listDiv.style.marginBottom = "0";
+    this._listDiv.style.borderRadius = "var(--input-radius)";
     this._refreshGroupEntries();
     const buttonRow = contentEl.createDiv();
+    buttonRow.addClass("act-group-button-row");
     buttonRow.style.display = "flex";
+    buttonRow.style.flexWrap = "wrap";
     buttonRow.style.gap = "10px";
     buttonRow.style.marginBottom = "15px";
     buttonRow.style.alignItems = "center";
@@ -16173,10 +16269,11 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
       "reverse-a-z": this.plugin.t("sort_label_reverse-a-z", "Sort: Z-A")
     };
     const sortBtn = buttonRow.createEl("button");
+    sortBtn.addClass("act-group-btn-sort");
     sortBtn.textContent = sortLabels[this._sortMode] || "Sort: Last Added";
     sortBtn.style.cursor = "pointer";
     sortBtn.style.padding = "6px 12px";
-    sortBtn.style.borderRadius = "4px";
+    sortBtn.style.borderRadius = "var(--input-radius)";
     const sortBtnHandler = () => {
       const currentIndex = sortModes.indexOf(this._sortMode);
       const nextIndex = (currentIndex + 1) % sortModes.length;
@@ -16189,10 +16286,11 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
       () => sortBtn.removeEventListener("click", sortBtnHandler)
     );
     const addWordsBtn = buttonRow.createEl("button");
+    addWordsBtn.addClass("act-group-btn-add");
     addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
     addWordsBtn.style.cursor = "pointer";
     addWordsBtn.style.padding = "6px 12px";
-    addWordsBtn.style.borderRadius = "4px";
+    addWordsBtn.style.borderRadius = "var(--input-radius)";
     addWordsBtn.style.flex = "1";
     addWordsBtn.addClass("mod-cta");
     const addWordsHandler = () => {
@@ -16214,10 +16312,11 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
     );
     if (this.plugin.settings.enableRegexSupport) {
       const addRegexBtn = buttonRow.createEl("button");
+      addRegexBtn.addClass("act-group-btn-regex");
       addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
       addRegexBtn.style.cursor = "pointer";
       addRegexBtn.style.padding = "6px 12px";
-      addRegexBtn.style.borderRadius = "4px";
+      addRegexBtn.style.borderRadius = "var(--input-radius)";
       addRegexBtn.style.flex = "1";
       addRegexBtn.addClass("mod-cta");
       const addRegexHandler = () => {
@@ -16236,10 +16335,11 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
       );
     }
     const presetsBtn = buttonRow.createEl("button");
+    presetsBtn.addClass("act-group-btn-presets");
     presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
     presetsBtn.style.cursor = "pointer";
     presetsBtn.style.padding = "6px 12px";
-    presetsBtn.style.borderRadius = "4px";
+    presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
       if (!this.plugin.settings.enableRegexSupport) {
         new AlertModal(
@@ -16395,11 +16495,11 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
       row.style.display = "flex";
       row.style.alignItems = "center";
       row.style.gap = "8px";
-      row.style.borderRadius = "4px";
+      row.style.borderRadius = "var(--input-radius)";
       row.style.paddingTop = "8px";
       const matchSelect = row.createEl("select");
       matchSelect.style.padding = "6px";
-      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.borderRadius = "var(--input-radius)";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.textAlign = "center";
@@ -16428,7 +16528,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
       });
       patternInput.style.flex = "1";
       patternInput.style.padding = "6px";
-      patternInput.style.borderRadius = "4px";
+      patternInput.style.borderRadius = "var(--input-radius)";
       patternInput.style.border = "1px solid var(--background-modifier-border)";
       patternInput.placeholder = this.plugin.t(
         "word_pattern_placeholder_long",
@@ -16450,7 +16550,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
         });
         flagsInput.style.width = "50px";
         flagsInput.style.padding = "6px";
-        flagsInput.style.borderRadius = "4px";
+        flagsInput.style.borderRadius = "var(--input-radius)";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
         flagsInput.placeholder = this.plugin.t("flags_placeholder", "Flags");
         flagsInput.title = "e.g., i, g, m";
@@ -16695,7 +16795,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       row.style.marginBottom = "8px";
       const styleSelect = row.createEl("select");
       styleSelect.style.padding = "6px";
-      styleSelect.style.borderRadius = "4px";
+      styleSelect.style.borderRadius = "var(--input-radius)";
       styleSelect.style.border = "1px solid var(--background-modifier-border)";
       styleSelect.style.background = "var(--background-modifier-form-field)";
       styleSelect.style.color = "var(--text-normal)";
@@ -16715,7 +16815,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       styleSelect.innerHTML = `<option value="text">${this.plugin.t("style_type_text", "color")}</option><option value="highlight">${this.plugin.t("style_type_highlight", "highlight")}</option><option value="both">${this.plugin.t("style_type_both", "both")}</option>`;
       const matchSelect = row.createEl("select");
       matchSelect.style.padding = "6px";
-      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.borderRadius = "var(--input-radius)";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.background = "var(--background-modifier-form-field)";
       matchSelect.style.color = "var(--text-normal)";
@@ -16735,7 +16835,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
       const colorTargetSelect = row.createEl("select");
       colorTargetSelect.style.padding = "6px";
-      colorTargetSelect.style.borderRadius = "4px";
+      colorTargetSelect.style.borderRadius = "var(--input-radius)";
       colorTargetSelect.style.border = "1px solid var(--background-modifier-border)";
       colorTargetSelect.style.background = "var(--background-modifier-form-field)";
       colorTargetSelect.style.color = "var(--text-normal)";
@@ -16759,7 +16859,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         });
         nameInput.style.flex = "0 0 60px";
         nameInput.style.padding = "6px";
-        nameInput.style.borderRadius = "4px";
+        nameInput.style.borderRadius = "var(--input-radius)";
         nameInput.style.border = "1px solid var(--background-modifier-border)";
         nameInput.placeholder = this.plugin.t(
           "regex_name_placeholder",
@@ -16778,7 +16878,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       textInput.style.flex = "1";
       textInput.style.minWidth = "100px";
       textInput.style.padding = "6px";
-      textInput.style.borderRadius = "4px";
+      textInput.style.borderRadius = "var(--input-radius)";
       textInput.style.border = "1px solid var(--background-modifier-border)";
       textInput.placeholder = this.plugin.t(
         "word_pattern_placeholder_long",
@@ -16809,9 +16909,17 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
       flagsInput.style.width = "64px";
       flagsInput.style.padding = "6px";
-      flagsInput.style.borderRadius = "4px";
+      flagsInput.style.borderRadius = "var(--input-radius)";
       flagsInput.style.border = "1px solid var(--background-modifier-border)";
       flagsInput.style.flex = "0 0 auto";
+      try {
+        flagsInput.addClass("act-flags-input");
+      } catch (e) {
+        try {
+          flagsInput.classList.add("act-flags-input");
+        } catch (_) {
+        }
+      }
       const swatchesArr = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
       const cp = row.createEl("input", { type: "color" });
       cp.title = this.plugin.t("text_color_title", "Text color");
@@ -16819,7 +16927,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       cp.style.width = "30px";
       cp.style.height = "30px";
       cp.style.border = "none";
-      cp.style.borderRadius = "4px";
+      cp.style.borderRadius = "var(--input-radius)";
       cp.style.cursor = "pointer";
       cp.style.flex = "0 0 auto";
       let swatchSelect = null;
@@ -16829,7 +16937,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       cpBg.style.width = "30px";
       cpBg.style.height = "30px";
       cpBg.style.border = "none";
-      cpBg.style.borderRadius = "4px";
+      cpBg.style.borderRadius = "var(--input-radius)";
       cpBg.style.cursor = "pointer";
       cpBg.style.flex = "0 0 auto";
       let swatchSelect2 = null;
@@ -17577,10 +17685,53 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         } catch (e) {
         }
         try {
+          entrySettingsBtn.removeEventListener("click", entrySettingsBtnHandler);
+        } catch (e) {
+        }
+        try {
           row.remove();
         } catch (e) {
         }
       };
+      const entrySettingsBtn = row.createEl("button");
+      entrySettingsBtn.style.flex = "0 0 auto";
+      entrySettingsBtn.style.padding = "4px";
+      entrySettingsBtn.style.cursor = "pointer";
+      entrySettingsBtn.style.background = "none";
+      entrySettingsBtn.style.border = "none";
+      entrySettingsBtn.style.boxShadow = "none";
+      try {
+        if (!import_obsidian15.Platform.isMobile) entrySettingsBtn.style.display = "none";
+      } catch (e) {
+        entrySettingsBtn.style.display = "none";
+      }
+      entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
+      try {
+        entrySettingsBtn.addClass("act-entry-settings-btn");
+      } catch (e) {
+        try {
+          entrySettingsBtn.classList.add("act-entry-settings-btn");
+        } catch (_) {
+        }
+      }
+      try {
+        (0, import_obsidian15.setIcon)(entrySettingsBtn, "settings");
+      } catch (e) {
+      }
+      const entrySettingsBtnHandler = () => {
+        try {
+          const modal = new EditEntryModal(this.app, this.plugin, entry, () => {
+            try {
+              this._refreshEntries();
+            } catch (e) {
+            }
+          });
+          modal.open();
+        } catch (e) {
+          debugError("SETTINGS", "entry settings btn error", e);
+        }
+      };
+      entrySettingsBtn.addEventListener("click", entrySettingsBtnHandler);
       this._entryRows.set(entry, {
         row,
         elements: {
@@ -17593,7 +17744,8 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           cpBg,
           regexChk,
           flagsInput,
-          del
+          del,
+          entrySettingsBtn
         },
         cleanup
       });
@@ -17705,6 +17857,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         } catch (_) {
         }
         this._disabledFilesListEl = this._disabledFilesContainer.createDiv();
+        this._disabledFilesListEl.addClass("act-disabled-files-list");
       }
       this._disabledFilesHeaderEl.style.display = hasAny ? "" : "none";
       this._disabledFilesSearchContainer.style.display = hasAny ? "flex" : "none";
@@ -17730,21 +17883,19 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         return fp.toLowerCase().includes(q) || name.toLowerCase().includes(q);
       };
       this.plugin.settings.disabledFiles.filter(matchesQuery).forEach((filePath) => {
-        new import_obsidian15.Setting(this._disabledFilesListEl).setName(filePath).addExtraButton(
-          (btn) => btn.setIcon("x").setTooltip(
-            this.plugin.t(
-              "tooltip_enable_for_file",
-              "Enable for this file"
-            )
-          ).onClick(async () => {
-            const index = this.plugin.settings.disabledFiles.indexOf(filePath);
-            if (index > -1) {
-              this.plugin.settings.disabledFiles.splice(index, 1);
-            }
-            await this.plugin.saveSettings();
-            this._refreshDisabledFiles();
-          })
-        );
+        const row = this._disabledFilesListEl.createDiv({ cls: "act-disabled-file" });
+        row.createSpan({ cls: "act-disabled-file-title", text: filePath });
+        const btn = row.createEl("button", { cls: "clickable-icon" });
+        btn.setAttribute("aria-label", this.plugin.t("tooltip_enable_for_file", "Enable for this file"));
+        btn.innerHTML = "\xD7";
+        btn.addEventListener("click", async () => {
+          const index = this.plugin.settings.disabledFiles.indexOf(filePath);
+          if (index > -1) {
+            this.plugin.settings.disabledFiles.splice(index, 1);
+          }
+          await this.plugin.saveSettings();
+          this._refreshDisabledFiles();
+        });
       });
     } catch (e) {
       debugError("SETTINGS", "_refreshDisabledFiles error", e);
@@ -17840,7 +17991,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         });
         textInput.style.flex = "1";
         textInput.style.padding = "6px";
-        textInput.style.borderRadius = "4px";
+        textInput.style.borderRadius = "var(--input-radius)";
         textInput.style.border = "1px solid var(--background-modifier-border)";
         textInput.placeholder = this.plugin.t(
           "word_pattern_placeholder_short",
@@ -17857,7 +18008,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
         flagsInput.style.width = "50px";
         flagsInput.style.padding = "6px";
-        flagsInput.style.borderRadius = "4px";
+        flagsInput.style.borderRadius = "var(--input-radius)";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";
         if (!entry.isRegex) flagsInput.style.display = "none";
         const del = { addEventListener: () => {
@@ -18190,7 +18341,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         const modeSel = row.createEl("select");
         modeSel.style.flex = "0 0 auto";
         modeSel.style.padding = "6px";
-        modeSel.style.borderRadius = "4px";
+        modeSel.style.borderRadius = "var(--input-radius)";
         modeSel.style.border = "1px solid var(--background-modifier-border)";
         modeSel.style.background = "var(--background-modifier-form-field)";
         modeSel.style.textAlign = "center";
@@ -18214,7 +18365,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         );
         input.style.flex = "1";
         input.style.padding = "6px";
-        input.style.borderRadius = "4px";
+        input.style.borderRadius = "var(--input-radius)";
         input.style.border = "1px solid var(--background-modifier-border)";
         const del = row.createEl("button", {
           text: this.plugin.t("delete_button_text", "\u2715")
@@ -18522,7 +18673,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         });
         nameInput.style.flex = "1";
         nameInput.style.padding = "6px";
-        nameInput.style.borderRadius = "4px";
+        nameInput.style.borderRadius = "var(--input-radius)";
         nameInput.style.border = "1px solid var(--background-modifier-border)";
         nameInput.disabled = true;
         const colorPicker = row.createEl("input", { type: "color" });
@@ -18530,7 +18681,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         colorPicker.style.width = "30px";
         colorPicker.style.height = "30px";
         colorPicker.style.border = "none";
-        colorPicker.style.borderRadius = "4px";
+        colorPicker.style.borderRadius = "var(--input-radius)";
         colorPicker.style.cursor = "pointer";
         colorPicker.disabled = true;
         const infoSpan = row.createEl("span", {
@@ -18638,14 +18789,14 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           });
           nameInput.style.flex = "1";
           nameInput.style.padding = "6px";
-          nameInput.style.borderRadius = "4px";
+          nameInput.style.borderRadius = "var(--input-radius)";
           nameInput.style.border = "1px solid var(--background-modifier-border)";
           const colorPicker = row.createEl("input", { type: "color" });
           colorPicker.value = sw && sw.color ? sw.color : "#000000";
           colorPicker.style.width = "30px";
           colorPicker.style.height = "30px";
           colorPicker.style.border = "none";
-          colorPicker.style.borderRadius = "4px";
+          colorPicker.style.borderRadius = "var(--input-radius)";
           colorPicker.style.cursor = "pointer";
           colorPicker.style.flexShrink = "0";
           const colorPickerContextHandler = (ev) => {
@@ -20795,7 +20946,7 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       btn.style.border = "none";
       btn.style.background = "transparent";
       btn.style.boxShadow = "none";
-      btn.style.borderRadius = "4px";
+      btn.style.borderRadius = "var(--input-radius)";
       btn.style.padding = "8px 16px";
       if (this._activeTab === tab.id) {
         btn.addClass("mod-cta");
@@ -31584,8 +31735,8 @@ var AlwaysColorText = class extends import_obsidian17.Plugin {
     const safeVault = vaultName.replace(/[^a-z0-9-_]+/gi, "_");
     const fname = `always-color-text-export-${safeVault}-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
     try {
-      const { Platform: Platform2 } = require("obsidian");
-      const isMobile = !!(Platform2 && (Platform2.isMobileApp || Platform2.isMobile));
+      const { Platform: Platform3 } = require("obsidian");
+      const isMobile = !!(Platform3 && (Platform3.isMobileApp || Platform3.isMobile));
       if (isMobile) {
         try {
           if (typeof navigator !== "undefined") {
