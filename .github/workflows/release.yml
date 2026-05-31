@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Attest build artifacts
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            main.js
+            styles.css
+            manifest.json
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: |
+            ## Bug Fixes
+            - Fixed #36 – Page jumps to the top after checking a checkbox in Reading Mode (Thanks to @sharik14 in #36)
+            - Fixed #46 – Default yellow markdown highlight changes to an incorrect color in Reading Mode (Thanks to @sharik14 in #46)
+            - Fixed #47 – Mobile UI issues: accidental deletions without confirmation, poor group menu layout (Thanks to @vxdewz in #47)
+            - Fixed #48 – "Starts With" match type and Unicode regex flag don't match full expected character range (Thanks to @cubbage in #48)
+            - Fixed #49 – Clicking a heading in the Outline panel jumps to wrong position in Reading View (Thanks to @Miracle-ZT in #49)
+            - Fixed off-centered selects in plugin modals
+            - Improved Reading Mode scrolling performance
+            - Significantly Improved Mobile UI
+          files: |
+            main.js
+            styles.css
+            manifest.json
