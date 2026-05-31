@@ -154,6 +154,12 @@ module.exports = {
   "notice_filter_disabled": "Фильтр отключён",
   
   // Confirmation Dialogs
+  "confirm_delete_entry_title": "Удалить запись",
+  "confirm_delete_entry_desc": "Вы уверены, что хотите удалить эту запись?",
+  "confirm_delete_disabled_file_title": "Удалить файл",
+  "confirm_delete_disabled_file_desc": "Включить окрашивание для этого файла снова?",
+  "confirm_delete_path_rule_title": "Удалить правило",
+  "confirm_delete_path_rule_desc": "Вы уверены, что хотите удалить это правило файла/папки?",
   "confirm_delete_all_title": "Удалить все слова",
   "confirm_delete_all_desc": "Вы уверены, что хотите удалить ВСЕ слова/шаблоны? Это действие необратимо!",
   "confirm_delete_all_blacklist_title": "Удалить все слова из чёрного списка",

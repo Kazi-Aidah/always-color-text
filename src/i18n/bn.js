@@ -144,6 +144,12 @@ module.exports = {
   "notice_filter_disabled": "ফিল্টার অক্ষম",
   
   // Confirmation Dialogs
+  "confirm_delete_entry_title": "এন্ট্রি মুছুন",
+  "confirm_delete_entry_desc": "আপনি কি নিশ্চিত যে আপনি এই এন্ট্রিটি মুছতে চান?",
+  "confirm_delete_disabled_file_title": "ফাইল সরান",
+  "confirm_delete_disabled_file_desc": "এই ফাইলের জন্য রঙায়ন পুনরায় সক্রিয় করবেন?",
+  "confirm_delete_path_rule_title": "নিয়ম মুছুন",
+  "confirm_delete_path_rule_desc": "আপনি কি নিশ্চিত যে আপনি এই ফাইল/ফোল্ডার নিয়মটি মুছতে চান?",
   "confirm_delete_all_title": "সমস্ত শব্দ মুছুন",
   "confirm_delete_all_desc": "আপনি কি নিশ্চিত যে আপনি আপনার সমস্ত রঙ করা শব্দ/প্যাটার্ন মুছতে চান? আপনি এটি পূর্বাবস্থায় ফিরিয়ে আনতে পারবেন না!",
   "confirm_delete_all_blacklist_title": "ব্ল্যাকলিস্ট করা সমস্ত শব্দ মুছুন",

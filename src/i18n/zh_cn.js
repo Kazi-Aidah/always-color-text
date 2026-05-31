@@ -151,6 +151,12 @@ module.exports = {
   "notice_filter_disabled": "过滤器已禁用",
   
   // Confirmation Dialogs
+  "confirm_delete_entry_title": "删除条目",
+  "confirm_delete_entry_desc": "确定要删除此条目吗？",
+  "confirm_delete_disabled_file_title": "移除文件",
+  "confirm_delete_disabled_file_desc": "重新启用此文件的着色？",
+  "confirm_delete_path_rule_title": "删除规则",
+  "confirm_delete_path_rule_desc": "确定要删除此文件/文件夹规则吗？",
   "confirm_delete_all_title": "删除所有单词",
   "confirm_delete_all_desc": "您确定要删除所有已着色的单词/模式吗？此操作无法撤销！",
   "confirm_delete_all_blacklist_title": "删除所有黑名单单词",

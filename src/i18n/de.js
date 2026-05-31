@@ -146,6 +146,12 @@ module.exports = {
   "notice_filter_disabled": "Filter deaktiviert",
   
   // Confirmation Dialogs
+  "confirm_delete_entry_title": "Eintrag löschen",
+  "confirm_delete_entry_desc": "Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?",
+  "confirm_delete_disabled_file_title": "Datei entfernen",
+  "confirm_delete_disabled_file_desc": "Färbung für diese Datei wieder aktivieren?",
+  "confirm_delete_path_rule_title": "Regel löschen",
+  "confirm_delete_path_rule_desc": "Sind Sie sicher, dass Sie diese Datei/Ordner-Regel löschen möchten?",
   "confirm_delete_all_title": "Alle Wörter löschen",
   "confirm_delete_all_desc": "Sind Sie sicher, dass Sie ALLE gefärbten Wörter/Muster löschen möchten? Dies kann nicht rückgängig gemacht werden!",
   "confirm_delete_all_blacklist_title": "Alle Wörter der schwarzen Liste löschen",

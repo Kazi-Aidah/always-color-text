@@ -829,18 +829,31 @@ export class ColorSettingTab extends PluginSettingTab {
 
       const delHandler = async () => {
         const idx = this.plugin.settings.wordEntries.indexOf(entry);
-        if (idx !== -1) this.plugin.settings.wordEntries.splice(idx, 1);
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        const info = this._entryRows.get(entry);
-        if (info) {
-          try {
-            info.cleanup();
-          } catch (e) {}
-          this._entryRows.delete(entry);
+        const doDelete = async () => {
+          if (idx !== -1) this.plugin.settings.wordEntries.splice(idx, 1);
+          await this.plugin.saveSettings();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          const info = this._entryRows.get(entry);
+          if (info) {
+            try {
+              info.cleanup();
+            } catch (e) {}
+            this._entryRows.delete(entry);
+          }
+          this._refreshEntries();
+        };
+        if (document.body.classList.contains("is-mobile")) {
+          new ConfirmationModal(
+            this.app,
+            this.plugin,
+            this.plugin.t("confirm_delete_entry_title", "Delete Entry"),
+            this.plugin.t("confirm_delete_entry_desc", "Are you sure you want to delete this entry?"),
+            doDelete,
+          ).open();
+        } else {
+          await doDelete();
         }
-        this._refreshEntries();
       };
 
       textInput.addEventListener("change", textInputHandler);
@@ -1475,14 +1488,27 @@ export class ColorSettingTab extends PluginSettingTab {
           row.createSpan({ cls: "act-disabled-file-title", text: filePath });
           const btn = row.createEl("button", { cls: "clickable-icon" });
           btn.setAttribute("aria-label", this.plugin.t("tooltip_enable_for_file", "Enable for this file"));
-          btn.innerHTML = "×";
+          setIcon(btn, "x");
           btn.addEventListener("click", async () => {
-            const index = this.plugin.settings.disabledFiles.indexOf(filePath);
-            if (index > -1) {
-              this.plugin.settings.disabledFiles.splice(index, 1);
+            const doDelete = async () => {
+              const index = this.plugin.settings.disabledFiles.indexOf(filePath);
+              if (index > -1) {
+                this.plugin.settings.disabledFiles.splice(index, 1);
+              }
+              await this.plugin.saveSettings();
+              this._refreshDisabledFiles();
+            };
+            if (document.body.classList.contains("is-mobile")) {
+              new ConfirmationModal(
+                this.app,
+                this.plugin,
+                this.plugin.t("confirm_delete_disabled_file_title", "Remove File"),
+                this.plugin.t("confirm_delete_disabled_file_desc", "Re-enable coloring for this file?"),
+                doDelete,
+              ).open();
+            } else {
+              await doDelete();
             }
-            await this.plugin.saveSettings();
-            this._refreshDisabledFiles();
           });
         });
     } catch (e) {
@@ -1824,11 +1850,24 @@ export class ColorSettingTab extends PluginSettingTab {
         };
 
         const delHandler = async () => {
-          let entryIdx = resolveBlacklistIndex();
-          if (entryIdx === -1) return;
-          this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
-          await this.plugin.saveSettings();
-          this._refreshBlacklistWords();
+          const doDelete = async () => {
+            let entryIdx = resolveBlacklistIndex();
+            if (entryIdx === -1) return;
+            this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
+            await this.plugin.saveSettings();
+            this._refreshBlacklistWords();
+          };
+          if (document.body.classList.contains("is-mobile")) {
+            new ConfirmationModal(
+              this.app,
+              this.plugin,
+              this.plugin.t("confirm_delete_entry_title", "Delete Entry"),
+              this.plugin.t("confirm_delete_entry_desc", "Are you sure you want to delete this entry?"),
+              doDelete,
+            ).open();
+          } else {
+            await doDelete();
+          }
         };
 
         const duplicateHandler = async () => {
@@ -2331,13 +2370,26 @@ export class ColorSettingTab extends PluginSettingTab {
           modeSel.removeEventListener("change", modeHandler),
         );
         const delHandler = async () => {
-          if (
-            actualIndex !== -1 &&
-            this.plugin.settings.pathRules[actualIndex]
-          ) {
-            this.plugin.settings.pathRules.splice(actualIndex, 1);
-            await this.plugin.saveSettings();
-            this._refreshPathRules();
+          const doDelete = async () => {
+            if (
+              actualIndex !== -1 &&
+              this.plugin.settings.pathRules[actualIndex]
+            ) {
+              this.plugin.settings.pathRules.splice(actualIndex, 1);
+              await this.plugin.saveSettings();
+              this._refreshPathRules();
+            }
+          };
+          if (document.body.classList.contains("is-mobile")) {
+            new ConfirmationModal(
+              this.app,
+              this.plugin,
+              this.plugin.t("confirm_delete_path_rule_title", "Delete Rule"),
+              this.plugin.t("confirm_delete_path_rule_desc", "Are you sure you want to delete this file/folder rule?"),
+              doDelete,
+            ).open();
+          } else {
+            await doDelete();
           }
         };
         del.addEventListener("click", delHandler);

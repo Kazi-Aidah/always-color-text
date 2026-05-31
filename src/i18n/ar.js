@@ -146,6 +146,12 @@ module.exports = {
   "notice_filter_disabled": "تم تعطيل المرشح",
   
   // Confirmation Dialogs
+  "confirm_delete_entry_title": "حذف الإدخال",
+  "confirm_delete_entry_desc": "هل أنت متأكد أنك تريد حذف هذا الإدخال؟",
+  "confirm_delete_disabled_file_title": "إزالة الملف",
+  "confirm_delete_disabled_file_desc": "إعادة تفعيل التلوين لهذا الملف؟",
+  "confirm_delete_path_rule_title": "حذف القاعدة",
+  "confirm_delete_path_rule_desc": "هل أنت متأكد أنك تريد حذف قاعدة الملف/المجلد هذه؟",
   "confirm_delete_all_title": "حذف جميع الكلمات",
   "confirm_delete_all_desc": "هل أنت متأكد أنك تريد حذف جميع الكلمات/الأنماط الملونة؟ لا يمكن التراجع عن هذا الإجراء!",
   "confirm_delete_all_blacklist_title": "حذف جميع كلمات القائمة السوداء",

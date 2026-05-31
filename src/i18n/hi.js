@@ -151,6 +151,12 @@ module.exports = {
   "notice_filter_disabled": "फिल्टर बंद की",
   
   // Confirmation Dialogs
+  "confirm_delete_entry_title": "प्रविष्टि हटाएँ",
+  "confirm_delete_entry_desc": "क्या आप वाकई इस प्रविष्टि को हटाना चाहते हैं?",
+  "confirm_delete_disabled_file_title": "फ़ाइल हटाएँ",
+  "confirm_delete_disabled_file_desc": "इस फ़ाइल के लिए रंगाई फिर से चालू करें?",
+  "confirm_delete_path_rule_title": "नियम हटाएँ",
+  "confirm_delete_path_rule_desc": "क्या आप वाकई इस फ़ाइल/फ़ोल्डर नियम को हटाना चाहते हैं?",
   "confirm_delete_all_title": "सभी शब्द हटाएँ",
   "confirm_delete_all_desc": "क्या आप वाकई अपने सभी रंगे शब्द/पैटर्न हटाना चाहते हैं? आप इसे पूर्ववत नहीं कर सकते!",
   "confirm_delete_all_blacklist_title": "ब्लैकलिस्टेड सभी शब्द हटाएँ",

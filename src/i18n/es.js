@@ -151,6 +151,12 @@ module.exports = {
   "notice_filter_disabled": "Filtro desactivado",
   
   // Confirmation Dialogs
+  "confirm_delete_entry_title": "Eliminar entrada",
+  "confirm_delete_entry_desc": "¿Estás seguro de que quieres eliminar esta entrada?",
+  "confirm_delete_disabled_file_title": "Quitar archivo",
+  "confirm_delete_disabled_file_desc": "¿Reactivar el coloreado para este archivo?",
+  "confirm_delete_path_rule_title": "Eliminar regla",
+  "confirm_delete_path_rule_desc": "¿Estás seguro de que quieres eliminar esta regla de archivo/carpeta?",
   "confirm_delete_all_title": "Eliminar todas las palabras",
   "confirm_delete_all_desc": "¿Estás seguro de que quieres eliminar TODAS las palabras/patrones coloreados? ¡Esto no se puede deshacer!",
   "confirm_delete_all_blacklist_title": "Eliminar todas las palabras de la lista negra",

@@ -1315,10 +1315,23 @@ export class EditWordGroupModal extends Modal {
               .setTitle(this.plugin.t("context_delete_entry", "Delete entry"))
               .setIcon("trash")
               .onClick(() => {
-                const idx = this.group.entries.indexOf(entry);
-                if (idx > -1) {
-                  this.group.entries.splice(idx, 1);
-                  this._refreshGroupEntries();
+                const doDelete = () => {
+                  const idx = this.group.entries.indexOf(entry);
+                  if (idx > -1) {
+                    this.group.entries.splice(idx, 1);
+                    this._refreshGroupEntries();
+                  }
+                };
+                if (document.body.classList.contains("is-mobile")) {
+                  new ConfirmationModal(
+                    this.app,
+                    this.plugin,
+                    this.plugin.t("confirm_delete_entry_title", "Delete Entry"),
+                    this.plugin.t("confirm_delete_entry_desc", "Are you sure you want to delete this entry?"),
+                    doDelete,
+                  ).open();
+                } else {
+                  doDelete();
                 }
               });
           });

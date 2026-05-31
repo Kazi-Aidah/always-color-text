@@ -174,6 +174,12 @@ var require_en = __commonJS({
       "notice_already_disabled_for_path": "Coloring already disabled for {path}",
       "notice_filter_disabled": "Filter Disabled",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "Delete Entry",
+      "confirm_delete_entry_desc": "Are you sure you want to delete this entry?",
+      "confirm_delete_disabled_file_title": "Remove File",
+      "confirm_delete_disabled_file_desc": "Re-enable coloring for this file?",
+      "confirm_delete_path_rule_title": "Delete Rule",
+      "confirm_delete_path_rule_desc": "Are you sure you want to delete this file/folder rule?",
       "confirm_delete_all_title": "Delete All Words",
       "confirm_delete_all_desc": "Are you sure you want to delete ALL colored words/patterns? This cannot be undone!",
       "confirm_delete_all_blacklist_title": "Delete All Blacklisted Words",
@@ -771,6 +777,12 @@ var require_es = __commonJS({
       "notice_already_disabled_for_path": "El coloreado ya est\xE1 desactivado para {path}",
       "notice_filter_disabled": "Filtro desactivado",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "Eliminar entrada",
+      "confirm_delete_entry_desc": "\xBFEst\xE1s seguro de que quieres eliminar esta entrada?",
+      "confirm_delete_disabled_file_title": "Quitar archivo",
+      "confirm_delete_disabled_file_desc": "\xBFReactivar el coloreado para este archivo?",
+      "confirm_delete_path_rule_title": "Eliminar regla",
+      "confirm_delete_path_rule_desc": "\xBFEst\xE1s seguro de que quieres eliminar esta regla de archivo/carpeta?",
       "confirm_delete_all_title": "Eliminar todas las palabras",
       "confirm_delete_all_desc": "\xBFEst\xE1s seguro de que quieres eliminar TODAS las palabras/patrones coloreados? \xA1Esto no se puede deshacer!",
       "confirm_delete_all_blacklist_title": "Eliminar todas las palabras de la lista negra",
@@ -1363,6 +1375,12 @@ var require_fr = __commonJS({
       "notice_already_disabled_for_path": "Coloriage d\xE9j\xE0 d\xE9sactiv\xE9 pour {path}",
       "notice_filter_disabled": "Filtre d\xE9sactiv\xE9",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "Supprimer l'entr\xE9e",
+      "confirm_delete_entry_desc": "\xCAtes-vous s\xFBr de vouloir supprimer cette entr\xE9e ?",
+      "confirm_delete_disabled_file_title": "Retirer le fichier",
+      "confirm_delete_disabled_file_desc": "R\xE9activer le coloriage pour ce fichier ?",
+      "confirm_delete_path_rule_title": "Supprimer la r\xE8gle",
+      "confirm_delete_path_rule_desc": "\xCAtes-vous s\xFBr de vouloir supprimer cette r\xE8gle de fichier/dossier ?",
       "confirm_delete_all_title": "Supprimer tous les mots",
       "confirm_delete_all_desc": "\xCAtes-vous s\xFBr de vouloir supprimer TOUS les mots/motifs color\xE9s ? Cela ne peut pas \xEAtre annul\xE9 !",
       "confirm_delete_all_blacklist_title": "Supprimer tous les mots de la liste noire",
@@ -1955,6 +1973,12 @@ var require_hi = __commonJS({
       "notice_already_disabled_for_path": "{path} \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092A\u0939\u0932\u0947 \u0938\u0947 \u0939\u0940 \u092C\u0902\u0926 \u0939\u0948",
       "notice_filter_disabled": "\u092B\u093F\u0932\u094D\u091F\u0930 \u092C\u0902\u0926 \u0915\u0940",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "\u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0939\u091F\u093E\u090F\u0901",
+      "confirm_delete_entry_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0935\u093E\u0915\u0908 \u0907\u0938 \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0915\u094B \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902?",
+      "confirm_delete_disabled_file_title": "\u092B\u093C\u093E\u0907\u0932 \u0939\u091F\u093E\u090F\u0901",
+      "confirm_delete_disabled_file_desc": "\u0907\u0938 \u092B\u093C\u093E\u0907\u0932 \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092B\u093F\u0930 \u0938\u0947 \u091A\u093E\u0932\u0942 \u0915\u0930\u0947\u0902?",
+      "confirm_delete_path_rule_title": "\u0928\u093F\u092F\u092E \u0939\u091F\u093E\u090F\u0901",
+      "confirm_delete_path_rule_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0935\u093E\u0915\u0908 \u0907\u0938 \u092B\u093C\u093E\u0907\u0932/\u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u0928\u093F\u092F\u092E \u0915\u094B \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902?",
       "confirm_delete_all_title": "\u0938\u092D\u0940 \u0936\u092C\u094D\u0926 \u0939\u091F\u093E\u090F\u0901",
       "confirm_delete_all_desc": "\u0915\u094D\u092F\u093E \u0906\u092A \u0935\u093E\u0915\u0908 \u0905\u092A\u0928\u0947 \u0938\u092D\u0940 \u0930\u0902\u0917\u0947 \u0936\u092C\u094D\u0926/\u092A\u0948\u091F\u0930\u094D\u0928 \u0939\u091F\u093E\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902? \u0906\u092A \u0907\u0938\u0947 \u092A\u0942\u0930\u094D\u0935\u0935\u0924 \u0928\u0939\u0940\u0902 \u0915\u0930 \u0938\u0915\u0924\u0947!",
       "confirm_delete_all_blacklist_title": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F\u0947\u0921 \u0938\u092D\u0940 \u0936\u092C\u094D\u0926 \u0939\u091F\u093E\u090F\u0901",
@@ -2547,6 +2571,12 @@ var require_it = __commonJS({
       "notice_already_disabled_for_path": "La colorazione \xE8 gi\xE0 disabilitata per {path}",
       "notice_filter_disabled": "Filtro disabilitato",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "Elimina voce",
+      "confirm_delete_entry_desc": "Sei sicuro di voler eliminare questa voce?",
+      "confirm_delete_disabled_file_title": "Rimuovi file",
+      "confirm_delete_disabled_file_desc": "Riabilitare la colorazione per questo file?",
+      "confirm_delete_path_rule_title": "Elimina regola",
+      "confirm_delete_path_rule_desc": "Sei sicuro di voler eliminare questa regola file/cartella?",
       "confirm_delete_all_title": "Elimina tutte le parole",
       "confirm_delete_all_desc": "Sei sicuro di voler eliminare tutte le tue parole/pattern colorati? Non potrai annullare questa azione!",
       "confirm_delete_all_blacklist_title": "Elimina tutte le parole in blacklist",
@@ -3132,6 +3162,12 @@ var require_bn = __commonJS({
       "notice_already_disabled_for_path": "{path} \u098F\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u0987\u09A4\u09BF\u09AE\u09A7\u09CD\u09AF\u09C7\u0987 \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC",
       "notice_filter_disabled": "\u09AB\u09BF\u09B2\u09CD\u099F\u09BE\u09B0 \u0985\u0995\u09CD\u09B7\u09AE",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "\u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09AE\u09C1\u099B\u09C1\u09A8",
+      "confirm_delete_entry_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u09AF\u09C7 \u0986\u09AA\u09A8\u09BF \u098F\u0987 \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF\u099F\u09BF \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8?",
+      "confirm_delete_disabled_file_title": "\u09AB\u09BE\u0987\u09B2 \u09B8\u09B0\u09BE\u09A8",
+      "confirm_delete_disabled_file_desc": "\u098F\u0987 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09AA\u09C1\u09A8\u09B0\u09BE\u09AF\u09BC \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09AC\u09C7\u09A8?",
+      "confirm_delete_path_rule_title": "\u09A8\u09BF\u09AF\u09BC\u09AE \u09AE\u09C1\u099B\u09C1\u09A8",
+      "confirm_delete_path_rule_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u09AF\u09C7 \u0986\u09AA\u09A8\u09BF \u098F\u0987 \u09AB\u09BE\u0987\u09B2/\u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0 \u09A8\u09BF\u09AF\u09BC\u09AE\u099F\u09BF \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8?",
       "confirm_delete_all_title": "\u09B8\u09AE\u09B8\u09CD\u09A4 \u09B6\u09AC\u09CD\u09A6 \u09AE\u09C1\u099B\u09C1\u09A8",
       "confirm_delete_all_desc": "\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u09A8\u09BF\u09B6\u09CD\u099A\u09BF\u09A4 \u09AF\u09C7 \u0986\u09AA\u09A8\u09BF \u0986\u09AA\u09A8\u09BE\u09B0 \u09B8\u09AE\u09B8\u09CD\u09A4 \u09B0\u0999 \u0995\u09B0\u09BE \u09B6\u09AC\u09CD\u09A6/\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AE\u09C1\u099B\u09A4\u09C7 \u099A\u09BE\u09A8? \u0986\u09AA\u09A8\u09BF \u098F\u099F\u09BF \u09AA\u09C2\u09B0\u09CD\u09AC\u09BE\u09AC\u09B8\u09CD\u09A5\u09BE\u09AF\u09BC \u09AB\u09BF\u09B0\u09BF\u09AF\u09BC\u09C7 \u0986\u09A8\u09A4\u09C7 \u09AA\u09BE\u09B0\u09AC\u09C7\u09A8 \u09A8\u09BE!",
       "confirm_delete_all_blacklist_title": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F \u0995\u09B0\u09BE \u09B8\u09AE\u09B8\u09CD\u09A4 \u09B6\u09AC\u09CD\u09A6 \u09AE\u09C1\u099B\u09C1\u09A8",
@@ -3751,6 +3787,12 @@ var require_ru = __commonJS({
       "notice_already_disabled_for_path": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0443\u0436\u0435 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u043E \u0434\u043B\u044F {path}",
       "notice_filter_disabled": "\u0424\u0438\u043B\u044C\u0442\u0440 \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C",
+      "confirm_delete_entry_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u0443 \u0437\u0430\u043F\u0438\u0441\u044C?",
+      "confirm_delete_disabled_file_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0444\u0430\u0439\u043B",
+      "confirm_delete_disabled_file_desc": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u044D\u0442\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430 \u0441\u043D\u043E\u0432\u0430?",
+      "confirm_delete_path_rule_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u043F\u0440\u0430\u0432\u0438\u043B\u043E",
+      "confirm_delete_path_rule_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u044D\u0442\u043E \u043F\u0440\u0430\u0432\u0438\u043B\u043E \u0444\u0430\u0439\u043B\u0430/\u043F\u0430\u043F\u043A\u0438?",
       "confirm_delete_all_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u043B\u043E\u0432\u0430",
       "confirm_delete_all_desc": "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0412\u0421\u0415 \u0441\u043B\u043E\u0432\u0430/\u0448\u0430\u0431\u043B\u043E\u043D\u044B? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E!",
       "confirm_delete_all_blacklist_title": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0432\u0441\u0435 \u0441\u043B\u043E\u0432\u0430 \u0438\u0437 \u0447\u0451\u0440\u043D\u043E\u0433\u043E \u0441\u043F\u0438\u0441\u043A\u0430",
@@ -4347,6 +4389,12 @@ var require_zh_cn = __commonJS({
       "notice_already_disabled_for_path": "\u5DF2\u4E3A {path} \u7981\u7528\u7740\u8272",
       "notice_filter_disabled": "\u8FC7\u6EE4\u5668\u5DF2\u7981\u7528",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "\u5220\u9664\u6761\u76EE",
+      "confirm_delete_entry_desc": "\u786E\u5B9A\u8981\u5220\u9664\u6B64\u6761\u76EE\u5417\uFF1F",
+      "confirm_delete_disabled_file_title": "\u79FB\u9664\u6587\u4EF6",
+      "confirm_delete_disabled_file_desc": "\u91CD\u65B0\u542F\u7528\u6B64\u6587\u4EF6\u7684\u7740\u8272\uFF1F",
+      "confirm_delete_path_rule_title": "\u5220\u9664\u89C4\u5219",
+      "confirm_delete_path_rule_desc": "\u786E\u5B9A\u8981\u5220\u9664\u6B64\u6587\u4EF6/\u6587\u4EF6\u5939\u89C4\u5219\u5417\uFF1F",
       "confirm_delete_all_title": "\u5220\u9664\u6240\u6709\u5355\u8BCD",
       "confirm_delete_all_desc": "\u60A8\u786E\u5B9A\u8981\u5220\u9664\u6240\u6709\u5DF2\u7740\u8272\u7684\u5355\u8BCD/\u6A21\u5F0F\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\uFF01",
       "confirm_delete_all_blacklist_title": "\u5220\u9664\u6240\u6709\u9ED1\u540D\u5355\u5355\u8BCD",
@@ -4935,6 +4983,12 @@ var require_de = __commonJS({
       "notice_already_disabled_for_path": "F\xE4rbung bereits deaktiviert f\xFCr {path}",
       "notice_filter_disabled": "Filter deaktiviert",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "Eintrag l\xF6schen",
+      "confirm_delete_entry_desc": "Sind Sie sicher, dass Sie diesen Eintrag l\xF6schen m\xF6chten?",
+      "confirm_delete_disabled_file_title": "Datei entfernen",
+      "confirm_delete_disabled_file_desc": "F\xE4rbung f\xFCr diese Datei wieder aktivieren?",
+      "confirm_delete_path_rule_title": "Regel l\xF6schen",
+      "confirm_delete_path_rule_desc": "Sind Sie sicher, dass Sie diese Datei/Ordner-Regel l\xF6schen m\xF6chten?",
       "confirm_delete_all_title": "Alle W\xF6rter l\xF6schen",
       "confirm_delete_all_desc": "Sind Sie sicher, dass Sie ALLE gef\xE4rbten W\xF6rter/Muster l\xF6schen m\xF6chten? Dies kann nicht r\xFCckg\xE4ngig gemacht werden!",
       "confirm_delete_all_blacklist_title": "Alle W\xF6rter der schwarzen Liste l\xF6schen",
@@ -5527,6 +5581,12 @@ var require_ar = __commonJS({
       "notice_already_disabled_for_path": "\u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0645\u0639\u0637\u0644 \u0628\u0627\u0644\u0641\u0639\u0644 \u0644\u0640 {path}",
       "notice_filter_disabled": "\u062A\u0645 \u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u0645\u0631\u0634\u062D",
       // Confirmation Dialogs
+      "confirm_delete_entry_title": "\u062D\u0630\u0641 \u0627\u0644\u0625\u062F\u062E\u0627\u0644",
+      "confirm_delete_entry_desc": "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0623\u0646\u0643 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u0647\u0630\u0627 \u0627\u0644\u0625\u062F\u062E\u0627\u0644\u061F",
+      "confirm_delete_disabled_file_title": "\u0625\u0632\u0627\u0644\u0629 \u0627\u0644\u0645\u0644\u0641",
+      "confirm_delete_disabled_file_desc": "\u0625\u0639\u0627\u062F\u0629 \u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0647\u0630\u0627 \u0627\u0644\u0645\u0644\u0641\u061F",
+      "confirm_delete_path_rule_title": "\u062D\u0630\u0641 \u0627\u0644\u0642\u0627\u0639\u062F\u0629",
+      "confirm_delete_path_rule_desc": "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0623\u0646\u0643 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u0642\u0627\u0639\u062F\u0629 \u0627\u0644\u0645\u0644\u0641/\u0627\u0644\u0645\u062C\u0644\u062F \u0647\u0630\u0647\u061F",
       "confirm_delete_all_title": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0627\u0644\u0643\u0644\u0645\u0627\u062A",
       "confirm_delete_all_desc": "\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F \u0623\u0646\u0643 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0627\u0644\u0643\u0644\u0645\u0627\u062A/\u0627\u0644\u0623\u0646\u0645\u0627\u0637 \u0627\u0644\u0645\u0644\u0648\u0646\u0629\u061F \u0644\u0627 \u064A\u0645\u0643\u0646 \u0627\u0644\u062A\u0631\u0627\u062C\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062C\u0631\u0627\u0621!",
       "confirm_delete_all_blacklist_title": "\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0643\u0644\u0645\u0627\u062A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
@@ -15799,10 +15859,23 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
           });
           menu.addItem((item) => {
             item.setTitle(this.plugin.t("context_delete_entry", "Delete entry")).setIcon("trash").onClick(() => {
-              const idx = this.group.entries.indexOf(entry);
-              if (idx > -1) {
-                this.group.entries.splice(idx, 1);
-                this._refreshGroupEntries();
+              const doDelete = () => {
+                const idx = this.group.entries.indexOf(entry);
+                if (idx > -1) {
+                  this.group.entries.splice(idx, 1);
+                  this._refreshGroupEntries();
+                }
+              };
+              if (document.body.classList.contains("is-mobile")) {
+                new ConfirmationModal(
+                  this.app,
+                  this.plugin,
+                  this.plugin.t("confirm_delete_entry_title", "Delete Entry"),
+                  this.plugin.t("confirm_delete_entry_desc", "Are you sure you want to delete this entry?"),
+                  doDelete
+                ).open();
+              } else {
+                doDelete();
               }
             });
           });
@@ -16684,10 +16757,23 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
           });
           menu.addItem((item) => {
             item.setTitle(this.plugin.t("context_delete_entry", "Delete entry")).setIcon("trash").onClick(() => {
-              const idx = this.group.entries.indexOf(entry);
-              if (idx !== -1) {
-                this.group.entries.splice(idx, 1);
-                this._refreshGroupEntries();
+              const doDelete = () => {
+                const idx = this.group.entries.indexOf(entry);
+                if (idx !== -1) {
+                  this.group.entries.splice(idx, 1);
+                  this._refreshGroupEntries();
+                }
+              };
+              if (document.body.classList.contains("is-mobile")) {
+                new ConfirmationModal(
+                  this.app,
+                  this.plugin,
+                  this.plugin.t("confirm_delete_entry_title", "Delete Entry"),
+                  this.plugin.t("confirm_delete_entry_desc", "Are you sure you want to delete this entry?"),
+                  doDelete
+                ).open();
+              } else {
+                doDelete();
               }
             });
           });
@@ -17318,19 +17404,32 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
       };
       const delHandler = async () => {
         const idx = this.plugin.settings.wordEntries.indexOf(entry);
-        if (idx !== -1) this.plugin.settings.wordEntries.splice(idx, 1);
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        const info = this._entryRows.get(entry);
-        if (info) {
-          try {
-            info.cleanup();
-          } catch (e) {
+        const doDelete = async () => {
+          if (idx !== -1) this.plugin.settings.wordEntries.splice(idx, 1);
+          await this.plugin.saveSettings();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          const info = this._entryRows.get(entry);
+          if (info) {
+            try {
+              info.cleanup();
+            } catch (e) {
+            }
+            this._entryRows.delete(entry);
           }
-          this._entryRows.delete(entry);
+          this._refreshEntries();
+        };
+        if (document.body.classList.contains("is-mobile")) {
+          new ConfirmationModal(
+            this.app,
+            this.plugin,
+            this.plugin.t("confirm_delete_entry_title", "Delete Entry"),
+            this.plugin.t("confirm_delete_entry_desc", "Are you sure you want to delete this entry?"),
+            doDelete
+          ).open();
+        } else {
+          await doDelete();
         }
-        this._refreshEntries();
       };
       textInput.addEventListener("change", textInputHandler);
       textInput.addEventListener("blur", textInputHandler);
@@ -17887,14 +17986,27 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
         row.createSpan({ cls: "act-disabled-file-title", text: filePath });
         const btn = row.createEl("button", { cls: "clickable-icon" });
         btn.setAttribute("aria-label", this.plugin.t("tooltip_enable_for_file", "Enable for this file"));
-        btn.innerHTML = "\xD7";
+        (0, import_obsidian15.setIcon)(btn, "x");
         btn.addEventListener("click", async () => {
-          const index = this.plugin.settings.disabledFiles.indexOf(filePath);
-          if (index > -1) {
-            this.plugin.settings.disabledFiles.splice(index, 1);
+          const doDelete = async () => {
+            const index = this.plugin.settings.disabledFiles.indexOf(filePath);
+            if (index > -1) {
+              this.plugin.settings.disabledFiles.splice(index, 1);
+            }
+            await this.plugin.saveSettings();
+            this._refreshDisabledFiles();
+          };
+          if (document.body.classList.contains("is-mobile")) {
+            new ConfirmationModal(
+              this.app,
+              this.plugin,
+              this.plugin.t("confirm_delete_disabled_file_title", "Remove File"),
+              this.plugin.t("confirm_delete_disabled_file_desc", "Re-enable coloring for this file?"),
+              doDelete
+            ).open();
+          } else {
+            await doDelete();
           }
-          await this.plugin.saveSettings();
-          this._refreshDisabledFiles();
         });
       });
     } catch (e) {
@@ -18122,11 +18234,24 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           this._refreshBlacklistWords();
         };
         const delHandler = async () => {
-          let entryIdx = resolveBlacklistIndex();
-          if (entryIdx === -1) return;
-          this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
-          await this.plugin.saveSettings();
-          this._refreshBlacklistWords();
+          const doDelete = async () => {
+            let entryIdx = resolveBlacklistIndex();
+            if (entryIdx === -1) return;
+            this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
+            await this.plugin.saveSettings();
+            this._refreshBlacklistWords();
+          };
+          if (document.body.classList.contains("is-mobile")) {
+            new ConfirmationModal(
+              this.app,
+              this.plugin,
+              this.plugin.t("confirm_delete_entry_title", "Delete Entry"),
+              this.plugin.t("confirm_delete_entry_desc", "Are you sure you want to delete this entry?"),
+              doDelete
+            ).open();
+          } else {
+            await doDelete();
+          }
         };
         const duplicateHandler = async () => {
           try {
@@ -18591,10 +18716,23 @@ var ColorSettingTab = class extends import_obsidian15.PluginSettingTab {
           () => modeSel.removeEventListener("change", modeHandler)
         );
         const delHandler = async () => {
-          if (actualIndex !== -1 && this.plugin.settings.pathRules[actualIndex]) {
-            this.plugin.settings.pathRules.splice(actualIndex, 1);
-            await this.plugin.saveSettings();
-            this._refreshPathRules();
+          const doDelete = async () => {
+            if (actualIndex !== -1 && this.plugin.settings.pathRules[actualIndex]) {
+              this.plugin.settings.pathRules.splice(actualIndex, 1);
+              await this.plugin.saveSettings();
+              this._refreshPathRules();
+            }
+          };
+          if (document.body.classList.contains("is-mobile")) {
+            new ConfirmationModal(
+              this.app,
+              this.plugin,
+              this.plugin.t("confirm_delete_path_rule_title", "Delete Rule"),
+              this.plugin.t("confirm_delete_path_rule_desc", "Are you sure you want to delete this file/folder rule?"),
+              doDelete
+            ).open();
+          } else {
+            await doDelete();
           }
         };
         del.addEventListener("click", delHandler);
