@@ -3582,7 +3582,12 @@ export class ColorSettingTab extends PluginSettingTab {
             this.plugin,
             style,
             null,
-            this.plugin.t("selected_text_preview", "Selected Text"),
+            (style.name && String(style.name).trim()) ||
+              (style.presetLabel && String(style.presetLabel).trim()) ||
+              (Array.isArray(style.groupedPatterns) && style.groupedPatterns.length > 0
+                ? style.groupedPatterns.join(", ")
+                : String(style.pattern || "")) ||
+              this.plugin.t("selected_text_preview", "Selected Text"),
           );
           const originalOnClose = modal.onClose.bind(modal);
           modal.onClose = async () => {
