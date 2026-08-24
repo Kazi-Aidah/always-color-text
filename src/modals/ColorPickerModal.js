@@ -144,32 +144,13 @@ export class ColorPickerModal extends Modal {
     contentEl.style.boxSizing = "border-box";
     contentEl.style.display = "grid";
     contentEl.style.gridTemplateColumns = isHorizontalBoth ? "1fr 1fr" : "1fr";
-    contentEl.style.columnGap = "10px"; // this
-    contentEl.style.rowGap = "10px"; // this this lookie
+    contentEl.style.columnGap = "10px";
+    contentEl.style.rowGap = "10px";
     contentEl.style.alignItems = "stretch";
     try {
       contentEl.addClass("act-color-picker-content");
     } catch (e) {}
 
-    const headerRow = contentEl.createDiv();
-    headerRow.style.display = "flex";
-    headerRow.style.alignItems = "center";
-    headerRow.style.gap = "8px";
-    headerRow.style.gridColumn = "1 / -1";
-    headerRow.style.marginBottom = "16px";
-    try {
-      headerRow.addClass("act-modal-header-controls");
-    } catch (e) {
-      try {
-        headerRow.classList.add("act-modal-header-controls");
-      } catch (_) {}
-    }
-    const h2 = headerRow.createEl("h2", {
-      text: this.plugin.t("pick_color_header", "Pick Color"),
-    });
-    h2.style.marginTop = "0";
-    h2.style.marginBottom = "0px";
-    h2.style.flex = "1 1 auto";
     const hideControls = !!this._hideHeaderControls;
     const isQuick = !!this.isQuickOnce;
     const quickColor = isQuick && this.mode === "text";
@@ -181,6 +162,26 @@ export class ColorPickerModal extends Modal {
     const groups = this.plugin.settings.hideInactiveGroupsInDropdowns
       ? groupsRaw.filter((g) => g && g.active)
       : groupsRaw;
+
+    // Header Row: "Style Text" heading on left, Group dropdown on right
+    const headerRow = contentEl.createDiv();
+    headerRow.style.display = "flex";
+    headerRow.style.alignItems = "center";
+    headerRow.style.gap = "8px";
+    headerRow.style.gridColumn = "1 / -1";
+    headerRow.style.marginBottom = "8px";
+    try {
+      headerRow.addClass("act-pickr-header");
+    } catch (e) {}
+
+    const h2 = headerRow.createEl("h2", {
+      text: this.plugin.t("pick_color_header", "Style Text"),
+    });
+    h2.style.marginTop = "0";
+    h2.style.marginBottom = "0px";
+    h2.style.flex = "1 1 auto";
+
+    // Group dropdown on the right
     if (!hideControls && !isQuick && groups.length > 0) {
       const groupSelect = headerRow.createEl("select");
       groupSelect.style.padding = "6px";
@@ -218,50 +219,92 @@ export class ColorPickerModal extends Modal {
       });
       this._groupSelect = groupSelect;
     }
+
+    // act-pickr-row: Controls row with Preset, Settings Icon, MarkTarget, Case Sensitivity, Match Type
+    const pickrRow = contentEl.createDiv();
+    pickrRow.style.display = "flex";
+    pickrRow.style.alignItems = "center";
+    pickrRow.style.gap = "8px";
+    pickrRow.style.gridColumn = "1 / -1";
+    pickrRow.style.width = "100%";
+    pickrRow.style.flexWrap = "wrap";
+    try {
+      pickrRow.addClass("act-pickr-row");
+    } catch (e) {}
+
+    // Preset button
     if (!hideControls && !isQuick) {
-      const matchSelect = headerRow.createEl("select");
-      matchSelect.style.padding = "6px";
-      matchSelect.style.borderRadius = "4px";
-      matchSelect.style.border = "1px solid var(--background-modifier-border)";
-      matchSelect.style.textAlign = "center";
-      matchSelect.style.maxWidth = "100px";
+      const presetBtn = pickrRow.createEl("button");
       try {
-        matchSelect.style.setProperty("max-width", "100px", "important");
-        matchSelect.style.setProperty("width", "100px", "important");
-        matchSelect.style.setProperty("min-width", "100px", "important");
+        setIcon(presetBtn, "presets");
       } catch (e) {}
-      matchSelect.style.flex = "0 0 auto";
-      matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "Exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "Contains")}</option><option value="startswith">${this.plugin.t("match_option_starts_with", "Starts with")}</option><option value="endswith">${this.plugin.t("match_option_ends_with", "Ends with")}</option>`;
-      this._matchType = this.plugin.settings.partialMatch
-        ? "contains"
-        : "exact";
-      matchSelect.value = this._matchType;
-      const mtHandler = () => {
-        this._matchType = matchSelect.value;
-        this._hasUserChanges = true;
-      };
-      matchSelect.addEventListener("change", mtHandler);
-      this._eventListeners.push({
-        el: matchSelect,
-        event: "change",
-        handler: mtHandler,
+      presetBtn.title = this.plugin.t("btn_presets", "Presets");
+      presetBtn.style.flex = "0 0 auto";
+      presetBtn.style.display = "flex";
+      presetBtn.style.alignItems = "center";
+      presetBtn.style.justifyContent = "center";
+      presetBtn.style.padding = "6px 10px";
+      presetBtn.style.borderRadius = "4px";
+      presetBtn.style.border = "1px solid var(--background-modifier-border)";
+      presetBtn.style.background = "var(--background-modifier-form-field)";
+      presetBtn.style.cursor = "pointer";
+      presetBtn.style.gap = "4px";
+      const presetLabel = presetBtn.createEl("span", {
+        text: this.plugin.t("btn_presets", "Preset"),
       });
-      this._matchSelect = matchSelect;
+      presetLabel.style.fontSize = "12px";
+      const presetHandler = () => {
+        try {
+          const { PresetModal } = require('../modals/PresetModal.js');
+          const modal = new PresetModal(this.app, this.plugin, this);
+          modal.open();
+        } catch (e) {
+          debugLog("MODAL", "Error opening preset modal", e);
+        }
+      };
+      presetBtn.addEventListener("click", presetHandler);
+      this._eventListeners.push({
+        el: presetBtn,
+        event: "click",
+        handler: presetHandler,
+      });
     }
 
+    // Settings Icon button (opens Edit Text Style/Edit Regex Style Modal)
+    let editBtn = null;
+    const shouldShowEdit =
+      (!hideControls && !isQuick) || quickHighlight || quickBoth;
+    if (shouldShowEdit) {
+      editBtn = pickrRow.createEl("button");
+      try {
+        setIcon(editBtn, "settings");
+      } catch (e) {}
+      editBtn.title = this.plugin.t("edit_entry_header", "Edit Entry");
+      try {
+        editBtn.addClass("act-pickr-icon-btn");
+      } catch (e) {}
+      editBtn.style.flex = "0 0 auto";
+      editBtn.style.display = "flex";
+      editBtn.style.alignItems = "center";
+      editBtn.style.justifyContent = "center";
+      editBtn.style.padding = "6px";
+      editBtn.style.borderRadius = "4px";
+      editBtn.style.border = "1px solid var(--background-modifier-border)";
+      editBtn.style.background = "var(--background-modifier-form-field)";
+      editBtn.style.cursor = "pointer";
+      editBtn.disabled = true;
+    }
+
+    // Mark Target dropdown (Color Text/Line/Nextline)
     if (!hideControls && !isQuick) {
-      const markTargetSelect = headerRow.createEl("select");
+      const markTargetSelect = pickrRow.createEl("select");
       markTargetSelect.style.padding = "6px";
       markTargetSelect.style.borderRadius = "4px";
       markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
       markTargetSelect.style.textAlign = "center";
-      markTargetSelect.style.maxWidth = "120px";
       try {
-        markTargetSelect.style.setProperty("max-width", "120px", "important");
-        markTargetSelect.style.setProperty("width", "120px", "important");
-        markTargetSelect.style.setProperty("min-width", "120px", "important");
+        markTargetSelect.addClass("act-pickr-mark-select");
       } catch (e) {}
-      markTargetSelect.style.flex = "0 0 auto";
       [
         ["text", this.plugin.t("mark_target_text", "Color Text")],
         ["line", this.plugin.t("mark_target_line", "Color Line")],
@@ -284,30 +327,64 @@ export class ColorPickerModal extends Modal {
       this._markTargetSelect = markTargetSelect;
     }
 
-    let editBtn = null;
-    const shouldShowEdit =
-      (!hideControls && !isQuick) || quickHighlight || quickBoth;
-    if (shouldShowEdit) {
-      editBtn = headerRow.createEl("button");
+    // Case Sensitivity dropdown
+    if (!hideControls && !isQuick) {
+      const caseSelect = pickrRow.createEl("select");
+      caseSelect.style.padding = "6px";
+      caseSelect.style.borderRadius = "4px";
+      caseSelect.style.border = "1px solid var(--background-modifier-border)";
+      caseSelect.style.textAlign = "center";
       try {
-        setIcon(editBtn, "edit-3");
+        caseSelect.addClass("act-pickr-case-select");
       } catch (e) {}
-      editBtn.title = this.plugin.t("edit_entry_header", "Edit Entry");
-      editBtn.style.flex = "0 0 auto";
-      editBtn.style.display = "flex";
-      editBtn.style.alignItems = "center";
-      editBtn.style.justifyContent = "center";
-      editBtn.style.padding = "6px";
-      editBtn.style.borderRadius = "4px";
-      editBtn.style.border = "1px solid var(--background-modifier-border)";
-      editBtn.style.background = "var(--background-modifier-form-field)";
-      editBtn.style.cursor = "pointer";
-      editBtn.disabled = true;
+      caseSelect.innerHTML = `<option value="insensitive">${this.plugin.t("opt_not_case_sensitive", "not case sensitive")}</option><option value="sensitive">${this.plugin.t("opt_case_sensitive", "is case sensitive")}</option>`;
+      this._caseSensitive = !!this.plugin.settings.caseSensitive;
+      caseSelect.value = this._caseSensitive ? "sensitive" : "insensitive";
+      const csHandler = () => {
+        this._caseSensitive = caseSelect.value === "sensitive";
+        this._hasUserChanges = true;
+      };
+      caseSelect.addEventListener("change", csHandler);
+      this._eventListeners.push({
+        el: caseSelect,
+        event: "change",
+        handler: csHandler,
+      });
+      this._caseSelect = caseSelect;
+    }
+
+    // Match Type dropdown
+    if (!hideControls && !isQuick) {
+      const matchSelect = pickrRow.createEl("select");
+      matchSelect.style.padding = "6px";
+      matchSelect.style.borderRadius = "4px";
+      matchSelect.style.border = "1px solid var(--background-modifier-border)";
+      matchSelect.style.textAlign = "center";
+      try {
+        matchSelect.addClass("act-pickr-match-select");
+      } catch (e) {}
+      matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "Exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "Contains")}</option><option value="startswith">${this.plugin.t("match_option_starts_with", "Starts with")}</option><option value="endswith">${this.plugin.t("match_option_ends_with", "Ends with")}</option>`;
+      this._matchType = this.plugin.settings.partialMatch
+        ? "contains"
+        : "exact";
+      matchSelect.value = this._matchType;
+      const mtHandler = () => {
+        this._matchType = matchSelect.value;
+        this._hasUserChanges = true;
+      };
+      matchSelect.addEventListener("change", mtHandler);
+      this._eventListeners.push({
+        el: matchSelect,
+        event: "change",
+        handler: mtHandler,
+      });
+      this._matchSelect = matchSelect;
     }
 
     this.selectedTextColor = null;
     this.selectedBgColor = null;
 
+    // Preview wrap
     const previewWrap = contentEl.createDiv();
     previewWrap.addClass("act-color-picker-preview-wrap");
     // Most styling moved to CSS to allow user overrides
@@ -872,6 +949,14 @@ export class ColorPickerModal extends Modal {
       }
       this._markTargetSelect.value = this._markTarget || "text";
     }
+    // Initialize case sensitivity from matched entry
+    if (this._caseSelect && matchedEntry) {
+      const entryCaseSensitive = typeof matchedEntry.caseSensitive === "boolean"
+        ? matchedEntry.caseSensitive
+        : !!this.plugin.settings.caseSensitive;
+      this._caseSensitive = entryCaseSensitive;
+      this._caseSelect.value = entryCaseSensitive ? "sensitive" : "insensitive";
+    }
 
     if (editBtn) {
       // Resolve original entry reference from settings arrays (not a clone)
@@ -1212,13 +1297,14 @@ export class ColorPickerModal extends Modal {
       initText = this._preFillTextColor;
       existingStyle = existingStyle || "text";
     }
-    if (
-      this._preFillBgColor &&
-      this.plugin.isValidHexColor(this._preFillBgColor)
-    ) {
-      initBg = this._preFillBgColor;
-      existingStyle = existingStyle || (initText ? "both" : "highlight");
-    }
+      if (
+        this._preFillBgColor &&
+        this.plugin.isValidHexColor(this._preFillBgColor)
+      ) {
+        initBg = this._preFillBgColor;
+        existingStyle =
+          initText && initBg ? "both" : existingStyle || "highlight";
+      }
     const tp = panelStates["text"];
     const bp = panelStates["background"];
     // Initialize modal mode based on existing entry
@@ -1524,6 +1610,7 @@ export class ColorPickerModal extends Modal {
                 matchType:
                   this._matchType ||
                   (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                caseSensitive: this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
                 markTarget: this._markTarget || "text",
                 quickOnceStyle: qo || undefined,
               },
