@@ -4,9 +4,6 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __esm = (fn, res) => function __init() {
-  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
-};
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
@@ -31,522 +28,6 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// src/modals/PresetModal.js
-var PresetModal_exports = {};
-__export(PresetModal_exports, {
-  PresetModal: () => PresetModal
-});
-var import_obsidian, PresetModal;
-var init_PresetModal = __esm({
-  "src/modals/PresetModal.js"() {
-    import_obsidian = require("obsidian");
-    PresetModal = class extends import_obsidian.Modal {
-      constructor(app, plugin, onChoose) {
-        super(app);
-        this.plugin = plugin;
-        this.onChoose = onChoose;
-        this._listeners = [];
-      }
-      onOpen() {
-        const { contentEl } = this;
-        contentEl.empty();
-        this.modalEl.addClass("act-modal");
-        this.modalEl.addClass("act-preset-modal");
-        try {
-          this.modalEl.style.maxWidth = "1200px !important";
-          this.modalEl.style.width = "1200px !important";
-        } catch (e) {
-        }
-        contentEl.style.maxWidth = "1200px !important";
-        const presets = [
-          {
-            label: this.plugin.t("preset_bold", "Bold"),
-            pattern: "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1",
-            flags: "",
-            examples: ["**bold**"],
-            group: "markdown",
-            isFormatting: true,
-            targetElement: "strong"
-          },
-          {
-            label: this.plugin.t("preset_italic", "Italic"),
-            pattern: "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1",
-            flags: "",
-            examples: ["*italic*"],
-            group: "markdown",
-            isFormatting: true,
-            targetElement: "em"
-          },
-          {
-            label: this.plugin.t("preset_bold_italic", "Bold Italic"),
-            pattern: "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1",
-            flags: "",
-            examples: ["***bold_italic***"],
-            group: "markdown",
-            isFormatting: true,
-            targetElement: "strong-em"
-          },
-          {
-            label: this.plugin.t("preset_all_headings", "All Headings (H1-H6)"),
-            pattern: "^\\s*#{1,6}\\s+.*$",
-            flags: "m",
-            examples: [this.plugin.t("preset_example_heading", "# Heading")]
-          },
-          {
-            label: this.plugin.t("preset_headings_h3", "Headings (H3)"),
-            pattern: "^\\s*#{3}\\s+.*$",
-            flags: "m",
-            examples: [this.plugin.t("preset_example_heading_h3", "### Heading")],
-            group: "markdown"
-          },
-          {
-            label: this.plugin.t("preset_bullet_points", "Bullet Points"),
-            pattern: "^\\s*[\\-\\*]\\s+.*$",
-            flags: "m",
-            examples: [this.plugin.t("preset_example_bullet", "- Bullet point")],
-            group: "markdown"
-          },
-          {
-            label: this.plugin.t("preset_numbered_lists", "Numbered Lists"),
-            pattern: "^\\s*\\d+\\.\\s+.*$",
-            flags: "m",
-            examples: [this.plugin.t("preset_example_numbered", "1. First item")],
-            group: "markdown"
-          },
-          {
-            label: this.plugin.t("preset_task_checked", "Task List (Checked)"),
-            pattern: "^\\s*[\\-\\*]\\s+\\[[xX]\\]\\s+.*$",
-            flags: "m",
-            examples: [
-              this.plugin.t("preset_example_task_checked", "- [x] Completed")
-            ],
-            group: "markdown"
-          },
-          {
-            label: this.plugin.t("preset_task_unchecked", "Task List (Unchecked)"),
-            pattern: "^\\s*[\\-\\*]\\s+\\[\\s\\]\\s+.*$",
-            flags: "m",
-            examples: [
-              this.plugin.t("preset_example_task_unchecked", "- [ ] Todo")
-            ],
-            group: "markdown"
-          },
-          {
-            label: this.plugin.t("preset_codeblocks", "Codeblocks"),
-            pattern: "```[\\s\\S]*?```",
-            flags: "",
-            examples: [this.plugin.t("preset_example_codeblock", "``` code ```")],
-            group: "markdown"
-          },
-          {
-            label: this.plugin.t("preset_dates_yyyy_mm_dd", "Dates (YYYY-MM-DD)"),
-            pattern: "\\b\\d{4}-\\d{2}-\\d{2}\\b",
-            flags: "",
-            examples: [this.plugin.t("preset_example_date_iso", "2009-01-19")]
-          },
-          {
-            label: this.plugin.t("preset_dates_yyyy_mmm_dd", "Dates (YYYY-MMM-DD)"),
-            pattern: "\\b\\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{2}\\b",
-            flags: "i",
-            examples: [this.plugin.t("preset_example_date_text", "2025-Jan-19")]
-          },
-          {
-            label: this.plugin.t("preset_times_am_pm", "Times (AM/PM)"),
-            pattern: "(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)",
-            flags: "i",
-            examples: [this.plugin.t("preset_example_time_ampm", "9:05pm")]
-          },
-          {
-            label: this.plugin.t("preset_times_short_am_pm", "Times (2pm, 10pm)"),
-            pattern: "(?:1[0-2]|0?[1-9])(?:\\s?[ap]m)",
-            flags: "i",
-            examples: [
-              this.plugin.t("preset_example_time_short_ampm", "2pm, 10pm")
-            ]
-          },
-          {
-            label: this.plugin.t("preset_times_24h", "Times (24h)"),
-            pattern: "\\b(?:[01]\\d|2[0-3]):[0-5]\\d\\b",
-            flags: "",
-            examples: [this.plugin.t("preset_example_time_24h", "13:00")]
-          },
-          {
-            label: this.plugin.t("preset_relative_dates", "Relative dates"),
-            pattern: "\\b(?:today|tomorrow|yesterday|next week|last week)\\b",
-            flags: "i",
-            examples: [this.plugin.t("preset_example_relative", "today, tomorrow")]
-          },
-          {
-            label: this.plugin.t("preset_basic_urls", "Basic URLs"),
-            pattern: "\\bhttps?://\\S+\\b",
-            flags: "",
-            examples: [this.plugin.t("preset_example_url", "https://example.com")],
-            group: "markdown"
-          },
-          {
-            label: this.plugin.t("preset_markdown_links", "Markdown links"),
-            pattern: "\\[[^\\]]+\\]\\(https?://[^)]+\\)",
-            flags: "",
-            examples: [
-              this.plugin.t(
-                "preset_example_markdown_link",
-                "[Link](https://example.com)"
-              )
-            ],
-            group: "markdown"
-          },
-          {
-            label: this.plugin.t("preset_inline_comments", "Comments (%%\u2026%%)"),
-            pattern: "%%\\s*[\\s\\S]*?\\s*%%",
-            flags: "s",
-            examples: [this.plugin.t("preset_example_comment", "%% comment %%")],
-            group: "markdown"
-          },
-          {
-            label: this.plugin.t(
-              "preset_highlighted_text",
-              "Highlighted Text (==...)"
-            ),
-            pattern: "==[\\s\\S]*?==",
-            flags: "s",
-            examples: [
-              this.plugin.t("preset_example_highlight", "==highlighted text==")
-            ],
-            group: "markdown",
-            affectMarkElements: true
-          },
-          {
-            label: this.plugin.t("preset_domain_names", "Domain names"),
-            pattern: "\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b",
-            flags: "",
-            examples: [this.plugin.t("preset_example_domain", "example.com")]
-          },
-          {
-            label: this.plugin.t("preset_email_addresses", "Email addresses"),
-            pattern: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
-            flags: "",
-            examples: [this.plugin.t("preset_example_email", "name@example.com")]
-          },
-          {
-            label: this.plugin.t("preset_at_username", "@username"),
-            pattern: "@[a-zA-Z0-9_]+",
-            flags: "",
-            examples: [this.plugin.t("preset_example_username", "@username")]
-          },
-          {
-            label: this.plugin.t("preset_currency", "Currency"),
-            pattern: "\\$\\d+(?:\\.\\d{2})?|\\b[\u20AC\xA3\xA5]\\d+(?:\\.\\d{2})?\\b",
-            flags: "",
-            examples: [this.plugin.t("preset_example_currency", "$29.99")]
-          },
-          {
-            label: this.plugin.t("preset_measurements", "Measurements"),
-            pattern: "\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|\xB0C|\xB0F|lbs)\\b",
-            flags: "",
-            examples: [this.plugin.t("preset_example_measurement", "25kg")]
-          },
-          {
-            label: this.plugin.t("preset_phone_numbers", "Phone numbers"),
-            pattern: "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b",
-            flags: "",
-            examples: [this.plugin.t("preset_example_phone", "123-456-7890")]
-          },
-          {
-            label: this.plugin.t("preset_parentheses", "Parentheses ()"),
-            pattern: "\\(([^)]*)\\)",
-            flags: "g",
-            examples: [this.plugin.t("preset_example_parentheses", "( text )")],
-            group: "brackets"
-          },
-          {
-            label: this.plugin.t("preset_square_brackets", "Square Brackets []"),
-            pattern: "\\[([^\\]]*)\\]",
-            flags: "g",
-            examples: [this.plugin.t("preset_example_square_brackets", "[ yes ]")],
-            group: "brackets",
-            disableRegexSafety: true
-          },
-          {
-            label: this.plugin.t("preset_curly_braces", "Curly Braces {}"),
-            pattern: "\\{([^}]*)\\}",
-            flags: "g",
-            examples: [this.plugin.t("preset_example_curly_braces", "{ no }")],
-            group: "brackets"
-          },
-          {
-            label: this.plugin.t("preset_angle_brackets", "Angle Brackets <>"),
-            pattern: "<([^>]*)>",
-            flags: "g",
-            examples: [this.plugin.t("preset_example_angle_brackets", "< text >")],
-            group: "brackets"
-          },
-          {
-            label: this.plugin.t("preset_colons", "Colons :"),
-            pattern: ":([^:]*):",
-            flags: "g",
-            examples: [this.plugin.t("preset_example_colons", ": text :")],
-            group: "brackets"
-          },
-          {
-            label: this.plugin.t("preset_double_quotes", 'Double Quotes ""'),
-            pattern: '"[^"]*"',
-            flags: "",
-            examples: [this.plugin.t("preset_example_double_quotes", '"text"')],
-            group: "brackets",
-            disableRegexSafety: true
-          },
-          {
-            label: this.plugin.t("preset_single_quotes", "Single Quotes ''"),
-            pattern: "'[^'\\r\\n]*'",
-            flags: "",
-            examples: [this.plugin.t("preset_example_single_quotes", "'text'")],
-            group: "brackets",
-            disableRegexSafety: true
-          },
-          {
-            label: this.plugin.t(
-              "preset_single_quotes_word_bounded",
-              "Single Quotes '' (word-bounded)"
-            ),
-            pattern: "'\\b[^'\\r\\n]*\\b'",
-            flags: "",
-            examples: [
-              this.plugin.t("preset_example_single_quotes_word", "'word'")
-            ],
-            group: "brackets",
-            disableRegexSafety: true
-          },
-          {
-            label: this.plugin.t("preset_all_texts", "All texts"),
-            pattern: ".+",
-            flags: "",
-            examples: [
-              this.plugin.t(
-                "preset_example_all_text",
-                "This will target all texts."
-              )
-            ],
-            group: "markdown"
-          }
-        ];
-        const formattingPresets = presets.filter((p) => p.isFormatting);
-        const markdownPresets = presets.filter(
-          (p) => (p.group === "markdown" || [
-            this.plugin.t("preset_all_headings", "All Headings (H1-H6)")
-          ].includes(p.label)) && !p.isFormatting
-        );
-        const bracketPresets = presets.filter((p) => p.group === "brackets");
-        const otherPresets = presets.filter(
-          (p) => !markdownPresets.includes(p) && !bracketPresets.includes(p) && !formattingPresets.includes(p)
-        );
-        const container = contentEl.createDiv();
-        container.style.display = "grid";
-        container.style.gridTemplateColumns = "1fr 1fr 1fr";
-        container.style.gap = "12px";
-        container.style.maxWidth = "100%";
-        const mediaRule = `
-      @media (max-width: 1024px) {
-        .preset-columns { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-      }
-      @media (max-width: 600px) {
-        .preset-columns { grid-template-columns: 1fr !important; gap: 8px !important; }
-      }
-    `;
-        const style = document.createElement("style");
-        style.textContent = mediaRule;
-        document.head.appendChild(style);
-        container.className = "preset-columns";
-        const leftCol = container.createDiv();
-        const leftTitle = leftCol.createEl("h3", {
-          text: this.plugin.t(
-            "preset_group_markdown_formatting",
-            "Markdown Formatting"
-          )
-        });
-        leftTitle.style.marginTop = "0";
-        leftTitle.style.marginBottom = "12px";
-        leftTitle.style.fontSize = "14px";
-        leftTitle.style.fontWeight = "600";
-        leftTitle.style.opacity = "0.8";
-        const leftList = leftCol.createDiv();
-        if (formattingPresets.length > 0) {
-          const row = leftList.createDiv();
-          row.style.display = "flex";
-          row.style.alignItems = "center";
-          row.style.gap = "8px";
-          row.style.marginBottom = "8px";
-          formattingPresets.forEach((p) => {
-            const btn = row.createEl("button", { text: p.label });
-            btn.style.fontSize = "12px";
-            btn.style.padding = "6px 10px";
-            btn.style.flex = "1";
-            btn.title = p.examples && p.examples[0] ? p.examples[0] : "";
-            const handler = () => {
-              try {
-                this.onChoose && this.onChoose(p);
-              } finally {
-                this.close();
-              }
-            };
-            btn.addEventListener("click", handler);
-            this._listeners.push({ el: btn, h: handler });
-          });
-        }
-        markdownPresets.forEach((p) => {
-          const row = leftList.createDiv();
-          row.style.display = "flex";
-          row.style.alignItems = "center";
-          row.style.gap = "8px";
-          row.style.marginBottom = "8px";
-          const btn = row.createEl("button", { text: p.label });
-          btn.style.fontSize = "12px";
-          btn.style.padding = "6px 10px";
-          const infoDiv = row.createDiv();
-          infoDiv.style.flex = "1";
-          infoDiv.style.display = "flex";
-          infoDiv.style.flexDirection = "column";
-          infoDiv.style.gap = "2px";
-          const sample = infoDiv.createEl("span", {
-            text: p.examples && p.examples[0] ? p.examples[0] : ""
-          });
-          sample.style.opacity = "0.7";
-          sample.style.fontSize = "11px";
-          if (p.disableRegexSafety) {
-            const badge = infoDiv.createEl("span", {
-              text: this.plugin.t(
-                "requires_regex_safety_disabled",
-                "Requires regex safety disabled"
-              )
-            });
-            badge.style.opacity = "0.6";
-            badge.style.fontSize = "10px";
-            badge.style.color = "var(--text-warning)";
-          }
-          const handler = () => {
-            try {
-              this.onChoose && this.onChoose(p);
-            } finally {
-              this.close();
-            }
-          };
-          btn.addEventListener("click", handler);
-          this._listeners.push({ el: btn, h: handler });
-        });
-        const rightCol = container.createDiv();
-        const rightTitle = rightCol.createEl("h3", {
-          text: this.plugin.t("preset_group_other_patterns", "Other Patterns")
-        });
-        rightTitle.style.marginTop = "0";
-        rightTitle.style.marginBottom = "12px";
-        rightTitle.style.fontSize = "14px";
-        rightTitle.style.fontWeight = "600";
-        rightTitle.style.opacity = "0.8";
-        const rightList = rightCol.createDiv();
-        otherPresets.forEach((p) => {
-          const row = rightList.createDiv();
-          row.style.display = "flex";
-          row.style.alignItems = "center";
-          row.style.gap = "8px";
-          row.style.marginBottom = "8px";
-          const btn = row.createEl("button", { text: p.label });
-          btn.style.fontSize = "12px";
-          btn.style.padding = "6px 10px";
-          const infoDiv = row.createDiv();
-          infoDiv.style.flex = "1";
-          infoDiv.style.display = "flex";
-          infoDiv.style.flexDirection = "column";
-          infoDiv.style.gap = "2px";
-          const sample = infoDiv.createEl("span", {
-            text: p.examples && p.examples[0] ? p.examples[0] : ""
-          });
-          sample.style.opacity = "0.7";
-          sample.style.fontSize = "11px";
-          if (p.disableRegexSafety) {
-            const badge = infoDiv.createEl("span", {
-              text: this.plugin.t(
-                "requires_regex_safety_disabled",
-                "Requires regex safety disabled"
-              )
-            });
-            badge.style.opacity = "0.6";
-            badge.style.fontSize = "10px";
-            badge.style.color = "var(--text-warning)";
-          }
-          const handler = () => {
-            try {
-              this.onChoose && this.onChoose(p);
-            } finally {
-              this.close();
-            }
-          };
-          btn.addEventListener("click", handler);
-          this._listeners.push({ el: btn, h: handler });
-        });
-        const middleCol = container.createDiv();
-        const middleTitle = middleCol.createEl("h3", {
-          text: this.plugin.t("preset_group_brackets", "Brackets")
-        });
-        middleTitle.style.marginTop = "0";
-        middleTitle.style.marginBottom = "12px";
-        middleTitle.style.fontSize = "14px";
-        middleTitle.style.fontWeight = "600";
-        middleTitle.style.opacity = "0.8";
-        const middleList = middleCol.createDiv();
-        bracketPresets.forEach((p) => {
-          const row = middleList.createDiv();
-          row.style.display = "flex";
-          row.style.alignItems = "center";
-          row.style.gap = "8px";
-          row.style.marginBottom = "8px";
-          const btn = row.createEl("button", { text: p.label });
-          btn.style.fontSize = "12px";
-          btn.style.padding = "6px 10px";
-          const infoDiv = row.createDiv();
-          infoDiv.style.flex = "1";
-          infoDiv.style.display = "flex";
-          infoDiv.style.flexDirection = "column";
-          infoDiv.style.gap = "2px";
-          const sample = infoDiv.createEl("span", {
-            text: p.examples && p.examples[0] ? p.examples[0] : ""
-          });
-          sample.style.opacity = "0.7";
-          sample.style.fontSize = "11px";
-          if (p.disableRegexSafety) {
-            const badge = infoDiv.createEl("span", {
-              text: this.plugin.t(
-                "requires_regex_safety_disabled",
-                "Requires regex safety disabled"
-              )
-            });
-            badge.style.opacity = "0.6";
-            badge.style.fontSize = "10px";
-            badge.style.color = "var(--text-warning)";
-          }
-          const handler = () => {
-            try {
-              this.onChoose && this.onChoose(p);
-            } finally {
-              this.close();
-            }
-          };
-          btn.addEventListener("click", handler);
-          this._listeners.push({ el: btn, h: handler });
-        });
-      }
-      onClose() {
-        this._listeners.forEach((x) => {
-          try {
-            x.el.removeEventListener("click", x.h);
-          } catch (e) {
-          }
-        });
-        this._listeners = [];
-        this.contentEl.empty();
-      }
-    };
-  }
-});
 
 // src/i18n/en.js
 var require_en = __commonJS({
@@ -6613,7 +6094,7 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 
 // src/core/AlwaysColorText.js
-var import_obsidian19 = require("obsidian");
+var import_obsidian20 = require("obsidian");
 
 // src/utils/BloomFilter.js
 var BloomFilter = class {
@@ -6944,6 +6425,178 @@ var MemoryManager = class {
 };
 
 // src/settings/defaultSettings.js
+var DEFAULT_TEXT_STYLE_PRESETS = [
+  {
+    uid: "tsp-default",
+    name: "Default",
+    isDefault: true,
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 50,
+    highlightBorderRadius: 8,
+    highlightHorizontalPadding: 6,
+    highlightVerticalPadding: 2,
+    enableBorderThickness: false,
+    borderStyle: "full",
+    borderLineStyle: "solid",
+    borderOpacity: 100,
+    borderThickness: 2
+  },
+  {
+    uid: "tsp-sharp",
+    isDefault: false,
+    name: "Sharp",
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 50,
+    highlightBorderRadius: 0,
+    highlightHorizontalPadding: 6,
+    highlightVerticalPadding: 2,
+    enableBorderThickness: false,
+    borderStyle: "full",
+    borderLineStyle: "solid",
+    borderOpacity: 100,
+    borderThickness: 2
+  },
+  {
+    uid: "tsp-round",
+    isDefault: false,
+    name: "Round",
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 50,
+    highlightBorderRadius: 8,
+    highlightHorizontalPadding: 6,
+    highlightVerticalPadding: 2,
+    enableBorderThickness: false,
+    borderStyle: "full",
+    borderLineStyle: "solid",
+    borderOpacity: 100,
+    borderThickness: 2
+  },
+  {
+    uid: "tsp-pill",
+    isDefault: false,
+    name: "Pill",
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 50,
+    highlightBorderRadius: 9999,
+    highlightHorizontalPadding: 10,
+    highlightVerticalPadding: 2,
+    enableBorderThickness: false,
+    borderStyle: "full",
+    borderLineStyle: "solid",
+    borderOpacity: 100,
+    borderThickness: 2
+  },
+  {
+    uid: "tsp-sharp-outline",
+    isDefault: false,
+    name: "Sharp Outlined",
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 25,
+    highlightBorderRadius: 0,
+    highlightHorizontalPadding: 6,
+    highlightVerticalPadding: 2,
+    enableBorderThickness: true,
+    borderStyle: "full",
+    borderLineStyle: "solid",
+    borderOpacity: 100,
+    borderThickness: 2
+  },
+  {
+    uid: "tsp-round-outline",
+    isDefault: false,
+    name: "Round Outlined",
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 25,
+    highlightBorderRadius: 8,
+    highlightHorizontalPadding: 6,
+    highlightVerticalPadding: 2,
+    enableBorderThickness: true,
+    borderStyle: "full",
+    borderLineStyle: "solid",
+    borderOpacity: 100,
+    borderThickness: 2
+  },
+  {
+    uid: "tsp-pill-outline",
+    isDefault: false,
+    name: "Pill Outlined",
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 25,
+    highlightBorderRadius: 9999,
+    highlightHorizontalPadding: 10,
+    highlightVerticalPadding: 2,
+    enableBorderThickness: true,
+    borderStyle: "full",
+    borderLineStyle: "solid",
+    borderOpacity: 100,
+    borderThickness: 2
+  },
+  {
+    uid: "tsp-dashed-under",
+    isDefault: false,
+    name: "Dashed Underline",
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 0,
+    highlightBorderRadius: 0,
+    highlightHorizontalPadding: 0,
+    highlightVerticalPadding: 0,
+    enableBorderThickness: true,
+    borderStyle: "bottom",
+    borderLineStyle: "dashed",
+    borderOpacity: 100,
+    borderThickness: 2
+  },
+  {
+    uid: "tsp-double-under",
+    isDefault: false,
+    name: "Double Underline",
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 0,
+    highlightBorderRadius: 0,
+    highlightHorizontalPadding: 0,
+    highlightVerticalPadding: 0,
+    enableBorderThickness: true,
+    borderStyle: "bottom",
+    borderLineStyle: "double",
+    borderOpacity: 100,
+    borderThickness: 3
+  },
+  {
+    uid: "tsp-under",
+    isDefault: false,
+    name: "Underline",
+    styleType: "highlight",
+    textColor: "currentColor",
+    backgroundColor: "",
+    backgroundOpacity: 0,
+    highlightBorderRadius: 0,
+    highlightHorizontalPadding: 0,
+    highlightVerticalPadding: 0,
+    enableBorderThickness: true,
+    borderStyle: "bottom",
+    borderLineStyle: "solid",
+    borderOpacity: 100,
+    borderThickness: 2
+  }
+];
 var defaultSettings = {
   // legacy: wordColors map. New model below: wordEntries array
   wordColors: {},
@@ -7053,6 +6706,8 @@ var defaultSettings = {
   // Array of swatch groups for quick menu
   quickStyles: [],
   // Array of objects { id, name, style }
+  textStylePresets: DEFAULT_TEXT_STYLE_PRESETS,
+  // Array of text style presets
   quickHighlightUseGlobalStyle: false,
   quickHighlightOpacity: 25,
   quickHighlightBorderRadius: 8,
@@ -7092,8 +6747,514 @@ var defaultSettings = {
 };
 
 // src/settings/SettingsTab.js
-var import_obsidian17 = require("obsidian");
-init_PresetModal();
+var import_obsidian18 = require("obsidian");
+
+// src/modals/PresetModal.js
+var import_obsidian = require("obsidian");
+var PresetModal = class extends import_obsidian.Modal {
+  constructor(app, plugin, onChoose) {
+    super(app);
+    this.plugin = plugin;
+    this.onChoose = onChoose;
+    this._listeners = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this.modalEl.addClass("act-modal");
+    this.modalEl.addClass("act-preset-modal");
+    try {
+      this.modalEl.style.maxWidth = "1200px !important";
+      this.modalEl.style.width = "1200px !important";
+    } catch (e) {
+    }
+    contentEl.style.maxWidth = "1200px !important";
+    const presets = [
+      {
+        label: this.plugin.t("preset_bold", "Bold"),
+        pattern: "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1",
+        flags: "",
+        examples: ["**bold**"],
+        group: "markdown",
+        isFormatting: true,
+        targetElement: "strong"
+      },
+      {
+        label: this.plugin.t("preset_italic", "Italic"),
+        pattern: "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1",
+        flags: "",
+        examples: ["*italic*"],
+        group: "markdown",
+        isFormatting: true,
+        targetElement: "em"
+      },
+      {
+        label: this.plugin.t("preset_bold_italic", "Bold Italic"),
+        pattern: "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1",
+        flags: "",
+        examples: ["***bold_italic***"],
+        group: "markdown",
+        isFormatting: true,
+        targetElement: "strong-em"
+      },
+      {
+        label: this.plugin.t("preset_all_headings", "All Headings (H1-H6)"),
+        pattern: "^\\s*#{1,6}\\s+.*$",
+        flags: "m",
+        examples: [this.plugin.t("preset_example_heading", "# Heading")]
+      },
+      {
+        label: this.plugin.t("preset_headings_h3", "Headings (H3)"),
+        pattern: "^\\s*#{3}\\s+.*$",
+        flags: "m",
+        examples: [this.plugin.t("preset_example_heading_h3", "### Heading")],
+        group: "markdown"
+      },
+      {
+        label: this.plugin.t("preset_bullet_points", "Bullet Points"),
+        pattern: "^\\s*[\\-\\*]\\s+.*$",
+        flags: "m",
+        examples: [this.plugin.t("preset_example_bullet", "- Bullet point")],
+        group: "markdown"
+      },
+      {
+        label: this.plugin.t("preset_numbered_lists", "Numbered Lists"),
+        pattern: "^\\s*\\d+\\.\\s+.*$",
+        flags: "m",
+        examples: [this.plugin.t("preset_example_numbered", "1. First item")],
+        group: "markdown"
+      },
+      {
+        label: this.plugin.t("preset_task_checked", "Task List (Checked)"),
+        pattern: "^\\s*[\\-\\*]\\s+\\[[xX]\\]\\s+.*$",
+        flags: "m",
+        examples: [
+          this.plugin.t("preset_example_task_checked", "- [x] Completed")
+        ],
+        group: "markdown"
+      },
+      {
+        label: this.plugin.t("preset_task_unchecked", "Task List (Unchecked)"),
+        pattern: "^\\s*[\\-\\*]\\s+\\[\\s\\]\\s+.*$",
+        flags: "m",
+        examples: [
+          this.plugin.t("preset_example_task_unchecked", "- [ ] Todo")
+        ],
+        group: "markdown"
+      },
+      {
+        label: this.plugin.t("preset_codeblocks", "Codeblocks"),
+        pattern: "```[\\s\\S]*?```",
+        flags: "",
+        examples: [this.plugin.t("preset_example_codeblock", "``` code ```")],
+        group: "markdown"
+      },
+      {
+        label: this.plugin.t("preset_dates_yyyy_mm_dd", "Dates (YYYY-MM-DD)"),
+        pattern: "\\b\\d{4}-\\d{2}-\\d{2}\\b",
+        flags: "",
+        examples: [this.plugin.t("preset_example_date_iso", "2009-01-19")]
+      },
+      {
+        label: this.plugin.t("preset_dates_yyyy_mmm_dd", "Dates (YYYY-MMM-DD)"),
+        pattern: "\\b\\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{2}\\b",
+        flags: "i",
+        examples: [this.plugin.t("preset_example_date_text", "2025-Jan-19")]
+      },
+      {
+        label: this.plugin.t("preset_times_am_pm", "Times (AM/PM)"),
+        pattern: "(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)",
+        flags: "i",
+        examples: [this.plugin.t("preset_example_time_ampm", "9:05pm")]
+      },
+      {
+        label: this.plugin.t("preset_times_short_am_pm", "Times (2pm, 10pm)"),
+        pattern: "(?:1[0-2]|0?[1-9])(?:\\s?[ap]m)",
+        flags: "i",
+        examples: [
+          this.plugin.t("preset_example_time_short_ampm", "2pm, 10pm")
+        ]
+      },
+      {
+        label: this.plugin.t("preset_times_24h", "Times (24h)"),
+        pattern: "\\b(?:[01]\\d|2[0-3]):[0-5]\\d\\b",
+        flags: "",
+        examples: [this.plugin.t("preset_example_time_24h", "13:00")]
+      },
+      {
+        label: this.plugin.t("preset_relative_dates", "Relative dates"),
+        pattern: "\\b(?:today|tomorrow|yesterday|next week|last week)\\b",
+        flags: "i",
+        examples: [this.plugin.t("preset_example_relative", "today, tomorrow")]
+      },
+      {
+        label: this.plugin.t("preset_basic_urls", "Basic URLs"),
+        pattern: "\\bhttps?://\\S+\\b",
+        flags: "",
+        examples: [this.plugin.t("preset_example_url", "https://example.com")],
+        group: "markdown"
+      },
+      {
+        label: this.plugin.t("preset_markdown_links", "Markdown links"),
+        pattern: "\\[[^\\]]+\\]\\(https?://[^)]+\\)",
+        flags: "",
+        examples: [
+          this.plugin.t(
+            "preset_example_markdown_link",
+            "[Link](https://example.com)"
+          )
+        ],
+        group: "markdown"
+      },
+      {
+        label: this.plugin.t("preset_inline_comments", "Comments (%%\u2026%%)"),
+        pattern: "%%\\s*[\\s\\S]*?\\s*%%",
+        flags: "s",
+        examples: [this.plugin.t("preset_example_comment", "%% comment %%")],
+        group: "markdown"
+      },
+      {
+        label: this.plugin.t(
+          "preset_highlighted_text",
+          "Highlighted Text (==...)"
+        ),
+        pattern: "==[\\s\\S]*?==",
+        flags: "s",
+        examples: [
+          this.plugin.t("preset_example_highlight", "==highlighted text==")
+        ],
+        group: "markdown",
+        affectMarkElements: true
+      },
+      {
+        label: this.plugin.t("preset_domain_names", "Domain names"),
+        pattern: "\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b",
+        flags: "",
+        examples: [this.plugin.t("preset_example_domain", "example.com")]
+      },
+      {
+        label: this.plugin.t("preset_email_addresses", "Email addresses"),
+        pattern: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+        flags: "",
+        examples: [this.plugin.t("preset_example_email", "name@example.com")]
+      },
+      {
+        label: this.plugin.t("preset_at_username", "@username"),
+        pattern: "@[a-zA-Z0-9_]+",
+        flags: "",
+        examples: [this.plugin.t("preset_example_username", "@username")]
+      },
+      {
+        label: this.plugin.t("preset_currency", "Currency"),
+        pattern: "\\$\\d+(?:\\.\\d{2})?|\\b[\u20AC\xA3\xA5]\\d+(?:\\.\\d{2})?\\b",
+        flags: "",
+        examples: [this.plugin.t("preset_example_currency", "$29.99")]
+      },
+      {
+        label: this.plugin.t("preset_measurements", "Measurements"),
+        pattern: "\\b\\d+(?:\\.\\d+)?(?:kg|cm|m|km|\xB0C|\xB0F|lbs)\\b",
+        flags: "",
+        examples: [this.plugin.t("preset_example_measurement", "25kg")]
+      },
+      {
+        label: this.plugin.t("preset_phone_numbers", "Phone numbers"),
+        pattern: "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b",
+        flags: "",
+        examples: [this.plugin.t("preset_example_phone", "123-456-7890")]
+      },
+      {
+        label: this.plugin.t("preset_parentheses", "Parentheses ()"),
+        pattern: "\\(([^)]*)\\)",
+        flags: "g",
+        examples: [this.plugin.t("preset_example_parentheses", "( text )")],
+        group: "brackets"
+      },
+      {
+        label: this.plugin.t("preset_square_brackets", "Square Brackets []"),
+        pattern: "\\[([^\\]]*)\\]",
+        flags: "g",
+        examples: [this.plugin.t("preset_example_square_brackets", "[ yes ]")],
+        group: "brackets",
+        disableRegexSafety: true
+      },
+      {
+        label: this.plugin.t("preset_curly_braces", "Curly Braces {}"),
+        pattern: "\\{([^}]*)\\}",
+        flags: "g",
+        examples: [this.plugin.t("preset_example_curly_braces", "{ no }")],
+        group: "brackets"
+      },
+      {
+        label: this.plugin.t("preset_angle_brackets", "Angle Brackets <>"),
+        pattern: "<([^>]*)>",
+        flags: "g",
+        examples: [this.plugin.t("preset_example_angle_brackets", "< text >")],
+        group: "brackets"
+      },
+      {
+        label: this.plugin.t("preset_colons", "Colons :"),
+        pattern: ":([^:]*):",
+        flags: "g",
+        examples: [this.plugin.t("preset_example_colons", ": text :")],
+        group: "brackets"
+      },
+      {
+        label: this.plugin.t("preset_double_quotes", 'Double Quotes ""'),
+        pattern: '"[^"]*"',
+        flags: "",
+        examples: [this.plugin.t("preset_example_double_quotes", '"text"')],
+        group: "brackets",
+        disableRegexSafety: true
+      },
+      {
+        label: this.plugin.t("preset_single_quotes", "Single Quotes ''"),
+        pattern: "'[^'\\r\\n]*'",
+        flags: "",
+        examples: [this.plugin.t("preset_example_single_quotes", "'text'")],
+        group: "brackets",
+        disableRegexSafety: true
+      },
+      {
+        label: this.plugin.t(
+          "preset_single_quotes_word_bounded",
+          "Single Quotes '' (word-bounded)"
+        ),
+        pattern: "'\\b[^'\\r\\n]*\\b'",
+        flags: "",
+        examples: [
+          this.plugin.t("preset_example_single_quotes_word", "'word'")
+        ],
+        group: "brackets",
+        disableRegexSafety: true
+      },
+      {
+        label: this.plugin.t("preset_all_texts", "All texts"),
+        pattern: ".+",
+        flags: "",
+        examples: [
+          this.plugin.t(
+            "preset_example_all_text",
+            "This will target all texts."
+          )
+        ],
+        group: "markdown"
+      }
+    ];
+    const formattingPresets = presets.filter((p) => p.isFormatting);
+    const markdownPresets = presets.filter(
+      (p) => (p.group === "markdown" || [
+        this.plugin.t("preset_all_headings", "All Headings (H1-H6)")
+      ].includes(p.label)) && !p.isFormatting
+    );
+    const bracketPresets = presets.filter((p) => p.group === "brackets");
+    const otherPresets = presets.filter(
+      (p) => !markdownPresets.includes(p) && !bracketPresets.includes(p) && !formattingPresets.includes(p)
+    );
+    const container = contentEl.createDiv();
+    container.style.display = "grid";
+    container.style.gridTemplateColumns = "1fr 1fr 1fr";
+    container.style.gap = "12px";
+    container.style.maxWidth = "100%";
+    const mediaRule = `
+      @media (max-width: 1024px) {
+        .preset-columns { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+      }
+      @media (max-width: 600px) {
+        .preset-columns { grid-template-columns: 1fr !important; gap: 8px !important; }
+      }
+    `;
+    const style = document.createElement("style");
+    style.textContent = mediaRule;
+    document.head.appendChild(style);
+    container.className = "preset-columns";
+    const leftCol = container.createDiv();
+    const leftTitle = leftCol.createEl("h3", {
+      text: this.plugin.t(
+        "preset_group_markdown_formatting",
+        "Markdown Formatting"
+      )
+    });
+    leftTitle.style.marginTop = "0";
+    leftTitle.style.marginBottom = "12px";
+    leftTitle.style.fontSize = "14px";
+    leftTitle.style.fontWeight = "600";
+    leftTitle.style.opacity = "0.8";
+    const leftList = leftCol.createDiv();
+    if (formattingPresets.length > 0) {
+      const row = leftList.createDiv();
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.marginBottom = "8px";
+      formattingPresets.forEach((p) => {
+        const btn = row.createEl("button", { text: p.label });
+        btn.style.fontSize = "12px";
+        btn.style.padding = "6px 10px";
+        btn.style.flex = "1";
+        btn.title = p.examples && p.examples[0] ? p.examples[0] : "";
+        const handler = () => {
+          try {
+            this.onChoose && this.onChoose(p);
+          } finally {
+            this.close();
+          }
+        };
+        btn.addEventListener("click", handler);
+        this._listeners.push({ el: btn, h: handler });
+      });
+    }
+    markdownPresets.forEach((p) => {
+      const row = leftList.createDiv();
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.marginBottom = "8px";
+      const btn = row.createEl("button", { text: p.label });
+      btn.style.fontSize = "12px";
+      btn.style.padding = "6px 10px";
+      const infoDiv = row.createDiv();
+      infoDiv.style.flex = "1";
+      infoDiv.style.display = "flex";
+      infoDiv.style.flexDirection = "column";
+      infoDiv.style.gap = "2px";
+      const sample = infoDiv.createEl("span", {
+        text: p.examples && p.examples[0] ? p.examples[0] : ""
+      });
+      sample.style.opacity = "0.7";
+      sample.style.fontSize = "11px";
+      if (p.disableRegexSafety) {
+        const badge = infoDiv.createEl("span", {
+          text: this.plugin.t(
+            "requires_regex_safety_disabled",
+            "Requires regex safety disabled"
+          )
+        });
+        badge.style.opacity = "0.6";
+        badge.style.fontSize = "10px";
+        badge.style.color = "var(--text-warning)";
+      }
+      const handler = () => {
+        try {
+          this.onChoose && this.onChoose(p);
+        } finally {
+          this.close();
+        }
+      };
+      btn.addEventListener("click", handler);
+      this._listeners.push({ el: btn, h: handler });
+    });
+    const rightCol = container.createDiv();
+    const rightTitle = rightCol.createEl("h3", {
+      text: this.plugin.t("preset_group_other_patterns", "Other Patterns")
+    });
+    rightTitle.style.marginTop = "0";
+    rightTitle.style.marginBottom = "12px";
+    rightTitle.style.fontSize = "14px";
+    rightTitle.style.fontWeight = "600";
+    rightTitle.style.opacity = "0.8";
+    const rightList = rightCol.createDiv();
+    otherPresets.forEach((p) => {
+      const row = rightList.createDiv();
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.marginBottom = "8px";
+      const btn = row.createEl("button", { text: p.label });
+      btn.style.fontSize = "12px";
+      btn.style.padding = "6px 10px";
+      const infoDiv = row.createDiv();
+      infoDiv.style.flex = "1";
+      infoDiv.style.display = "flex";
+      infoDiv.style.flexDirection = "column";
+      infoDiv.style.gap = "2px";
+      const sample = infoDiv.createEl("span", {
+        text: p.examples && p.examples[0] ? p.examples[0] : ""
+      });
+      sample.style.opacity = "0.7";
+      sample.style.fontSize = "11px";
+      if (p.disableRegexSafety) {
+        const badge = infoDiv.createEl("span", {
+          text: this.plugin.t(
+            "requires_regex_safety_disabled",
+            "Requires regex safety disabled"
+          )
+        });
+        badge.style.opacity = "0.6";
+        badge.style.fontSize = "10px";
+        badge.style.color = "var(--text-warning)";
+      }
+      const handler = () => {
+        try {
+          this.onChoose && this.onChoose(p);
+        } finally {
+          this.close();
+        }
+      };
+      btn.addEventListener("click", handler);
+      this._listeners.push({ el: btn, h: handler });
+    });
+    const middleCol = container.createDiv();
+    const middleTitle = middleCol.createEl("h3", {
+      text: this.plugin.t("preset_group_brackets", "Brackets")
+    });
+    middleTitle.style.marginTop = "0";
+    middleTitle.style.marginBottom = "12px";
+    middleTitle.style.fontSize = "14px";
+    middleTitle.style.fontWeight = "600";
+    middleTitle.style.opacity = "0.8";
+    const middleList = middleCol.createDiv();
+    bracketPresets.forEach((p) => {
+      const row = middleList.createDiv();
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.marginBottom = "8px";
+      const btn = row.createEl("button", { text: p.label });
+      btn.style.fontSize = "12px";
+      btn.style.padding = "6px 10px";
+      const infoDiv = row.createDiv();
+      infoDiv.style.flex = "1";
+      infoDiv.style.display = "flex";
+      infoDiv.style.flexDirection = "column";
+      infoDiv.style.gap = "2px";
+      const sample = infoDiv.createEl("span", {
+        text: p.examples && p.examples[0] ? p.examples[0] : ""
+      });
+      sample.style.opacity = "0.7";
+      sample.style.fontSize = "11px";
+      if (p.disableRegexSafety) {
+        const badge = infoDiv.createEl("span", {
+          text: this.plugin.t(
+            "requires_regex_safety_disabled",
+            "Requires regex safety disabled"
+          )
+        });
+        badge.style.opacity = "0.6";
+        badge.style.fontSize = "10px";
+        badge.style.color = "var(--text-warning)";
+      }
+      const handler = () => {
+        try {
+          this.onChoose && this.onChoose(p);
+        } finally {
+          this.close();
+        }
+      };
+      btn.addEventListener("click", handler);
+      this._listeners.push({ el: btn, h: handler });
+    });
+  }
+  onClose() {
+    this._listeners.forEach((x) => {
+      try {
+        x.el.removeEventListener("click", x.h);
+      } catch (e) {
+      }
+    });
+    this._listeners = [];
+    this.contentEl.empty();
+  }
+};
 
 // src/modals/RealTimeRegexTesterModal.js
 var import_obsidian2 = require("obsidian");
@@ -7854,13 +8015,13 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
 };
 
 // src/modals/HighlightStylingModal.js
-var import_obsidian8 = require("obsidian");
+var import_obsidian10 = require("obsidian");
 
 // src/modals/ColorPickerModal.js
-var import_obsidian7 = require("obsidian");
+var import_obsidian9 = require("obsidian");
 
 // src/modals/EditEntryModal.js
-var import_obsidian6 = require("obsidian");
+var import_obsidian8 = require("obsidian");
 
 // src/modals/CustomCssModal.js
 var import_obsidian3 = require("obsidian");
@@ -8408,12 +8569,545 @@ var CustomCssModal = class extends import_obsidian3.Modal {
   }
 };
 
-// src/modals/AddToExistingEntryModal.js
+// src/modals/TextStylePresetsModal.js
 var import_obsidian5 = require("obsidian");
 
-// src/modals/BlacklistRegexTesterModal.js
+// src/modals/ConfirmationModal.js
 var import_obsidian4 = require("obsidian");
-var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
+var ConfirmationModal = class extends import_obsidian4.Modal {
+  constructor(app, plugin, title, message, onConfirm) {
+    super(app);
+    this.plugin = plugin;
+    this.title = title;
+    this.message = message;
+    this.onConfirm = onConfirm;
+    this._eventListeners = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this._eventListeners = [];
+    try {
+      this.modalEl.addClass("act-modal");
+    } catch (e) {
+    }
+    const h2 = contentEl.createEl("h2", { text: this.title });
+    h2.style.marginTop = "0";
+    contentEl.createEl("p", { text: this.message });
+    const buttonDiv = contentEl.createDiv();
+    buttonDiv.style.display = "flex";
+    buttonDiv.style.justifyContent = "flex-end";
+    buttonDiv.style.marginTop = "20px";
+    buttonDiv.style.gap = "10px";
+    const cancelButton = buttonDiv.createEl("button", {
+      text: this.plugin.t("btn_cancel", "Cancel")
+    });
+    const cancelHandler = () => this.close();
+    cancelButton.addEventListener("click", cancelHandler);
+    this._eventListeners.push({
+      el: cancelButton,
+      event: "click",
+      handler: cancelHandler
+    });
+    const confirmButton = buttonDiv.createEl("button", {
+      text: this.plugin.t("btn_confirm", "Confirm")
+    });
+    confirmButton.addClass("mod-warning");
+    const confirmHandler = () => {
+      this.onConfirm();
+      this.close();
+    };
+    confirmButton.addEventListener("click", confirmHandler);
+    this._eventListeners.push({
+      el: confirmButton,
+      event: "click",
+      handler: confirmHandler
+    });
+  }
+  onClose() {
+    this._eventListeners.forEach(({ el, event, handler }) => {
+      el.removeEventListener(event, handler);
+    });
+    this._eventListeners = [];
+    this.contentEl.empty();
+  }
+};
+
+// src/modals/TextStylePresetsModal.js
+var TextStylePresetsModal = class extends import_obsidian5.Modal {
+  constructor(app, plugin, onPick = null) {
+    super(app);
+    this.plugin = plugin;
+    this.onPick = onPick;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    try {
+      this.modalEl.addClass("act-modal");
+      this.modalEl.addClass("act-text-style-presets-modal");
+    } catch (e) {
+    }
+    this._buildContent();
+  }
+  _buildContent() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", {
+      text: this.plugin.t("text_style_presets_header", "Text Style Presets")
+    });
+    const presets = Array.isArray(this.plugin.settings.textStylePresets) ? this.plugin.settings.textStylePresets : [];
+    const defaultPreset = presets.find((p) => p && p.isDefault) || presets[0] || null;
+    if (defaultPreset) {
+      const topBox = contentEl.createDiv({ cls: "act-tsp-top-box" });
+      const topPreview = topBox.createDiv({ cls: "act-tsp-preview" });
+      this._applyStyle(topPreview, this._globalStyleObj(), "Default Style");
+      if (typeof this.onPick === "function") {
+        topBox.style.cursor = "pointer";
+        topBox.addEventListener("click", () => this._pickPreset(defaultPreset));
+      }
+      const menuBtn = topBox.createEl("div", {
+        cls: "clickable-icon act-tsp-edit-btn"
+      });
+      (0, import_obsidian5.setIcon)(menuBtn, "more-vertical");
+      menuBtn.setAttribute(
+        "aria-label",
+        this.plugin.t("preset_options_label", "Preset options")
+      );
+      menuBtn.addEventListener("click", (evt) => {
+        evt.stopPropagation();
+        this._openDefaultMenu(defaultPreset, evt);
+      });
+    }
+    const grid = contentEl.createDiv({ cls: "act-tsp-grid" });
+    presets.forEach((preset) => {
+      if (!preset) return;
+      if (defaultPreset && preset.uid === defaultPreset.uid) return;
+      const box = grid.createDiv({ cls: "act-tsp-box" });
+      const preview = box.createDiv({ cls: "act-tsp-preview" });
+      this._applyStyle(preview, preset, preset.name || "Style");
+      if (typeof this.onPick === "function") {
+        box.style.cursor = "pointer";
+        box.addEventListener("click", () => this._pickPreset(preset));
+      }
+      const menuBtn = box.createEl("div", {
+        cls: "clickable-icon act-tsp-edit-btn"
+      });
+      (0, import_obsidian5.setIcon)(menuBtn, "more-vertical");
+      menuBtn.setAttribute(
+        "aria-label",
+        this.plugin.t("preset_options_label", "Preset options")
+      );
+      menuBtn.addEventListener("click", (evt) => {
+        evt.stopPropagation();
+        this._openPresetMenu(preset, evt);
+      });
+    });
+    const addRow = contentEl.createDiv({ cls: "act-tsp-add-row" });
+    const resetBtn = addRow.createEl("button", {
+      text: this.plugin.t("btn_reset_presets", "Reset")
+    });
+    resetBtn.addEventListener("click", () => this._resetBuiltInPresets());
+    const addBtn = addRow.createEl("button", {
+      text: this.plugin.t("btn_add_preset", "+ Add Style"),
+      cls: "mod-cta"
+    });
+    addBtn.addEventListener("click", () => this._addPreset());
+  }
+  // Render a preview span. Uses the preset's own colors when set, otherwise
+  // falls back to the theme accent (var(--color-accent)) for a consistent look.
+  _applyStyle(container, styleObj, text) {
+    container.empty();
+    const span = container.createSpan({ cls: "act-tsp-span" });
+    span.textContent = text;
+    const style = styleObj.styleType || "highlight";
+    const p = this.plugin.getHighlightParams(styleObj);
+    const opacity = p.opacity ?? 25;
+    const radius = p.radius ?? 8;
+    const hpad = p.hPad ?? 4;
+    const vpad = p.vPad ?? 0;
+    const accent = "var(--color-accent)";
+    const bgHex = styleObj.backgroundColor && this.plugin.isValidHexColor(styleObj.backgroundColor) ? styleObj.backgroundColor : null;
+    const textHex = styleObj.textColor && styleObj.textColor !== "currentColor" && this.plugin.isValidHexColor(styleObj.textColor) ? styleObj.textColor : null;
+    let bg = "";
+    if (style !== "text") {
+      if (bgHex) {
+        bg = `background: ${this.plugin.hexToRgba(bgHex, opacity)};`;
+      } else {
+        bg = `background: color-mix(in srgb, ${accent} ${opacity}%, transparent);`;
+      }
+    }
+    let border = "";
+    if (style !== "text" && p.enableBorder) {
+      const thickness = p.borderThickness ?? 1;
+      const line = p.borderLineStyle || "solid";
+      const color = bgHex || accent;
+      const css = `${thickness}px ${line} ${color} !important;`;
+      switch (p.borderStyle || "full") {
+        case "bottom":
+          border = ` border-bottom: ${css}`;
+          break;
+        case "top":
+          border = ` border-top: ${css}`;
+          break;
+        case "left":
+          border = ` border-left: ${css}`;
+          break;
+        case "right":
+          border = ` border-right: ${css}`;
+          break;
+        case "top-bottom":
+          border = ` border-top: ${css} border-bottom: ${css}`;
+          break;
+        case "left-right":
+          border = ` border-left: ${css} border-right: ${css}`;
+          break;
+        case "top-left-right":
+          border = ` border-top: ${css} border-left: ${css} border-right: ${css}`;
+          break;
+        case "bottom-left-right":
+          border = ` border-bottom: ${css} border-left: ${css} border-right: ${css}`;
+          break;
+        case "top-right":
+          border = ` border-top: ${css} border-right: ${css}`;
+          break;
+        case "top-left":
+          border = ` border-top: ${css} border-left: ${css}`;
+          break;
+        case "bottom-right":
+          border = ` border-bottom: ${css} border-right: ${css}`;
+          break;
+        case "full":
+        default:
+          border = ` border: ${css}`;
+      }
+    }
+    const textColorVal = textHex || accent;
+    const base = style === "text" ? `color:${textColorVal};background:transparent;` : style === "highlight" ? `${bg}border-radius:${radius}px;padding:${vpad}px ${hpad}px;color:var(--text-normal);${border}` : `color:${textColorVal};${bg}border-radius:${radius}px;padding:${vpad}px ${hpad}px;${border}`;
+    span.setAttribute(
+      "style",
+      base + "box-decoration-break:clone;-webkit-box-decoration-break:clone;"
+    );
+  }
+  // Build a style object that reflects the current Global Highlight Appearance
+  _globalStyleObj() {
+    const s = this.plugin.settings;
+    return {
+      styleType: "highlight",
+      textColor: "currentColor",
+      backgroundColor: "",
+      backgroundOpacity: s.backgroundOpacity ?? 35,
+      highlightBorderRadius: s.highlightBorderRadius ?? 4,
+      highlightHorizontalPadding: s.highlightHorizontalPadding ?? 4,
+      highlightVerticalPadding: s.highlightVerticalPadding ?? 0,
+      enableBorderThickness: s.enableBorderThickness ?? false,
+      borderStyle: s.borderStyle ?? "full",
+      borderLineStyle: s.borderLineStyle ?? "solid",
+      borderOpacity: s.borderOpacity ?? 100,
+      borderThickness: s.borderThickness ?? 2
+    };
+  }
+  // Resolve the theme accent to a concrete hex so it can be used in native
+  // <input type="color"> pickers and stored on the entry.
+  _resolveAccentHex() {
+    try {
+      const tmp = document.createElement("span");
+      tmp.style.color = "var(--color-accent)";
+      tmp.style.display = "none";
+      document.body.appendChild(tmp);
+      const computed = getComputedStyle(tmp).color;
+      document.body.removeChild(tmp);
+      const m = computed.match(/\d+/g);
+      if (m && m.length >= 3) {
+        return "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+      }
+    } catch (_) {
+    }
+    return "#7c3aed";
+  }
+  // Ensure the entry has concrete colors set; default unset colors to the accent.
+  _ensureAccentColors(entry) {
+    const accent = this._resolveAccentHex();
+    if (!entry.backgroundColor || !this.plugin.isValidHexColor(entry.backgroundColor)) {
+      entry.backgroundColor = accent;
+    }
+    if (entry.styleType === "both" || entry.styleType === "text") {
+      if (!entry.textColor || entry.textColor === "currentColor" || !this.plugin.isValidHexColor(entry.textColor)) {
+        entry.textColor = accent;
+      }
+    }
+  }
+  _editGlobalStyle() {
+    const s = this.plugin.settings;
+    const entry = this._globalStyleObj();
+    this._ensureAccentColors(entry);
+    try {
+      const modal = new HighlightStylingModal(
+        this.app,
+        this.plugin,
+        entry,
+        null,
+        "Default Style"
+      );
+      const orig = modal.onClose.bind(modal);
+      modal.onClose = () => {
+        try {
+          orig();
+        } catch (_) {
+        }
+        s.backgroundOpacity = entry.backgroundOpacity;
+        s.highlightBorderRadius = entry.highlightBorderRadius;
+        s.highlightHorizontalPadding = entry.highlightHorizontalPadding;
+        s.highlightVerticalPadding = entry.highlightVerticalPadding;
+        s.enableBorderThickness = entry.enableBorderThickness;
+        s.borderStyle = entry.borderStyle;
+        s.borderLineStyle = entry.borderLineStyle;
+        s.borderOpacity = entry.borderOpacity;
+        s.borderThickness = entry.borderThickness;
+        this.plugin.saveSettings();
+        this._render();
+      };
+      modal.open();
+    } catch (e) {
+    }
+  }
+  _editPreset(preset) {
+    try {
+      const accent = this._resolveAccentHex();
+      const temp = JSON.parse(JSON.stringify(preset));
+      if (!temp.backgroundColor || !this.plugin.isValidHexColor(temp.backgroundColor)) {
+        temp.backgroundColor = accent;
+      }
+      if (temp.styleType === "both" || temp.styleType === "text") {
+        if (!temp.textColor || temp.textColor === "currentColor" || !this.plugin.isValidHexColor(temp.textColor)) {
+          temp.textColor = accent;
+        }
+      }
+      const modal = new HighlightStylingModal(
+        this.app,
+        this.plugin,
+        temp,
+        null,
+        preset.name || "Style"
+      );
+      const orig = modal.onClose.bind(modal);
+      modal.onClose = () => {
+        try {
+          orig();
+        } catch (_) {
+        }
+        preset.styleType = temp.styleType;
+        preset.backgroundOpacity = temp.backgroundOpacity;
+        preset.highlightBorderRadius = temp.highlightBorderRadius;
+        preset.highlightHorizontalPadding = temp.highlightHorizontalPadding;
+        preset.highlightVerticalPadding = temp.highlightVerticalPadding;
+        preset.enableBorderThickness = temp.enableBorderThickness;
+        preset.borderStyle = temp.borderStyle;
+        preset.borderLineStyle = temp.borderLineStyle;
+        preset.borderOpacity = temp.borderOpacity;
+        preset.borderThickness = temp.borderThickness;
+        if (preset.backgroundColor && this.plugin.isValidHexColor(preset.backgroundColor)) {
+          preset.backgroundColor = temp.backgroundColor;
+          preset.textColor = temp.textColor;
+        } else {
+          if (temp.backgroundColor && temp.backgroundColor.toLowerCase() !== accent.toLowerCase()) {
+            preset.backgroundColor = temp.backgroundColor;
+          }
+          if (temp.textColor && temp.textColor.toLowerCase() !== accent.toLowerCase()) {
+            preset.textColor = temp.textColor;
+          }
+        }
+        this.plugin.saveSettings();
+        this._render();
+      };
+      modal.open();
+    } catch (e) {
+    }
+  }
+  _editCustomCss(preset) {
+    try {
+      const modal = new CustomCssModal(this.app, this.plugin, preset);
+      const orig = modal.onClose.bind(modal);
+      modal.onClose = () => {
+        try {
+          orig();
+        } catch (_) {
+        }
+        this.plugin.saveSettings();
+        this._render();
+      };
+      modal.open();
+    } catch (e) {
+    }
+  }
+  _renamePreset(preset) {
+    try {
+      const modal = new import_obsidian5.Modal(this.app);
+      modal.titleEl.setText(this.plugin.t("rename_preset", "Rename Preset"));
+      const input = modal.contentEl.createEl("input", { type: "text" });
+      input.value = preset.name || "";
+      input.style.margin = "10px 0";
+      input.style.width = "100%";
+      input.style.display = "block";
+      const save = modal.contentEl.createEl("button", {
+        text: this.plugin.t("save", "Save"),
+        cls: "mod-cta"
+      });
+      save.style.marginTop = "8px";
+      save.addEventListener("click", () => {
+        const v = input.value.trim();
+        if (v) preset.name = v;
+        this.plugin.saveSettings();
+        modal.close();
+        this._render();
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") save.click();
+      });
+      modal.onOpen = () => {
+        input.focus();
+        input.select();
+      };
+      modal.open();
+    } catch (e) {
+    }
+  }
+  _openDefaultMenu(preset, evt) {
+    const menu = new import_obsidian5.Menu();
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("edit_highlight_styling", "Edit Highlight Styling")).setIcon("pencil").onClick(() => this._editGlobalStyle())
+    );
+    if (this.plugin.settings.enableCustomCss) {
+      menu.addItem(
+        (item) => item.setTitle(this.plugin.t("edit_custom_css", "Edit Custom CSS")).setIcon("code").onClick(() => this._editCustomCss(preset))
+      );
+    }
+    menu.addSeparator();
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("rename", "Rename")).setIcon("pencil").onClick(() => this._renamePreset(preset))
+    );
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("duplicate", "Duplicate")).setIcon("copy").onClick(() => this._duplicatePreset(preset))
+    );
+    menu.showAtMouseEvent(evt);
+  }
+  _openPresetMenu(preset, evt) {
+    const menu = new import_obsidian5.Menu();
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("edit_highlight_styling", "Edit Highlight Styling")).setIcon("pencil").onClick(() => this._editPreset(preset))
+    );
+    if (this.plugin.settings.enableCustomCss) {
+      menu.addItem(
+        (item) => item.setTitle(this.plugin.t("edit_custom_css", "Edit Custom CSS")).setIcon("code").onClick(() => this._editCustomCss(preset))
+      );
+    }
+    menu.addSeparator();
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("rename", "Rename")).setIcon("pencil").onClick(() => this._renamePreset(preset))
+    );
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("duplicate", "Duplicate")).setIcon("copy").onClick(() => this._duplicatePreset(preset))
+    );
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("make_default", "Make Default")).setIcon("star").onClick(() => this._makeDefault(preset))
+    );
+    menu.addSeparator();
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("delete", "Delete")).setIcon("trash").onClick(() => this._deletePreset(preset))
+    );
+    menu.showAtMouseEvent(evt);
+  }
+  _duplicatePreset(preset) {
+    const list = this.plugin.settings.textStylePresets;
+    const copy = JSON.parse(JSON.stringify(preset));
+    copy.uid = "tsp-" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    copy.name = (preset.name || "Style") + " copy";
+    copy.isDefault = false;
+    list.push(copy);
+    this.plugin.saveSettings();
+    this._render();
+  }
+  _deletePreset(preset) {
+    const list = this.plugin.settings.textStylePresets;
+    const idx = list.indexOf(preset);
+    if (idx === -1) return;
+    const wasDefault = !!preset.isDefault;
+    list.splice(idx, 1);
+    if (wasDefault && list.length > 0) list[0].isDefault = true;
+    this.plugin.saveSettings();
+    this._render();
+  }
+  _makeDefault(preset) {
+    const list = this.plugin.settings.textStylePresets;
+    list.forEach((p) => p.isDefault = false);
+    preset.isDefault = true;
+    this.plugin.saveSettings();
+    this._render();
+  }
+  _pickPreset(preset) {
+    try {
+      if (typeof this.onPick === "function") this.onPick(preset);
+    } catch (e) {
+    }
+    this.close();
+  }
+  _addPreset() {
+    const list = Array.isArray(this.plugin.settings.textStylePresets) ? this.plugin.settings.textStylePresets : this.plugin.settings.textStylePresets = [];
+    const base = list.find((p) => p && p.isDefault) || {};
+    const preset = Object.assign({}, base, {
+      uid: "tsp-" + Date.now().toString(36) + Math.random().toString(36).slice(2),
+      name: this.plugin.t("new_preset_name", "New Preset"),
+      isDefault: false
+    });
+    list.push(preset);
+    this.plugin.saveSettings();
+    this._editPreset(preset);
+  }
+  // Restore built-in presets to their original styles, keeping any
+  // user-added presets (even those with tsp- uids) untouched.
+  _resetBuiltInPresets() {
+    try {
+      const seedUids = new Set(
+        (defaultSettings.textStylePresets || []).map((s) => s.uid)
+      );
+      const doReset = () => {
+        const userPresets = (this.plugin.settings.textStylePresets || []).filter(
+          (p) => p && !seedUids.has(p.uid)
+        );
+        const restored = (defaultSettings.textStylePresets || []).map(
+          (s) => JSON.parse(JSON.stringify(s))
+        );
+        this.plugin.settings.textStylePresets = restored.concat(userPresets);
+        this.plugin.saveSettings();
+        this._render();
+      };
+      new ConfirmationModal(
+        this.app,
+        this.plugin,
+        this.plugin.t("confirm_reset_presets_title", "Reset built-in presets?"),
+        this.plugin.t(
+          "confirm_reset_presets",
+          "Reset built-in presets to their original styles? Your added styles will not be deleted."
+        ),
+        doReset
+      ).open();
+    } catch (e) {
+    }
+  }
+  _render() {
+    this._buildContent();
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+};
+
+// src/modals/AddToExistingEntryModal.js
+var import_obsidian7 = require("obsidian");
+
+// src/modals/BlacklistRegexTesterModal.js
+var import_obsidian6 = require("obsidian");
+var BlacklistRegexTesterModal = class extends import_obsidian6.Modal {
   constructor(app, plugin, onAdded) {
     super(app);
     this.plugin = plugin;
@@ -8662,11 +9356,11 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
       const label = String(nameInput.value || "").trim();
       const flags = Object.keys(flagButtons).filter((k) => flagButtons[k].dataset.on === "1").join("");
       if (!pat) {
-        new import_obsidian4.Notice(this.plugin.t("notice_empty_pattern", "Pattern is empty"));
+        new import_obsidian6.Notice(this.plugin.t("notice_empty_pattern", "Pattern is empty"));
         return;
       }
       if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) {
-        new import_obsidian4.Notice(
+        new import_obsidian6.Notice(
           this.plugin.t("notice_pattern_too_complex", "Pattern too complex")
         );
         return;
@@ -8684,7 +9378,7 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
             this.onAdded && this.onAdded(this._advancedRuleEntry);
           } catch (e) {
           }
-          new import_obsidian4.Notice(this.plugin.t("notice_rule_updated", "Rule updated"));
+          new import_obsidian6.Notice(this.plugin.t("notice_rule_updated", "Rule updated"));
           this.close();
           return;
         } catch (e) {
@@ -8724,7 +9418,7 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
             this.onAdded && this.onAdded(updated);
           } catch (e) {
           }
-          new import_obsidian4.Notice(this.plugin.t("notice_entry_updated", "Entry updated"));
+          new import_obsidian6.Notice(this.plugin.t("notice_entry_updated", "Entry updated"));
           this.close();
           return;
         } catch (e) {
@@ -8762,7 +9456,7 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
         this.onAdded && this.onAdded(entry);
       } catch (e) {
       }
-      new import_obsidian4.Notice(
+      new import_obsidian6.Notice(
         this.plugin.t(
           "notice_added_to_blacklist",
           "Pattern added to blacklist"
@@ -8798,7 +9492,7 @@ var BlacklistRegexTesterModal = class extends import_obsidian4.Modal {
 };
 
 // src/modals/AddToExistingEntryModal.js
-var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsidian5.FuzzySuggestModal {
+var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsidian7.FuzzySuggestModal {
   constructor(app, plugin, selectedText, view) {
     super(app);
     this.plugin = plugin;
@@ -9444,7 +10138,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
               debugLog("RIGHTCLICK", "Creating menu for:", items[idx].label);
               const actualItem = items[idx];
               setTimeout(() => {
-                const menu = new import_obsidian5.Menu();
+                const menu = new import_obsidian7.Menu();
                 debugLog("RIGHTCLICK", "Menu created");
                 debugLog(
                   "RIGHTCLICK",
@@ -9542,7 +10236,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
                       } catch (_) {
                       }
                       this.refreshSuggestions();
-                      new import_obsidian5.Notice(`Entry "${actualItem.label}" deleted`);
+                      new import_obsidian7.Notice(`Entry "${actualItem.label}" deleted`);
                     }
                   });
                 });
@@ -9568,7 +10262,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
                       } catch (_) {
                       }
                       this.refreshSuggestions();
-                      new import_obsidian5.Notice(
+                      new import_obsidian7.Notice(
                         this.plugin.t(
                           "notice_entry_duplicated",
                           "Entry duplicated"
@@ -9630,7 +10324,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
                       } catch (_) {
                       }
                       this.refreshSuggestions();
-                      new import_obsidian5.Notice(`"${this.selectedText}" removed from entry`);
+                      new import_obsidian7.Notice(`"${this.selectedText}" removed from entry`);
                     });
                   });
                 }
@@ -9880,7 +10574,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
           "actualItem.entry.isRegex:",
           actualItem.entry?.isRegex
         );
-        const menu = new import_obsidian5.Menu();
+        const menu = new import_obsidian7.Menu();
         menu.addItem((item2) => {
           item2.setTitle(this.plugin.t("edit_entry_header", "Edit Entry")).setIcon("pencil").onClick(() => {
             let entry2 = actualItem.entry;
@@ -9985,7 +10679,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
                 this.plugin.refreshEditor(this.view, true);
               } catch (_) {
               }
-              new import_obsidian5.Notice(`Entry "${actualItem.label}" deleted`);
+              new import_obsidian7.Notice(`Entry "${actualItem.label}" deleted`);
               this.close();
             }
           });
@@ -10027,7 +10721,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
                 this.plugin.refreshEditor(this.view, true);
               } catch (_) {
               }
-              new import_obsidian5.Notice(`"${this.selectedText}" removed from entry`);
+              new import_obsidian7.Notice(`"${this.selectedText}" removed from entry`);
               this.close();
             });
           });
@@ -10066,7 +10760,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
         evt.preventDefault();
         evt.stopPropagation();
         evt.stopImmediatePropagation();
-        const menu = new import_obsidian5.Menu();
+        const menu = new import_obsidian7.Menu();
         menu.addItem((item2) => {
           item2.setTitle(this.plugin.t("edit_entry_header", "Edit Entry")).setIcon("pencil").onClick(() => {
             let entry2 = actualItem.entry;
@@ -10167,7 +10861,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
                 this.plugin.refreshEditor(this.view, true);
               } catch (_) {
               }
-              new import_obsidian5.Notice(`Entry "${actualItem.label}" deleted`);
+              new import_obsidian7.Notice(`Entry "${actualItem.label}" deleted`);
               this.close();
               new _AddToExistingEntryModal(
                 this.app,
@@ -10199,7 +10893,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
               } catch (_) {
               }
               this.refreshSuggestions();
-              new import_obsidian5.Notice(
+              new import_obsidian7.Notice(
                 this.plugin.t("notice_entry_duplicated", "Entry duplicated")
               );
               this.close();
@@ -10252,7 +10946,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
               } catch (_) {
               }
               this.refreshSuggestions();
-              new import_obsidian5.Notice(`"${this.selectedText}" removed from entry`);
+              new import_obsidian7.Notice(`"${this.selectedText}" removed from entry`);
             });
           });
         }
@@ -10299,7 +10993,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
             (p) => caseInsensitive ? p.toLowerCase() === s.toLowerCase() : p === s
           );
           if (containsWord) {
-            new import_obsidian5.Notice(
+            new import_obsidian7.Notice(
               this.plugin.t(
                 "notice_already_in_entry",
                 `"${s}" already exists in entry`,
@@ -10325,7 +11019,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
               this.plugin.refreshEditor(this.view, true);
             } catch (_) {
             }
-            new import_obsidian5.Notice(
+            new import_obsidian7.Notice(
               this.plugin.t(
                 "notice_added_to_existing",
                 `"${s}" added to existing entry`,
@@ -10342,7 +11036,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
           const caseInsensitive = flags.includes("i") || !this.plugin.settings.caseSensitive;
           const cmp2 = caseInsensitive ? word.toLowerCase() === s.toLowerCase() : word === s;
           if (cmp2) {
-            new import_obsidian5.Notice(
+            new import_obsidian7.Notice(
               this.plugin.t(
                 "notice_already_in_entry",
                 `"${s}" already exists in entry`,
@@ -10367,7 +11061,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
               this.plugin.refreshEditor(this.view, true);
             } catch (_) {
             }
-            new import_obsidian5.Notice(
+            new import_obsidian7.Notice(
               this.plugin.t(
                 "notice_added_to_existing",
                 `"${s}" added to existing entry`,
@@ -10394,7 +11088,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
               this.plugin.refreshEditor(this.view, true);
             } catch (_) {
             }
-            new import_obsidian5.Notice(
+            new import_obsidian7.Notice(
               this.plugin.t(
                 "notice_added_to_existing",
                 `"${s}" added to existing entry`,
@@ -10408,7 +11102,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
       }
     }
     if (cmp(e.pattern || "", s) || has(e.groupedPatterns, s)) {
-      new import_obsidian5.Notice(
+      new import_obsidian7.Notice(
         this.plugin.t(
           "notice_already_in_entry",
           `"${s}" already exists in entry`,
@@ -10434,7 +11128,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
         this.plugin.refreshEditor(this.view, true);
       } catch (_) {
       }
-      new import_obsidian5.Notice(
+      new import_obsidian7.Notice(
         this.plugin.t(
           "notice_added_to_existing",
           `"${s}" added to existing entry`,
@@ -10446,7 +11140,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
 };
 
 // src/modals/EditEntryModal.js
-var EditEntryModal = class extends import_obsidian6.Modal {
+var EditEntryModal = class extends import_obsidian8.Modal {
   constructor(app, plugin, entry, onSaved, parentModal, fromPickColorModal = false) {
     super(app);
     this.plugin = plugin;
@@ -10614,6 +11308,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     }
     const styleSelect = headerRow.createEl("select");
     styleSelect.addClass("act-edit-entry-style-select");
+    this._styleSelect = styleSelect;
     ["text", "highlight", "both"].forEach((val) => {
       const opt = styleSelect.createEl("option", {
         text: this.plugin.t(
@@ -10627,21 +11322,29 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     pickerRow.addClass("act-edit-entry-pickers");
     const textColorInput = pickerRow.createEl("input", { type: "color" });
     const bgColorInput = pickerRow.createEl("input", { type: "color" });
+    this._textColorInput = textColorInput;
+    this._bgColorInput = bgColorInput;
     const pickrRow = contentEl.createDiv();
     pickrRow.addClass("act-pickr-row");
     const presetBtn = pickrRow.createEl("button");
-    try {
-      (0, import_obsidian6.setIcon)(presetBtn, "presets");
-    } catch (e) {
-    }
-    presetBtn.title = this.plugin.t("btn_presets", "Presets");
+    presetBtn.title = this.plugin.t("btn_style", "Style");
     const presetLabel = presetBtn.createEl("span", {
-      text: this.plugin.t("btn_presets", "Preset")
+      text: this.plugin.t("btn_style", "Style")
     });
     presetLabel.style.fontSize = "12px";
+    presetBtn.addEventListener("click", () => {
+      try {
+        new TextStylePresetsModal(
+          this.app,
+          this.plugin,
+          (preset) => this._applyPreset(preset)
+        ).open();
+      } catch (e) {
+      }
+    });
     const hlBtn = pickrRow.createEl("button");
     try {
-      (0, import_obsidian6.setIcon)(hlBtn, "edit-3");
+      (0, import_obsidian8.setIcon)(hlBtn, "edit-3");
     } catch (e) {
     }
     hlBtn.title = this.plugin.t(
@@ -10653,7 +11356,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     if (this.plugin.settings.enableCustomCss) {
       cssBtn = pickrRow.createEl("button");
       try {
-        (0, import_obsidian6.setIcon)(cssBtn, "code");
+        (0, import_obsidian8.setIcon)(cssBtn, "code");
       } catch (e) {
       }
       cssBtn.title = this.plugin.t("edit_custom_css_btn", "Edit Custom CSS");
@@ -11077,7 +11780,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
             modal._preFillBgColor = this.entry._savedBackgroundColor;
           modal.open();
         } catch (e) {
-          new import_obsidian6.Notice(
+          new import_obsidian8.Notice(
             this.plugin.t(
               "notice_error_opening_regex_tester",
               "Error opening regex tester"
@@ -11782,6 +12485,49 @@ var EditEntryModal = class extends import_obsidian6.Modal {
     this._saveData = saveHandler;
     this._refreshPreview = renderPreview;
   }
+  _applyPreset(preset) {
+    if (!this.entry || !preset) return;
+    const keys = [
+      "styleType",
+      "textColor",
+      "backgroundColor",
+      "backgroundOpacity",
+      "highlightBorderRadius",
+      "highlightHorizontalPadding",
+      "highlightVerticalPadding",
+      "enableBorderThickness",
+      "borderStyle",
+      "borderLineStyle",
+      "borderOpacity",
+      "borderThickness",
+      "customCss"
+    ];
+    for (const k of keys) {
+      if (k in preset) this.entry[k] = preset[k];
+    }
+    try {
+      if (preset.styleType && this._styleSelect) {
+        this._styleSelect.value = preset.styleType;
+      }
+    } catch (e) {
+    }
+    const tc = preset.textColor && preset.textColor !== "currentColor" ? preset.textColor : "";
+    const bc = preset.backgroundColor ? preset.backgroundColor : "";
+    try {
+      if (this._textColorInput)
+        this._textColorInput.value = this.plugin.isValidHexColor(tc) ? tc : "#000000";
+    } catch (e) {
+    }
+    try {
+      if (this._bgColorInput)
+        this._bgColorInput.value = this.plugin.isValidHexColor(bc) ? bc : "#000000";
+    } catch (e) {
+    }
+    try {
+      this._refreshPreview();
+    } catch (e) {
+    }
+  }
   onClose() {
     try {
       if (this._saveData) this._saveData(false);
@@ -11815,7 +12561,7 @@ var EditEntryModal = class extends import_obsidian6.Modal {
 };
 
 // src/modals/ColorPickerModal.js
-var ColorPickerModal2 = class extends import_obsidian7.Modal {
+var ColorPickerModal2 = class extends import_obsidian9.Modal {
   constructor(app, plugin, callback, mode = "text", selectedText = "", isQuickOnce = false, preFillMarkTarget = "text", entry = null) {
     super(app);
     this.plugin = plugin;
@@ -11983,11 +12729,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     }
     if (!hideControls && !isQuick) {
       const presetBtn = pickrRow.createEl("button");
-      try {
-        (0, import_obsidian7.setIcon)(presetBtn, "presets");
-      } catch (e) {
-      }
-      presetBtn.title = this.plugin.t("btn_presets", "Presets");
+      presetBtn.title = this.plugin.t("btn_style", "Style");
       presetBtn.style.flex = "0 0 auto";
       presetBtn.style.display = "flex";
       presetBtn.style.alignItems = "center";
@@ -11999,16 +12741,19 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
       presetBtn.style.cursor = "pointer";
       presetBtn.style.gap = "4px";
       const presetLabel = presetBtn.createEl("span", {
-        text: this.plugin.t("btn_presets", "Preset")
+        text: this.plugin.t("btn_style", "Style")
       });
       presetLabel.style.fontSize = "12px";
       const presetHandler = () => {
         try {
-          const { PresetModal: PresetModal2 } = (init_PresetModal(), __toCommonJS(PresetModal_exports));
-          const modal = new PresetModal2(this.app, this.plugin, this);
+          const modal = new TextStylePresetsModal(
+            this.app,
+            this.plugin,
+            (preset) => this._applyPreset(preset)
+          );
           modal.open();
         } catch (e) {
-          debugLog("MODAL", "Error opening preset modal", e);
+          debugLog("MODAL", "Error opening style presets modal", e);
         }
       };
       presetBtn.addEventListener("click", presetHandler);
@@ -12023,7 +12768,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     if (shouldShowEdit) {
       editBtn = pickrRow.createEl("button");
       try {
-        (0, import_obsidian7.setIcon)(editBtn, "settings");
+        (0, import_obsidian9.setIcon)(editBtn, "settings");
       } catch (e) {
       }
       editBtn.title = this.plugin.t("edit_entry_header", "Edit Entry");
@@ -12323,6 +13068,8 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
         const curBg = type === "background" ? val : this.selectedBgColor || null;
         this._applyCustomCss(curText, curBg);
       };
+      if (type === "text") this._applyTextColorFn = apply;
+      else this._applyBgColorFn = apply;
       const colorChange = () => {
         const v = colorInput.value;
         apply(v);
@@ -12345,7 +13092,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
         if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(v)) {
           apply(v);
         } else {
-          new import_obsidian7.Notice(
+          new import_obsidian9.Notice(
             this.plugin.t(
               "notice_invalid_hex_format",
               "Invalid hex color format. Use #RRGGBB or #RGB."
@@ -13313,6 +14060,73 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
     }
     this._applyCustomCss();
   }
+  _applyPreset(preset) {
+    if (!preset) return;
+    const textColor = preset.textColor && preset.textColor !== "currentColor" ? preset.textColor : null;
+    const backgroundColor = preset.backgroundColor ? preset.backgroundColor : null;
+    const word = this._selectedText || "";
+    const styleFields = {
+      styleType: preset.styleType || "highlight",
+      backgroundOpacity: preset.backgroundOpacity ?? null,
+      highlightBorderRadius: preset.highlightBorderRadius ?? null,
+      highlightHorizontalPadding: preset.highlightHorizontalPadding ?? null,
+      highlightVerticalPadding: preset.highlightVerticalPadding ?? null,
+      enableBorderThickness: typeof preset.enableBorderThickness !== "undefined" ? !!preset.enableBorderThickness : null,
+      borderStyle: preset.borderStyle || null,
+      borderLineStyle: preset.borderLineStyle || null,
+      borderOpacity: preset.borderOpacity ?? null,
+      borderThickness: preset.borderThickness ?? null
+    };
+    const result = Object.assign(
+      {
+        textColor,
+        backgroundColor,
+        word,
+        markTarget: this._markTarget || "text",
+        matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"),
+        caseSensitive: this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
+        selectedGroupUid: this._selectedGroupUid || null,
+        quickOnceStyle: Object.assign({}, styleFields)
+      },
+      styleFields
+    );
+    const color = this.mode === "background" || this.mode === "text-and-background" ? backgroundColor || textColor : textColor || backgroundColor;
+    if (this._entry) {
+      const keys = [
+        "styleType",
+        "textColor",
+        "backgroundColor",
+        "backgroundOpacity",
+        "highlightBorderRadius",
+        "highlightHorizontalPadding",
+        "highlightVerticalPadding",
+        "enableBorderThickness",
+        "borderStyle",
+        "borderLineStyle",
+        "borderOpacity",
+        "borderThickness"
+      ];
+      for (const k of keys) {
+        if (k in preset) this._entry[k] = preset[k];
+      }
+    }
+    try {
+      if (typeof this.callback === "function") this.callback(color, result);
+    } catch (e) {
+    }
+    try {
+      if (textColor && typeof this._applyTextColorFn === "function") {
+        this._applyTextColorFn(textColor);
+      }
+    } catch (e) {
+    }
+    try {
+      if (backgroundColor && typeof this._applyBgColorFn === "function") {
+        this._applyBgColorFn(backgroundColor);
+      }
+    } catch (e) {
+    }
+  }
   onClose() {
     try {
       if (this._hasUserChanges && typeof this._submitFn === "function")
@@ -13328,7 +14142,7 @@ var ColorPickerModal2 = class extends import_obsidian7.Modal {
 };
 
 // src/modals/HighlightStylingModal.js
-var HighlightStylingModal = class extends import_obsidian8.Modal {
+var HighlightStylingModal = class extends import_obsidian10.Modal {
   constructor(app, plugin, entry = null, parentEditEntryModal = null, previewTextOverride = null) {
     super(app);
     this.plugin = plugin;
@@ -13659,9 +14473,9 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       slider.max = String(max);
       slider.value = String(value);
       const resetBtn = right.createEl("button");
-      resetBtn.addClass("act-highlight-reset-btn");
+      resetBtn.addClass("act-highlight-reset-btn", "clickable-icon");
       try {
-        (0, import_obsidian8.setIcon)(resetBtn, "reset");
+        (0, import_obsidian10.setIcon)(resetBtn, "reset");
       } catch (e) {
       }
       const handler = () => {
@@ -13714,9 +14528,9 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       renderPreview();
     });
     const radiusReset = radiusInputRight.createEl("button");
-    radiusReset.addClass("act-highlight-reset-btn");
+    radiusReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
-      (0, import_obsidian8.setIcon)(radiusReset, "reset");
+      (0, import_obsidian10.setIcon)(radiusReset, "reset");
     } catch (e) {
     }
     radiusReset.addEventListener("click", () => {
@@ -13747,9 +14561,9 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       renderPreview();
     });
     const hPadReset = hPadRight.createEl("button");
-    hPadReset.addClass("act-highlight-reset-btn");
+    hPadReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
-      (0, import_obsidian8.setIcon)(hPadReset, "reset");
+      (0, import_obsidian10.setIcon)(hPadReset, "reset");
     } catch (e) {
     }
     hPadReset.addEventListener("click", () => {
@@ -13778,9 +14592,9 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       renderPreview();
     });
     const vPadReset = vPadRight.createEl("button");
-    vPadReset.addClass("act-highlight-reset-btn");
+    vPadReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
-      (0, import_obsidian8.setIcon)(vPadReset, "reset");
+      (0, import_obsidian10.setIcon)(vPadReset, "reset");
     } catch (e) {
     }
     vPadReset.addEventListener("click", () => {
@@ -13849,9 +14663,9 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       renderPreview();
     });
     const sidesReset = sidesRight.createEl("button");
-    sidesReset.addClass("act-highlight-reset-btn");
+    sidesReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
-      (0, import_obsidian8.setIcon)(sidesReset, "reset");
+      (0, import_obsidian10.setIcon)(sidesReset, "reset");
     } catch (e) {
     }
     sidesReset.addEventListener("click", () => {
@@ -13883,9 +14697,9 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       renderPreview();
     });
     const styleReset = styleRight.createEl("button");
-    styleReset.addClass("act-highlight-reset-btn");
+    styleReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
-      (0, import_obsidian8.setIcon)(styleReset, "reset");
+      (0, import_obsidian10.setIcon)(styleReset, "reset");
     } catch (e) {
     }
     styleReset.addEventListener("click", () => {
@@ -13911,9 +14725,9 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       renderPreview();
     });
     const bOpReset = bOpRight.createEl("button");
-    bOpReset.addClass("act-highlight-reset-btn");
+    bOpReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
-      (0, import_obsidian8.setIcon)(bOpReset, "reset");
+      (0, import_obsidian10.setIcon)(bOpReset, "reset");
     } catch (e) {
     }
     bOpReset.addEventListener("click", () => {
@@ -13941,9 +14755,9 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
       renderPreview();
     });
     const thickReset = thickRight.createEl("button");
-    thickReset.addClass("act-highlight-reset-btn");
+    thickReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
-      (0, import_obsidian8.setIcon)(thickReset, "reset");
+      (0, import_obsidian10.setIcon)(thickReset, "reset");
     } catch (e) {
     }
     thickReset.addEventListener("click", () => {
@@ -14439,8 +15253,8 @@ var HighlightStylingModal = class extends import_obsidian8.Modal {
 };
 
 // src/modals/ChangelogModal.js
-var import_obsidian9 = require("obsidian");
-var ChangelogModal = class extends import_obsidian9.Modal {
+var import_obsidian11 = require("obsidian");
+var ChangelogModal = class extends import_obsidian11.Modal {
   constructor(app, plugin) {
     super(app);
     this.plugin = plugin;
@@ -14557,12 +15371,12 @@ var ChangelogModal = class extends import_obsidian9.Modal {
         try {
           if (!this._mdComp) {
             try {
-              this._mdComp = new import_obsidian9.Component();
+              this._mdComp = new import_obsidian11.Component();
             } catch (e) {
               this._mdComp = null;
             }
           }
-          await import_obsidian9.MarkdownRenderer.render(
+          await import_obsidian11.MarkdownRenderer.render(
             this.plugin.app,
             md,
             notes,
@@ -14611,12 +15425,11 @@ var ChangelogModal = class extends import_obsidian9.Modal {
 };
 
 // src/modals/EditWordGroupModal.js
-var import_obsidian12 = require("obsidian");
-init_PresetModal();
+var import_obsidian13 = require("obsidian");
 
 // src/modals/AlertModal.js
-var import_obsidian10 = require("obsidian");
-var AlertModal = class extends import_obsidian10.Modal {
+var import_obsidian12 = require("obsidian");
+var AlertModal = class extends import_obsidian12.Modal {
   constructor(app, plugin, title, message, customAction) {
     super(app);
     this.plugin = plugin;
@@ -14682,69 +15495,8 @@ var AlertModal = class extends import_obsidian10.Modal {
   }
 };
 
-// src/modals/ConfirmationModal.js
-var import_obsidian11 = require("obsidian");
-var ConfirmationModal = class extends import_obsidian11.Modal {
-  constructor(app, plugin, title, message, onConfirm) {
-    super(app);
-    this.plugin = plugin;
-    this.title = title;
-    this.message = message;
-    this.onConfirm = onConfirm;
-    this._eventListeners = [];
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    this._eventListeners = [];
-    try {
-      this.modalEl.addClass("act-modal");
-    } catch (e) {
-    }
-    const h2 = contentEl.createEl("h2", { text: this.title });
-    h2.style.marginTop = "0";
-    contentEl.createEl("p", { text: this.message });
-    const buttonDiv = contentEl.createDiv();
-    buttonDiv.style.display = "flex";
-    buttonDiv.style.justifyContent = "flex-end";
-    buttonDiv.style.marginTop = "20px";
-    buttonDiv.style.gap = "10px";
-    const cancelButton = buttonDiv.createEl("button", {
-      text: this.plugin.t("btn_cancel", "Cancel")
-    });
-    const cancelHandler = () => this.close();
-    cancelButton.addEventListener("click", cancelHandler);
-    this._eventListeners.push({
-      el: cancelButton,
-      event: "click",
-      handler: cancelHandler
-    });
-    const confirmButton = buttonDiv.createEl("button", {
-      text: this.plugin.t("btn_confirm", "Confirm")
-    });
-    confirmButton.addClass("mod-warning");
-    const confirmHandler = () => {
-      this.onConfirm();
-      this.close();
-    };
-    confirmButton.addEventListener("click", confirmHandler);
-    this._eventListeners.push({
-      el: confirmButton,
-      event: "click",
-      handler: confirmHandler
-    });
-  }
-  onClose() {
-    this._eventListeners.forEach(({ el, event, handler }) => {
-      el.removeEventListener(event, handler);
-    });
-    this._eventListeners = [];
-    this.contentEl.empty();
-  }
-};
-
 // src/modals/EditWordGroupModal.js
-var EditWordGroupModal = class extends import_obsidian12.Modal {
+var EditWordGroupModal = class extends import_obsidian13.Modal {
   constructor(app, plugin, group, onSave, onDelete) {
     super(app);
     this.plugin = plugin;
@@ -14904,7 +15656,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     );
     const editBtn = topRow.createEl("button");
     try {
-      (0, import_obsidian12.setIcon)(editBtn, "edit-3");
+      (0, import_obsidian13.setIcon)(editBtn, "edit-3");
     } catch (e) {
     }
     editBtn.title = this.plugin.t(
@@ -14936,7 +15688,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     if (this.plugin.settings.enableCustomCss) {
       const cssBtn = topRow.createEl("button");
       try {
-        (0, import_obsidian12.setIcon)(cssBtn, "code");
+        (0, import_obsidian13.setIcon)(cssBtn, "code");
       } catch (e) {
       }
       cssBtn.title = this.plugin.t("edit_custom_css_btn", "Edit Custom CSS");
@@ -15263,81 +16015,19 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
     }
     const presetsBtn = buttonRow.createEl("button");
     presetsBtn.addClass("act-group-btn-presets");
-    presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
+    presetsBtn.textContent = this.plugin.t("btn_style", "Style");
     presetsBtn.style.cursor = "pointer";
     presetsBtn.style.padding = "6px 12px";
     presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
-      if (!this.plugin.settings.enableRegexSupport) {
-        new AlertModal(
+      try {
+        new TextStylePresetsModal(
           this.app,
           this.plugin,
-          this.plugin.t("regex_support", "Regex Support"),
-          this.plugin.t("notice_regex_support_disabled"),
-          {
-            text: this.plugin.t("btn_take_me_there", "Take me there"),
-            callback: () => {
-              this.close();
-              this.plugin.openSettingsAndFocusRegex();
-            }
-          }
+          (preset) => this._applyPreset(preset)
         ).open();
-        return;
+      } catch (e) {
       }
-      new PresetModal(this.app, this.plugin, async (preset) => {
-        if (!preset) return;
-        new ColorPickerModal2(
-          this.app,
-          this.plugin,
-          async (color, result) => {
-            const sel = result || {};
-            const tc = sel.textColor && this.plugin.isValidHexColor(sel.textColor) ? sel.textColor : null;
-            const bc = sel.backgroundColor && this.plugin.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
-            if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color)))
-              return;
-            const entry = {
-              pattern: preset.pattern,
-              isRegex: true,
-              flags: preset.flags || "",
-              styleType: "text",
-              matchType: "contains",
-              caseSensitive: !!this.plugin.settings.caseSensitive,
-              presetLabel: preset.label,
-              markTarget: sel.markTarget || "text"
-            };
-            if (preset.affectMarkElements) entry.affectMarkElements = true;
-            if (preset.targetElement)
-              entry.targetElement = preset.targetElement;
-            if (tc && bc) {
-              entry.textColor = tc;
-              entry.backgroundColor = bc;
-              entry.color = "";
-              entry.styleType = "both";
-              entry._savedTextColor = tc;
-              entry._savedBackgroundColor = bc;
-            } else if (tc) {
-              entry.color = tc;
-              entry.styleType = "text";
-              entry._savedTextColor = tc;
-            } else if (bc) {
-              entry.textColor = "currentColor";
-              entry.backgroundColor = bc;
-              entry.color = "";
-              entry.styleType = "highlight";
-              entry._savedBackgroundColor = bc;
-            } else {
-              entry.color = color;
-              entry._savedTextColor = color;
-            }
-            this.group.entries.push(entry);
-            this._sortMode = "last-added";
-            this._refreshGroupEntries();
-          },
-          "text-and-background",
-          "",
-          false
-        ).open();
-      }).open();
     };
     presetsBtn.addEventListener("click", presetsHandler);
     this._cleanupHandlers.push(
@@ -15850,7 +16540,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         try {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
-          const menu = new import_obsidian12.Menu(this.app);
+          const menu = new import_obsidian13.Menu(this.app);
           menu.addItem((item) => {
             item.setTitle(
               this.plugin.t("edit_entry_details", "Edit Entry Details")
@@ -15944,7 +16634,7 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
         }
       }
       try {
-        (0, import_obsidian12.setIcon)(entrySettingsBtn, "settings");
+        (0, import_obsidian13.setIcon)(entrySettingsBtn, "settings");
       } catch (e) {
       }
       entrySettingsBtn.addEventListener("click", () => {
@@ -15968,6 +16658,34 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
   _refreshEntries() {
     this._refreshGroupEntries();
   }
+  _applyPreset(preset) {
+    if (!preset || !this.group) return;
+    const keys = [
+      "styleType",
+      "textColor",
+      "backgroundColor",
+      "backgroundOpacity",
+      "highlightBorderRadius",
+      "highlightHorizontalPadding",
+      "highlightVerticalPadding",
+      "enableBorderThickness",
+      "borderStyle",
+      "borderLineStyle",
+      "borderOpacity",
+      "borderThickness"
+    ];
+    if (Array.isArray(this.group.entries)) {
+      for (const entry of this.group.entries) {
+        for (const k of keys) {
+          if (k in preset) entry[k] = preset[k];
+        }
+      }
+    }
+    try {
+      this._refreshGroupEntries();
+    } catch (e) {
+    }
+  }
   onClose() {
     try {
       this.onSave(this.group);
@@ -15988,8 +16706,8 @@ var EditWordGroupModal = class extends import_obsidian12.Modal {
 };
 
 // src/modals/SelectBlacklistGroupModal.js
-var import_obsidian13 = require("obsidian");
-var SelectBlacklistGroupModal = class extends import_obsidian13.FuzzySuggestModal {
+var import_obsidian14 = require("obsidian");
+var SelectBlacklistGroupModal = class extends import_obsidian14.FuzzySuggestModal {
   constructor(app, plugin, onSelected) {
     super(app);
     this.plugin = plugin;
@@ -16026,9 +16744,8 @@ var SelectBlacklistGroupModal = class extends import_obsidian13.FuzzySuggestModa
 };
 
 // src/modals/EditBlacklistGroupModal.js
-var import_obsidian14 = require("obsidian");
-init_PresetModal();
-var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
+var import_obsidian15 = require("obsidian");
+var EditBlacklistGroupModal = class extends import_obsidian15.Modal {
   constructor(app, plugin, group, onSave, onDelete) {
     super(app);
     this.plugin = plugin;
@@ -16695,7 +17412,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
         try {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
-          const menu = new import_obsidian14.Menu(this.app);
+          const menu = new import_obsidian15.Menu(this.app);
           if (entry.isRegex) {
             menu.addItem((item) => {
               item.setTitle(
@@ -16730,7 +17447,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
                 this.plugin.settings.blacklistEntryGroups
               ) ? this.plugin.settings.blacklistEntryGroups : [];
               if (blacklistGroups.length === 0) {
-                new import_obsidian14.Notice(
+                new import_obsidian15.Notice(
                   this.plugin.t(
                     "no_blacklist_groups_available",
                     "No blacklist groups available"
@@ -16766,7 +17483,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
                     this.plugin.triggerActiveDocumentRerender();
                     this._refreshGroupEntries();
                     const groupName = selectedGroup && selectedGroup.name && String(selectedGroup.name).trim().length > 0 ? selectedGroup.name : "(unnamed group)";
-                    new import_obsidian14.Notice(
+                    new import_obsidian15.Notice(
                       this.plugin.t(
                         "entry_moved_to_group",
                         'Entry moved to "{groupName}"'
@@ -16778,7 +17495,7 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
                       "Error moving entry to blacklist group:",
                       e
                     );
-                    new import_obsidian14.Notice(
+                    new import_obsidian15.Notice(
                       this.plugin.t(
                         "notice_error_moving_entry",
                         "Error moving entry. Please try again."
@@ -16849,8 +17566,8 @@ var EditBlacklistGroupModal = class extends import_obsidian14.Modal {
 };
 
 // src/modals/EditColorSwatchesModal.js
-var import_obsidian15 = require("obsidian");
-var EditColorSwatchesModal = class extends import_obsidian15.Modal {
+var import_obsidian16 = require("obsidian");
+var EditColorSwatchesModal = class extends import_obsidian16.Modal {
   constructor(app, plugin) {
     super(app);
     this.plugin = plugin;
@@ -17055,7 +17772,7 @@ var EditColorSwatchesModal = class extends import_obsidian15.Modal {
         const ctxHandler = (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
-          const menu = new import_obsidian15.Menu();
+          const menu = new import_obsidian16.Menu();
           menu.addItem(
             (item) => item.setTitle(this.plugin.t("delete_swatch", "Delete Swatch")).setIcon("trash").onClick(async () => {
               const swatches2 = getSwatches();
@@ -17246,7 +17963,7 @@ var EditColorSwatchesModal = class extends import_obsidian15.Modal {
         color = colorInput.value;
       }
       if (!this.plugin.isValidHexColor(color)) {
-        new import_obsidian15.Notice(
+        new import_obsidian16.Notice(
           this.plugin.t(
             "notice_invalid_hex_format",
             "Invalid hex color format. Use #RRGGBB or #RGB."
@@ -17324,8 +18041,8 @@ var EditColorSwatchesModal = class extends import_obsidian15.Modal {
 };
 
 // src/modals/QuickMenuColorsModal.js
-var import_obsidian16 = require("obsidian");
-var QuickMenuColorsModal = class extends import_obsidian16.Modal {
+var import_obsidian17 = require("obsidian");
+var QuickMenuColorsModal = class extends import_obsidian17.Modal {
   constructor(app, plugin) {
     super(app);
     this.plugin = plugin;
@@ -17384,7 +18101,7 @@ var QuickMenuColorsModal = class extends import_obsidian16.Modal {
           row.style.flex = "0 0 auto";
           row.setAttribute("data-qc-index", String(i));
           const dragHandle = row.createEl("button");
-          (0, import_obsidian16.setIcon)(dragHandle, "menu");
+          (0, import_obsidian17.setIcon)(dragHandle, "menu");
           dragHandle.addClass("act-drag-handle");
           dragHandle.style.padding = "0";
           dragHandle.style.border = "none";
@@ -17485,7 +18202,7 @@ var QuickMenuColorsModal = class extends import_obsidian16.Modal {
           this._eventListeners.push({ el: bCp, event: "contextmenu", handler: () => {
           } });
           const delBtn = row.createDiv();
-          (0, import_obsidian16.setIcon)(delBtn, "x");
+          (0, import_obsidian17.setIcon)(delBtn, "x");
           delBtn.style.cursor = "pointer";
           delBtn.style.flexShrink = "0";
           delBtn.style.display = "flex";
@@ -17555,13 +18272,13 @@ var QuickMenuColorsModal = class extends import_obsidian16.Modal {
 };
 
 // src/settings/SettingsTab.js
-var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
+var ColorSettingTab = class extends import_obsidian18.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
     this.icon = "palette";
     this._activeTab = "general";
-    this.debouncedSaveSettings = (0, import_obsidian17.debounce)(
+    this.debouncedSaveSettings = (0, import_obsidian18.debounce)(
       this.plugin.saveSettings.bind(this.plugin),
       800
     );
@@ -17840,7 +18557,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           if (!newPattern) {
             this.plugin.settings.wordEntries.splice(idx, 1);
           } else if (this.plugin.settings.enableRegexSupport && entry.isRegex && !this.plugin.settings.disableRegexSafety && this.plugin.isRegexTooComplex(newPattern)) {
-            new import_obsidian17.Notice(
+            new import_obsidian18.Notice(
               this.plugin.t(
                 "notice_pattern_too_complex",
                 "Pattern too complex: " + newPattern.substring(0, 60) + "..."
@@ -17886,7 +18603,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           this._refreshEntries();
         } catch (error) {
           debugError("SETTINGS", "Error saving word entry", error);
-          new import_obsidian17.Notice(
+          new import_obsidian18.Notice(
             this.plugin.t(
               "notice_error_saving_changes",
               "Error saving changes. Please try again."
@@ -17969,7 +18686,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             this.plugin.forceRefreshAllEditors();
             this.plugin.forceRefreshAllReadingViews();
             this._refreshEntries();
-            new import_obsidian17.Notice(
+            new import_obsidian18.Notice(
               this.plugin.t("notice_text_color_reset", "Text color reset")
             );
           }
@@ -17995,7 +18712,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             this.plugin.forceRefreshAllEditors();
             this.plugin.forceRefreshAllReadingViews();
             this._refreshEntries();
-            new import_obsidian17.Notice(
+            new import_obsidian18.Notice(
               this.plugin.t("notice_highlight_reset", "Highlight color reset")
             );
           }
@@ -18007,7 +18724,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         try {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
-          const menu = new import_obsidian17.Menu(this.app);
+          const menu = new import_obsidian18.Menu(this.app);
           if (entry.isRegex) {
             menu.addItem((item) => {
               item.setTitle(
@@ -18047,7 +18764,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       const cpHandler = async () => {
         const newColor = cp.value;
         if (!this.plugin.isValidHexColor(newColor)) {
-          new import_obsidian17.Notice(
+          new import_obsidian18.Notice(
             this.plugin.t(
               "notice_invalid_color_format",
               "Invalid color format."
@@ -18126,7 +18843,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           this.plugin.settings.wordEntries[idx].isRegex = regexChk.checked;
         flagsInput.style.display = regexChk.checked ? "" : "none";
         if (regexChk.checked && !this.plugin.settings.enableRegexSupport) {
-          new import_obsidian17.Notice(
+          new import_obsidian18.Notice(
             this.plugin.t(
               "notice_regex_support_disabled",
               "To use Presets, enable Regex Support from the General tab in Settings."
@@ -18549,7 +19266,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       entrySettingsBtn.style.border = "none";
       entrySettingsBtn.style.boxShadow = "none";
       try {
-        if (!import_obsidian17.Platform.isMobile) entrySettingsBtn.style.display = "none";
+        if (!import_obsidian18.Platform.isMobile) entrySettingsBtn.style.display = "none";
       } catch (e) {
         entrySettingsBtn.style.display = "none";
       }
@@ -18563,7 +19280,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         }
       }
       try {
-        (0, import_obsidian17.setIcon)(entrySettingsBtn, "settings");
+        (0, import_obsidian18.setIcon)(entrySettingsBtn, "settings");
       } catch (e) {
       }
       const entrySettingsBtnHandler = () => {
@@ -18735,7 +19452,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         row.createSpan({ cls: "act-disabled-file-title", text: filePath });
         const btn = row.createEl("button", { cls: "clickable-icon" });
         btn.setAttribute("aria-label", this.plugin.t("tooltip_enable_for_file", "Enable for this file"));
-        (0, import_obsidian17.setIcon)(btn, "x");
+        (0, import_obsidian18.setIcon)(btn, "x");
         btn.addEventListener("click", async () => {
           const doDelete = async () => {
             const index = this.plugin.settings.disabledFiles.indexOf(filePath);
@@ -18926,7 +19643,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             if (!newPattern) {
               this.plugin.settings.blacklistEntries.splice(entryIdx, 1);
             } else if (this.plugin.settings.enableRegexSupport && entry.isRegex && !this.plugin.settings.disableRegexSafety && this.plugin.isRegexTooComplex(newPattern)) {
-              new import_obsidian17.Notice(
+              new import_obsidian18.Notice(
                 this.plugin.t(
                   "notice_pattern_too_complex",
                   "Pattern too complex: " + newPattern.substring(0, 60) + "..."
@@ -18957,7 +19674,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             this._refreshBlacklistWords();
           } catch (error) {
             debugError("SETTINGS", "Error saving blacklist entry", error);
-            new import_obsidian17.Notice(
+            new import_obsidian18.Notice(
               this.plugin.t(
                 "notice_error_saving_changes",
                 "Error saving changes. Please try again."
@@ -19048,7 +19765,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           try {
             ev && ev.preventDefault && ev.preventDefault();
             if (ev && ev.stopPropagation) ev.stopPropagation();
-            const menu = new import_obsidian17.Menu(this.app);
+            const menu = new import_obsidian18.Menu(this.app);
             if (entry.isRegex) {
               menu.addItem((item) => {
                 item.setTitle(
@@ -19655,7 +20372,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           row.style.marginBottom = "8px";
           row.setAttribute("data-swatch-index", i.toString());
           const dragHandle = row.createEl("button");
-          (0, import_obsidian17.setIcon)(dragHandle, "menu");
+          (0, import_obsidian18.setIcon)(dragHandle, "menu");
           dragHandle.style.padding = "0";
           dragHandle.style.border = "none";
           dragHandle.style.background = "transparent";
@@ -19709,7 +20426,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             }
           };
           const delBtn = row.createDiv();
-          (0, import_obsidian17.setIcon)(delBtn, "x");
+          (0, import_obsidian18.setIcon)(delBtn, "x");
           delBtn.style.cursor = "pointer";
           delBtn.style.flexShrink = "0";
           delBtn.style.display = "flex";
@@ -19952,7 +20669,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           delBtn.addEventListener("click", delHandler);
         });
       }
-      const addButtonSetting = new import_obsidian17.Setting(customSwatchesContent);
+      const addButtonSetting = new import_obsidian18.Setting(customSwatchesContent);
       addButtonSetting.addButton(
         (b) => b.setButtonText(this.plugin.t("btn_add_color", "+ Add color")).onClick(async () => {
           const nextIndex = (Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches.length : 0) + 1;
@@ -19984,12 +20701,12 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
     try {
       if (!this._quickMenuColorsSettingContainer) return;
       this._quickMenuColorsSettingContainer.empty();
-      const quickMenuColorsSetting = new import_obsidian17.Setting(this._quickMenuColorsSettingContainer).setName(this.plugin.t("quick_colors_header", "Quick Colors")).setDesc(
+      const quickMenuColorsSetting = new import_obsidian18.Setting(this._quickMenuColorsSettingContainer).setName(this.plugin.t("quick_colors_header", "Quick Colors")).setDesc(
         this.plugin.t(
           "quick_colors_desc",
           "Shows color dots in the menu"
         )
-      ).setHeading().addToggle(
+      ).addToggle(
         (t) => t.setValue(this.plugin.settings.quickMenuColorsEnabled).onChange(async (v) => {
           this.plugin.settings.quickMenuColorsEnabled = v;
           await this.plugin.saveSettings();
@@ -20006,6 +20723,17 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         quickMenuColorsSetting.settingEl.style.marginBottom = "8px";
         quickMenuColorsSetting.settingEl.style.borderTop = "none";
         quickMenuColorsSetting.controlEl.style.marginLeft = "10px";
+        const ctrl = quickMenuColorsSetting.controlEl;
+        const toggleEl = ctrl ? ctrl.firstChild : null;
+        if (toggleEl && quickMenuColorsSetting.infoEl) {
+          quickMenuColorsSetting.settingEl.insertBefore(
+            toggleEl,
+            quickMenuColorsSetting.infoEl
+          );
+          quickMenuColorsSetting.settingEl.style.alignItems = "center";
+          toggleEl.style.marginRight = "10px";
+          toggleEl.style.flexShrink = "0";
+        }
       } catch (e) {
       }
     } catch (e) {
@@ -20016,7 +20744,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
     try {
       if (!this._quickColorsContainer) return;
       this._quickColorsContainer.empty();
-      const quickColorsSetting = new import_obsidian17.Setting(this._quickColorsContainer).setName(this.plugin.t("quick_colors_header", "Quick Colors")).setDesc(
+      const quickColorsSetting = new import_obsidian18.Setting(this._quickColorsContainer).setName(this.plugin.t("quick_colors_header", "Quick Colors")).setDesc(
         this.plugin.t(
           "quick_colors_desc",
           "Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used."
@@ -20063,7 +20791,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           row.style.flex = "0 0 auto";
           row.setAttribute("data-qc-index", String(i));
           const dragHandle = row.createEl("button");
-          (0, import_obsidian17.setIcon)(dragHandle, "menu");
+          (0, import_obsidian18.setIcon)(dragHandle, "menu");
           dragHandle.addClass("act-drag-handle");
           dragHandle.style.padding = "0";
           dragHandle.style.border = "none";
@@ -20160,7 +20888,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             modal.open();
           });
           const delBtn = row.createDiv();
-          (0, import_obsidian17.setIcon)(delBtn, "x");
+          (0, import_obsidian18.setIcon)(delBtn, "x");
           delBtn.style.cursor = "pointer";
           delBtn.style.flexShrink = "0";
           delBtn.style.display = "flex";
@@ -20319,7 +21047,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         await this.plugin.saveSettings();
         this._refreshQuickColors();
       });
-      const modeSetting = new import_obsidian17.Setting(this._quickColorsContainer).setName(
+      const modeSetting = new import_obsidian18.Setting(this._quickColorsContainer).setName(
         this.plugin.t(
           "quick_colors_apply_mode_label",
           "The text coloring will apply as"
@@ -20348,7 +21076,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         modeSetting.settingEl.style.marginTop = "10px";
       } catch (e) {
       }
-      new import_obsidian17.Setting(this._quickColorsContainer).setName(this.plugin.t("enable_individual_quick_style_apply_mode", "Enable individual application")).setDesc(this.plugin.t("enable_individual_quick_style_apply_mode_desc", "Allow each quick style to have its own 'text coloring will apply as' setting.")).addToggle(
+      new import_obsidian18.Setting(this._quickColorsContainer).setName(this.plugin.t("enable_individual_quick_style_apply_mode", "Enable individual application")).setDesc(this.plugin.t("enable_individual_quick_style_apply_mode_desc", "Allow each quick style to have its own 'text coloring will apply as' setting.")).addToggle(
         (t) => t.setValue(!!this.plugin.settings.enableIndividualQuickStyleApplyMode).onChange(async (v) => {
           this.plugin.settings.enableIndividualQuickStyleApplyMode = v;
           await this.plugin.saveSettings();
@@ -20363,7 +21091,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
     try {
       if (!this._quickStylesContainer) return;
       this._quickStylesContainer.empty();
-      const quickStylesSetting = new import_obsidian17.Setting(this._quickStylesContainer).setName(this.plugin.t("quick_styles_header", "Quick Styles")).setDesc(
+      const quickStylesSetting = new import_obsidian18.Setting(this._quickStylesContainer).setName(this.plugin.t("quick_styles_header", "Quick Styles")).setDesc(
         this.plugin.t(
           "quick_styles_desc",
           "Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used."
@@ -20398,7 +21126,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         row.style.borderRadius = "var(--setting-items-radius)";
         row.style.background = "var(--setting-items-background)";
         const dragHandle = row.createEl("button");
-        (0, import_obsidian17.setIcon)(dragHandle, "menu");
+        (0, import_obsidian18.setIcon)(dragHandle, "menu");
         dragHandle.addClass("act-drag-handle");
         dragHandle.style.padding = "0";
         dragHandle.style.border = "none";
@@ -20460,7 +21188,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         settingsBtn.style.display = "flex";
         settingsBtn.style.paddingLeft = "0";
         settingsBtn.style.paddingRight = "4px";
-        (0, import_obsidian17.setIcon)(settingsBtn, "settings");
+        (0, import_obsidian18.setIcon)(settingsBtn, "settings");
         settingsBtn.addEventListener("click", () => {
           if (!style.styleType) style.styleType = "both";
           const modal = new HighlightStylingModal(
@@ -20486,7 +21214,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         });
         row.addEventListener("contextmenu", (e) => {
           e.preventDefault();
-          const menu = new import_obsidian17.Menu();
+          const menu = new import_obsidian18.Menu();
           menu.addItem(
             (item) => item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(async () => {
               const clone = JSON.parse(JSON.stringify(style));
@@ -20907,7 +21635,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         row.style.backgroundColor = "var(--setting-items-background)";
         row.setAttribute("data-group-uid", group.uid || "");
         const dragHandle = row.createEl("button");
-        (0, import_obsidian17.setIcon)(dragHandle, "menu");
+        (0, import_obsidian18.setIcon)(dragHandle, "menu");
         dragHandle.style.padding = "0";
         dragHandle.style.border = "none";
         dragHandle.style.background = "transparent";
@@ -21309,7 +22037,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         row.style.backgroundColor = "var(--setting-items-background)";
         row.setAttribute("data-group-uid", group.uid || "");
         const dragHandle = row.createEl("button");
-        (0, import_obsidian17.setIcon)(dragHandle, "menu");
+        (0, import_obsidian18.setIcon)(dragHandle, "menu");
         dragHandle.style.padding = "0";
         dragHandle.style.border = "none";
         dragHandle.style.background = "transparent";
@@ -21853,7 +22581,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       };
     });
     if (this._activeTab === "general") {
-      const releaseNotesSettingEl = new import_obsidian17.Setting(containerEl2).setName(
+      const releaseNotesSettingEl = new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t("latest_release_notes_label", "Latest Release Notes")
       ).setDesc(
         this.plugin.t(
@@ -21874,7 +22602,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         releaseNotesSettingEl.settingEl.style.borderTop = "none";
       } catch (e) {
       }
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("language_label", "Language")).setDesc(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("language_label", "Language")).setDesc(
         this.plugin.t(
           "language_desc",
           "Select the language to be used in this plugin"
@@ -21911,7 +22639,52 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         );
         return d;
       });
-      new import_obsidian17.Setting(containerEl2).setName(
+      containerEl2.createEl("hr", { cls: "act-settings-divider" });
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("enable_document_color", "Enable Global Color")).setDesc(
+        this.plugin.t(
+          "enable_global_color_desc",
+          "On-off switch for vault-wide coloring"
+        )
+      ).addToggle(
+        (t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
+          this.plugin.settings.enabled = v;
+          await this.debouncedSaveSettings();
+        })
+      );
+      containerEl2.createEl("hr", { cls: "act-settings-divider" });
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("text_style_presets", "Text Style Presets")).setDesc(
+        this.plugin.t(
+          "text_style_presets_desc",
+          "Manage and apply text style presets."
+        )
+      ).addButton(
+        (b) => b.setButtonText(this.plugin.t("btn_edit_presets", "Edit Presets")).onClick(() => {
+          try {
+            new TextStylePresetsModal(this.app, this.plugin).open();
+          } catch (e) {
+          }
+        })
+      );
+      new import_obsidian18.Setting(containerEl2).setName(
+        this.plugin.t(
+          "custom_color_swatches",
+          "Custom Color Swatches"
+        )
+      ).setDesc(
+        this.plugin.t(
+          "custom_color_swatches_desc",
+          "Add, edit and preview your custom color swatches."
+        )
+      ).addButton(
+        (b) => b.setButtonText(
+          this.plugin.t("btn_edit_swatches", "Edit Swatches")
+        ).onClick(() => {
+          new EditColorSwatchesModal(this.app, this.plugin).open();
+        })
+      );
+      this._quickMenuColorsSettingContainer = containerEl2.createDiv();
+      this._refreshQuickMenuColorsSetting();
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")
       ).addToggle(
         (t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
@@ -21940,7 +22713,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           }
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")
       ).addToggle(
         (t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
@@ -21959,11 +22732,11 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
                   this.forceRefreshAllEditors();
                   this.forceRefreshAllReadingViews();
                   if (this.settings.enabled)
-                    new import_obsidian17.Notice(
+                    new import_obsidian18.Notice(
                       this.t("notice_enabled", "Always color text enabled")
                     );
                   else
-                    new import_obsidian17.Notice(
+                    new import_obsidian18.Notice(
                       this.t(
                         "notice_disabled",
                         "Always color text disabled"
@@ -21982,7 +22755,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           }
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("show_toggle_command", "Show Toggle in command")).addToggle(
         (t) => t.setValue(!this.plugin.settings.disableToggleModes.command).onChange(async (v) => {
           this.plugin.settings.disableToggleModes.command = !v;
           await this.plugin.saveSettings();
@@ -22022,13 +22795,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           "Color Rendering & Performance"
         )
       });
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("enable_document_color", "Enable Global Color")).addToggle(
-        (t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
-          this.plugin.settings.enabled = v;
-          await this.debouncedSaveSettings();
-        })
-      );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "color_in_live_preview_mode",
           "Color in live preview mode"
@@ -22088,7 +22855,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           }
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t("color_in_reading_mode", "Color in reading mode")
       ).addToggle(
         (t) => t.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async (v) => {
@@ -22140,7 +22907,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           }
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t("lightweight_mode", "Lightweight mode (Experimental)")
       ).setDesc(this.plugin.t("lightweight_mode_desc", "")).addToggle(
         (t) => t.setValue(this.plugin.settings.extremeLightweightMode).onChange(async (v) => {
@@ -22160,7 +22927,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           }
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t("smart_update_mode", "Smart Updates (Experimental)")
       ).setDesc(
         this.plugin.t(
@@ -22181,7 +22948,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           }
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "word_completion_coloring",
           "Word Completion Coloring (Experimental)"
@@ -22208,7 +22975,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       containerEl2.createEl("h3", {
         text: this.plugin.t("matching_behavior_header", "Matching Behavior")
       });
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("case_sensitive", "Case sensitive")).setDesc(
         this.plugin.t(
           "case_sensitive_desc",
           `If this is on, "word" and "Word" are treated as different. If it's off, they're colored the same.`
@@ -22219,7 +22986,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           await this.debouncedSaveSettings();
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("partial_match", "Partial match")).setDesc(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("partial_match", "Partial match")).setDesc(
         this.plugin.t(
           "partial_match_desc",
           'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").'
@@ -22230,7 +22997,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           await this.debouncedSaveSettings();
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("regex_support", "Regex support")).setDesc(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("regex_support", "Regex support")).setDesc(
         this.plugin.t(
           "regex_support_desc",
           "Allow patterns to be regular expressions. Invalid regexes are ignored for safety."
@@ -22243,7 +23010,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           this.display();
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("disable_regex_safety", "Disable regex safety")).setDesc(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("disable_regex_safety", "Disable regex safety")).setDesc(
         this.plugin.t(
           "disable_regex_safety_desc",
           "Allow complex or potentially dangerous expressions. May cause performance issues or freezes."
@@ -22269,7 +23036,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       containerEl2.createEl("h3", {
         text: this.plugin.t("custom_css_header", "Custom CSS")
       });
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "enable_custom_css",
           "Enable custom CSS for text styling"
@@ -22300,7 +23067,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       containerEl2.createEl("h3", {
         text: this.plugin.t("theme_support_header", "Theme Support")
       });
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t("light_mode_fixer", "Light Mode Text Color Fixer")
       ).setDesc(
         this.plugin.t(
@@ -22314,7 +23081,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           this.plugin.updateLightModeFixer();
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("dark_mode_fixer", "Dark Mode Text Color Fixer")).setDesc(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("dark_mode_fixer", "Dark Mode Text Color Fixer")).setDesc(
         this.plugin.t(
           "dark_mode_fixer_desc",
           "Automatically lightens colored text when using Dark theme to improve visibility."
@@ -22329,7 +23096,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       containerEl2.createEl("h3", {
         text: this.plugin.t("menu_options_header", "Menu Options")
       });
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "show_always_color_text_menu",
           'Show "Always Color Text" in right-click menu'
@@ -22345,7 +23112,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "show_add_to_existing_menu",
           'Show "Add to Existing Entry" in right-click menu'
@@ -22361,7 +23128,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "show_blacklist_menu",
           'Show "Blacklist Word" in right-click menu'
@@ -22411,7 +23178,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         );
       } catch (_) {
       }
-      new import_obsidian17.Setting(otaContainer).setName(this.plugin.t("setting_color_once", "Color Once")).setDesc(
+      new import_obsidian18.Setting(otaContainer).setName(this.plugin.t("setting_color_once", "Color Once")).setDesc(
         this.plugin.t(
           "setting_color_once_desc",
           "Inserts HTML inline for the selected text. This persists even if the plugin is turned off."
@@ -22422,7 +23189,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
-      new import_obsidian17.Setting(otaContainer).setName(this.plugin.t("setting_highlight_once", "Highlight Once")).setDesc(
+      new import_obsidian18.Setting(otaContainer).setName(this.plugin.t("setting_highlight_once", "Highlight Once")).setDesc(
         this.plugin.t(
           "setting_highlight_once_desc",
           "Inserts HTML inline with background styling. This persists even if the plugin is turned off."
@@ -22435,7 +23202,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           this.display();
         })
       );
-      new import_obsidian17.Setting(otaContainer).setName(
+      new import_obsidian18.Setting(otaContainer).setName(
         this.plugin.t(
           "setting_color_highlight_once",
           "Color & Highlight Once"
@@ -22452,7 +23219,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         })
       );
       if (this.plugin.settings.enableQuickHighlightOnce || this.plugin.settings.enableQuickColorHighlightOnce) {
-        new import_obsidian17.Setting(otaContainer).setName(
+        new import_obsidian18.Setting(otaContainer).setName(
           this.plugin.t(
             "use_global_highlight_style",
             "Use Global Highlight Style for Highlight Once"
@@ -22470,7 +23237,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             this.display();
           })
         );
-        new import_obsidian17.Setting(otaContainer).setName(
+        new import_obsidian18.Setting(otaContainer).setName(
           this.plugin.t("style_highlight_once", "Style Highlight Once")
         ).setDesc(
           this.plugin.t(
@@ -22553,7 +23320,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           this._updateQuickOncePreview = updateQuickOncePreview;
         }
         if (this.plugin.settings.quickHighlightStyleEnable && !this.plugin.settings.quickHighlightUseGlobalStyle) {
-          new import_obsidian17.Setting(otaContainer).setName(
+          new import_obsidian18.Setting(otaContainer).setName(
             this.plugin.t("highlight_once_opacity", "Highlight once opacity")
           ).addSlider(
             (slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.quickHighlightOpacity ?? 25).setDynamicTooltip().onChange(async (v) => {
@@ -22567,7 +23334,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           );
           {
             let brInput;
-            new import_obsidian17.Setting(otaContainer).setName(
+            new import_obsidian18.Setting(otaContainer).setName(
               this.plugin.t(
                 "highlight_once_border_radius",
                 "Highlight once border radius (px)"
@@ -22602,7 +23369,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           }
           {
             let hpInput;
-            new import_obsidian17.Setting(otaContainer).setName(
+            new import_obsidian18.Setting(otaContainer).setName(
               this.plugin.t(
                 "highlight_horizontal_padding",
                 "Highlight horizontal padding (px)"
@@ -22637,7 +23404,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           }
           {
             let vpInput;
-            new import_obsidian17.Setting(otaContainer).setName(
+            new import_obsidian18.Setting(otaContainer).setName(
               this.plugin.t(
                 "highlight_vertical_padding",
                 "Highlight vertical padding (px)"
@@ -22670,7 +23437,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
               })
             );
           }
-          new import_obsidian17.Setting(otaContainer).setName(
+          new import_obsidian18.Setting(otaContainer).setName(
             this.plugin.t(
               "enable_border_highlight_once",
               "Enable Border for Highlight Once"
@@ -22695,7 +23462,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             })
           );
           if (this.plugin.settings.quickHighlightEnableBorder) {
-            new import_obsidian17.Setting(otaContainer).setName(
+            new import_obsidian18.Setting(otaContainer).setName(
               this.plugin.t(
                 "highlight_once_border_style",
                 "Highlight Once Border Sides"
@@ -22773,7 +23540,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
                 }
               });
             });
-            new import_obsidian17.Setting(otaContainer).setName(
+            new import_obsidian18.Setting(otaContainer).setName(
               this.plugin.t(
                 "highlight_once_border_line_style",
                 "Border Style"
@@ -22806,7 +23573,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
                 }
               });
             });
-            new import_obsidian17.Setting(otaContainer).setName(
+            new import_obsidian18.Setting(otaContainer).setName(
               this.plugin.t(
                 "highlight_once_border_opacity",
                 "Highlight Once Border Opacity"
@@ -22825,7 +23592,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             );
             {
               let btInput;
-              new import_obsidian17.Setting(otaContainer).setName(
+              new import_obsidian18.Setting(otaContainer).setName(
                 this.plugin.t(
                   "highlight_once_border_thickness",
                   "Highlight Once Border Thickness (px)"
@@ -22966,7 +23733,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         }
       };
       updatePreview2();
-      new import_obsidian17.Setting(ghContainer).setName(this.plugin.t("highlight_opacity", "Highlight opacity")).setDesc(
+      new import_obsidian18.Setting(ghContainer).setName(this.plugin.t("highlight_opacity", "Highlight opacity")).setDesc(
         this.plugin.t(
           "highlight_opacity_desc",
           "Set the opacity of the highlight (0-100%)"
@@ -22980,7 +23747,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       );
       {
         let brInput;
-        new import_obsidian17.Setting(ghContainer).setName(
+        new import_obsidian18.Setting(ghContainer).setName(
           this.plugin.t(
             "highlight_border_radius",
             "Highlight border radius (px)"
@@ -23010,7 +23777,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       }
       {
         let hpInput;
-        new import_obsidian17.Setting(ghContainer).setName(
+        new import_obsidian18.Setting(ghContainer).setName(
           this.plugin.t(
             "highlight_horizontal_padding",
             "Highlight horizontal padding (px)"
@@ -23042,7 +23809,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       }
       {
         let vpInput;
-        new import_obsidian17.Setting(ghContainer).setName(
+        new import_obsidian18.Setting(ghContainer).setName(
           this.plugin.t(
             "highlight_vertical_padding",
             "Highlight vertical padding (px)"
@@ -23072,7 +23839,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           })
         );
       }
-      new import_obsidian17.Setting(ghContainer).setName(
+      new import_obsidian18.Setting(ghContainer).setName(
         this.plugin.t(
           "rounded_corners_wrapping",
           "Rounded corners on line wrapping"
@@ -23088,7 +23855,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           await this.debouncedSaveSettings();
         })
       );
-      new import_obsidian17.Setting(ghContainer).setName(
+      new import_obsidian18.Setting(ghContainer).setName(
         this.plugin.t("enable_highlight_border", "Enable Highlight Border")
       ).setDesc(
         this.plugin.t(
@@ -23105,7 +23872,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         })
       );
       if (this.plugin.settings.enableBorderThickness) {
-        new import_obsidian17.Setting(ghContainer).setName(this.plugin.t("border_style", "Border Sides")).setDesc(
+        new import_obsidian18.Setting(ghContainer).setName(this.plugin.t("border_style", "Border Sides")).setDesc(
           this.plugin.t(
             "border_style_desc",
             "Choose which sides to apply the border"
@@ -23173,7 +23940,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             updatePreview2();
           });
         });
-        new import_obsidian17.Setting(ghContainer).setName(this.plugin.t("border_line_style", "Border Style")).setDesc(
+        new import_obsidian18.Setting(ghContainer).setName(this.plugin.t("border_line_style", "Border Style")).setDesc(
           this.plugin.t(
             "border_line_style_desc",
             "Choose the border line style"
@@ -23190,7 +23957,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             updatePreview2();
           });
         });
-        new import_obsidian17.Setting(ghContainer).setName(this.plugin.t("border_opacity", "Border Opacity")).setDesc(
+        new import_obsidian18.Setting(ghContainer).setName(this.plugin.t("border_opacity", "Border Opacity")).setDesc(
           this.plugin.t(
             "border_opacity_desc",
             "Set the opacity of the border (0-100%)"
@@ -23204,7 +23971,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         );
         {
           let btInput;
-          new import_obsidian17.Setting(ghContainer).setName(this.plugin.t("border_thickness", "Border Thickness (px)")).setDesc(
+          new import_obsidian18.Setting(ghContainer).setName(this.plugin.t("border_thickness", "Border Thickness (px)")).setDesc(
             this.plugin.t(
               "border_thickness_desc",
               "Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)"
@@ -23265,7 +24032,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         );
       } catch (_) {
       }
-      new import_obsidian17.Setting(swContainer).setName(this.plugin.t("color_picker_layout", "Color Picker Layout")).setDesc(
+      new import_obsidian18.Setting(swContainer).setName(this.plugin.t("color_picker_layout", "Color Picker Layout")).setDesc(
         this.plugin.t(
           "color_picker_layout_desc",
           "Choose which color types to show when picking colors for text"
@@ -23321,7 +24088,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           await this.plugin.saveSettings();
         });
       });
-      new import_obsidian17.Setting(swContainer).setName(
+      new import_obsidian18.Setting(swContainer).setName(
         this.plugin.t("enable_custom_swatches", "Enable custom swatches")
       ).setDesc(
         this.plugin.t(
@@ -23335,7 +24102,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           this._refreshCustomSwatches();
         })
       );
-      new import_obsidian17.Setting(swContainer).setName(
+      new import_obsidian18.Setting(swContainer).setName(
         this.plugin.t("replace_default_swatches", "Replace default swatches")
       ).setDesc(
         this.plugin.t(
@@ -23348,24 +24115,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
-      new import_obsidian17.Setting(swContainer).setName(
-        this.plugin.t(
-          "custom_color_swatches",
-          "Custom Color Swatches"
-        )
-      ).setDesc(
-        this.plugin.t(
-          "custom_color_swatches_desc",
-          "Add, edit and preview your custom color swatches."
-        )
-      ).addButton(
-        (b) => b.setButtonText(
-          this.plugin.t("btn_edit_swatches", "Edit Swatches")
-        ).onClick(() => {
-          new EditColorSwatchesModal(this.app, this.plugin).open();
-        })
-      );
-      new import_obsidian17.Setting(swContainer).setName(
+      new import_obsidian18.Setting(swContainer).setName(
         this.plugin.t(
           "link_swatch_updates",
           "Link swatch updates to text colors"
@@ -23383,15 +24133,13 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       );
       this._customSwatchesContainer = swContainer.createDiv();
       this._refreshCustomSwatches();
-      this._quickMenuColorsSettingContainer = containerEl2.createDiv();
-      this._refreshQuickMenuColorsSetting();
       this._quickColorsContainer = containerEl2.createDiv();
       this._refreshQuickColors();
       this._quickStylesContainer = containerEl2.createDiv();
       this._refreshQuickStyles();
     }
     if (this._activeTab === "always-color-texts") {
-      const coloredTextsHeading = new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("colored_texts_header", "Colored Texts")).setDesc(
+      const coloredTextsHeading = new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("colored_texts_header", "Colored Texts")).setDesc(
         this.plugin.t(
           "always_colored_texts_desc",
           "This is where you manage your words/patterns and their colors."
@@ -23402,7 +24150,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         coloredTextsHeading.settingEl.style.borderTop = "none";
       } catch (e) {
       }
-      const dividerSetting = new import_obsidian17.Setting(containerEl2);
+      const dividerSetting = new import_obsidian18.Setting(containerEl2);
       try {
         dividerSetting.settingEl.classList.add("act-section-divider");
       } catch (_) {
@@ -23741,7 +24489,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       this._cleanupHandlers.push(
         () => presetsBtn.removeEventListener("click", presetsHandler)
       );
-      const deleteAllWordsSetting = new import_obsidian17.Setting(containerEl2).addExtraButton(
+      const deleteAllWordsSetting = new import_obsidian18.Setting(containerEl2).addExtraButton(
         (b) => b.setIcon("trash").setTooltip(
           this.plugin.t(
             "tooltip_delete_all_words",
@@ -23775,7 +24523,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       containerEl2.createEl("h3", {
         text: this.plugin.t("grouped_entries_header", "Grouped Entries")
       });
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "hide_inactive_groups_in_dropdowns",
           "Hide Inactive Groups in Dropdowns"
@@ -23791,7 +24539,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "show_word_groups_in_commands",
           "Show word groups in commands"
@@ -23958,7 +24706,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           this._refreshGroups();
         }
       };
-      new import_obsidian17.Setting(groupButtonsContainer).addExtraButton(
+      new import_obsidian18.Setting(groupButtonsContainer).addExtraButton(
         (b) => b.setIcon("trash").setTooltip(
           this.plugin.t(
             "tooltip_delete_all_groups",
@@ -23992,7 +24740,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       });
     }
     if (this._activeTab === "blacklist") {
-      const blacklistsHeading = new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("blacklist_words_header", "Blacklists")).setDesc(
+      const blacklistsHeading = new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("blacklist_words_header", "Blacklists")).setDesc(
         this.plugin.t(
           "blacklist_words_desc",
           "Keywords or patterns here will never be colored, even for partial matches."
@@ -24264,7 +25012,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           blacklistPresetsHandler
         )
       );
-      const deleteAllBlacklistSetting = new import_obsidian17.Setting(containerEl2).addExtraButton(
+      const deleteAllBlacklistSetting = new import_obsidian18.Setting(containerEl2).addExtraButton(
         (b) => b.setIcon("trash").setTooltip(
           this.plugin.t(
             "tooltip_delete_all_blacklist",
@@ -24302,7 +25050,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           "Blacklist Group Entries"
         )
       });
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "show_blacklist_groups_in_commands",
           "Show blacklist groups in commands"
@@ -24433,7 +25181,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
           this._refreshBlacklistGroups();
         }
       };
-      new import_obsidian17.Setting(blGroupButtonsContainer).addExtraButton(
+      new import_obsidian18.Setting(blGroupButtonsContainer).addExtraButton(
         (b) => b.setIcon("trash").setTooltip(
           this.plugin.t(
             "tooltip_delete_all_blacklist_groups",
@@ -24465,7 +25213,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       });
     }
     if (this._activeTab === "file-folder-rules") {
-      const pathRulesHeading = new import_obsidian17.Setting(containerEl2).setName(
+      const pathRulesHeading = new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "file_folder_rules_header",
           "File & Folder Coloring Rules"
@@ -24645,7 +25393,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       this._cleanupHandlers.push(
         () => pathAddBtn.removeEventListener("click", pathAddHandler)
       );
-      new import_obsidian17.Setting(containerEl2).setName(
+      new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "disable_coloring_current_file",
           "Disable coloring for current file"
@@ -24664,7 +25412,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         ).onClick(async () => {
           const md = this.app.workspace.getActiveFile();
           if (!md) {
-            new import_obsidian17.Notice(
+            new import_obsidian18.Notice(
               this.plugin.t(
                 "notice_no_active_file_to_disable",
                 "No active file to disable coloring for."
@@ -24680,7 +25428,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             (r) => r && r.mode === "exclude" && !r.isFolder && this.plugin.normalizePath(String(r.path || "")) === np
           );
           if (exists) {
-            new import_obsidian17.Notice(
+            new import_obsidian18.Notice(
               this.plugin.t(
                 "notice_already_disabled_for_path",
                 `Coloring is already disabled for {path}`,
@@ -24701,7 +25449,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             this.display();
           } catch (e) {
           }
-          new import_obsidian17.Notice(
+          new import_obsidian18.Notice(
             this.plugin.t(
               "notice_coloring_disabled_for_path",
               `Coloring disabled for {path}`,
@@ -24717,7 +25465,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       containerEl2.createEl("h2", {
         text: this.plugin.t("auto_backup_header", "Automatic Backups")
       });
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("auto_backup_toggle", "Enable automatic backups")).setDesc(this.plugin.t("auto_backup_toggle_desc", "Periodically back up all plugin data to a folder inside your vault.")).addToggle(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("auto_backup_toggle", "Enable automatic backups")).setDesc(this.plugin.t("auto_backup_toggle_desc", "Periodically back up all plugin data to a folder inside your vault.")).addToggle(
         (toggle) => toggle.setValue(this.plugin.settings.autoBackupEnabled).onChange(async (value) => {
           this.plugin.settings.autoBackupEnabled = value;
           await this.plugin.saveSettings();
@@ -24727,14 +25475,14 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         })
       );
       if (this.plugin.settings.autoBackupEnabled) {
-        const folderSetting = new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("auto_backup_folder", "Backup folder")).setDesc(this.plugin.t("auto_backup_folder_desc", "Folder path inside your vault where backups are saved."));
+        const folderSetting = new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("auto_backup_folder", "Backup folder")).setDesc(this.plugin.t("auto_backup_folder_desc", "Folder path inside your vault where backups are saved."));
         let folderPickBtn;
         folderSetting.addButton((btn) => {
           folderPickBtn = btn;
           const cur = (this.plugin.settings.autoBackupFolder || "").trim();
           btn.setButtonText(cur || this.plugin.t("auto_backup_folder_pick", "Choose folder"));
           btn.buttonEl.addEventListener("click", () => {
-            const folders = this.plugin.app.vault.getAllLoadedFiles().filter((f) => f instanceof import_obsidian17.TFolder).map((f) => f.path).sort();
+            const folders = this.plugin.app.vault.getAllLoadedFiles().filter((f) => f instanceof import_obsidian18.TFolder).map((f) => f.path).sort();
             const modal = new FolderPickerModal(
               this.plugin.app,
               folders,
@@ -24757,7 +25505,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             if (folderPickBtn) folderPickBtn.setButtonText(this.plugin.t("auto_backup_folder_pick", "Choose folder"));
           });
         });
-        const intervalSetting = new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("auto_backup_interval", "Backup interval")).setDesc(this.plugin.t("auto_backup_interval_desc", "How often to save a backup."));
+        const intervalSetting = new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("auto_backup_interval", "Backup interval")).setDesc(this.plugin.t("auto_backup_interval_desc", "How often to save a backup."));
         intervalSetting.addText((text) => {
           text.inputEl.type = "number";
           text.inputEl.min = "1";
@@ -24778,23 +25526,23 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
             this.plugin.rescheduleAutoBackup();
           })
         );
-        new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("auto_backup_overwrite", "Overwrite previous backup")).setDesc(this.plugin.t("auto_backup_overwrite_desc", "Replace the last backup file instead of creating a new one each time.")).addToggle(
+        new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("auto_backup_overwrite", "Overwrite previous backup")).setDesc(this.plugin.t("auto_backup_overwrite_desc", "Replace the last backup file instead of creating a new one each time.")).addToggle(
           (toggle) => toggle.setValue(this.plugin.settings.autoBackupOverwrite || false).onChange(async (value) => {
             this.plugin.settings.autoBackupOverwrite = value;
             await this.plugin.saveSettings();
           })
         );
-        new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("auto_backup_now", "Backup now")).setDesc(this.plugin.t("auto_backup_now_desc", "Save a backup immediately.")).addButton(
+        new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("auto_backup_now", "Backup now")).setDesc(this.plugin.t("auto_backup_now_desc", "Save a backup immediately.")).addButton(
           (btn) => btn.setButtonText(this.plugin.t("btn_backup_now", "Backup now")).setCta().onClick(async () => {
             btn.setButtonText(this.plugin.t("btn_backup_now_running", "Saving..."));
             btn.setDisabled(true);
             try {
               const path = await this.plugin.runAutoBackup();
               btn.setButtonText(this.plugin.t("btn_backup_now_done", "Saved!"));
-              new import_obsidian17.Notice(`Backup saved: ${path}`);
+              new import_obsidian18.Notice(`Backup saved: ${path}`);
             } catch (e) {
               btn.setButtonText(this.plugin.t("btn_backup_now_failed", "Failed"));
-              new import_obsidian17.Notice(`Backup failed: ${e?.message || e}`);
+              new import_obsidian18.Notice(`Backup failed: ${e?.message || e}`);
             } finally {
               setTimeout(() => {
                 btn.setButtonText(this.plugin.t("btn_backup_now", "Backup now"));
@@ -24807,7 +25555,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
       containerEl2.createEl("h2", {
         text: this.plugin.t("data_export_import_header", "Data Export/Import")
       });
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("export_plugin_data", "Export plugin data")).setDesc(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("export_plugin_data", "Export plugin data")).setDesc(
         this.plugin.t(
           "export_plugin_data_desc",
           "Export settings, words, and rules to a JSON file."
@@ -24816,19 +25564,19 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
         (b) => b.setButtonText(this.plugin.t("btn_export", "Export")).onClick(async () => {
           try {
             const fname = await this.plugin.exportSettingsToPickedLocation();
-            new import_obsidian17.Notice(
+            new import_obsidian18.Notice(
               this.plugin.t("notice_exported", `Exported: {fname}`, {
                 fname
               })
             );
           } catch (e) {
-            new import_obsidian17.Notice(
+            new import_obsidian18.Notice(
               this.plugin.t("notice_export_failed", "Export failed")
             );
           }
         })
       );
-      new import_obsidian17.Setting(containerEl2).setName(this.plugin.t("import_plugin_data", "Import plugin data")).setDesc(
+      new import_obsidian18.Setting(containerEl2).setName(this.plugin.t("import_plugin_data", "Import plugin data")).setDesc(
         this.plugin.t(
           "import_plugin_data_desc",
           "Import settings from a JSON file"
@@ -24849,14 +25597,14 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
                 );
                 this._initializedSettingsUI = false;
                 this.display();
-                new import_obsidian17.Notice(
+                new import_obsidian18.Notice(
                   this.plugin.t(
                     "notice_import_completed",
                     "Import completed"
                   )
                 );
               } catch (e) {
-                new import_obsidian17.Notice(
+                new import_obsidian18.Notice(
                   this.plugin.t("notice_import_failed", "Import failed")
                 );
               }
@@ -24928,7 +25676,7 @@ var ColorSettingTab = class extends import_obsidian17.PluginSettingTab {
     }
   }
 };
-var FolderPickerModal = class extends import_obsidian17.FuzzySuggestModal {
+var FolderPickerModal = class extends import_obsidian18.FuzzySuggestModal {
   constructor(app, folders, onChoose) {
     super(app);
     this.folders = folders;
@@ -26510,14 +27258,13 @@ function getEntryForHeadingLevel(entries, level) {
 
 // src/core/AlwaysColorText.js
 var import_i18n = __toESM(require_i18n());
-init_PresetModal();
 
 // src/modals/RegexTesterModal.js
-var import_obsidian18 = require("obsidian");
+var import_obsidian19 = require("obsidian");
 
 // src/core/AlwaysColorText.js
 var moment = window.moment;
-var AlwaysColorText = class extends import_obsidian19.Plugin {
+var AlwaysColorText = class extends import_obsidian20.Plugin {
   constructor(...args) {
     super(...args);
     (function() {
@@ -27177,6 +27924,26 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
       this.settings.quickMenuColors = [];
     if (!Array.isArray(this.settings.quickStyles))
       this.settings.quickStyles = [];
+    if (!Array.isArray(this.settings.textStylePresets) || this.settings.textStylePresets.length === 0) {
+      try {
+        this.settings.textStylePresets = JSON.parse(
+          JSON.stringify(defaultSettings.textStylePresets || [])
+        );
+      } catch (e) {
+        this.settings.textStylePresets = [];
+      }
+    }
+    if (Array.isArray(this.settings.textStylePresets) && this.settings.textStylePresets.length > 0 && !this.settings.textStylePresets.some((p) => p && p.isDefault)) {
+      this.settings.textStylePresets[0].isDefault = true;
+    }
+    if (!this.settings._tspColorMigrated && Array.isArray(this.settings.textStylePresets)) {
+      for (const p of this.settings.textStylePresets) {
+        if (p && typeof p.uid === "string" && p.uid.startsWith("tsp-")) {
+          if (p.backgroundColor) p.backgroundColor = "";
+        }
+      }
+      this.settings._tspColorMigrated = true;
+    }
     if (typeof this.settings.quickStylesEnabled === "undefined")
       this.settings.quickStylesEnabled = true;
     if (typeof this.settings.enableQuickColorHighlightOnce === "undefined")
@@ -27278,9 +28045,9 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
           this.forceRefreshAllEditors();
           this.forceRefreshAllReadingViews();
           if (this.settings.enabled)
-            new import_obsidian19.Notice(this.t("notice_enabled", "Always color text enabled"));
+            new import_obsidian20.Notice(this.t("notice_enabled", "Always color text enabled"));
           else
-            new import_obsidian19.Notice(this.t("notice_disabled", "Always color text disabled"));
+            new import_obsidian20.Notice(this.t("notice_disabled", "Always color text disabled"));
           if (this.settings.enabled) {
             this.removeDisabledNeutralizerStyles();
           } else {
@@ -27338,9 +28105,9 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
         this.forceRefreshAllEditors();
         this.forceRefreshAllReadingViews();
         if (this.settings.enabled)
-          new import_obsidian19.Notice(this.t("notice_enabled", "Always color text enabled"));
+          new import_obsidian20.Notice(this.t("notice_enabled", "Always color text enabled"));
         else
-          new import_obsidian19.Notice(this.t("notice_disabled", "Always color text disabled"));
+          new import_obsidian20.Notice(this.t("notice_disabled", "Always color text disabled"));
         if (this.settings.enabled) {
           this.removeDisabledNeutralizerStyles();
         } else {
@@ -27612,7 +28379,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
                     view
                   ).open();
                 } catch (e) {
-                  new import_obsidian19.Notice(
+                  new import_obsidian20.Notice(
                     this.t(
                       "notice_error_opening_modal",
                       "Unable to open modal"
@@ -27626,7 +28393,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
             menu.addItem((item) => {
               item.setTitle(this.t("menu_always_color_text", "Always color text")).setIcon("palette").onClick(() => {
                 if (this.isWordBlacklisted(selectedText, view.file.path)) {
-                  new import_obsidian19.Notice(
+                  new import_obsidian20.Notice(
                     this.t(
                       "notice_blacklisted_cannot_color",
                       `"${selectedText}" is blacklisted and cannot be colored.`,
@@ -27812,7 +28579,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
               }
               this._openQuickStylesSubmenu = null;
             }
-            const sub = new import_obsidian19.Menu();
+            const sub = new import_obsidian20.Menu();
             stylesArr.forEach((style) => {
               sub.addItem((subItem) => {
                 const frag = document.createDocumentFragment();
@@ -28090,7 +28857,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
               chevronIcon.style.cursor = "pointer";
               chevronIcon.style.marginLeft = "auto";
               try {
-                (0, import_obsidian19.setIcon)(chevronIcon, "chevron-right");
+                (0, import_obsidian20.setIcon)(chevronIcon, "chevron-right");
               } catch (_) {
               }
               chevronIcon.addEventListener("click", (ev) => {
@@ -28134,7 +28901,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
               try {
                 const iconRight = document.createElement("div");
                 iconRight.className = "menu-item-icon mod-submenu";
-                (0, import_obsidian19.setIcon)(iconRight, "chevron-right");
+                (0, import_obsidian20.setIcon)(iconRight, "chevron-right");
                 item.dom?.appendChild(iconRight);
               } catch (_) {
               }
@@ -28312,7 +29079,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
                 }
                 await this.saveSettings();
                 this.refreshEditor(view, true);
-                new import_obsidian19.Notice(
+                new import_obsidian20.Notice(
                   this.t(
                     "notice_removed_always_color",
                     `Removed always coloring for "${selectedText}".`,
@@ -28345,7 +29112,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
                     groupedPatterns: null
                   });
                   await this.saveSettings();
-                  new import_obsidian19.Notice(
+                  new import_obsidian20.Notice(
                     this.t(
                       "notice_added_to_blacklist",
                       `"${selectedText}" added to blacklist.`,
@@ -28357,7 +29124,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
                     this.settingTab._refreshBlacklistWords();
                   }
                 } else {
-                  new import_obsidian19.Notice(
+                  new import_obsidian20.Notice(
                     this.t(
                       "notice_already_blacklisted",
                       `"${selectedText}" is already blacklisted.`,
@@ -28403,7 +29170,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t(
                 "notice_select_text_first",
                 "Please select some text first."
@@ -28538,14 +29305,14 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t("notice_select_text_first", "Please select some text first.")
             );
             return;
           }
           const activeFile = this.app.workspace.getActiveFile();
           if (!activeFile) {
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t("notice_no_active_file", "No active file found.")
             );
             return;
@@ -28681,7 +29448,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t(
                 "notice_select_text_first",
                 "Please select some text first."
@@ -28713,7 +29480,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
         callback: async () => {
           const md = this.app.workspace.getActiveFile();
           if (!md) {
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t(
                 "notice_no_active_file",
                 "No active file to toggle coloring for."
@@ -28725,7 +29492,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
             const index = this.settings.disabledFiles.indexOf(md.path);
             if (index > -1) this.settings.disabledFiles.splice(index, 1);
             await this.saveSettings();
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t(
                 "notice_coloring_enabled_for_path",
                 `Coloring enabled for ${md.path}`,
@@ -28735,7 +29502,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
           } else {
             this.settings.disabledFiles.push(md.path);
             await this.saveSettings();
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t(
                 "notice_coloring_disabled_for_path",
                 `Coloring disabled for ${md.path}`,
@@ -28774,7 +29541,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
         callback: async () => {
           this.settings.extremeLightweightMode = !this.settings.extremeLightweightMode;
           await this.saveSettings();
-          new import_obsidian19.Notice(
+          new import_obsidian20.Notice(
             this.settings.extremeLightweightMode ? this.t(
               "notice_lightweight_mode_enabled",
               "Lightweight Mode enabled"
@@ -28796,7 +29563,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t(
                 "notice_select_text_first_once",
                 "Please select text first to color/highlight once."
@@ -28868,7 +29635,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
         callback: async () => {
           this.settings.enabled = !this.settings.enabled;
           await this.saveSettings();
-          new import_obsidian19.Notice(
+          new import_obsidian20.Notice(
             this.settings.enabled ? this.t("notice_global_enabled", "Always Color Text Enabled") : this.t("notice_global_disabled", "Always Color Text Disabled")
           );
           this._lpCalloutCache = /* @__PURE__ */ new WeakMap();
@@ -28912,7 +29679,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
           try {
             new ChangelogModal(this.app, this).open();
           } catch (e) {
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t(
                 "notice_unable_open_changelog",
                 "Unable to open changelog modal."
@@ -28991,7 +29758,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
               this.forceRefreshAllReadingViews();
             }).open();
           } catch (e) {
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t(
                 "notice_error_opening_regex_tester",
                 "Error opening regex tester"
@@ -29039,7 +29806,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
               this.forceRefreshAllReadingViews();
             }).open();
           } catch (e) {
-            new import_obsidian19.Notice(
+            new import_obsidian20.Notice(
               this.t(
                 "notice_error_opening_blacklist_regex_tester",
                 "Error opening blacklist regex tester"
@@ -29095,7 +29862,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
             } catch (_) {
             }
             const msg = this.settings.hideTextColors ? this.t("notice_text_colors_hidden", "Text colors hidden") : this.t("notice_text_colors_visible", "Text colors visible");
-            new import_obsidian19.Notice(msg);
+            new import_obsidian20.Notice(msg);
           } catch (_) {
           }
         }
@@ -29153,7 +29920,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
             } catch (_) {
             }
             const msg = this.settings.hideHighlights ? this.t("notice_highlights_hidden", "Highlights hidden") : this.t("notice_highlights_visible", "Highlights visible");
-            new import_obsidian19.Notice(msg);
+            new import_obsidian20.Notice(msg);
           } catch (_) {
           }
         }
@@ -29219,7 +29986,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
                 "notice_word_group_deactivated",
                 `Word group "${latestGroupName}" deactivated`
               );
-              new import_obsidian19.Notice(status);
+              new import_obsidian20.Notice(status);
               this._cacheDirty = true;
               this.reconfigureEditorExtensions();
               this.forceRefreshAllEditors();
@@ -29287,7 +30054,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
                 "notice_blacklist_group_deactivated",
                 `Blacklist group "${latestGroupName}" deactivated`
               );
-              new import_obsidian19.Notice(status);
+              new import_obsidian20.Notice(status);
               this._cacheDirty = true;
               this.reconfigureEditorExtensions();
               this.forceRefreshAllEditors();
@@ -29575,7 +30342,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
       }
       {
         let vpInput;
-        new import_obsidian19.Setting(containerEl).setName(
+        new import_obsidian20.Setting(containerEl).setName(
           this.plugin.t(
             "highlight_vertical_padding",
             "Highlight vertical padding (px)"
@@ -31182,7 +31949,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
       this.activeLeafChangeListener = this.app.workspace.on(
         "active-leaf-change",
         (leaf) => {
-          if (leaf && leaf.view instanceof import_obsidian19.MarkdownView) {
+          if (leaf && leaf.view instanceof import_obsidian20.MarkdownView) {
             try {
               if (leaf.view.getMode && leaf.view.getMode() === "preview") {
                 setTimeout(() => {
@@ -31225,7 +31992,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
     this.setupSearchObserver();
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
-        const activeLeaf = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
+        const activeLeaf = this.app.workspace.getActiveViewOfType(import_obsidian20.MarkdownView);
         if (activeLeaf && activeLeaf.getMode && activeLeaf.getMode() === "preview") {
           clearTimeout(this._layoutChangeReadingTimer);
           this._layoutChangeReadingTimer = setTimeout(() => {
@@ -32338,8 +33105,8 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
   async fetchLatestRelease() {
     const url = "https://api.github.com/repos/Kazi-Aidah/always-color-text/releases/latest";
     try {
-      if (typeof import_obsidian19.requestUrl === "function") {
-        const res = await (0, import_obsidian19.requestUrl)({
+      if (typeof import_obsidian20.requestUrl === "function") {
+        const res = await (0, import_obsidian20.requestUrl)({
           url,
           headers: {
             Accept: "application/vnd.github.v3+json",
@@ -32372,9 +33139,9 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
       const url = `https://api.github.com/repos/Kazi-Aidah/always-color-text/releases?page=${page}&per_page=100`;
       try {
         let data = null;
-        if (typeof import_obsidian19.requestUrl === "function") {
+        if (typeof import_obsidian20.requestUrl === "function") {
           try {
-            const res = await (0, import_obsidian19.requestUrl)({
+            const res = await (0, import_obsidian20.requestUrl)({
               url,
               headers: {
                 Accept: "application/vnd.github.v3+json",
@@ -32618,7 +33385,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
       this._autoBackupTimer = setInterval(() => {
         this.runAutoBackup().catch((e) => {
           try {
-            new import_obsidian19.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
+            new import_obsidian20.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
           } catch (_) {
           }
         });
@@ -32627,7 +33394,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
     if (remaining === 0) {
       this.runAutoBackup().catch((e) => {
         try {
-          new import_obsidian19.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
+          new import_obsidian20.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
         } catch (_) {
         }
       });
@@ -32636,7 +33403,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
       this._autoBackupTimer = setTimeout(() => {
         this.runAutoBackup().catch((e) => {
           try {
-            new import_obsidian19.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
+            new import_obsidian20.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
           } catch (_) {
           }
         });
@@ -33134,7 +33901,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
   // --- FORCE REFRESH all open Markdown editors ---
   forceRefreshAllEditors() {
     this.app.workspace.iterateAllLeaves((leaf) => {
-      if (leaf.view instanceof import_obsidian19.MarkdownView && leaf.view.editor?.cm) {
+      if (leaf.view instanceof import_obsidian20.MarkdownView && leaf.view.editor?.cm) {
         leaf.view.editor.cm.dispatch({
           effects: forceRebuildEffect.of(null)
         });
@@ -33181,7 +33948,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
   // --- FORCE REFRESH all reading views (reading mode panes) ---
   forceRefreshAllReadingViews() {
     this.app.workspace.iterateAllLeaves((leaf) => {
-      if (leaf.view instanceof import_obsidian19.MarkdownView && leaf.view.getMode && leaf.view.getMode() === "preview") {
+      if (leaf.view instanceof import_obsidian20.MarkdownView && leaf.view.getMode && leaf.view.getMode() === "preview") {
         const root = leaf.view.previewMode && leaf.view.previewMode.containerEl || leaf.view.contentEl || leaf.view.containerEl;
         try {
           if (this.settings.enabled) {
@@ -33216,7 +33983,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
       return;
     }
     this._lastRerender = Date.now();
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian20.MarkdownView);
     if (activeView) {
       this.refreshEditor(activeView, true);
       setTimeout(() => {
@@ -33258,7 +34025,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
     const callback = () => {
       if (token !== this._refreshSeq) return;
       if (!this.app || !this.app.workspace) return;
-      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
+      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian20.MarkdownView);
       if (activeView) {
         this.refreshEditor(activeView, force);
       }
@@ -34272,7 +35039,7 @@ var AlwaysColorText = class extends import_obsidian19.Plugin {
   }
   async _applyQuickColorACT(selectedText, textColor, backgroundColor, view, styleEntry = null) {
     if (this.isWordBlacklisted(selectedText, view?.file?.path)) {
-      new import_obsidian19.Notice(
+      new import_obsidian20.Notice(
         this.t(
           "notice_blacklisted_cannot_color",
           `"${selectedText}" is blacklisted and cannot be colored.`,
@@ -38272,7 +39039,7 @@ ${strongRule}`;
       }
       this.app.workspace.iterateAllLeaves((leaf) => {
         try {
-          if (!(leaf.view instanceof import_obsidian19.MarkdownView)) return;
+          if (!(leaf.view instanceof import_obsidian20.MarkdownView)) return;
           if (leaf.view.getMode && leaf.view.getMode() !== "source") return;
           const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
           if (view) {
@@ -38328,7 +39095,7 @@ ${strongRule}`;
         try {
           this.app.workspace.iterateAllLeaves((leaf) => {
             try {
-              if (!(leaf.view instanceof import_obsidian19.MarkdownView)) return;
+              if (!(leaf.view instanceof import_obsidian20.MarkdownView)) return;
               if (leaf.view.getMode && leaf.view.getMode() !== "source") return;
               const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
               if (view) {
@@ -38452,7 +39219,7 @@ ${strongRule}`;
       }
       this.app.workspace.iterateAllLeaves((leaf) => {
         try {
-          if (!(leaf.view instanceof import_obsidian19.MarkdownView)) return;
+          if (!(leaf.view instanceof import_obsidian20.MarkdownView)) return;
           if (leaf.view.getMode && leaf.view.getMode() !== "source") return;
           const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
           if (view) {
@@ -38552,7 +39319,7 @@ ${strongRule}`;
         try {
           this.app.workspace.iterateAllLeaves((leaf) => {
             try {
-              if (!(leaf.view instanceof import_obsidian19.MarkdownView)) return;
+              if (!(leaf.view instanceof import_obsidian20.MarkdownView)) return;
               if (leaf.view.getMode && leaf.view.getMode() !== "source") return;
               const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
               if (view) {

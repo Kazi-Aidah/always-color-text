@@ -1,8 +1,9 @@
-import { Modal, Notice } from 'obsidian';
+import { Modal, Notice, setIcon } from 'obsidian';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
 import { CustomCssModal } from './CustomCssModal.js';
+import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
 import { AddToExistingEntryModal } from './AddToExistingEntryModal.js';
 
@@ -40,18 +41,13 @@ export class EditEntryModal extends Modal {
     try {
       this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-edit-entry-modal");
-      this.modalEl.style.maxWidth = "900px";
+      this.modalEl.style.maxWidth = "1100px";
       this.modalEl.style.padding = "20px";
     } catch (e) {}
 
     // Determine if regex early
     const isRegex = !!(this.entry && this.entry.isRegex);
 
-    const title = contentEl.createEl("h2", {
-      text: this.plugin.t("edit_entry_header", "Edit Entry"),
-    });
-    title.style.marginTop = "0";
-    title.style.marginBottom = "12px";
     const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups)
       ? this.plugin.settings.wordEntryGroups
       : [];
@@ -189,30 +185,162 @@ export class EditEntryModal extends Modal {
       if (found) this.entry = found;
     } catch (e) {}
 
-    // Main layout: two columns (left: input/preview, right: controls)
-    const mainContainer = contentEl.createDiv();
-    mainContainer.addClass("act-edit-entry-main");
-    mainContainer.style.display = "flex";
-    mainContainer.style.gap = "8px";
-    mainContainer.style.width = "100%";
-    mainContainer.style.boxSizing = "border-box";
+    // ===== Header Row: Title + Group + Color Target + Color Pickers =====
+    const headerRow = contentEl.createDiv();
+    headerRow.addClass("act-pickr-header");
 
-    // Left column: text input + preview
-    const leftColumn = mainContainer.createDiv();
-    leftColumn.addClass("act-edit-entry-left-column");
-    leftColumn.style.flex = "1";
-    leftColumn.style.minWidth = "0";
-    leftColumn.style.display = "flex";
-    leftColumn.style.flexDirection = "column";
+    const title = headerRow.createEl("h2", {
+      text: isRegex
+        ? this.plugin.t("style_regex_modal_header", "Style Regex")
+        : this.plugin.t("style_text_modal_header", "Style Text"),
+    });
+    title.style.marginTop = "0";
+    title.style.marginBottom = "0";
+    title.style.flex = "1 1 auto";
 
-    // Row 1: input
-    const row1 = leftColumn.createDiv();
-    row1.addClass("act-edit-entry-row1");
-    const box = row1.createDiv();
+    const groupSelect = headerRow.createEl("select");
+    groupSelect.addClass("act-edit-entry-group-select");
+    const defaultOpt = groupSelect.createEl("option", {
+      text: this.plugin.t("no_group", "No Group"),
+    });
+    defaultOpt.value = "";
+    groupsList.forEach((g) => {
+      const name =
+        g && g.name && String(g.name).trim().length > 0
+          ? g.name
+          : "(unnamed group)";
+      const opt = groupSelect.createEl("option", { text: name });
+      opt.value = g.uid || "";
+    });
+    groupSelect.value = currentGroupUid || "";
+    if (
+      !currentGroupUid &&
+      this.fromPickColorModal &&
+      this.entry &&
+      this.entry._preselectedGroupUid
+    ) {
+      groupSelect.value = this.entry._preselectedGroupUid || "";
+    }
+    // Only show if word groups exist
+    if (!groupsList || groupsList.length === 0) {
+      groupSelect.style.display = "none";
+    }
+
+    // Color target dropdown (Color / Highlight / Both)
+    const styleSelect = headerRow.createEl("select");
+    styleSelect.addClass("act-edit-entry-style-select");
+    this._styleSelect = styleSelect;
+    ["text", "highlight", "both"].forEach((val) => {
+      const opt = styleSelect.createEl("option", {
+        text: this.plugin.t(
+          "style_type_" + val,
+          val === "text" ? "color" : val,
+        ),
+      });
+      opt.value = val;
+    });
+
+    // Color pickers
+    const pickerRow = headerRow.createDiv();
+    pickerRow.addClass("act-edit-entry-pickers");
+    const textColorInput = pickerRow.createEl("input", { type: "color" });
+    const bgColorInput = pickerRow.createEl("input", { type: "color" });
+    this._textColorInput = textColorInput;
+    this._bgColorInput = bgColorInput;
+
+    // ===== act-pickr-row =====
+    const pickrRow = contentEl.createDiv();
+    pickrRow.addClass("act-pickr-row");
+
+    // Style button (opens the Text Style Presets modal to pick a style)
+    const presetBtn = pickrRow.createEl("button");
+    presetBtn.title = this.plugin.t("btn_style", "Style");
+    const presetLabel = presetBtn.createEl("span", {
+      text: this.plugin.t("btn_style", "Style"),
+    });
+    presetLabel.style.fontSize = "12px";
+    presetBtn.addEventListener("click", () => {
+      try {
+        new TextStylePresetsModal(
+          this.app,
+          this.plugin,
+          (preset) => this._applyPreset(preset),
+        ).open();
+      } catch (e) {}
+    });
+
+    // Edit Icon (opens Edit Highlight Styling modal)
+    const hlBtn = pickrRow.createEl("button");
+    try {
+      setIcon(hlBtn, "edit-3");
+    } catch (e) {}
+    hlBtn.title = this.plugin.t(
+      "edit_highlight_styling_btn",
+      "Edit Highlight Styling",
+    );
+    hlBtn.addClass("act-pickr-icon-btn");
+
+    // Custom CSS icon (if enabled)
+    let cssBtn = null;
+    if (this.plugin.settings.enableCustomCss) {
+      cssBtn = pickrRow.createEl("button");
+      try {
+        setIcon(cssBtn, "code");
+      } catch (e) {}
+      cssBtn.title = this.plugin.t("edit_custom_css_btn", "Edit Custom CSS");
+      cssBtn.addClass("act-pickr-icon-btn");
+    }
+
+    // Mark Target dropdown (Color Text / Line / Next Line)
+    const markTargetSelect = pickrRow.createEl("select");
+    markTargetSelect.addClass("act-edit-entry-mark-target");
+    [
+      ["text", this.plugin.t("mark_target_text", "Color Text")],
+      ["line", this.plugin.t("mark_target_line", "Color Line")],
+      ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")],
+    ].forEach(([val, label]) => {
+      const opt = markTargetSelect.createEl("option", { text: label });
+      opt.value = val;
+    });
+    markTargetSelect.value =
+      this.entry && this.entry.markTarget ? this.entry.markTarget : "text";
+
+    // Case Sensitivity dropdown
+    const caseSel = pickrRow.createEl("select");
+    caseSel.addClass("act-pickr-case-select");
+    caseSel.innerHTML = `<option value="case">${this.plugin.t("opt_case_sensitive", "is case sensitive")}</option><option value="nocase">${this.plugin.t("opt_not_case_sensitive", "not case sensitive")}</option>`;
+
+    // MatchType dropdown (text) OR Open in Regex Tester button (regex)
+    let matchSelect = null;
+    let openRegexBtn = null;
+    if (isRegex) {
+      openRegexBtn = pickrRow.createEl("button", {
+        text: this.plugin.t("open_in_regex_tester", "Open in Regex Tester"),
+      });
+      openRegexBtn.style.whiteSpace = "nowrap";
+    } else {
+      matchSelect = pickrRow.createEl("select");
+      matchSelect.addClass("act-pickr-match-select");
+      matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
+    }
+
+    // ===== Preview Wrap =====
+    const previewWrap = contentEl.createDiv();
+    previewWrap.addClass("act-color-picker-preview-wrap");
+    const preview = previewWrap.createDiv();
+    preview.addClass("act-edit-entry-preview");
+    preview.style.display = "flex";
+    preview.style.alignItems = "center";
+    preview.style.justifyContent = "center";
+    preview.style.flex = "1";
+    preview.style.whiteSpace = "pre-wrap";
+    preview.style.wordWrap = "break-word";
+
+    // ===== Full-width text input (div-based) =====
+    const box = contentEl.createDiv();
     box.addClass("act-edit-entry-textbox");
-    box.style.border = "1px solid var(--background-modifier-border)";
-    box.style.borderRadius = "var(--input-radius)";
-    box.style.background = "var(--background-modifier-form-field)";
+    box.style.width = "100%";
+    box.style.boxSizing = "border-box";
     const textInput = box.createEl("div");
     textInput.contentEditable = "true";
     textInput.style.width = "100%";
@@ -233,59 +361,22 @@ export class EditEntryModal extends Modal {
       configurable: true,
     });
 
-    // Row 2: preview
-    const row2 = leftColumn.createDiv();
-    row2.addClass("act-edit-entry-row2");
-
-    const preview = row2.createDiv();
-    preview.addClass("act-edit-entry-preview");
-    preview.style.display = "flex";
-    preview.style.alignItems = "center";
-    preview.style.justifyContent = "center";
-    preview.style.flex = "1";
-    preview.style.border = "1px dashed var(--background-modifier-border)";
-    preview.style.borderRadius = "var(--input-radius)";
-    preview.style.padding = "10px";
-    preview.style.background = "var(--background-modifier-form-field)";
-    preview.style.whiteSpace = "pre-wrap";
-    preview.style.wordWrap = "break-word";
-
-    // Right column: controls
-    const rightColumn = mainContainer.createDiv();
-    rightColumn.addClass("act-edit-entry-right-column");
-    rightColumn.style.flex = "0 0 auto";
-    rightColumn.style.display = "flex";
-    rightColumn.style.flexDirection = "column";
-    rightColumn.style.gap = "8px";
-
-    const styleSelect = rightColumn.createEl("select");
-    styleSelect.addClass("act-edit-entry-style-select");
-    styleSelect.style.minWidth = "140px";
-    ["text", "highlight", "both"].forEach((val) => {
-      const opt = styleSelect.createEl("option", {
-        text: this.plugin.t(
-          "style_type_" + val,
-          val === "text" ? "color" : val,
-        ),
-      });
-      opt.value = val;
+    // ===== Inclusion / Exclusion Rules =====
+    const rulesHeader = contentEl.createEl("h3", {
+      text: this.plugin.t(
+        "inclusion_exclusion_header",
+        "Inclusion / Exclusion Rules",
+      ),
     });
-    styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "var(--input-radius)";
-    styleSelect.style.background = "var(--background-modifier-form-field)";
-    styleSelect.style.flex = "1 0%";
+    const rulesContainer = contentEl.createDiv();
+    rulesContainer.style.marginTop = "8px";
+    const addRuleBtn = contentEl.createEl("button", {
+      text: this.plugin.t("btn_add_rule", "+ Add Rule"),
+    });
+    addRuleBtn.addClass("mod-cta");
+    addRuleBtn.style.marginTop = "6px";
 
-    const pickerRow = rightColumn.createDiv();
-    pickerRow.addClass("act-edit-entry-pickers");
-    pickerRow.style.flex = "0";
-    pickerRow.style.display = "flex";
-    pickerRow.style.gap = "8px";
-    pickerRow.style.alignItems = "center";
-    pickerRow.style.justifyContent = "center";
-    const textColorInput = pickerRow.createEl("input", { type: "color" });
-    const bgColorInput = pickerRow.createEl("input", { type: "color" });
-
-    // Add right-click handlers for color pickers to open ColorPickerModal
+    // ===== Color functions =====
     const dispatchColorsChanged = () => {
       try {
         window.dispatchEvent(
@@ -428,39 +519,7 @@ export class EditEntryModal extends Modal {
     setupColorPickerRightClick(textColorInput, applyTextColorToEntry);
     setupColorPickerRightClick(bgColorInput, applyBgColorToEntry);
 
-    // --- markTarget select (Color Text / Color Line / Color Next Line) ---
-    const markTargetRow = rightColumn.createDiv();
-    markTargetRow.style.display = "flex";
-    markTargetRow.style.flexDirection = "column";
-    markTargetRow.style.gap = "2px";
-
-    // const markTargetLabel = markTargetRow.createEl("span", {
-    //   text: this.plugin.t("mark_target_label", "Apply to"),
-    // });
-    // markTargetLabel.style.fontSize = "0.8em";
-    // markTargetLabel.style.color = "var(--text-muted)";
-    // markTargetLabel.style.textAlign = "center";
-
-    const markTargetSelect = markTargetRow.createEl("select");
-    markTargetSelect.addClass("act-edit-entry-mark-target");
-    markTargetSelect.style.minWidth = "140px";
-    markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
-    markTargetSelect.style.borderRadius = "var(--input-radius)";
-    markTargetSelect.style.background = "var(--background-modifier-form-field)";
-
-    [
-      ["text",      this.plugin.t("mark_target_text",       "Color Text")],
-      ["line",      this.plugin.t("mark_target_line",       "Color Line")],
-      ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")],
-    ].forEach(([val, label]) => {
-      const opt = markTargetSelect.createEl("option", { text: label });
-      opt.value = val;
-    });
-
-    // Initialise from entry
-    markTargetSelect.value =
-      (this.entry && this.entry.markTarget) ? this.entry.markTarget : "text";
-
+    // markTarget change handler
     const markTargetFn = async () => {
       if (this.entry) {
         this.entry.markTarget = markTargetSelect.value;
@@ -534,54 +593,7 @@ export class EditEntryModal extends Modal {
       fn: colorSyncHandler,
     });
 
-    // Row 3: group/match/case/regex/styling
-    const controls = contentEl.createDiv();
-    controls.addClass("act-edit-entry-controls");
-    controls.style.display = "flex";
-    controls.style.flexWrap = "wrap";
-    controls.style.gap = "8px";
-    controls.style.marginTop = "12px";
-    controls.style.alignItems = "center";
-    controls.style.width = "100%";
-    controls.style.boxSizing = "border-box";
-
-    const groupSelect = controls.createEl("select");
-    groupSelect.addClass("act-edit-entry-group-select");
-    groupSelect.style.flex = "1 1 max-content";
-    groupSelect.style.minWidth = "max-content";
-    groupSelect.style.maxWidth = "100%";
-    groupSelect.style.width = "auto";
-    groupSelect.style.height = "32px";
-    groupSelect.style.padding = "0 10px";
-    groupSelect.style.boxSizing = "border-box";
-    groupSelect.style.border = "1px solid var(--background-modifier-border)";
-    groupSelect.style.borderRadius = "var(--input-radius)";
-    groupSelect.style.background = "var(--background-modifier-form-field)";
-    const defaultOpt = groupSelect.createEl("option", {
-      text: this.plugin.t("no_group", "No Group"),
-    });
-    defaultOpt.value = "";
-    groupsList.forEach((g) => {
-      const name =
-        g && g.name && String(g.name).trim().length > 0
-          ? g.name
-          : "(unnamed group)";
-      const opt = groupSelect.createEl("option", { text: name });
-      opt.value = g.uid || "";
-    });
-    groupSelect.value = currentGroupUid || "";
-    if (
-      !currentGroupUid &&
-      this.fromPickColorModal &&
-      this.entry &&
-      this.entry._preselectedGroupUid
-    ) {
-      groupSelect.value = this.entry._preselectedGroupUid || "";
-    }
-    // Only show if word groups exist
-    if (!groupsList || groupsList.length === 0) {
-      groupSelect.style.display = "none";
-    }
+    // Group change handler
     const groupChangeHandler = async () => {
       const newGroupUid = groupSelect.value || "";
       const originalGroupUid = this.originalGroupUid; // Use stored original group UID
@@ -667,82 +679,7 @@ export class EditEntryModal extends Modal {
       fn: groupChangeHandler,
     });
 
-    const matchSelect = controls.createEl("select");
-    matchSelect.style.flex = "0.5 0 auto";
-    matchSelect.style.minWidth = "160px";
-    matchSelect.style.height = "32px";
-    matchSelect.style.padding = "0 10px";
-    matchSelect.style.boxSizing = "border-box";
-    matchSelect.style.border = "1px solid var(--background-modifier-border)";
-    matchSelect.style.borderRadius = "var(--input-radius)";
-    matchSelect.style.background = "var(--background-modifier-form-field)";
-    matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
-
-    const caseSel = controls.createEl("select");
-    caseSel.style.flex = "0.5 0 auto";
-    caseSel.style.minWidth = "160px";
-    caseSel.style.height = "32px";
-    caseSel.style.padding = "0 10px";
-    caseSel.style.boxSizing = "border-box";
-    caseSel.style.border = "1px solid var(--background-modifier-border)";
-    caseSel.style.borderRadius = "var(--input-radius)";
-    caseSel.style.background = "var(--background-modifier-form-field)";
-    caseSel.innerHTML = `<option value="case">${this.plugin.t("opt_case_sensitive", "is case sensitive")}</option><option value="nocase">${this.plugin.t("opt_not_case_sensitive", "not case sensitive")}</option>`;
-    let openRegexBtn = null;
-    if (isRegex) {
-      openRegexBtn = controls.createEl("button", {
-        text: this.plugin.t("open_in_regex_tester", "Open in Regex Tester"),
-      });
-      openRegexBtn.style.flex = "1 1 max-content";
-      openRegexBtn.style.minWidth = "max-content";
-      openRegexBtn.style.maxWidth = "100%";
-      openRegexBtn.style.width = "auto";
-      openRegexBtn.style.height = "32px";
-      openRegexBtn.style.padding = "0 10px";
-      openRegexBtn.style.boxSizing = "border-box";
-      openRegexBtn.style.whiteSpace = "nowrap";
-    }
-    const hlBtn = controls.createEl("button", {
-      text: this.plugin.t(
-        "edit_highlight_styling_btn",
-        "Edit Highlight Styling",
-      ),
-    });
-    hlBtn.style.flex = "1 1 max-content";
-    hlBtn.style.minWidth = "max-content";
-    hlBtn.style.maxWidth = "100%";
-    hlBtn.style.width = "auto";
-    hlBtn.style.height = "32px";
-    hlBtn.style.padding = "0 10px";
-    hlBtn.style.boxSizing = "border-box";
-    hlBtn.style.whiteSpace = "nowrap";
-    let cssBtn = null;
-    if (this.plugin.settings.enableCustomCss) {
-      cssBtn = controls.createEl("button", {
-        text: this.plugin.t("edit_custom_css_btn", "Edit Custom CSS"),
-      });
-      cssBtn.style.flex = "1 1 max-content";
-      cssBtn.style.minWidth = "max-content";
-      cssBtn.style.maxWidth = "100%";
-      cssBtn.style.width = "auto";
-      cssBtn.style.height = "32px";
-      cssBtn.style.padding = "0 10px";
-      cssBtn.style.boxSizing = "border-box";
-      cssBtn.style.whiteSpace = "nowrap";
-    }
-    const rulesHeader = contentEl.createEl("h3", {
-      text: this.plugin.t(
-        "inclusion_exclusion_header",
-        "Inclusion / Exclusion Rules",
-      ),
-    });
-    const rulesContainer = contentEl.createDiv();
-    rulesContainer.style.marginTop = "8px";
-    const addRuleBtn = contentEl.createEl("button", {
-      text: this.plugin.t("btn_add_rule", "+ Add Rule"),
-    });
-    addRuleBtn.addClass("mod-cta");
-    addRuleBtn.style.marginTop = "6px";
+    // ===== Initialization =====
     let initialStyle =
       this.entry && this.entry.styleType ? this.entry.styleType : null;
     if (!initialStyle) {
@@ -775,11 +712,12 @@ export class EditEntryModal extends Modal {
       bgColorInput.value = this.plugin.isValidHexColor(initBgColor)
         ? initBgColor
         : "#000000";
-    // const isRegex = !!this.entry.isRegex; // Already defined at top
     if (isRegex) {
       textInput.value = this.entry.pattern || "";
-      matchSelect.disabled = true;
-      matchSelect.style.opacity = "0.5";
+      if (matchSelect) {
+        matchSelect.disabled = true;
+        matchSelect.style.opacity = "0.5";
+      }
       caseSel.disabled = true;
       caseSel.style.opacity = "0.5";
     } else {
@@ -1010,7 +948,7 @@ export class EditEntryModal extends Modal {
     caseSel.addEventListener("change", caseFn);
     this._handlers.push({ el: caseSel, ev: "change", fn: caseFn });
     const matchFn = async () => {
-      if (isRegex) return;
+      if (isRegex || !matchSelect) return;
       let value = matchSelect.value;
       if (value === "startsWith") value = "startswith";
       if (value === "endsWith") value = "endswith";
@@ -1025,8 +963,10 @@ export class EditEntryModal extends Modal {
       this.plugin.forceRefreshAllReadingViews();
       this.plugin.triggerActiveDocumentRerender();
     };
-    matchSelect.addEventListener("change", matchFn);
-    this._handlers.push({ el: matchSelect, ev: "change", fn: matchFn });
+    if (matchSelect) {
+      matchSelect.addEventListener("change", matchFn);
+      this._handlers.push({ el: matchSelect, ev: "change", fn: matchFn });
+    }
     const buildSuggestions = () => {
       const files = this.plugin.app.vault.getFiles();
       const folders = new Set();
@@ -1362,7 +1302,7 @@ export class EditEntryModal extends Modal {
     const saveHandler = async (shouldClose = true) => {
       // Collect current UI values from EditEntryModal
       const st = styleSelect.value;
-      let matchTypeVal = isRegex ? "regex" : matchSelect.value;
+      let matchTypeVal = isRegex ? "regex" : (matchSelect ? matchSelect.value : "exact");
       if (matchTypeVal === "startsWith") matchTypeVal = "startswith";
       if (matchTypeVal === "endsWith") matchTypeVal = "endswith";
       const caseSensitiveVal = caseSel.value === "case";
@@ -1714,6 +1654,53 @@ export class EditEntryModal extends Modal {
     // Store references to functions for external access
     this._refreshPreview = renderPreview;
   }
+  _applyPreset(preset) {
+    if (!this.entry || !preset) return;
+    const keys = [
+      "styleType",
+      "textColor",
+      "backgroundColor",
+      "backgroundOpacity",
+      "highlightBorderRadius",
+      "highlightHorizontalPadding",
+      "highlightVerticalPadding",
+      "enableBorderThickness",
+      "borderStyle",
+      "borderLineStyle",
+      "borderOpacity",
+      "borderThickness",
+      "customCss",
+    ];
+    for (const k of keys) {
+      if (k in preset) this.entry[k] = preset[k];
+    }
+    try {
+      if (preset.styleType && this._styleSelect) {
+        this._styleSelect.value = preset.styleType;
+      }
+    } catch (e) {}
+    const tc =
+      preset.textColor && preset.textColor !== "currentColor"
+        ? preset.textColor
+        : "";
+    const bc = preset.backgroundColor ? preset.backgroundColor : "";
+    try {
+      if (this._textColorInput)
+        this._textColorInput.value = this.plugin.isValidHexColor(tc)
+          ? tc
+          : "#000000";
+    } catch (e) {}
+    try {
+      if (this._bgColorInput)
+        this._bgColorInput.value = this.plugin.isValidHexColor(bc)
+          ? bc
+          : "#000000";
+    } catch (e) {}
+    try {
+      this._refreshPreview();
+    } catch (e) {}
+  }
+
   onClose() {
     try {
       if (this._saveData) this._saveData(false);
@@ -1739,5 +1726,3 @@ export class EditEntryModal extends Modal {
     } catch (e) {}
   }
 }
-
-

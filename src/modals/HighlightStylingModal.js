@@ -452,7 +452,7 @@ export class HighlightStylingModal extends Modal {
       slider.max = String(max);
       slider.value = String(value);
       const resetBtn = right.createEl("button");
-      resetBtn.addClass("act-highlight-reset-btn");
+      resetBtn.addClass("act-highlight-reset-btn", "clickable-icon");
       try {
         setIcon(resetBtn, "reset");
       } catch (e) {}
@@ -512,7 +512,7 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     });
     const radiusReset = radiusInputRight.createEl("button");
-    radiusReset.addClass("act-highlight-reset-btn");
+    radiusReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
       setIcon(radiusReset, "reset");
     } catch (e) {}
@@ -546,7 +546,7 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     });
     const hPadReset = hPadRight.createEl("button");
-    hPadReset.addClass("act-highlight-reset-btn");
+    hPadReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
       setIcon(hPadReset, "reset");
     } catch (e) {}
@@ -579,7 +579,7 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     });
     const vPadReset = vPadRight.createEl("button");
-    vPadReset.addClass("act-highlight-reset-btn");
+    vPadReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
       setIcon(vPadReset, "reset");
     } catch (e) {}
@@ -655,7 +655,7 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     });
     const sidesReset = sidesRight.createEl("button");
-    sidesReset.addClass("act-highlight-reset-btn");
+    sidesReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
       setIcon(sidesReset, "reset");
     } catch (e) {}
@@ -691,7 +691,7 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     });
     const styleReset = styleRight.createEl("button");
-    styleReset.addClass("act-highlight-reset-btn");
+    styleReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
       setIcon(styleReset, "reset");
     } catch (e) {}
@@ -720,7 +720,7 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     });
     const bOpReset = bOpRight.createEl("button");
-    bOpReset.addClass("act-highlight-reset-btn");
+    bOpReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
       setIcon(bOpReset, "reset");
     } catch (e) {}
@@ -751,7 +751,7 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     });
     const thickReset = thickRight.createEl("button");
-    thickReset.addClass("act-highlight-reset-btn");
+    thickReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
       setIcon(thickReset, "reset");
     } catch (e) {}

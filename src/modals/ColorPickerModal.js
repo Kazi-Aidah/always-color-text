@@ -1,6 +1,7 @@
 import { Modal, Notice, setIcon } from 'obsidian';
 import { EditEntryModal } from './EditEntryModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
+import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { debugLog } from '../utils/debug.js';
 import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
 
@@ -235,10 +236,7 @@ export class ColorPickerModal extends Modal {
     // Preset button
     if (!hideControls && !isQuick) {
       const presetBtn = pickrRow.createEl("button");
-      try {
-        setIcon(presetBtn, "presets");
-      } catch (e) {}
-      presetBtn.title = this.plugin.t("btn_presets", "Presets");
+      presetBtn.title = this.plugin.t("btn_style", "Style");
       presetBtn.style.flex = "0 0 auto";
       presetBtn.style.display = "flex";
       presetBtn.style.alignItems = "center";
@@ -250,16 +248,19 @@ export class ColorPickerModal extends Modal {
       presetBtn.style.cursor = "pointer";
       presetBtn.style.gap = "4px";
       const presetLabel = presetBtn.createEl("span", {
-        text: this.plugin.t("btn_presets", "Preset"),
+        text: this.plugin.t("btn_style", "Style"),
       });
       presetLabel.style.fontSize = "12px";
       const presetHandler = () => {
         try {
-          const { PresetModal } = require('../modals/PresetModal.js');
-          const modal = new PresetModal(this.app, this.plugin, this);
+          const modal = new TextStylePresetsModal(
+            this.app,
+            this.plugin,
+            (preset) => this._applyPreset(preset),
+          );
           modal.open();
         } catch (e) {
-          debugLog("MODAL", "Error opening preset modal", e);
+          debugLog("MODAL", "Error opening style presets modal", e);
         }
       };
       presetBtn.addEventListener("click", presetHandler);
@@ -637,6 +638,8 @@ export class ColorPickerModal extends Modal {
         const curBg   = type === 'background' ? val : (this.selectedBgColor || null);
         this._applyCustomCss(curText, curBg);
       };
+      if (type === "text") this._applyTextColorFn = apply;
+      else this._applyBgColorFn = apply;
 
       const colorChange = () => {
         const v = colorInput.value;
@@ -1894,6 +1897,93 @@ export class ColorPickerModal extends Modal {
       };
     } catch (e) {}
     this._applyCustomCss();
+  }
+
+  _applyPreset(preset) {
+    if (!preset) return;
+    const textColor =
+      preset.textColor && preset.textColor !== "currentColor"
+        ? preset.textColor
+        : null;
+    const backgroundColor = preset.backgroundColor ? preset.backgroundColor : null;
+    const word = this._selectedText || "";
+    const styleFields = {
+      styleType: preset.styleType || "highlight",
+      backgroundOpacity: preset.backgroundOpacity ?? null,
+      highlightBorderRadius: preset.highlightBorderRadius ?? null,
+      highlightHorizontalPadding: preset.highlightHorizontalPadding ?? null,
+      highlightVerticalPadding: preset.highlightVerticalPadding ?? null,
+      enableBorderThickness:
+        typeof preset.enableBorderThickness !== "undefined"
+          ? !!preset.enableBorderThickness
+          : null,
+      borderStyle: preset.borderStyle || null,
+      borderLineStyle: preset.borderLineStyle || null,
+      borderOpacity: preset.borderOpacity ?? null,
+      borderThickness: preset.borderThickness ?? null,
+    };
+    const result = Object.assign(
+      {
+        textColor,
+        backgroundColor,
+        word,
+        markTarget: this._markTarget || "text",
+        matchType:
+          this._matchType ||
+          (this.plugin.settings.partialMatch ? "contains" : "exact"),
+        caseSensitive:
+          this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
+        selectedGroupUid: this._selectedGroupUid || null,
+        quickOnceStyle: Object.assign({}, styleFields),
+      },
+      styleFields,
+    );
+
+    const color =
+      this.mode === "background" || this.mode === "text-and-background"
+        ? backgroundColor || textColor
+        : textColor || backgroundColor;
+
+    // Persist the preset's style/shape onto the underlying entry so it
+    // survives when this picker closes.
+    if (this._entry) {
+      const keys = [
+        "styleType",
+        "textColor",
+        "backgroundColor",
+        "backgroundOpacity",
+        "highlightBorderRadius",
+        "highlightHorizontalPadding",
+        "highlightVerticalPadding",
+        "enableBorderThickness",
+        "borderStyle",
+        "borderLineStyle",
+        "borderOpacity",
+        "borderThickness",
+      ];
+      for (const k of keys) {
+        if (k in preset) this._entry[k] = preset[k];
+      }
+    }
+
+    // Let the parent (Edit Entry / etc.) react (updates its own preview)
+    try {
+      if (typeof this.callback === "function") this.callback(color, result);
+    } catch (e) {}
+
+    // Update THIS picker's preview using the exact same code path the user
+    // triggers when picking a swatch, so the preview is guaranteed to reflect
+    // the preset. Order matters: do this last so it wins over any reset.
+    try {
+      if (textColor && typeof this._applyTextColorFn === "function") {
+        this._applyTextColorFn(textColor);
+      }
+    } catch (e) {}
+    try {
+      if (backgroundColor && typeof this._applyBgColorFn === "function") {
+        this._applyBgColorFn(backgroundColor);
+      }
+    } catch (e) {}
   }
 
   onClose() {

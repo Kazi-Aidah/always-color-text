@@ -324,7 +324,6 @@ div[contenteditable="true"]:focus {
 .act-edit-entry-textbox:focus-within,
 .act-subject-wrap:focus-within {
   border-color: var(--color-accent) !important;
-  border-width: 2px !important;
 }
 
 .act-edit-entry-row1 {
@@ -335,12 +334,13 @@ div[contenteditable="true"]:focus {
 
 .act-edit-entry-textbox {
   flex: 3;
-  border: 1px solid var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-form-field);
   border-radius: var(--input-radius);
   corner-shape: var(--corner-shape);
   background: var(--background-modifier-form-field);
   padding: 0;
   margin-bottom: 12px;
+  transition: border-color 0.15s ease;
 }
 
 .act-edit-entry-textbox [contenteditable] {
@@ -372,11 +372,6 @@ div[contenteditable="true"]:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed var(--background-modifier-border);
-  border-radius: var(--input-radius);
-  corner-shape: var(--corner-shape);
-  padding: 10px;
-  background: var(--background-modifier-form-field);
   white-space: pre-wrap;
   word-wrap: break-word;
   min-height: 40px;
@@ -406,9 +401,8 @@ div[contenteditable="true"]:focus {
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--input-radius);
   corner-shape: var(--corner-shape);
-  margin-bottom: 16px;
-  padding: 10px;
   box-sizing: border-box;
+  margin-bottom: 12px;
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
@@ -763,8 +757,8 @@ button.mod-cta {
 }
 
 .act-edit-entry-group-select {
-  min-width: 140px !important;
-  width: 140px !important;
+  min-width: 120px !important;
+  width: 120px !important;
 }
 
 .act-edit-entry-style-select {
@@ -1193,5 +1187,351 @@ body:not(.is-mobile) .act-group-button-row {
     font-size: 30px;
     height: 50px;
 }
+
+/* ====== PICK COLOR MODAL - ACT-PICKR-ROW STYLING ====== */
+
+/* Header row: Style Text heading + Group dropdown */
+.act-pickr-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.act-pickr-header h2 {
+  margin: 0;
+  flex: 1 1 auto;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+/* Controls row: Preset, Settings, MarkTarget, Case, MatchType */
+.act-pickr-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100% !important;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.act-pickr-row select {
+  flex: 1 1 auto;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-modifier-form-field);
+  color: var(--text-normal);
+  cursor: pointer;
+  padding: 6px 8px;
+  height: 28px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.act-pickr-row button {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 8px;
+  height: 28px;
+}
+
+.act-pickr-row button:disabled {
+  opacity: 0.5;
+}
+
+.act-pickr-row select {
+  text-align: center;
+  min-width: 90px;
+  width: auto;
+}
+
+/* Case sensitivity dropdown needs extra room for its longer label */
+.act-pickr-row select.act-pickr-case-select {
+  min-width: 130px;
+}
+
+/* Mark Target dropdown */
+.act-pickr-row select.act-pickr-mark-select {
+  min-width: 110px;
+}
+
+/* Match Type dropdown */
+.act-pickr-row select.act-pickr-match-select {
+  min-width: 100px;
+}
+
+.act-pickr-row select:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+/* Button icon styling within act-pickr-row */
+.act-pickr-row button svg,
+.act-pickr-row button .lucide {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Icon-only buttons in the row stay compact (max 36px wide) */
+.act-pickr-row button.act-pickr-icon-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  max-width: 36px;
+  padding: 6px;
+}
+
+/* No border/outline on color inputs inside the modals */
+.act-modal input[type="color"] {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+/* Button label text */
+.act-pickr-row button span {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Mobile responsiveness for act-pickr-row */
+@media (max-width: 600px) {
+  .act-pickr-row {
+    gap: 6px;
+  }
+  
+  .act-pickr-row button,
+  .act-pickr-row select {
+    min-width: 70px;
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .act-pickr-row button.act-pickr-icon-btn {
+    width: 36px;
+    max-width: 36px;
+    min-width: 36px;
+  }
+}
+
+/* ====== EDIT ENTRY MODAL - NEW LAYOUT (Style Text / Style Regex) ====== */
+
+/* Header row: Style Text heading + Group dropdown + Color Target + color pickers */
+.act-edit-entry-modal .act-pickr-header {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.act-edit-entry-modal .act-pickr-header .act-edit-entry-group-select {
+  flex: 0 0 auto;
+}
+
+.act-edit-entry-modal .act-pickr-header .act-edit-entry-style-select {
+  flex: 0 0 auto;
+  min-width: 90px !important;
+  max-width: 110px !important;
+}
+
+/* Compact color pickers sitting in the header row */
+.act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
+  flex: 0 0 auto;
+}
+
+.act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers input[type="color"] {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Mark Target dropdown inside act-pickr-row */
+.act-pickr-row select.act-edit-entry-mark-target {
+  min-width: 110px;
+}
+
+/* Full-width text input below preview */
+.act-edit-entry-modal .act-edit-entry-textbox {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Rules section */
+.act-edit-entry-modal .act-edit-entry-textbox + h3 {
+  margin-top: 8px;
+}
+
+/* ====== EDIT COLOR SWATCHES MODAL ====== */
+.act-edit-swatches-modal .act-color-picker-preview-wrap {
+  min-height: 0;
+  padding: 8px;
+  text-align: center;
+}
+
+.act-edit-swatches-modal .color-picker-panel {
+  padding: 12px;
+}
+
+.act-edit-swatches-modal .color-swatch-grid button {
+  box-sizing: border-box;
+}
+
+.act-edit-swatches-modal button.act-swatch-active {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.act-edit-swatches-modal button.act-swatch-active:hover {
+  outline: 2px solid var(--color-accent);
+}
+
+/* ===== ROBUST DRAG & DROP STYLES (Obsidian + Electron compatible) ===== */
+
+/* Body drag state: prevents text selection and conflicts during drag */
+body.act-dragging-active {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  cursor: grabbing !important;
+}
+
+/* Prevent Electron's -webkit-app-region: drag from stealing mouse events from drag handles
+   and all interactive elements. Obsidian/Electron windows may have app-region set globally. */
+.act-drag-handle,
+.act-drag-handle *,
+button,
+input,
+select,
+textarea,
+a,
+[role="button"],
+.color-swatch-grid button,
+div[data-qc-index],
+div[data-swatch-index] {
+  -webkit-app-region: no-drag !important;
+  app-region: no-drag !important;
+}
+
+/* Core drag handle styling — touch friendly, no text selection */
+.act-drag-handle {
+  touch-action: none;          /* Prevent browser scroll/zoom on handle */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* Prevent iOS long-press menu */
+}
+
+/* Drop indicator — shows where item will be inserted (replaces inline DOM swapping) */
+.act-drop-indicator {
+  position: fixed;
+  height: 3px;
+  background: var(--interactive-accent);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 99999;
+  box-shadow: 0 0 8px var(--interactive-accent);
+  display: none;
+}
+
+.act-drop-indicator.visible {
+  display: block;
+}
+
 /* ting ting ting */
+
+/* Settings tab dividers */
+.act-settings-divider {
+  border: none;
+  border-top: 1px solid var(--background-modifier-border);
+  margin: 14px 0;
+  height: 0;
+}
+
+/* Text Style Presets modal */
+.modal.act-text-style-presets-modal {
+  width: 96vw;
+  max-width: 1400px;
+}
+.act-text-style-presets-modal .modal-content {
+  padding: 20px 24px;
+}
+.act-text-style-presets-modal h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.act-tsp-top-box {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-secondary);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.act-tsp-top-box .act-tsp-preview {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 10px 40px;
+  overflow: hidden;
+}
+.act-tsp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.act-tsp-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-secondary);
+  overflow: hidden;
+}
+.act-tsp-box .act-tsp-preview {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 10px 40px;
+  overflow: hidden;
+}
+.act-tsp-span {
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.act-tsp-edit-btn {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  cursor: pointer;
+}
+.act-tsp-add-row {
+  display: flex;
+  justify-content: space-between;
+}
+.act-tsp-add-row button {
+  padding: 6px 14px;
+}
 

@@ -3,6 +3,7 @@ import { debugLog, debugError } from '../utils/debug.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
 import { PresetModal } from './PresetModal.js';
+import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { AlertModal } from './AlertModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
@@ -582,89 +583,18 @@ export class EditWordGroupModal extends Modal {
 
     const presetsBtn = buttonRow.createEl("button");
     presetsBtn.addClass("act-group-btn-presets");
-    presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
+    presetsBtn.textContent = this.plugin.t("btn_style", "Style");
     presetsBtn.style.cursor = "pointer";
     presetsBtn.style.padding = "6px 12px";
     presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
-      if (!this.plugin.settings.enableRegexSupport) {
-        new AlertModal(
+      try {
+        new TextStylePresetsModal(
           this.app,
           this.plugin,
-          this.plugin.t("regex_support", "Regex Support"),
-          this.plugin.t("notice_regex_support_disabled"),
-          {
-            text: this.plugin.t("btn_take_me_there", "Take me there"),
-            callback: () => {
-              this.close();
-              this.plugin.openSettingsAndFocusRegex();
-            },
-          },
+          (preset) => this._applyPreset(preset),
         ).open();
-        return;
-      }
-      new PresetModal(this.app, this.plugin, async (preset) => {
-        if (!preset) return;
-        new ColorPickerModal(
-          this.app,
-          this.plugin,
-          async (color, result) => {
-            const sel = result || {};
-            const tc =
-              sel.textColor && this.plugin.isValidHexColor(sel.textColor)
-                ? sel.textColor
-                : null;
-            const bc =
-              sel.backgroundColor &&
-              this.plugin.isValidHexColor(sel.backgroundColor)
-                ? sel.backgroundColor
-                : null;
-            if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color)))
-              return;
-            const entry = {
-              pattern: preset.pattern,
-              isRegex: true,
-              flags: preset.flags || "",
-              styleType: "text",
-              matchType: "contains",
-              caseSensitive: !!this.plugin.settings.caseSensitive,
-              presetLabel: preset.label,
-              markTarget: sel.markTarget || "text",
-            };
-            // Copy preset properties like affectMarkElements and targetElement
-            if (preset.affectMarkElements) entry.affectMarkElements = true;
-            if (preset.targetElement)
-              entry.targetElement = preset.targetElement;
-            if (tc && bc) {
-              entry.textColor = tc;
-              entry.backgroundColor = bc;
-              entry.color = "";
-              entry.styleType = "both";
-              entry._savedTextColor = tc;
-              entry._savedBackgroundColor = bc;
-            } else if (tc) {
-              entry.color = tc;
-              entry.styleType = "text";
-              entry._savedTextColor = tc;
-            } else if (bc) {
-              entry.textColor = "currentColor";
-              entry.backgroundColor = bc;
-              entry.color = "";
-              entry.styleType = "highlight";
-              entry._savedBackgroundColor = bc;
-            } else {
-              entry.color = color;
-              entry._savedTextColor = color;
-            }
-            this.group.entries.push(entry);
-            this._sortMode = "last-added";
-            this._refreshGroupEntries();
-          },
-          "text-and-background",
-          "",
-          false,
-        ).open();
-      }).open();
+      } catch (e) {}
     };
     presetsBtn.addEventListener("click", presetsHandler);
     this._cleanupHandlers.push(() =>
@@ -1374,6 +1304,34 @@ export class EditWordGroupModal extends Modal {
 
   _refreshEntries() {
     this._refreshGroupEntries();
+  }
+
+  _applyPreset(preset) {
+    if (!preset || !this.group) return;
+    const keys = [
+      "styleType",
+      "textColor",
+      "backgroundColor",
+      "backgroundOpacity",
+      "highlightBorderRadius",
+      "highlightHorizontalPadding",
+      "highlightVerticalPadding",
+      "enableBorderThickness",
+      "borderStyle",
+      "borderLineStyle",
+      "borderOpacity",
+      "borderThickness",
+    ];
+    if (Array.isArray(this.group.entries)) {
+      for (const entry of this.group.entries) {
+        for (const k of keys) {
+          if (k in preset) entry[k] = preset[k];
+        }
+      }
+    }
+    try {
+      this._refreshGroupEntries();
+    } catch (e) {}
   }
 
   onClose() {

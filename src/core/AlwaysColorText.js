@@ -769,8 +769,45 @@ class AlwaysColorText extends Plugin {
       this.settings.quickColorsApplyMode = "html";
     if (!Array.isArray(this.settings.quickColors))
       this.settings.quickColors = [];
+    if (typeof this.settings.quickMenuColorsEnabled === "undefined")
+      this.settings.quickMenuColorsEnabled = false;
+    if (!Array.isArray(this.settings.quickMenuColors))
+      this.settings.quickMenuColors = [];
     if (!Array.isArray(this.settings.quickStyles))
       this.settings.quickStyles = [];
+    if (
+      !Array.isArray(this.settings.textStylePresets) ||
+      this.settings.textStylePresets.length === 0
+    ) {
+      try {
+        this.settings.textStylePresets = JSON.parse(
+          JSON.stringify(defaultSettings.textStylePresets || []),
+        );
+      } catch (e) {
+        this.settings.textStylePresets = [];
+      }
+    }
+    if (
+      Array.isArray(this.settings.textStylePresets) &&
+      this.settings.textStylePresets.length > 0 &&
+      !this.settings.textStylePresets.some((p) => p && p.isDefault)
+    ) {
+      this.settings.textStylePresets[0].isDefault = true;
+    }
+    // One-time migration: built-in presets were previously auto-assigned a
+    // concrete accent hex on edit. Clear those so they render with the live
+    // var(--color-accent) until the user explicitly picks a color.
+    if (
+      !this.settings._tspColorMigrated &&
+      Array.isArray(this.settings.textStylePresets)
+    ) {
+      for (const p of this.settings.textStylePresets) {
+        if (p && typeof p.uid === "string" && p.uid.startsWith("tsp-")) {
+          if (p.backgroundColor) p.backgroundColor = "";
+        }
+      }
+      this.settings._tspColorMigrated = true;
+    }
     if (typeof this.settings.quickStylesEnabled === "undefined")
       this.settings.quickStylesEnabled = true;
     if (typeof this.settings.enableQuickColorHighlightOnce === "undefined")
@@ -1664,11 +1701,47 @@ class AlwaysColorText extends Plugin {
               });
             }
           };
+          
+          // Check for Quick Menu Colors first, then Quick Colors
+          let showQuickColors = false;
+          let colorPairs = [];
+          let useQuickMenuColors = false;
+          
           if (
+            this.settings.quickMenuColorsEnabled &&
+            Array.isArray(this.settings.quickMenuColors) &&
+            this.settings.quickMenuColors.length > 0
+          ) {
+            // Use Quick Menu Colors - flatten swatch groups into color pairs
+            useQuickMenuColors = true;
+            showQuickColors = true;
+            this.settings.quickMenuColors.forEach((group) => {
+              if (group && Array.isArray(group.swatches)) {
+                group.swatches.forEach((swatch) => {
+                  if (swatch && swatch.backgroundColor && this.isValidHexColor(swatch.backgroundColor)) {
+                    colorPairs.push({
+                      textColor: swatch.textColor || null,
+                      backgroundColor: swatch.backgroundColor,
+                      isQuickMenuColor: true
+                    });
+                  }
+                });
+              }
+            });
+          } else if (
             this.settings.quickColorsEnabled &&
             Array.isArray(this.settings.quickColors) &&
             this.settings.quickColors.length > 0
           ) {
+            // Use regular Quick Colors
+            showQuickColors = true;
+            colorPairs = this.settings.quickColors.map(pair => ({
+              ...pair,
+              isQuickMenuColor: false
+            }));
+          }
+          
+          if (showQuickColors && colorPairs.length > 0) {
             menu.addItem((item) => {
               const titleEl = document.createElement("div");
               titleEl.className = "menu-item tappable has-submenu";
@@ -1710,7 +1783,7 @@ class AlwaysColorText extends Plugin {
               dotsContainer.style.width = "100%";
               dotsContainer.style.alignItems = "center";
               let activeDotEl = null;
-              this.settings.quickColors.forEach((pair) => {
+              colorPairs.forEach((pair) => {
                 if (
                   pair &&
                   pair.backgroundColor &&
@@ -2207,6 +2280,9 @@ class AlwaysColorText extends Plugin {
               const matchType =
                 sel.matchType ||
                 (this.settings.partialMatch ? "contains" : "exact");
+              const caseSensitive = typeof sel.caseSensitive === "boolean"
+                ? sel.caseSensitive
+                : !!this.settings.caseSensitive;
               const applyToArr = (arr) => {
                 const idx = arr.findIndex(
                   (e) => e && e.pattern === word && !e.isRegex,
@@ -2238,6 +2314,7 @@ class AlwaysColorText extends Plugin {
                     entry._savedTextColor = color;
                   }
                   if (!entry.isRegex) entry.matchType = matchType;
+                  if (!entry.isRegex) entry.caseSensitive = caseSensitive;
                   this.syncEntryCssFromColors(entry);
                 } else {
                   if (tc && bc) {
@@ -2250,6 +2327,7 @@ class AlwaysColorText extends Plugin {
                       flags: "",
                       styleType: "both",
                       matchType,
+                      caseSensitive,
                       _savedTextColor: tc,
                       _savedBackgroundColor: bc,
                     });
@@ -2261,6 +2339,7 @@ class AlwaysColorText extends Plugin {
                       flags: "",
                       styleType: "text",
                       matchType,
+                      caseSensitive,
                       _savedTextColor: tc,
                     });
                   } else if (bc) {
@@ -2273,6 +2352,7 @@ class AlwaysColorText extends Plugin {
                       flags: "",
                       styleType: "highlight",
                       matchType,
+                      caseSensitive,
                       _savedBackgroundColor: bc,
                     });
                   } else if (color && this.isValidHexColor(color)) {
@@ -2283,6 +2363,7 @@ class AlwaysColorText extends Plugin {
                       flags: "",
                       styleType: "text",
                       matchType,
+                      caseSensitive,
                       _savedTextColor: color,
                     });
                   }

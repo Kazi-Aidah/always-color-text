@@ -9,8 +9,11 @@ import { EditWordGroupModal } from '../modals/EditWordGroupModal.js';
 import { SelectBlacklistGroupModal } from '../modals/SelectBlacklistGroupModal.js';
 import { EditBlacklistGroupModal } from '../modals/EditBlacklistGroupModal.js';
 import { ColorPickerModal } from '../modals/ColorPickerModal.js';
+import { EditColorSwatchesModal } from '../modals/EditColorSwatchesModal.js';
 import { AlertModal } from '../modals/AlertModal.js';
 import { ConfirmationModal } from '../modals/ConfirmationModal.js';
+import { QuickMenuColorsModal } from '../modals/QuickMenuColorsModal.js';
+import { TextStylePresetsModal } from '../modals/TextStylePresetsModal.js';
 import { debugLog, debugError } from '../utils/debug.js';
 export class ColorSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
@@ -2997,6 +3000,62 @@ export class ColorSettingTab extends PluginSettingTab {
     }
   }
 
+  _refreshQuickMenuColorsSetting() {
+    try {
+      if (!this._quickMenuColorsSettingContainer) return;
+      this._quickMenuColorsSettingContainer.empty();
+
+      // Quick Colors toggle with Edit Swatches button
+      const quickMenuColorsSetting = new Setting(this._quickMenuColorsSettingContainer)
+        .setName(this.plugin.t("quick_colors_header", "Quick Colors"))
+        .setDesc(
+          this.plugin.t(
+            "quick_colors_desc",
+            "Shows color dots in the menu",
+          ),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.quickMenuColorsEnabled)
+            .onChange(async (v) => {
+              this.plugin.settings.quickMenuColorsEnabled = v;
+              await this.plugin.saveSettings();
+              this._refreshQuickMenuColorsSetting();
+            }),
+        )
+        .addButton((b) => {
+          b.setButtonText(this.plugin.t("edit_swatches_button", "Edit Swatches"))
+            .setCta()
+            .onClick(() => {
+              const modal = new QuickMenuColorsModal(this.app, this.plugin);
+              modal.open();
+            });
+        });
+
+      try {
+        quickMenuColorsSetting.settingEl.style.marginTop = "30px";
+        quickMenuColorsSetting.settingEl.style.marginBottom = "8px";
+        quickMenuColorsSetting.settingEl.style.borderTop = "none";
+        quickMenuColorsSetting.controlEl.style.marginLeft = "10px";
+
+        // Move the toggle to the left of the title/description
+        const ctrl = quickMenuColorsSetting.controlEl;
+        const toggleEl = ctrl ? ctrl.firstChild : null;
+        if (toggleEl && quickMenuColorsSetting.infoEl) {
+          quickMenuColorsSetting.settingEl.insertBefore(
+            toggleEl,
+            quickMenuColorsSetting.infoEl,
+          );
+          quickMenuColorsSetting.settingEl.style.alignItems = "center";
+          toggleEl.style.marginRight = "10px";
+          toggleEl.style.flexShrink = "0";
+        }
+      } catch (e) {}
+    } catch (e) {
+      debugError("SETTINGS", "_refreshQuickMenuColorsSetting error", e);
+    }
+  }
+
   _refreshQuickColors() {
     try {
       if (!this._quickColorsContainer) return;
@@ -3068,6 +3127,7 @@ export class ColorSettingTab extends PluginSettingTab {
           const dragHandle = row.createEl("button");
           setIcon(dragHandle, "menu");
           // dragHandle.setAttribute('draggable', 'true');
+          dragHandle.addClass("act-drag-handle");
           dragHandle.style.padding = "0";
           dragHandle.style.border = "none";
           dragHandle.style.background = "transparent";
@@ -3078,6 +3138,8 @@ export class ColorSettingTab extends PluginSettingTab {
           dragHandle.style.display = "flex";
           dragHandle.style.alignItems = "center";
           dragHandle.style.justifyContent = "center";
+          dragHandle.style.width = "24px";
+          dragHandle.style.height = "24px";
           dragHandle.setAttribute(
             "aria-label",
             this.plugin.t("drag_to_reorder", "Drag to reorder"),
@@ -3200,181 +3262,135 @@ export class ColorSettingTab extends PluginSettingTab {
             this._refreshQuickColors();
           });
 
-          // Custom drag handlers
-          dragHandle.addEventListener("mousedown", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          // ===== ROBUST DRAG HANDLERS (Obsidian + Electron compatible) =====
+          // Shared drag state
+          let dragStarted = false;
+          let ghost = null;
+          let sX = 0, sY = 0;
+          let oX = 0, oY = 0;
 
-            const startX = e.clientX;
-            const startY = e.clientY;
+          const createGhost = () => {
             const rect = row.getBoundingClientRect();
-            const offsetX = startX - rect.left;
-            const offsetY = startY - rect.top;
-
-            if (navigator.vibrate) navigator.vibrate(100);
-
-            // Create ghost
-            const ghost = document.body.createDiv({
-              cls: "drag-reorder-ghost",
-            });
+            ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
             const clone = row.cloneNode(true);
-            // Manually copy values for selects/inputs because cloneNode doesn't copy dynamic values
-            const originalInputs = row.querySelectorAll(
-              "input, select, textarea",
-            );
-            const clonedInputs = clone.querySelectorAll(
-              "input, select, textarea",
-            );
-            originalInputs.forEach((el, idx) => {
-              if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
-            });
+            const origInputs = row.querySelectorAll("input, select, textarea");
+            const clonInputs = clone.querySelectorAll("input, select, textarea");
+            origInputs.forEach((el, idx) => { if (clonInputs[idx]) clonInputs[idx].value = el.value; });
             ghost.appendChild(clone);
-            ghost.style.width = `${rect.width}px`;
-            ghost.style.height = `${rect.height}px`;
-            ghost.style.left = `${rect.left}px`;
-            ghost.style.top = `${rect.top}px`;
-
-            // Hide original
+            ghost.style.width = rect.width + "px";
+            ghost.style.height = rect.height + "px";
+            ghost.style.left = rect.left + "px";
+            ghost.style.top = rect.top + "px";
             row.classList.add("drag-ghost-hidden");
+            document.body.classList.add("act-dragging-active");
+            dragHandle.style.cursor = "grabbing";
+            if (navigator.vibrate) navigator.vibrate(30);
+          };
 
-            const onMove = (moveEvent) => {
-              moveEvent.preventDefault();
-              const currentX = moveEvent.clientX;
-              const currentY = moveEvent.clientY;
+          const doReorder = (currentX, currentY) => {
+            if (!ghost) return;
+            ghost.style.left = (currentX - oX) + "px";
+            ghost.style.top = (currentY - oY) + "px";
 
-              // Update ghost position
-              ghost.style.left = `${currentX - offsetX}px`;
-              ghost.style.top = `${currentY - offsetY}px`;
+            // Hide ghost briefly for accurate elementFromPoint hit-test
+            ghost.style.display = "none";
+            const from = document.elementFromPoint(currentX, currentY);
+            ghost.style.display = "";
 
-              // Reordering logic for Grid/Flow layout
-              const target = document.elementFromPoint(currentX, currentY);
-              const targetRow = target
-                ? target.closest("div[data-qc-index]")
-                : null;
+            const targetRow = from ? from.closest("div[data-qc-index]") : null;
+            if (!targetRow || targetRow === row || targetRow.parentNode !== listDiv) return;
 
-              if (
-                targetRow &&
-                targetRow !== row &&
-                targetRow.parentNode === listDiv
-              ) {
-                const children = Array.from(
-                  listDiv.querySelectorAll("div[data-qc-index]"),
-                );
-                const currentIndex = children.indexOf(row);
-                const targetIndex = children.indexOf(targetRow);
+            const children = Array.from(listDiv.querySelectorAll("div[data-qc-index]"));
+            const cur = children.indexOf(row);
+            const tgt = children.indexOf(targetRow);
+            if (cur === -1 || tgt === -1 || cur === tgt) return;
 
-                if (currentIndex !== -1 && targetIndex !== -1) {
-                  // Swap logic
-                  if (currentIndex < targetIndex) {
-                    // Move forward -> Place after target
-                    if (navigator.vibrate) navigator.vibrate(100);
-                    targetRow.after(row);
-                    // Update array
-                    const item = colors.splice(currentIndex, 1)[0];
-                    colors.splice(targetIndex, 0, item);
-                    // Update indices
-                    Array.from(
-                      listDiv.querySelectorAll("div[data-qc-index]"),
-                    ).forEach((r, idx) => {
-                      r.setAttribute("data-qc-index", idx.toString());
-                    });
-                    return;
-                  } else if (currentIndex > targetIndex) {
-                    // Move backward -> Place before target
-                    if (navigator.vibrate) navigator.vibrate(100);
-                    listDiv.insertBefore(row, targetRow);
-                    // Update array
-                    const item = colors.splice(currentIndex, 1)[0];
-                    colors.splice(targetIndex, 0, item);
-                    // Update indices
-                    Array.from(
-                      listDiv.querySelectorAll("div[data-qc-index]"),
-                    ).forEach((r, idx) => {
-                      r.setAttribute("data-qc-index", idx.toString());
-                    });
-                    return;
-                  }
-                }
-              }
-            };
+            if (navigator.vibrate) navigator.vibrate(30);
+            if (cur < tgt) targetRow.after(row);
+            else listDiv.insertBefore(row, targetRow);
 
-            const onEnd = async () => {
-              document.removeEventListener("mousemove", onMove);
-              document.removeEventListener("mouseup", onEnd);
-              ghost.remove();
-              row.classList.remove("drag-ghost-hidden");
+            const item = colors.splice(cur, 1)[0];
+            colors.splice(tgt, 0, item);
+            Array.from(listDiv.querySelectorAll("div[data-qc-index]")).forEach((r, idx) => {
+              r.setAttribute("data-qc-index", idx.toString());
+            });
+          };
 
+          const cleanupDrag = async () => {
+            document.removeEventListener("mousemove", onDocMouseMove, { capture: true });
+            document.removeEventListener("mouseup", onDocMouseUp, { capture: true });
+            document.removeEventListener("touchmove", onDocTouchMove, { capture: true });
+            document.removeEventListener("touchend", onDocTouchEnd, { capture: true });
+            document.removeEventListener("touchcancel", onDocTouchEnd, { capture: true });
+            document.body.classList.remove("act-dragging-active");
+            dragHandle.style.cursor = "grab";
+            if (ghost) { try { ghost.remove(); } catch (_) {} ghost = null; }
+            row.classList.remove("drag-ghost-hidden");
+            if (dragStarted) {
               this.plugin.settings.quickColors = colors;
               await this.plugin.saveSettings();
               this._refreshQuickColors();
-            };
+            }
+            dragStarted = false;
+          };
 
-            document.addEventListener("mousemove", onMove);
-            document.addEventListener("mouseup", onEnd);
+          const onDocMouseMove = (e) => {
+            if (!dragHandle) return;
+            e.preventDefault();
+            if (!dragStarted) {
+              if (Math.hypot(e.clientX - sX, e.clientY - sY) > 4) {
+                createGhost();
+                dragStarted = true;
+              } else {
+                return;
+              }
+            }
+            doReorder(e.clientX, e.clientY);
+          };
+          const onDocMouseUp = async () => { await cleanupDrag(); };
+
+          const onDocTouchMove = (e) => {
+            if (!dragHandle || e.touches.length !== 1) return;
+            e.preventDefault();
+            const t = e.touches[0];
+            if (!dragStarted) {
+              if (Math.hypot(t.clientX - sX, t.clientY - sY) > 4) {
+                createGhost();
+                dragStarted = true;
+              } else {
+                return;
+              }
+            }
+            doReorder(t.clientX, t.clientY);
+          };
+          const onDocTouchEnd = async () => { await cleanupDrag(); };
+
+          dragHandle.addEventListener("mousedown", (e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            e.stopPropagation();
+            sX = e.clientX; sY = e.clientY;
+            const rect = row.getBoundingClientRect();
+            oX = e.clientX - rect.left;
+            oY = e.clientY - rect.top;
+            dragStarted = false;
+            document.addEventListener("mousemove", onDocMouseMove, { passive: false, capture: true });
+            document.addEventListener("mouseup", onDocMouseUp, { passive: false, capture: true });
           });
 
           dragHandle.addEventListener("touchstart", (e) => {
+            if (e.touches.length !== 1) return;
             e.preventDefault();
             e.stopPropagation();
-            const touch = e.touches[0];
-            const startX = touch.clientX;
-            const startY = touch.clientY;
+            const t = e.touches[0];
+            sX = t.clientX; sY = t.clientY;
             const rect = row.getBoundingClientRect();
-            const offsetX = startX - rect.left;
-            const offsetY = startY - rect.top;
-            if (navigator.vibrate) navigator.vibrate(100);
-            const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
-            const clone = row.cloneNode(true);
-            const originalInputs = row.querySelectorAll("input, select, textarea");
-            const clonedInputs = clone.querySelectorAll("input, select, textarea");
-            originalInputs.forEach((el, idx) => { if (clonedInputs[idx]) clonedInputs[idx].value = el.value; });
-            ghost.appendChild(clone);
-            ghost.style.width = `${rect.width}px`;
-            ghost.style.height = `${rect.height}px`;
-            ghost.style.left = `${rect.left}px`;
-            ghost.style.top = `${rect.top}px`;
-            row.classList.add("drag-ghost-hidden");
-            const onTouchMove = (moveEvent) => {
-              moveEvent.preventDefault();
-              const t = moveEvent.touches[0];
-              const currentX = t.clientX;
-              const currentY = t.clientY;
-              ghost.style.left = `${currentX - offsetX}px`;
-              ghost.style.top = `${currentY - offsetY}px`;
-              const target = document.elementFromPoint(currentX, currentY);
-              const targetRow = target ? target.closest("div[data-qc-index]") : null;
-              if (targetRow && targetRow !== row && targetRow.parentNode === listDiv) {
-                const children = Array.from(listDiv.querySelectorAll("div[data-qc-index]"));
-                const currentIndex = children.indexOf(row);
-                const targetIndex = children.indexOf(targetRow);
-                if (currentIndex !== -1 && targetIndex !== -1) {
-                  if (currentIndex < targetIndex) {
-                    if (navigator.vibrate) navigator.vibrate(100);
-                    targetRow.after(row);
-                    const item = colors.splice(currentIndex, 1)[0];
-                    colors.splice(targetIndex, 0, item);
-                    Array.from(listDiv.querySelectorAll("div[data-qc-index]")).forEach((r, idx) => { r.setAttribute("data-qc-index", idx.toString()); });
-                  } else if (currentIndex > targetIndex) {
-                    if (navigator.vibrate) navigator.vibrate(100);
-                    listDiv.insertBefore(row, targetRow);
-                    const item = colors.splice(currentIndex, 1)[0];
-                    colors.splice(targetIndex, 0, item);
-                    Array.from(listDiv.querySelectorAll("div[data-qc-index]")).forEach((r, idx) => { r.setAttribute("data-qc-index", idx.toString()); });
-                  }
-                }
-              }
-            };
-            const onTouchEnd = async () => {
-              document.removeEventListener("touchmove", onTouchMove);
-              document.removeEventListener("touchend", onTouchEnd);
-              ghost.remove();
-              row.classList.remove("drag-ghost-hidden");
-              this.plugin.settings.quickColors = colors;
-              await this.plugin.saveSettings();
-              this._refreshQuickColors();
-            };
-            document.addEventListener("touchmove", onTouchMove, { passive: false });
-            document.addEventListener("touchend", onTouchEnd);
+            oX = t.clientX - rect.left;
+            oY = t.clientY - rect.top;
+            dragStarted = false;
+            document.addEventListener("touchmove", onDocTouchMove, { passive: false, capture: true });
+            document.addEventListener("touchend", onDocTouchEnd, { passive: false, capture: true });
+            document.addEventListener("touchcancel", onDocTouchEnd, { passive: false, capture: true });
           }, { passive: false });
         });
       }
@@ -3509,6 +3525,7 @@ export class ColorSettingTab extends PluginSettingTab {
         // Drag Handle
         const dragHandle = row.createEl("button");
         setIcon(dragHandle, "menu");
+        dragHandle.addClass("act-drag-handle");
         dragHandle.style.padding = "0";
         dragHandle.style.border = "none";
         dragHandle.style.background = "transparent";
@@ -3519,6 +3536,8 @@ export class ColorSettingTab extends PluginSettingTab {
         dragHandle.style.display = "flex";
         dragHandle.style.alignItems = "center";
         dragHandle.style.justifyContent = "center";
+        dragHandle.style.width = "24px";
+        dragHandle.style.height = "24px";
         dragHandle.setAttribute(
           "aria-label",
           this.plugin.t("drag_to_reorder", "Drag to reorder"),
@@ -3634,163 +3653,130 @@ export class ColorSettingTab extends PluginSettingTab {
           menu.showAtMouseEvent(e);
         });
 
-        // Custom Drag Implementation matching drag-example.ts
-        dragHandle.addEventListener("mousedown", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+        // ===== ROBUST DRAG HANDLERS (Obsidian + Electron compatible) =====
+        let qsDragStarted = false;
+        let qsGhost = null;
+        let qsSX = 0, qsSY = 0;
+        let qsOX = 0, qsOY = 0;
 
-          const startX = e.clientX;
-          const startY = e.clientY;
+        const qsCreateGhost = () => {
           const rect = row.getBoundingClientRect();
-          const offsetX = startX - rect.left;
-          const offsetY = startY - rect.top;
-
-          if (navigator.vibrate) navigator.vibrate(100);
-
-          // Create ghost
-          const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+          qsGhost = document.body.createDiv({ cls: "drag-reorder-ghost" });
           const clone = row.cloneNode(true);
-          // Manually copy values for selects/inputs because cloneNode doesn't copy dynamic values
-          const originalInputs = row.querySelectorAll(
-            "input, select, textarea",
-          );
-          const clonedInputs = clone.querySelectorAll(
-            "input, select, textarea",
-          );
-          originalInputs.forEach((el, idx) => {
-            if (clonedInputs[idx]) clonedInputs[idx].value = el.value;
-          });
-          ghost.appendChild(clone);
-          ghost.style.width = `${rect.width}px`;
-          ghost.style.height = `${rect.height}px`;
-          ghost.style.left = `${rect.left}px`;
-          ghost.style.top = `${rect.top}px`;
-
-          // Hide original
+          const origInputs = row.querySelectorAll("input, select, textarea");
+          const clonInputs = clone.querySelectorAll("input, select, textarea");
+          origInputs.forEach((el, idx) => { if (clonInputs[idx]) clonInputs[idx].value = el.value; });
+          qsGhost.appendChild(clone);
+          qsGhost.style.width = rect.width + "px";
+          qsGhost.style.height = rect.height + "px";
+          qsGhost.style.left = rect.left + "px";
+          qsGhost.style.top = rect.top + "px";
           row.classList.add("drag-ghost-hidden");
+          document.body.classList.add("act-dragging-active");
+          dragHandle.style.cursor = "grabbing";
+          if (navigator.vibrate) navigator.vibrate(30);
+        };
 
-          const onMove = (moveEvent) => {
-            moveEvent.preventDefault();
-            const currentX = moveEvent.clientX;
-            const currentY = moveEvent.clientY;
+        const qsDoReorder = (currentX, currentY) => {
+          if (!qsGhost) return;
+          qsGhost.style.left = (currentX - qsOX) + "px";
+          qsGhost.style.top = (currentY - qsOY) + "px";
 
-            // Update ghost position
-            ghost.style.left = `${currentX - offsetX}px`;
-            ghost.style.top = `${currentY - offsetY}px`;
+          // Vertical reordering: use elementFromPoint with ghost hidden for accuracy
+          qsGhost.style.display = "none";
+          const from = document.elementFromPoint(currentX, currentY);
+          qsGhost.style.display = "";
 
-            // Reordering logic
-            const children = Array.from(listDiv.children);
-            const currentIndex = children.indexOf(row);
-            if (currentIndex === -1) return;
+          const targetRow = from ? from.parentElement === listDiv ? from : from.closest(listDiv.children[0]?.tagName || 'div') : null;
+          if (!targetRow || targetRow === row || targetRow.parentElement !== listDiv) return;
 
-            // Check Previous
-            if (currentIndex > 0) {
-              const prevRow = children[currentIndex - 1];
-              const prevRect = prevRow.getBoundingClientRect();
-              const prevOverdrag = prevRect.height * 0.25;
-              if (currentY < prevRect.bottom - prevOverdrag) {
-                if (navigator.vibrate) navigator.vibrate(100);
-                listDiv.insertBefore(row, prevRow);
-                // Swap in data
-                const item = styles.splice(currentIndex, 1)[0];
-                styles.splice(currentIndex - 1, 0, item);
-                return;
-              }
-            }
+          const children = Array.from(listDiv.children);
+          const cur = children.indexOf(row);
+          const tgt = children.indexOf(targetRow);
+          if (cur === -1 || tgt === -1 || cur === tgt) return;
 
-            // Check Next
-            if (currentIndex < children.length - 1) {
-              const nextRow = children[currentIndex + 1];
-              const nextRect = nextRow.getBoundingClientRect();
-              const nextOverdrag = nextRect.height * 0.25;
-              if (currentY > nextRect.top + nextOverdrag) {
-                if (navigator.vibrate) navigator.vibrate(100);
-                nextRow.after(row);
-                // Swap in data
-                const item = styles.splice(currentIndex, 1)[0];
-                styles.splice(currentIndex + 1, 0, item);
-                return;
-              }
-            }
-          };
+          if (navigator.vibrate) navigator.vibrate(30);
+          if (cur < tgt) targetRow.after(row);
+          else listDiv.insertBefore(row, targetRow);
 
-          const onEnd = async () => {
-            document.removeEventListener("mousemove", onMove);
-            document.removeEventListener("mouseup", onEnd);
-            ghost.remove();
-            row.classList.remove("drag-ghost-hidden");
+          const item = styles.splice(cur, 1)[0];
+          styles.splice(tgt, 0, item);
+        };
+
+        const qsCleanupDrag = async () => {
+          document.removeEventListener("mousemove", qsOnDocMouseMove, { capture: true });
+          document.removeEventListener("mouseup", qsOnDocMouseUp, { capture: true });
+          document.removeEventListener("touchmove", qsOnDocTouchMove, { capture: true });
+          document.removeEventListener("touchend", qsOnDocTouchEnd, { capture: true });
+          document.removeEventListener("touchcancel", qsOnDocTouchEnd, { capture: true });
+          document.body.classList.remove("act-dragging-active");
+          dragHandle.style.cursor = "grab";
+          if (qsGhost) { try { qsGhost.remove(); } catch (_) {} qsGhost = null; }
+          row.classList.remove("drag-ghost-hidden");
+          if (qsDragStarted) {
             await this.plugin.saveSettings();
             this._refreshQuickStyles();
-          };
+          }
+          qsDragStarted = false;
+        };
 
-          document.addEventListener("mousemove", onMove);
-          document.addEventListener("mouseup", onEnd);
+        const qsOnDocMouseMove = (e) => {
+          if (!dragHandle) return;
+          e.preventDefault();
+          if (!qsDragStarted) {
+            if (Math.hypot(e.clientX - qsSX, e.clientY - qsSY) > 4) {
+              qsCreateGhost();
+              qsDragStarted = true;
+            } else {
+              return;
+            }
+          }
+          qsDoReorder(e.clientX, e.clientY);
+        };
+        const qsOnDocMouseUp = async () => { await qsCleanupDrag(); };
+
+        const qsOnDocTouchMove = (e) => {
+          if (!dragHandle || e.touches.length !== 1) return;
+          e.preventDefault();
+          const t = e.touches[0];
+          if (!qsDragStarted) {
+            if (Math.hypot(t.clientX - qsSX, t.clientY - qsSY) > 4) {
+              qsCreateGhost();
+              qsDragStarted = true;
+            } else {
+              return;
+            }
+          }
+          qsDoReorder(t.clientX, t.clientY);
+        };
+        const qsOnDocTouchEnd = async () => { await qsCleanupDrag(); };
+
+        dragHandle.addEventListener("mousedown", (e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.stopPropagation();
+          qsSX = e.clientX; qsSY = e.clientY;
+          const rect = row.getBoundingClientRect();
+          qsOX = e.clientX - rect.left;
+          qsOY = e.clientY - rect.top;
+          qsDragStarted = false;
+          document.addEventListener("mousemove", qsOnDocMouseMove, { passive: false, capture: true });
+          document.addEventListener("mouseup", qsOnDocMouseUp, { passive: false, capture: true });
         });
 
         dragHandle.addEventListener("touchstart", (e) => {
+          if (e.touches.length !== 1) return;
           e.preventDefault();
           e.stopPropagation();
-          const touch = e.touches[0];
-          const startX = touch.clientX;
-          const startY = touch.clientY;
+          const t = e.touches[0];
+          qsSX = t.clientX; qsSY = t.clientY;
           const rect = row.getBoundingClientRect();
-          const offsetX = startX - rect.left;
-          const offsetY = startY - rect.top;
-          if (navigator.vibrate) navigator.vibrate(100);
-          const ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
-          const clone = row.cloneNode(true);
-          const originalInputs = row.querySelectorAll("input, select, textarea");
-          const clonedInputs = clone.querySelectorAll("input, select, textarea");
-          originalInputs.forEach((el, idx) => { if (clonedInputs[idx]) clonedInputs[idx].value = el.value; });
-          ghost.appendChild(clone);
-          ghost.style.width = `${rect.width}px`;
-          ghost.style.height = `${rect.height}px`;
-          ghost.style.left = `${rect.left}px`;
-          ghost.style.top = `${rect.top}px`;
-          row.classList.add("drag-ghost-hidden");
-          const onTouchMove = (moveEvent) => {
-            moveEvent.preventDefault();
-            const t = moveEvent.touches[0];
-            const currentX = t.clientX;
-            const currentY = t.clientY;
-            ghost.style.left = `${currentX - offsetX}px`;
-            ghost.style.top = `${currentY - offsetY}px`;
-            const children = Array.from(listDiv.children);
-            const currentIndex = children.indexOf(row);
-            if (currentIndex === -1) return;
-            if (currentIndex > 0) {
-              const prevRow = children[currentIndex - 1];
-              const prevRect = prevRow.getBoundingClientRect();
-              if (currentY < prevRect.bottom - prevRect.height * 0.25) {
-                if (navigator.vibrate) navigator.vibrate(100);
-                listDiv.insertBefore(row, prevRow);
-                const item = styles.splice(currentIndex, 1)[0];
-                styles.splice(currentIndex - 1, 0, item);
-                return;
-              }
-            }
-            if (currentIndex < children.length - 1) {
-              const nextRow = children[currentIndex + 1];
-              const nextRect = nextRow.getBoundingClientRect();
-              if (currentY > nextRect.top + nextRect.height * 0.25) {
-                if (navigator.vibrate) navigator.vibrate(100);
-                nextRow.after(row);
-                const item = styles.splice(currentIndex, 1)[0];
-                styles.splice(currentIndex + 1, 0, item);
-                return;
-              }
-            }
-          };
-          const onTouchEnd = async () => {
-            document.removeEventListener("touchmove", onTouchMove);
-            document.removeEventListener("touchend", onTouchEnd);
-            ghost.remove();
-            row.classList.remove("drag-ghost-hidden");
-            await this.plugin.saveSettings();
-            this._refreshQuickStyles();
-          };
-          document.addEventListener("touchmove", onTouchMove, { passive: false });
-          document.addEventListener("touchend", onTouchEnd);
+          qsOX = t.clientX - rect.left;
+          qsOY = t.clientY - rect.top;
+          qsDragStarted = false;
+          document.addEventListener("touchmove", qsOnDocTouchMove, { passive: false, capture: true });
+          document.addEventListener("touchend", qsOnDocTouchEnd, { passive: false, capture: true });
+          document.addEventListener("touchcancel", qsOnDocTouchEnd, { passive: false, capture: true });
         }, { passive: false });
       });
 
@@ -5352,6 +5338,73 @@ export class ColorSettingTab extends PluginSettingTab {
           return d;
         });
 
+      containerEl.createEl("hr", { cls: "act-settings-divider" });
+
+      // Enable Global Color
+      new Setting(containerEl)
+        .setName(this.plugin.t("enable_document_color", "Enable Global Color"))
+        .setDesc(
+          this.plugin.t(
+            "enable_global_color_desc",
+            "On-off switch for vault-wide coloring",
+          ),
+        )
+        .addToggle((t) =>
+          t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
+            this.plugin.settings.enabled = v;
+            await this.debouncedSaveSettings();
+          }),
+        );
+
+      containerEl.createEl("hr", { cls: "act-settings-divider" });
+
+      // Text Style Presets
+      new Setting(containerEl)
+        .setName(this.plugin.t("text_style_presets", "Text Style Presets"))
+        .setDesc(
+          this.plugin.t(
+            "text_style_presets_desc",
+            "Manage and apply text style presets.",
+          ),
+        )
+        .addButton((b) =>
+          b
+            .setButtonText(this.plugin.t("btn_edit_presets", "Edit Presets"))
+            .onClick(() => {
+              try {
+                new TextStylePresetsModal(this.app, this.plugin).open();
+              } catch (e) {}
+            }),
+        );
+
+      // Custom Color Swatches
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "custom_color_swatches",
+            "Custom Color Swatches",
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "custom_color_swatches_desc",
+            "Add, edit and preview your custom color swatches.",
+          ),
+        )
+        .addButton((b) =>
+          b
+            .setButtonText(
+              this.plugin.t("btn_edit_swatches", "Edit Swatches"),
+            )
+            .onClick(() => {
+              new EditColorSwatchesModal(this.app, this.plugin).open();
+            }),
+        );
+
+      // Quick Menu Colors
+      this._quickMenuColorsSettingContainer = containerEl.createDiv();
+      this._refreshQuickMenuColorsSetting();
+
       new Setting(containerEl)
         .setName(
           this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar"),
@@ -5473,15 +5526,6 @@ export class ColorSettingTab extends PluginSettingTab {
         ),
       });
 
-      // 1. Enable document color
-      new Setting(containerEl)
-        .setName(this.plugin.t("enable_document_color", "Enable Global Color"))
-        .addToggle((t) =>
-          t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
-            this.plugin.settings.enabled = v;
-            await this.debouncedSaveSettings();
-          }),
-        );
 
       new Setting(containerEl)
         .setName(
@@ -7180,6 +7224,7 @@ export class ColorSettingTab extends PluginSettingTab {
               await this.plugin.saveSettings();
             }),
         );
+
 
       /* new Setting(swContainer)
         .setName(
