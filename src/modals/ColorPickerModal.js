@@ -1575,6 +1575,70 @@ export class ColorPickerModal extends Modal {
       }
 
       const word = this._selectedText || "";
+      // Merge a Text Style Preset's full style (shape + styleType) onto the
+      // entry that was just saved, regardless of whether submitFn created it
+      // directly or delegated to this.callback. Without this, only colors +
+      // a basic styleType are written and the saved entry reverts to the
+      // global default styling.
+      const applyPresetStyle = () => {
+        if (!this._appliedPresetStyle) return;
+        try {
+          const st = this._appliedPresetStyle;
+          const w = word;
+          const cs = !!this.plugin.settings.caseSensitive;
+          const eq = (a, b) =>
+            cs
+              ? String(a) === String(b)
+              : String(a).toLowerCase() === String(b).toLowerCase();
+          const matchWord = (e) => {
+            if (!e || e.isRegex) return false;
+            return (
+              eq(e.pattern || "", w) ||
+              (Array.isArray(e.groupedPatterns) &&
+                e.groupedPatterns.some((p) => eq(p, w)))
+            );
+          };
+          const findIn = (arr) =>
+            Array.isArray(arr) ? arr.find((e) => matchWord(e)) : null;
+          let finalEntry =
+            findIn(targetArr) || findIn(this.plugin.settings.wordEntries);
+          if (
+            !finalEntry &&
+            Array.isArray(this.plugin.settings.wordEntryGroups)
+          ) {
+            for (const g of this.plugin.settings.wordEntryGroups) {
+              const f = findIn(g.entries);
+              if (f) {
+                finalEntry = f;
+                break;
+              }
+            }
+          }
+          if (finalEntry) {
+            finalEntry.styleType = st.styleType;
+            if (st.backgroundOpacity != null)
+              finalEntry.backgroundOpacity = st.backgroundOpacity;
+            if (st.highlightBorderRadius != null)
+              finalEntry.highlightBorderRadius = st.highlightBorderRadius;
+            if (st.highlightHorizontalPadding != null)
+              finalEntry.highlightHorizontalPadding =
+                st.highlightHorizontalPadding;
+            if (st.highlightVerticalPadding != null)
+              finalEntry.highlightVerticalPadding =
+                st.highlightVerticalPadding;
+            if (st.enableBorderThickness != null)
+              finalEntry.enableBorderThickness = st.enableBorderThickness;
+            if (st.borderStyle != null) finalEntry.borderStyle = st.borderStyle;
+            if (st.borderLineStyle != null)
+              finalEntry.borderLineStyle = st.borderLineStyle;
+            if (st.borderOpacity != null)
+              finalEntry.borderOpacity = st.borderOpacity;
+            if (st.borderThickness != null)
+              finalEntry.borderThickness = st.borderThickness;
+            this.plugin.saveSettings();
+          }
+        } catch (e) {}
+      };
       try {
         if (typeof this.callback === "function") {
           try {
@@ -1619,6 +1683,7 @@ export class ColorPickerModal extends Modal {
               },
             );
           } catch (e) {}
+          applyPresetStyle();
           return;
         }
         const caseSensitive = !!this.plugin.settings.caseSensitive;
@@ -1876,67 +1941,9 @@ export class ColorPickerModal extends Modal {
         }
 
         // If a Text Style Preset was applied, merge its full style (shape +
-        // styleType) onto the saved entry. submitFn above only writes colors
-        // and a basic styleType, which would otherwise drop the preset's
-        // shape and revert to the global default styling on save.
-        if (this._appliedPresetStyle) {
-          try {
-            const st = this._appliedPresetStyle;
-            const w = this._selectedText || "";
-            const cs = !!this.plugin.settings.caseSensitive;
-            const matchWord = (e) => {
-              if (!e || e.isRegex) return false;
-              const eq = (a, b) =>
-                cs
-                  ? String(a) === String(b)
-                  : String(a).toLowerCase() === String(b).toLowerCase();
-              return (
-                eq(e.pattern || "", w) ||
-                (Array.isArray(e.groupedPatterns) &&
-                  e.groupedPatterns.some((p) => eq(p, w)))
-              );
-            };
-            const findIn = (arr) =>
-              Array.isArray(arr) ? arr.find((e) => matchWord(e)) : null;
-            let finalEntry =
-              findIn(targetArr) || findIn(this.plugin.settings.wordEntries);
-            if (
-              !finalEntry &&
-              Array.isArray(this.plugin.settings.wordEntryGroups)
-            ) {
-              for (const g of this.plugin.settings.wordEntryGroups) {
-                const f = findIn(g.entries);
-                if (f) {
-                  finalEntry = f;
-                  break;
-                }
-              }
-            }
-            if (finalEntry) {
-              finalEntry.styleType = st.styleType;
-              if (st.backgroundOpacity != null)
-                finalEntry.backgroundOpacity = st.backgroundOpacity;
-              if (st.highlightBorderRadius != null)
-                finalEntry.highlightBorderRadius = st.highlightBorderRadius;
-              if (st.highlightHorizontalPadding != null)
-                finalEntry.highlightHorizontalPadding =
-                  st.highlightHorizontalPadding;
-              if (st.highlightVerticalPadding != null)
-                finalEntry.highlightVerticalPadding =
-                  st.highlightVerticalPadding;
-              if (st.enableBorderThickness != null)
-                finalEntry.enableBorderThickness = st.enableBorderThickness;
-              if (st.borderStyle != null) finalEntry.borderStyle = st.borderStyle;
-              if (st.borderLineStyle != null)
-                finalEntry.borderLineStyle = st.borderLineStyle;
-              if (st.borderOpacity != null)
-                finalEntry.borderOpacity = st.borderOpacity;
-              if (st.borderThickness != null)
-                finalEntry.borderThickness = st.borderThickness;
-              await this.plugin.saveSettings();
-            }
-          } catch (e) {}
-        }
+        // styleType) onto the saved entry (submitFn above only writes colors
+        // and a basic styleType otherwise).
+        applyPresetStyle();
 
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
@@ -1996,26 +2003,37 @@ export class ColorPickerModal extends Modal {
     // (submitFn itself only writes colors + a basic styleType).
     this._appliedPresetStyle = Object.assign({}, styleFields);
 
-    // Persist the style + effective colors onto the underlying entry so the
-    // live preview (apply() reads this._entry for highlight params) and the
-    // eventual save reflect it.
-    if (this._entry) {
+    // Persist the style + effective colors onto an entry object so the live
+    // preview (apply() reads this._entry for highlight params) reflects the
+    // preset's SHAPE. For flows opened without a pre-existing entry (e.g.
+    // "select text -> color -> style"), create a throwaway object holding the
+    // style; the real entry is created on save, where _appliedPresetStyle is
+    // merged in by submitFn.
+    if (!this._entry) {
+      this._entry = {
+        pattern: this._selectedText || "",
+        isRegex: false,
+        styleType: styleFields.styleType,
+        textColor: textColor || "",
+        backgroundColor: backgroundColor || "",
+      };
+    } else {
       this._entry.styleType = styleFields.styleType;
       this._entry.textColor = textColor || "";
       this._entry.backgroundColor = backgroundColor || "";
-      for (const k of [
-        "backgroundOpacity",
-        "highlightBorderRadius",
-        "highlightHorizontalPadding",
-        "highlightVerticalPadding",
-        "enableBorderThickness",
-        "borderStyle",
-        "borderLineStyle",
-        "borderOpacity",
-        "borderThickness",
-      ]) {
-        if (styleFields[k] != null) this._entry[k] = styleFields[k];
-      }
+    }
+    for (const k of [
+      "backgroundOpacity",
+      "highlightBorderRadius",
+      "highlightHorizontalPadding",
+      "highlightVerticalPadding",
+      "enableBorderThickness",
+      "borderStyle",
+      "borderLineStyle",
+      "borderOpacity",
+      "borderThickness",
+    ]) {
+      if (styleFields[k] != null) this._entry[k] = styleFields[k];
     }
 
     const result = {
