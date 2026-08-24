@@ -14153,11 +14153,6 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
       quickOnceStyle: Object.assign({}, styleFields)
     };
     try {
-      if (typeof this.callback === "function")
-        this.callback(textColor || backgroundColor || null, result);
-    } catch (e) {
-    }
-    try {
       if (textColor && this.plugin.isValidHexColor(textColor)) {
         if (typeof this._applyTextColorFn === "function")
           this._applyTextColorFn(textColor);

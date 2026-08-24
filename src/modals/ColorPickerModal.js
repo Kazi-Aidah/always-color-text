@@ -2031,11 +2031,11 @@ export class ColorPickerModal extends Modal {
       quickOnceStyle: Object.assign({}, styleFields),
     };
 
-    // Let the parent (Edit Entry / etc.) react (updates its own preview)
-    try {
-      if (typeof this.callback === "function")
-        this.callback(textColor || backgroundColor || null, result);
-    } catch (e) {}
+    // NOTE: Do NOT call this.callback() here. For the Edit Entry flow the
+    // callback triggers saveSettings() + forceRefreshAllEditors(), i.e. a
+    // global recompile that would restyle every match in the document
+    // immediately (and before the chosen style is actually persisted).
+    // Persistence happens once, on close, through submitFn.
 
     // Update THIS picker's preview through the same apply path a swatch click
     // uses. Effective colors keep the user's manual choice; the preset's
