@@ -13267,7 +13267,7 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
           initText = e.textColor;
         if (this.plugin.isValidHexColor(e.backgroundColor))
           initBg = e.backgroundColor;
-        existingStyle = e.styleType || (e.textColor && e.textColor !== "currentColor" && e.backgroundColor ? "both" : e.backgroundColor ? "highlight" : "text");
+        existingStyle = e.textColor && e.textColor !== "currentColor" && this.plugin.isValidHexColor(e.textColor) && e.backgroundColor && this.plugin.isValidHexColor(e.backgroundColor) ? "both" : e.styleType || (e.backgroundColor ? "highlight" : "text");
         break;
       } else if (e.color && this.plugin.isValidHexColor(e.color)) {
         initText = e.color;
@@ -13295,7 +13295,7 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
                 initText = e.textColor;
               if (this.plugin.isValidHexColor(e.backgroundColor))
                 initBg = e.backgroundColor;
-              existingStyle = e.styleType || (e.textColor && e.textColor !== "currentColor" && e.backgroundColor ? "both" : e.backgroundColor ? "highlight" : "text");
+              existingStyle = e.textColor && e.textColor !== "currentColor" && this.plugin.isValidHexColor(e.textColor) && e.backgroundColor && this.plugin.isValidHexColor(e.backgroundColor) ? "both" : e.styleType || (e.backgroundColor ? "highlight" : "text");
             } else if (e.color && this.plugin.isValidHexColor(e.color)) {
               initText = e.color;
               existingStyle = existingStyle || "text";
@@ -13870,12 +13870,16 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
                 matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"),
                 caseSensitive: this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
                 markTarget: this._markTarget || "text",
-                quickOnceStyle: qo || void 0
+                quickOnceStyle: qo || void 0,
+                presetStyle: this._appliedPresetStyle || void 0
               }
             );
           } catch (e) {
           }
           applyPresetStyle();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
           return;
         }
         const caseSensitive = !!this.plugin.settings.caseSensitive;
@@ -28514,6 +28518,26 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
                         return eq(e.pattern || "", selectedText);
                       });
                     };
+                    const ps = sel.presetStyle || null;
+                    const applyPresetStyleToEntry = (ent) => {
+                      if (!ps || !ent) return;
+                      const keys = [
+                        "styleType",
+                        "backgroundOpacity",
+                        "highlightBorderRadius",
+                        "highlightHorizontalPadding",
+                        "highlightVerticalPadding",
+                        "enableBorderThickness",
+                        "borderStyle",
+                        "borderLineStyle",
+                        "borderOpacity",
+                        "borderThickness"
+                      ];
+                      for (const k of keys) {
+                        if (ps[k] != null) ent[k] = ps[k];
+                      }
+                      if (ent.customCss) this.syncEntryCssFromColors(ent);
+                    };
                     const applyToArr = (arr) => {
                       const idx = findEntry(arr);
                       if (idx !== -1) {
@@ -28544,10 +28568,12 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
                           entry._savedTextColor = color;
                         }
                         if (!entry.isRegex) entry.matchType = matchType;
+                        applyPresetStyleToEntry(entry);
                         this.syncEntryCssFromColors(entry);
                       } else {
+                        let ne = null;
                         if (tc && bc) {
-                          arr.push({
+                          ne = {
                             pattern: selectedText,
                             color: "",
                             textColor: tc,
@@ -28559,9 +28585,9 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
                             markTarget,
                             _savedTextColor: tc,
                             _savedBackgroundColor: bc
-                          });
+                          };
                         } else if (tc) {
-                          arr.push({
+                          ne = {
                             pattern: selectedText,
                             color: tc,
                             isRegex: false,
@@ -28570,9 +28596,9 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
                             matchType,
                             markTarget,
                             _savedTextColor: tc
-                          });
+                          };
                         } else if (bc) {
-                          arr.push({
+                          ne = {
                             pattern: selectedText,
                             color: "",
                             textColor: "currentColor",
@@ -28583,9 +28609,9 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
                             matchType,
                             markTarget,
                             _savedBackgroundColor: bc
-                          });
+                          };
                         } else if (color && this.isValidHexColor(color)) {
-                          arr.push({
+                          ne = {
                             pattern: selectedText,
                             color,
                             isRegex: false,
@@ -28594,7 +28620,11 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
                             matchType,
                             markTarget,
                             _savedTextColor: color
-                          });
+                          };
+                        }
+                        if (ne) {
+                          applyPresetStyleToEntry(ne);
+                          arr.push(ne);
                         }
                       }
                     };

@@ -878,12 +878,16 @@ export class ColorPickerModal extends Modal {
         if (this.plugin.isValidHexColor(e.backgroundColor))
           initBg = e.backgroundColor;
         existingStyle =
-          e.styleType ||
-          (e.textColor && e.textColor !== "currentColor" && e.backgroundColor
+          e.textColor &&
+          e.textColor !== "currentColor" &&
+          this.plugin.isValidHexColor(e.textColor) &&
+          e.backgroundColor &&
+          this.plugin.isValidHexColor(e.backgroundColor)
             ? "both"
-            : e.backgroundColor
-              ? "highlight"
-              : "text");
+            : e.styleType ||
+              (e.backgroundColor
+                ? "highlight"
+                : "text");
         break;
       } else if (e.color && this.plugin.isValidHexColor(e.color)) {
         initText = e.color;
@@ -918,14 +922,16 @@ export class ColorPickerModal extends Modal {
               if (this.plugin.isValidHexColor(e.backgroundColor))
                 initBg = e.backgroundColor;
               existingStyle =
-                e.styleType ||
-                (e.textColor &&
+                e.textColor &&
                 e.textColor !== "currentColor" &&
-                e.backgroundColor
+                this.plugin.isValidHexColor(e.textColor) &&
+                e.backgroundColor &&
+                this.plugin.isValidHexColor(e.backgroundColor)
                   ? "both"
-                  : e.backgroundColor
-                    ? "highlight"
-                    : "text");
+                  : e.styleType ||
+                    (e.backgroundColor
+                      ? "highlight"
+                      : "text");
             } else if (e.color && this.plugin.isValidHexColor(e.color)) {
               initText = e.color;
               existingStyle = existingStyle || "text";
@@ -1667,23 +1673,30 @@ export class ColorPickerModal extends Modal {
                       this._quickOnceEntry.borderThickness ?? null,
                   }
                 : null;
-            this.callback(
-              textSelected ? textColor : bgSelected ? bgColor : null,
-              {
-                textColor: textSelected ? textColor : null,
-                backgroundColor: bgSelected ? bgColor : null,
-                word,
-                selectedGroupUid: this._selectedGroupUid || null,
-                matchType:
-                  this._matchType ||
-                  (this.plugin.settings.partialMatch ? "contains" : "exact"),
-                caseSensitive: this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
-                markTarget: this._markTarget || "text",
-                quickOnceStyle: qo || undefined,
-              },
-            );
+              this.callback(
+                textSelected ? textColor : bgSelected ? bgColor : null,
+                {
+                  textColor: textSelected ? textColor : null,
+                  backgroundColor: bgSelected ? bgColor : null,
+                  word,
+                  selectedGroupUid: this._selectedGroupUid || null,
+                  matchType:
+                    this._matchType ||
+                    (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                  caseSensitive: this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
+                  markTarget: this._markTarget || "text",
+                  quickOnceStyle: qo || undefined,
+                  presetStyle: this._appliedPresetStyle || undefined,
+                },
+              );
           } catch (e) {}
           applyPresetStyle();
+          // The callback (e.g. "Always color text") already refreshed the
+          // editor with the unshaped entry; recompile so the now-shaped entry
+          // (applyPresetStyle merged the style onto it) is actually rendered.
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
           return;
         }
         const caseSensitive = !!this.plugin.settings.caseSensitive;

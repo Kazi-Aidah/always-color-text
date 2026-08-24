@@ -1426,6 +1426,26 @@ class AlwaysColorText extends Plugin {
                         });
                       };
 
+                      const ps = sel.presetStyle || null;
+                      const applyPresetStyleToEntry = (ent) => {
+                        if (!ps || !ent) return;
+                        const keys = [
+                          "styleType",
+                          "backgroundOpacity",
+                          "highlightBorderRadius",
+                          "highlightHorizontalPadding",
+                          "highlightVerticalPadding",
+                          "enableBorderThickness",
+                          "borderStyle",
+                          "borderLineStyle",
+                          "borderOpacity",
+                          "borderThickness",
+                        ];
+                        for (const k of keys) {
+                          if (ps[k] != null) ent[k] = ps[k];
+                        }
+                        if (ent.customCss) this.syncEntryCssFromColors(ent);
+                      };
                       const applyToArr = (arr) => {
                         const idx = findEntry(arr);
                         if (idx !== -1) {
@@ -1456,10 +1476,12 @@ class AlwaysColorText extends Plugin {
                             entry._savedTextColor = color;
                           }
                           if (!entry.isRegex) entry.matchType = matchType;
+                          applyPresetStyleToEntry(entry);
                           this.syncEntryCssFromColors(entry);
                         } else {
+                          let ne = null;
                           if (tc && bc) {
-                            arr.push({
+                            ne = {
                               pattern: selectedText,
                               color: "",
                               textColor: tc,
@@ -1471,9 +1493,9 @@ class AlwaysColorText extends Plugin {
                               markTarget,
                               _savedTextColor: tc,
                               _savedBackgroundColor: bc,
-                            });
+                            };
                           } else if (tc) {
-                            arr.push({
+                            ne = {
                               pattern: selectedText,
                               color: tc,
                               isRegex: false,
@@ -1482,9 +1504,9 @@ class AlwaysColorText extends Plugin {
                               matchType,
                               markTarget,
                               _savedTextColor: tc,
-                            });
+                            };
                           } else if (bc) {
-                            arr.push({
+                            ne = {
                               pattern: selectedText,
                               color: "",
                               textColor: "currentColor",
@@ -1495,9 +1517,9 @@ class AlwaysColorText extends Plugin {
                               matchType,
                               markTarget,
                               _savedBackgroundColor: bc,
-                            });
+                            };
                           } else if (color && this.isValidHexColor(color)) {
-                            arr.push({
+                            ne = {
                               pattern: selectedText,
                               color: color,
                               isRegex: false,
@@ -1506,7 +1528,11 @@ class AlwaysColorText extends Plugin {
                               matchType,
                               markTarget,
                               _savedTextColor: color,
-                            });
+                            };
+                          }
+                          if (ne) {
+                            applyPresetStyleToEntry(ne);
+                            arr.push(ne);
                           }
                         }
                       };
