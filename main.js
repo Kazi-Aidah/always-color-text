@@ -12967,7 +12967,7 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
         name: customMatch && customMatch.name || match && match.name
       });
     }
-    const panelStates = {};
+    this.panelStates = {};
     const buildPanel = (titleText, type) => {
       const col = contentEl.createDiv();
       col.style.border = "1px solid var(--background-modifier-border)";
@@ -13152,7 +13152,7 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
           handler: clickHandler
         });
       });
-      panelStates[type] = { hex, colorInput };
+      this.panelStates[type] = { hex, colorInput };
       return col;
     };
     let lastPanelEl = null;
@@ -13612,8 +13612,8 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
       initBg = this._preFillBgColor;
       existingStyle = initText && initBg ? "both" : existingStyle || "highlight";
     }
-    const tp = panelStates["text"];
-    const bp = panelStates["background"];
+    const tp = this.panelStates["text"];
+    const bp = this.panelStates["background"];
     if (!existingStyle) {
       existingStyle = initText && initBg ? "both" : initBg ? "highlight" : initText ? "text" : this.mode;
     }
@@ -13689,8 +13689,8 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
     actionRow.style.marginTop = "6px";
     actionRow.style.gridColumn = "1 / -1";
     const submitFn = async () => {
-      const textPanel = panelStates["text"];
-      const bgPanel = panelStates["background"];
+      const textPanel = this.panelStates["text"];
+      const bgPanel = this.panelStates["background"];
       const textColor = this.selectedTextColor || (textPanel && textPanel.hex.value ? textPanel.hex.value : null);
       const bgColor = this.selectedBgColor || (bgPanel && bgPanel.hex.value ? bgPanel.hex.value : null);
       const textSelected = !!(textColor && this.plugin.isValidHexColor(textColor));
@@ -14034,6 +14034,51 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
             this.plugin.compileTextBgColoringEntries();
           }
         }
+        if (this._appliedPresetStyle) {
+          try {
+            const st = this._appliedPresetStyle;
+            const w = this._selectedText || "";
+            const cs = !!this.plugin.settings.caseSensitive;
+            const matchWord = (e) => {
+              if (!e || e.isRegex) return false;
+              const eq2 = (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+              return eq2(e.pattern || "", w) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq2(p, w));
+            };
+            const findIn = (arr) => Array.isArray(arr) ? arr.find((e) => matchWord(e)) : null;
+            let finalEntry = findIn(targetArr) || findIn(this.plugin.settings.wordEntries);
+            if (!finalEntry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+              for (const g of this.plugin.settings.wordEntryGroups) {
+                const f = findIn(g.entries);
+                if (f) {
+                  finalEntry = f;
+                  break;
+                }
+              }
+            }
+            if (finalEntry) {
+              finalEntry.styleType = st.styleType;
+              if (st.backgroundOpacity != null)
+                finalEntry.backgroundOpacity = st.backgroundOpacity;
+              if (st.highlightBorderRadius != null)
+                finalEntry.highlightBorderRadius = st.highlightBorderRadius;
+              if (st.highlightHorizontalPadding != null)
+                finalEntry.highlightHorizontalPadding = st.highlightHorizontalPadding;
+              if (st.highlightVerticalPadding != null)
+                finalEntry.highlightVerticalPadding = st.highlightVerticalPadding;
+              if (st.enableBorderThickness != null)
+                finalEntry.enableBorderThickness = st.enableBorderThickness;
+              if (st.borderStyle != null) finalEntry.borderStyle = st.borderStyle;
+              if (st.borderLineStyle != null)
+                finalEntry.borderLineStyle = st.borderLineStyle;
+              if (st.borderOpacity != null)
+                finalEntry.borderOpacity = st.borderOpacity;
+              if (st.borderThickness != null)
+                finalEntry.borderThickness = st.borderThickness;
+              await this.plugin.saveSettings();
+            }
+          } catch (e) {
+          }
+        }
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
         this.plugin.forceRefreshAllReadingViews();
@@ -14062,9 +14107,10 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
   }
   _applyPreset(preset) {
     if (!preset) return;
-    const textColor = preset.textColor && preset.textColor !== "currentColor" ? preset.textColor : null;
-    const backgroundColor = preset.backgroundColor ? preset.backgroundColor : null;
-    const word = this._selectedText || "";
+    const presetText = preset.textColor && preset.textColor !== "currentColor" ? preset.textColor : null;
+    const presetBg = preset.backgroundColor ? preset.backgroundColor : null;
+    const textColor = this.selectedTextColor || presetText;
+    const backgroundColor = this.selectedBgColor || presetBg;
     const styleFields = {
       styleType: preset.styleType || "highlight",
       backgroundOpacity: preset.backgroundOpacity ?? null,
@@ -14077,25 +14123,12 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
       borderOpacity: preset.borderOpacity ?? null,
       borderThickness: preset.borderThickness ?? null
     };
-    const result = Object.assign(
-      {
-        textColor,
-        backgroundColor,
-        word,
-        markTarget: this._markTarget || "text",
-        matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"),
-        caseSensitive: this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
-        selectedGroupUid: this._selectedGroupUid || null,
-        quickOnceStyle: Object.assign({}, styleFields)
-      },
-      styleFields
-    );
-    const color = this.mode === "background" || this.mode === "text-and-background" ? backgroundColor || textColor : textColor || backgroundColor;
+    this._appliedPresetStyle = Object.assign({}, styleFields);
     if (this._entry) {
-      const keys = [
-        "styleType",
-        "textColor",
-        "backgroundColor",
+      this._entry.styleType = styleFields.styleType;
+      this._entry.textColor = textColor || "";
+      this._entry.backgroundColor = backgroundColor || "";
+      for (const k of [
         "backgroundOpacity",
         "highlightBorderRadius",
         "highlightHorizontalPadding",
@@ -14105,27 +14138,51 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
         "borderLineStyle",
         "borderOpacity",
         "borderThickness"
-      ];
-      for (const k of keys) {
-        if (k in preset) this._entry[k] = preset[k];
+      ]) {
+        if (styleFields[k] != null) this._entry[k] = styleFields[k];
       }
     }
+    const result = {
+      textColor: textColor || null,
+      backgroundColor: backgroundColor || null,
+      word: this._selectedText || "",
+      markTarget: this._markTarget || "text",
+      matchType: this._matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"),
+      caseSensitive: this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
+      selectedGroupUid: this._selectedGroupUid || null,
+      quickOnceStyle: Object.assign({}, styleFields)
+    };
     try {
-      if (typeof this.callback === "function") this.callback(color, result);
+      if (typeof this.callback === "function")
+        this.callback(textColor || backgroundColor || null, result);
     } catch (e) {
     }
     try {
-      if (textColor && typeof this._applyTextColorFn === "function") {
-        this._applyTextColorFn(textColor);
+      if (textColor && this.plugin.isValidHexColor(textColor)) {
+        if (typeof this._applyTextColorFn === "function")
+          this._applyTextColorFn(textColor);
+      } else if (this._previewSpan) {
+        this._previewSpan.style.color = "";
       }
+      if (backgroundColor && this.plugin.isValidHexColor(backgroundColor)) {
+        if (typeof this._applyBgColorFn === "function")
+          this._applyBgColorFn(backgroundColor);
+      } else if (this._previewSpan) {
+        this._previewSpan.style.border = "";
+        this._previewSpan.style.borderTop = "";
+        this._previewSpan.style.borderBottom = "";
+        this._previewSpan.style.borderLeft = "";
+        this._previewSpan.style.borderRight = "";
+        this._previewSpan.style.borderRadius = "";
+        this._previewSpan.style.paddingLeft = "";
+        this._previewSpan.style.paddingRight = "";
+        this._previewSpan.style.removeProperty("padding-top");
+        this._previewSpan.style.removeProperty("padding-bottom");
+      }
+      this._applyCustomCss(textColor, backgroundColor);
     } catch (e) {
     }
-    try {
-      if (backgroundColor && typeof this._applyBgColorFn === "function") {
-        this._applyBgColorFn(backgroundColor);
-      }
-    } catch (e) {
-    }
+    this._hasUserChanges = true;
   }
   onClose() {
     try {
