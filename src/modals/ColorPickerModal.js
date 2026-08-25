@@ -468,29 +468,8 @@ export class ColorPickerModal extends Modal {
       .map((sw) => sw && sw.color)
       .filter((c) => typeof c === "string" && this.plugin.isValidHexColor(c));
 
-    let colorPool = [];
-    const replaceDefaults = !!this.plugin.settings.replaceDefaultSwatches;
-
-    // Logic for color pool:
-    // 1. If replaceDefaults is ON and there are custom colors, ONLY show custom colors
-    // 2. If replaceDefaults is OFF, show defaults THEN custom colors after
-    if (replaceDefaults && userCustomColors.length > 0) {
-      // ONLY custom colors
-      colorPool = userCustomColors;
-    } else if (
-      replaceDefaults &&
-      namedColors.length > 0 &&
-      userCustomColors.length === 0
-    ) {
-      // User turned on replaceDefaults but has no custom colors, show named defaults only
-      colorPool = namedColors;
-    } else if (!replaceDefaults) {
-      // Show defaults first, then custom colors after
-      colorPool = namedColors.concat(userCustomColors);
-    } else {
-      // Fallback
-      colorPool = namedColors;
-    }
+    // Defaults are always shown, with custom swatches appended after.
+    const colorPool = namedColors.concat(userCustomColors);
 
     const seen = new Set();
     const swatchItems = [];

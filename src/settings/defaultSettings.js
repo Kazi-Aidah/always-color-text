@@ -191,10 +191,8 @@ export const defaultSettings = {
   borderStyle: "full", // 'full', 'top', 'bottom', 'left', 'right', 'top-bottom', 'left-right', 'top-right', 'top-left', 'bottom-right', 'bottom-left'
   borderLineStyle: "solid",
   disabledFiles: [],
-  customSwatchesEnabled: false,
-  replaceDefaultSwatches: false,
   customSwatches: [],
-  // Default named swatches (never edited by user, only read-only display)
+  // Default named swatches (editable via the Color Swatches modal)
   swatches: [
     { name: "Red", color: "#eb3b5a" },
     { name: "Orange", color: "#fa8231" },
@@ -262,7 +260,7 @@ export const defaultSettings = {
   enableQuickHighlightOnce: false,
   quickHighlightStyleEnable: false,
   quickColorsEnabled: false,
-  quickColorsApplyMode: "html",
+  quickColorsApplyMode: "act",
   enableIndividualQuickStyleApplyMode: false,
   quickColors: [], // Array of { textColor, backgroundColor, uid }
   quickMenuColorsEnabled: false,

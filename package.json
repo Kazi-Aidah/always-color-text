@@ -8,6 +8,7 @@
     "test": "vitest --run"
   },
   "devDependencies": {
+    "@esbuild/linux-x64": "^0.28.2",
     "esbuild": "^0.27.2",
     "fast-check": "^4.6.0",
     "vitest": "^4.1.4"

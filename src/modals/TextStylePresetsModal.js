@@ -60,11 +60,27 @@ export class TextStylePresetsModal extends Modal {
       });
     }
 
-    // Grid of the remaining presets
+    // Grid of the remaining presets + user-defined Quick Styles
     const grid = contentEl.createDiv({ cls: "act-tsp-grid" });
-    presets.forEach((preset) => {
+    const quickStyles = Array.isArray(this.plugin.settings.quickStyles)
+      ? this.plugin.settings.quickStyles
+      : [];
+    const seedUids = new Set(
+      (defaultSettings.textStylePresets || []).map((s) => s.uid),
+    );
+    const builtInPresets = presets.filter(
+      (p) => p && seedUids.has(p.uid),
+    );
+    const customPresets = presets.filter(
+      (p) => p && !seedUids.has(p.uid),
+    );
+    const allItems = builtInPresets.concat(quickStyles).concat(customPresets);
+    allItems.forEach((preset) => {
       if (!preset) return;
       if (defaultPreset && preset.uid === defaultPreset.uid) return;
+      if (!preset.uid)
+        preset.uid =
+          "qs-" + Date.now().toString(36) + Math.random().toString(36).slice(2);
       const box = grid.createDiv({ cls: "act-tsp-box" });
       const preview = box.createDiv({ cls: "act-tsp-preview" });
       this._applyStyle(preview, preset, preset.name || "Style");
@@ -82,7 +98,11 @@ export class TextStylePresetsModal extends Modal {
       );
       menuBtn.addEventListener("click", (evt) => {
         evt.stopPropagation();
-        this._openPresetMenu(preset, evt);
+        if (this._isQuickStyle(preset)) {
+          this._openQuickStyleMenu(preset, evt);
+        } else {
+          this._openPresetMenu(preset, evt);
+        }
       });
     });
 
@@ -468,6 +488,18 @@ export class TextStylePresetsModal extends Modal {
         .setIcon("copy")
         .onClick(() => this._duplicatePreset(preset)),
     );
+    menu.addItem((item) => {
+      const shown = this._quickMenuShown(preset);
+      return item
+        .setTitle(
+          shown
+            ? this.plugin.t("hide_from_quick_menu", "Hide from Quick Menu")
+            : this.plugin.t("show_in_quick_menu", "Show in Quick Menu"),
+        )
+        .setIcon("menu")
+        .setChecked(shown)
+        .onClick(() => this._toggleQuickMenu(preset));
+    });
     menu.addItem((item) =>
       item
         .setTitle(this.plugin.t("make_default", "Make Default"))
@@ -483,6 +515,116 @@ export class TextStylePresetsModal extends Modal {
         .onClick(() => this._deletePreset(preset)),
     );
     menu.showAtMouseEvent(evt);
+  }
+
+  _isQuickStyle(preset) {
+    const list = this.plugin.settings.quickStyles;
+    return Array.isArray(list) && list.includes(preset);
+  }
+
+  _quickMenuShown(style) {
+    if (this._isQuickStyle(style)) return style.showInQuickMenu !== false;
+    return style.showInQuickMenu === true;
+  }
+
+  _toggleQuickMenu(style) {
+    style.showInQuickMenu = !this._quickMenuShown(style);
+    this.plugin.saveSettings();
+    this._render();
+  }
+
+  _openQuickStyleMenu(preset, evt) {
+    const menu = new Menu();
+    menu.addItem((item) =>
+      item
+        .setTitle(this.plugin.t("edit_highlight_styling", "Edit Highlight Styling"))
+        .setIcon("pencil")
+        .onClick(() => this._editQuickStyle(preset)),
+    );
+    if (this.plugin.settings.enableCustomCss) {
+      menu.addItem((item) =>
+        item
+          .setTitle(this.plugin.t("edit_custom_css", "Edit Custom CSS"))
+          .setIcon("code")
+          .onClick(() => this._editCustomCss(preset)),
+      );
+    }
+    menu.addSeparator();
+    menu.addItem((item) =>
+      item
+        .setTitle(this.plugin.t("rename", "Rename"))
+        .setIcon("pencil")
+        .onClick(() => this._renamePreset(preset)),
+    );
+    menu.addItem((item) =>
+      item
+        .setTitle(this.plugin.t("duplicate", "Duplicate"))
+        .setIcon("copy")
+        .onClick(() => this._duplicateQuickStyle(preset)),
+    );
+    menu.addItem((item) => {
+      const shown = this._quickMenuShown(preset);
+      return item
+        .setTitle(
+          shown
+            ? this.plugin.t("hide_from_quick_menu", "Hide from Quick Menu")
+            : this.plugin.t("show_in_quick_menu", "Show in Quick Menu"),
+        )
+        .setIcon("menu")
+        .setChecked(shown)
+        .onClick(() => this._toggleQuickMenu(preset));
+    });
+    menu.addSeparator();
+    menu.addItem((item) =>
+      item
+        .setTitle(this.plugin.t("delete", "Delete"))
+        .setIcon("trash")
+        .onClick(() => this._deleteQuickStyle(preset)),
+    );
+    menu.showAtMouseEvent(evt);
+  }
+
+  _editQuickStyle(preset) {
+    try {
+      const modal = new HighlightStylingModal(
+        this.app,
+        this.plugin,
+        preset,
+        null,
+        preset.name || "Style",
+      );
+      const orig = modal.onClose.bind(modal);
+      modal.onClose = () => {
+        try {
+          orig();
+        } catch (_) {}
+        this.plugin.saveSettings();
+        this._render();
+      };
+      modal.open();
+    } catch (e) {}
+  }
+
+  _duplicateQuickStyle(preset) {
+    const list = this.plugin.settings.quickStyles;
+    if (!Array.isArray(list)) return;
+    const copy = JSON.parse(JSON.stringify(preset));
+    copy.uid =
+      "qs-" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    copy.name = (preset.name || "Style") + " copy";
+    list.push(copy);
+    this.plugin.saveSettings();
+    this._render();
+  }
+
+  _deleteQuickStyle(preset) {
+    const list = this.plugin.settings.quickStyles;
+    if (!Array.isArray(list)) return;
+    const idx = list.indexOf(preset);
+    if (idx === -1) return;
+    list.splice(idx, 1);
+    this.plugin.saveSettings();
+    this._render();
   }
 
   _duplicatePreset(preset) {

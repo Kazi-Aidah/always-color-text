@@ -810,8 +810,21 @@ class AlwaysColorText extends Plugin {
     }
     if (typeof this.settings.quickStylesEnabled === "undefined")
       this.settings.quickStylesEnabled = true;
+    // Individual quick-style apply mode has been removed from the UI; force the
+    // relevant settings off / to "Always Color Text".
+    this.settings.enableIndividualQuickStyleApplyMode = false;
+    this.settings.quickColorsApplyMode = "act";
     if (typeof this.settings.enableQuickColorHighlightOnce === "undefined")
       this.settings.enableQuickColorHighlightOnce = false;
+    // Ensure swatches is a standalone copy so edits made in the Color Swatches
+    // modal don't mutate the shared defaultSettings reference.
+    if (!Array.isArray(this.settings.swatches)) {
+      this.settings.swatches = JSON.parse(
+        JSON.stringify(defaultSettings.swatches || []),
+      );
+    } else {
+      this.settings.swatches = JSON.parse(JSON.stringify(this.settings.swatches));
+    }
 
     // Migrate old global advancedRules to per-entry rules on first load
     try {
@@ -1568,9 +1581,7 @@ class AlwaysColorText extends Plugin {
           }
 
           // Quick Colors / Styles menu behavior
-          const stylesArr = Array.isArray(this.settings.quickStyles)
-            ? this.settings.quickStyles
-            : [];
+          const stylesArr = this.getQuickMenuStyles();
           // Reset active color selection for this context menu
           this._lastSelectedQuickColor = null;
           let closeMenuTimeout = null;
@@ -1962,8 +1973,7 @@ class AlwaysColorText extends Plugin {
             });
           } else if (
             this.settings.quickStylesEnabled &&
-            Array.isArray(this.settings.quickStyles) &&
-            this.settings.quickStyles.length > 0
+            stylesArr.length > 0
           ) {
             menu.addItem((item) => {
               item.setIcon("heading-glyph");
@@ -9610,6 +9620,27 @@ class AlwaysColorText extends Plugin {
           : (this.settings.borderThickness ?? 1),
     };
 
+    return result;
+  }
+
+  // Combined list of styles shown in the right-click "Quick Styles" submenu.
+  // User-defined Quick Styles are included by default (unless explicitly hidden
+  // via showInQuickMenu === false). Text Style Presets are included only when
+  // their showInQuickMenu flag is explicitly true.
+  getQuickMenuStyles() {
+    const result = [];
+    const quickStyles = Array.isArray(this.settings.quickStyles)
+      ? this.settings.quickStyles
+      : [];
+    quickStyles.forEach((s) => {
+      if (s && s.showInQuickMenu !== false) result.push(s);
+    });
+    const presets = Array.isArray(this.settings.textStylePresets)
+      ? this.settings.textStylePresets
+      : [];
+    presets.forEach((p) => {
+      if (p && p.showInQuickMenu === true) result.push(p);
+    });
     return result;
   }
 

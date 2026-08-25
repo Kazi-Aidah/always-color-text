@@ -3025,7 +3025,6 @@ export class ColorSettingTab extends PluginSettingTab {
         )
         .addButton((b) => {
           b.setButtonText(this.plugin.t("edit_swatches_button", "Edit Swatches"))
-            .setCta()
             .onClick(() => {
               const modal = new QuickMenuColorsModal(this.app, this.plugin);
               modal.open();
@@ -3057,10 +3056,9 @@ export class ColorSettingTab extends PluginSettingTab {
   }
 
   _refreshQuickColors() {
-    try {
-      if (!this._quickColorsContainer) return;
-      this._quickColorsContainer.empty();
-
+    if (!this._quickColorsContainer) return;
+    this._quickColorsContainer.empty();
+    /*
       // Header, Description and Toggle in a unified heading setting
       const quickColorsSetting = new Setting(this._quickColorsContainer)
         .setName(this.plugin.t("quick_colors_header", "Quick Colors"))
@@ -3413,6 +3411,8 @@ export class ColorSettingTab extends PluginSettingTab {
         this._refreshQuickColors();
       });
 
+    */
+    /*
       // Apply mode setting: Always Color Text vs Inline HTML
       const modeSetting = new Setting(this._quickColorsContainer)
         .setName(
@@ -3458,14 +3458,13 @@ export class ColorSettingTab extends PluginSettingTab {
               this._refreshQuickColors();
             }),
         );
+    */
 
       // Fade away the global setting if individual application is enabled
-    } catch (e) {
-      debugError("SETTINGS", e);
-    }
   }
 
   _refreshQuickStyles() {
+    /*
     try {
       if (!this._quickStylesContainer) return;
       this._quickStylesContainer.empty();
@@ -3798,9 +3797,7 @@ export class ColorSettingTab extends PluginSettingTab {
         await this.plugin.saveSettings();
         this._refreshQuickStyles();
       });
-    } catch (e) {
-      debugError("SETTINGS", e);
-    }
+    */
   }
 
   _refreshEntries() {
@@ -5377,12 +5374,12 @@ export class ColorSettingTab extends PluginSettingTab {
             }),
         );
 
-      // Custom Color Swatches
+      // Color Swatches
       new Setting(containerEl)
         .setName(
           this.plugin.t(
             "custom_color_swatches",
-            "Custom Color Swatches",
+            "Color Swatches",
           ),
         )
         .setDesc(
@@ -7185,46 +7182,6 @@ export class ColorSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
         });
-
-      new Setting(swContainer)
-        .setName(
-          this.plugin.t("enable_custom_swatches", "Enable custom swatches"),
-        )
-        .setDesc(
-          this.plugin.t(
-            "enable_custom_swatches_desc",
-            "Turn this on if you want to pick your own colors for the color picker.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.customSwatchesEnabled)
-            .onChange(async (v) => {
-              this.plugin.settings.customSwatchesEnabled = v;
-              await this.plugin.saveSettings();
-              this._refreshCustomSwatches();
-            }),
-        );
-
-      new Setting(swContainer)
-        .setName(
-          this.plugin.t("replace_default_swatches", "Replace default swatches"),
-        )
-        .setDesc(
-          this.plugin.t(
-            "replace_default_swatches_desc",
-            "If enabled, only your custom swatches will be shown. If disabled, they will be appended to the default ones.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.replaceDefaultSwatches)
-            .onChange(async (v) => {
-              this.plugin.settings.replaceDefaultSwatches = v;
-              await this.plugin.saveSettings();
-            }),
-        );
-
 
       /* new Setting(swContainer)
         .setName(

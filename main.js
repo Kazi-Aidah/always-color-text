@@ -318,8 +318,11 @@ var require_en = __commonJS({
       "btn_update_swatch": "Update Swatches",
       "color_input_title": "Pick a color",
       "hex_input_title": "Hex code",
-      "custom_color_swatches": "Custom Color Swatches",
-      "custom_color_swatches_desc": "Add, edit and preview your custom color swatches.",
+      "custom_color_swatches": "Color Swatches",
+      "custom_color_swatches_desc": "Add, edit and preview your color swatches.",
+      "btn_reset_swatches": "Reset",
+      "confirm_reset_swatches_title": "Reset default swatches?",
+      "confirm_reset_swatches_desc": "Reset the default swatches back to their original colours? Edited defaults will be restored and deleted ones re-added.",
       "btn_edit_swatches": "Edit Swatches",
       "edit_color_swatches_header": "Edit Color Swatches",
       "bg_color_preview_label": "Background Color",
@@ -584,6 +587,8 @@ var require_en = __commonJS({
       "quick_styles_desc": "Allows styles to be applied from the right-click menu.",
       "btn_add_style": "+ Add Style",
       "quick_styles_menu_option": "Quick Styles",
+      "show_in_quick_menu": "Show in Quick Menu",
+      "hide_from_quick_menu": "Hide from Quick Menu",
       // Blacklist Groups
       "blacklist_grouped_entries_header": "Blacklist Group Entries",
       "show_blacklist_groups_in_commands": "Show blacklist groups in commands",
@@ -6626,10 +6631,8 @@ var defaultSettings = {
   // 'full', 'top', 'bottom', 'left', 'right', 'top-bottom', 'left-right', 'top-right', 'top-left', 'bottom-right', 'bottom-left'
   borderLineStyle: "solid",
   disabledFiles: [],
-  customSwatchesEnabled: false,
-  replaceDefaultSwatches: false,
   customSwatches: [],
-  // Default named swatches (never edited by user, only read-only display)
+  // Default named swatches (editable via the Color Swatches modal)
   swatches: [
     { name: "Red", color: "#eb3b5a" },
     { name: "Orange", color: "#fa8231" },
@@ -6697,7 +6700,7 @@ var defaultSettings = {
   enableQuickHighlightOnce: false,
   quickHighlightStyleEnable: false,
   quickColorsEnabled: false,
-  quickColorsApplyMode: "html",
+  quickColorsApplyMode: "act",
   enableIndividualQuickStyleApplyMode: false,
   quickColors: [],
   // Array of { textColor, backgroundColor, uid }
@@ -8680,9 +8683,22 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
       });
     }
     const grid = contentEl.createDiv({ cls: "act-tsp-grid" });
-    presets.forEach((preset) => {
+    const quickStyles = Array.isArray(this.plugin.settings.quickStyles) ? this.plugin.settings.quickStyles : [];
+    const seedUids = new Set(
+      (defaultSettings.textStylePresets || []).map((s) => s.uid)
+    );
+    const builtInPresets = presets.filter(
+      (p) => p && seedUids.has(p.uid)
+    );
+    const customPresets = presets.filter(
+      (p) => p && !seedUids.has(p.uid)
+    );
+    const allItems = builtInPresets.concat(quickStyles).concat(customPresets);
+    allItems.forEach((preset) => {
       if (!preset) return;
       if (defaultPreset && preset.uid === defaultPreset.uid) return;
+      if (!preset.uid)
+        preset.uid = "qs-" + Date.now().toString(36) + Math.random().toString(36).slice(2);
       const box = grid.createDiv({ cls: "act-tsp-box" });
       const preview = box.createDiv({ cls: "act-tsp-preview" });
       this._applyStyle(preview, preset, preset.name || "Style");
@@ -8700,7 +8716,11 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
       );
       menuBtn.addEventListener("click", (evt) => {
         evt.stopPropagation();
-        this._openPresetMenu(preset, evt);
+        if (this._isQuickStyle(preset)) {
+          this._openQuickStyleMenu(preset, evt);
+        } else {
+          this._openPresetMenu(preset, evt);
+        }
       });
     });
     const addRow = contentEl.createDiv({ cls: "act-tsp-add-row" });
@@ -9008,6 +9028,12 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
     menu.addItem(
       (item) => item.setTitle(this.plugin.t("duplicate", "Duplicate")).setIcon("copy").onClick(() => this._duplicatePreset(preset))
     );
+    menu.addItem((item) => {
+      const shown = this._quickMenuShown(preset);
+      return item.setTitle(
+        shown ? this.plugin.t("hide_from_quick_menu", "Hide from Quick Menu") : this.plugin.t("show_in_quick_menu", "Show in Quick Menu")
+      ).setIcon("menu").setChecked(shown).onClick(() => this._toggleQuickMenu(preset));
+    });
     menu.addItem(
       (item) => item.setTitle(this.plugin.t("make_default", "Make Default")).setIcon("star").onClick(() => this._makeDefault(preset))
     );
@@ -9016,6 +9042,89 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
       (item) => item.setTitle(this.plugin.t("delete", "Delete")).setIcon("trash").onClick(() => this._deletePreset(preset))
     );
     menu.showAtMouseEvent(evt);
+  }
+  _isQuickStyle(preset) {
+    const list = this.plugin.settings.quickStyles;
+    return Array.isArray(list) && list.includes(preset);
+  }
+  _quickMenuShown(style) {
+    if (this._isQuickStyle(style)) return style.showInQuickMenu !== false;
+    return style.showInQuickMenu === true;
+  }
+  _toggleQuickMenu(style) {
+    style.showInQuickMenu = !this._quickMenuShown(style);
+    this.plugin.saveSettings();
+    this._render();
+  }
+  _openQuickStyleMenu(preset, evt) {
+    const menu = new import_obsidian5.Menu();
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("edit_highlight_styling", "Edit Highlight Styling")).setIcon("pencil").onClick(() => this._editQuickStyle(preset))
+    );
+    if (this.plugin.settings.enableCustomCss) {
+      menu.addItem(
+        (item) => item.setTitle(this.plugin.t("edit_custom_css", "Edit Custom CSS")).setIcon("code").onClick(() => this._editCustomCss(preset))
+      );
+    }
+    menu.addSeparator();
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("rename", "Rename")).setIcon("pencil").onClick(() => this._renamePreset(preset))
+    );
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("duplicate", "Duplicate")).setIcon("copy").onClick(() => this._duplicateQuickStyle(preset))
+    );
+    menu.addItem((item) => {
+      const shown = this._quickMenuShown(preset);
+      return item.setTitle(
+        shown ? this.plugin.t("hide_from_quick_menu", "Hide from Quick Menu") : this.plugin.t("show_in_quick_menu", "Show in Quick Menu")
+      ).setIcon("menu").setChecked(shown).onClick(() => this._toggleQuickMenu(preset));
+    });
+    menu.addSeparator();
+    menu.addItem(
+      (item) => item.setTitle(this.plugin.t("delete", "Delete")).setIcon("trash").onClick(() => this._deleteQuickStyle(preset))
+    );
+    menu.showAtMouseEvent(evt);
+  }
+  _editQuickStyle(preset) {
+    try {
+      const modal = new HighlightStylingModal(
+        this.app,
+        this.plugin,
+        preset,
+        null,
+        preset.name || "Style"
+      );
+      const orig = modal.onClose.bind(modal);
+      modal.onClose = () => {
+        try {
+          orig();
+        } catch (_) {
+        }
+        this.plugin.saveSettings();
+        this._render();
+      };
+      modal.open();
+    } catch (e) {
+    }
+  }
+  _duplicateQuickStyle(preset) {
+    const list = this.plugin.settings.quickStyles;
+    if (!Array.isArray(list)) return;
+    const copy = JSON.parse(JSON.stringify(preset));
+    copy.uid = "qs-" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    copy.name = (preset.name || "Style") + " copy";
+    list.push(copy);
+    this.plugin.saveSettings();
+    this._render();
+  }
+  _deleteQuickStyle(preset) {
+    const list = this.plugin.settings.quickStyles;
+    if (!Array.isArray(list)) return;
+    const idx = list.indexOf(preset);
+    if (idx === -1) return;
+    list.splice(idx, 1);
+    this.plugin.saveSettings();
+    this._render();
   }
   _duplicatePreset(preset) {
     const list = this.plugin.settings.textStylePresets;
@@ -12937,17 +13046,7 @@ var ColorPickerModal2 = class extends import_obsidian9.Modal {
       this.plugin.settings.userCustomSwatches
     ) ? this.plugin.settings.userCustomSwatches : [];
     const userCustomColors = userCustomSwatches.map((sw) => sw && sw.color).filter((c) => typeof c === "string" && this.plugin.isValidHexColor(c));
-    let colorPool = [];
-    const replaceDefaults = !!this.plugin.settings.replaceDefaultSwatches;
-    if (replaceDefaults && userCustomColors.length > 0) {
-      colorPool = userCustomColors;
-    } else if (replaceDefaults && namedColors.length > 0 && userCustomColors.length === 0) {
-      colorPool = namedColors;
-    } else if (!replaceDefaults) {
-      colorPool = namedColors.concat(userCustomColors);
-    } else {
-      colorPool = namedColors;
-    }
+    const colorPool = namedColors.concat(userCustomColors);
     const seen = /* @__PURE__ */ new Set();
     const swatchItems = [];
     for (const c of colorPool) {
@@ -14486,41 +14585,6 @@ var HighlightStylingModal = class extends import_obsidian10.Modal {
     });
     const paneRow = contentEl.createDiv();
     paneRow.addClass("act-highlight-pane-row");
-    const isQuickStyle = this.plugin.settings.quickStyles && this.plugin.settings.quickStyles.includes(this.entry);
-    const showIndividualApplyMode = isQuickStyle && this.plugin.settings.enableIndividualQuickStyleApplyMode;
-    if (showIndividualApplyMode) {
-      const applyModeRow = contentEl.createDiv();
-      applyModeRow.style.display = "flex";
-      applyModeRow.style.alignItems = "center";
-      applyModeRow.style.gap = "12px";
-      applyModeRow.style.marginTop = "12px";
-      applyModeRow.style.padding = "0 4px";
-      applyModeRow.createEl("span", {
-        text: this.plugin.t("quick_colors_apply_mode_label", "The text coloring will apply as")
-      });
-      const applyModeSelect = applyModeRow.createEl("select");
-      applyModeSelect.style.minWidth = "150px";
-      applyModeSelect.style.border = "1px solid var(--background-modifier-border)";
-      applyModeSelect.style.borderRadius = "4px";
-      applyModeSelect.style.background = "var(--background-modifier-form-field)";
-      [
-        ["act", this.plugin.t("quick_colors_apply_mode_act", "Always Color Text")],
-        ["html", this.plugin.t("quick_colors_apply_mode_html", "Inline HTML")]
-      ].forEach(([val, label]) => {
-        const opt = applyModeSelect.createEl("option", { text: label });
-        opt.value = val;
-      });
-      const currentVal = this.entry.applyMode || this.plugin.settings.quickColorsApplyMode || "html";
-      applyModeSelect.value = currentVal;
-      if (!this.entry.applyMode) {
-        this.entry.applyMode = currentVal;
-        this.plugin.saveSettings();
-      }
-      applyModeSelect.addEventListener("change", async () => {
-        this.entry.applyMode = applyModeSelect.value;
-        await this.plugin.saveSettings();
-      });
-    }
     const hlWrap = paneRow.createDiv();
     hlWrap.addClass("act-highlight-pane");
     const borderWrap = paneRow.createDiv();
@@ -17718,15 +17782,33 @@ var EditColorSwatchesModal = class extends import_obsidian16.Modal {
     actionBtn.addClass("mod-cta");
     actionBtn.style.whiteSpace = "nowrap";
     actionBtn.style.flexShrink = "0";
+    actionBtn.style.marginLeft = "auto";
     const panel = contentEl.createDiv();
     panel.addClass("color-picker-panel");
     panel.style.marginTop = "6px";
     panel.style.padding = "12px";
     const grid = panel.createDiv();
     grid.addClass("color-swatch-grid");
-    const getSwatches = () => Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches : [];
+    const buildCombined = () => {
+      const def = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
+      const cus = Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches : [];
+      const out = [];
+      def.forEach(
+        (s, i) => out.push({ name: s.name, color: s.color, _src: "default", _idx: i })
+      );
+      cus.forEach(
+        (s, i) => out.push({ name: s.name, color: s.color, _src: "custom", _idx: i })
+      );
+      return out;
+    };
+    let combined = buildCombined();
+    const getSwatches = () => combined;
     const saveSwatches = async () => {
-      this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map((s) => s.color);
+      const def = combined.filter((s) => s._src === "default").map((s) => ({ name: s.name, color: s.color }));
+      const cus = combined.filter((s) => s._src === "custom").map((s) => ({ name: s.name, color: s.color }));
+      this.plugin.settings.swatches = def;
+      this.plugin.settings.userCustomSwatches = cus;
+      this.plugin.settings.customSwatches = combined.map((s) => s.color);
       await this.plugin.saveSettings();
     };
     const applyCurrentColor = (sourceIsColorInput = false) => {
@@ -17921,10 +18003,7 @@ var EditColorSwatchesModal = class extends import_obsidian16.Modal {
         removeGhost();
         if (dragActive) {
           didDrag = true;
-          const swatches = getSwatches();
-          this.plugin.settings.userCustomSwatches = swatches;
-          this.plugin.settings.customSwatches = swatches.map((s) => s.color);
-          await this.plugin.saveSettings();
+          await saveSwatches();
           renderGrid();
           updateMobileDelete();
         }
@@ -18043,7 +18122,7 @@ var EditColorSwatchesModal = class extends import_obsidian16.Modal {
       const swatches = getSwatches();
       if (this._activeIndex === null) {
         const nextIndex = swatches.length + 1;
-        swatches.push({ name: `Swatch ${nextIndex}`, color });
+        swatches.push({ name: `Swatch ${nextIndex}`, color, _src: "custom" });
         await saveSwatches();
         renderPreviews(color);
         this._activeIndex = null;
@@ -18084,6 +18163,42 @@ var EditColorSwatchesModal = class extends import_obsidian16.Modal {
     renderGrid();
     updateButtonLabel();
     updateMobileDelete();
+    const footer = contentEl.createDiv();
+    footer.style.marginTop = "12px";
+    const resetBtn = footer.createEl("button");
+    resetBtn.textContent = this.plugin.t("btn_reset_swatches", "Reset");
+    resetBtn.style.whiteSpace = "nowrap";
+    resetBtn.style.flexShrink = "0";
+    const doResetSwatches = () => {
+      new ConfirmationModal(
+        this.app,
+        this.plugin,
+        this.plugin.t(
+          "confirm_reset_swatches_title",
+          "Reset default swatches?"
+        ),
+        this.plugin.t(
+          "confirm_reset_swatches_desc",
+          "Reset the default swatches back to their original colours? Edited defaults will be restored and deleted ones re-added."
+        ),
+        async () => {
+          const originals = (defaultSettings.swatches || []).map((s) => ({
+            name: s.name,
+            color: s.color
+          }));
+          this.plugin.settings.swatches = JSON.parse(
+            JSON.stringify(originals)
+          );
+          combined = buildCombined();
+          this._activeIndex = null;
+          await this.plugin.saveSettings();
+          renderGrid();
+          updateButtonLabel();
+          updateMobileDelete();
+        }
+      ).open();
+    };
+    resetBtn.addEventListener("click", doResetSwatches);
   }
   onClose() {
     this._eventListeners.forEach(({ el, event, handler }) => {
@@ -20780,7 +20895,7 @@ var ColorSettingTab = class extends import_obsidian18.PluginSettingTab {
           this._refreshQuickMenuColorsSetting();
         })
       ).addButton((b) => {
-        b.setButtonText(this.plugin.t("edit_swatches_button", "Edit Swatches")).setCta().onClick(() => {
+        b.setButtonText(this.plugin.t("edit_swatches_button", "Edit Swatches")).onClick(() => {
           const modal = new QuickMenuColorsModal(this.app, this.plugin);
           modal.open();
         });
@@ -20808,645 +20923,10 @@ var ColorSettingTab = class extends import_obsidian18.PluginSettingTab {
     }
   }
   _refreshQuickColors() {
-    try {
-      if (!this._quickColorsContainer) return;
-      this._quickColorsContainer.empty();
-      const quickColorsSetting = new import_obsidian18.Setting(this._quickColorsContainer).setName(this.plugin.t("quick_colors_header", "Quick Colors")).setDesc(
-        this.plugin.t(
-          "quick_colors_desc",
-          "Allows you to quickly highlight or color text by showing colors in the right-click menu. If Quick Colors are off, per-style colors in Quick Styles will be used."
-        )
-      ).setHeading().addToggle(
-        (t) => t.setValue(this.plugin.settings.quickColorsEnabled).onChange(async (v) => {
-          this.plugin.settings.quickColorsEnabled = v;
-          await this.plugin.saveSettings();
-          this._refreshQuickColors();
-        })
-      );
-      try {
-        quickColorsSetting.settingEl.style.marginTop = "30px";
-        quickColorsSetting.settingEl.style.marginBottom = "8px";
-        quickColorsSetting.settingEl.style.borderTop = "none";
-        quickColorsSetting.controlEl.style.marginLeft = "10px";
-      } catch (e) {
-      }
-      const listDiv = this._quickColorsContainer.createDiv();
-      listDiv.style.display = "flex";
-      listDiv.style.flexWrap = "wrap";
-      listDiv.style.gap = "8px";
-      listDiv.style.alignItems = "center";
-      listDiv.style.width = "100%";
-      listDiv.style.boxSizing = "border-box";
-      const colors = Array.isArray(this.plugin.settings.quickColors) ? this.plugin.settings.quickColors : [];
-      if (colors.length > 0) {
-        colors.forEach((pair, i) => {
-          if (!pair || typeof pair !== "object")
-            pair = {
-              textColor: "#87c760",
-              backgroundColor: "#1d5010",
-              uid: Date.now().toString(36) + Math.random().toString(36).slice(2)
-            };
-          const row = listDiv.createDiv();
-          row.style.display = "inline-flex";
-          row.style.alignItems = "center";
-          row.style.gap = "8px";
-          row.style.marginBottom = "8px";
-          row.style.border = "1px solid var(--background-modifier-border)";
-          row.style.borderRadius = "var(--setting-items-radius)";
-          row.style.backgroundColor = "var(--setting-items-background)";
-          row.style.padding = "6px 10px";
-          row.style.flex = "0 0 auto";
-          row.setAttribute("data-qc-index", String(i));
-          const dragHandle = row.createEl("button");
-          (0, import_obsidian18.setIcon)(dragHandle, "menu");
-          dragHandle.addClass("act-drag-handle");
-          dragHandle.style.padding = "0";
-          dragHandle.style.border = "none";
-          dragHandle.style.background = "transparent";
-          dragHandle.style.boxShadow = "none";
-          dragHandle.style.cursor = "grab";
-          dragHandle.style.color = "var(--text-muted)";
-          dragHandle.style.flexShrink = "0";
-          dragHandle.style.display = "flex";
-          dragHandle.style.alignItems = "center";
-          dragHandle.style.justifyContent = "center";
-          dragHandle.style.width = "24px";
-          dragHandle.style.height = "24px";
-          dragHandle.setAttribute(
-            "aria-label",
-            this.plugin.t("drag_to_reorder", "Drag to reorder")
-          );
-          const tCp = row.createEl("input", { type: "color" });
-          tCp.value = pair.textColor && this.plugin.isValidHexColor(pair.textColor) ? pair.textColor : "#87c760";
-          tCp.style.width = "30px";
-          tCp.style.height = "30px";
-          tCp.style.borderRadius = "50%";
-          tCp.style.border = "none";
-          tCp.style.padding = "0";
-          tCp.style.overflow = "hidden";
-          tCp.style.background = "transparent";
-          tCp.style.cursor = "pointer";
-          tCp.title = this.plugin.t("text_color_title", "Text Color");
-          const tChange = async () => {
-            const val = tCp.value;
-            if (!this.plugin.isValidHexColor(val)) return;
-            this.plugin.settings.quickColors[i].textColor = val;
-            await this.plugin.saveSettings();
-          };
-          tCp.addEventListener("input", tChange);
-          tCp.addEventListener("contextmenu", (ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            const modal = new ColorPickerModal2(
-              this.app,
-              this.plugin,
-              async (color, result) => {
-                const chosen = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : color && this.plugin.isValidHexColor(color) ? color : tCp.value;
-                if (chosen && this.plugin.isValidHexColor(chosen)) {
-                  tCp.value = chosen;
-                  await tChange();
-                }
-              },
-              "text",
-              this.plugin.t("selected_text_preview", "Selected Text")
-            );
-            modal._hideHeaderControls = true;
-            modal._preFillTextColor = tCp.value;
-            modal.open();
-          });
-          const bCp = row.createEl("input", { type: "color" });
-          bCp.value = pair.backgroundColor && this.plugin.isValidHexColor(pair.backgroundColor) ? pair.backgroundColor : "#1d5010";
-          bCp.style.width = "30px";
-          bCp.style.height = "30px";
-          bCp.style.borderRadius = "50%";
-          bCp.style.border = "none";
-          bCp.style.padding = "0";
-          bCp.style.overflow = "hidden";
-          bCp.style.background = "transparent";
-          bCp.style.cursor = "pointer";
-          bCp.title = this.plugin.t("highlight_color_title", "Highlight Color");
-          const bChange = async () => {
-            const val = bCp.value;
-            if (!this.plugin.isValidHexColor(val)) return;
-            this.plugin.settings.quickColors[i].backgroundColor = val;
-            await this.plugin.saveSettings();
-          };
-          bCp.addEventListener("input", bChange);
-          bCp.addEventListener("contextmenu", (ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            const modal = new ColorPickerModal2(
-              this.app,
-              this.plugin,
-              async (color, result) => {
-                const chosen = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : color && this.plugin.isValidHexColor(color) ? color : bCp.value;
-                if (chosen && this.plugin.isValidHexColor(chosen)) {
-                  bCp.value = chosen;
-                  await bChange();
-                }
-              },
-              "background",
-              this.plugin.t("selected_text_preview", "Selected Text"),
-              false
-            );
-            modal._hideHeaderControls = true;
-            modal._preFillBgColor = bCp.value;
-            modal._preFillBorderColor = bCp.value;
-            modal.open();
-          });
-          const delBtn = row.createDiv();
-          (0, import_obsidian18.setIcon)(delBtn, "x");
-          delBtn.style.cursor = "pointer";
-          delBtn.style.flexShrink = "0";
-          delBtn.style.display = "flex";
-          delBtn.style.alignItems = "center";
-          delBtn.style.color = "var(--text-muted)";
-          delBtn.addEventListener("click", async () => {
-            this.plugin.settings.quickColors.splice(i, 1);
-            await this.plugin.saveSettings();
-            this._refreshQuickColors();
-          });
-          let dragStarted = false;
-          let ghost = null;
-          let sX = 0, sY = 0;
-          let oX = 0, oY = 0;
-          const createGhost = () => {
-            const rect = row.getBoundingClientRect();
-            ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
-            const clone = row.cloneNode(true);
-            const origInputs = row.querySelectorAll("input, select, textarea");
-            const clonInputs = clone.querySelectorAll("input, select, textarea");
-            origInputs.forEach((el, idx) => {
-              if (clonInputs[idx]) clonInputs[idx].value = el.value;
-            });
-            ghost.appendChild(clone);
-            ghost.style.width = rect.width + "px";
-            ghost.style.height = rect.height + "px";
-            ghost.style.left = rect.left + "px";
-            ghost.style.top = rect.top + "px";
-            row.classList.add("drag-ghost-hidden");
-            document.body.classList.add("act-dragging-active");
-            dragHandle.style.cursor = "grabbing";
-            if (navigator.vibrate) navigator.vibrate(30);
-          };
-          const doReorder = (currentX, currentY) => {
-            if (!ghost) return;
-            ghost.style.left = currentX - oX + "px";
-            ghost.style.top = currentY - oY + "px";
-            ghost.style.display = "none";
-            const from = document.elementFromPoint(currentX, currentY);
-            ghost.style.display = "";
-            const targetRow = from ? from.closest("div[data-qc-index]") : null;
-            if (!targetRow || targetRow === row || targetRow.parentNode !== listDiv) return;
-            const children = Array.from(listDiv.querySelectorAll("div[data-qc-index]"));
-            const cur = children.indexOf(row);
-            const tgt = children.indexOf(targetRow);
-            if (cur === -1 || tgt === -1 || cur === tgt) return;
-            if (navigator.vibrate) navigator.vibrate(30);
-            if (cur < tgt) targetRow.after(row);
-            else listDiv.insertBefore(row, targetRow);
-            const item = colors.splice(cur, 1)[0];
-            colors.splice(tgt, 0, item);
-            Array.from(listDiv.querySelectorAll("div[data-qc-index]")).forEach((r, idx) => {
-              r.setAttribute("data-qc-index", idx.toString());
-            });
-          };
-          const cleanupDrag = async () => {
-            document.removeEventListener("mousemove", onDocMouseMove, { capture: true });
-            document.removeEventListener("mouseup", onDocMouseUp, { capture: true });
-            document.removeEventListener("touchmove", onDocTouchMove, { capture: true });
-            document.removeEventListener("touchend", onDocTouchEnd, { capture: true });
-            document.removeEventListener("touchcancel", onDocTouchEnd, { capture: true });
-            document.body.classList.remove("act-dragging-active");
-            dragHandle.style.cursor = "grab";
-            if (ghost) {
-              try {
-                ghost.remove();
-              } catch (_) {
-              }
-              ghost = null;
-            }
-            row.classList.remove("drag-ghost-hidden");
-            if (dragStarted) {
-              this.plugin.settings.quickColors = colors;
-              await this.plugin.saveSettings();
-              this._refreshQuickColors();
-            }
-            dragStarted = false;
-          };
-          const onDocMouseMove = (e) => {
-            if (!dragHandle) return;
-            e.preventDefault();
-            if (!dragStarted) {
-              if (Math.hypot(e.clientX - sX, e.clientY - sY) > 4) {
-                createGhost();
-                dragStarted = true;
-              } else {
-                return;
-              }
-            }
-            doReorder(e.clientX, e.clientY);
-          };
-          const onDocMouseUp = async () => {
-            await cleanupDrag();
-          };
-          const onDocTouchMove = (e) => {
-            if (!dragHandle || e.touches.length !== 1) return;
-            e.preventDefault();
-            const t = e.touches[0];
-            if (!dragStarted) {
-              if (Math.hypot(t.clientX - sX, t.clientY - sY) > 4) {
-                createGhost();
-                dragStarted = true;
-              } else {
-                return;
-              }
-            }
-            doReorder(t.clientX, t.clientY);
-          };
-          const onDocTouchEnd = async () => {
-            await cleanupDrag();
-          };
-          dragHandle.addEventListener("mousedown", (e) => {
-            if (e.button !== 0) return;
-            e.preventDefault();
-            e.stopPropagation();
-            sX = e.clientX;
-            sY = e.clientY;
-            const rect = row.getBoundingClientRect();
-            oX = e.clientX - rect.left;
-            oY = e.clientY - rect.top;
-            dragStarted = false;
-            document.addEventListener("mousemove", onDocMouseMove, { passive: false, capture: true });
-            document.addEventListener("mouseup", onDocMouseUp, { passive: false, capture: true });
-          });
-          dragHandle.addEventListener("touchstart", (e) => {
-            if (e.touches.length !== 1) return;
-            e.preventDefault();
-            e.stopPropagation();
-            const t = e.touches[0];
-            sX = t.clientX;
-            sY = t.clientY;
-            const rect = row.getBoundingClientRect();
-            oX = t.clientX - rect.left;
-            oY = t.clientY - rect.top;
-            dragStarted = false;
-            document.addEventListener("touchmove", onDocTouchMove, { passive: false, capture: true });
-            document.addEventListener("touchend", onDocTouchEnd, { passive: false, capture: true });
-            document.addEventListener("touchcancel", onDocTouchEnd, { passive: false, capture: true });
-          }, { passive: false });
-        });
-      }
-      const btnRow = this._quickColorsContainer.createDiv();
-      btnRow.style.display = "flex";
-      btnRow.style.justifyContent = "flex-end";
-      btnRow.style.marginTop = "10px";
-      const addBtn = btnRow.createEl("button", {
-        text: this.plugin.t("btn_add_color", "+ Add Color")
-      });
-      addBtn.addEventListener("click", async () => {
-        const newPair = {
-          textColor: "#87c760",
-          backgroundColor: "#1d5010",
-          uid: Date.now().toString(36) + Math.random().toString(36).slice(2)
-        };
-        this.plugin.settings.quickColors.push(newPair);
-        await this.plugin.saveSettings();
-        this._refreshQuickColors();
-      });
-      const modeSetting = new import_obsidian18.Setting(this._quickColorsContainer).setName(
-        this.plugin.t(
-          "quick_colors_apply_mode_label",
-          "The text coloring will apply as"
-        )
-      ).addDropdown((d) => {
-        d.addOption(
-          "act",
-          this.plugin.t("quick_colors_apply_mode_act", "Always Color Text")
-        );
-        d.addOption(
-          "html",
-          this.plugin.t("quick_colors_apply_mode_html", "Inline HTML")
-        );
-        d.setValue(this.plugin.settings.quickColorsApplyMode || "html");
-        d.onChange(async (v) => {
-          this.plugin.settings.quickColorsApplyMode = v;
-          await this.plugin.saveSettings();
-        });
-        if (d.selectEl) {
-          d.selectEl.style.textAlign = "center";
-          d.selectEl.style.textAlignLast = "center";
-          d.selectEl.style.minWidth = "180px";
-        }
-      });
-      try {
-        modeSetting.settingEl.style.marginTop = "10px";
-      } catch (e) {
-      }
-      new import_obsidian18.Setting(this._quickColorsContainer).setName(this.plugin.t("enable_individual_quick_style_apply_mode", "Enable individual application")).setDesc(this.plugin.t("enable_individual_quick_style_apply_mode_desc", "Allow each quick style to have its own 'text coloring will apply as' setting.")).addToggle(
-        (t) => t.setValue(!!this.plugin.settings.enableIndividualQuickStyleApplyMode).onChange(async (v) => {
-          this.plugin.settings.enableIndividualQuickStyleApplyMode = v;
-          await this.plugin.saveSettings();
-          this._refreshQuickColors();
-        })
-      );
-    } catch (e) {
-      debugError("SETTINGS", e);
-    }
+    if (!this._quickColorsContainer) return;
+    this._quickColorsContainer.empty();
   }
   _refreshQuickStyles() {
-    try {
-      if (!this._quickStylesContainer) return;
-      this._quickStylesContainer.empty();
-      const quickStylesSetting = new import_obsidian18.Setting(this._quickStylesContainer).setName(this.plugin.t("quick_styles_header", "Quick Styles")).setDesc(
-        this.plugin.t(
-          "quick_styles_desc",
-          "Define named styles for applying text color and highlights. If Quick Colors are off, per-style colors here will be used."
-        )
-      ).setHeading().addToggle(
-        (t) => t.setValue(!!this.plugin.settings.quickStylesEnabled).onChange(async (v) => {
-          this.plugin.settings.quickStylesEnabled = !!v;
-          await this.plugin.saveSettings();
-          this._refreshQuickStyles();
-        })
-      );
-      try {
-        quickStylesSetting.settingEl.style.marginTop = "30px";
-        quickStylesSetting.settingEl.style.marginBottom = "8px";
-        quickStylesSetting.settingEl.style.borderTop = "none";
-        quickStylesSetting.controlEl.style.marginLeft = "10px";
-      } catch (e) {
-      }
-      const listDiv = this._quickStylesContainer.createDiv();
-      const styles = Array.isArray(this.plugin.settings.quickStyles) ? this.plugin.settings.quickStyles : [];
-      let dragSource = null;
-      styles.forEach((style, i) => {
-        if (!style.uid)
-          style.uid = Date.now() + Math.random().toString(36).slice(2);
-        const row = listDiv.createDiv();
-        row.style.display = "flex";
-        row.style.alignItems = "center";
-        row.style.gap = "8px";
-        row.style.marginBottom = "8px";
-        row.style.padding = "4px 8px";
-        row.style.border = "1px solid var(--background-modifier-border)";
-        row.style.borderRadius = "var(--setting-items-radius)";
-        row.style.background = "var(--setting-items-background)";
-        const dragHandle = row.createEl("button");
-        (0, import_obsidian18.setIcon)(dragHandle, "menu");
-        dragHandle.addClass("act-drag-handle");
-        dragHandle.style.padding = "0";
-        dragHandle.style.border = "none";
-        dragHandle.style.background = "transparent";
-        dragHandle.style.boxShadow = "none";
-        dragHandle.style.cursor = "grab";
-        dragHandle.style.color = "var(--text-muted)";
-        dragHandle.style.flexShrink = "0";
-        dragHandle.style.display = "flex";
-        dragHandle.style.alignItems = "center";
-        dragHandle.style.justifyContent = "center";
-        dragHandle.style.width = "24px";
-        dragHandle.style.height = "24px";
-        dragHandle.setAttribute(
-          "aria-label",
-          this.plugin.t("drag_to_reorder", "Drag to reorder")
-        );
-        const previewEl = row.createDiv();
-        previewEl.textContent = this.plugin.t("preview_text", "Text");
-        previewEl.style.flex = "0 0 auto";
-        const styleType2 = style && style.styleType ? style.styleType : "both";
-        const tc = style.textColor || style.color || null;
-        const bc = style.backgroundColor || null;
-        const params = this.plugin.getHighlightParams(style);
-        const borderCss = this.plugin.generateBorderStyle(tc, bc, style);
-        let previewStyleStr = "";
-        if (styleType2 === "text") {
-          if (tc) previewStyleStr += `color:${tc};`;
-        } else if (styleType2 === "highlight") {
-          if (bc) {
-            const bg = this.plugin.hexToHexWithAlpha(bc, params.opacity ?? 25);
-            previewStyleStr += `background-color:${bg};`;
-          }
-          previewStyleStr += `border-radius:${params.radius ?? 8}px; padding:${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss}`;
-        } else {
-          if (tc) previewStyleStr += `color:${tc};`;
-          if (bc) {
-            const bg = this.plugin.hexToHexWithAlpha(bc, params.opacity ?? 25);
-            previewStyleStr += `background-color:${bg};`;
-          }
-          previewStyleStr += `border-radius:${params.radius ?? 8}px; padding:${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss}`;
-        }
-        previewEl.setAttr("style", previewStyleStr);
-        const nameInput = row.createEl("input", {
-          type: "text",
-          value: style.name || `Style ${i + 1}`
-        });
-        nameInput.style.flex = "1";
-        nameInput.placeholder = this.plugin.t(
-          "style_name_placeholder",
-          "Style Name"
-        );
-        nameInput.addEventListener("change", async () => {
-          style.name = nameInput.value;
-          await this.plugin.saveSettings();
-        });
-        const settingsBtn = row.createDiv();
-        settingsBtn.style.cursor = "pointer";
-        settingsBtn.style.display = "flex";
-        settingsBtn.style.paddingLeft = "0";
-        settingsBtn.style.paddingRight = "4px";
-        (0, import_obsidian18.setIcon)(settingsBtn, "settings");
-        settingsBtn.addEventListener("click", () => {
-          if (!style.styleType) style.styleType = "both";
-          const modal = new HighlightStylingModal(
-            this.app,
-            this.plugin,
-            style,
-            null,
-            style.name && String(style.name).trim() || style.presetLabel && String(style.presetLabel).trim() || (Array.isArray(style.groupedPatterns) && style.groupedPatterns.length > 0 ? style.groupedPatterns.join(", ") : String(style.pattern || "")) || this.plugin.t("selected_text_preview", "Selected Text")
-          );
-          const originalOnClose = modal.onClose.bind(modal);
-          modal.onClose = async () => {
-            originalOnClose();
-            await this.plugin.saveSettings();
-            setTimeout(() => {
-              try {
-                this._refreshQuickStyles();
-              } catch (e) {
-                debugError("SETTINGS", e);
-              }
-            }, 50);
-          };
-          modal.open();
-        });
-        row.addEventListener("contextmenu", (e) => {
-          e.preventDefault();
-          const menu = new import_obsidian18.Menu();
-          menu.addItem(
-            (item) => item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(async () => {
-              const clone = JSON.parse(JSON.stringify(style));
-              clone.uid = Date.now() + Math.random().toString(36).slice(2);
-              clone.name = (clone.name || "") + " (Copy)";
-              this.plugin.settings.quickStyles.splice(i + 1, 0, clone);
-              await this.plugin.saveSettings();
-              this._refreshQuickStyles();
-            })
-          );
-          menu.addItem(
-            (item) => item.setTitle("Delete Entry").setIcon("trash").onClick(async () => {
-              this.plugin.settings.quickStyles.splice(i, 1);
-              await this.plugin.saveSettings();
-              this._refreshQuickStyles();
-            })
-          );
-          menu.showAtMouseEvent(e);
-        });
-        let qsDragStarted = false;
-        let qsGhost = null;
-        let qsSX = 0, qsSY = 0;
-        let qsOX = 0, qsOY = 0;
-        const qsCreateGhost = () => {
-          const rect = row.getBoundingClientRect();
-          qsGhost = document.body.createDiv({ cls: "drag-reorder-ghost" });
-          const clone = row.cloneNode(true);
-          const origInputs = row.querySelectorAll("input, select, textarea");
-          const clonInputs = clone.querySelectorAll("input, select, textarea");
-          origInputs.forEach((el, idx) => {
-            if (clonInputs[idx]) clonInputs[idx].value = el.value;
-          });
-          qsGhost.appendChild(clone);
-          qsGhost.style.width = rect.width + "px";
-          qsGhost.style.height = rect.height + "px";
-          qsGhost.style.left = rect.left + "px";
-          qsGhost.style.top = rect.top + "px";
-          row.classList.add("drag-ghost-hidden");
-          document.body.classList.add("act-dragging-active");
-          dragHandle.style.cursor = "grabbing";
-          if (navigator.vibrate) navigator.vibrate(30);
-        };
-        const qsDoReorder = (currentX, currentY) => {
-          if (!qsGhost) return;
-          qsGhost.style.left = currentX - qsOX + "px";
-          qsGhost.style.top = currentY - qsOY + "px";
-          qsGhost.style.display = "none";
-          const from = document.elementFromPoint(currentX, currentY);
-          qsGhost.style.display = "";
-          const targetRow = from ? from.parentElement === listDiv ? from : from.closest(listDiv.children[0]?.tagName || "div") : null;
-          if (!targetRow || targetRow === row || targetRow.parentElement !== listDiv) return;
-          const children = Array.from(listDiv.children);
-          const cur = children.indexOf(row);
-          const tgt = children.indexOf(targetRow);
-          if (cur === -1 || tgt === -1 || cur === tgt) return;
-          if (navigator.vibrate) navigator.vibrate(30);
-          if (cur < tgt) targetRow.after(row);
-          else listDiv.insertBefore(row, targetRow);
-          const item = styles.splice(cur, 1)[0];
-          styles.splice(tgt, 0, item);
-        };
-        const qsCleanupDrag = async () => {
-          document.removeEventListener("mousemove", qsOnDocMouseMove, { capture: true });
-          document.removeEventListener("mouseup", qsOnDocMouseUp, { capture: true });
-          document.removeEventListener("touchmove", qsOnDocTouchMove, { capture: true });
-          document.removeEventListener("touchend", qsOnDocTouchEnd, { capture: true });
-          document.removeEventListener("touchcancel", qsOnDocTouchEnd, { capture: true });
-          document.body.classList.remove("act-dragging-active");
-          dragHandle.style.cursor = "grab";
-          if (qsGhost) {
-            try {
-              qsGhost.remove();
-            } catch (_) {
-            }
-            qsGhost = null;
-          }
-          row.classList.remove("drag-ghost-hidden");
-          if (qsDragStarted) {
-            await this.plugin.saveSettings();
-            this._refreshQuickStyles();
-          }
-          qsDragStarted = false;
-        };
-        const qsOnDocMouseMove = (e) => {
-          if (!dragHandle) return;
-          e.preventDefault();
-          if (!qsDragStarted) {
-            if (Math.hypot(e.clientX - qsSX, e.clientY - qsSY) > 4) {
-              qsCreateGhost();
-              qsDragStarted = true;
-            } else {
-              return;
-            }
-          }
-          qsDoReorder(e.clientX, e.clientY);
-        };
-        const qsOnDocMouseUp = async () => {
-          await qsCleanupDrag();
-        };
-        const qsOnDocTouchMove = (e) => {
-          if (!dragHandle || e.touches.length !== 1) return;
-          e.preventDefault();
-          const t = e.touches[0];
-          if (!qsDragStarted) {
-            if (Math.hypot(t.clientX - qsSX, t.clientY - qsSY) > 4) {
-              qsCreateGhost();
-              qsDragStarted = true;
-            } else {
-              return;
-            }
-          }
-          qsDoReorder(t.clientX, t.clientY);
-        };
-        const qsOnDocTouchEnd = async () => {
-          await qsCleanupDrag();
-        };
-        dragHandle.addEventListener("mousedown", (e) => {
-          if (e.button !== 0) return;
-          e.preventDefault();
-          e.stopPropagation();
-          qsSX = e.clientX;
-          qsSY = e.clientY;
-          const rect = row.getBoundingClientRect();
-          qsOX = e.clientX - rect.left;
-          qsOY = e.clientY - rect.top;
-          qsDragStarted = false;
-          document.addEventListener("mousemove", qsOnDocMouseMove, { passive: false, capture: true });
-          document.addEventListener("mouseup", qsOnDocMouseUp, { passive: false, capture: true });
-        });
-        dragHandle.addEventListener("touchstart", (e) => {
-          if (e.touches.length !== 1) return;
-          e.preventDefault();
-          e.stopPropagation();
-          const t = e.touches[0];
-          qsSX = t.clientX;
-          qsSY = t.clientY;
-          const rect = row.getBoundingClientRect();
-          qsOX = t.clientX - rect.left;
-          qsOY = t.clientY - rect.top;
-          qsDragStarted = false;
-          document.addEventListener("touchmove", qsOnDocTouchMove, { passive: false, capture: true });
-          document.addEventListener("touchend", qsOnDocTouchEnd, { passive: false, capture: true });
-          document.addEventListener("touchcancel", qsOnDocTouchEnd, { passive: false, capture: true });
-        }, { passive: false });
-      });
-      const btnRow = this._quickStylesContainer.createDiv();
-      btnRow.style.display = "flex";
-      btnRow.style.justifyContent = "flex-end";
-      const addBtn = btnRow.createEl("button", {
-        text: this.plugin.t("btn_add_style", "+ Add Style")
-      });
-      addBtn.style.marginBottom = "10px";
-      addBtn.addEventListener("click", async () => {
-        this.plugin.settings.quickStyles.push({
-          name: "New Style",
-          styleType: "both",
-          textColor: "#ffffff",
-          backgroundColor: "#000000"
-        });
-        await this.plugin.saveSettings();
-        this._refreshQuickStyles();
-      });
-    } catch (e) {
-      debugError("SETTINGS", e);
-    }
   }
   _refreshEntries() {
     try {
@@ -22735,7 +22215,7 @@ var ColorSettingTab = class extends import_obsidian18.PluginSettingTab {
       new import_obsidian18.Setting(containerEl2).setName(
         this.plugin.t(
           "custom_color_swatches",
-          "Custom Color Swatches"
+          "Color Swatches"
         )
       ).setDesc(
         this.plugin.t(
@@ -24155,33 +23635,6 @@ var ColorSettingTab = class extends import_obsidian18.PluginSettingTab {
           await this.plugin.saveSettings();
         });
       });
-      new import_obsidian18.Setting(swContainer).setName(
-        this.plugin.t("enable_custom_swatches", "Enable custom swatches")
-      ).setDesc(
-        this.plugin.t(
-          "enable_custom_swatches_desc",
-          "Turn this on if you want to pick your own colors for the color picker."
-        )
-      ).addToggle(
-        (t) => t.setValue(this.plugin.settings.customSwatchesEnabled).onChange(async (v) => {
-          this.plugin.settings.customSwatchesEnabled = v;
-          await this.plugin.saveSettings();
-          this._refreshCustomSwatches();
-        })
-      );
-      new import_obsidian18.Setting(swContainer).setName(
-        this.plugin.t("replace_default_swatches", "Replace default swatches")
-      ).setDesc(
-        this.plugin.t(
-          "replace_default_swatches_desc",
-          "If enabled, only your custom swatches will be shown. If disabled, they will be appended to the default ones."
-        )
-      ).addToggle(
-        (t) => t.setValue(this.plugin.settings.replaceDefaultSwatches).onChange(async (v) => {
-          this.plugin.settings.replaceDefaultSwatches = v;
-          await this.plugin.saveSettings();
-        })
-      );
       new import_obsidian18.Setting(swContainer).setName(
         this.plugin.t(
           "link_swatch_updates",
@@ -28013,8 +27466,17 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
     }
     if (typeof this.settings.quickStylesEnabled === "undefined")
       this.settings.quickStylesEnabled = true;
+    this.settings.enableIndividualQuickStyleApplyMode = false;
+    this.settings.quickColorsApplyMode = "act";
     if (typeof this.settings.enableQuickColorHighlightOnce === "undefined")
       this.settings.enableQuickColorHighlightOnce = false;
+    if (!Array.isArray(this.settings.swatches)) {
+      this.settings.swatches = JSON.parse(
+        JSON.stringify(defaultSettings.swatches || [])
+      );
+    } else {
+      this.settings.swatches = JSON.parse(JSON.stringify(this.settings.swatches));
+    }
     try {
       this.migrateAdvancedRulesToPerEntry();
       await this.saveSettings();
@@ -28656,7 +28118,7 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
               });
             });
           }
-          const stylesArr = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
+          const stylesArr = this.getQuickMenuStyles();
           this._lastSelectedQuickColor = null;
           let closeMenuTimeout = null;
           const openStylesSubmenu = (anchorEvent, anchorElement = null) => {
@@ -28983,7 +28445,7 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
                 }
               });
             });
-          } else if (this.settings.quickStylesEnabled && Array.isArray(this.settings.quickStyles) && this.settings.quickStyles.length > 0) {
+          } else if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
             menu.addItem((item) => {
               item.setIcon("heading-glyph");
               item.setTitle(this.t("quick_styles_menu_option", "Quick Styles"));
@@ -35029,6 +34491,22 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
       borderOpacity: entry && typeof entry.borderOpacity === "number" ? entry.borderOpacity : this.settings.borderOpacity ?? 100,
       borderThickness: entry && typeof entry.borderThickness === "number" ? entry.borderThickness : this.settings.borderThickness ?? 1
     };
+    return result;
+  }
+  // Combined list of styles shown in the right-click "Quick Styles" submenu.
+  // User-defined Quick Styles are included by default (unless explicitly hidden
+  // via showInQuickMenu === false). Text Style Presets are included only when
+  // their showInQuickMenu flag is explicitly true.
+  getQuickMenuStyles() {
+    const result = [];
+    const quickStyles = Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : [];
+    quickStyles.forEach((s) => {
+      if (s && s.showInQuickMenu !== false) result.push(s);
+    });
+    const presets = Array.isArray(this.settings.textStylePresets) ? this.settings.textStylePresets : [];
+    presets.forEach((p) => {
+      if (p && p.showInQuickMenu === true) result.push(p);
+    });
     return result;
   }
   // Helper: Generate tooltip text explaining why text is colored

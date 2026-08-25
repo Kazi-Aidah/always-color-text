@@ -298,8 +298,11 @@ module.exports = {
   "btn_update_swatch": "Update Swatches",
   "color_input_title": "Pick a color",
   "hex_input_title": "Hex code",
-  "custom_color_swatches": "Custom Color Swatches",
-  "custom_color_swatches_desc": "Add, edit and preview your custom color swatches.",
+  "custom_color_swatches": "Color Swatches",
+  "custom_color_swatches_desc": "Add, edit and preview your color swatches.",
+  "btn_reset_swatches": "Reset",
+  "confirm_reset_swatches_title": "Reset default swatches?",
+  "confirm_reset_swatches_desc": "Reset the default swatches back to their original colours? Edited defaults will be restored and deleted ones re-added.",
   "btn_edit_swatches": "Edit Swatches",
   "edit_color_swatches_header": "Edit Color Swatches",
   "bg_color_preview_label": "Background Color",
@@ -578,6 +581,8 @@ module.exports = {
   "quick_styles_desc": "Allows styles to be applied from the right-click menu.",
   "btn_add_style": "+ Add Style",
   "quick_styles_menu_option": "Quick Styles",
+  "show_in_quick_menu": "Show in Quick Menu",
+  "hide_from_quick_menu": "Hide from Quick Menu",
   
   // Blacklist Groups
   "blacklist_grouped_entries_header": "Blacklist Group Entries",

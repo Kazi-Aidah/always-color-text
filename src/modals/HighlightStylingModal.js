@@ -390,6 +390,7 @@ export class HighlightStylingModal extends Modal {
     const paneRow = contentEl.createDiv();
     paneRow.addClass("act-highlight-pane-row");
 
+    /*
     // Individual Apply Mode for Quick Styles
     const isQuickStyle = this.plugin.settings.quickStyles && this.plugin.settings.quickStyles.includes(this.entry);
     const showIndividualApplyMode = isQuickStyle && this.plugin.settings.enableIndividualQuickStyleApplyMode;
@@ -433,6 +434,7 @@ export class HighlightStylingModal extends Modal {
         await this.plugin.saveSettings();
       });
     }
+    */
     const hlWrap = paneRow.createDiv();
     hlWrap.addClass("act-highlight-pane");
     const borderWrap = paneRow.createDiv();
