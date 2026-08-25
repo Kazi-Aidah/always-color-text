@@ -2411,6 +2411,10 @@ export class ColorSettingTab extends PluginSettingTab {
   }
 
   _refreshCustomSwatches() {
+    // The folded "Default Swatches" / "Custom Swatches" inline editor has been
+    // removed. Editing now happens in the Color Swatches modal, so this is a no-op
+    // to keep existing call sites valid.
+    return;
     try {
       if (!this._customSwatchesContainer) return;
       this._customSwatchesContainer.empty();
@@ -7226,10 +7230,6 @@ export class ColorSettingTab extends PluginSettingTab {
               await this.plugin.saveSettings();
             }),
         );
-
-      // Store reference and render custom swatches
-      this._customSwatchesContainer = swContainer.createDiv();
-      this._refreshCustomSwatches();
 
       // --- Quick Colors / Styles ---
       this._quickColorsContainer = containerEl.createDiv();

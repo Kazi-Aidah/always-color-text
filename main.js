@@ -20398,6 +20398,7 @@ var ColorSettingTab = class extends import_obsidian18.PluginSettingTab {
     }
   }
   _refreshCustomSwatches() {
+    return;
     try {
       if (!this._customSwatchesContainer) return;
       this._customSwatchesContainer.empty();
@@ -23651,8 +23652,6 @@ var ColorSettingTab = class extends import_obsidian18.PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
-      this._customSwatchesContainer = swContainer.createDiv();
-      this._refreshCustomSwatches();
       this._quickColorsContainer = containerEl2.createDiv();
       this._refreshQuickColors();
       this._quickStylesContainer = containerEl2.createDiv();
@@ -32346,6 +32345,28 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
         });
         this.settings.swatches = defaultSwatches;
       }
+    } catch (e) {
+    }
+    try {
+      const defColors = new Set(
+        (Array.isArray(this.settings.swatches) ? this.settings.swatches : []).map((s) => s && s.color ? s.color.toLowerCase() : "").filter(Boolean)
+      );
+      if (Array.isArray(this.settings.userCustomSwatches)) {
+        this.settings.userCustomSwatches = this.settings.userCustomSwatches.filter(
+          (s) => !s || !s.color || !defColors.has(s.color.toLowerCase())
+        );
+      }
+      if (Array.isArray(this.settings.swatches)) {
+        const seen = /* @__PURE__ */ new Set();
+        this.settings.swatches = this.settings.swatches.filter((s) => {
+          if (!s || !s.color) return false;
+          const c = s.color.toLowerCase();
+          if (seen.has(c)) return false;
+          seen.add(c);
+          return true;
+        });
+      }
+      this.settings.customSwatches = (this.settings.swatches || []).concat(this.settings.userCustomSwatches || []).map((s) => s && s.color ? s.color : "").filter(Boolean);
     } catch (e) {
     }
     try {

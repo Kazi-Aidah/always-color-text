@@ -6691,6 +6691,37 @@ class AlwaysColorText extends Plugin {
       }
     } catch (e) {}
 
+    // Prevent default colours from appearing twice. Defaults live in settings.swatches
+    // and user custom swatches in settings.userCustomSwatches; a custom swatch that
+    // duplicates a default colour would otherwise be shown as a second copy of that
+    // default. Drop such duplicates (and any duplicates within the defaults list).
+    try {
+      const defColors = new Set(
+        (Array.isArray(this.settings.swatches) ? this.settings.swatches : [])
+          .map((s) => (s && s.color ? s.color.toLowerCase() : ""))
+          .filter(Boolean),
+      );
+      if (Array.isArray(this.settings.userCustomSwatches)) {
+        this.settings.userCustomSwatches = this.settings.userCustomSwatches.filter(
+          (s) => !s || !s.color || !defColors.has(s.color.toLowerCase()),
+        );
+      }
+      if (Array.isArray(this.settings.swatches)) {
+        const seen = new Set();
+        this.settings.swatches = this.settings.swatches.filter((s) => {
+          if (!s || !s.color) return false;
+          const c = s.color.toLowerCase();
+          if (seen.has(c)) return false;
+          seen.add(c);
+          return true;
+        });
+      }
+      this.settings.customSwatches = (this.settings.swatches || [])
+        .concat(this.settings.userCustomSwatches || [])
+        .map((s) => (s && s.color ? s.color : ""))
+        .filter(Boolean);
+    } catch (e) {}
+
     try {
       if (Array.isArray(this.settings.pathRules)) {
         this.settings.pathRules = this.settings.pathRules.map((r) => {
