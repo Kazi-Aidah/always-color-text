@@ -20890,8 +20890,8 @@ var ColorSettingTab = class extends import_obsidian18.PluginSettingTab {
           "Shows color dots in the menu"
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.quickMenuColorsEnabled).onChange(async (v) => {
-          this.plugin.settings.quickMenuColorsEnabled = v;
+        (t) => t.setValue(this.plugin.settings.quickColorsEnabled).onChange(async (v) => {
+          this.plugin.settings.quickColorsEnabled = v;
           await this.plugin.saveSettings();
           this._refreshQuickMenuColorsSetting();
         })
@@ -28125,7 +28125,6 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
               clearTimeout(closeMenuTimeout);
               closeMenuTimeout = null;
             }
-            if (!this.settings.quickStylesEnabled) return;
             if (this._openQuickStylesSubmenu) {
               try {
                 this._openQuickStylesSubmenu.hide();
@@ -28263,7 +28262,7 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
               isQuickMenuColor: false
             }));
           }
-          if (showQuickColors && colorPairs.length > 0) {
+          if (showQuickColors && colorPairs.length > 0 && this.settings.quickStylesEnabled) {
             menu.addItem((item) => {
               const titleEl = document.createElement("div");
               titleEl.className = "menu-item tappable has-submenu";
@@ -28444,7 +28443,7 @@ var AlwaysColorText = class extends import_obsidian20.Plugin {
                 }
               });
             });
-          } else if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
+          } else if (stylesArr.length > 0) {
             menu.addItem((item) => {
               item.setIcon("heading-glyph");
               item.setTitle(this.t("quick_styles_menu_option", "Quick Styles"));

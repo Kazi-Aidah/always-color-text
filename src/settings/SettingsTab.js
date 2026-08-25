@@ -3020,9 +3020,9 @@ export class ColorSettingTab extends PluginSettingTab {
         )
         .addToggle((t) =>
           t
-            .setValue(this.plugin.settings.quickMenuColorsEnabled)
+            .setValue(this.plugin.settings.quickColorsEnabled)
             .onChange(async (v) => {
-              this.plugin.settings.quickMenuColorsEnabled = v;
+              this.plugin.settings.quickColorsEnabled = v;
               await this.plugin.saveSettings();
               this._refreshQuickMenuColorsSetting();
             }),

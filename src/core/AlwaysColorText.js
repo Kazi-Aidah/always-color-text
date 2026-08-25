@@ -1590,7 +1590,6 @@ class AlwaysColorText extends Plugin {
               clearTimeout(closeMenuTimeout);
               closeMenuTimeout = null;
             }
-            if (!this.settings.quickStylesEnabled) return;
             // Remove any previously open submenu to prevent duplicates
             if (this._openQuickStylesSubmenu) {
               try {
@@ -1778,7 +1777,7 @@ class AlwaysColorText extends Plugin {
             }));
           }
           
-          if (showQuickColors && colorPairs.length > 0) {
+          if (showQuickColors && colorPairs.length > 0 && this.settings.quickStylesEnabled) {
             menu.addItem((item) => {
               const titleEl = document.createElement("div");
               titleEl.className = "menu-item tappable has-submenu";
@@ -1971,10 +1970,7 @@ class AlwaysColorText extends Plugin {
                 }
               });
             });
-          } else if (
-            this.settings.quickStylesEnabled &&
-            stylesArr.length > 0
-          ) {
+          } else if (stylesArr.length > 0) {
             menu.addItem((item) => {
               item.setIcon("heading-glyph");
               item.setTitle(this.t("quick_styles_menu_option", "Quick Styles"));
