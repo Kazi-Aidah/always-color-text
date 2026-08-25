@@ -182,7 +182,7 @@ export const defaultSettings = {
   quickStylesEnabled: true,
   oneTimeActionsFolded: false,
   defaultWordGroup: "",
-  linkIdenticalMatchers: true,
+  linkIdenticalMatchers: false,
   hiddenCommands: [],
   enabled: true,
   highlightStyle: "text",

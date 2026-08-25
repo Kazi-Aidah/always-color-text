@@ -3,6 +3,8 @@ import { PresetModal } from '../modals/PresetModal.js';
 import { RealTimeRegexTesterModal } from '../modals/RealTimeRegexTesterModal.js';
 import { HighlightStylingModal } from '../modals/HighlightStylingModal.js';
 import { EditEntryModal } from '../modals/EditEntryModal.js';
+import { RulePickerModal } from '../modals/RulePickerModal.js';
+import { RuleValueModal } from '../modals/RuleValueModal.js';
 import { BlacklistRegexTesterModal } from '../modals/BlacklistRegexTesterModal.js';
 import { ChangelogModal } from '../modals/ChangelogModal.js';
 import { EditWordGroupModal } from '../modals/EditWordGroupModal.js';
@@ -2134,18 +2136,163 @@ export class ColorSettingTab extends PluginSettingTab {
           opt.value = val;
         });
         modeSel.value = entry.mode === "exclude" ? "exclude" : "include";
-        const input = row.createEl("input", {
-          type: "text",
-          value: entry.path || "",
+        // Type dropdown (Folder / File / Tag / Property) — mirrors entry inclusion/exclusion rules
+        const typeSel = row.createEl("select");
+        typeSel.style.flex = "0 0 auto";
+        typeSel.style.minWidth = "100px";
+        typeSel.style.padding = "6px";
+        typeSel.style.borderRadius = "var(--input-radius)";
+        typeSel.style.border = "1px solid var(--background-modifier-border)";
+        typeSel.style.background = "var(--background-modifier-form-field)";
+        typeSel.style.textAlign = "center";
+        [
+          ["folder", this.plugin.t("rule_type_folder", "Folder")],
+          ["file", this.plugin.t("rule_type_file", "File")],
+          ["tag", this.plugin.t("rule_type_tag", "Tag")],
+          ["property", this.plugin.t("rule_type_property", "Property")],
+          ["pattern", this.plugin.t("rule_type_pattern", "Pattern")],
+        ].forEach(([v, txt]) => {
+          const o = typeSel.createEl("option", { text: txt });
+          o.value = v;
         });
-        input.placeholder = this.plugin.t(
-          "enter_path_or_pattern",
-          "Enter path or pattern",
+        const inferType = (en) => {
+          if (en && en.type) return en.type;
+          const pp = String((en && en.path) || "");
+          if (pp.startsWith("#")) return "tag";
+          if (/\/$/.test(pp)) return "folder";
+          return "file";
+        };
+        typeSel.value = inferType(entry);
+        // Per-rule per-type memory (off-disk, survives re-renders)
+        const prTypeMap = (this._pathRuleTypeMap =
+          this._pathRuleTypeMap || new WeakMap());
+        if (!prTypeMap.has(entry)) prTypeMap.set(entry, {});
+        const prTV = prTypeMap.get(entry);
+        if (!(typeSel.value in prTV)) prTV[typeSel.value] = String(entry.path || "");
+
+        const chooseArea = row.createEl("div");
+        chooseArea.style.display = "flex";
+        chooseArea.style.gap = "8px";
+        chooseArea.style.flex = "1 1 auto";
+        chooseArea.style.minWidth = "160px";
+        const clip = (b) => {
+          b.style.overflow = "hidden";
+          b.style.textOverflow = "ellipsis";
+          b.style.whiteSpace = "nowrap";
+          b.style.textAlign = "left";
+          b.style.padding = "6px 10px";
+          b.style.border = "1px solid var(--background-modifier-border)";
+          b.style.borderRadius = "var(--radius-m)";
+        };
+        const openPicker = (type, cb) => {
+          new RulePickerModal(this.app, this.plugin, type, cb).open();
+        };
+        const persist = (type, pathVal) => {
+          entry.type = type;
+          entry.path = pathVal;
+          entry.isFolder = type === "folder";
+        };
+        const refreshChoose = () => {
+          const t = typeSel.value;
+          const raw = String(entry.path || "");
+          chooseArea.empty();
+          if (t === "property") {
+            const ci = raw.indexOf(":");
+            const key = ci > -1 ? raw.slice(0, ci).trim() : raw;
+            const val = ci > -1 ? raw.slice(ci + 1).trim() : "";
+            const keyBtn = chooseArea.createEl("button", {
+              text: key ? key : this.plugin.t("rule_choose_key", "Choose key…"),
+            });
+            clip(keyBtn);
+            keyBtn.style.flex = "1 1 auto";
+            keyBtn.addEventListener("click", () => {
+              openPicker("property", (v) => {
+                persist("property", String(v || ""));
+                this.plugin.saveSettings();
+                this._refreshPathRules();
+              });
+            });
+            const valBtn = chooseArea.createEl("button", {
+              text:
+                val ? val : this.plugin.t("rule_choose_value", "Choose value…"),
+            });
+            clip(valBtn);
+            valBtn.style.flex = "1 1 auto";
+            valBtn.addEventListener("click", () => {
+              const cur = String(entry.path || "");
+              const curCi = cur.indexOf(":");
+              const curKey = curCi > -1 ? cur.slice(0, curCi).trim() : cur;
+              new RuleValueModal(this.app, this.plugin, val, (v) => {
+                persist("property", (curKey ? curKey + ": " : "") + String(v || ""));
+                this.plugin.saveSettings();
+                this._refreshPathRules();
+              }).open();
+            });
+          } else if (t === "pattern") {
+            const inp = chooseArea.createEl("input", {
+              type: "text",
+              value: raw,
+            });
+            inp.placeholder = this.plugin.t(
+              "rule_pattern_placeholder",
+              "e.g. ** or note*",
+            );
+            inp.style.flex = "1 1 auto";
+            inp.style.padding = "6px 10px";
+            inp.style.border = "1px solid var(--background-modifier-border)";
+            inp.style.borderRadius = "var(--radius-m)";
+            const patternInputHandler = () => {
+              persist("pattern", String(inp.value || "").trim());
+              this.plugin.saveSettings();
+              this._refreshPathRules();
+            };
+            inp.addEventListener("change", patternInputHandler);
+            this._cleanupHandlers.push(() =>
+              inp.removeEventListener("change", patternInputHandler),
+            );
+          } else {
+            const btn = chooseArea.createEl("button", {
+              text:
+                raw ||
+                this.plugin.t(
+                  "rule_choose_placeholder_" + t,
+                  "Choose " + t + "…",
+                ),
+            });
+            clip(btn);
+            btn.style.flex = "1 1 auto";
+            btn.addEventListener("click", () => {
+              const type = typeSel.value;
+              openPicker(type, (v) => {
+                let pp = String(v || "");
+                if (type === "folder") {
+                  if (!pp.endsWith("/")) pp += "/";
+                } else if (type === "tag") {
+                  if (!pp.startsWith("#")) pp = "#" + pp;
+                }
+                persist(type, pp);
+                this.plugin.saveSettings();
+                this._refreshPathRules();
+              });
+            });
+          }
+        };
+        refreshChoose();
+
+        const typeHandler = async () => {
+          const newType = typeSel.value;
+          const oldType = entry.type || inferType(entry);
+          prTV[oldType] = String(entry.path || "");
+          const restored = prTV[newType] !== undefined ? prTV[newType] : "";
+          persist(newType, restored);
+          await this.plugin.saveSettings();
+          this._refreshPathRules();
+        };
+        typeSel.addEventListener("change", typeHandler);
+        this._cleanupHandlers.push(() =>
+          typeSel.removeEventListener("change", typeHandler),
         );
-        input.style.flex = "1";
-        input.style.padding = "6px";
-        input.style.borderRadius = "var(--input-radius)";
-        input.style.border = "1px solid var(--background-modifier-border)";
+
         const del = row.createEl("button", {
           text: this.plugin.t("delete_button_text", "✕"),
         });
@@ -2153,218 +2300,6 @@ export class ColorSettingTab extends PluginSettingTab {
         del.style.border = "none";
         del.style.cursor = "pointer";
         del.style.flex = "0 0 auto";
-        const updateDropdown = () => {
-          if (input._actDropdown) {
-            const dd = input._actDropdown;
-            if (input._dropdownScrollListener) {
-              document.removeEventListener(
-                "scroll",
-                input._dropdownScrollListener,
-                true,
-              );
-              input._dropdownScrollListener = null;
-            }
-            if (input._dropdownClickListener) {
-              document.removeEventListener(
-                "click",
-                input._dropdownClickListener,
-              );
-              input._dropdownClickListener = null;
-            }
-            if (input._dropdownKeyListener) {
-              document.removeEventListener(
-                "keydown",
-                input._dropdownKeyListener,
-              );
-              input._dropdownKeyListener = null;
-            }
-            dd.remove();
-            input._actDropdown = null;
-          }
-          const val = String(input.value || "")
-            .trim()
-            .toLowerCase();
-          const list = [];
-          sugg.folders.forEach((f) => list.push({ t: "folder", p: f }));
-          sugg.files.forEach((f) => list.push({ t: "file", p: f }));
-          const filtered = val
-            ? list.filter((x) => x.p.toLowerCase().includes(val))
-            : list;
-          if (filtered.length === 0) return;
-          const dd = document.createElement("div");
-          Object.assign(dd.style, {
-            position: "fixed",
-            zIndex: 2000,
-            background: "var(--background-primary)",
-            color: "var(--text-normal)",
-            border: "1px solid var(--background-modifier-border)",
-            borderRadius: "6px",
-            boxShadow: "0 6px 18px rgba(0,0,0,0.4)",
-            maxHeight: "240px",
-            overflowY: "auto",
-            padding: "6px 0",
-            minWidth: Math.max(240, input.offsetWidth) + "px",
-          });
-          let hi = -1;
-          filtered.forEach((item) => {
-            const it = document.createElement("div");
-            it.textContent = item.p || "/";
-            Object.assign(it.style, {
-              padding: "8px 12px",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            });
-            it.onmouseenter = () => {
-              if (hi >= 0 && dd.children[hi])
-                dd.children[hi].style.background = "transparent";
-              it.style.background = "var(--background-secondary)";
-              hi = Array.from(dd.children).indexOf(it);
-            };
-            it.onmouseleave = () => {
-              it.style.background = "transparent";
-            };
-            it.onclick = async (e) => {
-              e.stopPropagation();
-              input.value = item.p + (item.t === "folder" ? "/" : "");
-              const ev = new Event("change", { bubbles: true });
-              input.dispatchEvent(ev);
-              dd.remove();
-              input._actDropdown = null;
-            };
-            dd.appendChild(it);
-          });
-          document.body.appendChild(dd);
-          const pos = () => {
-            const r = input.getBoundingClientRect();
-            dd.style.left = r.left + "px";
-            dd.style.top = r.bottom + 6 + "px";
-            dd.style.width = input.offsetWidth + "px";
-          };
-          pos();
-          input._actDropdown = dd;
-          input._dropdownScrollListener = pos;
-          input._dropdownClickListener = (ev) => {
-            if (ev.target === input) return;
-            if (!dd.contains(ev.target)) {
-              dd.remove();
-              input._actDropdown = null;
-              document.removeEventListener(
-                "click",
-                input._dropdownClickListener,
-              );
-              document.removeEventListener(
-                "scroll",
-                input._dropdownScrollListener,
-                true,
-              );
-              document.removeEventListener(
-                "keydown",
-                input._dropdownKeyListener,
-              );
-              input._dropdownClickListener = null;
-              input._dropdownScrollListener = null;
-              input._dropdownKeyListener = null;
-            }
-          };
-          input._dropdownKeyListener = (ev) => {
-            const items = Array.from(dd.children);
-            if (items.length === 0) return;
-            if (ev.key === "ArrowDown") {
-              ev.preventDefault();
-              hi = Math.min(hi + 1, items.length - 1);
-              items.forEach((item) => (item.style.background = "transparent"));
-              if (hi >= 0) {
-                items[hi].style.background = "var(--background-secondary)";
-                items[hi].scrollIntoView({ block: "nearest" });
-              }
-            } else if (ev.key === "ArrowUp") {
-              ev.preventDefault();
-              hi = Math.max(hi - 1, -1);
-              items.forEach((item) => (item.style.background = "transparent"));
-              if (hi >= 0) {
-                items[hi].style.background = "var(--background-secondary)";
-                items[hi].scrollIntoView({ block: "nearest" });
-              }
-            } else if (ev.key === "Enter" && hi >= 0) {
-              ev.preventDefault();
-              items[hi].click();
-            } else if (ev.key === "Escape") {
-              ev.preventDefault();
-              dd.remove();
-              input._actDropdown = null;
-              document.removeEventListener(
-                "keydown",
-                input._dropdownKeyListener,
-              );
-              input._dropdownKeyListener = null;
-            }
-          };
-          document.addEventListener("scroll", pos, true);
-          document.addEventListener("click", input._dropdownClickListener);
-          document.addEventListener("keydown", input._dropdownKeyListener);
-          this._cleanupHandlers.push(() => {
-            try {
-              document.removeEventListener("scroll", pos, true);
-            } catch (e) {}
-            try {
-              document.removeEventListener(
-                "click",
-                input._dropdownClickListener,
-              );
-            } catch (e) {}
-            try {
-              document.removeEventListener(
-                "keydown",
-                input._dropdownKeyListener,
-              );
-            } catch (e) {}
-            if (input._actDropdown) {
-              try {
-                input._actDropdown.remove();
-              } catch (e) {}
-              input._actDropdown = null;
-            }
-          });
-        };
-        const focusHandler = () => {
-          updateDropdown();
-        };
-        input.addEventListener("focus", focusHandler);
-        const clickHandler = () => {
-          updateDropdown();
-        };
-        input.addEventListener("click", clickHandler);
-        this._cleanupHandlers.push(() =>
-          input.removeEventListener("focus", focusHandler),
-        );
-        this._cleanupHandlers.push(() =>
-          input.removeEventListener("click", clickHandler),
-        );
-        const inputHandler = () => {
-          updateDropdown();
-        };
-        input.addEventListener("input", inputHandler);
-        this._cleanupHandlers.push(() =>
-          input.removeEventListener("input", inputHandler),
-        );
-        const changeHandler = async () => {
-          let newPath = String(input.value || "")
-            .trim()
-            .replace(/\\\\/g, "/");
-          const isFolderSel =
-            /\/$/.test(newPath) ||
-            (!/\.[a-zA-Z0-9]+$/.test(newPath) && newPath.includes("/"));
-          // Ensure trailing slash for folders so folder rules apply to all descendants
-          if (isFolderSel && !/\/$/.test(newPath)) newPath = newPath + "/";
-          this.plugin.settings.pathRules[actualIndex].path = newPath;
-          this.plugin.settings.pathRules[actualIndex].isFolder = isFolderSel;
-          await this.plugin.saveSettings();
-          this._refreshPathRules();
-        };
-        input.addEventListener("change", changeHandler);
-        this._cleanupHandlers.push(() =>
-          input.removeEventListener("change", changeHandler),
-        );
         const modeHandler = async () => {
           this.plugin.settings.pathRules[actualIndex].mode = modeSel.value;
           await this.plugin.saveSettings();
@@ -6012,7 +5947,7 @@ export class ColorSettingTab extends PluginSettingTab {
         )
         .addToggle((t) =>
           t
-            .setValue(this.plugin.settings.linkIdenticalMatchers ?? true)
+            .setValue(this.plugin.settings.linkIdenticalMatchers ?? false)
             .onChange(async (v) => {
               this.plugin.settings.linkIdenticalMatchers = v;
               await this.debouncedSaveSettings();

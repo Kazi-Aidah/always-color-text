@@ -10,7 +10,7 @@ import { ColorSettingTab } from '../settings/SettingsTab.js';
 import { buildEditorExtension } from '../features/editorDecorator.js';
 import { buildReadingViewProcessor } from '../features/readingViewProcessor.js';
 import { compileWordEntriesLogic, compileTextBgColoringEntriesLogic, compileBlacklistEntriesLogic, PatternMatcher, SettingsIndex } from '../services/patternCompiler.js';
-import { evaluatePathRulesLogic, hasGlobalExcludeLogic, getBestFolderEntryLogic } from '../services/fileFilter.js';
+import { evaluatePathRulesLogic, hasGlobalExcludeLogic, getBestFolderEntryLogic, globToRegex } from '../services/fileFilter.js';
 import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS, GLOBAL_STYLE_KEYS, IS_DEVELOPMENT } from './constants.js';
 import { Decoration, syntaxTree, forceRebuildEffect } from './cmSetup.js';
 import { debugLog, debugError, debugWarn, escapeHtml } from '../utils/debug.js';
@@ -10232,6 +10232,18 @@ class AlwaysColorText extends Plugin {
     if (s.includes("/")) return { kind: "exact-file", path: s };
     return { kind: "name", name: s };
   }
+
+  // Resolve the frontmatter object for a file path (used by property rules).
+  _getFrontmatter(filePath) {
+    try {
+      const file = this.app.vault.getAbstractFileByPath(filePath);
+      if (!file || !(file instanceof TFile)) return null;
+      const cache = this.app.metadataCache.getFileCache(file);
+      return cache && cache.frontmatter ? cache.frontmatter : null;
+    } catch (e) {
+      return null;
+    }
+  }
   _matchesByName(filePath, name) {
     const fp = this.normalizePath(filePath);
     const nm = String(name || "").trim();
@@ -10270,6 +10282,7 @@ class AlwaysColorText extends Plugin {
       (fp, name) => this._matchesByName(fp, name),
       (fp) => this.getFileTags(fp),
       (rulePath, fp) => this._matchFile(rulePath, fp),
+      (p) => this._getFrontmatter(p),
     );
   }
 
@@ -10501,6 +10514,45 @@ class AlwaysColorText extends Plugin {
       const matchType = (rule) => {
         const pathStr = String(rule.path || "").trim();
         if (pathStr.length === 0) return "vault";
+        // Property rule: match files by frontmatter property (presence or
+        // exact value when written as "key: value").
+        if (rule.type === "property") {
+          const fm = this._getFrontmatter(filePath);
+          if (!fm) return null;
+          const idx = pathStr.indexOf(":");
+          let key, val;
+          if (idx > -1) {
+            key = pathStr.slice(0, idx).trim();
+            val = pathStr.slice(idx + 1).trim();
+          } else {
+            key = pathStr;
+            val = null;
+          }
+          if (!key || !(key in fm)) return null;
+          if (val === null || val === "") return "file";
+          const fv = String(fm[key]);
+          return fv.toLowerCase() === String(val).toLowerCase() ? "file" : null;
+        }
+        // Pattern rule: glob-like match against path, parent folders, and names.
+        if (rule.type === "pattern") {
+          if (!pathStr) return null;
+          let re = null;
+          try {
+            re = globToRegex(pathStr);
+          } catch (e) {
+            re = null;
+          }
+          if (!re) return null;
+          const segs = fp.split("/");
+          const base = segs[segs.length - 1];
+          if (re.test(fp) || re.test(base)) return "file";
+          const parents = this._parentFolders(fp);
+          for (const p of parents) {
+            const pbase = p.split("/").pop();
+            if (re.test(p) || (pbase && re.test(pbase))) return "folder";
+          }
+          return null;
+        }
         const dk = this.detectRuleKind(pathStr);
         if (dk.kind === "tag") {
           const tags = this.getFileTags(filePath).map((t) =>

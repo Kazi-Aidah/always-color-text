@@ -13,8 +13,35 @@ import { debugLog } from '../utils/debug.js';
  * @param {Function} _matchesByName - this._matchesByName
  * @param {Function} getFileTags    - this.getFileTags
  * @param {Function} _matchFile     - this._matchFile
+ * @param {Function} [getFrontmatter] - this._getFrontmatter (for `property` rules)
  * @returns {{ included: boolean, excluded: boolean, hasIncludes: boolean, hasFileRule: boolean }}
  */
+/**
+ * Convert a glob-like pattern to a RegExp.
+ *   **  → matches any characters (incl. path separators)
+ *   *   → matches any characters except "/"
+ *   ?   → matches a single character except "/"
+ */
+export function globToRegex(glob) {
+  let out = "";
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob[i];
+    if (c === "*") {
+      if (glob[i + 1] === "*") {
+        out += ".*";
+        i++;
+      } else {
+        out += "[^/]*";
+      }
+    } else if (c === "?") {
+      out += "[^/]";
+    } else {
+      out += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+    }
+  }
+  return new RegExp("^" + out + "$");
+}
+
 export function evaluatePathRulesLogic(
   filePath,
   settings,
@@ -25,6 +52,7 @@ export function evaluatePathRulesLogic(
   _matchesByName,
   getFileTags,
   _matchFile,
+  getFrontmatter,
 ) {
   const rules = Array.isArray(settings.pathRules) ? settings.pathRules : [];
   if (!filePath || rules.length === 0)
@@ -47,6 +75,71 @@ export function evaluatePathRulesLogic(
     const pathStr = String(r.path || "").trim();
     const pathEmpty = pathStr.length === 0;
     if (mode === "include") hasIncludes = true;
+    // Property rules: match by frontmatter (presence, or exact value as "key: value")
+    if (r.type === "property") {
+      if (pathEmpty) continue;
+      const fm = getFrontmatter ? getFrontmatter(fp) : null;
+      if (fm) {
+        const ci = pathStr.indexOf(":");
+        let key, val;
+        if (ci > -1) {
+          key = pathStr.slice(0, ci).trim();
+          val = pathStr.slice(ci + 1).trim();
+        } else {
+          key = pathStr;
+          val = null;
+        }
+        const hasKey = Object.prototype.hasOwnProperty.call(fm, key);
+        if (hasKey) {
+          let match = false;
+          if (val === null || val === "") {
+            match = true;
+          } else {
+            const eq = (x) =>
+              String(x ?? "")
+                .trim()
+                .toLowerCase() === String(val).toLowerCase();
+            const fmVals = fm[key];
+            if (Array.isArray(fmVals)) match = fmVals.some(eq);
+            else match = eq(fmVals);
+          }
+          if (match) {
+            if (mode === "include") fileInclude = true;
+            else fileExclude = true;
+          }
+        }
+      }
+      continue;
+    }
+    // Pattern rules: glob-like match against path, parent folders, and names
+    if (r.type === "pattern") {
+      if (pathEmpty) continue;
+      let re = null;
+      try {
+        re = globToRegex(pathStr);
+      } catch (e) {
+        re = null;
+      }
+      if (re) {
+        const segs = fp.split("/");
+        const base = segs[segs.length - 1];
+        let matched = re.test(fp) || re.test(base);
+        if (!matched) {
+          for (const p of parents) {
+            const pbase = p.split("/").pop();
+            if (re.test(p) || (pbase && re.test(pbase))) {
+              matched = true;
+              break;
+            }
+          }
+        }
+        if (matched) {
+          if (mode === "include") fileInclude = true;
+          else fileExclude = true;
+        }
+      }
+      continue;
+    }
     if (pathEmpty) {
       if (mode === "include") {
         folderInclude = true;

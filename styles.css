@@ -1236,7 +1236,6 @@ body:not(.is-mobile) .act-group-button-row {
   font-size: 12px;
   border-radius: 4px;
   border: 1px solid var(--background-modifier-border);
-  background: var(--background-modifier-form-field);
   color: var(--text-normal);
   cursor: pointer;
   padding: 6px 8px;

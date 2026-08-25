@@ -6,6 +6,14 @@ import { CustomCssModal } from './CustomCssModal.js';
 import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
 import { AddToExistingEntryModal } from './AddToExistingEntryModal.js';
+import { LinkedMatcherModal } from './LinkedMatcherModal.js';
+import { RulePickerModal } from './RulePickerModal.js';
+import { RuleValueModal } from './RuleValueModal.js';
+import {
+  matcherKey,
+  findEntriesWithMatcherKey,
+  propagateStyle,
+} from '../utils/matcherLinker.js';
 
 export class EditEntryModal extends Modal {
   constructor(
@@ -41,7 +49,7 @@ export class EditEntryModal extends Modal {
     try {
       this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-edit-entry-modal");
-      this.modalEl.style.maxWidth = "1100px";
+      this.modalEl.style.maxWidth = "700px";
       this.modalEl.style.padding = "20px";
     } catch (e) {}
 
@@ -345,11 +353,12 @@ export class EditEntryModal extends Modal {
     textInput.contentEditable = "true";
     textInput.style.width = "100%";
     textInput.style.minHeight = "40px";
-    textInput.style.border = "none";
+    textInput.style.border = "1px solid var(--background-modifier-border-focus)";
+    textInput.style.borderRadius = "4px";
     textInput.style.outline = "none";
     textInput.style.background = "transparent";
     textInput.style.color = "var(--text-normal)";
-    textInput.style.padding = "6px";
+    textInput.style.padding = "6px 10px";
     textInput.style.boxSizing = "border-box";
     textInput.style.lineHeight = "1.5";
     textInput.style.whiteSpace = "pre-wrap";
@@ -368,12 +377,12 @@ export class EditEntryModal extends Modal {
         "Inclusion / Exclusion Rules",
       ),
     });
+    rulesHeader.style.marginTop = "24px";
     const rulesContainer = contentEl.createDiv();
     rulesContainer.style.marginTop = "8px";
     const addRuleBtn = contentEl.createEl("button", {
       text: this.plugin.t("btn_add_rule", "+ Add Rule"),
     });
-    addRuleBtn.addClass("mod-cta");
     addRuleBtn.style.marginTop = "6px";
 
     // ===== Color functions =====
@@ -988,19 +997,40 @@ export class EditEntryModal extends Modal {
       return { files: filePaths.sort(), folders: Array.from(folders).sort() };
     };
     const sugg = buildSuggestions();
-    const renderRules = () => {
-      rulesContainer.empty();
-      const inc = Array.isArray(this.entry.inclusionRules)
+    // Single stable working list so rules keep their order and don't jump
+    // between the include/exclude blocks when a dropdown changes. `mode` is a
+    // field on each rule; the separate inc/exc arrays are rebuilt on save.
+    if (!Array.isArray(this._rules)) {
+      const incRules = Array.isArray(this.entry.inclusionRules)
         ? this.entry.inclusionRules
         : [];
-      const exc = Array.isArray(this.entry.exclusionRules)
+      const excRules = Array.isArray(this.entry.exclusionRules)
         ? this.entry.exclusionRules
         : [];
-      const combined = [
-        ...inc.map((r, idx) => ({ ...r, _mode: "include", _idx: idx })),
-        ...exc.map((r, idx) => ({ ...r, _mode: "exclude", _idx: idx })),
+      const merged = [
+        ...incRules.map((r) => ({ ...r, mode: "include" })),
+        ...excRules.map((r) => ({ ...r, mode: "exclude" })),
       ];
-      combined.forEach((r) => {
+      // Restore the interleaved order saved via _order; falls back to
+      // include-first for rules without an _order (pre-existing data).
+      merged.sort(
+        (a, b) => (Number(a._order) || 0) - (Number(b._order) || 0),
+      );
+      this._rules = merged;
+    }
+    const syncEntryRules = () => {
+      // Stamp a stable order index so the interleaved sequence survives a
+      // save/reopen (the engine stores includes and excludes in two arrays).
+      this._rules.forEach((r, i) => {
+        r._order = i;
+      });
+      this.entry.inclusionRules = this._rules.filter((r) => r.mode !== "exclude");
+      this.entry.exclusionRules = this._rules.filter((r) => r.mode === "exclude");
+    };
+    const renderRules = () => {
+      rulesContainer.empty();
+      const typeMap = (this._ruleTypeMap = this._ruleTypeMap || new WeakMap());
+      this._rules.forEach((r, idx) => {
         const row = rulesContainer.createDiv();
         row.style.display = "flex";
         row.style.gap = "8px";
@@ -1015,277 +1045,211 @@ export class EditEntryModal extends Modal {
           text: this.plugin.t("mode_does_not_color_in", "does not color in"),
         });
         optEx.value = "exclude";
-        modeSel.value = r._mode === "exclude" ? "exclude" : "include";
+        modeSel.value = r.mode === "exclude" ? "exclude" : "include";
         modeSel.style.textAlign = "center";
         modeSel.style.minWidth = "160px";
         modeSel.style.border = "1px solid var(--background-modifier-border)";
         modeSel.style.borderRadius = "var(--radius-m)";
         modeSel.style.background = "var(--background-modifier-form-field)";
-        const pathInput = row.createEl("input", {
-          type: "text",
-          value: String(r.path || ""),
-          placeholder: this.plugin.t(
-            "enter_path_or_pattern",
-            "Enter path, pattern or tags",
-          ),
+
+        // Type dropdown (Folder / File / Tag / Property / Pattern)
+        const typeSel = row.createEl("select");
+        const tOptFolder = typeSel.createEl("option", {
+          text: this.plugin.t("rule_type_folder", "Folder"),
         });
-        pathInput.style.flex = "1";
-        pathInput.style.padding = "6px";
-        pathInput.style.border = "1px solid var(--background-modifier-border)";
-        pathInput.style.borderRadius = "var(--radius-m)";
+        tOptFolder.value = "folder";
+        const tOptFile = typeSel.createEl("option", {
+          text: this.plugin.t("rule_type_file", "File"),
+        });
+        tOptFile.value = "file";
+        const tOptTag = typeSel.createEl("option", {
+          text: this.plugin.t("rule_type_tag", "Tag"),
+        });
+        tOptTag.value = "tag";
+        const tOptProp = typeSel.createEl("option", {
+          text: this.plugin.t("rule_type_property", "Property"),
+        });
+        tOptProp.value = "property";
+        const tOptPattern = typeSel.createEl("option", {
+          text: this.plugin.t("rule_type_pattern", "Pattern"),
+        });
+        tOptPattern.value = "pattern";
+        const ruleType =
+          r.type ||
+          (String(r.path || "").startsWith("#")
+            ? "tag"
+            : /\/$/.test(String(r.path || ""))
+              ? "folder"
+              : "file");
+        typeSel.value = ruleType;
+        typeSel.style.minWidth = "100px";
+        typeSel.style.border = "1px solid var(--background-modifier-border)";
+        typeSel.style.borderRadius = "var(--radius-m)";
+        typeSel.style.background = "var(--background-modifier-form-field)";
+        // Per-rule memory of chosen value for each type.
+        if (!typeMap.has(r)) typeMap.set(r, {});
+        const tv = typeMap.get(r);
+        if (!(ruleType in tv)) tv[ruleType] = String(r.path || "");
+        const typeHandler = async () => {
+          const newType = typeSel.value;
+          const oldType = r.type || ruleType;
+          tv[oldType] = String(r.path || "");
+          const restored = tv[newType] !== undefined ? tv[newType] : "";
+          r.type = newType;
+          r.path = restored;
+          syncEntryRules();
+          await this.plugin.saveSettings();
+          renderRules();
+        };
+        typeSel.addEventListener("change", typeHandler);
+
+        const modeHandler = async () => {
+          r.mode = modeSel.value === "exclude" ? "exclude" : "include";
+          syncEntryRules();
+          await this.plugin.saveSettings();
+          renderRules();
+        };
+        modeSel.addEventListener("change", modeHandler);
+
+        // Choose area: one full-width button, two (key + value) for property,
+        // or a text input for pattern.
+        const chooseArea = row.createEl("div");
+        chooseArea.style.display = "flex";
+        chooseArea.style.gap = "8px";
+        chooseArea.style.flex = "1 1 auto";
+        chooseArea.style.minWidth = "160px";
+
+        const clip = (b) => {
+          b.style.overflow = "hidden";
+          b.style.textOverflow = "ellipsis";
+          b.style.whiteSpace = "nowrap";
+          b.style.textAlign = "left";
+          b.style.padding = "6px 10px";
+          b.style.border = "1px solid var(--background-modifier-border)";
+          b.style.borderRadius = "var(--radius-m)";
+        };
+        const openPicker = (type, cb) => {
+          new RulePickerModal(this.app, this.plugin, type, cb).open();
+        };
+        const refreshLabels = () => {
+          const t = typeSel.value;
+          const raw = String(r.path || "");
+          chooseArea.empty();
+          if (t === "property") {
+            const ci = raw.indexOf(":");
+            const key = ci > -1 ? raw.slice(0, ci).trim() : raw;
+            const val = ci > -1 ? raw.slice(ci + 1).trim() : "";
+            const keyBtn = chooseArea.createEl("button", {
+              text: key ? key : this.plugin.t("rule_choose_key", "Choose key…"),
+            });
+            clip(keyBtn);
+            keyBtn.style.flex = "1 1 auto";
+            keyBtn.addEventListener("click", () => {
+              openPicker("property", (v) => {
+                r.path = String(v || "");
+                r.type = "property";
+                syncEntryRules();
+                this.plugin.saveSettings();
+                renderRules();
+              });
+            });
+            const valBtn = chooseArea.createEl("button", {
+              text:
+                val ? val : this.plugin.t("rule_choose_value", "Choose value…"),
+            });
+            clip(valBtn);
+            valBtn.style.flex = "1 1 auto";
+            valBtn.addEventListener("click", () => {
+              const cur = String(r.path || "");
+              const curCi = cur.indexOf(":");
+              const curKey = curCi > -1 ? cur.slice(0, curCi).trim() : cur;
+              new RuleValueModal(this.app, this.plugin, val, (v) => {
+                r.path = (curKey ? curKey + ": " : "") + String(v || "");
+                r.type = "property";
+                syncEntryRules();
+                this.plugin.saveSettings();
+                renderRules();
+              }).open();
+            });
+          } else if (t === "pattern") {
+            const inp = chooseArea.createEl("input", {
+              type: "text",
+              value: raw,
+            });
+            inp.placeholder = this.plugin.t(
+              "rule_pattern_placeholder",
+              "matches file/folder title",
+            );
+            inp.style.flex = "1 1 auto";
+            inp.style.padding = "6px 10px";
+            inp.style.border = "1px solid var(--background-modifier-border)";
+            inp.style.borderRadius = "var(--radius-m)";
+            const patternInputHandler = () => {
+              r.path = String(inp.value || "").trim();
+              r.type = "pattern";
+              syncEntryRules();
+              this.plugin.saveSettings();
+              renderRules();
+            };
+            inp.addEventListener("change", patternInputHandler);
+          } else {
+            const btn = chooseArea.createEl("button", {
+              text:
+                raw ||
+                this.plugin.t(
+                  "rule_choose_placeholder_" + t,
+                  "Choose " + t + "…",
+                ),
+            });
+            clip(btn);
+            btn.style.flex = "1 1 auto";
+            btn.addEventListener("click", () => {
+              const type = typeSel.value;
+              openPicker(type, (v) => {
+                let p = String(v || "");
+                if (type === "folder") {
+                  if (!p.endsWith("/")) p += "/";
+                } else if (type === "tag") {
+                  if (!p.startsWith("#")) p = "#" + p;
+                }
+                r.path = p;
+                r.type = type;
+                syncEntryRules();
+                this.plugin.saveSettings();
+                renderRules();
+              });
+            });
+          }
+        };
+        refreshLabels();
+
         const delBtn = row.createEl("button", {
           text: this.plugin.t("delete_button_text", "✕"),
         });
         delBtn.addClass("mod-warning");
-        const modeHandler = async () => {
-          const currMode = r._mode;
-          const nextMode = modeSel.value === "exclude" ? "exclude" : "include";
-          if (currMode === nextMode) return;
-          // Remove from current array and add to target array
-          try {
-            if (currMode === "include") {
-              const idx = inc.indexOf(inc[r._idx]);
-              if (idx > -1) inc.splice(idx, 1);
-              exc.push({
-                path: String(r.path || ""),
-                isRegex: !!r.isRegex,
-                flags: String(r.flags || "").replace(/[^gimsuy]/g, ""),
-              });
-            } else {
-              const idx = exc.indexOf(exc[r._idx]);
-              if (idx > -1) exc.splice(idx, 1);
-              inc.push({
-                path: String(r.path || ""),
-                isRegex: !!r.isRegex,
-                flags: String(r.flags || "").replace(/[^gimsuy]/g, ""),
-              });
-            }
-            this.entry.inclusionRules = inc;
-            this.entry.exclusionRules = exc;
-            await this.plugin.saveSettings();
-            renderRules();
-          } catch (e) {}
-        };
-        modeSel.addEventListener("change", modeHandler);
-        const updateDropdown = () => {
-          if (pathInput._actDropdown) {
-            const dd = pathInput._actDropdown;
-            if (pathInput._dropdownScrollListener) {
-              document.removeEventListener(
-                "scroll",
-                pathInput._dropdownScrollListener,
-                true,
-              );
-              pathInput._dropdownScrollListener = null;
-            }
-            if (pathInput._dropdownClickListener) {
-              document.removeEventListener(
-                "click",
-                pathInput._dropdownClickListener,
-              );
-              pathInput._dropdownClickListener = null;
-            }
-            if (pathInput._dropdownKeyListener) {
-              document.removeEventListener(
-                "keydown",
-                pathInput._dropdownKeyListener,
-              );
-              pathInput._dropdownKeyListener = null;
-            }
-            dd.remove();
-            pathInput._actDropdown = null;
-          }
-          const val = String(pathInput.value || "")
-            .trim()
-            .toLowerCase();
-          const list = [];
-          sugg.folders.forEach((f) => list.push({ t: "folder", p: f }));
-          sugg.files.forEach((f) => list.push({ t: "file", p: f }));
-          const filteredList = val
-            ? list.filter((x) => x.p.toLowerCase().includes(val))
-            : list;
-          if (filteredList.length === 0) return;
-          const dd = document.createElement("div");
-          Object.assign(dd.style, {
-            position: "fixed",
-            zIndex: 2000,
-            background: "var(--background-primary)",
-            color: "var(--text-normal)",
-            border: "1px solid var(--background-modifier-border)",
-            borderRadius: "6px",
-            boxShadow: "0 6px 18px rgba(0,0,0,0.4)",
-            maxHeight: "240px",
-            overflowY: "auto",
-            padding: "6px 0",
-            minWidth: Math.max(240, pathInput.offsetWidth) + "px",
-          });
-          let hi = -1;
-          filteredList.forEach((item) => {
-            const it = document.createElement("div");
-            it.textContent = item.p || "/";
-            Object.assign(it.style, {
-              padding: "8px 12px",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            });
-            it.onmouseenter = () => {
-              if (hi >= 0 && dd.children[hi])
-                dd.children[hi].style.background = "transparent";
-              it.style.background = "var(--background-secondary)";
-              hi = Array.from(dd.children).indexOf(it);
-            };
-            it.onmouseleave = () => {
-              it.style.background = "transparent";
-            };
-            it.onclick = (e) => {
-              e.stopPropagation();
-              pathInput.value = item.p + (item.t === "folder" ? "/" : "");
-              const ev = new Event("change", { bubbles: true });
-              pathInput.dispatchEvent(ev);
-              dd.remove();
-              pathInput._actDropdown = null;
-            };
-            dd.appendChild(it);
-          });
-          document.body.appendChild(dd);
-          const pos = () => {
-            const rct = pathInput.getBoundingClientRect();
-            dd.style.left = rct.left + "px";
-            dd.style.top = rct.bottom + 6 + "px";
-            dd.style.width = pathInput.offsetWidth + "px";
-          };
-          pos();
-          pathInput._actDropdown = dd;
-          pathInput._dropdownScrollListener = pos;
-          pathInput._dropdownClickListener = (ev) => {
-            if (ev.target === pathInput) return;
-            if (!dd.contains(ev.target)) {
-              dd.remove();
-              pathInput._actDropdown = null;
-              document.removeEventListener(
-                "click",
-                pathInput._dropdownClickListener,
-              );
-              document.removeEventListener(
-                "scroll",
-                pathInput._dropdownScrollListener,
-                true,
-              );
-              document.removeEventListener(
-                "keydown",
-                pathInput._dropdownKeyListener,
-              );
-              pathInput._dropdownClickListener = null;
-              pathInput._dropdownScrollListener = null;
-              pathInput._dropdownKeyListener = null;
-            }
-          };
-          pathInput._dropdownKeyListener = (ev) => {
-            const items = Array.from(dd.children);
-            if (items.length === 0) return;
-            if (ev.key === "ArrowDown") {
-              ev.preventDefault();
-              hi = Math.min(hi + 1, items.length - 1);
-              items.forEach((item) => (item.style.background = "transparent"));
-              if (hi >= 0) {
-                items[hi].style.background = "var(--background-secondary)";
-                items[hi].scrollIntoView({ block: "nearest" });
-              }
-            } else if (ev.key === "ArrowUp") {
-              ev.preventDefault();
-              hi = Math.max(hi - 1, -1);
-              items.forEach((item) => (item.style.background = "transparent"));
-              if (hi >= 0) {
-                items[hi].style.background = "var(--background-secondary)";
-                items[hi].scrollIntoView({ block: "nearest" });
-              }
-            } else if (ev.key === "Enter" && hi >= 0) {
-              ev.preventDefault();
-              items[hi].click();
-            } else if (ev.key === "Escape") {
-              ev.preventDefault();
-              dd.remove();
-              pathInput._actDropdown = null;
-              document.removeEventListener(
-                "keydown",
-                pathInput._dropdownKeyListener,
-              );
-              pathInput._dropdownKeyListener = null;
-            }
-          };
-          document.addEventListener("scroll", pos, true);
-          document.addEventListener("click", pathInput._dropdownClickListener);
-          document.addEventListener("keydown", pathInput._dropdownKeyListener);
-          // Track cleanup for onClose
-          this._dropdownCleanups.push(() => {
-            if (pathInput._actDropdown) {
-              const dd = pathInput._actDropdown;
-              if (pathInput._dropdownScrollListener)
-                document.removeEventListener(
-                  "scroll",
-                  pathInput._dropdownScrollListener,
-                  true,
-                );
-              if (pathInput._dropdownClickListener)
-                document.removeEventListener(
-                  "click",
-                  pathInput._dropdownClickListener,
-                );
-              if (pathInput._dropdownKeyListener)
-                document.removeEventListener(
-                  "keydown",
-                  pathInput._dropdownKeyListener,
-                );
-              dd.remove();
-              pathInput._actDropdown = null;
-            }
-          });
-        };
-        const pathHandler = async () => {
-          const newPath = String(pathInput.value || "");
-          try {
-            if (r._mode === "include") {
-              inc[r._idx].path = newPath;
-            } else {
-              exc[r._idx].path = newPath;
-            }
-            this.entry.inclusionRules = inc;
-            this.entry.exclusionRules = exc;
-            await this.plugin.saveSettings();
-          } catch (e) {}
-        };
-        pathInput.addEventListener("focus", updateDropdown);
-        pathInput.addEventListener("click", updateDropdown);
-        pathInput.addEventListener("input", updateDropdown);
-        pathInput.addEventListener("change", pathHandler);
-        const delHandler = async () => {
-          try {
-            if (r._mode === "include") {
-              if (inc[r._idx]) inc.splice(r._idx, 1);
-            } else {
-              if (exc[r._idx]) exc.splice(r._idx, 1);
-            }
-            this.entry.inclusionRules = inc;
-            this.entry.exclusionRules = exc;
-            await this.plugin.saveSettings();
-            renderRules();
-          } catch (e) {}
-        };
-        delBtn.addEventListener("click", delHandler);
+        delBtn.addEventListener("click", async () => {
+          this._rules.splice(idx, 1);
+          syncEntryRules();
+          await this.plugin.saveSettings();
+          renderRules();
+        });
       });
-      if (combined.length === 0) {
-        // no output
-      }
     };
     const addRuleFn = async () => {
       try {
-        if (!Array.isArray(this.entry.inclusionRules))
-          this.entry.inclusionRules = [];
-        this.entry.inclusionRules.push({ path: "", isRegex: false, flags: "" });
+        this._rules.push({
+          path: "",
+          type: "file",
+          mode: "include",
+          isRegex: false,
+          flags: "",
+        });
+        syncEntryRules();
         await this.plugin.saveSettings();
         renderRules();
       } catch (e) {}
     };
+
     addRuleBtn.addEventListener("click", addRuleFn);
     this._handlers.push({ el: addRuleBtn, ev: "click", fn: addRuleFn });
     renderRules();
@@ -1463,6 +1427,45 @@ export class EditEntryModal extends Modal {
         if (this.entry.customCss !== undefined)
           foundArray[foundIdx].customCss = this.entry.customCss;
         // Leave undefined values as-is to inherit global defaults
+
+        // Phase 1: Link Identical Matchers (write-through with confirmation)
+        // Only prompt when this save actually changed the entry vs. its
+        // state when the modal was opened (entries are mutated live while
+        // editing, so we compare against the open-time snapshot).
+        const _entryChanged =
+          JSON.stringify(foundArray[foundIdx]) !== this._originalSnapshot;
+        if (
+          this.plugin.settings.linkIdenticalMatchers &&
+          foundEntry &&
+          _entryChanged
+        ) {
+          const updatedEntry = foundArray[foundIdx];
+          const newKey = matcherKey({
+            pattern: updatedEntry.pattern,
+            isRegex: !!updatedEntry.isRegex,
+            flags: updatedEntry.flags || '',
+            matchType: updatedEntry.matchType,
+          });
+          const others = findEntriesWithMatcherKey(
+            this.plugin.settings,
+            newKey,
+            this.entry.uid,
+          );
+          if (others.length > 0) {
+            const choice = await new Promise((resolve) => {
+              new LinkedMatcherModal(
+                this.app,
+                this.plugin,
+                others,
+                () => resolve('all'),
+                () => resolve('single'),
+              ).open();
+            });
+            if (choice === 'all') {
+              propagateStyle(updatedEntry, others);
+            }
+          }
+        }
 
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -1699,6 +1702,13 @@ export class EditEntryModal extends Modal {
     try {
       this._refreshPreview();
     } catch (e) {}
+
+    // Baseline for change detection (used by Link Identical Matchers).
+    try {
+      this._originalSnapshot = JSON.stringify(this.entry || {});
+    } catch (e) {
+      this._originalSnapshot = "";
+    }
   }
 
   onClose() {
