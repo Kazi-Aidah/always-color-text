@@ -127,7 +127,7 @@ export class PatternMatcher {
     }
 
     const matchType = String(
-      entry?.matchType || (this.settings.partialMatch ? "contains" : "exact"),
+      entry?.matchType || (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
     ).toLowerCase();
     const pattern = entry?.pattern || "";
     const isSentence = this.helpers.isSentenceLikePattern
@@ -227,7 +227,7 @@ export class PatternMatcher {
           while (fwe < text.length && this.isWordCharacter(text[fwe])) fwe++;
         }        const mtLower = String(
           (entry && entry.matchType) ||
-            (this.settings.partialMatch ? "contains" : "exact"),
+            (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
         ).toLowerCase();
         const useExpanded =
           !isSentence(entry.pattern) &&
@@ -529,7 +529,7 @@ export function compileWordEntriesLogic(plugin) {
           markTarget: e.markTarget || "text",
           matchType:
             e.matchType ||
-            (plugin.settings.partialMatch ? "contains" : "exact"),
+            plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
           isRegex,
           flags,
           regex: null,
@@ -807,7 +807,7 @@ export function compileTextBgColoringEntriesLogic(plugin) {
             markTarget: e.markTarget || "text",
             matchType:
               e.matchType ||
-              (plugin.settings.partialMatch ? "contains" : "exact"),
+              plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
             isRegex,
             flags: "",
             regex: null,
@@ -840,7 +840,7 @@ export function compileTextBgColoringEntriesLogic(plugin) {
             markTarget: e.markTarget || "text",
             matchType:
               e.matchType ||
-              (plugin.settings.partialMatch ? "contains" : "exact"),
+              plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
             isRegex,
             flags,
             regex: null,

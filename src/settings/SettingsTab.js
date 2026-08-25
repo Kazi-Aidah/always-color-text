@@ -14,6 +14,7 @@ import { AlertModal } from '../modals/AlertModal.js';
 import { ConfirmationModal } from '../modals/ConfirmationModal.js';
 import { QuickMenuColorsModal } from '../modals/QuickMenuColorsModal.js';
 import { TextStylePresetsModal } from '../modals/TextStylePresetsModal.js';
+import { CommandVisibilityModal } from '../modals/CommandVisibilityModal.js';
 import { debugLog, debugError } from '../utils/debug.js';
 export class ColorSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
@@ -3036,7 +3037,7 @@ export class ColorSettingTab extends PluginSettingTab {
         });
 
       try {
-        quickMenuColorsSetting.settingEl.style.marginTop = "30px";
+        quickMenuColorsSetting.settingEl.style.marginTop = "0px";
         quickMenuColorsSetting.settingEl.style.marginBottom = "8px";
         quickMenuColorsSetting.settingEl.style.borderTop = "none";
         quickMenuColorsSetting.controlEl.style.marginLeft = "10px";
@@ -5270,6 +5271,14 @@ export class ColorSettingTab extends PluginSettingTab {
     });
 
     if (this._activeTab === "general") {
+      const addGroupHeader = (text) => {
+        const h = containerEl.createEl("h2", { text: text });
+        h.style.marginTop = "28px";
+        h.style.marginBottom = "16px";
+        return h;
+      };
+
+      // ===== Latest Release Notes =====
       const releaseNotesSettingEl = new Setting(containerEl)
         .setName(
           this.plugin.t("latest_release_notes_label", "Latest Release Notes"),
@@ -5293,7 +5302,6 @@ export class ColorSettingTab extends PluginSettingTab {
         );
       try {
         releaseNotesSettingEl.settingEl.style.borderTop = "none";
-        // releaseNotesSettingEl.settingEl.style.marginTop = '-18px';
       } catch (e) {}
 
       new Setting(containerEl)
@@ -5331,7 +5339,6 @@ export class ColorSettingTab extends PluginSettingTab {
               this.plugin.settings.language = v;
               await this.plugin.saveSettings();
               this._initializedSettingsUI = false;
-              // Re-register commands with the new language
               this.plugin.reregisterCommandsWithLanguage();
               this.display();
             },
@@ -5341,7 +5348,7 @@ export class ColorSettingTab extends PluginSettingTab {
 
       containerEl.createEl("hr", { cls: "act-settings-divider" });
 
-      // Enable Global Color
+      // ===== Enable Global Color =====
       new Setting(containerEl)
         .setName(this.plugin.t("enable_document_color", "Enable Global Color"))
         .setDesc(
@@ -5359,7 +5366,7 @@ export class ColorSettingTab extends PluginSettingTab {
 
       containerEl.createEl("hr", { cls: "act-settings-divider" });
 
-      // Text Style Presets
+      // ===== Text Style Presets =====
       new Setting(containerEl)
         .setName(this.plugin.t("text_style_presets", "Text Style Presets"))
         .setDesc(
@@ -5371,6 +5378,7 @@ export class ColorSettingTab extends PluginSettingTab {
         .addButton((b) =>
           b
             .setButtonText(this.plugin.t("btn_edit_presets", "Edit Presets"))
+            .setCta()
             .onClick(() => {
               try {
                 new TextStylePresetsModal(this.app, this.plugin).open();
@@ -5378,7 +5386,7 @@ export class ColorSettingTab extends PluginSettingTab {
             }),
         );
 
-      // Color Swatches
+      // ===== Color Swatches =====
       new Setting(containerEl)
         .setName(
           this.plugin.t(
@@ -5402,40 +5410,230 @@ export class ColorSettingTab extends PluginSettingTab {
             }),
         );
 
-      // Quick Menu Colors
+      // ===== Quick Colors (Quick Menu Colors) =====
       this._quickMenuColorsSettingContainer = containerEl.createDiv();
       this._refreshQuickMenuColorsSetting();
 
+      containerEl.createEl("hr", { cls: "act-settings-divider" });
+
+      // ===== ## Defaults =====
+      addGroupHeader(
+        this.plugin.t("defaults_header", "Defaults"),
+      );
+
+      new Setting(containerEl)
+        .setName(this.plugin.t("case_sensitive", "Case Sensitivity"))
+        .setDesc(
+          this.plugin.t(
+            "case_sensitive_desc",
+            'If this is "Is case sensitive", "word" and "Word" are treated as different. If "Not case sensitive", they\'re colored the same.',
+          ),
+        )
+        .addDropdown((d) => {
+          d.addOption(
+            "is_case_sensitive",
+            this.plugin.t("is_case_sensitive", "Is case sensitive"),
+          );
+          d.addOption(
+            "not_case_sensitive",
+            this.plugin.t("not_case_sensitive", "Not case sensitive"),
+          );
+          d.setValue(
+            this.plugin.settings.caseSensitive
+              ? "is_case_sensitive"
+              : "not_case_sensitive",
+          );
+          try {
+            d.selectEl.style.minWidth = "200px";
+          } catch (e) {}
+          d.onChange(async (v) => {
+            this.plugin.settings.caseSensitive = v === "is_case_sensitive";
+            await this.debouncedSaveSettings();
+          });
+          return d;
+        });
+
+      new Setting(containerEl)
+        .setName(this.plugin.t("partial_match", "Match Type"))
+        .setDesc(
+          this.plugin.t(
+            "partial_match_desc",
+            "Controls how a pattern matches text: Exact, Contains, Starts with, or Ends with.",
+          ),
+        )
+        .addDropdown((d) => {
+          d.addOption("exact", this.plugin.t("match_exact", "Exact"));
+          d.addOption("contains", this.plugin.t("match_contains", "Contains"));
+          d.addOption(
+            "startswith",
+            this.plugin.t("match_starts_with", "Starts with"),
+          );
+          d.addOption(
+            "endswith",
+            this.plugin.t("match_ends_with", "Ends with"),
+          );
+          d.setValue(
+            this.plugin.settings.matchType ||
+              this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"),
+          );
+          try {
+            d.selectEl.style.minWidth = "200px";
+          } catch (e) {}
+          d.onChange(async (v) => {
+            this.plugin.settings.matchType = v;
+            await this.debouncedSaveSettings();
+            try {
+              this.plugin.compileWordEntries();
+              this.plugin.compileTextBgColoringEntries();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+            } catch (_) {}
+          });
+          return d;
+        });
+
       new Setting(containerEl)
         .setName(
-          this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar"),
+          this.plugin.t("default_word_group", "Default Word Group"),
+        )
+        .setDesc(
+          this.plugin.t(
+            "default_word_group_desc",
+            "The word group newly created entries are added to by default.",
+          ),
+        )
+        .addDropdown((d) => {
+          d.addOption("", this.plugin.t("none", "None"));
+          const groups = Array.isArray(this.plugin.settings.wordEntryGroups)
+            ? this.plugin.settings.wordEntryGroups
+            : [];
+          groups.forEach((g) => {
+            if (g && (g.uid || g.name))
+              d.addOption(String(g.uid || g.name), g.name || String(g.uid || g.name));
+          });
+          d.setValue(this.plugin.settings.defaultWordGroup || "");
+          try {
+            d.selectEl.style.minWidth = "200px";
+          } catch (e) {}
+          d.onChange(async (v) => {
+            this.plugin.settings.defaultWordGroup = v;
+            await this.debouncedSaveSettings();
+          });
+          return d;
+        });
+
+      // ===== ## Menu Ribbon & Statusbar Options =====
+      addGroupHeader(
+        this.plugin.t(
+          "menu_ribbon_header",
+          "Menu Ribbon & Statusbar Options",
+        ),
+      );
+
+      new Setting(containerEl)
+        .setName(this.plugin.t("display_commands", "Display Commands"))
+        .setDesc(
+          this.plugin.t(
+            "display_commands_desc",
+            "Choose which plugin commands are visible in the command palette.",
+          ),
+        )
+        .addButton((b) =>
+          b
+            .setButtonText(this.plugin.t("btn_edit_commands", "Edit Commands"))
+            .onClick(() => {
+              try {
+                new CommandVisibilityModal(this.app, this.plugin).open();
+              } catch (e) {}
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "show_always_color_text_menu",
+            'Show "Always Color Text" in right-click menu',
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "show_always_color_text_menu_desc",
+            "Adds a right-click menu item to color selected text.",
+          ),
         )
         .addToggle((t) =>
           t
-            .setValue(!this.plugin.settings.disableToggleModes.statusBar)
+            .setValue(this.plugin.settings.enableAlwaysColorTextMenu)
             .onChange(async (v) => {
-              this.plugin.settings.disableToggleModes.statusBar = !v;
+              this.plugin.settings.enableAlwaysColorTextMenu = v;
               await this.plugin.saveSettings();
-              try {
-                if (v && !this.plugin.statusBar) {
-                  this.plugin.statusBar = this.plugin.addStatusBarItem();
-                  this.plugin.updateStatusBar();
-                  this.plugin.statusBar.onclick = () => {
-                    this.plugin.settings.enabled =
-                      !this.plugin.settings.enabled;
-                    this.plugin.saveSettings();
-                    this.plugin.updateStatusBar();
-                    this.plugin.reconfigureEditorExtensions();
-                    this.plugin.forceRefreshAllEditors();
-                    this.plugin.forceRefreshAllReadingViews();
-                  };
-                } else if (!v && this.plugin.statusBar) {
-                  try {
-                    this.plugin.statusBar.remove();
-                  } catch (e) {}
-                  this.plugin.statusBar = null;
-                }
-              } catch (e) {}
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "show_add_to_existing_menu",
+            'Show "Add to Existing Entry" in right-click menu',
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "show_add_to_existing_menu_desc",
+            "Adds a right-click menu item to add selected text to an existing entry.",
+          ),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.enableAddToExistingMenu)
+            .onChange(async (v) => {
+              this.plugin.settings.enableAddToExistingMenu = v;
+              await this.plugin.saveSettings();
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "show_blacklist_menu",
+            'Show "Blacklist Word" in right-click menu',
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "show_blacklist_menu_desc",
+            "Adds a right-click menu item to blacklist selected text from coloring.",
+          ),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.enableBlacklistMenu)
+            .onChange(async (v) => {
+              this.plugin.settings.enableBlacklistMenu = v;
+              await this.plugin.saveSettings();
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "quick_styles_menu_visibility",
+            "Show Quick Styles in right-click menu",
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "quick_styles_menu_visibility_desc",
+            "When off, quick styles are hidden from the right-click menu. Each preset's individual show/hide choice is preserved for when you re-enable this.",
+          ),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.quickStylesEnabled)
+            .onChange(async (v) => {
+              this.plugin.settings.quickStylesEnabled = v;
+              await this.debouncedSaveSettings();
             }),
         );
 
@@ -5485,48 +5683,104 @@ export class ColorSettingTab extends PluginSettingTab {
         );
 
       new Setting(containerEl)
-        .setName(this.plugin.t("show_toggle_command", "Show Toggle in command"))
+        .setName(
+          this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar"),
+        )
         .addToggle((t) =>
           t
-            .setValue(!this.plugin.settings.disableToggleModes.command)
+            .setValue(!this.plugin.settings.disableToggleModes.statusBar)
             .onChange(async (v) => {
-              this.plugin.settings.disableToggleModes.command = !v;
+              this.plugin.settings.disableToggleModes.statusBar = !v;
               await this.plugin.saveSettings();
               try {
-                if (v) {
-                  if (!this.plugin._commandsRegistered) {
-                    try {
-                      this.plugin.registerCommandPalette?.();
-                    } catch (e) {}
-                    this.plugin._commandsRegistered = true;
-                  }
-                } else {
-                  new ConfirmationModal(
-                    this.app,
-                    this.plugin,
-                    this.plugin.t("restart_required_title", "Restart required"),
-                    this.plugin.t(
-                      "restart_required_desc",
-                      "Disabling the command palette toggle requires restarting Obsidian to fully remove commands from the palette. Restart now?",
-                    ),
-                    () => {
-                      try {
-                        location.reload();
-                      } catch (e) {}
-                    },
-                  ).open();
+                if (v && !this.plugin.statusBar) {
+                  this.plugin.statusBar = this.plugin.addStatusBarItem();
+                  this.plugin.updateStatusBar();
+                  this.plugin.statusBar.onclick = () => {
+                    this.plugin.settings.enabled =
+                      !this.plugin.settings.enabled;
+                    this.plugin.saveSettings();
+                    this.plugin.updateStatusBar();
+                    this.plugin.reconfigureEditorExtensions();
+                    this.plugin.forceRefreshAllEditors();
+                    this.plugin.forceRefreshAllReadingViews();
+                  };
+                } else if (!v && this.plugin.statusBar) {
+                  try {
+                    this.plugin.statusBar.remove();
+                  } catch (e) {}
+                  this.plugin.statusBar = null;
                 }
               } catch (e) {}
             }),
         );
 
-      containerEl.createEl("h3", {
-        text: this.plugin.t(
-          "color_rendering_header",
-          "Color Rendering & Performance",
-        ),
-      });
+      // ===== ## Performance =====
+      addGroupHeader(
+        this.plugin.t("performance_header", "Performance"),
+      );
 
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t("color_in_reading_mode", "Color in reading mode"),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(!this.plugin.settings.disableReadingModeColoring)
+            .onChange(async (v) => {
+              this.plugin.settings.disableReadingModeColoring = !v;
+              this.plugin.settings.forceFullRenderInReading = v;
+              await this.debouncedSaveSettings();
+              try {
+                if (!v) {
+                  this.plugin.app.workspace.iterateAllLeaves((leaf) => {
+                    if (
+                      leaf.view instanceof MarkdownView &&
+                      leaf.view.getMode &&
+                      leaf.view.getMode() === "preview"
+                    ) {
+                      try {
+                        const root =
+                          (leaf.view.previewMode &&
+                            leaf.view.previewMode.containerEl) ||
+                          leaf.view.contentEl ||
+                          leaf.view.containerEl;
+                        if (root) {
+                          try {
+                            this.plugin.clearHighlightsInRoot(root);
+                          } catch (e) {}
+                          try {
+                            const obs =
+                              this.plugin._viewportObservers &&
+                              this.plugin._viewportObservers.get &&
+                              this.plugin._viewportObservers.get(root);
+                            if (obs && typeof obs.disconnect === "function") {
+                              try {
+                                obs.disconnect();
+                              } catch (e) {}
+                              try {
+                                this.plugin._viewportObservers.delete(root);
+                              } catch (e) {}
+                            }
+                          } catch (e) {}
+                        }
+                      } catch (e) {}
+                    }
+                  });
+                } else {
+                  try {
+                    this.plugin.forceRefreshAllReadingViews();
+                  } catch (e) {}
+                }
+              } catch (e) {
+                debugError(
+                  "SETTINGS",
+                  "disableReadingModeColoring handler failed",
+                  e,
+                );
+              }
+            }),
+        );
 
       new Setting(containerEl)
         .setName(
@@ -5582,69 +5836,7 @@ export class ColorSettingTab extends PluginSettingTab {
             }),
         );
 
-      // Option: color in reading/preview panes
-      new Setting(containerEl)
-        .setName(
-          this.plugin.t("color_in_reading_mode", "Color in reading mode"),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(!this.plugin.settings.disableReadingModeColoring)
-            .onChange(async (v) => {
-              this.plugin.settings.disableReadingModeColoring = !v;
-              // Sync forceFullRenderInReading: always enabled if Reading Mode is on
-              this.plugin.settings.forceFullRenderInReading = v;
-              await this.debouncedSaveSettings();
-              try {
-                if (!v) {
-                  this.plugin.app.workspace.iterateAllLeaves((leaf) => {
-                    if (
-                      leaf.view instanceof MarkdownView &&
-                      leaf.view.getMode &&
-                      leaf.view.getMode() === "preview"
-                    ) {
-                      try {
-                        const root =
-                          (leaf.view.previewMode &&
-                            leaf.view.previewMode.containerEl) ||
-                          leaf.view.contentEl ||
-                          leaf.view.containerEl;
-                        if (root) {
-                          try {
-                            this.plugin.clearHighlightsInRoot(root);
-                          } catch (e) {}
-                          try {
-                            const obs =
-                              this.plugin._viewportObservers &&
-                              this.plugin._viewportObservers.get &&
-                              this.plugin._viewportObservers.get(root);
-                            if (obs && typeof obs.disconnect === "function") {
-                              try {
-                                obs.disconnect();
-                              } catch (e) {}
-                              try {
-                                this.plugin._viewportObservers.delete(root);
-                              } catch (e) {}
-                            }
-                          } catch (e) {}
-                        }
-                      } catch (e) {}
-                    }
-                  });
-                } else {
-                  try {
-                    this.plugin.forceRefreshAllReadingViews();
-                  } catch (e) {}
-                }
-              } catch (e) {
-                debugError(
-                  "SETTINGS",
-                  "disableReadingModeColoring handler failed",
-                  e,
-                );
-              }
-            }),
-        );
+      containerEl.createEl("hr", { cls: "act-settings-divider" });
 
       new Setting(containerEl)
         .setName(
@@ -5722,86 +5914,8 @@ export class ColorSettingTab extends PluginSettingTab {
             }),
         );
 
-      containerEl.createEl("h3", {
-        text: this.plugin.t("matching_behavior_header", "Matching Behavior"),
-      });
-
-      new Setting(containerEl)
-        .setName(this.plugin.t("case_sensitive", "Case sensitive"))
-        .setDesc(
-          this.plugin.t(
-            "case_sensitive_desc",
-            'If this is on, "word" and "Word" are treated as different. If it\'s off, they\'re colored the same.',
-          ),
-        )
-        .addToggle((t) =>
-          t.setValue(this.plugin.settings.caseSensitive).onChange(async (v) => {
-            this.plugin.settings.caseSensitive = v;
-            await this.debouncedSaveSettings();
-          }),
-        );
-      new Setting(containerEl)
-        .setName(this.plugin.t("partial_match", "Partial match"))
-        .setDesc(
-          this.plugin.t(
-            "partial_match_desc",
-            'If enabled, the whole word will be colored if any colored word is found inside it (e.g., "as" colors "Jasper").',
-          ),
-        )
-        .addToggle((t) =>
-          t.setValue(this.plugin.settings.partialMatch).onChange(async (v) => {
-            this.plugin.settings.partialMatch = v;
-            await this.debouncedSaveSettings();
-          }),
-        );
-      new Setting(containerEl)
-        .setName(this.plugin.t("regex_support", "Regex support"))
-        .setDesc(
-          this.plugin.t(
-            "regex_support_desc",
-            "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.",
-          ),
-        )
-        .setClass("act-regex-support-setting")
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.enableRegexSupport)
-            .onChange(async (v) => {
-              this.plugin.settings.enableRegexSupport = v;
-              await this.plugin.saveSettings();
-              this._initializedSettingsUI = false;
-              this.display();
-            }),
-        );
-      new Setting(containerEl)
-        .setName(this.plugin.t("disable_regex_safety", "Disable regex safety"))
-        .setDesc(
-          this.plugin.t(
-            "disable_regex_safety_desc",
-            "Allow complex or potentially dangerous expressions. May cause performance issues or freezes.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.disableRegexSafety)
-            .onChange(async (v) => {
-              this.plugin.settings.disableRegexSafety = v;
-              await this.plugin.saveSettings();
-              try {
-                this.plugin.reconfigureEditorExtensions();
-              } catch (e) {}
-              try {
-                this.plugin.forceRefreshAllEditors();
-              } catch (e) {}
-              try {
-                this.plugin.forceRefreshAllReadingViews();
-              } catch (e) {}
-            }),
-        );
-
-      containerEl.createEl("h3", {
-        text: this.plugin.t("custom_css_header", "Custom CSS"),
-      });
+      // ===== ## Extras =====
+      addGroupHeader(this.plugin.t("advanced_header", "Advanced"));
 
       new Setting(containerEl)
         .setName(
@@ -5834,123 +5948,223 @@ export class ColorSettingTab extends PluginSettingTab {
             }),
         );
 
-      containerEl.createEl("h3", {
-        text: this.plugin.t("theme_support_header", "Theme Support"),
-      });
+      new Setting(containerEl)
+        .setName(this.plugin.t("regex_support", "Regex support"))
+        .setDesc(
+          this.plugin.t(
+            "regex_support_desc",
+            "Allow patterns to be regular expressions. Invalid regexes are ignored for safety.",
+          ),
+        )
+        .setClass("act-regex-support-setting")
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.enableRegexSupport)
+            .onChange(async (v) => {
+              this.plugin.settings.enableRegexSupport = v;
+              await this.plugin.saveSettings();
+              this._initializedSettingsUI = false;
+              this.display();
+            }),
+        );
 
       new Setting(containerEl)
         .setName(
-          this.plugin.t("light_mode_fixer", "Light Mode Text Color Fixer"),
+          this.plugin.t("disable_regex_safety", "Disable regex safety"),
         )
         .setDesc(
           this.plugin.t(
-            "light_mode_fixer_desc",
-            "Automatically darkens colored text when using Light theme to improve visibility.",
+            "disable_regex_safety_desc",
+            "Allow complex or potentially dangerous expressions. May cause performance issues or freezes.",
           ),
         )
         .addToggle((t) =>
           t
-            .setValue(this.plugin.settings.lightModeFixer)
+            .setValue(this.plugin.settings.disableRegexSafety)
             .onChange(async (v) => {
-              this.plugin.settings.lightModeFixer = v;
+              this.plugin.settings.disableRegexSafety = v;
+              await this.plugin.saveSettings();
+              try {
+                this.plugin.reconfigureEditorExtensions();
+              } catch (e) {}
+              try {
+                this.plugin.forceRefreshAllEditors();
+              } catch (e) {}
+              try {
+                this.plugin.forceRefreshAllReadingViews();
+              } catch (e) {}
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t("link_identical_matchers", "Link identical matchers"),
+        )
+        .setDesc(
+          this.plugin.t(
+            "link_identical_matchers_desc",
+            "When you edit a matcher (e.g. a regex), every rule that shares the exact same settings updates together.",
+          ),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.linkIdenticalMatchers ?? true)
+            .onChange(async (v) => {
+              this.plugin.settings.linkIdenticalMatchers = v;
               await this.debouncedSaveSettings();
-              this.plugin.updateLightModeFixer();
             }),
         );
 
       new Setting(containerEl)
-        .setName(this.plugin.t("dark_mode_fixer", "Dark Mode Text Color Fixer"))
+        .setName(
+          this.plugin.t(
+            "link_swatch_updates",
+            "Sync swatch changes to text",
+          ),
+        )
         .setDesc(
           this.plugin.t(
-            "dark_mode_fixer_desc",
-            "Automatically lightens colored text when using Dark theme to improve visibility.",
+            "link_swatch_updates_desc",
+            "If enabled, updating a swatch color will update all text colored with that swatch.",
           ),
         )
         .addToggle((t) =>
-          t.setValue(this.plugin.settings.darkModeFixer).onChange(async (v) => {
-            this.plugin.settings.darkModeFixer = v;
+          t
+            .setValue(this.plugin.settings.linkSwatchUpdatesToEntries)
+            .onChange(async (v) => {
+              this.plugin.settings.linkSwatchUpdatesToEntries = v;
+              await this.plugin.saveSettings();
+            }),
+        );
+
+      addGroupHeader(this.plugin.t("appearance_header", "Appearance"));
+
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "rounded_corners_wrapping",
+            "Rounded corners on line wrapping",
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "rounded_corners_wrapping_desc",
+            "When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line.",
+          ),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.enableBoxDecorationBreak ?? true)
+            .onChange(async (v) => {
+              this.plugin.settings.enableBoxDecorationBreak = v;
+              await this.debouncedSaveSettings();
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName(this.plugin.t("color_picker_layout", "Color Picker Layout"))
+        .setDesc(
+          this.plugin.t(
+            "color_picker_layout_desc",
+            "Choose which color types to show when picking colors for text",
+          ),
+        )
+        .addDropdown((dd) => {
+          dd.addOption(
+            "both",
+            this.plugin.t(
+              "opt_both_text_left",
+              "Both: Text left, Highlight right",
+            ),
+          );
+          dd.addOption(
+            "both-bg-left",
+            this.plugin.t(
+              "opt_both_bg_left",
+              "Both: Highlight left, Text right",
+            ),
+          );
+          dd.addOption(
+            "both-v-text-top",
+            this.plugin.t(
+              "opt_both_text_top",
+              "Both (vertical): Text above, Highlight below",
+            ),
+          );
+          dd.addOption(
+            "both-v-bg-top",
+            this.plugin.t(
+              "opt_both_bg_top",
+              "Both (vertical): Highlight above, Text below",
+            ),
+          );
+          dd.addOption(
+            "text",
+            this.plugin.t("opt_text_only", "Text color only"),
+          );
+          dd.addOption(
+            "background",
+            this.plugin.t("opt_background_only", "Highlight color only"),
+          );
+          dd.setValue(this.plugin.settings.colorPickerMode || "both");
+          try {
+            dd.selectEl.style.minWidth = "230px";
+          } catch (e) {}
+          try {
+            dd.selectEl.style.textAlign = "center";
+          } catch (e) {}
+          dd.onChange(async (v) => {
+            this.plugin.settings.colorPickerMode = v;
+            await this.plugin.saveSettings();
+          });
+        });
+
+      new Setting(containerEl)
+        .setName(this.plugin.t("dark_mode_fixer", "Theme Text Color Fixer"))
+        .setDesc(
+          this.plugin.t(
+            "theme_text_color_fixer_desc",
+            "Select your default theme mode.",
+          ),
+        )
+        .addDropdown((d) => {
+          d.addOption(
+            "disabled",
+            this.plugin.t("theme_disabled", "Disabled"),
+          );
+          d.addOption("dark", this.plugin.t("theme_dark", "Dark Mode"));
+          d.addOption("light", this.plugin.t("theme_light", "Light Mode"));
+          d.setValue(
+            this.plugin.settings.darkModeFixer
+              ? "dark"
+              : this.plugin.settings.lightModeFixer
+                ? "light"
+                : "disabled",
+          );
+          try {
+            d.selectEl.style.minWidth = "200px";
+          } catch (e) {}
+          d.onChange(async (v) => {
+            this.plugin.settings.darkModeFixer = v === "dark";
+            this.plugin.settings.lightModeFixer = v === "light";
             await this.debouncedSaveSettings();
-            this.plugin.updateDarkModeFixer();
-          }),
-        );
-
-      containerEl.createEl("h3", {
-        text: this.plugin.t("menu_options_header", "Menu Options"),
-      });
-
-      new Setting(containerEl)
-        .setName(
-          this.plugin.t(
-            "show_always_color_text_menu",
-            'Show "Always Color Text" in right-click menu',
-          ),
-        )
-        .setDesc(
-          this.plugin.t(
-            "show_always_color_text_menu_desc",
-            "Adds a right-click menu item to color selected text.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.enableAlwaysColorTextMenu)
-            .onChange(async (v) => {
-              this.plugin.settings.enableAlwaysColorTextMenu = v;
-              await this.plugin.saveSettings();
-            }),
-        );
-
-      new Setting(containerEl)
-        .setName(
-          this.plugin.t(
-            "show_add_to_existing_menu",
-            'Show "Add to Existing Entry" in right-click menu',
-          ),
-        )
-        .setDesc(
-          this.plugin.t(
-            "show_add_to_existing_menu_desc",
-            "Adds a right-click menu item to add selected text to an existing entry.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.enableAddToExistingMenu)
-            .onChange(async (v) => {
-              this.plugin.settings.enableAddToExistingMenu = v;
-              await this.plugin.saveSettings();
-            }),
-        );
-
-      new Setting(containerEl)
-        .setName(
-          this.plugin.t(
-            "show_blacklist_menu",
-            'Show "Blacklist Word" in right-click menu',
-          ),
-        )
-        .setDesc(
-          this.plugin.t(
-            "show_blacklist_menu_desc",
-            "Adds a right-click menu item to blacklist selected text from coloring.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.enableBlacklistMenu)
-            .onChange(async (v) => {
-              this.plugin.settings.enableBlacklistMenu = v;
-              await this.plugin.saveSettings();
-            }),
-        );
-
+            try {
+              this.plugin.updateDarkModeFixer();
+            } catch (e) {}
+            try {
+              this.plugin.updateLightModeFixer();
+            } catch (e) {}
+          });
+          return d;
+        });
+      // ===== One-Time Actions (Color Once / Highlight Once) — bottom of all items =====
       // --- One-Time Actions (Foldable) ---
       const otaHeaderDiv = containerEl.createDiv();
       otaHeaderDiv.style.display = "flex";
       otaHeaderDiv.style.alignItems = "center";
       otaHeaderDiv.style.gap = "8px";
-      otaHeaderDiv.style.marginTop = "16px";
-      otaHeaderDiv.style.marginBottom = "10px";
+      otaHeaderDiv.style.marginTop = "28px";
+      otaHeaderDiv.style.marginBottom = "16px";
       otaHeaderDiv.style.cursor = "pointer";
 
       const otaToggle = otaHeaderDiv.createEl("span");
@@ -6100,7 +6314,6 @@ export class ColorSettingTab extends PluginSettingTab {
               }),
           );
 
-        // Preview for Highlight Once styling (non-interactive), shown under the toggle
         if (
           this.plugin.settings.quickHighlightStyleEnable &&
           !this.plugin.settings.quickHighlightUseGlobalStyle
@@ -6163,7 +6376,6 @@ export class ColorSettingTab extends PluginSettingTab {
                 previewText.style.marginBottom = vpad + "px";
               }
             }
-            // Clear borders before re-applying
             previewText.style.border = "";
             previewText.style.borderTop = "";
             previewText.style.borderBottom = "";
@@ -6176,7 +6388,6 @@ export class ColorSettingTab extends PluginSettingTab {
           };
           updateQuickOncePreview();
 
-          // Hook up live updates for controls below
           this._updateQuickOncePreview = updateQuickOncePreview;
         }
 
@@ -6405,10 +6616,7 @@ export class ColorSettingTab extends PluginSettingTab {
                   )
                   .addOption(
                     "top-right",
-                    this.plugin.t(
-                      "opt_border_top_right",
-                      "Top & Right borders",
-                    ),
+                    this.plugin.t("opt_border_top_right", "Top & Right borders"),
                   )
                   .addOption(
                     "top-left",
@@ -6571,672 +6779,8 @@ export class ColorSettingTab extends PluginSettingTab {
           }
         }
       }
-
-      // --- Global Highlight Coloring Appearance ---
-      const ghHeaderDiv = containerEl.createDiv();
-      ghHeaderDiv.style.display = "flex";
-      ghHeaderDiv.style.alignItems = "center";
-      ghHeaderDiv.style.gap = "8px";
-      ghHeaderDiv.style.marginTop = "16px";
-      ghHeaderDiv.style.marginBottom = "10px";
-      ghHeaderDiv.style.cursor = "pointer";
-
-      const ghToggle = ghHeaderDiv.createEl("span");
-      ghToggle.textContent = this.plugin.settings.globalHighlightFolded
-        ? "▶"
-        : "▼";
-      ghToggle.style.fontSize = "12px";
-      ghToggle.style.fontWeight = "bold";
-      ghToggle.style.display = "inline-block";
-      ghToggle.style.width = "16px";
-
-      const ghTitle = ghHeaderDiv.createEl("h3", {
-        text: this.plugin.t(
-          "global_highlight_appearance_header",
-          "Global Highlight Coloring Appearance",
-        ),
-      });
-      ghTitle.style.margin = "0";
-      ghTitle.style.padding = "0";
-      ghTitle.style.flex = "1";
-      ghTitle.style.fontSize = "16px";
-      ghTitle.style.fontWeight = "600";
-
-      const ghContainer = containerEl.createDiv();
-      ghContainer.style.display = this.plugin.settings.globalHighlightFolded
-        ? "none"
-        : "block";
-
-      const ghToggleHandler = async () => {
-        this.plugin.settings.globalHighlightFolded =
-          !this.plugin.settings.globalHighlightFolded;
-        ghContainer.style.display = this.plugin.settings.globalHighlightFolded
-          ? "none"
-          : "block";
-        ghToggle.textContent = this.plugin.settings.globalHighlightFolded
-          ? "▶"
-          : "▼";
-        await this.debouncedSaveSettings();
-      };
-
-      ghHeaderDiv.addEventListener("click", ghToggleHandler);
-      try {
-        this._cleanupHandlers.push(() =>
-          ghHeaderDiv.removeEventListener("click", ghToggleHandler),
-        );
-      } catch (_) {}
-      // Preview of highlight styling
-      const previewSection = ghContainer.createDiv();
-      previewSection.style.marginBottom = "16px";
-      previewSection.style.padding = "12px";
-      previewSection.style.borderRadius = "8px";
-      previewSection.style.border =
-        "1px solid var(--background-modifier-border)";
-      previewSection.style.backgroundColor = "var(--background-secondary)";
-
-      const previewLabel = previewSection.createEl("div");
-      previewLabel.style.marginBottom = "8px";
-      previewLabel.style.fontWeight = "600";
-      previewLabel.style.fontSize = "14px";
-      previewLabel.textContent = this.plugin.t(
-        "highlight_preview",
-        "Highlight Preview",
-      );
-
-      const previewText = previewSection.createEl("div");
-      previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
-      previewText.style.display = "inline-block";
-      previewText.style.maxWidth = "auto";
-      previewText.style.wordWrap = "break-word";
-      previewText.textContent = this.plugin.t(
-        "highlight_preview_text",
-        "Here's how your default highlight looks!",
-      );
-
-      const updatePreview = () => {
-        const color = "#01c8ff";
-        const rgba = this.plugin.hexToRgba(
-          color,
-          this.plugin.settings.backgroundOpacity ?? 25,
-        );
-        previewText.style.backgroundColor = rgba;
-        previewText.style.borderRadius = `${this.plugin.settings.highlightBorderRadius ?? 8}px`;
-        previewText.style.paddingLeft =
-          previewText.style.paddingRight = `${this.plugin.settings.highlightHorizontalPadding ?? 4}px`;
-        try {
-          const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
-          previewText.style.setProperty(
-            "padding-top",
-            (vpad >= 0 ? vpad : 0) + "px",
-          );
-          previewText.style.setProperty(
-            "padding-bottom",
-            (vpad >= 0 ? vpad : 0) + "px",
-          );
-          if (vpad < 0) {
-            previewText.style.setProperty("margin-top", vpad + "px");
-            previewText.style.setProperty("margin-bottom", vpad + "px");
-          }
-        } catch (e) {
-          const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
-          previewText.style.paddingTop = (vpad >= 0 ? vpad : 0) + "px";
-          previewText.style.paddingBottom = (vpad >= 0 ? vpad : 0) + "px";
-          if (vpad < 0) {
-            previewText.style.marginTop = vpad + "px";
-            previewText.style.marginBottom = vpad + "px";
-          }
-        }
-
-        // Clear all existing border styles first
-        previewText.style.border = "";
-        previewText.style.borderTop = "";
-        previewText.style.borderBottom = "";
-        previewText.style.borderLeft = "";
-        previewText.style.borderRight = "";
-
-        // Apply new border styles if enabled
-        if (this.plugin.settings.enableBorderThickness) {
-          this.plugin.applyBorderStyleToElement(previewText, null, color);
-        }
-      };
-      updatePreview();
-
-      // Opacity slider (percent)
-      new Setting(ghContainer)
-        .setName(this.plugin.t("highlight_opacity", "Highlight opacity"))
-        .setDesc(
-          this.plugin.t(
-            "highlight_opacity_desc",
-            "Set the opacity of the highlight (0-100%)",
-          ),
-        )
-        .addSlider((slider) =>
-          slider
-            .setLimits(0, 100, 1)
-            .setValue(this.plugin.settings.backgroundOpacity ?? 25)
-            .setDynamicTooltip()
-            .onChange(async (v) => {
-              this.plugin.settings.backgroundOpacity = v;
-              await this.debouncedSaveSettings();
-              updatePreview();
-            }),
-        );
-
-      // Border radius input (px)
-      {
-        let brInput;
-        new Setting(ghContainer)
-          .setName(
-            this.plugin.t(
-              "highlight_border_radius",
-              "Highlight border radius (px)",
-            ),
-          )
-          .setDesc(
-            this.plugin.t(
-              "highlight_border_radius_desc",
-              "Set the border radius (in px) for rounded highlight corners",
-            ),
-          )
-          .addText((text) => {
-            brInput = text;
-            text
-              .setPlaceholder("e.g. 0, 4, 8")
-              .setValue(String(this.plugin.settings.highlightBorderRadius ?? 8))
-              .onChange(async (v) => {
-                let val = parseInt(v);
-                if (isNaN(val) || val < 0) val = 0;
-                this.plugin.settings.highlightBorderRadius = val;
-                await this.debouncedSaveSettings();
-                updatePreview();
-              });
-          })
-          .addExtraButton((btn) =>
-            btn
-              .setIcon("reset")
-              .setTooltip(this.plugin.t("reset_to_8", "Reset to 8"))
-              .onClick(async () => {
-                this.plugin.settings.highlightBorderRadius = 8;
-                await this.debouncedSaveSettings();
-                if (brInput) brInput.setValue("8");
-                updatePreview();
-              }),
-          );
-      }
-
-      // Horizontal padding input (px)
-      {
-        let hpInput;
-        new Setting(ghContainer)
-          .setName(
-            this.plugin.t(
-              "highlight_horizontal_padding",
-              "Highlight horizontal padding (px)",
-            ),
-          )
-          .setDesc(
-            this.plugin.t(
-              "highlight_horizontal_padding_desc",
-              "Set the left and right padding (in px) for highlighted text",
-            ),
-          )
-          .addText((text) => {
-            hpInput = text;
-            text
-              .setPlaceholder("e.g. 0, 4, 8")
-              .setValue(
-                String(this.plugin.settings.highlightHorizontalPadding ?? 4),
-              )
-              .onChange(async (v) => {
-                let val = parseInt(v);
-                if (isNaN(val) || val < 0) val = 0;
-                this.plugin.settings.highlightHorizontalPadding = val;
-                await this.debouncedSaveSettings();
-                updatePreview();
-              });
-          })
-          .addExtraButton((btn) =>
-            btn
-              .setIcon("reset")
-              .setTooltip(this.plugin.t("reset_to_4", "Reset to 4"))
-              .onClick(async () => {
-                this.plugin.settings.highlightHorizontalPadding = 4;
-                await this.debouncedSaveSettings();
-                if (hpInput) hpInput.setValue("4");
-                updatePreview();
-              }),
-          );
-      }
-
-      {
-        let vpInput;
-        new Setting(ghContainer)
-          .setName(
-            this.plugin.t(
-              "highlight_vertical_padding",
-              "Highlight vertical padding (px)",
-            ),
-          )
-          .setDesc(
-            this.plugin.t(
-              "highlight_vertical_padding_desc",
-              "Set the top and bottom padding (in px) for highlighted text",
-            ),
-          )
-          .addText((text) => {
-            vpInput = text;
-            text
-              .setPlaceholder("e.g. 0, 1, 2")
-              .setValue(
-                String(this.plugin.settings.highlightVerticalPadding ?? 0),
-              )
-              .onChange(async (v) => {
-                let val = parseInt(v);
-                if (isNaN(val) || val < 0) val = 0;
-                this.plugin.settings.highlightVerticalPadding = val;
-                await this.debouncedSaveSettings();
-                updatePreview();
-              });
-          })
-          .addExtraButton((btn) =>
-            btn
-              .setIcon("reset")
-              .setTooltip(this.plugin.t("reset_to_0", "Reset to 0"))
-              .onClick(async () => {
-                this.plugin.settings.highlightVerticalPadding = 0;
-                await this.debouncedSaveSettings();
-                if (vpInput) vpInput.setValue("0");
-                updatePreview();
-              }),
-          );
-      }
-
-      // Toggle for box decoration break on line wrapping
-      new Setting(ghContainer)
-        .setName(
-          this.plugin.t(
-            "rounded_corners_wrapping",
-            "Rounded corners on line wrapping",
-          ),
-        )
-        .setDesc(
-          this.plugin.t(
-            "rounded_corners_wrapping_desc",
-            "When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.enableBoxDecorationBreak ?? true)
-            .onChange(async (v) => {
-              this.plugin.settings.enableBoxDecorationBreak = v;
-              await this.debouncedSaveSettings();
-            }),
-        );
-
-      // NEW: Enable Highlight Border toggle
-      new Setting(ghContainer)
-        .setName(
-          this.plugin.t("enable_highlight_border", "Enable Highlight Border"),
-        )
-        .setDesc(
-          this.plugin.t(
-            "enable_highlight_border_desc",
-            "Add a border around highlights. The border will match the text or highlight color.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.enableBorderThickness ?? false)
-            .onChange(async (v) => {
-              this.plugin.settings.enableBorderThickness = v;
-              await this.plugin.saveSettings();
-              updatePreview();
-              // Force full re-render to show/hide border settings
-              this._initializedSettingsUI = false;
-              this.display();
-            }),
-        );
-
-      // Show border controls only when enabled
-      if (this.plugin.settings.enableBorderThickness) {
-        // Border Style dropdown
-        new Setting(ghContainer)
-          .setName(this.plugin.t("border_style", "Border Sides"))
-          .setDesc(
-            this.plugin.t(
-              "border_style_desc",
-              "Choose which sides to apply the border",
-            ),
-          )
-          .addDropdown((d) => {
-            d.selectEl.style.width = "200px";
-            try {
-              d.selectEl.style.textAlign = "center";
-            } catch (e) {}
-            return d
-              .addOption(
-                "full",
-                this.plugin.t("opt_border_full", "Full border (all sides)"),
-              )
-              .addOption(
-                "top-bottom",
-                this.plugin.t("opt_border_top_bottom", "Top & Bottom borders"),
-              )
-              .addOption(
-                "left-right",
-                this.plugin.t("opt_border_left_right", "Left & Right borders"),
-              )
-              .addOption(
-                "top-left-right",
-                this.plugin.t(
-                  "opt_border_top_left_right",
-                  "Top, Left & Right borders",
-                ),
-              )
-              .addOption(
-                "bottom-left-right",
-                this.plugin.t(
-                  "opt_border_bottom_left_right",
-                  "Bottom, Left & Right borders",
-                ),
-              )
-              .addOption(
-                "top-right",
-                this.plugin.t("opt_border_top_right", "Top & Right borders"),
-              )
-              .addOption(
-                "top-left",
-                this.plugin.t("opt_border_top_left", "Top & Left borders"),
-              )
-              .addOption(
-                "bottom-right",
-                this.plugin.t(
-                  "opt_border_bottom_right",
-                  "Bottom & Right borders",
-                ),
-              )
-              .addOption(
-                "bottom-left",
-                this.plugin.t(
-                  "opt_border_bottom_left",
-                  "Bottom & Left borders",
-                ),
-              )
-              .addOption(
-                "top",
-                this.plugin.t("opt_border_top", "Top border only"),
-              )
-              .addOption(
-                "bottom",
-                this.plugin.t("opt_border_bottom", "Bottom border only"),
-              )
-              .addOption(
-                "left",
-                this.plugin.t("opt_border_left", "Left border only"),
-              )
-              .addOption(
-                "right",
-                this.plugin.t("opt_border_right", "Right border only"),
-              )
-              .setValue(this.plugin.settings.borderStyle ?? "full")
-              .onChange(async (v) => {
-                this.plugin.settings.borderStyle = v;
-                await this.debouncedSaveSettings();
-                updatePreview();
-              });
-          });
-
-        new Setting(ghContainer)
-          .setName(this.plugin.t("border_line_style", "Border Style"))
-          .setDesc(
-            this.plugin.t(
-              "border_line_style_desc",
-              "Choose the border line style",
-            ),
-          )
-          .addDropdown((d) => {
-            d.selectEl.style.width = "200px";
-            try {
-              d.selectEl.style.textAlign = "center";
-            } catch (e) {}
-            return d
-              .addOption("solid", this.plugin.t("opt_line_solid", "Solid"))
-              .addOption("dashed", this.plugin.t("opt_line_dashed", "Dashed"))
-              .addOption("dotted", this.plugin.t("opt_line_dotted", "Dotted"))
-              .addOption("double", this.plugin.t("opt_line_double", "Double"))
-              .addOption("groove", this.plugin.t("opt_line_groove", "Groove"))
-              .addOption("ridge", this.plugin.t("opt_line_ridge", "Ridge"))
-              .addOption("inset", this.plugin.t("opt_line_inset", "Inset"))
-              .addOption("outset", this.plugin.t("opt_line_outset", "Outset"))
-              .setValue(this.plugin.settings.borderLineStyle ?? "solid")
-              .onChange(async (v) => {
-                this.plugin.settings.borderLineStyle = v;
-                await this.debouncedSaveSettings();
-                updatePreview();
-              });
-          });
-
-        // Border Opacity slider
-        new Setting(ghContainer)
-          .setName(this.plugin.t("border_opacity", "Border Opacity"))
-          .setDesc(
-            this.plugin.t(
-              "border_opacity_desc",
-              "Set the opacity of the border (0-100%)",
-            ),
-          )
-          .addSlider((slider) =>
-            slider
-              .setLimits(0, 100, 1)
-              .setValue(this.plugin.settings.borderOpacity ?? 100)
-              .setDynamicTooltip()
-              .onChange(async (v) => {
-                this.plugin.settings.borderOpacity = v;
-                await this.debouncedSaveSettings();
-                updatePreview();
-              }),
-          );
-
-        // Border Thickness input
-        {
-          let btInput;
-          new Setting(ghContainer)
-            .setName(this.plugin.t("border_thickness", "Border Thickness (px)"))
-            .setDesc(
-              this.plugin.t(
-                "border_thickness_desc",
-                "Set the border thickness from 0-5 pixels (e.g. 1, 2.5, 5)",
-              ),
-            )
-            .addText((text) => {
-              btInput = text;
-              text
-                .setPlaceholder("e.g. 1, 2.5, 3.7")
-                .setValue(String(this.plugin.settings.borderThickness ?? 1))
-                .onChange(async (v) => {
-                  let val = parseFloat(v);
-                  if (isNaN(val) || val < 0) val = 0;
-                  if (val > 5) val = 5;
-                  this.plugin.settings.borderThickness = val;
-                  await this.debouncedSaveSettings();
-                  updatePreview();
-                });
-            })
-            .addExtraButton((btn) =>
-              btn
-                .setIcon("reset")
-                .setTooltip(this.plugin.t("reset_to_1", "Reset to 1"))
-                .onClick(async () => {
-                  this.plugin.settings.borderThickness = 1;
-                  await this.debouncedSaveSettings();
-                  if (btInput) btInput.setValue("1");
-                  updatePreview();
-                }),
-            );
-        }
-      }
-      // }
-
-      // --- Custom swatches settings ---
-      const swHeaderDiv = containerEl.createDiv();
-      swHeaderDiv.style.display = "flex";
-      swHeaderDiv.style.alignItems = "center";
-      swHeaderDiv.style.gap = "8px";
-      swHeaderDiv.style.marginTop = "24px";
-      swHeaderDiv.style.marginBottom = "10px";
-      swHeaderDiv.style.cursor = "pointer";
-
-      const swToggle = swHeaderDiv.createEl("span");
-      swToggle.textContent = this.plugin.settings.colorSwatchesFolded
-        ? "▶"
-        : "▼";
-      swToggle.style.fontSize = "12px";
-      swToggle.style.fontWeight = "bold";
-      swToggle.style.display = "inline-block";
-      swToggle.style.width = "16px";
-      swToggle.style.marginTop = "-8px";
-
-      const swTitle = swHeaderDiv.createEl("h2", {
-        text: this.plugin.t("color_swatches_header", "Color Management"),
-      });
-      swTitle.style.margin = "0";
-      swTitle.style.marginTop = "-8px";
-      swTitle.style.padding = "0";
-      swTitle.style.flex = "1";
-
-      const swContainer = containerEl.createDiv();
-      swContainer.style.display = this.plugin.settings.colorSwatchesFolded
-        ? "none"
-        : "block";
-
-      const swToggleHandler = async () => {
-        this.plugin.settings.colorSwatchesFolded =
-          !this.plugin.settings.colorSwatchesFolded;
-        swContainer.style.display = this.plugin.settings.colorSwatchesFolded
-          ? "none"
-          : "block";
-        swToggle.textContent = this.plugin.settings.colorSwatchesFolded
-          ? "▶"
-          : "▼";
-        await this.debouncedSaveSettings();
-      };
-
-      swHeaderDiv.addEventListener("click", swToggleHandler);
-      try {
-        this._cleanupHandlers.push(() =>
-          swHeaderDiv.removeEventListener("click", swToggleHandler),
-        );
-      } catch (_) {}
-
-      new Setting(swContainer)
-        .setName(this.plugin.t("color_picker_layout", "Color Picker Layout"))
-        .setDesc(
-          this.plugin.t(
-            "color_picker_layout_desc",
-            "Choose which color types to show when picking colors for text",
-          ),
-        )
-        .addDropdown((dd) => {
-          dd.addOption(
-            "both",
-            this.plugin.t(
-              "opt_both_text_left",
-              "Both: Text left, Highlight right",
-            ),
-          );
-          dd.addOption(
-            "both-bg-left",
-            this.plugin.t(
-              "opt_both_bg_left",
-              "Both: Highlight left, Text right",
-            ),
-          );
-          dd.addOption(
-            "both-v-text-top",
-            this.plugin.t(
-              "opt_both_text_top",
-              "Both (vertical): Text above, Highlight below",
-            ),
-          );
-          dd.addOption(
-            "both-v-bg-top",
-            this.plugin.t(
-              "opt_both_bg_top",
-              "Both (vertical): Highlight above, Text below",
-            ),
-          );
-          dd.addOption(
-            "text",
-            this.plugin.t("opt_text_only", "Text color only"),
-          );
-          dd.addOption(
-            "background",
-            this.plugin.t("opt_background_only", "Highlight color only"),
-          );
-          dd.setValue(this.plugin.settings.colorPickerMode || "both");
-          try {
-            dd.selectEl.style.minWidth = "230px";
-          } catch (e) {}
-          try {
-            dd.selectEl.style.textAlign = "center";
-          } catch (e) {}
-          dd.onChange(async (v) => {
-            this.plugin.settings.colorPickerMode = v;
-            await this.plugin.saveSettings();
-          });
-        });
-
-      /* new Setting(swContainer)
-        .setName(
-          this.plugin.t(
-            "use_swatch_names",
-            "Use swatch names for coloring text",
-          ),
-        )
-        .setDesc(
-          this.plugin.t(
-            "use_swatch_names_desc",
-            'If enabled, the text will be colored using the name of the swatch (e.g., "Red") instead of the hex code.',
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.useSwatchNamesForText)
-            .onChange(async (v) => {
-              this.plugin.settings.useSwatchNamesForText = v;
-              await this.plugin.saveSettings();
-            }),
-        ); */
-
-      new Setting(swContainer)
-        .setName(
-          this.plugin.t(
-            "link_swatch_updates",
-            "Link swatch updates to text colors",
-          ),
-        )
-        .setDesc(
-          this.plugin.t(
-            "link_swatch_updates_desc",
-            "If enabled, updating a swatch color will update all text colored with that swatch.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.linkSwatchUpdatesToEntries)
-            .onChange(async (v) => {
-              this.plugin.settings.linkSwatchUpdatesToEntries = v;
-              await this.plugin.saveSettings();
-            }),
-        );
-
-      // --- Quick Colors / Styles ---
-      this._quickColorsContainer = containerEl.createDiv();
-      this._refreshQuickColors();
-      this._quickStylesContainer = containerEl.createDiv();
-      this._refreshQuickStyles();
     }
+
     if (this._activeTab === "always-color-texts") {
       // --- Always Colored Texts / patterns ---
       const coloredTextsHeading = new Setting(containerEl)
@@ -7455,7 +6999,7 @@ export class ColorSettingTab extends PluginSettingTab {
           styleType: "text",
           uid,
           persistAtEnd: true,
-          matchType: this.plugin.settings.partialMatch ? "contains" : "exact",
+          matchType: (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
           caseSensitive: !!this.plugin.settings.caseSensitive,
         });
         this._suspendSorting = this._wordsSortMode === "last-added";
@@ -7546,9 +7090,7 @@ export class ColorSettingTab extends PluginSettingTab {
                 groupedPatterns: null,
                 presetLabel: preset.label,
                 persistAtEnd: true,
-                matchType: this.plugin.settings.partialMatch
-                  ? "contains"
-                  : "exact",
+                matchType: (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
               };
               // Copy preset properties like affectMarkElements and targetElement
               if (preset.affectMarkElements) entry.affectMarkElements = true;

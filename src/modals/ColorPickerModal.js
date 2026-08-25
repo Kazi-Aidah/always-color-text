@@ -927,7 +927,7 @@ export class ColorPickerModal extends Modal {
     if (this._matchSelect) {
       this._matchType =
         matchedMatchType ||
-        (this.plugin.settings.partialMatch ? "contains" : "exact");
+        (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"));
       this._matchSelect.value = this._matchType;
     }
     if (this._markTargetSelect) {
@@ -1143,7 +1143,7 @@ export class ColorPickerModal extends Modal {
             const bgSelected = bs && this.plugin.isValidHexColor(bs);
             const mt =
               this._matchType ||
-              (this.plugin.settings.partialMatch ? "contains" : "exact");
+              (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact"));
             if (textSelected && bgSelected) {
               entryToEdit = {
                 pattern: this._selectedText || "",
@@ -1661,7 +1661,7 @@ export class ColorPickerModal extends Modal {
                   selectedGroupUid: this._selectedGroupUid || null,
                   matchType:
                     this._matchType ||
-                    (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                    (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
                   caseSensitive: this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
                   markTarget: this._markTarget || "text",
                   quickOnceStyle: qo || undefined,
@@ -1732,7 +1732,7 @@ export class ColorPickerModal extends Modal {
               styleType: "both",
               matchType:
                 this._matchType ||
-                (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
               caseSensitive: !!this.plugin.settings.caseSensitive,
               markTarget: this._markTarget || "text",
             };
@@ -1776,9 +1776,7 @@ export class ColorPickerModal extends Modal {
                     e.matchType =
                       this._matchType ||
                       e.matchType ||
-                      (this.plugin.settings.partialMatch
-                        ? "contains"
-                        : "exact");
+                      this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact");
                   break;
                 }
               } catch (err) {}
@@ -1795,7 +1793,7 @@ export class ColorPickerModal extends Modal {
                   e.matchType =
                     this._matchType ||
                     e.matchType ||
-                    (this.plugin.settings.partialMatch ? "contains" : "exact");
+                    this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact");
                 break;
               }
               if (
@@ -1813,7 +1811,7 @@ export class ColorPickerModal extends Modal {
                   e.matchType =
                     this._matchType ||
                     e.matchType ||
-                    (this.plugin.settings.partialMatch ? "contains" : "exact");
+                    this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact");
                 break;
               }
             }
@@ -1828,7 +1826,7 @@ export class ColorPickerModal extends Modal {
                 styleType: "text",
                 matchType:
                   this._matchType ||
-                  (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                  (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
                 caseSensitive: !!this.plugin.settings.caseSensitive,
                 markTarget: this._markTarget || "text",
               };
@@ -1906,7 +1904,7 @@ export class ColorPickerModal extends Modal {
               styleType: "highlight",
               matchType:
                 this._matchType ||
-                (this.plugin.settings.partialMatch ? "contains" : "exact"),
+                (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
               caseSensitive: !!this.plugin.settings.caseSensitive,
               markTarget: this._markTarget || "text",
             };
@@ -1994,6 +1992,13 @@ export class ColorPickerModal extends Modal {
     // Remember the full style so submitFn can persist the SHAPE on close
     // (submitFn itself only writes colors + a basic styleType).
     this._appliedPresetStyle = Object.assign({}, styleFields);
+    // Carry matching defaults from the preset (if set); the global Defaults
+    // section remains the fallback when these are absent.
+    if (preset.matchType) this._appliedPresetStyle.matchType = preset.matchType;
+    if (typeof preset.caseSensitive === "boolean")
+      this._appliedPresetStyle.caseSensitive = preset.caseSensitive;
+    if (preset.wordGroup)
+      this._appliedPresetStyle.wordGroup = preset.wordGroup;
 
     // Persist the style + effective colors onto an entry object so the live
     // preview (apply() reads this._entry for highlight params) reflects the
@@ -2035,7 +2040,7 @@ export class ColorPickerModal extends Modal {
       markTarget: this._markTarget || "text",
       matchType:
         this._matchType ||
-        (this.plugin.settings.partialMatch ? "contains" : "exact"),
+        (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
       caseSensitive: this._caseSensitive ?? !!this.plugin.settings.caseSensitive,
       selectedGroupUid: this._selectedGroupUid || null,
       quickOnceStyle: Object.assign({}, styleFields),

@@ -218,6 +218,34 @@ export class HighlightStylingModal extends Modal {
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.borderRadius = "4px";
       matchSelect.style.background = "var(--background-modifier-form-field)";
+
+      const caseSelect = headerRow.createEl("select");
+      caseSelect.style.minWidth = "120px";
+      caseSelect.style.marginLeft = "6px";
+      caseSelect.style.border = "1px solid var(--background-modifier-border)";
+      caseSelect.style.borderRadius = "4px";
+      caseSelect.style.background = "var(--background-modifier-form-field)";
+      caseSelect.innerHTML = `<option value="is_case_sensitive">${this.plugin.t("is_case_sensitive", "Is case sensitive")}</option>
+        <option value="not_case_sensitive">${this.plugin.t("not_case_sensitive", "Not case sensitive")}</option>`;
+      const csVal =
+        this.entry && typeof this.entry.caseSensitive === "boolean"
+          ? this.entry.caseSensitive
+            ? "is_case_sensitive"
+            : "not_case_sensitive"
+          : "not_case_sensitive";
+      caseSelect.value = csVal;
+      caseSelect.addEventListener("change", async () => {
+        if (!this.entry) return;
+        this.entry.caseSensitive = caseSelect.value === "is_case_sensitive";
+        await this.plugin.saveSettings();
+        try {
+          this.plugin.compileWordEntries();
+          this.plugin.compileTextBgColoringEntries();
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.triggerActiveDocumentRerender();
+        } catch (_) {}
+      });
     }
 
     if (!fromQuickOnce && isGroup) {

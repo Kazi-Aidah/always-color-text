@@ -299,6 +299,9 @@ export class TextStylePresetsModal extends Modal {
         s.borderLineStyle = entry.borderLineStyle;
         s.borderOpacity = entry.borderOpacity;
         s.borderThickness = entry.borderThickness;
+        s.matchType = entry.matchType;
+        s.caseSensitive = entry.caseSensitive;
+        s.wordGroup = entry.groupUid;
         this.plugin.saveSettings();
         this._render();
       };
@@ -347,6 +350,10 @@ export class TextStylePresetsModal extends Modal {
         preset.borderLineStyle = temp.borderLineStyle;
         preset.borderOpacity = temp.borderOpacity;
         preset.borderThickness = temp.borderThickness;
+        // Matching defaults persist from the editor
+        preset.matchType = temp.matchType;
+        preset.caseSensitive = temp.caseSensitive;
+        preset.wordGroup = temp.groupUid;
         // Colors persist only if the preset already had a real color, or the
         // user picked a color different from the accent default.
         if (

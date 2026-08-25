@@ -178,6 +178,12 @@ export const defaultSettings = {
   wordEntryGroups: [],
   blacklistEntryGroups: [],
   caseSensitive: false,
+  matchType: "contains",
+  quickStylesEnabled: true,
+  oneTimeActionsFolded: false,
+  defaultWordGroup: "",
+  linkIdenticalMatchers: true,
+  hiddenCommands: [],
   enabled: true,
   highlightStyle: "text",
   backgroundOpacity: 35, // percent

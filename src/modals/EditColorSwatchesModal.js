@@ -135,6 +135,14 @@ export class EditColorSwatchesModal extends Modal {
     const getSwatches = () => combined;
 
     const saveSwatches = async () => {
+      const prevAll = [
+        ...(Array.isArray(this.plugin.settings.swatches)
+          ? this.plugin.settings.swatches
+          : []),
+        ...(Array.isArray(this.plugin.settings.userCustomSwatches)
+          ? this.plugin.settings.userCustomSwatches
+          : []),
+      ];
       const def = combined
         .filter((s) => s._src === "default")
         .map((s) => ({ name: s.name, color: s.color }));
@@ -144,7 +152,59 @@ export class EditColorSwatchesModal extends Modal {
       this.plugin.settings.swatches = def;
       this.plugin.settings.userCustomSwatches = cus;
       this.plugin.settings.customSwatches = combined.map((s) => s.color);
+
+      if (this.plugin.settings.linkSwatchUpdatesToEntries) {
+        const newAll = [...def, ...cus];
+        const colorMap = {};
+        prevAll.forEach((p) => {
+          if (!p || !p.name || !p.color) return;
+          const n = newAll.find((x) => x && x.name === p.name);
+          if (
+            n &&
+            n.color &&
+            String(n.color).toLowerCase() !== String(p.color).toLowerCase()
+          ) {
+            colorMap[String(p.color).toLowerCase()] = n.color;
+          }
+        });
+        const keys = Object.keys(colorMap);
+        if (keys.length) {
+          const updateEntry = (e) => {
+            if (!e) return;
+            const fix = (key) => {
+              if (
+                typeof e[key] === "string" &&
+                e[key] !== "currentColor" &&
+                colorMap[e[key].toLowerCase()] !== undefined
+              ) {
+                e[key] = colorMap[e[key].toLowerCase()];
+              }
+            };
+            fix("color");
+            fix("textColor");
+            fix("backgroundColor");
+          };
+          const entries = Array.isArray(this.plugin.settings.wordEntries)
+            ? this.plugin.settings.wordEntries
+            : [];
+          entries.forEach(updateEntry);
+          const groups = Array.isArray(this.plugin.settings.wordEntryGroups)
+            ? this.plugin.settings.wordEntryGroups
+            : [];
+          groups.forEach((g) => {
+            if (g && Array.isArray(g.entries)) g.entries.forEach(updateEntry);
+          });
+        }
+      }
+
       await this.plugin.saveSettings();
+      try {
+        this.plugin.compileWordEntries();
+        this.plugin.compileTextBgColoringEntries();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+      } catch (_) {}
     };
 
     // Syncs hex text input from color picker, then renders previews.

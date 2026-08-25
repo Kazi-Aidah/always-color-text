@@ -1375,7 +1375,7 @@ class AlwaysColorText extends Plugin {
                       const selGroupUid = sel.selectedGroupUid || null;
                       const matchType =
                         sel.matchType ||
-                        (this.settings.partialMatch ? "contains" : "exact");
+                        this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact");
                       const markTarget = sel.markTarget || "text";
 
                       // Improved entry finding logic to match what the modal uses
@@ -1411,7 +1411,7 @@ class AlwaysColorText extends Plugin {
 
                           const entryMatchType = (
                             e.matchType ||
-                            (this.settings.partialMatch ? "contains" : "exact")
+                            this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")
                           ).toLowerCase();
                           const a = caseSensitive
                             ? String(selectedText)
@@ -1457,6 +1457,12 @@ class AlwaysColorText extends Plugin {
                         for (const k of keys) {
                           if (ps[k] != null) ent[k] = ps[k];
                         }
+                        // Matching defaults: preset value wins, global Defaults
+                        // section is the fallback (handled at entry creation).
+                        if (ps.matchType) ent.matchType = ps.matchType;
+                        if (typeof ps.caseSensitive === "boolean")
+                          ent.caseSensitive = ps.caseSensitive;
+                        if (ps.wordGroup) ent.groupUid = ps.wordGroup;
                         if (ent.customCss) this.syncEntryCssFromColors(ent);
                       };
                       const applyToArr = (arr) => {
@@ -2276,7 +2282,21 @@ class AlwaysColorText extends Plugin {
       if (this.settings?.disableToggleModes?.command) return;
       if (this._commandsRegistered) return;
 
+      const pluginId =
+        (this.manifest && this.manifest.id) || "always-color-text";
+      const isCommandHidden = (id) => {
+        try {
+          const hidden = Array.isArray(this.settings.hiddenCommands)
+            ? this.settings.hiddenCommands
+            : [];
+          return hidden.includes(id) || hidden.includes(`${pluginId}:${id}`);
+        } catch (_) {
+          return false;
+        }
+      };
+
       const addTrackedCommand = (cmd) => {
+        if (!cmd || !cmd.id || isCommandHidden(cmd.id)) return null;
         this._registeredCommandIds.push(cmd.id);
         return this.addCommand(cmd);
       };
@@ -2311,7 +2331,7 @@ class AlwaysColorText extends Plugin {
               const selGroupUid = sel.selectedGroupUid || null;
               const matchType =
                 sel.matchType ||
-                (this.settings.partialMatch ? "contains" : "exact");
+                this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact");
               const caseSensitive = typeof sel.caseSensitive === "boolean"
                 ? sel.caseSensitive
                 : !!this.settings.caseSensitive;
@@ -2465,7 +2485,7 @@ class AlwaysColorText extends Plugin {
               const selGroupUid = sel.selectedGroupUid || null;
               const matchType =
                 sel.matchType ||
-                (this.settings.partialMatch ? "contains" : "exact");
+                this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact");
               const fileInclusionRule = { path: filePath, mode: "include", isRegex: false, flags: "" };
               const applyToArr = (arr) => {
                 const idx = arr.findIndex(
@@ -4481,7 +4501,7 @@ class AlwaysColorText extends Plugin {
       );
       const mtLower = String(
         (entry && entry.matchType) ||
-          (this.settings.partialMatch ? "contains" : "exact"),
+          (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
       ).toLowerCase();
 
       // Build expanded ranges: expand all matches to full word boundaries for partial matches
@@ -4783,7 +4803,7 @@ class AlwaysColorText extends Plugin {
       );
       const mtLower = String(
         (entry && entry.matchType) ||
-          (this.settings.partialMatch ? "contains" : "exact"),
+          (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
       ).toLowerCase();
 
       // Build expanded ranges: expand all matches to full word boundaries for partial matches
@@ -7020,7 +7040,7 @@ class AlwaysColorText extends Plugin {
               textColor: styleType !== "text" ? textColor : null,
               backgroundColor,
               styleType,
-              matchType: this.settings.partialMatch ? "contains" : "exact",
+              matchType: (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
               customCss:
                 typeof e.customCss === "string" && e.customCss.trim().length > 0
                   ? e.customCss
@@ -8070,7 +8090,7 @@ class AlwaysColorText extends Plugin {
         textColor: null,
         backgroundColor: null,
         markTarget: markTarget,
-        matchType: this.settings.partialMatch ? "contains" : "exact",
+        matchType: (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
         caseSensitive: !!this.settings.caseSensitive,
       });
     }
@@ -8621,7 +8641,7 @@ class AlwaysColorText extends Plugin {
       }
 
       const matchType = String(
-        entry?.matchType || (this.settings.partialMatch ? "contains" : "exact"),
+        entry?.matchType || (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
       ).toLowerCase();
       const pattern = entry?.pattern || "";
 
@@ -9678,7 +9698,7 @@ class AlwaysColorText extends Plugin {
       const entry = match.entry;
       const pattern = entry.pattern || "";
       const matchType = (
-        entry.matchType || (this.settings.partialMatch ? "contains" : "exact")
+        entry.matchType || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")
       ).toLowerCase();
 
       if (matchType === "exact") {
@@ -9796,7 +9816,7 @@ class AlwaysColorText extends Plugin {
     }
     if (!Array.isArray(this.settings.wordEntries))
       this.settings.wordEntries = [];
-    const matchType = this.settings.partialMatch ? "contains" : "exact";
+    const matchType = (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"));
     const styleType =
       textColor && backgroundColor
         ? "both"
@@ -13017,7 +13037,7 @@ class AlwaysColorText extends Plugin {
 
               const mtLower = String(
                 (entry && entry.matchType) ||
-                  (this.settings.partialMatch ? "contains" : "exact"),
+                  (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
               ).toLowerCase();
               let colorStart = matchStart;
               let colorEnd = matchEnd;
@@ -13110,7 +13130,7 @@ class AlwaysColorText extends Plugin {
 
             const mtLower = String(
               (entry && entry.matchType) ||
-                (this.settings.partialMatch ? "contains" : "exact"),
+                (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
             ).toLowerCase();
             let colorStart = matchStart;
             let colorEnd = matchEnd;
@@ -13161,7 +13181,7 @@ class AlwaysColorText extends Plugin {
           if (!e || e.isTextBg || !(!e.styleType || e.styleType === "text"))
             return true;
           const actualMatchType = String(
-            e.matchType || (this.settings.partialMatch ? "contains" : "exact"),
+            e.matchType || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
           ).toLowerCase();
           const isSentence = this.isSentenceLikePattern(e.pattern);
           const isLatin = this.isLatinWordPattern(e.pattern);
@@ -13423,7 +13443,7 @@ class AlwaysColorText extends Plugin {
               // Use same default logic as PatternMatcher to determine actual matchType
               const mt = String(
                 entry.matchType ||
-                  (this.settings.partialMatch ? "contains" : "exact"),
+                  this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
               ).toLowerCase();
               const cs =
                 typeof entry._caseSensitiveOverride === "boolean"
@@ -13542,7 +13562,7 @@ class AlwaysColorText extends Plugin {
             if (!this.matchSatisfiesType(text, start, end, entry)) continue;
             const mtLower = String(
               (entry && entry.matchType) ||
-                (this.settings.partialMatch ? "contains" : "exact"),
+                (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
             ).toLowerCase();
             let expandedStart = start;
             let expandedEnd = end;
@@ -16913,7 +16933,7 @@ class AlwaysColorText extends Plugin {
       }
 
       const actualMatchType = String(
-        entry.matchType || (this.settings.partialMatch ? "contains" : "exact"),
+        entry.matchType || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
       ).toLowerCase();
       debugLog(
         "MAIN_LOOP_PROCESS",
@@ -17062,7 +17082,7 @@ class AlwaysColorText extends Plugin {
         {
           const mt = String(
             entry.matchType ||
-              (this.settings.partialMatch ? "contains" : "exact"),
+              this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
           ).toLowerCase();
           if (
             !this.isSentenceLikePattern(entry.pattern) &&
@@ -17090,7 +17110,7 @@ class AlwaysColorText extends Plugin {
 
         const mt = String(
           entry.matchType ||
-            (this.settings.partialMatch ? "contains" : "exact"),
+            this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
         ).toLowerCase();
         let colorStart = match.index;
         let colorEnd = match.index + matchedText.length;
@@ -17253,7 +17273,7 @@ class AlwaysColorText extends Plugin {
         if (!this.isLatinWordPattern(e.pattern)) return false;
       } catch (_) {}
       const actualMatchType = String(
-        e.matchType || (this.settings.partialMatch ? "contains" : "exact"),
+        e.matchType || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
       ).toLowerCase();
       return actualMatchType === "contains"; // Only 'contains' goes here (whether explicit or default)
     };
@@ -17323,7 +17343,7 @@ class AlwaysColorText extends Plugin {
             // This section only handles 'contains' matchType
             const mt = String(
               entry.matchType ||
-                (this.settings.partialMatch ? "contains" : "exact"),
+                this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
             ).toLowerCase();
             const cs =
               typeof entry._caseSensitiveOverride === "boolean"
@@ -18483,7 +18503,7 @@ class AlwaysColorText extends Plugin {
         ["contains", "startswith", "endswith"].includes(
           String(
             entry.matchType ||
-              (this.settings.partialMatch ? "contains" : "exact"),
+              this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
           ).toLowerCase(),
         ) &&
         !this.isSentenceLikePattern(entry.pattern);
@@ -18647,7 +18667,7 @@ class AlwaysColorText extends Plugin {
         {
           const mt = String(
             entry.matchType ||
-              (this.settings.partialMatch ? "contains" : "exact"),
+              this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
           ).toLowerCase();
           if (
             mt === "exact" &&
@@ -18713,7 +18733,7 @@ class AlwaysColorText extends Plugin {
         !e.isRegex &&
         ["contains", "startswith", "endswith"].includes(
           String(
-            e.matchType || (this.settings.partialMatch ? "contains" : "exact"),
+            e.matchType || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
           ).toLowerCase(),
         ) &&
         !this.isSentenceLikePattern(e.pattern),
@@ -18773,7 +18793,7 @@ class AlwaysColorText extends Plugin {
 
           const mt = String(
             entry.matchType ||
-              (this.settings.partialMatch ? "contains" : "exact"),
+              this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
           ).toLowerCase();
           const cs =
             typeof entry._caseSensitiveOverride === "boolean"
@@ -18875,7 +18895,7 @@ class AlwaysColorText extends Plugin {
 
           const mt = String(
             entry.matchType ||
-              (this.settings.partialMatch ? "contains" : "exact"),
+              this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
           ).toLowerCase();
           const cs =
             typeof entry._caseSensitiveOverride === "boolean"
@@ -19056,7 +19076,7 @@ class AlwaysColorText extends Plugin {
       // Skip entries with partial match types - they're handled in the partial match section below
       // Use same default logic as PatternMatcher to determine actual matchType
       const actualMatchType = String(
-        entry.matchType || (this.settings.partialMatch ? "contains" : "exact"),
+        entry.matchType || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
       ).toLowerCase();
       const isPartialMatch = ["contains", "startswith", "endswith"].includes(
         actualMatchType,
@@ -19163,7 +19183,7 @@ class AlwaysColorText extends Plugin {
         {
           const mt = String(
             entry.matchType ||
-              (this.settings.partialMatch ? "contains" : "exact"),
+              this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
           ).toLowerCase();
           if (
             !this.isSentenceLikePattern(entry.pattern) &&
@@ -19220,7 +19240,7 @@ class AlwaysColorText extends Plugin {
           ["contains", "startswith", "endswith"].includes(
             String(
               e.matchType ||
-                (this.settings.partialMatch ? "contains" : "exact"),
+                this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
             ).toLowerCase(),
           ) &&
           !this.isSentenceLikePattern(e.pattern) &&
@@ -19278,7 +19298,7 @@ class AlwaysColorText extends Plugin {
 
             const mt = String(
               entry.matchType ||
-                (this.settings.partialMatch ? "contains" : "exact"),
+                this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
             ).toLowerCase();
             const cs =
               typeof entry._caseSensitiveOverride === "boolean"

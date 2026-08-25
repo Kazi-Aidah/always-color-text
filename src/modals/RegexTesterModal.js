@@ -555,7 +555,7 @@ export class RegexTesterModal extends Modal {
       this.plugin.settings.wordEntries.push(
         Object.assign(
           {
-            matchType: this.plugin.settings.partialMatch ? "contains" : "exact",
+            matchType: (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
           },
           entry,
         ),
