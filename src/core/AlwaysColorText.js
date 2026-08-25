@@ -761,7 +761,7 @@ class AlwaysColorText extends Plugin {
 
   async onload() {
     await this.loadSettings();
-    this.updateLightModeFixer();
+    this.applyThemeFixer();
     // Initialize Quick Colors/Styles settings if missing
     if (typeof this.settings.quickColorsEnabled === "undefined")
       this.settings.quickColorsEnabled = false;
@@ -1976,7 +1976,7 @@ class AlwaysColorText extends Plugin {
                 }
               });
             });
-          } else if (stylesArr.length > 0) {
+          } else if (this.settings.quickStylesEnabled && stylesArr.length > 0) {
             menu.addItem((item) => {
               item.setIcon("heading-glyph");
               item.setTitle(this.t("quick_styles_menu_option", "Quick Styles"));
@@ -5456,29 +5456,43 @@ class AlwaysColorText extends Plugin {
   }
 
   // --- Register CodeMirror, markdown, and listeners ---
-  updateLightModeFixer() {
+  // Per-mode color adjustments: each theme mode has its own brightness,
+  // contrast and saturation applied via CSS variables on <body>.
+  applyThemeFixer() {
     try {
-      if (this.settings.enabled && this.settings.lightModeFixer) {
-        document.body.classList.add("act-light-mode-fix");
-      } else {
-        document.body.classList.remove("act-light-mode-fix");
+      const keys = [
+        "light-b",
+        "light-c",
+        "light-s",
+        "dark-b",
+        "dark-c",
+        "dark-s",
+      ];
+      const remove = () => {
+        for (const k of keys)
+          document.body.style.removeProperty("--act-fixer-" + k);
+      };
+      if (!this.settings.enabled) {
+        remove();
+        return;
       }
+      const set = (k, v) =>
+        document.body.style.setProperty("--act-fixer-" + k, String(v));
+      set("light-b", this._fixerNum(this.settings.themeFixerLightBrightness, 1));
+      set("light-c", this._fixerNum(this.settings.themeFixerLightContrast, 1));
+      set("light-s", this._fixerNum(this.settings.themeFixerLightSaturation, 1));
+      set("dark-b", this._fixerNum(this.settings.themeFixerDarkBrightness, 1));
+      set("dark-c", this._fixerNum(this.settings.themeFixerDarkContrast, 1));
+      set("dark-s", this._fixerNum(this.settings.themeFixerDarkSaturation, 1));
     } catch (e) {}
   }
 
-  updateDarkModeFixer() {
-    try {
-      if (this.settings.enabled && this.settings.darkModeFixer) {
-        document.body.classList.add("act-dark-mode-fix");
-      } else {
-        document.body.classList.remove("act-dark-mode-fix");
-      }
-    } catch (e) {}
+  _fixerNum(v, dflt) {
+    return typeof v === "number" && isFinite(v) ? v : dflt;
   }
 
   enablePluginFeatures() {
-    this.updateLightModeFixer();
-    this.updateDarkModeFixer();
+    this.applyThemeFixer();
     this.applyFormattingPresetStyles();
     this.applyFormattingStyles();
     this.applyHighlightPresetTransparency();
@@ -5753,10 +5767,16 @@ class AlwaysColorText extends Plugin {
       if (s) s.remove();
     } catch (_) {}
     try {
-      document.body.classList.remove("act-light-mode-fix");
-    } catch (_) {}
-    try {
-      document.body.classList.remove("act-dark-mode-fix");
+      for (const k of [
+        "light-b",
+        "light-c",
+        "light-s",
+        "dark-b",
+        "dark-c",
+        "dark-s",
+      ]) {
+        document.body.style.removeProperty("--act-fixer-" + k);
+      }
     } catch (_) {}
     if (this.cmExtensionRegistered && this.extension) {
       this.app.workspace.unregisterEditorExtension(this.extension);

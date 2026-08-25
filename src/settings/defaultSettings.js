@@ -294,8 +294,12 @@ export const defaultSettings = {
   blacklistSearchLimit: 0,
   pathSearchLimit: 0,
   showColoringReasonOnHover: false, // Show tooltip on hover explaining why text is colored
-  lightModeFixer: false,
-  darkModeFixer: false,
+  themeFixerDarkBrightness: 1,
+  themeFixerDarkContrast: 1,
+  themeFixerDarkSaturation: 1,
+  themeFixerLightBrightness: 0.75,
+  themeFixerLightContrast: 1,
+  themeFixerLightSaturation: 0.8,
   enableCustomCss: false,
   // Automatic backups
   autoBackupEnabled: false,

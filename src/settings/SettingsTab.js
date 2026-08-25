@@ -15,6 +15,7 @@ import { ConfirmationModal } from '../modals/ConfirmationModal.js';
 import { QuickMenuColorsModal } from '../modals/QuickMenuColorsModal.js';
 import { TextStylePresetsModal } from '../modals/TextStylePresetsModal.js';
 import { CommandVisibilityModal } from '../modals/CommandVisibilityModal.js';
+import { ThemeFixerAdjustModal } from '../modals/ThemeFixerAdjustModal.js';
 import { debugLog, debugError } from '../utils/debug.js';
 export class ColorSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
@@ -5410,11 +5411,36 @@ export class ColorSettingTab extends PluginSettingTab {
             }),
         );
 
+      // ===== Quick Menu =====
+      addGroupHeader(
+        this.plugin.t("quick_menu_header", "Quick Menu"),
+      );
+
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "quick_styles_menu_visibility",
+            "Quick Styles",
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "quick_styles_menu_visibility_desc",
+            "Master toggle for the Quick Styles right-click menu. When on, the Quick Styles submenu appears; with Quick Colors enabled, color dots are also shown.",
+          ),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.quickStylesEnabled)
+            .onChange(async (v) => {
+              this.plugin.settings.quickStylesEnabled = v;
+              await this.debouncedSaveSettings();
+            }),
+        );
+
       // ===== Quick Colors (Quick Menu Colors) =====
       this._quickMenuColorsSettingContainer = containerEl.createDiv();
       this._refreshQuickMenuColorsSetting();
-
-      containerEl.createEl("hr", { cls: "act-settings-divider" });
 
       // ===== ## Defaults =====
       addGroupHeader(
@@ -5612,28 +5638,6 @@ export class ColorSettingTab extends PluginSettingTab {
             .onChange(async (v) => {
               this.plugin.settings.enableBlacklistMenu = v;
               await this.plugin.saveSettings();
-            }),
-        );
-
-      new Setting(containerEl)
-        .setName(
-          this.plugin.t(
-            "quick_styles_menu_visibility",
-            "Show Quick Styles in right-click menu",
-          ),
-        )
-        .setDesc(
-          this.plugin.t(
-            "quick_styles_menu_visibility_desc",
-            "When off, quick styles are hidden from the right-click menu. Each preset's individual show/hide choice is preserved for when you re-enable this.",
-          ),
-        )
-        .addToggle((t) =>
-          t
-            .setValue(this.plugin.settings.quickStylesEnabled)
-            .onChange(async (v) => {
-              this.plugin.settings.quickStylesEnabled = v;
-              await this.debouncedSaveSettings();
             }),
         );
 
@@ -6062,6 +6066,24 @@ export class ColorSettingTab extends PluginSettingTab {
         );
 
       new Setting(containerEl)
+        .setName(this.plugin.t("dark_mode_fixer", "Theme Color Adjustments"))
+        .setDesc(
+          this.plugin.t(
+            "theme_text_color_fixer_desc",
+            "Fine-tune how your colored text looks in Dark and Light modes.",
+          ),
+        )
+        .addButton((b) =>
+          b
+            .setButtonText(this.plugin.t("theme_fixer_adjust", "Adjust"))
+            .onClick(() => {
+              try {
+                new ThemeFixerAdjustModal(this.app, this.plugin).open();
+              } catch (e) {}
+            }),
+        );
+
+      new Setting(containerEl)
         .setName(this.plugin.t("color_picker_layout", "Color Picker Layout"))
         .setDesc(
           this.plugin.t(
@@ -6119,44 +6141,6 @@ export class ColorSettingTab extends PluginSettingTab {
           });
         });
 
-      new Setting(containerEl)
-        .setName(this.plugin.t("dark_mode_fixer", "Theme Text Color Fixer"))
-        .setDesc(
-          this.plugin.t(
-            "theme_text_color_fixer_desc",
-            "Select your default theme mode.",
-          ),
-        )
-        .addDropdown((d) => {
-          d.addOption(
-            "disabled",
-            this.plugin.t("theme_disabled", "Disabled"),
-          );
-          d.addOption("dark", this.plugin.t("theme_dark", "Dark Mode"));
-          d.addOption("light", this.plugin.t("theme_light", "Light Mode"));
-          d.setValue(
-            this.plugin.settings.darkModeFixer
-              ? "dark"
-              : this.plugin.settings.lightModeFixer
-                ? "light"
-                : "disabled",
-          );
-          try {
-            d.selectEl.style.minWidth = "200px";
-          } catch (e) {}
-          d.onChange(async (v) => {
-            this.plugin.settings.darkModeFixer = v === "dark";
-            this.plugin.settings.lightModeFixer = v === "light";
-            await this.debouncedSaveSettings();
-            try {
-              this.plugin.updateDarkModeFixer();
-            } catch (e) {}
-            try {
-              this.plugin.updateLightModeFixer();
-            } catch (e) {}
-          });
-          return d;
-        });
       // ===== One-Time Actions (Color Once / Highlight Once) — bottom of all items =====
       // --- One-Time Actions (Foldable) ---
       const otaHeaderDiv = containerEl.createDiv();
