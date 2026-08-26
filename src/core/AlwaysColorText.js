@@ -23,6 +23,8 @@ import { RegexTesterModal } from '../modals/RegexTesterModal.js';
 import { RealTimeRegexTesterModal } from '../modals/RealTimeRegexTesterModal.js';
 import { HighlightStylingModal } from '../modals/HighlightStylingModal.js';
 import { CustomCssModal } from '../modals/CustomCssModal.js';
+import { MARKDOWN_TARGETS } from '../utils/markdownTargets.js';
+import { buildMarkdownSelector, buildMarkdownCmSelector, buildRenderedSelector, tagTextMatches, titleTextMatches } from '../utils/markdownElementConfig.js';
 import { EditEntryModal } from '../modals/EditEntryModal.js';
 import { BlacklistRegexTesterModal } from '../modals/BlacklistRegexTesterModal.js';
 import { ChangelogModal } from '../modals/ChangelogModal.js';
@@ -3734,6 +3736,7 @@ class AlwaysColorText extends Plugin {
       let weAll;
       if (Array.isArray(entries) && entries.length > 0) {
         we = entries;
+        weAll = entries;
       } else {
         weAll = Array.isArray(this.settings.wordEntries)
           ? this.settings.wordEntries.slice()
@@ -6893,6 +6896,13 @@ class AlwaysColorText extends Plugin {
               typeof e.customCss === "string" && e.customCss.trim().length > 0
                 ? e.customCss
                 : undefined,
+            // PRESERVE markdown-element config fields (critical — these are the
+            // per-element inputs like heading levels, task types, tag/title
+            // filters that would otherwise be dropped on every load).
+            headingLevels: e.headingLevels || undefined,
+            taskTypes: e.taskTypes || undefined,
+            tagFilter: e.tagFilter || undefined,
+            titleFilter: e.titleFilter || undefined,
           };
           // Preserve per-entry inclusion/exclusion rules on load
           try {
@@ -7291,25 +7301,18 @@ class AlwaysColorText extends Plugin {
         we.some((e) => e.targetElement === "strong-em") ||
         weAll.some((e) => e.targetElement === "strong-em");
 
-      const targets = [
-        {
-          type: "strong",
-          selector: hasBoldItalic
-            ? ".cm-strong:not(.cm-em), .markdown-rendered strong:not(:has(em)), .cm-s-obsidian span.cm-strong:not(.cm-em)"
-            : ".cm-strong, .markdown-rendered strong, .cm-s-obsidian span.cm-strong",
-        },
-        {
-          type: "em",
-          selector: hasBoldItalic
-            ? ".cm-em:not(.cm-strong), .markdown-rendered em:not(:has(strong)), .cm-s-obsidian span.cm-em:not(.cm-strong)"
-            : ".cm-em, .markdown-rendered em, .cm-s-obsidian span.cm-em",
-        },
-        {
-          type: "strong-em",
-          selector:
-            ".cm-strong.cm-em, .cm-strong .cm-em, .cm-em .cm-strong, .markdown-rendered strong em, .markdown-rendered em strong, .cm-s-obsidian span.cm-strong.cm-em",
-        },
-      ];
+      // Build the list of targetable markdown elements from the central registry,
+      // combining each element's editor (cm) selector with its rendered selector.
+      // Editor selectors are scoped under `.workspace .cm-s-obsidian .cm-content`
+      // and rendered selectors under `.markdown-rendered` so the generated rules
+      // outrank Obsidian's own base styles (e.g. `.cm-s-obsidian span.cm-strong.cm-em`)
+      // which otherwise override highlight/both coloring via higher specificity.
+      // Emit "all-tags" before "tag" so a specific tag rule (higher priority)
+      // always wins over the broad all-tags rule when both match an element.
+      const targets = [...MARKDOWN_TARGETS].sort((a, b) => {
+        const rank = (k) => (k === "all-tags" ? 0 : k === "tag" ? 2 : 1);
+        return rank(a.key) - rank(b.key);
+      });
 
       let css = "";
 
@@ -7318,17 +7321,40 @@ class AlwaysColorText extends Plugin {
         const reversedWe = [...we].reverse();
         const reversedWeAll = [...weAll].reverse();
         const entry =
-          reversedWe.find((e) => e && e.targetElement === t.type) ||
-          reversedWeAll.find((e) => e && e.targetElement === t.type);
+          reversedWe.find((e) => e && e.targetElement === t.key) ||
+          reversedWeAll.find((e) => e && e.targetElement === t.key);
 
-        if (entry) {
+        if (!entry) return;
+        const selector = buildMarkdownSelector(t, entry, hasBoldItalic);
+        if (!selector) return; // text-filtered tag/inline-title handled in reading view
+
+        {
           const textColor =
             entry.textColor && entry.textColor !== "currentColor"
               ? entry.textColor
               : entry.color || null;
           const bgColor = entry.backgroundColor || null;
 
-          css += `${t.selector} {`;
+          // Only apply box/highlight styling (padding, radius, border) when the
+          // entry is a highlight/both style, or actually has a background color.
+          // A color-only ("text") entry should emit just `color`, matching the
+          // behavior of word/regex entries.
+          const styleType = entry.styleType || "text";
+          const borderCSS = this.generateBorderStyle(
+            textColor,
+            bgColor,
+            entry,
+          );
+          let isHighlight =
+            styleType === "highlight" || styleType === "both" || !!bgColor;
+          // For tags only, also treat a configured border (even without a
+          // background) as a highlight so the border + radius are forced through.
+          // Other element types keep the original behavior: a color-only entry
+          // emits just `color` (no padding/border/radius).
+          if ((t.key === "tag" || t.key === "all-tags") && borderCSS)
+            isHighlight = true;
+
+          css += `${selector} {`;
 
           if (textColor || bgColor) {
             if (textColor) css += ` color: ${textColor} !important;`;
@@ -7349,10 +7375,7 @@ class AlwaysColorText extends Plugin {
           }
 
           // Add highlight styling properties
-          // Force apply these if we found a matching entry, regardless of color presence
-          // (User might want to style existing bold/italic without changing color)
-          // But to be safe, check if we have any relevant setting or global default
-          {
+          if (isHighlight) {
             const hPad =
               typeof entry.highlightHorizontalPadding === "number"
                 ? entry.highlightHorizontalPadding
@@ -7365,11 +7388,6 @@ class AlwaysColorText extends Plugin {
               typeof entry.highlightBorderRadius === "number"
                 ? entry.highlightBorderRadius
                 : (this.settings.highlightBorderRadius ?? 8);
-            const borderCSS = this.generateBorderStyle(
-              textColor,
-              bgColor,
-              entry,
-            );
 
             // Ensure element behaves like a box for padding/radius
             // For some themes, bold/italic might be inline, so padding works horizontally but radius might need display adjustment
@@ -7393,6 +7411,27 @@ class AlwaysColorText extends Plugin {
             if (extra) css += ` ${extra}`;
           }
           css += ` } \n`;
+
+          // For hashtags in live preview Obsidian splits the tag into a
+          // `.cm-hashtag-begin` ("#") span and a `.cm-hashtag-end` (name) span.
+          // When the "#" is visible, join the two halves into a single pill by
+          // zeroing the inner border + corner radii; when the "#" is hidden by a
+          // CSS snippet we leave the end span intact (scoped via :not(.act-tag-begin-hidden)).
+          if ((t.key === "tag" || t.key === "all-tags") && isHighlight) {
+            const cmSel = buildMarkdownCmSelector(t, entry, hasBoldItalic);
+            if (cmSel) {
+              const beginSel = cmSel
+                .split(",")
+                .map((s) => s.trim() + ".cm-hashtag-begin")
+                .join(", ");
+              const endSel = cmSel
+                .split(",")
+                .map((s) => s.trim() + ".cm-hashtag-end")
+                .join(", ");
+              css += `.cm-editor:not(.act-tag-begin-hidden) ${beginSel} { border-right: none !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }\n`;
+              css += `.cm-editor:not(.act-tag-begin-hidden) ${endSel} { border-left: none !important; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; }\n`;
+            }
+          }
         }
       });
 
@@ -7406,8 +7445,119 @@ class AlwaysColorText extends Plugin {
       } else {
         if (styleEl) styleEl.remove();
       }
+      // Inline / tab titles can't be matched by text via CSS, so apply any
+      // text-filter (titleFilter) for those targets via JS here.
+      this.applyTitleHighlights();
+      // Toggle per-editor class used by the tag begin/end split CSS.
+      this.updateTagBeginVisibility();
     } catch (e) {
       console.error("ACT: Error applying formatting styles", e);
+    }
+  }
+
+  // Obsidian renders a hashtag in live preview as two spans: `.cm-hashtag-begin`
+  // ("#") and `.cm-hashtag-end` (name). Some users hide the "#" via a snippet.
+  // We tag each `.cm-editor` with `act-tag-begin-hidden` when the "#" is not
+  // visible so the tag split CSS can be disabled for those editors.
+  updateTagBeginVisibility() {
+    try {
+      const editors = document.querySelectorAll(".cm-editor");
+      editors.forEach((ed) => {
+        const begin = ed.querySelector(".cm-hashtag-begin");
+        let hidden = true;
+        if (begin) {
+          const cs = getComputedStyle(begin);
+          hidden =
+            cs.display === "none" ||
+            cs.visibility === "hidden" ||
+            (begin.offsetWidth === 0 && begin.offsetHeight === 0);
+        }
+        ed.classList.toggle("act-tag-begin-hidden", hidden);
+      });
+    } catch (_) {}
+    this.ensureTagBeginObserver();
+  }
+
+  ensureTagBeginObserver() {
+    if (this._tagBeginObserver) return;
+    try {
+      let pending = false;
+      this._tagBeginObserver = new MutationObserver(() => {
+        if (pending) return;
+        pending = true;
+        setTimeout(() => {
+          pending = false;
+          try {
+            this.updateTagBeginVisibility();
+          } catch (_) {}
+        }, 250);
+      });
+      this._tagBeginObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+    } catch (_) {}
+  }
+
+  // Apply text-filter (titleFilter) matching for inline-title / tab-title
+  // targets. These elements live outside `.cm-content`/`.markdown-rendered`
+  // (the inline title is in `.cm-sizer`, the tab title in the view header), so
+  // CSS text matching is impossible — we resolve the match in JS instead.
+  applyTitleHighlights() {
+    try {
+      const all = (this.settings.wordEntries || []).concat(
+        (this.settings.wordEntryGroups || []).reduce(
+          (acc, g) => acc.concat(g.entries || []),
+          [],
+        ),
+      );
+      const targets = [
+        { key: "inline-title", sel: ".inline-title" },
+        { key: "tab-title", sel: ".workspace-tab-header-inner-title" },
+      ];
+      targets.forEach(({ key, sel }) => {
+        const els = Array.from(document.querySelectorAll(sel));
+        if (!els.length) return;
+        const entries = all.filter(
+          (e) =>
+            e &&
+            e.targetElement === key &&
+            e.titleFilter &&
+            String(e.titleFilter).trim().length > 0,
+        );
+        els.forEach((el) => {
+          // Clear any previously applied inline styling from this function.
+          el.style.removeProperty("color");
+          el.style.removeProperty("background-color");
+          el.style.removeProperty("border-radius");
+          el.style.removeProperty("padding-left");
+          el.style.removeProperty("padding-right");
+          const entry = entries.find((e) =>
+            titleTextMatches(e.titleFilter, el.textContent || ""),
+          );
+          if (!entry) return;
+          const textColor =
+            entry.textColor && entry.textColor !== "currentColor"
+              ? entry.textColor
+              : entry.color || null;
+          const bg = entry.backgroundColor || null;
+          if (textColor)
+            el.style.setProperty("color", textColor, "important");
+          if (bg) {
+            const op =
+              typeof entry.backgroundOpacity === "number"
+                ? entry.backgroundOpacity
+                : this.settings.backgroundOpacity ?? 25;
+            el.style.setProperty(
+              "background-color",
+              this.hexToRgba(bg, op),
+              "important",
+            );
+          }
+        });
+      });
+    } catch (e) {
+      debugError("TITLE_HIGHLIGHT", "Failed to apply title highlights", e);
     }
   }
 
@@ -7703,7 +7853,11 @@ class AlwaysColorText extends Plugin {
       if (!Array.isArray(s.blacklistEntries)) s.blacklistEntries = [];
       if (!Array.isArray(s.pathRules)) s.pathRules = [];
       s.wordEntries = s.wordEntries.map((e) => {
-        const x = Object.assign({}, e || {});
+        // IMPORTANT: mutate the live entry in place (do NOT clone) so the
+        // reference identity held by the UI (dropdown/config inputs) stays
+        // valid. Cloning here would orphan the UI's object and any later
+        // mutation would be lost on save.
+        const x = e || {};
         x.pattern = String(x.pattern || "");
         if (Array.isArray(x.groupedPatterns)) {
           x.groupedPatterns = x.groupedPatterns
@@ -7850,7 +8004,9 @@ class AlwaysColorText extends Plugin {
       // Sanitize wordEntryGroups
       if (!Array.isArray(s.wordEntryGroups)) s.wordEntryGroups = [];
       s.wordEntryGroups = s.wordEntryGroups.map((g) => {
-        const group = Object.assign({}, g || {});
+        // Mutate the live group in place (do NOT clone) so references held by
+        // the UI / group modal stay valid across saves.
+        const group = g || {};
         if (!Array.isArray(group.entries)) group.entries = [];
         if (!Array.isArray(group.inclusionRules)) group.inclusionRules = [];
         if (!Array.isArray(group.exclusionRules)) group.exclusionRules = [];
@@ -7901,12 +8057,12 @@ class AlwaysColorText extends Plugin {
         group.disableTags = [];
 
         group.entries = group.entries.map((e) => {
-          const entryCopy = Object.assign({}, e || {});
-          entryCopy.markTarget =
+          if (!e) return e;
+          e.markTarget =
             typeof e.markTarget === "string" && e.markTarget
               ? e.markTarget
               : "text";
-          return entryCopy;
+          return e;
         });
         return group;
       });
@@ -7914,7 +8070,8 @@ class AlwaysColorText extends Plugin {
       // Sanitize blacklistEntryGroups (same rule-array migration as above)
       if (!Array.isArray(s.blacklistEntryGroups)) s.blacklistEntryGroups = [];
       s.blacklistEntryGroups = s.blacklistEntryGroups.map((g) => {
-        const group = Object.assign({}, g || {});
+        // Mutate the live group in place to preserve reference identity.
+        const group = g || {};
         if (!Array.isArray(group.entries)) group.entries = [];
         if (!Array.isArray(group.inclusionRules)) group.inclusionRules = [];
         if (!Array.isArray(group.exclusionRules)) group.exclusionRules = [];
@@ -7964,7 +8121,8 @@ class AlwaysColorText extends Plugin {
       });
 
       s.blacklistEntries = s.blacklistEntries.map((e) => {
-        const x = Object.assign({}, e || {});
+        // Mutate in place to preserve UI reference identity.
+        const x = e || {};
         x.pattern = String(x.pattern || "");
         if (Array.isArray(x.groupedPatterns)) {
           x.groupedPatterns = x.groupedPatterns
@@ -8432,6 +8590,11 @@ class AlwaysColorText extends Plugin {
 
   // --- FORCE REFRESH all reading views (reading mode panes) ---
   forceRefreshAllReadingViews() {
+    // Regenerate the global markdown-element stylesheet (editor + reading view)
+    // so changes to markdown targets take effect immediately.
+    try {
+      this.applyFormattingStyles();
+    } catch (e) {}
     this.app.workspace.iterateAllLeaves((leaf) => {
       if (
         leaf.view instanceof MarkdownView &&
@@ -8473,6 +8636,11 @@ class AlwaysColorText extends Plugin {
 
   // --- Reconfigure CodeMirror extensions for all editors ---
    reconfigureEditorExtensions() {
+    // Regenerate the global markdown-element stylesheet so editor (live
+    // preview) styling reflects the current markdown-target entries.
+    try {
+      this.applyFormattingStyles();
+    } catch (e) {}
     if (this.extension) {
       this.app.workspace.unregisterEditorExtension(this.extension);
       this.app.workspace.registerEditorExtension(this.extension);
@@ -10983,9 +11151,10 @@ class AlwaysColorText extends Plugin {
     for (const entry of entries) {
       if (!entry || !entry.targetElement) continue;
 
-      // Map targetElement to selector if needed, or use as is
-      let selector = entry.targetElement;
-      if (selector === "strong-em") selector = "strong > em, em > strong";
+      // Map targetElement to its rendered/reading-mode selector, honoring
+      // per-element config (heading levels / task checkbox types).
+      const selector = buildRenderedSelector(entry);
+      if (!selector) continue;
 
       let elements;
       try {
@@ -11011,6 +11180,17 @@ class AlwaysColorText extends Plugin {
       const hideBg = this.settings.hideHighlights === true;
 
       for (const element of elements) {
+        // Text-based filtering for specific tags / inline-title text
+        if (
+          entry.tagFilter &&
+          !tagTextMatches(entry.tagFilter, element.textContent || "")
+        )
+          continue;
+        if (
+          entry.titleFilter &&
+          !titleTextMatches(entry.titleFilter, element.textContent || "")
+        )
+          continue;
         // Apply text color
         if (!hideText && finalTextColor) {
           element.style.setProperty("color", finalTextColor, "important");
@@ -11081,9 +11261,13 @@ class AlwaysColorText extends Plugin {
     const elementEntries = entries.filter((e) => e && e.targetElement);
     const regexEntries = entries.filter((e) => e && !e.targetElement);
 
-    // Apply element-targeted highlights first
+    // Apply element-targeted highlights first. Process broad "All Tags" before
+    // specific "Tag" entries so a specific tag's color wins when both match.
     if (elementEntries.length > 0) {
-      this.applyElementHighlights(el, elementEntries, folderEntry);
+      const rank = (e) =>
+        e.targetElement === "all-tags" ? 0 : e.targetElement === "tag" ? 1 : 0;
+      const ordered = [...elementEntries].sort((a, b) => rank(a) - rank(b));
+      this.applyElementHighlights(el, ordered, folderEntry);
     }
 
     // Continue with regex-based highlights

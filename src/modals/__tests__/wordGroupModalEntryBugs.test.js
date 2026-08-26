@@ -15,6 +15,15 @@
 
 import { describe, it, expect, vi, afterEach } from "vitest";
 
+// Minimal global `document` stub so DOM-creating helpers (e.g.
+// createMarkdownElementButton / createMarkdownElementConfigInput) can run
+// under the node test environment, which has no real `document`.
+if (typeof globalThis.document === "undefined") {
+  globalThis.document = {
+    createElement: (tag) => makeDomEl(tag),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Minimal DOM helpers
 // ---------------------------------------------------------------------------
@@ -51,6 +60,11 @@ function makeDomEl(tag = "div") {
     createDiv(opts = {}) {
       const child = makeDomEl("div");
       if (opts && opts.text) child.textContent = opts.text;
+      this._children.push(child);
+      return child;
+    },
+
+    appendChild(child) {
       this._children.push(child);
       return child;
     },

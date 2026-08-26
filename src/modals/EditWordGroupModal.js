@@ -8,6 +8,10 @@ import { AlertModal } from './AlertModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
 import { EditEntryModal } from './EditEntryModal.js';
 import { GroupRulesModal } from './GroupRulesModal.js';
+import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
+import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
+import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
+import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
 import { CustomCssModal } from './CustomCssModal.js';
 import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
 
@@ -402,7 +406,7 @@ export class EditWordGroupModal extends Modal {
     this._listDiv.style.backgroundColor = "var(--background-primary)";
     this._refreshGroupEntries();
 
-    // BUTTON ROW: Sort | Add Word | Add Regex | Presets
+    // BUTTON ROW: Sort | Add Rule | Presets
     const buttonRow = contentEl.createDiv();
     buttonRow.addClass("act-group-button-row");
     buttonRow.style.display = "flex";
@@ -447,6 +451,25 @@ export class EditWordGroupModal extends Modal {
       sortBtn.removeEventListener("click", sortBtnHandler),
     );
 
+    const _newUid = () => {
+      try {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2);
+      } catch (e) {
+        return Date.now();
+      }
+    };
+    const addEntry = (entry) => {
+      entry.uid = _newUid();
+      entry.persistAtEnd = true;
+      this.group.entries.push(entry);
+      this._sortMode = "last-added";
+      this._refreshGroupEntries();
+      setTimeout(() => {
+        this._listDiv.scrollTop = this._listDiv.scrollHeight;
+      }, 50);
+    };
+
+    // Add Words button (left)
     const addWordsBtn = buttonRow.createEl("button");
     addWordsBtn.addClass("act-group-btn-add");
     addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
@@ -455,8 +478,8 @@ export class EditWordGroupModal extends Modal {
     addWordsBtn.style.borderRadius = "var(--input-radius)";
     addWordsBtn.style.flex = "1";
     addWordsBtn.addClass("mod-cta");
-    const addWordsHandler = () => {
-      this.group.entries.push({
+    const addWordsHandler = () =>
+      addEntry({
         pattern: "",
         color: "",
         isRegex: false,
@@ -465,47 +488,37 @@ export class EditWordGroupModal extends Modal {
         matchType: "contains",
         caseSensitive: !!this.plugin.settings.caseSensitive,
       });
-      this._sortMode = "last-added";
-      this._refreshGroupEntries();
-      setTimeout(() => {
-        this._listDiv.scrollTop = this._listDiv.scrollHeight;
-      }, 50);
-    };
     addWordsBtn.addEventListener("click", addWordsHandler);
     this._cleanupHandlers.push(() =>
       addWordsBtn.removeEventListener("click", addWordsHandler),
     );
 
-    if (this.plugin.settings.enableRegexSupport) {
-      const addRegexBtn = buttonRow.createEl("button");
-      addRegexBtn.addClass("act-group-btn-regex");
-      addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
-      addRegexBtn.style.cursor = "pointer";
-      addRegexBtn.style.padding = "6px 12px";
-      addRegexBtn.style.borderRadius = "var(--input-radius)";
-      addRegexBtn.style.flex = "1";
-      addRegexBtn.addClass("mod-cta");
-      const addRegexHandler = () => {
-        this._sortMode = "last-added";
-        const onAdded = (entry) => {
-          if (entry) {
-            this.group.entries.push(entry);
-          }
-          this._refreshGroupEntries();
-        };
-        new RealTimeRegexTesterModal(
-          this.app,
-          this.plugin,
-          onAdded,
-          null,
-          true,
-        ).open();
-      };
-      addRegexBtn.addEventListener("click", addRegexHandler);
-      this._cleanupHandlers.push(() =>
-        addRegexBtn.removeEventListener("click", addRegexHandler),
-      );
-    }
+    // Add Regex button (right)
+    const addRegexBtn = buttonRow.createEl("button");
+    addRegexBtn.addClass("act-group-btn-add");
+    addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
+    addRegexBtn.style.cursor = "pointer";
+    addRegexBtn.style.padding = "6px 12px";
+    addRegexBtn.style.borderRadius = "var(--input-radius)";
+    addRegexBtn.style.flex = "1";
+    addRegexBtn.addClass("mod-cta");
+    addRegexBtn.style.display = this.plugin.settings.enableRegexSupport
+      ? ""
+      : "none";
+    const addRegexHandler = () =>
+      addEntry({
+        pattern: "",
+        color: "",
+        isRegex: true,
+        flags: "",
+        styleType: "text",
+        matchType: "contains",
+        caseSensitive: !!this.plugin.settings.caseSensitive,
+      });
+    addRegexBtn.addEventListener("click", addRegexHandler);
+    this._cleanupHandlers.push(() =>
+      addRegexBtn.removeEventListener("click", addRegexHandler),
+    );
 
     const presetsBtn = buttonRow.createEl("button");
     presetsBtn.addClass("act-group-btn-presets");
@@ -517,10 +530,13 @@ export class EditWordGroupModal extends Modal {
       try {
         new PresetModal(this.app, this.plugin, (preset) => {
           if (!preset) return;
+          const isFmt = !!preset.targetElement;
           const entry = {
-            pattern: preset.pattern,
-            isRegex: true,
-            flags: preset.flags || "",
+            pattern: isFmt
+              ? getTargetPatternText(this.plugin, preset.targetElement, false)
+              : preset.pattern,
+            isRegex: isFmt ? false : true,
+            flags: isFmt ? "" : preset.flags || "",
             matchType: "contains",
             presetLabel: preset.label,
             targetElement: preset.targetElement,
@@ -633,6 +649,10 @@ export class EditWordGroupModal extends Modal {
           String(e.presetLabel || "").toLowerCase(),
           String(e.flags || "").toLowerCase(),
           String(e.styleType || "").toLowerCase(),
+          getTargetLabel(this.plugin, e.targetElement, e.affectMarkElements)
+            ? getTargetLabel(this.plugin, e.targetElement, e.affectMarkElements)
+                .toLowerCase()
+            : "",
         ].join(" ");
         if (this._limitMatchExact) return text === q;
         if (this._limitMatchStarts) return text.startsWith(q);
@@ -838,14 +858,23 @@ export class EditWordGroupModal extends Modal {
       };
       markTargetSelect.addEventListener("change", markTargetHandler);
 
-      // Update visibility based on regex status
+      // Infer targetElement for legacy entries (stored only a preset name / regex)
+      // so they're treated as markdown targets.
+      const tgt = resolveTargetElement(this.plugin, entry);
+      if (tgt && !entry.targetElement && !entry.affectMarkElements) {
+        entry.targetElement = tgt;
+      }
+      // Determine the matcher kind for this entry.
+      const kind = entry.targetElement ? "markdown" : entry.isRegex ? "regex" : "word";
+
+      // Update visibility based on kind
       const updateVisibility = () => {
-        matchSelect.style.display = entry.isRegex ? "none" : "";
+        matchSelect.style.display = kind === "word" ? "" : "none";
       };
       updateVisibility();
 
-      // REGEX NAME INPUT (only for regex entries)
-      if (entry.isRegex) {
+      // REGEX NAME INPUT (only for regex kind)
+      if (kind === "regex") {
         const nameInput = row.createEl("input", {
           type: "text",
           value: String(entry.presetLabel || ""),
@@ -861,7 +890,57 @@ export class EditWordGroupModal extends Modal {
         nameInput.addEventListener("input", nameHandler);
       }
 
-      // 3. PATTERN INPUT (with same placeholder as Always Colored Texts)
+      // PATTERN / TARGET ELEMENT field
+      if (kind === "markdown") {
+        // The group was deep-cloned (see constructor), so edits to `entry`
+        // mutate the clone, not the live group in plugin.settings. Mirror the
+        // relevant fields onto the live entry so an immediate saveSettings()
+        // (e.g. from the config input) actually persists the change.
+        const syncLiveEntry = (src) => {
+          const liveGroup = Array.isArray(this.plugin.settings.wordEntryGroups)
+            ? this.plugin.settings.wordEntryGroups.find(
+                (g) => g && g.uid === this.group.uid,
+              )
+            : null;
+          if (!liveGroup || !Array.isArray(liveGroup.entries)) return;
+          const live = liveGroup.entries.find(
+            (e) =>
+              e &&
+              ((e.uid && src.uid && e.uid === src.uid) ||
+                (!e.uid &&
+                  !src.uid &&
+                  e.pattern === src.pattern &&
+                  !!e.isRegex === !!src.isRegex)),
+          );
+          if (!live) return;
+          live.targetElement = src.targetElement;
+          live.affectMarkElements = src.affectMarkElements;
+          live.isRegex = src.isRegex;
+          live.presetLabel = src.presetLabel;
+          live.pattern = src.pattern;
+          live.headingLevels = src.headingLevels;
+          live.taskTypes = src.taskTypes;
+          live.tagFilter = src.tagFilter;
+          live.titleFilter = src.titleFilter;
+        };
+        const onElementSwitch = () => {
+          syncLiveEntry(entry);
+          this.plugin.saveSettings().then(() => this._refreshGroupEntries());
+        };
+        const onConfigChange = () => {
+          syncLiveEntry(entry);
+          this.plugin.saveSettings();
+        };
+        row.appendChild(
+          createMarkdownElementButton(this.app, this.plugin, entry, onElementSwitch),
+        );
+        const cfgInput = createMarkdownElementConfigInput(
+          this.plugin,
+          entry,
+          onConfigChange,
+        );
+        if (cfgInput) row.appendChild(cfgInput);
+      } else {
       const patternInput = row.createEl("input", {
         type: "text",
         value: entry.pattern || "",
@@ -871,18 +950,23 @@ export class EditWordGroupModal extends Modal {
       patternInput.style.borderRadius = "var(--input-radius)";
       patternInput.style.border = "1px solid var(--background-modifier-border)";
       patternInput.placeholder = this.plugin.t(
-        "word_pattern_placeholder_long",
-        "pattern, word or comma-separated words (e.g. hello, world, foo)",
+        kind === "regex"
+          ? "regex_pattern_placeholder"
+          : "word_pattern_placeholder_long",
+        kind === "regex"
+          ? "enter regex pattern"
+          : "pattern, word or comma-separated words (e.g. hello, world, foo)",
       );
       const patternHandler = () => {
         entry.pattern = patternInput.value;
       };
       patternInput.addEventListener("change", patternHandler);
       patternInput.addEventListener("blur", patternHandler);
+      }
 
-      // 4. FLAGS INPUT (only if regex) - comes before regex checkbox
+      // FLAGS INPUT (only if regex kind) - comes before type dropdown
       let flagsInput = null;
-      if (entry.isRegex) {
+      if (kind === "regex") {
         flagsInput = row.createEl("input", {
           type: "text",
           value: entry.flags || "",
@@ -901,17 +985,6 @@ export class EditWordGroupModal extends Modal {
         };
         flagsInput.addEventListener("change", flagsHandler);
       }
-
-      // 5. REGEX CHECKBOX (NO LABEL)
-      const regexChk = row.createEl("input", { type: "checkbox" });
-      regexChk.checked = !!entry.isRegex;
-      regexChk.title = this.plugin.t("use_regex", "Use Regex");
-      const regexChkHandler = () => {
-        entry.isRegex = regexChk.checked;
-        updateVisibility();
-        this._refreshGroupEntries();
-      };
-      regexChk.addEventListener("change", regexChkHandler);
 
       // 6. TEXT COLOR PICKER (if text or both)
       let cp = null;

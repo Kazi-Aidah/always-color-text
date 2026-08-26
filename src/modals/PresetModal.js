@@ -53,13 +53,8 @@ export class PresetModal extends Modal {
         pattern: "^\\s*#{1,6}\\s+.*$",
         flags: "m",
         examples: [this.plugin.t("preset_example_heading", "# Heading")],
-      },
-      {
-        label: this.plugin.t("preset_headings_h3", "Headings (H3)"),
-        pattern: "^\\s*#{3}\\s+.*$",
-        flags: "m",
-        examples: [this.plugin.t("preset_example_heading_h3", "### Heading")],
         group: "markdown",
+        targetElement: "heading",
       },
       {
         label: this.plugin.t("preset_bullet_points", "Bullet Points"),
@@ -67,6 +62,7 @@ export class PresetModal extends Modal {
         flags: "m",
         examples: [this.plugin.t("preset_example_bullet", "- Bullet point")],
         group: "markdown",
+        targetElement: "bullet-list",
       },
       {
         label: this.plugin.t("preset_numbered_lists", "Numbered Lists"),
@@ -74,6 +70,7 @@ export class PresetModal extends Modal {
         flags: "m",
         examples: [this.plugin.t("preset_example_numbered", "1. First item")],
         group: "markdown",
+        targetElement: "numbered-list",
       },
       {
         label: this.plugin.t("preset_task_checked", "Task List (Checked)"),
@@ -83,6 +80,7 @@ export class PresetModal extends Modal {
           this.plugin.t("preset_example_task_checked", "- [x] Completed"),
         ],
         group: "markdown",
+        targetElement: "task-list",
       },
       {
         label: this.plugin.t("preset_task_unchecked", "Task List (Unchecked)"),
@@ -92,6 +90,7 @@ export class PresetModal extends Modal {
           this.plugin.t("preset_example_task_unchecked", "- [ ] Todo"),
         ],
         group: "markdown",
+        targetElement: "task-list",
       },
       {
         label: this.plugin.t("preset_codeblocks", "Codeblocks"),
@@ -99,6 +98,7 @@ export class PresetModal extends Modal {
         flags: "",
         examples: [this.plugin.t("preset_example_codeblock", "``` code ```")],
         group: "markdown",
+        targetElement: "codeblock",
       },
       {
         label: this.plugin.t("preset_dates_yyyy_mm_dd", "Dates (YYYY-MM-DD)"),
@@ -145,6 +145,15 @@ export class PresetModal extends Modal {
         flags: "",
         examples: [this.plugin.t("preset_example_url", "https://example.com")],
         group: "markdown",
+        targetElement: "external-link",
+      },
+      {
+        label: this.plugin.t("preset_internal_link", "Internal Link ([[note]])"),
+        pattern: "\\[\\[[^\\]]+\\]\\]",
+        flags: "",
+        examples: [this.plugin.t("preset_example_internal_link", "[[My Note]]")],
+        group: "markdown",
+        targetElement: "internal-link",
       },
       {
         label: this.plugin.t("preset_markdown_links", "Markdown links"),
@@ -157,6 +166,7 @@ export class PresetModal extends Modal {
           ),
         ],
         group: "markdown",
+        targetElement: "external-link",
       },
       {
         label: this.plugin.t("preset_inline_comments", "Comments (%%…%%)"),
@@ -164,6 +174,7 @@ export class PresetModal extends Modal {
         flags: "s",
         examples: [this.plugin.t("preset_example_comment", "%% comment %%")],
         group: "markdown",
+        targetElement: "comment",
       },
       {
         label: this.plugin.t(
@@ -176,7 +187,63 @@ export class PresetModal extends Modal {
           this.plugin.t("preset_example_highlight", "==highlighted text=="),
         ],
         group: "markdown",
-        affectMarkElements: true,
+        targetElement: "highlight",
+      },
+      {
+        label: this.plugin.t("preset_inline_code", "Inline Code (`code`)"),
+        pattern: "`[^`\\n]+`",
+        flags: "",
+        examples: [this.plugin.t("preset_example_inline_code", "`code`")],
+        group: "markdown",
+        targetElement: "inline-code",
+      },
+      {
+        label: this.plugin.t("preset_strikethrough", "Strikethrough (~~...~~)"),
+        pattern: "~~[^\\s\\S]*?~~",
+        flags: "s",
+        examples: [this.plugin.t("preset_example_strike", "~~struck~~")],
+        group: "markdown",
+        targetElement: "strikethrough",
+      },
+      {
+        label: this.plugin.t("preset_blockquote", "Blockquote"),
+        pattern: "^\\s*>\\s+.*$",
+        flags: "m",
+        examples: [this.plugin.t("preset_example_quote", "> quoted text")],
+        group: "markdown",
+        targetElement: "blockquote",
+      },
+      {
+        label: this.plugin.t("preset_tag", "Tag (#tag)"),
+        pattern: "(?:^|\\s)#[\\p{L}\\p{N}_/-]+",
+        flags: "u",
+        examples: [this.plugin.t("preset_example_tag", "#project")],
+        group: "markdown",
+        targetElement: "tag",
+      },
+      {
+        label: this.plugin.t("preset_all_tags", "All Tags"),
+        pattern: "(?:^|\\s)#[\\p{L}\\p{N}_/-]+",
+        flags: "u",
+        examples: [this.plugin.t("preset_example_tag_all", "#any-tag")],
+        group: "markdown",
+        targetElement: "all-tags",
+      },
+      {
+        label: this.plugin.t("preset_inline_title", "Inline Title (note name)"),
+        pattern: "",
+        flags: "",
+        examples: [this.plugin.t("preset_example_inline_title", "Note title")],
+        group: "markdown",
+        targetElement: "inline-title",
+      },
+      {
+        label: this.plugin.t("preset_tab_title", "Tab Title (note name in tab)"),
+        pattern: "",
+        flags: "",
+        examples: [this.plugin.t("preset_example_tab_title", "Note title")],
+        group: "markdown",
+        targetElement: "tab-title",
       },
       {
         label: this.plugin.t("preset_domain_names", "Domain names"),

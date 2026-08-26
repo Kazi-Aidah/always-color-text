@@ -9,6 +9,10 @@ import { AddToExistingEntryModal } from './AddToExistingEntryModal.js';
 import { LinkedMatcherModal } from './LinkedMatcherModal.js';
 import { RulePickerModal } from './RulePickerModal.js';
 import { RuleValueModal } from './RuleValueModal.js';
+import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
+import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
+import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
+import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
 import {
   matcherKey,
   findEntriesWithMatcherKey,
@@ -55,6 +59,14 @@ export class EditEntryModal extends Modal {
 
     // Determine if regex early
     const isRegex = !!(this.entry && this.entry.isRegex);
+    // A "target" entry colors a CSS element under the hood (Bold/Italic/Links…)
+    // rather than matching a regex, so its pattern is not user-facing. Infer the
+    // target even for older entries that only stored a preset name / regex.
+    const tgt = resolveTargetElement(this.plugin, this.entry);
+    if (tgt && this.entry && !this.entry.targetElement && !this.entry.affectMarkElements) {
+      this.entry.targetElement = tgt;
+    }
+    const isTarget = !!tgt;
 
     const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups)
       ? this.plugin.settings.wordEntryGroups
@@ -198,9 +210,11 @@ export class EditEntryModal extends Modal {
     headerRow.addClass("act-pickr-header");
 
     const title = headerRow.createEl("h2", {
-      text: isRegex
-        ? this.plugin.t("style_regex_modal_header", "Style Regex")
-        : this.plugin.t("style_text_modal_header", "Style Text"),
+      text: isTarget
+        ? this.plugin.t("style_target_modal_header", "Style Target")
+        : isRegex
+          ? this.plugin.t("style_regex_modal_header", "Style Regex")
+          : this.plugin.t("style_text_modal_header", "Style Text"),
     });
     title.style.marginTop = "0";
     title.style.marginBottom = "0";
@@ -321,15 +335,19 @@ export class EditEntryModal extends Modal {
     // MatchType dropdown (text) OR Open in Regex Tester button (regex)
     let matchSelect = null;
     let openRegexBtn = null;
-    if (isRegex) {
+    if (isRegex && !isTarget) {
       openRegexBtn = pickrRow.createEl("button", {
         text: this.plugin.t("open_in_regex_tester", "Open in Regex Tester"),
       });
       openRegexBtn.style.whiteSpace = "nowrap";
-    } else {
+    } else if (!isTarget) {
       matchSelect = pickrRow.createEl("select");
       matchSelect.addClass("act-pickr-match-select");
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "contains")}</option><option value="startsWith">${this.plugin.t("match_option_starts_with", "starts with")}</option><option value="endsWith">${this.plugin.t("match_option_ends_with", "ends with")}</option>`;
+    }
+    if (isTarget) {
+      if (openRegexBtn) openRegexBtn.style.display = "none";
+      caseSel.style.display = "none";
     }
 
     // ===== Preview Wrap =====
@@ -752,6 +770,76 @@ export class EditEntryModal extends Modal {
           : defaultMatch === "endswith"
             ? "endsWith"
             : defaultMatch;
+    }
+    if (isTarget) {
+      // Hide the regex box and show a dropdown to pick the markdown element
+      // this entry targets. Store the description as the pattern so saving keeps
+      // the data meaningful.
+      const targetText = getTargetPatternText(
+        this.plugin,
+        this.entry.targetElement,
+        this.entry.affectMarkElements,
+      );
+      textInput.style.display = "none";
+      textInput.value = targetText;
+
+      // When opened from a group the passed entry is a deep clone, so edits to
+      // it wouldn't be reflected in plugin.settings on an immediate save.
+      // Mirror the markdown config fields onto the live entry (found by uid).
+      const findLiveEntry = () => {
+        const uid = this.originalEntryUid;
+        if (!uid) return null;
+        const lists = [this.plugin.settings.wordEntries];
+        if (Array.isArray(this.plugin.settings.wordEntryGroups)) {
+          this.plugin.settings.wordEntryGroups.forEach((g) => {
+            if (g && Array.isArray(g.entries)) lists.push(g.entries);
+          });
+        }
+        if (Array.isArray(this.plugin.settings.blacklistEntryGroups)) {
+          this.plugin.settings.blacklistEntryGroups.forEach((g) => {
+            if (g && Array.isArray(g.entries)) lists.push(g.entries);
+          });
+        }
+        for (const list of lists) {
+          if (!Array.isArray(list)) continue;
+          const found = list.find((e) => e && e.uid === uid);
+          if (found) return found;
+        }
+        return null;
+      };
+      const syncLiveEntry = (src) => {
+        const live = findLiveEntry();
+        if (!live) return;
+        live.targetElement = src.targetElement;
+        live.affectMarkElements = src.affectMarkElements;
+        live.headingLevels = src.headingLevels;
+        live.taskTypes = src.taskTypes;
+        live.tagFilter = src.tagFilter;
+        live.titleFilter = src.titleFilter;
+      };
+      const onElementSwitch = () => {
+        syncLiveEntry(this.entry);
+        this.plugin.saveSettings().then(() => {
+          this.plugin.reconfigureEditorExtensions();
+          this.plugin.forceRefreshAllEditors();
+          this.plugin.forceRefreshAllReadingViews();
+          if (typeof this._renderPreview === "function") this._renderPreview();
+        });
+      };
+      const onConfigChange = () => {
+        syncLiveEntry(this.entry);
+        this.plugin.saveSettings();
+        if (typeof this._renderPreview === "function") this._renderPreview();
+      };
+      box.appendChild(
+        createMarkdownElementButton(this.app, this.plugin, this.entry, onElementSwitch),
+      );
+      const cfgInput = createMarkdownElementConfigInput(
+        this.plugin,
+        this.entry,
+        onConfigChange,
+      );
+      if (cfgInput) box.appendChild(cfgInput);
     }
     const isCase =
       typeof this.entry.caseSensitive === "boolean"

@@ -6,6 +6,10 @@ import { AlertModal } from './AlertModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
 import { PresetModal } from './PresetModal.js';
 import { GroupRulesModal } from './GroupRulesModal.js';
+import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
+import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
+import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
+import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
 
 export class EditBlacklistGroupModal extends Modal {
   constructor(app, plugin, group, onSave, onDelete) {
@@ -332,7 +336,7 @@ export class EditBlacklistGroupModal extends Modal {
     this._listDiv.style.borderRadius = "var(--input-radius)";
     this._refreshGroupEntries();
 
-    // BUTTON ROW: Sort | Add Word | Add Regex | Presets
+    // BUTTON ROW: Sort | Add Rule | Presets
     const buttonRow = contentEl.createDiv();
     buttonRow.addClass("act-group-button-row");
     buttonRow.style.display = "flex";
@@ -366,6 +370,25 @@ export class EditBlacklistGroupModal extends Modal {
       sortBtn.removeEventListener("click", sortBtnHandler),
     );
 
+    const _newUid = () => {
+      try {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2);
+      } catch (e) {
+        return Date.now();
+      }
+    };
+    const addEntry = (entry) => {
+      entry.uid = _newUid();
+      entry.persistAtEnd = true;
+      this.group.entries.push(entry);
+      this._sortMode = "last-added";
+      this._refreshGroupEntries();
+      setTimeout(() => {
+        this._listDiv.scrollTop = this._listDiv.scrollHeight;
+      }, 50);
+    };
+
+    // Add Words button (left)
     const addWordsBtn = buttonRow.createEl("button");
     addWordsBtn.addClass("act-group-btn-add");
     addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
@@ -374,48 +397,31 @@ export class EditBlacklistGroupModal extends Modal {
     addWordsBtn.style.borderRadius = "var(--input-radius)";
     addWordsBtn.style.flex = "1";
     addWordsBtn.addClass("mod-cta");
-    const addWordsHandler = () => {
-      this.group.entries.push({
-        pattern: "",
-        isRegex: false,
-        flags: "",
-        matchType: "contains",
-      });
-      this._sortMode = "last-added";
-      this._refreshGroupEntries();
-      setTimeout(() => {
-        this._listDiv.scrollTop = this._listDiv.scrollHeight;
-      }, 50);
-    };
+    const addWordsHandler = () =>
+      addEntry({ pattern: "", isRegex: false, flags: "", matchType: "contains" });
     addWordsBtn.addEventListener("click", addWordsHandler);
     this._cleanupHandlers.push(() =>
       addWordsBtn.removeEventListener("click", addWordsHandler),
     );
 
-    if (this.plugin.settings.enableRegexSupport) {
-      const addRegexBtn = buttonRow.createEl("button");
-      addRegexBtn.addClass("act-group-btn-regex");
-      addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
-      addRegexBtn.style.cursor = "pointer";
-      addRegexBtn.style.padding = "6px 12px";
-      addRegexBtn.style.borderRadius = "var(--input-radius)";
-      addRegexBtn.style.flex = "1";
-      addRegexBtn.addClass("mod-cta");
-      const addRegexHandler = () => {
-        this._sortMode = "last-added";
-        const onAdded = (entry) => {
-          if (entry) {
-            this.group.entries.push(entry);
-          }
-          this._refreshGroupEntries();
-        };
-        new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
-      };
-      addRegexBtn.addEventListener("click", addRegexHandler);
-      this._cleanupHandlers.push(() =>
-        addRegexBtn.removeEventListener("click", addRegexHandler),
-      );
-    }
+    // Add Regex button (right)
+    const addRegexBtn = buttonRow.createEl("button");
+    addRegexBtn.addClass("act-group-btn-add");
+    addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
+    addRegexBtn.style.cursor = "pointer";
+    addRegexBtn.style.padding = "6px 12px";
+    addRegexBtn.style.borderRadius = "var(--input-radius)";
+    addRegexBtn.style.flex = "1";
+    addRegexBtn.addClass("mod-cta");
+    addRegexBtn.style.display = this.plugin.settings.enableRegexSupport
+      ? ""
+      : "none";
+    const addRegexHandler = () =>
+      addEntry({ pattern: "", isRegex: true, flags: "", matchType: "contains" });
+    addRegexBtn.addEventListener("click", addRegexHandler);
+    this._cleanupHandlers.push(() =>
+      addRegexBtn.removeEventListener("click", addRegexHandler),
+    );
 
     const presetsBtn = buttonRow.createEl("button");
     presetsBtn.addClass("act-group-btn-presets");
@@ -442,14 +448,17 @@ export class EditBlacklistGroupModal extends Modal {
       }
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
-        const entry = {
-          pattern: preset.pattern,
-          isRegex: true,
-          flags: preset.flags || "",
-          matchType: "contains",
-          presetLabel: preset.label,
-          targetElement: preset.targetElement, // Preserve targetElement for logic-based coloring
-        };
+          const isFmt = !!preset.targetElement;
+          const entry = {
+            pattern: isFmt
+              ? getTargetPatternText(this.plugin, preset.targetElement, false)
+              : preset.pattern,
+            isRegex: isFmt ? false : true,
+            flags: isFmt ? "" : preset.flags || "",
+            matchType: "contains",
+            presetLabel: preset.label,
+            targetElement: preset.targetElement, // Preserve targetElement for logic-based coloring
+          };
         this.group.entries.push(entry);
         this._sortMode = "last-added";
         this._refreshGroupEntries();
@@ -535,6 +544,10 @@ export class EditBlacklistGroupModal extends Modal {
           ...patterns.map((p) => p.toLowerCase()),
           String(e.presetLabel || "").toLowerCase(),
           String(e.flags || "").toLowerCase(),
+          getTargetLabel(this.plugin, e.targetElement, e.affectMarkElements)
+            ? getTargetLabel(this.plugin, e.targetElement, e.affectMarkElements)
+                .toLowerCase()
+            : "",
         ].join(" ");
         if (this._limitMatchExact) return text === q;
         if (this._limitMatchStarts) return text.startsWith(q);
@@ -614,21 +627,82 @@ export class EditBlacklistGroupModal extends Modal {
       };
       matchSelect.addEventListener("change", matchSelectHandler);
 
-      // Update visibility based on regex status
+      // Update visibility based on kind
       const updateVisibility = () => {
-        matchSelect.style.display = entry.isRegex ? "none" : "";
+        matchSelect.style.display = kind === "word" ? "" : "none";
       };
+
+      // Infer targetElement for legacy entries (stored only a preset name / regex)
+      // so they're treated as markdown targets.
+      const tgt = resolveTargetElement(this.plugin, entry);
+      if (tgt && !entry.targetElement && !entry.affectMarkElements) {
+        entry.targetElement = tgt;
+      }
+      // Determine the matcher kind for this entry.
+      const kind = entry.targetElement ? "markdown" : entry.isRegex ? "regex" : "word";
       updateVisibility();
 
-      // Show regex name badge if it's a regex entry (before pattern input, like main blacklist entries)
-      if (entry.isRegex && entry.presetLabel) {
+      // Show badge / target label if applicable (before pattern input)
+      if (kind === "markdown") {
+        // The group was deep-cloned (see constructor), so edits to `entry`
+        // mutate the clone, not the live group in plugin.settings. Mirror the
+        // relevant fields onto the live entry so an immediate saveSettings()
+        // (e.g. from the config input) actually persists the change.
+        const syncLiveEntry = (src) => {
+          const liveGroup = Array.isArray(this.plugin.settings.blacklistEntryGroups)
+            ? this.plugin.settings.blacklistEntryGroups.find(
+                (g) => g && g.uid === this.group.uid,
+              )
+            : null;
+          if (!liveGroup || !Array.isArray(liveGroup.entries)) return;
+          const live = liveGroup.entries.find(
+            (e) =>
+              e &&
+              ((e.uid && src.uid && e.uid === src.uid) ||
+                (!e.uid &&
+                  !src.uid &&
+                  e.pattern === src.pattern &&
+                  !!e.isRegex === !!src.isRegex)),
+          );
+          if (!live) return;
+          live.targetElement = src.targetElement;
+          live.affectMarkElements = src.affectMarkElements;
+          live.isRegex = src.isRegex;
+          live.presetLabel = src.presetLabel;
+          live.pattern = src.pattern;
+          live.headingLevels = src.headingLevels;
+          live.taskTypes = src.taskTypes;
+          live.tagFilter = src.tagFilter;
+          live.titleFilter = src.titleFilter;
+        };
+        const onElementSwitch = () => {
+          syncLiveEntry(entry);
+          this.plugin.saveSettings().then(() => this._refreshGroupEntries());
+        };
+        const onConfigChange = () => {
+          syncLiveEntry(entry);
+          this.plugin.saveSettings();
+        };
+        row.appendChild(
+          createMarkdownElementButton(this.app, this.plugin, entry, onElementSwitch),
+        );
+        const cfgInput = createMarkdownElementConfigInput(
+          this.plugin,
+          entry,
+          onConfigChange,
+        );
+        if (cfgInput) row.appendChild(cfgInput);
+      } else if (kind === "regex" && entry.presetLabel) {
         const badge = row.createEl("span", { text: entry.presetLabel });
         badge.style.marginRight = "8px";
         badge.style.opacity = "0.7";
         badge.style.flex = "0 0 auto";
       }
 
-      // 2. PATTERN INPUT
+      // 2. PATTERN INPUT / TARGET ELEMENT field
+      if (kind === "markdown") {
+        // Element name is shown via the "Target:" badge above; no dropdown/descriptor.
+      } else {
       const displayPatterns =
         Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0
           ? entry.groupedPatterns.join(", ")
@@ -642,24 +716,33 @@ export class EditBlacklistGroupModal extends Modal {
       patternInput.style.borderRadius = "var(--input-radius)";
       patternInput.style.border = "1px solid var(--background-modifier-border)";
       patternInput.placeholder = this.plugin.t(
-        "word_pattern_placeholder_long",
-        "pattern, word or comma-separated words (e.g. hello, world, foo)",
+        kind === "regex"
+          ? "regex_pattern_placeholder"
+          : "word_pattern_placeholder_long",
+        kind === "regex"
+          ? "enter regex pattern"
+          : "pattern, word or comma-separated words (e.g. hello, world, foo)",
       );
       const patternHandler = () => {
         const raw = String(patternInput.value || "");
-        const patterns = raw
-          .split(",")
-          .map((p) => p.trim())
-          .filter((p) => p.length > 0);
-        entry.pattern = patterns[0] || "";
-        entry.groupedPatterns = patterns.length > 1 ? patterns : null;
+        if (kind === "regex") {
+          entry.pattern = raw;
+        } else {
+          const patterns = raw
+            .split(",")
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0);
+          entry.pattern = patterns[0] || "";
+          entry.groupedPatterns = patterns.length > 1 ? patterns : null;
+        }
       };
       patternInput.addEventListener("change", patternHandler);
       patternInput.addEventListener("blur", patternHandler);
+      }
 
-      // 3. FLAGS INPUT (only if regex)
+      // 3. FLAGS INPUT (only if regex kind)
       let flagsInput = null;
-      if (entry.isRegex) {
+      if (kind === "regex") {
         flagsInput = row.createEl("input", {
           type: "text",
           value: entry.flags || "",
@@ -675,17 +758,6 @@ export class EditBlacklistGroupModal extends Modal {
         };
         flagsInput.addEventListener("change", flagsHandler);
       }
-
-      // 4. REGEX CHECKBOX
-      const regexChk = row.createEl("input", { type: "checkbox" });
-      regexChk.checked = !!entry.isRegex;
-      regexChk.title = this.plugin.t("use_regex", "Use Regex");
-      const regexChkHandler = () => {
-        entry.isRegex = regexChk.checked;
-        updateVisibility();
-        this._refreshGroupEntries();
-      };
-      regexChk.addEventListener("change", regexChkHandler);
 
       // 5. DELETE BUTTON (commented out — use right-click context menu to delete)
       /* const btnDelete = row.createEl("button", {

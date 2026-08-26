@@ -19,6 +19,10 @@ import { TextStylePresetsModal } from '../modals/TextStylePresetsModal.js';
 import { CommandVisibilityModal } from '../modals/CommandVisibilityModal.js';
 import { ThemeFixerAdjustModal } from '../modals/ThemeFixerAdjustModal.js';
 import { debugLog, debugError } from '../utils/debug.js';
+import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
+import { getTargetPatternText } from '../utils/targetLabels.js';
+import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
+import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
 export class ColorSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
@@ -121,6 +125,13 @@ export class ColorSettingTab extends PluginSettingTab {
       row.style.gap = "8px";
       row.style.marginBottom = "8px";
 
+      // Determine entry kind: markdown (targetElement) > regex > word
+      const kind = entry.targetElement
+        ? "markdown"
+        : entry.isRegex
+          ? "regex"
+          : "word";
+
       // ELEMENT 1: Style selector (moved first)
       const styleSelect = row.createEl("select");
       styleSelect.style.padding = "6px";
@@ -218,27 +229,38 @@ export class ColorSettingTab extends PluginSettingTab {
         "pattern, word or comma-separated words (e.g. hello, world, foo)",
       );
 
-      // ELEMENT 3: Regex checkbox & flags
-      const regexChk = row.createEl("input", { type: "checkbox" });
-      regexChk.checked = !!entry.isRegex;
-      // regexChk.title = 'Treat pattern as a JavaScript regular expression';
-      regexChk.title = this.plugin.t("use_regex", "Use Regex");
-      regexChk.style.cursor = "pointer";
-      regexChk.style.flex = "0 0 auto";
-
-      const regexLabel = row.createEl("label");
-      regexLabel.appendChild(
-        document.createTextNode(this.plugin.t("label_regex", "Regex")),
-      );
-      regexLabel.style.flex = "0 0 auto";
-      regexLabel.style.cursor = "pointer";
-      regexLabel.style.userSelect = "none";
-      regexLabel.style.fontSize = "0.9em";
-      regexLabel.onclick = () => {
-        regexChk.checked = !regexChk.checked;
-      };
-      regexChk.style.margin = "0";
-      regexLabel.style.display = "none";
+      // ELEMENT 3: (no type UI) — full-width button to switch markdown element
+      let mdElementLabel = null;
+      if (kind === "markdown") {
+        const onElementSwitch = () => {
+          this.plugin.saveSettings().then(() => {
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this._refreshEntries();
+          });
+        };
+        const onConfigChange = () => {
+          this.plugin.saveSettings().then(() => {
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+          });
+        };
+        mdElementLabel = createMarkdownElementButton(
+          this.app,
+          this.plugin,
+          entry,
+          onElementSwitch,
+        );
+        row.appendChild(mdElementLabel);
+        const cfgInput = createMarkdownElementConfigInput(
+          this.plugin,
+          entry,
+          onConfigChange,
+        );
+        if (cfgInput) row.appendChild(cfgInput);
+      }
 
       const flagsInput = row.createEl("input", {
         type: "text",
@@ -377,7 +399,7 @@ export class ColorSettingTab extends PluginSettingTab {
       if (initBgEntry && initBgEntry.backgroundColor)
         cpBg.value = initBgEntry.backgroundColor;
       // Set flags input visibility based on current style and regex state
-      flagsInput.style.display = entry.isRegex ? "" : "none";
+      flagsInput.style.display = kind === "regex" ? "" : "none";
 
       // Initialize matchSelect value with entry.matchType or default based on partialMatch
       try {
@@ -444,6 +466,7 @@ export class ColorSettingTab extends PluginSettingTab {
 
       const textInputHandler = async () => {
         try {
+          if (kind === "markdown") return;
           const newPattern = textInput.value;
           const idx = resolveIdx();
           if (idx === -1) return;
@@ -800,29 +823,6 @@ export class ColorSettingTab extends PluginSettingTab {
         this.plugin.forceRefreshAllEditors();
       };
 
-      const regexChkHandler = async () => {
-        const idx = resolveIdx();
-        if (idx !== -1)
-          this.plugin.settings.wordEntries[idx].isRegex = regexChk.checked;
-        flagsInput.style.display = regexChk.checked ? "" : "none";
-        // Show notice if regex is enabled but regex support is disabled
-        if (regexChk.checked && !this.plugin.settings.enableRegexSupport) {
-          new Notice(
-            this.plugin.t(
-              "notice_regex_support_disabled",
-              "To use Presets, enable Regex Support from the General tab in Settings.",
-            ),
-          );
-        }
-        await this.plugin.saveSettings();
-        this.plugin.compileWordEntries();
-        this.plugin.compileTextBgColoringEntries();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        entry.isRegex = regexChk.checked;
-        this._refreshEntries();
-      };
-
       const flagsInputHandler = async () => {
         const idx = resolveIdx();
         if (idx !== -1)
@@ -1003,7 +1003,6 @@ export class ColorSettingTab extends PluginSettingTab {
       };
       cp.addEventListener("contextmenu", cpContextHandler);
       cpBg.addEventListener("contextmenu", cpBgContextHandler);
-      regexChk.addEventListener("change", regexChkHandler);
       flagsInput.addEventListener("change", flagsInputHandler);
       del.addEventListener("click", delHandler);
 
@@ -1061,14 +1060,17 @@ export class ColorSettingTab extends PluginSettingTab {
 
       const updateVisibility = () => {
         const style = styleSelect.value;
-        matchSelect.style.display = entry.isRegex ? "none" : "";
+        matchSelect.style.display = kind === "word" ? "" : "none";
+        textInput.style.display = kind === "markdown" ? "none" : "";
+        if (mdElementLabel)
+          mdElementLabel.style.display = kind === "markdown" ? "" : "none";
         if (style === "text") {
           cp.style.display = "";
           if (swatchSelect) swatchSelect.style.display = "";
           cpBg.style.display = "none";
           if (swatchSelect2) swatchSelect2.style.display = "none";
-          flagsInput.style.display = entry.isRegex ? "" : "none";
-          if (nameInput) nameInput.style.display = entry.isRegex ? "" : "none";
+          flagsInput.style.display = kind === "regex" ? "" : "none";
+          if (nameInput) nameInput.style.display = kind === "regex" ? "" : "none";
           try {
             // Synchronize picker values with entry fields
             const val =
@@ -1084,8 +1086,8 @@ export class ColorSettingTab extends PluginSettingTab {
           if (swatchSelect) swatchSelect.style.display = "none";
           cpBg.style.display = "";
           if (swatchSelect2) swatchSelect2.style.display = "";
-          flagsInput.style.display = entry.isRegex ? "" : "none";
-          if (nameInput) nameInput.style.display = entry.isRegex ? "" : "none";
+          flagsInput.style.display = kind === "regex" ? "" : "none";
+          if (nameInput) nameInput.style.display = kind === "regex" ? "" : "none";
           try {
             const val =
               entry.backgroundColor ||
@@ -1101,8 +1103,8 @@ export class ColorSettingTab extends PluginSettingTab {
           if (swatchSelect) swatchSelect.style.display = "";
           cpBg.style.display = "";
           if (swatchSelect2) swatchSelect2.style.display = "";
-          flagsInput.style.display = entry.isRegex ? "" : "none";
-          if (nameInput) nameInput.style.display = entry.isRegex ? "" : "none";
+          flagsInput.style.display = kind === "regex" ? "" : "none";
+          if (nameInput) nameInput.style.display = kind === "regex" ? "" : "none";
           try {
             const t =
               entry.textColor && entry.textColor !== "currentColor"
@@ -1252,9 +1254,6 @@ export class ColorSettingTab extends PluginSettingTab {
           cpBg.removeEventListener("contextmenu", cpBgContextHandler);
         } catch (e) {}
         try {
-          regexChk.removeEventListener("change", regexChkHandler);
-        } catch (e) {}
-        try {
           flagsInput.removeEventListener("change", flagsInputHandler);
         } catch (e) {}
         try {
@@ -1328,7 +1327,6 @@ export class ColorSettingTab extends PluginSettingTab {
           colorTargetSelect,
           cp,
           cpBg,
-          regexChk,
           flagsInput,
           del,
           entrySettingsBtn,
@@ -1664,12 +1662,6 @@ export class ColorSettingTab extends PluginSettingTab {
           "Keyword or pattern, or comma-separated words",
         );
 
-        const regexChk = row.createEl("input", { type: "checkbox" });
-        regexChk.checked = !!entry.isRegex;
-        // regexChk.title = 'Treat pattern as a JavaScript regular expression';
-        regexChk.title = this.plugin.t("use_regex", "Use Regex");
-        regexChk.style.cursor = "pointer";
-
         const flagsInput = row.createEl("input", {
           type: "text",
           value: entry.flags || "",
@@ -1700,7 +1692,7 @@ export class ColorSettingTab extends PluginSettingTab {
         }
         const updateInputDisplay = () => {
           // Update the input field to show the current state from entry
-          if (regexChk && regexChk.checked) {
+          if (entry.isRegex) {
             textInput.value = entry.pattern || "";
           } else {
             const patterns =
@@ -1833,18 +1825,6 @@ export class ColorSettingTab extends PluginSettingTab {
         };
 
         // cpHandler for blacklist color picker
-        const regexChkHandler = async () => {
-          let entryIdx = resolveBlacklistIndex();
-          if (entryIdx === -1) return;
-          this.plugin.settings.blacklistEntries[entryIdx].isRegex =
-            regexChk.checked;
-          flagsInput.style.display = regexChk.checked ? "inline-block" : "none";
-          await this.plugin.saveSettings();
-          // Sync local entry and refresh UI
-          entry.isRegex = regexChk.checked;
-          this._refreshBlacklistWords();
-        };
-
         const flagsInputHandler = async () => {
           let entryIdx = resolveBlacklistIndex();
           if (entryIdx === -1) return;
@@ -1964,7 +1944,6 @@ export class ColorSettingTab extends PluginSettingTab {
         textInput.addEventListener("change", textInputHandler);
         textInput.addEventListener("blur", textInputHandler);
         row.addEventListener("contextmenu", contextMenuHandler);
-        regexChk.addEventListener("change", regexChkHandler);
         flagsInput.addEventListener("change", flagsInputHandler);
         del.addEventListener("click", delHandler);
         this._cleanupHandlers.push(() => {
@@ -1976,9 +1955,6 @@ export class ColorSettingTab extends PluginSettingTab {
           } catch (e) {}
           try {
             row.removeEventListener("contextmenu", contextMenuHandler);
-          } catch (e) {}
-          try {
-            regexChk.removeEventListener("change", regexChkHandler);
           } catch (e) {}
           try {
             flagsInput.removeEventListener("change", flagsInputHandler);
@@ -4920,7 +4896,7 @@ export class ColorSettingTab extends PluginSettingTab {
         const rows = Array.from(this._entryRows?.entries() || []);
         rows.forEach(([entry, info]) => {
           if (!entry || !info || !info.elements) return;
-          const { textInput, styleSelect, cp, cpBg, regexChk, flagsInput } =
+          const { textInput, styleSelect, cp, cpBg, flagsInput } =
             info.elements;
           let idx = -1;
           if (entry && entry.uid)
@@ -4935,9 +4911,6 @@ export class ColorSettingTab extends PluginSettingTab {
             const patterns = raw.split(",").filter((p) => p.length > 0);
             s.pattern = patterns[0] || "";
             s.groupedPatterns = patterns.length > 1 ? patterns : null;
-          }
-          if (regexChk) {
-            s.isRegex = !!regexChk.checked;
           }
           if (flagsInput && typeof flagsInput.value === "string") {
             s.flags = String(flagsInput.value || "");
@@ -6893,7 +6866,8 @@ export class ColorSettingTab extends PluginSettingTab {
         sortBtn.removeEventListener("click", sortBtnHandler),
       );
 
-      // Add Words button (right side)
+      // Add Rule button (replaces Add Words / Add Regex)
+      // Add Words button (left)
       const addWordsBtn = buttonRowDiv.createEl("button");
       addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
       addWordsBtn.style.cursor = "pointer";
@@ -6936,7 +6910,7 @@ export class ColorSettingTab extends PluginSettingTab {
         addWordsBtn.removeEventListener("click", addWordsHandler),
       );
 
-      // Add Regex button (beside Add Words)
+      // Add Regex button (right)
       const addRegexBtn = buttonRowDiv.createEl("button");
       addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
       addRegexBtn.style.cursor = "pointer";
@@ -6950,9 +6924,8 @@ export class ColorSettingTab extends PluginSettingTab {
           this._suspendSorting = this._wordsSortMode === "last-added";
           const onAdded = (entry) => {
             try {
-              if (entry && entry.uid) {
+              if (entry && entry.uid)
                 this._newEntriesSet && this._newEntriesSet.add(entry.uid);
-              }
               this._refreshEntries();
             } catch (e) {}
           };
@@ -7002,19 +6975,31 @@ export class ColorSettingTab extends PluginSettingTab {
                   : null;
               if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color)))
                 return;
+              const matchType =
+                this.plugin.settings.matchType ||
+                (this.plugin.settings.partialMatch ? "contains" : "exact");
               const entry = {
-                pattern: preset.pattern,
-                isRegex: true,
-                flags: preset.flags || "",
+                isRegex: preset.targetElement ? false : true,
                 groupedPatterns: null,
                 presetLabel: preset.label,
                 persistAtEnd: true,
-                matchType: (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
+                matchType,
               };
-              // Copy preset properties like affectMarkElements and targetElement
-              if (preset.affectMarkElements) entry.affectMarkElements = true;
-              if (preset.targetElement)
+              // Markdown-element presets become targeted entries (rendered as the
+              // element dropdown), not regex patterns.
+              if (preset.targetElement) {
                 entry.targetElement = preset.targetElement;
+                entry.pattern = getTargetPatternText(
+                  this.plugin,
+                  preset.targetElement,
+                  false,
+                );
+                entry.affectMarkElements = false;
+              } else {
+                entry.pattern = preset.pattern;
+                entry.flags = preset.flags || "";
+              }
+              if (preset.affectMarkElements) entry.affectMarkElements = true;
               try {
                 entry.uid =
                   Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -7508,6 +7493,7 @@ export class ColorSettingTab extends PluginSettingTab {
         blacklistSortBtn.removeEventListener("click", blacklistSortHandler),
       );
 
+      // Add blacklist word button (left)
       const blacklistAddBtn = blacklistButtonRowDiv.createEl("button");
       blacklistAddBtn.textContent = this.plugin.t(
         "btn_add_blacklist_word",
@@ -7549,6 +7535,7 @@ export class ColorSettingTab extends PluginSettingTab {
         blacklistAddBtn.removeEventListener("click", blacklistAddHandler),
       );
 
+      // Add blacklist regex button (right)
       const blacklistAddRegexBtn = blacklistButtonRowDiv.createEl("button");
       blacklistAddRegexBtn.textContent = this.plugin.t(
         "btn_add_blacklist_regex",
@@ -7565,9 +7552,8 @@ export class ColorSettingTab extends PluginSettingTab {
         try {
           const onAdded = (entry) => {
             try {
-              if (entry && entry.uid) {
+              if (entry && entry.uid)
                 this._blacklistNewSet && this._blacklistNewSet.add(entry.uid);
-              }
               this._refreshBlacklistWords();
             } catch (e) {}
           };
