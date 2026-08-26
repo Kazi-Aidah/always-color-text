@@ -7852,10 +7852,54 @@ class AlwaysColorText extends Plugin {
       s.wordEntryGroups = s.wordEntryGroups.map((g) => {
         const group = Object.assign({}, g || {});
         if (!Array.isArray(group.entries)) group.entries = [];
-        if (!Array.isArray(group.enableFolders)) group.enableFolders = [];
-        if (!Array.isArray(group.disableFolders)) group.disableFolders = [];
-        if (!Array.isArray(group.enableTags)) group.enableTags = [];
-        if (!Array.isArray(group.disableTags)) group.disableTags = [];
+        if (!Array.isArray(group.inclusionRules)) group.inclusionRules = [];
+        if (!Array.isArray(group.exclusionRules)) group.exclusionRules = [];
+
+        // Migrate legacy enable/disable fields into rule arrays (idempotent:
+        // legacy fields are cleared afterwards so this runs only once).
+        const toRule = (path, type) => ({
+          path: String(path || ""),
+          type,
+          isRegex: false,
+          flags: "",
+        });
+        const legacyFolders = Array.isArray(group.enableFolders)
+          ? group.enableFolders
+          : [];
+        const legacyTags = Array.isArray(group.enableTags)
+          ? group.enableTags
+          : [];
+        const legacyDisFolders = Array.isArray(group.disableFolders)
+          ? group.disableFolders
+          : [];
+        const legacyDisTags = Array.isArray(group.disableTags)
+          ? group.disableTags
+          : [];
+        if (legacyFolders.length)
+          group.inclusionRules.push(
+            ...legacyFolders.map((f) => toRule(f, "folder")),
+          );
+        if (legacyTags.length)
+          group.inclusionRules.push(
+            ...legacyTags.map((t) =>
+              toRule(String(t).startsWith("#") ? t : "#" + t, "tag"),
+            ),
+          );
+        if (legacyDisFolders.length)
+          group.exclusionRules.push(
+            ...legacyDisFolders.map((f) => toRule(f, "folder")),
+          );
+        if (legacyDisTags.length)
+          group.exclusionRules.push(
+            ...legacyDisTags.map((t) =>
+              toRule(String(t).startsWith("#") ? t : "#" + t, "tag"),
+            ),
+          );
+        group.enableFolders = [];
+        group.disableFolders = [];
+        group.enableTags = [];
+        group.disableTags = [];
+
         group.entries = group.entries.map((e) => {
           const entryCopy = Object.assign({}, e || {});
           entryCopy.markTarget =
@@ -7864,6 +7908,58 @@ class AlwaysColorText extends Plugin {
               : "text";
           return entryCopy;
         });
+        return group;
+      });
+
+      // Sanitize blacklistEntryGroups (same rule-array migration as above)
+      if (!Array.isArray(s.blacklistEntryGroups)) s.blacklistEntryGroups = [];
+      s.blacklistEntryGroups = s.blacklistEntryGroups.map((g) => {
+        const group = Object.assign({}, g || {});
+        if (!Array.isArray(group.entries)) group.entries = [];
+        if (!Array.isArray(group.inclusionRules)) group.inclusionRules = [];
+        if (!Array.isArray(group.exclusionRules)) group.exclusionRules = [];
+        const toRule = (path, type) => ({
+          path: String(path || ""),
+          type,
+          isRegex: false,
+          flags: "",
+        });
+        const legacyFolders = Array.isArray(group.enableFolders)
+          ? group.enableFolders
+          : [];
+        const legacyTags = Array.isArray(group.enableTags)
+          ? group.enableTags
+          : [];
+        const legacyDisFolders = Array.isArray(group.disableFolders)
+          ? group.disableFolders
+          : [];
+        const legacyDisTags = Array.isArray(group.disableTags)
+          ? group.disableTags
+          : [];
+        if (legacyFolders.length)
+          group.inclusionRules.push(
+            ...legacyFolders.map((f) => toRule(f, "folder")),
+          );
+        if (legacyTags.length)
+          group.inclusionRules.push(
+            ...legacyTags.map((t) =>
+              toRule(String(t).startsWith("#") ? t : "#" + t, "tag"),
+            ),
+          );
+        if (legacyDisFolders.length)
+          group.exclusionRules.push(
+            ...legacyDisFolders.map((f) => toRule(f, "folder")),
+          );
+        if (legacyDisTags.length)
+          group.exclusionRules.push(
+            ...legacyDisTags.map((t) =>
+              toRule(String(t).startsWith("#") ? t : "#" + t, "tag"),
+            ),
+          );
+        group.enableFolders = [];
+        group.disableFolders = [];
+        group.enableTags = [];
+        group.disableTags = [];
         return group;
       });
 
@@ -16066,6 +16162,126 @@ class AlwaysColorText extends Plugin {
     }
   }
 
+  // Evaluate a single inclusion/exclusion rule against a file path.
+  // Mirrors the matcher used for entry/advanced rules.
+  // Returns "file" | "folder" | "vault" | null.
+  _matchRuleScope(rule, filePath) {
+    try {
+      const fp = this.normalizePath(filePath);
+      const pathStr = String(rule && rule.path ? rule.path : "").trim();
+      if (pathStr.length === 0) return "vault";
+
+      if (rule.type === "property") {
+        const fm = this._getFrontmatter(filePath);
+        if (!fm) return null;
+        const idx = pathStr.indexOf(":");
+        let key, val;
+        if (idx > -1) {
+          key = pathStr.slice(0, idx).trim();
+          val = pathStr.slice(idx + 1).trim();
+        } else {
+          key = pathStr;
+          val = null;
+        }
+        if (!key || !(key in fm)) return null;
+        if (val === null || val === "") return "file";
+        const fv = String(fm[key]);
+        return fv.toLowerCase() === String(val).toLowerCase() ? "file" : null;
+      }
+
+      if (rule.type === "pattern") {
+        if (!pathStr) return null;
+        let re = null;
+        try {
+          re = globToRegex(pathStr);
+        } catch (e) {
+          re = null;
+        }
+        if (!re) return null;
+        const segs = fp.split("/");
+        const base = segs[segs.length - 1];
+        if (re.test(fp) || re.test(base)) return "file";
+        const parents = this._parentFolders(fp);
+        for (const p of parents) {
+          const pbase = p.split("/").pop();
+          if (re.test(p) || (pbase && re.test(pbase))) return "folder";
+        }
+        return null;
+      }
+
+      const dk = this.detectRuleKind(pathStr);
+      if (dk.kind === "tag") {
+        const tags = this.getFileTags(filePath).map((t) =>
+          t.replace(/^#/, ""),
+        );
+        if (tags.includes(String(dk.tag || "").replace(/^#/, "")))
+          return "file";
+        return null;
+      }
+      if (dk.kind === "name") {
+        const { fileMatch, folderMatch } = this._matchesByName(fp, dk.name);
+        if (fileMatch) return "file";
+        if (folderMatch) return "folder";
+        return null;
+      }
+      if (dk.kind === "exact-file")
+        return this._matchFile(dk.path, fp) ? "file" : null;
+      if (dk.kind === "exact-folder") {
+        const parents = this._parentFolders(fp);
+        for (const p of parents) {
+          if (this.normalizePath(p) === this.normalizePath(dk.path))
+            return "folder";
+        }
+        return null;
+      }
+      if (dk.kind === "regex") {
+        try {
+          const re = new RegExp(dk.pattern);
+          if (re.test(fp)) return "file";
+          const parents = this._parentFolders(fp);
+          for (const p of parents) {
+            if (re.test(p)) return "folder";
+          }
+        } catch (e) {
+          return null;
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Rule-array based group scoping (new model). Returns true when the rules
+  // permit coloring in this file (neutral -> true).
+  _groupRulesAllow(group, filePath) {
+    const inc = Array.isArray(group.inclusionRules)
+      ? group.inclusionRules
+      : [];
+    const exc = Array.isArray(group.exclusionRules)
+      ? group.exclusionRules
+      : [];
+
+    const includeMatches = inc
+      .map((r) => this._matchRuleScope(r, filePath))
+      .filter((t) => t);
+    const excludeMatches = exc
+      .map((r) => this._matchRuleScope(r, filePath))
+      .filter((t) => t);
+
+    if (inc.length > 0 && includeMatches.length === 0) return false;
+
+    if (excludeMatches.includes("file")) return false;
+    if (
+      (excludeMatches.includes("folder") ||
+        excludeMatches.includes("vault")) &&
+      !includeMatches.includes("file")
+    )
+      return false;
+
+    return true;
+  }
+
   // NEW METHOD: Check if word is blacklisted
   isGroupEnabledForFile(group, filePath) {
     if (!group || !filePath) return true;
@@ -16176,9 +16392,15 @@ class AlwaysColorText extends Plugin {
       if (enableMatchTag) tagDecision = 1;
     }
 
-    if (folderDecision === 1 || tagDecision === 1) return true;
-    if (folderDecision === -1 || tagDecision === -1) return false;
-    return true;
+    const legacyAllowed =
+      folderDecision === 1 ||
+      tagDecision === 1 ||
+      !(folderDecision === -1 || tagDecision === -1);
+
+    // Combine with the new rule-array based scoping (AND of both models).
+    const ruleAllowed = this._groupRulesAllow(group, filePath);
+
+    return legacyAllowed && ruleAllowed;
   }
 
   isWordBlacklisted(word, filePath = null) {

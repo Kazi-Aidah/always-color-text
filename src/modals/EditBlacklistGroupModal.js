@@ -5,6 +5,7 @@ import { SelectBlacklistGroupModal } from './SelectBlacklistGroupModal.js';
 import { AlertModal } from './AlertModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
 import { PresetModal } from './PresetModal.js';
+import { GroupRulesModal } from './GroupRulesModal.js';
 
 export class EditBlacklistGroupModal extends Modal {
   constructor(app, plugin, group, onSave, onDelete) {
@@ -184,114 +185,40 @@ export class EditBlacklistGroupModal extends Modal {
       matchTypeSelect.removeEventListener("change", matchTypeHandler),
     );
 
-    const enableDisableRow = contentEl.createDiv();
-    enableDisableRow.addClass("act-group-enable-disable-row");
-    enableDisableRow.style.display = "grid";
-    enableDisableRow.style.gridTemplateColumns =
-      "auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)";
-    enableDisableRow.style.gap = "8px";
-    enableDisableRow.style.alignItems = "center";
-    enableDisableRow.style.marginBottom = "12px";
+    const rulesRow = contentEl.createDiv();
+    rulesRow.style.display = "flex";
+    rulesRow.style.alignItems = "center";
+    rulesRow.style.gap = "8px";
+    rulesRow.style.marginBottom = "12px";
 
-    const enLabel = enableDisableRow.createEl("div", {
-      text: this.plugin.t("label_enable_in", "Enable in"),
+    const rulesCount = () =>
+      (Array.isArray(this.group.inclusionRules)
+        ? this.group.inclusionRules.length
+        : 0) +
+      (Array.isArray(this.group.exclusionRules)
+        ? this.group.exclusionRules.length
+        : 0);
+
+    const rulesBtn = rulesRow.createEl("button", {
+      text:
+        this.plugin.t("group_rules_button", "Edit inclusion / exclusion rules") +
+        ` (${rulesCount()})`,
     });
-    enLabel.addClass("act-group-enable-label");
-    enLabel.style.color = "var(--text-muted)";
-
-    const enFoldersInput = enableDisableRow.createEl("input", { type: "text" });
-    enFoldersInput.placeholder = "folder1/, folder2/";
-    enFoldersInput.style.padding = "6px";
-    enFoldersInput.style.borderRadius = "var(--input-radius)";
-    enFoldersInput.style.border = "1px solid var(--background-modifier-border)";
-    enFoldersInput.style.minWidth = "0";
-    enFoldersInput.value = Array.isArray(this.group.enableFolders)
-      ? this.group.enableFolders.join(", ")
-      : "";
-
-    const enTagsInput = enableDisableRow.createEl("input", { type: "text" });
-    enTagsInput.placeholder = "#tag1, #tag2";
-    enTagsInput.style.padding = "6px";
-    enTagsInput.style.borderRadius = "var(--input-radius)";
-    enTagsInput.style.border = "1px solid var(--background-modifier-border)";
-    enTagsInput.style.minWidth = "0";
-    enTagsInput.value = Array.isArray(this.group.enableTags)
-      ? this.group.enableTags
-          .map((t) => (t.startsWith("#") ? t : `#${t}`))
-          .join(", ")
-      : "";
-
-    const disLabel = enableDisableRow.createEl("div", {
-      text: this.plugin.t("label_disable_in", "Disable in"),
-    });
-    disLabel.addClass("act-group-disable-label");
-    disLabel.style.color = "var(--text-muted)";
-
-    const disFoldersInput = enableDisableRow.createEl("input", {
-      type: "text",
-    });
-    disFoldersInput.placeholder = "folder1/, folder2/";
-    disFoldersInput.style.padding = "6px";
-    disFoldersInput.style.borderRadius = "var(--input-radius)";
-    disFoldersInput.style.border =
-      "1px solid var(--background-modifier-border)";
-    disFoldersInput.style.minWidth = "0";
-    disFoldersInput.value = Array.isArray(this.group.disableFolders)
-      ? this.group.disableFolders.join(", ")
-      : "";
-
-    const disTagsInput = enableDisableRow.createEl("input", { type: "text" });
-    disTagsInput.placeholder = "#tag1, #tag2";
-    disTagsInput.style.padding = "6px";
-    disTagsInput.style.borderRadius = "var(--input-radius)";
-    disTagsInput.style.border = "1px solid var(--background-modifier-border)";
-    disTagsInput.style.minWidth = "0";
-    disTagsInput.value = Array.isArray(this.group.disableTags)
-      ? this.group.disableTags
-          .map((t) => (t.startsWith("#") ? t : `#${t}`))
-          .join(", ")
-      : "";
-
-    // Helper to parse lists
-    const parseList = (raw, isTag) => {
-      const arr = String(raw || "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      if (isTag) return arr.map((t) => t.replace(/^#/, "")).filter(Boolean);
-      return arr;
+    rulesBtn.style.padding = "6px 12px";
+    rulesBtn.style.borderRadius = "var(--input-radius)";
+    rulesBtn.style.border = "1px solid var(--background-modifier-border)";
+    rulesBtn.style.width = "100%";
+    rulesBtn.style.flex = "1 1 auto";
+    const openRulesModal = () => {
+      new GroupRulesModal(this.app, this.plugin, this.group, () => {
+        rulesBtn.textContent =
+          this.plugin.t(
+            "group_rules_button",
+            "Edit inclusion / exclusion rules",
+          ) + ` (${rulesCount()})`;
+      }).open();
     };
-
-    const enFoldersHandler = () => {
-      this.group.enableFolders = parseList(enFoldersInput.value, false);
-    };
-    const enTagsHandler = () => {
-      this.group.enableTags = parseList(enTagsInput.value, true);
-    };
-    const disFoldersHandler = () => {
-      this.group.disableFolders = parseList(disFoldersInput.value, false);
-    };
-    const disTagsHandler = () => {
-      this.group.disableTags = parseList(disTagsInput.value, true);
-    };
-
-    enFoldersInput.addEventListener("input", enFoldersHandler);
-    enTagsInput.addEventListener("input", enTagsHandler);
-    disFoldersInput.addEventListener("input", disFoldersHandler);
-    disTagsInput.addEventListener("input", disTagsHandler);
-
-    this._cleanupHandlers.push(() =>
-      enFoldersInput.removeEventListener("input", enFoldersHandler),
-    );
-    this._cleanupHandlers.push(() =>
-      enTagsInput.removeEventListener("input", enTagsHandler),
-    );
-    this._cleanupHandlers.push(() =>
-      disFoldersInput.removeEventListener("input", disFoldersHandler),
-    );
-    this._cleanupHandlers.push(() =>
-      disTagsInput.removeEventListener("input", disTagsHandler),
-    );
+    rulesBtn.addEventListener("click", openRulesModal);
 
     // SEARCH BAR & LIMIT INPUT ROW
     const searchRow = contentEl.createDiv();
