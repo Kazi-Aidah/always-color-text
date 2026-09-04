@@ -922,6 +922,7 @@ export class EditWordGroupModal extends Modal {
           live.taskTypes = src.taskTypes;
           live.tagFilter = src.tagFilter;
           live.titleFilter = src.titleFilter;
+          live.titleMatchType = src.titleMatchType;
         };
         const onElementSwitch = () => {
           syncLiveEntry(entry);

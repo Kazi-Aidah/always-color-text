@@ -11856,9 +11856,6 @@ var RENDER_PREFIX = ".markdown-rendered";
 function parseTagFilterNames(filter) {
   return String(filter || "").split(/[\s,]+/).map((s) => s.replace(/^#/, "").trim().toLowerCase()).filter(Boolean);
 }
-function cssClassEscape(name) {
-  return name.replace(/[^a-z0-9_-]/g, (c) => "\\" + c);
-}
 function parseHeadingLevels(input) {
   const raw = input == null ? "" : String(input).trim();
   const levels = /* @__PURE__ */ new Set();
@@ -11905,12 +11902,14 @@ function getElementConfig(key) {
     case "inline-title":
       return {
         field: "titleFilter",
+        matchField: "titleMatchType",
         placeholder: "title text",
         defaultValue: ""
       };
     case "tab-title":
       return {
         field: "titleFilter",
+        matchField: "titleMatchType",
         placeholder: "tab title text",
         defaultValue: ""
       };
@@ -11918,8 +11917,12 @@ function getElementConfig(key) {
       return null;
   }
 }
-function cssAttr(c) {
-  return '"' + String(c).replace(/"/g, '\\"') + '"';
+function normalizeTitleMatchType(mode) {
+  const m = String(mode || "contains").trim().toLowerCase();
+  if (m === "exact") return "exact";
+  if (m === "startswith" || m === "starts with") return "startswith";
+  if (m === "endswith" || m === "ends with") return "endswith";
+  return "contains";
 }
 function taskAttrCombos(ch) {
   if (ch === " ") return [`[data-task=" "]`, `[data-task=""]`];
@@ -11939,16 +11942,26 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
     cm = levels.map((l) => `${EDITOR_PREFIX} .cm-header-${l}`).join(", ");
     rend = levels.map((l) => `${RENDER_PREFIX} h${l}`).join(", ");
   } else if (t.key === "bullet-list") {
-    cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(:has(.cm-task, .HyperMD-task-line)) .cm-formatting-list-ul ~ .cm-list-1`;
+    cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(.HyperMD-task-line):not(:has(.cm-task)) .cm-formatting-list-ul ~ .cm-list-1`;
     rend = `${RENDER_PREFIX} ul li:not(.task-list-item), ul li:not(.task-list-item)`;
   } else if (t.key === "numbered-list") {
-    cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(:has(.cm-task, .HyperMD-task-line)) .cm-formatting-list-ol ~ .cm-list-1`;
+    cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(.HyperMD-task-line):not(:has(.cm-task)) .cm-formatting-list-ol ~ .cm-list-1`;
     rend = `${RENDER_PREFIX} ol li:not(.task-list-item), ol li:not(.task-list-item)`;
   } else if (t.key === "internal-link") {
-    cm = `${EDITOR_PREFIX} .cm-line .cm-hmd-internal-link`;
+    cm = [
+      `${EDITOR_PREFIX} a.internal-link`,
+      `${EDITOR_PREFIX} .cm-hmd-internal-link .cm-underline`,
+      // Fallback for Obsidian builds that render the link text without the
+      // inner .cm-underline wrapper (direct .cm-hmd-internal-link text node).
+      `${EDITOR_PREFIX} .cm-hmd-internal-link:not(:has(.cm-underline))`
+    ].join(", ");
     rend = `.workspace ${RENDER_PREFIX} a.internal-link, ${RENDER_PREFIX} a.internal-link`;
   } else if (t.key === "external-link") {
-    cm = `${EDITOR_PREFIX} .cm-line .cm-link`;
+    cm = [
+      `${EDITOR_PREFIX} a.external-link`,
+      `${EDITOR_PREFIX} .cm-link .cm-underline`,
+      `${EDITOR_PREFIX} .cm-link:not(:has(.cm-underline))`
+    ].join(", ");
     rend = `.workspace ${RENDER_PREFIX} a.external-link, ${RENDER_PREFIX} a.external-link`;
   } else if (t.key === "task-list") {
     const types = parseTaskTypes(entry.taskTypes);
@@ -11975,10 +11988,10 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
         cm = `${EDITOR_PREFIX} .cm-hashtag`;
         rend = `${RENDER_PREFIX} .tag`;
       } else {
-        cm = names.map((n) => `${EDITOR_PREFIX} .cm-tag-${cssClassEscape(n)}.cm-hashtag`).join(", ");
-        rend = names.map(
-          (n) => `${RENDER_PREFIX} a.tag[href*="${cssAttr(n)}"], a.tag[href*="${cssAttr(n)}"]`
-        ).join(", ");
+        const cmTag = (n) => `${EDITOR_PREFIX} .cm-hashtag.cm-hashtag[data-tag*="${n}" i]`;
+        const rendTag = (n) => `${RENDER_PREFIX} .tag.tag[data-tag*="${n}" i], .tag.tag[data-tag*="${n}" i]`;
+        cm = names.map(cmTag).join(", ");
+        rend = names.map(rendTag).join(", ");
       }
     }
   } else if (t.key === "inline-title" || t.key === "tab-title") {
@@ -12035,6 +12048,45 @@ function createMarkdownElementConfigInput(plugin, entry, onChange) {
   };
   input.addEventListener("input", handler);
   input.addEventListener("change", handler);
+  if (cfg.matchField) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "act-md-element-config-wrapper";
+    wrapper.style.display = "flex";
+    wrapper.style.alignItems = "center";
+    wrapper.style.gap = "6px";
+    wrapper.style.flex = "1 1 auto";
+    wrapper.style.minWidth = "0";
+    const select = document.createElement("select");
+    select.className = "act-md-title-match-select dropdown";
+    select.style.padding = "6px";
+    select.style.borderRadius = "var(--input-radius)";
+    select.style.border = "1px solid var(--background-modifier-border)";
+    select.style.background = "var(--background-modifier-form-field)";
+    select.style.color = "var(--text-normal)";
+    select.style.flex = "0 0 auto";
+    select.style.minWidth = "120px";
+    select.style.textAlign = "center";
+    select.style.textAlignLast = "center";
+    const t = (k, fb) => {
+      try {
+        return plugin.t(k, fb);
+      } catch (_) {
+        return fb;
+      }
+    };
+    select.innerHTML = `<option value="contains" style="text-align:center">${t("match_option_contains", "Contains")}</option><option value="exact" style="text-align:center">${t("match_option_exact", "Exact")}</option><option value="startswith" style="text-align:center">${t("match_option_starts_with", "Starts with")}</option><option value="endswith" style="text-align:center">${t("match_option_ends_with", "Ends with")}</option>`;
+    const cur = normalizeTitleMatchType(entry[cfg.matchField] || "contains");
+    select.value = cur;
+    select.title = t("title_match_mode_title", "How the title text must match the filter");
+    const selHandler = () => {
+      entry[cfg.matchField] = normalizeTitleMatchType(select.value);
+      if (onChange) onChange();
+    };
+    select.addEventListener("change", selHandler);
+    wrapper.appendChild(select);
+    wrapper.appendChild(input);
+    return wrapper;
+  }
   return input;
 }
 function tagTextMatches(filter, text) {
@@ -12045,10 +12097,16 @@ function tagTextMatches(filter, text) {
   const cur = t.replace(/^#/, "").toLowerCase();
   return wanted.includes(cur);
 }
-function titleTextMatches(filter, text) {
+function titleTextMatches(filter, text, mode) {
   const f = (filter || "").trim().toLowerCase();
   if (!f) return true;
-  return (text || "").toLowerCase().includes(f);
+  const raw = (text || "").toLowerCase();
+  const tTrim = raw.trim();
+  const m = normalizeTitleMatchType(mode);
+  if (m === "exact") return tTrim === f;
+  if (m === "startswith") return tTrim.startsWith(f);
+  if (m === "endswith") return tTrim.endsWith(f);
+  return raw.includes(f);
 }
 function buildRenderedSelector(entry) {
   const t = getMarkdownTarget(entry.targetElement);
@@ -12830,6 +12888,7 @@ var EditEntryModal = class extends import_obsidian11.Modal {
         live.taskTypes = src.taskTypes;
         live.tagFilter = src.tagFilter;
         live.titleFilter = src.titleFilter;
+        live.titleMatchType = src.titleMatchType;
       };
       const onElementSwitch = () => {
         syncLiveEntry(this.entry);
@@ -17731,6 +17790,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
           live.taskTypes = src.taskTypes;
           live.tagFilter = src.tagFilter;
           live.titleFilter = src.titleFilter;
+          live.titleMatchType = src.titleMatchType;
         };
         const onElementSwitch = () => {
           syncLiveEntry(entry);
@@ -18706,6 +18766,7 @@ var EditBlacklistGroupModal = class extends import_obsidian19.Modal {
           live.taskTypes = src.taskTypes;
           live.tagFilter = src.tagFilter;
           live.titleFilter = src.titleFilter;
+          live.titleMatchType = src.titleMatchType;
         };
         const onElementSwitch = () => {
           syncLiveEntry(entry);
@@ -33879,7 +33940,8 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           headingLevels: e.headingLevels || void 0,
           taskTypes: e.taskTypes || void 0,
           tagFilter: e.tagFilter || void 0,
-          titleFilter: e.titleFilter || void 0
+          titleFilter: e.titleFilter || void 0,
+          titleMatchType: e.titleMatchType ? normalizeTitleMatchType(e.titleMatchType) : void 0
         };
         try {
           if (Array.isArray(e.inclusionRules)) {
@@ -34259,9 +34321,62 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         if (styleEl) styleEl.remove();
       }
       this.applyTitleHighlights();
+      this._applyLivePreviewTagHighlights();
       this.updateTagBeginVisibility();
     } catch (e) {
       console.error("ACT: Error applying formatting styles", e);
+    }
+  }
+  // Apply text-filter (tagFilter) matching for `tag` / `all-tags` targets in the
+  // LIVE PREVIEW editor. The injected stylesheet (applyFormattingStyles) can only
+  // match specific tags via the `data-tag` attribute; for robustness we also
+  // resolve the match in JS here (mirroring applyElementHighlights in reading view),
+  // since CSS cannot match tag text. This guarantees single-tag coloring works even
+  // on Obsidian builds that don't expose a usable per-tag selector.
+  _applyLivePreviewTagHighlights() {
+    try {
+      const all = (this.settings.wordEntries || []).concat(
+        (this.settings.wordEntryGroups || []).reduce(
+          (acc, g) => acc.concat(g.entries || []),
+          []
+        )
+      );
+      const entries = all.filter(
+        (e) => e && (e.targetElement === "tag" || e.targetElement === "all-tags") && e.tagFilter && String(e.tagFilter).trim().length > 0
+      );
+      if (!entries.length) return;
+      const tags = document.querySelectorAll(".cm-hashtag");
+      tags.forEach((el) => {
+        el.style.removeProperty("color");
+        el.style.removeProperty("background-color");
+        el.style.removeProperty("border-radius");
+        el.style.removeProperty("padding-left");
+        el.style.removeProperty("padding-right");
+        el.style.removeProperty("padding-top");
+        el.style.removeProperty("padding-bottom");
+        const name = el.dataset && el.dataset.tag ? el.dataset.tag : el.textContent || "";
+        const entry = entries.find((e) => tagTextMatches(e.tagFilter, name));
+        if (!entry) return;
+        const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
+        const bg = entry.backgroundColor || null;
+        if (textColor) el.style.setProperty("color", textColor, "important");
+        if (bg) {
+          const op = typeof entry.backgroundOpacity === "number" ? entry.backgroundOpacity : this.settings.backgroundOpacity ?? 25;
+          el.style.setProperty(
+            "background-color",
+            this.hexToRgba(bg, op),
+            "important"
+          );
+          const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
+          const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
+          el.style.setProperty("border-radius", radius + "px", "important");
+          el.style.setProperty("padding-left", hPad + "px", "important");
+          el.style.setProperty("padding-right", hPad + "px", "important");
+          el.style.boxDecorationBreak = "clone";
+          el.style.WebkitBoxDecorationBreak = "clone";
+        }
+      });
+    } catch (_) {
     }
   }
   // Obsidian renders a hashtag in live preview as two spans: `.cm-hashtag-begin`
@@ -34280,6 +34395,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         }
         ed.classList.toggle("act-tag-begin-hidden", hidden);
       });
+      this._applyLivePreviewTagHighlights();
     } catch (_) {
     }
     this.ensureTagBeginObserver();
@@ -34335,7 +34451,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           el.style.removeProperty("padding-left");
           el.style.removeProperty("padding-right");
           const entry = entries.find(
-            (e) => titleTextMatches(e.titleFilter, el.textContent || "")
+            (e) => titleTextMatches(e.titleFilter, el.textContent || "", e.titleMatchType)
           );
           if (!entry) return;
           const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
@@ -34639,6 +34755,13 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         const mtLower = rawMt.toLowerCase();
         const normalized = mtLower === "startswith" || rawMt === "startsWith" || mtLower === "starts with" ? "startswith" : mtLower === "endswith" || rawMt === "endsWith" || mtLower === "ends with" ? "endswith" : mtLower === "exact" ? "exact" : mtLower === "contains" ? "contains" : this.settings.partialMatch ? "contains" : "exact";
         x.matchType = normalized;
+        if (x.targetElement === "tab-title" || x.targetElement === "inline-title") {
+          const rawTitleMt = x.titleMatchType != null ? String(x.titleMatchType) : "";
+          x.titleMatchType = rawTitleMt ? normalizeTitleMatchType(rawTitleMt) : "contains";
+          if (x.titleFilter != null) x.titleFilter = String(x.titleFilter);
+        } else if (x.titleMatchType) {
+          x.titleMatchType = normalizeTitleMatchType(x.titleMatchType);
+        }
         x._savedTextColor = x._savedTextColor && this.isValidHexColor(x._savedTextColor) ? x._savedTextColor : this.isValidHexColor(x.color) ? x.color : null;
         x._savedBackgroundColor = x._savedBackgroundColor && this.isValidHexColor(x._savedBackgroundColor) ? x._savedBackgroundColor : this.isValidHexColor(x.backgroundColor) ? x.backgroundColor : null;
         if (Array.isArray(e.inclusionRules)) {
@@ -34719,6 +34842,13 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         group.entries = group.entries.map((e) => {
           if (!e) return e;
           e.markTarget = typeof e.markTarget === "string" && e.markTarget ? e.markTarget : "text";
+          if (e.targetElement === "tab-title" || e.targetElement === "inline-title") {
+            const raw = e.titleMatchType != null ? String(e.titleMatchType) : "";
+            e.titleMatchType = raw ? normalizeTitleMatchType(raw) : "contains";
+            if (e.titleFilter != null) e.titleFilter = String(e.titleFilter);
+          } else if (e.titleMatchType) {
+            e.titleMatchType = normalizeTitleMatchType(e.titleMatchType);
+          }
           return e;
         });
         return group;
@@ -37119,7 +37249,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       for (const element of elements) {
         if (entry.tagFilter && !tagTextMatches(entry.tagFilter, element.textContent || ""))
           continue;
-        if (entry.titleFilter && !titleTextMatches(entry.titleFilter, element.textContent || ""))
+        if (entry.titleFilter && !titleTextMatches(entry.titleFilter, element.textContent || "", entry.titleMatchType))
           continue;
         if (!hideText && finalTextColor) {
           element.style.setProperty("color", finalTextColor, "important");
@@ -38544,6 +38674,9 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           if (node.parentElement?.closest("code, pre")) {
             return NodeFilter.FILTER_REJECT;
           }
+          if (node.parentElement?.closest("a.internal-link, a.external-link, .cm-hmd-internal-link")) {
+            return NodeFilter.FILTER_REJECT;
+          }
           if (node.parentElement?.closest("mark")) {
             return NodeFilter.FILTER_REJECT;
           }
@@ -38639,6 +38772,9 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       {
         acceptNode(node) {
           if (node.parentElement?.closest("code, pre")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (node.parentElement?.closest("a.internal-link, a.external-link, .cm-hmd-internal-link")) {
             return NodeFilter.FILTER_REJECT;
           }
           if (node.parentElement?.closest("mark")) {
@@ -41641,7 +41777,7 @@ ${strongRule}`;
         headingRanges.push({ start: from + lineStart, end: from + lineEnd });
         const hashes = match[1].length;
         const entryToUse = getEntryForHeadingLevel(we, hashes);
-        if (entryToUse) {
+        if (entryToUse && !entryToUse.targetElement) {
           const contentStart = lineStart + hashes + 1;
           let contentStartOffset = hashes;
           while (contentStartOffset < match[0].length && /\s/.test(match[0][contentStartOffset]))
@@ -42619,7 +42755,7 @@ ${strongRule}`;
         headingRanges.push({ start: from + lineStart, end: from + lineEnd });
         const hashes = match[1].length;
         const entryToUse = getEntryForHeadingLevel(we, hashes);
-        if (entryToUse) {
+        if (entryToUse && !entryToUse.targetElement) {
           const start = from + lineStart;
           const end = from + lineEnd;
           if (entryToUse.backgroundColor) {
@@ -42646,16 +42782,16 @@ ${strongRule}`;
       const we = entries;
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
       const taskCheckedEntry = we.find(
-        (e) => e && e.presetLabel === "Task List (Checked)"
+        (e) => e && e.presetLabel === "Task List (Checked)" && !e.targetElement
       );
       const taskUncheckedEntry = we.find(
-        (e) => e && e.presetLabel === "Task List (Unchecked)"
+        (e) => e && e.presetLabel === "Task List (Unchecked)" && !e.targetElement
       );
       const numberedEntry = we.find(
-        (e) => e && e.presetLabel === "Numbered Lists"
+        (e) => e && e.presetLabel === "Numbered Lists" && !e.targetElement
       );
       const bulletEntry = we.find(
-        (e) => e && e.presetLabel === "Bullet Points"
+        (e) => e && e.presetLabel === "Bullet Points" && !e.targetElement
       );
       const taskCheckedBlacklisted = !!blEntries.find(
         (e) => e && e.presetLabel === "Task List (Checked)" && !!e.isRegex
@@ -42857,6 +42993,7 @@ ${strongRule}`;
     if (textBgEntries.length > 0) {
       for (const entry of textBgEntries) {
         if (!entry || entry.invalid) continue;
+        if (entry.targetElement) continue;
         if (entry.fastTest && !entry.fastTest(text)) {
           if (entry.presetLabel && entry.presetLabel.includes("Time")) {
             debugLog("TBG_FASTTEST_SKIP", `Skipped '${entry.presetLabel}' for text snippet: "${text.substring(0, 30)}"`);
@@ -43023,6 +43160,38 @@ ${strongRule}`;
         blacklistWordSet
       );
       allMatches = allMatches.concat(chunkMatches);
+    }
+    try {
+      const linkRanges = [];
+      if (tree2) {
+        tree2.iterate({
+          from,
+          to,
+          enter: (node) => {
+            if (/link|wikilink|autolink|url/i.test(node.name))
+              linkRanges.push([node.from, node.to]);
+          }
+        });
+      }
+      if (!linkRanges.length) {
+        const linkRe = /\[[^\]\n]*\]\([^)\n]*\)|\[\[[^\]\n]+\]\]|<https?:\/\/[^>\n]+>/g;
+        let lm;
+        while (lm = linkRe.exec(text)) {
+          linkRanges.push([from + lm.index, from + lm.index + lm[0].length]);
+        }
+      }
+      if (linkRanges.length) {
+        allMatches = allMatches.filter((m) => {
+          if (!m || !m.entryRef || m.entryRef.targetElement) return true;
+          const s = m.start;
+          const e = m.end;
+          for (const [ls, le] of linkRanges) {
+            if (s < le && e > ls) return false;
+          }
+          return true;
+        });
+      }
+    } catch (_) {
     }
     return this.applyDecorationsFromMatches(
       view,

@@ -69,18 +69,28 @@ export function getElementConfig(key) {
     case "inline-title":
       return {
         field: "titleFilter",
+        matchField: "titleMatchType",
         placeholder: "title text",
         defaultValue: "",
       };
     case "tab-title":
       return {
         field: "titleFilter",
+        matchField: "titleMatchType",
         placeholder: "tab title text",
         defaultValue: "",
       };
     default:
       return null;
   }
+}
+
+export function normalizeTitleMatchType(mode) {
+  const m = String(mode || "contains").trim().toLowerCase();
+  if (m === "exact") return "exact";
+  if (m === "startswith" || m === "starts with") return "startswith";
+  if (m === "endswith" || m === "ends with") return "endswith";
+  return "contains";
 }
 
 function cssAttr(c) {
@@ -110,20 +120,43 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
     cm = levels.map((l) => `${EDITOR_PREFIX} .cm-header-${l}`).join(", ");
     rend = levels.map((l) => `${RENDER_PREFIX} h${l}`).join(", ");
   } else if (t.key === "bullet-list") {
-    // Only style plain bullets: exclude any list line that contains a task
-    // checkbox (`- [ ]` / `- [x]`), i.e. a line where a `-` is followed by `[]`.
-    cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(:has(.cm-task, .HyperMD-task-line)) .cm-formatting-list-ul ~ .cm-list-1`;
+    // Only style plain bullets: exclude any task list line. The task line carries
+    // `.HyperMD-task-line` ON the line element itself (not as a descendant), so a
+    // bare `:not(:has(.HyperMD-task-line))` would never exclude it — we must also
+    // reject the class on the line directly.
+    cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(.HyperMD-task-line):not(:has(.cm-task)) .cm-formatting-list-ul ~ .cm-list-1`;
     rend = `${RENDER_PREFIX} ul li:not(.task-list-item), ul li:not(.task-list-item)`;
   } else if (t.key === "numbered-list") {
-    cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(:has(.cm-task, .HyperMD-task-line)) .cm-formatting-list-ol ~ .cm-list-1`;
+    cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(.HyperMD-task-line):not(:has(.cm-task)) .cm-formatting-list-ol ~ .cm-list-1`;
     rend = `${RENDER_PREFIX} ol li:not(.task-list-item), ol li:not(.task-list-item)`;
   } else if (t.key === "internal-link") {
-    // Force link text color with maximal specificity (links are colored by
-    // Obsidian via --link-color / --link-external-color, so we must outrank it).
-    cm = `${EDITOR_PREFIX} .cm-line .cm-hmd-internal-link`;
+    // Fix: previously used `.cm-hmd-internal-link *` etc. which applied
+    // background/padding to BOTH the container and each inner span
+    // (.is-unresolved, .cm-underline), producing 2-3 nested highlight layers
+    // in Live Preview (see provided DOM dumps). For text color we still need
+    // to reach the leaf, but for highlight we must only style the leaf.
+    // Target the leaf `.cm-underline` inside the link container and the live
+    // preview anchor itself. No `*` wildcard.
+    cm = [
+      `${EDITOR_PREFIX} a.internal-link`,
+      `${EDITOR_PREFIX} .cm-hmd-internal-link .cm-underline`,
+      // Fallback for Obsidian builds that render the link text without the
+      // inner .cm-underline wrapper (direct .cm-hmd-internal-link text node).
+      `${EDITOR_PREFIX} .cm-hmd-internal-link:not(:has(.cm-underline))`,
+    ].join(", ");
     rend = `.workspace ${RENDER_PREFIX} a.internal-link, ${RENDER_PREFIX} a.internal-link`;
   } else if (t.key === "external-link") {
-    cm = `${EDITOR_PREFIX} .cm-line .cm-link`;
+    // Same fix as internal-link: target only the leaf text span
+    // `.cm-link .cm-underline` (display text) and the rendered anchor.
+    // Avoid `.cm-link *` / `.cm-url *` which duplicated background onto
+    // container + child. Do NOT target `.cm-url` here — the URL is a
+    // separate source-mode token; highlighting it would produce a second
+    // span alongside the link text (2 spans per link).
+    cm = [
+      `${EDITOR_PREFIX} a.external-link`,
+      `${EDITOR_PREFIX} .cm-link .cm-underline`,
+      `${EDITOR_PREFIX} .cm-link:not(:has(.cm-underline))`,
+    ].join(", ");
     rend = `.workspace ${RENDER_PREFIX} a.external-link, ${RENDER_PREFIX} a.external-link`;
   } else if (t.key === "task-list") {
     const types = parseTaskTypes(entry.taskTypes);
@@ -152,17 +185,18 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
         cm = `${EDITOR_PREFIX} .cm-hashtag`;
         rend = `${RENDER_PREFIX} .tag`;
       } else {
-        cm = names
-          .map((n) => `${EDITOR_PREFIX} .cm-tag-${cssClassEscape(n)}.cm-hashtag`)
-          .join(", ");
-        // Reading view: target the tag's href directly (Obsidian renders tags as
-        // <a class="tag" href="#name">) since text filtering can't be in pure CSS.
-        rend = names
-          .map(
-            (n) =>
-              `${RENDER_PREFIX} a.tag[href*="${cssAttr(n)}"], a.tag[href*="${cssAttr(n)}"]`,
-          )
-          .join(", ");
+        // Obsidian does NOT emit a per-tag class (e.g. .cm-tag-foo) in the editor,
+        // so a class-based selector can never match a specific tag. Instead target
+        // the `data-tag` attribute, which Obsidian sets on both the live-preview
+        // `.cm-hashtag` spans and the reading-view `.tag` anchors. The `i` flag
+        // makes the match case-insensitive. A redundant class is added to guarantee
+        // higher specificity than the "All Tags" rule so a specific tag always wins.
+        const cmTag = (n) =>
+          `${EDITOR_PREFIX} .cm-hashtag.cm-hashtag[data-tag*="${n}" i]`;
+        const rendTag = (n) =>
+          `${RENDER_PREFIX} .tag.tag[data-tag*="${n}" i], .tag.tag[data-tag*="${n}" i]`;
+        cm = names.map(cmTag).join(", ");
+        rend = names.map(rendTag).join(", ");
       }
     }
   } else if (t.key === "inline-title" || t.key === "tab-title") {
@@ -207,6 +241,8 @@ export function buildMarkdownCmSelector(t, entry, hasBoldItalic) {
 
 // A text input shown to the right of the element dropdown for configurable
 // targets (heading levels, task types, tag filter, inline-title filter).
+// For inline-title / tab-title also renders a "contains/exact/starts with/ends with"
+// dropdown next to the filter input.
 export function createMarkdownElementConfigInput(plugin, entry, onChange) {
   const cfg = getElementConfig(entry.targetElement);
   if (!cfg) return null;
@@ -232,6 +268,53 @@ export function createMarkdownElementConfigInput(plugin, entry, onChange) {
   };
   input.addEventListener("input", handler);
   input.addEventListener("change", handler);
+
+  if (cfg.matchField) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "act-md-element-config-wrapper";
+    wrapper.style.display = "flex";
+    wrapper.style.alignItems = "center";
+    wrapper.style.gap = "6px";
+    wrapper.style.flex = "1 1 auto";
+    wrapper.style.minWidth = "0";
+
+    const select = document.createElement("select");
+    select.className = "act-md-title-match-select dropdown";
+    select.style.padding = "6px";
+    select.style.borderRadius = "var(--input-radius)";
+    select.style.border = "1px solid var(--background-modifier-border)";
+    select.style.background = "var(--background-modifier-form-field)";
+    select.style.color = "var(--text-normal)";
+    select.style.flex = "0 0 auto";
+    select.style.minWidth = "120px";
+    select.style.textAlign = "center";
+    select.style.textAlignLast = "center";
+    const t = (k, fb) => {
+      try {
+        return plugin.t(k, fb);
+      } catch (_) {
+        return fb;
+      }
+    };
+    select.innerHTML =
+      `<option value="contains" style="text-align:center">${t("match_option_contains", "Contains")}</option>` +
+      `<option value="exact" style="text-align:center">${t("match_option_exact", "Exact")}</option>` +
+      `<option value="startswith" style="text-align:center">${t("match_option_starts_with", "Starts with")}</option>` +
+      `<option value="endswith" style="text-align:center">${t("match_option_ends_with", "Ends with")}</option>`;
+    const cur = normalizeTitleMatchType(entry[cfg.matchField] || "contains");
+    select.value = cur;
+    select.title = t("title_match_mode_title", "How the title text must match the filter");
+    const selHandler = () => {
+      entry[cfg.matchField] = normalizeTitleMatchType(select.value);
+      if (onChange) onChange();
+    };
+    select.addEventListener("change", selHandler);
+
+    wrapper.appendChild(select);
+    wrapper.appendChild(input);
+    return wrapper;
+  }
+
   return input;
 }
 
@@ -249,10 +332,16 @@ export function tagTextMatches(filter, text) {
   return wanted.includes(cur);
 }
 
-export function titleTextMatches(filter, text) {
+export function titleTextMatches(filter, text, mode) {
   const f = (filter || "").trim().toLowerCase();
   if (!f) return true;
-  return (text || "").toLowerCase().includes(f);
+  const raw = (text || "").toLowerCase();
+  const tTrim = raw.trim();
+  const m = normalizeTitleMatchType(mode);
+  if (m === "exact") return tTrim === f;
+  if (m === "startswith") return tTrim.startsWith(f);
+  if (m === "endswith") return tTrim.endsWith(f);
+  return raw.includes(f);
 }
 
 // Builds the READING-VIEW (rendered) CSS selector for a markdown entry,

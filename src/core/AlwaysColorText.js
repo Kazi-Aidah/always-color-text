@@ -24,7 +24,7 @@ import { RealTimeRegexTesterModal } from '../modals/RealTimeRegexTesterModal.js'
 import { HighlightStylingModal } from '../modals/HighlightStylingModal.js';
 import { CustomCssModal } from '../modals/CustomCssModal.js';
 import { MARKDOWN_TARGETS } from '../utils/markdownTargets.js';
-import { buildMarkdownSelector, buildMarkdownCmSelector, buildRenderedSelector, tagTextMatches, titleTextMatches } from '../utils/markdownElementConfig.js';
+import { buildMarkdownSelector, buildMarkdownCmSelector, buildRenderedSelector, tagTextMatches, titleTextMatches, normalizeTitleMatchType } from '../utils/markdownElementConfig.js';
 import { EditEntryModal } from '../modals/EditEntryModal.js';
 import { BlacklistRegexTesterModal } from '../modals/BlacklistRegexTesterModal.js';
 import { ChangelogModal } from '../modals/ChangelogModal.js';
@@ -6903,7 +6903,8 @@ class AlwaysColorText extends Plugin {
             taskTypes: e.taskTypes || undefined,
             tagFilter: e.tagFilter || undefined,
             titleFilter: e.titleFilter || undefined,
-          };
+            titleMatchType: e.titleMatchType ? normalizeTitleMatchType(e.titleMatchType) : undefined,
+           };
           // Preserve per-entry inclusion/exclusion rules on load
           try {
             if (Array.isArray(e.inclusionRules)) {
@@ -7448,11 +7449,84 @@ class AlwaysColorText extends Plugin {
       // Inline / tab titles can't be matched by text via CSS, so apply any
       // text-filter (titleFilter) for those targets via JS here.
       this.applyTitleHighlights();
+      // Specific-tag (tagFilter) coloring in live preview must also be resolved
+      // in JS since CSS cannot match tag text.
+      this._applyLivePreviewTagHighlights();
       // Toggle per-editor class used by the tag begin/end split CSS.
       this.updateTagBeginVisibility();
     } catch (e) {
       console.error("ACT: Error applying formatting styles", e);
     }
+  }
+
+  // Apply text-filter (tagFilter) matching for `tag` / `all-tags` targets in the
+  // LIVE PREVIEW editor. The injected stylesheet (applyFormattingStyles) can only
+  // match specific tags via the `data-tag` attribute; for robustness we also
+  // resolve the match in JS here (mirroring applyElementHighlights in reading view),
+  // since CSS cannot match tag text. This guarantees single-tag coloring works even
+  // on Obsidian builds that don't expose a usable per-tag selector.
+  _applyLivePreviewTagHighlights() {
+    try {
+      const all = (this.settings.wordEntries || []).concat(
+        (this.settings.wordEntryGroups || []).reduce(
+          (acc, g) => acc.concat(g.entries || []),
+          [],
+        ),
+      );
+      const entries = all.filter(
+        (e) =>
+          e &&
+          (e.targetElement === "tag" || e.targetElement === "all-tags") &&
+          e.tagFilter &&
+          String(e.tagFilter).trim().length > 0,
+      );
+      if (!entries.length) return;
+      const tags = document.querySelectorAll(".cm-hashtag");
+      tags.forEach((el) => {
+        // Clear any previously applied inline styling from this function.
+        el.style.removeProperty("color");
+        el.style.removeProperty("background-color");
+        el.style.removeProperty("border-radius");
+        el.style.removeProperty("padding-left");
+        el.style.removeProperty("padding-right");
+        el.style.removeProperty("padding-top");
+        el.style.removeProperty("padding-bottom");
+        const name =
+          el.dataset && el.dataset.tag ? el.dataset.tag : el.textContent || "";
+        const entry = entries.find((e) => tagTextMatches(e.tagFilter, name));
+        if (!entry) return;
+        const textColor =
+          entry.textColor && entry.textColor !== "currentColor"
+            ? entry.textColor
+            : entry.color || null;
+        const bg = entry.backgroundColor || null;
+        if (textColor) el.style.setProperty("color", textColor, "important");
+        if (bg) {
+          const op =
+            typeof entry.backgroundOpacity === "number"
+              ? entry.backgroundOpacity
+              : this.settings.backgroundOpacity ?? 25;
+          el.style.setProperty(
+            "background-color",
+            this.hexToRgba(bg, op),
+            "important",
+          );
+          const radius =
+            typeof entry.highlightBorderRadius === "number"
+              ? entry.highlightBorderRadius
+              : this.settings.highlightBorderRadius ?? 8;
+          const hPad =
+            typeof entry.highlightHorizontalPadding === "number"
+              ? entry.highlightHorizontalPadding
+              : this.settings.highlightHorizontalPadding ?? 4;
+          el.style.setProperty("border-radius", radius + "px", "important");
+          el.style.setProperty("padding-left", hPad + "px", "important");
+          el.style.setProperty("padding-right", hPad + "px", "important");
+          el.style.boxDecorationBreak = "clone";
+          el.style.WebkitBoxDecorationBreak = "clone";
+        }
+      });
+    } catch (_) {}
   }
 
   // Obsidian renders a hashtag in live preview as two spans: `.cm-hashtag-begin`
@@ -7474,6 +7548,8 @@ class AlwaysColorText extends Plugin {
         }
         ed.classList.toggle("act-tag-begin-hidden", hidden);
       });
+      // Keep specific-tag (tagFilter) live-preview highlights in sync too.
+      this._applyLivePreviewTagHighlights();
     } catch (_) {}
     this.ensureTagBeginObserver();
   }
@@ -7533,7 +7609,7 @@ class AlwaysColorText extends Plugin {
           el.style.removeProperty("padding-left");
           el.style.removeProperty("padding-right");
           const entry = entries.find((e) =>
-            titleTextMatches(e.titleFilter, el.textContent || ""),
+            titleTextMatches(e.titleFilter, el.textContent || "", e.titleMatchType),
           );
           if (!entry) return;
           const textColor =
@@ -7918,6 +7994,17 @@ class AlwaysColorText extends Plugin {
                     ? "contains"
                     : "exact";
         x.matchType = normalized;
+        // Normalize title-specific match mode for tab-title / inline-title entries.
+        // Default is "contains" to preserve legacy behavior where only substring search existed.
+        if (x.targetElement === "tab-title" || x.targetElement === "inline-title") {
+          const rawTitleMt = x.titleMatchType != null ? String(x.titleMatchType) : "";
+          x.titleMatchType = rawTitleMt ? normalizeTitleMatchType(rawTitleMt) : "contains";
+          // Keep titleFilter as trimmed string (empty means no filter)
+          if (x.titleFilter != null) x.titleFilter = String(x.titleFilter);
+        } else if (x.titleMatchType) {
+          // Non-title entries should not carry a stale titleMatchType
+          x.titleMatchType = normalizeTitleMatchType(x.titleMatchType);
+        }
         x._savedTextColor =
           x._savedTextColor && this.isValidHexColor(x._savedTextColor)
             ? x._savedTextColor
@@ -8062,6 +8149,13 @@ class AlwaysColorText extends Plugin {
             typeof e.markTarget === "string" && e.markTarget
               ? e.markTarget
               : "text";
+          if (e.targetElement === "tab-title" || e.targetElement === "inline-title") {
+            const raw = e.titleMatchType != null ? String(e.titleMatchType) : "";
+            e.titleMatchType = raw ? normalizeTitleMatchType(raw) : "contains";
+            if (e.titleFilter != null) e.titleFilter = String(e.titleFilter);
+          } else if (e.titleMatchType) {
+            e.titleMatchType = normalizeTitleMatchType(e.titleMatchType);
+          }
           return e;
         });
         return group;
@@ -11188,7 +11282,7 @@ class AlwaysColorText extends Plugin {
           continue;
         if (
           entry.titleFilter &&
-          !titleTextMatches(entry.titleFilter, element.textContent || "")
+          !titleTextMatches(entry.titleFilter, element.textContent || "", entry.titleMatchType)
         )
           continue;
         // Apply text color
@@ -12977,6 +13071,11 @@ class AlwaysColorText extends Plugin {
           if (node.parentElement?.closest("code, pre")) {
             return NodeFilter.FILTER_REJECT;
           }
+          // Links are highlighted exclusively by the Markdown Element link entry,
+          // so word/regex entries must not wrap text inside them.
+          if (node.parentElement?.closest("a.internal-link, a.external-link, .cm-hmd-internal-link")) {
+            return NodeFilter.FILTER_REJECT;
+          }
           if (node.parentElement?.closest("mark")) {
             return NodeFilter.FILTER_REJECT;
           }
@@ -13102,6 +13201,11 @@ class AlwaysColorText extends Plugin {
         acceptNode(node) {
           // Skip text nodes in code blocks
           if (node.parentElement?.closest("code, pre")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          // Links are highlighted exclusively by the Markdown Element link entry,
+          // so word/regex entries must not wrap text inside them.
+          if (node.parentElement?.closest("a.internal-link, a.external-link, .cm-hmd-internal-link")) {
             return NodeFilter.FILTER_REJECT;
           }
           if (node.parentElement?.closest("mark")) {
@@ -16939,7 +17043,9 @@ class AlwaysColorText extends Plugin {
         const hashes = match[1].length;
         const entryToUse = getEntryForHeadingLevel(we, hashes);
 
-        if (entryToUse) {
+        // Markdown Element heading entries are styled via applyFormattingStyles CSS
+        // injection; re-wrapping them here would double-highlight.
+        if (entryToUse && !entryToUse.targetElement) {
           const contentStart = lineStart + hashes + 1; // +1 for space
           // Only color content if needed, or whole line? Original logic colored whole line minus hashes?
           // Original: while (i < lineEnd && text[i] === ' ') i++; const start = from + i;
@@ -18373,7 +18479,9 @@ class AlwaysColorText extends Plugin {
         const hashes = match[1].length;
         const entryToUse = getEntryForHeadingLevel(we, hashes);
 
-        if (entryToUse) {
+        // Markdown Element heading entries are styled via applyFormattingStyles CSS
+        // injection; re-wrapping them here would double-highlight.
+        if (entryToUse && !entryToUse.targetElement) {
           const start = from + lineStart;
           const end = from + lineEnd;
 
@@ -18405,17 +18513,22 @@ class AlwaysColorText extends Plugin {
         ? this.settings.blacklistEntries
         : [];
 
+      // Skip the legacy decoration path when an entry is a "Markdown Element"
+      // (has targetElement). Those are styled via the central registry +
+      // applyFormattingStyles CSS injection, so re-wrapping them here would
+      // double-apply (nested highlight) and, for bullets, also wrongly match
+      // task lines. Pure-legacy presets (no targetElement) keep working.
       const taskCheckedEntry = we.find(
-        (e) => e && e.presetLabel === "Task List (Checked)",
+        (e) => e && e.presetLabel === "Task List (Checked)" && !e.targetElement,
       );
       const taskUncheckedEntry = we.find(
-        (e) => e && e.presetLabel === "Task List (Unchecked)",
+        (e) => e && e.presetLabel === "Task List (Unchecked)" && !e.targetElement,
       );
       const numberedEntry = we.find(
-        (e) => e && e.presetLabel === "Numbered Lists",
+        (e) => e && e.presetLabel === "Numbered Lists" && !e.targetElement,
       );
       const bulletEntry = we.find(
-        (e) => e && e.presetLabel === "Bullet Points",
+        (e) => e && e.presetLabel === "Bullet Points" && !e.targetElement,
       );
 
       const taskCheckedBlacklisted = !!blEntries.find(
@@ -18690,11 +18803,15 @@ class AlwaysColorText extends Plugin {
         return this.shouldColorText(filePath, entry.pattern, entry);
       });
     }
-    if (textBgEntries.length > 0) {
-      for (const entry of textBgEntries) {
-        if (!entry || entry.invalid) continue;
+      if (textBgEntries.length > 0) {
+        for (const entry of textBgEntries) {
+          if (!entry || entry.invalid) continue;
+          // Markdown Element entries are styled via applyFormattingStyles CSS
+          // injection, not wrapped here — re-wrapping them as word entries would
+          // double-highlight (and wrongly bleed onto tasks/other lines).
+          if (entry.targetElement) continue;
 
-        if (entry.fastTest && !entry.fastTest(text)) {
+          if (entry.fastTest && !entry.fastTest(text)) {
           if (entry.presetLabel && entry.presetLabel.includes("Time")) {
             debugLog("TBG_FASTTEST_SKIP", `Skipped '${entry.presetLabel}' for text snippet: "${text.substring(0, 30)}"`);
           }
@@ -18930,6 +19047,44 @@ class AlwaysColorText extends Plugin {
     }
 
     // Pattern processing completed
+
+    // LINK ISOLATION: links are highlighted exclusively by the Markdown Element
+    // link entry (via applyFormattingStyles CSS). Drop any pure word/regex match
+    // that falls inside a link so links never receive stacked highlights.
+    // Detection works with OR without a syntax tree (tree may be null when the
+    // caller doesn't supply syntaxTreeFn), so we also regex-scan the source text.
+    try {
+      const linkRanges = [];
+      if (tree) {
+        tree.iterate({
+          from,
+          to,
+          enter: (node) => {
+            if (/link|wikilink|autolink|url/i.test(node.name))
+              linkRanges.push([node.from, node.to]);
+          },
+        });
+      }
+      if (!linkRanges.length) {
+        const linkRe =
+          /\[[^\]\n]*\]\([^)\n]*\)|\[\[[^\]\n]+\]\]|<https?:\/\/[^>\n]+>/g;
+        let lm;
+        while ((lm = linkRe.exec(text))) {
+          linkRanges.push([from + lm.index, from + lm.index + lm[0].length]);
+        }
+      }
+      if (linkRanges.length) {
+        allMatches = allMatches.filter((m) => {
+          if (!m || !m.entryRef || m.entryRef.targetElement) return true;
+          const s = m.start;
+          const e = m.end;
+          for (const [ls, le] of linkRanges) {
+            if (s < le && e > ls) return false;
+          }
+          return true;
+        });
+      }
+    } catch (_) {}
 
     // Apply decorations from collected matches
     return this.applyDecorationsFromMatches(
