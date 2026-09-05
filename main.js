@@ -11938,10 +11938,13 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
   let rend = "";
   if (t.key === "strong") {
     cm = `${EDITOR_PREFIX} .cm-strong:not(.cm-em)`;
-    rend = `${RENDER_PREFIX} strong:not(:has(em))`;
+    rend = `${RENDER_PREFIX} strong:not(:has(em)):not(em strong)`;
   } else if (t.key === "em") {
     cm = `${EDITOR_PREFIX} .cm-em:not(.cm-strong)`;
-    rend = `${RENDER_PREFIX} em:not(:has(strong))`;
+    rend = `${RENDER_PREFIX} em:not(:has(strong)):not(strong em)`;
+  } else if (t.key === "strong-em") {
+    cm = `${EDITOR_PREFIX} .cm-strong.cm-em`;
+    rend = `${RENDER_PREFIX} strong em, ${RENDER_PREFIX} em strong, ${RENDER_PREFIX} strong:has(em), ${RENDER_PREFIX} em:has(strong)`;
   } else if (t.key === "heading") {
     const levels = parseHeadingLevels(entry.headingLevels);
     cm = levels.map((l) => `${EDITOR_PREFIX} .cm-header-${l}`).join(", ");
@@ -12124,6 +12127,15 @@ function titleTextMatches(filter, text, mode) {
 function buildRenderedSelector(entry) {
   const t = getMarkdownTarget(entry.targetElement);
   if (!t) return entry.targetElement;
+  if (entry.targetElement === "strong") {
+    return `${RENDER_PREFIX} strong:not(:has(em)):not(em strong), strong:not(:has(em)):not(em strong)`;
+  }
+  if (entry.targetElement === "em") {
+    return `${RENDER_PREFIX} em:not(:has(strong)):not(strong em), em:not(:has(strong)):not(strong em)`;
+  }
+  if (entry.targetElement === "strong-em") {
+    return `${RENDER_PREFIX} strong em, strong em, ${RENDER_PREFIX} em strong, em strong, ${RENDER_PREFIX} strong:has(em), strong:has(em), ${RENDER_PREFIX} em:has(strong), em:has(strong)`;
+  }
   if (entry.targetElement === "heading") {
     const levels = parseHeadingLevels(entry.headingLevels);
     if (!levels.length) return "";
