@@ -174,30 +174,38 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
     rend = rendParts.join(", ");
   } else if (t.key === "tag" || t.key === "all-tags") {
     const filter = entry.tagFilter || "";
-    // An "All Tags" entry with a filter behaves as a specific tag; only an
-    // "All Tags" entry with NO filter colors every hashtag.
-    if (t.key === "all-tags" && !filter.trim()) {
+    const names = parseTagFilterNames(filter);
+    if (!names.length) {
+      // No filter: colors every hashtag — same for "tag" with empty filter
+      // and "all-tags" with empty filter. Unified so both appear identical.
       cm = `${EDITOR_PREFIX} .cm-hashtag`;
       rend = `${RENDER_PREFIX} .tag`;
     } else {
-      const names = parseTagFilterNames(filter);
-      if (!names.length) {
-        cm = `${EDITOR_PREFIX} .cm-hashtag`;
-        rend = `${RENDER_PREFIX} .tag`;
-      } else {
-        // Obsidian does NOT emit a per-tag class (e.g. .cm-tag-foo) in the editor,
-        // so a class-based selector can never match a specific tag. Instead target
-        // the `data-tag` attribute, which Obsidian sets on both the live-preview
-        // `.cm-hashtag` spans and the reading-view `.tag` anchors. The `i` flag
-        // makes the match case-insensitive. A redundant class is added to guarantee
-        // higher specificity than the "All Tags" rule so a specific tag always wins.
-        const cmTag = (n) =>
-          `${EDITOR_PREFIX} .cm-hashtag.cm-hashtag[data-tag*="${n}" i]`;
-        const rendTag = (n) =>
-          `${RENDER_PREFIX} .tag.tag[data-tag*="${n}" i], .tag.tag[data-tag*="${n}" i]`;
-        cm = names.map(cmTag).join(", ");
-        rend = names.map(rendTag).join(", ");
-      }
+      // Obsidian DOES emit per-tag classes `.cm-tag-<name>` on both the
+      // hashtag begin/end spans in Live Preview (e.g. `.cm-tag-kill`) and
+      // reading view anchors carry `href="#<name>"` (and sometimes `data-tag`).
+      // The old `data-tag` selector never matched the actual DOM, so specific
+      // tags fell back to JS inline on only the end span while the begin `#`
+      // stayed pink -> flicker. Reading view never matched at all.
+      // Use class for editor and href/data-tag for reading, with doubled
+      // class to outrank the All-Tags rule.
+      const cmTag = (n) => {
+        const esc = cssClassEscape(n);
+        return `${EDITOR_PREFIX} .cm-tag-${esc}.cm-tag-${esc}, ${EDITOR_PREFIX} .cm-hashtag.cm-tag-${esc}`;
+      };
+      const rendTag = (n) => {
+        const esc = n.replace(/"/g, '\\"');
+        return [
+          `${RENDER_PREFIX} a.tag[href="#${esc}" i]`,
+          `${RENDER_PREFIX} .tag[href="#${esc}" i]`,
+          `a.tag[href="#${esc}" i]`,
+          `.tag[href="#${esc}" i]`,
+          `${RENDER_PREFIX} .tag[data-tag*="${esc}" i]`,
+          `.tag[data-tag*="${esc}" i]`,
+        ].join(", ");
+      };
+      cm = names.map(cmTag).join(", ");
+      rend = names.map(rendTag).join(", ");
     }
   } else if (t.key === "inline-title" || t.key === "tab-title") {
     const field = "titleFilter";

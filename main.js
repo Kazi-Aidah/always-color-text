@@ -7474,7 +7474,9 @@ var REGEX_CONSTANTS = {
   TASK_CHECKED: /^(\s*)([\-\*])(\s+)(\[[xX]\])(\s+)(.*)$/,
   TASK_UNCHECKED: /^(\s*)([\-\*])(\s+)(\[\s\])(\s+)(.*)$/,
   NUMBERED_LIST: /^(\s*)(\d+\.)(\s+)(.*)$/,
-  BULLET_POINT: /^(\s*)([\-\*])(\s+)(.*)$/
+  // Bullet must NOT match task lines (``- [ ]`` / ``- [x]``). Use negative lookahead
+  // so ``- [ ] task`` is handled only by the task branch, not the bullet branch.
+  BULLET_POINT: /^(\s*)([\-\*])(\s+)(?!\[[^\]]*\]\s+)(.*)$/
 };
 var IS_DEVELOPMENT = false;
 var GLOBAL_STYLE_KEYS = [
@@ -11778,16 +11780,16 @@ var MARKDOWN_TARGETS = [
     labelKey: "target_bullet_list",
     label: "Bullet Lists",
     group: "lists",
-    cmSelector: ".cm-formatting-list-ul ~ .cm-list-1",
-    renderedSelector: "ul li, .markdown-rendered ul li"
+    cmSelector: ".HyperMD-list-line:not(.HyperMD-task-line):not(:has(.cm-task)) .cm-formatting-list-ul ~ .cm-list-1",
+    renderedSelector: "ul li:not(.task-list-item), .markdown-rendered ul li:not(.task-list-item)"
   },
   {
     key: "numbered-list",
     labelKey: "target_numbered_list",
     label: "Numbered Lists",
     group: "lists",
-    cmSelector: ".cm-formatting-list-ol ~ .cm-list-1",
-    renderedSelector: "ol li, .markdown-rendered ol li"
+    cmSelector: ".HyperMD-list-line:not(.HyperMD-task-line):not(:has(.cm-task)) .cm-formatting-list-ol ~ .cm-list-1",
+    renderedSelector: "ol li:not(.task-list-item), .markdown-rendered ol li:not(.task-list-item)"
   },
   {
     key: "task-list",
@@ -11855,6 +11857,9 @@ var EDITOR_PREFIX = ".workspace .cm-s-obsidian .cm-content";
 var RENDER_PREFIX = ".markdown-rendered";
 function parseTagFilterNames(filter) {
   return String(filter || "").split(/[\s,]+/).map((s) => s.replace(/^#/, "").trim().toLowerCase()).filter(Boolean);
+}
+function cssClassEscape(name) {
+  return name.replace(/[^a-z0-9_-]/g, (c) => "\\" + c);
 }
 function parseHeadingLevels(input) {
   const raw = input == null ? "" : String(input).trim();
@@ -11979,20 +11984,28 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
     rend = rendParts.join(", ");
   } else if (t.key === "tag" || t.key === "all-tags") {
     const filter = entry.tagFilter || "";
-    if (t.key === "all-tags" && !filter.trim()) {
+    const names = parseTagFilterNames(filter);
+    if (!names.length) {
       cm = `${EDITOR_PREFIX} .cm-hashtag`;
       rend = `${RENDER_PREFIX} .tag`;
     } else {
-      const names = parseTagFilterNames(filter);
-      if (!names.length) {
-        cm = `${EDITOR_PREFIX} .cm-hashtag`;
-        rend = `${RENDER_PREFIX} .tag`;
-      } else {
-        const cmTag = (n) => `${EDITOR_PREFIX} .cm-hashtag.cm-hashtag[data-tag*="${n}" i]`;
-        const rendTag = (n) => `${RENDER_PREFIX} .tag.tag[data-tag*="${n}" i], .tag.tag[data-tag*="${n}" i]`;
-        cm = names.map(cmTag).join(", ");
-        rend = names.map(rendTag).join(", ");
-      }
+      const cmTag = (n) => {
+        const esc = cssClassEscape(n);
+        return `${EDITOR_PREFIX} .cm-tag-${esc}.cm-tag-${esc}, ${EDITOR_PREFIX} .cm-hashtag.cm-tag-${esc}`;
+      };
+      const rendTag = (n) => {
+        const esc = n.replace(/"/g, '\\"');
+        return [
+          `${RENDER_PREFIX} a.tag[href="#${esc}" i]`,
+          `${RENDER_PREFIX} .tag[href="#${esc}" i]`,
+          `a.tag[href="#${esc}" i]`,
+          `.tag[href="#${esc}" i]`,
+          `${RENDER_PREFIX} .tag[data-tag*="${esc}" i]`,
+          `.tag[data-tag*="${esc}" i]`
+        ].join(", ");
+      };
+      cm = names.map(cmTag).join(", ");
+      rend = names.map(rendTag).join(", ");
     }
   } else if (t.key === "inline-title" || t.key === "tab-title") {
     const field = "titleFilter";
@@ -33147,10 +33160,14 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         try {
           const container = leaf.view.containerEl;
           if (!container) return;
-          const results = container.querySelectorAll(
+          const fileMatches = container.querySelectorAll(
             ".search-result-file-match"
           );
-          if (results.length === 0) return;
+          const fileTitles = container.querySelectorAll(
+            ".search-result-file-title .tree-item-inner"
+          );
+          const blocks = [...fileMatches, ...fileTitles];
+          if (blocks.length === 0) return;
           const sourcePath = "search-results";
           const folderEntry = this.getBestFolderEntry(sourcePath);
           const allEntries = this.getSortedWordEntries();
@@ -33159,7 +33176,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             allEntries
           );
           if (allowedEntries.length === 0) return;
-          for (const result of results) {
+          for (const result of blocks) {
             try {
               this._processSearchResultBlock(
                 result,
@@ -34302,9 +34319,9 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             if (cmSel) {
               const beginSel = cmSel.split(",").map((s) => s.trim() + ".cm-hashtag-begin").join(", ");
               const endSel = cmSel.split(",").map((s) => s.trim() + ".cm-hashtag-end").join(", ");
-              css += `.cm-editor:not(.act-tag-begin-hidden) ${beginSel} { border-right: none !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+              css += `.cm-editor:not(.act-tag-begin-hidden) ${beginSel} { border-right: none !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; padding-right: 0px !important; }
 `;
-              css += `.cm-editor:not(.act-tag-begin-hidden) ${endSel} { border-left: none !important; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+              css += `.cm-editor:not(.act-tag-begin-hidden) ${endSel} { border-left: none !important; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; padding-left: 0px !important; }
 `;
             }
           }
@@ -34341,25 +34358,22 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           []
         )
       );
-      const entries = all.filter(
+      const specificEntries = all.filter(
         (e) => e && (e.targetElement === "tag" || e.targetElement === "all-tags") && e.tagFilter && String(e.tagFilter).trim().length > 0
       );
-      if (!entries.length) return;
-      const tags = document.querySelectorAll(".cm-hashtag");
-      tags.forEach((el) => {
-        el.style.removeProperty("color");
-        el.style.removeProperty("background-color");
-        el.style.removeProperty("border-radius");
-        el.style.removeProperty("padding-left");
-        el.style.removeProperty("padding-right");
-        el.style.removeProperty("padding-top");
-        el.style.removeProperty("padding-bottom");
-        const name = el.dataset && el.dataset.tag ? el.dataset.tag : el.textContent || "";
-        const entry = entries.find((e) => tagTextMatches(e.tagFilter, name));
-        if (!entry) return;
+      if (!specificEntries.length) return;
+      const findEntryForTag = (name) => {
+        return specificEntries.find((e) => tagTextMatches(e.tagFilter, name)) || null;
+      };
+      const applyToEl = (el, entry, opts = {}) => {
+        const isBegin = !!opts.isBegin;
+        const isEnd = !!opts.isEnd;
+        const beginHidden = !!opts.beginHidden;
         const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
         const bg = entry.backgroundColor || null;
+        const isTag = entry.targetElement === "tag" || entry.targetElement === "all-tags";
         if (textColor) el.style.setProperty("color", textColor, "important");
+        else el.style.removeProperty("color");
         if (bg) {
           const op = typeof entry.backgroundOpacity === "number" ? entry.backgroundOpacity : this.settings.backgroundOpacity ?? 25;
           el.style.setProperty(
@@ -34367,15 +34381,138 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             this.hexToRgba(bg, op),
             "important"
           );
-          const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
-          const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
-          el.style.setProperty("border-radius", radius + "px", "important");
-          el.style.setProperty("padding-left", hPad + "px", "important");
-          el.style.setProperty("padding-right", hPad + "px", "important");
-          el.style.boxDecorationBreak = "clone";
-          el.style.WebkitBoxDecorationBreak = "clone";
+          if (!isTag) {
+            const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
+            const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
+            if (isBegin && !beginHidden) {
+              el.style.setProperty("border-top-left-radius", radius + "px", "important");
+              el.style.setProperty("border-bottom-left-radius", radius + "px", "important");
+              el.style.setProperty("border-top-right-radius", "0px", "important");
+              el.style.setProperty("border-bottom-right-radius", "0px", "important");
+              el.style.setProperty("border-right", "none", "important");
+              el.style.removeProperty("border-left");
+              el.style.setProperty("padding-left", hPad + "px", "important");
+              el.style.setProperty("padding-right", "0px", "important");
+              el.style.removeProperty("border-radius");
+            } else if (isEnd && !beginHidden) {
+              el.style.setProperty("border-top-left-radius", "0px", "important");
+              el.style.setProperty("border-bottom-left-radius", "0px", "important");
+              el.style.setProperty("border-top-right-radius", radius + "px", "important");
+              el.style.setProperty("border-bottom-right-radius", radius + "px", "important");
+              el.style.setProperty("border-left", "none", "important");
+              el.style.removeProperty("border-right");
+              el.style.setProperty("padding-left", "0px", "important");
+              el.style.setProperty("padding-right", hPad + "px", "important");
+              el.style.removeProperty("border-radius");
+            } else {
+              el.style.setProperty("border-radius", radius + "px", "important");
+              el.style.removeProperty("border-top-left-radius");
+              el.style.removeProperty("border-top-right-radius");
+              el.style.removeProperty("border-bottom-left-radius");
+              el.style.removeProperty("border-bottom-right-radius");
+              el.style.removeProperty("border-left");
+              el.style.removeProperty("border-right");
+              el.style.setProperty("padding-left", hPad + "px", "important");
+              el.style.setProperty("padding-right", hPad + "px", "important");
+            }
+            el.style.boxDecorationBreak = "clone";
+            el.style.WebkitBoxDecorationBreak = "clone";
+          } else {
+            el.style.boxDecorationBreak = "clone";
+            el.style.WebkitBoxDecorationBreak = "clone";
+          }
+        } else {
+          el.style.removeProperty("background-color");
+          if (!isTag) {
+            el.style.removeProperty("border-radius");
+            el.style.removeProperty("border-top-left-radius");
+            el.style.removeProperty("border-top-right-radius");
+            el.style.removeProperty("border-bottom-left-radius");
+            el.style.removeProperty("border-bottom-right-radius");
+            el.style.removeProperty("border-left");
+            el.style.removeProperty("border-right");
+            el.style.removeProperty("padding-left");
+            el.style.removeProperty("padding-right");
+          }
         }
-      });
+      };
+      const clearTagEl = (el) => {
+        el.style.removeProperty("color");
+        el.style.removeProperty("background-color");
+        el.style.removeProperty("border-radius");
+        el.style.removeProperty("border-top-left-radius");
+        el.style.removeProperty("border-top-right-radius");
+        el.style.removeProperty("border-bottom-left-radius");
+        el.style.removeProperty("border-bottom-right-radius");
+        el.style.removeProperty("border-left");
+        el.style.removeProperty("border-right");
+        el.style.removeProperty("padding-left");
+        el.style.removeProperty("padding-right");
+        el.style.removeProperty("padding-top");
+        el.style.removeProperty("padding-bottom");
+      };
+      const tags = document.querySelectorAll(".cm-hashtag");
+      const ends = document.querySelectorAll(".cm-hashtag-end");
+      if (ends.length) {
+        ends.forEach((end) => {
+          let name = "";
+          if (end.dataset && end.dataset.tag) name = end.dataset.tag;
+          else {
+            const cls = Array.from(end.classList || []).find((c) => c.startsWith("cm-tag-"));
+            if (cls) name = cls.slice(7);
+            else name = end.textContent || "";
+          }
+          let begin = end.previousElementSibling;
+          let pairedBegin = null;
+          for (let i = 0; i < 4 && begin; i++) {
+            if (begin.classList && (begin.classList.contains("cm-hashtag-begin") || begin.classList.contains("cm-formatting-hashtag"))) {
+              const bCls = Array.from(begin.classList || []).find((c) => c.startsWith("cm-tag-"));
+              const eCls = Array.from(end.classList || []).find((c) => c.startsWith("cm-tag-"));
+              if (!bCls || !eCls || bCls === eCls) {
+                pairedBegin = begin;
+                break;
+              }
+            }
+            begin = begin.previousElementSibling;
+            if (begin && begin.tagName === "IMG") {
+              begin = begin.previousElementSibling;
+              i--;
+            }
+          }
+          const entry = findEntryForTag(name);
+          if (!entry) {
+            clearTagEl(end);
+            if (pairedBegin) clearTagEl(pairedBegin);
+            return;
+          }
+          let beginHidden = false;
+          try {
+            if (pairedBegin) {
+              const ed = pairedBegin.closest ? pairedBegin.closest(".cm-editor") : null;
+              if (ed && ed.classList.contains("act-tag-begin-hidden")) beginHidden = true;
+              else {
+                const cs = window.getComputedStyle(pairedBegin);
+                if (cs.display === "none" || cs.visibility === "hidden" || pairedBegin.offsetWidth === 0 && pairedBegin.offsetHeight === 0) beginHidden = true;
+              }
+            } else {
+              beginHidden = true;
+            }
+          } catch (_) {
+          }
+          applyToEl(end, entry, { isEnd: true, beginHidden });
+          if (pairedBegin) applyToEl(pairedBegin, entry, { isBegin: true, beginHidden });
+        });
+      } else {
+        tags.forEach((el) => {
+          const name = el.dataset && el.dataset.tag ? el.dataset.tag : el.textContent || "";
+          const entry = findEntryForTag(name);
+          if (!entry) {
+            clearTagEl(el);
+            return;
+          }
+          applyToEl(el, entry);
+        });
+      }
     } catch (_) {
     }
   }
@@ -41806,18 +41943,13 @@ ${strongRule}`;
       try {
         const we = entries;
         const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-        const taskCheckedEntry = we.find(
-          (e) => e && e.presetLabel === "Task List (Checked)"
-        );
-        const taskUncheckedEntry = we.find(
-          (e) => e && e.presetLabel === "Task List (Unchecked)"
-        );
-        const numberedEntry = we.find(
-          (e) => e && e.presetLabel === "Numbered Lists"
-        );
-        const bulletEntry = we.find(
-          (e) => e && e.presetLabel === "Bullet Points"
-        );
+        const hasMarkdownBulletStd = we.some((e) => e && e.targetElement === "bullet-list");
+        const hasMarkdownNumberedStd = we.some((e) => e && e.targetElement === "numbered-list");
+        const hasMarkdownTaskStd = we.some((e) => e && e.targetElement === "task-list");
+        const taskCheckedEntry = !hasMarkdownTaskStd ? we.find((e) => e && e.presetLabel === "Task List (Checked)" && !e.targetElement) : null;
+        const taskUncheckedEntry = !hasMarkdownTaskStd ? we.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !e.targetElement) : null;
+        const numberedEntry = !hasMarkdownNumberedStd ? we.find((e) => e && e.presetLabel === "Numbered Lists" && !e.targetElement) : null;
+        const bulletEntry = !hasMarkdownBulletStd ? we.find((e) => e && e.presetLabel === "Bullet Points" && !e.targetElement) : null;
         const taskCheckedBlacklisted = !!blEntries.find(
           (e) => e && e.presetLabel === "Task List (Checked)" && !!e.isRegex
         );
@@ -42517,6 +42649,64 @@ ${strongRule}`;
       return a.end - b.end;
     });
     try {
+      const hasAnyBulletStd = entries && entries.some((e) => e && (e.targetElement === "bullet-list" || e.presetLabel === "Bullet Points"));
+      const hasAnyNumberedStd = entries && entries.some((e) => e && (e.targetElement === "numbered-list" || e.presetLabel === "Numbered Lists"));
+      const hasAnyTaskStd = entries && entries.some((e) => e && (e.targetElement === "task-list" || e.presetLabel && String(e.presetLabel).toLowerCase().includes("task list")));
+      if (hasAnyBulletStd || hasAnyNumberedStd || hasAnyTaskStd) {
+        const listRanges = [];
+        let p = 0;
+        while (p <= text.length) {
+          const ls = p;
+          const nl = text.indexOf("\n", p);
+          const le = nl === -1 ? text.length : nl;
+          const line = text.substring(ls, le);
+          if (hasAnyBulletStd && /^\s*[\-\*]\s+(?!\[[^\]]*\]\s+)/.test(line)) {
+            const m = /^(\s*)([\-\*])(\s+)(.*)$/.exec(line);
+            if (m) {
+              const cs = ls + m[1].length + m[2].length + m[3].length;
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (hasAnyNumberedStd && /^\s*\d+\.\s+/.test(line)) {
+            const m = /^(\s*)(\d+\.)(\s+)(.*)$/.exec(line);
+            if (m) {
+              const cs = ls + m[1].length + m[2].length + m[3].length;
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (hasAnyTaskStd && /^\s*[\-\*]\s+\[[^\]]*\]\s+/.test(line)) {
+            const m2 = /^\s*[\-\*]\s+\[[^\]]*\]\s+(.*)$/.exec(line);
+            if (m2 && m2[1] != null) {
+              const idx = line.indexOf(m2[1]);
+              const cs = ls + (idx === -1 ? 0 : idx);
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (nl === -1) break;
+          p = nl + 1;
+        }
+        if (listRanges.length) {
+          const before = matches.length;
+          matches = matches.filter((m) => {
+            if (!m || !m.entryRef || m.entryRef.targetElement) return true;
+            const s = m.start, e = m.end;
+            for (const [ls, le] of listRanges) if (s < le && e > ls) return false;
+            return true;
+          });
+          if (matches.length !== before) {
+            try {
+              debugLog("LIST_ISOLATION", `filtered ${before - matches.length} generic matches inside markdown lists`);
+            } catch (_) {
+            }
+          }
+        }
+      }
+    } catch (_) {
+    }
+    try {
       const viewportText = text.substring(0, 100);
       if (viewportText.includes(":")) {
         const timeMatches = matches.filter((m) => {
@@ -42781,18 +42971,13 @@ ${strongRule}`;
     try {
       const we = entries;
       const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
-      const taskCheckedEntry = we.find(
-        (e) => e && e.presetLabel === "Task List (Checked)" && !e.targetElement
-      );
-      const taskUncheckedEntry = we.find(
-        (e) => e && e.presetLabel === "Task List (Unchecked)" && !e.targetElement
-      );
-      const numberedEntry = we.find(
-        (e) => e && e.presetLabel === "Numbered Lists" && !e.targetElement
-      );
-      const bulletEntry = we.find(
-        (e) => e && e.presetLabel === "Bullet Points" && !e.targetElement
-      );
+      const hasMarkdownBullet = we.some((e) => e && e.targetElement === "bullet-list");
+      const hasMarkdownNumbered = we.some((e) => e && e.targetElement === "numbered-list");
+      const hasMarkdownTask = we.some((e) => e && e.targetElement === "task-list");
+      const taskCheckedEntry = !hasMarkdownTask ? we.find((e) => e && e.presetLabel === "Task List (Checked)" && !e.targetElement) : null;
+      const taskUncheckedEntry = !hasMarkdownTask ? we.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !e.targetElement) : null;
+      const numberedEntry = !hasMarkdownNumbered ? we.find((e) => e && e.presetLabel === "Numbered Lists" && !e.targetElement) : null;
+      const bulletEntry = !hasMarkdownBullet ? we.find((e) => e && e.presetLabel === "Bullet Points" && !e.targetElement) : null;
       const taskCheckedBlacklisted = !!blEntries.find(
         (e) => e && e.presetLabel === "Task List (Checked)" && !!e.isRegex
       );
@@ -42934,41 +43119,44 @@ ${strongRule}`;
           }
         }
         if (!matched && !bulletBlacklisted && bulletEntry && bulletAllowed) {
-          const pattern = /^(\s*)([\-\*])(\s+)(.*)$/;
-          const mdMatch = pattern.exec(line);
-          if (mdMatch) {
-            const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
-            const contentEnd = lineEnd;
-            const contentText = mdMatch[4] || "";
-            const lineBlacklisted = this.isLineBlacklistedByRegex(
-              line,
-              filePath
-            );
-            if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
-              const start = from + contentStart;
-              const end = from + contentEnd;
-              if (bulletEntry.backgroundColor) {
-                const tc = bulletEntry.textColor || "currentColor";
-                const bc = bulletEntry.backgroundColor;
-                allMatches.push({
-                  start,
-                  end,
-                  textColor: tc,
-                  backgroundColor: bc,
-                  isTextBg: true,
-                  entryRef: bulletEntry
-                });
-              } else {
-                const c = bulletEntry.color || bulletEntry.textColor;
-                if (c)
+          if (/^\s*[\-\*]\s+\[[^\]]*\]\s+/.test(line)) {
+          } else {
+            const pattern = /^(\s*)([\-\*])(\s+)(.*)$/;
+            const mdMatch = pattern.exec(line);
+            if (mdMatch) {
+              const contentStart = lineStart + mdMatch.index + (mdMatch[1].length + mdMatch[2].length + mdMatch[3].length);
+              const contentEnd = lineEnd;
+              const contentText = mdMatch[4] || "";
+              const lineBlacklisted = this.isLineBlacklistedByRegex(
+                line,
+                filePath
+              );
+              if (contentStart < contentEnd && !this.containsBlacklistedWord(contentText, filePath) && !lineBlacklisted) {
+                const start = from + contentStart;
+                const end = from + contentEnd;
+                if (bulletEntry.backgroundColor) {
+                  const tc = bulletEntry.textColor || "currentColor";
+                  const bc = bulletEntry.backgroundColor;
                   allMatches.push({
                     start,
                     end,
-                    color: c,
+                    textColor: tc,
+                    backgroundColor: bc,
+                    isTextBg: true,
                     entryRef: bulletEntry
                   });
+                } else {
+                  const c = bulletEntry.color || bulletEntry.textColor;
+                  if (c)
+                    allMatches.push({
+                      start,
+                      end,
+                      color: c,
+                      entryRef: bulletEntry
+                    });
+                }
+                matched = true;
               }
-              matched = true;
             }
           }
         }
@@ -43160,6 +43348,50 @@ ${strongRule}`;
         blacklistWordSet
       );
       allMatches = allMatches.concat(chunkMatches);
+    }
+    try {
+      const hasAnyBullet = entries && entries.some((e) => e && (e.targetElement === "bullet-list" || e.presetLabel === "Bullet Points"));
+      const hasAnyNumbered = entries && entries.some((e) => e && (e.targetElement === "numbered-list" || e.presetLabel === "Numbered Lists"));
+      if (hasAnyBullet || hasAnyNumbered) {
+        const listRanges = [];
+        let p = 0;
+        while (p <= text.length) {
+          const ls = p;
+          const nl = text.indexOf("\n", p);
+          const le = nl === -1 ? text.length : nl;
+          const line = text.substring(ls, le);
+          if (hasAnyBullet && /^\s*[\-\*]\s+(?!\[[^\]]*\]\s+)/.test(line)) {
+            const m = /^(\s*)([\-\*])(\s+)(.*)$/.exec(line);
+            if (m) {
+              const cs = ls + m[1].length + m[2].length + m[3].length;
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (hasAnyNumbered && /^\s*\d+\.\s+/.test(line)) {
+            const m = /^(\s*)(\d+\.)(\s+)(.*)$/.exec(line);
+            if (m) {
+              const cs = ls + m[1].length + m[2].length + m[3].length;
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (nl === -1) break;
+          p = nl + 1;
+        }
+        if (listRanges.length) {
+          allMatches = allMatches.filter((m) => {
+            if (!m || !m.entryRef || m.entryRef.targetElement) return true;
+            const s = m.start;
+            const e = m.end;
+            for (const [ls, le] of listRanges) {
+              if (s < le && e > ls) return false;
+            }
+            return true;
+          });
+        }
+      }
+    } catch (_) {
     }
     try {
       const linkRanges = [];

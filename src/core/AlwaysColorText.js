@@ -5866,11 +5866,16 @@ class AlwaysColorText extends Plugin {
           const container = leaf.view.containerEl;
           if (!container) return;
 
-          const results = container.querySelectorAll(
+          const fileMatches = container.querySelectorAll(
             ".search-result-file-match",
           );
-
-          if (results.length === 0) return;
+          const fileTitles = container.querySelectorAll(
+            ".search-result-file-title .tree-item-inner",
+          );
+          // Combine both match lines and file titles – user reported file
+          // titles like "bomb is fire" were never colored in the sidebar.
+          const blocks = [...fileMatches, ...fileTitles];
+          if (blocks.length === 0) return;
 
           const sourcePath = "search-results";
           const folderEntry = this.getBestFolderEntry(sourcePath);
@@ -5882,7 +5887,7 @@ class AlwaysColorText extends Plugin {
 
           if (allowedEntries.length === 0) return;
 
-          for (const result of results) {
+          for (const result of blocks) {
             try {
               this._processSearchResultBlock(
                 result,
@@ -7429,8 +7434,8 @@ class AlwaysColorText extends Plugin {
                 .split(",")
                 .map((s) => s.trim() + ".cm-hashtag-end")
                 .join(", ");
-              css += `.cm-editor:not(.act-tag-begin-hidden) ${beginSel} { border-right: none !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }\n`;
-              css += `.cm-editor:not(.act-tag-begin-hidden) ${endSel} { border-left: none !important; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; }\n`;
+              css += `.cm-editor:not(.act-tag-begin-hidden) ${beginSel} { border-right: none !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; padding-right: 0px !important; }\n`;
+              css += `.cm-editor:not(.act-tag-begin-hidden) ${endSel} { border-left: none !important; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; padding-left: 0px !important; }\n`;
             }
           }
         }
@@ -7473,34 +7478,37 @@ class AlwaysColorText extends Plugin {
           [],
         ),
       );
-      const entries = all.filter(
+      // Only specific tags (with a filter) are handled via JS in live preview.
+      // Generic "all tags" / "tag with empty filter" (colors every hashtag) is
+      // handled purely via CSS (applyFormattingStyles) so both appear identical.
+      // This unifies "all tags" and "single tag" code paths.
+      const specificEntries = all.filter(
         (e) =>
           e &&
           (e.targetElement === "tag" || e.targetElement === "all-tags") &&
           e.tagFilter &&
           String(e.tagFilter).trim().length > 0,
       );
-      if (!entries.length) return;
-      const tags = document.querySelectorAll(".cm-hashtag");
-      tags.forEach((el) => {
-        // Clear any previously applied inline styling from this function.
-        el.style.removeProperty("color");
-        el.style.removeProperty("background-color");
-        el.style.removeProperty("border-radius");
-        el.style.removeProperty("padding-left");
-        el.style.removeProperty("padding-right");
-        el.style.removeProperty("padding-top");
-        el.style.removeProperty("padding-bottom");
-        const name =
-          el.dataset && el.dataset.tag ? el.dataset.tag : el.textContent || "";
-        const entry = entries.find((e) => tagTextMatches(e.tagFilter, name));
-        if (!entry) return;
+      if (!specificEntries.length) return;
+      const findEntryForTag = (name) => {
+        return specificEntries.find((e) => tagTextMatches(e.tagFilter, name)) || null;
+      };
+      const applyToEl = (el, entry, opts = {}) => {
+        const isBegin = !!opts.isBegin;
+        const isEnd = !!opts.isEnd;
+        const beginHidden = !!opts.beginHidden;
         const textColor =
           entry.textColor && entry.textColor !== "currentColor"
             ? entry.textColor
             : entry.color || null;
         const bg = entry.backgroundColor || null;
+        // Retain existing styles unless explicitly overwritten – no global clear
+        // to avoid flicker on click/selection. For tags, border/padding is
+        // handled purely by CSS (applyFormattingStyles half-pill rules) to
+        // avoid JS vs CSS race on All Tags. JS only sets color/background.
+        const isTag = entry.targetElement === "tag" || entry.targetElement === "all-tags";
         if (textColor) el.style.setProperty("color", textColor, "important");
+        else el.style.removeProperty("color");
         if (bg) {
           const op =
             typeof entry.backgroundOpacity === "number"
@@ -7511,21 +7519,160 @@ class AlwaysColorText extends Plugin {
             this.hexToRgba(bg, op),
             "important",
           );
-          const radius =
-            typeof entry.highlightBorderRadius === "number"
-              ? entry.highlightBorderRadius
-              : this.settings.highlightBorderRadius ?? 8;
-          const hPad =
-            typeof entry.highlightHorizontalPadding === "number"
-              ? entry.highlightHorizontalPadding
-              : this.settings.highlightHorizontalPadding ?? 4;
-          el.style.setProperty("border-radius", radius + "px", "important");
-          el.style.setProperty("padding-left", hPad + "px", "important");
-          el.style.setProperty("padding-right", hPad + "px", "important");
-          el.style.boxDecorationBreak = "clone";
-          el.style.WebkitBoxDecorationBreak = "clone";
+          if (!isTag) {
+            const radius =
+              typeof entry.highlightBorderRadius === "number"
+                ? entry.highlightBorderRadius
+                : this.settings.highlightBorderRadius ?? 8;
+            const hPad =
+              typeof entry.highlightHorizontalPadding === "number"
+                ? entry.highlightHorizontalPadding
+                : this.settings.highlightHorizontalPadding ?? 4;
+            if (isBegin && !beginHidden) {
+              el.style.setProperty("border-top-left-radius", radius + "px", "important");
+              el.style.setProperty("border-bottom-left-radius", radius + "px", "important");
+              el.style.setProperty("border-top-right-radius", "0px", "important");
+              el.style.setProperty("border-bottom-right-radius", "0px", "important");
+              el.style.setProperty("border-right", "none", "important");
+              el.style.removeProperty("border-left");
+              el.style.setProperty("padding-left", hPad + "px", "important");
+              el.style.setProperty("padding-right", "0px", "important");
+              el.style.removeProperty("border-radius");
+            } else if (isEnd && !beginHidden) {
+              el.style.setProperty("border-top-left-radius", "0px", "important");
+              el.style.setProperty("border-bottom-left-radius", "0px", "important");
+              el.style.setProperty("border-top-right-radius", radius + "px", "important");
+              el.style.setProperty("border-bottom-right-radius", radius + "px", "important");
+              el.style.setProperty("border-left", "none", "important");
+              el.style.removeProperty("border-right");
+              el.style.setProperty("padding-left", "0px", "important");
+              el.style.setProperty("padding-right", hPad + "px", "important");
+              el.style.removeProperty("border-radius");
+            } else {
+              el.style.setProperty("border-radius", radius + "px", "important");
+              el.style.removeProperty("border-top-left-radius");
+              el.style.removeProperty("border-top-right-radius");
+              el.style.removeProperty("border-bottom-left-radius");
+              el.style.removeProperty("border-bottom-right-radius");
+              el.style.removeProperty("border-left");
+              el.style.removeProperty("border-right");
+              el.style.setProperty("padding-left", hPad + "px", "important");
+              el.style.setProperty("padding-right", hPad + "px", "important");
+            }
+            el.style.boxDecorationBreak = "clone";
+            el.style.WebkitBoxDecorationBreak = "clone";
+          } else {
+            // For tags, let CSS handle border/padding half-pill to avoid glitch;
+            // just ensure boxDecorationBreak for wrapping.
+            el.style.boxDecorationBreak = "clone";
+            el.style.WebkitBoxDecorationBreak = "clone";
+          }
+        } else {
+          el.style.removeProperty("background-color");
+          if (!isTag) {
+            el.style.removeProperty("border-radius");
+            el.style.removeProperty("border-top-left-radius");
+            el.style.removeProperty("border-top-right-radius");
+            el.style.removeProperty("border-bottom-left-radius");
+            el.style.removeProperty("border-bottom-right-radius");
+            el.style.removeProperty("border-left");
+            el.style.removeProperty("border-right");
+            el.style.removeProperty("padding-left");
+            el.style.removeProperty("padding-right");
+          }
         }
-      });
+      };
+      const clearTagEl = (el) => {
+        el.style.removeProperty("color");
+        el.style.removeProperty("background-color");
+        el.style.removeProperty("border-radius");
+        el.style.removeProperty("border-top-left-radius");
+        el.style.removeProperty("border-top-right-radius");
+        el.style.removeProperty("border-bottom-left-radius");
+        el.style.removeProperty("border-bottom-right-radius");
+        el.style.removeProperty("border-left");
+        el.style.removeProperty("border-right");
+        el.style.removeProperty("padding-left");
+        el.style.removeProperty("padding-right");
+        el.style.removeProperty("padding-top");
+        el.style.removeProperty("padding-bottom");
+      };
+      // Obsidian splits a hashtag into two spans: `cm-hashtag-begin` ("#") and
+      // `cm-hashtag-end` ("tag"). The old code only styled the end span, so the
+      // "#" stayed pink (All-Tags CSS) while "kill" was red -> visible split +
+      // flicker as the two layers were reconciled. Style the pair together.
+      const tags = document.querySelectorAll(".cm-hashtag");
+      const ends = document.querySelectorAll(".cm-hashtag-end");
+      if (ends.length) {
+        ends.forEach((end) => {
+          // Derive tag name from end span: prefer data-tag, then class cm-tag-<name>, then text
+          let name = "";
+          if (end.dataset && end.dataset.tag) name = end.dataset.tag;
+          else {
+            // Try class cm-tag-<name>
+            const cls = Array.from(end.classList || []).find((c) => c.startsWith("cm-tag-"));
+            if (cls) name = cls.slice(7);
+            else name = end.textContent || "";
+          }
+          // Find paired begin first to allow clearing both when no match
+          let begin = end.previousElementSibling;
+          let pairedBegin = null;
+          for (let i = 0; i < 4 && begin; i++) {
+            if (
+              begin.classList &&
+              (begin.classList.contains("cm-hashtag-begin") ||
+                begin.classList.contains("cm-formatting-hashtag"))
+            ) {
+              const bCls = Array.from(begin.classList || []).find((c) => c.startsWith("cm-tag-"));
+              const eCls = Array.from(end.classList || []).find((c) => c.startsWith("cm-tag-"));
+              if (!bCls || !eCls || bCls === eCls) {
+                pairedBegin = begin;
+                break;
+              }
+            }
+            begin = begin.previousElementSibling;
+            if (begin && begin.tagName === "IMG") {
+              begin = begin.previousElementSibling;
+              i--;
+            }
+          }
+          const entry = findEntryForTag(name);
+          if (!entry) {
+            clearTagEl(end);
+            if (pairedBegin) clearTagEl(pairedBegin);
+            return;
+          }
+          // Determine if the "#" begin is hidden (snippet or theme)
+          let beginHidden = false;
+          try {
+            if (pairedBegin) {
+              const ed = pairedBegin.closest ? pairedBegin.closest(".cm-editor") : null;
+              if (ed && ed.classList.contains("act-tag-begin-hidden")) beginHidden = true;
+              else {
+                const cs = window.getComputedStyle(pairedBegin);
+                if (cs.display === "none" || cs.visibility === "hidden" || (pairedBegin.offsetWidth === 0 && pairedBegin.offsetHeight === 0)) beginHidden = true;
+              }
+            } else {
+              // No begin found -> effectively hidden / single-span tag
+              beginHidden = true;
+            }
+          } catch (_) {}
+          applyToEl(end, entry, { isEnd: true, beginHidden });
+          if (pairedBegin) applyToEl(pairedBegin, entry, { isBegin: true, beginHidden });
+        });
+      } else {
+        // Fallback: no split (single span per tag) – style the span directly
+        tags.forEach((el) => {
+          const name =
+            el.dataset && el.dataset.tag ? el.dataset.tag : el.textContent || "";
+          const entry = findEntryForTag(name);
+          if (!entry) {
+            clearTagEl(el);
+            return;
+          }
+          applyToEl(el, entry);
+        });
+      }
     } catch (_) {}
   }
 
@@ -17089,18 +17236,24 @@ class AlwaysColorText extends Plugin {
           ? this.settings.blacklistEntries
           : [];
 
-        const taskCheckedEntry = we.find(
-          (e) => e && e.presetLabel === "Task List (Checked)",
-        );
-        const taskUncheckedEntry = we.find(
-          (e) => e && e.presetLabel === "Task List (Unchecked)",
-        );
-        const numberedEntry = we.find(
-          (e) => e && e.presetLabel === "Numbered Lists",
-        );
-        const bulletEntry = we.find(
-          (e) => e && e.presetLabel === "Bullet Points",
-        );
+        // Skip legacy decoration when entry is a Markdown Element (has targetElement) —
+        // those are styled via CSS injection (applyFormattingStyles), so re-wrapping
+        // them here would double-highlight and, for bullets, wrongly match tasks.
+        const hasMarkdownBulletStd = we.some((e) => e && e.targetElement === "bullet-list");
+        const hasMarkdownNumberedStd = we.some((e) => e && e.targetElement === "numbered-list");
+        const hasMarkdownTaskStd = we.some((e) => e && e.targetElement === "task-list");
+        const taskCheckedEntry = !hasMarkdownTaskStd
+          ? we.find((e) => e && e.presetLabel === "Task List (Checked)" && !e.targetElement)
+          : null;
+        const taskUncheckedEntry = !hasMarkdownTaskStd
+          ? we.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !e.targetElement)
+          : null;
+        const numberedEntry = !hasMarkdownNumberedStd
+          ? we.find((e) => e && e.presetLabel === "Numbered Lists" && !e.targetElement)
+          : null;
+        const bulletEntry = !hasMarkdownBulletStd
+          ? we.find((e) => e && e.presetLabel === "Bullet Points" && !e.targetElement)
+          : null;
 
         const taskCheckedBlacklisted = !!blEntries.find(
           (e) => e && e.presetLabel === "Task List (Checked)" && !!e.isRegex,
@@ -18122,6 +18275,64 @@ class AlwaysColorText extends Plugin {
       return a.end - b.end;
     });
 
+    // LIST ISOLATION: when a list is highlighted (markdown CSS or legacy handler),
+    // suppress generic word highlights that fall inside that list's content
+    // (otherwise outer list highlight + inner word span would be two layers).
+    try {
+      const hasAnyBulletStd = entries && entries.some((e) => e && (e.targetElement === "bullet-list" || e.presetLabel === "Bullet Points"));
+      const hasAnyNumberedStd = entries && entries.some((e) => e && (e.targetElement === "numbered-list" || e.presetLabel === "Numbered Lists"));
+      const hasAnyTaskStd = entries && entries.some((e) => e && (e.targetElement === "task-list" || (e.presetLabel && String(e.presetLabel).toLowerCase().includes("task list"))));
+      if (hasAnyBulletStd || hasAnyNumberedStd || hasAnyTaskStd) {
+        const listRanges = [];
+        let p = 0;
+        while (p <= text.length) {
+          const ls = p;
+          const nl = text.indexOf("\n", p);
+          const le = nl === -1 ? text.length : nl;
+          const line = text.substring(ls, le);
+          if (hasAnyBulletStd && /^\s*[\-\*]\s+(?!\[[^\]]*\]\s+)/.test(line)) {
+            const m = /^(\s*)([\-\*])(\s+)(.*)$/.exec(line);
+            if (m) {
+              const cs = ls + m[1].length + m[2].length + m[3].length;
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (hasAnyNumberedStd && /^\s*\d+\.\s+/.test(line)) {
+            const m = /^(\s*)(\d+\.)(\s+)(.*)$/.exec(line);
+            if (m) {
+              const cs = ls + m[1].length + m[2].length + m[3].length;
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (hasAnyTaskStd && /^\s*[\-\*]\s+\[[^\]]*\]\s+/.test(line)) {
+            const m2 = /^\s*[\-\*]\s+\[[^\]]*\]\s+(.*)$/.exec(line);
+            if (m2 && m2[1] != null) {
+              const idx = line.indexOf(m2[1]);
+              const cs = ls + (idx === -1 ? 0 : idx);
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (nl === -1) break;
+          p = nl + 1;
+        }
+        if (listRanges.length) {
+          const before = matches.length;
+          matches = matches.filter((m) => {
+            if (!m || !m.entryRef || m.entryRef.targetElement) return true;
+            const s = m.start, e = m.end;
+            for (const [ls, le] of listRanges) if (s < le && e > ls) return false;
+            return true;
+          });
+          if (matches.length !== before) {
+            try { debugLog("LIST_ISOLATION", `filtered ${before - matches.length} generic matches inside markdown lists`); } catch (_) {}
+          }
+        }
+      }
+    } catch (_) {}
+
     // DEBUG: Check if timepm or @username matches are in the final matches list
     try {
       const viewportText = text.substring(0, 100);
@@ -18518,18 +18729,25 @@ class AlwaysColorText extends Plugin {
       // applyFormattingStyles CSS injection, so re-wrapping them here would
       // double-apply (nested highlight) and, for bullets, also wrongly match
       // task lines. Pure-legacy presets (no targetElement) keep working.
-      const taskCheckedEntry = we.find(
-        (e) => e && e.presetLabel === "Task List (Checked)" && !e.targetElement,
-      );
-      const taskUncheckedEntry = we.find(
-        (e) => e && e.presetLabel === "Task List (Unchecked)" && !e.targetElement,
-      );
-      const numberedEntry = we.find(
-        (e) => e && e.presetLabel === "Numbered Lists" && !e.targetElement,
-      );
-      const bulletEntry = we.find(
-        (e) => e && e.presetLabel === "Bullet Points" && !e.targetElement,
-      );
+      // Additionally, if ANY markdown element for lists exists, suppress the
+      // legacy list deco entirely — otherwise a vault with both a markdown
+      // bullet entry (CSS) and a legacy bullet entry (deco) would produce
+      // two highlights on the same bullet line (outer CSS + inner deco).
+      const hasMarkdownBullet = we.some((e) => e && e.targetElement === "bullet-list");
+      const hasMarkdownNumbered = we.some((e) => e && e.targetElement === "numbered-list");
+      const hasMarkdownTask = we.some((e) => e && e.targetElement === "task-list");
+      const taskCheckedEntry = !hasMarkdownTask
+        ? we.find((e) => e && e.presetLabel === "Task List (Checked)" && !e.targetElement)
+        : null;
+      const taskUncheckedEntry = !hasMarkdownTask
+        ? we.find((e) => e && e.presetLabel === "Task List (Unchecked)" && !e.targetElement)
+        : null;
+      const numberedEntry = !hasMarkdownNumbered
+        ? we.find((e) => e && e.presetLabel === "Numbered Lists" && !e.targetElement)
+        : null;
+      const bulletEntry = !hasMarkdownBullet
+        ? we.find((e) => e && e.presetLabel === "Bullet Points" && !e.targetElement)
+        : null;
 
       const taskCheckedBlacklisted = !!blEntries.find(
         (e) => e && e.presetLabel === "Task List (Checked)" && !!e.isRegex,
@@ -18728,10 +18946,15 @@ class AlwaysColorText extends Plugin {
           }
         }
 
-        // Bullet points
+        // Bullet points — must NOT match task lines (``- [ ]`` / ``- [x]``)
         if (!matched && !bulletBlacklisted && bulletEntry && bulletAllowed) {
-          const pattern = /^(\s*)([\-\*])(\s+)(.*)$/;
-          const mdMatch = pattern.exec(line);
+          // Extra guard: skip lines that look like tasks even if task entries are
+          // Markdown Elements (targetElement) and thus `matched` is still false.
+          if (/^\s*[\-\*]\s+\[[^\]]*\]\s+/.test(line)) {
+            // task line — let the task branch (CSS path) handle it
+          } else {
+            const pattern = /^(\s*)([\-\*])(\s+)(.*)$/;
+            const mdMatch = pattern.exec(line);
           if (mdMatch) {
             const contentStart =
               lineStart +
@@ -18774,6 +18997,7 @@ class AlwaysColorText extends Plugin {
               }
               matched = true;
             }
+          }
           }
         }
 
@@ -19047,6 +19271,56 @@ class AlwaysColorText extends Plugin {
     }
 
     // Pattern processing completed
+
+    // LIST ISOLATION: when a bullet/numbered list is highlighted (either via
+    // markdown CSS or legacy handler), suppress generic word highlights that
+    // fall inside that list's content — otherwise outer list highlight + inner
+    // word span would be two stacked layers. This fixes bullet double in live
+    // preview. Task lists are excluded so word highlights like "unchecked"
+    // inside tasks remain visible.
+    try {
+      const hasAnyBullet = entries && entries.some((e) => e && (e.targetElement === "bullet-list" || e.presetLabel === "Bullet Points"));
+      const hasAnyNumbered = entries && entries.some((e) => e && (e.targetElement === "numbered-list" || e.presetLabel === "Numbered Lists"));
+      if (hasAnyBullet || hasAnyNumbered) {
+        const listRanges = [];
+        let p = 0;
+        while (p <= text.length) {
+          const ls = p;
+          const nl = text.indexOf("\n", p);
+          const le = nl === -1 ? text.length : nl;
+          const line = text.substring(ls, le);
+          if (hasAnyBullet && /^\s*[\-\*]\s+(?!\[[^\]]*\]\s+)/.test(line)) {
+            const m = /^(\s*)([\-\*])(\s+)(.*)$/.exec(line);
+            if (m) {
+              const cs = ls + m[1].length + m[2].length + m[3].length;
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (hasAnyNumbered && /^\s*\d+\.\s+/.test(line)) {
+            const m = /^(\s*)(\d+\.)(\s+)(.*)$/.exec(line);
+            if (m) {
+              const cs = ls + m[1].length + m[2].length + m[3].length;
+              const ce = le;
+              if (cs < ce) listRanges.push([from + cs, from + ce]);
+            }
+          }
+          if (nl === -1) break;
+          p = nl + 1;
+        }
+        if (listRanges.length) {
+          allMatches = allMatches.filter((m) => {
+            if (!m || !m.entryRef || m.entryRef.targetElement) return true;
+            const s = m.start;
+            const e = m.end;
+            for (const [ls, le] of listRanges) {
+              if (s < le && e > ls) return false;
+            }
+            return true;
+          });
+        }
+      }
+    } catch (_) {}
 
     // LINK ISOLATION: links are highlighted exclusively by the Markdown Element
     // link entry (via applyFormattingStyles CSS). Drop any pure word/regex match

@@ -25,7 +25,9 @@ export const REGEX_CONSTANTS = {
   TASK_CHECKED: /^(\s*)([\-\*])(\s+)(\[[xX]\])(\s+)(.*)$/,
   TASK_UNCHECKED: /^(\s*)([\-\*])(\s+)(\[\s\])(\s+)(.*)$/,
   NUMBERED_LIST: /^(\s*)(\d+\.)(\s+)(.*)$/,
-  BULLET_POINT: /^(\s*)([\-\*])(\s+)(.*)$/,
+  // Bullet must NOT match task lines (``- [ ]`` / ``- [x]``). Use negative lookahead
+  // so ``- [ ] task`` is handled only by the task branch, not the bullet branch.
+  BULLET_POINT: /^(\s*)([\-\*])(\s+)(?!\[[^\]]*\]\s+)(.*)$/,
 };
 
 // Development mode flag
