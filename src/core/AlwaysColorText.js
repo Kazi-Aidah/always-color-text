@@ -7323,6 +7323,8 @@ class AlwaysColorText extends Plugin {
       let css = "";
 
       targets.forEach((t) => {
+        // If this markdown element is blacklisted, suppress its coloring entirely
+        if (this.isMarkdownElementBlacklisted(t.key)) return;
         // Find the LAST matching entry to ensure we get the user's latest configuration
         const reversedWe = [...we].reverse();
         const reversedWeAll = [...weAll].reverse();
@@ -7331,6 +7333,8 @@ class AlwaysColorText extends Plugin {
           reversedWeAll.find((e) => e && e.targetElement === t.key);
 
         if (!entry) return;
+        // Double-check entry itself isn't blacklisted (covers per-entry granularity)
+        if (this.isMarkdownEntryBlacklisted(entry)) return;
         const selector = buildMarkdownSelector(t, entry, hasBoldItalic);
         if (!selector) return; // text-filtered tag/inline-title handled in reading view
 
@@ -7493,6 +7497,31 @@ class AlwaysColorText extends Plugin {
       const findEntryForTag = (name) => {
         return specificEntries.find((e) => tagTextMatches(e.tagFilter, name)) || null;
       };
+      // Blacklist check for tags: if a tag name matches any blacklist tag entry, suppress
+      const isTagNameBlacklisted = (name) => {
+        try {
+          const blEntries = Array.isArray(this.settings.blacklistEntries)
+            ? this.settings.blacklistEntries
+            : [];
+          const blGroups = Array.isArray(this.settings.blacklistEntryGroups)
+            ? this.settings.blacklistEntryGroups
+            : [];
+          const allBl = [...blEntries];
+          for (const g of blGroups) {
+            if (!g || !g.active) continue;
+            if (Array.isArray(g.entries)) allBl.push(...g.entries);
+          }
+          for (const bl of allBl) {
+            if (!bl || (bl.targetElement !== "tag" && bl.targetElement !== "all-tags")) continue;
+            const f = String(bl.tagFilter || "").trim();
+            if (!f) return true; // blacklist all tags
+            try {
+              if (tagTextMatches(f, name)) return true;
+            } catch (_) {}
+          }
+        } catch (_) {}
+        return false;
+      };
       const applyToEl = (el, entry, opts = {}) => {
         const isBegin = !!opts.isBegin;
         const isEnd = !!opts.isEnd;
@@ -7636,8 +7665,18 @@ class AlwaysColorText extends Plugin {
               i--;
             }
           }
+          if (isTagNameBlacklisted(name)) {
+            clearTagEl(end);
+            if (pairedBegin) clearTagEl(pairedBegin);
+            return;
+          }
           const entry = findEntryForTag(name);
           if (!entry) {
+            clearTagEl(end);
+            if (pairedBegin) clearTagEl(pairedBegin);
+            return;
+          }
+          if (this.isMarkdownEntryBlacklisted(entry)) {
             clearTagEl(end);
             if (pairedBegin) clearTagEl(pairedBegin);
             return;
@@ -7665,8 +7704,16 @@ class AlwaysColorText extends Plugin {
         tags.forEach((el) => {
           const name =
             el.dataset && el.dataset.tag ? el.dataset.tag : el.textContent || "";
+          if (isTagNameBlacklisted(name)) {
+            clearTagEl(el);
+            return;
+          }
           const entry = findEntryForTag(name);
           if (!entry) {
+            clearTagEl(el);
+            return;
+          }
+          if (this.isMarkdownEntryBlacklisted(entry)) {
             clearTagEl(el);
             return;
           }
@@ -7741,12 +7788,24 @@ class AlwaysColorText extends Plugin {
       targets.forEach(({ key, sel }) => {
         const els = Array.from(document.querySelectorAll(sel));
         if (!els.length) return;
+        // If this title element is blacklisted, clear any existing styling and skip
+        if (this.isMarkdownElementBlacklisted(key)) {
+          els.forEach((el) => {
+            el.style.removeProperty("color");
+            el.style.removeProperty("background-color");
+            el.style.removeProperty("border-radius");
+            el.style.removeProperty("padding-left");
+            el.style.removeProperty("padding-right");
+          });
+          return;
+        }
         const entries = all.filter(
           (e) =>
             e &&
             e.targetElement === key &&
             e.titleFilter &&
-            String(e.titleFilter).trim().length > 0,
+            String(e.titleFilter).trim().length > 0 &&
+            !this.isMarkdownEntryBlacklisted(e),
         );
         els.forEach((el) => {
           // Clear any previously applied inline styling from this function.
@@ -7759,6 +7818,7 @@ class AlwaysColorText extends Plugin {
             titleTextMatches(e.titleFilter, el.textContent || "", e.titleMatchType),
           );
           if (!entry) return;
+          if (this.isMarkdownEntryBlacklisted(entry)) return;
           const textColor =
             entry.textColor && entry.textColor !== "currentColor"
               ? entry.textColor
@@ -11391,6 +11451,7 @@ class AlwaysColorText extends Plugin {
 
     for (const entry of entries) {
       if (!entry || !entry.targetElement) continue;
+      if (this.isMarkdownEntryBlacklisted(entry)) continue;
 
       // Map targetElement to its rendered/reading-mode selector, honoring
       // per-element config (heading levels / task checkbox types).
@@ -16836,6 +16897,47 @@ class AlwaysColorText extends Plugin {
     const ruleAllowed = this._groupRulesAllow(group, filePath);
 
     return legacyAllowed && ruleAllowed;
+  }
+
+  isMarkdownElementBlacklisted(targetKey, filePath = null) {
+    try {
+      if (!targetKey) return false;
+      const k = String(targetKey);
+      const isTagFamily = (x) => x === "tag" || x === "all-tags";
+      // Treat tag / all-tags as same family for blacklist purposes
+      const matchesFamily = (blKey) => {
+        if (blKey === k) return true;
+        if (isTagFamily(k) && isTagFamily(blKey)) return true;
+        return false;
+      };
+      const blEntries = Array.isArray(this.settings.blacklistEntries)
+        ? this.settings.blacklistEntries
+        : [];
+      for (const bl of blEntries) {
+        if (bl && bl.targetElement && matchesFamily(String(bl.targetElement))) {
+          // For heading/task/tag/title with config, could check finer overlap,
+          // but for now any matching family blocks the element.
+          return true;
+        }
+      }
+      const blGroups = Array.isArray(this.settings.blacklistEntryGroups)
+        ? this.settings.blacklistEntryGroups
+        : [];
+      for (const g of blGroups) {
+        if (!g || !g.active) continue;
+        if (filePath && !this.isGroupEnabledForFile(g, filePath)) continue;
+        const entries = Array.isArray(g.entries) ? g.entries : [];
+        for (const bl of entries) {
+          if (bl && bl.targetElement && matchesFamily(String(bl.targetElement))) return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  isMarkdownEntryBlacklisted(entry, filePath = null) {
+    if (!entry || !entry.targetElement) return false;
+    return this.isMarkdownElementBlacklisted(entry.targetElement, filePath);
   }
 
   isWordBlacklisted(word, filePath = null) {

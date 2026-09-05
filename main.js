@@ -18795,11 +18795,46 @@ var EditBlacklistGroupModal = class extends import_obsidian19.Modal {
         };
         const onElementSwitch = () => {
           syncLiveEntry(entry);
-          this.plugin.saveSettings().then(() => this._refreshGroupEntries());
+          this.plugin.saveSettings().then(() => {
+            try {
+              this.plugin.compileBlacklistEntries();
+            } catch (_) {
+            }
+            try {
+              this.plugin.reconfigureEditorExtensions();
+            } catch (_) {
+            }
+            try {
+              this.plugin.forceRefreshAllEditors();
+            } catch (_) {
+            }
+            try {
+              this.plugin.forceRefreshAllReadingViews();
+            } catch (_) {
+            }
+            this._refreshGroupEntries();
+          });
         };
         const onConfigChange = () => {
           syncLiveEntry(entry);
-          this.plugin.saveSettings();
+          this.plugin.saveSettings().then(() => {
+            try {
+              this.plugin.compileBlacklistEntries();
+            } catch (_) {
+            }
+            try {
+              this.plugin.reconfigureEditorExtensions();
+            } catch (_) {
+            }
+            try {
+              this.plugin.forceRefreshAllEditors();
+            } catch (_) {
+            }
+            try {
+              this.plugin.forceRefreshAllReadingViews();
+            } catch (_) {
+            }
+          });
         };
         row.appendChild(
           createMarkdownElementButton(this.app, this.plugin, entry, onElementSwitch)
@@ -21467,7 +21502,12 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           const text = [
             ...patterns.map((p) => p.toLowerCase()),
             String(e.presetLabel || "").toLowerCase(),
-            String(e.flags || "").toLowerCase()
+            String(e.flags || "").toLowerCase(),
+            getTargetLabel(this.plugin, e.targetElement, e.affectMarkElements) ? getTargetLabel(
+              this.plugin,
+              e.targetElement,
+              e.affectMarkElements
+            ).toLowerCase() : ""
           ].join(" ");
           const hay = text;
           if (this._blacklistSearchMatchStarts || this._blacklistSearchMatchEnds || this._blacklistSearchMatchExact) {
@@ -21533,34 +21573,88 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         row.style.alignItems = "center";
         row.style.marginBottom = "8px";
         row.style.gap = "8px";
+        try {
+          row.addClass("act-entry-row");
+        } catch (e) {
+          try {
+            row.classList.add("act-entry-row");
+          } catch (_) {
+          }
+        }
+        const tgt = resolveTargetElement(this.plugin, entry);
+        if (tgt && !entry.targetElement && !entry.affectMarkElements) {
+          entry.targetElement = tgt;
+        }
+        const kind = entry.targetElement ? "markdown" : entry.isRegex ? "regex" : "word";
         const displayPatterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns.join(", ") : entry.pattern || "";
-        if (entry.presetLabel) {
+        if (kind === "markdown") {
+          const onElementSwitch = async () => {
+            await this.plugin.saveSettings();
+            this.plugin.compileBlacklistEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this.plugin.triggerActiveDocumentRerender();
+            this._refreshBlacklistWords();
+          };
+          const onConfigChange = async () => {
+            await this.plugin.saveSettings();
+            this.plugin.compileBlacklistEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this.plugin.triggerActiveDocumentRerender();
+          };
+          row.appendChild(
+            createMarkdownElementButton(this.app, this.plugin, entry, onElementSwitch)
+          );
+          const cfgInput = createMarkdownElementConfigInput(
+            this.plugin,
+            entry,
+            onConfigChange
+          );
+          if (cfgInput) row.appendChild(cfgInput);
+        } else if (kind === "regex" && entry.presetLabel) {
           const badge = row.createEl("span", { text: entry.presetLabel });
           badge.style.marginRight = "8px";
           badge.style.opacity = "0.7";
+          badge.style.flex = "0 0 auto";
         }
-        const textInput = row.createEl("input", {
-          type: "text",
-          value: displayPatterns
-        });
-        textInput.style.flex = "1";
-        textInput.style.padding = "6px";
-        textInput.style.borderRadius = "var(--input-radius)";
-        textInput.style.border = "1px solid var(--background-modifier-border)";
-        textInput.placeholder = this.plugin.t(
-          "word_pattern_placeholder_short",
-          "Keyword or pattern, or comma-separated words"
-        );
-        const flagsInput = row.createEl("input", {
-          type: "text",
-          value: entry.flags || ""
-        });
-        flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
-        flagsInput.style.width = "50px";
-        flagsInput.style.padding = "6px";
-        flagsInput.style.borderRadius = "var(--input-radius)";
-        flagsInput.style.border = "1px solid var(--background-modifier-border)";
-        if (!entry.isRegex) flagsInput.style.display = "none";
+        let textInput = null;
+        if (kind !== "markdown") {
+          textInput = row.createEl("input", {
+            type: "text",
+            value: displayPatterns
+          });
+          textInput.style.flex = "1";
+          textInput.style.padding = "6px";
+          textInput.style.borderRadius = "var(--input-radius)";
+          textInput.style.border = "1px solid var(--background-modifier-border)";
+          textInput.placeholder = this.plugin.t(
+            kind === "regex" ? "regex_pattern_placeholder" : "word_pattern_placeholder_short",
+            kind === "regex" ? "enter regex pattern" : "Keyword or pattern, or comma-separated words"
+          );
+        }
+        let flagsInput = null;
+        if (kind === "regex") {
+          flagsInput = row.createEl("input", {
+            type: "text",
+            value: entry.flags || ""
+          });
+          flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
+          flagsInput.style.width = "50px";
+          flagsInput.style.padding = "6px";
+          flagsInput.style.borderRadius = "var(--input-radius)";
+          flagsInput.style.border = "1px solid var(--background-modifier-border)";
+          try {
+            flagsInput.addClass("act-flags-input");
+          } catch (e) {
+            try {
+              flagsInput.classList.add("act-flags-input");
+            } catch (_) {
+            }
+          }
+        }
         const del = { addEventListener: () => {
         }, removeEventListener: () => {
         } };
@@ -21572,6 +21666,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           }
         }
         const updateInputDisplay = () => {
+          if (!textInput) return;
           if (entry.isRegex) {
             textInput.value = entry.pattern || "";
           } else {
@@ -21609,6 +21704,8 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         };
         const textInputHandler = async () => {
           try {
+            if (!textInput) return;
+            if (kind === "markdown") return;
             const newPattern = textInput.value;
             let entryIdx = resolveBlacklistIndex();
             if (entryIdx === -1) return;
@@ -21655,6 +21752,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           }
         };
         const flagsInputHandler = async () => {
+          if (!flagsInput) return;
           let entryIdx = resolveBlacklistIndex();
           if (entryIdx === -1) return;
           this.plugin.settings.blacklistEntries[entryIdx].flags = flagsInput.value || "";
@@ -21703,7 +21801,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         };
         const openInRegexTesterHandler = async () => {
           try {
-            if (!entry.isRegex) return;
+            if (kind !== "regex") return;
             const onAdded = () => {
               try {
                 this._refreshBlacklistWords();
@@ -21729,7 +21827,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             ev && ev.preventDefault && ev.preventDefault();
             if (ev && ev.stopPropagation) ev.stopPropagation();
             const menu = new import_obsidian24.Menu(this.app);
-            if (entry.isRegex) {
+            if (kind === "regex") {
               menu.addItem((item) => {
                 item.setTitle(
                   this.plugin.t(
@@ -21750,18 +21848,20 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             debugError("SETTINGS", "context menu error", e);
           }
         };
-        textInput.addEventListener("change", textInputHandler);
-        textInput.addEventListener("blur", textInputHandler);
+        if (textInput) {
+          textInput.addEventListener("change", textInputHandler);
+          textInput.addEventListener("blur", textInputHandler);
+        }
         row.addEventListener("contextmenu", contextMenuHandler);
-        flagsInput.addEventListener("change", flagsInputHandler);
+        if (flagsInput) flagsInput.addEventListener("change", flagsInputHandler);
         del.addEventListener("click", delHandler);
         this._cleanupHandlers.push(() => {
           try {
-            textInput.removeEventListener("change", textInputHandler);
+            if (textInput) textInput.removeEventListener("change", textInputHandler);
           } catch (e) {
           }
           try {
-            textInput.removeEventListener("blur", textInputHandler);
+            if (textInput) textInput.removeEventListener("blur", textInputHandler);
           } catch (e) {
           }
           try {
@@ -21769,7 +21869,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           } catch (e) {
           }
           try {
-            flagsInput.removeEventListener("change", flagsInputHandler);
+            if (flagsInput) flagsInput.removeEventListener("change", flagsInputHandler);
           } catch (e) {
           }
           try {
@@ -25883,10 +25983,11 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
+          const isFmt = !!preset.targetElement;
           const newEntry = {
-            pattern: preset.pattern,
-            isRegex: true,
-            flags: preset.flags || "",
+            pattern: isFmt ? getTargetPatternText(this.plugin, preset.targetElement, false) : preset.pattern,
+            isRegex: isFmt ? false : true,
+            flags: isFmt ? "" : preset.flags || "",
             groupedPatterns: null,
             presetLabel: preset.label,
             persistAtEnd: true,
@@ -25906,6 +26007,22 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           } catch (e) {
           }
           await this.plugin.saveSettings();
+          try {
+            this.plugin.compileBlacklistEntries();
+          } catch (_) {
+          }
+          try {
+            this.plugin.reconfigureEditorExtensions();
+          } catch (_) {
+          }
+          try {
+            this.plugin.forceRefreshAllEditors();
+          } catch (_) {
+          }
+          try {
+            this.plugin.forceRefreshAllReadingViews();
+          } catch (_) {
+          }
           this._refreshBlacklistWords();
         }).open();
       };
@@ -27817,6 +27934,7 @@ function compileBlacklistEntriesLogic(plugin) {
     const blacklistEntries = Array.isArray(plugin.settings.blacklistEntries) ? plugin.settings.blacklistEntries : [];
     for (const entry of blacklistEntries) {
       if (!entry) continue;
+      if (entry.targetElement) continue;
       try {
         const compiled = { entry, patterns: [] };
         if (entry.isRegex && plugin.settings.enableRegexSupport) {
@@ -27863,6 +27981,7 @@ function compileBlacklistEntriesLogic(plugin) {
         const groupEntries = Array.isArray(group.entries) ? group.entries : [];
         for (const entry of groupEntries) {
           if (!entry) continue;
+          if (entry.targetElement) continue;
           const entryCompiled = { entry, patterns: [] };
           if (entry.isRegex && plugin.settings.enableRegexSupport) {
             const flags = entry.flags || (compiled.isCaseSensitive ? "" : "i");
@@ -34280,10 +34399,12 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       });
       let css = "";
       targets.forEach((t) => {
+        if (this.isMarkdownElementBlacklisted(t.key)) return;
         const reversedWe = [...we].reverse();
         const reversedWeAll = [...weAll].reverse();
         const entry = reversedWe.find((e) => e && e.targetElement === t.key) || reversedWeAll.find((e) => e && e.targetElement === t.key);
         if (!entry) return;
+        if (this.isMarkdownEntryBlacklisted(entry)) return;
         const selector = buildMarkdownSelector(t, entry, hasBoldItalic);
         if (!selector) return;
         {
@@ -34376,6 +34497,28 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       if (!specificEntries.length) return;
       const findEntryForTag = (name) => {
         return specificEntries.find((e) => tagTextMatches(e.tagFilter, name)) || null;
+      };
+      const isTagNameBlacklisted = (name) => {
+        try {
+          const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+          const blGroups = Array.isArray(this.settings.blacklistEntryGroups) ? this.settings.blacklistEntryGroups : [];
+          const allBl = [...blEntries];
+          for (const g of blGroups) {
+            if (!g || !g.active) continue;
+            if (Array.isArray(g.entries)) allBl.push(...g.entries);
+          }
+          for (const bl of allBl) {
+            if (!bl || bl.targetElement !== "tag" && bl.targetElement !== "all-tags") continue;
+            const f = String(bl.tagFilter || "").trim();
+            if (!f) return true;
+            try {
+              if (tagTextMatches(f, name)) return true;
+            } catch (_) {
+            }
+          }
+        } catch (_) {
+        }
+        return false;
       };
       const applyToEl = (el, entry, opts = {}) => {
         const isBegin = !!opts.isBegin;
@@ -34491,8 +34634,18 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
               i--;
             }
           }
+          if (isTagNameBlacklisted(name)) {
+            clearTagEl(end);
+            if (pairedBegin) clearTagEl(pairedBegin);
+            return;
+          }
           const entry = findEntryForTag(name);
           if (!entry) {
+            clearTagEl(end);
+            if (pairedBegin) clearTagEl(pairedBegin);
+            return;
+          }
+          if (this.isMarkdownEntryBlacklisted(entry)) {
             clearTagEl(end);
             if (pairedBegin) clearTagEl(pairedBegin);
             return;
@@ -34517,8 +34670,16 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       } else {
         tags.forEach((el) => {
           const name = el.dataset && el.dataset.tag ? el.dataset.tag : el.textContent || "";
+          if (isTagNameBlacklisted(name)) {
+            clearTagEl(el);
+            return;
+          }
           const entry = findEntryForTag(name);
           if (!entry) {
+            clearTagEl(el);
+            return;
+          }
+          if (this.isMarkdownEntryBlacklisted(entry)) {
             clearTagEl(el);
             return;
           }
@@ -34590,8 +34751,18 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       targets.forEach(({ key, sel }) => {
         const els = Array.from(document.querySelectorAll(sel));
         if (!els.length) return;
+        if (this.isMarkdownElementBlacklisted(key)) {
+          els.forEach((el) => {
+            el.style.removeProperty("color");
+            el.style.removeProperty("background-color");
+            el.style.removeProperty("border-radius");
+            el.style.removeProperty("padding-left");
+            el.style.removeProperty("padding-right");
+          });
+          return;
+        }
         const entries = all.filter(
-          (e) => e && e.targetElement === key && e.titleFilter && String(e.titleFilter).trim().length > 0
+          (e) => e && e.targetElement === key && e.titleFilter && String(e.titleFilter).trim().length > 0 && !this.isMarkdownEntryBlacklisted(e)
         );
         els.forEach((el) => {
           el.style.removeProperty("color");
@@ -34603,6 +34774,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             (e) => titleTextMatches(e.titleFilter, el.textContent || "", e.titleMatchType)
           );
           if (!entry) return;
+          if (this.isMarkdownEntryBlacklisted(entry)) return;
           const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
           const bg = entry.backgroundColor || null;
           if (textColor)
@@ -37381,6 +37553,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
     if (!el || !entries || entries.length === 0) return;
     for (const entry of entries) {
       if (!entry || !entry.targetElement) continue;
+      if (this.isMarkdownEntryBlacklisted(entry)) continue;
       const selector = buildRenderedSelector(entry);
       if (!selector) continue;
       let elements;
@@ -41653,6 +41826,39 @@ ${strongRule}`;
     const legacyAllowed = folderDecision === 1 || tagDecision === 1 || !(folderDecision === -1 || tagDecision === -1);
     const ruleAllowed = this._groupRulesAllow(group, filePath);
     return legacyAllowed && ruleAllowed;
+  }
+  isMarkdownElementBlacklisted(targetKey, filePath = null) {
+    try {
+      if (!targetKey) return false;
+      const k = String(targetKey);
+      const isTagFamily = (x) => x === "tag" || x === "all-tags";
+      const matchesFamily = (blKey) => {
+        if (blKey === k) return true;
+        if (isTagFamily(k) && isTagFamily(blKey)) return true;
+        return false;
+      };
+      const blEntries = Array.isArray(this.settings.blacklistEntries) ? this.settings.blacklistEntries : [];
+      for (const bl of blEntries) {
+        if (bl && bl.targetElement && matchesFamily(String(bl.targetElement))) {
+          return true;
+        }
+      }
+      const blGroups = Array.isArray(this.settings.blacklistEntryGroups) ? this.settings.blacklistEntryGroups : [];
+      for (const g of blGroups) {
+        if (!g || !g.active) continue;
+        if (filePath && !this.isGroupEnabledForFile(g, filePath)) continue;
+        const entries = Array.isArray(g.entries) ? g.entries : [];
+        for (const bl of entries) {
+          if (bl && bl.targetElement && matchesFamily(String(bl.targetElement))) return true;
+        }
+      }
+    } catch (e) {
+    }
+    return false;
+  }
+  isMarkdownEntryBlacklisted(entry, filePath = null) {
+    if (!entry || !entry.targetElement) return false;
+    return this.isMarkdownElementBlacklisted(entry.targetElement, filePath);
   }
   isWordBlacklisted(word, filePath = null) {
     try {

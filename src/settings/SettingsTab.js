@@ -20,7 +20,7 @@ import { CommandVisibilityModal } from '../modals/CommandVisibilityModal.js';
 import { ThemeFixerAdjustModal } from '../modals/ThemeFixerAdjustModal.js';
 import { debugLog, debugError } from '../utils/debug.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
-import { getTargetPatternText } from '../utils/targetLabels.js';
+import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
 import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
 export class ColorSettingTab extends PluginSettingTab {
@@ -1542,6 +1542,13 @@ export class ColorSettingTab extends PluginSettingTab {
             ...patterns.map((p) => p.toLowerCase()),
             String(e.presetLabel || "").toLowerCase(),
             String(e.flags || "").toLowerCase(),
+            getTargetLabel(this.plugin, e.targetElement, e.affectMarkElements)
+              ? getTargetLabel(
+                  this.plugin,
+                  e.targetElement,
+                  e.affectMarkElements,
+                ).toLowerCase()
+              : "",
           ].join(" ");
           const hay = text;
           // Check if any match mode filter is active - use OR logic
@@ -1637,6 +1644,25 @@ export class ColorSettingTab extends PluginSettingTab {
         row.style.alignItems = "center";
         row.style.marginBottom = "8px";
         row.style.gap = "8px";
+        try {
+          row.addClass("act-entry-row");
+        } catch (e) {
+          try {
+            row.classList.add("act-entry-row");
+          } catch (_) {}
+        }
+
+        // Infer targetElement for legacy entries (stored only a preset name / regex)
+        // so they're treated as markdown targets.
+        const tgt = resolveTargetElement(this.plugin, entry);
+        if (tgt && !entry.targetElement && !entry.affectMarkElements) {
+          entry.targetElement = tgt;
+        }
+        const kind = entry.targetElement
+          ? "markdown"
+          : entry.isRegex
+            ? "regex"
+            : "word";
 
         const displayPatterns =
           Array.isArray(entry.groupedPatterns) &&
@@ -1644,34 +1670,80 @@ export class ColorSettingTab extends PluginSettingTab {
             ? entry.groupedPatterns.join(", ")
             : entry.pattern || "";
 
-        if (entry.presetLabel) {
+        // Show markdown element picker + config for markdown kind, otherwise badge / pattern input
+        if (kind === "markdown") {
+          const onElementSwitch = async () => {
+            await this.plugin.saveSettings();
+            this.plugin.compileBlacklistEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this.plugin.triggerActiveDocumentRerender();
+            this._refreshBlacklistWords();
+          };
+          const onConfigChange = async () => {
+            await this.plugin.saveSettings();
+            this.plugin.compileBlacklistEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+            this.plugin.triggerActiveDocumentRerender();
+          };
+          row.appendChild(
+            createMarkdownElementButton(this.app, this.plugin, entry, onElementSwitch),
+          );
+          const cfgInput = createMarkdownElementConfigInput(
+            this.plugin,
+            entry,
+            onConfigChange,
+          );
+          if (cfgInput) row.appendChild(cfgInput);
+        } else if (kind === "regex" && entry.presetLabel) {
           const badge = row.createEl("span", { text: entry.presetLabel });
           badge.style.marginRight = "8px";
           badge.style.opacity = "0.7";
+          badge.style.flex = "0 0 auto";
         }
-        const textInput = row.createEl("input", {
-          type: "text",
-          value: displayPatterns,
-        });
-        textInput.style.flex = "1";
-        textInput.style.padding = "6px";
-        textInput.style.borderRadius = "var(--input-radius)";
-        textInput.style.border = "1px solid var(--background-modifier-border)";
-        textInput.placeholder = this.plugin.t(
-          "word_pattern_placeholder_short",
-          "Keyword or pattern, or comma-separated words",
-        );
 
-        const flagsInput = row.createEl("input", {
-          type: "text",
-          value: entry.flags || "",
-        });
-        flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
-        flagsInput.style.width = "50px";
-        flagsInput.style.padding = "6px";
-        flagsInput.style.borderRadius = "var(--input-radius)";
-        flagsInput.style.border = "1px solid var(--background-modifier-border)";
-        if (!entry.isRegex) flagsInput.style.display = "none";
+        let textInput = null;
+        if (kind !== "markdown") {
+          textInput = row.createEl("input", {
+            type: "text",
+            value: displayPatterns,
+          });
+          textInput.style.flex = "1";
+          textInput.style.padding = "6px";
+          textInput.style.borderRadius = "var(--input-radius)";
+          textInput.style.border = "1px solid var(--background-modifier-border)";
+          textInput.placeholder = this.plugin.t(
+            kind === "regex"
+              ? "regex_pattern_placeholder"
+              : "word_pattern_placeholder_short",
+            kind === "regex"
+              ? "enter regex pattern"
+              : "Keyword or pattern, or comma-separated words",
+          );
+        }
+
+        let flagsInput = null;
+        if (kind === "regex") {
+          flagsInput = row.createEl("input", {
+            type: "text",
+            value: entry.flags || "",
+          });
+          flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
+          flagsInput.style.width = "50px";
+          flagsInput.style.padding = "6px";
+          flagsInput.style.borderRadius = "var(--input-radius)";
+          flagsInput.style.border = "1px solid var(--background-modifier-border)";
+          try {
+            flagsInput.addClass("act-flags-input");
+          } catch (e) {
+            try {
+              flagsInput.classList.add("act-flags-input");
+            } catch (_) {}
+          }
+        }
 
         // Delete button (commented out — use right-click context menu to delete)
         /* const del = row.createEl("button", {
@@ -1691,6 +1763,7 @@ export class ColorSettingTab extends PluginSettingTab {
           }
         }
         const updateInputDisplay = () => {
+          if (!textInput) return;
           // Update the input field to show the current state from entry
           if (entry.isRegex) {
             textInput.value = entry.pattern || "";
@@ -1758,6 +1831,8 @@ export class ColorSettingTab extends PluginSettingTab {
 
         const textInputHandler = async () => {
           try {
+            if (!textInput) return;
+            if (kind === "markdown") return;
             const newPattern = textInput.value;
             let entryIdx = resolveBlacklistIndex();
             if (entryIdx === -1) return;
@@ -1826,6 +1901,7 @@ export class ColorSettingTab extends PluginSettingTab {
 
         // cpHandler for blacklist color picker
         const flagsInputHandler = async () => {
+          if (!flagsInput) return;
           let entryIdx = resolveBlacklistIndex();
           if (entryIdx === -1) return;
           this.plugin.settings.blacklistEntries[entryIdx].flags =
@@ -1880,7 +1956,7 @@ export class ColorSettingTab extends PluginSettingTab {
 
         const openInRegexTesterHandler = async () => {
           try {
-            if (!entry.isRegex) return;
+            if (kind !== "regex") return;
             const onAdded = () => {
               try {
                 this._refreshBlacklistWords();
@@ -1907,7 +1983,7 @@ export class ColorSettingTab extends PluginSettingTab {
             if (ev && ev.stopPropagation) ev.stopPropagation();
             const menu = new Menu(this.app);
 
-            if (entry.isRegex) {
+            if (kind === "regex") {
               menu.addItem((item) => {
                 item
                   .setTitle(
@@ -1941,23 +2017,25 @@ export class ColorSettingTab extends PluginSettingTab {
           }
         };
 
-        textInput.addEventListener("change", textInputHandler);
-        textInput.addEventListener("blur", textInputHandler);
+        if (textInput) {
+          textInput.addEventListener("change", textInputHandler);
+          textInput.addEventListener("blur", textInputHandler);
+        }
         row.addEventListener("contextmenu", contextMenuHandler);
-        flagsInput.addEventListener("change", flagsInputHandler);
+        if (flagsInput) flagsInput.addEventListener("change", flagsInputHandler);
         del.addEventListener("click", delHandler);
         this._cleanupHandlers.push(() => {
           try {
-            textInput.removeEventListener("change", textInputHandler);
+            if (textInput) textInput.removeEventListener("change", textInputHandler);
           } catch (e) {}
           try {
-            textInput.removeEventListener("blur", textInputHandler);
+            if (textInput) textInput.removeEventListener("blur", textInputHandler);
           } catch (e) {}
           try {
             row.removeEventListener("contextmenu", contextMenuHandler);
           } catch (e) {}
           try {
-            flagsInput.removeEventListener("change", flagsInputHandler);
+            if (flagsInput) flagsInput.removeEventListener("change", flagsInputHandler);
           } catch (e) {}
           try {
             del.removeEventListener("click", delHandler);
@@ -7590,10 +7668,13 @@ export class ColorSettingTab extends PluginSettingTab {
         }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
+          const isFmt = !!preset.targetElement;
           const newEntry = {
-            pattern: preset.pattern,
-            isRegex: true,
-            flags: preset.flags || "",
+            pattern: isFmt
+              ? getTargetPatternText(this.plugin, preset.targetElement, false)
+              : preset.pattern,
+            isRegex: isFmt ? false : true,
+            flags: isFmt ? "" : preset.flags || "",
             groupedPatterns: null,
             presetLabel: preset.label,
             persistAtEnd: true,
@@ -7616,6 +7697,10 @@ export class ColorSettingTab extends PluginSettingTab {
               this._blacklistNewSet.add(newEntry.uid);
           } catch (e) {}
           await this.plugin.saveSettings();
+          try { this.plugin.compileBlacklistEntries(); } catch (_) {}
+          try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+          try { this.plugin.forceRefreshAllEditors(); } catch (_) {}
+          try { this.plugin.forceRefreshAllReadingViews(); } catch (_) {}
           this._refreshBlacklistWords();
         }).open();
       };

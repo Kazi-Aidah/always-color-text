@@ -678,11 +678,22 @@ export class EditBlacklistGroupModal extends Modal {
         };
         const onElementSwitch = () => {
           syncLiveEntry(entry);
-          this.plugin.saveSettings().then(() => this._refreshGroupEntries());
+          this.plugin.saveSettings().then(() => {
+            try { this.plugin.compileBlacklistEntries(); } catch (_) {}
+            try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+            try { this.plugin.forceRefreshAllEditors(); } catch (_) {}
+            try { this.plugin.forceRefreshAllReadingViews(); } catch (_) {}
+            this._refreshGroupEntries();
+          });
         };
         const onConfigChange = () => {
           syncLiveEntry(entry);
-          this.plugin.saveSettings();
+          this.plugin.saveSettings().then(() => {
+            try { this.plugin.compileBlacklistEntries(); } catch (_) {}
+            try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+            try { this.plugin.forceRefreshAllEditors(); } catch (_) {}
+            try { this.plugin.forceRefreshAllReadingViews(); } catch (_) {}
+          });
         };
         row.appendChild(
           createMarkdownElementButton(this.app, this.plugin, entry, onElementSwitch),

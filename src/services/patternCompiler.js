@@ -1026,6 +1026,8 @@ export function compileBlacklistEntriesLogic(plugin) {
       : [];
     for (const entry of blacklistEntries) {
       if (!entry) continue;
+      // Markdown element blacklists are handled via isMarkdownElementBlacklisted, not regex
+      if (entry.targetElement) continue;
       try {
         const compiled = { entry, patterns: [] };
         if (entry.isRegex && plugin.settings.enableRegexSupport) {
@@ -1083,6 +1085,7 @@ export function compileBlacklistEntriesLogic(plugin) {
         const groupEntries = Array.isArray(group.entries) ? group.entries : [];
         for (const entry of groupEntries) {
           if (!entry) continue;
+          if (entry.targetElement) continue;
           const entryCompiled = { entry, patterns: [] };
           if (entry.isRegex && plugin.settings.enableRegexSupport) {
             const flags =
