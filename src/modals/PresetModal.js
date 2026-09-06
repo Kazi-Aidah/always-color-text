@@ -422,6 +422,7 @@ export class PresetModal extends Modal {
       row.style.alignItems = "center";
       row.style.gap = "8px";
       row.style.marginBottom = "8px";
+      row.style.maxWidth = "250px";
 
       formattingPresets.forEach((p) => {
         const btn = row.createEl("button", { text: p.label });

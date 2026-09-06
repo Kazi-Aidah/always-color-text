@@ -7264,6 +7264,7 @@ var PresetModal = class extends import_obsidian.Modal {
       row.style.alignItems = "center";
       row.style.gap = "8px";
       row.style.marginBottom = "8px";
+      row.style.maxWidth = "250px";
       formattingPresets.forEach((p) => {
         const btn = row.createEl("button", { text: p.label });
         btn.style.fontSize = "12px";
@@ -15528,6 +15529,7 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
     } catch (e) {
     }
     const isGroup = this.entry && Array.isArray(this.entry.entries);
+    let stylePresetBtn = null;
     if (this.entry && this.entry.customCss && !isGroup) {
       try {
         parseCssIntoEntry(this.entry.customCss, this.entry, this.plugin);
@@ -15691,6 +15693,14 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
         } catch (_) {
         }
       });
+      caseSelect.style.display = "none";
+      stylePresetBtn = headerRow.createEl("button", { text: this.plugin.t("btn_style", "Style") });
+      stylePresetBtn.style.minWidth = "80px";
+      stylePresetBtn.style.padding = "6px 10px";
+      stylePresetBtn.style.border = "1px solid var(--background-modifier-border)";
+      stylePresetBtn.style.borderRadius = "4px";
+      stylePresetBtn.style.background = "var(--background-modifier-form-field)";
+      stylePresetBtn.style.cursor = "pointer";
     }
     if (!fromQuickOnce && isGroup) {
       matchSelect.innerHTML = `<option value="per-entry">${this.plugin.t("opt_match_all", "Match Type (All)")}</option>
@@ -15779,6 +15789,25 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
     const bColor = pickerRow.createEl("input", { type: "color" });
     tColor.value = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "#ffffff") || "#ffffff";
     bColor.value = this.entry && this.entry.backgroundColor ? this.entry.backgroundColor : "#000000";
+    // For word groups with no explicit colors yet, default color pickers to accent so preview shows accent (not white/black)
+    if (isGroup && this.entry && !this.entry.textColor && !this.entry.color && !this.entry.backgroundColor) {
+      try {
+        const tmp = document.createElement("span");
+        tmp.style.color = "var(--color-accent)";
+        tmp.style.display = "none";
+        document.body.appendChild(tmp);
+        const computed = getComputedStyle(tmp).color;
+        document.body.removeChild(tmp);
+        const m = computed.match(/\d+/g);
+        if (m && m.length >= 3) {
+          const hex = "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+          if (this.plugin.isValidHexColor(hex)) {
+            tColor.value = hex;
+            bColor.value = hex;
+          }
+        }
+      } catch (_) {}
+    }
     const syncColorsFromParent = (evt) => {
       try {
         if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
@@ -16114,6 +16143,8 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
     const renderPreview = () => {
       const style = styleSelect.value;
       if (isGroup && !style) {
+        // Per-entry (no explicit group style) — show accent color preview so user can see it
+        // This is preview-only; it does not apply to entries
         const txt2 = words.textContent || "";
         try {
           while (previewWrap.firstChild)
@@ -16122,11 +16153,33 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
           span2.textContent = txt2;
           span2.style.display = "inline";
           span2.style.opacity = "1";
+          try {
+            span2.style.setProperty("color", "var(--color-accent)", "important");
+            span2.style.setProperty("background", "transparent", "important");
+            span2.style.setProperty("background-color", "transparent", "important");
+            span2.style.setProperty("background-image", "none", "important");
+            span2.style.setProperty("border", "none", "important");
+          } catch (_) {
+            span2.style.color = "var(--color-accent)";
+          }
+          // Ensure previewWrap itself also shows accent and transparent bg with !important to beat prior black
+          try {
+            previewWrap.style.setProperty("color", "var(--color-accent)", "important");
+            previewWrap.style.setProperty("background", "transparent", "important");
+            previewWrap.style.setProperty("background-color", "transparent", "important");
+            previewWrap.style.setProperty("background-image", "none", "important");
+          } catch (_) { try { previewWrap.style.color = "var(--color-accent)"; } catch (_) {} }
           previewWrap.appendChild(span2);
         } catch (_) {
-          previewWrap.innerHTML = `<span style="display:inline">${escapeHtml(
+          previewWrap.innerHTML = `<span style="display:inline;color:var(--color-accent) !important;background:transparent !important;background-color:transparent !important;background-image:none !important;border:none !important">${escapeHtml(
             txt2
           )}</span>`;
+          try {
+            previewWrap.style.setProperty("color", "var(--color-accent)", "important");
+            previewWrap.style.setProperty("background", "transparent", "important");
+            previewWrap.style.setProperty("background-color", "transparent", "important");
+            previewWrap.style.setProperty("background-image", "none", "important");
+          } catch (_) { try { previewWrap.style.color = "var(--color-accent)"; } catch (_) {} }
         }
         return;
       }
@@ -16167,6 +16220,45 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
         } catch (_) {
         }
       }
+      // For word groups with default black/white (no explicit accent), show accent in preview for visibility (preview-only)
+      if (isGroup) {
+        const bIsDefault = !b || b.toLowerCase() === "#000000" || b.toLowerCase() === "#205613";
+        const tIsDefault = !t || t.toLowerCase() === "#ffffff" || t.toLowerCase() === "#58bc54";
+        if ((style === "highlight" || style === "both") && bIsDefault) {
+          const accentRgba = `color-mix(in srgb, var(--color-accent) ${p.opacity ?? 25}%, transparent)`;
+          try {
+            span.style.setProperty("background", accentRgba, "important");
+            span.style.setProperty("background-color", accentRgba, "important");
+            span.style.setProperty("background-image", "none", "important");
+            // Ensure border also accent if enabled
+            if (p.enableBorder) {
+              const accentBorder = `color-mix(in srgb, var(--color-accent) ${p.borderOpacity ?? 100}%, transparent)`;
+              const th = p.borderThickness ?? 1;
+              const ls = p.borderLineStyle || "solid";
+              const bs = p.borderStyle || "full";
+              let bc = "";
+              const css = `${th}px ${ls} ${accentBorder} !important;`;
+              switch (bs) {
+                case "bottom": bc = ` border-bottom: ${css}`; break;
+                case "top": bc = ` border-top: ${css}`; break;
+                case "left": bc = ` border-left: ${css}`; break;
+                case "right": bc = ` border-right: ${css}`; break;
+                case "top-bottom": bc = ` border-top: ${css} border-bottom: ${css}`; break;
+                case "left-right": bc = ` border-left: ${css} border-right: ${css}`; break;
+                default: bc = ` border: ${css}`;
+              }
+              if (bc) span.style.cssText += bc;
+            }
+          } catch (_) {}
+        }
+        if ((style === "text" || style === "both") && tIsDefault) {
+          try { span.style.setProperty("color", "var(--color-accent)", "important"); } catch (_) {}
+        }
+        if (style === "highlight" && tIsDefault) {
+          // Highlight style text is var(--text-normal), make it accent for visibility when default
+          try { span.style.setProperty("color", "var(--color-accent)", "important"); } catch (_) {}
+        }
+      }
       previewWrap.appendChild(span);
     };
     const updatePickerVisibility = () => {
@@ -16194,10 +16286,99 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
     this._handlers.push({ el: bColor, ev: "input", fn: styleChange });
     updatePickerVisibility();
     renderPreview();
+    if (stylePresetBtn) {
+      const presetHandler = () => {
+        new TextStylePresetsModal(this.app, this.plugin, (preset) => {
+          if (!preset || !this.entry) return;
+          const shapeKeys = ["styleType", "backgroundOpacity", "highlightBorderRadius", "highlightHorizontalPadding", "highlightVerticalPadding", "enableBorderThickness", "borderStyle", "borderLineStyle", "borderOpacity", "borderThickness", "customCss"];
+          for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
+          if ("textColor" in preset) this.entry.textColor = preset.textColor;
+          if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
+          if ("color" in preset) this.entry.color = preset.color;
+          if (preset.styleType === "text" && preset.textColor && this.plugin.isValidHexColor(preset.textColor)) {
+            this.entry.color = preset.textColor;
+            this.entry.textColor = null;
+            this.entry.backgroundColor = null;
+          } else if (preset.styleType === "highlight" && preset.backgroundColor) {
+            this.entry.backgroundColor = preset.backgroundColor;
+            this.entry.textColor = "currentColor";
+            this.entry.color = "";
+          }
+          try {
+            if (styleSelect) styleSelect.value = this.entry.styleType || "both";
+          } catch (_) {
+          }
+          try {
+            if (tColor) tColor.value = this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) ? this.entry.textColor : this.entry.color && this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : tColor.value;
+          } catch (_) {
+          }
+          try {
+            if (bColor) bColor.value = this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor) ? this.entry.backgroundColor : bColor.value;
+          } catch (_) {
+          }
+          try {
+            opacitySlider.value = String(this.entry.backgroundOpacity ?? this.plugin.settings.backgroundOpacity ?? 35);
+          } catch (_) {
+          }
+          try {
+            radiusInput.value = String(this.entry.highlightBorderRadius ?? this.plugin.settings.highlightBorderRadius ?? 4);
+          } catch (_) {
+          }
+          try {
+            hPadInput.value = String(this.entry.highlightHorizontalPadding ?? this.plugin.settings.highlightHorizontalPadding ?? 4);
+          } catch (_) {
+          }
+          try {
+            vPadInput.value = String(this.entry.highlightVerticalPadding ?? this.plugin.settings.highlightVerticalPadding ?? 0);
+          } catch (_) {
+          }
+          try {
+            enableChk.checked = !!(typeof this.entry.enableBorderThickness !== "undefined" ? this.entry.enableBorderThickness : this.plugin.settings.enableBorderThickness);
+          } catch (_) {
+          }
+          try {
+            sidesSel.value = this.entry.borderStyle || this.plugin.settings.borderStyle || "full";
+          } catch (_) {
+          }
+          try {
+            lineSel.value = this.entry.borderLineStyle || this.plugin.settings.borderLineStyle || "solid";
+          } catch (_) {
+          }
+          try {
+            bOpSlider.value = String(this.entry.borderOpacity ?? this.plugin.settings.borderOpacity ?? 100);
+          } catch (_) {
+          }
+          try {
+            thickInput.value = String(this.entry.borderThickness ?? this.plugin.settings.borderThickness ?? 1);
+          } catch (_) {
+          }
+          try {
+            updatePickerVisibility();
+          } catch (_) {
+          }
+          try {
+            renderPreview();
+          } catch (_) {
+          }
+          try {
+            window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } }));
+          } catch (_) {
+          }
+        }).open();
+      };
+      stylePresetBtn.addEventListener("click", presetHandler);
+      this._handlers.push({ el: stylePresetBtn, ev: "click", fn: presetHandler });
+    }
     const actions = contentEl.createDiv();
+    try { actions.addClass("act-highlight-footer"); } catch (e) { try { actions.classList.add("act-highlight-footer"); } catch (_) {} }
+    if (isGroup) { try { actions.addClass("act-group-highlight-footer"); } catch (e) { try { actions.classList.add("act-group-highlight-footer"); } catch (_) {} } }
     actions.style.display = "flex";
     actions.style.justifyContent = "space-between";
-    actions.style.marginTop = "12px";
+    // edit highlight styling modals: force margin-top 0
+    actions.style.marginTop = "0";
+    try { actions.style.setProperty("margin-top", "0", "important"); } catch (_) {}
+    // Ensure footer stays visible without scrolling (like word groups)
+    try { actions.style.flexShrink = "0"; actions.style.position = "sticky"; actions.style.bottom = "0"; } catch (_) {}
     const resetAllBtn = actions.createEl("button", {
       text: this.plugin.t("btn_reset_all", "Reset Highlight Style")
     });
@@ -23215,29 +23396,71 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           preview.style.fontWeight = "bold";
           preview.style.cursor = "default";
           preview.textContent = "Text";
-          const t = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
-          const b = group.backgroundColor || "";
+          const tRaw = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
+          const bRaw = group.backgroundColor || "";
+          const tIsDefault = !tRaw || !this.plugin.isValidHexColor(tRaw) || tRaw.toLowerCase() === "#ffffff";
+          const bIsDefault = !bRaw || !this.plugin.isValidHexColor(bRaw) || bRaw.toLowerCase() === "#000000";
+          const t = !tIsDefault && this.plugin.isValidHexColor(tRaw) ? tRaw : "";
+          const b = !bIsDefault && this.plugin.isValidHexColor(bRaw) ? bRaw : "";
           const p = this.plugin.getHighlightParams(group);
-          const rgba = b ? this.plugin.hexToRgba(b, p.opacity ?? 25) : "transparent";
+          const styleType = group.styleType || "";
+          // For highlight/both styles with no explicit background (or default black), show accent background (color-mix) so preview is visible
+          const useAccentBg = (bIsDefault || !b) && (styleType === "highlight" || styleType === "both");
+          const rgba = b ? this.plugin.hexToRgba(b, p.opacity ?? 25) : useAccentBg ? `color-mix(in srgb, var(--color-accent) ${p.opacity ?? 25}%, transparent)` : "transparent";
+          // Text color: for text/both with no explicit t (or default white), show accent
+          const useAccentText = (tIsDefault || !t) && (styleType === "text" || styleType === "both" || !styleType);
           if (t) preview.style.color = t;
-          else preview.style.color = "var(--text-normal)";
+          else if (useAccentText) try { preview.style.setProperty("color", "var(--color-accent)", "important"); } catch (_) { preview.style.color = "var(--color-accent)"; }
+          else try { preview.style.setProperty("color", "var(--color-accent)", "important"); } catch (_) { preview.style.color = "var(--color-accent)"; }
           if (b) {
-            preview.style.backgroundColor = rgba;
+            try { preview.style.setProperty("background-color", rgba, "important"); preview.style.setProperty("background", rgba, "important"); } catch (_) { preview.style.backgroundColor = rgba; }
+          } else if (useAccentBg) {
+            try { preview.style.setProperty("background-color", rgba, "important"); preview.style.setProperty("background", rgba, "important"); preview.style.setProperty("background-image", "none", "important"); } catch (_) { preview.style.backgroundColor = rgba; }
           } else {
-            preview.style.backgroundColor = "transparent";
+            try { preview.style.setProperty("background-color", "transparent", "important"); preview.style.setProperty("background", "transparent", "important"); preview.style.setProperty("background-image", "none", "important"); } catch (_) { preview.style.backgroundColor = "transparent"; }
           }
           preview.style.borderRadius = (p.radius ?? 8) + "px";
           preview.style.paddingLeft = (p.hPad ?? 4) + "px";
           preview.style.paddingRight = (p.hPad ?? 4) + "px";
           preview.style.paddingTop = (p.vPad ?? 0) + "px";
           preview.style.paddingBottom = (p.vPad ?? 0) + "px";
-          if (p.enableBorder) {
-            const borderStyle = this.plugin.generateBorderStyle(t, b, group);
-            if (borderStyle) {
-              preview.style.cssText += borderStyle;
+          // colortype: color (styleType text) should never show borders in act-group-styling-preview
+          if (styleType === "text") {
+            try { preview.style.setProperty("border", "none", "important"); preview.style.setProperty("border-top", "none", "important"); preview.style.setProperty("border-bottom", "none", "important"); preview.style.setProperty("border-left", "none", "important"); preview.style.setProperty("border-right", "none", "important"); } catch (_) { preview.style.border = "none"; }
+          } else if (p.enableBorder) {
+            // If we are showing accent fallback for background (highlight/both), generate accent border instead of black fallback
+            // Do NOT generate accent border for text-only style (colortype: color) — it should have no border
+            const isAccentFallback = useAccentBg;
+            if (isAccentFallback) {
+              const accentBorderColor = `color-mix(in srgb, var(--color-accent) ${p.borderOpacity ?? 100}%, transparent)`;
+              const thickness = p.borderThickness ?? 1;
+              const line = p.borderLineStyle || "solid";
+              const css = `${thickness}px ${line} ${accentBorderColor} !important;`;
+              let borderCss = "";
+              switch (p.borderStyle || "full") {
+                case "bottom": borderCss = ` border-bottom: ${css}`; break;
+                case "top": borderCss = ` border-top: ${css}`; break;
+                case "left": borderCss = ` border-left: ${css}`; break;
+                case "right": borderCss = ` border-right: ${css}`; break;
+                case "top-bottom": borderCss = ` border-top: ${css} border-bottom: ${css}`; break;
+                case "left-right": borderCss = ` border-left: ${css} border-right: ${css}`; break;
+                case "top-left-right": borderCss = ` border-top: ${css} border-left: ${css} border-right: ${css}`; break;
+                case "bottom-left-right": borderCss = ` border-bottom: ${css} border-left: ${css} border-right: ${css}`; break;
+                case "top-right": borderCss = ` border-top: ${css} border-right: ${css}`; break;
+                case "top-left": borderCss = ` border-top: ${css} border-left: ${css}`; break;
+                case "bottom-right": borderCss = ` border-bottom: ${css} border-right: ${css}`; break;
+                case "bottom-left": borderCss = ` border-bottom: ${css} border-left: ${css}`; break;
+                default: borderCss = ` border: ${css}`;
+              }
+              preview.style.cssText += borderCss;
+            } else {
+              const borderStyle = this.plugin.generateBorderStyle(t, b, group);
+              if (borderStyle) {
+                preview.style.cssText += borderStyle;
+              }
             }
           } else {
-            preview.style.border = "1px solid var(--background-modifier-border)";
+            try { preview.style.setProperty("border", "1px solid var(--background-modifier-border)", "important"); } catch (_) { preview.style.border = "1px solid var(--background-modifier-border)"; }
           }
           if (group.customCss) {
             try {
@@ -23251,7 +23474,95 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
               }
             } catch (_) {
             }
+            // If group has no explicit color (per-entry/default black/white), customCss may have set black with !important — force accent back (preview-only)
+            if (!t || tIsDefault) {
+              try {
+                preview.style.setProperty("color", "var(--color-accent)", "important");
+                // Keep accent background if this is highlight/both with accent fallback, otherwise transparent
+                if (!useAccentBg) {
+                  preview.style.setProperty("background", "transparent", "important");
+                  preview.style.setProperty("background-color", "transparent", "important");
+                  preview.style.setProperty("background-image", "none", "important");
+                }
+              } catch (_) {}
+            }
+            if ((!b || bIsDefault) && !useAccentBg) {
+              try {
+                preview.style.setProperty("background", "transparent", "important");
+                preview.style.setProperty("background-color", "transparent", "important");
+                preview.style.setProperty("background-image", "none", "important");
+              } catch (_) {}
+            }
+            // Re-apply accent background if needed (highlight/both with default black)
+            if (useAccentBg) {
+              try {
+                const accentBg2 = `color-mix(in srgb, var(--color-accent) ${p.opacity ?? 25}%, transparent)`;
+                preview.style.setProperty("background", accentBg2, "important");
+                preview.style.setProperty("background-color", accentBg2, "important");
+                preview.style.setProperty("background-image", "none", "important");
+              } catch (_) {}
+            }
           }
+        } else {
+          // Per-entry group (no explicit group styling) — show accent color preview so user can see it
+          // This does NOT apply to entries; it's preview-only
+          const preview = row.createDiv();
+          try {
+            preview.addClass("act-group-styling-preview");
+          } catch (e) {
+            try {
+              preview.classList.add("act-group-styling-preview");
+            } catch (_) {
+            }
+          }
+          preview.style.flexShrink = "0";
+          preview.style.display = "flex";
+          preview.style.alignItems = "center";
+          preview.style.justifyContent = "center";
+          preview.style.fontSize = "12px";
+          preview.style.fontWeight = "bold";
+          preview.style.cursor = "default";
+          preview.textContent = "Text";
+          const p = this.plugin.getHighlightParams(group);
+          // Use !important to beat any prior customCss/black !important — per-entry preview is text-only (colortype: color) so keep transparent bg
+          try {
+            preview.style.setProperty("color", "var(--color-accent)", "important");
+            preview.style.setProperty("background", "transparent", "important");
+            preview.style.setProperty("background-color", "transparent", "important");
+            preview.style.setProperty("background-image", "none", "important");
+          } catch (_) {
+            preview.style.color = "var(--color-accent)";
+            preview.style.backgroundColor = "transparent";
+          }
+          preview.style.borderRadius = (p.radius ?? 8) + "px";
+          preview.style.paddingLeft = (p.hPad ?? 4) + "px";
+          preview.style.paddingRight = (p.hPad ?? 4) + "px";
+          preview.style.paddingTop = (p.vPad ?? 0) + "px";
+          preview.style.paddingBottom = (p.vPad ?? 0) + "px";
+          // For per-entry preview, respect colortype: if enableBorder false (e.g. colortype: color/text), show no border
+          try {
+            if (p.enableBorder) {
+              const accentBorder = `color-mix(in srgb, var(--color-accent) ${p.borderOpacity ?? 100}%, transparent)`;
+              const th = p.borderThickness ?? 1;
+              const ls = p.borderLineStyle || "solid";
+              const bs = p.borderStyle || "full";
+              const css = `${th}px ${ls} ${accentBorder} !important;`;
+              let borderCss = "";
+              switch (bs) {
+                case "bottom": borderCss = ` border-bottom: ${css}`; break;
+                case "top": borderCss = ` border-top: ${css}`; break;
+                case "left": borderCss = ` border-left: ${css}`; break;
+                case "right": borderCss = ` border-right: ${css}`; break;
+                case "top-bottom": borderCss = ` border-top: ${css} border-bottom: ${css}`; break;
+                case "left-right": borderCss = ` border-left: ${css} border-right: ${css}`; break;
+                default: borderCss = ` border: ${css}`;
+              }
+              preview.style.cssText += borderCss;
+            } else {
+              // colortype: color / text — no border
+              try { preview.style.setProperty("border", "none", "important"); } catch (_) { preview.style.border = "none"; }
+            }
+          } catch (_) { try { preview.style.setProperty("border", "none", "important"); } catch (_) { preview.style.border = "none"; } }
         }
         const nameInput = row.createEl("input", {
           type: "text",

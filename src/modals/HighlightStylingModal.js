@@ -1,6 +1,7 @@
 import { Modal, setIcon } from 'obsidian';
 import { escapeHtml } from '../utils/debug.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
+import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { deriveHighlightCssFromEntry, parseCssIntoEntry, patchCssLayoutFromEntry } from './CustomCssModal.js';
 
 export class HighlightStylingModal extends Modal {
@@ -40,6 +41,7 @@ export class HighlightStylingModal extends Modal {
     } catch (e) {}
 
     const isGroup = this.entry && Array.isArray(this.entry.entries);
+    let stylePresetBtn = null;
 
     // If the entry has customCss, parse it into structured fields first so
     // sliders/inputs below read the correct values (makes CSS ↔ UI interchangeable)
@@ -246,6 +248,15 @@ export class HighlightStylingModal extends Modal {
           this.plugin.triggerActiveDocumentRerender();
         } catch (_) {}
       });
+      // Hide case sensitivity dropdown for both entry and group modals, replace with Style button
+      caseSelect.style.display = "none";
+      stylePresetBtn = headerRow.createEl("button", { text: this.plugin.t("btn_style", "Style") });
+      stylePresetBtn.style.minWidth = "80px";
+      stylePresetBtn.style.padding = "6px 10px";
+      stylePresetBtn.style.border = "1px solid var(--background-modifier-border)";
+      stylePresetBtn.style.borderRadius = "4px";
+      stylePresetBtn.style.background = "var(--background-modifier-form-field)";
+      stylePresetBtn.style.cursor = "pointer";
     }
 
     if (!fromQuickOnce && isGroup) {
@@ -892,6 +903,46 @@ export class HighlightStylingModal extends Modal {
     this._handlers.push({ el: bColor, ev: "input", fn: styleChange });
     updatePickerVisibility();
     renderPreview();
+    // Style preset button handler (replaces case sensitivity dropdown)
+    if (stylePresetBtn) {
+      const presetHandler = () => {
+        new TextStylePresetsModal(this.app, this.plugin, (preset) => {
+          if (!preset || !this.entry) return;
+          const shapeKeys = ["styleType","backgroundOpacity","highlightBorderRadius","highlightHorizontalPadding","highlightVerticalPadding","enableBorderThickness","borderStyle","borderLineStyle","borderOpacity","borderThickness","customCss"];
+          for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
+          // Colors: only apply if preset has them, preserve entry colors otherwise
+          if ("textColor" in preset) this.entry.textColor = preset.textColor;
+          if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
+          if ("color" in preset) this.entry.color = preset.color;
+          if (preset.styleType === "text" && preset.textColor && this.plugin.isValidHexColor(preset.textColor)) {
+            this.entry.color = preset.textColor;
+            this.entry.textColor = null;
+            this.entry.backgroundColor = null;
+          } else if (preset.styleType === "highlight" && preset.backgroundColor) {
+            this.entry.backgroundColor = preset.backgroundColor;
+            this.entry.textColor = "currentColor";
+            this.entry.color = "";
+          }
+          try { if (styleSelect) styleSelect.value = this.entry.styleType || "both"; } catch(_){}
+          try { if (tColor) tColor.value = (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) ? this.entry.textColor : (this.entry.color && this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : tColor.value)); } catch(_){}
+          try { if (bColor) bColor.value = (this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor) ? this.entry.backgroundColor : bColor.value); } catch(_){}
+          try { opacitySlider.value = String(this.entry.backgroundOpacity ?? this.plugin.settings.backgroundOpacity ?? 35); } catch(_){}
+          try { radiusInput.value = String(this.entry.highlightBorderRadius ?? this.plugin.settings.highlightBorderRadius ?? 4); } catch(_){}
+          try { hPadInput.value = String(this.entry.highlightHorizontalPadding ?? this.plugin.settings.highlightHorizontalPadding ?? 4); } catch(_){}
+          try { vPadInput.value = String(this.entry.highlightVerticalPadding ?? this.plugin.settings.highlightVerticalPadding ?? 0); } catch(_){}
+          try { enableChk.checked = !! (typeof this.entry.enableBorderThickness !== "undefined" ? this.entry.enableBorderThickness : this.plugin.settings.enableBorderThickness); } catch(_){}
+          try { sidesSel.value = this.entry.borderStyle || this.plugin.settings.borderStyle || "full"; } catch(_){}
+          try { lineSel.value = this.entry.borderLineStyle || this.plugin.settings.borderLineStyle || "solid"; } catch(_){}
+          try { bOpSlider.value = String(this.entry.borderOpacity ?? this.plugin.settings.borderOpacity ?? 100); } catch(_){}
+          try { thickInput.value = String(this.entry.borderThickness ?? this.plugin.settings.borderThickness ?? 1); } catch(_){}
+          try { updatePickerVisibility(); } catch(_){}
+          try { renderPreview(); } catch(_){}
+          try { window.dispatchEvent(new CustomEvent("act-colors-changed", { detail: { entry: this.entry } })); } catch(_){}
+        }).open();
+      };
+      stylePresetBtn.addEventListener("click", presetHandler);
+      this._handlers.push({ el: stylePresetBtn, ev: "click", fn: presetHandler });
+    }
     const actions = contentEl.createDiv();
     actions.style.display = "flex";
     actions.style.justifyContent = "space-between";
