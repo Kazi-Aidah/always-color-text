@@ -356,6 +356,7 @@ div[contenteditable="true"]:focus {
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.5;
+  border-radius: var(--input-radius);
 }
 
 .act-edit-entry-style-select {
@@ -892,9 +893,15 @@ body.is-mobile .act-group-row input {
   Row 2: [styleSelect] [cp] [cpBg] [regexChk] [flagsInput]  ···  [settingsBtn]
 */
 
-/* Desktop: always hide the settings button */
+/* Settings button — visible on both desktop and mobile */
 .act-entry-settings-btn {
-  display: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  width: 32px !important;
+  height: 32px !important;
+  padding: 4px !important;
 }
 
 /* Make the entry row wrap on mobile */
@@ -972,6 +979,28 @@ body.is-mobile .color-words-list .act-entry-row .act-entry-settings-btn {
   height: 32px !important;
   padding: 4px !important;
   margin-left: auto !important;
+}
+
+/* Markdown element entry — mobile: dropdown full width, matchtype prepended + input fills */
+body.is-mobile .color-words-list .act-entry-row .act-md-element-select {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+body.is-mobile .color-words-list .act-entry-row .act-md-element-config-wrapper {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 6px !important;
+}
+
+body.is-mobile .color-words-list .act-entry-row .act-md-element-config {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
 }
 
 /* ====== EDIT ENTRY MODAL — MOBILE LAYOUT ====== */
@@ -1234,7 +1263,6 @@ body:not(.is-mobile) .act-group-button-row {
 .act-pickr-row select {
   flex: 1 1 auto;
   font-size: 12px;
-  border-radius: 4px;
   border: 1px solid var(--background-modifier-border);
   color: var(--text-normal);
   cursor: pointer;
@@ -1358,11 +1386,39 @@ body:not(.is-mobile) .act-group-button-row {
 .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers input[type="color"] {
   flex: 0 0 auto;
   width: 36px;
-  height: 28px;
+  height: 100%;
   padding: 0;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+/* Mobile: title on top row, selects + color pickers in single row below */
+body.is-mobile .act-edit-entry-modal .act-pickr-header {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+
+body.is-mobile .act-edit-entry-modal .act-pickr-header h2 {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  order: 1 !important;
+}
+
+body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-group-select,
+body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-style-select,
+body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
+  order: 2 !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 6px !important;
 }
 
 /* Mark Target dropdown inside act-pickr-row */

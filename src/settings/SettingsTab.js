@@ -333,7 +333,7 @@ export class ColorSettingTab extends PluginSettingTab {
       cpBg.style.cursor = "pointer";
       cpBg.style.flex = "0 0 auto";
 
-      let swatchSelect2 = null;
+let swatchSelect2 = null;
       /* if (
         this.plugin.settings.useSwatchNamesForText &&
         swatchesArr.length > 0
@@ -1288,7 +1288,7 @@ export class ColorSettingTab extends PluginSettingTab {
         } catch (e) {}
       };
 
-      // ELEMENT 6: Settings button (opens EditEntryModal) — visible on mobile only
+      // ELEMENT 6: Settings button (opens EditEntryModal) — visible on both mobile and desktop
       const entrySettingsBtn = row.createEl("button");
       entrySettingsBtn.style.flex = "0 0 auto";
       entrySettingsBtn.style.padding = "4px";
@@ -1296,13 +1296,6 @@ export class ColorSettingTab extends PluginSettingTab {
       entrySettingsBtn.style.background = "none";
       entrySettingsBtn.style.border = "none";
       entrySettingsBtn.style.boxShadow = "none";
-      // Show only on mobile; CSS handles visibility via body.is-mobile
-      // Also guard with Platform so it's hidden on desktop even without the CSS class
-      try {
-        if (!Platform.isMobile) entrySettingsBtn.style.display = "none";
-      } catch (e) {
-        entrySettingsBtn.style.display = "none";
-      }
       entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
       try { entrySettingsBtn.addClass("act-entry-settings-btn"); } catch (e) {
         try { entrySettingsBtn.classList.add("act-entry-settings-btn"); } catch (_) {}

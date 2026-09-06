@@ -12602,7 +12602,7 @@ var EditEntryModal = class extends import_obsidian11.Modal {
     textInput.style.width = "100%";
     textInput.style.minHeight = "40px";
     textInput.style.border = "1px solid var(--background-modifier-border-focus)";
-    textInput.style.borderRadius = "4px";
+    textInput.style.borderRadius = "var(--input-radius)";
     textInput.style.outline = "none";
     textInput.style.background = "transparent";
     textInput.style.color = "var(--text-normal)";
@@ -21436,11 +21436,6 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       entrySettingsBtn.style.background = "none";
       entrySettingsBtn.style.border = "none";
       entrySettingsBtn.style.boxShadow = "none";
-      try {
-        if (!import_obsidian24.Platform.isMobile) entrySettingsBtn.style.display = "none";
-      } catch (e) {
-        entrySettingsBtn.style.display = "none";
-      }
       entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
       try {
         entrySettingsBtn.addClass("act-entry-settings-btn");

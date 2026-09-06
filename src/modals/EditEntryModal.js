@@ -372,7 +372,7 @@ export class EditEntryModal extends Modal {
     textInput.style.width = "100%";
     textInput.style.minHeight = "40px";
     textInput.style.border = "1px solid var(--background-modifier-border-focus)";
-    textInput.style.borderRadius = "4px";
+    textInput.style.borderRadius = "var(--input-radius)";
     textInput.style.outline = "none";
     textInput.style.background = "transparent";
     textInput.style.color = "var(--text-normal)";
