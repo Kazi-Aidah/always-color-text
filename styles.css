@@ -1605,20 +1605,20 @@ div[data-swatch-index] {
   padding: 6px 14px;
 }
 
-/* ── Per-entry group preview: show accent color (preview only, not applied to entries) ── */
+/* ── Per-entry group preview: show text-normal for text, accent for background (preview only) ── */
 .act-color-picker-preview-wrap,
 .act-custom-css-preview-wrap,
 .act-highlight-preview-wrap {
-  color: var(--color-accent);
+  color: var(--text-normal);
 }
 .act-color-picker-preview-wrap > span,
 .act-custom-css-preview-wrap > span,
 .act-highlight-preview-wrap > span {
-  color: var(--color-accent);
+  color: var(--text-normal);
 }
 /* act-group-styling-preview fallback when JS has no explicit color (per-entry) */
 .act-group-styling-preview {
-  color: var(--color-accent);
+  color: var(--text-normal);
 }
 
 /* ── Highlight Styling modals: sticky footer like word groups ── */

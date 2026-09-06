@@ -6263,24 +6263,24 @@ var BloomFilter = class {
   }
   mightContain(text) {
     if (!text) return false;
-    const t = String(text).toLowerCase();
+    const t2 = String(text).toLowerCase();
     if (this._singleChars) {
       for (let i = 0; i < this._singleChars.length; i++) {
-        if (t.includes(this._singleChars[i])) {
+        if (t2.includes(this._singleChars[i])) {
           return true;
         }
       }
     }
-    const L = t.length;
+    const L = t2.length;
     if (L < 2) return true;
     for (let i = 0; i < L; i++) {
       if (i <= L - 3) {
-        const tok3 = t.slice(i, i + 3);
+        const tok3 = t2.slice(i, i + 3);
         const [a3, b3, c3] = this._hashes(tok3);
         if (this.bits[a3] && this.bits[b3] && this.bits[c3]) return true;
       }
       if (i <= L - 2) {
-        const tok2 = t.slice(i, i + 2);
+        const tok2 = t2.slice(i, i + 2);
         const [a2, b2, c2] = this._hashes(tok2);
         if (this.bits[a2] && this.bits[b2] && this.bits[c2]) return true;
       }
@@ -6323,10 +6323,10 @@ var SmartEventManager = class {
     const useRaf = !!opts.useRaf;
     let wrapped = handler;
     if (debounceMs > 0) {
-      let t;
+      let t2;
       wrapped = (...args) => {
-        clearTimeout(t);
-        t = setTimeout(() => handler(...args), debounceMs);
+        clearTimeout(t2);
+        t2 = setTimeout(() => handler(...args), debounceMs);
       };
     }
     if (useRaf) {
@@ -6432,9 +6432,9 @@ var ErrorRecovery = class {
     this.breakers = /* @__PURE__ */ new Map();
   }
   getBreaker(key) {
-    const b = this.breakers.get(key) || new CircuitBreaker();
-    this.breakers.set(key, b);
-    return b;
+    const b2 = this.breakers.get(key) || new CircuitBreaker();
+    this.breakers.set(key, b2);
+    return b2;
   }
   wrap(key, fn, fallback) {
     const br = this.getBreaker(key);
@@ -7557,13 +7557,13 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     const flagNames = ["i", "g", "m", "s", "u", "y"];
     const flagButtons = {};
     flagNames.forEach((f) => {
-      const b = flagsRow.createEl("button", { text: f });
-      b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--input-radius)";
-      b.style.border = "1px solid var(--background-modifier-border)";
-      b.style.background = "var(--background-modifier-form-field)";
-      b.style.cursor = "pointer";
-      flagButtons[f] = b;
+      const b2 = flagsRow.createEl("button", { text: f });
+      b2.style.padding = "6px 10px";
+      b2.style.borderRadius = "var(--input-radius)";
+      b2.style.border = "1px solid var(--background-modifier-border)";
+      b2.style.background = "var(--background-modifier-form-field)";
+      b2.style.cursor = "pointer";
+      flagButtons[f] = b2;
     });
     const styleSelect = controlsRow.createEl("select");
     ["text", "highlight", "both"].forEach((val) => {
@@ -7814,17 +7814,17 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
       let out = "";
       let count = 0;
       const style = styleSelect.value;
-      const t = this.plugin.isValidHexColor(textColorInput.value) ? textColorInput.value : "#58bc54";
-      const b = this.plugin.isValidHexColor(bgColorInput.value) ? bgColorInput.value : "#205613";
+      const t2 = this.plugin.isValidHexColor(textColorInput.value) ? textColorInput.value : "#58bc54";
+      const b2 = this.plugin.isValidHexColor(bgColorInput.value) ? bgColorInput.value : "#205613";
       const rgba = this.plugin.hexToRgba(
-        b,
+        b2,
         this.plugin.settings.backgroundOpacity ?? 25
       );
       const radius = this.plugin.settings.highlightBorderRadius ?? 8;
       const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
       const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
-      const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, b) : this.plugin.generateBorderStyle(t, b);
-      const matchStyle = style === "text" ? `color:${t};background:transparent;` : style === "highlight" ? `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}` : `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
+      const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, b2) : this.plugin.generateBorderStyle(t2, b2);
+      const matchStyle = style === "text" ? `color:${t2};background:transparent;` : style === "highlight" ? `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}` : `color:${t2};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
       for (const m of raw.matchAll(re)) {
         const s = m.index ?? 0;
         const e = s + (m[0] ? m[0].length : 0);
@@ -8461,8 +8461,8 @@ function extractHex(val, plugin) {
   if (rgbMatch) {
     const r = parseInt(rgbMatch[1]).toString(16).padStart(2, "0");
     const g = parseInt(rgbMatch[2]).toString(16).padStart(2, "0");
-    const b = parseInt(rgbMatch[3]).toString(16).padStart(2, "0");
-    return `#${r}${g}${b}`;
+    const b2 = parseInt(rgbMatch[3]).toString(16).padStart(2, "0");
+    return `#${r}${g}${b2}`;
   }
   return null;
 }
@@ -8980,7 +8980,7 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
           border = ` border: ${css}`;
       }
     }
-    const textColorVal = textHex || accent;
+    const textColorVal = textHex || "var(--text-normal)";
     const base = style === "text" ? `color:${textColorVal};background:transparent;` : style === "highlight" ? `${bg}border-radius:${radius}px;padding:${vpad}px ${hpad}px;color:var(--text-normal);${border}` : `color:${textColorVal};${bg}border-radius:${radius}px;padding:${vpad}px ${hpad}px;${border}`;
     span.setAttribute(
       "style",
@@ -9440,13 +9440,13 @@ var BlacklistRegexTesterModal = class extends import_obsidian6.Modal {
     const flagNames = ["i", "g", "m", "s", "u", "y"];
     const flagButtons = {};
     flagNames.forEach((f) => {
-      const b = flagsRow.createEl("button", { text: f });
-      b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--input-radius)";
-      b.style.border = "1px solid var(--background-modifier-border)";
-      b.style.background = "var(--background-modifier-form-field)";
-      b.style.cursor = "pointer";
-      flagButtons[f] = b;
+      const b2 = flagsRow.createEl("button", { text: f });
+      b2.style.padding = "6px 10px";
+      b2.style.borderRadius = "var(--input-radius)";
+      b2.style.border = "1px solid var(--background-modifier-border)";
+      b2.style.background = "var(--background-modifier-form-field)";
+      b2.style.cursor = "pointer";
+      flagButtons[f] = b2;
     });
     const regexInput2 = contentEl.createEl("input", { type: "text" });
     regexInput2.placeholder = this.plugin.t(
@@ -10577,9 +10577,9 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
                 const matchesWord = () => {
                   if (entry.isRegex) return false;
                   const cs = typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : !!this.plugin.settings.caseSensitive;
-                  const cmp = (a, b) => {
-                    if (cs) return String(a) === String(b);
-                    return String(a).toLowerCase() === String(b).toLowerCase();
+                  const cmp = (a, b2) => {
+                    if (cs) return String(a) === String(b2);
+                    return String(a).toLowerCase() === String(b2).toLowerCase();
                   };
                   if (cmp(entry.pattern, this.selectedText)) return true;
                   if (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.some((p) => cmp(p, this.selectedText)))
@@ -10776,7 +10776,7 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
       }
     }
     items.sort(
-      (a, b) => String(a.label).toLowerCase().localeCompare(String(b.label).toLowerCase())
+      (a, b2) => String(a.label).toLowerCase().localeCompare(String(b2.label).toLowerCase())
     );
     return items;
   }
@@ -10981,9 +10981,9 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
         const matchesWord = () => {
           if (entry.isRegex) return false;
           const cs = typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : !!this.plugin.settings.caseSensitive;
-          const cmp = (a, b) => {
-            if (cs) return String(a) === String(b);
-            return String(a).toLowerCase() === String(b).toLowerCase();
+          const cmp = (a, b2) => {
+            if (cs) return String(a) === String(b2);
+            return String(a).toLowerCase() === String(b2).toLowerCase();
           };
           if (cmp(entry.pattern, this.selectedText)) return true;
           if (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.some((p) => cmp(p, this.selectedText)))
@@ -11204,10 +11204,10 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
         const entry = actualItem.entry;
         const matchesWord = () => {
           if (entry.isRegex) return false;
-          const cmp = (a, b) => {
+          const cmp = (a, b2) => {
             if (this.plugin.settings.caseSensitive)
-              return String(a) === String(b);
-            return String(a).toLowerCase() === String(b).toLowerCase();
+              return String(a) === String(b2);
+            return String(a).toLowerCase() === String(b2).toLowerCase();
           };
           if (cmp(entry.pattern, this.selectedText)) return true;
           if (Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.some((p) => cmp(p, this.selectedText)))
@@ -11267,9 +11267,9 @@ var AddToExistingEntryModal = class _AddToExistingEntryModal extends import_obsi
     const e = actualItem.entry;
     const s = this.selectedText;
     if (!s) return;
-    const cmp = (a, b) => {
-      if (this.plugin.settings.caseSensitive) return String(a) === String(b);
-      return String(a).toLowerCase() === String(b).toLowerCase();
+    const cmp = (a, b2) => {
+      if (this.plugin.settings.caseSensitive) return String(a) === String(b2);
+      return String(a).toLowerCase() === String(b2).toLowerCase();
     };
     const has = (arr, val) => Array.isArray(arr) && arr.some((p) => cmp(p, val));
     if (e.isRegex && this.plugin.settings.enableRegexSupport) {
@@ -11538,7 +11538,7 @@ var RulePickerModal = class extends import_obsidian9.FuzzySuggestModal {
           else if (typeof mc.getTags === "function") tags = mc.getTags();
         }
         if (tags && !Array.isArray(tags)) tags = Object.keys(tags);
-        return Array.from(new Set(tags.map((t) => String(t)))).sort();
+        return Array.from(new Set(tags.map((t2) => String(t2)))).sort();
       }
       if (this.type === "property") {
         const cache = this.app.metadataCache;
@@ -11864,7 +11864,7 @@ var MARKDOWN_TARGET_GROUPS = [
   { key: "lists", labelKey: "target_group_lists", label: "Lists" },
   { key: "other", labelKey: "target_group_other", label: "Other" }
 ];
-var BY_KEY = Object.fromEntries(MARKDOWN_TARGETS.map((t) => [t.key, t]));
+var BY_KEY = Object.fromEntries(MARKDOWN_TARGETS.map((t2) => [t2.key, t2]));
 function getMarkdownTarget(key) {
   return BY_KEY[String(key)] || null;
 }
@@ -11885,7 +11885,7 @@ function parseHeadingLevels(input) {
     const n = parseInt(tok, 10);
     if (!isNaN(n) && n >= 1 && n <= 6) levels.add(n);
   });
-  const arr = [...levels].sort((a, b) => a - b);
+  const arr = [...levels].sort((a, b2) => a - b2);
   return arr.length ? arr : [1, 2, 3, 4, 5, 6];
 }
 function parseTaskTypes(input) {
@@ -11950,29 +11950,29 @@ function taskAttrCombos(ch) {
   if (ch === " ") return [`[data-task=" "]`, `[data-task=""]`];
   return [`[data-task="${ch}"]`];
 }
-function buildMarkdownParts(t, entry, hasBoldItalic) {
+function buildMarkdownParts(t2, entry, hasBoldItalic) {
   let cm = "";
   let rend = "";
-  if (t.key === "strong") {
+  if (t2.key === "strong") {
     cm = `${EDITOR_PREFIX} .cm-strong:not(.cm-em)`;
     rend = `${RENDER_PREFIX} strong:not(:has(em)):not(em strong)`;
-  } else if (t.key === "em") {
+  } else if (t2.key === "em") {
     cm = `${EDITOR_PREFIX} .cm-em:not(.cm-strong)`;
     rend = `${RENDER_PREFIX} em:not(:has(strong)):not(strong em)`;
-  } else if (t.key === "strong-em") {
+  } else if (t2.key === "strong-em") {
     cm = `${EDITOR_PREFIX} .cm-strong.cm-em`;
     rend = `${RENDER_PREFIX} strong em, ${RENDER_PREFIX} em strong, ${RENDER_PREFIX} strong:has(em), ${RENDER_PREFIX} em:has(strong)`;
-  } else if (t.key === "heading") {
+  } else if (t2.key === "heading") {
     const levels = parseHeadingLevels(entry.headingLevels);
     cm = levels.map((l) => `${EDITOR_PREFIX} .cm-header-${l}`).join(", ");
     rend = levels.map((l) => `${RENDER_PREFIX} h${l}`).join(", ");
-  } else if (t.key === "bullet-list") {
+  } else if (t2.key === "bullet-list") {
     cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(.HyperMD-task-line):not(:has(.cm-task)) .cm-formatting-list-ul ~ .cm-list-1`;
     rend = `${RENDER_PREFIX} ul li:not(.task-list-item), ul li:not(.task-list-item)`;
-  } else if (t.key === "numbered-list") {
+  } else if (t2.key === "numbered-list") {
     cm = `${EDITOR_PREFIX} .HyperMD-list-line:not(.HyperMD-task-line):not(:has(.cm-task)) .cm-formatting-list-ol ~ .cm-list-1`;
     rend = `${RENDER_PREFIX} ol li:not(.task-list-item), ol li:not(.task-list-item)`;
-  } else if (t.key === "internal-link") {
+  } else if (t2.key === "internal-link") {
     cm = [
       `${EDITOR_PREFIX} a.internal-link`,
       `${EDITOR_PREFIX} .cm-hmd-internal-link .cm-underline`,
@@ -11981,14 +11981,14 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
       `${EDITOR_PREFIX} .cm-hmd-internal-link:not(:has(.cm-underline))`
     ].join(", ");
     rend = `.workspace ${RENDER_PREFIX} a.internal-link, ${RENDER_PREFIX} a.internal-link`;
-  } else if (t.key === "external-link") {
+  } else if (t2.key === "external-link") {
     cm = [
       `${EDITOR_PREFIX} a.external-link`,
       `${EDITOR_PREFIX} .cm-link .cm-underline`,
       `${EDITOR_PREFIX} .cm-link:not(:has(.cm-underline))`
     ].join(", ");
     rend = `.workspace ${RENDER_PREFIX} a.external-link, ${RENDER_PREFIX} a.external-link`;
-  } else if (t.key === "task-list") {
+  } else if (t2.key === "task-list") {
     const types = parseTaskTypes(entry.taskTypes);
     const cmParts = [];
     const rendParts = [];
@@ -12002,7 +12002,7 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
     }
     cm = cmParts.join(", ");
     rend = rendParts.join(", ");
-  } else if (t.key === "tag" || t.key === "all-tags") {
+  } else if (t2.key === "tag" || t2.key === "all-tags") {
     const filter = entry.tagFilter || "";
     const names = parseTagFilterNames(filter);
     if (!names.length) {
@@ -12027,12 +12027,12 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
       cm = names.map(cmTag).join(", ");
       rend = names.map(rendTag).join(", ");
     }
-  } else if (t.key === "inline-title" || t.key === "tab-title") {
+  } else if (t2.key === "inline-title" || t2.key === "tab-title") {
     const field = "titleFilter";
     if (entry[field] && String(entry[field]).trim().length > 0) {
       cm = "";
       rend = "";
-    } else if (t.key === "tab-title") {
+    } else if (t2.key === "tab-title") {
       cm = ".workspace .workspace-tab-header-inner-title";
       rend = ".workspace-tab-header-inner-title";
     } else {
@@ -12040,20 +12040,20 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
       rend = `${RENDER_PREFIX} .inline-title`;
     }
   } else {
-    cm = `${EDITOR_PREFIX} ${t.cmSelector}`;
-    rend = t.renderedSelector ? t.renderedSelector.split(",").map((s) => {
+    cm = `${EDITOR_PREFIX} ${t2.cmSelector}`;
+    rend = t2.renderedSelector ? t2.renderedSelector.split(",").map((s) => {
       s = s.trim();
       return s.startsWith(RENDER_PREFIX) ? s : `${RENDER_PREFIX} ${s}`;
     }).join(", ") : "";
   }
   return { cm, rend };
 }
-function buildMarkdownSelector(t, entry, hasBoldItalic) {
-  const { cm, rend } = buildMarkdownParts(t, entry, hasBoldItalic);
+function buildMarkdownSelector(t2, entry, hasBoldItalic) {
+  const { cm, rend } = buildMarkdownParts(t2, entry, hasBoldItalic);
   return [cm, rend].filter(Boolean).join(", ");
 }
-function buildMarkdownCmSelector(t, entry, hasBoldItalic) {
-  const { cm } = buildMarkdownParts(t, entry, hasBoldItalic);
+function buildMarkdownCmSelector(t2, entry, hasBoldItalic) {
+  const { cm } = buildMarkdownParts(t2, entry, hasBoldItalic);
   return cm;
 }
 function createMarkdownElementConfigInput(plugin, entry, onChange) {
@@ -12100,17 +12100,17 @@ function createMarkdownElementConfigInput(plugin, entry, onChange) {
     select.style.minWidth = "120px";
     select.style.textAlign = "center";
     select.style.textAlignLast = "center";
-    const t = (k, fb) => {
+    const t2 = (k, fb) => {
       try {
         return plugin.t(k, fb);
       } catch (_) {
         return fb;
       }
     };
-    select.innerHTML = `<option value="contains" style="text-align:center">${t("match_option_contains", "Contains")}</option><option value="exact" style="text-align:center">${t("match_option_exact", "Exact")}</option><option value="startswith" style="text-align:center">${t("match_option_starts_with", "Starts with")}</option><option value="endswith" style="text-align:center">${t("match_option_ends_with", "Ends with")}</option>`;
+    select.innerHTML = `<option value="contains" style="text-align:center">${t2("match_option_contains", "Contains")}</option><option value="exact" style="text-align:center">${t2("match_option_exact", "Exact")}</option><option value="startswith" style="text-align:center">${t2("match_option_starts_with", "Starts with")}</option><option value="endswith" style="text-align:center">${t2("match_option_ends_with", "Ends with")}</option>`;
     const cur = normalizeTitleMatchType(entry[cfg.matchField] || "contains");
     select.value = cur;
-    select.title = t("title_match_mode_title", "How the title text must match the filter");
+    select.title = t2("title_match_mode_title", "How the title text must match the filter");
     const selHandler = () => {
       entry[cfg.matchField] = normalizeTitleMatchType(select.value);
       if (onChange) onChange();
@@ -12123,11 +12123,11 @@ function createMarkdownElementConfigInput(plugin, entry, onChange) {
   return input;
 }
 function tagTextMatches(filter, text) {
-  const t = (text || "").trim();
-  if (!t) return false;
+  const t2 = (text || "").trim();
+  if (!t2) return false;
   const wanted = (filter || "").split(/[\s,]+/).map((s) => s.replace(/^#/, "").toLowerCase()).filter(Boolean);
   if (!wanted.length) return true;
-  const cur = t.replace(/^#/, "").toLowerCase();
+  const cur = t2.replace(/^#/, "").toLowerCase();
   return wanted.includes(cur);
 }
 function titleTextMatches(filter, text, mode) {
@@ -12142,8 +12142,8 @@ function titleTextMatches(filter, text, mode) {
   return raw.includes(f);
 }
 function buildRenderedSelector(entry) {
-  const t = getMarkdownTarget(entry.targetElement);
-  if (!t) return entry.targetElement;
+  const t2 = getMarkdownTarget(entry.targetElement);
+  if (!t2) return entry.targetElement;
   if (entry.targetElement === "strong") {
     return `${RENDER_PREFIX} strong:not(:has(em)):not(em strong), strong:not(:has(em)):not(em strong)`;
   }
@@ -12173,8 +12173,8 @@ function buildRenderedSelector(entry) {
     return `${RENDER_PREFIX} ul li:not(.task-list-item), ul li:not(.task-list-item)`;
   if (entry.targetElement === "numbered-list")
     return `${RENDER_PREFIX} ol li:not(.task-list-item), ol li:not(.task-list-item)`;
-  if (!t.renderedSelector) return "";
-  return t.renderedSelector;
+  if (!t2.renderedSelector) return "";
+  return t2.renderedSelector;
 }
 
 // src/utils/markdownElementPicker.js
@@ -12225,15 +12225,15 @@ function createMarkdownElementButton(app, plugin, entry, onChange) {
     select.style.width = "100%";
   }
   MARKDOWN_TARGET_GROUPS.forEach((grp) => {
-    const targets = MARKDOWN_TARGETS.filter((t) => t.group === grp.key);
+    const targets = MARKDOWN_TARGETS.filter((t2) => t2.group === grp.key);
     if (!targets.length) return;
     const og = document.createElement("optgroup");
     og.label = plugin.t(grp.labelKey, grp.label);
-    targets.forEach((t) => {
+    targets.forEach((t2) => {
       const opt = document.createElement("option");
-      opt.value = t.key;
-      opt.textContent = plugin.t(t.labelKey, t.label);
-      if (t.key === entry.targetElement) opt.selected = true;
+      opt.value = t2.key;
+      opt.textContent = plugin.t(t2.labelKey, t2.label);
+      if (t2.key === entry.targetElement) opt.selected = true;
       og.appendChild(opt);
     });
     select.appendChild(og);
@@ -12257,8 +12257,8 @@ function createMarkdownElementButton(app, plugin, entry, onChange) {
     entry.targetElement = newKey;
     entry.isRegex = false;
     entry.affectMarkElements = false;
-    const t = getMarkdownTarget(newKey);
-    entry.presetLabel = plugin.t(t ? t.labelKey : "type_markdown", t ? t.label : newKey);
+    const t2 = getMarkdownTarget(newKey);
+    entry.presetLabel = plugin.t(t2 ? t2.labelKey : "type_markdown", t2 ? t2.label : newKey);
     entry.pattern = getTargetPatternText(plugin, newKey, false);
     try {
       fitSelectToText(select);
@@ -12327,6 +12327,45 @@ function propagateStyle(sourceEntry, targets) {
 }
 
 // src/modals/EditEntryModal.js
+function resolveVarToHex(varStr) {
+  try {
+    const tmp = document.createElement("div");
+    tmp.style.color = varStr;
+    tmp.style.display = "none";
+    document.body.appendChild(tmp);
+    const computed = getComputedStyle(tmp).color;
+    document.body.removeChild(tmp);
+    const m = computed.match(/\d+/g);
+    if (m && m.length >= 3) {
+      return "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+    }
+  } catch (_) {
+  }
+  return null;
+}
+function isVarColor(str) {
+  return typeof str === "string" && /^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(str.trim());
+}
+function setColorInputValue(input, colorStr) {
+  if (!colorStr) {
+    input.value = "#000000";
+    delete input.dataset.varColor;
+    return;
+  }
+  if (isVarColor(colorStr)) {
+    input.dataset.varColor = colorStr.trim();
+    const resolved = resolveVarToHex(colorStr);
+    if (resolved) input.value = resolved;
+    else input.value = "#000000";
+  } else {
+    delete input.dataset.varColor;
+    input.value = colorStr;
+  }
+}
+function getColorInputValue(input) {
+  if (input.dataset.varColor && isVarColor(input.dataset.varColor)) return input.dataset.varColor;
+  return input.value;
+}
 var EditEntryModal = class extends import_obsidian11.Modal {
   constructor(app, plugin, entry, onSaved, parentModal, fromPickColorModal = false) {
     super(app);
@@ -12516,6 +12555,8 @@ var EditEntryModal = class extends import_obsidian11.Modal {
     const bgColorInput = pickerRow.createEl("input", { type: "color" });
     this._textColorInput = textColorInput;
     this._bgColorInput = bgColorInput;
+    this._textPickerTouched = false;
+    this._bgPickerTouched = false;
     const pickrRow = contentEl.createDiv();
     pickrRow.addClass("act-pickr-row");
     const presetBtn = pickrRow.createEl("button");
@@ -12647,12 +12688,17 @@ var EditEntryModal = class extends import_obsidian11.Modal {
     };
     const applyTextColorToEntry = (dispatch = true) => {
       const style = styleSelect.value;
+      const curTextVal = getColorInputValue(textColorInput);
+      const hasEntryText = !!(this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) || this.entry.color && this.plugin.isValidHexColor(this.entry.color)));
+      const isVarText = curTextVal && /^var\(/.test(curTextVal.trim());
+      const hasValidText = curTextVal && this.plugin.isValidHexColor(curTextVal) && (isVarText || hasEntryText || this._textPickerTouched);
+      const effectiveText = hasValidText ? curTextVal : style === "text" || style === "both" ? "var(--text-normal)" : "";
       if (this.entry)
-        this.entry._savedTextColor = textColorInput.value || this.entry._savedTextColor || this.entry.color || this.entry.textColor || "";
+        this.entry._savedTextColor = effectiveText || this.entry._savedTextColor || this.entry.color || this.entry.textColor || "";
       if (style === "text") {
-        this.entry.color = textColorInput.value || "";
+        this.entry.color = effectiveText || "";
       } else if (style === "both") {
-        this.entry.textColor = textColorInput.value || "";
+        this.entry.textColor = effectiveText || "";
       }
       if (this.entry && this.entry.customCss) {
         this.plugin.syncEntryCssFromColors(this.entry);
@@ -12661,12 +12707,17 @@ var EditEntryModal = class extends import_obsidian11.Modal {
     };
     const applyBgColorToEntry = (dispatch = true) => {
       const style = styleSelect.value;
+      const curBgVal = getColorInputValue(bgColorInput);
+      const hasEntryBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+      const isVarBg = curBgVal && /^var\(/.test(curBgVal.trim());
+      const hasValidBg = curBgVal && this.plugin.isValidHexColor(curBgVal) && (isVarBg || hasEntryBg || this._bgPickerTouched);
+      const effectiveBg = hasValidBg ? curBgVal : style === "highlight" || style === "both" ? "var(--color-accent)" : "";
       if (this.entry)
-        this.entry._savedBackgroundColor = bgColorInput.value || this.entry._savedBackgroundColor || this.entry.backgroundColor || "";
+        this.entry._savedBackgroundColor = effectiveBg || this.entry._savedBackgroundColor || this.entry.backgroundColor || "";
       if (style === "highlight") {
-        this.entry.backgroundColor = bgColorInput.value || "";
+        this.entry.backgroundColor = effectiveBg || "";
       } else if (style === "both") {
-        this.entry.backgroundColor = bgColorInput.value || "";
+        this.entry.backgroundColor = effectiveBg || "";
       }
       if (this.entry && this.entry.customCss) {
         this.plugin.syncEntryCssFromColors(this.entry);
@@ -12677,7 +12728,7 @@ var EditEntryModal = class extends import_obsidian11.Modal {
       colorInput.addEventListener("contextmenu", (evt) => {
         evt.preventDefault();
         evt.stopPropagation();
-        const currentColor = colorInput.value || "#000000";
+        const currentColor = getColorInputValue(colorInput) || "#000000";
         const displayText = this.entry && this.entry.isRegex ? this.entry.pattern || "" : Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0 ? this.entry.groupedPatterns.map((p) => String(p).trim()).join(", ") : this.entry && this.entry.pattern ? String(this.entry.pattern) : "";
         const isTextPicker = colorInput === textColorInput;
         const modal = new ColorPickerModal2(
@@ -12689,17 +12740,21 @@ var EditEntryModal = class extends import_obsidian11.Modal {
             const fallback = color && this.plugin.isValidHexColor(color) ? color : null;
             let changed = false;
             if (tc) {
-              textColorInput.value = tc;
+              setColorInputValue(textColorInput, tc);
+              this._textPickerTouched = true;
               changed = true;
             } else if (fallback && isTextPicker && !bc) {
-              textColorInput.value = fallback;
+              setColorInputValue(textColorInput, fallback);
+              this._textPickerTouched = true;
               changed = true;
             }
             if (bc) {
-              bgColorInput.value = bc;
+              setColorInputValue(bgColorInput, bc);
+              this._bgPickerTouched = true;
               changed = true;
             } else if (fallback && !isTextPicker && !tc) {
-              bgColorInput.value = fallback;
+              setColorInputValue(bgColorInput, fallback);
+              this._bgPickerTouched = true;
               changed = true;
             }
             if (result && result.markTarget) {
@@ -12717,8 +12772,8 @@ var EditEntryModal = class extends import_obsidian11.Modal {
             }
             if (!changed) {
               if (currentColor && this.plugin.isValidHexColor(currentColor)) {
-                if (isTextPicker) textColorInput.value = currentColor;
-                else bgColorInput.value = currentColor;
+                if (isTextPicker) setColorInputValue(textColorInput, currentColor);
+                else setColorInputValue(bgColorInput, currentColor);
               }
             }
             applyTextColorToEntry(false);
@@ -12732,9 +12787,10 @@ var EditEntryModal = class extends import_obsidian11.Modal {
           this.entry
         );
         modal._hideHeaderControls = true;
-        if (textColorInput.value)
-          modal._preFillTextColor = textColorInput.value;
-        if (bgColorInput.value) modal._preFillBgColor = bgColorInput.value;
+        const preText = getColorInputValue(textColorInput);
+        const preBg = getColorInputValue(bgColorInput);
+        if (preText) modal._preFillTextColor = preText;
+        if (preBg) modal._preFillBgColor = preBg;
         modal.open();
       });
     };
@@ -12758,27 +12814,35 @@ var EditEntryModal = class extends import_obsidian11.Modal {
       ev: "change",
       fn: markTargetFn
     });
-    textColorInput.addEventListener("input", applyTextColorToEntry);
+    const textInputHandler = () => {
+      this._textPickerTouched = true;
+      applyTextColorToEntry();
+    };
+    textColorInput.addEventListener("input", textInputHandler);
     this._handlers.push({
       el: textColorInput,
       ev: "input",
-      fn: applyTextColorToEntry
+      fn: textInputHandler
     });
-    bgColorInput.addEventListener("input", applyBgColorToEntry);
+    const bgInputHandler = () => {
+      this._bgPickerTouched = true;
+      applyBgColorToEntry();
+    };
+    bgColorInput.addEventListener("input", bgInputHandler);
     this._handlers.push({
       el: bgColorInput,
       ev: "input",
-      fn: applyBgColorToEntry
+      fn: bgInputHandler
     });
     const colorSyncHandler = (evt) => {
       try {
         if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
-          const initTextColor2 = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "") || textColorInput.value || "#000000";
-          const initBgColor2 = this.entry && (this.entry.backgroundColor || "") || bgColorInput.value || "#000000";
+          const initTextColor2 = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "") || getColorInputValue(textColorInput) || "#000000";
+          const initBgColor2 = this.entry && (this.entry.backgroundColor || "") || getColorInputValue(bgColorInput) || "#000000";
           if (this.plugin.isValidHexColor(initTextColor2))
-            textColorInput.value = initTextColor2;
+            setColorInputValue(textColorInput, initTextColor2);
           if (this.plugin.isValidHexColor(initBgColor2))
-            bgColorInput.value = initBgColor2;
+            setColorInputValue(bgColorInput, initBgColor2);
           if (this.entry && this.entry.styleType) {
             styleSelect.value = this.entry.styleType;
             updatePickerVisibility();
@@ -12881,9 +12945,8 @@ var EditEntryModal = class extends import_obsidian11.Modal {
     })();
     const initTextColor = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "") || textColorInput.value || visibleDefault;
     const initBgColor = this.entry && (this.entry.backgroundColor || "") || bgColorInput.value || visibleDefault;
-    textColorInput.value = this.plugin.isValidHexColor(initTextColor) ? initTextColor : visibleDefault;
-    if (initBgColor)
-      bgColorInput.value = this.plugin.isValidHexColor(initBgColor) ? initBgColor : visibleDefault;
+    setColorInputValue(textColorInput, this.plugin.isValidHexColor(initTextColor) ? initTextColor : visibleDefault);
+    if (initBgColor) setColorInputValue(bgColorInput, this.plugin.isValidHexColor(initBgColor) ? initBgColor : visibleDefault);
     if (isRegex) {
       textInput.value = this.entry.pattern || "";
       if (matchSelect) {
@@ -12989,18 +13052,27 @@ var EditEntryModal = class extends import_obsidian11.Modal {
     const renderPreview = () => {
       const raw = String(textInput.value || "");
       const style = styleSelect.value;
-      const t = textColorInput.value;
-      const b = bgColorInput.value;
+      const tRaw = getColorInputValue(textColorInput);
+      const bRaw = getColorInputValue(bgColorInput);
       const p = this.plugin.getHighlightParams(this.entry);
-      const rgba = this.plugin.hexToRgba(b, p.opacity ?? 25);
+      const hasEntryText = !!(this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) || this.entry.color && this.plugin.isValidHexColor(this.entry.color)));
+      const isVarText = tRaw && /^var\(/.test(tRaw.trim());
+      const hasValidText = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarText || hasEntryText || this._textPickerTouched);
+      const effectiveText = hasValidText ? tRaw : "var(--text-normal)";
+      const hasEntryBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+      const isVarBg = bRaw && /^var\(/.test(bRaw.trim());
+      const hasValidBg = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarBg || hasEntryBg || this._bgPickerTouched);
+      const effectiveBg = hasValidBg ? bRaw : "var(--color-accent)";
+      const rgba = this.plugin.hexToRgba(effectiveBg, p.opacity ?? 25);
+      const rgbaForBorder = hasValidBg ? bRaw : effectiveBg;
       const radius = p.radius ?? 8;
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
-      const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, b, this.entry) : this.plugin.generateBorderStyle(t, b, this.entry);
+      const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, rgbaForBorder, this.entry) : this.plugin.generateBorderStyle(effectiveText, rgbaForBorder, this.entry);
       const bdb = `box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-      const sText = `color:${t};background:transparent;`;
+      const sText = `color:${effectiveText};background:transparent;`;
       const sHighlight = `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}${bdb}`;
-      const sBoth = `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}${bdb}`;
+      const sBoth = `color:${effectiveText};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}${bdb}`;
       const styleStr = style === "text" ? sText : style === "highlight" ? sHighlight : sBoth;
       while (preview.firstChild) preview.removeChild(preview.firstChild);
       if (!raw && !isTarget) return;
@@ -13228,7 +13300,7 @@ var EditEntryModal = class extends import_obsidian11.Modal {
         ...excRules.map((r) => ({ ...r, mode: "exclude" }))
       ];
       merged.sort(
-        (a, b) => (Number(a._order) || 0) - (Number(b._order) || 0)
+        (a, b2) => (Number(a._order) || 0) - (Number(b2._order) || 0)
       );
       this._rules = merged;
     }
@@ -13317,23 +13389,23 @@ var EditEntryModal = class extends import_obsidian11.Modal {
         chooseArea.style.gap = "8px";
         chooseArea.style.flex = "1 1 auto";
         chooseArea.style.minWidth = "160px";
-        const clip = (b) => {
-          b.style.overflow = "hidden";
-          b.style.textOverflow = "ellipsis";
-          b.style.whiteSpace = "nowrap";
-          b.style.textAlign = "left";
-          b.style.padding = "6px 10px";
-          b.style.border = "1px solid var(--background-modifier-border)";
-          b.style.borderRadius = "var(--radius-m)";
+        const clip = (b2) => {
+          b2.style.overflow = "hidden";
+          b2.style.textOverflow = "ellipsis";
+          b2.style.whiteSpace = "nowrap";
+          b2.style.textAlign = "left";
+          b2.style.padding = "6px 10px";
+          b2.style.border = "1px solid var(--background-modifier-border)";
+          b2.style.borderRadius = "var(--radius-m)";
         };
         const openPicker = (type, cb) => {
           new RulePickerModal(this.app, this.plugin, type, cb).open();
         };
         const refreshLabels = () => {
-          const t = typeSel.value;
+          const t2 = typeSel.value;
           const raw = String(r.path || "");
           chooseArea.empty();
-          if (t === "property") {
+          if (t2 === "property") {
             const ci = raw.indexOf(":");
             const key = ci > -1 ? raw.slice(0, ci).trim() : raw;
             const val = ci > -1 ? raw.slice(ci + 1).trim() : "";
@@ -13368,7 +13440,7 @@ var EditEntryModal = class extends import_obsidian11.Modal {
                 renderRules();
               }).open();
             });
-          } else if (t === "pattern") {
+          } else if (t2 === "pattern") {
             const inp = chooseArea.createEl("input", {
               type: "text",
               value: raw
@@ -13392,8 +13464,8 @@ var EditEntryModal = class extends import_obsidian11.Modal {
           } else {
             const btn = chooseArea.createEl("button", {
               text: raw || this.plugin.t(
-                "rule_choose_placeholder_" + t,
-                "Choose " + t + "\u2026"
+                "rule_choose_placeholder_" + t2,
+                "Choose " + t2 + "\u2026"
               )
             });
             clip(btn);
@@ -13463,8 +13535,8 @@ var EditEntryModal = class extends import_obsidian11.Modal {
       if (matchTypeVal === "startsWith") matchTypeVal = "startswith";
       if (matchTypeVal === "endsWith") matchTypeVal = "endswith";
       const caseSensitiveVal = caseSel.value === "case";
-      const textColorVal = textColorInput.value || "";
-      const bgColorVal = bgColorInput.value || "";
+      const textColorVal = getColorInputValue(textColorInput) || "";
+      const bgColorVal = getColorInputValue(bgColorInput) || "";
       const patternVal = String(textInput.value || "").trim();
       if (this.entry._isNewFromPickModal && this.entry._originalState) {
         const originalState = this.entry._originalState;
@@ -13864,7 +13936,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
       entry = this.plugin.settings.wordEntries.find((e) => {
         if (!e || e.isRegex) return false;
         const cs = typeof e.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
-        const eq = (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+        const eq = (a, b2) => cs ? String(a) === String(b2) : String(a).toLowerCase() === String(b2).toLowerCase();
         return eq(e.pattern, s) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s));
       });
       if (!entry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
@@ -13873,7 +13945,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
           entry = g.entries.find((e) => {
             if (!e || e.isRegex) return false;
             const cs = typeof e.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
-            const eq = (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+            const eq = (a, b2) => cs ? String(a) === String(b2) : String(a).toLowerCase() === String(b2).toLowerCase();
             return eq(e.pattern, s) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s));
           });
           if (entry) break;
@@ -14284,8 +14356,8 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
       hex.style.padding = "8px";
       hex.style.borderRadius = "8px";
       hex.style.border = "1px solid var(--background-modifier-border)";
-      hex.style.width = "120px";
-      hex.placeholder = "#000000";
+      hex.style.width = "160px";
+      hex.placeholder = "#000000 or var()";
       hex.value = "";
       const grid = col.createDiv();
       grid.title = titleText;
@@ -14297,7 +14369,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
           entry = this.plugin.settings.wordEntries.find((e) => {
             if (!e || e.isRegex) return false;
             const cs = typeof e.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
-            const eq = (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+            const eq = (a, b2) => cs ? String(a) === String(b2) : String(a).toLowerCase() === String(b2).toLowerCase();
             return eq(e.pattern, s2) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s2));
           });
         }
@@ -14338,7 +14410,24 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
           this._hasUserChanges = true;
         }
         hex.value = val;
-        colorInput.value = val;
+        if (/^var\(\s*--/.test(val)) {
+          try {
+            const tmp = document.createElement("div");
+            tmp.style.color = val;
+            tmp.style.display = "none";
+            document.body.appendChild(tmp);
+            const computed = getComputedStyle(tmp).color;
+            document.body.removeChild(tmp);
+            const m = computed.match(/\d+/g);
+            if (m && m.length >= 3) {
+              const hexResolved = "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+              colorInput.value = hexResolved;
+            }
+          } catch (_) {
+          }
+        } else {
+          colorInput.value = val;
+        }
         const curText = type === "text" ? val : this.selectedTextColor || null;
         const curBg = type === "background" ? val : this.selectedBgColor || null;
         this._applyCustomCss(curText, curBg);
@@ -14363,6 +14452,10 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
       });
       const hexChange = () => {
         let v = hex.value.trim();
+        if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(v)) {
+          apply(v);
+          return;
+        }
         if (!v.startsWith("#")) v = "#" + v;
         if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(v)) {
           apply(v);
@@ -14370,9 +14463,22 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
           new import_obsidian12.Notice(
             this.plugin.t(
               "notice_invalid_hex_format",
-              "Invalid hex color format. Use #RRGGBB or #RGB."
+              "Invalid hex color format. Use #RRGGBB, #RGB or var(--css-variable)."
             )
           );
+        }
+      };
+      const hexInputLive = () => {
+        let v = hex.value.trim();
+        if (!v) return;
+        if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(v)) {
+          apply(v);
+          return;
+        }
+        let hv = v;
+        if (!hv.startsWith("#")) hv = "#" + hv;
+        if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hv)) {
+          apply(hv);
         }
       };
       hex.addEventListener("change", hexChange);
@@ -14380,6 +14486,12 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
         el: hex,
         event: "change",
         handler: hexChange
+      });
+      hex.addEventListener("input", hexInputLive);
+      this._eventListeners.push({
+        el: hex,
+        event: "input",
+        handler: hexInputLive
       });
       const resetHandler = () => {
         if (type === "text") {
@@ -14494,7 +14606,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
     let matchedMatchType = null;
     const getEq = (e) => {
       const cs = typeof e?.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
-      return (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+      return (a, b2) => cs ? String(a) === String(b2) : String(a).toLowerCase() === String(b2).toLowerCase();
     };
     let allEntries = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries.map(
       (e) => Object.assign({}, e, { _groupUid: null })
@@ -14514,20 +14626,20 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
       const eq = getEq(e);
       const cs = typeof e.caseSensitive === "boolean" ? e.caseSensitive : !!this.plugin.settings.caseSensitive;
       const a = cs ? String(s) : String(s).toLowerCase();
-      const b = cs ? String(e.pattern || "") : String(e.pattern || "").toLowerCase();
+      const b2 = cs ? String(e.pattern || "") : String(e.pattern || "").toLowerCase();
       let matches = false;
       if (entryMatchType === "exact") {
         matches = eq(e.pattern || "", s) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s));
       } else if (entryMatchType === "startswith") {
-        matches = b && a.startsWith(b);
+        matches = b2 && a.startsWith(b2);
       } else if (entryMatchType === "endswith") {
-        matches = b && a.endsWith(b);
+        matches = b2 && a.endsWith(b2);
       } else if (entryMatchType === "contains") {
-        matches = b && a.includes(b);
+        matches = b2 && a.includes(b2);
       } else {
         const literalMatch = eq(e.pattern || "", s) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, s));
         if (!literalMatch && this.plugin.settings.partialMatch && !e.isRegex) {
-          matches = b && a.includes(b);
+          matches = b2 && a.includes(b2);
         } else if (!literalMatch && !this.plugin.settings.partialMatch) {
           matches = false;
         } else {
@@ -14609,7 +14721,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
           try {
             const word = this._selectedText || "";
             const caseSensitive2 = !!this.plugin.settings.caseSensitive;
-            const eq2 = (a, b) => caseSensitive2 ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+            const eq2 = (a, b2) => caseSensitive2 ? String(a) === String(b2) : String(a).toLowerCase() === String(b2).toLowerCase();
             if (matchedGroupUid) {
               const group = (Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : []).find((g) => g && g.uid === matchedGroupUid);
               if (group && Array.isArray(group.entries)) {
@@ -14896,17 +15008,37 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
     if (!forcedSingle) {
       this.mode = existingStyle === "highlight" ? "background" : existingStyle === "both" ? "text-and-background" : "text";
     }
+    const setPanelColor = (panel, colorStr) => {
+      if (!panel || !colorStr) return;
+      panel.hex.value = colorStr;
+      if (/^var\(\s*--/.test(colorStr)) {
+        try {
+          const tmp = document.createElement("div");
+          tmp.style.color = colorStr;
+          tmp.style.display = "none";
+          document.body.appendChild(tmp);
+          const computed = getComputedStyle(tmp).color;
+          document.body.removeChild(tmp);
+          const m = computed.match(/\d+/g);
+          if (m && m.length >= 3) {
+            const hexResolved = "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+            panel.colorInput.value = hexResolved;
+          }
+        } catch (_) {
+        }
+      } else {
+        panel.colorInput.value = colorStr;
+      }
+    };
     if (initText && tp && this.mode !== "background") {
       preview.style.color = initText;
-      tp.hex.value = initText;
-      tp.colorInput.value = initText;
+      setPanelColor(tp, initText);
       this.selectedTextColor = initText;
     }
     const applyPrefill = (val, type) => {
       if (type === "text") {
         if (tp && val) {
-          tp.colorInput.value = val;
-          tp.hex.value = val;
+          setPanelColor(tp, val);
           this.selectedTextColor = val;
           preview.style.color = val;
           try {
@@ -14916,8 +15048,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
         }
       } else if (type === "background") {
         if (bp && val) {
-          bp.colorInput.value = val;
-          bp.hex.value = val;
+          setPanelColor(bp, val);
           this.selectedBgColor = val;
           const op = matchedEntry && typeof matchedEntry.backgroundOpacity === "number" ? matchedEntry.backgroundOpacity : this.plugin.settings.backgroundOpacity ?? 25;
           const rgba = this.plugin.hexToRgba(val, op);
@@ -14953,8 +15084,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
         preview.style.boxDecorationBreak = "clone";
         preview.style.WebkitBoxDecorationBreak = "clone";
       }
-      bp.hex.value = initBg;
-      bp.colorInput.value = initBg;
+      setPanelColor(bp, initBg);
       this.selectedBgColor = initBg;
     }
     this._applyCustomCss();
@@ -14989,7 +15119,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
         if (matchedEntry && fromGroupUid !== toGroupUid) {
           const word2 = this._selectedText || "";
           const caseSensitive = !!this.plugin.settings.caseSensitive;
-          const eq = (a, b) => caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+          const eq = (a, b2) => caseSensitive ? String(a) === String(b2) : String(a).toLowerCase() === String(b2).toLowerCase();
           let sourceArr = null;
           if (fromGroupUid) {
             const srcGroup = groupsList.find(
@@ -15046,7 +15176,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
       if (!textSelected && !bgSelected) {
         const word2 = this._selectedText || "";
         const caseSensitive = !!this.plugin.settings.caseSensitive;
-        const eq = (a, b) => caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+        const eq = (a, b2) => caseSensitive ? String(a) === String(b2) : String(a).toLowerCase() === String(b2).toLowerCase();
         for (let i = targetArr.length - 1; i >= 0; i--) {
           const e = targetArr[i];
           if (!e) continue;
@@ -15081,7 +15211,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
           const st = this._appliedPresetStyle;
           const w = word;
           const cs = !!this.plugin.settings.caseSensitive;
-          const eq = (a, b) => cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+          const eq = (a, b2) => cs ? String(a) === String(b2) : String(a).toLowerCase() === String(b2).toLowerCase();
           const matchWord = (e) => {
             if (!e || e.isRegex) return false;
             return eq(e.pattern || "", w) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, w));
@@ -15159,7 +15289,7 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
           return;
         }
         const caseSensitive = !!this.plugin.settings.caseSensitive;
-        const eq = (a, b) => caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
+        const eq = (a, b2) => caseSensitive ? String(a) === String(b2) : String(a).toLowerCase() === String(b2).toLowerCase();
         const syncCustomCss = (e) => {
           if (e && e.customCss) this.plugin.syncEntryCssFromColors(e);
         };
@@ -15501,6 +15631,46 @@ var ColorPickerModal2 = class extends import_obsidian12.Modal {
 };
 
 // src/modals/HighlightStylingModal.js
+function resolveVarToHex2(varStr) {
+  try {
+    const tmp = document.createElement("div");
+    tmp.style.color = varStr;
+    tmp.style.display = "none";
+    document.body.appendChild(tmp);
+    const computed = getComputedStyle(tmp).color;
+    document.body.removeChild(tmp);
+    const m = computed.match(/\d+/g);
+    if (m && m.length >= 3) {
+      return "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+    }
+  } catch (_) {
+  }
+  return null;
+}
+function isVarColor2(str) {
+  return typeof str === "string" && /^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(str.trim());
+}
+function setColorInputValue2(input, colorStr) {
+  if (!colorStr) {
+    input.value = input.type === "color" ? "#000000" : "";
+    delete input.dataset.varColor;
+    return;
+  }
+  if (isVarColor2(colorStr)) {
+    input.dataset.varColor = colorStr.trim();
+    const resolved = resolveVarToHex2(colorStr);
+    if (resolved) input.value = resolved;
+    else if (input.type === "color") input.value = "#000000";
+    else input.value = colorStr;
+  } else {
+    delete input.dataset.varColor;
+    input.value = colorStr;
+  }
+}
+function getColorInputValue2(input) {
+  if (input.dataset.varColor && isVarColor2(input.dataset.varColor)) return input.dataset.varColor;
+  return input.value;
+}
 var HighlightStylingModal = class extends import_obsidian13.Modal {
   constructor(app, plugin, entry = null, parentEditEntryModal = null, previewTextOverride = null) {
     super(app);
@@ -15513,8 +15683,10 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
   }
   onOpen() {
     const { contentEl } = this;
+    this._hasUserChanges = false;
     const clearResetFlag = () => {
       this._resetAllApplied = false;
+      this._hasUserChanges = true;
     };
     contentEl.addEventListener("input", clearResetFlag, true);
     contentEl.addEventListener("change", clearResetFlag, true);
@@ -15787,36 +15959,25 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
     if (isGroup && !styleSelect.value) pickerRow.style.display = "none";
     const tColor = pickerRow.createEl("input", { type: "color" });
     const bColor = pickerRow.createEl("input", { type: "color" });
-    tColor.value = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "#ffffff") || "#ffffff";
-    bColor.value = this.entry && this.entry.backgroundColor ? this.entry.backgroundColor : "#000000";
-    // For word groups with no explicit colors yet, default color pickers to accent so preview shows accent (not white/black)
-    if (isGroup && this.entry && !this.entry.textColor && !this.entry.color && !this.entry.backgroundColor) {
-      try {
-        const tmp = document.createElement("span");
-        tmp.style.color = "var(--color-accent)";
-        tmp.style.display = "none";
-        document.body.appendChild(tmp);
-        const computed = getComputedStyle(tmp).color;
-        document.body.removeChild(tmp);
-        const m = computed.match(/\d+/g);
-        if (m && m.length >= 3) {
-          const hex = "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
-          if (this.plugin.isValidHexColor(hex)) {
-            tColor.value = hex;
-            bColor.value = hex;
-          }
-        }
-      } catch (_) {}
-    }
+    this._tPickerTouched = false;
+    this._bPickerTouched = false;
+    setColorInputValue2(
+      tColor,
+      this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "#ffffff") || "#ffffff"
+    );
+    setColorInputValue2(
+      bColor,
+      this.entry && this.entry.backgroundColor ? this.entry.backgroundColor : "#000000"
+    );
     const syncColorsFromParent = (evt) => {
       try {
         if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
-          const initTextColor = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "") || tColor.value || "#ffffff";
-          const initBgColor = this.entry && (this.entry.backgroundColor || "") || bColor.value || "#000000";
+          const initTextColor = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "") || getColorInputValue2(tColor) || "#ffffff";
+          const initBgColor = this.entry && (this.entry.backgroundColor || "") || getColorInputValue2(bColor) || "#000000";
           if (this.plugin.isValidHexColor(initTextColor))
-            tColor.value = initTextColor;
+            setColorInputValue2(tColor, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
-            bColor.value = initBgColor;
+            setColorInputValue2(bColor, initBgColor);
         }
       } catch (_) {
       }
@@ -16143,8 +16304,6 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
     const renderPreview = () => {
       const style = styleSelect.value;
       if (isGroup && !style) {
-        // Per-entry (no explicit group style) — show accent color preview so user can see it
-        // This is preview-only; it does not apply to entries
         const txt2 = words.textContent || "";
         try {
           while (previewWrap.firstChild)
@@ -16153,45 +16312,31 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
           span2.textContent = txt2;
           span2.style.display = "inline";
           span2.style.opacity = "1";
-          try {
-            span2.style.setProperty("color", "var(--color-accent)", "important");
-            span2.style.setProperty("background", "transparent", "important");
-            span2.style.setProperty("background-color", "transparent", "important");
-            span2.style.setProperty("background-image", "none", "important");
-            span2.style.setProperty("border", "none", "important");
-          } catch (_) {
-            span2.style.color = "var(--color-accent)";
-          }
-          // Ensure previewWrap itself also shows accent and transparent bg with !important to beat prior black
-          try {
-            previewWrap.style.setProperty("color", "var(--color-accent)", "important");
-            previewWrap.style.setProperty("background", "transparent", "important");
-            previewWrap.style.setProperty("background-color", "transparent", "important");
-            previewWrap.style.setProperty("background-image", "none", "important");
-          } catch (_) { try { previewWrap.style.color = "var(--color-accent)"; } catch (_) {} }
           previewWrap.appendChild(span2);
         } catch (_) {
-          previewWrap.innerHTML = `<span style="display:inline;color:var(--color-accent) !important;background:transparent !important;background-color:transparent !important;background-image:none !important;border:none !important">${escapeHtml(
+          previewWrap.innerHTML = `<span style="display:inline">${escapeHtml(
             txt2
           )}</span>`;
-          try {
-            previewWrap.style.setProperty("color", "var(--color-accent)", "important");
-            previewWrap.style.setProperty("background", "transparent", "important");
-            previewWrap.style.setProperty("background-color", "transparent", "important");
-            previewWrap.style.setProperty("background-image", "none", "important");
-          } catch (_) { try { previewWrap.style.color = "var(--color-accent)"; } catch (_) {} }
         }
         return;
       }
-      const t = this.plugin.isValidHexColor(tColor.value) ? tColor.value : "#58bc54";
-      const b = this.plugin.isValidHexColor(bColor.value) ? bColor.value : "#205613";
+      const tRaw = getColorInputValue2(tColor);
+      const bRaw = getColorInputValue2(bColor);
+      const hasEntryText = !!(this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) || this.entry.color && this.plugin.isValidHexColor(this.entry.color)));
+      const hasEntryBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+      const isVarT = tRaw && /^var\(/.test(tRaw.trim());
+      const isVarB = bRaw && /^var\(/.test(bRaw.trim());
+      const hasValidT = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarT || hasEntryText || this._tPickerTouched);
+      const hasValidB = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarB || hasEntryBg || this._bPickerTouched);
+      const t2 = hasValidT ? tRaw : "var(--text-normal)";
+      const b2 = hasValidB ? bRaw : "var(--color-accent)";
       const p = this.plugin.getHighlightParams(this.entry);
-      const rgba = this.plugin.hexToRgba(b, p.opacity ?? 25);
+      const rgba = this.plugin.hexToRgba(b2, p.opacity ?? 25);
       const radius = p.radius ?? 8;
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
-      const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, b, this.entry) : this.plugin.generateBorderStyle(t, b, this.entry);
-      const matchStyle = style === "text" ? `color:${t};background:transparent;` : style === "highlight" ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}box-decoration-break: clone; -webkit-box-decoration-break: clone;` : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+      const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, b2, this.entry) : this.plugin.generateBorderStyle(t2, b2, this.entry);
+      const matchStyle = style === "text" ? `color:${t2};background:transparent;` : style === "highlight" ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}box-decoration-break: clone; -webkit-box-decoration-break: clone;` : `color:${t2};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
       const txt = words.textContent || "";
       while (previewWrap.firstChild)
         previewWrap.removeChild(previewWrap.firstChild);
@@ -16204,9 +16349,9 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
       if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
         try {
           const tempEntry = Object.assign({}, this.entry, {
-            color: style === "text" ? t : "",
-            textColor: style === "both" ? t : style === "highlight" ? "currentColor" : null,
-            backgroundColor: style === "highlight" || style === "both" ? b : null
+            color: style === "text" ? t2 : "",
+            textColor: style === "both" ? t2 : style === "highlight" ? "currentColor" : null,
+            backgroundColor: style === "highlight" || style === "both" ? b2 : null
           });
           const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
           const decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
@@ -16218,45 +16363,6 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
             });
           }
         } catch (_) {
-        }
-      }
-      // For word groups with default black/white (no explicit accent), show accent in preview for visibility (preview-only)
-      if (isGroup) {
-        const bIsDefault = !b || b.toLowerCase() === "#000000" || b.toLowerCase() === "#205613";
-        const tIsDefault = !t || t.toLowerCase() === "#ffffff" || t.toLowerCase() === "#58bc54";
-        if ((style === "highlight" || style === "both") && bIsDefault) {
-          const accentRgba = `color-mix(in srgb, var(--color-accent) ${p.opacity ?? 25}%, transparent)`;
-          try {
-            span.style.setProperty("background", accentRgba, "important");
-            span.style.setProperty("background-color", accentRgba, "important");
-            span.style.setProperty("background-image", "none", "important");
-            // Ensure border also accent if enabled
-            if (p.enableBorder) {
-              const accentBorder = `color-mix(in srgb, var(--color-accent) ${p.borderOpacity ?? 100}%, transparent)`;
-              const th = p.borderThickness ?? 1;
-              const ls = p.borderLineStyle || "solid";
-              const bs = p.borderStyle || "full";
-              let bc = "";
-              const css = `${th}px ${ls} ${accentBorder} !important;`;
-              switch (bs) {
-                case "bottom": bc = ` border-bottom: ${css}`; break;
-                case "top": bc = ` border-top: ${css}`; break;
-                case "left": bc = ` border-left: ${css}`; break;
-                case "right": bc = ` border-right: ${css}`; break;
-                case "top-bottom": bc = ` border-top: ${css} border-bottom: ${css}`; break;
-                case "left-right": bc = ` border-left: ${css} border-right: ${css}`; break;
-                default: bc = ` border: ${css}`;
-              }
-              if (bc) span.style.cssText += bc;
-            }
-          } catch (_) {}
-        }
-        if ((style === "text" || style === "both") && tIsDefault) {
-          try { span.style.setProperty("color", "var(--color-accent)", "important"); } catch (_) {}
-        }
-        if (style === "highlight" && tIsDefault) {
-          // Highlight style text is var(--text-normal), make it accent for visibility when default
-          try { span.style.setProperty("color", "var(--color-accent)", "important"); } catch (_) {}
         }
       }
       previewWrap.appendChild(span);
@@ -16279,11 +16385,19 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
       renderPreview();
     };
     styleSelect.addEventListener("change", styleChange);
-    tColor.addEventListener("input", styleChange);
-    bColor.addEventListener("input", styleChange);
+    const tColorStyleChange = () => {
+      this._tPickerTouched = true;
+      styleChange();
+    };
+    const bColorStyleChange = () => {
+      this._bPickerTouched = true;
+      styleChange();
+    };
+    tColor.addEventListener("input", tColorStyleChange);
+    bColor.addEventListener("input", bColorStyleChange);
     this._handlers.push({ el: styleSelect, ev: "change", fn: styleChange });
-    this._handlers.push({ el: tColor, ev: "input", fn: styleChange });
-    this._handlers.push({ el: bColor, ev: "input", fn: styleChange });
+    this._handlers.push({ el: tColor, ev: "input", fn: tColorStyleChange });
+    this._handlers.push({ el: bColor, ev: "input", fn: bColorStyleChange });
     updatePickerVisibility();
     renderPreview();
     if (stylePresetBtn) {
@@ -16309,11 +16423,17 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
           } catch (_) {
           }
           try {
-            if (tColor) tColor.value = this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) ? this.entry.textColor : this.entry.color && this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : tColor.value;
+            if (tColor) {
+              const tv = this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) ? this.entry.textColor : this.entry.color && this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : getColorInputValue2(tColor);
+              if (tv) setColorInputValue2(tColor, tv);
+            }
           } catch (_) {
           }
           try {
-            if (bColor) bColor.value = this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor) ? this.entry.backgroundColor : bColor.value;
+            if (bColor) {
+              const bv = this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor) ? this.entry.backgroundColor : getColorInputValue2(bColor);
+              if (bv) setColorInputValue2(bColor, bv);
+            }
           } catch (_) {
           }
           try {
@@ -16370,15 +16490,9 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
       this._handlers.push({ el: stylePresetBtn, ev: "click", fn: presetHandler });
     }
     const actions = contentEl.createDiv();
-    try { actions.addClass("act-highlight-footer"); } catch (e) { try { actions.classList.add("act-highlight-footer"); } catch (_) {} }
-    if (isGroup) { try { actions.addClass("act-group-highlight-footer"); } catch (e) { try { actions.classList.add("act-group-highlight-footer"); } catch (_) {} } }
     actions.style.display = "flex";
     actions.style.justifyContent = "space-between";
-    // edit highlight styling modals: force margin-top 0
-    actions.style.marginTop = "0";
-    try { actions.style.setProperty("margin-top", "0", "important"); } catch (_) {}
-    // Ensure footer stays visible without scrolling (like word groups)
-    try { actions.style.flexShrink = "0"; actions.style.position = "sticky"; actions.style.bottom = "0"; } catch (_) {}
+    actions.style.marginTop = "12px";
     const resetAllBtn = actions.createEl("button", {
       text: this.plugin.t("btn_reset_all", "Reset Highlight Style")
     });
@@ -16437,17 +16551,19 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
     const syncEntryColorsFromInputs = () => {
       if (!this.entry) return;
       const style = styleSelect.value;
-      this.entry._savedTextColor = tColor.value || this.entry._savedTextColor || this.entry.color || this.entry.textColor || "";
-      this.entry._savedBackgroundColor = bColor.value || this.entry._savedBackgroundColor || this.entry.backgroundColor || "";
+      const curT = getColorInputValue2(tColor);
+      const curB = getColorInputValue2(bColor);
+      this.entry._savedTextColor = curT || this.entry._savedTextColor || this.entry.color || this.entry.textColor || "";
+      this.entry._savedBackgroundColor = curB || this.entry._savedBackgroundColor || this.entry.backgroundColor || "";
       if (style === "text") {
-        this.entry.color = tColor.value || "";
+        this.entry.color = curT || "";
       } else if (style === "highlight") {
-        this.entry.backgroundColor = bColor.value || "";
+        this.entry.backgroundColor = curB || "";
         this.entry.textColor = "currentColor";
         this.entry.color = "";
       } else {
-        this.entry.textColor = tColor.value || "";
-        this.entry.backgroundColor = bColor.value || "";
+        this.entry.textColor = curT || "";
+        this.entry.backgroundColor = curB || "";
         this.entry.color = "";
       }
     };
@@ -16466,7 +16582,7 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
       colorInput.addEventListener("contextmenu", (evt) => {
         evt.preventDefault();
         evt.stopPropagation();
-        const currentColor = colorInput.value || "#000000";
+        const currentColor = getColorInputValue2(colorInput) || "#000000";
         const isTextPicker = colorInput === tColor;
         const modal = new ColorPickerModal2(
           this.app,
@@ -16477,17 +16593,21 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
             const fallback = color && this.plugin.isValidHexColor(color) ? color : null;
             let changed = false;
             if (tc) {
-              tColor.value = tc;
+              setColorInputValue2(tColor, tc);
+              this._tPickerTouched = true;
               changed = true;
             } else if (fallback && isTextPicker) {
-              tColor.value = fallback;
+              setColorInputValue2(tColor, fallback);
+              this._tPickerTouched = true;
               changed = true;
             }
             if (bc) {
-              bColor.value = bc;
+              setColorInputValue2(bColor, bc);
+              this._bPickerTouched = true;
               changed = true;
             } else if (fallback && !isTextPicker) {
-              bColor.value = fallback;
+              setColorInputValue2(bColor, fallback);
+              this._bPickerTouched = true;
               changed = true;
             }
             if (result && result.markTarget) {
@@ -16504,8 +16624,8 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
             }
             if (!changed) {
               if (currentColor && this.plugin.isValidHexColor(currentColor)) {
-                if (isTextPicker) tColor.value = currentColor;
-                else bColor.value = currentColor;
+                if (isTextPicker) setColorInputValue2(tColor, currentColor);
+                else setColorInputValue2(bColor, currentColor);
               }
             }
             dispatchHighlightColorsChanged();
@@ -16518,10 +16638,12 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
           this.entry
         );
         modal._hideHeaderControls = true;
-        if (tColor.value) modal._preFillTextColor = tColor.value;
-        if (bColor.value) {
-          modal._preFillBgColor = bColor.value;
-          modal._preFillBorderColor = bColor.value;
+        const preT = getColorInputValue2(tColor);
+        const preB = getColorInputValue2(bColor);
+        if (preT) modal._preFillTextColor = preT;
+        if (preB) {
+          modal._preFillBgColor = preB;
+          modal._preFillBorderColor = preB;
         }
         modal.open();
       });
@@ -16529,10 +16651,12 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
     setupHighlightColorPickerRightClick(tColor);
     setupHighlightColorPickerRightClick(bColor);
     const tColorInputHandler = () => {
+      this._tPickerTouched = true;
       dispatchHighlightColorsChanged();
       renderPreview();
     };
     const bColorInputHandler = () => {
+      this._bPickerTouched = true;
       dispatchHighlightColorsChanged();
       renderPreview();
     };
@@ -16546,9 +16670,9 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
           const initTextColor = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "#ffffff") || "#ffffff";
           const initBgColor = this.entry && this.entry.backgroundColor ? this.entry.backgroundColor : "#000000";
           if (this.plugin.isValidHexColor(initTextColor))
-            tColor.value = initTextColor;
+            setColorInputValue2(tColor, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
-            bColor.value = initBgColor;
+            setColorInputValue2(bColor, initBgColor);
           renderPreview();
         }
       } catch (_) {
@@ -16577,17 +16701,17 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
           } catch (_) {
           }
           if (st === "text") {
-            this.entry.color = tColor.value || "";
+            this.entry.color = getColorInputValue2(tColor) || "";
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = bColor.value || "";
+            this.entry.backgroundColor = getColorInputValue2(bColor) || "";
           } else {
             this.entry.color = "";
-            this.entry.textColor = tColor.value || "";
-            this.entry.backgroundColor = bColor.value || "";
+            this.entry.textColor = getColorInputValue2(tColor) || "";
+            this.entry.backgroundColor = getColorInputValue2(bColor) || "";
           }
         }
       }
@@ -16606,19 +16730,29 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
           this.entry.textColor = void 0;
           this.entry.backgroundColor = void 0;
         } else {
+          const tRawSave = getColorInputValue2(tColor);
+          const bRawSave = getColorInputValue2(bColor);
+          const hasEntryTextSave = !!(this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) || this.entry.color && this.plugin.isValidHexColor(this.entry.color)));
+          const hasEntryBgSave = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+          const isVarTSave = tRawSave && /^var\(/.test(tRawSave.trim());
+          const isVarBSave = bRawSave && /^var\(/.test(bRawSave.trim());
+          const hasValidTSave = tRawSave && this.plugin.isValidHexColor(tRawSave) && (isVarTSave || hasEntryTextSave || this._tPickerTouched);
+          const hasValidBSave = bRawSave && this.plugin.isValidHexColor(bRawSave) && (isVarBSave || hasEntryBgSave || this._bPickerTouched);
+          const effectiveTSave = hasValidTSave ? tRawSave : "var(--text-normal)";
+          const effectiveBSave = hasValidBSave ? bRawSave : "var(--color-accent)";
           this.entry.styleType = st;
           if (st === "text") {
-            this.entry.color = tColor.value || "";
+            this.entry.color = hasValidTSave ? tRawSave : "var(--text-normal)";
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = bColor.value || "";
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : "var(--color-accent)";
           } else {
             this.entry.color = "";
-            this.entry.textColor = tColor.value || "";
-            this.entry.backgroundColor = bColor.value || "";
+            this.entry.textColor = hasValidTSave ? tRawSave : "var(--text-normal)";
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : "var(--color-accent)";
           }
         }
         if (this._resetAllApplied) {
@@ -16730,15 +16864,23 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
             const bgColorInput = parentInputs[1];
             const st = this.entry?.styleType || "both";
             if (st === "text" || st === "both") {
-              const textColor = (this.entry?.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.entry?.color) || textColorInput.value;
+              const textColor = (this.entry?.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.entry?.color) || getColorInputValue2(textColorInput);
               if (this.plugin.isValidHexColor(textColor)) {
-                textColorInput.value = textColor;
+                setColorInputValue2(textColorInput, textColor);
+                try {
+                  this.parentEditEntryModal._textPickerTouched = true;
+                } catch (_) {
+                }
               }
             }
             if (st === "highlight" || st === "both") {
-              const bgColor = this.entry?.backgroundColor || bgColorInput.value;
+              const bgColor = this.entry?.backgroundColor || getColorInputValue2(bgColorInput);
               if (this.plugin.isValidHexColor(bgColor)) {
-                bgColorInput.value = bgColor;
+                setColorInputValue2(bgColorInput, bgColor);
+                try {
+                  this.parentEditEntryModal._bgPickerTouched = true;
+                } catch (_) {
+                }
               }
             }
           }
@@ -16757,7 +16899,7 @@ var HighlightStylingModal = class extends import_obsidian13.Modal {
   }
   onClose() {
     try {
-      if (this._saveData) {
+      if (this._hasUserChanges && this._saveData) {
         this._saveData(false);
       }
     } catch (e) {
@@ -17146,23 +17288,23 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
         chooseArea.style.gap = "8px";
         chooseArea.style.flex = "1 1 auto";
         chooseArea.style.minWidth = "160px";
-        const clip = (b) => {
-          b.style.overflow = "hidden";
-          b.style.textOverflow = "ellipsis";
-          b.style.whiteSpace = "nowrap";
-          b.style.textAlign = "left";
-          b.style.padding = "6px 10px";
-          b.style.border = "1px solid var(--background-modifier-border)";
-          b.style.borderRadius = "var(--radius-m)";
+        const clip = (b2) => {
+          b2.style.overflow = "hidden";
+          b2.style.textOverflow = "ellipsis";
+          b2.style.whiteSpace = "nowrap";
+          b2.style.textAlign = "left";
+          b2.style.padding = "6px 10px";
+          b2.style.border = "1px solid var(--background-modifier-border)";
+          b2.style.borderRadius = "var(--radius-m)";
         };
         const openPicker = (type, cb) => {
           new RulePickerModal(this.app, this.plugin, type, cb).open();
         };
         const refreshLabels = () => {
-          const t = typeSel.value;
+          const t2 = typeSel.value;
           const raw = String(r.path || "");
           chooseArea.empty();
-          if (t === "property") {
+          if (t2 === "property") {
             const ci = raw.indexOf(":");
             const key = ci > -1 ? raw.slice(0, ci).trim() : raw;
             const val = ci > -1 ? raw.slice(ci + 1).trim() : "";
@@ -17195,7 +17337,7 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
                 renderRules();
               }).open();
             });
-          } else if (t === "pattern") {
+          } else if (t2 === "pattern") {
             const inp = chooseArea.createEl("input", {
               type: "text",
               value: raw
@@ -17218,8 +17360,8 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
           } else {
             const btn = chooseArea.createEl("button", {
               text: raw || this.plugin.t(
-                "rule_choose_placeholder_" + t,
-                "Choose " + t + "\u2026"
+                "rule_choose_placeholder_" + t2,
+                "Choose " + t2 + "\u2026"
               )
             });
             clip(btn);
@@ -17876,9 +18018,9 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       );
     }
     if (this._sortMode === "a-z") {
-      entries.sort((a, b) => {
+      entries.sort((a, b2) => {
         const patternA = a.pattern || "";
-        const patternB = b.pattern || "";
+        const patternB = b2.pattern || "";
         const aEmpty = String(patternA).trim().length === 0;
         const bEmpty = String(patternB).trim().length === 0;
         if (aEmpty && !bEmpty) return 1;
@@ -17886,9 +18028,9 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
         return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
       });
     } else if (this._sortMode === "reverse-a-z") {
-      entries.sort((a, b) => {
+      entries.sort((a, b2) => {
         const patternA = a.pattern || "";
-        const patternB = b.pattern || "";
+        const patternB = b2.pattern || "";
         const aEmpty = String(patternA).trim().length === 0;
         const bEmpty = String(patternB).trim().length === 0;
         if (aEmpty && !bEmpty) return 1;
@@ -17897,28 +18039,28 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       });
     } else if (this._sortMode === "style-order") {
       const styleOrder = { text: 0, highlight: 1, both: 2 };
-      entries.sort((a, b) => {
+      entries.sort((a, b2) => {
         const patternA = a.pattern || "";
-        const patternB = b.pattern || "";
+        const patternB = b2.pattern || "";
         const aEmpty = String(patternA).trim().length === 0;
         const bEmpty = String(patternB).trim().length === 0;
         if (aEmpty && !bEmpty) return 1;
         if (!aEmpty && bEmpty) return -1;
         const styleA = styleOrder[a.styleType] ?? 0;
-        const styleB = styleOrder[b.styleType] ?? 0;
+        const styleB = styleOrder[b2.styleType] ?? 0;
         if (styleA !== styleB) return styleA - styleB;
         return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
       });
     } else if (this._sortMode === "color") {
-      entries.sort((a, b) => {
+      entries.sort((a, b2) => {
         const patternA = a.pattern || "";
-        const patternB = b.pattern || "";
+        const patternB = b2.pattern || "";
         const aEmpty = String(patternA).trim().length === 0;
         const bEmpty = String(patternB).trim().length === 0;
         if (aEmpty && !bEmpty) return 1;
         if (!aEmpty && bEmpty) return -1;
         const colorA = (a.backgroundColor || a.textColor || a.color || "").toLowerCase();
-        const colorB = (b.backgroundColor || b.textColor || b.color || "").toLowerCase();
+        const colorB = (b2.backgroundColor || b2.textColor || b2.color || "").toLowerCase();
         if (colorA !== colorB) return colorA.localeCompare(colorB);
         return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
       });
@@ -19037,9 +19179,9 @@ var EditBlacklistGroupModal = class extends import_obsidian19.Modal {
       entries = entries.filter((e) => !e.isRegex);
     }
     if (this._sortMode === "a-z") {
-      entries.sort((a, b) => {
+      entries.sort((a, b2) => {
         const patternA = a.pattern || "";
-        const patternB = b.pattern || "";
+        const patternB = b2.pattern || "";
         const aEmpty = String(patternA).trim().length === 0;
         const bEmpty = String(patternB).trim().length === 0;
         if (aEmpty && !bEmpty) return 1;
@@ -19047,9 +19189,9 @@ var EditBlacklistGroupModal = class extends import_obsidian19.Modal {
         return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
       });
     } else if (this._sortMode === "reverse-a-z") {
-      entries.sort((a, b) => {
+      entries.sort((a, b2) => {
         const patternA = a.pattern || "";
-        const patternB = b.pattern || "";
+        const patternB = b2.pattern || "";
         const aEmpty = String(patternA).trim().length === 0;
         const bEmpty = String(patternB).trim().length === 0;
         if (aEmpty && !bEmpty) return 1;
@@ -19470,7 +19612,7 @@ var EditColorSwatchesModal = class extends import_obsidian20.Modal {
     hex.style.borderRadius = "8px";
     hex.style.border = "1px solid var(--background-modifier-border)";
     hex.style.width = "120px";
-    hex.placeholder = "#000000";
+    hex.placeholder = "#000000 or var()";
     hex.value = "";
     const actionBtn = pickerWrap.createEl("button");
     actionBtn.addClass("mod-cta");
@@ -19555,13 +19697,36 @@ var EditColorSwatchesModal = class extends import_obsidian20.Modal {
         hex.value = color;
       } else {
         const raw = hex.value.trim();
-        const normalised = raw.startsWith("#") ? raw : "#" + raw;
-        if (this.plugin.isValidHexColor(normalised)) {
-          color = normalised;
-          hex.value = normalised;
-          colorInput.value = normalised;
+        if (!raw) {
+          renderPreviews(colorInput.value);
+          return;
+        }
+        if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(raw)) {
+          color = raw;
+          hex.value = raw;
+          try {
+            const tmp = document.createElement("div");
+            tmp.style.color = raw;
+            tmp.style.display = "none";
+            document.body.appendChild(tmp);
+            const computed = getComputedStyle(tmp).color;
+            document.body.removeChild(tmp);
+            const m = computed.match(/\d+/g);
+            if (m && m.length >= 3) {
+              const hexResolved = "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+              colorInput.value = hexResolved;
+            }
+          } catch (_) {
+          }
         } else {
-          color = colorInput.value;
+          const normalised = raw.startsWith("#") ? raw : "#" + raw;
+          if (this.plugin.isValidHexColor(normalised)) {
+            color = normalised;
+            hex.value = normalised;
+            colorInput.value = normalised;
+          } else {
+            color = colorInput.value;
+          }
         }
       }
       renderPreviews(color);
@@ -19840,22 +20005,44 @@ var EditColorSwatchesModal = class extends import_obsidian20.Modal {
       this._eventListeners.push({ el: grid, event: "touchstart", handler: gridTouchStart });
     }
     const actionHandler = async () => {
-      let color = hex.value.trim();
-      if (!color.startsWith("#")) color = "#" + color;
-      if (!this.plugin.isValidHexColor(color)) {
-        color = colorInput.value;
+      let raw = hex.value.trim();
+      let color = null;
+      if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(raw)) {
+        color = raw;
+      } else {
+        if (raw && !raw.startsWith("#")) raw = "#" + raw;
+        if (this.plugin.isValidHexColor(raw)) color = raw;
+        else if (this.plugin.isValidHexColor(colorInput.value)) color = colorInput.value;
       }
-      if (!this.plugin.isValidHexColor(color)) {
+      if (!color || !this.plugin.isValidHexColor(color)) {
         new import_obsidian20.Notice(
           this.plugin.t(
             "notice_invalid_hex_format",
-            "Invalid hex color format. Use #RRGGBB or #RGB."
+            "Invalid hex color format. Use #RRGGBB, #RGB or var(--css-variable)."
           )
         );
         return;
       }
-      colorInput.value = color;
-      hex.value = color;
+      if (/^var\(/.test(color)) {
+        hex.value = color;
+        try {
+          const tmp = document.createElement("div");
+          tmp.style.color = color;
+          tmp.style.display = "none";
+          document.body.appendChild(tmp);
+          const computed = getComputedStyle(tmp).color;
+          document.body.removeChild(tmp);
+          const m = computed.match(/\d+/g);
+          if (m && m.length >= 3) {
+            const hexResolved = "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+            colorInput.value = hexResolved;
+          }
+        } catch (_) {
+        }
+      } else {
+        colorInput.value = color;
+        hex.value = color;
+      }
       const swatches = getSwatches();
       if (this._activeIndex === null) {
         const nextIndex = swatches.length + 1;
@@ -20148,9 +20335,9 @@ var QuickMenuColorsModal = class extends import_obsidian21.Modal {
             if (e.touches.length !== 1) return;
             e.preventDefault();
             e.stopPropagation();
-            const t = e.touches[0];
-            startX = t.clientX;
-            startY = t.clientY;
+            const t2 = e.touches[0];
+            startX = t2.clientX;
+            startY = t2.clientY;
             dragStarted = false;
           }, { passive: false });
         });
@@ -20231,7 +20418,7 @@ var CommandVisibilityModal = class extends import_obsidian22.Modal {
       const all = this.app.commands.listCommands();
       commands = (all || []).filter(
         (c) => c && typeof c.id === "string" && c.id.startsWith(pluginId + ":")
-      ).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+      ).sort((a, b2) => String(a.name).localeCompare(String(b2.name)));
     } catch (e) {
     }
     if (commands.length === 0) {
@@ -20381,7 +20568,7 @@ var ThemeFixerAdjustModal = class extends import_obsidian23.Modal {
       this._fillSwatches(sampleSwatch);
       this._fillPresets(samplePreset);
       const k = this._keysFor(mode.key);
-      let b = this._num(this.plugin.settings[k.b], 1);
+      let b2 = this._num(this.plugin.settings[k.b], 1);
       let c = this._num(this.plugin.settings[k.c], 1);
       let s = this._num(this.plugin.settings[k.s], 1);
       const spans = [];
@@ -20394,7 +20581,7 @@ var ThemeFixerAdjustModal = class extends import_obsidian23.Modal {
         spans.push(sp);
       });
       const applyThis = () => {
-        const f = `brightness(${b}) contrast(${c}) saturate(${s})`;
+        const f = `brightness(${b2}) contrast(${c}) saturate(${s})`;
         for (const sp of spans) sp.style.filter = f;
       };
       applyThis();
@@ -20402,9 +20589,9 @@ var ThemeFixerAdjustModal = class extends import_obsidian23.Modal {
       sliderWrap.style.marginTop = "12px";
       const refs = [];
       refs.push(
-        this._addSlider(sliderWrap, "theme_fixer_brightness", "Brightness", b, k.b, "b", (v) => {
+        this._addSlider(sliderWrap, "theme_fixer_brightness", "Brightness", b2, k.b, "b", (v) => {
           this.plugin.settings[k.b] = v;
-          b = v;
+          b2 = v;
           applyThis();
           this._live();
         })
@@ -20427,7 +20614,7 @@ var ThemeFixerAdjustModal = class extends import_obsidian23.Modal {
       );
       resetBtn.addEventListener("click", () => {
         const def = { b: 1, c: 1, s: 1 };
-        b = def.b;
+        b2 = def.b;
         c = def.c;
         s = def.s;
         this.plugin.settings[k.b] = def.b;
@@ -20592,8 +20779,8 @@ var ThemeFixerAdjustModal = class extends import_obsidian23.Modal {
       if (h.length === 6) {
         const r = parseInt(h.slice(0, 2), 16);
         const g = parseInt(h.slice(2, 4), 16);
-        const b = parseInt(h.slice(4, 6), 16);
-        return `rgba(${r}, ${g}, ${b}, ${a})`;
+        const b2 = parseInt(h.slice(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b2}, ${a})`;
       }
     }
     return hex;
@@ -21445,10 +21632,10 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           flagsInput.style.display = kind === "regex" ? "" : "none";
           if (nameInput) nameInput.style.display = kind === "regex" ? "" : "none";
           try {
-            const t = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || "";
-            const b = entry.backgroundColor || "";
-            if (t && this.plugin.isValidHexColor(t)) cp.value = t;
-            if (b && this.plugin.isValidHexColor(b)) cpBg.value = b;
+            const t2 = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || "";
+            const b2 = entry.backgroundColor || "";
+            if (t2 && this.plugin.isValidHexColor(t2)) cp.value = t2;
+            if (b2 && this.plugin.isValidHexColor(b2)) cpBg.value = b2;
           } catch (e) {
           }
         }
@@ -21494,10 +21681,10 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         }
         updateVisibility();
         try {
-          const t = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || "";
-          const b = entry.backgroundColor || "";
-          if (t && this.plugin.isValidHexColor(t)) cp.value = t;
-          if (b && this.plugin.isValidHexColor(b)) cpBg.value = b;
+          const t2 = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || "";
+          const b2 = entry.backgroundColor || "";
+          if (t2 && this.plugin.isValidHexColor(t2)) cp.value = t2;
+          if (b2 && this.plugin.isValidHexColor(b2)) cpBg.value = b2;
         } catch (e) {
         }
       };
@@ -21863,9 +22050,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         entries = entries.filter((e) => !e.isRegex);
       }
       if (this._blacklistSortMode === "a-z") {
-        entries.sort((a, b) => {
+        entries.sort((a, b2) => {
           const aPat = Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0 ? a.groupedPatterns[0] : a.pattern || "";
-          const bPat = Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0 ? b.groupedPatterns[0] : b.pattern || "";
+          const bPat = Array.isArray(b2.groupedPatterns) && b2.groupedPatterns.length > 0 ? b2.groupedPatterns[0] : b2.pattern || "";
           const aEmpty = String(aPat).trim().length === 0;
           const bEmpty = String(bPat).trim().length === 0;
           if (aEmpty && !bEmpty) return 1;
@@ -21873,9 +22060,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           return String(aPat).toLowerCase().localeCompare(String(bPat).toLowerCase());
         });
       } else if (this._blacklistSortMode === "reverse-a-z") {
-        entries.sort((a, b) => {
+        entries.sort((a, b2) => {
           const aPat = Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0 ? a.groupedPatterns[0] : a.pattern || "";
-          const bPat = Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0 ? b.groupedPatterns[0] : b.pattern || "";
+          const bPat = Array.isArray(b2.groupedPatterns) && b2.groupedPatterns.length > 0 ? b2.groupedPatterns[0] : b2.pattern || "";
           const aEmpty = String(aPat).trim().length === 0;
           const bEmpty = String(bPat).trim().length === 0;
           if (aEmpty && !bEmpty) return 1;
@@ -22246,9 +22433,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       }
       if (!this._suspendSorting) {
         if (this._pathSortMode === "a-z") {
-          filteredRows.sort((a, b) => {
+          filteredRows.sort((a, b2) => {
             const aPath = String(a.path || "");
-            const bPath = String(b.path || "");
+            const bPath = String(b2.path || "");
             const aEmpty = aPath.trim().length === 0;
             const bEmpty = bPath.trim().length === 0;
             if (aEmpty && !bEmpty) return 1;
@@ -22256,9 +22443,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
           });
         } else if (this._pathSortMode === "reverse-a-z") {
-          filteredRows.sort((a, b) => {
+          filteredRows.sort((a, b2) => {
             const aPath = String(a.path || "");
-            const bPath = String(b.path || "");
+            const bPath = String(b2.path || "");
             const aEmpty = aPath.trim().length === 0;
             const bEmpty = bPath.trim().length === 0;
             if (aEmpty && !bEmpty) return 1;
@@ -22267,26 +22454,26 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           });
         } else if (this._pathSortMode === "mode") {
           const order = { exclude: 0, include: 1 };
-          filteredRows.sort((a, b) => {
+          filteredRows.sort((a, b2) => {
             const aPath = String(a.path || "");
-            const bPath = String(b.path || "");
+            const bPath = String(b2.path || "");
             const aEmpty = aPath.trim().length === 0;
             const bEmpty = bPath.trim().length === 0;
             if (aEmpty && !bEmpty) return 1;
             if (!aEmpty && bEmpty) return -1;
-            const styleCmp = (order[String(a.mode || "")] ?? 1) - (order[String(b.mode || "")] ?? 1);
+            const styleCmp = (order[String(a.mode || "")] ?? 1) - (order[String(b2.mode || "")] ?? 1);
             if (styleCmp !== 0) return styleCmp;
             return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
           });
         } else if (this._pathSortMode === "type") {
-          filteredRows.sort((a, b) => {
+          filteredRows.sort((a, b2) => {
             const aPath = String(a.path || "");
-            const bPath = String(b.path || "");
+            const bPath = String(b2.path || "");
             const aEmpty = aPath.trim().length === 0;
             const bEmpty = bPath.trim().length === 0;
             if (aEmpty && !bEmpty) return 1;
             if (!aEmpty && bEmpty) return -1;
-            const typeCmp = Boolean(a.isFolder) === Boolean(b.isFolder) ? 0 : a.isFolder ? -1 : 1;
+            const typeCmp = Boolean(a.isFolder) === Boolean(b2.isFolder) ? 0 : a.isFolder ? -1 : 1;
             if (typeCmp !== 0) return typeCmp;
             return aPath.toLowerCase().localeCompare(bPath.toLowerCase());
           });
@@ -22374,14 +22561,14 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         chooseArea.style.gap = "8px";
         chooseArea.style.flex = "1 1 auto";
         chooseArea.style.minWidth = "160px";
-        const clip = (b) => {
-          b.style.overflow = "hidden";
-          b.style.textOverflow = "ellipsis";
-          b.style.whiteSpace = "nowrap";
-          b.style.textAlign = "left";
-          b.style.padding = "6px 10px";
-          b.style.border = "1px solid var(--background-modifier-border)";
-          b.style.borderRadius = "var(--radius-m)";
+        const clip = (b2) => {
+          b2.style.overflow = "hidden";
+          b2.style.textOverflow = "ellipsis";
+          b2.style.whiteSpace = "nowrap";
+          b2.style.textAlign = "left";
+          b2.style.padding = "6px 10px";
+          b2.style.border = "1px solid var(--background-modifier-border)";
+          b2.style.borderRadius = "var(--radius-m)";
         };
         const openPicker = (type, cb) => {
           new RulePickerModal(this.app, this.plugin, type, cb).open();
@@ -22392,10 +22579,10 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           entry.isFolder = type === "folder";
         };
         const refreshChoose = () => {
-          const t = typeSel.value;
+          const t2 = typeSel.value;
           const raw = String(entry.path || "");
           chooseArea.empty();
-          if (t === "property") {
+          if (t2 === "property") {
             const ci = raw.indexOf(":");
             const key = ci > -1 ? raw.slice(0, ci).trim() : raw;
             const val = ci > -1 ? raw.slice(ci + 1).trim() : "";
@@ -22426,7 +22613,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
                 this._refreshPathRules();
               }).open();
             });
-          } else if (t === "pattern") {
+          } else if (t2 === "pattern") {
             const inp = chooseArea.createEl("input", {
               type: "text",
               value: raw
@@ -22451,8 +22638,8 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           } else {
             const btn = chooseArea.createEl("button", {
               text: raw || this.plugin.t(
-                "rule_choose_placeholder_" + t,
-                "Choose " + t + "\u2026"
+                "rule_choose_placeholder_" + t2,
+                "Choose " + t2 + "\u2026"
               )
             });
             clip(btn);
@@ -22933,9 +23120,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             row.classList.add("drag-ghost-hidden");
             const onTouchMove = (moveEvent) => {
               moveEvent.preventDefault();
-              const t = moveEvent.touches[0];
-              const currentX = t.clientX;
-              const currentY = t.clientY;
+              const t2 = moveEvent.touches[0];
+              const currentX = t2.clientX;
+              const currentY = t2.clientY;
               ghost.style.left = `${currentX - offsetX}px`;
               ghost.style.top = `${currentY - offsetY}px`;
               const children = Array.from(customSwatchesContent.querySelectorAll("div[data-swatch-index]"));
@@ -22994,7 +23181,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       }
       const addButtonSetting = new import_obsidian24.Setting(customSwatchesContent);
       addButtonSetting.addButton(
-        (b) => b.setButtonText(this.plugin.t("btn_add_color", "+ Add color")).onClick(async () => {
+        (b2) => b2.setButtonText(this.plugin.t("btn_add_color", "+ Add color")).onClick(async () => {
           const nextIndex = (Array.isArray(this.plugin.settings.userCustomSwatches) ? this.plugin.settings.userCustomSwatches.length : 0) + 1;
           const newSwatch = { name: `Swatch ${nextIndex}`, color: "#000000" };
           if (!Array.isArray(this.plugin.settings.userCustomSwatches))
@@ -23030,13 +23217,13 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Shows color dots in the menu"
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.quickColorsEnabled).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.quickColorsEnabled).onChange(async (v) => {
           this.plugin.settings.quickColorsEnabled = v;
           await this.plugin.saveSettings();
           this._refreshQuickMenuColorsSetting();
         })
-      ).addButton((b) => {
-        b.setButtonText(this.plugin.t("edit_swatches_button", "Edit Swatches")).onClick(() => {
+      ).addButton((b2) => {
+        b2.setButtonText(this.plugin.t("edit_swatches_button", "Edit Swatches")).onClick(() => {
           const modal = new QuickMenuColorsModal(this.app, this.plugin);
           modal.open();
         });
@@ -23158,9 +23345,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         );
       }
       if (!this._suspendSorting && this._wordsSortMode === "a-z") {
-        finalFiltered.sort((a, b) => {
+        finalFiltered.sort((a, b2) => {
           const patternA = Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0 ? a.groupedPatterns[0] : a.pattern || "";
-          const patternB = Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0 ? b.groupedPatterns[0] : b.pattern || "";
+          const patternB = Array.isArray(b2.groupedPatterns) && b2.groupedPatterns.length > 0 ? b2.groupedPatterns[0] : b2.pattern || "";
           const aEmpty = String(patternA).trim().length === 0;
           const bEmpty = String(patternB).trim().length === 0;
           if (aEmpty && !bEmpty) return 1;
@@ -23172,9 +23359,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
       } else if (!this._suspendSorting && this._wordsSortMode === "reverse-a-z") {
-        finalFiltered.sort((a, b) => {
+        finalFiltered.sort((a, b2) => {
           const patternA = Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0 ? a.groupedPatterns[0] : a.pattern || "";
-          const patternB = Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0 ? b.groupedPatterns[0] : b.pattern || "";
+          const patternB = Array.isArray(b2.groupedPatterns) && b2.groupedPatterns.length > 0 ? b2.groupedPatterns[0] : b2.pattern || "";
           const aEmpty = String(patternA).trim().length === 0;
           const bEmpty = String(patternB).trim().length === 0;
           if (aEmpty && !bEmpty) return 1;
@@ -23187,28 +23374,28 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         });
       } else if (!this._suspendSorting && this._wordsSortMode === "style-order") {
         const styleOrder = { text: 0, highlight: 1, both: 2 };
-        finalFiltered.sort((a, b) => {
+        finalFiltered.sort((a, b2) => {
           const patternA = Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0 ? a.groupedPatterns[0] : a.pattern || "";
-          const patternB = Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0 ? b.groupedPatterns[0] : b.pattern || "";
+          const patternB = Array.isArray(b2.groupedPatterns) && b2.groupedPatterns.length > 0 ? b2.groupedPatterns[0] : b2.pattern || "";
           const aEmpty = String(patternA).trim().length === 0;
           const bEmpty = String(patternB).trim().length === 0;
           if (aEmpty && !bEmpty) return 1;
           if (!aEmpty && bEmpty) return -1;
           const styleA = styleOrder[a.styleType] ?? 0;
-          const styleB = styleOrder[b.styleType] ?? 0;
+          const styleB = styleOrder[b2.styleType] ?? 0;
           if (styleA !== styleB) return styleA - styleB;
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
       } else if (!this._suspendSorting && this._wordsSortMode === "color") {
-        finalFiltered.sort((a, b) => {
+        finalFiltered.sort((a, b2) => {
           const patternA = Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0 ? a.groupedPatterns[0] : a.pattern || "";
-          const patternB = Array.isArray(b.groupedPatterns) && b.groupedPatterns.length > 0 ? b.groupedPatterns[0] : b.pattern || "";
+          const patternB = Array.isArray(b2.groupedPatterns) && b2.groupedPatterns.length > 0 ? b2.groupedPatterns[0] : b2.pattern || "";
           const aEmpty = String(patternA).trim().length === 0;
           const bEmpty = String(patternB).trim().length === 0;
           if (aEmpty && !bEmpty) return 1;
           if (!aEmpty && bEmpty) return -1;
           const colorA = (a.backgroundColor || a.textColor || a.color || "").toLowerCase();
-          const colorB = (b.backgroundColor || b.textColor || b.color || "").toLowerCase();
+          const colorB = (b2.backgroundColor || b2.textColor || b2.color || "").toLowerCase();
           if (colorA !== colorB) return colorA.localeCompare(colorB);
           return patternA.toLowerCase().localeCompare(patternB.toLowerCase());
         });
@@ -23396,71 +23583,29 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           preview.style.fontWeight = "bold";
           preview.style.cursor = "default";
           preview.textContent = "Text";
-          const tRaw = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
-          const bRaw = group.backgroundColor || "";
-          const tIsDefault = !tRaw || !this.plugin.isValidHexColor(tRaw) || tRaw.toLowerCase() === "#ffffff";
-          const bIsDefault = !bRaw || !this.plugin.isValidHexColor(bRaw) || bRaw.toLowerCase() === "#000000";
-          const t = !tIsDefault && this.plugin.isValidHexColor(tRaw) ? tRaw : "";
-          const b = !bIsDefault && this.plugin.isValidHexColor(bRaw) ? bRaw : "";
+          const t2 = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
+          const b2 = group.backgroundColor || "";
           const p = this.plugin.getHighlightParams(group);
-          const styleType = group.styleType || "";
-          // For highlight/both styles with no explicit background (or default black), show accent background (color-mix) so preview is visible
-          const useAccentBg = (bIsDefault || !b) && (styleType === "highlight" || styleType === "both");
-          const rgba = b ? this.plugin.hexToRgba(b, p.opacity ?? 25) : useAccentBg ? `color-mix(in srgb, var(--color-accent) ${p.opacity ?? 25}%, transparent)` : "transparent";
-          // Text color: for text/both with no explicit t (or default white), show accent
-          const useAccentText = (tIsDefault || !t) && (styleType === "text" || styleType === "both" || !styleType);
-          if (t) preview.style.color = t;
-          else if (useAccentText) try { preview.style.setProperty("color", "var(--color-accent)", "important"); } catch (_) { preview.style.color = "var(--color-accent)"; }
-          else try { preview.style.setProperty("color", "var(--color-accent)", "important"); } catch (_) { preview.style.color = "var(--color-accent)"; }
-          if (b) {
-            try { preview.style.setProperty("background-color", rgba, "important"); preview.style.setProperty("background", rgba, "important"); } catch (_) { preview.style.backgroundColor = rgba; }
-          } else if (useAccentBg) {
-            try { preview.style.setProperty("background-color", rgba, "important"); preview.style.setProperty("background", rgba, "important"); preview.style.setProperty("background-image", "none", "important"); } catch (_) { preview.style.backgroundColor = rgba; }
+          const rgba = b2 ? this.plugin.hexToRgba(b2, p.opacity ?? 25) : "transparent";
+          if (t2) preview.style.color = t2;
+          else preview.style.color = "var(--text-normal)";
+          if (b2) {
+            preview.style.backgroundColor = rgba;
           } else {
-            try { preview.style.setProperty("background-color", "transparent", "important"); preview.style.setProperty("background", "transparent", "important"); preview.style.setProperty("background-image", "none", "important"); } catch (_) { preview.style.backgroundColor = "transparent"; }
+            preview.style.backgroundColor = "transparent";
           }
           preview.style.borderRadius = (p.radius ?? 8) + "px";
           preview.style.paddingLeft = (p.hPad ?? 4) + "px";
           preview.style.paddingRight = (p.hPad ?? 4) + "px";
           preview.style.paddingTop = (p.vPad ?? 0) + "px";
           preview.style.paddingBottom = (p.vPad ?? 0) + "px";
-          // colortype: color (styleType text) should never show borders in act-group-styling-preview
-          if (styleType === "text") {
-            try { preview.style.setProperty("border", "none", "important"); preview.style.setProperty("border-top", "none", "important"); preview.style.setProperty("border-bottom", "none", "important"); preview.style.setProperty("border-left", "none", "important"); preview.style.setProperty("border-right", "none", "important"); } catch (_) { preview.style.border = "none"; }
-          } else if (p.enableBorder) {
-            // If we are showing accent fallback for background (highlight/both), generate accent border instead of black fallback
-            // Do NOT generate accent border for text-only style (colortype: color) — it should have no border
-            const isAccentFallback = useAccentBg;
-            if (isAccentFallback) {
-              const accentBorderColor = `color-mix(in srgb, var(--color-accent) ${p.borderOpacity ?? 100}%, transparent)`;
-              const thickness = p.borderThickness ?? 1;
-              const line = p.borderLineStyle || "solid";
-              const css = `${thickness}px ${line} ${accentBorderColor} !important;`;
-              let borderCss = "";
-              switch (p.borderStyle || "full") {
-                case "bottom": borderCss = ` border-bottom: ${css}`; break;
-                case "top": borderCss = ` border-top: ${css}`; break;
-                case "left": borderCss = ` border-left: ${css}`; break;
-                case "right": borderCss = ` border-right: ${css}`; break;
-                case "top-bottom": borderCss = ` border-top: ${css} border-bottom: ${css}`; break;
-                case "left-right": borderCss = ` border-left: ${css} border-right: ${css}`; break;
-                case "top-left-right": borderCss = ` border-top: ${css} border-left: ${css} border-right: ${css}`; break;
-                case "bottom-left-right": borderCss = ` border-bottom: ${css} border-left: ${css} border-right: ${css}`; break;
-                case "top-right": borderCss = ` border-top: ${css} border-right: ${css}`; break;
-                case "top-left": borderCss = ` border-top: ${css} border-left: ${css}`; break;
-                case "bottom-right": borderCss = ` border-bottom: ${css} border-right: ${css}`; break;
-                case "bottom-left": borderCss = ` border-bottom: ${css} border-left: ${css}`; break;
-                default: borderCss = ` border: ${css}`;
-              }
-              preview.style.cssText += borderCss;
-            } else {
-              const borderStyle = this.plugin.generateBorderStyle(t, b, group);
-              if (borderStyle) {
-                preview.style.cssText += borderStyle;
-              }
+          if (p.enableBorder) {
+            const borderStyle = this.plugin.generateBorderStyle(t2, b2, group);
+            if (borderStyle) {
+              preview.style.cssText += borderStyle;
             }
           } else {
-            try { preview.style.setProperty("border", "1px solid var(--background-modifier-border)", "important"); } catch (_) { preview.style.border = "1px solid var(--background-modifier-border)"; }
+            preview.style.border = "1px solid var(--background-modifier-border)";
           }
           if (group.customCss) {
             try {
@@ -23474,95 +23619,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
               }
             } catch (_) {
             }
-            // If group has no explicit color (per-entry/default black/white), customCss may have set black with !important — force accent back (preview-only)
-            if (!t || tIsDefault) {
-              try {
-                preview.style.setProperty("color", "var(--color-accent)", "important");
-                // Keep accent background if this is highlight/both with accent fallback, otherwise transparent
-                if (!useAccentBg) {
-                  preview.style.setProperty("background", "transparent", "important");
-                  preview.style.setProperty("background-color", "transparent", "important");
-                  preview.style.setProperty("background-image", "none", "important");
-                }
-              } catch (_) {}
-            }
-            if ((!b || bIsDefault) && !useAccentBg) {
-              try {
-                preview.style.setProperty("background", "transparent", "important");
-                preview.style.setProperty("background-color", "transparent", "important");
-                preview.style.setProperty("background-image", "none", "important");
-              } catch (_) {}
-            }
-            // Re-apply accent background if needed (highlight/both with default black)
-            if (useAccentBg) {
-              try {
-                const accentBg2 = `color-mix(in srgb, var(--color-accent) ${p.opacity ?? 25}%, transparent)`;
-                preview.style.setProperty("background", accentBg2, "important");
-                preview.style.setProperty("background-color", accentBg2, "important");
-                preview.style.setProperty("background-image", "none", "important");
-              } catch (_) {}
-            }
           }
-        } else {
-          // Per-entry group (no explicit group styling) — show accent color preview so user can see it
-          // This does NOT apply to entries; it's preview-only
-          const preview = row.createDiv();
-          try {
-            preview.addClass("act-group-styling-preview");
-          } catch (e) {
-            try {
-              preview.classList.add("act-group-styling-preview");
-            } catch (_) {
-            }
-          }
-          preview.style.flexShrink = "0";
-          preview.style.display = "flex";
-          preview.style.alignItems = "center";
-          preview.style.justifyContent = "center";
-          preview.style.fontSize = "12px";
-          preview.style.fontWeight = "bold";
-          preview.style.cursor = "default";
-          preview.textContent = "Text";
-          const p = this.plugin.getHighlightParams(group);
-          // Use !important to beat any prior customCss/black !important — per-entry preview is text-only (colortype: color) so keep transparent bg
-          try {
-            preview.style.setProperty("color", "var(--color-accent)", "important");
-            preview.style.setProperty("background", "transparent", "important");
-            preview.style.setProperty("background-color", "transparent", "important");
-            preview.style.setProperty("background-image", "none", "important");
-          } catch (_) {
-            preview.style.color = "var(--color-accent)";
-            preview.style.backgroundColor = "transparent";
-          }
-          preview.style.borderRadius = (p.radius ?? 8) + "px";
-          preview.style.paddingLeft = (p.hPad ?? 4) + "px";
-          preview.style.paddingRight = (p.hPad ?? 4) + "px";
-          preview.style.paddingTop = (p.vPad ?? 0) + "px";
-          preview.style.paddingBottom = (p.vPad ?? 0) + "px";
-          // For per-entry preview, respect colortype: if enableBorder false (e.g. colortype: color/text), show no border
-          try {
-            if (p.enableBorder) {
-              const accentBorder = `color-mix(in srgb, var(--color-accent) ${p.borderOpacity ?? 100}%, transparent)`;
-              const th = p.borderThickness ?? 1;
-              const ls = p.borderLineStyle || "solid";
-              const bs = p.borderStyle || "full";
-              const css = `${th}px ${ls} ${accentBorder} !important;`;
-              let borderCss = "";
-              switch (bs) {
-                case "bottom": borderCss = ` border-bottom: ${css}`; break;
-                case "top": borderCss = ` border-top: ${css}`; break;
-                case "left": borderCss = ` border-left: ${css}`; break;
-                case "right": borderCss = ` border-right: ${css}`; break;
-                case "top-bottom": borderCss = ` border-top: ${css} border-bottom: ${css}`; break;
-                case "left-right": borderCss = ` border-left: ${css} border-right: ${css}`; break;
-                default: borderCss = ` border: ${css}`;
-              }
-              preview.style.cssText += borderCss;
-            } else {
-              // colortype: color / text — no border
-              try { preview.style.setProperty("border", "none", "important"); } catch (_) { preview.style.border = "none"; }
-            }
-          } catch (_) { try { preview.style.setProperty("border", "none", "important"); } catch (_) { preview.style.border = "none"; } }
         }
         const nameInput = row.createEl("input", {
           type: "text",
@@ -23762,9 +23819,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           row.classList.add("drag-ghost-hidden");
           const onTouchMove = (moveEvent) => {
             moveEvent.preventDefault();
-            const t = moveEvent.touches[0];
-            const currentX = t.clientX;
-            const currentY = t.clientY;
+            const t2 = moveEvent.touches[0];
+            const currentX = t2.clientX;
+            const currentY = t2.clientY;
             ghost.style.left = `${currentX - offsetX}px`;
             ghost.style.top = `${currentY - offsetY}px`;
             const children = Array.from(container.querySelectorAll("div[data-group-uid]"));
@@ -24098,9 +24155,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           row.classList.add("drag-ghost-hidden");
           const onTouchMove = (moveEvent) => {
             moveEvent.preventDefault();
-            const t = moveEvent.touches[0];
-            const currentX = t.clientX;
-            const currentY = t.clientY;
+            const t2 = moveEvent.touches[0];
+            const currentX = t2.clientX;
+            const currentY = t2.clientY;
             ghost.style.left = `${currentX - offsetX}px`;
             ghost.style.top = `${currentY - offsetY}px`;
             const children = Array.from(container.querySelectorAll("div[data-group-uid]"));
@@ -24192,10 +24249,10 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
               s.backgroundColor
             ) ? s.backgroundColor : s._savedBackgroundColor || null;
           } else {
-            const t = cp && typeof cp.value === "string" ? cp.value : s.textColor;
-            const b = cpBg && typeof cpBg.value === "string" ? cpBg.value : s.backgroundColor;
-            s.textColor = this.plugin.isValidHexColor(t) ? t : s.textColor === "currentColor" ? "currentColor" : null;
-            s.backgroundColor = this.plugin.isValidHexColor(b) ? b : null;
+            const t2 = cp && typeof cp.value === "string" ? cp.value : s.textColor;
+            const b2 = cpBg && typeof cpBg.value === "string" ? cpBg.value : s.backgroundColor;
+            s.textColor = this.plugin.isValidHexColor(t2) ? t2 : s.textColor === "currentColor" ? "currentColor" : null;
+            s.backgroundColor = this.plugin.isValidHexColor(b2) ? b2 : null;
             s.color = "";
             s.styleType = "both";
             s._savedTextColor = this.plugin.isValidHexColor(s.textColor) ? s.textColor : s._savedTextColor || null;
@@ -24467,7 +24524,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "On-off switch for vault-wide coloring"
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enabled).onChange(async (v) => {
           this.plugin.settings.enabled = v;
           await this.debouncedSaveSettings();
         })
@@ -24479,7 +24536,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Manage and apply text style presets."
         )
       ).addButton(
-        (b) => b.setButtonText(this.plugin.t("btn_edit_presets", "Edit Presets")).setCta().onClick(() => {
+        (b2) => b2.setButtonText(this.plugin.t("btn_edit_presets", "Edit Presets")).setCta().onClick(() => {
           try {
             new TextStylePresetsModal(this.app, this.plugin).open();
           } catch (e) {
@@ -24497,7 +24554,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Add, edit and preview your custom color swatches."
         )
       ).addButton(
-        (b) => b.setButtonText(
+        (b2) => b2.setButtonText(
           this.plugin.t("btn_edit_swatches", "Edit Swatches")
         ).onClick(() => {
           new EditColorSwatchesModal(this.app, this.plugin).open();
@@ -24517,7 +24574,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Master toggle for the Quick Styles right-click menu. When on, the Quick Styles submenu appears; with Quick Colors enabled, color dots are also shown."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.quickStylesEnabled).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.quickStylesEnabled).onChange(async (v) => {
           this.plugin.settings.quickStylesEnabled = v;
           await this.debouncedSaveSettings();
         })
@@ -24628,7 +24685,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Choose which plugin commands are visible in the command palette."
         )
       ).addButton(
-        (b) => b.setButtonText(this.plugin.t("btn_edit_commands", "Edit Commands")).onClick(() => {
+        (b2) => b2.setButtonText(this.plugin.t("btn_edit_commands", "Edit Commands")).onClick(() => {
           try {
             new CommandVisibilityModal(this.app, this.plugin).open();
           } catch (e) {
@@ -24646,7 +24703,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Adds a right-click menu item to color selected text."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableAlwaysColorTextMenu).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableAlwaysColorTextMenu).onChange(async (v) => {
           this.plugin.settings.enableAlwaysColorTextMenu = v;
           await this.plugin.saveSettings();
         })
@@ -24662,7 +24719,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Adds a right-click menu item to add selected text to an existing entry."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableAddToExistingMenu).onChange(async (v) => {
           this.plugin.settings.enableAddToExistingMenu = v;
           await this.plugin.saveSettings();
         })
@@ -24678,7 +24735,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Adds a right-click menu item to blacklist selected text from coloring."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableBlacklistMenu).onChange(async (v) => {
           this.plugin.settings.enableBlacklistMenu = v;
           await this.plugin.saveSettings();
         })
@@ -24686,7 +24743,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       new import_obsidian24.Setting(containerEl2).setName(
         this.plugin.t("show_toggle_ribbon", "Show Toggle icon in ribbon")
       ).addToggle(
-        (t) => t.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
+        (t2) => t2.setValue(!this.plugin.settings.disableToggleModes.ribbon).onChange(async (v) => {
           this.plugin.settings.disableToggleModes.ribbon = !v;
           await this.plugin.saveSettings();
           try {
@@ -24728,7 +24785,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       new import_obsidian24.Setting(containerEl2).setName(
         this.plugin.t("show_toggle_statusbar", "Show Toggle in Status Bar")
       ).addToggle(
-        (t) => t.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
+        (t2) => t2.setValue(!this.plugin.settings.disableToggleModes.statusBar).onChange(async (v) => {
           this.plugin.settings.disableToggleModes.statusBar = !v;
           await this.plugin.saveSettings();
           try {
@@ -24760,7 +24817,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       new import_obsidian24.Setting(containerEl2).setName(
         this.plugin.t("color_in_reading_mode", "Color in reading mode")
       ).addToggle(
-        (t) => t.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async (v) => {
+        (t2) => t2.setValue(!this.plugin.settings.disableReadingModeColoring).onChange(async (v) => {
           this.plugin.settings.disableReadingModeColoring = !v;
           this.plugin.settings.forceFullRenderInReading = v;
           await this.debouncedSaveSettings();
@@ -24815,7 +24872,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Color in live preview mode"
         )
       ).addToggle(
-        (t) => t.setValue(!this.plugin.settings.disableLivePreviewColoring).onChange(async (v) => {
+        (t2) => t2.setValue(!this.plugin.settings.disableLivePreviewColoring).onChange(async (v) => {
           this.plugin.settings.disableLivePreviewColoring = !v;
           await this.debouncedSaveSettings();
           try {
@@ -24873,7 +24930,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       new import_obsidian24.Setting(containerEl2).setName(
         this.plugin.t("lightweight_mode", "Lightweight mode (Experimental)")
       ).setDesc(this.plugin.t("lightweight_mode_desc", "")).addToggle(
-        (t) => t.setValue(this.plugin.settings.extremeLightweightMode).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.extremeLightweightMode).onChange(async (v) => {
           this.plugin.settings.extremeLightweightMode = v;
           await this.debouncedSaveSettings();
           try {
@@ -24898,7 +24955,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Only updates coloring for active line while typing and freezes other lines to improve performance."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableSmartUpdates).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableSmartUpdates).onChange(async (v) => {
           this.plugin.settings.enableSmartUpdates = v;
           await this.debouncedSaveSettings();
           try {
@@ -24922,7 +24979,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Only color words after a space is typed. Prevents partial matches from being colored while typing."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableWordCompletionColoring).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableWordCompletionColoring).onChange(async (v) => {
           this.plugin.settings.enableWordCompletionColoring = v;
           await this.debouncedSaveSettings();
           try {
@@ -24947,7 +25004,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Add per-entry CSS via the 'Edit Custom CSS' button in entry and group editors."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableCustomCss).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableCustomCss).onChange(async (v) => {
           this.plugin.settings.enableCustomCss = v;
           await this.plugin.saveSettings();
           try {
@@ -24970,7 +25027,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Allow patterns to be regular expressions. Invalid regexes are ignored for safety."
         )
       ).setClass("act-regex-support-setting").addToggle(
-        (t) => t.setValue(this.plugin.settings.enableRegexSupport).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableRegexSupport).onChange(async (v) => {
           this.plugin.settings.enableRegexSupport = v;
           await this.plugin.saveSettings();
           this._initializedSettingsUI = false;
@@ -24985,7 +25042,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Allow complex or potentially dangerous expressions. May cause performance issues or freezes."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.disableRegexSafety).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.disableRegexSafety).onChange(async (v) => {
           this.plugin.settings.disableRegexSafety = v;
           await this.plugin.saveSettings();
           try {
@@ -25010,7 +25067,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "When you edit a matcher (e.g. a regex), every rule that shares the exact same settings updates together."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.linkIdenticalMatchers ?? false).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.linkIdenticalMatchers ?? false).onChange(async (v) => {
           this.plugin.settings.linkIdenticalMatchers = v;
           await this.debouncedSaveSettings();
         })
@@ -25026,7 +25083,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "If enabled, updating a swatch color will update all text colored with that swatch."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async (v) => {
           this.plugin.settings.linkSwatchUpdatesToEntries = v;
           await this.plugin.saveSettings();
         })
@@ -25043,7 +25100,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "When enabled, highlights will have rounded corners on all sides, even when text wraps to a new line."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableBoxDecorationBreak ?? true).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableBoxDecorationBreak ?? true).onChange(async (v) => {
           this.plugin.settings.enableBoxDecorationBreak = v;
           await this.debouncedSaveSettings();
         })
@@ -25054,7 +25111,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Fine-tune how your colored text looks in Dark and Light modes."
         )
       ).addButton(
-        (b) => b.setButtonText(this.plugin.t("theme_fixer_adjust", "Adjust")).onClick(() => {
+        (b2) => b2.setButtonText(this.plugin.t("theme_fixer_adjust", "Adjust")).onClick(() => {
           try {
             new ThemeFixerAdjustModal(this.app, this.plugin).open();
           } catch (e) {
@@ -25157,7 +25214,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Inserts HTML inline for the selected text. This persists even if the plugin is turned off."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableQuickColorOnce).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableQuickColorOnce).onChange(async (v) => {
           this.plugin.settings.enableQuickColorOnce = v;
           await this.plugin.saveSettings();
         })
@@ -25168,7 +25225,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Inserts HTML inline with background styling. This persists even if the plugin is turned off."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableQuickHighlightOnce).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableQuickHighlightOnce).onChange(async (v) => {
           this.plugin.settings.enableQuickHighlightOnce = v;
           await this.plugin.saveSettings();
           this._initializedSettingsUI = false;
@@ -25186,7 +25243,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Opens the unified color picker to apply both text color and background highlight inline. Uses Unified Menu."
         )
       ).addToggle(
-        (t) => t.setValue(this.plugin.settings.enableQuickColorHighlightOnce).onChange(async (v) => {
+        (t2) => t2.setValue(this.plugin.settings.enableQuickColorHighlightOnce).onChange(async (v) => {
           this.plugin.settings.enableQuickColorHighlightOnce = v;
           await this.plugin.saveSettings();
         })
@@ -25203,7 +25260,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             "Uses your global inline style. The added HTML/CSS may be long."
           )
         ).addToggle(
-          (t) => t.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async (v) => {
+          (t2) => t2.setValue(this.plugin.settings.quickHighlightUseGlobalStyle).onChange(async (v) => {
             this.plugin.settings.quickHighlightUseGlobalStyle = v;
             await this.plugin.saveSettings();
             this._initializedSettingsUI = false;
@@ -25218,7 +25275,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             "Uses your custom inline style. The added HTML/CSS may be long."
           )
         ).addToggle(
-          (t) => t.setValue(this.plugin.settings.quickHighlightStyleEnable).onChange(async (v) => {
+          (t2) => t2.setValue(this.plugin.settings.quickHighlightStyleEnable).onChange(async (v) => {
             this.plugin.settings.quickHighlightStyleEnable = v;
             await this.plugin.saveSettings();
             this._initializedSettingsUI = false;
@@ -25421,7 +25478,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
               "Add a border to your inline highlight. The added HTML/CSS WILL be long."
             )
           ).addToggle(
-            (t) => t.setValue(
+            (t2) => t2.setValue(
               this.plugin.settings.quickHighlightEnableBorder ?? false
             ).onChange(async (v) => {
               this.plugin.settings.quickHighlightEnableBorder = v;
@@ -25960,7 +26017,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         () => presetsBtn.removeEventListener("click", presetsHandler)
       );
       const deleteAllWordsSetting = new import_obsidian24.Setting(containerEl2).addExtraButton(
-        (b) => b.setIcon("trash").setTooltip(
+        (b2) => b2.setIcon("trash").setTooltip(
           this.plugin.t(
             "tooltip_delete_all_words",
             "Delete all defined words/patterns"
@@ -26004,7 +26061,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Hide inactive word groups when displaying group lists in dropdowns."
         )
       ).addToggle(
-        (t) => t.setValue(!!this.plugin.settings.hideInactiveGroupsInDropdowns).onChange(async (v) => {
+        (t2) => t2.setValue(!!this.plugin.settings.hideInactiveGroupsInDropdowns).onChange(async (v) => {
           this.plugin.settings.hideInactiveGroupsInDropdowns = !!v;
           await this.plugin.saveSettings();
         })
@@ -26020,7 +26077,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "When enabled, word groups appear in the command palette with Activate/Deactivate commands."
         )
       ).addToggle(
-        (t) => t.setValue(!!this.plugin.settings.showWordGroupsInCommands).onChange(async (v) => {
+        (t2) => t2.setValue(!!this.plugin.settings.showWordGroupsInCommands).onChange(async (v) => {
           this.plugin.settings.showWordGroupsInCommands = !!v;
           await this.plugin.saveSettings();
           this.plugin.reregisterCommandsWithLanguage();
@@ -26177,7 +26234,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         }
       };
       new import_obsidian24.Setting(groupButtonsContainer).addExtraButton(
-        (b) => b.setIcon("trash").setTooltip(
+        (b2) => b2.setIcon("trash").setTooltip(
           this.plugin.t(
             "tooltip_delete_all_groups",
             "Delete all Word Groups"
@@ -26499,7 +26556,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         )
       );
       const deleteAllBlacklistSetting = new import_obsidian24.Setting(containerEl2).addExtraButton(
-        (b) => b.setIcon("trash").setTooltip(
+        (b2) => b2.setIcon("trash").setTooltip(
           this.plugin.t(
             "tooltip_delete_all_blacklist",
             "Delete all blacklisted words/patterns"
@@ -26547,7 +26604,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "When enabled, blacklist groups appear in the command palette with Activate/Deactivate commands."
         )
       ).addToggle(
-        (t) => t.setValue(!!this.plugin.settings.showBlacklistGroupsInCommands).onChange(async (v) => {
+        (t2) => t2.setValue(!!this.plugin.settings.showBlacklistGroupsInCommands).onChange(async (v) => {
           this.plugin.settings.showBlacklistGroupsInCommands = !!v;
           await this.plugin.saveSettings();
           this.plugin.reregisterCommandsWithLanguage();
@@ -26668,7 +26725,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         }
       };
       new import_obsidian24.Setting(blGroupButtonsContainer).addExtraButton(
-        (b) => b.setIcon("trash").setTooltip(
+        (b2) => b2.setIcon("trash").setTooltip(
           this.plugin.t(
             "tooltip_delete_all_blacklist_groups",
             "Delete all Blacklist Groups"
@@ -26890,7 +26947,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Adds an exclude rule for the active file under File & Folder Coloring Rules."
         )
       ).addButton(
-        (b) => b.setButtonText(
+        (b2) => b2.setButtonText(
           this.plugin.t(
             "btn_disable_for_this_file",
             "Disable for this file"
@@ -27047,7 +27104,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Export settings, words, and rules to a JSON file."
         )
       ).addButton(
-        (b) => b.setButtonText(this.plugin.t("btn_export", "Export")).onClick(async () => {
+        (b2) => b2.setButtonText(this.plugin.t("btn_export", "Export")).onClick(async () => {
           try {
             const fname = await this.plugin.exportSettingsToPickedLocation();
             new import_obsidian24.Notice(
@@ -27068,7 +27125,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           "Import settings from a JSON file"
         )
       ).addButton(
-        (b) => b.setButtonText(this.plugin.t("btn_import", "Import")).onClick(() => {
+        (b2) => b2.setButtonText(this.plugin.t("btn_import", "Import")).onClick(() => {
           const input = document.createElement("input");
           input.type = "file";
           input.accept = "application/json";
@@ -27385,22 +27442,22 @@ function buildEditorExtension(plugin) {
                       lineCollector
                     );
                     const newRanges = [];
-                    markSet.between(range.from, range.to, (f, t, v) => {
-                      newRanges.push({ from: f, to: t, value: v });
+                    markSet.between(range.from, range.to, (f, t2, v) => {
+                      newRanges.push({ from: f, to: t2, value: v });
                     });
                     for (const { pos, deco } of lineDecos) {
                       if (pos >= range.from && pos <= range.to) {
                         newRanges.push({ from: pos, to: pos, value: deco });
                       }
                     }
-                    newRanges.sort((a, b) => {
-                      const byFrom = a.from - b.from;
+                    newRanges.sort((a, b2) => {
+                      const byFrom = a.from - b2.from;
                       if (byFrom !== 0) return byFrom;
                       const aSide = a.value && typeof a.value.startSide === "number" ? a.value.startSide : 0;
-                      const bSide = b.value && typeof b.value.startSide === "number" ? b.value.startSide : 0;
+                      const bSide = b2.value && typeof b2.value.startSide === "number" ? b2.value.startSide : 0;
                       const bySide = aSide - bSide;
                       if (bySide !== 0) return bySide;
-                      return a.to - b.to;
+                      return a.to - b2.to;
                     });
                     this.decorations = this.decorations.update({
                       add: newRanges,
@@ -27512,25 +27569,25 @@ function buildEditorExtension(plugin) {
         const lineSet = lineBuilder.finish();
         if (lineSet.size === 0) return markSet;
         const markRanges = [];
-        markSet.between(from, extendedTo, (f, t, v) => {
-          markRanges.push({ from: f, to: t, value: v });
+        markSet.between(from, extendedTo, (f, t2, v) => {
+          markRanges.push({ from: f, to: t2, value: v });
         });
         const lineRanges = [];
-        lineSet.between(0, extendedTo, (f, t, v) => {
-          lineRanges.push({ from: f, to: t, value: v, line: true });
+        lineSet.between(0, extendedTo, (f, t2, v) => {
+          lineRanges.push({ from: f, to: t2, value: v, line: true });
         });
         const all = [
           ...lineRanges,
           ...markRanges.map((r) => ({ ...r, line: false }))
-        ].sort((a, b) => {
-          const byFrom = a.from - b.from;
+        ].sort((a, b2) => {
+          const byFrom = a.from - b2.from;
           if (byFrom !== 0) return byFrom;
           const aSide = a.value && typeof a.value.startSide === "number" ? a.value.startSide : 0;
-          const bSide = b.value && typeof b.value.startSide === "number" ? b.value.startSide : 0;
+          const bSide = b2.value && typeof b2.value.startSide === "number" ? b2.value.startSide : 0;
           const bySide = aSide - bSide;
           if (bySide !== 0) return bySide;
-          if (a.line !== b.line) return a.line ? -1 : 1;
-          return a.to - b.to;
+          if (a.line !== b2.line) return a.line ? -1 : 1;
+          return a.to - b2.to;
         });
         const merged = new RangeSetBuilder();
         for (const item of all) {
@@ -27755,11 +27812,11 @@ var PatternMatcher = class {
   match(text, entries, folderEntry) {
     const out = [];
     const isSentence = (p) => this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(p) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(p || "");
-    const wholeWord = (t, s, e) => {
-      const lc = s > 0 ? t[s - 1] : "";
-      const rc = e < t.length ? t[e] : "";
+    const wholeWord = (t2, s, e) => {
+      const lc = s > 0 ? t2[s - 1] : "";
+      const rc = e < t2.length ? t2[e] : "";
       const isW = (ch) => this.isWordCharacter(ch);
-      return (s === 0 || !isW(lc)) && (e === t.length || !isW(rc));
+      return (s === 0 || !isW(lc)) && (e === t2.length || !isW(rc));
     };
     for (const entry of entries) {
       if (!entry || entry.invalid) continue;
@@ -27835,15 +27892,15 @@ var PatternMatcher = class {
       }
     }
     if (out.length > 1) {
-      out.sort((a, b) => {
+      out.sort((a, b2) => {
         const la = a.end - a.start;
-        const lb = b.end - b.start;
+        const lb = b2.end - b2.start;
         if (la !== lb) return lb - la;
         const ar = a.entryRef && !!a.entryRef.isRegex;
-        const br = b.entryRef && !!b.entryRef.isRegex;
+        const br = b2.entryRef && !!b2.entryRef.isRegex;
         if (ar !== br) return ar ? 1 : -1;
-        if (a.start !== b.start) return a.start - b.start;
-        return (b.priority || 0) - (a.priority || 0);
+        if (a.start !== b2.start) return a.start - b2.start;
+        return (b2.priority || 0) - (a.priority || 0);
       });
       const no = [];
       for (const m of out) {
@@ -27898,17 +27955,17 @@ var SettingsIndex = class {
   }
   query(text) {
     if (!text) return [];
-    const t = String(text);
+    const t2 = String(text);
     const set = /* @__PURE__ */ new Set();
-    const d = t[0] || "";
+    const d = t2[0] || "";
     const cands = this.firstChar.get(d) || [];
     for (const e of cands) set.add(e);
-    const len = t.length;
+    const len = t2.length;
     const rk = len < 5 ? "lt5" : len < 10 ? "lt10" : len < 20 ? "lt20" : "ge20";
     const lr = this.lengthRanges.get(rk) || [];
     for (const e of lr) set.add(e);
-    if (t.length >= 1) {
-      const rp = this.regexPrefixes.get(t[0]) || [];
+    if (t2.length >= 1) {
+      const rp = this.regexPrefixes.get(t2[0]) || [];
       for (const e of rp) set.add(e);
     }
     return Array.from(set);
@@ -28124,7 +28181,7 @@ function compileWordEntriesLogic(plugin) {
       }
     }
     plugin._compiledWordEntries.sort(
-      (a, b) => b.specificity - a.specificity || b.pattern.length - a.pattern.length
+      (a, b2) => b2.specificity - a.specificity || b2.pattern.length - a.pattern.length
     );
     try {
       plugin._cacheDirty = true;
@@ -28345,7 +28402,7 @@ function compileTextBgColoringEntriesLogic(plugin) {
       }
     }
     plugin._compiledTextBgEntries.sort(
-      (a, b) => b.specificity - a.specificity
+      (a, b2) => b2.specificity - a.specificity
     );
   } catch (err) {
     debugError(
@@ -28626,7 +28683,7 @@ function evaluatePathRulesLogic(filePath, settings, pathRulesCache, normalizePat
       continue;
     }
     if (dk.kind === "tag") {
-      const tags = getFileTags(fp).map((t) => t.replace(/^#/, ""));
+      const tags = getFileTags(fp).map((t2) => t2.replace(/^#/, ""));
       const hasTag = tags.includes(String(dk.tag || "").replace(/^#/, ""));
       if (hasTag) {
         if (mode === "include") fileInclude = true;
@@ -28892,7 +28949,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
     this._patternMatcher = new PatternMatcher(this.settings, {
       escapeRegex: (s) => this.escapeRegex(s),
       isSentenceLikePattern: (p) => this.isSentenceLikePattern(p),
-      safeMatchLoop: (re, t) => this.safeMatchLoop(re, t)
+      safeMatchLoop: (re, t2) => this.safeMatchLoop(re, t2)
     });
     this._settingsIndex = new SettingsIndex(this.settings);
     this._eventManager = new SmartEventManager();
@@ -29990,7 +30047,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                     const markTarget = sel.markTarget || "text";
                     const findEntry = (arr) => {
                       const caseSensitive2 = !!this.settings.caseSensitive;
-                      const eq = (a2, b) => caseSensitive2 ? String(a2) === String(b) : String(a2).toLowerCase() === String(b).toLowerCase();
+                      const eq = (a2, b2) => caseSensitive2 ? String(a2) === String(b2) : String(a2).toLowerCase() === String(b2).toLowerCase();
                       return arr.findIndex((e) => {
                         if (!e) return false;
                         if (e.isRegex) {
@@ -30012,17 +30069,17 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                         }
                         const entryMatchType = (e.matchType || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
                         const a2 = caseSensitive2 ? String(selectedText) : String(selectedText).toLowerCase();
-                        const b = caseSensitive2 ? String(e.pattern || "") : String(e.pattern || "").toLowerCase();
+                        const b2 = caseSensitive2 ? String(e.pattern || "") : String(e.pattern || "").toLowerCase();
                         if (entryMatchType === "exact") {
                           return eq(e.pattern || "", selectedText) || Array.isArray(e.groupedPatterns) && e.groupedPatterns.some(
                             (p) => eq(p, selectedText)
                           );
                         } else if (entryMatchType === "startswith") {
-                          return b && a2.startsWith(b);
+                          return b2 && a2.startsWith(b2);
                         } else if (entryMatchType === "endswith") {
-                          return b && a2.endsWith(b);
+                          return b2 && a2.endsWith(b2);
                         } else if (entryMatchType === "contains") {
-                          return b && a2.includes(b);
+                          return b2 && a2.includes(b2);
                         }
                         return eq(e.pattern || "", selectedText);
                       });
@@ -30547,12 +30604,12 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             return "exact";
           };
           const matchPattern = (p, mt) => {
-            const b = norm(p || "");
+            const b2 = norm(p || "");
             const m = matchTypeVal(mt);
-            if (m === "startswith") return a.startsWith(b);
-            if (m === "endswith") return a.endsWith(b);
-            if (m === "contains") return a.includes(b);
-            return a === b;
+            if (m === "startswith") return a.startsWith(b2);
+            if (m === "endswith") return a.endsWith(b2);
+            if (m === "contains") return a.includes(b2);
+            return a === b2;
           };
           const findManualMatch = () => {
             for (let i = 0; i < wordEntries.length; i++) {
@@ -32473,8 +32530,8 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         NodeFilter.SHOW_TEXT,
         {
           acceptNode(node) {
-            const t = node.textContent || "";
-            if (t.includes("[x]") || t.includes("[X]") || t.includes("[ ]"))
+            const t2 = node.textContent || "";
+            if (t2.includes("[x]") || t2.includes("[X]") || t2.includes("[ ]"))
               return NodeFilter.FILTER_ACCEPT;
             return NodeFilter.FILTER_REJECT;
           }
@@ -32608,10 +32665,10 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         ranges.push({ start: colorStart, end: colorEnd });
       }
       if (ranges.length === 0) return;
-      ranges.sort((a, b) => {
-        const la = a.end - a.start, lb = b.end - b.start;
+      ranges.sort((a, b2) => {
+        const la = a.end - a.start, lb = b2.end - b2.start;
         if (la !== lb) return lb - la;
-        return a.start - b.start;
+        return a.start - b2.start;
       });
       const selected = [];
       for (const r of ranges) {
@@ -32867,10 +32924,10 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         ranges.push({ start: colorStart, end: colorEnd });
       }
       if (ranges.length === 0) return;
-      ranges.sort((a, b) => {
-        const la = a.end - a.start, lb = b.end - b.start;
+      ranges.sort((a, b2) => {
+        const la = a.end - a.start, lb = b2.end - b2.start;
         if (la !== lb) return lb - la;
-        return a.start - b.start;
+        return a.start - b2.start;
       });
       const selected = [];
       for (const r of ranges) {
@@ -33325,7 +33382,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
     }
     try {
       if (Array.isArray(this._compiledWordEntries) && this._compiledWordEntries.length > 0) {
-        const top = this._compiledWordEntries.slice().sort((a, b) => (b.execs || 0) - (a.execs || 0)).slice(0, 5);
+        const top = this._compiledWordEntries.slice().sort((a, b2) => (b2.execs || 0) - (a.execs || 0)).slice(0, 5);
         if (IS_DEVELOPMENT) {
           for (const e of top) {
             debugLog(
@@ -33706,8 +33763,8 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           );
           embeds.forEach((el) => {
             try {
-              const t = this._canvasDebounceTimers.get(el);
-              if (t) clearTimeout(t);
+              const t2 = this._canvasDebounceTimers.get(el);
+              if (t2) clearTimeout(t2);
             } catch (_) {
             }
           });
@@ -33899,17 +33956,17 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       const pm = this._patternMatcher ? this._patternMatcher.match(combined, textOnlyCandidates, folderEntry) : [];
       for (const m of pm) matches.push(m);
       if (matches.length === 0) return;
-      matches.sort((a, b) => {
+      matches.sort((a, b2) => {
         const la = a.end - a.start;
-        const lb = b.end - b.start;
+        const lb = b2.end - b2.start;
         if (la !== lb) return lb - la;
-        if (a.start !== b.start) return a.start - b.start;
+        if (a.start !== b2.start) return a.start - b2.start;
         const aT = a.isTextBg ? !!(a.textColor && a.textColor !== "currentColor") : !!a.color;
-        const bT = b.isTextBg ? !!(b.textColor && b.textColor !== "currentColor") : !!b.color;
+        const bT = b2.isTextBg ? !!(b2.textColor && b2.textColor !== "currentColor") : !!b2.color;
         if (aT && !bT) return -1;
         if (!aT && bT) return 1;
-        if (a.isTextBg && !b.isTextBg) return -1;
-        if (!a.isTextBg && b.isTextBg) return 1;
+        if (a.isTextBg && !b2.isTextBg) return -1;
+        if (!a.isTextBg && b2.isTextBg) return 1;
         return 0;
       });
       const nonOverlap = [];
@@ -33923,7 +33980,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         }
         if (ok) nonOverlap.push(m);
       }
-      matches = nonOverlap.sort((a, b) => a.start - b.start);
+      matches = nonOverlap.sort((a, b2) => a.start - b2.start);
       const segBounds = [];
       let acc = 0;
       for (const seg of textNodes) {
@@ -33935,13 +33992,13 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       const appendRange = (frag2, rStart, rEnd) => {
         if (rEnd <= rStart) return;
         let pos2 = rStart;
-        for (const b of segBounds) {
-          if (b.end <= pos2) continue;
-          if (b.start >= rEnd) break;
-          const s = Math.max(b.start, pos2);
-          const e = Math.min(b.end, rEnd);
-          const slice = b.seg.text.slice(s - b.start, e - b.start);
-          if (b.seg.isMatch) {
+        for (const b2 of segBounds) {
+          if (b2.end <= pos2) continue;
+          if (b2.start >= rEnd) break;
+          const s = Math.max(b2.start, pos2);
+          const e = Math.min(b2.end, rEnd);
+          const slice = b2.seg.text.slice(s - b2.start, e - b2.start);
+          if (b2.seg.isMatch) {
             const span = document.createElement("span");
             span.className = "search-result-file-matched-text";
             span.textContent = slice;
@@ -33961,10 +34018,10 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         const isBoldItalicPreset = /bold|italic/i.test(presetLabel);
         let skipWrapper = false;
         if (isBoldItalicPreset) {
-          for (const b of segBounds) {
-            if (b.end <= m.start) continue;
-            if (b.start >= m.end) break;
-            const parent = b.seg.node.parentElement;
+          for (const b2 of segBounds) {
+            if (b2.end <= m.start) continue;
+            if (b2.start >= m.end) break;
+            const parent = b2.seg.node.parentElement;
             if (parent && (parent.closest(
               ".cm-strong, .cm-em, .markdown-rendered strong, .markdown-rendered em"
             ) || parent.matches && parent.matches(
@@ -34858,19 +34915,19 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       const we = this.settings.wordEntries || [];
       const weAll = (this.settings.wordEntryGroups || []).reduce((acc, g) => acc.concat(g.entries || []), []).concat(we);
       const hasBoldItalic = we.some((e) => e.targetElement === "strong-em") || weAll.some((e) => e.targetElement === "strong-em");
-      const targets = [...MARKDOWN_TARGETS].sort((a, b) => {
+      const targets = [...MARKDOWN_TARGETS].sort((a, b2) => {
         const rank = (k) => k === "all-tags" ? 0 : k === "tag" ? 2 : 1;
-        return rank(a.key) - rank(b.key);
+        return rank(a.key) - rank(b2.key);
       });
       let css = "";
-      targets.forEach((t) => {
-        if (this.isMarkdownElementBlacklisted(t.key)) return;
+      targets.forEach((t2) => {
+        if (this.isMarkdownElementBlacklisted(t2.key)) return;
         const reversedWe = [...we].reverse();
         const reversedWeAll = [...weAll].reverse();
-        const entry = reversedWe.find((e) => e && e.targetElement === t.key) || reversedWeAll.find((e) => e && e.targetElement === t.key);
+        const entry = reversedWe.find((e) => e && e.targetElement === t2.key) || reversedWeAll.find((e) => e && e.targetElement === t2.key);
         if (!entry) return;
         if (this.isMarkdownEntryBlacklisted(entry)) return;
-        const selector = buildMarkdownSelector(t, entry, hasBoldItalic);
+        const selector = buildMarkdownSelector(t2, entry, hasBoldItalic);
         if (!selector) return;
         {
           const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
@@ -34882,7 +34939,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             entry
           );
           let isHighlight = styleType2 === "highlight" || styleType2 === "both" || !!bgColor;
-          if ((t.key === "tag" || t.key === "all-tags") && borderCSS)
+          if ((t2.key === "tag" || t2.key === "all-tags") && borderCSS)
             isHighlight = true;
           css += `${selector} {`;
           if (textColor || bgColor) {
@@ -34912,8 +34969,8 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           }
           css += ` } 
 `;
-          if ((t.key === "tag" || t.key === "all-tags") && isHighlight) {
-            const cmSel = buildMarkdownCmSelector(t, entry, hasBoldItalic);
+          if ((t2.key === "tag" || t2.key === "all-tags") && isHighlight) {
+            const cmSel = buildMarkdownCmSelector(t2, entry, hasBoldItalic);
             if (cmSel) {
               const beginSel = cmSel.split(",").map((s) => s.trim() + ".cm-hashtag-begin").join(", ");
               const endSel = cmSel.split(",").map((s) => s.trim() + ".cm-hashtag-end").join(", ");
@@ -35608,7 +35665,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         if (legacyTags.length)
           group.inclusionRules.push(
             ...legacyTags.map(
-              (t) => toRule(String(t).startsWith("#") ? t : "#" + t, "tag")
+              (t2) => toRule(String(t2).startsWith("#") ? t2 : "#" + t2, "tag")
             )
           );
         if (legacyDisFolders.length)
@@ -35618,7 +35675,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         if (legacyDisTags.length)
           group.exclusionRules.push(
             ...legacyDisTags.map(
-              (t) => toRule(String(t).startsWith("#") ? t : "#" + t, "tag")
+              (t2) => toRule(String(t2).startsWith("#") ? t2 : "#" + t2, "tag")
             )
           );
         group.enableFolders = [];
@@ -35662,7 +35719,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         if (legacyTags.length)
           group.inclusionRules.push(
             ...legacyTags.map(
-              (t) => toRule(String(t).startsWith("#") ? t : "#" + t, "tag")
+              (t2) => toRule(String(t2).startsWith("#") ? t2 : "#" + t2, "tag")
             )
           );
         if (legacyDisFolders.length)
@@ -35672,7 +35729,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         if (legacyDisTags.length)
           group.exclusionRules.push(
             ...legacyDisTags.map(
-              (t) => toRule(String(t).startsWith("#") ? t : "#" + t, "tag")
+              (t2) => toRule(String(t2).startsWith("#") ? t2 : "#" + t2, "tag")
             )
           );
         group.enableFolders = [];
@@ -36264,16 +36321,16 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
     if (typeof pattern !== "string") pattern = String(pattern || "");
     if (!pattern) return false;
     const a = this.settings.caseSensitive ? word : word.toLowerCase();
-    const b = this.settings.caseSensitive ? pattern : pattern.toLowerCase();
-    return a.startsWith(b);
+    const b2 = this.settings.caseSensitive ? pattern : pattern.toLowerCase();
+    return a.startsWith(b2);
   }
   _isPatternAtWordEnd(text, start, end, pattern) {
     const word = this._extractWordAtPosition(text, start, end);
     if (typeof pattern !== "string") pattern = String(pattern || "");
     if (!pattern) return false;
     const a = this.settings.caseSensitive ? word : word.toLowerCase();
-    const b = this.settings.caseSensitive ? pattern : pattern.toLowerCase();
-    return a.endsWith(b);
+    const b2 = this.settings.caseSensitive ? pattern : pattern.toLowerCase();
+    return a.endsWith(b2);
   }
   // Helper: Extract full word at given position
   extractFullWordAtPosition(text, start, end) {
@@ -36584,16 +36641,16 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           return e;
         }).filter(Boolean);
       }
-      filtered.sort((a, b) => {
+      filtered.sort((a, b2) => {
         const aIsRegex = !!a.isRegex;
-        const bIsRegex = !!b.isRegex;
+        const bIsRegex = !!b2.isRegex;
         if (!aIsRegex && bIsRegex) return -1;
         if (aIsRegex && !bIsRegex) return 1;
         const sa = typeof a.specificity === "number" ? a.specificity : String(a.pattern || "").replace(/\*/g, "").length;
-        const sb = typeof b.specificity === "number" ? b.specificity : String(b.pattern || "").replace(/\*/g, "").length;
+        const sb = typeof b2.specificity === "number" ? b2.specificity : String(b2.pattern || "").replace(/\*/g, "").length;
         const specDiff = sb - sa;
         if (specDiff !== 0) return specDiff;
-        return String(b.pattern || "").length - String(a.pattern || "").length;
+        return String(b2.pattern || "").length - String(a.pattern || "").length;
       });
       this._cachedSortedEntries = filtered;
       this._cacheDirty = false;
@@ -36605,6 +36662,8 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
   isValidHexColor(hex) {
     if (hex === "inherit" || hex === "currentColor") return true;
     if (typeof hex !== "string") return false;
+    const trimmed = hex.trim();
+    if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(trimmed)) return true;
     if (hex.includes(";") || hex.toLowerCase().includes("!important") || /\s/.test(hex))
       return false;
     const hexRegex = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/;
@@ -36614,7 +36673,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
   isDarkColor(color) {
     if (!color) return false;
     try {
-      let r, g, b;
+      let r, g, b2;
       if (color.startsWith("#")) {
         let hex = color.substring(1);
         if (hex.length === 3)
@@ -36622,17 +36681,17 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         if (hex.length !== 6) return false;
         r = parseInt(hex.substring(0, 2), 16);
         g = parseInt(hex.substring(2, 4), 16);
-        b = parseInt(hex.substring(4, 6), 16);
+        b2 = parseInt(hex.substring(4, 6), 16);
       } else if (color.startsWith("rgb")) {
         const parts = color.match(/\d+/g);
         if (!parts || parts.length < 3) return false;
         r = parseInt(parts[0]);
         g = parseInt(parts[1]);
-        b = parseInt(parts[2]);
+        b2 = parseInt(parts[2]);
       } else {
         return false;
       }
-      const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+      const luma = 0.299 * r + 0.587 * g + 0.114 * b2;
       return luma < 60;
     } catch (e) {
       return false;
@@ -36642,28 +36701,52 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
     if (!this.isValidHexColor(hex)) {
       return `rgba(0,0,0,1)`;
     }
+    const trimmed = hex.trim();
+    if (trimmed.startsWith("var(")) {
+      try {
+        const tmp = document.createElement("div");
+        tmp.style.color = trimmed;
+        tmp.style.display = "none";
+        document.body.appendChild(tmp);
+        const computed = getComputedStyle(tmp).color;
+        document.body.removeChild(tmp);
+        const m = computed.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/);
+        if (m) {
+          const r2 = parseInt(m[1], 10), g2 = parseInt(m[2], 10), b3 = parseInt(m[3], 10);
+          const a2 = (opacityPercent ?? 100) / 100;
+          return `rgba(${r2},${g2},${b3},${a2})`;
+        }
+      } catch (_) {
+      }
+      const a = (opacityPercent ?? 100) / 100;
+      return `rgba(0,0,0,${a})`;
+    }
     let c = hex.replace("#", "");
     if (c.length === 3)
       c = c.split("").map((x) => x + x).join("");
     const num = parseInt(c, 16);
     const r = num >> 16 & 255;
     const g = num >> 8 & 255;
-    const b = num & 255;
+    const b2 = num & 255;
     let o = Math.max(0, Math.min(100, Number(opacityPercent)));
     o = o / 100;
-    return `rgba(${r},${g},${b},${o})`;
+    return `rgba(${r},${g},${b2},${o})`;
   }
   hexToHexWithAlpha(hex, opacityPercent) {
     try {
       const h = String(hex || "").trim();
+      if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(h)) {
+        const pct2 = Math.max(0, Math.min(100, Number(opacityPercent)));
+        return `color-mix(in srgb, ${h} ${pct2}%, transparent)`;
+      }
       if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(h)) return h;
       const pct = Math.max(0, Math.min(100, Number(opacityPercent)));
       const alpha = Math.round(pct / 100 * 255).toString(16).padStart(2, "0");
       if (h.length === 4) {
         const r = h[1];
         const g = h[2];
-        const b = h[3];
-        const full = `#${r}${r}${g}${g}${b}${b}`;
+        const b2 = h[3];
+        const full = `#${r}${r}${g}${g}${b2}${b2}`;
         return `${full}${alpha}`;
       }
       return `${h}${alpha}`;
@@ -37163,10 +37246,10 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
     const targetGroupUid = styleEntry && styleEntry.groupUid ? styleEntry.groupUid : null;
     const groupsList = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : [];
     const targetGroup = targetGroupUid ? groupsList.find((g) => g && g.uid === targetGroupUid) : null;
-    const matchesEntry = (a, b) => {
-      if (!a || !b) return false;
-      if (a.uid && b.uid) return String(a.uid) === String(b.uid);
-      return String(a.pattern || "") === String(b.pattern || "") && !!a.isRegex === !!b.isRegex;
+    const matchesEntry = (a, b2) => {
+      if (!a || !b2) return false;
+      if (a.uid && b2.uid) return String(a.uid) === String(b2.uid);
+      return String(a.pattern || "") === String(b2.pattern || "") && !!a.isRegex === !!b2.isRegex;
     };
     const applyStyleToEntry = (entry) => {
       entry.styleType = styleType2;
@@ -37531,8 +37614,8 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
   }
   _matchFile(rulePath, filePath) {
     const a = this.normalizePath(rulePath);
-    const b = this.normalizePath(filePath);
-    return a === b;
+    const b2 = this.normalizePath(filePath);
+    return a === b2;
   }
   evaluatePathRules(filePath) {
     return evaluatePathRulesLogic(
@@ -37623,11 +37706,11 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         let tagDecision = 0;
         if (hasEnableTags || hasDisableTags) {
           const fileTags = this.getFileTags(filePath);
-          const normTag = (t) => String(t || "").replace(/^#/, "").trim();
+          const normTag = (t2) => String(t2 || "").replace(/^#/, "").trim();
           const enableTags = hasEnableTags ? entry.groupEnableTags.map(normTag).filter(Boolean) : [];
           const disableTags = hasDisableTags ? entry.groupDisableTags.map(normTag).filter(Boolean) : [];
-          const enableMatchTag = enableTags.length > 0 && fileTags.some((t) => enableTags.includes(normTag(t)));
-          const disableMatchTag = disableTags.length > 0 && fileTags.some((t) => disableTags.includes(normTag(t)));
+          const enableMatchTag = enableTags.length > 0 && fileTags.some((t2) => enableTags.includes(normTag(t2)));
+          const disableMatchTag = disableTags.length > 0 && fileTags.some((t2) => disableTags.includes(normTag(t2)));
           if (enableTags.length > 0 && !enableMatchTag) {
             tagDecision = -1;
           }
@@ -37678,7 +37761,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         const dk = this.detectRuleKind(pathStr);
         if (dk.kind === "tag") {
           const tags = this.getFileTags(filePath).map(
-            (t) => t.replace(/^#/, "")
+            (t2) => t2.replace(/^#/, "")
           );
           if (tags.includes(String(dk.tag || "").replace(/^#/, "")))
             return "file";
@@ -37758,7 +37841,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         const dk = this.detectRuleKind(pathStr);
         if (dk.kind === "tag") {
           const tags = this.getFileTags(filePath).map(
-            (t) => t.replace(/^#/, "")
+            (t2) => t2.replace(/^#/, "")
           );
           if (tags.includes(String(dk.tag || "").replace(/^#/, "")))
             return "file";
@@ -37800,7 +37883,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       const globalExclude = advRules.filter((r) => r && r.mode === "exclude" && textMatches(r, textPattern)).map((r) => ({ path: r.path, isRegex: r.isRegex, flags: r.flags }));
       const includeRules = [...perEntryInclude, ...globalInclude];
       const excludeRules = [...perEntryExclude, ...globalExclude];
-      const includeMatches = includeRules.map((r) => matchType(r)).filter((t) => t);
+      const includeMatches = includeRules.map((r) => matchType(r)).filter((t2) => t2);
       const hasIncludeRules = includeRules.length > 0;
       const includeMatched = includeMatches.length > 0;
       const hasFileInclude = includeMatches.includes("file");
@@ -37811,7 +37894,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         );
         return false;
       }
-      const excludeMatches = excludeRules.map((r) => matchType(r)).filter((t) => t);
+      const excludeMatches = excludeRules.map((r) => matchType(r)).filter((t2) => t2);
       const hasFileExclude = excludeMatches.includes("file");
       const hasFolderOrVaultExclude = excludeMatches.includes("folder") || excludeMatches.includes("vault");
       if (hasFileExclude) {
@@ -37858,15 +37941,15 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       const cache = this.app.metadataCache.getFileCache(af);
       if (!cache) return [];
       const tags = /* @__PURE__ */ new Set();
-      const normalize = (t) => String(t || "").replace(/^#/, "").trim();
+      const normalize = (t2) => String(t2 || "").replace(/^#/, "").trim();
       const raw = cache.frontmatter?.tags;
       if (Array.isArray(raw)) {
-        raw.forEach((t) => tags.add(normalize(t)));
+        raw.forEach((t2) => tags.add(normalize(t2)));
       } else if (typeof raw === "string") {
-        raw.split(",").forEach((t) => tags.add(normalize(t)));
+        raw.split(",").forEach((t2) => tags.add(normalize(t2)));
       }
       if (Array.isArray(cache.tags)) {
-        cache.tags.forEach((t) => tags.add(normalize(t.tag)));
+        cache.tags.forEach((t2) => tags.add(normalize(t2.tag)));
       }
       return Array.from(tags).filter(Boolean);
     } catch (e) {
@@ -38096,7 +38179,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
     const regexEntries = entries.filter((e) => e && !e.targetElement);
     if (elementEntries.length > 0) {
       const rank = (e) => e.targetElement === "all-tags" ? 0 : e.targetElement === "tag" ? 1 : 0;
-      const ordered = [...elementEntries].sort((a, b) => rank(a) - rank(b));
+      const ordered = [...elementEntries].sort((a, b2) => rank(a) - rank(b2));
       this.applyElementHighlights(el, ordered, folderEntry);
     }
     if (regexEntries.length > 0) {
@@ -38123,7 +38206,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       if (matches.length === 0) return;
     } catch (_) {
     }
-    matches.sort((a, b) => a.start - b.start);
+    matches.sort((a, b2) => a.start - b2.start);
     const nonOverlapping = [];
     for (const m of matches) {
       let overlaps = false;
@@ -38931,7 +39014,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         if (matches.length > 100) break;
       }
       if (matches.length > 0) {
-        matches.sort((a, b) => a.start - b.start);
+        matches.sort((a, b2) => a.start - b2.start);
         const frag = document.createDocumentFragment();
         let pos = 0;
         for (const m of matches) {
@@ -39966,24 +40049,24 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           "OVERLAP",
           `Before resolution: ${matches.length} matches found`
         );
-        matches.sort((a, b) => {
+        matches.sort((a, b2) => {
           const lenA = a.end - a.start;
-          const lenB = b.end - b.start;
+          const lenB = b2.end - b2.start;
           if (lenA !== lenB) return lenB - lenA;
           const pLenA = String(
             (a.entryRef || a.entry || {}).pattern || ""
           ).length;
           const pLenB = String(
-            (b.entryRef || b.entry || {}).pattern || ""
+            (b2.entryRef || b2.entry || {}).pattern || ""
           ).length;
           if (pLenA !== pLenB) return pLenB - pLenA;
-          if (a.start !== b.start) return a.start - b.start;
+          if (a.start !== b2.start) return a.start - b2.start;
           const aHasText = a.isTextBg ? !!(a.textColor && a.textColor !== "currentColor") : !!a.color;
-          const bHasText = b.isTextBg ? !!(b.textColor && b.textColor !== "currentColor") : !!b.color;
+          const bHasText = b2.isTextBg ? !!(b2.textColor && b2.textColor !== "currentColor") : !!b2.color;
           if (aHasText && !bHasText) return -1;
           if (!aHasText && bHasText) return 1;
-          if (a.isTextBg && !b.isTextBg) return -1;
-          if (!a.isTextBg && b.isTextBg) return 1;
+          if (a.isTextBg && !b2.isTextBg) return -1;
+          if (!a.isTextBg && b2.isTextBg) return 1;
           return 0;
         });
         let nonOverlapping2 = [];
@@ -40292,24 +40375,24 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         }
       }
       if (matches.length > 1) {
-        matches.sort((a, b) => {
+        matches.sort((a, b2) => {
           const lenA = a.end - a.start;
-          const lenB = b.end - b.start;
+          const lenB = b2.end - b2.start;
           if (lenA !== lenB) return lenB - lenA;
           const pLenA = String(
             (a.entryRef || a.entry || {}).pattern || ""
           ).length;
           const pLenB = String(
-            (b.entryRef || b.entry || {}).pattern || ""
+            (b2.entryRef || b2.entry || {}).pattern || ""
           ).length;
           if (pLenA !== pLenB) return pLenB - pLenA;
-          if (a.start !== b.start) return a.start - b.start;
+          if (a.start !== b2.start) return a.start - b2.start;
           const aHasText = a.isTextBg ? !!(a.textColor && a.textColor !== "currentColor") : !!a.color;
-          const bHasText = b.isTextBg ? !!(b.textColor && b.textColor !== "currentColor") : !!b.color;
+          const bHasText = b2.isTextBg ? !!(b2.textColor && b2.textColor !== "currentColor") : !!b2.color;
           if (aHasText && !bHasText) return -1;
           if (!aHasText && bHasText) return 1;
-          if (a.isTextBg && !b.isTextBg) return -1;
-          if (!a.isTextBg && b.isTextBg) return 1;
+          if (a.isTextBg && !b2.isTextBg) return -1;
+          if (!a.isTextBg && b2.isTextBg) return 1;
           return 0;
         });
         let nonOverlapping2 = [];
@@ -40327,7 +40410,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         }
         matches = nonOverlapping2;
       }
-      matches.sort((a, b) => a.start - b.start);
+      matches.sort((a, b2) => a.start - b2.start);
       let nonOverlapping = matches;
       const seenRanges = /* @__PURE__ */ new Set();
       const beforeDedup = nonOverlapping.length;
@@ -41614,8 +41697,8 @@ ${strongRule}`;
                 this._processBasesViews();
                 return;
               }
-              const t = m.target;
-              if (t && t.closest && t.closest(".bases-view")) {
+              const t2 = m.target;
+              if (t2 && t2.closest && t2.closest(".bases-view")) {
                 this._processBasesViews();
                 return;
               }
@@ -41898,9 +41981,9 @@ ${strongRule}`;
         }
         processNext();
       }, observerOptions);
-      for (const b of blocks) {
+      for (const b2 of blocks) {
         try {
-          io.observe(b);
+          io.observe(b2);
         } catch (e) {
           debugError("VIEWPORT", "Error observing block", e);
         }
@@ -41914,25 +41997,25 @@ ${strongRule}`;
       try {
         const firstN = Number(options.immediateBlocks) || 10;
         let count = 0;
-        for (const b of blocks) {
+        for (const b2 of blocks) {
           if (count >= firstN) break;
-          const rect = b.getBoundingClientRect();
+          const rect = b2.getBoundingClientRect();
           if (rect.top < window.innerHeight + 400 && rect.bottom > -400) {
-            if (!processed.has(b)) {
-              processed.add(b);
+            if (!processed.has(b2)) {
+              processed.add(b2);
               try {
-                io.unobserve(b);
+                io.unobserve(b2);
               } catch (e) {
               }
               try {
-                if (b.closest(".act-skip-coloring") || b.classList.contains("act-skip-coloring")) continue;
+                if (b2.closest(".act-skip-coloring") || b2.classList.contains("act-skip-coloring")) continue;
               } catch (_) {
               }
               try {
                 const es = options && Array.isArray(options.entries) ? options.entries : this.getSortedWordEntries();
                 this._errorRecovery.wrap(
                   "PROCESS_BLOCK",
-                  () => this._processBlock(b, es, folderEntry, {
+                  () => this._processBlock(b2, es, folderEntry, {
                     clearExisting: options.clearExisting !== false,
                     effectiveStyle: "text",
                     forceProcess: options.forceProcess || this.settings.forceFullRenderInReading,
@@ -41954,10 +42037,10 @@ ${strongRule}`;
         `observer set: ${blocks.length} blocks, immediate=${options.immediateBlocks || 10}`
       );
       const debounce3 = (fn, ms) => {
-        let t;
+        let t2;
         return (...args) => {
-          clearTimeout(t);
-          t = setTimeout(() => fn(...args), ms);
+          clearTimeout(t2);
+          t2 = setTimeout(() => fn(...args), ms);
         };
       };
       const onChange = debounce3(() => {
@@ -41981,10 +42064,10 @@ ${strongRule}`;
           if (performance && performance.memory) {
             const usedMB = performance.memory.usedJSHeapSize / (1024 * 1024);
             if (usedMB > 1e3) {
-              for (const b of blocks) {
-                const rect = b.getBoundingClientRect();
+              for (const b2 of blocks) {
+                const rect = b2.getBoundingClientRect();
                 if (rect.bottom < -200 || rect.top > window.innerHeight + 200) {
-                  const highlights = b.querySelectorAll(
+                  const highlights = b2.querySelectorAll(
                     "span.always-color-text-highlight"
                   );
                   for (const ex of highlights) {
@@ -42157,7 +42240,7 @@ ${strongRule}`;
       const dk = this.detectRuleKind(pathStr);
       if (dk.kind === "tag") {
         const tags = this.getFileTags(filePath).map(
-          (t) => t.replace(/^#/, "")
+          (t2) => t2.replace(/^#/, "")
         );
         if (tags.includes(String(dk.tag || "").replace(/^#/, "")))
           return "file";
@@ -42201,8 +42284,8 @@ ${strongRule}`;
   _groupRulesAllow(group, filePath) {
     const inc = Array.isArray(group.inclusionRules) ? group.inclusionRules : [];
     const exc = Array.isArray(group.exclusionRules) ? group.exclusionRules : [];
-    const includeMatches = inc.map((r) => this._matchRuleScope(r, filePath)).filter((t) => t);
-    const excludeMatches = exc.map((r) => this._matchRuleScope(r, filePath)).filter((t) => t);
+    const includeMatches = inc.map((r) => this._matchRuleScope(r, filePath)).filter((t2) => t2);
+    const excludeMatches = exc.map((r) => this._matchRuleScope(r, filePath)).filter((t2) => t2);
     if (inc.length > 0 && includeMatches.length === 0) return false;
     if (excludeMatches.includes("file")) return false;
     if ((excludeMatches.includes("folder") || excludeMatches.includes("vault")) && !includeMatches.includes("file"))
@@ -42277,11 +42360,11 @@ ${strongRule}`;
     let tagDecision = 0;
     if (hasEnableTags || hasDisableTags) {
       const fileTags = this.getFileTags(filePath);
-      const normTag = (t) => String(t || "").replace(/^#/, "").trim();
+      const normTag = (t2) => String(t2 || "").replace(/^#/, "").trim();
       const enableTagsNorm = hasEnableTags ? enableTags.map(normTag).filter(Boolean) : [];
       const disableTagsNorm = hasDisableTags ? disableTags.map(normTag).filter(Boolean) : [];
-      const enableMatchTag = enableTagsNorm.length > 0 && fileTags.some((t) => enableTagsNorm.includes(normTag(t)));
-      const disableMatchTag = disableTagsNorm.length > 0 && fileTags.some((t) => disableTagsNorm.includes(normTag(t)));
+      const enableMatchTag = enableTagsNorm.length > 0 && fileTags.some((t2) => enableTagsNorm.includes(normTag(t2)));
+      const disableMatchTag = disableTagsNorm.length > 0 && fileTags.some((t2) => disableTagsNorm.includes(normTag(t2)));
       if (enableTagsNorm.length > 0 && !enableMatchTag) {
         tagDecision = -1;
       }
@@ -42357,15 +42440,15 @@ ${strongRule}`;
   containsBlacklistedWord(text, filePath = null) {
     try {
       if (this._blacklistCompilationDirty) this.compileBlacklistEntries();
-      const t = String(text || "");
+      const t2 = String(text || "");
       for (const compiled of this._compiledBlacklistWords) {
         compiled.regex.lastIndex = 0;
-        if (compiled.regex.test(t)) return true;
+        if (compiled.regex.test(t2)) return true;
       }
       for (const compiled of this._compiledBlacklistEntries) {
         for (const pattern of compiled.patterns) {
           pattern.regex.lastIndex = 0;
-          if (pattern.regex.test(t)) return true;
+          if (pattern.regex.test(t2)) return true;
         }
       }
       for (const compiled of Object.values(this._compiledBlacklistGroups)) {
@@ -42375,7 +42458,7 @@ ${strongRule}`;
         for (const entryCompiled of compiled.entries) {
           for (const pattern of entryCompiled.patterns) {
             pattern.regex.lastIndex = 0;
-            if (pattern.regex.test(t)) return true;
+            if (pattern.regex.test(t2)) return true;
           }
         }
       }
@@ -43285,16 +43368,16 @@ ${strongRule}`;
       }
     }
     if (matches.length > 1) {
-      const all = matches.slice().sort((a, b) => {
-        if (a.start !== b.start) return a.start - b.start;
+      const all = matches.slice().sort((a, b2) => {
+        if (a.start !== b2.start) return a.start - b2.start;
         const lenA = a.end - a.start;
-        const lenB = b.end - b.start;
+        const lenB = b2.end - b2.start;
         if (lenA !== lenB) return lenB - lenA;
         const ar = a.entryRef && !!a.entryRef.isRegex;
-        const br = b.entryRef && !!b.entryRef.isRegex;
+        const br = b2.entryRef && !!b2.entryRef.isRegex;
         if (ar !== br) return ar ? 1 : -1;
-        if (a.isTextBg && !b.isTextBg) return -1;
-        if (!a.isTextBg && b.isTextBg) return 1;
+        if (a.isTextBg && !b2.isTextBg) return -1;
+        if (!a.isTextBg && b2.isTextBg) return 1;
         return 0;
       });
       const selected = [];
@@ -43327,9 +43410,9 @@ ${strongRule}`;
       matches = selected;
     }
     matches = matches.slice(0, 3e3);
-    matches.sort((a, b) => {
-      if (a.start !== b.start) return a.start - b.start;
-      return a.end - b.end;
+    matches.sort((a, b2) => {
+      if (a.start !== b2.start) return a.start - b2.start;
+      return a.end - b2.end;
     });
     try {
       const hasAnyBulletStd = entries && entries.some((e) => e && (e.targetElement === "bullet-list" || e.presetLabel === "Bullet Points"));
@@ -44762,12 +44845,12 @@ ${strongRule}`;
   }
   // NEW METHOD: Apply decorations from collected matches
   applyDecorationsFromMatches(view, builder, matches, folderEntry, tree2, lineBuilder) {
-    const all = matches.slice().sort((a, b) => {
-      if (a.start !== b.start) return a.start - b.start;
-      const lenDiff = b.end - b.start - (a.end - a.start);
+    const all = matches.slice().sort((a, b2) => {
+      if (a.start !== b2.start) return a.start - b2.start;
+      const lenDiff = b2.end - b2.start - (a.end - a.start);
       if (lenDiff !== 0) return lenDiff;
       const ar = a.entryRef && !!a.entryRef.isRegex;
-      const br = b.entryRef && !!b.entryRef.isRegex;
+      const br = b2.entryRef && !!b2.entryRef.isRegex;
       if (ar !== br) return ar ? 1 : -1;
       return 0;
     });
@@ -44798,7 +44881,7 @@ ${strongRule}`;
         }
       }
     }
-    const sortedSel = selected.sort((a, b) => a.start - b.start || a.end - b.end).slice(0, 1e3);
+    const sortedSel = selected.sort((a, b2) => a.start - b2.start || a.end - b2.end).slice(0, 1e3);
     const limited = (() => {
       const merged = [];
       for (const m of sortedSel) {
@@ -44816,7 +44899,7 @@ ${strongRule}`;
     if (limited.some((m) => m.isTextBg)) {
       const fullTextBg = limited.filter((m) => m.isTextBg);
       const filtered = [];
-      limited.sort((a, b) => a.start - b.start || a.end - b.end);
+      limited.sort((a, b2) => a.start - b2.start || a.end - b2.end);
       for (const m of limited) {
         if (!m.isTextBg) {
           let overlapsTextBg = false;
@@ -44836,7 +44919,7 @@ ${strongRule}`;
       limited.length = 0;
       for (const m of filtered) limited.push(m);
     }
-    limited.sort((a, b) => a.start - b.start || a.end - b.end);
+    limited.sort((a, b2) => a.start - b2.start || a.end - b2.end);
     for (const m of limited) {
       if (m.skip || m.start >= m.end) continue;
       let style;
@@ -45014,14 +45097,14 @@ ${strongLayoutRule}`;
       continue;
     }
     if (pendingLineDecos && pendingLineDecos.length) {
-      pendingLineDecos.sort((a, b) => {
-        const byFrom = a.from - b.from;
+      pendingLineDecos.sort((a, b2) => {
+        const byFrom = a.from - b2.from;
         if (byFrom !== 0) return byFrom;
         const aSide = a.value && typeof a.value.startSide === "number" ? a.value.startSide : 0;
-        const bSide = b.value && typeof b.value.startSide === "number" ? b.value.startSide : 0;
+        const bSide = b2.value && typeof b2.value.startSide === "number" ? b2.value.startSide : 0;
         const bySide = aSide - bSide;
         if (bySide !== 0) return bySide;
-        return a.to - b.to;
+        return a.to - b2.to;
       });
       for (const r of pendingLineDecos) lineBuilder.add(r.from, r.to, r.value);
     }

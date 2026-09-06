@@ -19,6 +19,45 @@ import {
   propagateStyle,
 } from '../utils/matcherLinker.js';
 
+function resolveVarToHex(varStr) {
+  try {
+    const tmp = document.createElement("div");
+    tmp.style.color = varStr;
+    tmp.style.display = "none";
+    document.body.appendChild(tmp);
+    const computed = getComputedStyle(tmp).color;
+    document.body.removeChild(tmp);
+    const m = computed.match(/\d+/g);
+    if (m && m.length >= 3) {
+      return "#" + [m[0], m[1], m[2]].map(x => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+    }
+  } catch (_) {}
+  return null;
+}
+function isVarColor(str) {
+  return typeof str === "string" && /^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(str.trim());
+}
+function setColorInputValue(input, colorStr) {
+  if (!colorStr) {
+    input.value = "#000000";
+    delete input.dataset.varColor;
+    return;
+  }
+  if (isVarColor(colorStr)) {
+    input.dataset.varColor = colorStr.trim();
+    const resolved = resolveVarToHex(colorStr);
+    if (resolved) input.value = resolved;
+    else input.value = "#000000";
+  } else {
+    delete input.dataset.varColor;
+    input.value = colorStr;
+  }
+}
+function getColorInputValue(input) {
+  if (input.dataset.varColor && isVarColor(input.dataset.varColor)) return input.dataset.varColor;
+  return input.value;
+}
+
 export class EditEntryModal extends Modal {
   constructor(
     app,
@@ -269,6 +308,8 @@ export class EditEntryModal extends Modal {
     const bgColorInput = pickerRow.createEl("input", { type: "color" });
     this._textColorInput = textColorInput;
     this._bgColorInput = bgColorInput;
+    this._textPickerTouched = false;
+    this._bgPickerTouched = false;
 
     // ===== act-pickr-row =====
     const pickrRow = contentEl.createDiv();
@@ -416,17 +457,22 @@ export class EditEntryModal extends Modal {
     };
     const applyTextColorToEntry = (dispatch = true) => {
       const style = styleSelect.value;
+      const curTextVal = getColorInputValue(textColorInput);
+      const hasEntryText = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) || (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
+      const isVarText = curTextVal && /^var\(/.test(curTextVal.trim());
+      const hasValidText = curTextVal && this.plugin.isValidHexColor(curTextVal) && (isVarText || hasEntryText || this._textPickerTouched);
+      const effectiveText = hasValidText ? curTextVal : (style === "text" || style === "both" ? "var(--text-normal)" : "");
       if (this.entry)
         this.entry._savedTextColor =
-          textColorInput.value ||
+          effectiveText ||
           this.entry._savedTextColor ||
           this.entry.color ||
           this.entry.textColor ||
           "";
       if (style === "text") {
-        this.entry.color = textColorInput.value || "";
+        this.entry.color = effectiveText || "";
       } else if (style === "both") {
-        this.entry.textColor = textColorInput.value || "";
+        this.entry.textColor = effectiveText || "";
       }
       if (this.entry && this.entry.customCss) {
         this.plugin.syncEntryCssFromColors(this.entry);
@@ -435,16 +481,21 @@ export class EditEntryModal extends Modal {
     };
     const applyBgColorToEntry = (dispatch = true) => {
       const style = styleSelect.value;
+      const curBgVal = getColorInputValue(bgColorInput);
+      const hasEntryBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+      const isVarBg = curBgVal && /^var\(/.test(curBgVal.trim());
+      const hasValidBg = curBgVal && this.plugin.isValidHexColor(curBgVal) && (isVarBg || hasEntryBg || this._bgPickerTouched);
+      const effectiveBg = hasValidBg ? curBgVal : (style === "highlight" || style === "both" ? "var(--color-accent)" : "");
       if (this.entry)
         this.entry._savedBackgroundColor =
-          bgColorInput.value ||
+          effectiveBg ||
           this.entry._savedBackgroundColor ||
           this.entry.backgroundColor ||
           "";
       if (style === "highlight") {
-        this.entry.backgroundColor = bgColorInput.value || "";
+        this.entry.backgroundColor = effectiveBg || "";
       } else if (style === "both") {
-        this.entry.backgroundColor = bgColorInput.value || "";
+        this.entry.backgroundColor = effectiveBg || "";
       }
       if (this.entry && this.entry.customCss) {
         this.plugin.syncEntryCssFromColors(this.entry);
@@ -455,7 +506,7 @@ export class EditEntryModal extends Modal {
       colorInput.addEventListener("contextmenu", (evt) => {
         evt.preventDefault();
         evt.stopPropagation();
-        const currentColor = colorInput.value || "#000000";
+        const currentColor = getColorInputValue(colorInput) || "#000000";
         const displayText =
           this.entry && this.entry.isRegex
             ? this.entry.pattern || ""
@@ -489,18 +540,22 @@ export class EditEntryModal extends Modal {
             let changed = false;
 
             if (tc) {
-              textColorInput.value = tc;
+              setColorInputValue(textColorInput, tc);
+              this._textPickerTouched = true;
               changed = true;
             } else if (fallback && isTextPicker && !bc) {
-              textColorInput.value = fallback;
+              setColorInputValue(textColorInput, fallback);
+              this._textPickerTouched = true;
               changed = true;
             }
 
             if (bc) {
-              bgColorInput.value = bc;
+              setColorInputValue(bgColorInput, bc);
+              this._bgPickerTouched = true;
               changed = true;
             } else if (fallback && !isTextPicker && !tc) {
-              bgColorInput.value = fallback;
+              setColorInputValue(bgColorInput, fallback);
+              this._bgPickerTouched = true;
               changed = true;
             }
 
@@ -520,8 +575,8 @@ export class EditEntryModal extends Modal {
 
             if (!changed) {
               if (currentColor && this.plugin.isValidHexColor(currentColor)) {
-                if (isTextPicker) textColorInput.value = currentColor;
-                else bgColorInput.value = currentColor;
+                if (isTextPicker) setColorInputValue(textColorInput, currentColor);
+                else setColorInputValue(bgColorInput, currentColor);
               }
             }
 
@@ -536,9 +591,10 @@ export class EditEntryModal extends Modal {
           this.entry,
         );
         modal._hideHeaderControls = true;
-        if (textColorInput.value)
-          modal._preFillTextColor = textColorInput.value;
-        if (bgColorInput.value) modal._preFillBgColor = bgColorInput.value;
+        const preText = getColorInputValue(textColorInput);
+        const preBg = getColorInputValue(bgColorInput);
+        if (preText) modal._preFillTextColor = preText;
+        if (preBg) modal._preFillBgColor = preBg;
         modal.open();
       });
     };
@@ -568,18 +624,26 @@ export class EditEntryModal extends Modal {
     });
 
     // Add real-time syncing to this.entry when colors change
-    textColorInput.addEventListener("input", applyTextColorToEntry);
+    const textInputHandler = () => {
+      this._textPickerTouched = true;
+      applyTextColorToEntry();
+    };
+    textColorInput.addEventListener("input", textInputHandler);
     this._handlers.push({
       el: textColorInput,
       ev: "input",
-      fn: applyTextColorToEntry,
+      fn: textInputHandler,
     });
 
-    bgColorInput.addEventListener("input", applyBgColorToEntry);
+    const bgInputHandler = () => {
+      this._bgPickerTouched = true;
+      applyBgColorToEntry();
+    };
+    bgColorInput.addEventListener("input", bgInputHandler);
     this._handlers.push({
       el: bgColorInput,
       ev: "input",
-      fn: applyBgColorToEntry,
+      fn: bgInputHandler,
     });
 
     // Listen for color changes from HighlightStylingModal and update our inputs
@@ -594,16 +658,16 @@ export class EditEntryModal extends Modal {
                 : this.plugin.isValidHexColor(this.entry.color)
                   ? this.entry.color
                   : "")) ||
-            textColorInput.value ||
+            getColorInputValue(textColorInput) ||
             "#000000";
           const initBgColor =
             (this.entry && (this.entry.backgroundColor || "")) ||
-            bgColorInput.value ||
+            getColorInputValue(bgColorInput) ||
             "#000000";
           if (this.plugin.isValidHexColor(initTextColor))
-            textColorInput.value = initTextColor;
+            setColorInputValue(textColorInput, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
-            bgColorInput.value = initBgColor;
+            setColorInputValue(bgColorInput, initBgColor);
           // Sync styleType dropdown from entry (CustomCssModal may have updated it)
           if (this.entry && this.entry.styleType) {
             styleSelect.value = this.entry.styleType;
@@ -742,13 +806,8 @@ export class EditEntryModal extends Modal {
       (this.entry && (this.entry.backgroundColor || "")) ||
       bgColorInput.value ||
       visibleDefault;
-    textColorInput.value = this.plugin.isValidHexColor(initTextColor)
-      ? initTextColor
-      : visibleDefault;
-    if (initBgColor)
-      bgColorInput.value = this.plugin.isValidHexColor(initBgColor)
-        ? initBgColor
-        : visibleDefault;
+    setColorInputValue(textColorInput, this.plugin.isValidHexColor(initTextColor) ? initTextColor : visibleDefault);
+    if (initBgColor) setColorInputValue(bgColorInput, this.plugin.isValidHexColor(initBgColor) ? initBgColor : visibleDefault);
     if (isRegex) {
       textInput.value = this.entry.pattern || "";
       if (matchSelect) {
@@ -881,10 +940,21 @@ export class EditEntryModal extends Modal {
     const renderPreview = () => {
       const raw = String(textInput.value || "");
       const style = styleSelect.value;
-      const t = textColorInput.value;
-      const b = bgColorInput.value;
+      const tRaw = getColorInputValue(textColorInput);
+      const bRaw = getColorInputValue(bgColorInput);
       const p = this.plugin.getHighlightParams(this.entry);
-      const rgba = this.plugin.hexToRgba(b, p.opacity ?? 25);
+      // Text color: var(--text-normal) when picker null/invalid
+      const hasEntryText = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) || (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
+      const isVarText = tRaw && /^var\(/.test(tRaw.trim());
+      const hasValidText = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarText || hasEntryText || this._textPickerTouched);
+      const effectiveText = hasValidText ? tRaw : "var(--text-normal)";
+      // Background: var(--color-accent) when picker null and style needs bg (only affects bg)
+      const hasEntryBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+      const isVarBg = bRaw && /^var\(/.test(bRaw.trim());
+      const hasValidBg = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarBg || hasEntryBg || this._bgPickerTouched);
+      const effectiveBg = hasValidBg ? bRaw : "var(--color-accent)";
+      const rgba = this.plugin.hexToRgba(effectiveBg, p.opacity ?? 25);
+      const rgbaForBorder = hasValidBg ? bRaw : effectiveBg;
       const radius = p.radius ?? 8;
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
@@ -892,12 +962,12 @@ export class EditEntryModal extends Modal {
         style === "text"
           ? ""
           : style === "highlight"
-            ? this.plugin.generateBorderStyle(null, b, this.entry)
-            : this.plugin.generateBorderStyle(t, b, this.entry);
+            ? this.plugin.generateBorderStyle(null, rgbaForBorder, this.entry)
+            : this.plugin.generateBorderStyle(effectiveText, rgbaForBorder, this.entry);
       const bdb = `box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-      const sText = `color:${t};background:transparent;`;
+      const sText = `color:${effectiveText};background:transparent;`;
       const sHighlight = `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}${bdb}`;
-      const sBoth = `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}${bdb}`;
+      const sBoth = `color:${effectiveText};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}${bdb}`;
       const styleStr =
         style === "text" ? sText : style === "highlight" ? sHighlight : sBoth;
 
@@ -1402,8 +1472,8 @@ export class EditEntryModal extends Modal {
       if (matchTypeVal === "startsWith") matchTypeVal = "startswith";
       if (matchTypeVal === "endsWith") matchTypeVal = "endswith";
       const caseSensitiveVal = caseSel.value === "case";
-      const textColorVal = textColorInput.value || "";
-      const bgColorVal = bgColorInput.value || "";
+      const textColorVal = getColorInputValue(textColorInput) || "";
+      const bgColorVal = getColorInputValue(bgColorInput) || "";
       const patternVal = String(textInput.value || "").trim();
 
       // Check if this is a new entry from pick modal and if anything was actually changed

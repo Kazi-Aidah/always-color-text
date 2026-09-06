@@ -9668,6 +9668,9 @@ class AlwaysColorText extends Plugin {
   isValidHexColor(hex) {
     if (hex === "inherit" || hex === "currentColor") return true;
     if (typeof hex !== "string") return false;
+    const trimmed = hex.trim();
+    // Allow CSS variables like var(--color-red) or var(--x, #fff)
+    if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(trimmed)) return true;
     if (
       hex.includes(";") ||
       hex.toLowerCase().includes("!important") ||
@@ -9718,6 +9721,28 @@ class AlwaysColorText extends Plugin {
       return `rgba(0,0,0,1)`;
     }
 
+    // Resolve CSS variable like var(--color-red) to actual rgba
+    const trimmed = hex.trim();
+    if (trimmed.startsWith("var(")) {
+      try {
+        const tmp = document.createElement("div");
+        tmp.style.color = trimmed;
+        tmp.style.display = "none";
+        document.body.appendChild(tmp);
+        const computed = getComputedStyle(tmp).color;
+        document.body.removeChild(tmp);
+        const m = computed.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/);
+        if (m) {
+          const r = parseInt(m[1], 10), g = parseInt(m[2], 10), b = parseInt(m[3], 10);
+          const a = (opacityPercent ?? 100) / 100;
+          return `rgba(${r},${g},${b},${a})`;
+        }
+      } catch (_) {}
+      // Fallback if var cannot be resolved (e.g. undefined)
+      const a = (opacityPercent ?? 100) / 100;
+      return `rgba(0,0,0,${a})`;
+    }
+
     let c = hex.replace("#", "");
     if (c.length === 3)
       c = c
@@ -9737,6 +9762,11 @@ class AlwaysColorText extends Plugin {
   hexToHexWithAlpha(hex, opacityPercent) {
     try {
       const h = String(hex || "").trim();
+      // Handle CSS variables - use color-mix to preserve variable and apply opacity
+      if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(h)) {
+        const pct = Math.max(0, Math.min(100, Number(opacityPercent)));
+        return `color-mix(in srgb, ${h} ${pct}%, transparent)`;
+      }
       if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(h)) return h;
       const pct = Math.max(0, Math.min(100, Number(opacityPercent)));
       const alpha = Math.round((pct / 100) * 255)

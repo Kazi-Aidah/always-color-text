@@ -543,8 +543,8 @@ export class ColorPickerModal extends Modal {
       hex.style.padding = "8px";
       hex.style.borderRadius = "8px";
       hex.style.border = "1px solid var(--background-modifier-border)";
-      hex.style.width = "120px";
-      hex.placeholder = "#000000";
+      hex.style.width = "160px";
+      hex.placeholder = "#000000 or var()";
       hex.value = "";
 
       const grid = col.createDiv();
@@ -615,7 +615,26 @@ export class ColorPickerModal extends Modal {
           this._hasUserChanges = true;
         }
         hex.value = val;
-        colorInput.value = val;
+        // For CSS variables, try to resolve to hex for the native color picker (which only accepts hex)
+        if (/^var\(\s*--/.test(val)) {
+          try {
+            const tmp = document.createElement("div");
+            tmp.style.color = val;
+            tmp.style.display = "none";
+            document.body.appendChild(tmp);
+            const computed = getComputedStyle(tmp).color;
+            document.body.removeChild(tmp);
+            const m = computed.match(/\d+/g);
+            if (m && m.length >= 3) {
+              const hexResolved = "#" + [m[0], m[1], m[2]].map(x => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+              colorInput.value = hexResolved;
+            }
+          } catch (_) {
+            // keep previous colorInput value if var cannot be resolved
+          }
+        } else {
+          colorInput.value = val;
+        }
         // Pass current picker colors so the preview reflects the new color immediately
         const curText = type === 'text' ? val : (this.selectedTextColor || null);
         const curBg   = type === 'background' ? val : (this.selectedBgColor || null);
@@ -643,6 +662,11 @@ export class ColorPickerModal extends Modal {
 
       const hexChange = () => {
         let v = hex.value.trim();
+        // Allow CSS variables like var(--color-red) or var(--x, #fff)
+        if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(v)) {
+          apply(v);
+          return;
+        }
         if (!v.startsWith("#")) v = "#" + v;
         if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(v)) {
           apply(v);
@@ -650,16 +674,36 @@ export class ColorPickerModal extends Modal {
           new Notice(
             this.plugin.t(
               "notice_invalid_hex_format",
-              "Invalid hex color format. Use #RRGGBB or #RGB.",
+              "Invalid hex color format. Use #RRGGBB, #RGB or var(--css-variable).",
             ),
           );
         }
+      };
+      const hexInputLive = () => {
+        let v = hex.value.trim();
+        if (!v) return;
+        if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(v)) {
+          apply(v);
+          return;
+        }
+        let hv = v;
+        if (!hv.startsWith("#")) hv = "#" + hv;
+        if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hv)) {
+          apply(hv);
+        }
+        // Don't show Notice on input, only on change/enter
       };
       hex.addEventListener("change", hexChange);
       this._eventListeners.push({
         el: hex,
         event: "change",
         handler: hexChange,
+      });
+      hex.addEventListener("input", hexInputLive);
+      this._eventListeners.push({
+        el: hex,
+        event: "input",
+        handler: hexInputLive,
       });
 
       const resetHandler = () => {
@@ -1321,10 +1365,30 @@ export class ColorPickerModal extends Modal {
             : "text";
     }
 
+    const setPanelColor = (panel, colorStr) => {
+      if (!panel || !colorStr) return;
+      panel.hex.value = colorStr;
+      if (/^var\(\s*--/.test(colorStr)) {
+        try {
+          const tmp = document.createElement("div");
+          tmp.style.color = colorStr;
+          tmp.style.display = "none";
+          document.body.appendChild(tmp);
+          const computed = getComputedStyle(tmp).color;
+          document.body.removeChild(tmp);
+          const m = computed.match(/\d+/g);
+          if (m && m.length >= 3) {
+            const hexResolved = "#" + [m[0], m[1], m[2]].map(x=>parseInt(x,10).toString(16).padStart(2,"0")).join("");
+            panel.colorInput.value = hexResolved;
+          }
+        } catch(_) {}
+      } else {
+        panel.colorInput.value = colorStr;
+      }
+    };
     if (initText && tp && this.mode !== "background") {
       preview.style.color = initText;
-      tp.hex.value = initText;
-      tp.colorInput.value = initText;
+      setPanelColor(tp, initText);
       this.selectedTextColor = initText;
       // prefill does not count as a change; do not set selectedTextColor
     }
@@ -1332,8 +1396,7 @@ export class ColorPickerModal extends Modal {
     const applyPrefill = (val, type) => {
       if (type === "text") {
         if (tp && val) {
-          tp.colorInput.value = val;
-          tp.hex.value = val;
+          setPanelColor(tp, val);
           this.selectedTextColor = val;
           preview.style.color = val;
           try {
@@ -1342,8 +1405,7 @@ export class ColorPickerModal extends Modal {
         }
       } else if (type === "background") {
         if (bp && val) {
-          bp.colorInput.value = val;
-          bp.hex.value = val;
+          setPanelColor(bp, val);
           this.selectedBgColor = val;
           const op =
             matchedEntry && typeof matchedEntry.backgroundOpacity === "number"
@@ -1397,8 +1459,7 @@ export class ColorPickerModal extends Modal {
         preview.style.boxDecorationBreak = "clone";
         preview.style.WebkitBoxDecorationBreak = "clone";
       }
-      bp.hex.value = initBg;
-      bp.colorInput.value = initBg;
+      setPanelColor(bp, initBg);
       this.selectedBgColor = initBg;
       // prefill does not count as a change; do not set selectedBgColor
       // border style already applied via applyBorderStyleToElement using _preFillBorderColor when available

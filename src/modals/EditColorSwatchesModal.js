@@ -92,7 +92,7 @@ export class EditColorSwatchesModal extends Modal {
     hex.style.borderRadius = "8px";
     hex.style.border = "1px solid var(--background-modifier-border)";
     hex.style.width = "120px";
-    hex.placeholder = "#000000";
+    hex.placeholder = "#000000 or var()";
     hex.value = "";
 
     // ===== Action button (right of the picker row) =====
@@ -218,14 +218,37 @@ export class EditColorSwatchesModal extends Modal {
       } else {
         // Hex typed: validate and sync back to colorInput
         const raw = hex.value.trim();
-        const normalised = raw.startsWith("#") ? raw : "#" + raw;
-        if (this.plugin.isValidHexColor(normalised)) {
-          color = normalised;
-          hex.value = normalised;
-          colorInput.value = normalised;
+        if (!raw) {
+          renderPreviews(colorInput.value);
+          return;
+        }
+        if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(raw)) {
+          color = raw;
+          hex.value = raw;
+          // Try to resolve var to hex for the native color picker
+          try {
+            const tmp = document.createElement("div");
+            tmp.style.color = raw;
+            tmp.style.display = "none";
+            document.body.appendChild(tmp);
+            const computed = getComputedStyle(tmp).color;
+            document.body.removeChild(tmp);
+            const m = computed.match(/\d+/g);
+            if (m && m.length >= 3) {
+              const hexResolved = "#" + [m[0], m[1], m[2]].map(x => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+              colorInput.value = hexResolved;
+            }
+          } catch (_) {}
         } else {
-          // Not yet valid — still update colorInput best-effort so wheel moves
-          color = colorInput.value;
+          const normalised = raw.startsWith("#") ? raw : "#" + raw;
+          if (this.plugin.isValidHexColor(normalised)) {
+            color = normalised;
+            hex.value = normalised;
+            colorInput.value = normalised;
+          } else {
+            // Not yet valid — still update colorInput best-effort so wheel moves
+            color = colorInput.value;
+          }
         }
       }
       renderPreviews(color);
@@ -562,25 +585,45 @@ export class EditColorSwatchesModal extends Modal {
 
     // ===== Action button handler =====
     const actionHandler = async () => {
-      // Use colorInput as the authoritative source — it's always a valid hex.
-      // Prefer hex if the user has typed a valid one, fall back to colorInput.
-      let color = hex.value.trim();
-      if (!color.startsWith("#")) color = "#" + color;
-      if (!this.plugin.isValidHexColor(color)) {
-        color = colorInput.value;
+      // Prefer hex/var if the user has typed a valid one, fall back to colorInput.
+      let raw = hex.value.trim();
+      let color = null;
+      if (/^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(raw)) {
+        color = raw;
+      } else {
+        if (raw && !raw.startsWith("#")) raw = "#" + raw;
+        if (this.plugin.isValidHexColor(raw)) color = raw;
+        else if (this.plugin.isValidHexColor(colorInput.value)) color = colorInput.value;
       }
-      if (!this.plugin.isValidHexColor(color)) {
+      if (!color || !this.plugin.isValidHexColor(color)) {
         new Notice(
           this.plugin.t(
             "notice_invalid_hex_format",
-            "Invalid hex color format. Use #RRGGBB or #RGB.",
+            "Invalid hex color format. Use #RRGGBB, #RGB or var(--css-variable).",
           ),
         );
         return;
       }
-      // Keep inputs in sync
-      colorInput.value = color;
-      hex.value = color;
+      // Keep inputs in sync (resolve var to hex for native picker)
+      if (/^var\(/.test(color)) {
+        hex.value = color;
+        try {
+          const tmp = document.createElement("div");
+          tmp.style.color = color;
+          tmp.style.display = "none";
+          document.body.appendChild(tmp);
+          const computed = getComputedStyle(tmp).color;
+          document.body.removeChild(tmp);
+          const m = computed.match(/\d+/g);
+          if (m && m.length >= 3) {
+            const hexResolved = "#" + [m[0], m[1], m[2]].map(x => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+            colorInput.value = hexResolved;
+          }
+        } catch (_) {}
+      } else {
+        colorInput.value = color;
+        hex.value = color;
+      }
 
       const swatches = getSwatches();
       if (this._activeIndex === null) {

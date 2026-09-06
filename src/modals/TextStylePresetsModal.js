@@ -200,7 +200,7 @@ export class TextStylePresetsModal extends Modal {
       }
     }
 
-    const textColorVal = textHex || accent;
+    const textColorVal = textHex || "var(--text-normal)";
     const base =
       style === "text"
         ? `color:${textColorVal};background:transparent;`

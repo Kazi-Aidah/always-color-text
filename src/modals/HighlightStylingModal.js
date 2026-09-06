@@ -4,6 +4,46 @@ import { ColorPickerModal } from './ColorPickerModal.js';
 import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { deriveHighlightCssFromEntry, parseCssIntoEntry, patchCssLayoutFromEntry } from './CustomCssModal.js';
 
+function resolveVarToHex(varStr) {
+  try {
+    const tmp = document.createElement("div");
+    tmp.style.color = varStr;
+    tmp.style.display = "none";
+    document.body.appendChild(tmp);
+    const computed = getComputedStyle(tmp).color;
+    document.body.removeChild(tmp);
+    const m = computed.match(/\d+/g);
+    if (m && m.length >= 3) {
+      return "#" + [m[0], m[1], m[2]].map(x => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+    }
+  } catch (_) {}
+  return null;
+}
+function isVarColor(str) {
+  return typeof str === "string" && /^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(str.trim());
+}
+function setColorInputValue(input, colorStr) {
+  if (!colorStr) {
+    input.value = input.type === "color" ? "#000000" : "";
+    delete input.dataset.varColor;
+    return;
+  }
+  if (isVarColor(colorStr)) {
+    input.dataset.varColor = colorStr.trim();
+    const resolved = resolveVarToHex(colorStr);
+    if (resolved) input.value = resolved;
+    else if (input.type === "color") input.value = "#000000";
+    else input.value = colorStr;
+  } else {
+    delete input.dataset.varColor;
+    input.value = colorStr;
+  }
+}
+function getColorInputValue(input) {
+  if (input.dataset.varColor && isVarColor(input.dataset.varColor)) return input.dataset.varColor;
+  return input.value;
+}
+
 export class HighlightStylingModal extends Modal {
   constructor(
     app,
@@ -22,10 +62,12 @@ export class HighlightStylingModal extends Modal {
   }
   onOpen() {
     const { contentEl } = this;
+    this._hasUserChanges = false;
 
     // Global listener to detect user interaction and clear reset flag
     const clearResetFlag = () => {
       this._resetAllApplied = false;
+      this._hasUserChanges = true;
     };
     contentEl.addEventListener("input", clearResetFlag, true);
     contentEl.addEventListener("change", clearResetFlag, true);
@@ -380,18 +422,20 @@ export class HighlightStylingModal extends Modal {
     if (isGroup && !styleSelect.value) pickerRow.style.display = "none";
     const tColor = pickerRow.createEl("input", { type: "color" });
     const bColor = pickerRow.createEl("input", { type: "color" });
-    tColor.value =
+    this._tPickerTouched = false;
+    this._bPickerTouched = false;
+    setColorInputValue(tColor,
       (this.entry &&
         (this.entry.textColor && this.entry.textColor !== "currentColor"
           ? this.entry.textColor
           : this.plugin.isValidHexColor(this.entry.color)
             ? this.entry.color
             : "#ffffff")) ||
-      "#ffffff";
-    bColor.value =
+      "#ffffff");
+    setColorInputValue(bColor,
       this.entry && this.entry.backgroundColor
         ? this.entry.backgroundColor
-        : "#000000";
+        : "#000000");
 
     // Listen for color changes from parent EditEntryModal and update in real-time
     const syncColorsFromParent = (evt) => {
@@ -405,16 +449,16 @@ export class HighlightStylingModal extends Modal {
                 : this.plugin.isValidHexColor(this.entry.color)
                   ? this.entry.color
                   : "")) ||
-            tColor.value ||
+            getColorInputValue(tColor) ||
             "#ffffff";
           const initBgColor =
             (this.entry && (this.entry.backgroundColor || "")) ||
-            bColor.value ||
+            getColorInputValue(bColor) ||
             "#000000";
           if (this.plugin.isValidHexColor(initTextColor))
-            tColor.value = initTextColor;
+            setColorInputValue(tColor, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
-            bColor.value = initBgColor;
+            setColorInputValue(bColor, initBgColor);
           // Don't trigger renderPreview here to avoid loops
         }
       } catch (_) {}
@@ -822,8 +866,16 @@ export class HighlightStylingModal extends Modal {
         return;
       }
 
-      const t = this.plugin.isValidHexColor(tColor.value) ? tColor.value : "#58bc54";
-      const b = this.plugin.isValidHexColor(bColor.value) ? bColor.value : "#205613";
+      const tRaw = getColorInputValue(tColor);
+      const bRaw = getColorInputValue(bColor);
+      const hasEntryText = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) || (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
+      const hasEntryBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+      const isVarT = tRaw && /^var\(/.test(tRaw.trim());
+      const isVarB = bRaw && /^var\(/.test(bRaw.trim());
+      const hasValidT = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarT || hasEntryText || this._tPickerTouched);
+      const hasValidB = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarB || hasEntryBg || this._bPickerTouched);
+      const t = hasValidT ? tRaw : "var(--text-normal)";
+      const b = hasValidB ? bRaw : "var(--color-accent)";
       const p = this.plugin.getHighlightParams(this.entry);
       const rgba = this.plugin.hexToRgba(b, p.opacity ?? 25);
       const radius = p.radius ?? 8;
@@ -896,11 +948,13 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     };
     styleSelect.addEventListener("change", styleChange);
-    tColor.addEventListener("input", styleChange);
-    bColor.addEventListener("input", styleChange);
+    const tColorStyleChange = () => { this._tPickerTouched = true; styleChange(); };
+    const bColorStyleChange = () => { this._bPickerTouched = true; styleChange(); };
+    tColor.addEventListener("input", tColorStyleChange);
+    bColor.addEventListener("input", bColorStyleChange);
     this._handlers.push({ el: styleSelect, ev: "change", fn: styleChange });
-    this._handlers.push({ el: tColor, ev: "input", fn: styleChange });
-    this._handlers.push({ el: bColor, ev: "input", fn: styleChange });
+    this._handlers.push({ el: tColor, ev: "input", fn: tColorStyleChange });
+    this._handlers.push({ el: bColor, ev: "input", fn: bColorStyleChange });
     updatePickerVisibility();
     renderPreview();
     // Style preset button handler (replaces case sensitivity dropdown)
@@ -924,8 +978,8 @@ export class HighlightStylingModal extends Modal {
             this.entry.color = "";
           }
           try { if (styleSelect) styleSelect.value = this.entry.styleType || "both"; } catch(_){}
-          try { if (tColor) tColor.value = (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) ? this.entry.textColor : (this.entry.color && this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : tColor.value)); } catch(_){}
-          try { if (bColor) bColor.value = (this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor) ? this.entry.backgroundColor : bColor.value); } catch(_){}
+          try { if (tColor) { const tv = (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) ? this.entry.textColor : (this.entry.color && this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : getColorInputValue(tColor))); if (tv) setColorInputValue(tColor, tv); } } catch(_){}
+          try { if (bColor) { const bv = (this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor) ? this.entry.backgroundColor : getColorInputValue(bColor)); if (bv) setColorInputValue(bColor, bv); } } catch(_){}
           try { opacitySlider.value = String(this.entry.backgroundOpacity ?? this.plugin.settings.backgroundOpacity ?? 35); } catch(_){}
           try { radiusInput.value = String(this.entry.highlightBorderRadius ?? this.plugin.settings.highlightBorderRadius ?? 4); } catch(_){}
           try { hPadInput.value = String(this.entry.highlightHorizontalPadding ?? this.plugin.settings.highlightHorizontalPadding ?? 4); } catch(_){}
@@ -1007,26 +1061,28 @@ export class HighlightStylingModal extends Modal {
     const syncEntryColorsFromInputs = () => {
       if (!this.entry) return;
       const style = styleSelect.value;
+      const curT = getColorInputValue(tColor);
+      const curB = getColorInputValue(bColor);
       this.entry._savedTextColor =
-        tColor.value ||
+        curT ||
         this.entry._savedTextColor ||
         this.entry.color ||
         this.entry.textColor ||
         "";
       this.entry._savedBackgroundColor =
-        bColor.value ||
+        curB ||
         this.entry._savedBackgroundColor ||
         this.entry.backgroundColor ||
         "";
       if (style === "text") {
-        this.entry.color = tColor.value || "";
+        this.entry.color = curT || "";
       } else if (style === "highlight") {
-        this.entry.backgroundColor = bColor.value || "";
+        this.entry.backgroundColor = curB || "";
         this.entry.textColor = "currentColor";
         this.entry.color = "";
       } else {
-        this.entry.textColor = tColor.value || "";
-        this.entry.backgroundColor = bColor.value || "";
+        this.entry.textColor = curT || "";
+        this.entry.backgroundColor = curB || "";
         this.entry.color = "";
       }
     };
@@ -1044,7 +1100,7 @@ export class HighlightStylingModal extends Modal {
       colorInput.addEventListener("contextmenu", (evt) => {
         evt.preventDefault();
         evt.stopPropagation();
-        const currentColor = colorInput.value || "#000000";
+        const currentColor = getColorInputValue(colorInput) || "#000000";
         const isTextPicker = colorInput === tColor;
         const modal = new ColorPickerModal(
           this.app,
@@ -1068,18 +1124,22 @@ export class HighlightStylingModal extends Modal {
             let changed = false;
 
             if (tc) {
-              tColor.value = tc;
+              setColorInputValue(tColor, tc);
+              this._tPickerTouched = true;
               changed = true;
             } else if (fallback && isTextPicker) {
-              tColor.value = fallback;
+              setColorInputValue(tColor, fallback);
+              this._tPickerTouched = true;
               changed = true;
             }
 
             if (bc) {
-              bColor.value = bc;
+              setColorInputValue(bColor, bc);
+              this._bPickerTouched = true;
               changed = true;
             } else if (fallback && !isTextPicker) {
-              bColor.value = fallback;
+              setColorInputValue(bColor, fallback);
+              this._bPickerTouched = true;
               changed = true;
             }
 
@@ -1098,8 +1158,8 @@ export class HighlightStylingModal extends Modal {
 
             if (!changed) {
               if (currentColor && this.plugin.isValidHexColor(currentColor)) {
-                if (isTextPicker) tColor.value = currentColor;
-                else bColor.value = currentColor;
+                if (isTextPicker) setColorInputValue(tColor, currentColor);
+                else setColorInputValue(bColor, currentColor);
               }
             }
 
@@ -1113,10 +1173,12 @@ export class HighlightStylingModal extends Modal {
           this.entry,
         );
         modal._hideHeaderControls = true;
-        if (tColor.value) modal._preFillTextColor = tColor.value;
-        if (bColor.value) {
-          modal._preFillBgColor = bColor.value;
-          modal._preFillBorderColor = bColor.value;
+        const preT = getColorInputValue(tColor);
+        const preB = getColorInputValue(bColor);
+        if (preT) modal._preFillTextColor = preT;
+        if (preB) {
+          modal._preFillBgColor = preB;
+          modal._preFillBorderColor = preB;
         }
         modal.open();
       });
@@ -1126,10 +1188,12 @@ export class HighlightStylingModal extends Modal {
 
     // Add real-time syncing to this.entry when colors change
     const tColorInputHandler = () => {
+      this._tPickerTouched = true;
       dispatchHighlightColorsChanged();
       renderPreview();
     };
     const bColorInputHandler = () => {
+      this._bPickerTouched = true;
       dispatchHighlightColorsChanged();
       renderPreview();
     };
@@ -1156,9 +1220,9 @@ export class HighlightStylingModal extends Modal {
               ? this.entry.backgroundColor
               : "#000000";
           if (this.plugin.isValidHexColor(initTextColor))
-            tColor.value = initTextColor;
+            setColorInputValue(tColor, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
-            bColor.value = initBgColor;
+            setColorInputValue(bColor, initBgColor);
           renderPreview();
         }
       } catch (_) {}
@@ -1188,17 +1252,17 @@ export class HighlightStylingModal extends Modal {
             updatePickerVisibility();
           } catch (_) {}
           if (st === "text") {
-            this.entry.color = tColor.value || "";
+            this.entry.color = getColorInputValue(tColor) || "";
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = bColor.value || "";
+            this.entry.backgroundColor = getColorInputValue(bColor) || "";
           } else {
             this.entry.color = "";
-            this.entry.textColor = tColor.value || "";
-            this.entry.backgroundColor = bColor.value || "";
+            this.entry.textColor = getColorInputValue(tColor) || "";
+            this.entry.backgroundColor = getColorInputValue(bColor) || "";
           }
         }
       }
@@ -1220,19 +1284,30 @@ export class HighlightStylingModal extends Modal {
           this.entry.textColor = undefined;
           this.entry.backgroundColor = undefined;
         } else {
+          const tRawSave = getColorInputValue(tColor);
+          const bRawSave = getColorInputValue(bColor);
+          const hasEntryTextSave = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) || (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
+          const hasEntryBgSave = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+          const isVarTSave = tRawSave && /^var\(/.test(tRawSave.trim());
+          const isVarBSave = bRawSave && /^var\(/.test(bRawSave.trim());
+          const hasValidTSave = tRawSave && this.plugin.isValidHexColor(tRawSave) && (isVarTSave || hasEntryTextSave || this._tPickerTouched);
+          const hasValidBSave = bRawSave && this.plugin.isValidHexColor(bRawSave) && (isVarBSave || hasEntryBgSave || this._bPickerTouched);
+          // When style needs a color but picker is null, save var(--text-normal)/var(--color-accent) for preview consistency
+          const effectiveTSave = hasValidTSave ? tRawSave : "var(--text-normal)";
+          const effectiveBSave = hasValidBSave ? bRawSave : "var(--color-accent)";
           this.entry.styleType = st;
           if (st === "text") {
-            this.entry.color = tColor.value || "";
+            this.entry.color = hasValidTSave ? tRawSave : "var(--text-normal)";
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = bColor.value || "";
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : "var(--color-accent)";
           } else {
             this.entry.color = "";
-            this.entry.textColor = tColor.value || "";
-            this.entry.backgroundColor = bColor.value || "";
+            this.entry.textColor = hasValidTSave ? tRawSave : "var(--text-normal)";
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : "var(--color-accent)";
           }
         }
         // Save highlight styling parameters
@@ -1391,15 +1466,17 @@ export class HighlightStylingModal extends Modal {
                 (this.entry?.textColor &&
                 this.entry.textColor !== "currentColor"
                   ? this.entry.textColor
-                  : this.entry?.color) || textColorInput.value;
+                  : this.entry?.color) || getColorInputValue(textColorInput);
               if (this.plugin.isValidHexColor(textColor)) {
-                textColorInput.value = textColor;
+                setColorInputValue(textColorInput, textColor);
+                try { this.parentEditEntryModal._textPickerTouched = true; } catch(_) {}
               }
             }
             if (st === "highlight" || st === "both") {
-              const bgColor = this.entry?.backgroundColor || bgColorInput.value;
+              const bgColor = this.entry?.backgroundColor || getColorInputValue(bgColorInput);
               if (this.plugin.isValidHexColor(bgColor)) {
-                bgColorInput.value = bgColor;
+                setColorInputValue(bgColorInput, bgColor);
+                try { this.parentEditEntryModal._bgPickerTouched = true; } catch(_) {}
               }
             }
           }
@@ -1422,21 +1499,8 @@ export class HighlightStylingModal extends Modal {
     this._saveData = saveData;
   }
   onClose() {
-    // Auto-save on close if not already saved via button (implicit check via state?)
-    // Actually we just trigger saveData(false) which saves current state.
-    // If user clicked Save, modal is closed and this is called again?
-    // Modal.close() -> ... -> onClose().
-    // If saveHandler calls close(), close() calls onClose().
-    // So we need to know if we should auto-save.
-    // Ideally, saveData() is idempotent or harmless if called twice.
-    // But we don't want to double-save if we can avoid it.
-    // However, since we can't easily pass state, we'll just save. It's safe.
     try {
-      if (this._saveData) {
-        // We must ensure we don't trigger this if the modal is already closing due to save button?
-        // Actually, if save button was clicked, we already saved.
-        // But it's hard to distinguish.
-        // Let's just save. It's a few ms overhead.
+      if (this._hasUserChanges && this._saveData) {
         this._saveData(false);
       }
     } catch (e) {}
