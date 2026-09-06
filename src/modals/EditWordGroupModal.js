@@ -1023,17 +1023,23 @@ export class EditWordGroupModal extends Modal {
         cp.addEventListener("input", cpHandler);
         cp.title = "Text color";
 
-        // RIGHT-CLICK CONTEXT MENU FOR TEXT COLOR PICKER
-        const cpContextHandler = (ev) => {
+        // RIGHT-CLICK CONTEXT MENU FOR TEXT COLOR PICKER - combined picker shows both text and highlight
+        const openGroupCombinedPicker = (ev) => {
           try {
             ev && ev.preventDefault && ev.preventDefault();
             if (ev && ev.stopPropagation) ev.stopPropagation();
-            const preFillText =
+            const rawText =
               entry.textColor && entry.textColor !== "currentColor"
                 ? entry.textColor
                 : this.plugin.isValidHexColor(entry.color)
                   ? entry.color
-                  : cp.value;
+                  : null;
+            const rawBg =
+              entry.backgroundColor && this.plugin.isValidHexColor(entry.backgroundColor)
+                ? entry.backgroundColor
+                : null;
+            const preFillText = rawText && this.plugin.isValidHexColor(rawText) ? rawText : null;
+            const preFillBg = rawBg && this.plugin.isValidHexColor(rawBg) ? rawBg : null;
             const displayText = entry.isRegex
               ? entry.pattern || ""
               : Array.isArray(entry.groupedPatterns) &&
@@ -1044,40 +1050,65 @@ export class EditWordGroupModal extends Modal {
               this.app,
               this.plugin,
               async (color, result) => {
-                const tc = (result && result.textColor) || color;
-                if (!tc || !this.plugin.isValidHexColor(tc)) return;
-                const currentStyle = entry.styleType || "text";
-                if (currentStyle === "both") {
+                const tc =
+                  result && result.textColor && this.plugin.isValidHexColor(result.textColor)
+                    ? result.textColor
+                    : null;
+                const bc =
+                  result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor)
+                    ? result.backgroundColor
+                    : null;
+                const tcValid = !!tc;
+                const bcValid = !!bc;
+                if (!tcValid && !bcValid) return;
+                if (tcValid && bcValid) {
                   entry.textColor = tc;
+                  entry.backgroundColor = bc;
                   entry.color = "";
+                  entry.styleType = "both";
                   entry._savedTextColor = tc;
-                } else {
-                  entry.color = tc;
+                  entry._savedBackgroundColor = bc;
+                } else if (tcValid) {
                   entry.textColor = null;
+                  entry.color = tc;
                   entry.backgroundColor = null;
+                  entry.styleType = "text";
                   entry._savedTextColor = tc;
+                } else if (bcValid) {
+                  entry.backgroundColor = bc;
+                  if (!entry.textColor || entry.textColor === "currentColor") entry.textColor = "currentColor";
+                  entry.color = "";
+                  const hasText = !!(entry.textColor && entry.textColor !== "currentColor");
+                  entry.styleType = hasText ? "both" : "highlight";
+                  entry._savedBackgroundColor = bc;
                 }
-                if (result && result.markTarget) {
-                  entry.markTarget = result.markTarget;
-                }
+                if (result && result.markTarget) entry.markTarget = result.markTarget;
+                if (result && result.matchType) entry.matchType = result.matchType;
+                if (result && typeof result.caseSensitive === "boolean") entry.caseSensitive = result.caseSensitive;
                 if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
-                cp.value = tc;
+                if (tcValid && cp) cp.value = tc;
+                if (bcValid && cpBg) cpBg.value = bc;
                 this._refreshGroupEntries();
               },
-              "text",
+              "text-and-background",
               displayText,
               false,
               entry ? entry.markTarget : "text",
               entry,
             );
             try {
-              modal._preFillTextColor = preFillText;
+              if (preFillText) modal._preFillTextColor = preFillText;
+              if (preFillBg) {
+                modal._preFillBgColor = preFillBg;
+                modal._preFillBorderColor = preFillBg;
+              }
             } catch (_) {}
             try {
               modal.open();
             } catch (_) {}
           } catch (e) {}
         };
+        const cpContextHandler = openGroupCombinedPicker;
         cp.addEventListener("contextmenu", cpContextHandler);
       }
 
@@ -1120,15 +1151,25 @@ export class EditWordGroupModal extends Modal {
         cpBg.addEventListener("input", cpBgHandler);
         cpBg.title = "Highlight color";
 
-        // RIGHT-CLICK CONTEXT MENU FOR HIGHLIGHT COLOR PICKER
+        // RIGHT-CLICK CONTEXT MENU FOR HIGHLIGHT COLOR PICKER - combined picker shows both
         const cpBgContextHandler = (ev) => {
           try {
             ev && ev.preventDefault && ev.preventDefault();
             if (ev && ev.stopPropagation) ev.stopPropagation();
-            const preFillBg =
-              entry.backgroundColor ||
-              entry._savedBackgroundColor ||
-              cpBg.value;
+            const rawText =
+              entry.textColor && entry.textColor !== "currentColor"
+                ? entry.textColor
+                : this.plugin.isValidHexColor(entry.color)
+                  ? entry.color
+                  : null;
+            const rawBg =
+              entry.backgroundColor && this.plugin.isValidHexColor(entry.backgroundColor)
+                ? entry.backgroundColor
+                : entry._savedBackgroundColor && this.plugin.isValidHexColor(entry._savedBackgroundColor)
+                  ? entry._savedBackgroundColor
+                  : null;
+            const preFillText = rawText && this.plugin.isValidHexColor(rawText) ? rawText : null;
+            const preFillBg = rawBg && this.plugin.isValidHexColor(rawBg) ? rawBg : null;
             const displayText = entry.isRegex
               ? entry.pattern || ""
               : Array.isArray(entry.groupedPatterns) &&
@@ -1139,29 +1180,58 @@ export class EditWordGroupModal extends Modal {
               this.app,
               this.plugin,
               async (color, result) => {
-                const bc = (result && result.backgroundColor) || color;
-                if (!bc || !this.plugin.isValidHexColor(bc)) return;
-                entry.backgroundColor = bc;
-                if (!entry.textColor || entry.textColor === "currentColor") {
-                  entry.textColor = "currentColor";
+                const tc =
+                  result && result.textColor && this.plugin.isValidHexColor(result.textColor)
+                    ? result.textColor
+                    : null;
+                const bc =
+                  result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor)
+                    ? result.backgroundColor
+                    : null;
+                const tcValid = !!tc;
+                const bcValid = !!bc;
+                if (!tcValid && !bcValid) return;
+                if (tcValid && bcValid) {
+                  entry.textColor = tc;
+                  entry.backgroundColor = bc;
+                  entry.color = "";
+                  entry.styleType = "both";
+                  entry._savedTextColor = tc;
+                  entry._savedBackgroundColor = bc;
+                } else if (tcValid) {
+                  entry.textColor = null;
+                  entry.color = tc;
+                  entry.backgroundColor = null;
+                  entry.styleType = "text";
+                  entry._savedTextColor = tc;
+                } else if (bcValid) {
+                  entry.backgroundColor = bc;
+                  if (!entry.textColor || entry.textColor === "currentColor") entry.textColor = "currentColor";
+                  entry.color = "";
+                  const hasText = !!(entry.textColor && entry.textColor !== "currentColor");
+                  entry.styleType = hasText ? "both" : "highlight";
+                  entry._savedBackgroundColor = bc;
                 }
-                entry.color = "";
-                entry._savedBackgroundColor = bc;
-                if (result && result.markTarget) {
-                  entry.markTarget = result.markTarget;
-                }
+                if (result && result.markTarget) entry.markTarget = result.markTarget;
+                if (result && result.matchType) entry.matchType = result.matchType;
+                if (result && typeof result.caseSensitive === "boolean") entry.caseSensitive = result.caseSensitive;
                 if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
-                cpBg.value = bc;
+                if (tcValid && cp) cp.value = tc;
+                if (bcValid) cpBg.value = bc;
                 this._refreshGroupEntries();
               },
-              "background",
+              "text-and-background",
               displayText,
               false,
               entry ? entry.markTarget : "text",
               entry,
             );
             try {
-              modal._preFillBgColor = preFillBg;
+              if (preFillText) modal._preFillTextColor = preFillText;
+              if (preFillBg) {
+                modal._preFillBgColor = preFillBg;
+                modal._preFillBorderColor = preFillBg;
+              }
             } catch (_) {}
             try {
               modal.open();
@@ -1200,6 +1270,7 @@ export class EditWordGroupModal extends Modal {
               )
               .setIcon("pencil")
               .onClick(() => {
+                try { menu.hide(); } catch (_) {}
                 const modal = new EditEntryModal(
                   this.app,
                   this.plugin,
@@ -1220,6 +1291,7 @@ export class EditWordGroupModal extends Modal {
                 )
                 .setIcon("regex")
                 .onClick(() => {
+                  try { menu.hide(); } catch (_) {}
                   const modal = new RealTimeRegexTesterModal(
                     this.app,
                     this.plugin,
@@ -1243,6 +1315,7 @@ export class EditWordGroupModal extends Modal {
               .setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry"))
               .setIcon("copy")
               .onClick(() => {
+                try { menu.hide(); } catch (_) {}
                 const dup = JSON.parse(JSON.stringify(entry));
                 this.group.entries.push(dup);
                 this._sortMode = "last-added";
@@ -1254,6 +1327,7 @@ export class EditWordGroupModal extends Modal {
               .setTitle(this.plugin.t("context_delete_entry", "Delete entry"))
               .setIcon("trash")
               .onClick(() => {
+                try { menu.hide(); } catch (_) {}
                 const doDelete = () => {
                   const idx = this.group.entries.indexOf(entry);
                   if (idx > -1) {

@@ -121,17 +121,21 @@ export class ColorPickerModal extends Modal {
     this._eventListeners = []; // Reset listeners
     this._hasUserChanges = false;
     const cpm = this.plugin.settings.colorPickerMode || "both";
+    const isForceBoth = this.mode === "text-and-background";
     const forcedSingle = this.mode === "text" || this.mode === "background";
+    // When mode is explicitly text-and-background (e.g. right-click on entry pickers or quick colors),
+    // always show both panels even if user's colorPickerMode is set to single
+    const effectiveCpm = isForceBoth && (cpm === "text" || cpm === "background") ? "both" : cpm;
     const isBoth =
       !forcedSingle &&
-      (cpm === "both" ||
-        cpm === "both-bg-left" ||
-        cpm === "both-v-text-top" ||
-        cpm === "both-v-bg-top");
+      (effectiveCpm === "both" ||
+        effectiveCpm === "both-bg-left" ||
+        effectiveCpm === "both-v-text-top" ||
+        effectiveCpm === "both-v-bg-top");
     const isHorizontalBoth =
-      !forcedSingle && (cpm === "both" || cpm === "both-bg-left");
+      !forcedSingle && (effectiveCpm === "both" || effectiveCpm === "both-bg-left");
     const isVerticalBoth =
-      !forcedSingle && (cpm === "both-v-text-top" || cpm === "both-v-bg-top");
+      !forcedSingle && (effectiveCpm === "both-v-text-top" || effectiveCpm === "both-v-bg-top");
     this.modalEl.style.maxWidth = isHorizontalBoth ? "650px" : "560px";
     this.modalEl.style.width = "100%";
     this.modalEl.style.margin = "0";
@@ -724,17 +728,19 @@ export class ColorPickerModal extends Modal {
         "background",
       );
     } else {
-      if (cpm === "text") {
+      // Use effectiveCpm so that text-and-background always shows both even when user prefers single mode
+      const buildCpm = typeof effectiveCpm !== "undefined" ? effectiveCpm : cpm;
+      if (buildCpm === "text") {
         lastPanelEl = buildPanel(
           this.plugin.t("text_color_title", "Text Color"),
           "text",
         );
-      } else if (cpm === "background") {
+      } else if (buildCpm === "background") {
         lastPanelEl = buildPanel(
           this.plugin.t("highlight_color_title", "Highlight Color"),
           "background",
         );
-      } else if (cpm === "both-v-bg-top") {
+      } else if (buildCpm === "both-v-bg-top") {
         buildPanel(
           this.plugin.t("highlight_color_title", "Highlight Color"),
           "background",
@@ -743,13 +749,13 @@ export class ColorPickerModal extends Modal {
           this.plugin.t("text_color_title", "Text Color"),
           "text",
         );
-      } else if (cpm === "both-v-text-top") {
+      } else if (buildCpm === "both-v-text-top") {
         buildPanel(this.plugin.t("text_color_title", "Text Color"), "text");
         lastPanelEl = buildPanel(
           this.plugin.t("highlight_color_title", "Highlight Color"),
           "background",
         );
-      } else if (cpm === "both-bg-left") {
+      } else if (buildCpm === "both-bg-left") {
         buildPanel(
           this.plugin.t("highlight_color_title", "Highlight Color"),
           "background",
@@ -1969,12 +1975,37 @@ export class ColorPickerModal extends Modal {
         : null;
     const presetBg = preset.backgroundColor ? preset.backgroundColor : null;
 
-    // Preserve the user's already-chosen color; fall back to the preset's.
-    const textColor = this.selectedTextColor || presetText;
-    const backgroundColor = this.selectedBgColor || presetBg;
+    // If entry already has user-set colors, preserve them and don't let preset overwrite
+    const entryHasValidText =
+      this._entry &&
+      ((this._entry.color && this.plugin.isValidHexColor(this._entry.color)) ||
+        (this._entry.textColor &&
+          this._entry.textColor !== "currentColor" &&
+          this.plugin.isValidHexColor(this._entry.textColor)));
+    const entryHasValidBg =
+      this._entry && this._entry.backgroundColor && this.plugin.isValidHexColor(this._entry.backgroundColor);
+    const entryHasAnyColor = !!(entryHasValidText || entryHasValidBg);
 
+    // Preserve the user's already-chosen color; fall back to the preset's only if entry has no color
+    let textColor;
+    let backgroundColor;
+    if (entryHasAnyColor) {
+      // Keep existing entry colors (or already selected colors) and ignore preset colors
+      textColor = this.selectedTextColor || (entryHasValidText
+        ? (this._entry.textColor && this._entry.textColor !== "currentColor" ? this._entry.textColor : this._entry.color)
+        : null);
+      backgroundColor = this.selectedBgColor || (entryHasValidBg ? this._entry.backgroundColor : null);
+    } else {
+      textColor = this.selectedTextColor || presetText;
+      backgroundColor = this.selectedBgColor || presetBg;
+    }
+
+    // When entry already has colors, keep its styleType and only apply shape - don't switch text/highlight/both
+    const effectiveStyleType = entryHasAnyColor && this._entry && this._entry.styleType
+      ? this._entry.styleType
+      : preset.styleType || "highlight";
     const styleFields = {
-      styleType: preset.styleType || "highlight",
+      styleType: effectiveStyleType,
       backgroundOpacity: preset.backgroundOpacity ?? null,
       highlightBorderRadius: preset.highlightBorderRadius ?? null,
       highlightHorizontalPadding: preset.highlightHorizontalPadding ?? null,

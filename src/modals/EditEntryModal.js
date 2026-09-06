@@ -491,7 +491,7 @@ export class EditEntryModal extends Modal {
             if (tc) {
               textColorInput.value = tc;
               changed = true;
-            } else if (fallback && isTextPicker) {
+            } else if (fallback && isTextPicker && !bc) {
               textColorInput.value = fallback;
               changed = true;
             }
@@ -499,7 +499,7 @@ export class EditEntryModal extends Modal {
             if (bc) {
               bgColorInput.value = bc;
               changed = true;
-            } else if (fallback && !isTextPicker) {
+            } else if (fallback && !isTextPicker && !tc) {
               bgColorInput.value = fallback;
               changed = true;
             }
@@ -529,7 +529,7 @@ export class EditEntryModal extends Modal {
             applyBgColorToEntry(false);
             dispatchColorsChanged();
           },
-          isTextPicker ? "text" : "background",
+          "text-and-background",
           displayText,
           false,
           this.entry ? this.entry.markTarget : "text",
@@ -719,6 +719,16 @@ export class EditEntryModal extends Modal {
       initialStyle = hasText && hasBg ? "both" : hasBg ? "highlight" : "text";
     }
     styleSelect.value = initialStyle || "text";
+    // Use a visible default instead of black so markdown preview is visible on dark themes
+    const visibleDefault = (() => {
+      try {
+        const sw = this.plugin.settings.swatches && this.plugin.settings.swatches[0] && this.plugin.settings.swatches[0].color;
+        if (sw && this.plugin.isValidHexColor(sw)) return sw;
+        const usw = this.plugin.settings.unifiedSwatches && this.plugin.settings.unifiedSwatches[0] && this.plugin.settings.unifiedSwatches[0].color;
+        if (usw && this.plugin.isValidHexColor(usw)) return usw;
+      } catch (_) {}
+      return "#eb3b5a";
+    })();
     const initTextColor =
       (this.entry &&
         (this.entry.textColor && this.entry.textColor !== "currentColor"
@@ -727,18 +737,18 @@ export class EditEntryModal extends Modal {
             ? this.entry.color
             : "")) ||
       textColorInput.value ||
-      "#000000";
+      visibleDefault;
     const initBgColor =
       (this.entry && (this.entry.backgroundColor || "")) ||
       bgColorInput.value ||
-      "#000000";
+      visibleDefault;
     textColorInput.value = this.plugin.isValidHexColor(initTextColor)
       ? initTextColor
-      : "#000000";
+      : visibleDefault;
     if (initBgColor)
       bgColorInput.value = this.plugin.isValidHexColor(initBgColor)
         ? initBgColor
-        : "#000000";
+        : visibleDefault;
     if (isRegex) {
       textInput.value = this.entry.pattern || "";
       if (matchSelect) {
@@ -764,12 +774,14 @@ export class EditEntryModal extends Modal {
         defaultMatch = "startswith";
       if (defaultMatch === "endswith" || defaultMatch === "ends with")
         defaultMatch = "endswith";
-      matchSelect.value =
-        defaultMatch === "startswith"
-          ? "startsWith"
-          : defaultMatch === "endswith"
-            ? "endsWith"
-            : defaultMatch;
+      if (matchSelect) {
+        matchSelect.value =
+          defaultMatch === "startswith"
+            ? "startsWith"
+            : defaultMatch === "endswith"
+              ? "endsWith"
+              : defaultMatch;
+      }
     }
     if (isTarget) {
       // Hide the regex box and show a dropdown to pick the markdown element
@@ -781,6 +793,7 @@ export class EditEntryModal extends Modal {
         this.entry.affectMarkElements,
       );
       textInput.style.display = "none";
+      box.style.display = "none";
       textInput.value = targetText;
 
       // When opened from a group the passed entry is a deep clone, so edits to
@@ -824,23 +837,41 @@ export class EditEntryModal extends Modal {
           this.plugin.reconfigureEditorExtensions();
           this.plugin.forceRefreshAllEditors();
           this.plugin.forceRefreshAllReadingViews();
-          if (typeof this._renderPreview === "function") this._renderPreview();
+          if (typeof this._refreshPreview === "function") this._refreshPreview();
         });
       };
       const onConfigChange = () => {
         syncLiveEntry(this.entry);
         this.plugin.saveSettings();
-        if (typeof this._renderPreview === "function") this._renderPreview();
+        if (typeof this._refreshPreview === "function") this._refreshPreview();
       };
-      box.appendChild(
-        createMarkdownElementButton(this.app, this.plugin, this.entry, onElementSwitch),
-      );
+      const mdRow = contentEl.createDiv();
+      mdRow.addClass("act-md-element-row");
+      mdRow.style.display = "flex";
+      mdRow.style.alignItems = "center";
+      mdRow.style.gap = "8px";
+      mdRow.style.width = "100%";
+      mdRow.style.boxSizing = "border-box";
+      mdRow.style.borderBottom = "none";
+      contentEl.insertBefore(mdRow, box);
+      const mdBtn = createMarkdownElementButton(this.app, this.plugin, this.entry, onElementSwitch);
       const cfgInput = createMarkdownElementConfigInput(
         this.plugin,
         this.entry,
         onConfigChange,
       );
-      if (cfgInput) box.appendChild(cfgInput);
+      if (cfgInput && cfgInput.classList && cfgInput.classList.contains("act-md-element-config-wrapper")) {
+        // cfgInput is a wrapper div — put the element select inside it at the front
+        cfgInput.insertBefore(mdBtn, cfgInput.firstChild);
+        mdRow.appendChild(cfgInput);
+      } else if (cfgInput) {
+        // cfgInput is a bare input — put both in mdRow
+        mdRow.appendChild(mdBtn);
+        mdRow.appendChild(cfgInput);
+      } else {
+        // no config input — just the element select
+        mdRow.appendChild(mdBtn);
+      }
     }
     const isCase =
       typeof this.entry.caseSensitive === "boolean"
@@ -871,11 +902,21 @@ export class EditEntryModal extends Modal {
         style === "text" ? sText : style === "highlight" ? sHighlight : sBoth;
 
       while (preview.firstChild) preview.removeChild(preview.firstChild);
-      if (!raw) return;
-      const displayText =
-        this.entry && this.entry.isRegex && this.entry.presetLabel
-          ? this.entry.presetLabel
-          : raw;
+      if (!raw && !isTarget) return;
+      let displayText;
+      if (isTarget) {
+        // For markdown elements show the element's label (e.g. "Bold", "Heading") or pattern as fallback
+        displayText = getTargetLabel(this.plugin, this.entry.targetElement, this.entry.affectMarkElements)
+          || this.entry.presetLabel
+          || raw
+          || getTargetPatternText(this.plugin, this.entry.targetElement, this.entry.affectMarkElements)
+          || "Sample Text";
+      } else if (this.entry && this.entry.isRegex && this.entry.presetLabel) {
+        displayText = this.entry.presetLabel;
+      } else {
+        displayText = raw || "Sample Text";
+      }
+      if (!displayText) return;
       const makeSpan = (text) => {
         const span = document.createElement("span");
         span.setAttribute("style", styleStr);
@@ -965,6 +1006,8 @@ export class EditEntryModal extends Modal {
         pickerRow.style.flexDirection = "row";
       }
     };
+    this._updatePickerVisibility = updatePickerVisibility;
+    updatePickerVisibility();
     const onInputImmediate = () => {
       renderPreview();
     };
@@ -1748,10 +1791,18 @@ export class EditEntryModal extends Modal {
   }
   _applyPreset(preset) {
     if (!this.entry || !preset) return;
-    const keys = [
-      "styleType",
-      "textColor",
-      "backgroundColor",
+    // Preserve user-set colors: preset colors only apply if entry has no valid colors
+    const hasValidText =
+      (this.entry.color && this.plugin.isValidHexColor(this.entry.color)) ||
+      (this.entry.textColor &&
+        this.entry.textColor !== "currentColor" &&
+        this.plugin.isValidHexColor(this.entry.textColor));
+    const hasValidBg =
+      this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor);
+    const hasAnyColor = hasValidText || hasValidBg;
+
+    // Shape/style keys - always apply (colors handled separately)
+    const shapeKeys = [
       "backgroundOpacity",
       "highlightBorderRadius",
       "highlightHorizontalPadding",
@@ -1763,30 +1814,54 @@ export class EditEntryModal extends Modal {
       "borderThickness",
       "customCss",
     ];
-    for (const k of keys) {
+    for (const k of shapeKeys) {
       if (k in preset) this.entry[k] = preset[k];
     }
+    // Only copy styleType/colors if entry has no colors yet
+    if (!hasAnyColor) {
+      if ("styleType" in preset) this.entry.styleType = preset.styleType;
+      if ("textColor" in preset) this.entry.textColor = preset.textColor;
+      if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
+      // For legacy text style using `color` field
+      if (preset.styleType === "text" && preset.textColor && this.plugin.isValidHexColor(preset.textColor)) {
+        this.entry.color = preset.textColor;
+        this.entry.textColor = null;
+        this.entry.backgroundColor = null;
+      } else if (preset.styleType === "highlight" && preset.backgroundColor) {
+        this.entry.color = "";
+      }
+    } else {
+      // Entry already has colors - keep its styleType and colors, only shape changes
+      // Ensure styleType stays consistent with existing colors (don't let preset wipe it)
+    }
     try {
-      if (preset.styleType && this._styleSelect) {
-        this._styleSelect.value = preset.styleType;
+      if (this._styleSelect) {
+        this._styleSelect.value = this.entry.styleType || "text";
       }
     } catch (e) {}
-    const tc =
-      preset.textColor && preset.textColor !== "currentColor"
-        ? preset.textColor
+    try { this._updatePickerVisibility(); } catch (_) {}
+    // Update color inputs to reflect preserved (or newly applied) entry colors, not preset's
+    const curTc =
+      this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)
+        ? this.entry.textColor
+        : this.entry.color && this.plugin.isValidHexColor(this.entry.color)
+          ? this.entry.color
+          : "";
+    const curBc =
+      this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor)
+        ? this.entry.backgroundColor
         : "";
-    const bc = preset.backgroundColor ? preset.backgroundColor : "";
     try {
       if (this._textColorInput)
-        this._textColorInput.value = this.plugin.isValidHexColor(tc)
-          ? tc
-          : "#000000";
+        this._textColorInput.value = this.plugin.isValidHexColor(curTc)
+          ? curTc
+          : this._textColorInput.value || "#000000";
     } catch (e) {}
     try {
       if (this._bgColorInput)
-        this._bgColorInput.value = this.plugin.isValidHexColor(bc)
-          ? bc
-          : "#000000";
+        this._bgColorInput.value = this.plugin.isValidHexColor(curBc)
+          ? curBc
+          : this._bgColorInput.value || "#000000";
     } catch (e) {}
     try {
       this._refreshPreview();

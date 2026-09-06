@@ -8,6 +8,22 @@ const TARGET_KEYS = {
   a: ["target_a", "Links"],
   code: ["target_code", "Inline Code"],
   mark: ["target_mark", "Highlight"],
+  highlight: ["target_highlight", "Highlight"],
+  strikethrough: ["target_strikethrough", "Strikethrough"],
+  heading: ["target_heading", "Heading"],
+  "inline-code": ["target_inline_code", "Inline Code"],
+  codeblock: ["target_codeblock", "Code Block"],
+  comment: ["target_comment", "Comment"],
+  "internal-link": ["target_internal_link", "Internal Link"],
+  "external-link": ["target_external_link", "External Link"],
+  "bullet-list": ["target_bullet_list", "Bullet Lists"],
+  "numbered-list": ["target_numbered_list", "Numbered Lists"],
+  "task-list": ["target_task_list", "Task List"],
+  blockquote: ["target_blockquote", "Blockquote"],
+  tag: ["target_tag", "Tag"],
+  "all-tags": ["target_all_tags", "All Tags"],
+  "tab-title": ["target_tab_title", "Tab Title"],
+  "inline-title": ["target_inline_title", "Inline Title"],
 };
 
 // The actual CodeMirror / rendered-DOM selectors the engine colors for a

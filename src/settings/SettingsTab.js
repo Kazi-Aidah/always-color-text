@@ -673,7 +673,10 @@ export class ColorSettingTab extends PluginSettingTab {
                   this.plugin.t("open_in_regex_tester", "Open in Regex Tester"),
                 )
                 .setIcon("regex")
-                .onClick(openInRegexTesterHandler);
+                .onClick(() => {
+                  try { menu.hide(); } catch (_) {}
+                  openInRegexTesterHandler();
+                });
             });
           }
           menu.addItem((item) => {
@@ -683,6 +686,7 @@ export class ColorSettingTab extends PluginSettingTab {
               )
               .setIcon("pencil")
               .onClick(() => {
+                try { menu.hide(); } catch (_) {}
                 const modal = new EditEntryModal(
                   this.app,
                   this.plugin,
@@ -700,13 +704,19 @@ export class ColorSettingTab extends PluginSettingTab {
             item
               .setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry"))
               .setIcon("copy")
-              .onClick(duplicateHandler);
+              .onClick(() => {
+                try { menu.hide(); } catch (_) {}
+                duplicateHandler();
+              });
           });
           menu.addItem((item) => {
             item
               .setTitle(this.plugin.t("context_delete_entry", "Delete entry"))
               .setIcon("trash")
-              .onClick(delHandler);
+              .onClick(() => {
+                try { menu.hide(); } catch (_) {}
+                delHandler();
+              });
           });
           menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
         } catch (e) {
@@ -868,21 +878,26 @@ export class ColorSettingTab extends PluginSettingTab {
       row.addEventListener("contextmenu", contextMenuHandler);
       cp.addEventListener("input", cpHandler);
       cpBg.addEventListener("input", cpBgHandler);
-      const cpContextHandler = (ev) => {
+      const openCombinedColorPicker = (ev) => {
         try {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const idx = resolveIdx();
           const preExisting =
             idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
-          const preFillText =
-            (preExisting &&
-              (preExisting.textColor && preExisting.textColor !== "currentColor"
-                ? preExisting.textColor
-                : this.plugin.isValidHexColor(preExisting.color)
-                  ? preExisting.color
-                  : null)) ||
-            cp.value;
+          const rawText =
+            preExisting &&
+            (preExisting.textColor && preExisting.textColor !== "currentColor"
+              ? preExisting.textColor
+              : this.plugin.isValidHexColor(preExisting.color)
+                ? preExisting.color
+                : null);
+          const rawBg =
+            preExisting && preExisting.backgroundColor && this.plugin.isValidHexColor(preExisting.backgroundColor)
+              ? preExisting.backgroundColor
+              : null;
+          const preFillText = rawText && this.plugin.isValidHexColor(rawText) ? rawText : null;
+          const preFillBg = rawBg && this.plugin.isValidHexColor(rawBg) ? rawBg : null;
           const displayText =
             preExisting && preExisting.isRegex
               ? preExisting.pattern || ""
@@ -898,109 +913,98 @@ export class ColorSettingTab extends PluginSettingTab {
             this.app,
             this.plugin,
             async (color, result) => {
-              const tc = (result && result.textColor) || color;
-              if (!tc || !this.plugin.isValidHexColor(tc)) return;
+              const tc =
+                result && result.textColor && this.plugin.isValidHexColor(result.textColor)
+                  ? result.textColor
+                  : null;
+              const bc =
+                result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor)
+                  ? result.backgroundColor
+                  : null;
+              // Fallback for single-color legacy: use `color` param if result is empty
+              const fallback = color && this.plugin.isValidHexColor(color) ? color : null;
+              // Determine effective colors: prefer result colors, fallback to color param based on which picker was clicked is not needed anymore since we show both
+              let effTc = tc;
+              let effBc = bc;
+              if (!effTc && fallback) {
+                // If no explicit text color but fallback exists, keep existing text if entry had one; otherwise ignore
+                // We don't auto-assign fallback to text when bg was intended; let result drive
+              }
+              if (!effBc && fallback) {
+                // similarly
+              }
+              const tcValid = !!effTc && this.plugin.isValidHexColor(effTc);
+              const bcValid = !!effBc && this.plugin.isValidHexColor(effBc);
+              if (!tcValid && !bcValid) return;
               const i = resolveIdx();
               if (i !== -1) {
                 const s = this.plugin.settings.wordEntries[i];
-                if (s.backgroundColor) {
-                  s.textColor = tc;
+                if (tcValid && bcValid) {
+                  s.textColor = effTc;
+                  s.backgroundColor = effBc;
                   s.color = "";
                   s.styleType = "both";
-                  s._savedTextColor = tc;
-                } else {
-                  s.color = tc;
+                  s._savedTextColor = effTc;
+                  s._savedBackgroundColor = effBc;
+                } else if (tcValid) {
+                  // Check if entry previously had a background - if so keep it unless user reset it
+                  // Since we have bc invalid but preExisting background may exist, we preserve it only if it was prefilled and not reset
+                  // With combined picker, bcValid false means user didn't pick bg and init bg was empty or reset; so set text-only
                   s.textColor = null;
+                  s.color = effTc;
                   s.backgroundColor = null;
                   s.styleType = "text";
-                  s._savedTextColor = tc;
+                  s._savedTextColor = effTc;
+                  // If we want to preserve existing bg when only text changed but bg was previously present, we would have bcValid true via prefill
+                  // So clearing is intentional for reset case
+                } else if (bcValid) {
+                  s.backgroundColor = effBc;
+                  if (!s.textColor || s.textColor === "currentColor") s.textColor = "currentColor";
+                  // If previously had text color, preserve it; with combined picker tc would have been valid via prefill
+                  s.color = "";
+                  const hasText = !!(s.textColor && s.textColor !== "currentColor");
+                  s.styleType = hasText ? "both" : "highlight";
+                  s._savedBackgroundColor = effBc;
                 }
                 if (result && result.markTarget) {
                   s.markTarget = result.markTarget;
                 }
+                if (result && result.matchType) {
+                  s.matchType = result.matchType;
+                }
+                if (result && typeof result.caseSensitive === "boolean") {
+                  s.caseSensitive = result.caseSensitive;
+                }
                 await this.plugin.saveSettings();
-                cp.value = tc;
+                if (tcValid) cp.value = effTc;
+                if (bcValid) cpBg.value = effBc;
                 styleSelect.value = s.styleType || "text";
+                // Refresh visibility in case style changed between text/highlight/both
+                try { if (typeof updateVisibility === "function") updateVisibility(); } catch (_) {}
                 this.plugin.reconfigureEditorExtensions();
                 this.plugin.forceRefreshAllEditors();
               }
             },
-            "text",
+            "text-and-background",
             displayText,
             false,
             preExisting ? preExisting.markTarget : "text",
             preExisting,
           );
           try {
-            modal._preFillTextColor = preFillText || cp.value;
+            if (preFillText && this.plugin.isValidHexColor(preFillText)) modal._preFillTextColor = preFillText;
+            if (preFillBg && this.plugin.isValidHexColor(preFillBg)) {
+              modal._preFillBgColor = preFillBg;
+              modal._preFillBorderColor = preFillBg;
+            }
           } catch (_) {}
           try {
             modal.open();
           } catch (_) {}
         } catch (_) {}
       };
-      const cpBgContextHandler = (ev) => {
-        try {
-          ev && ev.preventDefault && ev.preventDefault();
-          if (ev && ev.stopPropagation) ev.stopPropagation();
-          const idx = resolveIdx();
-          const preExisting =
-            idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
-          const preFillBg =
-            (preExisting && preExisting.backgroundColor) || cpBg.value;
-          const displayText =
-            preExisting && preExisting.isRegex
-              ? preExisting.pattern || ""
-              : Array.isArray(preExisting?.groupedPatterns) &&
-                  preExisting.groupedPatterns.length > 0
-                ? preExisting.groupedPatterns
-                    .map((p) => String(p).trim())
-                    .join(", ")
-                : preExisting && preExisting.pattern
-                  ? String(preExisting.pattern)
-                  : "";
-          const modal = new ColorPickerModal(
-            this.app,
-            this.plugin,
-            async (color, result) => {
-              const bc = (result && result.backgroundColor) || color;
-              if (!bc || !this.plugin.isValidHexColor(bc)) return;
-              const i = resolveIdx();
-              if (i !== -1) {
-                const s = this.plugin.settings.wordEntries[i];
-                s.backgroundColor = bc;
-                if (!s.textColor || s.textColor === "currentColor")
-                  s.textColor = "currentColor";
-                s.color = "";
-                const hasText = !!(
-                  s.textColor && s.textColor !== "currentColor"
-                );
-                s.styleType = hasText ? "both" : "highlight";
-                s._savedBackgroundColor = bc;
-                if (result && result.markTarget) {
-                  s.markTarget = result.markTarget;
-                }
-                await this.plugin.saveSettings();
-                cpBg.value = bc;
-                styleSelect.value = s.styleType || "highlight";
-                this.plugin.reconfigureEditorExtensions();
-                this.plugin.forceRefreshAllEditors();
-              }
-            },
-            "background",
-            displayText,
-            false,
-            preExisting ? preExisting.markTarget : "text",
-            preExisting,
-          );
-          try {
-            modal._preFillBgColor = preFillBg || cpBg.value;
-          } catch (_) {}
-          try {
-            modal.open();
-          } catch (_) {}
-        } catch (_) {}
-      };
+      const cpContextHandler = openCombinedColorPicker;
+      const cpBgContextHandler = openCombinedColorPicker;
       cp.addEventListener("contextmenu", cpContextHandler);
       cpBg.addEventListener("contextmenu", cpBgContextHandler);
       flagsInput.addEventListener("change", flagsInputHandler);
@@ -3160,33 +3164,47 @@ export class ColorSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           };
           tCp.addEventListener("input", tChange);
-          tCp.addEventListener("contextmenu", (ev) => {
+          const openQuickCombinedPicker = (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
             const modal = new ColorPickerModal(
               this.app,
               this.plugin,
               async (color, result) => {
-                const chosen =
-                  result &&
-                  result.textColor &&
-                  this.plugin.isValidHexColor(result.textColor)
+                const newText =
+                  result && result.textColor && this.plugin.isValidHexColor(result.textColor)
                     ? result.textColor
-                    : color && this.plugin.isValidHexColor(color)
-                      ? color
-                      : tCp.value;
-                if (chosen && this.plugin.isValidHexColor(chosen)) {
-                  tCp.value = chosen;
-                  await tChange();
+                    : null;
+                const newBg =
+                  result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor)
+                    ? result.backgroundColor
+                    : null;
+                let changed = false;
+                if (newText && this.plugin.isValidHexColor(newText)) {
+                  tCp.value = newText;
+                  this.plugin.settings.quickColors[i].textColor = newText;
+                  changed = true;
+                }
+                if (newBg && this.plugin.isValidHexColor(newBg)) {
+                  bCp.value = newBg;
+                  this.plugin.settings.quickColors[i].backgroundColor = newBg;
+                  changed = true;
+                }
+                if (changed) {
+                  await this.plugin.saveSettings();
+                  this._refreshQuickColors();
                 }
               },
-              "text",
+              "text-and-background",
               this.plugin.t("selected_text_preview", "Selected Text"),
             );
             modal._hideHeaderControls = true;
             modal._preFillTextColor = tCp.value;
+            modal._preFillBgColor = bCp.value;
+            modal._preFillBorderColor = bCp.value;
             modal.open();
-          });
+          };
+          tCp.addEventListener("contextmenu", openQuickCombinedPicker);
 
           // Highlight color picker
           const bCp = row.createEl("input", { type: "color" });
@@ -3211,35 +3229,7 @@ export class ColorSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           };
           bCp.addEventListener("input", bChange);
-          bCp.addEventListener("contextmenu", (ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            const modal = new ColorPickerModal(
-              this.app,
-              this.plugin,
-              async (color, result) => {
-                const chosen =
-                  result &&
-                  result.backgroundColor &&
-                  this.plugin.isValidHexColor(result.backgroundColor)
-                    ? result.backgroundColor
-                    : color && this.plugin.isValidHexColor(color)
-                      ? color
-                      : bCp.value;
-                if (chosen && this.plugin.isValidHexColor(chosen)) {
-                  bCp.value = chosen;
-                  await bChange();
-                }
-              },
-              "background",
-              this.plugin.t("selected_text_preview", "Selected Text"),
-              false,
-            );
-            modal._hideHeaderControls = true;
-            modal._preFillBgColor = bCp.value;
-            modal._preFillBorderColor = bCp.value;
-            modal.open();
-          });
+          bCp.addEventListener("contextmenu", openQuickCombinedPicker);
 
           // Delete button
           const delBtn = row.createDiv();
