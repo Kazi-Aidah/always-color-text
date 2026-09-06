@@ -23,6 +23,96 @@ import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
 import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
+function resolveVarToHex(varStr) {
+  const toHex = (rgbStr) => {
+    try {
+      const m = rgbStr.match(/\d+/g);
+      if (!m || m.length < 3) return null;
+      // treat transparent (0,0,0,0) as unresolved -> return null so caller can try fallback
+      if (m.length >= 4 && parseInt(m[3],10) === 0 && parseInt(m[0],10)===0 && parseInt(m[1],10)===0 && parseInt(m[2],10)===0) return null;
+      return "#" + [m[0], m[1], m[2]].map(x => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+    } catch (_) { return null; }
+  };
+  // 1) try CSS computed via temporary element
+  try {
+    const tmp = document.createElement("div");
+    tmp.style.color = varStr;
+    tmp.style.position = "absolute";
+    tmp.style.visibility = "hidden";
+    tmp.style.pointerEvents = "none";
+    document.body.appendChild(tmp);
+    const computed = getComputedStyle(tmp).color;
+    document.body.removeChild(tmp);
+    const hex = toHex(computed);
+    if (hex && hex !== "#000000") return hex;
+    if (hex === "#000000") {
+      // #000000 could be real resolved black or unresolved; check if var actually maps to black vs transparent
+      // if computed was transparent, toHex returned null, so not here
+      return hex;
+    }
+  } catch (_) {}
+  // 2) try direct variable lookup on :root / body
+  try {
+    const varName = varStr.match(/--[\w-]+/)?.[0];
+    const fallback = varStr.match(/var\([^,]+,\s*([^)]+)\)/)?.[1]?.trim();
+    if (varName) {
+      let val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      if (!val) val = getComputedStyle(document.body).getPropertyValue(varName).trim();
+      if (val) {
+        // val could be #hex, rgb(), or another var
+        if (/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(val)) return val;
+        if (val.startsWith("var(")) {
+          const inner = resolveVarToHex(val);
+          if (inner) return inner;
+        }
+        const hex2 = toHex(val);
+        if (hex2) return hex2;
+        // try via temp element again for that val
+        try {
+          const t2 = document.createElement("div");
+          t2.style.color = val;
+          t2.style.position = "absolute";
+          t2.style.visibility = "hidden";
+          document.body.appendChild(t2);
+          const c2 = getComputedStyle(t2).color;
+          document.body.removeChild(t2);
+          const h2 = toHex(c2);
+          if (h2) return h2;
+        } catch (_) {}
+      }
+    }
+    if (fallback) {
+      if (/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(fallback)) return fallback;
+      const hf = toHex(fallback);
+      if (hf) return hf;
+      return fallback;
+    }
+  } catch (_) {}
+  return null;
+}
+function isVarColor(str) {
+  return typeof str === "string" && /^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(str.trim());
+}
+function setColorInputValue(input, colorStr) {
+  if (!colorStr) {
+    input.value = "#000000";
+    delete input.dataset.varColor;
+    return;
+  }
+  if (isVarColor(colorStr)) {
+    input.dataset.varColor = colorStr.trim();
+    const resolved = resolveVarToHex(colorStr);
+    if (resolved) input.value = resolved;
+    else input.value = "#000000";
+  } else {
+    delete input.dataset.varColor;
+    input.value = colorStr;
+  }
+}
+function getColorInputValue(input) {
+  if (input.dataset.varColor && isVarColor(input.dataset.varColor)) return input.dataset.varColor;
+  return input.value;
+}
 export class ColorSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
@@ -284,7 +374,7 @@ export class ColorSettingTab extends PluginSettingTab {
       // Text color and swatch
       const cp = row.createEl("input", { type: "color" });
       cp.title = this.plugin.t("text_color_title", "Text color");
-      cp.value = entry.color || "#000000";
+      setColorInputValue(cp, entry.color || "#000000");
       cp.style.width = "30px";
       cp.style.height = "30px";
       cp.style.border = "none";
@@ -325,7 +415,7 @@ export class ColorSettingTab extends PluginSettingTab {
       // Background color and swatch
       const cpBg = row.createEl("input", { type: "color" });
       cpBg.title = this.plugin.t("highlight_color_title", "Highlight color");
-      cpBg.value = entry.backgroundColor || "#000000";
+      setColorInputValue(cpBg, entry.backgroundColor || "#000000");
       cpBg.style.width = "30px";
       cpBg.style.height = "30px";
       cpBg.style.border = "none";
@@ -333,7 +423,7 @@ export class ColorSettingTab extends PluginSettingTab {
       cpBg.style.cursor = "pointer";
       cpBg.style.flex = "0 0 auto";
 
-let swatchSelect2 = null;
+      let swatchSelect2 = null;
       /* if (
         this.plugin.settings.useSwatchNamesForText &&
         swatchesArr.length > 0
@@ -395,9 +485,9 @@ let swatchSelect2 = null;
         initBgEntry.textColor &&
         initBgEntry.textColor !== "currentColor"
       )
-        cp.value = initBgEntry.textColor;
+        setColorInputValue(cp, initBgEntry.textColor);
       if (initBgEntry && initBgEntry.backgroundColor)
-        cpBg.value = initBgEntry.backgroundColor;
+        setColorInputValue(cpBg, initBgEntry.backgroundColor);
       // Set flags input visibility based on current style and regex state
       flagsInput.style.display = kind === "regex" ? "" : "none";
 
@@ -1082,8 +1172,8 @@ let swatchSelect2 = null;
               (entry.textColor && entry.textColor !== "currentColor"
                 ? entry.textColor
                 : entry.backgroundColor || "") ||
-              cp.value;
-            if (val && this.plugin.isValidHexColor(val)) cp.value = val;
+              getColorInputValue(cp);
+            if (val && this.plugin.isValidHexColor(val)) setColorInputValue(cp, val);
           } catch (e) {}
         } else if (style === "highlight") {
           cp.style.display = "none";
@@ -1099,8 +1189,8 @@ let swatchSelect2 = null;
               (entry.textColor && entry.textColor !== "currentColor"
                 ? entry.textColor
                 : "") ||
-              cpBg.value;
-            if (val && this.plugin.isValidHexColor(val)) cpBg.value = val;
+              getColorInputValue(cpBg);
+            if (val && this.plugin.isValidHexColor(val)) setColorInputValue(cpBg, val);
           } catch (e) {}
         } else {
           cp.style.display = "";
@@ -1115,8 +1205,8 @@ let swatchSelect2 = null;
                 ? entry.textColor
                 : entry.color || "";
             const b = entry.backgroundColor || "";
-            if (t && this.plugin.isValidHexColor(t)) cp.value = t;
-            if (b && this.plugin.isValidHexColor(b)) cpBg.value = b;
+            if (t && this.plugin.isValidHexColor(t)) setColorInputValue(cp, t);
+            if (b && this.plugin.isValidHexColor(b)) setColorInputValue(cpBg, b);
           } catch (e) {}
         }
       };
@@ -1186,8 +1276,8 @@ let swatchSelect2 = null;
               ? entry.textColor
               : entry.color || "";
           const b = entry.backgroundColor || "";
-          if (t && this.plugin.isValidHexColor(t)) cp.value = t;
-          if (b && this.plugin.isValidHexColor(b)) cpBg.value = b;
+          if (t && this.plugin.isValidHexColor(t)) setColorInputValue(cp, t);
+          if (b && this.plugin.isValidHexColor(b)) setColorInputValue(cpBg, b);
         } catch (e) {}
       };
       styleSelect.addEventListener("change", styleChangeHandler);

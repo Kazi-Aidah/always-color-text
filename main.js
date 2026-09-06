@@ -20924,6 +20924,94 @@ var ThemeFixerAdjustModal = class extends import_obsidian23.Modal {
 };
 
 // src/settings/SettingsTab.js
+function resolveVarToHex3(varStr) {
+  const toHex = (rgbStr) => {
+    try {
+      const m = rgbStr.match(/\d+/g);
+      if (!m || m.length < 3) return null;
+      if (m.length >= 4 && parseInt(m[3], 10) === 0 && parseInt(m[0], 10) === 0 && parseInt(m[1], 10) === 0 && parseInt(m[2], 10) === 0) return null;
+      return "#" + [m[0], m[1], m[2]].map((x) => parseInt(x, 10).toString(16).padStart(2, "0")).join("");
+    } catch (_) {
+      return null;
+    }
+  };
+  try {
+    const tmp = document.createElement("div");
+    tmp.style.color = varStr;
+    tmp.style.position = "absolute";
+    tmp.style.visibility = "hidden";
+    tmp.style.pointerEvents = "none";
+    document.body.appendChild(tmp);
+    const computed = getComputedStyle(tmp).color;
+    document.body.removeChild(tmp);
+    const hex = toHex(computed);
+    if (hex && hex !== "#000000") return hex;
+    if (hex === "#000000") {
+      return hex;
+    }
+  } catch (_) {
+  }
+  try {
+    const varName = varStr.match(/--[\w-]+/)?.[0];
+    const fallback = varStr.match(/var\([^,]+,\s*([^)]+)\)/)?.[1]?.trim();
+    if (varName) {
+      let val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      if (!val) val = getComputedStyle(document.body).getPropertyValue(varName).trim();
+      if (val) {
+        if (/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(val)) return val;
+        if (val.startsWith("var(")) {
+          const inner = resolveVarToHex3(val);
+          if (inner) return inner;
+        }
+        const hex2 = toHex(val);
+        if (hex2) return hex2;
+        try {
+          const t2 = document.createElement("div");
+          t2.style.color = val;
+          t2.style.position = "absolute";
+          t2.style.visibility = "hidden";
+          document.body.appendChild(t2);
+          const c2 = getComputedStyle(t2).color;
+          document.body.removeChild(t2);
+          const h2 = toHex(c2);
+          if (h2) return h2;
+        } catch (_) {
+        }
+      }
+    }
+    if (fallback) {
+      if (/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(fallback)) return fallback;
+      const hf = toHex(fallback);
+      if (hf) return hf;
+      return fallback;
+    }
+  } catch (_) {
+  }
+  return null;
+}
+function isVarColor3(str) {
+  return typeof str === "string" && /^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(str.trim());
+}
+function setColorInputValue3(input, colorStr) {
+  if (!colorStr) {
+    input.value = "#000000";
+    delete input.dataset.varColor;
+    return;
+  }
+  if (isVarColor3(colorStr)) {
+    input.dataset.varColor = colorStr.trim();
+    const resolved = resolveVarToHex3(colorStr);
+    if (resolved) input.value = resolved;
+    else input.value = "#000000";
+  } else {
+    delete input.dataset.varColor;
+    input.value = colorStr;
+  }
+}
+function getColorInputValue3(input) {
+  if (input.dataset.varColor && isVarColor3(input.dataset.varColor)) return input.dataset.varColor;
+  return input.value;
+}
 var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
@@ -21141,7 +21229,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       const swatchesArr = Array.isArray(this.plugin.settings.swatches) ? this.plugin.settings.swatches : [];
       const cp = row.createEl("input", { type: "color" });
       cp.title = this.plugin.t("text_color_title", "Text color");
-      cp.value = entry.color || "#000000";
+      setColorInputValue3(cp, entry.color || "#000000");
       cp.style.width = "30px";
       cp.style.height = "30px";
       cp.style.border = "none";
@@ -21151,7 +21239,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       let swatchSelect = null;
       const cpBg = row.createEl("input", { type: "color" });
       cpBg.title = this.plugin.t("highlight_color_title", "Highlight color");
-      cpBg.value = entry.backgroundColor || "#000000";
+      setColorInputValue3(cpBg, entry.backgroundColor || "#000000");
       cpBg.style.width = "30px";
       cpBg.style.height = "30px";
       cpBg.style.border = "none";
@@ -21174,9 +21262,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         styleSelect.value = "text";
       }
       if (initBgEntry && initBgEntry.textColor && initBgEntry.textColor !== "currentColor")
-        cp.value = initBgEntry.textColor;
+        setColorInputValue3(cp, initBgEntry.textColor);
       if (initBgEntry && initBgEntry.backgroundColor)
-        cpBg.value = initBgEntry.backgroundColor;
+        setColorInputValue3(cpBg, initBgEntry.backgroundColor);
       flagsInput.style.display = kind === "regex" ? "" : "none";
       try {
         let defaultMatch = typeof entry.matchType === "string" && entry.matchType ? entry.matchType.toLowerCase() : this.plugin.settings.partialMatch ? "contains" : "exact";
@@ -21723,8 +21811,8 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           flagsInput.style.display = kind === "regex" ? "" : "none";
           if (nameInput) nameInput.style.display = kind === "regex" ? "" : "none";
           try {
-            const val = entry.color || (entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.backgroundColor || "") || cp.value;
-            if (val && this.plugin.isValidHexColor(val)) cp.value = val;
+            const val = entry.color || (entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.backgroundColor || "") || getColorInputValue3(cp);
+            if (val && this.plugin.isValidHexColor(val)) setColorInputValue3(cp, val);
           } catch (e) {
           }
         } else if (style === "highlight") {
@@ -21735,8 +21823,8 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           flagsInput.style.display = kind === "regex" ? "" : "none";
           if (nameInput) nameInput.style.display = kind === "regex" ? "" : "none";
           try {
-            const val = entry.backgroundColor || entry.color || (entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : "") || cpBg.value;
-            if (val && this.plugin.isValidHexColor(val)) cpBg.value = val;
+            const val = entry.backgroundColor || entry.color || (entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : "") || getColorInputValue3(cpBg);
+            if (val && this.plugin.isValidHexColor(val)) setColorInputValue3(cpBg, val);
           } catch (e) {
           }
         } else {
@@ -21749,8 +21837,8 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           try {
             const t2 = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || "";
             const b2 = entry.backgroundColor || "";
-            if (t2 && this.plugin.isValidHexColor(t2)) cp.value = t2;
-            if (b2 && this.plugin.isValidHexColor(b2)) cpBg.value = b2;
+            if (t2 && this.plugin.isValidHexColor(t2)) setColorInputValue3(cp, t2);
+            if (b2 && this.plugin.isValidHexColor(b2)) setColorInputValue3(cpBg, b2);
           } catch (e) {
           }
         }
@@ -21798,8 +21886,8 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         try {
           const t2 = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || "";
           const b2 = entry.backgroundColor || "";
-          if (t2 && this.plugin.isValidHexColor(t2)) cp.value = t2;
-          if (b2 && this.plugin.isValidHexColor(b2)) cpBg.value = b2;
+          if (t2 && this.plugin.isValidHexColor(t2)) setColorInputValue3(cp, t2);
+          if (b2 && this.plugin.isValidHexColor(b2)) setColorInputValue3(cpBg, b2);
         } catch (e) {
         }
       };
