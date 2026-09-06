@@ -7706,23 +7706,25 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     subjectWrap.style.cornerShape = "var(--corner-shape)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
-    const testInput = subjectWrap.createEl("div");
-    testInput.contentEditable = "true";
-    testInput.dataset.placeholder = this.plugin.t(
+    const testInput = subjectWrap.createEl("textarea");
+    testInput.placeholder = this.plugin.t(
       "regex_subject_placeholder",
       "type your subject / test string here..."
     );
     testInput.style.width = "100%";
     testInput.style.minHeight = "120px";
+    testInput.style.height = "120px";
     testInput.style.padding = "12px";
     testInput.style.border = "none";
     testInput.style.outline = "none";
     testInput.style.background = "transparent";
     testInput.style.color = "var(--text-normal)";
-    testInput.style.fontFamily = "var(--font-ui-medium)";
+    testInput.style.fontFamily = "var(--font-monospace)";
     testInput.style.whiteSpace = "pre-wrap";
     testInput.style.wordBreak = "break-word";
+    testInput.style.wordWrap = "break-word";
     testInput.style.boxSizing = "border-box";
+    testInput.style.resize = "none";
     const previewWrap = contentEl.createDiv();
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
@@ -7778,41 +7780,12 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
       return out;
     };
     const renderPreview = () => {
-      const raw = String(testInput.textContent || "");
+      const rawRaw = String(testInput.value || "");
+      const raw = rawRaw.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
       const patRaw = String(regexInput2.value || "").trim();
       const flags = Object.keys(flagButtons).filter((k) => flagButtons[k].dataset.on === "1").join("");
       const f = flags.includes("g") ? flags : flags + "g";
-      if (!patRaw) {
-        status.textContent = "";
-        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
-        return;
-      }
-      const pat = this.plugin.sanitizePattern(patRaw, true);
-      if (!pat) {
-        status.textContent = "";
-        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
-        return;
-      }
-      if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) {
-        status.textContent = "";
-        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
-        return;
-      }
-      let re;
-      try {
-        re = new RegExp(pat, f);
-      } catch (e) {
-        status.textContent = "";
-        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 matches";
-        return;
-      }
-      let lastIndex = 0;
-      let out = "";
-      let count = 0;
+      const markTarget = markTargetSelect.value || "text";
       const style = styleSelect.value;
       const t2 = this.plugin.isValidHexColor(textColorInput.value) ? textColorInput.value : "#58bc54";
       const b2 = this.plugin.isValidHexColor(bgColorInput.value) ? bgColorInput.value : "#205613";
@@ -7825,13 +7798,150 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
       const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
       const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, b2) : this.plugin.generateBorderStyle(t2, b2);
       const matchStyle = style === "text" ? `color:${t2};background:transparent;` : style === "highlight" ? `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}` : `color:${t2};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
+      if (markTarget === "line" || markTarget === "nextLine") {
+        previewWrap.style.display = "block";
+        previewWrap.style.textAlign = "left";
+        previewWrap.style.alignItems = "";
+        previewWrap.style.justifyContent = "";
+      } else {
+        previewWrap.style.display = "flex";
+        previewWrap.style.alignItems = "center";
+        previewWrap.style.justifyContent = "center";
+        previewWrap.style.textAlign = "";
+      }
+      if (!patRaw) {
+        status.textContent = "";
+        if (markTarget === "line" || markTarget === "nextLine") {
+          if (!raw) {
+            previewWrap.innerHTML = `<div style="display:block;opacity:0.6;">${escapeHtml(raw) || "<br>"}</div>`;
+          } else {
+            const lines = raw.split("\n");
+            let out2 = "";
+            for (let i = 0; i < lines.length; i++) {
+              const esc = escapeHtml(lines[i]);
+              out2 += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
+            }
+            previewWrap.innerHTML = out2;
+          }
+        } else {
+          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
+        }
+        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
+        return;
+      }
+      const pat = this.plugin.sanitizePattern(patRaw, true);
+      if (!pat) {
+        status.textContent = "";
+        if (markTarget === "line" || markTarget === "nextLine") {
+          const lines = raw.split("\n");
+          let out2 = "";
+          for (let i = 0; i < lines.length; i++) {
+            const esc = escapeHtml(lines[i]);
+            out2 += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
+          }
+          previewWrap.innerHTML = out2 || escapeHtml(raw).replace(/\n/g, "<br>");
+        } else {
+          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
+        }
+        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
+        return;
+      }
+      if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) {
+        status.textContent = "";
+        if (markTarget === "line" || markTarget === "nextLine") {
+          const lines = raw.split("\n");
+          let out2 = "";
+          for (let i = 0; i < lines.length; i++) {
+            const esc = escapeHtml(lines[i]);
+            out2 += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
+          }
+          previewWrap.innerHTML = out2 || escapeHtml(raw).replace(/\n/g, "<br>");
+        } else {
+          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
+        }
+        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
+        return;
+      }
+      let re;
+      try {
+        re = new RegExp(pat, f);
+      } catch (e) {
+        status.textContent = "";
+        if (markTarget === "line" || markTarget === "nextLine") {
+          const lines = raw.split("\n");
+          let out2 = "";
+          for (let i = 0; i < lines.length; i++) {
+            const esc = escapeHtml(lines[i]);
+            out2 += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
+          }
+          previewWrap.innerHTML = out2 || escapeHtml(raw).replace(/\n/g, "<br>");
+        } else {
+          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
+        }
+        matchFooter.textContent = "0 matches";
+        return;
+      }
+      if (markTarget === "line" || markTarget === "nextLine") {
+        const lines = raw.split("\n");
+        const active = /* @__PURE__ */ new Set();
+        let count2 = 0;
+        let iter2 = 0;
+        for (const m of raw.matchAll(re)) {
+          if (iter2++ > 4e3) break;
+          const s = m.index ?? 0;
+          const lineIdx = raw.slice(0, s).split("\n").length - 1;
+          let targetIdx = lineIdx;
+          if (markTarget === "nextLine") targetIdx = lineIdx + 1;
+          if (targetIdx >= 0 && targetIdx < lines.length) active.add(targetIdx);
+          if (m[0] !== void 0) count2++;
+          if (count2 > 2e3) break;
+        }
+        let out2 = "";
+        for (let i = 0; i < lines.length; i++) {
+          const esc = escapeHtml(lines[i]);
+          const content = esc || "&#8203;";
+          if (active.has(i)) {
+            out2 += `<div style="display:block;${matchStyle};margin:0 -12px;padding:2px 12px;box-sizing:border-box;min-height:1.2em;">${content}</div>`;
+          } else {
+            out2 += `<div style="display:block;min-height:1.2em;">${content}</div>`;
+          }
+        }
+        if (lines.length === 1 && lines[0] === "") {
+          out2 = `<div style="display:block;min-height:1.2em;opacity:0.6;">&#8203;</div>`;
+        }
+        previewWrap.innerHTML = out2;
+        matchFooter.textContent = `${count2} match${count2 === 1 ? "" : "es"}`;
+        status.textContent = "";
+        return;
+      }
+      let lastIndex = 0;
+      let out = "";
+      let count = 0;
+      let iter = 0;
       for (const m of raw.matchAll(re)) {
+        if (iter++ > 4e3) break;
         const s = m.index ?? 0;
-        const e = s + (m[0] ? m[0].length : 0);
+        const matched = m[0] ?? "";
+        const len = matched.length;
+        const e = s + len;
+        if (len === 0) {
+          out += escapeHtml(raw.slice(lastIndex, s));
+          out += `<span style="${matchStyle};border-left:2px solid ${t2};margin:0 1px;">&#8203;</span>`;
+          lastIndex = s;
+          if (lastIndex < raw.length && raw.slice(s, s + 1)) {
+          }
+          count++;
+          if (count > 2e3) break;
+          if (iter > 1e3 && len === 0) {
+            if (s >= raw.length) break;
+          }
+          continue;
+        }
         out += escapeHtml(raw.slice(lastIndex, s));
         out += `<span style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</span>`;
         lastIndex = e;
         count++;
+        if (count > 2e3) break;
       }
       out += escapeHtml(raw.slice(lastIndex));
       previewWrap.innerHTML = out.replace(/\n/g, "<br>");
@@ -7924,6 +8034,11 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
       el.addEventListener(ev, fn);
       this._handlers.push({ el, ev, fn });
     });
+    const markTargetChange = () => {
+      render();
+    };
+    markTargetSelect.addEventListener("change", markTargetChange);
+    this._handlers.push({ el: markTargetSelect, ev: "change", fn: markTargetChange });
     testInput.addEventListener("input", onInputDebounced);
     this._handlers.push({ el: testInput, ev: "input", fn: onInputDebounced });
     regexInput2.addEventListener("input", onInputDebounced);
@@ -34972,11 +35087,29 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           if ((t2.key === "tag" || t2.key === "all-tags") && isHighlight) {
             const cmSel = buildMarkdownCmSelector(t2, entry, hasBoldItalic);
             if (cmSel) {
-              const beginSel = cmSel.split(",").map((s) => s.trim() + ".cm-hashtag-begin").join(", ");
-              const endSel = cmSel.split(",").map((s) => s.trim() + ".cm-hashtag-end").join(", ");
-              css += `.cm-editor:not(.act-tag-begin-hidden) ${beginSel} { border-right: none !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; padding-right: 0px !important; }
+              const fixCmEditorScope = (sel) => {
+                const trimmed = sel.trim();
+                let injected = trimmed.replace(
+                  /^(\.workspace\s+\.cm-s-obsidian)\s+(\.cm-content)/,
+                  "$1 .cm-editor:not(.act-tag-begin-hidden) $2"
+                );
+                if (injected === trimmed) {
+                  injected = trimmed.replace(
+                    /\.cm-content/,
+                    ".cm-editor:not(.act-tag-begin-hidden) .cm-content"
+                  );
+                }
+                const shortFallback = trimmed.replace(
+                  /^.*?\.cm-content/,
+                  ".cm-editor:not(.act-tag-begin-hidden) .cm-content"
+                );
+                return `${injected}, ${shortFallback}`;
+              };
+              const begins = cmSel.split(",").map((s) => fixCmEditorScope(s.trim() + ".cm-hashtag-begin"));
+              const ends = cmSel.split(",").map((s) => fixCmEditorScope(s.trim() + ".cm-hashtag-end"));
+              css += `${begins.join(", ")} { border-right: none !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; padding-right: 0px !important; }
 `;
-              css += `.cm-editor:not(.act-tag-begin-hidden) ${endSel} { border-left: none !important; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; padding-left: 0px !important; }
+              css += `${ends.join(", ")} { border-left: none !important; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; padding-left: 0px !important; }
 `;
             }
           }
@@ -35049,69 +35182,123 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
         const bg = entry.backgroundColor || null;
         const isTag = entry.targetElement === "tag" || entry.targetElement === "all-tags";
+        const styleType2 = entry.styleType || "text";
+        const borderCSS = this.generateBorderStyle(textColor, bg, entry);
+        let isHighlight = styleType2 === "highlight" || styleType2 === "both" || !!bg;
+        if (isTag && borderCSS) isHighlight = true;
+        const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
+        const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
+        const vPad = typeof entry.highlightVerticalPadding === "number" ? entry.highlightVerticalPadding : this.settings.highlightVerticalPadding ?? 0;
         if (textColor) el.style.setProperty("color", textColor, "important");
         else el.style.removeProperty("color");
-        if (bg) {
-          const op = typeof entry.backgroundOpacity === "number" ? entry.backgroundOpacity : this.settings.backgroundOpacity ?? 25;
-          el.style.setProperty(
-            "background-color",
-            this.hexToRgba(bg, op),
-            "important"
-          );
-          if (!isTag) {
-            const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
-            const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
-            if (isBegin && !beginHidden) {
-              el.style.setProperty("border-top-left-radius", radius + "px", "important");
-              el.style.setProperty("border-bottom-left-radius", radius + "px", "important");
-              el.style.setProperty("border-top-right-radius", "0px", "important");
-              el.style.setProperty("border-bottom-right-radius", "0px", "important");
-              el.style.setProperty("border-right", "none", "important");
-              el.style.removeProperty("border-left");
-              el.style.setProperty("padding-left", hPad + "px", "important");
-              el.style.setProperty("padding-right", "0px", "important");
-              el.style.removeProperty("border-radius");
-            } else if (isEnd && !beginHidden) {
-              el.style.setProperty("border-top-left-radius", "0px", "important");
-              el.style.setProperty("border-bottom-left-radius", "0px", "important");
-              el.style.setProperty("border-top-right-radius", radius + "px", "important");
-              el.style.setProperty("border-bottom-right-radius", radius + "px", "important");
-              el.style.setProperty("border-left", "none", "important");
-              el.style.removeProperty("border-right");
-              el.style.setProperty("padding-left", "0px", "important");
-              el.style.setProperty("padding-right", hPad + "px", "important");
-              el.style.removeProperty("border-radius");
-            } else {
-              el.style.setProperty("border-radius", radius + "px", "important");
-              el.style.removeProperty("border-top-left-radius");
-              el.style.removeProperty("border-top-right-radius");
-              el.style.removeProperty("border-bottom-left-radius");
-              el.style.removeProperty("border-bottom-right-radius");
-              el.style.removeProperty("border-left");
-              el.style.removeProperty("border-right");
-              el.style.setProperty("padding-left", hPad + "px", "important");
-              el.style.setProperty("padding-right", hPad + "px", "important");
-            }
-            el.style.boxDecorationBreak = "clone";
-            el.style.WebkitBoxDecorationBreak = "clone";
-          } else {
-            el.style.boxDecorationBreak = "clone";
-            el.style.WebkitBoxDecorationBreak = "clone";
-          }
-        } else {
-          el.style.removeProperty("background-color");
-          if (!isTag) {
+        const applyHalfPillSplit = () => {
+          if (isBegin && !beginHidden) {
+            el.style.setProperty("border-top-left-radius", radius + "px", "important");
+            el.style.setProperty("border-bottom-left-radius", radius + "px", "important");
+            el.style.setProperty("border-top-right-radius", "0px", "important");
+            el.style.setProperty("border-bottom-right-radius", "0px", "important");
+            el.style.setProperty("padding-left", hPad + "px", "important");
+            el.style.setProperty("padding-right", "0px", "important");
             el.style.removeProperty("border-radius");
+          } else if (isEnd && !beginHidden) {
+            el.style.setProperty("border-top-left-radius", "0px", "important");
+            el.style.setProperty("border-bottom-left-radius", "0px", "important");
+            el.style.setProperty("border-top-right-radius", radius + "px", "important");
+            el.style.setProperty("border-bottom-right-radius", radius + "px", "important");
+            el.style.setProperty("padding-left", "0px", "important");
+            el.style.setProperty("padding-right", hPad + "px", "important");
+            el.style.removeProperty("border-radius");
+          } else {
+            el.style.setProperty("border-radius", radius + "px", "important");
             el.style.removeProperty("border-top-left-radius");
             el.style.removeProperty("border-top-right-radius");
             el.style.removeProperty("border-bottom-left-radius");
             el.style.removeProperty("border-bottom-right-radius");
+            el.style.setProperty("padding-left", hPad + "px", "important");
+            el.style.setProperty("padding-right", hPad + "px", "important");
+          }
+          if (vPad >= 0) {
+            el.style.setProperty("padding-top", vPad + "px", "important");
+            el.style.setProperty("padding-bottom", vPad + "px", "important");
+            el.style.removeProperty("margin-top");
+            el.style.removeProperty("margin-bottom");
+          } else {
+            el.style.setProperty("padding-top", "0px", "important");
+            el.style.setProperty("padding-bottom", "0px", "important");
+            el.style.setProperty("margin-top", vPad + "px", "important");
+            el.style.setProperty("margin-bottom", vPad + "px", "important");
+          }
+        };
+        const applyBorderInline = () => {
+          if (!borderCSS) {
+            el.style.removeProperty("border");
+            el.style.removeProperty("border-top");
+            el.style.removeProperty("border-bottom");
             el.style.removeProperty("border-left");
             el.style.removeProperty("border-right");
-            el.style.removeProperty("padding-left");
-            el.style.removeProperty("padding-right");
+            return;
           }
+          const parts = borderCSS.split(";").map((s) => s.trim()).filter(Boolean);
+          for (const p of parts) {
+            const idx = p.indexOf(":");
+            if (idx === -1) continue;
+            const prop = p.slice(0, idx).trim();
+            let val = p.slice(idx + 1).trim();
+            val = val.replace(/\s*!important\s*$/, "");
+            if (!val) continue;
+            if (isBegin && !beginHidden && /^border(-right)?$/i.test(prop)) continue;
+            if (isEnd && !beginHidden && /^border(-left)?$/i.test(prop)) continue;
+            try {
+              el.style.setProperty(prop, val, "important");
+            } catch (_) {
+              el.style[prop] = val;
+            }
+          }
+          if (isBegin && !beginHidden) {
+            el.style.setProperty("border-right", "none", "important");
+          }
+          if (isEnd && !beginHidden) {
+            el.style.setProperty("border-left", "none", "important");
+          }
+        };
+        const clearHighlightInline = () => {
+          el.style.removeProperty("background-color");
+          el.style.removeProperty("border-radius");
+          el.style.removeProperty("border-top-left-radius");
+          el.style.removeProperty("border-top-right-radius");
+          el.style.removeProperty("border-bottom-left-radius");
+          el.style.removeProperty("border-bottom-right-radius");
+          el.style.removeProperty("border");
+          el.style.removeProperty("border-top");
+          el.style.removeProperty("border-bottom");
+          el.style.removeProperty("border-left");
+          el.style.removeProperty("border-right");
+          el.style.removeProperty("padding-left");
+          el.style.removeProperty("padding-right");
+          el.style.removeProperty("padding-top");
+          el.style.removeProperty("padding-bottom");
+          el.style.removeProperty("margin-top");
+          el.style.removeProperty("margin-bottom");
+        };
+        if (isHighlight) {
+          if (bg) {
+            const op = typeof entry.backgroundOpacity === "number" ? entry.backgroundOpacity : this.settings.backgroundOpacity ?? 25;
+            el.style.setProperty(
+              "background-color",
+              this.hexToRgba(bg, op),
+              "important"
+            );
+          } else {
+            el.style.removeProperty("background-color");
+          }
+          applyHalfPillSplit();
+          applyBorderInline();
+          el.style.boxDecorationBreak = "clone";
+          el.style.WebkitBoxDecorationBreak = "clone";
+        } else {
+          clearHighlightInline();
         }
+        this.applyCustomCssToElement(el, entry);
       };
       const clearTagEl = (el) => {
         el.style.removeProperty("color");
@@ -38125,10 +38312,19 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           element.style.setProperty("color", finalTextColor, "important");
           element.style.setProperty("--highlight-color", finalTextColor);
         }
-        if (!hideBg && backgroundColor) {
-          const params = this.getHighlightParams(entry);
-          const bgRgba = this.hexToRgba(backgroundColor, params.opacity);
-          element.style.setProperty("background-color", bgRgba, "important");
+        const styleType2 = entry.styleType || "text";
+        const borderCSS = this.generateBorderStyle(finalTextColor, backgroundColor, entry);
+        const isTagElem = entry.targetElement === "tag" || entry.targetElement === "all-tags";
+        let isHighlight = styleType2 === "highlight" || styleType2 === "both" || !!backgroundColor;
+        if (isTagElem && borderCSS) isHighlight = true;
+        const params = this.getHighlightParams(entry);
+        if (!hideBg && isHighlight) {
+          if (backgroundColor) {
+            const bgRgba = this.hexToRgba(backgroundColor, params.opacity);
+            element.style.setProperty("background-color", bgRgba, "important");
+          } else {
+            element.style.removeProperty("background-color");
+          }
           element.style.setProperty(
             "border-radius",
             params.radius + "px",
@@ -38152,6 +38348,8 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
               vPad + "px",
               "important"
             );
+            element.style.removeProperty("margin-top");
+            element.style.removeProperty("margin-bottom");
           } else {
             element.style.setProperty("padding-top", "0px", "important");
             element.style.setProperty("padding-bottom", "0px", "important");
@@ -38162,11 +38360,53 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
               "important"
             );
           }
+          if (borderCSS) {
+            const parts = borderCSS.split(";").map((s) => s.trim()).filter(Boolean);
+            for (const p of parts) {
+              const idx = p.indexOf(":");
+              if (idx === -1) continue;
+              const prop = p.slice(0, idx).trim();
+              let val = p.slice(idx + 1).trim();
+              val = val.replace(/\s*!important\s*$/, "");
+              if (!val) continue;
+              try {
+                element.style.setProperty(prop, val, "important");
+              } catch (_) {
+                element.style[prop] = val;
+              }
+            }
+          } else {
+            element.style.removeProperty("border");
+            element.style.removeProperty("border-top");
+            element.style.removeProperty("border-bottom");
+            element.style.removeProperty("border-left");
+            element.style.removeProperty("border-right");
+          }
           if (this.settings.enableBoxDecorationBreak ?? true) {
             element.style.boxDecorationBreak = "clone";
             element.style.WebkitBoxDecorationBreak = "clone";
+          } else {
+            element.style.removeProperty("box-decoration-break");
+            element.style.removeProperty("-webkit-box-decoration-break");
           }
+        } else {
+          element.style.removeProperty("background-color");
+          element.style.removeProperty("border-radius");
+          element.style.removeProperty("padding-left");
+          element.style.removeProperty("padding-right");
+          element.style.removeProperty("padding-top");
+          element.style.removeProperty("padding-bottom");
+          element.style.removeProperty("margin-top");
+          element.style.removeProperty("margin-bottom");
+          element.style.removeProperty("border");
+          element.style.removeProperty("border-top");
+          element.style.removeProperty("border-bottom");
+          element.style.removeProperty("border-left");
+          element.style.removeProperty("border-right");
+          element.style.removeProperty("box-decoration-break");
+          element.style.removeProperty("-webkit-box-decoration-break");
         }
+        this.applyCustomCssToElement(element, entry);
       }
     }
   }

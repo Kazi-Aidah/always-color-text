@@ -1667,3 +1667,19 @@ body.is-mobile .act-highlight-footer {
   padding-bottom: 8px !important;
 }
 
+/* All Tags — when # is visible, join hashtag halves into single pill
+   Live Preview renders "#tag" as two spans: .cm-hashtag-begin ("#") and
+   .cm-hashtag-end ("tag"). Zero inner radii/padding when the hash is present
+   so an "all tags" highlight looks like one pill; hidden hash is flagged via
+   .act-tag-begin-hidden on .cm-editor (see updateTagBeginVisibility). */
+.cm-editor:not(.act-tag-begin-hidden) .cm-hashtag-begin {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  padding-right: 0 !important;
+}
+.cm-editor:not(.act-tag-begin-hidden) .cm-hashtag-end {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  padding-left: 0 !important;
+}
+

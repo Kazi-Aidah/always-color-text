@@ -212,23 +212,25 @@ export class RealTimeRegexTesterModal extends Modal {
     subjectWrap.style.cornerShape = "var(--corner-shape)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
-    const testInput = subjectWrap.createEl("div");
-    testInput.contentEditable = "true";
-    testInput.dataset.placeholder = this.plugin.t(
+    const testInput = subjectWrap.createEl("textarea");
+    testInput.placeholder = this.plugin.t(
       "regex_subject_placeholder",
       "type your subject / test string here...",
     );
     testInput.style.width = "100%";
     testInput.style.minHeight = "120px";
+    testInput.style.height = "120px";
     testInput.style.padding = "12px";
     testInput.style.border = "none";
     testInput.style.outline = "none";
     testInput.style.background = "transparent";
     testInput.style.color = "var(--text-normal)";
-    testInput.style.fontFamily = "var(--font-ui-medium)";
+    testInput.style.fontFamily = "var(--font-monospace)";
     testInput.style.whiteSpace = "pre-wrap";
     testInput.style.wordBreak = "break-word";
+    testInput.style.wordWrap = "break-word";
     testInput.style.boxSizing = "border-box";
+    testInput.style.resize = "none";
     const previewWrap = contentEl.createDiv();
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
@@ -289,46 +291,16 @@ export class RealTimeRegexTesterModal extends Modal {
     };
 
     const renderPreview = () => {
-      const raw = String(testInput.textContent || "");
+      // Use textarea value for reliable line break handling (plaintext)
+      const rawRaw = String(testInput.value || "");
+      // Normalize line breaks to \n for consistent regex matching
+      const raw = rawRaw.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
       const patRaw = String(regexInput.value || "").trim();
       const flags = Object.keys(flagButtons)
         .filter((k) => flagButtons[k].dataset.on === "1")
         .join("");
       const f = flags.includes("g") ? flags : flags + "g";
-      if (!patRaw) {
-        status.textContent = "";
-        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
-        return;
-      }
-      const pat = this.plugin.sanitizePattern(patRaw, true);
-      if (!pat) {
-        status.textContent = "";
-        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
-        return;
-      }
-      if (
-        !this.plugin.settings.disableRegexSafety &&
-        !this.plugin.validateAndSanitizeRegex(pat)
-      ) {
-        status.textContent = "";
-        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
-        return;
-      }
-      let re;
-      try {
-        re = new RegExp(pat, f);
-      } catch (e) {
-        status.textContent = "";
-        previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        matchFooter.textContent = "0 matches";
-        return;
-      }
-      let lastIndex = 0;
-      let out = "";
-      let count = 0;
+      const markTarget = markTargetSelect.value || "text";
       const style = styleSelect.value;
       const t = this.plugin.isValidHexColor(textColorInput.value) ? textColorInput.value : "#58bc54";
       const b = this.plugin.isValidHexColor(bgColorInput.value) ? bgColorInput.value : "#205613";
@@ -351,13 +323,169 @@ export class RealTimeRegexTesterModal extends Modal {
           : style === "highlight"
             ? `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`
             : `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
+      // For line-level previews, adjust wrapper to block layout
+      if (markTarget === "line" || markTarget === "nextLine") {
+        previewWrap.style.display = "block";
+        previewWrap.style.textAlign = "left";
+        previewWrap.style.alignItems = "";
+        previewWrap.style.justifyContent = "";
+      } else {
+        previewWrap.style.display = "flex";
+        previewWrap.style.alignItems = "center";
+        previewWrap.style.justifyContent = "center";
+        previewWrap.style.textAlign = "";
+      }
+      if (!patRaw) {
+        status.textContent = "";
+        // For line targets, render lines as blocks to preview line backgrounds even when no pattern
+        if (markTarget === "line" || markTarget === "nextLine") {
+          if (!raw) {
+            previewWrap.innerHTML = `<div style="display:block;opacity:0.6;">${escapeHtml(raw) || "<br>"}</div>`;
+          } else {
+            const lines = raw.split("\n");
+            let out = "";
+            for (let i = 0; i < lines.length; i++) {
+              const esc = escapeHtml(lines[i]);
+              out += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
+            }
+            previewWrap.innerHTML = out;
+          }
+        } else {
+          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
+        }
+        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
+        return;
+      }
+      const pat = this.plugin.sanitizePattern(patRaw, true);
+      if (!pat) {
+        status.textContent = "";
+        if (markTarget === "line" || markTarget === "nextLine") {
+          const lines = raw.split("\n");
+          let out = "";
+          for (let i = 0; i < lines.length; i++) {
+            const esc = escapeHtml(lines[i]);
+            out += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
+          }
+          previewWrap.innerHTML = out || escapeHtml(raw).replace(/\n/g, "<br>");
+        } else {
+          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
+        }
+        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
+        return;
+      }
+      if (
+        !this.plugin.settings.disableRegexSafety &&
+        !this.plugin.validateAndSanitizeRegex(pat)
+      ) {
+        status.textContent = "";
+        if (markTarget === "line" || markTarget === "nextLine") {
+          const lines = raw.split("\n");
+          let out = "";
+          for (let i = 0; i < lines.length; i++) {
+            const esc = escapeHtml(lines[i]);
+            out += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
+          }
+          previewWrap.innerHTML = out || escapeHtml(raw).replace(/\n/g, "<br>");
+        } else {
+          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
+        }
+        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
+        return;
+      }
+      let re;
+      try {
+        re = new RegExp(pat, f);
+      } catch (e) {
+        status.textContent = "";
+        if (markTarget === "line" || markTarget === "nextLine") {
+          const lines = raw.split("\n");
+          let out = "";
+          for (let i = 0; i < lines.length; i++) {
+            const esc = escapeHtml(lines[i]);
+            out += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
+          }
+          previewWrap.innerHTML = out || escapeHtml(raw).replace(/\n/g, "<br>");
+        } else {
+          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
+        }
+        matchFooter.textContent = "0 matches";
+        return;
+      }
+      // Line-level preview: highlight whole lines
+      if (markTarget === "line" || markTarget === "nextLine") {
+        const lines = raw.split("\n");
+        const active = new Set();
+        let count = 0;
+        // Prevent infinite loop on zero-length matches
+        let iter = 0;
+        for (const m of raw.matchAll(re)) {
+          if (iter++ > 4000) break;
+          const s = m.index ?? 0;
+          const lineIdx = raw.slice(0, s).split("\n").length - 1;
+          let targetIdx = lineIdx;
+          if (markTarget === "nextLine") targetIdx = lineIdx + 1;
+          if (targetIdx >= 0 && targetIdx < lines.length) active.add(targetIdx);
+          // Count even zero-length matches but avoid counting empty that would flood
+          if (m[0] !== undefined) count++;
+          // Safety for zero-length that could produce excessive matches
+          if (count > 2000) break;
+        }
+        let out = "";
+        for (let i = 0; i < lines.length; i++) {
+          const esc = escapeHtml(lines[i]);
+          const content = esc || "&#8203;";
+          if (active.has(i)) {
+            out += `<div style="display:block;${matchStyle};margin:0 -12px;padding:2px 12px;box-sizing:border-box;min-height:1.2em;">${content}</div>`;
+          } else {
+            out += `<div style="display:block;min-height:1.2em;">${content}</div>`;
+          }
+        }
+        // Handle empty input (no lines)
+        if (lines.length === 1 && lines[0] === "") {
+          out = `<div style="display:block;min-height:1.2em;opacity:0.6;">&#8203;</div>`;
+        }
+        previewWrap.innerHTML = out;
+        matchFooter.textContent = `${count} match${count === 1 ? "" : "es"}`;
+        status.textContent = "";
+        return;
+      }
+      // Text-level preview: inline highlights
+      let lastIndex = 0;
+      let out = "";
+      let count = 0;
+      let iter = 0;
       for (const m of raw.matchAll(re)) {
+        if (iter++ > 4000) break;
         const s = m.index ?? 0;
-        const e = s + (m[0] ? m[0].length : 0);
+        const matched = m[0] ?? "";
+        const len = matched.length;
+        const e = s + len;
+        // Guard against zero-length causing infinite empty spans
+        if (len === 0) {
+          out += escapeHtml(raw.slice(lastIndex, s));
+          // Show zero-width match indicator
+          out += `<span style="${matchStyle};border-left:2px solid ${t};margin:0 1px;">&#8203;</span>`;
+          lastIndex = s;
+          // Move lastIndex forward by 1 to avoid re-processing same position if needed
+          // But keep count and let engine advance naturally; adjust slice for next iter
+          if (lastIndex < raw.length && raw.slice(s, s + 1)) {
+            // Consume one char in display to avoid duplicate rendering
+            // The next loop's slice will handle the char between s and next match
+          }
+          count++;
+          if (count > 2000) break;
+          // Avoid infinite loop when pattern matches empty string at every position
+          if (iter > 1000 && len === 0) {
+            // If we have many zero-length matches, break early
+            if (s >= raw.length) break;
+          }
+          continue;
+        }
         out += escapeHtml(raw.slice(lastIndex, s));
         out += `<span style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</span>`;
         lastIndex = e;
         count++;
+        if (count > 2000) break;
       }
       out += escapeHtml(raw.slice(lastIndex));
       previewWrap.innerHTML = out.replace(/\n/g, "<br>");
@@ -451,6 +579,11 @@ export class RealTimeRegexTesterModal extends Modal {
       el.addEventListener(ev, fn);
       this._handlers.push({ el, ev, fn });
     });
+    const markTargetChange = () => {
+      render();
+    };
+    markTargetSelect.addEventListener("change", markTargetChange);
+    this._handlers.push({ el: markTargetSelect, ev: "change", fn: markTargetChange });
     testInput.addEventListener("input", onInputDebounced);
     this._handlers.push({ el: testInput, ev: "input", fn: onInputDebounced });
     regexInput.addEventListener("input", onInputDebounced);

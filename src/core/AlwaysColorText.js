@@ -7430,16 +7430,32 @@ class AlwaysColorText extends Plugin {
           if ((t.key === "tag" || t.key === "all-tags") && isHighlight) {
             const cmSel = buildMarkdownCmSelector(t, entry, hasBoldItalic);
             if (cmSel) {
-              const beginSel = cmSel
+              const fixCmEditorScope = (sel) => {
+                const trimmed = sel.trim();
+                let injected = trimmed.replace(
+                  /^(\.workspace\s+\.cm-s-obsidian)\s+(\.cm-content)/,
+                  "$1 .cm-editor:not(.act-tag-begin-hidden) $2",
+                );
+                if (injected === trimmed) {
+                  injected = trimmed.replace(
+                    /\.cm-content/,
+                    ".cm-editor:not(.act-tag-begin-hidden) .cm-content",
+                  );
+                }
+                const shortFallback = trimmed.replace(
+                  /^.*?\.cm-content/,
+                  ".cm-editor:not(.act-tag-begin-hidden) .cm-content",
+                );
+                return `${injected}, ${shortFallback}`;
+              };
+              const begins = cmSel
                 .split(",")
-                .map((s) => s.trim() + ".cm-hashtag-begin")
-                .join(", ");
-              const endSel = cmSel
+                .map((s) => fixCmEditorScope(s.trim() + ".cm-hashtag-begin"));
+              const ends = cmSel
                 .split(",")
-                .map((s) => s.trim() + ".cm-hashtag-end")
-                .join(", ");
-              css += `.cm-editor:not(.act-tag-begin-hidden) ${beginSel} { border-right: none !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; padding-right: 0px !important; }\n`;
-              css += `.cm-editor:not(.act-tag-begin-hidden) ${endSel} { border-left: none !important; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; padding-left: 0px !important; }\n`;
+                .map((s) => fixCmEditorScope(s.trim() + ".cm-hashtag-end"));
+              css += `${begins.join(", ")} { border-right: none !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; padding-right: 0px !important; }\n`;
+              css += `${ends.join(", ")} { border-left: none !important; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; padding-left: 0px !important; }\n`;
             }
           }
         }
@@ -7531,85 +7547,147 @@ class AlwaysColorText extends Plugin {
             ? entry.textColor
             : entry.color || null;
         const bg = entry.backgroundColor || null;
-        // Retain existing styles unless explicitly overwritten – no global clear
-        // to avoid flicker on click/selection. For tags, border/padding is
-        // handled purely by CSS (applyFormattingStyles half-pill rules) to
-        // avoid JS vs CSS race on All Tags. JS only sets color/background.
         const isTag = entry.targetElement === "tag" || entry.targetElement === "all-tags";
+
+        const styleType = entry.styleType || "text";
+        const borderCSS = this.generateBorderStyle(textColor, bg, entry);
+        let isHighlight =
+          styleType === "highlight" || styleType === "both" || !!bg;
+        if (isTag && borderCSS) isHighlight = true;
+
+        const radius =
+          typeof entry.highlightBorderRadius === "number"
+            ? entry.highlightBorderRadius
+            : (this.settings.highlightBorderRadius ?? 8);
+        const hPad =
+          typeof entry.highlightHorizontalPadding === "number"
+            ? entry.highlightHorizontalPadding
+            : (this.settings.highlightHorizontalPadding ?? 4);
+        const vPad =
+          typeof entry.highlightVerticalPadding === "number"
+            ? entry.highlightVerticalPadding
+            : (this.settings.highlightVerticalPadding ?? 0);
+
         if (textColor) el.style.setProperty("color", textColor, "important");
         else el.style.removeProperty("color");
-        if (bg) {
-          const op =
-            typeof entry.backgroundOpacity === "number"
-              ? entry.backgroundOpacity
-              : this.settings.backgroundOpacity ?? 25;
-          el.style.setProperty(
-            "background-color",
-            this.hexToRgba(bg, op),
-            "important",
-          );
-          if (!isTag) {
-            const radius =
-              typeof entry.highlightBorderRadius === "number"
-                ? entry.highlightBorderRadius
-                : this.settings.highlightBorderRadius ?? 8;
-            const hPad =
-              typeof entry.highlightHorizontalPadding === "number"
-                ? entry.highlightHorizontalPadding
-                : this.settings.highlightHorizontalPadding ?? 4;
-            if (isBegin && !beginHidden) {
-              el.style.setProperty("border-top-left-radius", radius + "px", "important");
-              el.style.setProperty("border-bottom-left-radius", radius + "px", "important");
-              el.style.setProperty("border-top-right-radius", "0px", "important");
-              el.style.setProperty("border-bottom-right-radius", "0px", "important");
-              el.style.setProperty("border-right", "none", "important");
-              el.style.removeProperty("border-left");
-              el.style.setProperty("padding-left", hPad + "px", "important");
-              el.style.setProperty("padding-right", "0px", "important");
-              el.style.removeProperty("border-radius");
-            } else if (isEnd && !beginHidden) {
-              el.style.setProperty("border-top-left-radius", "0px", "important");
-              el.style.setProperty("border-bottom-left-radius", "0px", "important");
-              el.style.setProperty("border-top-right-radius", radius + "px", "important");
-              el.style.setProperty("border-bottom-right-radius", radius + "px", "important");
-              el.style.setProperty("border-left", "none", "important");
-              el.style.removeProperty("border-right");
-              el.style.setProperty("padding-left", "0px", "important");
-              el.style.setProperty("padding-right", hPad + "px", "important");
-              el.style.removeProperty("border-radius");
-            } else {
-              el.style.setProperty("border-radius", radius + "px", "important");
-              el.style.removeProperty("border-top-left-radius");
-              el.style.removeProperty("border-top-right-radius");
-              el.style.removeProperty("border-bottom-left-radius");
-              el.style.removeProperty("border-bottom-right-radius");
-              el.style.removeProperty("border-left");
-              el.style.removeProperty("border-right");
-              el.style.setProperty("padding-left", hPad + "px", "important");
-              el.style.setProperty("padding-right", hPad + "px", "important");
-            }
-            el.style.boxDecorationBreak = "clone";
-            el.style.WebkitBoxDecorationBreak = "clone";
-          } else {
-            // For tags, let CSS handle border/padding half-pill to avoid glitch;
-            // just ensure boxDecorationBreak for wrapping.
-            el.style.boxDecorationBreak = "clone";
-            el.style.WebkitBoxDecorationBreak = "clone";
-          }
-        } else {
-          el.style.removeProperty("background-color");
-          if (!isTag) {
+
+        const applyHalfPillSplit = () => {
+          if (isBegin && !beginHidden) {
+            el.style.setProperty("border-top-left-radius", radius + "px", "important");
+            el.style.setProperty("border-bottom-left-radius", radius + "px", "important");
+            el.style.setProperty("border-top-right-radius", "0px", "important");
+            el.style.setProperty("border-bottom-right-radius", "0px", "important");
+            el.style.setProperty("padding-left", hPad + "px", "important");
+            el.style.setProperty("padding-right", "0px", "important");
             el.style.removeProperty("border-radius");
+          } else if (isEnd && !beginHidden) {
+            el.style.setProperty("border-top-left-radius", "0px", "important");
+            el.style.setProperty("border-bottom-left-radius", "0px", "important");
+            el.style.setProperty("border-top-right-radius", radius + "px", "important");
+            el.style.setProperty("border-bottom-right-radius", radius + "px", "important");
+            el.style.setProperty("padding-left", "0px", "important");
+            el.style.setProperty("padding-right", hPad + "px", "important");
+            el.style.removeProperty("border-radius");
+          } else {
+            el.style.setProperty("border-radius", radius + "px", "important");
             el.style.removeProperty("border-top-left-radius");
             el.style.removeProperty("border-top-right-radius");
             el.style.removeProperty("border-bottom-left-radius");
             el.style.removeProperty("border-bottom-right-radius");
+            el.style.setProperty("padding-left", hPad + "px", "important");
+            el.style.setProperty("padding-right", hPad + "px", "important");
+          }
+          if (vPad >= 0) {
+            el.style.setProperty("padding-top", vPad + "px", "important");
+            el.style.setProperty("padding-bottom", vPad + "px", "important");
+            el.style.removeProperty("margin-top");
+            el.style.removeProperty("margin-bottom");
+          } else {
+            el.style.setProperty("padding-top", "0px", "important");
+            el.style.setProperty("padding-bottom", "0px", "important");
+            el.style.setProperty("margin-top", vPad + "px", "important");
+            el.style.setProperty("margin-bottom", vPad + "px", "important");
+          }
+        };
+
+        const applyBorderInline = () => {
+          if (!borderCSS) {
+            el.style.removeProperty("border");
+            el.style.removeProperty("border-top");
+            el.style.removeProperty("border-bottom");
             el.style.removeProperty("border-left");
             el.style.removeProperty("border-right");
-            el.style.removeProperty("padding-left");
-            el.style.removeProperty("padding-right");
+            return;
           }
+          const parts = borderCSS
+            .split(";")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          for (const p of parts) {
+            const idx = p.indexOf(":");
+            if (idx === -1) continue;
+            const prop = p.slice(0, idx).trim();
+            let val = p.slice(idx + 1).trim();
+            val = val.replace(/\s*!important\s*$/, "");
+            if (!val) continue;
+            if (isBegin && !beginHidden && /^border(-right)?$/i.test(prop)) continue;
+            if (isEnd && !beginHidden && /^border(-left)?$/i.test(prop)) continue;
+            try {
+              el.style.setProperty(prop, val, "important");
+            } catch (_) {
+              el.style[prop] = val;
+            }
+          }
+          if (isBegin && !beginHidden) {
+            el.style.setProperty("border-right", "none", "important");
+          }
+          if (isEnd && !beginHidden) {
+            el.style.setProperty("border-left", "none", "important");
+          }
+        };
+
+        const clearHighlightInline = () => {
+          el.style.removeProperty("background-color");
+          el.style.removeProperty("border-radius");
+          el.style.removeProperty("border-top-left-radius");
+          el.style.removeProperty("border-top-right-radius");
+          el.style.removeProperty("border-bottom-left-radius");
+          el.style.removeProperty("border-bottom-right-radius");
+          el.style.removeProperty("border");
+          el.style.removeProperty("border-top");
+          el.style.removeProperty("border-bottom");
+          el.style.removeProperty("border-left");
+          el.style.removeProperty("border-right");
+          el.style.removeProperty("padding-left");
+          el.style.removeProperty("padding-right");
+          el.style.removeProperty("padding-top");
+          el.style.removeProperty("padding-bottom");
+          el.style.removeProperty("margin-top");
+          el.style.removeProperty("margin-bottom");
+        };
+
+        if (isHighlight) {
+          if (bg) {
+            const op =
+              typeof entry.backgroundOpacity === "number"
+                ? entry.backgroundOpacity
+                : this.settings.backgroundOpacity ?? 25;
+            el.style.setProperty(
+              "background-color",
+              this.hexToRgba(bg, op),
+              "important",
+            );
+          } else {
+            el.style.removeProperty("background-color");
+          }
+          applyHalfPillSplit();
+          applyBorderInline();
+          el.style.boxDecorationBreak = "clone";
+          el.style.WebkitBoxDecorationBreak = "clone";
+        } else {
+          clearHighlightInline();
         }
+        this.applyCustomCssToElement(el, entry);
       };
       const clearTagEl = (el) => {
         el.style.removeProperty("color");
@@ -11529,12 +11607,30 @@ class AlwaysColorText extends Plugin {
           element.style.setProperty("--highlight-color", finalTextColor);
         }
 
-        // Apply background color
-        if (!hideBg && backgroundColor) {
-          const params = this.getHighlightParams(entry);
-          const bgRgba = this.hexToRgba(backgroundColor, params.opacity);
+        // Mirror applyFormattingStyles isHighlight logic: styleType (highlight/both) OR
+        // background-color OR (tag element + border). Ensures tag entries look the same
+        // whether styled via "All Tags" (CSS injection) or "Tag" filter (JS inline).
+        const styleType = entry.styleType || "text";
+        const borderCSS = this.generateBorderStyle(finalTextColor, backgroundColor, entry);
+        const isTagElem =
+          entry.targetElement === "tag" || entry.targetElement === "all-tags";
+        let isHighlight =
+          styleType === "highlight" ||
+          styleType === "both" ||
+          !!backgroundColor;
+        if (isTagElem && borderCSS) isHighlight = true;
 
-          element.style.setProperty("background-color", bgRgba, "important");
+        const params = this.getHighlightParams(entry);
+
+        // Apply highlight styling (bg, padding, radius, border, box-decoration-break)
+        if (!hideBg && isHighlight) {
+          if (backgroundColor) {
+            const bgRgba = this.hexToRgba(backgroundColor, params.opacity);
+            element.style.setProperty("background-color", bgRgba, "important");
+          } else {
+            element.style.removeProperty("background-color");
+          }
+
           element.style.setProperty(
             "border-radius",
             params.radius + "px",
@@ -11559,6 +11655,8 @@ class AlwaysColorText extends Plugin {
               vPad + "px",
               "important",
             );
+            element.style.removeProperty("margin-top");
+            element.style.removeProperty("margin-bottom");
           } else {
             element.style.setProperty("padding-top", "0px", "important");
             element.style.setProperty("padding-bottom", "0px", "important");
@@ -11570,11 +11668,58 @@ class AlwaysColorText extends Plugin {
             );
           }
 
+          if (borderCSS) {
+            const parts = borderCSS
+              .split(";")
+              .map((s) => s.trim())
+              .filter(Boolean);
+            for (const p of parts) {
+              const idx = p.indexOf(":");
+              if (idx === -1) continue;
+              const prop = p.slice(0, idx).trim();
+              let val = p.slice(idx + 1).trim();
+              val = val.replace(/\s*!important\s*$/, "");
+              if (!val) continue;
+              try {
+                element.style.setProperty(prop, val, "important");
+              } catch (_) {
+                element.style[prop] = val;
+              }
+            }
+          } else {
+            element.style.removeProperty("border");
+            element.style.removeProperty("border-top");
+            element.style.removeProperty("border-bottom");
+            element.style.removeProperty("border-left");
+            element.style.removeProperty("border-right");
+          }
+
           if (this.settings.enableBoxDecorationBreak ?? true) {
             element.style.boxDecorationBreak = "clone";
             element.style.WebkitBoxDecorationBreak = "clone";
+          } else {
+            element.style.removeProperty("box-decoration-break");
+            element.style.removeProperty("-webkit-box-decoration-break");
           }
+        } else {
+          element.style.removeProperty("background-color");
+          element.style.removeProperty("border-radius");
+          element.style.removeProperty("padding-left");
+          element.style.removeProperty("padding-right");
+          element.style.removeProperty("padding-top");
+          element.style.removeProperty("padding-bottom");
+          element.style.removeProperty("margin-top");
+          element.style.removeProperty("margin-bottom");
+          element.style.removeProperty("border");
+          element.style.removeProperty("border-top");
+          element.style.removeProperty("border-bottom");
+          element.style.removeProperty("border-left");
+          element.style.removeProperty("border-right");
+          element.style.removeProperty("box-decoration-break");
+          element.style.removeProperty("-webkit-box-decoration-break");
         }
+
+        this.applyCustomCssToElement(element, entry);
       }
     }
   }
