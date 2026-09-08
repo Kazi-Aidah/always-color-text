@@ -11203,8 +11203,10 @@ class AlwaysColorText extends Plugin {
           }
           if (!key || !(key in fm)) return null;
           if (val === null || val === "") return "file";
-          const fv = String(fm[key]);
-          return fv.toLowerCase() === String(val).toLowerCase() ? "file" : null;
+          const fmVal = fm[key];
+          const eq = (x) => String(x ?? "").trim().toLowerCase() === String(val).toLowerCase();
+          if (Array.isArray(fmVal)) return fmVal.some(eq) ? "file" : null;
+          return eq(fmVal) ? "file" : null;
         }
         // Pattern rule: glob-like match against path, parent folders, and names.
         if (rule.type === "pattern") {
@@ -16873,8 +16875,10 @@ class AlwaysColorText extends Plugin {
         }
         if (!key || !(key in fm)) return null;
         if (val === null || val === "") return "file";
-        const fv = String(fm[key]);
-        return fv.toLowerCase() === String(val).toLowerCase() ? "file" : null;
+        const fmVal = fm[key];
+        const eq = (x) => String(x ?? "").trim().toLowerCase() === String(val).toLowerCase();
+        if (Array.isArray(fmVal)) return fmVal.some(eq) ? "file" : null;
+        return eq(fmVal) ? "file" : null;
       }
 
       if (rule.type === "pattern") {

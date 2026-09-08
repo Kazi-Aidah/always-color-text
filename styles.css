@@ -1070,11 +1070,11 @@ body.is-mobile .color-words-list .act-entry-row .act-md-element-config {
 }
 
 /* ====== BLACKLIST ENTRIES — MOBILE LAYOUT (.is-mobile) ====== */
-/* Only for mobile — background + border + radius like colored text + file folder rules */
+/* Base styling always on is-mobile (background/border) — keep on tablet */
 body.is-mobile .blacklist-words-list .act-entry-row {
-  flex-wrap: wrap !important;
+  display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
   width: 100% !important;
   background-color: var(--setting-items-background) !important;
   border: 1px solid var(--background-modifier-border) !important;
@@ -1083,6 +1083,12 @@ body.is-mobile .blacklist-words-list .act-entry-row {
   margin-top: 6px !important;
   margin-bottom: 0 !important;
   box-sizing: border-box !important;
+  flex-wrap: nowrap !important;
+}
+@media (max-width: 480px) {
+body.is-mobile .blacklist-words-list .act-entry-row {
+  flex-wrap: wrap !important;
+  gap: 6px !important;
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-regex-name {
   order: -1 !important;
@@ -1137,10 +1143,6 @@ body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-delete-btn {
   border-radius: var(--button-radius) !important;
   margin-left: auto !important;
 }
-body:not(.is-mobile) .act-blacklist-regex-btn,
-body:not(.is-mobile) .act-blacklist-delete-btn {
-  display: none !important;
-}
 /* Markdown: just element dropdown (no config) -> dropdown + X same row */
 body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-select):not(:has(.act-md-element-config)):not(:has(.act-md-element-config-wrapper)) .act-md-element-select {
   flex: 1 1 0 !important;
@@ -1194,6 +1196,11 @@ body.is-mobile .blacklist-words-list .act-entry-row .act-md-element-config {
   width: auto !important;
   min-width: 0 !important;
 }
+}
+body:not(.is-mobile) .act-blacklist-regex-btn,
+body:not(.is-mobile) .act-blacklist-delete-btn {
+  display: none !important;
+}
 
 /* ====== FILE/FOLDER RULES — MOBILE LAYOUT — X BUTTON (same as blacklist) ====== */
 body.is-mobile .path-rules-list .act-path-delete-btn {
@@ -1215,6 +1222,36 @@ body.is-mobile .path-rules-list .act-path-delete-btn {
 }
 body:not(.is-mobile) .act-path-delete-btn {
   display: none !important;
+}
+/* ====== PATH RULES — KEEP is-mobile STYLING ALWAYS, BREAK INTO TWO ROWS ONLY WHEN VERY NARROW ====== */
+body.is-mobile .path-rules-list > div {
+  /* base is-mobile styling kept via JS (background/border/padding), ensure row stays single line unless narrow */
+  flex-wrap: nowrap !important;
+}
+@media (max-width: 480px) {
+  body.is-mobile .path-rules-list > div {
+    flex-wrap: wrap !important;
+  }
+  body.is-mobile .path-rules-list .act-path-mode-sel,
+  body.is-mobile .path-rules-list .act-path-type-sel {
+    flex: 1 1 calc(50% - 4px) !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  body.is-mobile .path-rules-list .act-path-choose-area {
+    flex: 1 1 calc(100% - 40px) !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+@media (min-width: 481px) {
+  body.is-mobile .path-rules-list .act-path-mode-sel,
+  body.is-mobile .path-rules-list .act-path-type-sel {
+    flex: 0 0 auto !important;
+  }
+  body.is-mobile .path-rules-list .act-path-choose-area {
+    flex: 1 1 auto !important;
+  }
 }
 
 /* ====== EDIT ENTRY MODAL — MOBILE LAYOUT ====== */
@@ -2084,19 +2121,19 @@ body.is-mobile .act-group-rule-row {
   margin-top: 6px !important;
   margin-bottom: 0 !important;
 }
-
-/* On mobile the chooseRow (choose + X) breaks to its own row */
+@media (max-width: 480px) {
+/* On very narrow phone the chooseRow (choose + X) breaks to its own row */
 body.is-mobile .act-group-rule-row .act-group-rule-choose-row {
   flex: 1 1 100% !important;
   width: 100% !important;
   min-width: 0 !important;
 }
-
-/* Let selects shrink and share the first row evenly */
+/* Let selects shrink and share the first row evenly on very narrow */
 body.is-mobile .act-group-rule-row .act-group-rule-mode,
 body.is-mobile .act-group-rule-row .act-group-rule-type {
   flex: 1 1 0 !important;
   min-width: 0 !important;
+}
 }
 
 /* Also handle narrow modals on desktop via media query */
@@ -2110,4 +2147,87 @@ body.is-mobile .act-group-rule-row .act-group-rule-type {
   }
 }
 
-                                                        
+/* ===== Mobile color picker hint (General tab, before Latest Release Notes) ===== */
+.act-mobile-tip {
+  border: 2px solid var(--color-accent) !important;
+  background: var(--background-secondary) !important;
+  border-radius: var(--setting-items-radius) !important;
+  padding: 10px 12px !important;
+  margin-bottom: 12px !important;
+  align-items: center !important;
+}
+.act-mobile-tip .setting-item-name {
+  font-weight: 500;
+}
+.act-mobile-tip .setting-item-description {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+.act-mobile-tip .setting-item-info {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+.act-mobile-tip .setting-item-control {
+  margin-left: auto !important;
+  justify-content: flex-end !important;
+  flex: 0 0 auto !important;
+}
+.act-mobile-tip-word {
+    background: hsla(var(--interactive-accent-hsl), 1) !important;
+    padding: 1px 8px !important;
+    border-radius: 6px !important;
+    font-weight: bold !important;
+    color: var(--text-on-accent);
+    display: inline-block !important;
+    line-height: 1.5 !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+/* Prevent clipping of inline-block highlight in Setting row */
+.act-mobile-tip .setting-item-name {
+  line-height: 1.6 !important;
+  overflow: visible !important;
+  white-space: normal !important;
+  align-items: center !important;
+}
+.act-mobile-tip .setting-item-info {
+  overflow: visible !important;
+}
+/* Mobile: Mobile Tip centered in its row, rest below */
+body.is-mobile .act-mobile-tip .setting-item-name {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 6px !important;
+}
+body.is-mobile .act-mobile-tip-word {
+  display: inline-block !important;
+  text-align: center !important;
+  white-space: normal !important;
+  padding: 1px 8px !important;
+}
+body.is-mobile .act-mobile-tip-rest {
+  display: block !important;
+  text-align: center !important;
+  white-space: normal !important;
+}
+/* Tablet: dismiss button forcibly under title/description row, right bottom */
+body.is-tablet .act-mobile-tip {
+  flex-wrap: wrap !important;
+}
+body.is-tablet .act-mobile-tip .setting-item-info {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+}
+body.is-tablet .act-mobile-tip .setting-item-control {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin-top: 8px !important;
+}
+body.is-tablet .act-mobile-tip .act-mobile-tip-dismiss {
+  width: 100% !important;
+}

@@ -2292,10 +2292,11 @@ export class ColorSettingTab extends PluginSettingTab {
         if (actualIndex === -1) return; // Safety check
 
         const isMobile = document.body.classList.contains("is-mobile");
+        const isVeryNarrow = window.matchMedia ? window.matchMedia("(max-width: 480px)").matches : window.innerWidth <= 480;
+        const isMobileNarrow = isMobile && isVeryNarrow;
         const row = this._pathRulesContainer.createDiv();
         if (isMobile) {
           row.style.display = "flex";
-          row.style.flexWrap = "wrap";
           row.style.alignItems = "center";
           row.style.gap = "8px";
           row.style.backgroundColor = "var(--setting-items-background)";
@@ -2306,6 +2307,7 @@ export class ColorSettingTab extends PluginSettingTab {
           row.style.marginBottom = "0";
           row.style.width = "100%";
           row.style.boxSizing = "border-box";
+          row.style.flexWrap = isMobileNarrow ? "wrap" : "nowrap";
         } else {
           row.style.display = "flex";
           row.style.alignItems = "center";
@@ -2313,10 +2315,14 @@ export class ColorSettingTab extends PluginSettingTab {
           row.style.marginBottom = "8px";
         }
         const modeSel = row.createEl("select");
-        if (isMobile) {
+        modeSel.addClass("act-path-mode-sel");
+        if (isMobileNarrow) {
           modeSel.style.flex = "1 1 calc(50% - 4px)";
           modeSel.style.minWidth = "0";
           modeSel.style.boxSizing = "border-box";
+        } else if (isMobile) {
+          modeSel.style.flex = "0 0 auto";
+          modeSel.style.minWidth = "0";
         } else {
           modeSel.style.flex = "0 0 auto";
         }
@@ -2337,10 +2343,14 @@ export class ColorSettingTab extends PluginSettingTab {
         modeSel.value = entry.mode === "exclude" ? "exclude" : "include";
         // Type dropdown (Folder / File / Tag / Property) — mirrors entry inclusion/exclusion rules
         const typeSel = row.createEl("select");
-        if (isMobile) {
+        typeSel.addClass("act-path-type-sel");
+        if (isMobileNarrow) {
           typeSel.style.flex = "1 1 calc(50% - 4px)";
           typeSel.style.minWidth = "0";
           typeSel.style.boxSizing = "border-box";
+        } else if (isMobile) {
+          typeSel.style.flex = "0 0 auto";
+          typeSel.style.minWidth = "0";
         } else {
           typeSel.style.flex = "0 0 auto";
           typeSel.style.minWidth = "100px";
@@ -2376,12 +2386,16 @@ export class ColorSettingTab extends PluginSettingTab {
         if (!(typeSel.value in prTV)) prTV[typeSel.value] = String(entry.path || "");
 
         const chooseArea = row.createEl("div");
+        chooseArea.addClass("act-path-choose-area");
         chooseArea.style.display = "flex";
         chooseArea.style.gap = "8px";
-        if (isMobile) {
+        if (isMobileNarrow) {
           chooseArea.style.flex = "1 1 calc(100% - 40px)";
           chooseArea.style.minWidth = "0";
           chooseArea.style.boxSizing = "border-box";
+        } else if (isMobile) {
+          chooseArea.style.flex = "1 1 auto";
+          chooseArea.style.minWidth = "0";
         } else {
           chooseArea.style.flex = "1 1 auto";
           chooseArea.style.minWidth = "160px";
@@ -5487,6 +5501,73 @@ export class ColorSettingTab extends PluginSettingTab {
         h.style.marginBottom = "16px";
         return h;
       };
+
+      // ===== Color picker hint (dismissible, before release notes) =====
+      try {
+        const _isMobileHint = document.body.classList.contains("is-mobile");
+        const _dismissCount = Number(this.plugin.settings.mobileColorHintDismissCount ?? 0);
+        const _lastDismissed = Number(this.plugin.settings.mobileColorHintLastDismissed ?? 0);
+        const _now = Date.now();
+        const _dayMs = 24 * 60 * 60 * 1000;
+        const _shouldShowHint = _dismissCount < 3 && (!_lastDismissed || _now - _lastDismissed >= _dayMs);
+        if (_shouldShowHint) {
+          const _hintRaw = _isMobileHint
+            ? this.plugin.t("mobile_color_hint", "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours")
+            : this.plugin.t("desktop_color_hint", "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours");
+          let _hintText = String(_hintRaw || "").trim();
+          // normalize legacy "Tip ..." -> platform prefix for display if needed
+          if (/^Tip\b/i.test(_hintText) && !/^(Mobile|Desktop) Tip/i.test(_hintText)) {
+            _hintText = _hintText.replace(/^Tip:?\s*/i, _isMobileHint ? "Mobile Tip: " : "Desktop Tip: ");
+          }
+          const _hintSetting = new Setting(containerEl)
+            .addButton((btn) => {
+              btn
+                .setButtonText(this.plugin.t("dismiss", "Dismiss"))
+                .onClick(async () => {
+                  try {
+                    const cur = Number(this.plugin.settings.mobileColorHintDismissCount ?? 0);
+                    this.plugin.settings.mobileColorHintDismissCount = cur + 1;
+                    this.plugin.settings.mobileColorHintLastDismissed = Date.now();
+                    await this.plugin.saveSettings();
+                  } catch (e) {}
+                  try {
+                    _hintSetting.settingEl.remove();
+                  } catch (e) {}
+                });
+              try { btn.buttonEl.addClass("act-mobile-tip-dismiss"); } catch (e) {}
+              try { btn.buttonEl.removeClass("mod-cta"); } catch (e) {}
+              try { btn.buttonEl.setAttr("aria-label", this.plugin.t("dismiss", "Dismiss")); } catch (e) {}
+            });
+          try { _hintSetting.settingEl.addClass("act-mobile-tip"); } catch (e) {}
+          try { _hintSetting.settingEl.addClass("act-mobile-tip-setting"); } catch (e) {}
+          // Build name: highlighted tip label + rest of sentence
+          try {
+            const nameEl = _hintSetting.nameEl;
+            nameEl.empty();
+            const m = _hintText.match(/^((?:Mobile|Desktop) Tip:?)(.*)$/i);
+            let prefixRaw = "";
+            let rest = "";
+            if (m) {
+              prefixRaw = (m[1] || "").trim();
+              rest = (m[2] || "").trim();
+            } else {
+              prefixRaw = _isMobileHint ? "Mobile Tip" : "Desktop Tip";
+              rest = _hintText.replace(/^(Mobile|Desktop) Tip:?\s*/i, "").trim();
+            }
+            // mobile: no colon, desktop: keep colon as in spec
+            const prefixText = _isMobileHint ? prefixRaw.replace(/:$/, "").trim() : prefixRaw;
+            const tipWord = nameEl.createSpan({ text: prefixText });
+            tipWord.addClass("act-mobile-tip-word");
+            if (rest) {
+              const restEl = nameEl.createSpan({ text: rest });
+              restEl.addClass("act-mobile-tip-rest");
+              // desktop inline: prepend space, mobile stacked via CSS
+              if (!_isMobileHint) restEl.prepend(" ");
+            }
+            try { _hintSetting.descEl.style.display = "none"; } catch (e) {}
+          } catch (e) {}
+        }
+      } catch (e) {}
 
       // ===== Latest Release Notes =====
       const releaseNotesSettingEl = new Setting(containerEl)

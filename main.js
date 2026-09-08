@@ -58,6 +58,8 @@ var require_en = __commonJS({
       "latest_release_notes_label": "Latest Release Notes",
       "latest_release_notes_desc": "Check the latest release notes for the plugin",
       "open_changelog_button": "Open Changelog",
+      "mobile_color_hint": "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours",
+      "desktop_color_hint": "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours",
       "command_show_release_notes": "Show Latest Release Notes",
       "changelog_view_on_github": "View on GitHub",
       "changelog_loading": "Loading releases...",
@@ -6853,8 +6855,11 @@ var defaultSettings = {
   // "hour" | "day" | "week"
   autoBackupOverwrite: false,
   // true = keep one rolling file, false = timestamped files
-  autoBackupLastRun: 0
+  autoBackupLastRun: 0,
   // Unix timestamp (ms) of last successful backup
+  // Mobile color picker hint (Setting tab, before Latest Release Notes)
+  mobileColorHintDismissCount: 0,
+  mobileColorHintLastDismissed: 0
 };
 
 // src/settings/SettingsTab.js
@@ -23159,10 +23164,11 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         const actualIndex = rows.indexOf(entry);
         if (actualIndex === -1) return;
         const isMobile = document.body.classList.contains("is-mobile");
+        const isVeryNarrow = window.matchMedia ? window.matchMedia("(max-width: 480px)").matches : window.innerWidth <= 480;
+        const isMobileNarrow = isMobile && isVeryNarrow;
         const row = this._pathRulesContainer.createDiv();
         if (isMobile) {
           row.style.display = "flex";
-          row.style.flexWrap = "wrap";
           row.style.alignItems = "center";
           row.style.gap = "8px";
           row.style.backgroundColor = "var(--setting-items-background)";
@@ -23173,6 +23179,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           row.style.marginBottom = "0";
           row.style.width = "100%";
           row.style.boxSizing = "border-box";
+          row.style.flexWrap = isMobileNarrow ? "wrap" : "nowrap";
         } else {
           row.style.display = "flex";
           row.style.alignItems = "center";
@@ -23180,10 +23187,14 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           row.style.marginBottom = "8px";
         }
         const modeSel = row.createEl("select");
-        if (isMobile) {
+        modeSel.addClass("act-path-mode-sel");
+        if (isMobileNarrow) {
           modeSel.style.flex = "1 1 calc(50% - 4px)";
           modeSel.style.minWidth = "0";
           modeSel.style.boxSizing = "border-box";
+        } else if (isMobile) {
+          modeSel.style.flex = "0 0 auto";
+          modeSel.style.minWidth = "0";
         } else {
           modeSel.style.flex = "0 0 auto";
         }
@@ -23203,10 +23214,14 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         });
         modeSel.value = entry.mode === "exclude" ? "exclude" : "include";
         const typeSel = row.createEl("select");
-        if (isMobile) {
+        typeSel.addClass("act-path-type-sel");
+        if (isMobileNarrow) {
           typeSel.style.flex = "1 1 calc(50% - 4px)";
           typeSel.style.minWidth = "0";
           typeSel.style.boxSizing = "border-box";
+        } else if (isMobile) {
+          typeSel.style.flex = "0 0 auto";
+          typeSel.style.minWidth = "0";
         } else {
           typeSel.style.flex = "0 0 auto";
           typeSel.style.minWidth = "100px";
@@ -23239,12 +23254,16 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         const prTV = prTypeMap.get(entry);
         if (!(typeSel.value in prTV)) prTV[typeSel.value] = String(entry.path || "");
         const chooseArea = row.createEl("div");
+        chooseArea.addClass("act-path-choose-area");
         chooseArea.style.display = "flex";
         chooseArea.style.gap = "8px";
-        if (isMobile) {
+        if (isMobileNarrow) {
           chooseArea.style.flex = "1 1 calc(100% - 40px)";
           chooseArea.style.minWidth = "0";
           chooseArea.style.boxSizing = "border-box";
+        } else if (isMobile) {
+          chooseArea.style.flex = "1 1 auto";
+          chooseArea.style.minWidth = "0";
         } else {
           chooseArea.style.flex = "1 1 auto";
           chooseArea.style.minWidth = "160px";
@@ -25206,6 +25225,84 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         h.style.marginBottom = "16px";
         return h;
       };
+      try {
+        const _isMobileHint = document.body.classList.contains("is-mobile");
+        const _dismissCount = Number(this.plugin.settings.mobileColorHintDismissCount ?? 0);
+        const _lastDismissed = Number(this.plugin.settings.mobileColorHintLastDismissed ?? 0);
+        const _now = Date.now();
+        const _dayMs = 24 * 60 * 60 * 1e3;
+        const _shouldShowHint = _dismissCount < 3 && (!_lastDismissed || _now - _lastDismissed >= _dayMs);
+        if (_shouldShowHint) {
+          const _hintRaw = _isMobileHint ? this.plugin.t("mobile_color_hint", "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours") : this.plugin.t("desktop_color_hint", "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours");
+          let _hintText = String(_hintRaw || "").trim();
+          if (/^Tip\b/i.test(_hintText) && !/^(Mobile|Desktop) Tip/i.test(_hintText)) {
+            _hintText = _hintText.replace(/^Tip:?\s*/i, _isMobileHint ? "Mobile Tip: " : "Desktop Tip: ");
+          }
+          const _hintSetting = new import_obsidian24.Setting(containerEl2).addButton((btn) => {
+            btn.setButtonText(this.plugin.t("dismiss", "Dismiss")).onClick(async () => {
+              try {
+                const cur = Number(this.plugin.settings.mobileColorHintDismissCount ?? 0);
+                this.plugin.settings.mobileColorHintDismissCount = cur + 1;
+                this.plugin.settings.mobileColorHintLastDismissed = Date.now();
+                await this.plugin.saveSettings();
+              } catch (e) {
+              }
+              try {
+                _hintSetting.settingEl.remove();
+              } catch (e) {
+              }
+            });
+            try {
+              btn.buttonEl.addClass("act-mobile-tip-dismiss");
+            } catch (e) {
+            }
+            try {
+              btn.buttonEl.removeClass("mod-cta");
+            } catch (e) {
+            }
+            try {
+              btn.buttonEl.setAttr("aria-label", this.plugin.t("dismiss", "Dismiss"));
+            } catch (e) {
+            }
+          });
+          try {
+            _hintSetting.settingEl.addClass("act-mobile-tip");
+          } catch (e) {
+          }
+          try {
+            _hintSetting.settingEl.addClass("act-mobile-tip-setting");
+          } catch (e) {
+          }
+          try {
+            const nameEl = _hintSetting.nameEl;
+            nameEl.empty();
+            const m = _hintText.match(/^((?:Mobile|Desktop) Tip:?)(.*)$/i);
+            let prefixRaw = "";
+            let rest = "";
+            if (m) {
+              prefixRaw = (m[1] || "").trim();
+              rest = (m[2] || "").trim();
+            } else {
+              prefixRaw = _isMobileHint ? "Mobile Tip" : "Desktop Tip";
+              rest = _hintText.replace(/^(Mobile|Desktop) Tip:?\s*/i, "").trim();
+            }
+            const prefixText = _isMobileHint ? prefixRaw.replace(/:$/, "").trim() : prefixRaw;
+            const tipWord = nameEl.createSpan({ text: prefixText });
+            tipWord.addClass("act-mobile-tip-word");
+            if (rest) {
+              const restEl = nameEl.createSpan({ text: rest });
+              restEl.addClass("act-mobile-tip-rest");
+              if (!_isMobileHint) restEl.prepend(" ");
+            }
+            try {
+              _hintSetting.descEl.style.display = "none";
+            } catch (e) {
+            }
+          } catch (e) {
+          }
+        }
+      } catch (e) {
+      }
       const releaseNotesSettingEl = new import_obsidian24.Setting(containerEl2).setName(
         this.plugin.t("latest_release_notes_label", "Latest Release Notes")
       ).setDesc(
@@ -38635,8 +38732,10 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           }
           if (!key || !(key in fm)) return null;
           if (val === null || val === "") return "file";
-          const fv = String(fm[key]);
-          return fv.toLowerCase() === String(val).toLowerCase() ? "file" : null;
+          const fmVal = fm[key];
+          const eq = (x) => String(x ?? "").trim().toLowerCase() === String(val).toLowerCase();
+          if (Array.isArray(fmVal)) return fmVal.some(eq) ? "file" : null;
+          return eq(fmVal) ? "file" : null;
         }
         if (rule.type === "pattern") {
           if (!pathStr) return null;
@@ -43098,8 +43197,10 @@ ${strongRule}`;
         }
         if (!key || !(key in fm)) return null;
         if (val === null || val === "") return "file";
-        const fv = String(fm[key]);
-        return fv.toLowerCase() === String(val).toLowerCase() ? "file" : null;
+        const fmVal = fm[key];
+        const eq = (x) => String(x ?? "").trim().toLowerCase() === String(val).toLowerCase();
+        if (Array.isArray(fmVal)) return fmVal.some(eq) ? "file" : null;
+        return eq(fmVal) ? "file" : null;
       }
       if (rule.type === "pattern") {
         if (!pathStr) return null;

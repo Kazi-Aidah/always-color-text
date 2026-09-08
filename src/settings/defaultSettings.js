@@ -308,4 +308,7 @@ export const defaultSettings = {
   autoBackupUnit: "day", // "hour" | "day" | "week"
   autoBackupOverwrite: false, // true = keep one rolling file, false = timestamped files
   autoBackupLastRun: 0, // Unix timestamp (ms) of last successful backup
+  // Mobile color picker hint (Setting tab, before Latest Release Notes)
+  mobileColorHintDismissCount: 0,
+  mobileColorHintLastDismissed: 0,
 };
