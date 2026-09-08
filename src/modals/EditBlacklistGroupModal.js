@@ -189,12 +189,6 @@ export class EditBlacklistGroupModal extends Modal {
       matchTypeSelect.removeEventListener("change", matchTypeHandler),
     );
 
-    const rulesRow = contentEl.createDiv();
-    rulesRow.style.display = "flex";
-    rulesRow.style.alignItems = "center";
-    rulesRow.style.gap = "8px";
-    rulesRow.style.marginBottom = "12px";
-
     const rulesCount = () =>
       (Array.isArray(this.group.inclusionRules)
         ? this.group.inclusionRules.length
@@ -203,22 +197,23 @@ export class EditBlacklistGroupModal extends Modal {
         ? this.group.exclusionRules.length
         : 0);
 
-    const rulesBtn = rulesRow.createEl("button", {
+    const rulesBtn = topRow.createEl("button", {
       text:
-        this.plugin.t("group_rules_button", "Edit inclusion / exclusion rules") +
+        this.plugin.t("group_rules_button", "Edit Rules") +
         ` (${rulesCount()})`,
     });
+    try { rulesBtn.addClass("act-wg-rules-btn"); } catch (_) { try { rulesBtn.classList.add("act-wg-rules-btn"); } catch (_) {} }
     rulesBtn.style.padding = "6px 12px";
     rulesBtn.style.borderRadius = "var(--input-radius)";
     rulesBtn.style.border = "1px solid var(--background-modifier-border)";
-    rulesBtn.style.width = "100%";
-    rulesBtn.style.flex = "1 1 auto";
+    rulesBtn.style.width = "auto";
+    rulesBtn.style.flex = "0 0 auto";
     const openRulesModal = () => {
       new GroupRulesModal(this.app, this.plugin, this.group, () => {
         rulesBtn.textContent =
           this.plugin.t(
             "group_rules_button",
-            "Edit inclusion / exclusion rules",
+            "Edit Rules",
           ) + ` (${rulesCount()})`;
       }).open();
     };

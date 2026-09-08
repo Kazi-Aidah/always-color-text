@@ -1,4 +1,5 @@
-import { Modal, Notice, setIcon } from 'obsidian';
+import { Modal, Menu, Notice, setIcon } from 'obsidian';
+import { ConfirmationModal } from './ConfirmationModal.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
@@ -1234,10 +1235,15 @@ export class EditEntryModal extends Modal {
       const typeMap = (this._ruleTypeMap = this._ruleTypeMap || new WeakMap());
       this._rules.forEach((r, idx) => {
         const row = rulesContainer.createDiv();
+        try { row.addClass("act-group-rule-row"); } catch (_) { try { row.classList.add("act-group-rule-row"); } catch (_) {} }
+        try { row.addClass("act-entry-rule-row"); } catch (_) { try { row.classList.add("act-entry-rule-row"); } catch (_) {} }
         row.style.display = "flex";
         row.style.gap = "8px";
         row.style.alignItems = "center";
         row.style.marginBottom = "8px";
+        row.style.flexWrap = "wrap";
+        row.style.width = "100%";
+        row.style.boxSizing = "border-box";
         const modeSel = row.createEl("select");
         const optIn = modeSel.createEl("option", {
           text: this.plugin.t("mode_only_colors_in", "only colors in"),
@@ -1248,10 +1254,11 @@ export class EditEntryModal extends Modal {
         });
         optEx.value = "exclude";
         modeSel.value = r.mode === "exclude" ? "exclude" : "include";
+        try { modeSel.addClass("act-group-rule-mode"); } catch (_) { try { modeSel.classList.add("act-group-rule-mode"); } catch (_) {} }
         modeSel.style.textAlign = "center";
-        modeSel.style.minWidth = "160px";
+        modeSel.style.minWidth = "120px";
+        modeSel.style.flex = "1 1 120px";
         modeSel.style.border = "1px solid var(--background-modifier-border)";
-        modeSel.style.borderRadius = "var(--radius-m)";
         modeSel.style.background = "var(--background-modifier-form-field)";
 
         // Type dropdown (Folder / File / Tag / Property / Pattern)
@@ -1284,9 +1291,10 @@ export class EditEntryModal extends Modal {
               ? "folder"
               : "file");
         typeSel.value = ruleType;
+        try { typeSel.addClass("act-group-rule-type"); } catch (_) { try { typeSel.classList.add("act-group-rule-type"); } catch (_) {} }
         typeSel.style.minWidth = "100px";
+        typeSel.style.flex = "1 1 90px";
         typeSel.style.border = "1px solid var(--background-modifier-border)";
-        typeSel.style.borderRadius = "var(--radius-m)";
         typeSel.style.background = "var(--background-modifier-form-field)";
         // Per-rule memory of chosen value for each type.
         if (!typeMap.has(r)) typeMap.set(r, {});
@@ -1313,13 +1321,23 @@ export class EditEntryModal extends Modal {
         };
         modeSel.addEventListener("change", modeHandler);
 
-        // Choose area: one full-width button, two (key + value) for property,
-        // or a text input for pattern.
-        const chooseArea = row.createEl("div");
+        // Choose row: wraps the choose area + X so they stay on the same line
+        const chooseRow = row.createDiv();
+        try { chooseRow.addClass("act-group-rule-choose-row"); } catch (_) { try { chooseRow.classList.add("act-group-rule-choose-row"); } catch (_) {} }
+        chooseRow.style.display = "flex";
+        chooseRow.style.gap = "8px";
+        chooseRow.style.alignItems = "center";
+        chooseRow.style.flex = "1 1 160px";
+        chooseRow.style.minWidth = "0";
+        chooseRow.style.flexWrap = "nowrap";
+
+        const chooseArea = chooseRow.createEl("div");
+        try { chooseArea.addClass("act-group-rule-choose-area"); } catch (_) { try { chooseArea.classList.add("act-group-rule-choose-area"); } catch (_) {} }
         chooseArea.style.display = "flex";
         chooseArea.style.gap = "8px";
         chooseArea.style.flex = "1 1 auto";
-        chooseArea.style.minWidth = "160px";
+        chooseArea.style.minWidth = "0";
+        chooseArea.style.flexWrap = "wrap";
 
         const clip = (b) => {
           b.style.overflow = "hidden";
@@ -1328,7 +1346,6 @@ export class EditEntryModal extends Modal {
           b.style.textAlign = "left";
           b.style.padding = "6px 10px";
           b.style.border = "1px solid var(--background-modifier-border)";
-          b.style.borderRadius = "var(--radius-m)";
         };
         const openPicker = (type, cb) => {
           new RulePickerModal(this.app, this.plugin, type, cb).open();
@@ -1385,7 +1402,6 @@ export class EditEntryModal extends Modal {
             inp.style.flex = "1 1 auto";
             inp.style.padding = "6px 10px";
             inp.style.border = "1px solid var(--background-modifier-border)";
-            inp.style.borderRadius = "var(--radius-m)";
             const patternInputHandler = () => {
               r.path = String(inp.value || "").trim();
               r.type = "pattern";
@@ -1425,16 +1441,52 @@ export class EditEntryModal extends Modal {
         };
         refreshLabels();
 
-        const delBtn = row.createEl("button", {
-          text: this.plugin.t("delete_button_text", "✕"),
-        });
-        delBtn.addClass("mod-warning");
+        const delBtn = chooseRow.createEl("button");
+        try { delBtn.addClass("act-blacklist-delete-btn"); } catch (_) { try { delBtn.classList.add("act-blacklist-delete-btn"); } catch (_) {} }
+        try { delBtn.addClass("act-group-rule-delete"); } catch (_) { try { delBtn.classList.add("act-group-rule-delete"); } catch (_) {} }
+        try { setIcon(delBtn, "x"); } catch (_) { delBtn.textContent = this.plugin.t("delete_button_text", "✕"); }
+        delBtn.title = this.plugin.t("delete_button_text", "✕");
         delBtn.addEventListener("click", async () => {
-          this._rules.splice(idx, 1);
+          const at = this._rules.indexOf(r);
+          if (at !== -1) this._rules.splice(at, 1);
+          else this._rules.splice(idx, 1);
           syncEntryRules();
           await this.plugin.saveSettings();
           renderRules();
         });
+
+        const doDeleteRule = async () => {
+          const at = this._rules.indexOf(r);
+          if (at !== -1) this._rules.splice(at, 1);
+          else this._rules.splice(idx, 1);
+          syncEntryRules();
+          await this.plugin.saveSettings();
+          renderRules();
+        };
+        const rowContextHandler = (ev) => {
+          try { ev.preventDefault(); ev.stopPropagation(); } catch (_) {}
+          const menu = new Menu();
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("delete_rule", "Delete Rule"))
+              .setIcon("trash")
+              .onClick(async () => {
+                if (document.body.classList.contains("is-mobile")) {
+                  new ConfirmationModal(
+                    this.app,
+                    this.plugin,
+                    this.plugin.t("confirm_delete_path_rule_title", "Delete Rule"),
+                    this.plugin.t("confirm_delete_path_rule_desc", "Are you sure you want to delete this file/folder rule?"),
+                    doDeleteRule,
+                  ).open();
+                } else {
+                  await doDeleteRule();
+                }
+              }),
+          );
+          menu.showAtMouseEvent(ev);
+        };
+        row.addEventListener("contextmenu", rowContextHandler);
       });
     };
     const addRuleFn = async () => {

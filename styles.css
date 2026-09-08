@@ -882,6 +882,39 @@ body.theme-dark .always-color-text-highlight-marks:not(.act-fixer-noauto) {
   padding-right: 4px !important;
 }
 
+/* Edit Word Group Modal — Top Row — Narrow (mobile portrait) only */
+@media (max-width: 600px) {
+  .act-edit-word-group-modal .act-toprow {
+      gap: 8px !important;
+      flex-wrap: wrap !important;
+  }
+
+  .act-edit-word-group-modal .act-toprow .act-wg-case-select {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+  }
+
+  .act-edit-word-group-modal .act-toprow .act-wg-match-select {
+      flex: 1 1 0 !important;
+      width: auto !important;
+      min-width: 0 !important;
+  }
+
+  .act-edit-word-group-modal .act-toprow .act-wg-edit-btn,
+  .act-edit-word-group-modal .act-toprow .act-wg-css-btn {
+      flex: 0 0 36px !important;
+      width: 36px !important;
+      min-width: 36px !important;
+      height: 36px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-sizing: border-box !important;
+  }
+}
+
 /* Word Group Mobile */
 body.is-mobile .act-group-row {
     display: flex !important;
@@ -1381,6 +1414,10 @@ body.is-mobile .act-group-disable-label {
     padding: 10px;
     margin-top: 6px;
     border: 1px solid var(--background-modifier-border);
+}
+
+body:not(.is-mobile) .color-words-list .act-entry-row {
+    padding: 4px 10px;
 }
 
 body.is-mobile .color-words-list .act-style-select {
@@ -1977,6 +2014,100 @@ body.is-mobile .act-highlight-footer {
   border-top-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
   padding-left: 0 !important;
+}
+
+/* ====== GROUP INCLUSION / EXCLUSION RULES — MOBILE WRAP FIX ====== */
+/* Row structure: [modeSel] [typeSel] [chooseRow: [chooseArea + X]]
+   Row is flex-wrap so on narrow mobile mode+type stay on line 1 and
+   chooseRow (choose button/input + X) wraps to line 2 together. */
+.act-group-rule-row {
+  flex-wrap: wrap !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.act-group-rule-row .act-group-rule-choose-area {
+  min-width: 0 !important;
+}
+
+.act-group-rule-row .act-group-rule-choose-row {
+  flex: 1 1 160px !important;
+  min-width: 0 !important;
+  width: auto !important;
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+}
+
+.act-group-rule-row .act-group-rule-choose-row .act-group-rule-choose-area {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+/* Use blacklist-style X button — always visible (override the
+   blacklist's body:not(.is-mobile) {display:none} rule) */
+.act-group-rule-row .act-group-rule-delete {
+  flex: 0 0 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  color: var(--color-red) !important;
+  background: rgba(var(--color-red-rgb), 0.2) !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: var(--button-radius) !important;
+}
+/* Override blacklist hidden-on-desktop for group rules context */
+.act-group-rules-modal .act-blacklist-delete-btn,
+.act-edit-entry-modal .act-blacklist-delete-btn,
+.act-group-rule-row .act-blacklist-delete-btn {
+  display: flex !important;
+}
+
+body.is-mobile .act-group-rules-modal,
+body.is-mobile .act-edit-entry-modal {
+  --act-rule-row-gap: 8px;
+}
+
+body.is-mobile .act-group-rule-row {
+  gap: 8px !important;
+  background-color: var(--setting-items-background) !important;
+  border: 1px solid var(--background-modifier-border) !important;
+  border-radius: var(--setting-items-radius) !important;
+  padding: 10px !important;
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
+}
+
+/* On mobile the chooseRow (choose + X) breaks to its own row */
+body.is-mobile .act-group-rule-row .act-group-rule-choose-row {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Let selects shrink and share the first row evenly */
+body.is-mobile .act-group-rule-row .act-group-rule-mode,
+body.is-mobile .act-group-rule-row .act-group-rule-type {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+/* Also handle narrow modals on desktop via media query */
+@media (max-width: 600px) {
+  .act-group-rule-row {
+    flex-wrap: wrap !important;
+  }
+  .act-group-rule-row .act-group-rule-choose-row {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
 }
 
                                                         

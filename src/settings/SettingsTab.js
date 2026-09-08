@@ -5448,7 +5448,7 @@ export class ColorSettingTab extends PluginSettingTab {
         id: "file-folder-rules",
         label: this.plugin.t(
           "settings_tab_file_folder_rules",
-          "File / Folder Rules",
+          "Rules",
         ),
       },
       { id: "data", label: this.plugin.t("settings_tab_data", "Data") },
@@ -8162,7 +8162,7 @@ export class ColorSettingTab extends PluginSettingTab {
         .setName(
           this.plugin.t(
             "file_folder_rules_header",
-            "File & Folder Coloring Rules",
+            "File Coloring Rules",
           ),
         )
         .setDesc(

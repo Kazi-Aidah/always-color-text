@@ -432,7 +432,7 @@ var require_en = __commonJS({
       "settings_tab_general": "General",
       "settings_tab_colored_texts": "Colored Texts",
       "settings_tab_blacklists": "Blacklists",
-      "settings_tab_file_folder_rules": "File / Folder Rules",
+      "settings_tab_file_folder_rules": "Rules",
       "settings_tab_data": "Data",
       // Always Colored Texts
       "always_colored_texts_header": "Always Colored Texts",
@@ -558,7 +558,7 @@ var require_en = __commonJS({
       "btn_add_blacklist_word": "+ Add blacklist word",
       "btn_add_blacklist_regex": "+ Add blacklist regex",
       // File & Folder Rules
-      "file_folder_rules_header": "File & Folder Coloring Rules",
+      "file_folder_rules_header": "File Coloring Rules",
       "file_folder_rules_desc": "Control coloring in files using name matching, paths, regex patterns, or tags.",
       "search_file_folder_rules_placeholder": "Search file/folder rules\u2026",
       "path_sort_label_last-added": "Sort: Last Added",
@@ -579,8 +579,8 @@ var require_en = __commonJS({
       "label_text_exclude": "Blacklist",
       "label_enable_in": "Enable in",
       "label_disable_in": "Disable in",
-      "group_rules_button": "Edit inclusion / exclusion rules",
-      "group_rules_modal_title": "Group inclusion / exclusion rules",
+      "group_rules_button": "Edit Rules",
+      "group_rules_modal_title": "Edit Rules",
       "group_rules_add": "+ Add rule",
       "enter_path_or_pattern": "Enter path, pattern or tags",
       "label_regex": "Regex",
@@ -8387,8 +8387,69 @@ var import_obsidian12 = require("obsidian");
 // src/modals/EditEntryModal.js
 var import_obsidian11 = require("obsidian");
 
-// src/modals/CustomCssModal.js
+// src/modals/ConfirmationModal.js
 var import_obsidian3 = require("obsidian");
+var ConfirmationModal = class extends import_obsidian3.Modal {
+  constructor(app, plugin, title, message, onConfirm) {
+    super(app);
+    this.plugin = plugin;
+    this.title = title;
+    this.message = message;
+    this.onConfirm = onConfirm;
+    this._eventListeners = [];
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this._eventListeners = [];
+    try {
+      this.modalEl.addClass("act-modal");
+    } catch (e) {
+    }
+    const h2 = contentEl.createEl("h2", { text: this.title });
+    h2.style.marginTop = "0";
+    contentEl.createEl("p", { text: this.message });
+    const buttonDiv = contentEl.createDiv();
+    buttonDiv.style.display = "flex";
+    buttonDiv.style.justifyContent = "flex-end";
+    buttonDiv.style.marginTop = "20px";
+    buttonDiv.style.gap = "10px";
+    const cancelButton = buttonDiv.createEl("button", {
+      text: this.plugin.t("btn_cancel", "Cancel")
+    });
+    const cancelHandler = () => this.close();
+    cancelButton.addEventListener("click", cancelHandler);
+    this._eventListeners.push({
+      el: cancelButton,
+      event: "click",
+      handler: cancelHandler
+    });
+    const confirmButton = buttonDiv.createEl("button", {
+      text: this.plugin.t("btn_confirm", "Confirm")
+    });
+    confirmButton.addClass("mod-warning");
+    const confirmHandler = () => {
+      this.onConfirm();
+      this.close();
+    };
+    confirmButton.addEventListener("click", confirmHandler);
+    this._eventListeners.push({
+      el: confirmButton,
+      event: "click",
+      handler: confirmHandler
+    });
+  }
+  onClose() {
+    this._eventListeners.forEach(({ el, event, handler }) => {
+      el.removeEventListener(event, handler);
+    });
+    this._eventListeners = [];
+    this.contentEl.empty();
+  }
+};
+
+// src/modals/CustomCssModal.js
+var import_obsidian4 = require("obsidian");
 function deriveHighlightCssFromEntry(entry, plugin) {
   const lines = [];
   const settings = plugin.settings;
@@ -8649,7 +8710,7 @@ function extractHex(val, plugin) {
   }
   return null;
 }
-var CustomCssModal = class extends import_obsidian3.Modal {
+var CustomCssModal = class extends import_obsidian4.Modal {
   constructor(app, plugin, entry) {
     super(app);
     this.plugin = plugin;
@@ -8935,69 +8996,6 @@ var CustomCssModal = class extends import_obsidian3.Modal {
 
 // src/modals/TextStylePresetsModal.js
 var import_obsidian5 = require("obsidian");
-
-// src/modals/ConfirmationModal.js
-var import_obsidian4 = require("obsidian");
-var ConfirmationModal = class extends import_obsidian4.Modal {
-  constructor(app, plugin, title, message, onConfirm) {
-    super(app);
-    this.plugin = plugin;
-    this.title = title;
-    this.message = message;
-    this.onConfirm = onConfirm;
-    this._eventListeners = [];
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    this._eventListeners = [];
-    try {
-      this.modalEl.addClass("act-modal");
-    } catch (e) {
-    }
-    const h2 = contentEl.createEl("h2", { text: this.title });
-    h2.style.marginTop = "0";
-    contentEl.createEl("p", { text: this.message });
-    const buttonDiv = contentEl.createDiv();
-    buttonDiv.style.display = "flex";
-    buttonDiv.style.justifyContent = "flex-end";
-    buttonDiv.style.marginTop = "20px";
-    buttonDiv.style.gap = "10px";
-    const cancelButton = buttonDiv.createEl("button", {
-      text: this.plugin.t("btn_cancel", "Cancel")
-    });
-    const cancelHandler = () => this.close();
-    cancelButton.addEventListener("click", cancelHandler);
-    this._eventListeners.push({
-      el: cancelButton,
-      event: "click",
-      handler: cancelHandler
-    });
-    const confirmButton = buttonDiv.createEl("button", {
-      text: this.plugin.t("btn_confirm", "Confirm")
-    });
-    confirmButton.addClass("mod-warning");
-    const confirmHandler = () => {
-      this.onConfirm();
-      this.close();
-    };
-    confirmButton.addEventListener("click", confirmHandler);
-    this._eventListeners.push({
-      el: confirmButton,
-      event: "click",
-      handler: confirmHandler
-    });
-  }
-  onClose() {
-    this._eventListeners.forEach(({ el, event, handler }) => {
-      el.removeEventListener(event, handler);
-    });
-    this._eventListeners = [];
-    this.contentEl.empty();
-  }
-};
-
-// src/modals/TextStylePresetsModal.js
 var TextStylePresetsModal = class extends import_obsidian5.Modal {
   constructor(app, plugin, onPick = null) {
     super(app);
@@ -13547,10 +13545,29 @@ var EditEntryModal = class extends import_obsidian11.Modal {
       const typeMap = this._ruleTypeMap = this._ruleTypeMap || /* @__PURE__ */ new WeakMap();
       this._rules.forEach((r, idx) => {
         const row = rulesContainer.createDiv();
+        try {
+          row.addClass("act-group-rule-row");
+        } catch (_) {
+          try {
+            row.classList.add("act-group-rule-row");
+          } catch (_2) {
+          }
+        }
+        try {
+          row.addClass("act-entry-rule-row");
+        } catch (_) {
+          try {
+            row.classList.add("act-entry-rule-row");
+          } catch (_2) {
+          }
+        }
         row.style.display = "flex";
         row.style.gap = "8px";
         row.style.alignItems = "center";
         row.style.marginBottom = "8px";
+        row.style.flexWrap = "wrap";
+        row.style.width = "100%";
+        row.style.boxSizing = "border-box";
         const modeSel = row.createEl("select");
         const optIn = modeSel.createEl("option", {
           text: this.plugin.t("mode_only_colors_in", "only colors in")
@@ -13561,10 +13578,18 @@ var EditEntryModal = class extends import_obsidian11.Modal {
         });
         optEx.value = "exclude";
         modeSel.value = r.mode === "exclude" ? "exclude" : "include";
+        try {
+          modeSel.addClass("act-group-rule-mode");
+        } catch (_) {
+          try {
+            modeSel.classList.add("act-group-rule-mode");
+          } catch (_2) {
+          }
+        }
         modeSel.style.textAlign = "center";
-        modeSel.style.minWidth = "160px";
+        modeSel.style.minWidth = "120px";
+        modeSel.style.flex = "1 1 120px";
         modeSel.style.border = "1px solid var(--background-modifier-border)";
-        modeSel.style.borderRadius = "var(--radius-m)";
         modeSel.style.background = "var(--background-modifier-form-field)";
         const typeSel = row.createEl("select");
         const tOptFolder = typeSel.createEl("option", {
@@ -13589,9 +13614,17 @@ var EditEntryModal = class extends import_obsidian11.Modal {
         tOptPattern.value = "pattern";
         const ruleType = r.type || (String(r.path || "").startsWith("#") ? "tag" : /\/$/.test(String(r.path || "")) ? "folder" : "file");
         typeSel.value = ruleType;
+        try {
+          typeSel.addClass("act-group-rule-type");
+        } catch (_) {
+          try {
+            typeSel.classList.add("act-group-rule-type");
+          } catch (_2) {
+          }
+        }
         typeSel.style.minWidth = "100px";
+        typeSel.style.flex = "1 1 90px";
         typeSel.style.border = "1px solid var(--background-modifier-border)";
-        typeSel.style.borderRadius = "var(--radius-m)";
         typeSel.style.background = "var(--background-modifier-form-field)";
         if (!typeMap.has(r)) typeMap.set(r, {});
         const tv = typeMap.get(r);
@@ -13615,11 +13648,35 @@ var EditEntryModal = class extends import_obsidian11.Modal {
           renderRules();
         };
         modeSel.addEventListener("change", modeHandler);
-        const chooseArea = row.createEl("div");
+        const chooseRow = row.createDiv();
+        try {
+          chooseRow.addClass("act-group-rule-choose-row");
+        } catch (_) {
+          try {
+            chooseRow.classList.add("act-group-rule-choose-row");
+          } catch (_2) {
+          }
+        }
+        chooseRow.style.display = "flex";
+        chooseRow.style.gap = "8px";
+        chooseRow.style.alignItems = "center";
+        chooseRow.style.flex = "1 1 160px";
+        chooseRow.style.minWidth = "0";
+        chooseRow.style.flexWrap = "nowrap";
+        const chooseArea = chooseRow.createEl("div");
+        try {
+          chooseArea.addClass("act-group-rule-choose-area");
+        } catch (_) {
+          try {
+            chooseArea.classList.add("act-group-rule-choose-area");
+          } catch (_2) {
+          }
+        }
         chooseArea.style.display = "flex";
         chooseArea.style.gap = "8px";
         chooseArea.style.flex = "1 1 auto";
-        chooseArea.style.minWidth = "160px";
+        chooseArea.style.minWidth = "0";
+        chooseArea.style.flexWrap = "wrap";
         const clip = (b2) => {
           b2.style.overflow = "hidden";
           b2.style.textOverflow = "ellipsis";
@@ -13627,7 +13684,6 @@ var EditEntryModal = class extends import_obsidian11.Modal {
           b2.style.textAlign = "left";
           b2.style.padding = "6px 10px";
           b2.style.border = "1px solid var(--background-modifier-border)";
-          b2.style.borderRadius = "var(--radius-m)";
         };
         const openPicker = (type, cb) => {
           new RulePickerModal(this.app, this.plugin, type, cb).open();
@@ -13683,7 +13739,6 @@ var EditEntryModal = class extends import_obsidian11.Modal {
             inp.style.flex = "1 1 auto";
             inp.style.padding = "6px 10px";
             inp.style.border = "1px solid var(--background-modifier-border)";
-            inp.style.borderRadius = "var(--radius-m)";
             const patternInputHandler = () => {
               r.path = String(inp.value || "").trim();
               r.type = "pattern";
@@ -13720,16 +13775,70 @@ var EditEntryModal = class extends import_obsidian11.Modal {
           }
         };
         refreshLabels();
-        const delBtn = row.createEl("button", {
-          text: this.plugin.t("delete_button_text", "\u2715")
-        });
-        delBtn.addClass("mod-warning");
+        const delBtn = chooseRow.createEl("button");
+        try {
+          delBtn.addClass("act-blacklist-delete-btn");
+        } catch (_) {
+          try {
+            delBtn.classList.add("act-blacklist-delete-btn");
+          } catch (_2) {
+          }
+        }
+        try {
+          delBtn.addClass("act-group-rule-delete");
+        } catch (_) {
+          try {
+            delBtn.classList.add("act-group-rule-delete");
+          } catch (_2) {
+          }
+        }
+        try {
+          (0, import_obsidian11.setIcon)(delBtn, "x");
+        } catch (_) {
+          delBtn.textContent = this.plugin.t("delete_button_text", "\u2715");
+        }
+        delBtn.title = this.plugin.t("delete_button_text", "\u2715");
         delBtn.addEventListener("click", async () => {
-          this._rules.splice(idx, 1);
+          const at = this._rules.indexOf(r);
+          if (at !== -1) this._rules.splice(at, 1);
+          else this._rules.splice(idx, 1);
           syncEntryRules();
           await this.plugin.saveSettings();
           renderRules();
         });
+        const doDeleteRule = async () => {
+          const at = this._rules.indexOf(r);
+          if (at !== -1) this._rules.splice(at, 1);
+          else this._rules.splice(idx, 1);
+          syncEntryRules();
+          await this.plugin.saveSettings();
+          renderRules();
+        };
+        const rowContextHandler = (ev) => {
+          try {
+            ev.preventDefault();
+            ev.stopPropagation();
+          } catch (_) {
+          }
+          const menu = new import_obsidian11.Menu();
+          menu.addItem(
+            (item) => item.setTitle(this.plugin.t("delete_rule", "Delete Rule")).setIcon("trash").onClick(async () => {
+              if (document.body.classList.contains("is-mobile")) {
+                new ConfirmationModal(
+                  this.app,
+                  this.plugin,
+                  this.plugin.t("confirm_delete_path_rule_title", "Delete Rule"),
+                  this.plugin.t("confirm_delete_path_rule_desc", "Are you sure you want to delete this file/folder rule?"),
+                  doDeleteRule
+                ).open();
+              } else {
+                await doDeleteRule();
+              }
+            })
+          );
+          menu.showAtMouseEvent(ev);
+        };
+        row.addEventListener("contextmenu", rowContextHandler);
       });
     };
     const addRuleFn = async () => {
@@ -17422,8 +17531,16 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.style.maxWidth = "700px";
+    try {
+      this.modalEl.addClass("act-group-rules-modal");
+    } catch (_) {
+      try {
+        this.modalEl.classList.add("act-group-rules-modal");
+      } catch (_2) {
+      }
+    }
     const header = contentEl.createEl("h3", {
-      text: this.plugin.t("group_rules_modal_title", "Group inclusion / exclusion rules")
+      text: this.plugin.t("group_rules_modal_title", "Edit Rules")
     });
     header.style.marginTop = "0";
     const rulesContainer = contentEl.createDiv();
@@ -17450,10 +17567,21 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
       const typeMap = this._ruleTypeMap;
       this._rules.forEach((r, idx) => {
         const row = rulesContainer.createDiv();
+        try {
+          row.addClass("act-group-rule-row");
+        } catch (_) {
+          try {
+            row.classList.add("act-group-rule-row");
+          } catch (_2) {
+          }
+        }
         row.style.display = "flex";
         row.style.gap = "8px";
         row.style.alignItems = "center";
         row.style.marginBottom = "8px";
+        row.style.flexWrap = "wrap";
+        row.style.width = "100%";
+        row.style.boxSizing = "border-box";
         const modeSel = row.createEl("select");
         const optIn = modeSel.createEl("option", {
           text: this.plugin.t("mode_only_colors_in", "only colors in")
@@ -17464,9 +17592,17 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
         });
         optEx.value = "exclude";
         modeSel.value = r.mode === "exclude" ? "exclude" : "include";
-        modeSel.style.minWidth = "160px";
+        try {
+          modeSel.addClass("act-group-rule-mode");
+        } catch (_) {
+          try {
+            modeSel.classList.add("act-group-rule-mode");
+          } catch (_2) {
+          }
+        }
+        modeSel.style.minWidth = "120px";
+        modeSel.style.flex = "1 1 120px";
         modeSel.style.border = "1px solid var(--background-modifier-border)";
-        modeSel.style.borderRadius = "var(--radius-m)";
         modeSel.style.background = "var(--background-modifier-form-field)";
         const typeSel = row.createEl("select");
         const tOptFolder = typeSel.createEl("option", {
@@ -17491,9 +17627,17 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
         tOptPattern.value = "pattern";
         const ruleType = r.type || (String(r.path || "").startsWith("#") ? "tag" : /\/$/.test(String(r.path || "")) ? "folder" : "file");
         typeSel.value = ruleType;
+        try {
+          typeSel.addClass("act-group-rule-type");
+        } catch (_) {
+          try {
+            typeSel.classList.add("act-group-rule-type");
+          } catch (_2) {
+          }
+        }
         typeSel.style.minWidth = "100px";
+        typeSel.style.flex = "1 1 90px";
         typeSel.style.border = "1px solid var(--background-modifier-border)";
-        typeSel.style.borderRadius = "var(--radius-m)";
         typeSel.style.background = "var(--background-modifier-form-field)";
         if (!typeMap.has(r)) typeMap.set(r, {});
         const tv = typeMap.get(r);
@@ -17514,11 +17658,35 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
           renderRules();
         };
         modeSel.addEventListener("change", modeHandler);
-        const chooseArea = row.createEl("div");
+        const chooseRow = row.createDiv();
+        try {
+          chooseRow.addClass("act-group-rule-choose-row");
+        } catch (_) {
+          try {
+            chooseRow.classList.add("act-group-rule-choose-row");
+          } catch (_2) {
+          }
+        }
+        chooseRow.style.display = "flex";
+        chooseRow.style.gap = "8px";
+        chooseRow.style.alignItems = "center";
+        chooseRow.style.flex = "1 1 160px";
+        chooseRow.style.minWidth = "0";
+        chooseRow.style.flexWrap = "nowrap";
+        const chooseArea = chooseRow.createEl("div");
+        try {
+          chooseArea.addClass("act-group-rule-choose-area");
+        } catch (_) {
+          try {
+            chooseArea.classList.add("act-group-rule-choose-area");
+          } catch (_2) {
+          }
+        }
         chooseArea.style.display = "flex";
         chooseArea.style.gap = "8px";
         chooseArea.style.flex = "1 1 auto";
-        chooseArea.style.minWidth = "160px";
+        chooseArea.style.minWidth = "0";
+        chooseArea.style.flexWrap = "wrap";
         const clip = (b2) => {
           b2.style.overflow = "hidden";
           b2.style.textOverflow = "ellipsis";
@@ -17526,7 +17694,6 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
           b2.style.textAlign = "left";
           b2.style.padding = "6px 10px";
           b2.style.border = "1px solid var(--background-modifier-border)";
-          b2.style.borderRadius = "var(--radius-m)";
         };
         const openPicker = (type, cb) => {
           new RulePickerModal(this.app, this.plugin, type, cb).open();
@@ -17580,7 +17747,6 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
             inp.style.flex = "1 1 auto";
             inp.style.padding = "6px 10px";
             inp.style.border = "1px solid var(--background-modifier-border)";
-            inp.style.borderRadius = "var(--radius-m)";
             const patternInputHandler = () => {
               r.path = String(inp.value || "").trim();
               r.type = "pattern";
@@ -17615,15 +17781,68 @@ var GroupRulesModal = class extends import_obsidian16.Modal {
           }
         };
         refreshLabels();
-        const delBtn = row.createEl("button", {
-          text: this.plugin.t("delete_button_text", "\u2715")
-        });
-        delBtn.addClass("mod-warning");
+        const delBtn = chooseRow.createEl("button");
+        try {
+          delBtn.addClass("act-blacklist-delete-btn");
+        } catch (_) {
+          try {
+            delBtn.classList.add("act-blacklist-delete-btn");
+          } catch (_2) {
+          }
+        }
+        try {
+          delBtn.addClass("act-group-rule-delete");
+        } catch (_) {
+          try {
+            delBtn.classList.add("act-group-rule-delete");
+          } catch (_2) {
+          }
+        }
+        try {
+          (0, import_obsidian16.setIcon)(delBtn, "x");
+        } catch (_) {
+          delBtn.textContent = this.plugin.t("delete_button_text", "\u2715");
+        }
+        delBtn.title = this.plugin.t("delete_button_text", "\u2715");
         delBtn.addEventListener("click", () => {
-          this._rules.splice(idx, 1);
+          const at = this._rules.indexOf(r);
+          if (at !== -1) this._rules.splice(at, 1);
+          else this._rules.splice(idx, 1);
           this.syncGroupRules();
           renderRules();
         });
+        const doDeleteRule = () => {
+          const at = this._rules.indexOf(r);
+          if (at !== -1) this._rules.splice(at, 1);
+          else this._rules.splice(idx, 1);
+          this.syncGroupRules();
+          renderRules();
+        };
+        const rowContextHandler = (ev) => {
+          try {
+            ev.preventDefault();
+            ev.stopPropagation();
+          } catch (_) {
+          }
+          const menu = new import_obsidian16.Menu();
+          menu.addItem(
+            (item) => item.setTitle(this.plugin.t("delete_rule", "Delete Rule")).setIcon("trash").onClick(async () => {
+              if (document.body.classList.contains("is-mobile")) {
+                new ConfirmationModal(
+                  this.app,
+                  this.plugin,
+                  this.plugin.t("confirm_delete_path_rule_title", "Delete Rule"),
+                  this.plugin.t("confirm_delete_path_rule_desc", "Are you sure you want to delete this file/folder rule?"),
+                  doDeleteRule
+                ).open();
+              } else {
+                doDeleteRule();
+              }
+            })
+          );
+          menu.showAtMouseEvent(ev);
+        };
+        row.addEventListener("contextmenu", rowContextHandler);
       });
     };
     renderRules();
@@ -17742,6 +17961,14 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       () => nameInput.removeEventListener("input", nameInputHandler)
     );
     const caseSelect = topRow.createEl("select");
+    try {
+      caseSelect.addClass("act-wg-case-select");
+    } catch (_) {
+      try {
+        caseSelect.classList.add("act-wg-case-select");
+      } catch (_2) {
+      }
+    }
     caseSelect.style.padding = "6px";
     caseSelect.style.borderRadius = "var(--input-radius)";
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
@@ -17772,6 +17999,14 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       () => caseSelect.removeEventListener("change", caseSelectHandler)
     );
     const matchTypeSelect = topRow.createEl("select");
+    try {
+      matchTypeSelect.addClass("act-wg-match-select");
+    } catch (_) {
+      try {
+        matchTypeSelect.classList.add("act-wg-match-select");
+      } catch (_2) {
+      }
+    }
     matchTypeSelect.style.padding = "6px";
     matchTypeSelect.style.borderRadius = "var(--input-radius)";
     matchTypeSelect.style.border = "1px solid var(--background-modifier-border)";
@@ -17810,6 +18045,14 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
     );
     const editBtn = topRow.createEl("button");
     try {
+      editBtn.addClass("act-wg-edit-btn");
+    } catch (_) {
+      try {
+        editBtn.classList.add("act-wg-edit-btn");
+      } catch (_2) {
+      }
+    }
+    try {
       (0, import_obsidian17.setIcon)(editBtn, "edit-3");
     } catch (e) {
     }
@@ -17842,6 +18085,14 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
     if (this.plugin.settings.enableCustomCss) {
       const cssBtn = topRow.createEl("button");
       try {
+        cssBtn.addClass("act-wg-css-btn");
+      } catch (_) {
+        try {
+          cssBtn.classList.add("act-wg-css-btn");
+        } catch (_2) {
+        }
+      }
+      try {
         (0, import_obsidian17.setIcon)(cssBtn, "code");
       } catch (e) {
       }
@@ -17863,25 +18114,28 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
         () => cssBtn.removeEventListener("click", cssHandler)
       );
     }
-    const rulesRow = contentEl.createDiv();
-    rulesRow.style.display = "flex";
-    rulesRow.style.alignItems = "center";
-    rulesRow.style.gap = "8px";
-    rulesRow.style.marginBottom = "12px";
     const rulesCount = () => (Array.isArray(this.group.inclusionRules) ? this.group.inclusionRules.length : 0) + (Array.isArray(this.group.exclusionRules) ? this.group.exclusionRules.length : 0);
-    const rulesBtn = rulesRow.createEl("button", {
-      text: this.plugin.t("group_rules_button", "Edit inclusion / exclusion rules") + ` (${rulesCount()})`
+    const rulesBtn = topRow.createEl("button", {
+      text: this.plugin.t("group_rules_button", "Edit Rules") + ` (${rulesCount()})`
     });
+    try {
+      rulesBtn.addClass("act-wg-rules-btn");
+    } catch (_) {
+      try {
+        rulesBtn.classList.add("act-wg-rules-btn");
+      } catch (_2) {
+      }
+    }
     rulesBtn.style.padding = "6px 12px";
     rulesBtn.style.borderRadius = "var(--input-radius)";
     rulesBtn.style.border = "1px solid var(--background-modifier-border)";
-    rulesBtn.style.width = "100%";
-    rulesBtn.style.flex = "1 1 auto";
+    rulesBtn.style.width = "auto";
+    rulesBtn.style.flex = "0 0 auto";
     const openRulesModal = () => {
       new GroupRulesModal(this.app, this.plugin, this.group, () => {
         rulesBtn.textContent = this.plugin.t(
           "group_rules_button",
-          "Edit inclusion / exclusion rules"
+          "Edit Rules"
         ) + ` (${rulesCount()})`;
       }).open();
     };
@@ -19087,25 +19341,28 @@ var EditBlacklistGroupModal = class extends import_obsidian19.Modal {
     this._cleanupHandlers.push(
       () => matchTypeSelect.removeEventListener("change", matchTypeHandler)
     );
-    const rulesRow = contentEl.createDiv();
-    rulesRow.style.display = "flex";
-    rulesRow.style.alignItems = "center";
-    rulesRow.style.gap = "8px";
-    rulesRow.style.marginBottom = "12px";
     const rulesCount = () => (Array.isArray(this.group.inclusionRules) ? this.group.inclusionRules.length : 0) + (Array.isArray(this.group.exclusionRules) ? this.group.exclusionRules.length : 0);
-    const rulesBtn = rulesRow.createEl("button", {
-      text: this.plugin.t("group_rules_button", "Edit inclusion / exclusion rules") + ` (${rulesCount()})`
+    const rulesBtn = topRow.createEl("button", {
+      text: this.plugin.t("group_rules_button", "Edit Rules") + ` (${rulesCount()})`
     });
+    try {
+      rulesBtn.addClass("act-wg-rules-btn");
+    } catch (_) {
+      try {
+        rulesBtn.classList.add("act-wg-rules-btn");
+      } catch (_2) {
+      }
+    }
     rulesBtn.style.padding = "6px 12px";
     rulesBtn.style.borderRadius = "var(--input-radius)";
     rulesBtn.style.border = "1px solid var(--background-modifier-border)";
-    rulesBtn.style.width = "100%";
-    rulesBtn.style.flex = "1 1 auto";
+    rulesBtn.style.width = "auto";
+    rulesBtn.style.flex = "0 0 auto";
     const openRulesModal = () => {
       new GroupRulesModal(this.app, this.plugin, this.group, () => {
         rulesBtn.textContent = this.plugin.t(
           "group_rules_button",
-          "Edit inclusion / exclusion rules"
+          "Edit Rules"
         ) + ` (${rulesCount()})`;
       }).open();
     };
@@ -24914,7 +25171,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         id: "file-folder-rules",
         label: this.plugin.t(
           "settings_tab_file_folder_rules",
-          "File / Folder Rules"
+          "Rules"
         )
       },
       { id: "data", label: this.plugin.t("settings_tab_data", "Data") }
@@ -27249,7 +27506,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       const pathRulesHeading = new import_obsidian24.Setting(containerEl2).setName(
         this.plugin.t(
           "file_folder_rules_header",
-          "File & Folder Coloring Rules"
+          "File Coloring Rules"
         )
       ).setDesc(
         this.plugin.t(

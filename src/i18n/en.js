@@ -414,7 +414,7 @@ module.exports = {
   "settings_tab_general": "General",
   "settings_tab_colored_texts": "Colored Texts",
   "settings_tab_blacklists": "Blacklists",
-  "settings_tab_file_folder_rules": "File / Folder Rules",
+  "settings_tab_file_folder_rules": "Rules",
   "settings_tab_data": "Data",
   
   // Always Colored Texts
@@ -545,7 +545,7 @@ module.exports = {
   "btn_add_blacklist_regex": "+ Add blacklist regex",
   
   // File & Folder Rules
-  "file_folder_rules_header": "File & Folder Coloring Rules",
+  "file_folder_rules_header": "File Coloring Rules",
   "file_folder_rules_desc": "Control coloring in files using name matching, paths, regex patterns, or tags.",
   "search_file_folder_rules_placeholder": "Search file/folder rules…",
   "path_sort_label_last-added": "Sort: Last Added",
@@ -567,8 +567,8 @@ module.exports = {
   "label_text_exclude": "Blacklist",
   "label_enable_in": "Enable in",
   "label_disable_in": "Disable in",
-  "group_rules_button": "Edit inclusion / exclusion rules",
-  "group_rules_modal_title": "Group inclusion / exclusion rules",
+  "group_rules_button": "Edit Rules",
+  "group_rules_modal_title": "Edit Rules",
   "group_rules_add": "+ Add rule",
   "enter_path_or_pattern": "Enter path, pattern or tags",
   "label_regex": "Regex",
