@@ -58,8 +58,8 @@ var require_en = __commonJS({
       "latest_release_notes_label": "Latest Release Notes",
       "latest_release_notes_desc": "Check the latest release notes for the plugin",
       "open_changelog_button": "Open Changelog",
-      "mobile_color_hint": "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours",
-      "desktop_color_hint": "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours",
+      "mobile_color_hint": "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours.",
+      "desktop_color_hint": "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours.",
       "command_show_release_notes": "Show Latest Release Notes",
       "changelog_view_on_github": "View on GitHub",
       "changelog_loading": "Loading releases...",
@@ -25233,7 +25233,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         const _dayMs = 24 * 60 * 60 * 1e3;
         const _shouldShowHint = _dismissCount < 3 && (!_lastDismissed || _now - _lastDismissed >= _dayMs);
         if (_shouldShowHint) {
-          const _hintRaw = _isMobileHint ? this.plugin.t("mobile_color_hint", "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours") : this.plugin.t("desktop_color_hint", "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours");
+          const _hintRaw = _isMobileHint ? this.plugin.t("mobile_color_hint", "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours.") : this.plugin.t("desktop_color_hint", "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours.");
           let _hintText = String(_hintRaw || "").trim();
           if (/^Tip\b/i.test(_hintText) && !/^(Mobile|Desktop) Tip/i.test(_hintText)) {
             _hintText = _hintText.replace(/^Tip:?\s*/i, _isMobileHint ? "Mobile Tip: " : "Desktop Tip: ");

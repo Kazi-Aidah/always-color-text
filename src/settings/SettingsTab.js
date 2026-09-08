@@ -5512,8 +5512,8 @@ export class ColorSettingTab extends PluginSettingTab {
         const _shouldShowHint = _dismissCount < 3 && (!_lastDismissed || _now - _lastDismissed >= _dayMs);
         if (_shouldShowHint) {
           const _hintRaw = _isMobileHint
-            ? this.plugin.t("mobile_color_hint", "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours")
-            : this.plugin.t("desktop_color_hint", "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours");
+            ? this.plugin.t("mobile_color_hint", "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours.")
+            : this.plugin.t("desktop_color_hint", "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours.");
           let _hintText = String(_hintRaw || "").trim();
           // normalize legacy "Tip ..." -> platform prefix for display if needed
           if (/^Tip\b/i.test(_hintText) && !/^(Mobile|Desktop) Tip/i.test(_hintText)) {

@@ -1085,7 +1085,40 @@ body.is-mobile .blacklist-words-list .act-entry-row {
   box-sizing: border-box !important;
   flex-wrap: nowrap !important;
 }
+body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-regex-btn {
+  flex: 0 0 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  color: var(--text-muted) !important;
+  background: var(--interactive-normal) !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: var(--button-radius) !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-delete-btn {
+  flex: 0 0 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  color: var(--color-red) !important;
+  background: rgba(var(--color-red-rgb), 0.2) !important;
+  border: none !important;
+  border-radius: var(--button-radius) !important;
+  margin-left: auto !important;
+}
 @media (max-width: 480px) {
+/* Very narrow phone only: dropdown and inputs break into two rows */
 body.is-mobile .blacklist-words-list .act-entry-row {
   flex-wrap: wrap !important;
   gap: 6px !important;
@@ -1110,38 +1143,10 @@ body.is-mobile .blacklist-words-list .act-entry-row .act-flags-input {
   align-self: center !important;
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-regex-btn {
-  flex: 0 0 32px !important;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
   order: 1 !important;
-  cursor: pointer !important;
-  color: var(--text-muted) !important;
-  background: var(--interactive-normal) !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: var(--button-radius) !important;
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-delete-btn {
-  flex: 0 0 32px !important;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
   order: 99 !important;
-  cursor: pointer !important;
-  color: var(--color-red) !important;
-  background: rgba(var(--color-red-rgb), 0.2) !important;
-  border: none !important;
-  border-radius: var(--button-radius) !important;
-  margin-left: auto !important;
 }
 /* Markdown: just element dropdown (no config) -> dropdown + X same row */
 body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-select):not(:has(.act-md-element-config)):not(:has(.act-md-element-config-wrapper)) .act-md-element-select {
@@ -1195,6 +1200,7 @@ body.is-mobile .blacklist-words-list .act-entry-row .act-md-element-config {
   flex: 1 1 auto !important;
   width: auto !important;
   min-width: 0 !important;
+}
 }
 }
 body:not(.is-mobile) .act-blacklist-regex-btn,
