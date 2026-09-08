@@ -7551,9 +7551,21 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     const controlsRow = contentEl.createDiv();
     controlsRow.style.display = "flex";
     controlsRow.style.gap = "12px";
+    controlsRow.style.flexWrap = "wrap";
+    controlsRow.style.alignItems = "center";
+    try {
+      controlsRow.addClass("act-regex-tester-controls");
+    } catch (e) {
+    }
     const flagsRow = controlsRow.createDiv();
     flagsRow.style.display = "flex";
     flagsRow.style.gap = "6px";
+    flagsRow.style.flexWrap = "wrap";
+    flagsRow.style.alignItems = "center";
+    try {
+      flagsRow.addClass("act-regex-tester-flags");
+    } catch (e) {
+    }
     const flagNames = ["i", "g", "m", "s", "u", "y"];
     const flagButtons = {};
     flagNames.forEach((f) => {
@@ -7563,9 +7575,17 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
       b2.style.border = "1px solid var(--background-modifier-border)";
       b2.style.background = "var(--background-modifier-form-field)";
       b2.style.cursor = "pointer";
+      try {
+        b2.addClass("act-regex-tester-flag");
+      } catch (e) {
+      }
       flagButtons[f] = b2;
     });
     const styleSelect = controlsRow.createEl("select");
+    try {
+      styleSelect.addClass("act-regex-tester-style");
+    } catch (e) {
+    }
     ["text", "highlight", "both"].forEach((val) => {
       const opt = styleSelect.createEl("option", {
         text: this.plugin.t(
@@ -7581,6 +7601,10 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.marginTop = "0";
     const markTargetSelect = controlsRow.createEl("select");
+    try {
+      markTargetSelect.addClass("act-regex-tester-mark-target");
+    } catch (e) {
+    }
     [
       ["text", this.plugin.t("mark_target_text", "Color Text")],
       ["line", this.plugin.t("mark_target_line", "Color Line")],
@@ -7595,9 +7619,17 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     markTargetSelect.style.background = "var(--background-modifier-form-field)";
     markTargetSelect.style.marginTop = "0";
     const textColorInput = controlsRow.createEl("input", { type: "color" });
+    try {
+      textColorInput.addClass("act-regex-tester-text-color");
+    } catch (e) {
+    }
     textColorInput.value = this._preFillTextColor || "#87c760";
     textColorInput.style.width = "48px";
     const bgColorInput = controlsRow.createEl("input", { type: "color" });
+    try {
+      bgColorInput.addClass("act-regex-tester-bg-color");
+    } catch (e) {
+    }
     bgColorInput.value = this._preFillBgColor || "#1d5010";
     bgColorInput.style.width = "48px";
     const onTextPickerContext = (ev) => {
@@ -7687,6 +7719,10 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
       }
     };
     const regexInput2 = contentEl.createEl("input", { type: "text" });
+    try {
+      regexInput2.addClass("act-regex-tester-pattern");
+    } catch (e) {
+    }
     regexInput2.placeholder = this.plugin.t(
       "regex_expression_placeholder",
       "put your expression here"
@@ -7707,6 +7743,10 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("textarea");
+    try {
+      testInput.addClass("act-regex-tester-subject");
+    } catch (e) {
+    }
     testInput.placeholder = this.plugin.t(
       "regex_subject_placeholder",
       "type your subject / test string here..."
@@ -7726,6 +7766,10 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     testInput.style.boxSizing = "border-box";
     testInput.style.resize = "none";
     const previewWrap = contentEl.createDiv();
+    try {
+      previewWrap.addClass("act-regex-tester-preview");
+    } catch (e) {
+    }
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
     previewWrap.style.borderRadius = "var(--input-radius)";
@@ -7741,6 +7785,10 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     previewWrap.style.alignItems = "center";
     previewWrap.style.justifyContent = "center";
     const nameInput = contentEl.createEl("input", { type: "text" });
+    try {
+      nameInput.addClass("act-regex-tester-name");
+    } catch (e) {
+    }
     nameInput.placeholder = this.plugin.t(
       "regex_name_placeholder",
       "name your regex"
@@ -7753,23 +7801,43 @@ var RealTimeRegexTesterModal = class extends import_obsidian2.Modal {
     nameInput.style.background = "var(--background-modifier-form-field)";
     nameInput.style.boxSizing = "border-box";
     const statusRow = contentEl.createDiv();
+    try {
+      statusRow.addClass("act-regex-tester-status-row");
+    } catch (e) {
+    }
     statusRow.style.display = "flex";
     statusRow.style.justifyContent = "space-between";
     statusRow.style.alignItems = "center";
     statusRow.style.gap = "8px";
     statusRow.style.marginTop = "14px";
     const matchFooter = statusRow.createDiv();
+    try {
+      matchFooter.addClass("act-regex-tester-match");
+    } catch (e) {
+    }
     matchFooter.style.opacity = "0.8";
     matchFooter.style.flex = "1";
     const addBtn = statusRow.createEl("button", {
       text: this._editingEntry ? this.plugin.t("btn_save_regex", "Save Regex") : this.plugin.t("btn_add_regex", "+ Add Regex")
     });
     addBtn.addClass("mod-cta");
+    try {
+      addBtn.addClass("act-regex-tester-add");
+    } catch (e) {
+    }
     const infoWrap = contentEl.createDiv();
+    try {
+      infoWrap.addClass("act-regex-tester-info");
+    } catch (e) {
+    }
     infoWrap.style.marginTop = "8px";
     infoWrap.style.fontFamily = "monospace";
     infoWrap.style.fontSize = "var(--font-small)";
     const status = infoWrap.createDiv();
+    try {
+      status.addClass("act-regex-tester-status");
+    } catch (e) {
+    }
     status.style.opacity = "0.8";
     const sanitizeFlags = (f) => {
       const s = String(f || "").toLowerCase().replace(/[^gimsuy]/g, "");
@@ -9549,9 +9617,21 @@ var BlacklistRegexTesterModal = class extends import_obsidian6.Modal {
     const controlsRow = contentEl.createDiv();
     controlsRow.style.display = "flex";
     controlsRow.style.gap = "12px";
+    controlsRow.style.flexWrap = "wrap";
+    controlsRow.style.alignItems = "center";
+    try {
+      controlsRow.addClass("act-regex-tester-controls");
+    } catch (e) {
+    }
     const flagsRow = controlsRow.createDiv();
     flagsRow.style.display = "flex";
     flagsRow.style.gap = "6px";
+    flagsRow.style.flexWrap = "wrap";
+    flagsRow.style.alignItems = "center";
+    try {
+      flagsRow.addClass("act-regex-tester-flags");
+    } catch (e) {
+    }
     const flagNames = ["i", "g", "m", "s", "u", "y"];
     const flagButtons = {};
     flagNames.forEach((f) => {
@@ -9561,9 +9641,17 @@ var BlacklistRegexTesterModal = class extends import_obsidian6.Modal {
       b2.style.border = "1px solid var(--background-modifier-border)";
       b2.style.background = "var(--background-modifier-form-field)";
       b2.style.cursor = "pointer";
+      try {
+        b2.addClass("act-regex-tester-flag");
+      } catch (e) {
+      }
       flagButtons[f] = b2;
     });
     const regexInput2 = contentEl.createEl("input", { type: "text" });
+    try {
+      regexInput2.addClass("act-regex-tester-pattern");
+    } catch (e) {
+    }
     regexInput2.placeholder = this.plugin.t(
       "regex_expression_placeholder",
       "put your expression here"
@@ -9576,12 +9664,20 @@ var BlacklistRegexTesterModal = class extends import_obsidian6.Modal {
     regexInput2.style.background = "var(--background-modifier-form-field)";
     regexInput2.style.fontFamily = "var(--font-ui-medium)";
     const subjectWrap = contentEl.createDiv();
+    try {
+      subjectWrap.addClass("act-regex-tester-subject-wrap");
+    } catch (e) {
+    }
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
     subjectWrap.style.borderRadius = "var(--input-radius)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("textarea");
+    try {
+      testInput.addClass("act-regex-tester-subject");
+    } catch (e) {
+    }
     testInput.placeholder = this.plugin.t(
       "regex_subject_placeholder",
       "type your subject / test string here..."
@@ -9596,6 +9692,10 @@ var BlacklistRegexTesterModal = class extends import_obsidian6.Modal {
     testInput.style.fontFamily = "var(--font-ui-medium)";
     testInput.style.resize = "none";
     const previewWrap = contentEl.createDiv();
+    try {
+      previewWrap.addClass("act-regex-tester-preview");
+    } catch (e) {
+    }
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
     previewWrap.style.borderRadius = "var(--input-radius)";
@@ -9607,6 +9707,10 @@ var BlacklistRegexTesterModal = class extends import_obsidian6.Modal {
     previewWrap.style.fontSize = "var(--font-small)";
     previewWrap.style.lineHeight = "1.5";
     const nameInput = contentEl.createEl("input", { type: "text" });
+    try {
+      nameInput.addClass("act-regex-tester-name");
+    } catch (e) {
+    }
     nameInput.placeholder = this.plugin.t(
       "regex_name_placeholder",
       "name your regex"
@@ -9620,18 +9724,30 @@ var BlacklistRegexTesterModal = class extends import_obsidian6.Modal {
     nameInput.style.boxSizing = "border-box";
     nameInput.style.fontFamily = "var(--font-ui-medium)";
     const statusRow = contentEl.createDiv();
+    try {
+      statusRow.addClass("act-regex-tester-status-row");
+    } catch (e) {
+    }
     statusRow.style.display = "flex";
     statusRow.style.justifyContent = "space-between";
     statusRow.style.alignItems = "center";
     statusRow.style.gap = "8px";
     statusRow.style.marginTop = "14px";
     const matchFooter = statusRow.createDiv();
+    try {
+      matchFooter.addClass("act-regex-tester-match");
+    } catch (e) {
+    }
     matchFooter.style.opacity = "0.8";
     matchFooter.style.flex = "1";
     const addBtn = statusRow.createEl("button", {
       text: this._editingEntry ? this.plugin.t("btn_save_regex", "Save Regex") : this.plugin.t("btn_add_regex", "+ Add to Blacklist")
     });
     addBtn.addClass("mod-cta");
+    try {
+      addBtn.addClass("act-regex-tester-add");
+    } catch (e) {
+    }
     const sanitizeFlags = (f) => {
       const s = String(f || "").toLowerCase().replace(/[^gimsuy]/g, "");
       let out = "";
@@ -18718,6 +18834,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       entrySettingsBtn.style.background = "none";
       entrySettingsBtn.style.border = "none";
       entrySettingsBtn.style.boxShadow = "none";
+      entrySettingsBtn.style.color = "var(--text-muted)";
       entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
       try {
         entrySettingsBtn.addClass("act-entry-settings-btn");
@@ -19676,6 +19793,10 @@ var EditColorSwatchesModal = class extends import_obsidian20.Modal {
     });
     title.style.margin = "0";
     const previewRow = contentEl.createDiv();
+    try {
+      previewRow.addClass("act-edit-swatches-preview-row");
+    } catch (e) {
+    }
     previewRow.style.display = "flex";
     previewRow.style.gap = "8px";
     previewRow.style.marginTop = "8px";
@@ -19683,9 +19804,14 @@ var EditColorSwatchesModal = class extends import_obsidian20.Modal {
     previewRow.style.flexWrap = "wrap";
     const bgWrap = previewRow.createDiv();
     bgWrap.addClass("act-color-picker-preview-wrap");
+    try {
+      bgWrap.addClass("act-edit-swatches-bg-wrap");
+    } catch (e) {
+    }
     bgWrap.style.flex = "1 1 120px";
     bgWrap.style.minWidth = "120px";
     bgWrap.style.marginTop = "20px";
+    bgWrap.style.marginBottom = "2px";
     const bgSample = bgWrap.createDiv();
     bgSample.textContent = this.plugin.t(
       "bg_color_preview_label",
@@ -19695,6 +19821,10 @@ var EditColorSwatchesModal = class extends import_obsidian20.Modal {
     bgSample.style.borderRadius = "6px";
     const textWrap = previewRow.createDiv();
     textWrap.addClass("act-color-picker-preview-wrap");
+    try {
+      textWrap.addClass("act-edit-swatches-text-wrap");
+    } catch (e) {
+    }
     textWrap.style.flex = "1 1 120px";
     textWrap.style.minWidth = "120px";
     textWrap.style.marginTop = "20px";
@@ -19724,7 +19854,6 @@ var EditColorSwatchesModal = class extends import_obsidian20.Modal {
     hex.title = this.plugin.t("hex_input_title", "Hex code");
     hex.style.flex = "1";
     hex.style.padding = "8px";
-    hex.style.borderRadius = "8px";
     hex.style.border = "1px solid var(--background-modifier-border)";
     hex.style.width = "120px";
     hex.placeholder = "#000000 or var()";
@@ -20344,12 +20473,22 @@ var QuickMenuColorsModal = class extends import_obsidian21.Modal {
           tCp.value = pair.textColor && this.plugin.isValidHexColor(pair.textColor) ? pair.textColor : "#87c760";
           tCp.style.width = "30px";
           tCp.style.height = "30px";
+          tCp.style.minWidth = "30px";
+          tCp.style.minHeight = "30px";
           tCp.style.borderRadius = "50%";
           tCp.style.border = "none";
           tCp.style.padding = "0";
           tCp.style.overflow = "hidden";
           tCp.style.background = "transparent";
           tCp.style.cursor = "pointer";
+          tCp.style.boxSizing = "border-box";
+          tCp.style.flexShrink = "0";
+          tCp.style.display = "block";
+          try {
+            tCp.style.appearance = "none";
+            tCp.style.setProperty("-webkit-appearance", "none");
+          } catch (e) {
+          }
           tCp.title = this.plugin.t("text_color_title", "Text Color");
           const tChange = async () => {
             const val = tCp.value;
@@ -20369,12 +20508,22 @@ var QuickMenuColorsModal = class extends import_obsidian21.Modal {
           bCp.value = pair.backgroundColor && this.plugin.isValidHexColor(pair.backgroundColor) ? pair.backgroundColor : "#1d5010";
           bCp.style.width = "30px";
           bCp.style.height = "30px";
+          bCp.style.minWidth = "30px";
+          bCp.style.minHeight = "30px";
           bCp.style.borderRadius = "50%";
           bCp.style.border = "none";
           bCp.style.padding = "0";
           bCp.style.overflow = "hidden";
           bCp.style.background = "transparent";
           bCp.style.cursor = "pointer";
+          bCp.style.boxSizing = "border-box";
+          bCp.style.flexShrink = "0";
+          bCp.style.display = "block";
+          try {
+            bCp.style.appearance = "none";
+            bCp.style.setProperty("-webkit-appearance", "none");
+          } catch (e) {
+          }
           bCp.title = this.plugin.t("highlight_color_title", "Highlight Color");
           const bChange = async () => {
             const val = bCp.value;
@@ -22007,6 +22156,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       entrySettingsBtn.style.background = "none";
       entrySettingsBtn.style.border = "none";
       entrySettingsBtn.style.boxShadow = "none";
+      entrySettingsBtn.style.color = "var(--text-muted)";
       entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
       try {
         entrySettingsBtn.addClass("act-entry-settings-btn");
@@ -22341,6 +22491,14 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           if (cfgInput) row.appendChild(cfgInput);
         } else if (kind === "regex" && entry.presetLabel) {
           const badge = row.createEl("span", { text: entry.presetLabel });
+          try {
+            badge.addClass("act-regex-name");
+          } catch (e) {
+            try {
+              badge.classList.add("act-regex-name");
+            } catch (_) {
+            }
+          }
           badge.style.marginRight = "8px";
           badge.style.opacity = "0.7";
           badge.style.flex = "0 0 auto";
@@ -22380,9 +22538,38 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             }
           }
         }
-        const del = { addEventListener: () => {
-        }, removeEventListener: () => {
-        } };
+        let blacklistRegexBtn = null;
+        if (kind === "regex") {
+          blacklistRegexBtn = row.createEl("button");
+          try {
+            blacklistRegexBtn.addClass("act-blacklist-regex-btn");
+          } catch (e) {
+            try {
+              blacklistRegexBtn.classList.add("act-blacklist-regex-btn");
+            } catch (_) {
+            }
+          }
+          try {
+            (0, import_obsidian24.setIcon)(blacklistRegexBtn, "regex");
+          } catch (e) {
+          }
+          blacklistRegexBtn.title = this.plugin.t("open_in_regex_tester", "Open in Regex Tester");
+        }
+        const del = row.createEl("button");
+        try {
+          del.addClass("act-blacklist-delete-btn");
+        } catch (e) {
+          try {
+            del.classList.add("act-blacklist-delete-btn");
+          } catch (_) {
+          }
+        }
+        try {
+          (0, import_obsidian24.setIcon)(del, "x");
+        } catch (e) {
+          del.textContent = this.plugin.t("delete_button_text", "\u2715");
+        }
+        del.title = this.plugin.t("delete_button_text", "\u2715");
         if (!entry.uid) {
           try {
             entry.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -22580,6 +22767,9 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         row.addEventListener("contextmenu", contextMenuHandler);
         if (flagsInput) flagsInput.addEventListener("change", flagsInputHandler);
         del.addEventListener("click", delHandler);
+        if (blacklistRegexBtn) {
+          blacklistRegexBtn.addEventListener("click", openInRegexTesterHandler);
+        }
         this._cleanupHandlers.push(() => {
           try {
             if (textInput) textInput.removeEventListener("change", textInputHandler);
@@ -22599,6 +22789,10 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           }
           try {
             del.removeEventListener("click", delHandler);
+          } catch (e) {
+          }
+          try {
+            if (blacklistRegexBtn) blacklistRegexBtn.removeEventListener("click", openInRegexTesterHandler);
           } catch (e) {
           }
         });
@@ -22707,13 +22901,35 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       limitedRows.forEach((entry, filterIndex) => {
         const actualIndex = rows.indexOf(entry);
         if (actualIndex === -1) return;
+        const isMobile = document.body.classList.contains("is-mobile");
         const row = this._pathRulesContainer.createDiv();
-        row.style.display = "flex";
-        row.style.alignItems = "center";
-        row.style.gap = "8px";
-        row.style.marginBottom = "8px";
+        if (isMobile) {
+          row.style.display = "flex";
+          row.style.flexWrap = "wrap";
+          row.style.alignItems = "center";
+          row.style.gap = "8px";
+          row.style.backgroundColor = "var(--setting-items-background)";
+          row.style.border = "1px solid var(--background-modifier-border)";
+          row.style.borderRadius = "var(--setting-items-radius)";
+          row.style.padding = "10px";
+          row.style.marginTop = "6px";
+          row.style.marginBottom = "0";
+          row.style.width = "100%";
+          row.style.boxSizing = "border-box";
+        } else {
+          row.style.display = "flex";
+          row.style.alignItems = "center";
+          row.style.gap = "8px";
+          row.style.marginBottom = "8px";
+        }
         const modeSel = row.createEl("select");
-        modeSel.style.flex = "0 0 auto";
+        if (isMobile) {
+          modeSel.style.flex = "1 1 calc(50% - 4px)";
+          modeSel.style.minWidth = "0";
+          modeSel.style.boxSizing = "border-box";
+        } else {
+          modeSel.style.flex = "0 0 auto";
+        }
         modeSel.style.padding = "6px";
         modeSel.style.borderRadius = "var(--input-radius)";
         modeSel.style.border = "1px solid var(--background-modifier-border)";
@@ -22730,8 +22946,14 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         });
         modeSel.value = entry.mode === "exclude" ? "exclude" : "include";
         const typeSel = row.createEl("select");
-        typeSel.style.flex = "0 0 auto";
-        typeSel.style.minWidth = "100px";
+        if (isMobile) {
+          typeSel.style.flex = "1 1 calc(50% - 4px)";
+          typeSel.style.minWidth = "0";
+          typeSel.style.boxSizing = "border-box";
+        } else {
+          typeSel.style.flex = "0 0 auto";
+          typeSel.style.minWidth = "100px";
+        }
         typeSel.style.padding = "6px";
         typeSel.style.borderRadius = "var(--input-radius)";
         typeSel.style.border = "1px solid var(--background-modifier-border)";
@@ -22762,8 +22984,14 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         const chooseArea = row.createEl("div");
         chooseArea.style.display = "flex";
         chooseArea.style.gap = "8px";
-        chooseArea.style.flex = "1 1 auto";
-        chooseArea.style.minWidth = "160px";
+        if (isMobile) {
+          chooseArea.style.flex = "1 1 calc(100% - 40px)";
+          chooseArea.style.minWidth = "0";
+          chooseArea.style.boxSizing = "border-box";
+        } else {
+          chooseArea.style.flex = "1 1 auto";
+          chooseArea.style.minWidth = "160px";
+        }
         const clip = (b2) => {
           b2.style.overflow = "hidden";
           b2.style.textOverflow = "ellipsis";
@@ -22771,7 +22999,6 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           b2.style.textAlign = "left";
           b2.style.padding = "6px 10px";
           b2.style.border = "1px solid var(--background-modifier-border)";
-          b2.style.borderRadius = "var(--radius-m)";
         };
         const openPicker = (type, cb) => {
           new RulePickerModal(this.app, this.plugin, type, cb).open();
@@ -22828,7 +23055,6 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             inp.style.flex = "1 1 auto";
             inp.style.padding = "6px 10px";
             inp.style.border = "1px solid var(--background-modifier-border)";
-            inp.style.borderRadius = "var(--radius-m)";
             const patternInputHandler = () => {
               persist("pattern", String(inp.value || "").trim());
               this.plugin.saveSettings();
@@ -22877,13 +23103,6 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         this._cleanupHandlers.push(
           () => typeSel.removeEventListener("change", typeHandler)
         );
-        const del = row.createEl("button", {
-          text: this.plugin.t("delete_button_text", "\u2715")
-        });
-        del.addClass("mod-warning");
-        del.style.border = "none";
-        del.style.cursor = "pointer";
-        del.style.flex = "0 0 auto";
         const modeHandler = async () => {
           this.plugin.settings.pathRules[actualIndex].mode = modeSel.value;
           await this.plugin.saveSettings();
@@ -22893,30 +23112,75 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         this._cleanupHandlers.push(
           () => modeSel.removeEventListener("change", modeHandler)
         );
-        const delHandler = async () => {
-          const doDelete = async () => {
-            if (actualIndex !== -1 && this.plugin.settings.pathRules[actualIndex]) {
-              this.plugin.settings.pathRules.splice(actualIndex, 1);
-              await this.plugin.saveSettings();
-              this._refreshPathRules();
-            }
-          };
-          if (document.body.classList.contains("is-mobile")) {
+        const doDeleteRule = async () => {
+          if (actualIndex !== -1 && this.plugin.settings.pathRules[actualIndex]) {
+            this.plugin.settings.pathRules.splice(actualIndex, 1);
+            await this.plugin.saveSettings();
+            this._refreshPathRules();
+          }
+        };
+        const rowContextHandler = (ev) => {
+          try {
+            ev.preventDefault();
+            ev.stopPropagation();
+          } catch (e) {
+          }
+          const menu = new import_obsidian24.Menu();
+          menu.addItem(
+            (item) => item.setTitle(this.plugin.t("delete_rule", "Delete Rule")).setIcon("trash").onClick(async () => {
+              if (document.body.classList.contains("is-mobile")) {
+                new ConfirmationModal(
+                  this.app,
+                  this.plugin,
+                  this.plugin.t("confirm_delete_path_rule_title", "Delete Rule"),
+                  this.plugin.t("confirm_delete_path_rule_desc", "Are you sure you want to delete this file/folder rule?"),
+                  doDeleteRule
+                ).open();
+              } else {
+                await doDeleteRule();
+              }
+            })
+          );
+          menu.showAtMouseEvent(ev);
+        };
+        row.addEventListener("contextmenu", rowContextHandler);
+        if (isMobile) {
+          const del = row.createEl("button");
+          try {
+            (0, import_obsidian24.setIcon)(del, "x");
+          } catch (e) {
+            del.textContent = this.plugin.t("delete_button_text", "\u2715");
+          }
+          del.addClass("act-path-delete-btn");
+          del.style.border = "none";
+          del.style.cursor = "pointer";
+          del.style.flex = "0 0 32px";
+          del.style.width = "32px";
+          del.style.height = "32px";
+          del.style.minWidth = "32px";
+          del.style.display = "flex";
+          del.style.alignItems = "center";
+          del.style.justifyContent = "center";
+          del.style.padding = "0";
+          del.style.color = "var(--color-red)";
+          del.style.background = "rgba(var(--color-red-rgb), 0.2)";
+          del.style.borderRadius = "var(--button-radius)";
+          del.style.order = "99";
+          del.style.marginLeft = "0";
+          const delHandler = async () => {
             new ConfirmationModal(
               this.app,
               this.plugin,
               this.plugin.t("confirm_delete_path_rule_title", "Delete Rule"),
               this.plugin.t("confirm_delete_path_rule_desc", "Are you sure you want to delete this file/folder rule?"),
-              doDelete
+              doDeleteRule
             ).open();
-          } else {
-            await doDelete();
-          }
-        };
-        del.addEventListener("click", delHandler);
-        this._cleanupHandlers.push(
-          () => del.removeEventListener("click", delHandler)
-        );
+          };
+          del.addEventListener("click", delHandler);
+          this._cleanupHandlers.push(
+            () => del.removeEventListener("click", delHandler)
+          );
+        }
       });
       if (rows.length === 0) {
         this._pathRulesContainer.createEl("p", {
@@ -23786,13 +24050,25 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           preview.style.fontWeight = "bold";
           preview.style.cursor = "default";
           preview.textContent = "Text";
-          const t2 = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
-          const b2 = group.backgroundColor || "";
+          let styleType2 = group.styleType;
+          if (!styleType2) {
+            const hasText = !!(group.textColor && group.textColor !== "currentColor");
+            const hasBg = !!group.backgroundColor;
+            if (hasText && hasBg) styleType2 = "both";
+            else if (hasBg) styleType2 = "highlight";
+            else styleType2 = "text";
+          }
+          const isTextOnly = styleType2 === "text";
+          const isHighlightOnly = styleType2 === "highlight";
+          const tRaw = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
+          const bRaw = group.backgroundColor || "";
+          const t2 = isHighlightOnly ? "" : tRaw;
+          const b2 = isTextOnly ? "" : bRaw;
           const p = this.plugin.getHighlightParams(group);
           const rgba = b2 ? this.plugin.hexToRgba(b2, p.opacity ?? 25) : "transparent";
-          if (t2) preview.style.color = t2;
+          if (!isHighlightOnly && t2) preview.style.color = t2;
           else preview.style.color = "var(--text-normal)";
-          if (b2) {
+          if (!isTextOnly && b2) {
             preview.style.backgroundColor = rgba;
           } else {
             preview.style.backgroundColor = "transparent";
@@ -23802,13 +24078,24 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           preview.style.paddingRight = (p.hPad ?? 4) + "px";
           preview.style.paddingTop = (p.vPad ?? 0) + "px";
           preview.style.paddingBottom = (p.vPad ?? 0) + "px";
-          if (p.enableBorder) {
-            const borderStyle = this.plugin.generateBorderStyle(t2, b2, group);
+          preview.style.border = "none";
+          preview.style.borderTop = "none";
+          preview.style.borderBottom = "none";
+          preview.style.borderLeft = "none";
+          preview.style.borderRight = "none";
+          if (!isTextOnly && p.enableBorder) {
+            const borderStyle = this.plugin.generateBorderStyle(
+              isHighlightOnly ? null : t2,
+              b2,
+              group
+            );
             if (borderStyle) {
               preview.style.cssText += borderStyle;
             }
+          } else if (!isTextOnly) {
+            preview.style.border = "none";
           } else {
-            preview.style.border = "1px solid var(--background-modifier-border)";
+            preview.style.border = "none";
           }
           if (group.customCss) {
             try {

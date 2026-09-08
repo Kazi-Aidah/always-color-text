@@ -33,6 +33,9 @@ export class EditColorSwatchesModal extends Modal {
 
     // ===== Preview row: Background Color (left) + Text Color (right) =====
     const previewRow = contentEl.createDiv();
+    try {
+      previewRow.addClass("act-edit-swatches-preview-row");
+    } catch (e) {}
     previewRow.style.display = "flex";
     previewRow.style.gap = "8px";
     previewRow.style.marginTop = "8px";
@@ -41,9 +44,13 @@ export class EditColorSwatchesModal extends Modal {
 
     const bgWrap = previewRow.createDiv();
     bgWrap.addClass("act-color-picker-preview-wrap");
+    try {
+      bgWrap.addClass("act-edit-swatches-bg-wrap");
+    } catch (e) {}
     bgWrap.style.flex = "1 1 120px";
     bgWrap.style.minWidth = "120px";
     bgWrap.style.marginTop = "20px";
+    bgWrap.style.marginBottom = "2px";
 
     const bgSample = bgWrap.createDiv();
     bgSample.textContent = this.plugin.t(
@@ -55,6 +62,9 @@ export class EditColorSwatchesModal extends Modal {
 
     const textWrap = previewRow.createDiv();
     textWrap.addClass("act-color-picker-preview-wrap");
+    try {
+      textWrap.addClass("act-edit-swatches-text-wrap");
+    } catch (e) {}
     textWrap.style.flex = "1 1 120px";
     textWrap.style.minWidth = "120px";
     textWrap.style.marginTop = "20px";
@@ -89,7 +99,6 @@ export class EditColorSwatchesModal extends Modal {
     hex.title = this.plugin.t("hex_input_title", "Hex code");
     hex.style.flex = "1";
     hex.style.padding = "8px";
-    hex.style.borderRadius = "8px";
     hex.style.border = "1px solid var(--background-modifier-border)";
     hex.style.width = "120px";
     hex.placeholder = "#000000 or var()";

@@ -612,6 +612,32 @@ body.is-mobile .act-highlight-header-row select {
   min-width: 0;
 }
 
+/* RealTime / Blacklist Regex Tester - controls row with flags, selects, color pickers */
+.act-regex-tester-controls {
+  display: flex !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  max-width: 100% !important;
+}
+
+.act-regex-tester-flags {
+  display: flex !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+
+@media (max-width: 600px) {
+  .act-regex-tester-controls {
+    gap: 8px !important;
+  }
+}
+
+body.is-mobile .act-regex-tester-controls {
+  gap: 8px !important;
+}
+
 /* @media (min-width: 768px) {
   .act-regex-name {
     max-width: 125px !important;
@@ -902,6 +928,13 @@ body.is-mobile .act-group-row input {
   width: 32px !important;
   height: 32px !important;
   padding: 4px !important;
+  color: var(--text-muted) !important;
+}
+
+.act-entry-settings-btn svg,
+.act-entry-settings-btn .svg-icon {
+  color: var(--text-muted) !important;
+  stroke: var(--text-muted) !important;
 }
 
 /* Make the entry row wrap on mobile */
@@ -1001,6 +1034,154 @@ body.is-mobile .color-words-list .act-entry-row .act-md-element-config {
   flex: 1 1 auto !important;
   width: auto !important;
   min-width: 0 !important;
+}
+
+/* ====== BLACKLIST ENTRIES — MOBILE LAYOUT (.is-mobile) ====== */
+/* Only for mobile — background + border + radius like colored text + file folder rules */
+body.is-mobile .blacklist-words-list .act-entry-row {
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  background-color: var(--setting-items-background) !important;
+  border: 1px solid var(--background-modifier-border) !important;
+  border-radius: var(--setting-items-radius) !important;
+  padding: 10px !important;
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
+  box-sizing: border-box !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row .act-regex-name {
+  order: -1 !important;
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 6px !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row input[type="text"]:not(.act-flags-input):not(.act-regex-name):not(.act-md-element-config) {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  order: 2 !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row .act-flags-input {
+  flex: 0 0 80px !important;
+  width: 80px !important;
+  order: 3 !important;
+  align-self: center !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-regex-btn {
+  flex: 0 0 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  order: 1 !important;
+  cursor: pointer !important;
+  color: var(--text-muted) !important;
+  background: var(--interactive-normal) !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: var(--button-radius) !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-delete-btn {
+  flex: 0 0 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  order: 99 !important;
+  cursor: pointer !important;
+  color: var(--color-red) !important;
+  background: rgba(var(--color-red-rgb), 0.2) !important;
+  border: none !important;
+  border-radius: var(--button-radius) !important;
+  margin-left: auto !important;
+}
+body:not(.is-mobile) .act-blacklist-regex-btn,
+body:not(.is-mobile) .act-blacklist-delete-btn {
+  display: none !important;
+}
+/* Markdown: just element dropdown (no config) -> dropdown + X same row */
+body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-select):not(:has(.act-md-element-config)):not(:has(.act-md-element-config-wrapper)) .act-md-element-select {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  order: 0 !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-select):not(:has(.act-md-element-config)):not(:has(.act-md-element-config-wrapper)) .act-blacklist-delete-btn {
+  order: 99 !important;
+  margin-left: 0 !important;
+}
+/* Markdown: plain input (heading, tag, task-list) -> select row1 (100%), input+X row2 */
+body.is-mobile .blacklist-words-list .act-entry-row:has(> .act-md-element-config):not(:has(.act-md-element-config-wrapper)) .act-md-element-select {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  order: 0 !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row:has(> .act-md-element-config):not(:has(.act-md-element-config-wrapper)) .act-md-element-config {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  order: 1 !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row:has(> .act-md-element-config):not(:has(.act-md-element-config-wrapper)) .act-blacklist-delete-btn {
+  order: 99 !important;
+  margin-left: 0 !important;
+}
+/* Markdown: element dropdown row1, second dropdown+input+X row2 (wrapper case) */
+body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-config-wrapper) .act-md-element-select {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  order: 0 !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-config-wrapper) .act-md-element-config-wrapper {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 6px !important;
+  order: 1 !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-config-wrapper) .act-blacklist-delete-btn {
+  order: 99 !important;
+  margin-left: 0 !important;
+}
+body.is-mobile .blacklist-words-list .act-entry-row .act-md-element-config {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+/* ====== FILE/FOLDER RULES — MOBILE LAYOUT — X BUTTON (same as blacklist) ====== */
+body.is-mobile .path-rules-list .act-path-delete-btn {
+  flex: 0 0 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  order: 99 !important;
+  cursor: pointer !important;
+  color: var(--color-red) !important;
+  background: rgba(var(--color-red-rgb), 0.2) !important;
+  border: none !important;
+  border-radius: var(--button-radius) !important;
+  margin-left: 0 !important;
+}
+body:not(.is-mobile) .act-path-delete-btn {
+  display: none !important;
 }
 
 /* ====== EDIT ENTRY MODAL — MOBILE LAYOUT ====== */
@@ -1334,6 +1515,11 @@ body:not(.is-mobile) .act-group-button-row {
   box-shadow: none;
 }
 
+/* Force heading p margin-top to zero inside act-modals (fixes excessive top margin) */
+.act-modal p {
+  margin-top: 0 !important;
+}
+
 /* Button label text */
 .act-pickr-row button span {
   font-size: 11px;
@@ -1461,6 +1647,69 @@ body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
   outline: 2px solid var(--color-accent);
 }
 
+.act-edit-swatches-preview-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .act-edit-swatches-preview-row {
+    flex-direction: column !important;
+  }
+  .act-edit-swatches-preview-row .act-color-picker-preview-wrap {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .act-edit-swatches-preview-row .act-edit-swatches-text-wrap {
+    margin-top: 0 !important;
+  }
+}
+
+body.is-mobile .act-edit-swatches-preview-row {
+  flex-direction: column !important;
+}
+body.is-mobile .act-edit-swatches-preview-row .act-color-picker-preview-wrap {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+body.is-mobile .act-edit-swatches-preview-row .act-edit-swatches-text-wrap {
+  margin-top: 0 !important;
+}
+
+/* Quick Colors modal – fix color picker inputs clipped left/right */
+[data-qc-index] input[type="color"] {
+  flex-shrink: 0 !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
+  width: 30px !important;
+  height: 30px !important;
+  box-sizing: border-box !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  display: block !important;
+}
+[data-qc-index] input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0 !important;
+}
+[data-qc-index] input[type="color"]::-webkit-color-swatch {
+  border: none !important;
+  border-radius: 50% !important;
+}
+[data-qc-index] input[type="color"]::-moz-color-swatch {
+  border: none !important;
+  border-radius: 50% !important;
+}
+
 /* ===== ROBUST DRAG & DROP STYLES (Obsidian + Electron compatible) ===== */
 
 /* Body drag state: prevents text selection and conflicts during drag */
@@ -1560,6 +1809,18 @@ div[data-swatch-index] {
   gap: 16px;
   margin-bottom: 18px;
 }
+
+@media (max-width: 900px) {
+  .act-tsp-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .act-tsp-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .act-tsp-box {
   position: relative;
   display: flex;
@@ -1603,6 +1864,41 @@ div[data-swatch-index] {
 }
 .act-tsp-add-row button {
   padding: 6px 14px;
+}
+
+/* Sticky footer for Text Style Presets modal – reuses highlight footer pattern */
+.act-text-style-presets-modal .modal-content {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 85vh !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+.act-text-style-presets-modal h2,
+.act-text-style-presets-modal .act-tsp-top-box {
+  flex-shrink: 0 !important;
+}
+.act-text-style-presets-modal .act-tsp-grid {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
+  padding-right: 4px !important;
+  margin-bottom: 0 !important;
+}
+.act-tsp-add-row {
+  flex-shrink: 0 !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  border-top: 1px solid var(--background-modifier-border) !important;
+  padding: 12px 0 4px 0 !important;
+  margin-top: 0 !important;
+  z-index: 1 !important;
+}
+body.is-mobile .act-text-style-presets-modal .modal-content {
+  max-height: 90vh !important;
+}
+body.is-mobile .act-tsp-add-row {
+  padding-bottom: 8px !important;
 }
 
 /* ── Per-entry group preview: show text-normal for text, accent for background (preview only) ── */
@@ -1683,3 +1979,4 @@ body.is-mobile .act-highlight-footer {
   padding-left: 0 !important;
 }
 
+                                                        

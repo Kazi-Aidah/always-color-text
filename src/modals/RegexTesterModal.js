@@ -95,6 +95,9 @@ export class RegexTesterModal extends Modal {
     } catch (e) {}
 
     const markTargetSelect = rowStyle.createEl("select");
+    try {
+      markTargetSelect.addClass("act-regex-mark-target");
+    } catch (e) {}
     [
       ["text", this.plugin.t("mark_target_text", "Color Text")],
       ["line", this.plugin.t("mark_target_line", "Color Line")],
@@ -237,6 +240,9 @@ export class RegexTesterModal extends Modal {
 
     // Split layout: editor on left, preview on right
     const splitContainer = contentEl.createDiv();
+    try {
+      splitContainer.addClass("act-regex-split");
+    } catch (e) {}
     splitContainer.style.display = "flex";
     splitContainer.style.gap = "12px";
     splitContainer.style.marginTop = "12px";
@@ -244,6 +250,9 @@ export class RegexTesterModal extends Modal {
 
     // Left: CodeMirror editor for test input
     const editorWrap = splitContainer.createDiv();
+    try {
+      editorWrap.addClass("act-regex-editor-wrap");
+    } catch (e) {}
     editorWrap.style.flex = "1";
     editorWrap.style.border = "1px solid var(--background-modifier-border)";
     editorWrap.style.borderRadius = "var(--input-radius)";
@@ -253,6 +262,9 @@ export class RegexTesterModal extends Modal {
 
     // Right: Live preview panel
     const previewWrap = splitContainer.createDiv();
+    try {
+      previewWrap.addClass("act-regex-preview");
+    } catch (e) {}
     previewWrap.style.flex = "1";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
     previewWrap.style.borderRadius = "var(--input-radius)";
@@ -286,6 +298,9 @@ export class RegexTesterModal extends Modal {
     } catch (e) {
       // Fallback to textarea if CodeMirror fails
       const textarea = editorWrap.createEl("textarea");
+      try {
+        textarea.addClass("act-regex-subject");
+      } catch (e) {}
       textarea.placeholder = this.plugin.t(
         "regex_subject_placeholder",
         "type your subject / test string here...",
@@ -465,6 +480,9 @@ export class RegexTesterModal extends Modal {
     }
 
     const actionRow = contentEl.createDiv();
+    try {
+      actionRow.addClass("act-regex-action-row");
+    } catch (e) {}
     actionRow.style.display = "flex";
     actionRow.style.justifyContent = "space-between";
     actionRow.style.alignItems = "center";

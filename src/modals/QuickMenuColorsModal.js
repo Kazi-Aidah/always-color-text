@@ -105,12 +105,21 @@ export class QuickMenuColorsModal extends Modal {
               : "#87c760";
           tCp.style.width = "30px";
           tCp.style.height = "30px";
+          tCp.style.minWidth = "30px";
+          tCp.style.minHeight = "30px";
           tCp.style.borderRadius = "50%";
           tCp.style.border = "none";
           tCp.style.padding = "0";
           tCp.style.overflow = "hidden";
           tCp.style.background = "transparent";
           tCp.style.cursor = "pointer";
+          tCp.style.boxSizing = "border-box";
+          tCp.style.flexShrink = "0";
+          tCp.style.display = "block";
+          try {
+            tCp.style.appearance = "none";
+            tCp.style.setProperty("-webkit-appearance", "none");
+          } catch (e) {}
           tCp.title = this.plugin.t("text_color_title", "Text Color");
           
           const tChange = async () => {
@@ -135,12 +144,21 @@ export class QuickMenuColorsModal extends Modal {
               : "#1d5010";
           bCp.style.width = "30px";
           bCp.style.height = "30px";
+          bCp.style.minWidth = "30px";
+          bCp.style.minHeight = "30px";
           bCp.style.borderRadius = "50%";
           bCp.style.border = "none";
           bCp.style.padding = "0";
           bCp.style.overflow = "hidden";
           bCp.style.background = "transparent";
           bCp.style.cursor = "pointer";
+          bCp.style.boxSizing = "border-box";
+          bCp.style.flexShrink = "0";
+          bCp.style.display = "block";
+          try {
+            bCp.style.appearance = "none";
+            bCp.style.setProperty("-webkit-appearance", "none");
+          } catch (e) {}
           bCp.title = this.plugin.t("highlight_color_title", "Highlight Color");
           
           const bChange = async () => {

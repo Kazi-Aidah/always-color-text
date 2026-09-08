@@ -1386,6 +1386,7 @@ export class ColorSettingTab extends PluginSettingTab {
       entrySettingsBtn.style.background = "none";
       entrySettingsBtn.style.border = "none";
       entrySettingsBtn.style.boxShadow = "none";
+      entrySettingsBtn.style.color = "var(--text-muted)";
       entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
       try { entrySettingsBtn.addClass("act-entry-settings-btn"); } catch (e) {
         try { entrySettingsBtn.classList.add("act-entry-settings-btn"); } catch (_) {}
@@ -1787,6 +1788,13 @@ export class ColorSettingTab extends PluginSettingTab {
           if (cfgInput) row.appendChild(cfgInput);
         } else if (kind === "regex" && entry.presetLabel) {
           const badge = row.createEl("span", { text: entry.presetLabel });
+          try {
+            badge.addClass("act-regex-name");
+          } catch (e) {
+            try {
+              badge.classList.add("act-regex-name");
+            } catch (_) {}
+          }
           badge.style.marginRight = "8px";
           badge.style.opacity = "0.7";
           badge.style.flex = "0 0 auto";
@@ -1832,14 +1840,36 @@ export class ColorSettingTab extends PluginSettingTab {
           }
         }
 
-        // Delete button (commented out — use right-click context menu to delete)
-        /* const del = row.createEl("button", {
-          text: this.plugin.t("delete_button_text", "✕"),
-        });
-        del.addClass("mod-warning");
-        del.style.padding = "4px 8px";
-        del.style.cursor = "pointer"; */
-        const del = { addEventListener: () => {}, removeEventListener: () => {} };
+        // Mobile row 2: regex icon button (like X) — visible only on mobile via CSS
+        let blacklistRegexBtn = null;
+        if (kind === "regex") {
+          blacklistRegexBtn = row.createEl("button");
+          try {
+            blacklistRegexBtn.addClass("act-blacklist-regex-btn");
+          } catch (e) {
+            try {
+              blacklistRegexBtn.classList.add("act-blacklist-regex-btn");
+            } catch (_) {}
+          }
+          try {
+            setIcon(blacklistRegexBtn, "regex");
+          } catch (e) {}
+          blacklistRegexBtn.title = this.plugin.t("open_in_regex_tester", "Open in Regex Tester");
+        }
+        const del = row.createEl("button");
+        try {
+          del.addClass("act-blacklist-delete-btn");
+        } catch (e) {
+          try {
+            del.classList.add("act-blacklist-delete-btn");
+          } catch (_) {}
+        }
+        try {
+          setIcon(del, "x");
+        } catch (e) {
+          del.textContent = this.plugin.t("delete_button_text", "✕");
+        }
+        del.title = this.plugin.t("delete_button_text", "✕");
 
         if (!entry.uid) {
           try {
@@ -2111,6 +2141,9 @@ export class ColorSettingTab extends PluginSettingTab {
         row.addEventListener("contextmenu", contextMenuHandler);
         if (flagsInput) flagsInput.addEventListener("change", flagsInputHandler);
         del.addEventListener("click", delHandler);
+        if (blacklistRegexBtn) {
+          blacklistRegexBtn.addEventListener("click", openInRegexTesterHandler);
+        }
         this._cleanupHandlers.push(() => {
           try {
             if (textInput) textInput.removeEventListener("change", textInputHandler);
@@ -2126,6 +2159,9 @@ export class ColorSettingTab extends PluginSettingTab {
           } catch (e) {}
           try {
             del.removeEventListener("click", delHandler);
+          } catch (e) {}
+          try {
+            if (blacklistRegexBtn) blacklistRegexBtn.removeEventListener("click", openInRegexTesterHandler);
           } catch (e) {}
         });
       });
@@ -2255,13 +2291,35 @@ export class ColorSettingTab extends PluginSettingTab {
         const actualIndex = rows.indexOf(entry);
         if (actualIndex === -1) return; // Safety check
 
+        const isMobile = document.body.classList.contains("is-mobile");
         const row = this._pathRulesContainer.createDiv();
-        row.style.display = "flex";
-        row.style.alignItems = "center";
-        row.style.gap = "8px";
-        row.style.marginBottom = "8px";
+        if (isMobile) {
+          row.style.display = "flex";
+          row.style.flexWrap = "wrap";
+          row.style.alignItems = "center";
+          row.style.gap = "8px";
+          row.style.backgroundColor = "var(--setting-items-background)";
+          row.style.border = "1px solid var(--background-modifier-border)";
+          row.style.borderRadius = "var(--setting-items-radius)";
+          row.style.padding = "10px";
+          row.style.marginTop = "6px";
+          row.style.marginBottom = "0";
+          row.style.width = "100%";
+          row.style.boxSizing = "border-box";
+        } else {
+          row.style.display = "flex";
+          row.style.alignItems = "center";
+          row.style.gap = "8px";
+          row.style.marginBottom = "8px";
+        }
         const modeSel = row.createEl("select");
-        modeSel.style.flex = "0 0 auto";
+        if (isMobile) {
+          modeSel.style.flex = "1 1 calc(50% - 4px)";
+          modeSel.style.minWidth = "0";
+          modeSel.style.boxSizing = "border-box";
+        } else {
+          modeSel.style.flex = "0 0 auto";
+        }
         modeSel.style.padding = "6px";
         modeSel.style.borderRadius = "var(--input-radius)";
         modeSel.style.border = "1px solid var(--background-modifier-border)";
@@ -2279,8 +2337,14 @@ export class ColorSettingTab extends PluginSettingTab {
         modeSel.value = entry.mode === "exclude" ? "exclude" : "include";
         // Type dropdown (Folder / File / Tag / Property) — mirrors entry inclusion/exclusion rules
         const typeSel = row.createEl("select");
-        typeSel.style.flex = "0 0 auto";
-        typeSel.style.minWidth = "100px";
+        if (isMobile) {
+          typeSel.style.flex = "1 1 calc(50% - 4px)";
+          typeSel.style.minWidth = "0";
+          typeSel.style.boxSizing = "border-box";
+        } else {
+          typeSel.style.flex = "0 0 auto";
+          typeSel.style.minWidth = "100px";
+        }
         typeSel.style.padding = "6px";
         typeSel.style.borderRadius = "var(--input-radius)";
         typeSel.style.border = "1px solid var(--background-modifier-border)";
@@ -2314,8 +2378,14 @@ export class ColorSettingTab extends PluginSettingTab {
         const chooseArea = row.createEl("div");
         chooseArea.style.display = "flex";
         chooseArea.style.gap = "8px";
-        chooseArea.style.flex = "1 1 auto";
-        chooseArea.style.minWidth = "160px";
+        if (isMobile) {
+          chooseArea.style.flex = "1 1 calc(100% - 40px)";
+          chooseArea.style.minWidth = "0";
+          chooseArea.style.boxSizing = "border-box";
+        } else {
+          chooseArea.style.flex = "1 1 auto";
+          chooseArea.style.minWidth = "160px";
+        }
         const clip = (b) => {
           b.style.overflow = "hidden";
           b.style.textOverflow = "ellipsis";
@@ -2323,7 +2393,6 @@ export class ColorSettingTab extends PluginSettingTab {
           b.style.textAlign = "left";
           b.style.padding = "6px 10px";
           b.style.border = "1px solid var(--background-modifier-border)";
-          b.style.borderRadius = "var(--radius-m)";
         };
         const openPicker = (type, cb) => {
           new RulePickerModal(this.app, this.plugin, type, cb).open();
@@ -2381,7 +2450,6 @@ export class ColorSettingTab extends PluginSettingTab {
             inp.style.flex = "1 1 auto";
             inp.style.padding = "6px 10px";
             inp.style.border = "1px solid var(--background-modifier-border)";
-            inp.style.borderRadius = "var(--radius-m)";
             const patternInputHandler = () => {
               persist("pattern", String(inp.value || "").trim());
               this.plugin.saveSettings();
@@ -2434,13 +2502,6 @@ export class ColorSettingTab extends PluginSettingTab {
           typeSel.removeEventListener("change", typeHandler),
         );
 
-        const del = row.createEl("button", {
-          text: this.plugin.t("delete_button_text", "✕"),
-        });
-        del.addClass("mod-warning");
-        del.style.border = "none";
-        del.style.cursor = "pointer";
-        del.style.flex = "0 0 auto";
         const modeHandler = async () => {
           this.plugin.settings.pathRules[actualIndex].mode = modeSel.value;
           await this.plugin.saveSettings();
@@ -2450,33 +2511,76 @@ export class ColorSettingTab extends PluginSettingTab {
         this._cleanupHandlers.push(() =>
           modeSel.removeEventListener("change", modeHandler),
         );
-        const delHandler = async () => {
-          const doDelete = async () => {
-            if (
-              actualIndex !== -1 &&
-              this.plugin.settings.pathRules[actualIndex]
-            ) {
-              this.plugin.settings.pathRules.splice(actualIndex, 1);
-              await this.plugin.saveSettings();
-              this._refreshPathRules();
-            }
-          };
-          if (document.body.classList.contains("is-mobile")) {
+        const doDeleteRule = async () => {
+          if (
+            actualIndex !== -1 &&
+            this.plugin.settings.pathRules[actualIndex]
+          ) {
+            this.plugin.settings.pathRules.splice(actualIndex, 1);
+            await this.plugin.saveSettings();
+            this._refreshPathRules();
+          }
+        };
+        const rowContextHandler = (ev) => {
+          try {
+            ev.preventDefault();
+            ev.stopPropagation();
+          } catch (e) {}
+          const menu = new Menu();
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("delete_rule", "Delete Rule"))
+              .setIcon("trash")
+              .onClick(async () => {
+                if (document.body.classList.contains("is-mobile")) {
+                  new ConfirmationModal(
+                    this.app,
+                    this.plugin,
+                    this.plugin.t("confirm_delete_path_rule_title", "Delete Rule"),
+                    this.plugin.t("confirm_delete_path_rule_desc", "Are you sure you want to delete this file/folder rule?"),
+                    doDeleteRule,
+                  ).open();
+                } else {
+                  await doDeleteRule();
+                }
+              }),
+          );
+          menu.showAtMouseEvent(ev);
+        };
+        row.addEventListener("contextmenu", rowContextHandler);
+        if (isMobile) {
+          const del = row.createEl("button");
+          try { setIcon(del, "x"); } catch (e) { del.textContent = this.plugin.t("delete_button_text", "✕"); }
+          del.addClass("act-path-delete-btn");
+          del.style.border = "none";
+          del.style.cursor = "pointer";
+          del.style.flex = "0 0 32px";
+          del.style.width = "32px";
+          del.style.height = "32px";
+          del.style.minWidth = "32px";
+          del.style.display = "flex";
+          del.style.alignItems = "center";
+          del.style.justifyContent = "center";
+          del.style.padding = "0";
+          del.style.color = "var(--color-red)";
+          del.style.background = "rgba(var(--color-red-rgb), 0.2)";
+          del.style.borderRadius = "var(--button-radius)";
+          del.style.order = "99";
+          del.style.marginLeft = "0";
+          const delHandler = async () => {
             new ConfirmationModal(
               this.app,
               this.plugin,
               this.plugin.t("confirm_delete_path_rule_title", "Delete Rule"),
               this.plugin.t("confirm_delete_path_rule_desc", "Are you sure you want to delete this file/folder rule?"),
-              doDelete,
+              doDeleteRule,
             ).open();
-          } else {
-            await doDelete();
-          }
-        };
-        del.addEventListener("click", delHandler);
-        this._cleanupHandlers.push(() =>
-          del.removeEventListener("click", delHandler),
-        );
+          };
+          del.addEventListener("click", delHandler);
+          this._cleanupHandlers.push(() =>
+            del.removeEventListener("click", delHandler),
+          );
+        }
       });
       if (rows.length === 0) {
         this._pathRulesContainer.createEl("p", {
@@ -3233,12 +3337,21 @@ export class ColorSettingTab extends PluginSettingTab {
               : "#87c760";
           tCp.style.width = "30px";
           tCp.style.height = "30px";
+          tCp.style.minWidth = "30px";
+          tCp.style.minHeight = "30px";
           tCp.style.borderRadius = "50%";
           tCp.style.border = "none";
           tCp.style.padding = "0";
           tCp.style.overflow = "hidden";
           tCp.style.background = "transparent";
           tCp.style.cursor = "pointer";
+          tCp.style.boxSizing = "border-box";
+          tCp.style.flexShrink = "0";
+          tCp.style.display = "block";
+          try {
+            tCp.style.appearance = "none";
+            tCp.style.setProperty("-webkit-appearance", "none");
+          } catch (e) {}
           tCp.title = this.plugin.t("text_color_title", "Text Color");
           const tChange = async () => {
             const val = tCp.value;
@@ -3298,12 +3411,21 @@ export class ColorSettingTab extends PluginSettingTab {
               : "#1d5010";
           bCp.style.width = "30px";
           bCp.style.height = "30px";
+          bCp.style.minWidth = "30px";
+          bCp.style.minHeight = "30px";
           bCp.style.borderRadius = "50%";
           bCp.style.border = "none";
           bCp.style.padding = "0";
           bCp.style.overflow = "hidden";
           bCp.style.background = "transparent";
           bCp.style.cursor = "pointer";
+          bCp.style.boxSizing = "border-box";
+          bCp.style.flexShrink = "0";
+          bCp.style.display = "block";
+          try {
+            bCp.style.appearance = "none";
+            bCp.style.setProperty("-webkit-appearance", "none");
+          } catch (e) {}
           bCp.title = this.plugin.t("highlight_color_title", "Highlight Color");
           const bChange = async () => {
             const val = bCp.value;
@@ -4336,20 +4458,34 @@ export class ColorSettingTab extends PluginSettingTab {
           preview.style.cursor = "default";
           preview.textContent = "Text";
 
-          const t =
+          // Resolve styleType: text = text color only, highlight = background+border only, both = text+background+border
+          let styleType = group.styleType;
+          if (!styleType) {
+            const hasText = !!(group.textColor && group.textColor !== "currentColor");
+            const hasBg = !!group.backgroundColor;
+            if (hasText && hasBg) styleType = "both";
+            else if (hasBg) styleType = "highlight";
+            else styleType = "text";
+          }
+          const isTextOnly = styleType === "text";
+          const isHighlightOnly = styleType === "highlight";
+          const tRaw =
             group.textColor && group.textColor !== "currentColor"
               ? group.textColor
               : "";
-          const b = group.backgroundColor || "";
+          const bRaw = group.backgroundColor || "";
+          // Respect styleType for what is displayed
+          const t = isHighlightOnly ? "" : tRaw;
+          const b = isTextOnly ? "" : bRaw;
           const p = this.plugin.getHighlightParams(group);
           const rgba = b
             ? this.plugin.hexToRgba(b, p.opacity ?? 25)
             : "transparent";
 
-          if (t) preview.style.color = t;
+          if (!isHighlightOnly && t) preview.style.color = t;
           else preview.style.color = "var(--text-normal)";
 
-          if (b) {
+          if (!isTextOnly && b) {
             preview.style.backgroundColor = rgba;
           } else {
             preview.style.backgroundColor = "transparent";
@@ -4362,14 +4498,28 @@ export class ColorSettingTab extends PluginSettingTab {
           preview.style.paddingTop = (p.vPad ?? 0) + "px";
           preview.style.paddingBottom = (p.vPad ?? 0) + "px";
 
-          if (p.enableBorder) {
-            const borderStyle = this.plugin.generateBorderStyle(t, b, group);
+          // Clear any default border first
+          preview.style.border = "none";
+          preview.style.borderTop = "none";
+          preview.style.borderBottom = "none";
+          preview.style.borderLeft = "none";
+          preview.style.borderRight = "none";
+
+          if (!isTextOnly && p.enableBorder) {
+            const borderStyle = this.plugin.generateBorderStyle(
+              isHighlightOnly ? null : t,
+              b,
+              group,
+            );
             if (borderStyle) {
               preview.style.cssText += borderStyle;
             }
+          } else if (!isTextOnly) {
+            // Highlight/both but borders disabled -> keep no border (transparent preview already shows background)
+            preview.style.border = "none";
           } else {
-            preview.style.border =
-              "1px solid var(--background-modifier-border)";
+            // Text only -> never show border
+            preview.style.border = "none";
           }
 
           // Apply custom CSS on top

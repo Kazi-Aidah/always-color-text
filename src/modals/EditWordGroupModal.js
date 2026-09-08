@@ -1363,6 +1363,7 @@ export class EditWordGroupModal extends Modal {
       entrySettingsBtn.style.background = "none";
       entrySettingsBtn.style.border = "none";
       entrySettingsBtn.style.boxShadow = "none";
+      entrySettingsBtn.style.color = "var(--text-muted)";
       entrySettingsBtn.title = this.plugin.t("edit_entry_details", "Edit Entry Details");
       try { entrySettingsBtn.addClass("act-entry-settings-btn"); } catch (e) {
         try { entrySettingsBtn.classList.add("act-entry-settings-btn"); } catch (_) {}

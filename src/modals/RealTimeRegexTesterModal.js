@@ -48,9 +48,19 @@ export class RealTimeRegexTesterModal extends Modal {
     const controlsRow = contentEl.createDiv();
     controlsRow.style.display = "flex";
     controlsRow.style.gap = "12px";
+    controlsRow.style.flexWrap = "wrap";
+    controlsRow.style.alignItems = "center";
+    try {
+      controlsRow.addClass("act-regex-tester-controls");
+    } catch (e) {}
     const flagsRow = controlsRow.createDiv();
     flagsRow.style.display = "flex";
     flagsRow.style.gap = "6px";
+    flagsRow.style.flexWrap = "wrap";
+    flagsRow.style.alignItems = "center";
+    try {
+      flagsRow.addClass("act-regex-tester-flags");
+    } catch (e) {}
     const flagNames = ["i", "g", "m", "s", "u", "y"];
     const flagButtons = {};
     flagNames.forEach((f) => {
@@ -60,9 +70,15 @@ export class RealTimeRegexTesterModal extends Modal {
       b.style.border = "1px solid var(--background-modifier-border)";
       b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
+      try {
+        b.addClass("act-regex-tester-flag");
+      } catch (e) {}
       flagButtons[f] = b;
     });
     const styleSelect = controlsRow.createEl("select");
+    try {
+      styleSelect.addClass("act-regex-tester-style");
+    } catch (e) {}
     ["text", "highlight", "both"].forEach((val) => {
       const opt = styleSelect.createEl("option", {
         text: this.plugin.t(
@@ -79,6 +95,9 @@ export class RealTimeRegexTesterModal extends Modal {
     styleSelect.style.marginTop = "0";
 
     const markTargetSelect = controlsRow.createEl("select");
+    try {
+      markTargetSelect.addClass("act-regex-tester-mark-target");
+    } catch (e) {}
     [
       ["text", this.plugin.t("mark_target_text", "Color Text")],
       ["line", this.plugin.t("mark_target_line", "Color Line")],
@@ -95,9 +114,15 @@ export class RealTimeRegexTesterModal extends Modal {
     markTargetSelect.style.marginTop = "0";
 
     const textColorInput = controlsRow.createEl("input", { type: "color" });
+    try {
+      textColorInput.addClass("act-regex-tester-text-color");
+    } catch (e) {}
     textColorInput.value = this._preFillTextColor || "#87c760";
     textColorInput.style.width = "48px";
     const bgColorInput = controlsRow.createEl("input", { type: "color" });
+    try {
+      bgColorInput.addClass("act-regex-tester-bg-color");
+    } catch (e) {}
     bgColorInput.value = this._preFillBgColor || "#1d5010";
     bgColorInput.style.width = "48px";
     const onTextPickerContext = (ev) => {
@@ -193,6 +218,9 @@ export class RealTimeRegexTesterModal extends Modal {
       }
     };
     const regexInput = contentEl.createEl("input", { type: "text" });
+    try {
+      regexInput.addClass("act-regex-tester-pattern");
+    } catch (e) {}
     regexInput.placeholder = this.plugin.t(
       "regex_expression_placeholder",
       "put your expression here",
@@ -213,6 +241,9 @@ export class RealTimeRegexTesterModal extends Modal {
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("textarea");
+    try {
+      testInput.addClass("act-regex-tester-subject");
+    } catch (e) {}
     testInput.placeholder = this.plugin.t(
       "regex_subject_placeholder",
       "type your subject / test string here...",
@@ -232,6 +263,9 @@ export class RealTimeRegexTesterModal extends Modal {
     testInput.style.boxSizing = "border-box";
     testInput.style.resize = "none";
     const previewWrap = contentEl.createDiv();
+    try {
+      previewWrap.addClass("act-regex-tester-preview");
+    } catch (e) {}
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
     previewWrap.style.borderRadius = "var(--input-radius)";
@@ -247,6 +281,9 @@ export class RealTimeRegexTesterModal extends Modal {
     previewWrap.style.alignItems = "center";
     previewWrap.style.justifyContent = "center";
     const nameInput = contentEl.createEl("input", { type: "text" });
+    try {
+      nameInput.addClass("act-regex-tester-name");
+    } catch (e) {}
     nameInput.placeholder = this.plugin.t(
       "regex_name_placeholder",
       "name your regex",
@@ -259,12 +296,18 @@ export class RealTimeRegexTesterModal extends Modal {
     nameInput.style.background = "var(--background-modifier-form-field)";
     nameInput.style.boxSizing = "border-box";
     const statusRow = contentEl.createDiv();
+    try {
+      statusRow.addClass("act-regex-tester-status-row");
+    } catch (e) {}
     statusRow.style.display = "flex";
     statusRow.style.justifyContent = "space-between";
     statusRow.style.alignItems = "center";
     statusRow.style.gap = "8px";
     statusRow.style.marginTop = "14px";
     const matchFooter = statusRow.createDiv();
+    try {
+      matchFooter.addClass("act-regex-tester-match");
+    } catch (e) {}
     matchFooter.style.opacity = "0.8";
     matchFooter.style.flex = "1";
     const addBtn = statusRow.createEl("button", {
@@ -273,11 +316,20 @@ export class RealTimeRegexTesterModal extends Modal {
         : this.plugin.t("btn_add_regex", "+ Add Regex"),
     });
     addBtn.addClass("mod-cta");
+    try {
+      addBtn.addClass("act-regex-tester-add");
+    } catch (e) {}
     const infoWrap = contentEl.createDiv();
+    try {
+      infoWrap.addClass("act-regex-tester-info");
+    } catch (e) {}
     infoWrap.style.marginTop = "8px";
     infoWrap.style.fontFamily = "monospace";
     infoWrap.style.fontSize = "var(--font-small)";
     const status = infoWrap.createDiv();
+    try {
+      status.addClass("act-regex-tester-status");
+    } catch (e) {}
     status.style.opacity = "0.8";
     const sanitizeFlags = (f) => {
       const s = String(f || "")

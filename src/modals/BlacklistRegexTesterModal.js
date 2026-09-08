@@ -33,9 +33,19 @@ export class BlacklistRegexTesterModal extends Modal {
     const controlsRow = contentEl.createDiv();
     controlsRow.style.display = "flex";
     controlsRow.style.gap = "12px";
+    controlsRow.style.flexWrap = "wrap";
+    controlsRow.style.alignItems = "center";
+    try {
+      controlsRow.addClass("act-regex-tester-controls");
+    } catch (e) {}
     const flagsRow = controlsRow.createDiv();
     flagsRow.style.display = "flex";
     flagsRow.style.gap = "6px";
+    flagsRow.style.flexWrap = "wrap";
+    flagsRow.style.alignItems = "center";
+    try {
+      flagsRow.addClass("act-regex-tester-flags");
+    } catch (e) {}
     const flagNames = ["i", "g", "m", "s", "u", "y"];
     const flagButtons = {};
     flagNames.forEach((f) => {
@@ -45,9 +55,15 @@ export class BlacklistRegexTesterModal extends Modal {
       b.style.border = "1px solid var(--background-modifier-border)";
       b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
+      try {
+        b.addClass("act-regex-tester-flag");
+      } catch (e) {}
       flagButtons[f] = b;
     });
     const regexInput = contentEl.createEl("input", { type: "text" });
+    try {
+      regexInput.addClass("act-regex-tester-pattern");
+    } catch (e) {}
     regexInput.placeholder = this.plugin.t(
       "regex_expression_placeholder",
       "put your expression here",
@@ -60,12 +76,18 @@ export class BlacklistRegexTesterModal extends Modal {
     regexInput.style.background = "var(--background-modifier-form-field)";
     regexInput.style.fontFamily = "var(--font-ui-medium)";
     const subjectWrap = contentEl.createDiv();
+    try {
+      subjectWrap.addClass("act-regex-tester-subject-wrap");
+    } catch (e) {}
     subjectWrap.style.marginTop = "10px";
     subjectWrap.style.border = "1px solid var(--background-modifier-border)";
     subjectWrap.style.borderRadius = "var(--input-radius)";
     subjectWrap.style.overflow = "hidden";
     subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("textarea");
+    try {
+      testInput.addClass("act-regex-tester-subject");
+    } catch (e) {}
     testInput.placeholder = this.plugin.t(
       "regex_subject_placeholder",
       "type your subject / test string here...",
@@ -80,6 +102,9 @@ export class BlacklistRegexTesterModal extends Modal {
     testInput.style.fontFamily = "var(--font-ui-medium)";
     testInput.style.resize = "none";
     const previewWrap = contentEl.createDiv();
+    try {
+      previewWrap.addClass("act-regex-tester-preview");
+    } catch (e) {}
     previewWrap.style.marginTop = "10px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
     previewWrap.style.borderRadius = "var(--input-radius)";
@@ -91,6 +116,9 @@ export class BlacklistRegexTesterModal extends Modal {
     previewWrap.style.fontSize = "var(--font-small)";
     previewWrap.style.lineHeight = "1.5";
     const nameInput = contentEl.createEl("input", { type: "text" });
+    try {
+      nameInput.addClass("act-regex-tester-name");
+    } catch (e) {}
     nameInput.placeholder = this.plugin.t(
       "regex_name_placeholder",
       "name your regex",
@@ -104,12 +132,18 @@ export class BlacklistRegexTesterModal extends Modal {
     nameInput.style.boxSizing = "border-box";
     nameInput.style.fontFamily = "var(--font-ui-medium)";
     const statusRow = contentEl.createDiv();
+    try {
+      statusRow.addClass("act-regex-tester-status-row");
+    } catch (e) {}
     statusRow.style.display = "flex";
     statusRow.style.justifyContent = "space-between";
     statusRow.style.alignItems = "center";
     statusRow.style.gap = "8px";
     statusRow.style.marginTop = "14px";
     const matchFooter = statusRow.createDiv();
+    try {
+      matchFooter.addClass("act-regex-tester-match");
+    } catch (e) {}
     matchFooter.style.opacity = "0.8";
     matchFooter.style.flex = "1";
     const addBtn = statusRow.createEl("button", {
@@ -118,6 +152,9 @@ export class BlacklistRegexTesterModal extends Modal {
         : this.plugin.t("btn_add_regex", "+ Add to Blacklist"),
     });
     addBtn.addClass("mod-cta");
+    try {
+      addBtn.addClass("act-regex-tester-add");
+    } catch (e) {}
     const sanitizeFlags = (f) => {
       const s = String(f || "")
         .toLowerCase()
