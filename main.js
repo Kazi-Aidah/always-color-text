@@ -38743,6 +38743,17 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         return entries;
       const filtered = entries.filter((entry) => {
         if (!entry || !entry.pattern) return true;
+        try {
+          const gid = entry.groupUid || entry._groupRef && entry._groupRef.uid || entry.entryRef && (entry.entryRef.groupUid || entry.entryRef._groupRef && entry.entryRef._groupRef.uid);
+          if (gid) {
+            const groups = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : [];
+            let g = groups.find((x) => x && x.uid === gid);
+            if (!g && entry._groupRef) g = entry._groupRef;
+            if (!g && entry.entryRef && entry.entryRef._groupRef) g = entry.entryRef._groupRef;
+            if (g && !this.isGroupEnabledForFile(g, filePath)) return false;
+          }
+        } catch (_) {
+        }
         return this.shouldColorText(filePath, entry.pattern, entry);
       });
       return filtered;
