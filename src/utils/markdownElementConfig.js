@@ -223,7 +223,10 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
       rend = ".workspace-tab-header-inner-title";
     } else {
       cm = ".workspace .cm-s-obsidian .inline-title";
-      rend = `${RENDER_PREFIX} .inline-title`;
+      // The inline title is not always nested inside `.markdown-rendered`
+      // (reading view places it above/outside the rendered container), so
+      // emit a fallback workspace-scoped selector alongside the scoped one.
+      rend = `${RENDER_PREFIX} .inline-title, .workspace .inline-title`;
     }
   } else {
     cm = `${EDITOR_PREFIX} ${t.cmSelector}`;

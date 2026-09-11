@@ -2889,6 +2889,23 @@ class AlwaysColorText extends Plugin {
         },
       });
       addTrackedCommand({
+        id: "open-plugin-settings",
+        name: this.t(
+          "command_open_plugin_settings",
+          "Open Plugin Settings",
+        ),
+        callback: () => {
+          try {
+            this.app.setting.open();
+            const tabId =
+              (this.manifest && this.manifest.id) || "always-color-text";
+            try {
+              this.app.setting.openTabById(tabId);
+            } catch (e) {}
+          } catch (_) {}
+        },
+      });
+      addTrackedCommand({
         id: "manage-colored-texts",
         name: this.t("command_manage_colored_texts", "Manage Colored Texts"),
         callback: () => {
@@ -5454,6 +5471,12 @@ class AlwaysColorText extends Plugin {
     try {
       this.clearAllHighlights();
     } catch (e) {}
+    try {
+      if (this._titleObserver) {
+        this._titleObserver.disconnect();
+        this._titleObserver = null;
+      }
+    } catch (e) {}
     // Disable features (unregister processors/listeners) as final step
     this.disablePluginFeatures();
   }
@@ -5768,6 +5791,38 @@ class AlwaysColorText extends Plugin {
     try {
       const s = document.getElementById("act-formatting-styles");
       if (s) s.remove();
+    } catch (_) {}
+    // Clear JS-applied title styling (inline-title / tab-title live outside
+    // the stylesheet scope, so they must be reset explicitly on disable).
+    try {
+      document
+        .querySelectorAll(".inline-title, .workspace-tab-header-inner-title")
+        .forEach((el) => {
+          for (const p of [
+            "color",
+            "--highlight-color",
+            "background-color",
+            "border-radius",
+            "padding-left",
+            "padding-right",
+            "padding-top",
+            "padding-bottom",
+            "margin-top",
+            "margin-bottom",
+            "border",
+            "border-top",
+            "border-bottom",
+            "border-left",
+            "border-right",
+            "box-decoration-break",
+            "-webkit-box-decoration-break",
+            "corner-shape",
+          ]) {
+            try {
+              el.style.removeProperty(p);
+            } catch (_) {}
+          }
+        });
     } catch (_) {}
     try {
       for (const k of [
@@ -7851,7 +7906,31 @@ class AlwaysColorText extends Plugin {
   // targets. These elements live outside `.cm-content`/`.markdown-rendered`
   // (the inline title is in `.cm-sizer`, the tab title in the view header), so
   // CSS text matching is impossible — we resolve the match in JS instead.
+  // This handles BOTH filtered (titleFilter set) and unfiltered (match-all)
+  // entries, and applies the full highlight box model (background, padding,
+  // border-radius, border, box-decoration-break, custom CSS incl. corner-shape)
+  // mirroring applyElementHighlights / applyFormattingStyles.
   applyTitleHighlights() {
+    const clearTitleStyling = (el) => {
+      el.style.removeProperty("color");
+      el.style.removeProperty("--highlight-color");
+      el.style.removeProperty("background-color");
+      el.style.removeProperty("border-radius");
+      el.style.removeProperty("padding-left");
+      el.style.removeProperty("padding-right");
+      el.style.removeProperty("padding-top");
+      el.style.removeProperty("padding-bottom");
+      el.style.removeProperty("margin-top");
+      el.style.removeProperty("margin-bottom");
+      el.style.removeProperty("border");
+      el.style.removeProperty("border-top");
+      el.style.removeProperty("border-bottom");
+      el.style.removeProperty("border-left");
+      el.style.removeProperty("border-right");
+      el.style.removeProperty("box-decoration-break");
+      el.style.removeProperty("-webkit-box-decoration-break");
+      el.style.removeProperty("corner-shape");
+    };
     try {
       const all = (this.settings.wordEntries || []).concat(
         (this.settings.wordEntryGroups || []).reduce(
@@ -7863,38 +7942,44 @@ class AlwaysColorText extends Plugin {
         { key: "inline-title", sel: ".inline-title" },
         { key: "tab-title", sel: ".workspace-tab-header-inner-title" },
       ];
+      const hideText = this.settings.hideTextColors === true;
+      const hideBg = this.settings.hideHighlights === true;
       targets.forEach(({ key, sel }) => {
         const els = Array.from(document.querySelectorAll(sel));
         if (!els.length) return;
         // If this title element is blacklisted, clear any existing styling and skip
         if (this.isMarkdownElementBlacklisted(key)) {
-          els.forEach((el) => {
-            el.style.removeProperty("color");
-            el.style.removeProperty("background-color");
-            el.style.removeProperty("border-radius");
-            el.style.removeProperty("padding-left");
-            el.style.removeProperty("padding-right");
-          });
+          els.forEach(clearTitleStyling);
           return;
         }
-        const entries = all.filter(
+        // All (non-blacklisted) entries for this target. Entries with an empty
+        // titleFilter match every title; filtered entries must match the text.
+        // LAST entry wins, consistent with applyFormattingStyles.
+        const candidates = all.filter(
           (e) =>
             e &&
             e.targetElement === key &&
-            e.titleFilter &&
-            String(e.titleFilter).trim().length > 0 &&
             !this.isMarkdownEntryBlacklisted(e),
         );
         els.forEach((el) => {
           // Clear any previously applied inline styling from this function.
-          el.style.removeProperty("color");
-          el.style.removeProperty("background-color");
-          el.style.removeProperty("border-radius");
-          el.style.removeProperty("padding-left");
-          el.style.removeProperty("padding-right");
-          const entry = entries.find((e) =>
-            titleTextMatches(e.titleFilter, el.textContent || "", e.titleMatchType),
-          );
+          clearTitleStyling(el);
+          const text = el.textContent || "";
+          let entry = null;
+          for (let i = candidates.length - 1; i >= 0; i--) {
+            const e = candidates[i];
+            const f = e.titleFilter != null ? String(e.titleFilter).trim() : "";
+            if (f.length > 0) {
+              try {
+                if (!titleTextMatches(e.titleFilter, text, e.titleMatchType))
+                  continue;
+              } catch (_) {
+                continue;
+              }
+            }
+            entry = e;
+            break;
+          }
           if (!entry) return;
           if (this.isMarkdownEntryBlacklisted(entry)) return;
           const textColor =
@@ -7902,24 +7987,219 @@ class AlwaysColorText extends Plugin {
               ? entry.textColor
               : entry.color || null;
           const bg = entry.backgroundColor || null;
-          if (textColor)
+          if (!hideText && textColor) {
             el.style.setProperty("color", textColor, "important");
-          if (bg) {
-            const op =
-              typeof entry.backgroundOpacity === "number"
-                ? entry.backgroundOpacity
-                : this.settings.backgroundOpacity ?? 25;
+            try {
+              el.style.setProperty("--highlight-color", textColor);
+            } catch (_) {}
+          }
+          // Mirror applyFormattingStyles isHighlight logic: highlight/both
+          // styleType OR a background color. A color-only ("text") entry
+          // emits just `color` (no padding/border/radius).
+          const styleType = entry.styleType || "text";
+          const borderCSS = this.generateBorderStyle(
+            textColor,
+            bg,
+            entry,
+          );
+          const isHighlight =
+            styleType === "highlight" || styleType === "both" || !!bg;
+          if (!hideBg && isHighlight) {
+            const params = this.getHighlightParams(entry);
+            if (bg) {
+              let opacityRaw =
+                typeof entry.backgroundOpacity === "number"
+                  ? entry.backgroundOpacity
+                  : (this.settings.backgroundOpacity ?? 25);
+              // Legacy 0-1 values → 0-100 (same as applyFormattingStyles).
+              const opacity =
+                opacityRaw <= 1 && opacityRaw > 0
+                  ? opacityRaw * 100
+                  : opacityRaw;
+              el.style.setProperty(
+                "background-color",
+                this.hexToRgba(bg, opacity),
+                "important",
+              );
+            } else {
+              el.style.removeProperty("background-color");
+            }
             el.style.setProperty(
-              "background-color",
-              this.hexToRgba(bg, op),
+              "border-radius",
+              params.radius + "px",
               "important",
             );
+            el.style.setProperty(
+              "padding-left",
+              params.hPad + "px",
+              "important",
+            );
+            el.style.setProperty(
+              "padding-right",
+              params.hPad + "px",
+              "important",
+            );
+            const vPad = params.vPad;
+            if (vPad >= 0) {
+              el.style.setProperty("padding-top", vPad + "px", "important");
+              el.style.setProperty(
+                "padding-bottom",
+                vPad + "px",
+                "important",
+              );
+              el.style.removeProperty("margin-top");
+              el.style.removeProperty("margin-bottom");
+            } else {
+              el.style.setProperty("padding-top", "0px", "important");
+              el.style.setProperty("padding-bottom", "0px", "important");
+              el.style.setProperty("margin-top", vPad + "px", "important");
+              el.style.setProperty(
+                "margin-bottom",
+                vPad + "px",
+                "important",
+              );
+            }
+            if (borderCSS) {
+              const parts = borderCSS
+                .split(";")
+                .map((s) => s.trim())
+                .filter(Boolean);
+              for (const p of parts) {
+                const idx = p.indexOf(":");
+                if (idx === -1) continue;
+                const prop = p.slice(0, idx).trim();
+                let val = p.slice(idx + 1).trim();
+                val = val.replace(/\s*!important\s*$/, "");
+                if (!val) continue;
+                try {
+                  el.style.setProperty(prop, val, "important");
+                } catch (_) {
+                  el.style[prop] = val;
+                }
+              }
+            } else {
+              el.style.removeProperty("border");
+              el.style.removeProperty("border-top");
+              el.style.removeProperty("border-bottom");
+              el.style.removeProperty("border-left");
+              el.style.removeProperty("border-right");
+            }
+            if (this.settings.enableBoxDecorationBreak ?? true) {
+              el.style.boxDecorationBreak = "clone";
+              el.style.WebkitBoxDecorationBreak = "clone";
+            } else {
+              el.style.removeProperty("box-decoration-break");
+              el.style.removeProperty("-webkit-box-decoration-break");
+            }
+            // Explicit corner-shape field (future-proof) — customCss
+            // corner-shape is handled by applyCustomCssToElement below.
+            if (entry.cornerShape) {
+              try {
+                el.style.setProperty(
+                  "corner-shape",
+                  String(entry.cornerShape),
+                  "important",
+                );
+              } catch (_) {}
+            }
           }
+          this.applyCustomCssToElement(el, entry);
         });
       });
     } catch (e) {
       debugError("TITLE_HIGHLIGHT", "Failed to apply title highlights", e);
     }
+    this.ensureTitleObserver();
+  }
+
+  // Tab switches and inline-title edits recreate/update title DOM nodes
+  // without re-running applyFormattingStyles, so keep title highlights in
+  // sync via a lightweight debounced observer (attributes excluded to avoid
+  // loops from our own inline-style writes).
+  ensureTitleObserver() {
+    if (this._titleObserver) return;
+    try {
+      let pending = false;
+      const isTitleMutation = (mutations) => {
+        try {
+          for (const m of mutations || []) {
+            const t = m.target;
+            if (t && t.closest) {
+              try {
+                if (
+                  t.closest(
+                    ".inline-title, .workspace-tab-header-inner-title, .workspace-tab-header",
+                  )
+                )
+                  return true;
+              } catch (_) {}
+            } else if (t && t.parentElement && t.parentElement.closest) {
+              // characterData text node
+              try {
+                if (
+                  t.parentElement.closest(
+                    ".inline-title, .workspace-tab-header-inner-title, .workspace-tab-header",
+                  )
+                )
+                  return true;
+              } catch (_) {}
+            }
+            for (const n of m.addedNodes || []) {
+              if (n && n.querySelector) {
+                try {
+                  if (
+                    (n.classList &&
+                      (n.classList.contains("inline-title") ||
+                        n.classList.contains(
+                          "workspace-tab-header-inner-title",
+                        ) ||
+                        n.classList.contains("workspace-tab-header"))) ||
+                    n.querySelector(
+                      ".inline-title, .workspace-tab-header-inner-title",
+                    )
+                  )
+                    return true;
+                } catch (_) {}
+              }
+            }
+            for (const n of m.removedNodes || []) {
+              if (n && n.querySelector) {
+                try {
+                  if (
+                    (n.classList &&
+                      (n.classList.contains("inline-title") ||
+                        n.classList.contains(
+                          "workspace-tab-header-inner-title",
+                        ))) ||
+                    n.querySelector(
+                      ".inline-title, .workspace-tab-header-inner-title",
+                    )
+                  )
+                    return true;
+                } catch (_) {}
+              }
+            }
+          }
+        } catch (_) {}
+        return false;
+      };
+      this._titleObserver = new MutationObserver((mutations) => {
+        if (pending) return;
+        if (!isTitleMutation(mutations)) return;
+        pending = true;
+        setTimeout(() => {
+          pending = false;
+          try {
+            this.applyTitleHighlights();
+          } catch (_) {}
+        }, 250);
+      });
+      this._titleObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+    } catch (_) {}
   }
 
   async saveSettings() {

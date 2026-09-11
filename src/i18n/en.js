@@ -86,6 +86,7 @@ module.exports = {
   "command_open_regex_tester": "Add Regex (Open Regex Tester)",
   "command_open_blacklist_regex_tester": "Add Blacklist Regex",
   "command_manage_colored_texts": "Manage Colored Texts",
+  "command_open_plugin_settings": "Open Plugin Settings",
   "command_toggle_hide_text_colors": "Hide/Unhide Text Colors",
   "command_toggle_hide_highlights": "Hide/Unhide Highlights",
   "command_hide_text_colors": "Hide Text Colors",
