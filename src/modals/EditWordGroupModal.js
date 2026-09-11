@@ -1039,6 +1039,16 @@ export class EditWordGroupModal extends Modal {
                 : null;
             const preFillText = rawText && this.plugin.isValidHexColor(rawText) ? rawText : null;
             const preFillBg = rawBg && this.plugin.isValidHexColor(rawBg) ? rawBg : null;
+            // Respect the entry's color type (text / highlight / both).
+            const groupPickerStyleType =
+              (entry && entry.styleType) ||
+              (preFillBg && preFillText ? "both" : preFillBg ? "highlight" : "text");
+            const groupPickerMode =
+              groupPickerStyleType === "highlight"
+                ? "background"
+                : groupPickerStyleType === "text"
+                  ? "text"
+                  : "text-and-background";
             const displayText = entry.isRegex
               ? entry.pattern || ""
               : Array.isArray(entry.groupedPatterns) &&
@@ -1089,7 +1099,7 @@ export class EditWordGroupModal extends Modal {
                 if (bcValid && cpBg) cpBg.value = bc;
                 this._refreshGroupEntries();
               },
-              "text-and-background",
+              groupPickerMode,
               displayText,
               false,
               entry ? entry.markTarget : "text",
@@ -1169,6 +1179,16 @@ export class EditWordGroupModal extends Modal {
                   : null;
             const preFillText = rawText && this.plugin.isValidHexColor(rawText) ? rawText : null;
             const preFillBg = rawBg && this.plugin.isValidHexColor(rawBg) ? rawBg : null;
+            // Respect the entry's color type (text / highlight / both).
+            const bgPickerStyleType =
+              (entry && entry.styleType) ||
+              (preFillBg && preFillText ? "both" : preFillBg ? "highlight" : "text");
+            const bgPickerMode =
+              bgPickerStyleType === "highlight"
+                ? "background"
+                : bgPickerStyleType === "text"
+                  ? "text"
+                  : "text-and-background";
             const displayText = entry.isRegex
               ? entry.pattern || ""
               : Array.isArray(entry.groupedPatterns) &&
@@ -1219,7 +1239,7 @@ export class EditWordGroupModal extends Modal {
                 if (bcValid) cpBg.value = bc;
                 this._refreshGroupEntries();
               },
-              "text-and-background",
+              bgPickerMode,
               displayText,
               false,
               entry ? entry.markTarget : "text",
@@ -1305,6 +1325,7 @@ export class EditWordGroupModal extends Modal {
                   if (entry.pattern) modal._preFillPattern = entry.pattern;
                   if (entry.flags) modal._preFillFlags = entry.flags;
                   if (entry.presetLabel) modal._preFillName = entry.presetLabel;
+                  if (entry.styleType) modal._preFillStyleType = entry.styleType;
                   modal.open();
                 });
             });

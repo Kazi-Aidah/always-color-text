@@ -1,6 +1,6 @@
 import { Modal, Notice } from 'obsidian';
 import { escapeHtml } from '../utils/debug.js';
-// ColorPickerModal will be imported once extracted to its own module
+import { ColorPickerModal } from './ColorPickerModal.js';
 
 export class RegexTesterModal extends Modal {
   constructor(app, plugin, onAdded) {
@@ -136,6 +136,9 @@ export class RegexTesterModal extends Modal {
         ev.preventDefault();
       } catch (e) {}
       try {
+        ev.stopPropagation();
+      } catch (e) {}
+      try {
         const modal = new ColorPickerModal(
           this.app,
           this.plugin,
@@ -144,19 +147,39 @@ export class RegexTesterModal extends Modal {
             const tc =
               sel.textColor && this.plugin.isValidHexColor(sel.textColor)
                 ? sel.textColor
-                : this.plugin.isValidHexColor(color)
-                  ? color
-                  : null;
+                : null;
+            const bc =
+              sel.backgroundColor &&
+              this.plugin.isValidHexColor(sel.backgroundColor)
+                ? sel.backgroundColor
+                : null;
+            let changed = false;
             if (tc) {
               textColorInput.value = tc;
-              renderPreview();
+              changed = true;
+            } else if (
+              !bc &&
+              color &&
+              this.plugin.isValidHexColor(color)
+            ) {
+              textColorInput.value = color;
+              changed = true;
             }
+            if (bc) {
+              bgColorInput.value = bc;
+              changed = true;
+            }
+            if (changed) renderPreview();
           },
-          "text",
-          regexInput.value || "",
+          "text-and-background",
+          exprInput.value || "",
         );
         modal._hideHeaderControls = true;
-        modal._preFillTextColor = textColorInput.value;
+        if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
+        if (bgColorInput.value) {
+          modal._preFillBgColor = bgColorInput.value;
+          modal._preFillBorderColor = bgColorInput.value;
+        }
         modal.open();
       } catch (e) {}
     };
@@ -165,28 +188,50 @@ export class RegexTesterModal extends Modal {
         ev.preventDefault();
       } catch (e) {}
       try {
+        ev.stopPropagation();
+      } catch (e) {}
+      try {
         const modal = new ColorPickerModal(
           this.app,
           this.plugin,
           async (color, result) => {
             const sel = result || {};
+            const tc =
+              sel.textColor && this.plugin.isValidHexColor(sel.textColor)
+                ? sel.textColor
+                : null;
             const bc =
               sel.backgroundColor &&
               this.plugin.isValidHexColor(sel.backgroundColor)
                 ? sel.backgroundColor
-                : this.plugin.isValidHexColor(color)
-                  ? color
-                  : null;
+                : null;
+            let changed = false;
             if (bc) {
               bgColorInput.value = bc;
-              renderPreview();
+              changed = true;
+            } else if (
+              !tc &&
+              color &&
+              this.plugin.isValidHexColor(color)
+            ) {
+              bgColorInput.value = color;
+              changed = true;
             }
+            if (tc) {
+              textColorInput.value = tc;
+              changed = true;
+            }
+            if (changed) renderPreview();
           },
-          "background",
-          regexInput.value || "",
+          "text-and-background",
+          exprInput.value || "",
         );
         modal._hideHeaderControls = true;
-        modal._preFillBgColor = bgColorInput.value;
+        if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
+        if (bgColorInput.value) {
+          modal._preFillBgColor = bgColorInput.value;
+          modal._preFillBorderColor = bgColorInput.value;
+        }
         modal.open();
       } catch (e) {}
     };

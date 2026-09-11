@@ -311,6 +311,12 @@ export class EditEntryModal extends Modal {
     this._bgColorInput = bgColorInput;
     this._textPickerTouched = false;
     this._bgPickerTouched = false;
+    // Snapshot real colors at open time — prevents syncEntryColorsFromInputs mutations
+    // from making picker-default values appear as intentional colors in renderPreview.
+    const _openHadRealText = !!(this.entry &&
+      ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) ||
+       (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
+    const _openHadRealBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
 
     // ===== act-pickr-row =====
     const pickrRow = contentEl.createDiv();
@@ -459,10 +465,10 @@ export class EditEntryModal extends Modal {
     const applyTextColorToEntry = (dispatch = true) => {
       const style = styleSelect.value;
       const curTextVal = getColorInputValue(textColorInput);
-      const hasEntryText = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) || (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
       const isVarText = curTextVal && /^var\(/.test(curTextVal.trim());
-      const hasValidText = curTextVal && this.plugin.isValidHexColor(curTextVal) && (isVarText || hasEntryText || this._textPickerTouched);
-      const effectiveText = hasValidText ? curTextVal : (style === "text" || style === "both" ? "var(--text-normal)" : "");
+      const hasValidText = curTextVal && this.plugin.isValidHexColor(curTextVal) && (isVarText || _openHadRealText || this._textPickerTouched);
+      // Storage: keep empty when picker NULL so editor is not colored; preview fallback is handled in renderPreview with var(--text-normal)
+      const effectiveText = hasValidText ? curTextVal : "";
       if (this.entry)
         this.entry._savedTextColor =
           effectiveText ||
@@ -483,10 +489,10 @@ export class EditEntryModal extends Modal {
     const applyBgColorToEntry = (dispatch = true) => {
       const style = styleSelect.value;
       const curBgVal = getColorInputValue(bgColorInput);
-      const hasEntryBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
       const isVarBg = curBgVal && /^var\(/.test(curBgVal.trim());
-      const hasValidBg = curBgVal && this.plugin.isValidHexColor(curBgVal) && (isVarBg || hasEntryBg || this._bgPickerTouched);
-      const effectiveBg = hasValidBg ? curBgVal : (style === "highlight" || style === "both" ? "var(--color-accent)" : "");
+      const hasValidBg = curBgVal && this.plugin.isValidHexColor(curBgVal) && (isVarBg || _openHadRealBg || this._bgPickerTouched);
+      // Storage: keep empty when picker NULL so editor is not colored; preview fallback is var(--color-accent) in renderPreview
+      const effectiveBg = hasValidBg ? curBgVal : "";
       if (this.entry)
         this.entry._savedBackgroundColor =
           effectiveBg ||
@@ -784,31 +790,43 @@ export class EditEntryModal extends Modal {
       initialStyle = hasText && hasBg ? "both" : hasBg ? "highlight" : "text";
     }
     styleSelect.value = initialStyle || "text";
-    // Use a visible default instead of black so markdown preview is visible on dark themes
-    const visibleDefault = (() => {
+    // No prefilled hardcoded colors - use default text style preset if available, otherwise leave empty for var(--text-normal)/var(--color-accent) preview
+    const getDefaultPresetColors = () => {
       try {
-        const sw = this.plugin.settings.swatches && this.plugin.settings.swatches[0] && this.plugin.settings.swatches[0].color;
-        if (sw && this.plugin.isValidHexColor(sw)) return sw;
-        const usw = this.plugin.settings.unifiedSwatches && this.plugin.settings.unifiedSwatches[0] && this.plugin.settings.unifiedSwatches[0].color;
-        if (usw && this.plugin.isValidHexColor(usw)) return usw;
-      } catch (_) {}
-      return "#eb3b5a";
-    })();
+        const presets = this.plugin.settings.textStylePresets || [];
+        const def = presets.find(p=>p&&p.isDefault) || presets[0];
+        if (def) {
+          const tc = def.textColor && this.plugin.isValidHexColor(def.textColor) ? def.textColor : (def.color && this.plugin.isValidHexColor(def.color) ? def.color : "");
+          const bg = def.backgroundColor && this.plugin.isValidHexColor(def.backgroundColor) ? def.backgroundColor : "";
+          return { tc, bg };
+        }
+      } catch(e) {}
+      return { tc: "", bg: "" };
+    };
+    const defColors = getDefaultPresetColors();
+    const hasRealTextAtOpen = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) || (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
+    const hasRealBgAtOpen = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
     const initTextColor =
       (this.entry &&
         (this.entry.textColor && this.entry.textColor !== "currentColor"
           ? this.entry.textColor
           : this.plugin.isValidHexColor(this.entry.color)
             ? this.entry.color
-            : "")) ||
-      textColorInput.value ||
-      visibleDefault;
+            : "")) || "";
     const initBgColor =
-      (this.entry && (this.entry.backgroundColor || "")) ||
-      bgColorInput.value ||
-      visibleDefault;
-    setColorInputValue(textColorInput, this.plugin.isValidHexColor(initTextColor) ? initTextColor : visibleDefault);
-    if (initBgColor) setColorInputValue(bgColorInput, this.plugin.isValidHexColor(initBgColor) ? initBgColor : visibleDefault);
+      (this.entry && (this.entry.backgroundColor || "")) || "";
+    // Only prefill from default preset if entry had no real colors (new entry with no colours → preview var, picker shows default preset or empty)
+    const effectiveInitText = this.plugin.isValidHexColor(initTextColor) ? initTextColor : (hasRealTextAtOpen ? "" : (defColors.tc || ""));
+    const effectiveInitBg = this.plugin.isValidHexColor(initBgColor) ? initBgColor : (hasRealBgAtOpen ? "" : (defColors.bg || ""));
+    setColorInputValue(textColorInput, effectiveInitText || "");
+    if (effectiveInitBg) setColorInputValue(bgColorInput, effectiveInitBg);
+    else setColorInputValue(bgColorInput, "");
+    // Track whether picker was prefilled from real entry or default preset (for hasValid checks)
+    this._textPickerTouched = !!effectiveInitText;
+    this._bgPickerTouched = !!effectiveInitBg;
+    // For new entries with no colours, ensure hasValid is false so preview shows var
+    if (!hasRealTextAtOpen && !effectiveInitText) this._textPickerTouched = false;
+    if (!hasRealBgAtOpen && !effectiveInitBg) this._bPickerTouched = false;
     if (isRegex) {
       textInput.value = this.entry.pattern || "";
       if (matchSelect) {
@@ -945,38 +963,32 @@ export class EditEntryModal extends Modal {
       const bRaw = getColorInputValue(bgColorInput);
       const p = this.plugin.getHighlightParams(this.entry);
       // Text color: var(--text-normal) when picker null/invalid
-      const hasEntryText = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) || (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
       const isVarText = tRaw && /^var\(/.test(tRaw.trim());
-      const hasValidText = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarText || hasEntryText || this._textPickerTouched);
+      const hasValidText = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarText || _openHadRealText || this._textPickerTouched);
       const effectiveText = hasValidText ? tRaw : "var(--text-normal)";
-      // Background: var(--color-accent) when picker null and style needs bg (only affects bg)
-      const hasEntryBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+      // Background: color-mix when picker null (avoids hexToRgba resolving var to black)
       const isVarBg = bRaw && /^var\(/.test(bRaw.trim());
-      const hasValidBg = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarBg || hasEntryBg || this._bgPickerTouched);
-      const effectiveBg = hasValidBg ? bRaw : "var(--color-accent)";
-      const rgba = this.plugin.hexToRgba(effectiveBg, p.opacity ?? 25);
-      const rgbaForBorder = hasValidBg ? bRaw : effectiveBg;
+      const hasValidBg = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarBg || _openHadRealBg || this._bgPickerTouched);
+      const opacity = p.opacity ?? 25;
+      const bgCss = hasValidBg
+        ? (isVarBg ? `color-mix(in srgb, ${bRaw.trim()} ${opacity}%, transparent)` : this.plugin.hexToRgba(bRaw, opacity))
+        : `color-mix(in srgb, var(--color-accent) ${opacity}%, transparent)`;
+      // Border: use effective fallback vars so NULL never yields black
+      const effectiveTForBorder = hasValidText ? tRaw : "var(--color-accent)";
+      const effectiveBForBorder = hasValidBg ? bRaw : "var(--color-accent)";
+      const borderCss = style === "text" ? "" : (p.enableBorder || this.plugin.settings.enableBorderThickness)
+        ? (style === "highlight"
+            ? this.plugin.generateBorderStyle(null, effectiveBForBorder, this.entry)
+            : this.plugin.generateBorderStyle(effectiveTForBorder, effectiveBForBorder, this.entry))
+        : "";
       const radius = p.radius ?? 8;
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
-      const borderStyle =
-        style === "text"
-          ? ""
-          : style === "highlight"
-            ? this.plugin.generateBorderStyle(null, rgbaForBorder, this.entry)
-            : this.plugin.generateBorderStyle(effectiveText, rgbaForBorder, this.entry);
-      const bdb = `box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-      const sText = `color:${effectiveText};background:transparent;`;
-      const sHighlight = `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}${bdb}`;
-      const sBoth = `color:${effectiveText};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}${bdb}`;
-      const styleStr =
-        style === "text" ? sText : style === "highlight" ? sHighlight : sBoth;
 
       while (preview.firstChild) preview.removeChild(preview.firstChild);
       if (!raw && !isTarget) return;
       let displayText;
       if (isTarget) {
-        // For markdown elements show the element's label (e.g. "Bold", "Heading") or pattern as fallback
         displayText = getTargetLabel(this.plugin, this.entry.targetElement, this.entry.affectMarkElements)
           || this.entry.presetLabel
           || raw
@@ -990,26 +1002,60 @@ export class EditEntryModal extends Modal {
       if (!displayText) return;
       const makeSpan = (text) => {
         const span = document.createElement("span");
-        span.setAttribute("style", styleStr);
         span.style.display = "inline";
+        // Set each property individually via setProperty so CSS variables resolve natively
+        if (style === "text") {
+          span.style.setProperty("color", effectiveText, "important");
+          span.style.setProperty("background", "transparent", "important");
+        } else if (style === "highlight") {
+          span.style.setProperty("background-color", bgCss, "important");
+          span.style.setProperty("color", "var(--text-normal)", "important");
+          span.style.setProperty("border-radius", radius + "px", "important");
+          span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
+          span.style.setProperty("box-decoration-break", "clone", "important");
+          span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
+        } else {
+          span.style.setProperty("color", effectiveText, "important");
+          span.style.setProperty("background-color", bgCss, "important");
+          span.style.setProperty("border-radius", radius + "px", "important");
+          span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
+          span.style.setProperty("box-decoration-break", "clone", "important");
+          span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
+        }
+        if (borderCss) {
+          borderCss.split(';').map(s => s.trim()).filter(Boolean).forEach(bs => {
+            const idx = bs.indexOf(':');
+            if (idx === -1) return;
+            const prop = bs.slice(0, idx).trim();
+            const val = bs.slice(idx + 1).trim().replace(/\s*!important\s*$/, '');
+            span.style.setProperty(prop, val, 'important');
+          });
+        }
         // Apply custom CSS on top if present — use current picker colors for immediate preview
         if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
           try {
             const tempEntry = Object.assign({}, this.entry, {
-              color: style === 'text' ? t : '',
-              textColor: style === 'both' ? t : (style === 'highlight' ? 'currentColor' : null),
-              backgroundColor: (style === 'highlight' || style === 'both') ? b : null,
+              color: style === 'text' ? effectiveText : '',
+              textColor: style === 'both' ? effectiveText : (style === 'highlight' ? 'currentColor' : null),
+              backgroundColor: (style === 'highlight' || style === 'both') ? (hasValidBg ? bRaw : null) : null,
             });
             const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
             const decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
             if (decl) {
-              decl.split(";").map(s => s.trim()).filter(Boolean).forEach(p => {
-                const idx = p.indexOf(":");
+              decl.split(";").map(s => s.trim()).filter(Boolean).forEach(pd => {
+                const idx = pd.indexOf(":");
                 if (idx === -1) return;
-                span.style.setProperty(p.slice(0, idx).trim(), p.slice(idx + 1).trim(), "important");
+                span.style.setProperty(pd.slice(0, idx).trim(), pd.slice(idx + 1).trim(), "important");
               });
             }
           } catch (_) {}
+        }
+        // Final re-enforce: fallback colors always win over stale customCss
+        if (!hasValidText && style !== 'highlight') {
+          span.style.setProperty('color', 'var(--text-normal)', 'important');
+        }
+        if (!hasValidBg && style !== 'text') {
+          span.style.setProperty('background-color', bgCss, 'important');
         }
         span.textContent = text;
         return span;
@@ -1540,11 +1586,8 @@ export class EditEntryModal extends Modal {
         const effectiveText  = (noOriginalText && textColorVal === "#000000") ? "" : textColorVal;
         const effectiveBg    = (noOriginalBg   && bgColorVal   === "#000000") ? "" : bgColorVal;
 
-        // If both effective colors are empty and the original had none, block save entirely
-        if (noOriginalText && noOriginalBg && !effectiveText && !effectiveBg) {
-          if (shouldClose) this.close();
-          return;
-        }
+        // Allow saving even when both colors are empty so users can edit later (preview will show var(--text-normal)/var(--color-accent))
+        // Previously this blocked save, causing entries with no color to disappear.
 
         const hasChanges =
           patternVal !== originalState.pattern ||
@@ -1613,10 +1656,11 @@ export class EditEntryModal extends Modal {
 
       // Update entry in global settings if found there
       if (foundEntry && foundIdx !== -1 && foundArray) {
-        // Handle pattern changes
+        // Handle pattern changes - retain entry even with empty pattern so users can edit later
         if (!isRegex) {
           if (!patternVal) {
-            foundArray.splice(foundIdx, 1);
+            foundArray[foundIdx].pattern = "";
+            foundArray[foundIdx].groupedPatterns = null;
           } else {
             const parts = patternVal
               .split(",")

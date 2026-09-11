@@ -1,6 +1,100 @@
 import { Modal, Notice } from 'obsidian';
 import { escapeHtml, debugError } from '../utils/debug.js';
-// ColorPickerModal will be imported once extracted to its own module
+import { ColorPickerModal } from './ColorPickerModal.js';
+
+const HARDCODED_LEGACY_DEFAULTS = ["#87c760", "#1d5010", "#58bc54", "#205613"];
+
+function isHardcodedLegacyDefault(c) {
+  return HARDCODED_LEGACY_DEFAULTS.includes(String(c || "").toLowerCase());
+}
+
+function isBareBlack(c) {
+  return String(c || "").toLowerCase() === "#000000";
+}
+
+/**
+ * Pure decision logic for the regex tester color pickers.
+ * Determines whether each picker holds a REAL color (user intent) vs NULL
+ * (never picked — preview must show var(--text-normal)/var(--color-accent), save must store "").
+ *
+ * Rules (preset colors are ignored — NULL always previews as var):
+ * - Fresh add (no editingEntry): both NULL, unless the caller passed a real color.
+ * - Editing: keep the entry's stored colors, EXCEPT legacy pollution is dropped:
+ *   hardcoded greens (#87c760/#1d5010/…) and bare "#000000" with no other signal are NULL.
+ *   Stored both-sides-#000000 is treated as NULL (native picker default leaked into storage by old saves).
+ *   A solitary #000000 on one side with the other side empty is kept as a legit black choice.
+ *
+ * @param {object} opts
+ * @param {object|null} opts.editingEntry
+ * @param {string} opts.preFillTextColor
+ * @param {string} opts.preFillBgColor
+ * @param {Function} opts.isValidHexColor
+ * @returns {{preFillTextColor:string, preFillBgColor:string, tTouched:boolean, bTouched:boolean}}
+ */
+export function resolveRegexTesterColorInit({ editingEntry, preFillTextColor, preFillBgColor, isValidHexColor }) {
+  const storedText = editingEntry
+    ? ((editingEntry.textColor && editingEntry.textColor !== "currentColor") ? editingEntry.textColor : (editingEntry.color || ""))
+    : "";
+  const storedBg = editingEntry ? (editingEntry.backgroundColor || "") : "";
+  const hasStoredText = !!(storedText && isValidHexColor(storedText));
+  const hasStoredBg = !!(storedBg && isValidHexColor(storedBg));
+  // Legacy pollution: native picker default "#000000" leaked into storage on both sides → NULL
+  const isPollutedBothBlack = !!editingEntry && isBareBlack(storedText) && isBareBlack(storedBg);
+  const effHasRealText = hasStoredText && !isPollutedBothBlack;
+  const effHasRealBg = hasStoredBg && !isPollutedBothBlack;
+
+  const isRealPrefill = (c) => !!c && isValidHexColor(c) && !isHardcodedLegacyDefault(c) && !isBareBlack(c);
+  let preT = preFillTextColor || "";
+  let preB = preFillBgColor || "";
+  let tTouched;
+  let bTouched;
+  if (!editingEntry) {
+    // Fresh add: both NULL unless caller passed a real color. Preset ignored.
+    if (!isRealPrefill(preT)) preT = "";
+    if (!isRealPrefill(preB)) preB = "";
+    tTouched = isRealPrefill(preT);
+    bTouched = isRealPrefill(preB);
+  } else {
+    if (!effHasRealText && (!preT || isHardcodedLegacyDefault(preT) || isBareBlack(preT))) preT = "";
+    if (!effHasRealBg && (!preB || isHardcodedLegacyDefault(preB) || isBareBlack(preB))) preB = "";
+    tTouched = !!effHasRealText || isRealPrefill(preT);
+    bTouched = !!effHasRealBg || isRealPrefill(preB);
+  }
+  return { preFillTextColor: preT, preFillBgColor: preB, tTouched, bTouched };
+}
+
+/**
+ * Pure mapping from picker state to preview colors.
+ * NULL (untouched native "#000000") → text var(--text-normal), bg/border var(--color-accent). Never black.
+ *
+ * @param {object} opts
+ * @param {string} opts.tRaw native text picker value
+ * @param {string} opts.bRaw native bg picker value
+ * @param {boolean} opts.tTouched
+ * @param {boolean} opts.bTouched
+ * @param {Function} opts.isValidHexColor
+ * @param {number} opts.opacity 0-100
+ * @param {Function} opts.hexToRgba (hex, opacity) => css color
+ * @returns {{hasValidT:boolean, hasValidB:boolean, t:string, bgCss:string, effectiveTForBorder:string, effectiveBForBorder:string}}
+ */
+export function resolveRegexTesterPreviewColors({ tRaw, bRaw, tTouched, bTouched, isValidHexColor, opacity, hexToRgba }) {
+  const isVar = (s) => !!s && /^var\(/.test(String(s).trim());
+  const hasValidT = !!(tRaw && isValidHexColor(tRaw) && (isVar(tRaw) || tTouched));
+  const hasValidB = !!(bRaw && isValidHexColor(bRaw) && (isVar(bRaw) || bTouched));
+  const t = hasValidT ? String(tRaw).trim() : "var(--text-normal)";
+  const op = opacity ?? 25;
+  const bgCss = hasValidB
+    ? (isVar(bRaw) ? `color-mix(in srgb, ${String(bRaw).trim()} ${op}%, transparent)` : hexToRgba(bRaw, op))
+    : `color-mix(in srgb, var(--color-accent) ${op}%, transparent)`;
+  return {
+    hasValidT,
+    hasValidB,
+    t,
+    bgCss,
+    effectiveTForBorder: hasValidT ? String(tRaw).trim() : "var(--color-accent)",
+    effectiveBForBorder: hasValidB ? String(bRaw).trim() : "var(--color-accent)",
+  };
+}
 
 export class RealTimeRegexTesterModal extends Modal {
   constructor(
@@ -20,12 +114,14 @@ export class RealTimeRegexTesterModal extends Modal {
     this._preFillFlags = "";
     this._preFillName = "";
     this._preFillStyleType = "both";
-    this._preFillTextColor = "#87c760";
-    this._preFillBgColor = "#1d5010";
+    this._preFillTextColor = "";
+    this._preFillBgColor = "";
     this._handlers = [];
     this._rafId = null;
     this._debounceId = null;
     this._lastValidHTML = "";
+    this._tPickerTouched = false;
+    this._bPickerTouched = false;
   }
   onOpen() {
     const { contentEl } = this;
@@ -47,7 +143,7 @@ export class RealTimeRegexTesterModal extends Modal {
     } catch (e) {}
     const controlsRow = contentEl.createDiv();
     controlsRow.style.display = "flex";
-    controlsRow.style.gap = "12px";
+    controlsRow.style.gap = "8px";
     controlsRow.style.flexWrap = "wrap";
     controlsRow.style.alignItems = "center";
     try {
@@ -117,17 +213,34 @@ export class RealTimeRegexTesterModal extends Modal {
     try {
       textColorInput.addClass("act-regex-tester-text-color");
     } catch (e) {}
-    textColorInput.value = this._preFillTextColor || "#87c760";
+    // Resolve NULL vs REAL via pure helper (tested): untouched pickers are NULL
+    // (native black display) → preview var(--text-normal)/var(--color-accent),
+    // save "". Preset colors are ignored here: NULL always previews as var.
+    const _init = resolveRegexTesterColorInit({
+      editingEntry: this._editingEntry,
+      preFillTextColor: this._preFillTextColor,
+      preFillBgColor: this._preFillBgColor,
+      isValidHexColor: (c) => this.plugin.isValidHexColor(c),
+    });
+    this._preFillTextColor = _init.preFillTextColor;
+    this._preFillBgColor = _init.preFillBgColor;
+    this._tPickerTouched = _init.tTouched;
+    this._bPickerTouched = _init.bTouched;
+    // Native color inputs cannot be empty — NULL shows black until the user picks.
+    textColorInput.value = this._preFillTextColor || "#000000";
     textColorInput.style.width = "48px";
     const bgColorInput = controlsRow.createEl("input", { type: "color" });
     try {
       bgColorInput.addClass("act-regex-tester-bg-color");
     } catch (e) {}
-    bgColorInput.value = this._preFillBgColor || "#1d5010";
+    bgColorInput.value = this._preFillBgColor || "#000000";
     bgColorInput.style.width = "48px";
     const onTextPickerContext = (ev) => {
       try {
         ev.preventDefault();
+      } catch (e) {}
+      try {
+        ev.stopPropagation();
       } catch (e) {}
       try {
         const modal = new ColorPickerModal(
@@ -138,22 +251,43 @@ export class RealTimeRegexTesterModal extends Modal {
             const tc =
               sel.textColor && this.plugin.isValidHexColor(sel.textColor)
                 ? sel.textColor
-                : this.plugin.isValidHexColor(color)
-                  ? color
-                  : null;
+                : null;
+            const bc =
+              sel.backgroundColor &&
+              this.plugin.isValidHexColor(sel.backgroundColor)
+                ? sel.backgroundColor
+                : null;
+            const fallback =
+              color && this.plugin.isValidHexColor(color) ? color : null;
+            let changed = false;
             if (tc) {
               textColorInput.value = tc;
-              render();
+              this._tPickerTouched = true;
+              changed = true;
+            } else if (fallback && !bc) {
+              textColorInput.value = fallback;
+              this._tPickerTouched = true;
+              changed = true;
             }
+            if (bc) {
+              bgColorInput.value = bc;
+              this._bPickerTouched = true;
+              changed = true;
+            }
+            if (changed) render();
           },
-          "text",
-          regexInput.value || "",
+          "text-and-background",
+          (typeof regexInput !== "undefined" && regexInput.value) || "",
           false,
           this._editingEntry ? this._editingEntry.markTarget : "text",
           this._editingEntry,
         );
         modal._hideHeaderControls = true;
-        modal._preFillTextColor = textColorInput.value;
+        if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
+        if (bgColorInput.value) {
+          modal._preFillBgColor = bgColorInput.value;
+          modal._preFillBorderColor = bgColorInput.value;
+        }
         modal.open();
       } catch (e) {}
     };
@@ -162,31 +296,54 @@ export class RealTimeRegexTesterModal extends Modal {
         ev.preventDefault();
       } catch (e) {}
       try {
+        ev.stopPropagation();
+      } catch (e) {}
+      try {
         const modal = new ColorPickerModal(
           this.app,
           this.plugin,
           async (color, result) => {
             const sel = result || {};
+            const tc =
+              sel.textColor && this.plugin.isValidHexColor(sel.textColor)
+                ? sel.textColor
+                : null;
             const bc =
               sel.backgroundColor &&
               this.plugin.isValidHexColor(sel.backgroundColor)
                 ? sel.backgroundColor
-                : this.plugin.isValidHexColor(color)
-                  ? color
-                  : null;
+                : null;
+            const fallback =
+              color && this.plugin.isValidHexColor(color) ? color : null;
+            let changed = false;
             if (bc) {
               bgColorInput.value = bc;
-              render();
+              this._bPickerTouched = true;
+              changed = true;
+            } else if (fallback && !tc) {
+              bgColorInput.value = fallback;
+              this._bPickerTouched = true;
+              changed = true;
             }
+            if (tc) {
+              textColorInput.value = tc;
+              this._tPickerTouched = true;
+              changed = true;
+            }
+            if (changed) render();
           },
-          "background",
-          regexInput.value || "",
+          "text-and-background",
+          (typeof regexInput !== "undefined" && regexInput.value) || "",
           false,
           this._editingEntry ? this._editingEntry.markTarget : "text",
           this._editingEntry,
         );
         modal._hideHeaderControls = true;
-        modal._preFillBgColor = bgColorInput.value;
+        if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
+        if (bgColorInput.value) {
+          modal._preFillBgColor = bgColorInput.value;
+          modal._preFillBorderColor = bgColorInput.value;
+        }
         modal.open();
       } catch (e) {}
     };
@@ -354,21 +511,33 @@ export class RealTimeRegexTesterModal extends Modal {
       const f = flags.includes("g") ? flags : flags + "g";
       const markTarget = markTargetSelect.value || "text";
       const style = styleSelect.value;
-      const t = this.plugin.isValidHexColor(textColorInput.value) ? textColorInput.value : "#58bc54";
-      const b = this.plugin.isValidHexColor(bgColorInput.value) ? bgColorInput.value : "#205613";
-      const rgba = this.plugin.hexToRgba(
-        b,
-        this.plugin.settings.backgroundOpacity ?? 25,
-      );
+      const tRaw = textColorInput.value;
+      const bRaw = bgColorInput.value;
+      // NULL (untouched picker) → text var(--text-normal), bg/border var(--color-accent). Never black.
+      const _pv = resolveRegexTesterPreviewColors({
+        tRaw,
+        bRaw,
+        tTouched: this._tPickerTouched,
+        bTouched: this._bPickerTouched,
+        isValidHexColor: (c) => this.plugin.isValidHexColor(c),
+        opacity: this.plugin.settings.backgroundOpacity ?? 25,
+        hexToRgba: (c, o) => this.plugin.hexToRgba(c, o),
+      });
+      const hasValidT = _pv.hasValidT;
+      const hasValidB = _pv.hasValidB;
+      const t = _pv.t;
+      const rgba = _pv.bgCss;
       const radius = this.plugin.settings.highlightBorderRadius ?? 8;
       const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
       const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+      const effectiveBForBorder = _pv.effectiveBForBorder;
+      const effectiveTForBorder = _pv.effectiveTForBorder;
       const borderStyle =
         style === "text"
           ? ""
           : style === "highlight"
-            ? this.plugin.generateBorderStyle(null, b)
-            : this.plugin.generateBorderStyle(t, b);
+            ? this.plugin.generateBorderStyle(null, effectiveBForBorder)
+            : this.plugin.generateBorderStyle(effectiveTForBorder, effectiveBForBorder);
       const matchStyle =
         style === "text"
           ? `color:${t};background:transparent;`
@@ -627,7 +796,12 @@ export class RealTimeRegexTesterModal extends Modal {
     };
     [textColorInput, bgColorInput, styleSelect].forEach((el) => {
       const ev = el === styleSelect ? "change" : "input";
-      const fn = el === styleSelect ? styleChange : onInputImmediate;
+      const baseFn = el === styleSelect ? styleChange : onInputImmediate;
+      const fn = (...args) => {
+        if (el === textColorInput) this._tPickerTouched = true;
+        if (el === bgColorInput) this._bPickerTouched = true;
+        return baseFn(...args);
+      };
       el.addEventListener(ev, fn);
       this._handlers.push({ el, ev, fn });
     });
@@ -682,11 +856,15 @@ export class RealTimeRegexTesterModal extends Modal {
         }
       }
 
-      // Handle editing existing word entry
+      // Handle editing existing word entry - use hasValid so empty pickers save as "" (var preview) not "#000000" black
       if (this._editingEntry) {
         try {
           const style = styleSelect.value;
           const markTarget = markTargetSelect.value;
+          const tRawForSave = textColorInput.value;
+          const bRawForSave = bgColorInput.value;
+          const hasValidTForSave = tRawForSave && this.plugin.isValidHexColor(tRawForSave) && (this._tPickerTouched || !!this._preFillTextColor);
+          const hasValidBForSave = bRawForSave && this.plugin.isValidHexColor(bRawForSave) && (this._bPickerTouched || !!this._preFillBgColor);
           const updated = Object.assign({}, this._editingEntry, {
             pattern: pat,
             flags,
@@ -696,15 +874,15 @@ export class RealTimeRegexTesterModal extends Modal {
             isRegex: true,
           });
           if (style === "text") {
-            updated.color = textColorInput.value || "";
+            updated.color = hasValidTForSave ? tRawForSave : "";
             updated.textColor = null;
             updated._savedTextColor =
-              textColorInput.value ||
+              hasValidTForSave ? tRawForSave :
               this._editingEntry._savedTextColor ||
               updated.color ||
               "";
             updated._savedBackgroundColor =
-              bgColorInput.value ||
+              hasValidBForSave ? bRawForSave :
               this._editingEntry._savedBackgroundColor ||
               "";
             updated.backgroundColor = null;
@@ -712,20 +890,20 @@ export class RealTimeRegexTesterModal extends Modal {
             updated.color = "";
             updated.textColor = "currentColor";
             updated._savedTextColor =
-              textColorInput.value || this._editingEntry._savedTextColor || "";
-            updated.backgroundColor = bgColorInput.value || "";
+              hasValidTForSave ? tRawForSave : this._editingEntry._savedTextColor || "";
+            updated.backgroundColor = hasValidBForSave ? bRawForSave : "";
             updated._savedBackgroundColor =
-              bgColorInput.value ||
+              hasValidBForSave ? bRawForSave :
               this._editingEntry._savedBackgroundColor ||
               "";
           } else {
             updated.color = "";
-            updated.textColor = textColorInput.value || "";
-            updated.backgroundColor = bgColorInput.value || "";
+            updated.textColor = hasValidTForSave ? tRawForSave : "";
+            updated.backgroundColor = hasValidBForSave ? bRawForSave : "";
             updated._savedTextColor =
-              textColorInput.value || this._editingEntry._savedTextColor || "";
+              hasValidTForSave ? tRawForSave : this._editingEntry._savedTextColor || "";
             updated._savedBackgroundColor =
-              bgColorInput.value ||
+              hasValidBForSave ? bRawForSave :
               this._editingEntry._savedBackgroundColor ||
               "";
           }
@@ -820,24 +998,28 @@ export class RealTimeRegexTesterModal extends Modal {
           markTarget: markTarget,
           persistAtEnd: true,
         };
+        const tRawForSave2 = textColorInput.value;
+        const bRawForSave2 = bgColorInput.value;
+        const hasValidTForSave2 = tRawForSave2 && this.plugin.isValidHexColor(tRawForSave2) && (this._tPickerTouched || !!this._preFillTextColor);
+        const hasValidBForSave2 = bRawForSave2 && this.plugin.isValidHexColor(bRawForSave2) && (this._bPickerTouched || !!this._preFillBgColor);
         if (style === "text") {
-          entry.color = textColorInput.value || "";
+          entry.color = hasValidTForSave2 ? tRawForSave2 : "";
           entry.textColor = null;
           entry.backgroundColor = null;
-          entry._savedTextColor = textColorInput.value || "";
-          entry._savedBackgroundColor = bgColorInput.value || "";
+          entry._savedTextColor = hasValidTForSave2 ? tRawForSave2 : "";
+          entry._savedBackgroundColor = hasValidBForSave2 ? bRawForSave2 : "";
         } else if (style === "highlight") {
           entry.color = "";
           entry.textColor = "currentColor";
-          entry.backgroundColor = bgColorInput.value || "";
-          entry._savedTextColor = textColorInput.value || "";
-          entry._savedBackgroundColor = bgColorInput.value || "";
+          entry.backgroundColor = hasValidBForSave2 ? bRawForSave2 : "";
+          entry._savedTextColor = hasValidTForSave2 ? tRawForSave2 : "";
+          entry._savedBackgroundColor = hasValidBForSave2 ? bRawForSave2 : "";
         } else {
           entry.color = "";
-          entry.textColor = textColorInput.value || "";
-          entry.backgroundColor = bgColorInput.value || "";
-          entry._savedTextColor = textColorInput.value || "";
-          entry._savedBackgroundColor = bgColorInput.value || "";
+          entry.textColor = hasValidTForSave2 ? tRawForSave2 : "";
+          entry.backgroundColor = hasValidBForSave2 ? bRawForSave2 : "";
+          entry._savedTextColor = hasValidTForSave2 ? tRawForSave2 : "";
+          entry._savedBackgroundColor = hasValidBForSave2 ? bRawForSave2 : "";
         }
         this.plugin.settings.wordEntries.push(
           Object.assign(
@@ -858,39 +1040,43 @@ export class RealTimeRegexTesterModal extends Modal {
         this.plugin.triggerActiveDocumentRerender();
       }
 
-      // Always call the onAdded callback with the entry object
-      const style = styleSelect.value;
-      const markTarget = markTargetSelect.value;
-      const entry = {
+      // Always call the onAdded callback with the entry object (use hasValid so empty pickers → var preview not black)
+      const cbTForSave = textColorInput.value;
+      const cbBForSave = bgColorInput.value;
+      const cbHasValidT = cbTForSave && this.plugin.isValidHexColor(cbTForSave) && (this._tPickerTouched || !!this._preFillTextColor);
+      const cbHasValidB = cbBForSave && this.plugin.isValidHexColor(cbBForSave) && (this._bPickerTouched || !!this._preFillBgColor);
+      const cbStyle = styleSelect.value;
+      const cbMarkTarget = markTargetSelect.value;
+      const cbEntry = {
         isRegex: true,
         pattern: pat,
         flags,
         presetLabel: label || undefined,
-        styleType: style,
-        markTarget: markTarget,
+        styleType: cbStyle,
+        markTarget: cbMarkTarget,
         caseSensitive: !!this.plugin.settings.caseSensitive,
       };
-      if (style === "text") {
-        entry.color = textColorInput.value || "";
-        entry.textColor = null;
-        entry.backgroundColor = null;
-        entry._savedTextColor = textColorInput.value || "";
-        entry._savedBackgroundColor = bgColorInput.value || "";
-      } else if (style === "highlight") {
-        entry.color = "";
-        entry.textColor = "currentColor";
-        entry.backgroundColor = bgColorInput.value || "";
-        entry._savedTextColor = textColorInput.value || "";
-        entry._savedBackgroundColor = bgColorInput.value || "";
+      if (cbStyle === "text") {
+        cbEntry.color = cbHasValidT ? cbTForSave : "";
+        cbEntry.textColor = null;
+        cbEntry.backgroundColor = null;
+        cbEntry._savedTextColor = cbHasValidT ? cbTForSave : "";
+        cbEntry._savedBackgroundColor = cbHasValidB ? cbBForSave : "";
+      } else if (cbStyle === "highlight") {
+        cbEntry.color = "";
+        cbEntry.textColor = "currentColor";
+        cbEntry.backgroundColor = cbHasValidB ? cbBForSave : "";
+        cbEntry._savedTextColor = cbHasValidT ? cbTForSave : "";
+        cbEntry._savedBackgroundColor = cbHasValidB ? cbBForSave : "";
       } else {
-        entry.color = "";
-        entry.textColor = textColorInput.value || "";
-        entry.backgroundColor = bgColorInput.value || "";
-        entry._savedTextColor = textColorInput.value || "";
-        entry._savedBackgroundColor = bgColorInput.value || "";
+        cbEntry.color = "";
+        cbEntry.textColor = cbHasValidT ? cbTForSave : "";
+        cbEntry.backgroundColor = cbHasValidB ? cbBForSave : "";
+        cbEntry._savedTextColor = cbHasValidT ? cbTForSave : "";
+        cbEntry._savedBackgroundColor = cbHasValidB ? cbBForSave : "";
       }
       try {
-        this.onAdded && this.onAdded(entry);
+        this.onAdded && this.onAdded(cbEntry);
       } catch (e) {}
       new Notice(this.plugin.t("notice_added_regex", "Regex added"));
       try {

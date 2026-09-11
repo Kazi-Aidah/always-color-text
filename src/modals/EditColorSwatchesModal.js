@@ -41,6 +41,7 @@ export class EditColorSwatchesModal extends Modal {
     previewRow.style.marginTop = "8px";
     previewRow.style.marginBottom = "4px";
     previewRow.style.flexWrap = "wrap";
+    previewRow.style.alignItems = "stretch";
 
     const bgWrap = previewRow.createDiv();
     bgWrap.addClass("act-color-picker-preview-wrap");
@@ -50,7 +51,6 @@ export class EditColorSwatchesModal extends Modal {
     bgWrap.style.flex = "1 1 120px";
     bgWrap.style.minWidth = "120px";
     bgWrap.style.marginTop = "20px";
-    bgWrap.style.marginBottom = "2px";
 
     const bgSample = bgWrap.createDiv();
     bgSample.textContent = this.plugin.t(
@@ -270,6 +270,9 @@ export class EditColorSwatchesModal extends Modal {
         bgSample.style.padding = "";
         bgSample.style.border = "";
         textSample.style.color = "";
+        textSample.style.padding = "2px 6px";
+        textSample.style.borderTop = "";
+        textSample.style.borderBottom = "";
         return;
       }
       const params = this.plugin.getHighlightParams(null);
@@ -293,6 +296,23 @@ export class EditColorSwatchesModal extends Modal {
 
       // Text color preview
       textSample.style.color = color;
+
+      // Keep both preview pills the same height: only the background
+      // sample carries dynamic highlight padding/borders, so mirror its
+      // vertical metrics (transparent borders) onto the text sample.
+      textSample.style.paddingTop = bgSample.style.paddingTop;
+      textSample.style.paddingBottom = bgSample.style.paddingBottom;
+      try {
+        const cs = getComputedStyle(bgSample);
+        textSample.style.borderTop =
+          cs.borderTopWidth && cs.borderTopWidth !== "0px"
+            ? `${cs.borderTopWidth} solid transparent`
+            : "";
+        textSample.style.borderBottom =
+          cs.borderBottomWidth && cs.borderBottomWidth !== "0px"
+            ? `${cs.borderBottomWidth} solid transparent`
+            : "";
+      } catch (_) {}
     };
 
     const updateButtonLabel = () => {
@@ -539,6 +559,9 @@ export class EditColorSwatchesModal extends Modal {
         const sw = swatches[i];
         if (this._activeIndex === i) {
           this._activeIndex = null;
+          colorInput.value = "#000000";
+          hex.value = "";
+          renderPreviews("");
           updateButtonLabel();
           renderGrid();
           updateMobileDelete();

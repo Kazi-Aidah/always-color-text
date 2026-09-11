@@ -988,6 +988,17 @@ export class ColorSettingTab extends PluginSettingTab {
               : null;
           const preFillText = rawText && this.plugin.isValidHexColor(rawText) ? rawText : null;
           const preFillBg = rawBg && this.plugin.isValidHexColor(rawBg) ? rawBg : null;
+          // Respect the entry's color type: text-only shows the text panel,
+          // highlight-only the highlight panel, both shows both panels.
+          const entryStyleType =
+            (preExisting && preExisting.styleType) ||
+            (preFillBg && preFillText ? "both" : preFillBg ? "highlight" : "text");
+          const pickerMode =
+            entryStyleType === "highlight"
+              ? "background"
+              : entryStyleType === "text"
+                ? "text"
+                : "text-and-background";
           const displayText =
             preExisting && preExisting.isRegex
               ? preExisting.pattern || ""
@@ -1075,7 +1086,7 @@ export class ColorSettingTab extends PluginSettingTab {
                 this.plugin.forceRefreshAllEditors();
               }
             },
-            "text-and-background",
+            pickerMode,
             displayText,
             false,
             preExisting ? preExisting.markTarget : "text",
@@ -3312,7 +3323,7 @@ export class ColorSettingTab extends PluginSettingTab {
           const row = listDiv.createDiv();
           row.style.display = "inline-flex";
           row.style.alignItems = "center";
-          row.style.gap = "8px";
+          row.style.gap = "6px";
           row.style.marginBottom = "8px";
           row.style.border = "1px solid var(--background-modifier-border)";
           row.style.borderRadius = "var(--setting-items-radius)"; // BORDER RADIUS OF CUSTOM COLOR ENTRIES
@@ -3351,21 +3362,10 @@ export class ColorSettingTab extends PluginSettingTab {
               : "#87c760";
           tCp.style.width = "30px";
           tCp.style.height = "30px";
-          tCp.style.minWidth = "30px";
-          tCp.style.minHeight = "30px";
-          tCp.style.borderRadius = "50%";
           tCp.style.border = "none";
-          tCp.style.padding = "0";
-          tCp.style.overflow = "hidden";
-          tCp.style.background = "transparent";
+          tCp.style.borderRadius = "var(--input-radius)";
           tCp.style.cursor = "pointer";
-          tCp.style.boxSizing = "border-box";
-          tCp.style.flexShrink = "0";
-          tCp.style.display = "block";
-          try {
-            tCp.style.appearance = "none";
-            tCp.style.setProperty("-webkit-appearance", "none");
-          } catch (e) {}
+          tCp.style.flex = "0 0 auto";
           tCp.title = this.plugin.t("text_color_title", "Text Color");
           const tChange = async () => {
             const val = tCp.value;
@@ -3425,21 +3425,10 @@ export class ColorSettingTab extends PluginSettingTab {
               : "#1d5010";
           bCp.style.width = "30px";
           bCp.style.height = "30px";
-          bCp.style.minWidth = "30px";
-          bCp.style.minHeight = "30px";
-          bCp.style.borderRadius = "50%";
           bCp.style.border = "none";
-          bCp.style.padding = "0";
-          bCp.style.overflow = "hidden";
-          bCp.style.background = "transparent";
+          bCp.style.borderRadius = "var(--input-radius)";
           bCp.style.cursor = "pointer";
-          bCp.style.boxSizing = "border-box";
-          bCp.style.flexShrink = "0";
-          bCp.style.display = "block";
-          try {
-            bCp.style.appearance = "none";
-            bCp.style.setProperty("-webkit-appearance", "none");
-          } catch (e) {}
+          bCp.style.flex = "0 0 auto";
           bCp.title = this.plugin.t("highlight_color_title", "Highlight Color");
           const bChange = async () => {
             const val = bCp.value;
@@ -4447,14 +4436,8 @@ export class ColorSettingTab extends PluginSettingTab {
         };
         activeSelect.onchange = activeHandler;
 
-        // Group Styling Preview
-        if (
-          group.textColor ||
-          group.backgroundColor ||
-          (typeof group.enableBorderThickness !== "undefined" &&
-            group.enableBorderThickness) ||
-          group.customCss
-        ) {
+        // Group Styling Preview — always show preview with fallback to var(--text-normal)/var(--color-accent) when NULL for accessibility
+        if (true) {
           const preview = row.createDiv();
           try {
             preview.addClass("act-group-styling-preview");
@@ -4488,18 +4471,26 @@ export class ColorSettingTab extends PluginSettingTab {
               ? group.textColor
               : "";
           const bRaw = group.backgroundColor || "";
-          // Respect styleType for what is displayed
-          const t = isHighlightOnly ? "" : tRaw;
-          const b = isTextOnly ? "" : bRaw;
+          // Preview-only fallback for accessibility when picker NULL: var(--text-normal) / var(--color-accent)
+          // Polluted groups saved with default black/black (both #000000) are treated as NULL for preview.
+          const isPollutedGroupBothBlack = styleType === "both" && String(tRaw).toLowerCase() === "#000000" && String(bRaw).toLowerCase() === "#000000";
+          const hasValidTRaw = !isPollutedGroupBothBlack && tRaw && this.plugin.isValidHexColor(tRaw);
+          const hasValidBRaw = !isPollutedGroupBothBlack && bRaw && this.plugin.isValidHexColor(bRaw);
+          const effectiveTRaw = hasValidTRaw ? tRaw : "var(--text-normal)";
+          const effectiveBRaw = hasValidBRaw ? bRaw : "var(--color-accent)";
+          // Respect styleType for what is displayed, but use fallback when NULL
+          const t = isHighlightOnly ? "" : effectiveTRaw;
+          const b = isTextOnly ? "" : effectiveBRaw;
           const p = this.plugin.getHighlightParams(group);
-          const rgba = b
-            ? this.plugin.hexToRgba(b, p.opacity ?? 25)
+          const isVarBForPreview = b && /^var\(/.test(b.trim());
+          const rgba = !isTextOnly
+            ? (isVarBForPreview ? `color-mix(in srgb, ${b.trim()} ${p.opacity ?? 25}%, transparent)` : this.plugin.hexToRgba(b, p.opacity ?? 25))
             : "transparent";
 
-          if (!isHighlightOnly && t) preview.style.color = t;
+          if (!isHighlightOnly) preview.style.color = t || "var(--text-normal)";
           else preview.style.color = "var(--text-normal)";
 
-          if (!isTextOnly && b) {
+          if (!isTextOnly) {
             preview.style.backgroundColor = rgba;
           } else {
             preview.style.backgroundColor = "transparent";
@@ -4520,9 +4511,11 @@ export class ColorSettingTab extends PluginSettingTab {
           preview.style.borderRight = "none";
 
           if (!isTextOnly && p.enableBorder) {
+            const borderTForAccent = hasValidTRaw ? tRaw : "var(--color-accent)";
+            const borderBForAccent = hasValidBRaw ? bRaw : "var(--color-accent)";
             const borderStyle = this.plugin.generateBorderStyle(
-              isHighlightOnly ? null : t,
-              b,
+              isHighlightOnly ? null : borderTForAccent,
+              borderBForAccent,
               group,
             );
             if (borderStyle) {

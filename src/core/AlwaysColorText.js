@@ -10270,14 +10270,19 @@ class AlwaysColorText extends Plugin {
         ? entry.borderOpacity
         : (this.settings.borderOpacity ?? 100);
     let borderColor;
+    const isVar = (s) => typeof s === "string" && s.trim().startsWith("var(");
     if (
       textColor &&
       textColor !== "currentColor" &&
       this.isValidHexColor(textColor)
     ) {
-      borderColor = this.hexToRgba(textColor, borderOpacity);
+      borderColor = isVar(textColor)
+        ? `color-mix(in srgb, ${textColor.trim()} ${borderOpacity}%, transparent)`
+        : this.hexToRgba(textColor, borderOpacity);
     } else if (backgroundColor && this.isValidHexColor(backgroundColor)) {
-      borderColor = this.hexToRgba(backgroundColor, borderOpacity);
+      borderColor = isVar(backgroundColor)
+        ? `color-mix(in srgb, ${backgroundColor.trim()} ${borderOpacity}%, transparent)`
+        : this.hexToRgba(backgroundColor, borderOpacity);
     } else {
       borderColor = "rgba(0,0,0,1)";
     }

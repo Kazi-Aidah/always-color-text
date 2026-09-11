@@ -169,6 +169,8 @@ export class ColorPickerModal extends Modal {
       : groupsRaw;
 
     // Header Row: "Style Text" heading on left, Group dropdown on right
+    // The heading always shows (even for the right-click minimal picker);
+    // only the Group dropdown and the controls row below are hidden there.
     const headerRow = contentEl.createDiv();
     headerRow.style.display = "flex";
     headerRow.style.alignItems = "center";
@@ -226,13 +228,18 @@ export class ColorPickerModal extends Modal {
     }
 
     // act-pickr-row: Controls row with Preset, Settings Icon, MarkTarget, Case Sensitivity, Match Type
+    // Hidden entirely for the right-click minimal picker.
     const pickrRow = contentEl.createDiv();
-    pickrRow.style.display = "flex";
-    pickrRow.style.alignItems = "center";
-    pickrRow.style.gap = "8px";
-    pickrRow.style.gridColumn = "1 / -1";
-    pickrRow.style.width = "100%";
-    pickrRow.style.flexWrap = "wrap";
+    if (hideControls) {
+      pickrRow.style.display = "none";
+    } else {
+      pickrRow.style.display = "flex";
+      pickrRow.style.alignItems = "center";
+      pickrRow.style.gap = "8px";
+      pickrRow.style.gridColumn = "1 / -1";
+      pickrRow.style.width = "100%";
+      pickrRow.style.flexWrap = "wrap";
+    }
     try {
       pickrRow.addClass("act-pickr-row");
     } catch (e) {}
@@ -389,6 +396,12 @@ export class ColorPickerModal extends Modal {
     this.selectedTextColor = null;
     this.selectedBgColor = null;
 
+    // Hoisted so the preview fallback below can reference them without
+    // hitting the temporal dead zone (they are fully resolved further down).
+    let initText = null;
+    let initBg = null;
+    let matchedEntry = null;
+
     // Preview wrap
     const previewWrap = contentEl.createDiv();
     previewWrap.addClass("act-color-picker-preview-wrap");
@@ -403,7 +416,53 @@ export class ColorPickerModal extends Modal {
       ? displayText
       : this.plugin.t("selected_text_preview", "Selected Text");
     preview.style.display = "inline";
+
+    // Preview-only fallback for accessibility: when no color is pre-filled,
+    // show var(--text-normal) / var(--color-accent) instead of browser-default black.
+    // These will be overwritten by applyPrefill / swatch clicks when a real color exists.
+    if (!initText) {
+      preview.style.color = "var(--text-normal)";
+    }
+    if (!initBg && !this.isQuickOnce) {
+      // Only apply accent bg fallback when a background panel would be shown
+      const willShowBg = this.mode !== "text";
+      if (willShowBg) {
+        const p = this.plugin.getHighlightParams(matchedEntry || {});
+        const op = (matchedEntry && typeof matchedEntry.backgroundOpacity === "number")
+          ? matchedEntry.backgroundOpacity
+          : (this.plugin.settings.backgroundOpacity ?? 25);
+        const radius = p.radius ?? 8;
+        const hPad = p.hPad ?? 4;
+        const vPad = p.vPad ?? 0;
+        // Use color-mix so --color-accent resolves natively at paint time, not via getComputedStyle
+        const accentBg = `color-mix(in srgb, var(--color-accent) ${op}%, transparent)`;
+        preview.style.setProperty("background-color", accentBg, "important");
+        preview.style.borderRadius = radius + "px";
+        preview.style.paddingLeft = preview.style.paddingRight = hPad + "px";
+        try {
+          preview.style.setProperty("padding-top", vPad + "px");
+          preview.style.setProperty("padding-bottom", vPad + "px");
+        } catch (e) {
+          preview.style.paddingTop = preview.style.paddingBottom = vPad + "px";
+        }
+        if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
+          preview.style.boxDecorationBreak = "clone";
+          preview.style.WebkitBoxDecorationBreak = "clone";
+        }
+      }
+    }
+
     this._applyCustomCss();
+    // Re-enforce fallback colors after _applyCustomCss which applies !important
+    if (!initText) {
+      preview.style.setProperty('color', 'var(--text-normal)', 'important');
+    }
+    if (!initBg && !this.isQuickOnce && this.mode !== "text") {
+      const _op2 = (matchedEntry && typeof matchedEntry.backgroundOpacity === "number")
+        ? matchedEntry.backgroundOpacity
+        : (this.plugin.settings.backgroundOpacity ?? 25);
+      preview.style.setProperty('background-color', `color-mix(in srgb, var(--color-accent) ${_op2}%, transparent)`, 'important');
+    }
 
     // For Highlight Once: show no styling until a color is picked
     if (this.isQuickOnce) {
@@ -417,6 +476,8 @@ export class ColorPickerModal extends Modal {
         preview.style.borderRadius = "";
         preview.style.paddingLeft = "";
         preview.style.paddingRight = "";
+        // Restore text color fallback even in Quick Once mode
+        if (!initText) preview.style.color = "var(--text-normal)";
         this._applyCustomCss();
       } catch (e) {}
     }
@@ -819,10 +880,10 @@ export class ColorPickerModal extends Modal {
     // Gap below panels is managed by a smaller margin-top on the action row, not per-panel margins
 
     const s = this._selectedText || "";
-    let initText = null;
-    let initBg = null;
+    initText = null;
+    initBg = null;
     let existingStyle = null;
-    let matchedEntry = null;
+    matchedEntry = null;
     let matchedGroupUid = null;
     let matchedMatchType = null;
     const getEq = (e) => {

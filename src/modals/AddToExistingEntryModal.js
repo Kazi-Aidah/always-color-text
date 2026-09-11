@@ -836,7 +836,7 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                           },
                           null,
                         );
-                        // Prefill the modal fields with the entry's current values
+                        // Prefill the modal fields with the entry's current values (no hardcoded defaults - modal falls back to default preset / var) (no hardcoded defaults - modal falls back to default preset / var)
                         modal._editingEntry = entry;
                         modal._preFillPattern = entry.pattern || "";
                         modal._preFillFlags = entry.flags || "";
@@ -847,9 +847,9 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                             ? entry.textColor
                             : this.plugin.isValidHexColor(entry.color)
                               ? entry.color
-                              : "#87c760") || "#87c760";
+                              : "") || "";
                         modal._preFillBgColor =
-                          entry.backgroundColor || "#1d5010";
+                          entry.backgroundColor || "";
                         // Store reference to parent modal so we can refresh it after save
                         modal._parentModal = this;
                         modal.open();
@@ -1397,7 +1397,7 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                   },
                   null,
                 );
-                // Prefill the modal fields with the entry's current values
+                // Prefill the modal fields with the entry's current values (no hardcoded defaults - modal falls back to default preset / var)
                 modal._editingEntry = entry;
                 modal._preFillPattern = entry.pattern || "";
                 modal._preFillFlags = entry.flags || "";
@@ -1408,8 +1408,8 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                     ? entry.textColor
                     : this.plugin.isValidHexColor(entry.color)
                       ? entry.color
-                      : "#87c760") || "#87c760";
-                modal._preFillBgColor = entry.backgroundColor || "#1d5010";
+                      : "") || "";
+                modal._preFillBgColor = entry.backgroundColor || "";
                 // Store reference to parent modal so we can refresh it after save
                 modal._parentModal = this;
                 modal.open();
@@ -1652,7 +1652,7 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                   },
                   null,
                 );
-                // Prefill the modal fields with the entry's current values
+                // Prefill the modal fields with the entry's current values (no hardcoded defaults - modal falls back to default preset / var)
                 modal._editingEntry = entry;
                 modal._preFillPattern = entry.pattern || "";
                 modal._preFillFlags = entry.flags || "";
@@ -1663,8 +1663,8 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                     ? entry.textColor
                     : this.plugin.isValidHexColor(entry.color)
                       ? entry.color
-                      : "#87c760") || "#87c760";
-                modal._preFillBgColor = entry.backgroundColor || "#1d5010";
+                      : "") || "";
+                modal._preFillBgColor = entry.backgroundColor || "";
                 // Store reference to parent modal so we can refresh it after save
                 modal._parentModal = this;
                 modal.open();

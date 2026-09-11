@@ -615,7 +615,7 @@ body.is-mobile .act-highlight-header-row select {
 /* RealTime / Blacklist Regex Tester - controls row with flags, selects, color pickers */
 .act-regex-tester-controls {
   display: flex !important;
-  gap: 12px !important;
+  gap: 8px !important;
   flex-wrap: wrap !important;
   align-items: center !important;
   max-width: 100% !important;
@@ -773,6 +773,14 @@ button.mod-cta {
 
 .act-entry-row button, .act-entry-row select  {
   border-radius: var(--button-radius) !important;
+}
+
+.act-entry-row {
+  padding: 10px;
+}
+
+.act-edit-word-group-modal .color-words-list .act-entry-row {
+  padding: 4px 10px;
 }
 
 /* Round checkboxes in blacklist entry rows */
@@ -1459,10 +1467,6 @@ body.is-mobile .act-group-disable-label {
     border: 1px solid var(--background-modifier-border);
 }
 
-body:not(.is-mobile) .color-words-list .act-entry-row {
-    padding: 4px 10px;
-}
-
 body.is-mobile .color-words-list .act-style-select {
     border-radius: var(--button-radius);
 }
@@ -1733,11 +1737,13 @@ body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
   margin-top: 8px;
   margin-bottom: 4px;
   flex-wrap: wrap;
+  height: 80px;
 }
 
 @media (max-width: 600px) {
   .act-edit-swatches-preview-row {
     flex-direction: column !important;
+    height: auto !important;
   }
   .act-edit-swatches-preview-row .act-color-picker-preview-wrap {
     flex: 1 1 auto !important;
@@ -1751,6 +1757,7 @@ body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
 
 body.is-mobile .act-edit-swatches-preview-row {
   flex-direction: column !important;
+  height: auto !important;
 }
 body.is-mobile .act-edit-swatches-preview-row .act-color-picker-preview-wrap {
   flex: 1 1 auto !important;
@@ -1761,33 +1768,17 @@ body.is-mobile .act-edit-swatches-preview-row .act-edit-swatches-text-wrap {
   margin-top: 0 !important;
 }
 
-/* Quick Colors modal – fix color picker inputs clipped left/right */
+/* Quick Colors pickers – match colored text entry pickers exactly */
+[data-qc-index] {
+  gap: 6px !important;
+}
 [data-qc-index] input[type="color"] {
-  flex-shrink: 0 !important;
-  min-width: 30px !important;
-  min-height: 30px !important;
   width: 30px !important;
   height: 30px !important;
-  box-sizing: border-box !important;
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  padding: 0 !important;
   border: none !important;
-  border-radius: 50% !important;
-  overflow: hidden !important;
-  background: transparent !important;
-  display: block !important;
-}
-[data-qc-index] input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0 !important;
-}
-[data-qc-index] input[type="color"]::-webkit-color-swatch {
-  border: none !important;
-  border-radius: 50% !important;
-}
-[data-qc-index] input[type="color"]::-moz-color-swatch {
-  border: none !important;
-  border-radius: 50% !important;
+  border-radius: var(--input-radius) !important;
+  cursor: pointer !important;
+  flex: 0 0 auto !important;
 }
 
 /* ===== ROBUST DRAG & DROP STYLES (Obsidian + Electron compatible) ===== */

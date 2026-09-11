@@ -32,7 +32,7 @@ export class BlacklistRegexTesterModal extends Modal {
     } catch (e) {}
     const controlsRow = contentEl.createDiv();
     controlsRow.style.display = "flex";
-    controlsRow.style.gap = "12px";
+    controlsRow.style.gap = "8px";
     controlsRow.style.flexWrap = "wrap";
     controlsRow.style.alignItems = "center";
     try {

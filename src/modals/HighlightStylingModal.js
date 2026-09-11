@@ -424,6 +424,15 @@ export class HighlightStylingModal extends Modal {
     const bColor = pickerRow.createEl("input", { type: "color" });
     this._tPickerTouched = false;
     this._bPickerTouched = false;
+    // Snapshot whether entry had real colors AT OPEN TIME — used in renderPreview to
+    // prevent picker-default (#000000/#ffffff) values written by syncEntryColorsFromInputs
+    // from being treated as intentional colors. These never change after open.
+    // Polluted groups saved with default black/black (both #000000) are treated as NULL for preview.
+    const isPollutedGroupBothBlackAtOpen = isGroup && String(this.entry?.textColor||"").toLowerCase()==="#000000" && String(this.entry?.backgroundColor||"").toLowerCase()==="#000000";
+    const _openHadRealText = !isPollutedGroupBothBlackAtOpen && !!(this.entry &&
+      ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) ||
+       (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
+    const _openHadRealBg = !isPollutedGroupBothBlackAtOpen && !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
     setColorInputValue(tColor,
       (this.entry &&
         (this.entry.textColor && this.entry.textColor !== "currentColor"
@@ -856,10 +865,12 @@ export class HighlightStylingModal extends Modal {
           span.textContent = txt;
           span.style.display = "inline";
           span.style.opacity = "1";
-          // Keep spans inline so multi-line wrapping can clone highlights correctly
+          // Preview-only fallback for accessibility when group has no style override: show var(--text-normal)
+          span.style.color = "var(--text-normal)";
+          span.style.backgroundColor = "transparent";
           previewWrap.appendChild(span);
         } catch (_) {
-          previewWrap.innerHTML = `<span style="display:inline">${escapeHtml(
+          previewWrap.innerHTML = `<span style="display:inline;color:var(--text-normal)">${escapeHtml(
             txt,
           )}</span>`;
         }
@@ -868,54 +879,73 @@ export class HighlightStylingModal extends Modal {
 
       const tRaw = getColorInputValue(tColor);
       const bRaw = getColorInputValue(bColor);
-      const hasEntryText = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) || (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
-      const hasEntryBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
       const isVarT = tRaw && /^var\(/.test(tRaw.trim());
       const isVarB = bRaw && /^var\(/.test(bRaw.trim());
-      const hasValidT = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarT || hasEntryText || this._tPickerTouched);
-      const hasValidB = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarB || hasEntryBg || this._bPickerTouched);
+      const hasValidT = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarT || _openHadRealText || this._tPickerTouched);
+      const hasValidB = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarB || _openHadRealBg || this._bPickerTouched);
       const t = hasValidT ? tRaw : "var(--text-normal)";
-      const b = hasValidB ? bRaw : "var(--color-accent)";
       const p = this.plugin.getHighlightParams(this.entry);
-      const rgba = this.plugin.hexToRgba(b, p.opacity ?? 25);
+      const opacity = p.opacity ?? 25;
       const radius = p.radius ?? 8;
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
-      const borderStyle =
-        style === "text"
-          ? ""
-          : style === "highlight"
-            ? this.plugin.generateBorderStyle(null, b, this.entry)
-            : this.plugin.generateBorderStyle(t, b, this.entry);
-      const matchStyle =
-        style === "text"
-          ? `color:${t};background:transparent;`
-          : style === "highlight"
-            ? `background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}box-decoration-break: clone; -webkit-box-decoration-break: clone;`
-            : `color:${t};background:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
-      const txt = words.textContent || "";
+      // When bg is NULL or is a CSS var use color-mix() so the browser resolves it natively
+      // instead of hexToRgba which can return black when getComputedStyle hasn't resolved the var yet.
+      const bgCss = hasValidB
+        ? (isVarB ? `color-mix(in srgb, ${bRaw.trim()} ${opacity}%, transparent)` : this.plugin.hexToRgba(bRaw, opacity))
+        : `color-mix(in srgb, var(--color-accent) ${opacity}%, transparent)`;
+      // Border: when text/bg is NULL border must be var(--color-accent) (not var(--text-normal) nor black)
+      const effectiveBForBorder = hasValidB ? bRaw : "var(--color-accent)";
+      const effectiveTForBorder = hasValidT ? tRaw : "var(--color-accent)";
+      const borderStyle = style === "text" ? "" : (style === "highlight"
+            ? this.plugin.generateBorderStyle(null, effectiveBForBorder, this.entry)
+            : this.plugin.generateBorderStyle(effectiveTForBorder, effectiveBForBorder, this.entry));
+      const bdb = "box-decoration-break:clone;-webkit-box-decoration-break:clone;";
       while (previewWrap.firstChild)
         previewWrap.removeChild(previewWrap.firstChild);
       const span = document.createElement("span");
-      span.setAttribute("style", matchStyle);
       span.style.display = "inline";
+      // Set each property individually so CSS variables are resolved natively by the browser
+      if (style === "text") {
+        span.style.setProperty("color", t, "important");
+        span.style.setProperty("background", "transparent", "important");
+      } else if (style === "highlight") {
+        span.style.setProperty("background-color", bgCss, "important");
+        span.style.setProperty("color", "var(--text-normal)", "important");
+        span.style.setProperty("border-radius", radius + "px", "important");
+        span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
+        span.style.setProperty("box-decoration-break", "clone", "important");
+        span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
+      } else {
+        span.style.setProperty("color", t, "important");
+        span.style.setProperty("background-color", bgCss, "important");
+        span.style.setProperty("border-radius", radius + "px", "important");
+        span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
+        span.style.setProperty("box-decoration-break", "clone", "important");
+        span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
+      }
+      if (borderStyle) {
+        borderStyle.split(';').map(s => s.trim()).filter(Boolean).forEach(bs => {
+          // strip embedded !important from value before passing to setProperty
+          const idx = bs.indexOf(':');
+          if (idx === -1) return;
+          const prop = bs.slice(0, idx).trim();
+          const val = bs.slice(idx + 1).trim().replace(/\s*!important\s*$/, '');
+          span.style.setProperty(prop, val, 'important');
+        });
+      }
       const displayText =
         !isGroup && this.entry && this.entry.isRegex && this.entry.presetLabel
           ? this.entry.presetLabel
           : words.textContent || "";
-      
-      // Clear out the span's content before adding text to avoid doubling up
-      span.textContent = "";
       span.textContent = displayText;
       // Apply custom CSS on top if present — use current picker colors, not stored entry colors
       if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
         try {
-          // Build a temporary patched CSS using the current picker values so the
-          // preview reflects the color the user is currently hovering over
           const tempEntry = Object.assign({}, this.entry, {
             color: style === 'text' ? t : '',
             textColor: (style === 'both') ? t : (style === 'highlight' ? 'currentColor' : null),
-            backgroundColor: (style === 'highlight' || style === 'both') ? b : null,
+            backgroundColor: (style === 'highlight' || style === 'both') ? (hasValidB ? bRaw : null) : null,
           });
           const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
           const decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
@@ -927,6 +957,13 @@ export class HighlightStylingModal extends Modal {
             });
           }
         } catch (_) {}
+      }
+      // Final re-enforce: fallback colors must always win over stale customCss values
+      if (!hasValidT && style !== 'highlight') {
+        span.style.setProperty('color', 'var(--text-normal)', 'important');
+      }
+      if (!hasValidB && style !== 'text') {
+        span.style.setProperty('background-color', bgCss, 'important');
       }
       previewWrap.appendChild(span);
     };
@@ -1063,26 +1100,31 @@ export class HighlightStylingModal extends Modal {
       const style = styleSelect.value;
       const curT = getColorInputValue(tColor);
       const curB = getColorInputValue(bColor);
+      // Only treat the picker value as a real color if the user touched it or the
+      // entry already had that color at open time. Without this guard, the browser
+      // default #000000/#ffffff gets written to the entry and hasEntryBg becomes true.
+      const realT = (this._tPickerTouched || _openHadRealText) ? curT : "";
+      const realB = (this._bPickerTouched || _openHadRealBg) ? curB : "";
       this.entry._savedTextColor =
-        curT ||
+        realT ||
         this.entry._savedTextColor ||
         this.entry.color ||
         this.entry.textColor ||
         "";
       this.entry._savedBackgroundColor =
-        curB ||
+        realB ||
         this.entry._savedBackgroundColor ||
         this.entry.backgroundColor ||
         "";
       if (style === "text") {
-        this.entry.color = curT || "";
+        this.entry.color = realT || "";
       } else if (style === "highlight") {
-        this.entry.backgroundColor = curB || "";
+        this.entry.backgroundColor = realB || "";
         this.entry.textColor = "currentColor";
         this.entry.color = "";
       } else {
-        this.entry.textColor = curT || "";
-        this.entry.backgroundColor = curB || "";
+        this.entry.textColor = realT || "";
+        this.entry.backgroundColor = realB || "";
         this.entry.color = "";
       }
     };
@@ -1166,7 +1208,7 @@ export class HighlightStylingModal extends Modal {
             dispatchHighlightColorsChanged();
             renderPreview();
           },
-          isTextPicker ? "text" : "background",
+          "text-and-background",
           this.previewTextOverride || currentColor,
           false,
           this.entry ? this.entry.markTarget : "text",

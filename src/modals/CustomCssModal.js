@@ -510,35 +510,52 @@ export class CustomCssModal extends Modal {
     this._previewSpan.removeAttribute('style');
     this._previewSpan.style.display = 'inline';
 
-    // Apply base text color
-    const tc = (this.entry.textColor && this.entry.textColor !== 'currentColor')
+    // Apply base text color — preview-only fallback to var(--text-normal) when picker NULL for accessibility
+    const isPollutedGroupBothBlackCustom = Array.isArray(this.entry.entries) && String(this.entry.textColor||"").toLowerCase()==="#000000" && String(this.entry.backgroundColor||"").toLowerCase()==="#000000";
+    const rawTc = (this.entry.textColor && this.entry.textColor !== 'currentColor')
       ? this.entry.textColor : this.entry.color;
-    if (tc) this._previewSpan.style.setProperty('color', tc, 'important');
+    const hasValidTc = !isPollutedGroupBothBlackCustom && rawTc && this.plugin.isValidHexColor(rawTc);
+    const tc = hasValidTc ? rawTc : "var(--text-normal)";
+    this._previewSpan.style.setProperty('color', tc, 'important');
 
-    // Apply base background color (skip for text-only entries)
+    // Apply base background color — preview-only fallback to var(--color-accent) when picker NULL
     const styleType = this.entry.styleType || (this.entry.backgroundColor ? 'highlight' : 'text');
-    if (styleType !== 'text' && this.entry.backgroundColor) {
+    if (styleType !== 'text') {
+      const rawBg = this.entry.backgroundColor;
+      const hasValidBg = !isPollutedGroupBothBlackCustom && rawBg && this.plugin.isValidHexColor(rawBg);
+      const isVarBg = rawBg && /^var\(/.test(String(rawBg).trim());
       const p = this.plugin.getHighlightParams(this.entry);
-      const rgba = this.plugin.hexToRgba(this.entry.backgroundColor, p.opacity ?? 35);
+      const opacity = p.opacity ?? 35;
+      // Use color-mix when bg is NULL or is a CSS var so it resolves natively
+      const bgCss = hasValidBg
+        ? (isVarBg ? `color-mix(in srgb, ${String(rawBg).trim()} ${opacity}%, transparent)` : this.plugin.hexToRgba(rawBg, opacity))
+        : `color-mix(in srgb, var(--color-accent) ${opacity}%, transparent)`;
       const radius = p.radius ?? 4;
       const hpad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
 
-      this._previewSpan.style.setProperty('background-color', rgba, 'important');
+      this._previewSpan.style.setProperty('background-color', bgCss, 'important');
       this._previewSpan.style.setProperty('border-radius', `${radius}px`, 'important');
       this._previewSpan.style.setProperty('padding', `${vpad}px ${hpad}px`, 'important');
       this._previewSpan.style.setProperty('box-decoration-break', 'clone', 'important');
       this._previewSpan.style.setProperty('-webkit-box-decoration-break', 'clone', 'important');
 
-      // Add border if enabled
-      if (this.entry.enableBorderThickness || this.plugin.settings.enableBorderThickness) {
-        const borderStyle = this.plugin.generateBorderStyle(tc, this.entry.backgroundColor, this.entry);
+      // Add border with effective fallback vars so NULL never yields black - border must be var(--color-accent) when null
+      if (styleType !== 'text' && (this.entry.enableBorderThickness || this.plugin.settings.enableBorderThickness)) {
+        const rawTc2 = (this.entry.textColor && this.entry.textColor !== 'currentColor')
+          ? this.entry.textColor : this.entry.color;
+        const hasValidTc2 = !isPollutedGroupBothBlackCustom && rawTc2 && this.plugin.isValidHexColor(rawTc2);
+        const effectiveTc2 = hasValidTc2 ? rawTc2 : "var(--color-accent)";
+        const effectiveBg2 = hasValidBg ? rawBg : "var(--color-accent)";
+        const borderStyle = this.plugin.generateBorderStyle(effectiveTc2, effectiveBg2, this.entry);
         if (borderStyle) {
           const parts = borderStyle.split(';').map(s => s.trim()).filter(Boolean);
           for (const part of parts) {
             const idx = part.indexOf(':');
             if (idx === -1) continue;
-            this._previewSpan.style.setProperty(part.slice(0, idx).trim(), part.slice(idx + 1).trim(), 'important');
+            const prop = part.slice(0, idx).trim();
+            const val = part.slice(idx + 1).trim().replace(/\s*!important\s*$/, '');
+            this._previewSpan.style.setProperty(prop, val, 'important');
           }
         }
       }
