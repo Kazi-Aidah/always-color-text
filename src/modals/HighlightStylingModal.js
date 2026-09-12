@@ -3,6 +3,7 @@ import { escapeHtml } from '../utils/debug.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { deriveHighlightCssFromEntry, parseCssIntoEntry, patchCssLayoutFromEntry } from './CustomCssModal.js';
+import { stripInheritedGroupCssColors } from '../services/patternCompiler.js';
 
 function resolveVarToHex(varStr) {
   try {
@@ -395,7 +396,7 @@ export class HighlightStylingModal extends Modal {
     styleSelect.addClass("act-highlight-style-select");
     if (isGroup) {
       const defaultOpt = styleSelect.createEl("option", {
-        text: this.plugin.t("opt_style_default", "Default (Per-Entry)"),
+        text: this.plugin.t("opt_style_default", "Per-Entry"),
       });
       defaultOpt.value = "";
     }
@@ -426,25 +427,35 @@ export class HighlightStylingModal extends Modal {
     this._bPickerTouched = false;
     // Snapshot whether entry had real colors AT OPEN TIME — used in renderPreview to
     // prevent picker-default (#000000/#ffffff) values written by syncEntryColorsFromInputs
-    // from being treated as intentional colors. These never change after open.
+    // from being treated as intentional colors. Stored on `this` (not consts) so
+    // Reset can invalidate them — otherwise stale open-time state keeps forcing
+    // old picker colors into the preview after a reset nulled the colors.
     // Polluted groups saved with default black/black (both #000000) are treated as NULL for preview.
     const isPollutedGroupBothBlackAtOpen = isGroup && String(this.entry?.textColor||"").toLowerCase()==="#000000" && String(this.entry?.backgroundColor||"").toLowerCase()==="#000000";
-    const _openHadRealText = !isPollutedGroupBothBlackAtOpen && !!(this.entry &&
+    this._openHadRealText = !isPollutedGroupBothBlackAtOpen && !!(this.entry &&
       ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) ||
        (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
-    const _openHadRealBg = !isPollutedGroupBothBlackAtOpen && !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+    this._openHadRealBg = !isPollutedGroupBothBlackAtOpen && !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+    // Null-color display: native color inputs cannot show "null", so show the
+    // null black (#000000). The previewWrap (not the picker) shows what null
+    // actually renders as — var(--text-normal) text and var(--color-accent)
+    // highlight/border — for accessibility. Untouched null pickers are still
+    // treated as null by the open-time/touched guards, so this black fill
+    // never persists as a real color.
+    const nullTextDisplay = "#000000";
+    const nullBgDisplay = "#000000";
     setColorInputValue(tColor,
       (this.entry &&
         (this.entry.textColor && this.entry.textColor !== "currentColor"
           ? this.entry.textColor
           : this.plugin.isValidHexColor(this.entry.color)
             ? this.entry.color
-            : "#ffffff")) ||
-      "#ffffff");
+            : nullTextDisplay)) ||
+      nullTextDisplay);
     setColorInputValue(bColor,
       this.entry && this.entry.backgroundColor
         ? this.entry.backgroundColor
-        : "#000000");
+        : nullBgDisplay);
 
     // Listen for color changes from parent EditEntryModal and update in real-time
     const syncColorsFromParent = (evt) => {
@@ -459,11 +470,11 @@ export class HighlightStylingModal extends Modal {
                   ? this.entry.color
                   : "")) ||
             getColorInputValue(tColor) ||
-            "#ffffff";
+            nullTextDisplay;
           const initBgColor =
             (this.entry && (this.entry.backgroundColor || "")) ||
             getColorInputValue(bColor) ||
-            "#000000";
+            nullBgDisplay;
           if (this.plugin.isValidHexColor(initTextColor))
             setColorInputValue(tColor, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
@@ -605,6 +616,12 @@ export class HighlightStylingModal extends Modal {
         this.entry.highlightBorderRadius = Number(radiusInput.value || 0);
       renderPreview();
     });
+    // Instant preview while typing, not just on blur/Enter.
+    radiusInput.addEventListener("input", () => {
+      if (this.entry)
+        this.entry.highlightBorderRadius = Number(radiusInput.value || 0);
+      renderPreview();
+    });
     const radiusReset = radiusInputRight.createEl("button");
     radiusReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
@@ -618,6 +635,53 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     });
     this._handlers.push({ el: radiusInput, ev: "change", fn: () => {} });
+    const shapeLeft = grid.createDiv();
+    shapeLeft.textContent = this.plugin.t(
+      "label_highlight_shape",
+      "Highlight Shape",
+    );
+    const shapeRight = grid.createDiv();
+    const CORNER_SHAPES = [
+      "round",
+      "scoop",
+      "bevel",
+      "notch",
+      "square",
+      "squircle",
+    ];
+    const shapeSel = shapeRight.createEl("select");
+    shapeSel.setAttribute("data-act-corner-shape", "true");
+    CORNER_SHAPES.forEach((value) => {
+      const o = shapeSel.createEl("option", {
+        text: this.plugin.t(
+          "opt_corner_" + value,
+          value.charAt(0).toUpperCase() + value.slice(1),
+        ),
+      });
+      o.value = value;
+    });
+    const initShapeRaw =
+      this.entry && typeof this.entry.cornerShape === "string" && this.entry.cornerShape
+        ? this.entry.cornerShape.toLowerCase()
+        : String(this.plugin.settings.cornerShape ?? "round").toLowerCase();
+    shapeSel.value = CORNER_SHAPES.includes(initShapeRaw) ? initShapeRaw : "round";
+    shapeSel.addEventListener("change", () => {
+      if (this.entry) this.entry.cornerShape = shapeSel.value;
+      renderPreview();
+    });
+    const shapeReset = shapeRight.createEl("button");
+    shapeReset.addClass("act-highlight-reset-btn", "clickable-icon");
+    try {
+      setIcon(shapeReset, "reset");
+    } catch (e) {}
+    shapeReset.addEventListener("click", () => {
+      if (this.entry) this.entry.cornerShape = undefined;
+      shapeSel.value = String(
+        this.plugin.settings.cornerShape ?? "round",
+      ).toLowerCase();
+      if (!CORNER_SHAPES.includes(shapeSel.value)) shapeSel.value = "round";
+      renderPreview();
+    });
     const hPadLeft = grid.createDiv();
     hPadLeft.textContent = this.plugin.t(
       "label_horizontal_padding",
@@ -635,6 +699,11 @@ export class HighlightStylingModal extends Modal {
     hPadInput.addClass("act-highlight-input-small");
     hPadInput.setAttribute("data-act-hpad-input", "true");
     hPadInput.addEventListener("change", () => {
+      if (this.entry)
+        this.entry.highlightHorizontalPadding = Number(hPadInput.value || 0);
+      renderPreview();
+    });
+    hPadInput.addEventListener("input", () => {
       if (this.entry)
         this.entry.highlightHorizontalPadding = Number(hPadInput.value || 0);
       renderPreview();
@@ -668,6 +737,11 @@ export class HighlightStylingModal extends Modal {
     vPadInput.addClass("act-highlight-input-small");
     vPadInput.setAttribute("data-act-vpad-input", "true");
     vPadInput.addEventListener("change", () => {
+      if (this.entry)
+        this.entry.highlightVerticalPadding = Number(vPadInput.value || 0);
+      renderPreview();
+    });
+    vPadInput.addEventListener("input", () => {
       if (this.entry)
         this.entry.highlightVerticalPadding = Number(vPadInput.value || 0);
       renderPreview();
@@ -844,6 +918,11 @@ export class HighlightStylingModal extends Modal {
         this.entry.borderThickness = Number(thickInput.value || 0);
       renderPreview();
     });
+    thickInput.addEventListener("input", () => {
+      if (this.entry)
+        this.entry.borderThickness = Number(thickInput.value || 0);
+      renderPreview();
+    });
     const thickReset = thickRight.createEl("button");
     thickReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
@@ -856,39 +935,27 @@ export class HighlightStylingModal extends Modal {
     });
     const renderPreview = () => {
       const style = styleSelect.value;
-      if (isGroup && !style) {
-        const txt = words.textContent || "";
-        try {
-          while (previewWrap.firstChild)
-            previewWrap.removeChild(previewWrap.firstChild);
-          const span = document.createElement("span");
-          span.textContent = txt;
-          span.style.display = "inline";
-          span.style.opacity = "1";
-          // Preview-only fallback for accessibility when group has no style override: show var(--text-normal)
-          span.style.color = "var(--text-normal)";
-          span.style.backgroundColor = "transparent";
-          previewWrap.appendChild(span);
-        } catch (_) {
-          previewWrap.innerHTML = `<span style="display:inline;color:var(--text-normal)">${escapeHtml(
-            txt,
-          )}</span>`;
-        }
-        return;
-      }
+      // Groups in Default (Per-Entry) mode still impose layout (radius,
+      // shape, padding, opacity, border) on member entries via the compiler,
+      // so preview that geometry with fallback colors instead of plain text —
+      // otherwise radius/shape/etc. controls appear dead in the preview.
+      // Null colors fall back to var(--text-normal) text and
+      // var(--color-accent) background/border (see below).
+      const renderStyle = (isGroup && !style) ? "highlight" : style;
 
       const tRaw = getColorInputValue(tColor);
       const bRaw = getColorInputValue(bColor);
       const isVarT = tRaw && /^var\(/.test(tRaw.trim());
       const isVarB = bRaw && /^var\(/.test(bRaw.trim());
-      const hasValidT = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarT || _openHadRealText || this._tPickerTouched);
-      const hasValidB = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarB || _openHadRealBg || this._bPickerTouched);
+      const hasValidT = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarT || this._openHadRealText || this._tPickerTouched);
+      const hasValidB = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarB || this._openHadRealBg || this._bPickerTouched);
       const t = hasValidT ? tRaw : "var(--text-normal)";
       const p = this.plugin.getHighlightParams(this.entry);
       const opacity = p.opacity ?? 25;
       const radius = p.radius ?? 8;
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
+      const cornerShape = p.cornerShape ?? "round";
       // When bg is NULL or is a CSS var use color-mix() so the browser resolves it natively
       // instead of hexToRgba which can return black when getComputedStyle hasn't resolved the var yet.
       const bgCss = hasValidB
@@ -897,7 +964,7 @@ export class HighlightStylingModal extends Modal {
       // Border: when text/bg is NULL border must be var(--color-accent) (not var(--text-normal) nor black)
       const effectiveBForBorder = hasValidB ? bRaw : "var(--color-accent)";
       const effectiveTForBorder = hasValidT ? tRaw : "var(--color-accent)";
-      const borderStyle = style === "text" ? "" : (style === "highlight"
+      const borderStyle = renderStyle === "text" ? "" : (renderStyle === "highlight"
             ? this.plugin.generateBorderStyle(null, effectiveBForBorder, this.entry)
             : this.plugin.generateBorderStyle(effectiveTForBorder, effectiveBForBorder, this.entry));
       const bdb = "box-decoration-break:clone;-webkit-box-decoration-break:clone;";
@@ -906,13 +973,14 @@ export class HighlightStylingModal extends Modal {
       const span = document.createElement("span");
       span.style.display = "inline";
       // Set each property individually so CSS variables are resolved natively by the browser
-      if (style === "text") {
+      if (renderStyle === "text") {
         span.style.setProperty("color", t, "important");
         span.style.setProperty("background", "transparent", "important");
-      } else if (style === "highlight") {
+      } else if (renderStyle === "highlight") {
         span.style.setProperty("background-color", bgCss, "important");
         span.style.setProperty("color", "var(--text-normal)", "important");
         span.style.setProperty("border-radius", radius + "px", "important");
+        if (cornerShape && cornerShape !== "round") span.style.setProperty("corner-shape", cornerShape, "important");
         span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
         span.style.setProperty("box-decoration-break", "clone", "important");
         span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
@@ -920,6 +988,7 @@ export class HighlightStylingModal extends Modal {
         span.style.setProperty("color", t, "important");
         span.style.setProperty("background-color", bgCss, "important");
         span.style.setProperty("border-radius", radius + "px", "important");
+        if (cornerShape && cornerShape !== "round") span.style.setProperty("corner-shape", cornerShape, "important");
         span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
         span.style.setProperty("box-decoration-break", "clone", "important");
         span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
@@ -943,12 +1012,23 @@ export class HighlightStylingModal extends Modal {
       if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
         try {
           const tempEntry = Object.assign({}, this.entry, {
-            color: style === 'text' ? t : '',
-            textColor: (style === 'both') ? t : (style === 'highlight' ? 'currentColor' : null),
-            backgroundColor: (style === 'highlight' || style === 'both') ? (hasValidB ? bRaw : null) : null,
+            color: renderStyle === 'text' ? t : '',
+            textColor: (renderStyle === 'both') ? t : (renderStyle === 'highlight' ? 'currentColor' : null),
+            backgroundColor: (renderStyle === 'highlight' || renderStyle === 'both') ? (hasValidB ? bRaw : null) : null,
           });
           const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
-          const decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
+          let decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
+          // Per-entry groups must preview without group CSS colors: a stale
+          // auto-derived `color:` (e.g. orange from a reset forced type) would
+          // otherwise repaint the preview. Layout still previews, with the
+          // border in var(--color-accent) for accessibility.
+          if (decl && isGroup && !style) {
+            try {
+              decl = this.plugin.sanitizeCssDeclarations(
+                stripInheritedGroupCssColors(decl, "var(--color-accent)"),
+              );
+            } catch (_) {}
+          }
           if (decl) {
             decl.split(";").map(s => s.trim()).filter(Boolean).forEach(p => {
               const idx = p.indexOf(":");
@@ -959,15 +1039,25 @@ export class HighlightStylingModal extends Modal {
         } catch (_) {}
       }
       // Final re-enforce: fallback colors must always win over stale customCss values
-      if (!hasValidT && style !== 'highlight') {
+      if (!hasValidT && renderStyle !== 'highlight') {
         span.style.setProperty('color', 'var(--text-normal)', 'important');
       }
-      if (!hasValidB && style !== 'text') {
+      if (!hasValidB && renderStyle !== 'text') {
         span.style.setProperty('background-color', bgCss, 'important');
       }
       previewWrap.appendChild(span);
     };
+    const updateStyleSelectHeight = () => {
+      // Per-entry groups hide the color pickers, so let the dropdown fill
+      // the column height for a prettier UI. Any other type keeps its
+      // natural height.
+      try {
+        styleSelect.style.height =
+          isGroup && !styleSelect.value ? "100%" : "";
+      } catch (_) {}
+    };
     const updatePickerVisibility = () => {
+      updateStyleSelectHeight();
       const style = styleSelect.value;
       if (style === "text") {
         tColor.style.display = "inline-block";
@@ -999,7 +1089,7 @@ export class HighlightStylingModal extends Modal {
       const presetHandler = () => {
         new TextStylePresetsModal(this.app, this.plugin, (preset) => {
           if (!preset || !this.entry) return;
-          const shapeKeys = ["styleType","backgroundOpacity","highlightBorderRadius","highlightHorizontalPadding","highlightVerticalPadding","enableBorderThickness","borderStyle","borderLineStyle","borderOpacity","borderThickness","customCss"];
+          const shapeKeys = ["styleType","backgroundOpacity","highlightBorderRadius","cornerShape","highlightHorizontalPadding","highlightVerticalPadding","enableBorderThickness","borderStyle","borderLineStyle","borderOpacity","borderThickness","customCss"];
           for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
           // Colors: only apply if preset has them, preserve entry colors otherwise
           if ("textColor" in preset) this.entry.textColor = preset.textColor;
@@ -1019,6 +1109,7 @@ export class HighlightStylingModal extends Modal {
           try { if (bColor) { const bv = (this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor) ? this.entry.backgroundColor : getColorInputValue(bColor)); if (bv) setColorInputValue(bColor, bv); } } catch(_){}
           try { opacitySlider.value = String(this.entry.backgroundOpacity ?? this.plugin.settings.backgroundOpacity ?? 35); } catch(_){}
           try { radiusInput.value = String(this.entry.highlightBorderRadius ?? this.plugin.settings.highlightBorderRadius ?? 4); } catch(_){}
+          try { shapeSel.value = String(this.entry.cornerShape ?? this.plugin.settings.cornerShape ?? "round").toLowerCase(); } catch(_){}
           try { hPadInput.value = String(this.entry.highlightHorizontalPadding ?? this.plugin.settings.highlightHorizontalPadding ?? 4); } catch(_){}
           try { vPadInput.value = String(this.entry.highlightVerticalPadding ?? this.plugin.settings.highlightVerticalPadding ?? 0); } catch(_){}
           try { enableChk.checked = !! (typeof this.entry.enableBorderThickness !== "undefined" ? this.entry.enableBorderThickness : this.plugin.settings.enableBorderThickness); } catch(_){}
@@ -1046,6 +1137,7 @@ export class HighlightStylingModal extends Modal {
       if (this.entry) {
         this.entry.backgroundOpacity = undefined;
         this.entry.highlightBorderRadius = undefined;
+        this.entry.cornerShape = undefined;
         this.entry.highlightHorizontalPadding = undefined;
         this.entry.highlightVerticalPadding = undefined;
         this.entry.enableBorderThickness = undefined;
@@ -1062,6 +1154,18 @@ export class HighlightStylingModal extends Modal {
         }
       }
       this._resetAllApplied = true;
+      // Recompute color state from the entry's CURRENT (just-cleared) colors
+      // so the preview falls back to var(--text-normal) text and
+      // var(--color-accent) background/border instead of forcibly
+      // re-applying stale picker values (#ffffff/#000000) via open-time
+      // snapshots or earlier picker touches. Entries whose colors survive a
+      // reset keep previewing those colors.
+      this._openHadRealText = !!(this.entry &&
+        ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) ||
+         (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
+      this._openHadRealBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+      this._tPickerTouched = false;
+      this._bPickerTouched = false;
       try {
         opacitySlider.value = String(
           this.plugin.settings.backgroundOpacity ?? 35,
@@ -1069,6 +1173,11 @@ export class HighlightStylingModal extends Modal {
         radiusInput.value = String(
           this.plugin.settings.highlightBorderRadius ?? 4,
         );
+        try {
+          shapeSel.value = String(
+            this.plugin.settings.cornerShape ?? "round",
+          ).toLowerCase();
+        } catch (_) {}
         hPadInput.value = String(
           this.plugin.settings.highlightHorizontalPadding ?? 4,
         );
@@ -1084,6 +1193,9 @@ export class HighlightStylingModal extends Modal {
         if (isGroup) {
           styleSelect.value = "";
           pickerRow.style.display = "none";
+          try {
+            updateStyleSelectHeight();
+          } catch (_) {}
         }
       } catch (_) {}
       renderPreview();
@@ -1103,8 +1215,8 @@ export class HighlightStylingModal extends Modal {
       // Only treat the picker value as a real color if the user touched it or the
       // entry already had that color at open time. Without this guard, the browser
       // default #000000/#ffffff gets written to the entry and hasEntryBg becomes true.
-      const realT = (this._tPickerTouched || _openHadRealText) ? curT : "";
-      const realB = (this._bPickerTouched || _openHadRealBg) ? curB : "";
+      const realT = (this._tPickerTouched || this._openHadRealText) ? curT : "";
+      const realB = (this._bPickerTouched || this._openHadRealBg) ? curB : "";
       this.entry._savedTextColor =
         realT ||
         this.entry._savedTextColor ||
@@ -1161,28 +1273,26 @@ export class HighlightStylingModal extends Modal {
                 ? result.backgroundColor
                 : null;
 
-            const fallback =
-              color && this.plugin.isValidHexColor(color) ? color : null;
-            let changed = false;
-
+            // The nested picker is authoritative: a null side means that panel
+            // was reset (untouched panels keep their prefilled valid color, so
+            // null can only come from an explicit Reset). Clearing must remove
+            // hex/var codes and show null black — never restore the old color.
             if (tc) {
               setColorInputValue(tColor, tc);
               this._tPickerTouched = true;
-              changed = true;
-            } else if (fallback && isTextPicker) {
-              setColorInputValue(tColor, fallback);
-              this._tPickerTouched = true;
-              changed = true;
+            } else {
+              setColorInputValue(tColor, "#000000");
+              this._tPickerTouched = false;
+              this._openHadRealText = false;
             }
 
             if (bc) {
               setColorInputValue(bColor, bc);
               this._bPickerTouched = true;
-              changed = true;
-            } else if (fallback && !isTextPicker) {
-              setColorInputValue(bColor, fallback);
-              this._bPickerTouched = true;
-              changed = true;
+            } else {
+              setColorInputValue(bColor, "#000000");
+              this._bPickerTouched = false;
+              this._openHadRealBg = false;
             }
 
             if (result && result.markTarget) {
@@ -1198,13 +1308,6 @@ export class HighlightStylingModal extends Modal {
               }
             }
 
-            if (!changed) {
-              if (currentColor && this.plugin.isValidHexColor(currentColor)) {
-                if (isTextPicker) setColorInputValue(tColor, currentColor);
-                else setColorInputValue(bColor, currentColor);
-              }
-            }
-
             dispatchHighlightColorsChanged();
             renderPreview();
           },
@@ -1215,13 +1318,20 @@ export class HighlightStylingModal extends Modal {
           this.entry,
         );
         modal._hideHeaderControls = true;
-        const preT = getColorInputValue(tColor);
-        const preB = getColorInputValue(bColor);
-        if (preT) modal._preFillTextColor = preT;
-        if (preB) {
-          modal._preFillBgColor = preB;
-          modal._preFillBorderColor = preB;
-        }
+        // Only prefill real colors — never the null-black display fill.
+        // Otherwise a reset-to-null entry reopens with #000000 ghosted as real.
+        try {
+          const _e = this.entry;
+          const _realT = (_e && ((_e.textColor && _e.textColor !== "currentColor" && this.plugin.isValidHexColor(_e.textColor)) ? _e.textColor : (this.plugin.isValidHexColor(_e.color) ? _e.color : null)))
+            || ((this._tPickerTouched || this._openHadRealText) ? getColorInputValue(tColor) : null);
+          const _realB = (_e && _e.backgroundColor && this.plugin.isValidHexColor(_e.backgroundColor) ? _e.backgroundColor : null)
+            || ((this._bPickerTouched || this._openHadRealBg) ? getColorInputValue(bColor) : null);
+          if (_realT && this.plugin.isValidHexColor(_realT)) modal._preFillTextColor = _realT;
+          if (_realB && this.plugin.isValidHexColor(_realB)) {
+            modal._preFillBgColor = _realB;
+            modal._preFillBorderColor = _realB;
+          }
+        } catch (_) {}
         modal.open();
       });
     };
@@ -1255,12 +1365,12 @@ export class HighlightStylingModal extends Modal {
                 ? this.entry.textColor
                 : this.plugin.isValidHexColor(this.entry.color)
                   ? this.entry.color
-                  : "#ffffff")) ||
-            "#ffffff";
+                  : nullTextDisplay)) ||
+            nullTextDisplay;
           const initBgColor =
             this.entry && this.entry.backgroundColor
               ? this.entry.backgroundColor
-              : "#000000";
+              : nullBgDisplay;
           if (this.plugin.isValidHexColor(initTextColor))
             setColorInputValue(tColor, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
@@ -1287,24 +1397,37 @@ export class HighlightStylingModal extends Modal {
           this.entry.textColor = undefined;
           this.entry.backgroundColor = undefined;
           pickerRow.style.display = "none";
+          try {
+            updateStyleSelectHeight();
+          } catch (_) {}
         } else {
           this.entry.styleType = st;
           pickerRow.style.display = "";
           try {
+            updateStyleSelectHeight();
+          } catch (_) {}
+          try {
             updatePickerVisibility();
           } catch (_) {}
+          // Groups: a null group color must stay null so member entries'
+          // own colours apply. Only write picker values when the picker was
+          // touched or the group already had a real color at open time —
+          // otherwise the native input's default (#ffffff/#000000) would
+          // pollute the group and override every entry (e.g. black bg).
+          const tHad = this._tPickerTouched || this._openHadRealText;
+          const bHad = this._bPickerTouched || this._openHadRealBg;
           if (st === "text") {
-            this.entry.color = getColorInputValue(tColor) || "";
+            this.entry.color = isGroup && !tHad ? undefined : (getColorInputValue(tColor) || "");
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = getColorInputValue(bColor) || "";
+            this.entry.backgroundColor = isGroup && !bHad ? undefined : (getColorInputValue(bColor) || "");
           } else {
             this.entry.color = "";
-            this.entry.textColor = getColorInputValue(tColor) || "";
-            this.entry.backgroundColor = getColorInputValue(bColor) || "";
+            this.entry.textColor = isGroup && !tHad ? undefined : (getColorInputValue(tColor) || "");
+            this.entry.backgroundColor = isGroup && !bHad ? undefined : (getColorInputValue(bColor) || "");
           }
         }
       }
@@ -1319,12 +1442,63 @@ export class HighlightStylingModal extends Modal {
     const saveData = async (shouldClose = true) => {
       if (this.entry) {
         // Persist style type and picker choices into entry
-        const st = styleSelect.value;
+        let st = styleSelect.value;
+        // Validity predicate shared by narrowing (groups) and saving below:
+        // a picker value only counts as a real color for vars, touched
+        // pickers, or entries that already held a real color at open time.
+        // Untouched null-black display fills (#000000) never count.
+        const tRawPeek = getColorInputValue(tColor);
+        const bRawPeek = getColorInputValue(bColor);
+        const hasEntryTextPeek = !!(
+          this.entry &&
+          ((this.entry.textColor &&
+            this.entry.textColor !== "currentColor" &&
+            this.plugin.isValidHexColor(this.entry.textColor)) ||
+            (this.entry.color && this.plugin.isValidHexColor(this.entry.color)))
+        );
+        const hasEntryBgPeek = !!(
+          this.entry &&
+          this.entry.backgroundColor &&
+          this.plugin.isValidHexColor(this.entry.backgroundColor)
+        );
+        const isVarPeek = (v) => v && /^var\(/.test(String(v).trim());
+        const validTPeek =
+          tRawPeek &&
+          this.plugin.isValidHexColor(tRawPeek) &&
+          (isVarPeek(tRawPeek) || hasEntryTextPeek || this._tPickerTouched);
+        const validBPeek =
+          bRawPeek &&
+          this.plugin.isValidHexColor(bRawPeek) &&
+          (isVarPeek(bRawPeek) || hasEntryBgPeek || this._bPickerTouched);
+        if (isGroup && st) {
+          // Narrow a forced group type by availability: a forced channel with
+          // a null/reset color must not apply — it would otherwise strip
+          // members of their own colours with nothing to force with.
+          if (st === "text" && !validTPeek) st = "";
+          else if (st === "highlight" && !validBPeek) st = "";
+          else if (st === "both")
+            st =
+              validTPeek && validBPeek
+                ? "both"
+                : validTPeek
+                  ? "text"
+                  : validBPeek
+                    ? "highlight"
+                    : "";
+        }
         if (isGroup && !st) {
           this.entry.styleType = undefined;
           this.entry.color = undefined;
           this.entry.textColor = undefined;
           this.entry.backgroundColor = undefined;
+          // Drop stale auto-derived CSS colors (e.g. orange from a previous
+          // forced type) so per-entry members keep their own colours; layout
+          // declarations are preserved by the sync.
+          if (this.entry.customCss) {
+            try {
+              this.plugin.syncEntryCssFromColors(this.entry);
+            } catch (_) {}
+          }
         } else {
           const tRawSave = getColorInputValue(tColor);
           const bRawSave = getColorInputValue(bColor);
@@ -1334,28 +1508,47 @@ export class HighlightStylingModal extends Modal {
           const isVarBSave = bRawSave && /^var\(/.test(bRawSave.trim());
           const hasValidTSave = tRawSave && this.plugin.isValidHexColor(tRawSave) && (isVarTSave || hasEntryTextSave || this._tPickerTouched);
           const hasValidBSave = bRawSave && this.plugin.isValidHexColor(bRawSave) && (isVarBSave || hasEntryBgSave || this._bPickerTouched);
-          // When style needs a color but picker is null, save var(--text-normal)/var(--color-accent) for preview consistency
+          // When style needs a color but picker is null, save var(--text-normal)/var(--color-accent) for preview consistency.
+          // Groups are exempt: a null group color must stay null (undefined)
+          // so it is ignored and member entries' own colours apply. Saving a
+          // placeholder var here would override every entry in the group.
           const effectiveTSave = hasValidTSave ? tRawSave : "var(--text-normal)";
           const effectiveBSave = hasValidBSave ? bRawSave : "var(--color-accent)";
           this.entry.styleType = st;
           if (st === "text") {
-            this.entry.color = hasValidTSave ? tRawSave : "var(--text-normal)";
+            this.entry.color = hasValidTSave ? tRawSave : (isGroup ? undefined : "var(--text-normal)");
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = hasValidBSave ? bRawSave : "var(--color-accent)";
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : (isGroup ? undefined : "var(--color-accent)");
           } else {
             this.entry.color = "";
-            this.entry.textColor = hasValidTSave ? tRawSave : "var(--text-normal)";
-            this.entry.backgroundColor = hasValidBSave ? bRawSave : "var(--color-accent)";
+            this.entry.textColor = hasValidTSave ? tRawSave : (isGroup ? undefined : "var(--text-normal)");
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : (isGroup ? undefined : "var(--color-accent)");
+          }
+          if (isGroup) {
+            // Collapse a both-black text+background combo (native picker
+            // defaults saved as #000000/#000000) back to null. A single
+            // black (e.g. black text on red) is legitimate and is kept.
+            const _gT = st === "text" ? this.entry.color : this.entry.textColor;
+            const _gB = this.entry.backgroundColor;
+            if (
+              String(_gT || "").toLowerCase() === "#000000" &&
+              String(_gB || "").toLowerCase() === "#000000"
+            ) {
+              if (st === "text") this.entry.color = undefined;
+              else this.entry.textColor = undefined;
+              this.entry.backgroundColor = undefined;
+            }
           }
         }
         // Save highlight styling parameters
         if (this._resetAllApplied) {
           this.entry.backgroundOpacity = undefined;
           this.entry.highlightBorderRadius = undefined;
+          this.entry.cornerShape = undefined;
           this.entry.highlightHorizontalPadding = undefined;
           this.entry.highlightVerticalPadding = undefined;
           this.entry.enableBorderThickness = undefined;
@@ -1385,6 +1578,7 @@ export class HighlightStylingModal extends Modal {
 
           this.entry.backgroundOpacity = rawOpacity;
           this.entry.highlightBorderRadius = rawRadius;
+          this.entry.cornerShape = shapeSel.value || (this.plugin.settings.cornerShape ?? "round");
           this.entry.highlightHorizontalPadding = rawHPad;
           this.entry.highlightVerticalPadding = rawVPad;
           this.entry.enableBorderThickness = !!enableChk.checked;
@@ -1394,6 +1588,20 @@ export class HighlightStylingModal extends Modal {
             lineSel.value || (this.plugin.settings.borderLineStyle ?? "solid");
           this.entry.borderOpacity = rawBOpacity;
           this.entry.borderThickness = rawBThickness;
+        }
+
+        // If entry has customCss, patch only the color/layout properties that
+        // HighlightStylingModal controls — preserve any user-added custom properties.
+        // Runs for entries AND groups so a stale border-radius/padding in
+        // customCss can't silently override the saved styling (custom CSS wins
+        // at render time).
+        if (this.entry.customCss) {
+          try { this.plugin.syncEntryCssFromColors(this.entry); } catch (_) {}
+          // Also patch padding/radius/border/corner-shape from the updated structured fields
+          try {
+            const patched = patchCssLayoutFromEntry(this.entry.customCss, this.entry, this.plugin);
+            this.entry.customCss = patched;
+          } catch (_) {}
         }
 
         // Find and update entry in the settings array using uid
@@ -1453,6 +1661,8 @@ export class HighlightStylingModal extends Modal {
           foundArray[foundIdx].backgroundOpacity = this.entry.backgroundOpacity;
           foundArray[foundIdx].highlightBorderRadius =
             this.entry.highlightBorderRadius;
+          foundArray[foundIdx].cornerShape =
+            this.entry.cornerShape;
           foundArray[foundIdx].highlightHorizontalPadding =
             this.entry.highlightHorizontalPadding;
           foundArray[foundIdx].highlightVerticalPadding =
@@ -1463,16 +1673,38 @@ export class HighlightStylingModal extends Modal {
           foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
           foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
           foundArray[foundIdx].borderThickness = this.entry.borderThickness;
-          // If entry has customCss, patch only the color/layout properties that
-          // HighlightStylingModal controls — preserve any user-added custom properties
-          if (this.entry.customCss) {
-            try { this.plugin.syncEntryCssFromColors(this.entry); } catch (_) {}
-            // Also patch padding/radius/border from the updated structured fields
-            try {
-              const patched = patchCssLayoutFromEntry(this.entry.customCss, this.entry, this.plugin);
-              this.entry.customCss = patched;
-            } catch (_) {}
-            foundArray[foundIdx].customCss = this.entry.customCss;
+          foundArray[foundIdx].customCss = this.entry.customCss;
+        }
+
+        // Groups: this.entry may itself be a word group (has .entries). The
+        // uid lookup above only matches member entries, so without this the
+        // group styling save silently persisted nothing to settings.
+        if (
+          isGroup &&
+          this.entry &&
+          this.entry.uid &&
+          Array.isArray(this.plugin.settings.wordEntryGroups)
+        ) {
+          const gIdx = this.plugin.settings.wordEntryGroups.findIndex(
+            (g) => g && g.uid === this.entry.uid,
+          );
+          if (gIdx !== -1) {
+            const g = this.plugin.settings.wordEntryGroups[gIdx];
+            g.styleType = this.entry.styleType;
+            g.color = this.entry.color;
+            g.textColor = this.entry.textColor;
+            g.backgroundColor = this.entry.backgroundColor;
+            g.backgroundOpacity = this.entry.backgroundOpacity;
+            g.highlightBorderRadius = this.entry.highlightBorderRadius;
+            g.cornerShape = this.entry.cornerShape;
+            g.highlightHorizontalPadding = this.entry.highlightHorizontalPadding;
+            g.highlightVerticalPadding = this.entry.highlightVerticalPadding;
+            g.enableBorderThickness = this.entry.enableBorderThickness;
+            g.borderStyle = this.entry.borderStyle;
+            g.borderLineStyle = this.entry.borderLineStyle;
+            g.borderOpacity = this.entry.borderOpacity;
+            g.borderThickness = this.entry.borderThickness;
+            g.customCss = this.entry.customCss;
           }
         }
 

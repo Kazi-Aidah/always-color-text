@@ -19,6 +19,7 @@ import { TextStylePresetsModal } from '../modals/TextStylePresetsModal.js';
 import { CommandVisibilityModal } from '../modals/CommandVisibilityModal.js';
 import { ThemeFixerAdjustModal } from '../modals/ThemeFixerAdjustModal.js';
 import { debugLog, debugError } from '../utils/debug.js';
+import { stripInheritedGroupCssColors } from '../services/patternCompiler.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
@@ -179,6 +180,9 @@ export class ColorSettingTab extends PluginSettingTab {
     this._entriesSearchMatch = "contains";
     // Color targeting mode filter (null = no filter, 'text', 'line', 'child')
     this._colorTargetFilter = null;
+    // Active/inactive entry filter via limit tokens (off = deactivated only, on = active only)
+    this._entriesActiveOnly = false;
+    this._entriesInactiveOnly = false;
     // Word groups limit and filter state
     this._groupLimit = 0;
     this._groupColorTargetFilter = null;
@@ -214,6 +218,7 @@ export class ColorSettingTab extends PluginSettingTab {
       row.style.alignItems = "center";
       row.style.gap = "8px";
       row.style.marginBottom = "8px";
+      if (entry.active === false) row.style.opacity = "0.55";
 
       // Determine entry kind: markdown (targetElement) > regex > word
       const kind = entry.targetElement
@@ -648,6 +653,7 @@ export class ColorSettingTab extends PluginSettingTab {
           } catch (e) {
             dup.uid = Date.now();
           }
+          if (dup.active === false) dup.active = true;
           this.plugin.settings.wordEntries.splice(idx + 1, 0, dup);
           await this.plugin.saveSettings();
           this.plugin.compileWordEntries();
@@ -788,6 +794,37 @@ export class ColorSettingTab extends PluginSettingTab {
                   },
                 );
                 modal.open();
+              });
+          });
+          const entryIsActive = entry.active !== false;
+          menu.addItem((item) => {
+            item
+              .setTitle(
+                entryIsActive
+                  ? this.plugin.t("deactivate_entry", "Deactivate Entry")
+                  : this.plugin.t("activate_entry", "Activate Entry"),
+              )
+              .setIcon(entryIsActive ? "eye-off" : "eye")
+              .onClick(async () => {
+                try { menu.hide(); } catch (_) {}
+                try {
+                  const idx = resolveIdx();
+                  const target =
+                    idx !== -1
+                      ? this.plugin.settings.wordEntries[idx]
+                      : entry;
+                  target.active = target.active === false ? true : false;
+                  entry.active = target.active;
+                  await this.plugin.saveSettings();
+                  this.plugin.compileWordEntries();
+                  this.plugin.compileTextBgColoringEntries();
+                  this.plugin.reconfigureEditorExtensions();
+                  this.plugin.forceRefreshAllEditors();
+                  this.plugin.forceRefreshAllReadingViews();
+                  this._refreshEntries();
+                } catch (e) {
+                  debugError("SETTINGS", "toggle entry active error", e);
+                }
               });
           });
           menu.addItem((item) => {
@@ -4115,6 +4152,12 @@ export class ColorSettingTab extends PluginSettingTab {
           (e) => (e.markTarget || "text") === this._colorTargetFilter,
         );
       }
+      // Apply active/inactive filter (off=deactivated only, on=active only)
+      if (this._entriesInactiveOnly) {
+        finalFiltered = finalFiltered.filter((e) => e && e.active === false);
+      } else if (this._entriesActiveOnly) {
+        finalFiltered = finalFiltered.filter((e) => !e || e.active !== false);
+      }
 
       if (!this._suspendSorting && this._wordsSortMode === "a-z") {
         finalFiltered.sort((a, b) => {
@@ -4464,8 +4507,6 @@ export class ColorSettingTab extends PluginSettingTab {
             else if (hasBg) styleType = "highlight";
             else styleType = "text";
           }
-          const isTextOnly = styleType === "text";
-          const isHighlightOnly = styleType === "highlight";
           const tRaw =
             group.textColor && group.textColor !== "currentColor"
               ? group.textColor
@@ -4476,6 +4517,13 @@ export class ColorSettingTab extends PluginSettingTab {
           const isPollutedGroupBothBlack = styleType === "both" && String(tRaw).toLowerCase() === "#000000" && String(bRaw).toLowerCase() === "#000000";
           const hasValidTRaw = !isPollutedGroupBothBlack && tRaw && this.plugin.isValidHexColor(tRaw);
           const hasValidBRaw = !isPollutedGroupBothBlack && bRaw && this.plugin.isValidHexColor(bRaw);
+          // Per-entry groups (no colortype, no colors) preview as theme text +
+          // accent highlight/border so layout (radius/border/padding) is
+          // visible; they must never show a transparent empty box.
+          const isPerEntryPreview = !group.styleType && !hasValidTRaw && !hasValidBRaw;
+          if (isPerEntryPreview) styleType = "both";
+          const isTextOnly = styleType === "text";
+          const isHighlightOnly = styleType === "highlight";
           const effectiveTRaw = hasValidTRaw ? tRaw : "var(--text-normal)";
           const effectiveBRaw = hasValidBRaw ? bRaw : "var(--color-accent)";
           // Respect styleType for what is displayed, but use fallback when NULL
@@ -4532,7 +4580,14 @@ export class ColorSettingTab extends PluginSettingTab {
           // Apply custom CSS on top
           if (group.customCss) {
             try {
-              const decl = this.plugin.sanitizeCssDeclarations(group.customCss);
+              let decl = this.plugin.sanitizeCssDeclarations(group.customCss);
+              // Per-entry preview must not repaint via stale group CSS colors
+              // (e.g. orange from a reset forced type); layout still previews.
+              if (decl && isPerEntryPreview) {
+                decl = this.plugin.sanitizeCssDeclarations(
+                  stripInheritedGroupCssColors(decl, "var(--color-accent)"),
+                );
+              }
               if (decl) {
                 decl.split(";").map(s => s.trim()).filter(Boolean).forEach(part => {
                   const idx = part.indexOf(":");
@@ -7134,7 +7189,7 @@ export class ColorSettingTab extends PluginSettingTab {
       );
       entriesLimitInput.title = this.plugin.t(
         "limit_input_tooltip",
-        "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child",
+        "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child; off=deactivated; on=active",
       );
       entriesLimitInput.style.width = "64px";
       entriesLimitInput.style.padding = "6px";
@@ -7161,6 +7216,8 @@ export class ColorSettingTab extends PluginSettingTab {
         this._entriesMatchTypeStartsWith = false;
         this._entriesMatchTypeEndsWith = false;
         this._entriesMatchTypeExact = false;
+        this._entriesActiveOnly = false;
+        this._entriesInactiveOnly = false;
         for (const tok of parts) {
           // Check longer tokens first to avoid partial matches
           if (tok === "ct") { this._colorTargetFilter = "text"; }
@@ -7168,6 +7225,8 @@ export class ColorSettingTab extends PluginSettingTab {
           else if (tok === "cc") { this._colorTargetFilter = "nextLine"; }
           else if (tok === "sw") { this._entriesMatchTypeStartsWith = true; }
           else if (tok === "ew") { this._entriesMatchTypeEndsWith = true; }
+          else if (tok === "off" || tok === "inactive") { this._entriesInactiveOnly = true; }
+          else if (tok === "on" || tok === "active") { this._entriesActiveOnly = true; }
           else if (tok === "r") { this._entriesRegexOnly = true; }
           else if (tok === "w") { this._entriesWordsOnly = true; }
           else if (tok === "h") { this._filterMode = "highlight"; }

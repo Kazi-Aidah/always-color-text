@@ -2,6 +2,145 @@ import { REGEX_CONSTANTS, EDITOR_PERFORMANCE_CONSTANTS } from '../core/constants
 import { debugLog, debugError, debugWarn } from '../utils/debug.js';
 import { RegexCache } from '../utils/RegexCache.js';
 
+/**
+ * Resolve a word group's color forcing for member entries.
+ *
+ * Colortype semantics (user-confirmed):
+ * - per-entry (no styleType): group colors do not apply; members keep their own.
+ * - "text":      all members are forced to the group's text color, no highlight.
+ * - "highlight": all members use the group's highlight color, no text color.
+ * - "both":      members use both group colors.
+ *
+ * A forced channel with a null/reset group color does NOT apply — forcing is
+ * narrowed by availability ("both" with only text becomes "text", etc., and a
+ * forced type with nothing set behaves like per-entry) so a reset group color
+ * never strips members of their own colours.
+ *
+ * Highlight layout (opacity/radius/shape/padding/border) is intentionally NOT
+ * part of forcing: it applies whenever set on the group, independent of the
+ * colortype, and is ignored only when reset (undefined).
+ */
+export function resolveGroupColorOverride(group, isValidHex) {
+  const isValid = (c) => {
+    try {
+      return !!isValidHex(c);
+    } catch (_) {
+      return false;
+    }
+  };
+  // Null group colors are ignored so member entries' own colours apply.
+  // A both-black text+background combo is treated as polluted-null: native
+  // color inputs default to #000000, so groups saved without ever picking
+  // colors carry #000000/#000000. A single black (e.g. black text on a red
+  // highlight) is a legitimate override and still applies.
+  const polluted =
+    String(group.textColor || "").toLowerCase() === "#000000" &&
+    String(group.backgroundColor || "").toLowerCase() === "#000000";
+  let text = null;
+  let bg = null;
+  if (!polluted) {
+    if (
+      group.textColor &&
+      group.textColor !== "currentColor" &&
+      isValid(group.textColor)
+    ) {
+      text = group.textColor;
+    } else if (isValid(group.color)) {
+      text = group.color;
+    }
+    if (isValid(group.backgroundColor)) bg = group.backgroundColor;
+  }
+  const declared = group.styleType || "";
+  let type = "";
+  if (declared === "text") type = text ? "text" : "";
+  else if (declared === "highlight") type = bg ? "highlight" : "";
+  else if (declared === "both")
+    type = text && bg ? "both" : text ? "text" : bg ? "highlight" : "";
+  else if (!declared && (text || bg)) type = "legacy";
+  return { text, bg, type, polluted };
+}
+
+/**
+ * Strip color declarations from an inherited group customCss for members of an
+ * unforced (per-entry / forced-but-reset) group. Layout declarations
+ * (padding, radius, shape, border geometry) are preserved; border color tokens
+ * become member-relative `currentColor`. Without this, a group customCss
+ * auto-derived from earlier (now reset) group colors keeps tinting members —
+ * e.g. a stale `color: #fa8231` painting every member orange.
+ */
+export function stripInheritedGroupCssColors(css, borderColor) {
+  const fallback = borderColor || "currentColor";
+  if (!css || typeof css !== "string") return css;
+  try {
+    const parts = css
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const out = [];
+    for (const p of parts) {
+      const idx = p.indexOf(":");
+      if (idx === -1) {
+        out.push(p);
+        continue;
+      }
+      const prop = p.slice(0, idx).trim().toLowerCase();
+      const val = p.slice(idx + 1).trim();
+      if (prop === "color" || prop === "background-color") continue;
+      if (
+        prop === "border" ||
+        prop === "border-top" ||
+        prop === "border-bottom" ||
+        prop === "border-left" ||
+        prop === "border-right"
+      ) {
+        out.push(
+          `${prop}: ${val
+            .replace(/#[0-9a-fA-F]{3,8}\b/g, fallback)
+            .replace(/rgba?\s*\([^)]+\)/gi, fallback)
+            .replace(/var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)/g, fallback)}`,
+        );
+        continue;
+      }
+      out.push(`${prop}: ${val}`);
+    }
+    return out.length > 0 ? out.join(";\n") + ";" : "";
+  } catch (_) {
+    return css;
+  }
+}
+
+export function applyGroupColorOverride(copy, group, isValidHex) {
+  const { text, bg, type, polluted } = resolveGroupColorOverride(
+    group,
+    isValidHex,
+  );
+  if (type === "text") {
+    copy.color = text;
+    copy.textColor = null;
+    copy.backgroundColor = null;
+    copy.styleType = "text";
+  } else if (type === "highlight") {
+    copy.color = "";
+    copy.textColor = "currentColor";
+    copy.backgroundColor = bg;
+    copy.styleType = "highlight";
+  } else if (type === "both") {
+    copy.color = "";
+    copy.textColor = text;
+    copy.backgroundColor = bg;
+    copy.styleType = "both";
+  } else if (type === "legacy") {
+    // Legacy groups carrying colors but no colortype: override colors only,
+    // members keep their own type.
+    if (group.textColor && !polluted) copy.textColor = group.textColor;
+    if (group.color) copy.color = group.color;
+    if (group.backgroundColor && !polluted)
+      copy.backgroundColor = group.backgroundColor;
+  }
+  // type "" (per-entry or forced-but-reset): no color/type forcing at all.
+  return type;
+}
+
 export class PatternMatcher {
   constructor(settings, helpers) {
     this.settings = settings || {};
@@ -266,6 +405,7 @@ export class PatternMatcher {
           // Copy custom styling properties directly to match object for rendering
           backgroundOpacity: entry.backgroundOpacity,
           highlightBorderRadius: entry.highlightBorderRadius,
+          cornerShape: entry.cornerShape,
           highlightHorizontalPadding: entry.highlightHorizontalPadding,
           highlightVerticalPadding: entry.highlightVerticalPadding,
           enableBorderThickness: entry.enableBorderThickness,
@@ -408,15 +548,19 @@ export function compileWordEntriesLogic(plugin) {
             if (groupMatch) copy.matchType = groupMatch;
             if (groupCase !== undefined)
               copy._caseSensitiveOverride = groupCase;
-            if (group.styleType) copy.styleType = group.styleType;
-            if (group.textColor) copy.textColor = group.textColor;
-            if (group.color) copy.color = group.color;
-            if (group.backgroundColor)
-              copy.backgroundColor = group.backgroundColor;
+            // Group colortype forces member colours (narrowed by availability so
+            // a reset channel never strips members); per-entry forces nothing.
+            const _effGroupType = applyGroupColorOverride(copy, group, (c) =>
+              plugin.isValidHexColor(c),
+            );
+            // Highlight layout always applies when set on the group,
+            // independent of colortype; reset (undefined) never applies.
             if (typeof group.backgroundOpacity !== "undefined")
               copy.backgroundOpacity = group.backgroundOpacity;
             if (typeof group.highlightBorderRadius !== "undefined")
               copy.highlightBorderRadius = group.highlightBorderRadius;
+            if (typeof group.cornerShape !== "undefined")
+              copy.cornerShape = group.cornerShape;
             if (typeof group.highlightHorizontalPadding !== "undefined")
               copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
             if (typeof group.highlightVerticalPadding !== "undefined")
@@ -433,7 +577,13 @@ export function compileWordEntriesLogic(plugin) {
             copy._groupUid = group.uid || null;
             copy._groupRef = group;
             // Inherit group-level customCss only if the entry doesn't have its own
-            if (group.customCss && !copy.customCss) copy.customCss = group.customCss;
+            if (group.customCss && !copy.customCss) {
+              copy.customCss = group.customCss;
+              // Unforced groups must not tint members via stale auto-derived
+              // CSS colors; layout still inherits.
+              if (!_effGroupType)
+                copy.customCss = stripInheritedGroupCssColors(copy.customCss);
+            }
             copy.groupEnableFolders = Array.isArray(group.enableFolders)
               ? group.enableFolders.slice()
               : [];
@@ -455,6 +605,7 @@ export function compileWordEntriesLogic(plugin) {
 
     for (const e of allEntries) {
       if (!e) continue;
+      if (e.active === false) continue;
       if (e && e.backgroundColor) continue;
 
       const patterns =
@@ -575,6 +726,7 @@ export function compileWordEntriesLogic(plugin) {
             : [],
           backgroundOpacity: e.backgroundOpacity,
           highlightBorderRadius: e.highlightBorderRadius,
+          cornerShape: e.cornerShape,
           highlightHorizontalPadding: e.highlightHorizontalPadding,
           highlightVerticalPadding: e.highlightVerticalPadding,
           enableBorderThickness: e.enableBorderThickness,
@@ -722,15 +874,19 @@ export function compileTextBgColoringEntriesLogic(plugin) {
             if (groupMatch) copy.matchType = groupMatch;
             if (groupCase !== undefined)
               copy._caseSensitiveOverride = groupCase;
-            if (group.styleType) copy.styleType = group.styleType;
-            if (group.textColor) copy.textColor = group.textColor;
-            if (group.color) copy.color = group.color;
-            if (group.backgroundColor)
-              copy.backgroundColor = group.backgroundColor;
+            // Group colortype forces member colours (narrowed by availability so
+            // a reset channel never strips members); per-entry forces nothing.
+            const _effGroupType = applyGroupColorOverride(copy, group, (c) =>
+              plugin.isValidHexColor(c),
+            );
+            // Highlight layout always applies when set on the group,
+            // independent of colortype; reset (undefined) never applies.
             if (typeof group.backgroundOpacity !== "undefined")
               copy.backgroundOpacity = group.backgroundOpacity;
             if (typeof group.highlightBorderRadius !== "undefined")
               copy.highlightBorderRadius = group.highlightBorderRadius;
+            if (typeof group.cornerShape !== "undefined")
+              copy.cornerShape = group.cornerShape;
             if (typeof group.highlightHorizontalPadding !== "undefined")
               copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
             if (typeof group.highlightVerticalPadding !== "undefined")
@@ -747,7 +903,13 @@ export function compileTextBgColoringEntriesLogic(plugin) {
             copy._groupUid = group.uid || null;
             copy._groupRef = group;
             // Inherit group-level customCss only if the entry doesn't have its own
-            if (group.customCss && !copy.customCss) copy.customCss = group.customCss;
+            if (group.customCss && !copy.customCss) {
+              copy.customCss = group.customCss;
+              // Unforced groups must not tint members via stale auto-derived
+              // CSS colors; layout still inherits.
+              if (!_effGroupType)
+                copy.customCss = stripInheritedGroupCssColors(copy.customCss);
+            }
             copy.groupEnableFolders = Array.isArray(group.enableFolders)
               ? group.enableFolders.slice()
               : [];
@@ -769,6 +931,7 @@ export function compileTextBgColoringEntriesLogic(plugin) {
 
     for (const e of source) {
       if (!e || !e.backgroundColor) continue;
+      if (e.active === false) continue;
       if (e.presetLabel) {
         const label = String(e.presetLabel).toLowerCase();
         if (label.includes("bold") || label.includes("italic")) continue;
@@ -872,6 +1035,7 @@ export function compileTextBgColoringEntriesLogic(plugin) {
             : [],
           backgroundOpacity: e.backgroundOpacity,
           highlightBorderRadius: e.highlightBorderRadius,
+          cornerShape: e.cornerShape,
           highlightHorizontalPadding: e.highlightHorizontalPadding,
           highlightVerticalPadding: e.highlightVerticalPadding,
           enableBorderThickness: e.enableBorderThickness,

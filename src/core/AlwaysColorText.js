@@ -9,7 +9,7 @@ import { defaultSettings } from '../settings/defaultSettings.js';
 import { ColorSettingTab } from '../settings/SettingsTab.js';
 import { buildEditorExtension } from '../features/editorDecorator.js';
 import { buildReadingViewProcessor } from '../features/readingViewProcessor.js';
-import { compileWordEntriesLogic, compileTextBgColoringEntriesLogic, compileBlacklistEntriesLogic, PatternMatcher, SettingsIndex } from '../services/patternCompiler.js';
+import { compileWordEntriesLogic, compileTextBgColoringEntriesLogic, compileBlacklistEntriesLogic, PatternMatcher, SettingsIndex, resolveGroupColorOverride, stripInheritedGroupCssColors } from '../services/patternCompiler.js';
 import { evaluatePathRulesLogic, hasGlobalExcludeLogic, getBestFolderEntryLogic, globToRegex } from '../services/fileFilter.js';
 import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS, GLOBAL_STYLE_KEYS, IS_DEVELOPMENT } from './constants.js';
 import { Decoration, syntaxTree, forceRebuildEffect } from './cmSetup.js';
@@ -305,7 +305,7 @@ class AlwaysColorText extends Plugin {
         color: ${colorValue} !important;
         border-radius: ${radius}px !important;
         padding: ${vPad}px ${hPad}px !important;
-        ${borderRule}
+        ${borderRule}${this.getCornerShapeCss(presetEntry)}
       `;
 
       const style = document.createElement("style");
@@ -717,6 +717,21 @@ class AlwaysColorText extends Plugin {
     } catch (e) {
       return ["auto"];
     }
+  }
+
+  async openPluginSettingsTab(innerTabId) {
+    try {
+      this.app.setting.open();
+      await this.app.setting.openTabById(
+        (this.manifest && this.manifest.id) || "always-color-text",
+      );
+      const tab = this.settingTab;
+      if (tab && innerTabId && tab._activeTab !== innerTabId) {
+        tab._activeTab = innerTabId;
+        tab._initializedSettingsUI = false;
+        tab.display();
+      }
+    } catch (_) {}
   }
 
   async openSettingsAndFocusRegex() {
@@ -1144,7 +1159,7 @@ class AlwaysColorText extends Plugin {
                           this.settings.enableBoxDecorationBreak ?? true
                             ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;"
                             : "";
-                        style = `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
+                        style = `background-color: ${rgba}; border-radius: ${radius}px;${this.getCornerShapeCss(qo)} padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
                       } else {
                         if (this.settings.quickHighlightUseGlobalStyle) {
                           const rgba = this.hexToRgba(
@@ -1156,7 +1171,7 @@ class AlwaysColorText extends Plugin {
                           const pad =
                             this.settings.highlightHorizontalPadding ?? 4;
                           const border = this.generateBorderStyle(null, bg);
-                          style = `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
+                          style = `background-color: ${rgba}; border-radius: ${radius}px;${this.getCornerShapeCss(null)} padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
                         } else if (this.settings.quickHighlightStyleEnable) {
                           const hexWithAlpha = this.hexToHexWithAlpha(
                             bg,
@@ -1241,7 +1256,7 @@ class AlwaysColorText extends Plugin {
                             this.settings.enableBoxDecorationBreak ?? true
                               ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;"
                               : "";
-                          style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
+                          style += `background-color: ${rgba}; border-radius: ${radius}px;${this.getCornerShapeCss(qo)} padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
                         }
                       } else {
                         if (tc) style += `color: ${tc}; `;
@@ -1256,7 +1271,7 @@ class AlwaysColorText extends Plugin {
                             const pad =
                               this.settings.highlightHorizontalPadding ?? 4;
                             const border = this.generateBorderStyle(null, bg);
-                            style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
+                            style += `background-color: ${rgba}; border-radius: ${radius}px;${this.getCornerShapeCss(null)} padding-left: ${pad}px; padding-right: ${pad}px;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
                           } else if (this.settings.quickHighlightStyleEnable) {
                             const hexWithAlpha = this.hexToHexWithAlpha(
                               bg,
@@ -1646,7 +1661,7 @@ class AlwaysColorText extends Plugin {
                     styleStr += `background-color:${bc};`;
                   }
                 }
-                styleStr += `border-radius:${params.radius ?? 8}px; padding:${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss}`;
+                styleStr += `border-radius:${params.radius ?? 8}px;${this.getCornerShapeCss(style)} padding:${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss}`;
                 nameEl.setAttr("style", styleStr);
                 wrapper.appendChild(nameEl);
                 frag.appendChild(wrapper);
@@ -1931,7 +1946,7 @@ class AlwaysColorText extends Plugin {
                             pair.backgroundColor,
                             null,
                           );
-                          const styleStr = `background-color: ${hexWithAlpha}; border-radius: ${p.radius ?? 8}px; padding: ${p.vPad ?? 0}px ${p.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+                          const styleStr = `background-color: ${hexWithAlpha}; border-radius: ${p.radius ?? 8}px;${this.getCornerShapeCss(null)} padding: ${p.vPad ?? 0}px ${p.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
                           const html = `<span class="always-color-text-highlight" style="${styleStr}">${escapeHtml(selectedText)}</span>`;
                           editor.replaceSelection(html);
                         }
@@ -2906,26 +2921,20 @@ class AlwaysColorText extends Plugin {
         },
       });
       addTrackedCommand({
+        id: "open-colored-texts-settings",
+        name: this.t(
+          "command_open_colored_texts_settings",
+          "Colored Texts Settings",
+        ),
+        callback: () => {
+          this.openPluginSettingsTab("always-color-texts");
+        },
+      });
+      addTrackedCommand({
         id: "manage-colored-texts",
         name: this.t("command_manage_colored_texts", "Manage Colored Texts"),
         callback: () => {
-          try {
-            this.app.setting.open();
-            const tabId =
-              (this.manifest && this.manifest.id) || "always-color-text";
-            try {
-              this.app.setting.openTabById(tabId);
-            } catch (e) {}
-            setTimeout(() => {
-              try {
-                const el = document.querySelector(
-                  "#always-colored-texts-header",
-                );
-                if (el && el.scrollIntoView)
-                  el.scrollIntoView({ behavior: "smooth", block: "start" });
-              } catch (_) {}
-            }, 100);
-          } catch (_) {}
+          this.openPluginSettingsTab("always-color-texts");
         },
       });
       // Add command for opening regex tester
@@ -3950,6 +3959,8 @@ class AlwaysColorText extends Plugin {
               br + "px",
               "important",
             );
+            this.applyCornerShapeToElement(fallbackSpan, quickStyle);
+            this.applyCornerShapeToElement(mark, quickStyle);
             try {
               const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
               if (borderCss) {
@@ -4029,6 +4040,8 @@ class AlwaysColorText extends Plugin {
               br + "px",
               "important",
             );
+            this.applyCornerShapeToElement(fallbackSpan, entryForMark);
+            this.applyCornerShapeToElement(mark, entryForMark);
             try {
               const borderCss = this.generateBorderStyle(tc, bc, entryForMark);
               if (borderCss) {
@@ -4781,7 +4794,7 @@ class AlwaysColorText extends Plugin {
 
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -5083,7 +5096,7 @@ class AlwaysColorText extends Plugin {
 
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -5255,7 +5268,7 @@ class AlwaysColorText extends Plugin {
 
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
         }
         this.applyCustomCssToElement(span, entry);
         textNode.replaceWith(span);
@@ -6267,6 +6280,7 @@ class AlwaysColorText extends Plugin {
             } catch (_) {
               span.style.borderRadius = br;
             }
+            this.applyCornerShapeToElement(span, m.entryRef || m.entry || null);
             const borderCss = this.generateBorderStyle(
               null,
               bgColor,
@@ -6354,6 +6368,7 @@ class AlwaysColorText extends Plugin {
             } catch (_) {
               span.style.borderRadius = br2;
             }
+            this.applyCornerShapeToElement(span, m.entryRef || m.entry || null);
             const borderCss2 = this.generateBorderStyle(
               hideText ? null : textColor,
               hideBg ? null : bgColor,
@@ -7461,7 +7476,7 @@ class AlwaysColorText extends Plugin {
 
             css += ` padding-left: ${hPad}px !important; padding-right: ${hPad}px !important;`;
             css += ` padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`;
-            css += ` border-radius: ${radius}px !important;`;
+            css += ` border-radius: ${radius}px !important;${this.getCornerShapeCss(entry)}`;
 
             if (borderCSS) css += borderCSS;
 
@@ -7704,6 +7719,7 @@ class AlwaysColorText extends Plugin {
         const clearHighlightInline = () => {
           el.style.removeProperty("background-color");
           el.style.removeProperty("border-radius");
+          el.style.removeProperty("corner-shape");
           el.style.removeProperty("border-top-left-radius");
           el.style.removeProperty("border-top-right-radius");
           el.style.removeProperty("border-bottom-left-radius");
@@ -7737,6 +7753,7 @@ class AlwaysColorText extends Plugin {
           }
           applyHalfPillSplit();
           applyBorderInline();
+          this.applyCornerShapeToElement(el, entry);
           el.style.boxDecorationBreak = "clone";
           el.style.WebkitBoxDecorationBreak = "clone";
         } else {
@@ -7748,6 +7765,7 @@ class AlwaysColorText extends Plugin {
         el.style.removeProperty("color");
         el.style.removeProperty("background-color");
         el.style.removeProperty("border-radius");
+        el.style.removeProperty("corner-shape");
         el.style.removeProperty("border-top-left-radius");
         el.style.removeProperty("border-top-right-radius");
         el.style.removeProperty("border-bottom-left-radius");
@@ -10271,29 +10289,45 @@ class AlwaysColorText extends Plugin {
       });
 
       const found = new Set();
-      const rebuilt = parsed.map(({ prop, val }) => {
+      const rebuilt = [];
+      for (const { prop, val } of parsed) {
         if (updates.hasOwnProperty(prop)) {
           found.add(prop);
-          return `${prop}: ${updates[prop]}`;
+          rebuilt.push(`${prop}: ${updates[prop]}`);
+          continue;
         }
+        // Drop stale colors the entry no longer has: a reset color must
+        // remove its CSS, not linger (e.g. per-entry groups keeping an old
+        // `color: #fa8231` that repaints every member orange).
+        if (!tc && prop === 'color') continue;
+        if ((!bg || isTextOnly) && prop === 'background-color') continue;
         if (tc && (prop === 'border' || prop === 'border-top' || prop === 'border-bottom' ||
                    prop === 'border-left' || prop === 'border-right')) {
           const patched = val
             .replace(/#[0-9a-fA-F]{3,8}\b/g, tc)
             .replace(/rgba?\s*\([^)]+\)/gi, tc);
-          return `${prop}: ${patched}`;
+          rebuilt.push(`${prop}: ${patched}`);
+          continue;
         }
-        return `${prop}: ${val}`;
-      });
+        // No text color left: border color tokens fall back to currentColor
+        // instead of a stale hardcoded color.
+        if (!tc && (prop === 'border' || prop === 'border-top' || prop === 'border-bottom' ||
+                    prop === 'border-left' || prop === 'border-right')) {
+          const patched = val
+            .replace(/#[0-9a-fA-F]{3,8}\b/g, 'currentColor')
+            .replace(/rgba?\s*\([^)]+\)/gi, 'currentColor');
+          rebuilt.push(`${prop}: ${patched}`);
+          continue;
+        }
+        rebuilt.push(`${prop}: ${val}`);
+      }
 
       for (const [prop, val] of Object.entries(updates)) {
         if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
       }
 
-      return rebuilt.join(';\n') + ';';
-    } catch (_) {
-      return entry.customCss;
-    }
+      entry.customCss = rebuilt.join(';\n') + ';';
+    } catch (_) {}
   }
 
   /**
@@ -10360,6 +10394,30 @@ class AlwaysColorText extends Plugin {
 
       entry.customCss = rebuilt.join(';\n') + ';';
     } catch (_) {}
+  }
+
+  /**
+   * Group customCss contribution for member entries. Highlight styling and
+   * custom properties always apply regardless of colortype; color
+   * declarations apply only when the group colortype forces them (structured
+   * colors are the colortype's job). Unforced (per-entry / forced-but-reset)
+   * groups contribute layout only, so stale auto-derived colors can never
+   * repaint members.
+   */
+  groupCssForMembers(group) {
+    try {
+      if (!group || !group.customCss) return "";
+      let type = "";
+      try {
+        type = resolveGroupColorOverride(group, (c) => this.isValidHexColor(c)).type;
+      } catch (_) {
+        type = group.styleType || "";
+      }
+      if (!type) return stripInheritedGroupCssColors(group.customCss);
+      return group.customCss;
+    } catch (_) {
+      return (group && group.customCss) || "";
+    }
   }
 
   _mergeStyleWithCustomCss(baseStyle, customCss) {
@@ -10643,9 +10701,55 @@ class AlwaysColorText extends Plugin {
         entry && typeof entry.borderThickness === "number"
           ? entry.borderThickness
           : (this.settings.borderThickness ?? 1),
+      cornerShape:
+        entry && typeof entry.cornerShape === "string" && entry.cornerShape
+          ? entry.cornerShape
+          : (this.settings.cornerShape ?? "round"),
     };
 
     return result;
+  }
+
+  static CORNER_SHAPES = ["round", "scoop", "bevel", "notch", "square", "squircle"];
+
+  // Returns e.g. " corner-shape: scoop !important;" or "" when round/default/invalid.
+  // Used in stylesheet string builders where border-radius is emitted.
+  getCornerShapeCss(entryOrShape) {
+    try {
+      let v = null;
+      if (typeof entryOrShape === "string") v = entryOrShape;
+      else if (entryOrShape && typeof entryOrShape.cornerShape === "string") v = entryOrShape.cornerShape;
+      else if (entryOrShape && typeof entryOrShape.cornerShape !== "undefined") v = null;
+      else if (entryOrShape && entryOrShape.radius !== undefined) v = entryOrShape.cornerShape;
+      if (!v && this.settings && typeof this.settings.cornerShape === "string") {
+        // Fall back to global only when entry doesn't define its own
+        if (!entryOrShape || typeof entryOrShape.cornerShape === "undefined") v = this.settings.cornerShape;
+      }
+      if (typeof v !== "string") return "";
+      v = v.trim().toLowerCase();
+      if (!v || v === "round") return "";
+      if (!AlwaysColorText.CORNER_SHAPES.includes(v)) return "";
+      return ` corner-shape: ${v} !important;`;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  // Applies corner-shape to a live element (or removes it when round/default).
+  applyCornerShapeToElement(el, entry) {
+    try {
+      if (!el || !el.style) return;
+      let v = entry && typeof entry.cornerShape === "string"
+        ? entry.cornerShape.trim().toLowerCase()
+        : (this.settings && typeof this.settings.cornerShape === "string"
+          ? this.settings.cornerShape.trim().toLowerCase()
+          : "round");
+      if (!v || v === "round" || !AlwaysColorText.CORNER_SHAPES.includes(v)) {
+        el.style.removeProperty("corner-shape");
+        return;
+      }
+      el.style.setProperty("corner-shape", v, "important");
+    } catch (_) {}
   }
 
   // Combined list of styles shown in the right-click "Quick Styles" submenu.
@@ -11024,7 +11128,7 @@ class AlwaysColorText extends Plugin {
     }
     if (styleType === "highlight") {
       const bg = bc ? this.hexToHexWithAlpha(bc, params.opacity ?? 25) : null;
-      const styleStr = `${bg ? `background-color: ${bg}; ` : ""}border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+      const styleStr = `${bg ? `background-color: ${bg}; ` : ""}border-radius: ${params.radius ?? 8}px;${this.getCornerShapeCss(style)} padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
       const html = `<span class="always-color-text-highlight" style="${styleStr}">${escapeHtml(selectedText)}</span>`;
       editor.replaceSelection(html);
       return;
@@ -11034,7 +11138,7 @@ class AlwaysColorText extends Plugin {
     let styleStr = "";
     if (tc) styleStr += `color: ${tc}; `;
     if (bg) styleStr += `background-color: ${bg}; `;
-    styleStr += `border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+    styleStr += `border-radius: ${params.radius ?? 8}px;${this.getCornerShapeCss(style)} padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
     const html = `<span style="${styleStr}">${escapeHtml(selectedText)}</span>`;
     editor.replaceSelection(html);
   }
@@ -11940,6 +12044,7 @@ class AlwaysColorText extends Plugin {
             params.radius + "px",
             "important",
           );
+          this.applyCornerShapeToElement(element, entry);
           element.style.setProperty(
             "padding-left",
             params.hPad + "px",
@@ -12008,6 +12113,7 @@ class AlwaysColorText extends Plugin {
         } else {
           element.style.removeProperty("background-color");
           element.style.removeProperty("border-radius");
+          element.style.removeProperty("corner-shape");
           element.style.removeProperty("padding-left");
           element.style.removeProperty("padding-right");
           element.style.removeProperty("padding-top");
@@ -12305,6 +12411,7 @@ class AlwaysColorText extends Plugin {
         } catch (_) {
           span.style.borderRadius = br;
         }
+        this.applyCornerShapeToElement(span, entry);
         // Disable boxDecorationBreak in headings as it affects line wrapping and causes offset issues
         if ((this.settings.enableBoxDecorationBreak ?? true) && !isInHeading) {
           span.style.boxDecorationBreak = "clone";
@@ -12389,6 +12496,7 @@ class AlwaysColorText extends Plugin {
           } catch (_) {
             span.style.borderRadius = br2;
           }
+          this.applyCornerShapeToElement(span, entry);
           if (this.settings.enableBoxDecorationBreak ?? true) {
             span.style.boxDecorationBreak = "clone";
             span.style.WebkitBoxDecorationBreak = "clone";
@@ -13209,6 +13317,7 @@ class AlwaysColorText extends Plugin {
                 } catch (_) {
                   span.style.borderRadius = br;
                 }
+                this.applyCornerShapeToElement(span, null);
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   span.style.boxDecorationBreak = "clone";
                   span.style.WebkitBoxDecorationBreak = "clone";
@@ -13289,6 +13398,7 @@ class AlwaysColorText extends Plugin {
               } catch (_) {
                 span.style.borderRadius = br2;
               }
+              this.applyCornerShapeToElement(span, null);
               if (this.settings.enableBoxDecorationBreak ?? true) {
                 span.style.boxDecorationBreak = "clone";
                 span.style.WebkitBoxDecorationBreak = "clone";
@@ -14012,6 +14122,7 @@ class AlwaysColorText extends Plugin {
                       ? 0
                       : params.radius) + "px";
                   wrapper.style.borderRadius = br;
+                  this.applyCornerShapeToElement(wrapper, headingEntry);
                 }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   wrapper.style.boxDecorationBreak = "clone";
@@ -15113,6 +15224,10 @@ class AlwaysColorText extends Plugin {
                   lineStyleParts.push(`margin-bottom: ${vpad}px`);
                 }
                 lineStyleParts.push(`border-radius: ${params.radius ?? 4}px`);
+                {
+                  const _cs = this.getCornerShapeCss(m.entryRef || {});
+                  if (_cs) lineStyleParts.push(_cs.replace(/ !important;?/, ""));
+                }
 
                 // Add border styles for Reading Mode
                 const entryRef = m.entryRef || {};
@@ -15135,7 +15250,7 @@ class AlwaysColorText extends Plugin {
                 const entryRef = m.entryRef || {};
                 const groupRef = entryRef._groupRef || entryRef.entryRef?._groupRef;
                 if (groupRef?.customCss) {
-                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, groupRef.customCss);
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, this.groupCssForMembers(groupRef));
                 }
                 if (entryRef.customCss) {
                   lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss);
@@ -15355,6 +15470,7 @@ class AlwaysColorText extends Plugin {
                   } catch (_) {
                     span.style.borderRadius = br;
                   }
+                  this.applyCornerShapeToElement(span, entryRef);
                   const borderCss = this.generateBorderStyle(
                     null,
                     bgColor,
@@ -15474,6 +15590,7 @@ class AlwaysColorText extends Plugin {
                 } catch (_) {
                   span.style.borderRadius = br2;
                 }
+                this.applyCornerShapeToElement(span, entryRef);
                 const borderCss = this.generateBorderStyle(
                   hideText ? null : textColor,
                   hideBg ? null : bgColor,
@@ -15541,7 +15658,7 @@ class AlwaysColorText extends Plugin {
               debugLog("READING_RENDER_CSS", `Checking for custom CSS on: ${m.pattern || "unknown"}`);
               if (this.settings.enableCustomCss) {
                 const groupRef = entryRef?._groupRef || entryRef?.entryRef?._groupRef;
-                if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
+                if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
               }
               this.applyCustomCssToElement(span, entryRef);
 
@@ -19034,7 +19151,7 @@ class AlwaysColorText extends Plugin {
             : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
         const bgPart = hideBg
           ? ""
-          : `background-color: ${this.hexToRgba(m.backgroundColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+          : `background-color: ${this.hexToRgba(m.backgroundColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         // Check the styleType to determine how to apply the color
@@ -19062,7 +19179,7 @@ class AlwaysColorText extends Plugin {
             vPadH >= 0
               ? `padding-top: ${vPadH}px !important; padding-bottom: ${vPadH}px !important;`
               : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadH}px !important; margin-bottom: ${vPadH}px !important;`;
-          style = `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssH}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+          style = `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssH}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
         } else if (styleType === "both") {
           // Both text and background color
           const textColor =
@@ -19091,7 +19208,7 @@ class AlwaysColorText extends Plugin {
               : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadB}px !important; margin-bottom: ${vPadB}px !important;`;
           const bgPart = hideBg
             ? ""
-            : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssB}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+            : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssB}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           // Default to text color
@@ -21034,13 +21151,13 @@ class AlwaysColorText extends Plugin {
         const textPart = hideText || !textColor ? "" : `color: ${textColor} !important; `;
         const bgPart = hideBg || !bgColor
           ? ""
-          : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+          : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
 
         // Merge group CSS then entry CSS (custom CSS wins over base styles)
         if (this.settings.enableCustomCss) {
           if (m.entryRef?._groupRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, m.entryRef._groupRef.customCss);
+            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef));
           }
           if (m.entryRef?.customCss) {
             style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
@@ -21089,7 +21206,7 @@ class AlwaysColorText extends Plugin {
                   vPad >= 0
                     ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
                     : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-                return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+                return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
               })();
             }
           } else if (styleType === "both") {
@@ -21123,7 +21240,7 @@ class AlwaysColorText extends Plugin {
                   vPad >= 0
                     ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
                     : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-                return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+                return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
               })();
               style = `${textPart}${bgPart}${borderStyle}`;
             }
@@ -21142,7 +21259,7 @@ class AlwaysColorText extends Plugin {
         // Merge group CSS then entry CSS (custom CSS wins over base styles)
         if (this.settings.enableCustomCss) {
           if (m.entryRef?._groupRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, m.entryRef._groupRef.customCss);
+            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef));
           }
           if (m.entryRef?.customCss) {
             style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);

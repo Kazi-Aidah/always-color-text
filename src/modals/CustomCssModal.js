@@ -27,10 +27,29 @@ export function deriveHighlightCssFromEntry(entry, plugin) {
     lines.push(`background-color: ${plugin.hexToRgba(bg, opacity)}`);
   }
 
-  // border-radius and padding only for non-text-only entries
-  if (!isTextOnly) {
+  // border-radius and padding for non-text-only entries — plus any entry/group
+  // with explicitly-set layout, so group highlight styling applies regardless
+  // of colortype (a per-entry group still shapes its members' highlights).
+  const hasExplicitLayout = !!entry && (
+    typeof entry.highlightBorderRadius !== 'undefined' ||
+    typeof entry.cornerShape !== 'undefined' ||
+    typeof entry.highlightHorizontalPadding !== 'undefined' ||
+    typeof entry.highlightVerticalPadding !== 'undefined' ||
+    typeof entry.backgroundOpacity !== 'undefined' ||
+    typeof entry.enableBorderThickness !== 'undefined' ||
+    typeof entry.borderThickness !== 'undefined' ||
+    typeof entry.borderStyle !== 'undefined' ||
+    typeof entry.borderLineStyle !== 'undefined' ||
+    typeof entry.borderOpacity !== 'undefined'
+  );
+  if (!isTextOnly || hasExplicitLayout) {
     const radius = entry.highlightBorderRadius ?? settings.highlightBorderRadius ?? 4;
     lines.push(`border-radius: ${radius}px`);
+
+    const cornerShape = entry.cornerShape ?? settings.cornerShape ?? 'round';
+    if (cornerShape && cornerShape !== 'round') {
+      lines.push(`corner-shape: ${cornerShape}`);
+    }
 
     const hpad = entry.highlightHorizontalPadding ?? settings.highlightHorizontalPadding ?? 4;
     const vpad = entry.highlightVerticalPadding ?? settings.highlightVerticalPadding ?? 0;
@@ -148,6 +167,13 @@ export function parseCssIntoEntry(css, entry, plugin) {
         if (!isNaN(n)) entry.highlightBorderRadius = n;
         break;
       }
+      case 'corner-shape': {
+        const v = val.trim().toLowerCase().split(/\s+/)[0];
+        if (['round','scoop','bevel','notch','square','squircle'].includes(v)) {
+          entry.cornerShape = v;
+        }
+        break;
+      }
       case 'padding': {
         // "Vpx Hpx" or "Vpx Hpx Vpx Hpx" etc.
         const nums = val.match(/[\d.]+/g);
@@ -228,11 +254,29 @@ export function patchCssLayoutFromEntry(css, entry, plugin) {
   const styleType = entry.styleType || (entry.backgroundColor ? 'highlight' : 'text');
   const isTextOnly = styleType === 'text';
 
-  // Build map of layout properties to update
+  // Build map of layout properties to update. Layout applies whenever set,
+  // regardless of colortype (see deriveHighlightCssFromEntry).
+  const hasExplicitLayout = !!entry && (
+    typeof entry.highlightBorderRadius !== 'undefined' ||
+    typeof entry.cornerShape !== 'undefined' ||
+    typeof entry.highlightHorizontalPadding !== 'undefined' ||
+    typeof entry.highlightVerticalPadding !== 'undefined' ||
+    typeof entry.backgroundOpacity !== 'undefined' ||
+    typeof entry.enableBorderThickness !== 'undefined' ||
+    typeof entry.borderThickness !== 'undefined' ||
+    typeof entry.borderStyle !== 'undefined' ||
+    typeof entry.borderLineStyle !== 'undefined' ||
+    typeof entry.borderOpacity !== 'undefined'
+  );
   const updates = {};
-  if (!isTextOnly) {
+  if (!isTextOnly || hasExplicitLayout) {
     const radius = entry.highlightBorderRadius ?? settings.highlightBorderRadius ?? 4;
     updates['border-radius'] = `${radius}px`;
+
+    const cornerShape = entry.cornerShape ?? settings.cornerShape ?? 'round';
+    if (cornerShape && cornerShape !== 'round') {
+      updates['corner-shape'] = `${cornerShape}`;
+    }
 
     const hpad = entry.highlightHorizontalPadding ?? settings.highlightHorizontalPadding ?? 4;
     const vpad = entry.highlightVerticalPadding ?? settings.highlightVerticalPadding ?? 0;
@@ -279,8 +323,13 @@ export function patchCssLayoutFromEntry(css, entry, plugin) {
       found.add(prop);
       return `${prop}: ${updates[prop]}`;
     }
+    // Drop stale corner-shape when the effective shape is round (default)
+    if (prop === 'corner-shape' && !updates.hasOwnProperty('corner-shape')) {
+      found.add(prop);
+      return null;
+    }
     return `${prop}: ${val}`;
-  });
+  }).filter(Boolean);
 
   for (const [prop, val] of Object.entries(updates)) {
     if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
@@ -536,6 +585,10 @@ export class CustomCssModal extends Modal {
 
       this._previewSpan.style.setProperty('background-color', bgCss, 'important');
       this._previewSpan.style.setProperty('border-radius', `${radius}px`, 'important');
+      {
+        const _cs = this.entry.cornerShape ?? this.plugin.settings.cornerShape ?? 'round';
+        if (_cs && _cs !== 'round') this._previewSpan.style.setProperty('corner-shape', _cs, 'important');
+      }
       this._previewSpan.style.setProperty('padding', `${vpad}px ${hpad}px`, 'important');
       this._previewSpan.style.setProperty('box-decoration-break', 'clone', 'important');
       this._previewSpan.style.setProperty('-webkit-box-decoration-break', 'clone', 'important');

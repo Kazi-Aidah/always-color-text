@@ -188,6 +188,7 @@ export const defaultSettings = {
   highlightStyle: "text",
   backgroundOpacity: 35, // percent
   highlightBorderRadius: 4, // px
+  cornerShape: "round", // css corner-shape: round|scoop|bevel|notch|square|squircle
   highlightHorizontalPadding: 4, // px
   highlightVerticalPadding: 0, // px
   enableBoxDecorationBreak: true, // Toggle for rounded corners on text wrapping

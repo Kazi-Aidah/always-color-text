@@ -770,21 +770,66 @@ export class ColorPickerModal extends Modal {
       const resetHandler = () => {
         if (type === "text") {
           this.selectedTextColor = null;
-          preview.style.color = "";
+          // Null text must preview as theme text, not empty/browser default.
+          try {
+            preview.style.setProperty("color", "var(--text-normal)", "important");
+          } catch (_) {
+            preview.style.color = "var(--text-normal)";
+          }
         } else {
           this.selectedBgColor = null;
-          preview.style.backgroundColor = "";
           // Clear all border styles when resetting background color
           preview.style.border = "";
           preview.style.borderTop = "";
           preview.style.borderBottom = "";
           preview.style.borderLeft = "";
           preview.style.borderRight = "";
+          // Null background must preview as theme accent, not empty.
+          // Use color-mix so --color-accent resolves natively at paint time.
+          try {
+            let _op = 25;
+            try {
+              _op = (matchedEntry && typeof matchedEntry.backgroundOpacity === "number")
+                ? matchedEntry.backgroundOpacity
+                : (this.plugin.settings.backgroundOpacity ?? 25);
+            } catch (_) {}
+            preview.style.setProperty(
+              "background-color",
+              `color-mix(in srgb, var(--color-accent) ${_op}%, transparent)`,
+              "important",
+            );
+            // Border fallback is also accent when bg is null.
+            try {
+              this.plugin.applyBorderStyleToElement(preview, null, "var(--color-accent)", matchedEntry || this._entry);
+            } catch (_) {}
+          } catch (_) {
+            preview.style.backgroundColor = "";
+          }
         }
+        // Reset removes any hex/var code: inputs stay empty, picker shows null black.
         hex.value = "";
         colorInput.value = "#000000";
         this._hasUserChanges = true;
         this._applyCustomCss();
+        // _applyCustomCss may re-apply stale entry CSS with !important; re-enforce null fallbacks.
+        try {
+          if (type === "text" && !this.selectedTextColor) {
+            preview.style.setProperty("color", "var(--text-normal)", "important");
+          }
+          if (type === "background" && !this.selectedBgColor) {
+            let _op2 = 25;
+            try {
+              _op2 = (matchedEntry && typeof matchedEntry.backgroundOpacity === "number")
+                ? matchedEntry.backgroundOpacity
+                : (this.plugin.settings.backgroundOpacity ?? 25);
+            } catch (_) {}
+            preview.style.setProperty(
+              "background-color",
+              `color-mix(in srgb, var(--color-accent) ${_op2}%, transparent)`,
+              "important",
+            );
+          }
+        } catch (_) {}
       };
       resetBtn.addEventListener("click", resetHandler);
       this._eventListeners.push({
@@ -1404,6 +1449,38 @@ export class ColorPickerModal extends Modal {
         existingStyle =
           initText && initBg ? "both" : existingStyle || "highlight";
       }
+    // When an explicit entry (or group) is passed, it is the source of truth —
+    // not the stale text search in settings. Without this, a reset-to-null
+    // entry reopens with the old live colors ghosted back in via matchedEntry.
+    try {
+      const _e = this._entry;
+      if (_e && !_e._quickOnce) {
+        const _eText = (_e.textColor && _e.textColor !== "currentColor" && this.plugin.isValidHexColor(_e.textColor))
+          ? _e.textColor
+          : (this.plugin.isValidHexColor(_e.color) ? _e.color : null);
+        const _eBg = (_e.backgroundColor && this.plugin.isValidHexColor(_e.backgroundColor))
+          ? _e.backgroundColor
+          : null;
+        const _preT = (this._preFillTextColor && this.plugin.isValidHexColor(this._preFillTextColor))
+          ? this._preFillTextColor : null;
+        const _preB = (this._preFillBgColor && this.plugin.isValidHexColor(this._preFillBgColor))
+          ? this._preFillBgColor : null;
+        // Prefill (from direct user interaction) wins; otherwise use _entry.
+        // Crucially, a null _entry stays null instead of falling back to the
+        // stale settings search result.
+        initText = _preT || _eText || null;
+        initBg = _preB || _eBg || null;
+        if (_eText || _eBg || _preT || _preB) {
+          matchedEntry = _e;
+          existingStyle = (initText && initBg) ? "both" : initBg ? "highlight" : initText ? "text" : existingStyle;
+        } else {
+          // Both null: force null so panels stay empty/black with theme preview.
+          initText = null;
+          initBg = null;
+          matchedEntry = _e;
+        }
+      }
+    } catch (_) {}
     const tp = this.panelStates["text"];
     const bp = this.panelStates["background"];
     // Initialize modal mode based on existing entry
@@ -1648,8 +1725,12 @@ export class ColorPickerModal extends Modal {
         }
       } catch (_) {}
 
-      // If both colors are empty/reset, remove the entry
-      if (!textSelected && !bgSelected) {
+      // If both colors are empty/reset, remove the entry — but only for the
+      // standalone flow. When a callback is present (right-click from group /
+      // highlight styling), the parent owns the entry (often an unsaved clone)
+      // and must clear it to null itself; deleting here would remove the wrong
+      // live entry and swallow the reset so the callback never fires.
+      if (!textSelected && !bgSelected && typeof this.callback !== "function") {
         const word = this._selectedText || "";
         const caseSensitive = !!this.plugin.settings.caseSensitive;
         const eq = (a, b) =>

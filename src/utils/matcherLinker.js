@@ -46,6 +46,7 @@ export const LINKED_STYLE_FIELDS = [
   'backgroundColor',
   'backgroundOpacity',
   'highlightBorderRadius',
+  'cornerShape',
   'highlightHorizontalPadding',
   'highlightVerticalPadding',
   'enableBorderThickness',

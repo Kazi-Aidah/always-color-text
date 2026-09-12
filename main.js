@@ -116,6 +116,7 @@ var require_en = __commonJS({
       "command_open_regex_tester": "Add Regex (Open Regex Tester)",
       "command_open_blacklist_regex_tester": "Add Blacklist Regex",
       "command_manage_colored_texts": "Manage Colored Texts",
+      "command_open_colored_texts_settings": "Colored Texts Settings",
       "command_open_plugin_settings": "Open Plugin Settings",
       "command_toggle_hide_text_colors": "Hide/Unhide Text Colors",
       "command_toggle_hide_highlights": "Hide/Unhide Highlights",
@@ -469,6 +470,8 @@ var require_en = __commonJS({
       "flags_placeholder": "Flags",
       "text_or_regex_placeholder": "Text/Regex Input",
       "duplicate_entry": "Duplicate Entry",
+      "activate_entry": "Activate Entry",
+      "deactivate_entry": "Deactivate Entry",
       "open_in_regex_tester": "Open in Regex Tester",
       "no_rules_configured": "No rules configured.",
       "no_rules_found": "No rules found.",
@@ -622,7 +625,7 @@ var require_en = __commonJS({
       "import_plugin_data_desc": "Import settings from a JSON file",
       "btn_import": "Import",
       "limit_input_placeholder": "limit",
-      "limit_input_tooltip": "0=all; number=last N; r=regex; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact",
+      "limit_input_tooltip": "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child; off=deactivated; on=active",
       // Missing Keys Added
       "highlight_styling_header": "Edit Highlight Styling",
       "edit_entry_header": "Edit Entry",
@@ -649,6 +652,13 @@ var require_en = __commonJS({
       "section_highlight_styling": "Highlight Styling",
       "label_highlight_opacity": "Highlight Opacity",
       "label_highlight_radius": "Highlight Border Radius",
+      "label_highlight_shape": "Highlight Shape",
+      "opt_corner_round": "Round",
+      "opt_corner_scoop": "Scoop",
+      "opt_corner_bevel": "Bevel",
+      "opt_corner_notch": "Notch",
+      "opt_corner_square": "Square",
+      "opt_corner_squircle": "Squircle",
       "label_horizontal_padding": "Horizontal Padding",
       "label_vertical_padding": "Vertical Padding",
       "label_enable_border": "Enable Border",
@@ -6722,6 +6732,8 @@ var defaultSettings = {
   // percent
   highlightBorderRadius: 4,
   // px
+  cornerShape: "round",
+  // css corner-shape: round|scoop|bevel|notch|square|squircle
   highlightHorizontalPadding: 4,
   // px
   highlightVerticalPadding: 0,
@@ -7601,9 +7613,14 @@ function deriveHighlightCssFromEntry(entry, plugin) {
     const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
     lines.push(`background-color: ${plugin.hexToRgba(bg, opacity)}`);
   }
-  if (!isTextOnly) {
+  const hasExplicitLayout = !!entry && (typeof entry.highlightBorderRadius !== "undefined" || typeof entry.cornerShape !== "undefined" || typeof entry.highlightHorizontalPadding !== "undefined" || typeof entry.highlightVerticalPadding !== "undefined" || typeof entry.backgroundOpacity !== "undefined" || typeof entry.enableBorderThickness !== "undefined" || typeof entry.borderThickness !== "undefined" || typeof entry.borderStyle !== "undefined" || typeof entry.borderLineStyle !== "undefined" || typeof entry.borderOpacity !== "undefined");
+  if (!isTextOnly || hasExplicitLayout) {
     const radius = entry.highlightBorderRadius ?? settings.highlightBorderRadius ?? 4;
     lines.push(`border-radius: ${radius}px`);
+    const cornerShape = entry.cornerShape ?? settings.cornerShape ?? "round";
+    if (cornerShape && cornerShape !== "round") {
+      lines.push(`corner-shape: ${cornerShape}`);
+    }
     const hpad = entry.highlightHorizontalPadding ?? settings.highlightHorizontalPadding ?? 4;
     const vpad = entry.highlightVerticalPadding ?? settings.highlightVerticalPadding ?? 0;
     lines.push(`padding: ${vpad}px ${hpad}px`);
@@ -7709,6 +7726,13 @@ function parseCssIntoEntry(css, entry, plugin) {
         if (!isNaN(n)) entry.highlightBorderRadius = n;
         break;
       }
+      case "corner-shape": {
+        const v = val.trim().toLowerCase().split(/\s+/)[0];
+        if (["round", "scoop", "bevel", "notch", "square", "squircle"].includes(v)) {
+          entry.cornerShape = v;
+        }
+        break;
+      }
       case "padding": {
         const nums = val.match(/[\d.]+/g);
         if (nums && nums.length >= 2) {
@@ -7782,10 +7806,15 @@ function patchCssLayoutFromEntry(css, entry, plugin) {
   const settings = plugin.settings;
   const styleType2 = entry.styleType || (entry.backgroundColor ? "highlight" : "text");
   const isTextOnly = styleType2 === "text";
+  const hasExplicitLayout = !!entry && (typeof entry.highlightBorderRadius !== "undefined" || typeof entry.cornerShape !== "undefined" || typeof entry.highlightHorizontalPadding !== "undefined" || typeof entry.highlightVerticalPadding !== "undefined" || typeof entry.backgroundOpacity !== "undefined" || typeof entry.enableBorderThickness !== "undefined" || typeof entry.borderThickness !== "undefined" || typeof entry.borderStyle !== "undefined" || typeof entry.borderLineStyle !== "undefined" || typeof entry.borderOpacity !== "undefined");
   const updates = {};
-  if (!isTextOnly) {
+  if (!isTextOnly || hasExplicitLayout) {
     const radius = entry.highlightBorderRadius ?? settings.highlightBorderRadius ?? 4;
     updates["border-radius"] = `${radius}px`;
+    const cornerShape = entry.cornerShape ?? settings.cornerShape ?? "round";
+    if (cornerShape && cornerShape !== "round") {
+      updates["corner-shape"] = `${cornerShape}`;
+    }
     const hpad = entry.highlightHorizontalPadding ?? settings.highlightHorizontalPadding ?? 4;
     const vpad = entry.highlightVerticalPadding ?? settings.highlightVerticalPadding ?? 0;
     updates["padding"] = `${vpad}px ${hpad}px`;
@@ -7829,8 +7858,12 @@ function patchCssLayoutFromEntry(css, entry, plugin) {
       found.add(prop);
       return `${prop}: ${updates[prop]}`;
     }
+    if (prop === "corner-shape" && !updates.hasOwnProperty("corner-shape")) {
+      found.add(prop);
+      return null;
+    }
     return `${prop}: ${val}`;
-  });
+  }).filter(Boolean);
   for (const [prop, val] of Object.entries(updates)) {
     if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
   }
@@ -8048,6 +8081,10 @@ var CustomCssModal = class extends import_obsidian3.Modal {
       const vpad = p.vPad ?? 0;
       this._previewSpan.style.setProperty("background-color", bgCss, "important");
       this._previewSpan.style.setProperty("border-radius", `${radius}px`, "important");
+      {
+        const _cs = this.entry.cornerShape ?? this.plugin.settings.cornerShape ?? "round";
+        if (_cs && _cs !== "round") this._previewSpan.style.setProperty("corner-shape", _cs, "important");
+      }
       this._previewSpan.style.setProperty("padding", `${vpad}px ${hpad}px`, "important");
       this._previewSpan.style.setProperty("box-decoration-break", "clone", "important");
       this._previewSpan.style.setProperty("-webkit-box-decoration-break", "clone", "important");
@@ -8313,7 +8350,9 @@ var TextStylePresetsModal = class extends import_obsidian4.Modal {
       }
     }
     const textColorVal = textHex || "var(--text-normal)";
-    const base = style === "text" ? `color:${textColorVal};background:transparent;` : style === "highlight" ? `${bg}border-radius:${radius}px;padding:${vpad}px ${hpad}px;color:var(--text-normal);${border}` : `color:${textColorVal};${bg}border-radius:${radius}px;padding:${vpad}px ${hpad}px;${border}`;
+    const cornerShape = styleObj.cornerShape || this.plugin.settings.cornerShape || "round";
+    const cornerCss = cornerShape && cornerShape !== "round" ? `corner-shape:${cornerShape};` : "";
+    const base = style === "text" ? `color:${textColorVal};background:transparent;` : style === "highlight" ? `${bg}border-radius:${radius}px;${cornerCss}padding:${vpad}px ${hpad}px;color:var(--text-normal);${border}` : `color:${textColorVal};${bg}border-radius:${radius}px;${cornerCss}padding:${vpad}px ${hpad}px;${border}`;
     span.setAttribute(
       "style",
       base + "box-decoration-break:clone;-webkit-box-decoration-break:clone;"
@@ -8328,6 +8367,7 @@ var TextStylePresetsModal = class extends import_obsidian4.Modal {
       backgroundColor: "",
       backgroundOpacity: s.backgroundOpacity ?? 35,
       highlightBorderRadius: s.highlightBorderRadius ?? 4,
+      cornerShape: s.cornerShape ?? "round",
       highlightHorizontalPadding: s.highlightHorizontalPadding ?? 4,
       highlightVerticalPadding: s.highlightVerticalPadding ?? 0,
       enableBorderThickness: s.enableBorderThickness ?? false,
@@ -8387,6 +8427,7 @@ var TextStylePresetsModal = class extends import_obsidian4.Modal {
         }
         s.backgroundOpacity = entry.backgroundOpacity;
         s.highlightBorderRadius = entry.highlightBorderRadius;
+        s.cornerShape = entry.cornerShape;
         s.highlightHorizontalPadding = entry.highlightHorizontalPadding;
         s.highlightVerticalPadding = entry.highlightVerticalPadding;
         s.enableBorderThickness = entry.enableBorderThickness;
@@ -8432,6 +8473,7 @@ var TextStylePresetsModal = class extends import_obsidian4.Modal {
         preset.styleType = temp.styleType;
         preset.backgroundOpacity = temp.backgroundOpacity;
         preset.highlightBorderRadius = temp.highlightBorderRadius;
+        preset.cornerShape = temp.cornerShape;
         preset.highlightHorizontalPadding = temp.highlightHorizontalPadding;
         preset.highlightVerticalPadding = temp.highlightVerticalPadding;
         preset.enableBorderThickness = temp.enableBorderThickness;
@@ -8726,6 +8768,1012 @@ var TextStylePresetsModal = class extends import_obsidian4.Modal {
     this.contentEl.empty();
   }
 };
+
+// src/utils/RegexCache.js
+var RegexCache = class {
+  constructor(maxSize = 100) {
+    this.maxSize = maxSize;
+    this.map = /* @__PURE__ */ new Map();
+    this.hits = 0;
+    this.misses = 0;
+    this.entryMap = /* @__PURE__ */ new WeakMap();
+  }
+  _key(pattern, flags) {
+    return `${pattern}::${flags || ""}`;
+  }
+  getOrCreate(pattern, flags) {
+    const k = this._key(pattern, flags);
+    if (this.map.has(k)) {
+      const r2 = this.map.get(k);
+      this.map.delete(k);
+      this.map.set(k, r2);
+      this.hits++;
+      return r2;
+    }
+    let r;
+    try {
+      if (pattern && typeof pattern === "string" && pattern.length > 1e4) {
+        return null;
+      }
+      r = flags && flags !== "" ? new RegExp(pattern, flags) : new RegExp(pattern);
+    } catch (_) {
+      r = null;
+    }
+    this.misses++;
+    if (r) {
+      this.map.set(k, r);
+      if (this.map.size > this.maxSize) {
+        const oldestKey = this.map.keys().next().value;
+        this.map.delete(oldestKey);
+      }
+    }
+    return r;
+  }
+  associate(entry, regex) {
+    if (entry && regex) {
+      try {
+        this.entryMap.set(entry, regex);
+      } catch (_) {
+      }
+    }
+  }
+  clear() {
+    this.map.clear();
+    this.hits = 0;
+    this.misses = 0;
+  }
+  stats() {
+    return { hits: this.hits, misses: this.misses, size: this.map.size };
+  }
+};
+
+// src/services/patternCompiler.js
+function resolveGroupColorOverride(group, isValidHex) {
+  const isValid = (c) => {
+    try {
+      return !!isValidHex(c);
+    } catch (_) {
+      return false;
+    }
+  };
+  const polluted = String(group.textColor || "").toLowerCase() === "#000000" && String(group.backgroundColor || "").toLowerCase() === "#000000";
+  let text = null;
+  let bg = null;
+  if (!polluted) {
+    if (group.textColor && group.textColor !== "currentColor" && isValid(group.textColor)) {
+      text = group.textColor;
+    } else if (isValid(group.color)) {
+      text = group.color;
+    }
+    if (isValid(group.backgroundColor)) bg = group.backgroundColor;
+  }
+  const declared = group.styleType || "";
+  let type = "";
+  if (declared === "text") type = text ? "text" : "";
+  else if (declared === "highlight") type = bg ? "highlight" : "";
+  else if (declared === "both")
+    type = text && bg ? "both" : text ? "text" : bg ? "highlight" : "";
+  else if (!declared && (text || bg)) type = "legacy";
+  return { text, bg, type, polluted };
+}
+function stripInheritedGroupCssColors(css, borderColor) {
+  const fallback = borderColor || "currentColor";
+  if (!css || typeof css !== "string") return css;
+  try {
+    const parts = css.split(";").map((s) => s.trim()).filter(Boolean);
+    const out = [];
+    for (const p of parts) {
+      const idx = p.indexOf(":");
+      if (idx === -1) {
+        out.push(p);
+        continue;
+      }
+      const prop = p.slice(0, idx).trim().toLowerCase();
+      const val = p.slice(idx + 1).trim();
+      if (prop === "color" || prop === "background-color") continue;
+      if (prop === "border" || prop === "border-top" || prop === "border-bottom" || prop === "border-left" || prop === "border-right") {
+        out.push(
+          `${prop}: ${val.replace(/#[0-9a-fA-F]{3,8}\b/g, fallback).replace(/rgba?\s*\([^)]+\)/gi, fallback).replace(/var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)/g, fallback)}`
+        );
+        continue;
+      }
+      out.push(`${prop}: ${val}`);
+    }
+    return out.length > 0 ? out.join(";\n") + ";" : "";
+  } catch (_) {
+    return css;
+  }
+}
+function applyGroupColorOverride(copy, group, isValidHex) {
+  const { text, bg, type, polluted } = resolveGroupColorOverride(
+    group,
+    isValidHex
+  );
+  if (type === "text") {
+    copy.color = text;
+    copy.textColor = null;
+    copy.backgroundColor = null;
+    copy.styleType = "text";
+  } else if (type === "highlight") {
+    copy.color = "";
+    copy.textColor = "currentColor";
+    copy.backgroundColor = bg;
+    copy.styleType = "highlight";
+  } else if (type === "both") {
+    copy.color = "";
+    copy.textColor = text;
+    copy.backgroundColor = bg;
+    copy.styleType = "both";
+  } else if (type === "legacy") {
+    if (group.textColor && !polluted) copy.textColor = group.textColor;
+    if (group.color) copy.color = group.color;
+    if (group.backgroundColor && !polluted)
+      copy.backgroundColor = group.backgroundColor;
+  }
+  return type;
+}
+var PatternMatcher = class {
+  constructor(settings, helpers) {
+    this.settings = settings || {};
+    this.helpers = helpers || {};
+    this.counters = { regexExecs: 0, matchesFound: 0 };
+  }
+  compilePattern(entry, cache) {
+    if (!entry || !entry.pattern) return entry;
+    const isRegex = !!entry.isRegex;
+    const rawFlags = String(entry.flags || "").replace(/[^gimsuy]/g, "");
+    let flags = rawFlags || "";
+    if (!flags.includes("g")) flags += "g";
+    const effectiveCS = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : false;
+    if (!effectiveCS && !flags.includes("i")) flags += "i";
+    try {
+      if (isRegex && this.settings.enableRegexSupport) {
+        entry.regex = cache ? cache.getOrCreate(entry.pattern, flags) : this._createRegexSafe(entry.pattern, flags);
+        const tf = flags.replace(/g/g, "");
+        entry.testRegex = cache ? cache.getOrCreate(entry.pattern, tf) : tf === "" ? this._createRegexSafe(entry.pattern, "") : this._createRegexSafe(entry.pattern, tf);
+      } else {
+        const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(entry.pattern) : entry.pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const lf = effectiveCS ? "g" + (flags.includes("u") ? "u" : "") : "gi" + (flags.includes("u") ? "u" : "");
+        entry.regex = cache ? cache.getOrCreate(esc, lf) : this._createRegexSafe(esc, lf);
+        entry.testRegex = effectiveCS ? cache ? cache.getOrCreate(esc, flags.includes("u") ? "u" : "") : this._createRegexSafe(esc, flags.includes("u") ? "u" : "") : cache ? cache.getOrCreate(esc, flags.includes("u") ? "iu" : "i") : this._createRegexSafe(esc, flags.includes("u") ? "iu" : "i");
+      }
+    } catch (_) {
+      entry.invalid = true;
+    }
+    return entry;
+  }
+  _createRegexSafe(pattern, flags) {
+    try {
+      return new RegExp(pattern, flags);
+    } catch (_) {
+      return null;
+    }
+  }
+  isWordCharacter(char) {
+    if (!char) return false;
+    try {
+      if (char === "-" || char === "'") return true;
+      return /[\p{L}\p{N}]/u.test(char);
+    } catch (_) {
+      if (/[A-Za-z0-9]/.test(char) || char === "-" || char === "'") return true;
+      const code = char.codePointAt(0);
+      return code >= 192 && code <= 591 || code >= 592 && code <= 687 || code >= 880 && code <= 1023 || code >= 1024 && code <= 1327 || code >= 1536 && code <= 1791 || code >= 2304 && code <= 3583 || code >= 3584 && code <= 3711 || code >= 7680 && code <= 7935 || code >= 19968 && code <= 40959 || code >= 44032 && code <= 55215 || code >= 63744 && code <= 64255;
+    }
+  }
+  extractFullWordAtPosition(text, start, end) {
+    let wordStart = start;
+    let wordEnd = end;
+    const slice = text.substring(start, end);
+    const hasNonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(slice);
+    if (hasNonRoman) {
+      while (wordStart > 0 && this.isCJKChar(text[wordStart - 1])) {
+        wordStart--;
+      }
+      while (wordEnd < text.length && this.isCJKChar(text[wordEnd])) {
+        wordEnd++;
+      }
+    } else {
+      while (wordStart > 0 && this.isWordCharacter(text[wordStart - 1])) {
+        wordStart--;
+      }
+      while (wordEnd < text.length && this.isWordCharacter(text[wordEnd])) {
+        wordEnd++;
+      }
+    }
+    return text.substring(wordStart, wordEnd);
+  }
+  matchSatisfiesType(text, start, end, entry) {
+    if (entry && entry.isRegex) {
+      return true;
+    }
+    const matchType = String(
+      entry?.matchType || (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"))
+    ).toLowerCase();
+    const pattern = entry?.pattern || "";
+    const isSentence = this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(pattern) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(pattern || "");
+    const cs = typeof entry?._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry?.caseSensitive === "boolean" ? entry.caseSensitive : false;
+    if (isSentence) {
+      return true;
+    }
+    const fullWord = pattern && pattern.length <= 2 ? text.substring(start, end) : this.extractFullWordAtPosition(text, start, end);
+    switch (matchType) {
+      case "exact":
+        const exactMatch = cs ? fullWord === pattern : fullWord.toLowerCase() === pattern.toLowerCase();
+        return exactMatch;
+      case "contains":
+        const containsMatch = cs ? fullWord.includes(pattern) : fullWord.toLowerCase().includes(pattern.toLowerCase());
+        return containsMatch;
+      case "startswith":
+        return cs ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
+      case "endswith":
+        return cs ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
+      default:
+        return true;
+    }
+  }
+  match(text, entries, folderEntry) {
+    const out = [];
+    const isSentence = (p) => this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(p) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(p || "");
+    const wholeWord = (t, s, e) => {
+      const lc = s > 0 ? t[s - 1] : "";
+      const rc = e < t.length ? t[e] : "";
+      const isW = (ch) => this.isWordCharacter(ch);
+      return (s === 0 || !isW(lc)) && (e === t.length || !isW(rc));
+    };
+    for (const entry of entries) {
+      if (!entry || entry.invalid) continue;
+      try {
+        if (entry.fastTest && typeof entry.fastTest === "function") {
+          if (!entry.fastTest(text)) continue;
+        }
+      } catch (_) {
+      }
+      const regex = entry.regex;
+      if (!regex) continue;
+      const matches = this.helpers.safeMatchLoop ? this.helpers.safeMatchLoop(regex, text) : (text.match(regex) || []).map((m) => ({
+        0: m,
+        index: text.indexOf(m)
+      }));
+      let iters = 0;
+      for (const m of matches) {
+        const matchedText = m[0];
+        const ms = m.index;
+        const me = m.index + matchedText.length;
+        if (!this.matchSatisfiesType(text, ms, me, entry)) {
+          iters++;
+          continue;
+        }
+        let fws = ms;
+        let fwe = me;
+        if (!isSentence(entry.pattern)) {
+          while (fws > 0 && this.isWordCharacter(text[fws - 1])) fws--;
+          while (fwe < text.length && this.isWordCharacter(text[fwe])) fwe++;
+        }
+        const mtLower = String(
+          entry && entry.matchType || (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"))
+        ).toLowerCase();
+        const useExpanded = !isSentence(entry.pattern) && (mtLower === "contains" || mtLower === "startswith" || mtLower === "endswith");
+        const useStart = useExpanded ? fws : ms;
+        const useEnd = useExpanded ? fwe : me;
+        const useColor = folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color;
+        const priority = me - ms + (entry.isTextBg ? -10 : 0);
+        if (entry.pattern === "hello") {
+          debugLog(
+            "[MATCH_CREATE]",
+            `Pattern: hello, has bgOpacity=${typeof entry.backgroundOpacity}, value=${entry.backgroundOpacity}, textColor=${entry.textColor}, bgColor=${entry.backgroundColor}`
+          );
+        }
+        out.push({
+          start: useStart,
+          end: useEnd,
+          color: useColor,
+          word: matchedText,
+          styleType: entry.styleType,
+          textColor: entry.textColor,
+          backgroundColor: entry.backgroundColor,
+          isTextBg: entry.isTextBg === true,
+          priority,
+          entryRef: entry,
+          // Copy custom styling properties directly to match object for rendering
+          backgroundOpacity: entry.backgroundOpacity,
+          highlightBorderRadius: entry.highlightBorderRadius,
+          cornerShape: entry.cornerShape,
+          highlightHorizontalPadding: entry.highlightHorizontalPadding,
+          highlightVerticalPadding: entry.highlightVerticalPadding,
+          enableBorderThickness: entry.enableBorderThickness,
+          borderStyle: entry.borderStyle,
+          borderLineStyle: entry.borderLineStyle,
+          borderOpacity: entry.borderOpacity,
+          borderThickness: entry.borderThickness,
+          markTarget: entry.markTarget || "text"
+        });
+        iters++;
+      }
+      if (iters > 0) {
+        this.counters.regexExecs += iters;
+        this.counters.matchesFound += out.length;
+      }
+    }
+    if (out.length > 1) {
+      out.sort((a, b) => {
+        const la = a.end - a.start;
+        const lb = b.end - b.start;
+        if (la !== lb) return lb - la;
+        const ar = a.entryRef && !!a.entryRef.isRegex;
+        const br = b.entryRef && !!b.entryRef.isRegex;
+        if (ar !== br) return ar ? 1 : -1;
+        if (a.start !== b.start) return a.start - b.start;
+        return (b.priority || 0) - (a.priority || 0);
+      });
+      const no = [];
+      for (const m of out) {
+        let ov = false;
+        for (const s of no) {
+          if (m.start < s.end && m.end > s.start) {
+            ov = true;
+            break;
+          }
+        }
+        if (!ov) no.push(m);
+      }
+      return no;
+    }
+    return out;
+  }
+};
+var SettingsIndex = class {
+  constructor(settings) {
+    this.settings = settings || {};
+    this.firstChar = /* @__PURE__ */ new Map();
+    this.lengthRanges = /* @__PURE__ */ new Map();
+    this.regexPrefixes = /* @__PURE__ */ new Map();
+  }
+  rebuild(entries) {
+    this.firstChar.clear();
+    this.lengthRanges.clear();
+    this.regexPrefixes.clear();
+    for (const e of entries || []) {
+      if (!e || e.invalid || !e.pattern) continue;
+      const p = String(e.pattern);
+      if (!e.isRegex) {
+        const d = p[0] || "";
+        const bucket = this.firstChar.get(d) || [];
+        bucket.push(e);
+        this.firstChar.set(d, bucket);
+        const len = p.length;
+        const rangeKey = len < 5 ? "lt5" : len < 10 ? "lt10" : len < 20 ? "lt20" : "ge20";
+        const lr = this.lengthRanges.get(rangeKey) || [];
+        lr.push(e);
+        this.lengthRanges.set(rangeKey, lr);
+      } else {
+        const m = p.match(/[A-Za-z0-9]{3,}/);
+        if (m) {
+          const pref = m[0][0];
+          const list = this.regexPrefixes.get(pref) || [];
+          list.push(e);
+          this.regexPrefixes.set(pref, list);
+        }
+      }
+    }
+  }
+  query(text) {
+    if (!text) return [];
+    const t = String(text);
+    const set = /* @__PURE__ */ new Set();
+    const d = t[0] || "";
+    const cands = this.firstChar.get(d) || [];
+    for (const e of cands) set.add(e);
+    const len = t.length;
+    const rk = len < 5 ? "lt5" : len < 10 ? "lt10" : len < 20 ? "lt20" : "ge20";
+    const lr = this.lengthRanges.get(rk) || [];
+    for (const e of lr) set.add(e);
+    if (t.length >= 1) {
+      const rp = this.regexPrefixes.get(t[0]) || [];
+      for (const e of rp) set.add(e);
+    }
+    return Array.from(set);
+  }
+};
+function compileWordEntriesLogic(plugin) {
+  try {
+    try {
+      plugin._compiledWordEntries = [];
+      plugin._cachedSortedEntries = null;
+      plugin._cacheDirty = true;
+    } catch (e) {
+    }
+    try {
+      plugin._regexCache && plugin._regexCache.clear();
+    } catch (_) {
+    }
+    try {
+      plugin._bloomFilter && plugin._bloomFilter.reset();
+    } catch (_) {
+    }
+    if (!Array.isArray(plugin.settings.wordEntries)) return;
+    let allEntries = [...plugin.settings.wordEntries || []];
+    if (Array.isArray(plugin.settings.wordEntryGroups)) {
+      plugin.settings.wordEntryGroups.forEach((group) => {
+        if (group && group.active && Array.isArray(group.entries)) {
+          const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
+          const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
+          const mapped = group.entries.map((e) => {
+            const copy = Object.assign({}, e);
+            if (groupMatch) copy.matchType = groupMatch;
+            if (groupCase !== void 0)
+              copy._caseSensitiveOverride = groupCase;
+            const _effGroupType = applyGroupColorOverride(
+              copy,
+              group,
+              (c) => plugin.isValidHexColor(c)
+            );
+            if (typeof group.backgroundOpacity !== "undefined")
+              copy.backgroundOpacity = group.backgroundOpacity;
+            if (typeof group.highlightBorderRadius !== "undefined")
+              copy.highlightBorderRadius = group.highlightBorderRadius;
+            if (typeof group.cornerShape !== "undefined")
+              copy.cornerShape = group.cornerShape;
+            if (typeof group.highlightHorizontalPadding !== "undefined")
+              copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
+            if (typeof group.highlightVerticalPadding !== "undefined")
+              copy.highlightVerticalPadding = group.highlightVerticalPadding;
+            if (typeof group.enableBorderThickness !== "undefined")
+              copy.enableBorderThickness = group.enableBorderThickness;
+            if (group.borderStyle) copy.borderStyle = group.borderStyle;
+            if (group.borderLineStyle)
+              copy.borderLineStyle = group.borderLineStyle;
+            if (typeof group.borderOpacity !== "undefined")
+              copy.borderOpacity = group.borderOpacity;
+            if (typeof group.borderThickness !== "undefined")
+              copy.borderThickness = group.borderThickness;
+            copy._groupUid = group.uid || null;
+            copy._groupRef = group;
+            if (group.customCss && !copy.customCss) {
+              copy.customCss = group.customCss;
+              if (!_effGroupType)
+                copy.customCss = stripInheritedGroupCssColors(copy.customCss);
+            }
+            copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
+            copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
+            copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
+            copy.groupDisableTags = Array.isArray(group.disableTags) ? group.disableTags.slice() : [];
+            return copy;
+          });
+          allEntries = allEntries.concat(mapped);
+        }
+      });
+    }
+    for (const e of allEntries) {
+      if (!e) continue;
+      if (e.active === false) continue;
+      if (e && e.backgroundColor) continue;
+      const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || "").trim()];
+      const color = e.color;
+      if (!plugin.isValidHexColor(color) && !plugin.isValidHexColor(e.textColor)) {
+        continue;
+      }
+      const isRegex = !!e.isRegex;
+      for (let pattern of patterns) {
+        pattern = String(pattern).trim();
+        if (!pattern) continue;
+        pattern = plugin.sanitizePattern(pattern, isRegex);
+        if (!plugin.settings.disableRegexSafety && plugin.isKnownProblematicPattern(pattern)) {
+          debugWarn(
+            "COMPILE",
+            `Blocked dangerous pattern: ${pattern.substring(0, 50)}`
+          );
+          const compiled2 = {
+            pattern,
+            color,
+            isRegex,
+            flags: "",
+            regex: null,
+            testRegex: null,
+            invalid: true,
+            specificity: 0
+          };
+          plugin._compiledWordEntries.push(compiled2);
+          try {
+            const { Notice: Notice13 } = require("obsidian");
+            new Notice13(
+              plugin.t(
+                "notice_pattern_blocked",
+                "Pattern blocked for Memory Safety: " + pattern.substring(0, 30) + "..."
+              )
+            );
+          } catch (e2) {
+          }
+          continue;
+        }
+        const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
+        let flags = rawFlags || "";
+        if (!flags.includes("g")) flags += "g";
+        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : false;
+        if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
+        const compiled = {
+          pattern,
+          color,
+          textColor: e.textColor || e.color || color,
+          backgroundColor: e.backgroundColor || null,
+          styleType: e.styleType || "text",
+          markTarget: e.markTarget || "text",
+          matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
+          isRegex,
+          flags,
+          regex: null,
+          testRegex: null,
+          invalid: false,
+          specificity: pattern.replace(/\*/g, "").length,
+          presetLabel: e.presetLabel || void 0,
+          entryRef: e,
+          caseSensitive: effectiveCaseSensitive,
+          targetElement: e.targetElement || (e.presetLabel && /bold\s*italic/i.test(e.presetLabel) ? "strong-em" : e.presetLabel && /bold/i.test(e.presetLabel) ? "strong" : e.presetLabel && /italic/i.test(e.presetLabel) ? "em" : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" ? "strong" : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" ? "em" : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" ? "strong-em" : void 0),
+          inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
+          exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
+          groupUid: e._groupUid || null,
+          groupEnableFolders: Array.isArray(e.groupEnableFolders) ? e.groupEnableFolders.slice() : [],
+          groupDisableFolders: Array.isArray(e.groupDisableFolders) ? e.groupDisableFolders.slice() : [],
+          groupEnableTags: Array.isArray(e.groupEnableTags) ? e.groupEnableTags.slice() : [],
+          groupDisableTags: Array.isArray(e.groupDisableTags) ? e.groupDisableTags.slice() : [],
+          backgroundOpacity: e.backgroundOpacity,
+          highlightBorderRadius: e.highlightBorderRadius,
+          cornerShape: e.cornerShape,
+          highlightHorizontalPadding: e.highlightHorizontalPadding,
+          highlightVerticalPadding: e.highlightVerticalPadding,
+          enableBorderThickness: e.enableBorderThickness,
+          borderStyle: e.borderStyle,
+          borderLineStyle: e.borderLineStyle,
+          borderOpacity: e.borderOpacity,
+          borderThickness: e.borderThickness,
+          customCss: e.customCss || null,
+          execs: 0,
+          avoidedExecs: 0,
+          matchesFound: 0,
+          blocksProcessed: 0,
+          _hotLogged: false
+        };
+        if (!pattern) {
+          compiled.invalid = true;
+          plugin._compiledWordEntries.push(compiled);
+          continue;
+        }
+        try {
+          if (plugin.settings.enableRegexSupport && isRegex) {
+            if (!plugin.validateAndSanitizeRegex(pattern)) {
+              compiled.invalid = true;
+              plugin._compiledWordEntries.push(compiled);
+              continue;
+            }
+            compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
+            const testFlags = flags.replace(/g/g, "");
+            compiled.testRegex = plugin._regexCache.getOrCreate(
+              pattern,
+              testFlags
+            );
+          } else {
+            const esc = plugin.escapeRegex(pattern);
+            const matchTypeLower = String(
+              compiled.matchType || "exact"
+            ).toLowerCase();
+            const isSentence = plugin.isSentenceLikePattern(pattern);
+            const UWC = "\\p{L}\\p{N}\\-'";
+            let finalPattern = esc;
+            if (!isSentence && matchTypeLower === "startswith") {
+              finalPattern = `(?<![${UWC}])` + esc;
+            } else if (!isSentence && matchTypeLower === "endswith") {
+              finalPattern = esc + `(?![${UWC}])`;
+            } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
+              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
+            }
+            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
+            compiled.regex = plugin._regexCache.getOrCreate(
+              finalPattern,
+              literalFlags
+            );
+            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "u") : plugin._regexCache.getOrCreate(finalPattern, "iu");
+          }
+        } catch (err) {
+          compiled.invalid = true;
+        }
+        try {
+          plugin._bloomFilter && plugin._bloomFilter.addPattern(pattern, isRegex);
+        } catch (_) {
+        }
+        try {
+          compiled.fastTest = plugin.createFastTester(
+            pattern,
+            compiled.isRegex,
+            effectiveCaseSensitive
+          );
+        } catch (e2) {
+          compiled.fastTest = (text) => true;
+        }
+        plugin._compiledWordEntries.push(compiled);
+      }
+    }
+    plugin._compiledWordEntries.sort(
+      (a, b) => b.specificity - a.specificity || b.pattern.length - a.pattern.length
+    );
+    try {
+      plugin._cacheDirty = true;
+      plugin._cachedSortedEntries = null;
+    } catch (e) {
+    }
+    try {
+      const all = (Array.isArray(plugin._compiledWordEntries) ? plugin._compiledWordEntries : []).concat(
+        Array.isArray(plugin._compiledTextBgEntries) ? plugin._compiledTextBgEntries : []
+      );
+      plugin._settingsIndex && plugin._settingsIndex.rebuild(all);
+    } catch (_) {
+    }
+  } catch (err) {
+    debugError("COMPILE", "compileWordEntriesLogic failed", err);
+    try {
+      plugin._compiledWordEntries = [];
+      plugin._cachedSortedEntries = null;
+      plugin._cacheDirty = true;
+    } catch (e) {
+    }
+  }
+}
+function compileTextBgColoringEntriesLogic(plugin) {
+  try {
+    try {
+      plugin._compiledTextBgEntries = [];
+    } catch (e) {
+    }
+    let source = [
+      ...Array.isArray(plugin.settings.wordEntries) ? plugin.settings.wordEntries : []
+    ];
+    if (Array.isArray(plugin.settings.wordEntryGroups)) {
+      plugin.settings.wordEntryGroups.forEach((group) => {
+        if (group && group.active && Array.isArray(group.entries)) {
+          const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
+          const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
+          const mapped = group.entries.map((e) => {
+            const copy = Object.assign({}, e);
+            if (groupMatch) copy.matchType = groupMatch;
+            if (groupCase !== void 0)
+              copy._caseSensitiveOverride = groupCase;
+            const _effGroupType = applyGroupColorOverride(
+              copy,
+              group,
+              (c) => plugin.isValidHexColor(c)
+            );
+            if (typeof group.backgroundOpacity !== "undefined")
+              copy.backgroundOpacity = group.backgroundOpacity;
+            if (typeof group.highlightBorderRadius !== "undefined")
+              copy.highlightBorderRadius = group.highlightBorderRadius;
+            if (typeof group.cornerShape !== "undefined")
+              copy.cornerShape = group.cornerShape;
+            if (typeof group.highlightHorizontalPadding !== "undefined")
+              copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
+            if (typeof group.highlightVerticalPadding !== "undefined")
+              copy.highlightVerticalPadding = group.highlightVerticalPadding;
+            if (typeof group.enableBorderThickness !== "undefined")
+              copy.enableBorderThickness = group.enableBorderThickness;
+            if (group.borderStyle) copy.borderStyle = group.borderStyle;
+            if (group.borderLineStyle)
+              copy.borderLineStyle = group.borderLineStyle;
+            if (typeof group.borderOpacity !== "undefined")
+              copy.borderOpacity = group.borderOpacity;
+            if (typeof group.borderThickness !== "undefined")
+              copy.borderThickness = group.borderThickness;
+            copy._groupUid = group.uid || null;
+            copy._groupRef = group;
+            if (group.customCss && !copy.customCss) {
+              copy.customCss = group.customCss;
+              if (!_effGroupType)
+                copy.customCss = stripInheritedGroupCssColors(copy.customCss);
+            }
+            copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
+            copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
+            copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
+            copy.groupDisableTags = Array.isArray(group.disableTags) ? group.disableTags.slice() : [];
+            return copy;
+          });
+          source = source.concat(mapped);
+        }
+      });
+    }
+    for (const e of source) {
+      if (!e || !e.backgroundColor) continue;
+      if (e.active === false) continue;
+      if (e.presetLabel) {
+        const label = String(e.presetLabel).toLowerCase();
+        if (label.includes("bold") || label.includes("italic")) continue;
+      }
+      const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || "").trim()];
+      const textColor = e.textColor || "currentColor";
+      const backgroundColor = e.backgroundColor;
+      const isRegex = !!e.isRegex;
+      const textOk = textColor === "currentColor" || plugin.isValidHexColor(textColor);
+      const bgOk = plugin.isValidHexColor(backgroundColor);
+      if (!textOk || !bgOk) continue;
+      for (let pattern of patterns) {
+        pattern = String(pattern).trim();
+        if (!pattern) continue;
+        pattern = plugin.sanitizePattern(pattern, isRegex);
+        if (!plugin.settings.disableRegexSafety && plugin.isKnownProblematicPattern(pattern)) {
+          debugWarn(
+            "COMPILE_TEXTBG",
+            `Blocked dangerous pattern: ${pattern.substring(0, 50)}`
+          );
+          const compiled2 = {
+            pattern,
+            textColor,
+            backgroundColor,
+            markTarget: e.markTarget || "text",
+            matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
+            isRegex,
+            flags: "",
+            regex: null,
+            testRegex: null,
+            invalid: true,
+            specificity: 0,
+            isTextBg: true,
+            entryRef: e
+          };
+          plugin._compiledTextBgEntries.push(compiled2);
+          continue;
+        }
+        const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
+        let flags = rawFlags || "";
+        if (!flags.includes("g")) flags += "g";
+        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : false;
+        if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
+        const compiled = {
+          pattern,
+          textColor,
+          backgroundColor,
+          styleType: e.styleType || "both",
+          markTarget: e.markTarget || "text",
+          matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
+          isRegex,
+          flags,
+          regex: null,
+          testRegex: null,
+          invalid: false,
+          specificity: pattern.replace(/\*/g, "").length,
+          isTextBg: true,
+          presetLabel: e.presetLabel || void 0,
+          entryRef: e,
+          caseSensitive: effectiveCaseSensitive,
+          inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
+          exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
+          groupUid: e._groupUid || null,
+          groupEnableFolders: Array.isArray(e.groupEnableFolders) ? e.groupEnableFolders.slice() : [],
+          groupDisableFolders: Array.isArray(e.groupDisableFolders) ? e.groupDisableFolders.slice() : [],
+          groupEnableTags: Array.isArray(e.groupEnableTags) ? e.groupEnableTags.slice() : [],
+          groupDisableTags: Array.isArray(e.groupDisableTags) ? e.groupDisableTags.slice() : [],
+          backgroundOpacity: e.backgroundOpacity,
+          highlightBorderRadius: e.highlightBorderRadius,
+          cornerShape: e.cornerShape,
+          highlightHorizontalPadding: e.highlightHorizontalPadding,
+          highlightVerticalPadding: e.highlightVerticalPadding,
+          enableBorderThickness: e.enableBorderThickness,
+          borderStyle: e.borderStyle,
+          borderLineStyle: e.borderLineStyle,
+          borderOpacity: e.borderOpacity,
+          borderThickness: e.borderThickness,
+          customCss: e.customCss || null
+        };
+        try {
+          if (plugin.settings.enableRegexSupport && isRegex) {
+            if (!plugin.validateAndSanitizeRegex(pattern)) {
+              compiled.invalid = true;
+              plugin._compiledTextBgEntries.push(compiled);
+              continue;
+            }
+            compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
+            const testFlags = flags.replace(/g/g, "");
+            compiled.testRegex = plugin._regexCache.getOrCreate(
+              pattern,
+              testFlags
+            );
+          } else {
+            const esc = plugin.escapeRegex(pattern);
+            const matchTypeLower = String(
+              compiled.matchType || "exact"
+            ).toLowerCase();
+            const isSentence = plugin.isSentenceLikePattern(pattern);
+            const UWC = "\\p{L}\\p{N}\\-'";
+            let finalPattern = esc;
+            if (!isSentence && matchTypeLower === "startswith") {
+              finalPattern = `(?<![${UWC}])` + esc;
+            } else if (!isSentence && matchTypeLower === "endswith") {
+              finalPattern = esc + `(?![${UWC}])`;
+            } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
+              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
+            }
+            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
+            compiled.regex = plugin._regexCache.getOrCreate(
+              finalPattern,
+              literalFlags
+            );
+            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "u") : plugin._regexCache.getOrCreate(finalPattern, "iu");
+          }
+          try {
+            compiled.fastTest = plugin.createFastTester(
+              pattern,
+              isRegex,
+              effectiveCaseSensitive
+            );
+          } catch (e2) {
+            compiled.fastTest = (text) => true;
+          }
+          try {
+            plugin._bloomFilter && plugin._bloomFilter.addPattern(pattern, isRegex);
+          } catch (_) {
+          }
+          plugin._compiledTextBgEntries.push(compiled);
+        } catch (err) {
+          compiled.invalid = true;
+          compiled.regex = null;
+          compiled.testRegex = null;
+          debugError(
+            "COMPILE_TEXTBG",
+            `Failed to compile pattern: ${pattern}`,
+            err
+          );
+          plugin._compiledTextBgEntries.push(compiled);
+        }
+      }
+    }
+    plugin._compiledTextBgEntries.sort(
+      (a, b) => b.specificity - a.specificity
+    );
+  } catch (err) {
+    debugError(
+      "COMPILE_TEXTBG",
+      "compileTextBgColoringEntriesLogic failed",
+      err
+    );
+    try {
+      plugin._compiledTextBgEntries = [];
+    } catch (e) {
+    }
+  }
+  try {
+    const all = (Array.isArray(plugin._compiledWordEntries) ? plugin._compiledWordEntries : []).concat(
+      Array.isArray(plugin._compiledTextBgEntries) ? plugin._compiledTextBgEntries : []
+    );
+    plugin._settingsIndex && plugin._settingsIndex.rebuild(all);
+  } catch (_) {
+  }
+  try {
+    plugin.compileWordPatterns();
+  } catch (e) {
+    debugError("COMPILE", "Failed to compile word patterns", e);
+  }
+  try {
+    plugin.compileTextBgPatterns();
+  } catch (e) {
+    debugError("COMPILE", "Failed to compile text+bg patterns", e);
+  }
+}
+function compileBlacklistEntriesLogic(plugin) {
+  try {
+    plugin._compiledBlacklistWords = [];
+    plugin._compiledBlacklistEntries = [];
+    plugin._compiledBlacklistGroups = {};
+    const blacklistWords = Array.isArray(plugin.settings.blacklistWords) ? plugin.settings.blacklistWords : [];
+    for (const word of blacklistWords) {
+      if (!word) continue;
+      try {
+        const flags = plugin.settings.caseSensitive ? "u" : "iu";
+        const UWC = "\\p{L}\\p{N}\\-'";
+        const esc = plugin.escapeRegex(String(word));
+        const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
+        const regex = plugin._regexCache.getOrCreate(pattern, flags);
+        if (regex) {
+          plugin._compiledBlacklistWords.push({ word, regex, flags });
+        }
+      } catch (e) {
+      }
+    }
+    const blacklistEntries = Array.isArray(plugin.settings.blacklistEntries) ? plugin.settings.blacklistEntries : [];
+    for (const entry of blacklistEntries) {
+      if (!entry) continue;
+      if (entry.targetElement) continue;
+      try {
+        const compiled = { entry, patterns: [] };
+        if (entry.isRegex && plugin.settings.enableRegexSupport) {
+          const flags = entry.flags || (plugin.settings.caseSensitive ? "" : "i");
+          const regex = plugin._regexCache.getOrCreate(entry.pattern, flags);
+          if (regex) {
+            compiled.patterns.push({ regex, flags, isRegex: true });
+          }
+        } else {
+          const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
+          for (const p of patterns) {
+            if (!p) continue;
+            const flags = plugin.settings.caseSensitive ? "u" : "iu";
+            const UWC = "\\p{L}\\p{N}\\-'";
+            const esc = plugin.escapeRegex(String(p));
+            const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
+            const regex = plugin._regexCache.getOrCreate(pattern, flags);
+            if (regex) {
+              compiled.patterns.push({
+                regex,
+                flags,
+                isRegex: false,
+                pattern: String(p)
+              });
+            }
+          }
+        }
+        if (compiled.patterns.length > 0) {
+          plugin._compiledBlacklistEntries.push(compiled);
+        }
+      } catch (e) {
+      }
+    }
+    const blacklistGroups = Array.isArray(plugin.settings.blacklistEntryGroups) ? plugin.settings.blacklistEntryGroups : [];
+    for (const group of blacklistGroups) {
+      if (!group || !group.uid) continue;
+      try {
+        const compiled = {
+          group,
+          entries: [],
+          isCaseSensitive: group.caseSensitiveOverride !== null ? group.caseSensitiveOverride : plugin.settings.caseSensitive,
+          matchType: group.matchTypeOverride || "contains"
+        };
+        const groupEntries = Array.isArray(group.entries) ? group.entries : [];
+        for (const entry of groupEntries) {
+          if (!entry) continue;
+          if (entry.targetElement) continue;
+          const entryCompiled = { entry, patterns: [] };
+          if (entry.isRegex && plugin.settings.enableRegexSupport) {
+            const flags = entry.flags || (compiled.isCaseSensitive ? "" : "i");
+            const regex = plugin._regexCache.getOrCreate(
+              entry.pattern,
+              flags
+            );
+            if (regex) {
+              entryCompiled.patterns.push({ regex, flags, isRegex: true });
+            }
+          } else {
+            const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
+            for (const p of patterns) {
+              if (!p) continue;
+              const UWC = "\\p{L}\\p{N}\\-'";
+              const esc = plugin.escapeRegex(String(p));
+              const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
+              const flags = compiled.isCaseSensitive ? "u" : "iu";
+              const regex = plugin._regexCache.getOrCreate(
+                pattern,
+                flags
+              );
+              if (regex) {
+                entryCompiled.patterns.push({
+                  regex,
+                  pattern: String(p),
+                  isRegex: false
+                });
+              }
+            }
+          }
+          if (entryCompiled.patterns.length > 0) {
+            entryCompiled.matchType = compiled.matchType;
+            compiled.entries.push(entryCompiled);
+          }
+        }
+        if (compiled.entries.length > 0) {
+          plugin._compiledBlacklistGroups[group.uid] = compiled;
+        }
+      } catch (e) {
+      }
+    }
+    plugin._blacklistCompilationDirty = false;
+    debugLog(
+      "BLACKLIST_COMPILE",
+      `Compiled ${plugin._compiledBlacklistWords.length} words, ${plugin._compiledBlacklistEntries.length} entries, ${Object.keys(plugin._compiledBlacklistGroups).length} groups`
+    );
+  } catch (e) {
+    debugError("BLACKLIST_COMPILE", "Failed to compile blacklist", e);
+  }
+}
 
 // src/modals/HighlightStylingModal.js
 function resolveVarToHex(varStr) {
@@ -9034,7 +10082,7 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
     styleSelect.addClass("act-highlight-style-select");
     if (isGroup) {
       const defaultOpt = styleSelect.createEl("option", {
-        text: this.plugin.t("opt_style_default", "Default (Per-Entry)")
+        text: this.plugin.t("opt_style_default", "Per-Entry")
       });
       defaultOpt.value = "";
     }
@@ -9059,21 +10107,23 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
     this._tPickerTouched = false;
     this._bPickerTouched = false;
     const isPollutedGroupBothBlackAtOpen = isGroup && String(this.entry?.textColor || "").toLowerCase() === "#000000" && String(this.entry?.backgroundColor || "").toLowerCase() === "#000000";
-    const _openHadRealText = !isPollutedGroupBothBlackAtOpen && !!(this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) || this.entry.color && this.plugin.isValidHexColor(this.entry.color)));
-    const _openHadRealBg = !isPollutedGroupBothBlackAtOpen && !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+    this._openHadRealText = !isPollutedGroupBothBlackAtOpen && !!(this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) || this.entry.color && this.plugin.isValidHexColor(this.entry.color)));
+    this._openHadRealBg = !isPollutedGroupBothBlackAtOpen && !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+    const nullTextDisplay = "#000000";
+    const nullBgDisplay = "#000000";
     setColorInputValue(
       tColor,
-      this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "#ffffff") || "#ffffff"
+      this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : nullTextDisplay) || nullTextDisplay
     );
     setColorInputValue(
       bColor,
-      this.entry && this.entry.backgroundColor ? this.entry.backgroundColor : "#000000"
+      this.entry && this.entry.backgroundColor ? this.entry.backgroundColor : nullBgDisplay
     );
     const syncColorsFromParent = (evt) => {
       try {
         if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
-          const initTextColor = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "") || getColorInputValue(tColor) || "#ffffff";
-          const initBgColor = this.entry && (this.entry.backgroundColor || "") || getColorInputValue(bColor) || "#000000";
+          const initTextColor = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "") || getColorInputValue(tColor) || nullTextDisplay;
+          const initBgColor = this.entry && (this.entry.backgroundColor || "") || getColorInputValue(bColor) || nullBgDisplay;
           if (this.plugin.isValidHexColor(initTextColor))
             setColorInputValue(tColor, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
@@ -9163,6 +10213,11 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
         this.entry.highlightBorderRadius = Number(radiusInput.value || 0);
       renderPreview();
     });
+    radiusInput.addEventListener("input", () => {
+      if (this.entry)
+        this.entry.highlightBorderRadius = Number(radiusInput.value || 0);
+      renderPreview();
+    });
     const radiusReset = radiusInputRight.createEl("button");
     radiusReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
@@ -9178,6 +10233,51 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
     });
     this._handlers.push({ el: radiusInput, ev: "change", fn: () => {
     } });
+    const shapeLeft = grid.createDiv();
+    shapeLeft.textContent = this.plugin.t(
+      "label_highlight_shape",
+      "Highlight Shape"
+    );
+    const shapeRight = grid.createDiv();
+    const CORNER_SHAPES = [
+      "round",
+      "scoop",
+      "bevel",
+      "notch",
+      "square",
+      "squircle"
+    ];
+    const shapeSel = shapeRight.createEl("select");
+    shapeSel.setAttribute("data-act-corner-shape", "true");
+    CORNER_SHAPES.forEach((value) => {
+      const o = shapeSel.createEl("option", {
+        text: this.plugin.t(
+          "opt_corner_" + value,
+          value.charAt(0).toUpperCase() + value.slice(1)
+        )
+      });
+      o.value = value;
+    });
+    const initShapeRaw = this.entry && typeof this.entry.cornerShape === "string" && this.entry.cornerShape ? this.entry.cornerShape.toLowerCase() : String(this.plugin.settings.cornerShape ?? "round").toLowerCase();
+    shapeSel.value = CORNER_SHAPES.includes(initShapeRaw) ? initShapeRaw : "round";
+    shapeSel.addEventListener("change", () => {
+      if (this.entry) this.entry.cornerShape = shapeSel.value;
+      renderPreview();
+    });
+    const shapeReset = shapeRight.createEl("button");
+    shapeReset.addClass("act-highlight-reset-btn", "clickable-icon");
+    try {
+      (0, import_obsidian5.setIcon)(shapeReset, "reset");
+    } catch (e) {
+    }
+    shapeReset.addEventListener("click", () => {
+      if (this.entry) this.entry.cornerShape = void 0;
+      shapeSel.value = String(
+        this.plugin.settings.cornerShape ?? "round"
+      ).toLowerCase();
+      if (!CORNER_SHAPES.includes(shapeSel.value)) shapeSel.value = "round";
+      renderPreview();
+    });
     const hPadLeft = grid.createDiv();
     hPadLeft.textContent = this.plugin.t(
       "label_horizontal_padding",
@@ -9192,6 +10292,11 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
     hPadInput.addClass("act-highlight-input-small");
     hPadInput.setAttribute("data-act-hpad-input", "true");
     hPadInput.addEventListener("change", () => {
+      if (this.entry)
+        this.entry.highlightHorizontalPadding = Number(hPadInput.value || 0);
+      renderPreview();
+    });
+    hPadInput.addEventListener("input", () => {
       if (this.entry)
         this.entry.highlightHorizontalPadding = Number(hPadInput.value || 0);
       renderPreview();
@@ -9223,6 +10328,11 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
     vPadInput.addClass("act-highlight-input-small");
     vPadInput.setAttribute("data-act-vpad-input", "true");
     vPadInput.addEventListener("change", () => {
+      if (this.entry)
+        this.entry.highlightVerticalPadding = Number(vPadInput.value || 0);
+      renderPreview();
+    });
+    vPadInput.addEventListener("input", () => {
       if (this.entry)
         this.entry.highlightVerticalPadding = Number(vPadInput.value || 0);
       renderPreview();
@@ -9390,6 +10500,11 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
         this.entry.borderThickness = Number(thickInput.value || 0);
       renderPreview();
     });
+    thickInput.addEventListener("input", () => {
+      if (this.entry)
+        this.entry.borderThickness = Number(thickInput.value || 0);
+      renderPreview();
+    });
     const thickReset = thickRight.createEl("button");
     thickReset.addClass("act-highlight-reset-btn", "clickable-icon");
     try {
@@ -9403,53 +10518,37 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
     });
     const renderPreview = () => {
       const style = styleSelect.value;
-      if (isGroup && !style) {
-        const txt = words.textContent || "";
-        try {
-          while (previewWrap.firstChild)
-            previewWrap.removeChild(previewWrap.firstChild);
-          const span2 = document.createElement("span");
-          span2.textContent = txt;
-          span2.style.display = "inline";
-          span2.style.opacity = "1";
-          span2.style.color = "var(--text-normal)";
-          span2.style.backgroundColor = "transparent";
-          previewWrap.appendChild(span2);
-        } catch (_) {
-          previewWrap.innerHTML = `<span style="display:inline;color:var(--text-normal)">${escapeHtml(
-            txt
-          )}</span>`;
-        }
-        return;
-      }
+      const renderStyle = isGroup && !style ? "highlight" : style;
       const tRaw = getColorInputValue(tColor);
       const bRaw = getColorInputValue(bColor);
       const isVarT = tRaw && /^var\(/.test(tRaw.trim());
       const isVarB = bRaw && /^var\(/.test(bRaw.trim());
-      const hasValidT = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarT || _openHadRealText || this._tPickerTouched);
-      const hasValidB = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarB || _openHadRealBg || this._bPickerTouched);
+      const hasValidT = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarT || this._openHadRealText || this._tPickerTouched);
+      const hasValidB = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarB || this._openHadRealBg || this._bPickerTouched);
       const t = hasValidT ? tRaw : "var(--text-normal)";
       const p = this.plugin.getHighlightParams(this.entry);
       const opacity = p.opacity ?? 25;
       const radius = p.radius ?? 8;
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
+      const cornerShape = p.cornerShape ?? "round";
       const bgCss = hasValidB ? isVarB ? `color-mix(in srgb, ${bRaw.trim()} ${opacity}%, transparent)` : this.plugin.hexToRgba(bRaw, opacity) : `color-mix(in srgb, var(--color-accent) ${opacity}%, transparent)`;
       const effectiveBForBorder = hasValidB ? bRaw : "var(--color-accent)";
       const effectiveTForBorder = hasValidT ? tRaw : "var(--color-accent)";
-      const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, effectiveBForBorder, this.entry) : this.plugin.generateBorderStyle(effectiveTForBorder, effectiveBForBorder, this.entry);
+      const borderStyle = renderStyle === "text" ? "" : renderStyle === "highlight" ? this.plugin.generateBorderStyle(null, effectiveBForBorder, this.entry) : this.plugin.generateBorderStyle(effectiveTForBorder, effectiveBForBorder, this.entry);
       const bdb = "box-decoration-break:clone;-webkit-box-decoration-break:clone;";
       while (previewWrap.firstChild)
         previewWrap.removeChild(previewWrap.firstChild);
       const span = document.createElement("span");
       span.style.display = "inline";
-      if (style === "text") {
+      if (renderStyle === "text") {
         span.style.setProperty("color", t, "important");
         span.style.setProperty("background", "transparent", "important");
-      } else if (style === "highlight") {
+      } else if (renderStyle === "highlight") {
         span.style.setProperty("background-color", bgCss, "important");
         span.style.setProperty("color", "var(--text-normal)", "important");
         span.style.setProperty("border-radius", radius + "px", "important");
+        if (cornerShape && cornerShape !== "round") span.style.setProperty("corner-shape", cornerShape, "important");
         span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
         span.style.setProperty("box-decoration-break", "clone", "important");
         span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
@@ -9457,6 +10556,7 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
         span.style.setProperty("color", t, "important");
         span.style.setProperty("background-color", bgCss, "important");
         span.style.setProperty("border-radius", radius + "px", "important");
+        if (cornerShape && cornerShape !== "round") span.style.setProperty("corner-shape", cornerShape, "important");
         span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
         span.style.setProperty("box-decoration-break", "clone", "important");
         span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
@@ -9475,12 +10575,20 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
       if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
         try {
           const tempEntry = Object.assign({}, this.entry, {
-            color: style === "text" ? t : "",
-            textColor: style === "both" ? t : style === "highlight" ? "currentColor" : null,
-            backgroundColor: style === "highlight" || style === "both" ? hasValidB ? bRaw : null : null
+            color: renderStyle === "text" ? t : "",
+            textColor: renderStyle === "both" ? t : renderStyle === "highlight" ? "currentColor" : null,
+            backgroundColor: renderStyle === "highlight" || renderStyle === "both" ? hasValidB ? bRaw : null : null
           });
           const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
-          const decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
+          let decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
+          if (decl && isGroup && !style) {
+            try {
+              decl = this.plugin.sanitizeCssDeclarations(
+                stripInheritedGroupCssColors(decl, "var(--color-accent)")
+              );
+            } catch (_) {
+            }
+          }
           if (decl) {
             decl.split(";").map((s) => s.trim()).filter(Boolean).forEach((p2) => {
               const idx = p2.indexOf(":");
@@ -9491,15 +10599,22 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
         } catch (_) {
         }
       }
-      if (!hasValidT && style !== "highlight") {
+      if (!hasValidT && renderStyle !== "highlight") {
         span.style.setProperty("color", "var(--text-normal)", "important");
       }
-      if (!hasValidB && style !== "text") {
+      if (!hasValidB && renderStyle !== "text") {
         span.style.setProperty("background-color", bgCss, "important");
       }
       previewWrap.appendChild(span);
     };
+    const updateStyleSelectHeight = () => {
+      try {
+        styleSelect.style.height = isGroup && !styleSelect.value ? "100%" : "";
+      } catch (_) {
+      }
+    };
     const updatePickerVisibility = () => {
+      updateStyleSelectHeight();
       const style = styleSelect.value;
       if (style === "text") {
         tColor.style.display = "inline-block";
@@ -9536,7 +10651,7 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
       const presetHandler = () => {
         new TextStylePresetsModal(this.app, this.plugin, (preset) => {
           if (!preset || !this.entry) return;
-          const shapeKeys = ["styleType", "backgroundOpacity", "highlightBorderRadius", "highlightHorizontalPadding", "highlightVerticalPadding", "enableBorderThickness", "borderStyle", "borderLineStyle", "borderOpacity", "borderThickness", "customCss"];
+          const shapeKeys = ["styleType", "backgroundOpacity", "highlightBorderRadius", "cornerShape", "highlightHorizontalPadding", "highlightVerticalPadding", "enableBorderThickness", "borderStyle", "borderLineStyle", "borderOpacity", "borderThickness", "customCss"];
           for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
           if ("textColor" in preset) this.entry.textColor = preset.textColor;
           if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
@@ -9574,6 +10689,10 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
           }
           try {
             radiusInput.value = String(this.entry.highlightBorderRadius ?? this.plugin.settings.highlightBorderRadius ?? 4);
+          } catch (_) {
+          }
+          try {
+            shapeSel.value = String(this.entry.cornerShape ?? this.plugin.settings.cornerShape ?? "round").toLowerCase();
           } catch (_) {
           }
           try {
@@ -9633,6 +10752,7 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
       if (this.entry) {
         this.entry.backgroundOpacity = void 0;
         this.entry.highlightBorderRadius = void 0;
+        this.entry.cornerShape = void 0;
         this.entry.highlightHorizontalPadding = void 0;
         this.entry.highlightVerticalPadding = void 0;
         this.entry.enableBorderThickness = void 0;
@@ -9648,6 +10768,10 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
         }
       }
       this._resetAllApplied = true;
+      this._openHadRealText = !!(this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) || this.entry.color && this.plugin.isValidHexColor(this.entry.color)));
+      this._openHadRealBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+      this._tPickerTouched = false;
+      this._bPickerTouched = false;
       try {
         opacitySlider.value = String(
           this.plugin.settings.backgroundOpacity ?? 35
@@ -9655,6 +10779,12 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
         radiusInput.value = String(
           this.plugin.settings.highlightBorderRadius ?? 4
         );
+        try {
+          shapeSel.value = String(
+            this.plugin.settings.cornerShape ?? "round"
+          ).toLowerCase();
+        } catch (_) {
+        }
         hPadInput.value = String(
           this.plugin.settings.highlightHorizontalPadding ?? 4
         );
@@ -9669,6 +10799,10 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
         if (isGroup2) {
           styleSelect.value = "";
           pickerRow.style.display = "none";
+          try {
+            updateStyleSelectHeight();
+          } catch (_) {
+          }
         }
       } catch (_) {
       }
@@ -9685,8 +10819,8 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
       const style = styleSelect.value;
       const curT = getColorInputValue(tColor);
       const curB = getColorInputValue(bColor);
-      const realT = this._tPickerTouched || _openHadRealText ? curT : "";
-      const realB = this._bPickerTouched || _openHadRealBg ? curB : "";
+      const realT = this._tPickerTouched || this._openHadRealText ? curT : "";
+      const realB = this._bPickerTouched || this._openHadRealBg ? curB : "";
       this.entry._savedTextColor = realT || this.entry._savedTextColor || this.entry.color || this.entry.textColor || "";
       this.entry._savedBackgroundColor = realB || this.entry._savedBackgroundColor || this.entry.backgroundColor || "";
       if (style === "text") {
@@ -9724,25 +10858,21 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
           async (color, result) => {
             const tc = result && result.textColor && this.plugin.isValidHexColor(result.textColor) ? result.textColor : null;
             const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
-            const fallback = color && this.plugin.isValidHexColor(color) ? color : null;
-            let changed = false;
             if (tc) {
               setColorInputValue(tColor, tc);
               this._tPickerTouched = true;
-              changed = true;
-            } else if (fallback && isTextPicker) {
-              setColorInputValue(tColor, fallback);
-              this._tPickerTouched = true;
-              changed = true;
+            } else {
+              setColorInputValue(tColor, "#000000");
+              this._tPickerTouched = false;
+              this._openHadRealText = false;
             }
             if (bc) {
               setColorInputValue(bColor, bc);
               this._bPickerTouched = true;
-              changed = true;
-            } else if (fallback && !isTextPicker) {
-              setColorInputValue(bColor, fallback);
-              this._bPickerTouched = true;
-              changed = true;
+            } else {
+              setColorInputValue(bColor, "#000000");
+              this._bPickerTouched = false;
+              this._openHadRealBg = false;
             }
             if (result && result.markTarget) {
               if (this._markTargetSelect) this._markTargetSelect.value = result.markTarget;
@@ -9756,12 +10886,6 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
                 this.plugin.triggerActiveDocumentRerender();
               }
             }
-            if (!changed) {
-              if (currentColor && this.plugin.isValidHexColor(currentColor)) {
-                if (isTextPicker) setColorInputValue(tColor, currentColor);
-                else setColorInputValue(bColor, currentColor);
-              }
-            }
             dispatchHighlightColorsChanged();
             renderPreview();
           },
@@ -9772,12 +10896,16 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
           this.entry
         );
         modal._hideHeaderControls = true;
-        const preT = getColorInputValue(tColor);
-        const preB = getColorInputValue(bColor);
-        if (preT) modal._preFillTextColor = preT;
-        if (preB) {
-          modal._preFillBgColor = preB;
-          modal._preFillBorderColor = preB;
+        try {
+          const _e = this.entry;
+          const _realT = _e && (_e.textColor && _e.textColor !== "currentColor" && this.plugin.isValidHexColor(_e.textColor) ? _e.textColor : this.plugin.isValidHexColor(_e.color) ? _e.color : null) || (this._tPickerTouched || this._openHadRealText ? getColorInputValue(tColor) : null);
+          const _realB = (_e && _e.backgroundColor && this.plugin.isValidHexColor(_e.backgroundColor) ? _e.backgroundColor : null) || (this._bPickerTouched || this._openHadRealBg ? getColorInputValue(bColor) : null);
+          if (_realT && this.plugin.isValidHexColor(_realT)) modal._preFillTextColor = _realT;
+          if (_realB && this.plugin.isValidHexColor(_realB)) {
+            modal._preFillBgColor = _realB;
+            modal._preFillBorderColor = _realB;
+          }
+        } catch (_) {
         }
         modal.open();
       });
@@ -9801,8 +10929,8 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
     const colorSyncHandler = (evt) => {
       try {
         if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
-          const initTextColor = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : "#ffffff") || "#ffffff";
-          const initBgColor = this.entry && this.entry.backgroundColor ? this.entry.backgroundColor : "#000000";
+          const initTextColor = this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" ? this.entry.textColor : this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : nullTextDisplay) || nullTextDisplay;
+          const initBgColor = this.entry && this.entry.backgroundColor ? this.entry.backgroundColor : nullBgDisplay;
           if (this.plugin.isValidHexColor(initTextColor))
             setColorInputValue(tColor, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
@@ -9827,25 +10955,35 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
           this.entry.textColor = void 0;
           this.entry.backgroundColor = void 0;
           pickerRow.style.display = "none";
+          try {
+            updateStyleSelectHeight();
+          } catch (_) {
+          }
         } else {
           this.entry.styleType = st;
           pickerRow.style.display = "";
           try {
+            updateStyleSelectHeight();
+          } catch (_) {
+          }
+          try {
             updatePickerVisibility();
           } catch (_) {
           }
+          const tHad = this._tPickerTouched || this._openHadRealText;
+          const bHad = this._bPickerTouched || this._openHadRealBg;
           if (st === "text") {
-            this.entry.color = getColorInputValue(tColor) || "";
+            this.entry.color = isGroup && !tHad ? void 0 : getColorInputValue(tColor) || "";
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = getColorInputValue(bColor) || "";
+            this.entry.backgroundColor = isGroup && !bHad ? void 0 : getColorInputValue(bColor) || "";
           } else {
             this.entry.color = "";
-            this.entry.textColor = getColorInputValue(tColor) || "";
-            this.entry.backgroundColor = getColorInputValue(bColor) || "";
+            this.entry.textColor = isGroup && !tHad ? void 0 : getColorInputValue(tColor) || "";
+            this.entry.backgroundColor = isGroup && !bHad ? void 0 : getColorInputValue(bColor) || "";
           }
         }
       }
@@ -9857,12 +10995,31 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
     saveBtn.addClass("mod-cta");
     const saveData = async (shouldClose = true) => {
       if (this.entry) {
-        const st = styleSelect.value;
+        let st = styleSelect.value;
+        const tRawPeek = getColorInputValue(tColor);
+        const bRawPeek = getColorInputValue(bColor);
+        const hasEntryTextPeek = !!(this.entry && (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) || this.entry.color && this.plugin.isValidHexColor(this.entry.color)));
+        const hasEntryBgPeek = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+        const isVarPeek = (v) => v && /^var\(/.test(String(v).trim());
+        const validTPeek = tRawPeek && this.plugin.isValidHexColor(tRawPeek) && (isVarPeek(tRawPeek) || hasEntryTextPeek || this._tPickerTouched);
+        const validBPeek = bRawPeek && this.plugin.isValidHexColor(bRawPeek) && (isVarPeek(bRawPeek) || hasEntryBgPeek || this._bPickerTouched);
+        if (isGroup && st) {
+          if (st === "text" && !validTPeek) st = "";
+          else if (st === "highlight" && !validBPeek) st = "";
+          else if (st === "both")
+            st = validTPeek && validBPeek ? "both" : validTPeek ? "text" : validBPeek ? "highlight" : "";
+        }
         if (isGroup && !st) {
           this.entry.styleType = void 0;
           this.entry.color = void 0;
           this.entry.textColor = void 0;
           this.entry.backgroundColor = void 0;
+          if (this.entry.customCss) {
+            try {
+              this.plugin.syncEntryCssFromColors(this.entry);
+            } catch (_) {
+            }
+          }
         } else {
           const tRawSave = getColorInputValue(tColor);
           const bRawSave = getColorInputValue(bColor);
@@ -9876,22 +11033,32 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
           const effectiveBSave = hasValidBSave ? bRawSave : "var(--color-accent)";
           this.entry.styleType = st;
           if (st === "text") {
-            this.entry.color = hasValidTSave ? tRawSave : "var(--text-normal)";
+            this.entry.color = hasValidTSave ? tRawSave : isGroup ? void 0 : "var(--text-normal)";
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = hasValidBSave ? bRawSave : "var(--color-accent)";
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : isGroup ? void 0 : "var(--color-accent)";
           } else {
             this.entry.color = "";
-            this.entry.textColor = hasValidTSave ? tRawSave : "var(--text-normal)";
-            this.entry.backgroundColor = hasValidBSave ? bRawSave : "var(--color-accent)";
+            this.entry.textColor = hasValidTSave ? tRawSave : isGroup ? void 0 : "var(--text-normal)";
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : isGroup ? void 0 : "var(--color-accent)";
+          }
+          if (isGroup) {
+            const _gT = st === "text" ? this.entry.color : this.entry.textColor;
+            const _gB = this.entry.backgroundColor;
+            if (String(_gT || "").toLowerCase() === "#000000" && String(_gB || "").toLowerCase() === "#000000") {
+              if (st === "text") this.entry.color = void 0;
+              else this.entry.textColor = void 0;
+              this.entry.backgroundColor = void 0;
+            }
           }
         }
         if (this._resetAllApplied) {
           this.entry.backgroundOpacity = void 0;
           this.entry.highlightBorderRadius = void 0;
+          this.entry.cornerShape = void 0;
           this.entry.highlightHorizontalPadding = void 0;
           this.entry.highlightVerticalPadding = void 0;
           this.entry.enableBorderThickness = void 0;
@@ -9908,6 +11075,7 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
           const rawBThickness = thickInput.value ? Number(thickInput.value) : this.plugin.settings.borderThickness ?? 1;
           this.entry.backgroundOpacity = rawOpacity;
           this.entry.highlightBorderRadius = rawRadius;
+          this.entry.cornerShape = shapeSel.value || (this.plugin.settings.cornerShape ?? "round");
           this.entry.highlightHorizontalPadding = rawHPad;
           this.entry.highlightVerticalPadding = rawVPad;
           this.entry.enableBorderThickness = !!enableChk.checked;
@@ -9915,6 +11083,17 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
           this.entry.borderLineStyle = lineSel.value || (this.plugin.settings.borderLineStyle ?? "solid");
           this.entry.borderOpacity = rawBOpacity;
           this.entry.borderThickness = rawBThickness;
+        }
+        if (this.entry.customCss) {
+          try {
+            this.plugin.syncEntryCssFromColors(this.entry);
+          } catch (_) {
+          }
+          try {
+            const patched = patchCssLayoutFromEntry(this.entry.customCss, this.entry, this.plugin);
+            this.entry.customCss = patched;
+          } catch (_) {
+          }
         }
         const entryUid = this.entry.uid;
         let foundArray = null;
@@ -9956,6 +11135,7 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
           foundArray[foundIdx].backgroundColor = this.entry.backgroundColor;
           foundArray[foundIdx].backgroundOpacity = this.entry.backgroundOpacity;
           foundArray[foundIdx].highlightBorderRadius = this.entry.highlightBorderRadius;
+          foundArray[foundIdx].cornerShape = this.entry.cornerShape;
           foundArray[foundIdx].highlightHorizontalPadding = this.entry.highlightHorizontalPadding;
           foundArray[foundIdx].highlightVerticalPadding = this.entry.highlightVerticalPadding;
           foundArray[foundIdx].enableBorderThickness = this.entry.enableBorderThickness;
@@ -9963,17 +11143,29 @@ var HighlightStylingModal = class extends import_obsidian5.Modal {
           foundArray[foundIdx].borderLineStyle = this.entry.borderLineStyle;
           foundArray[foundIdx].borderOpacity = this.entry.borderOpacity;
           foundArray[foundIdx].borderThickness = this.entry.borderThickness;
-          if (this.entry.customCss) {
-            try {
-              this.plugin.syncEntryCssFromColors(this.entry);
-            } catch (_) {
-            }
-            try {
-              const patched = patchCssLayoutFromEntry(this.entry.customCss, this.entry, this.plugin);
-              this.entry.customCss = patched;
-            } catch (_) {
-            }
-            foundArray[foundIdx].customCss = this.entry.customCss;
+          foundArray[foundIdx].customCss = this.entry.customCss;
+        }
+        if (isGroup && this.entry && this.entry.uid && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+          const gIdx = this.plugin.settings.wordEntryGroups.findIndex(
+            (g) => g && g.uid === this.entry.uid
+          );
+          if (gIdx !== -1) {
+            const g = this.plugin.settings.wordEntryGroups[gIdx];
+            g.styleType = this.entry.styleType;
+            g.color = this.entry.color;
+            g.textColor = this.entry.textColor;
+            g.backgroundColor = this.entry.backgroundColor;
+            g.backgroundOpacity = this.entry.backgroundOpacity;
+            g.highlightBorderRadius = this.entry.highlightBorderRadius;
+            g.cornerShape = this.entry.cornerShape;
+            g.highlightHorizontalPadding = this.entry.highlightHorizontalPadding;
+            g.highlightVerticalPadding = this.entry.highlightVerticalPadding;
+            g.enableBorderThickness = this.entry.enableBorderThickness;
+            g.borderStyle = this.entry.borderStyle;
+            g.borderLineStyle = this.entry.borderLineStyle;
+            g.borderOpacity = this.entry.borderOpacity;
+            g.borderThickness = this.entry.borderThickness;
+            g.customCss = this.entry.customCss;
           }
         }
         await this.plugin.saveSettings();
@@ -13013,6 +14205,7 @@ var LINKED_STYLE_FIELDS = [
   "backgroundColor",
   "backgroundOpacity",
   "highlightBorderRadius",
+  "cornerShape",
   "highlightHorizontalPadding",
   "highlightVerticalPadding",
   "enableBorderThickness",
@@ -13789,6 +14982,7 @@ var EditEntryModal = class extends import_obsidian11.Modal {
       const radius = p.radius ?? 8;
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
+      const cornerShape = p.cornerShape ?? "round";
       while (preview.firstChild) preview.removeChild(preview.firstChild);
       if (!raw && !isTarget) return;
       let displayText;
@@ -13810,6 +15004,7 @@ var EditEntryModal = class extends import_obsidian11.Modal {
           span.style.setProperty("background-color", bgCss, "important");
           span.style.setProperty("color", "var(--text-normal)", "important");
           span.style.setProperty("border-radius", radius + "px", "important");
+          if (cornerShape && cornerShape !== "round") span.style.setProperty("corner-shape", cornerShape, "important");
           span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
           span.style.setProperty("box-decoration-break", "clone", "important");
           span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
@@ -13817,6 +15012,7 @@ var EditEntryModal = class extends import_obsidian11.Modal {
           span.style.setProperty("color", effectiveText, "important");
           span.style.setProperty("background-color", bgCss, "important");
           span.style.setProperty("border-radius", radius + "px", "important");
+          if (cornerShape && cornerShape !== "round") span.style.setProperty("corner-shape", cornerShape, "important");
           span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
           span.style.setProperty("box-decoration-break", "clone", "important");
           span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
@@ -15393,20 +16589,59 @@ var ColorPickerModal = class extends import_obsidian12.Modal {
       const resetHandler = () => {
         if (type === "text") {
           this.selectedTextColor = null;
-          preview.style.color = "";
+          try {
+            preview.style.setProperty("color", "var(--text-normal)", "important");
+          } catch (_) {
+            preview.style.color = "var(--text-normal)";
+          }
         } else {
           this.selectedBgColor = null;
-          preview.style.backgroundColor = "";
           preview.style.border = "";
           preview.style.borderTop = "";
           preview.style.borderBottom = "";
           preview.style.borderLeft = "";
           preview.style.borderRight = "";
+          try {
+            let _op = 25;
+            try {
+              _op = matchedEntry && typeof matchedEntry.backgroundOpacity === "number" ? matchedEntry.backgroundOpacity : this.plugin.settings.backgroundOpacity ?? 25;
+            } catch (_) {
+            }
+            preview.style.setProperty(
+              "background-color",
+              `color-mix(in srgb, var(--color-accent) ${_op}%, transparent)`,
+              "important"
+            );
+            try {
+              this.plugin.applyBorderStyleToElement(preview, null, "var(--color-accent)", matchedEntry || this._entry);
+            } catch (_) {
+            }
+          } catch (_) {
+            preview.style.backgroundColor = "";
+          }
         }
         hex.value = "";
         colorInput.value = "#000000";
         this._hasUserChanges = true;
         this._applyCustomCss();
+        try {
+          if (type === "text" && !this.selectedTextColor) {
+            preview.style.setProperty("color", "var(--text-normal)", "important");
+          }
+          if (type === "background" && !this.selectedBgColor) {
+            let _op2 = 25;
+            try {
+              _op2 = matchedEntry && typeof matchedEntry.backgroundOpacity === "number" ? matchedEntry.backgroundOpacity : this.plugin.settings.backgroundOpacity ?? 25;
+            } catch (_) {
+            }
+            preview.style.setProperty(
+              "background-color",
+              `color-mix(in srgb, var(--color-accent) ${_op2}%, transparent)`,
+              "important"
+            );
+          }
+        } catch (_) {
+        }
       };
       resetBtn.addEventListener("click", resetHandler);
       this._eventListeners.push({
@@ -15897,6 +17132,26 @@ var ColorPickerModal = class extends import_obsidian12.Modal {
       initBg = this._preFillBgColor;
       existingStyle = initText && initBg ? "both" : existingStyle || "highlight";
     }
+    try {
+      const _e = this._entry;
+      if (_e && !_e._quickOnce) {
+        const _eText = _e.textColor && _e.textColor !== "currentColor" && this.plugin.isValidHexColor(_e.textColor) ? _e.textColor : this.plugin.isValidHexColor(_e.color) ? _e.color : null;
+        const _eBg = _e.backgroundColor && this.plugin.isValidHexColor(_e.backgroundColor) ? _e.backgroundColor : null;
+        const _preT = this._preFillTextColor && this.plugin.isValidHexColor(this._preFillTextColor) ? this._preFillTextColor : null;
+        const _preB = this._preFillBgColor && this.plugin.isValidHexColor(this._preFillBgColor) ? this._preFillBgColor : null;
+        initText = _preT || _eText || null;
+        initBg = _preB || _eBg || null;
+        if (_eText || _eBg || _preT || _preB) {
+          matchedEntry = _e;
+          existingStyle = initText && initBg ? "both" : initBg ? "highlight" : initText ? "text" : existingStyle;
+        } else {
+          initText = null;
+          initBg = null;
+          matchedEntry = _e;
+        }
+      }
+    } catch (_) {
+    }
     const tp = this.panelStates["text"];
     const bp = this.panelStates["background"];
     if (!existingStyle) {
@@ -16070,7 +17325,7 @@ var ColorPickerModal = class extends import_obsidian12.Modal {
         }
       } catch (_) {
       }
-      if (!textSelected && !bgSelected) {
+      if (!textSelected && !bgSelected && typeof this.callback !== "function") {
         const word2 = this._selectedText || "";
         const caseSensitive = !!this.plugin.settings.caseSensitive;
         const eq = (a, b) => caseSensitive ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase();
@@ -18155,6 +19410,8 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
     this._limitMatchEnds = false;
     this._limitMatchExact = false;
     this._limitColorTarget = null;
+    this._limitActiveOnly = false;
+    this._limitInactiveOnly = false;
     this._listDiv = null;
     this._cleanupHandlers = [];
     this._sortMode = "last-added";
@@ -18462,7 +19719,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
     limitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
     limitInput.title = this.plugin.t(
       "limit_input_tooltip",
-      "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child"
+      "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child; off=deactivated; on=active"
     );
     limitInput.style.width = "80px";
     limitInput.style.padding = "6px";
@@ -18481,6 +19738,8 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       this._limitMatchEnds = false;
       this._limitMatchExact = false;
       this._limitColorTarget = null;
+      this._limitActiveOnly = false;
+      this._limitInactiveOnly = false;
       for (const tok of parts) {
         if (tok === "r") {
           this._limitRegexOnly = true;
@@ -18504,6 +19763,10 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
           this._limitColorTarget = "line";
         } else if (tok === "cc") {
           this._limitColorTarget = "nextLine";
+        } else if (tok === "off" || tok === "inactive") {
+          this._limitInactiveOnly = true;
+        } else if (tok === "on" || tok === "active") {
+          this._limitActiveOnly = true;
         }
       }
       this._refreshGroupEntries();
@@ -18582,10 +19845,11 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
         return Date.now();
       }
     };
-    const addEntry = (entry) => {
+    const addEntry = async (entry) => {
       entry.uid = _newUid();
       entry.persistAtEnd = true;
       this.group.entries.push(entry);
+      await this._mirrorEntryToLive(entry);
       this._sortMode = "last-added";
       this._refreshGroupEntries();
       setTimeout(() => {
@@ -18643,7 +19907,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
     presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
       try {
-        new PresetModal(this.app, this.plugin, (preset) => {
+        new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
           const isFmt = !!preset.targetElement;
           const entry = {
@@ -18655,6 +19919,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
             targetElement: preset.targetElement
           };
           this.group.entries.push(entry);
+          await this._mirrorEntryToLive(entry);
           this._sortMode = "last-added";
           this._refreshGroupEntries();
         }).open();
@@ -18725,6 +19990,82 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       () => btnSave.removeEventListener("click", saveHandler)
     );
   }
+  // Mirror a clone entry into the live settings group and persist it.
+  // The modal edits a deep clone, but _refreshGroupEntries() reloads the live
+  // group from settings — so any clone mutation (color pick, reset, add,
+  // delete, type switch) would be silently discarded on the next refresh
+  // (search/sort/render) unless it is written through here first.
+  async _mirrorEntryToLive(entry) {
+    try {
+      const groups = this.plugin.settings.wordEntryGroups;
+      if (!Array.isArray(groups)) return;
+      const liveGroup = groups.find(
+        (g) => g && g.uid === this.group?.uid
+      );
+      if (!liveGroup || !Array.isArray(liveGroup.entries)) return;
+      const live = liveGroup.entries.find(
+        (e) => e && entry && e.uid && entry.uid && e.uid === entry.uid
+      ) || liveGroup.entries.find(
+        (e) => e && entry && e.pattern === entry.pattern && !!e.isRegex === !!entry.isRegex
+      );
+      if (live) {
+        for (const k of [
+          "pattern",
+          "groupedPatterns",
+          "color",
+          "textColor",
+          "backgroundColor",
+          "styleType",
+          "matchType",
+          "caseSensitive",
+          "markTarget",
+          "flags",
+          "presetLabel",
+          "targetElement",
+          "affectMarkElements",
+          "headingLevels",
+          "taskTypes",
+          "tagFilter",
+          "titleFilter",
+          "titleMatchType",
+          "customCss",
+          "_savedTextColor",
+          "_savedBackgroundColor",
+          "isRegex",
+          "active"
+        ]) {
+          if (k in entry) {
+            try {
+              live[k] = entry[k];
+            } catch (_) {
+            }
+          }
+        }
+      } else {
+        liveGroup.entries.push(JSON.parse(JSON.stringify(entry)));
+      }
+      await this.plugin.saveSettings();
+    } catch (_) {
+    }
+  }
+  async _mirrorDeleteToLive(entry) {
+    try {
+      const groups = this.plugin.settings.wordEntryGroups;
+      if (!Array.isArray(groups)) return;
+      const liveGroup = groups.find(
+        (g) => g && g.uid === this.group?.uid
+      );
+      if (!liveGroup || !Array.isArray(liveGroup.entries)) return;
+      const idx = liveGroup.entries.findIndex(
+        (e) => e && entry && (e.uid && entry.uid && e.uid === entry.uid || e.pattern === entry.pattern && !!e.isRegex === !!entry.isRegex)
+      );
+      if (idx !== -1) {
+        liveGroup.entries.splice(idx, 1);
+        await this.plugin.saveSettings();
+      }
+    } catch (_) {
+    }
+  }
   _refreshGroupEntries() {
     const currentGroupInSettings = Array.isArray(
       this.plugin.settings.wordEntryGroups
@@ -18770,6 +20111,11 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       entries = entries.filter(
         (e) => (e.markTarget || "text") === this._limitColorTarget
       );
+    }
+    if (this._limitInactiveOnly) {
+      entries = entries.filter((e) => e && e.active === false);
+    } else if (this._limitActiveOnly) {
+      entries = entries.filter((e) => !e || e.active !== false);
     }
     if (this._sortMode === "a-z") {
       entries.sort((a, b) => {
@@ -18840,6 +20186,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       row.style.alignItems = "center";
       row.style.gap = "8px";
       row.style.borderRadius = "var(--input-radius)";
+      if (entry.active === false) row.style.opacity = "0.55";
       const styleSelect = row.createEl("select");
       styleSelect.style.padding = "6px";
       styleSelect.style.borderRadius = "var(--input-radius)";
@@ -18866,8 +20213,9 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
         opt.value = val;
       });
       styleSelect.value = entry.styleType || "text";
-      const styleSelectHandler = () => {
+      const styleSelectHandler = async () => {
         entry.styleType = styleSelect.value;
+        await this._mirrorEntryToLive(entry);
         this._refreshGroupEntries();
       };
       styleSelect.addEventListener("change", styleSelectHandler);
@@ -18889,8 +20237,9 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
       }
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "Exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "Contains")}</option><option value="startswith">${this.plugin.t("match_option_starts_with", "Starts with")}</option><option value="endswith">${this.plugin.t("match_option_ends_with", "Ends with")}</option>`;
       matchSelect.value = entry.matchType || "contains";
-      const matchSelectHandler = () => {
+      const matchSelectHandler = async () => {
         entry.matchType = matchSelect.value;
+        await this._mirrorEntryToLive(entry);
       };
       matchSelect.addEventListener("change", matchSelectHandler);
       const markTargetSelect = row.createEl("select");
@@ -19051,7 +20400,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
         cp.style.borderRadius = "var(--input-radius)";
         const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || "#000000";
         cp.value = textColor;
-        const cpHandler = () => {
+        const cpHandler = async () => {
           const newColor = cp.value;
           if (!this.plugin.isValidHexColor(newColor)) return;
           if (entry.backgroundColor) {
@@ -19068,6 +20417,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
           }
           styleSelect.value = entry.styleType;
           if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
+          await this._mirrorEntryToLive(entry);
         };
         cp.addEventListener("input", cpHandler);
         cp.title = "Text color";
@@ -19090,7 +20440,20 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
                 const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
                 const tcValid = !!tc;
                 const bcValid = !!bc;
-                if (!tcValid && !bcValid) return;
+                if (!tcValid && !bcValid) {
+                  entry.color = "";
+                  entry.textColor = null;
+                  entry.backgroundColor = null;
+                  entry._savedTextColor = "";
+                  entry._savedBackgroundColor = "";
+                  if (result && result.markTarget) entry.markTarget = result.markTarget;
+                  if (result && result.matchType) entry.matchType = result.matchType;
+                  if (result && typeof result.caseSensitive === "boolean") entry.caseSensitive = result.caseSensitive;
+                  if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
+                  await this._mirrorEntryToLive(entry);
+                  this._refreshGroupEntries();
+                  return;
+                }
                 if (tcValid && bcValid) {
                   entry.textColor = tc;
                   entry.backgroundColor = bc;
@@ -19118,6 +20481,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
                 if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
                 if (tcValid && cp) cp.value = tc;
                 if (bcValid && cpBg) cpBg.value = bc;
+                await this._mirrorEntryToLive(entry);
                 this._refreshGroupEntries();
               },
               groupPickerMode,
@@ -19155,7 +20519,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
         cpBg.style.borderRadius = "var(--input-radius)";
         const bgColor = entry.backgroundColor || entry._savedBackgroundColor || "#000000";
         cpBg.value = bgColor;
-        const cpBgHandler = () => {
+        const cpBgHandler = async () => {
           const newColor = cpBg.value;
           if (!this.plugin.isValidHexColor(newColor)) return;
           entry.backgroundColor = newColor;
@@ -19175,6 +20539,7 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
           entry._savedBackgroundColor = newColor;
           styleSelect.value = entry.styleType;
           if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
+          await this._mirrorEntryToLive(entry);
         };
         cpBg.addEventListener("input", cpBgHandler);
         cpBg.title = "Highlight color";
@@ -19197,7 +20562,20 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
                 const bc = result && result.backgroundColor && this.plugin.isValidHexColor(result.backgroundColor) ? result.backgroundColor : null;
                 const tcValid = !!tc;
                 const bcValid = !!bc;
-                if (!tcValid && !bcValid) return;
+                if (!tcValid && !bcValid) {
+                  entry.color = "";
+                  entry.textColor = null;
+                  entry.backgroundColor = null;
+                  entry._savedTextColor = "";
+                  entry._savedBackgroundColor = "";
+                  if (result && result.markTarget) entry.markTarget = result.markTarget;
+                  if (result && result.matchType) entry.matchType = result.matchType;
+                  if (result && typeof result.caseSensitive === "boolean") entry.caseSensitive = result.caseSensitive;
+                  if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
+                  await this._mirrorEntryToLive(entry);
+                  this._refreshGroupEntries();
+                  return;
+                }
                 if (tcValid && bcValid) {
                   entry.textColor = tc;
                   entry.backgroundColor = bc;
@@ -19250,10 +20628,11 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
         };
         cpBg.addEventListener("contextmenu", cpBgContextHandler);
       }
-      const delHandler = () => {
+      const delHandler = async () => {
         const idx = this.group.entries.indexOf(entry);
         if (idx > -1) {
           this.group.entries.splice(idx, 1);
+          await this._mirrorDeleteToLive(entry);
           this._refreshGroupEntries();
         }
       };
@@ -19295,9 +20674,10 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
                 const modal = new RealTimeRegexTesterModal(
                   this.app,
                   this.plugin,
-                  (updatedEntry) => {
+                  async (updatedEntry) => {
                     if (updatedEntry) {
                       Object.assign(entry, updatedEntry);
+                      await this._mirrorEntryToLive(entry);
                       this._refreshGroupEntries();
                     }
                   }
@@ -19311,14 +20691,46 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
               });
             });
           }
+          const groupEntryIsActive = entry.active !== false;
           menu.addItem((item) => {
-            item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(() => {
+            item.setTitle(
+              groupEntryIsActive ? this.plugin.t("deactivate_entry", "Deactivate Entry") : this.plugin.t("activate_entry", "Activate Entry")
+            ).setIcon(groupEntryIsActive ? "eye-off" : "eye").onClick(async () => {
+              try {
+                menu.hide();
+              } catch (_) {
+              }
+              try {
+                entry.active = entry.active === false ? true : false;
+                await this._mirrorEntryToLive(entry);
+                try {
+                  this.plugin.compileWordEntries();
+                  this.plugin.compileTextBgColoringEntries();
+                  this.plugin.reconfigureEditorExtensions();
+                  this.plugin.forceRefreshAllEditors();
+                  this.plugin.forceRefreshAllReadingViews();
+                } catch (_) {
+                }
+                this._refreshGroupEntries();
+              } catch (e) {
+                debugError("MODAL", "toggle group entry active error", e);
+              }
+            });
+          });
+          menu.addItem((item) => {
+            item.setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry")).setIcon("copy").onClick(async () => {
               try {
                 menu.hide();
               } catch (_) {
               }
               const dup = JSON.parse(JSON.stringify(entry));
+              try {
+                dup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+              } catch (_) {
+              }
+              if (dup.active === false) dup.active = true;
               this.group.entries.push(dup);
+              await this._mirrorEntryToLive(dup);
               this._sortMode = "last-added";
               this._refreshGroupEntries();
             });
@@ -19329,10 +20741,11 @@ var EditWordGroupModal = class extends import_obsidian17.Modal {
                 menu.hide();
               } catch (_) {
               }
-              const doDelete = () => {
+              const doDelete = async () => {
                 const idx = this.group.entries.indexOf(entry);
                 if (idx > -1) {
                   this.group.entries.splice(idx, 1);
+                  await this._mirrorDeleteToLive(entry);
                   this._refreshGroupEntries();
                 }
               };
@@ -21723,6 +23136,8 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
     this._entriesRegexOnly = false;
     this._entriesSearchMatch = "contains";
     this._colorTargetFilter = null;
+    this._entriesActiveOnly = false;
+    this._entriesInactiveOnly = false;
     this._groupLimit = 0;
     this._groupColorTargetFilter = null;
     this._blacklistLimit = Number(this.plugin.settings?.blacklistSearchLimit ?? 0) || 0;
@@ -21755,6 +23170,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       row.style.alignItems = "center";
       row.style.gap = "8px";
       row.style.marginBottom = "8px";
+      if (entry.active === false) row.style.opacity = "0.55";
       const kind = entry.targetElement ? "markdown" : entry.isRegex ? "regex" : "word";
       const styleSelect = row.createEl("select");
       styleSelect.style.padding = "6px";
@@ -22047,6 +23463,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           } catch (e) {
             dup.uid = Date.now();
           }
+          if (dup.active === false) dup.active = true;
           this.plugin.settings.wordEntries.splice(idx + 1, 0, dup);
           await this.plugin.saveSettings();
           this.plugin.compileWordEntries();
@@ -22183,6 +23600,32 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
                 }
               );
               modal.open();
+            });
+          });
+          const entryIsActive = entry.active !== false;
+          menu.addItem((item) => {
+            item.setTitle(
+              entryIsActive ? this.plugin.t("deactivate_entry", "Deactivate Entry") : this.plugin.t("activate_entry", "Activate Entry")
+            ).setIcon(entryIsActive ? "eye-off" : "eye").onClick(async () => {
+              try {
+                menu.hide();
+              } catch (_) {
+              }
+              try {
+                const idx = resolveIdx();
+                const target = idx !== -1 ? this.plugin.settings.wordEntries[idx] : entry;
+                target.active = target.active === false ? true : false;
+                entry.active = target.active;
+                await this.plugin.saveSettings();
+                this.plugin.compileWordEntries();
+                this.plugin.compileTextBgColoringEntries();
+                this.plugin.reconfigureEditorExtensions();
+                this.plugin.forceRefreshAllEditors();
+                this.plugin.forceRefreshAllReadingViews();
+                this._refreshEntries();
+              } catch (e) {
+                debugError("SETTINGS", "toggle entry active error", e);
+              }
             });
           });
           menu.addItem((item) => {
@@ -24348,6 +25791,11 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           (e) => (e.markTarget || "text") === this._colorTargetFilter
         );
       }
+      if (this._entriesInactiveOnly) {
+        finalFiltered = finalFiltered.filter((e) => e && e.active === false);
+      } else if (this._entriesActiveOnly) {
+        finalFiltered = finalFiltered.filter((e) => !e || e.active !== false);
+      }
       if (!this._suspendSorting && this._wordsSortMode === "a-z") {
         finalFiltered.sort((a, b) => {
           const patternA = Array.isArray(a.groupedPatterns) && a.groupedPatterns.length > 0 ? a.groupedPatterns[0] : a.pattern || "";
@@ -24595,13 +26043,15 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             else if (hasBg) styleType2 = "highlight";
             else styleType2 = "text";
           }
-          const isTextOnly = styleType2 === "text";
-          const isHighlightOnly = styleType2 === "highlight";
           const tRaw = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
           const bRaw = group.backgroundColor || "";
           const isPollutedGroupBothBlack = styleType2 === "both" && String(tRaw).toLowerCase() === "#000000" && String(bRaw).toLowerCase() === "#000000";
           const hasValidTRaw = !isPollutedGroupBothBlack && tRaw && this.plugin.isValidHexColor(tRaw);
           const hasValidBRaw = !isPollutedGroupBothBlack && bRaw && this.plugin.isValidHexColor(bRaw);
+          const isPerEntryPreview = !group.styleType && !hasValidTRaw && !hasValidBRaw;
+          if (isPerEntryPreview) styleType2 = "both";
+          const isTextOnly = styleType2 === "text";
+          const isHighlightOnly = styleType2 === "highlight";
           const effectiveTRaw = hasValidTRaw ? tRaw : "var(--text-normal)";
           const effectiveBRaw = hasValidBRaw ? bRaw : "var(--color-accent)";
           const t = isHighlightOnly ? "" : effectiveTRaw;
@@ -24644,7 +26094,12 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
           }
           if (group.customCss) {
             try {
-              const decl = this.plugin.sanitizeCssDeclarations(group.customCss);
+              let decl = this.plugin.sanitizeCssDeclarations(group.customCss);
+              if (decl && isPerEntryPreview) {
+                decl = this.plugin.sanitizeCssDeclarations(
+                  stripInheritedGroupCssColors(decl, "var(--color-accent)")
+                );
+              }
               if (decl) {
                 decl.split(";").map((s) => s.trim()).filter(Boolean).forEach((part) => {
                   const idx = part.indexOf(":");
@@ -26851,7 +28306,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
       );
       entriesLimitInput.title = this.plugin.t(
         "limit_input_tooltip",
-        "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child"
+        "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child; off=deactivated; on=active"
       );
       entriesLimitInput.style.width = "64px";
       entriesLimitInput.style.padding = "6px";
@@ -26876,6 +28331,8 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
         this._entriesMatchTypeStartsWith = false;
         this._entriesMatchTypeEndsWith = false;
         this._entriesMatchTypeExact = false;
+        this._entriesActiveOnly = false;
+        this._entriesInactiveOnly = false;
         for (const tok of parts) {
           if (tok === "ct") {
             this._colorTargetFilter = "text";
@@ -26887,6 +28344,10 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             this._entriesMatchTypeStartsWith = true;
           } else if (tok === "ew") {
             this._entriesMatchTypeEndsWith = true;
+          } else if (tok === "off" || tok === "inactive") {
+            this._entriesInactiveOnly = true;
+          } else if (tok === "on" || tok === "active") {
+            this._entriesActiveOnly = true;
           } else if (tok === "r") {
             this._entriesRegexOnly = true;
           } else if (tok === "w") {
@@ -28764,911 +30225,6 @@ function buildReadingViewProcessor(plugin) {
   };
 }
 
-// src/utils/RegexCache.js
-var RegexCache = class {
-  constructor(maxSize = 100) {
-    this.maxSize = maxSize;
-    this.map = /* @__PURE__ */ new Map();
-    this.hits = 0;
-    this.misses = 0;
-    this.entryMap = /* @__PURE__ */ new WeakMap();
-  }
-  _key(pattern, flags) {
-    return `${pattern}::${flags || ""}`;
-  }
-  getOrCreate(pattern, flags) {
-    const k = this._key(pattern, flags);
-    if (this.map.has(k)) {
-      const r2 = this.map.get(k);
-      this.map.delete(k);
-      this.map.set(k, r2);
-      this.hits++;
-      return r2;
-    }
-    let r;
-    try {
-      if (pattern && typeof pattern === "string" && pattern.length > 1e4) {
-        return null;
-      }
-      r = flags && flags !== "" ? new RegExp(pattern, flags) : new RegExp(pattern);
-    } catch (_) {
-      r = null;
-    }
-    this.misses++;
-    if (r) {
-      this.map.set(k, r);
-      if (this.map.size > this.maxSize) {
-        const oldestKey = this.map.keys().next().value;
-        this.map.delete(oldestKey);
-      }
-    }
-    return r;
-  }
-  associate(entry, regex) {
-    if (entry && regex) {
-      try {
-        this.entryMap.set(entry, regex);
-      } catch (_) {
-      }
-    }
-  }
-  clear() {
-    this.map.clear();
-    this.hits = 0;
-    this.misses = 0;
-  }
-  stats() {
-    return { hits: this.hits, misses: this.misses, size: this.map.size };
-  }
-};
-
-// src/services/patternCompiler.js
-var PatternMatcher = class {
-  constructor(settings, helpers) {
-    this.settings = settings || {};
-    this.helpers = helpers || {};
-    this.counters = { regexExecs: 0, matchesFound: 0 };
-  }
-  compilePattern(entry, cache) {
-    if (!entry || !entry.pattern) return entry;
-    const isRegex = !!entry.isRegex;
-    const rawFlags = String(entry.flags || "").replace(/[^gimsuy]/g, "");
-    let flags = rawFlags || "";
-    if (!flags.includes("g")) flags += "g";
-    const effectiveCS = typeof entry._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry.caseSensitive === "boolean" ? entry.caseSensitive : false;
-    if (!effectiveCS && !flags.includes("i")) flags += "i";
-    try {
-      if (isRegex && this.settings.enableRegexSupport) {
-        entry.regex = cache ? cache.getOrCreate(entry.pattern, flags) : this._createRegexSafe(entry.pattern, flags);
-        const tf = flags.replace(/g/g, "");
-        entry.testRegex = cache ? cache.getOrCreate(entry.pattern, tf) : tf === "" ? this._createRegexSafe(entry.pattern, "") : this._createRegexSafe(entry.pattern, tf);
-      } else {
-        const esc = this.helpers.escapeRegex ? this.helpers.escapeRegex(entry.pattern) : entry.pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const lf = effectiveCS ? "g" + (flags.includes("u") ? "u" : "") : "gi" + (flags.includes("u") ? "u" : "");
-        entry.regex = cache ? cache.getOrCreate(esc, lf) : this._createRegexSafe(esc, lf);
-        entry.testRegex = effectiveCS ? cache ? cache.getOrCreate(esc, flags.includes("u") ? "u" : "") : this._createRegexSafe(esc, flags.includes("u") ? "u" : "") : cache ? cache.getOrCreate(esc, flags.includes("u") ? "iu" : "i") : this._createRegexSafe(esc, flags.includes("u") ? "iu" : "i");
-      }
-    } catch (_) {
-      entry.invalid = true;
-    }
-    return entry;
-  }
-  _createRegexSafe(pattern, flags) {
-    try {
-      return new RegExp(pattern, flags);
-    } catch (_) {
-      return null;
-    }
-  }
-  isWordCharacter(char) {
-    if (!char) return false;
-    try {
-      if (char === "-" || char === "'") return true;
-      return /[\p{L}\p{N}]/u.test(char);
-    } catch (_) {
-      if (/[A-Za-z0-9]/.test(char) || char === "-" || char === "'") return true;
-      const code = char.codePointAt(0);
-      return code >= 192 && code <= 591 || code >= 592 && code <= 687 || code >= 880 && code <= 1023 || code >= 1024 && code <= 1327 || code >= 1536 && code <= 1791 || code >= 2304 && code <= 3583 || code >= 3584 && code <= 3711 || code >= 7680 && code <= 7935 || code >= 19968 && code <= 40959 || code >= 44032 && code <= 55215 || code >= 63744 && code <= 64255;
-    }
-  }
-  extractFullWordAtPosition(text, start, end) {
-    let wordStart = start;
-    let wordEnd = end;
-    const slice = text.substring(start, end);
-    const hasNonRoman = this.containsNonRomanCharacters && this.containsNonRomanCharacters(slice);
-    if (hasNonRoman) {
-      while (wordStart > 0 && this.isCJKChar(text[wordStart - 1])) {
-        wordStart--;
-      }
-      while (wordEnd < text.length && this.isCJKChar(text[wordEnd])) {
-        wordEnd++;
-      }
-    } else {
-      while (wordStart > 0 && this.isWordCharacter(text[wordStart - 1])) {
-        wordStart--;
-      }
-      while (wordEnd < text.length && this.isWordCharacter(text[wordEnd])) {
-        wordEnd++;
-      }
-    }
-    return text.substring(wordStart, wordEnd);
-  }
-  matchSatisfiesType(text, start, end, entry) {
-    if (entry && entry.isRegex) {
-      return true;
-    }
-    const matchType = String(
-      entry?.matchType || (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"))
-    ).toLowerCase();
-    const pattern = entry?.pattern || "";
-    const isSentence = this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(pattern) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(pattern || "");
-    const cs = typeof entry?._caseSensitiveOverride === "boolean" ? entry._caseSensitiveOverride : typeof entry?.caseSensitive === "boolean" ? entry.caseSensitive : false;
-    if (isSentence) {
-      return true;
-    }
-    const fullWord = pattern && pattern.length <= 2 ? text.substring(start, end) : this.extractFullWordAtPosition(text, start, end);
-    switch (matchType) {
-      case "exact":
-        const exactMatch = cs ? fullWord === pattern : fullWord.toLowerCase() === pattern.toLowerCase();
-        return exactMatch;
-      case "contains":
-        const containsMatch = cs ? fullWord.includes(pattern) : fullWord.toLowerCase().includes(pattern.toLowerCase());
-        return containsMatch;
-      case "startswith":
-        return cs ? fullWord.startsWith(pattern) : fullWord.toLowerCase().startsWith(pattern.toLowerCase());
-      case "endswith":
-        return cs ? fullWord.endsWith(pattern) : fullWord.toLowerCase().endsWith(pattern.toLowerCase());
-      default:
-        return true;
-    }
-  }
-  match(text, entries, folderEntry) {
-    const out = [];
-    const isSentence = (p) => this.helpers.isSentenceLikePattern ? this.helpers.isSentenceLikePattern(p) : /[\s,\.;:!\?"'\(\)\[\]\{\}<>]/.test(p || "");
-    const wholeWord = (t, s, e) => {
-      const lc = s > 0 ? t[s - 1] : "";
-      const rc = e < t.length ? t[e] : "";
-      const isW = (ch) => this.isWordCharacter(ch);
-      return (s === 0 || !isW(lc)) && (e === t.length || !isW(rc));
-    };
-    for (const entry of entries) {
-      if (!entry || entry.invalid) continue;
-      try {
-        if (entry.fastTest && typeof entry.fastTest === "function") {
-          if (!entry.fastTest(text)) continue;
-        }
-      } catch (_) {
-      }
-      const regex = entry.regex;
-      if (!regex) continue;
-      const matches = this.helpers.safeMatchLoop ? this.helpers.safeMatchLoop(regex, text) : (text.match(regex) || []).map((m) => ({
-        0: m,
-        index: text.indexOf(m)
-      }));
-      let iters = 0;
-      for (const m of matches) {
-        const matchedText = m[0];
-        const ms = m.index;
-        const me = m.index + matchedText.length;
-        if (!this.matchSatisfiesType(text, ms, me, entry)) {
-          iters++;
-          continue;
-        }
-        let fws = ms;
-        let fwe = me;
-        if (!isSentence(entry.pattern)) {
-          while (fws > 0 && this.isWordCharacter(text[fws - 1])) fws--;
-          while (fwe < text.length && this.isWordCharacter(text[fwe])) fwe++;
-        }
-        const mtLower = String(
-          entry && entry.matchType || (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"))
-        ).toLowerCase();
-        const useExpanded = !isSentence(entry.pattern) && (mtLower === "contains" || mtLower === "startswith" || mtLower === "endswith");
-        const useStart = useExpanded ? fws : ms;
-        const useEnd = useExpanded ? fwe : me;
-        const useColor = folderEntry && folderEntry.defaultColor ? folderEntry.defaultColor : entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color;
-        const priority = me - ms + (entry.isTextBg ? -10 : 0);
-        if (entry.pattern === "hello") {
-          debugLog(
-            "[MATCH_CREATE]",
-            `Pattern: hello, has bgOpacity=${typeof entry.backgroundOpacity}, value=${entry.backgroundOpacity}, textColor=${entry.textColor}, bgColor=${entry.backgroundColor}`
-          );
-        }
-        out.push({
-          start: useStart,
-          end: useEnd,
-          color: useColor,
-          word: matchedText,
-          styleType: entry.styleType,
-          textColor: entry.textColor,
-          backgroundColor: entry.backgroundColor,
-          isTextBg: entry.isTextBg === true,
-          priority,
-          entryRef: entry,
-          // Copy custom styling properties directly to match object for rendering
-          backgroundOpacity: entry.backgroundOpacity,
-          highlightBorderRadius: entry.highlightBorderRadius,
-          highlightHorizontalPadding: entry.highlightHorizontalPadding,
-          highlightVerticalPadding: entry.highlightVerticalPadding,
-          enableBorderThickness: entry.enableBorderThickness,
-          borderStyle: entry.borderStyle,
-          borderLineStyle: entry.borderLineStyle,
-          borderOpacity: entry.borderOpacity,
-          borderThickness: entry.borderThickness,
-          markTarget: entry.markTarget || "text"
-        });
-        iters++;
-      }
-      if (iters > 0) {
-        this.counters.regexExecs += iters;
-        this.counters.matchesFound += out.length;
-      }
-    }
-    if (out.length > 1) {
-      out.sort((a, b) => {
-        const la = a.end - a.start;
-        const lb = b.end - b.start;
-        if (la !== lb) return lb - la;
-        const ar = a.entryRef && !!a.entryRef.isRegex;
-        const br = b.entryRef && !!b.entryRef.isRegex;
-        if (ar !== br) return ar ? 1 : -1;
-        if (a.start !== b.start) return a.start - b.start;
-        return (b.priority || 0) - (a.priority || 0);
-      });
-      const no = [];
-      for (const m of out) {
-        let ov = false;
-        for (const s of no) {
-          if (m.start < s.end && m.end > s.start) {
-            ov = true;
-            break;
-          }
-        }
-        if (!ov) no.push(m);
-      }
-      return no;
-    }
-    return out;
-  }
-};
-var SettingsIndex = class {
-  constructor(settings) {
-    this.settings = settings || {};
-    this.firstChar = /* @__PURE__ */ new Map();
-    this.lengthRanges = /* @__PURE__ */ new Map();
-    this.regexPrefixes = /* @__PURE__ */ new Map();
-  }
-  rebuild(entries) {
-    this.firstChar.clear();
-    this.lengthRanges.clear();
-    this.regexPrefixes.clear();
-    for (const e of entries || []) {
-      if (!e || e.invalid || !e.pattern) continue;
-      const p = String(e.pattern);
-      if (!e.isRegex) {
-        const d = p[0] || "";
-        const bucket = this.firstChar.get(d) || [];
-        bucket.push(e);
-        this.firstChar.set(d, bucket);
-        const len = p.length;
-        const rangeKey = len < 5 ? "lt5" : len < 10 ? "lt10" : len < 20 ? "lt20" : "ge20";
-        const lr = this.lengthRanges.get(rangeKey) || [];
-        lr.push(e);
-        this.lengthRanges.set(rangeKey, lr);
-      } else {
-        const m = p.match(/[A-Za-z0-9]{3,}/);
-        if (m) {
-          const pref = m[0][0];
-          const list = this.regexPrefixes.get(pref) || [];
-          list.push(e);
-          this.regexPrefixes.set(pref, list);
-        }
-      }
-    }
-  }
-  query(text) {
-    if (!text) return [];
-    const t = String(text);
-    const set = /* @__PURE__ */ new Set();
-    const d = t[0] || "";
-    const cands = this.firstChar.get(d) || [];
-    for (const e of cands) set.add(e);
-    const len = t.length;
-    const rk = len < 5 ? "lt5" : len < 10 ? "lt10" : len < 20 ? "lt20" : "ge20";
-    const lr = this.lengthRanges.get(rk) || [];
-    for (const e of lr) set.add(e);
-    if (t.length >= 1) {
-      const rp = this.regexPrefixes.get(t[0]) || [];
-      for (const e of rp) set.add(e);
-    }
-    return Array.from(set);
-  }
-};
-function compileWordEntriesLogic(plugin) {
-  try {
-    try {
-      plugin._compiledWordEntries = [];
-      plugin._cachedSortedEntries = null;
-      plugin._cacheDirty = true;
-    } catch (e) {
-    }
-    try {
-      plugin._regexCache && plugin._regexCache.clear();
-    } catch (_) {
-    }
-    try {
-      plugin._bloomFilter && plugin._bloomFilter.reset();
-    } catch (_) {
-    }
-    if (!Array.isArray(plugin.settings.wordEntries)) return;
-    let allEntries = [...plugin.settings.wordEntries || []];
-    if (Array.isArray(plugin.settings.wordEntryGroups)) {
-      plugin.settings.wordEntryGroups.forEach((group) => {
-        if (group && group.active && Array.isArray(group.entries)) {
-          const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
-          const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
-          const mapped = group.entries.map((e) => {
-            const copy = Object.assign({}, e);
-            if (groupMatch) copy.matchType = groupMatch;
-            if (groupCase !== void 0)
-              copy._caseSensitiveOverride = groupCase;
-            if (group.styleType) copy.styleType = group.styleType;
-            if (group.textColor) copy.textColor = group.textColor;
-            if (group.color) copy.color = group.color;
-            if (group.backgroundColor)
-              copy.backgroundColor = group.backgroundColor;
-            if (typeof group.backgroundOpacity !== "undefined")
-              copy.backgroundOpacity = group.backgroundOpacity;
-            if (typeof group.highlightBorderRadius !== "undefined")
-              copy.highlightBorderRadius = group.highlightBorderRadius;
-            if (typeof group.highlightHorizontalPadding !== "undefined")
-              copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
-            if (typeof group.highlightVerticalPadding !== "undefined")
-              copy.highlightVerticalPadding = group.highlightVerticalPadding;
-            if (typeof group.enableBorderThickness !== "undefined")
-              copy.enableBorderThickness = group.enableBorderThickness;
-            if (group.borderStyle) copy.borderStyle = group.borderStyle;
-            if (group.borderLineStyle)
-              copy.borderLineStyle = group.borderLineStyle;
-            if (typeof group.borderOpacity !== "undefined")
-              copy.borderOpacity = group.borderOpacity;
-            if (typeof group.borderThickness !== "undefined")
-              copy.borderThickness = group.borderThickness;
-            copy._groupUid = group.uid || null;
-            copy._groupRef = group;
-            if (group.customCss && !copy.customCss) copy.customCss = group.customCss;
-            copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
-            copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
-            copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
-            copy.groupDisableTags = Array.isArray(group.disableTags) ? group.disableTags.slice() : [];
-            return copy;
-          });
-          allEntries = allEntries.concat(mapped);
-        }
-      });
-    }
-    for (const e of allEntries) {
-      if (!e) continue;
-      if (e && e.backgroundColor) continue;
-      const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || "").trim()];
-      const color = e.color;
-      if (!plugin.isValidHexColor(color) && !plugin.isValidHexColor(e.textColor)) {
-        continue;
-      }
-      const isRegex = !!e.isRegex;
-      for (let pattern of patterns) {
-        pattern = String(pattern).trim();
-        if (!pattern) continue;
-        pattern = plugin.sanitizePattern(pattern, isRegex);
-        if (!plugin.settings.disableRegexSafety && plugin.isKnownProblematicPattern(pattern)) {
-          debugWarn(
-            "COMPILE",
-            `Blocked dangerous pattern: ${pattern.substring(0, 50)}`
-          );
-          const compiled2 = {
-            pattern,
-            color,
-            isRegex,
-            flags: "",
-            regex: null,
-            testRegex: null,
-            invalid: true,
-            specificity: 0
-          };
-          plugin._compiledWordEntries.push(compiled2);
-          try {
-            const { Notice: Notice13 } = require("obsidian");
-            new Notice13(
-              plugin.t(
-                "notice_pattern_blocked",
-                "Pattern blocked for Memory Safety: " + pattern.substring(0, 30) + "..."
-              )
-            );
-          } catch (e2) {
-          }
-          continue;
-        }
-        const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
-        let flags = rawFlags || "";
-        if (!flags.includes("g")) flags += "g";
-        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : false;
-        if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
-        const compiled = {
-          pattern,
-          color,
-          textColor: e.textColor || e.color || color,
-          backgroundColor: e.backgroundColor || null,
-          styleType: e.styleType || "text",
-          markTarget: e.markTarget || "text",
-          matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
-          isRegex,
-          flags,
-          regex: null,
-          testRegex: null,
-          invalid: false,
-          specificity: pattern.replace(/\*/g, "").length,
-          presetLabel: e.presetLabel || void 0,
-          entryRef: e,
-          caseSensitive: effectiveCaseSensitive,
-          targetElement: e.targetElement || (e.presetLabel && /bold\s*italic/i.test(e.presetLabel) ? "strong-em" : e.presetLabel && /bold/i.test(e.presetLabel) ? "strong" : e.presetLabel && /italic/i.test(e.presetLabel) ? "em" : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" ? "strong" : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" ? "em" : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" ? "strong-em" : void 0),
-          inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
-          exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
-          groupUid: e._groupUid || null,
-          groupEnableFolders: Array.isArray(e.groupEnableFolders) ? e.groupEnableFolders.slice() : [],
-          groupDisableFolders: Array.isArray(e.groupDisableFolders) ? e.groupDisableFolders.slice() : [],
-          groupEnableTags: Array.isArray(e.groupEnableTags) ? e.groupEnableTags.slice() : [],
-          groupDisableTags: Array.isArray(e.groupDisableTags) ? e.groupDisableTags.slice() : [],
-          backgroundOpacity: e.backgroundOpacity,
-          highlightBorderRadius: e.highlightBorderRadius,
-          highlightHorizontalPadding: e.highlightHorizontalPadding,
-          highlightVerticalPadding: e.highlightVerticalPadding,
-          enableBorderThickness: e.enableBorderThickness,
-          borderStyle: e.borderStyle,
-          borderLineStyle: e.borderLineStyle,
-          borderOpacity: e.borderOpacity,
-          borderThickness: e.borderThickness,
-          customCss: e.customCss || null,
-          execs: 0,
-          avoidedExecs: 0,
-          matchesFound: 0,
-          blocksProcessed: 0,
-          _hotLogged: false
-        };
-        if (!pattern) {
-          compiled.invalid = true;
-          plugin._compiledWordEntries.push(compiled);
-          continue;
-        }
-        try {
-          if (plugin.settings.enableRegexSupport && isRegex) {
-            if (!plugin.validateAndSanitizeRegex(pattern)) {
-              compiled.invalid = true;
-              plugin._compiledWordEntries.push(compiled);
-              continue;
-            }
-            compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
-            const testFlags = flags.replace(/g/g, "");
-            compiled.testRegex = plugin._regexCache.getOrCreate(
-              pattern,
-              testFlags
-            );
-          } else {
-            const esc = plugin.escapeRegex(pattern);
-            const matchTypeLower = String(
-              compiled.matchType || "exact"
-            ).toLowerCase();
-            const isSentence = plugin.isSentenceLikePattern(pattern);
-            const UWC = "\\p{L}\\p{N}\\-'";
-            let finalPattern = esc;
-            if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = `(?<![${UWC}])` + esc;
-            } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = esc + `(?![${UWC}])`;
-            } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
-              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
-            }
-            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
-            compiled.regex = plugin._regexCache.getOrCreate(
-              finalPattern,
-              literalFlags
-            );
-            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "u") : plugin._regexCache.getOrCreate(finalPattern, "iu");
-          }
-        } catch (err) {
-          compiled.invalid = true;
-        }
-        try {
-          plugin._bloomFilter && plugin._bloomFilter.addPattern(pattern, isRegex);
-        } catch (_) {
-        }
-        try {
-          compiled.fastTest = plugin.createFastTester(
-            pattern,
-            compiled.isRegex,
-            effectiveCaseSensitive
-          );
-        } catch (e2) {
-          compiled.fastTest = (text) => true;
-        }
-        plugin._compiledWordEntries.push(compiled);
-      }
-    }
-    plugin._compiledWordEntries.sort(
-      (a, b) => b.specificity - a.specificity || b.pattern.length - a.pattern.length
-    );
-    try {
-      plugin._cacheDirty = true;
-      plugin._cachedSortedEntries = null;
-    } catch (e) {
-    }
-    try {
-      const all = (Array.isArray(plugin._compiledWordEntries) ? plugin._compiledWordEntries : []).concat(
-        Array.isArray(plugin._compiledTextBgEntries) ? plugin._compiledTextBgEntries : []
-      );
-      plugin._settingsIndex && plugin._settingsIndex.rebuild(all);
-    } catch (_) {
-    }
-  } catch (err) {
-    debugError("COMPILE", "compileWordEntriesLogic failed", err);
-    try {
-      plugin._compiledWordEntries = [];
-      plugin._cachedSortedEntries = null;
-      plugin._cacheDirty = true;
-    } catch (e) {
-    }
-  }
-}
-function compileTextBgColoringEntriesLogic(plugin) {
-  try {
-    try {
-      plugin._compiledTextBgEntries = [];
-    } catch (e) {
-    }
-    let source = [
-      ...Array.isArray(plugin.settings.wordEntries) ? plugin.settings.wordEntries : []
-    ];
-    if (Array.isArray(plugin.settings.wordEntryGroups)) {
-      plugin.settings.wordEntryGroups.forEach((group) => {
-        if (group && group.active && Array.isArray(group.entries)) {
-          const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
-          const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
-          const mapped = group.entries.map((e) => {
-            const copy = Object.assign({}, e);
-            if (groupMatch) copy.matchType = groupMatch;
-            if (groupCase !== void 0)
-              copy._caseSensitiveOverride = groupCase;
-            if (group.styleType) copy.styleType = group.styleType;
-            if (group.textColor) copy.textColor = group.textColor;
-            if (group.color) copy.color = group.color;
-            if (group.backgroundColor)
-              copy.backgroundColor = group.backgroundColor;
-            if (typeof group.backgroundOpacity !== "undefined")
-              copy.backgroundOpacity = group.backgroundOpacity;
-            if (typeof group.highlightBorderRadius !== "undefined")
-              copy.highlightBorderRadius = group.highlightBorderRadius;
-            if (typeof group.highlightHorizontalPadding !== "undefined")
-              copy.highlightHorizontalPadding = group.highlightHorizontalPadding;
-            if (typeof group.highlightVerticalPadding !== "undefined")
-              copy.highlightVerticalPadding = group.highlightVerticalPadding;
-            if (typeof group.enableBorderThickness !== "undefined")
-              copy.enableBorderThickness = group.enableBorderThickness;
-            if (group.borderStyle) copy.borderStyle = group.borderStyle;
-            if (group.borderLineStyle)
-              copy.borderLineStyle = group.borderLineStyle;
-            if (typeof group.borderOpacity !== "undefined")
-              copy.borderOpacity = group.borderOpacity;
-            if (typeof group.borderThickness !== "undefined")
-              copy.borderThickness = group.borderThickness;
-            copy._groupUid = group.uid || null;
-            copy._groupRef = group;
-            if (group.customCss && !copy.customCss) copy.customCss = group.customCss;
-            copy.groupEnableFolders = Array.isArray(group.enableFolders) ? group.enableFolders.slice() : [];
-            copy.groupDisableFolders = Array.isArray(group.disableFolders) ? group.disableFolders.slice() : [];
-            copy.groupEnableTags = Array.isArray(group.enableTags) ? group.enableTags.slice() : [];
-            copy.groupDisableTags = Array.isArray(group.disableTags) ? group.disableTags.slice() : [];
-            return copy;
-          });
-          source = source.concat(mapped);
-        }
-      });
-    }
-    for (const e of source) {
-      if (!e || !e.backgroundColor) continue;
-      if (e.presetLabel) {
-        const label = String(e.presetLabel).toLowerCase();
-        if (label.includes("bold") || label.includes("italic")) continue;
-      }
-      const patterns = Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0 ? e.groupedPatterns : [String(e.pattern || "").trim()];
-      const textColor = e.textColor || "currentColor";
-      const backgroundColor = e.backgroundColor;
-      const isRegex = !!e.isRegex;
-      const textOk = textColor === "currentColor" || plugin.isValidHexColor(textColor);
-      const bgOk = plugin.isValidHexColor(backgroundColor);
-      if (!textOk || !bgOk) continue;
-      for (let pattern of patterns) {
-        pattern = String(pattern).trim();
-        if (!pattern) continue;
-        pattern = plugin.sanitizePattern(pattern, isRegex);
-        if (!plugin.settings.disableRegexSafety && plugin.isKnownProblematicPattern(pattern)) {
-          debugWarn(
-            "COMPILE_TEXTBG",
-            `Blocked dangerous pattern: ${pattern.substring(0, 50)}`
-          );
-          const compiled2 = {
-            pattern,
-            textColor,
-            backgroundColor,
-            markTarget: e.markTarget || "text",
-            matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
-            isRegex,
-            flags: "",
-            regex: null,
-            testRegex: null,
-            invalid: true,
-            specificity: 0,
-            isTextBg: true,
-            entryRef: e
-          };
-          plugin._compiledTextBgEntries.push(compiled2);
-          continue;
-        }
-        const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
-        let flags = rawFlags || "";
-        if (!flags.includes("g")) flags += "g";
-        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : false;
-        if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
-        const compiled = {
-          pattern,
-          textColor,
-          backgroundColor,
-          styleType: e.styleType || "both",
-          markTarget: e.markTarget || "text",
-          matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
-          isRegex,
-          flags,
-          regex: null,
-          testRegex: null,
-          invalid: false,
-          specificity: pattern.replace(/\*/g, "").length,
-          isTextBg: true,
-          presetLabel: e.presetLabel || void 0,
-          entryRef: e,
-          caseSensitive: effectiveCaseSensitive,
-          inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
-          exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
-          groupUid: e._groupUid || null,
-          groupEnableFolders: Array.isArray(e.groupEnableFolders) ? e.groupEnableFolders.slice() : [],
-          groupDisableFolders: Array.isArray(e.groupDisableFolders) ? e.groupDisableFolders.slice() : [],
-          groupEnableTags: Array.isArray(e.groupEnableTags) ? e.groupEnableTags.slice() : [],
-          groupDisableTags: Array.isArray(e.groupDisableTags) ? e.groupDisableTags.slice() : [],
-          backgroundOpacity: e.backgroundOpacity,
-          highlightBorderRadius: e.highlightBorderRadius,
-          highlightHorizontalPadding: e.highlightHorizontalPadding,
-          highlightVerticalPadding: e.highlightVerticalPadding,
-          enableBorderThickness: e.enableBorderThickness,
-          borderStyle: e.borderStyle,
-          borderLineStyle: e.borderLineStyle,
-          borderOpacity: e.borderOpacity,
-          borderThickness: e.borderThickness,
-          customCss: e.customCss || null
-        };
-        try {
-          if (plugin.settings.enableRegexSupport && isRegex) {
-            if (!plugin.validateAndSanitizeRegex(pattern)) {
-              compiled.invalid = true;
-              plugin._compiledTextBgEntries.push(compiled);
-              continue;
-            }
-            compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
-            const testFlags = flags.replace(/g/g, "");
-            compiled.testRegex = plugin._regexCache.getOrCreate(
-              pattern,
-              testFlags
-            );
-          } else {
-            const esc = plugin.escapeRegex(pattern);
-            const matchTypeLower = String(
-              compiled.matchType || "exact"
-            ).toLowerCase();
-            const isSentence = plugin.isSentenceLikePattern(pattern);
-            const UWC = "\\p{L}\\p{N}\\-'";
-            let finalPattern = esc;
-            if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = `(?<![${UWC}])` + esc;
-            } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = esc + `(?![${UWC}])`;
-            } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
-              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
-            }
-            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
-            compiled.regex = plugin._regexCache.getOrCreate(
-              finalPattern,
-              literalFlags
-            );
-            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "u") : plugin._regexCache.getOrCreate(finalPattern, "iu");
-          }
-          try {
-            compiled.fastTest = plugin.createFastTester(
-              pattern,
-              isRegex,
-              effectiveCaseSensitive
-            );
-          } catch (e2) {
-            compiled.fastTest = (text) => true;
-          }
-          try {
-            plugin._bloomFilter && plugin._bloomFilter.addPattern(pattern, isRegex);
-          } catch (_) {
-          }
-          plugin._compiledTextBgEntries.push(compiled);
-        } catch (err) {
-          compiled.invalid = true;
-          compiled.regex = null;
-          compiled.testRegex = null;
-          debugError(
-            "COMPILE_TEXTBG",
-            `Failed to compile pattern: ${pattern}`,
-            err
-          );
-          plugin._compiledTextBgEntries.push(compiled);
-        }
-      }
-    }
-    plugin._compiledTextBgEntries.sort(
-      (a, b) => b.specificity - a.specificity
-    );
-  } catch (err) {
-    debugError(
-      "COMPILE_TEXTBG",
-      "compileTextBgColoringEntriesLogic failed",
-      err
-    );
-    try {
-      plugin._compiledTextBgEntries = [];
-    } catch (e) {
-    }
-  }
-  try {
-    const all = (Array.isArray(plugin._compiledWordEntries) ? plugin._compiledWordEntries : []).concat(
-      Array.isArray(plugin._compiledTextBgEntries) ? plugin._compiledTextBgEntries : []
-    );
-    plugin._settingsIndex && plugin._settingsIndex.rebuild(all);
-  } catch (_) {
-  }
-  try {
-    plugin.compileWordPatterns();
-  } catch (e) {
-    debugError("COMPILE", "Failed to compile word patterns", e);
-  }
-  try {
-    plugin.compileTextBgPatterns();
-  } catch (e) {
-    debugError("COMPILE", "Failed to compile text+bg patterns", e);
-  }
-}
-function compileBlacklistEntriesLogic(plugin) {
-  try {
-    plugin._compiledBlacklistWords = [];
-    plugin._compiledBlacklistEntries = [];
-    plugin._compiledBlacklistGroups = {};
-    const blacklistWords = Array.isArray(plugin.settings.blacklistWords) ? plugin.settings.blacklistWords : [];
-    for (const word of blacklistWords) {
-      if (!word) continue;
-      try {
-        const flags = plugin.settings.caseSensitive ? "u" : "iu";
-        const UWC = "\\p{L}\\p{N}\\-'";
-        const esc = plugin.escapeRegex(String(word));
-        const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
-        const regex = plugin._regexCache.getOrCreate(pattern, flags);
-        if (regex) {
-          plugin._compiledBlacklistWords.push({ word, regex, flags });
-        }
-      } catch (e) {
-      }
-    }
-    const blacklistEntries = Array.isArray(plugin.settings.blacklistEntries) ? plugin.settings.blacklistEntries : [];
-    for (const entry of blacklistEntries) {
-      if (!entry) continue;
-      if (entry.targetElement) continue;
-      try {
-        const compiled = { entry, patterns: [] };
-        if (entry.isRegex && plugin.settings.enableRegexSupport) {
-          const flags = entry.flags || (plugin.settings.caseSensitive ? "" : "i");
-          const regex = plugin._regexCache.getOrCreate(entry.pattern, flags);
-          if (regex) {
-            compiled.patterns.push({ regex, flags, isRegex: true });
-          }
-        } else {
-          const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
-          for (const p of patterns) {
-            if (!p) continue;
-            const flags = plugin.settings.caseSensitive ? "u" : "iu";
-            const UWC = "\\p{L}\\p{N}\\-'";
-            const esc = plugin.escapeRegex(String(p));
-            const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
-            const regex = plugin._regexCache.getOrCreate(pattern, flags);
-            if (regex) {
-              compiled.patterns.push({
-                regex,
-                flags,
-                isRegex: false,
-                pattern: String(p)
-              });
-            }
-          }
-        }
-        if (compiled.patterns.length > 0) {
-          plugin._compiledBlacklistEntries.push(compiled);
-        }
-      } catch (e) {
-      }
-    }
-    const blacklistGroups = Array.isArray(plugin.settings.blacklistEntryGroups) ? plugin.settings.blacklistEntryGroups : [];
-    for (const group of blacklistGroups) {
-      if (!group || !group.uid) continue;
-      try {
-        const compiled = {
-          group,
-          entries: [],
-          isCaseSensitive: group.caseSensitiveOverride !== null ? group.caseSensitiveOverride : plugin.settings.caseSensitive,
-          matchType: group.matchTypeOverride || "contains"
-        };
-        const groupEntries = Array.isArray(group.entries) ? group.entries : [];
-        for (const entry of groupEntries) {
-          if (!entry) continue;
-          if (entry.targetElement) continue;
-          const entryCompiled = { entry, patterns: [] };
-          if (entry.isRegex && plugin.settings.enableRegexSupport) {
-            const flags = entry.flags || (compiled.isCaseSensitive ? "" : "i");
-            const regex = plugin._regexCache.getOrCreate(
-              entry.pattern,
-              flags
-            );
-            if (regex) {
-              entryCompiled.patterns.push({ regex, flags, isRegex: true });
-            }
-          } else {
-            const patterns = Array.isArray(entry.groupedPatterns) && entry.groupedPatterns.length > 0 ? entry.groupedPatterns : [entry.pattern];
-            for (const p of patterns) {
-              if (!p) continue;
-              const UWC = "\\p{L}\\p{N}\\-'";
-              const esc = plugin.escapeRegex(String(p));
-              const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
-              const flags = compiled.isCaseSensitive ? "u" : "iu";
-              const regex = plugin._regexCache.getOrCreate(
-                pattern,
-                flags
-              );
-              if (regex) {
-                entryCompiled.patterns.push({
-                  regex,
-                  pattern: String(p),
-                  isRegex: false
-                });
-              }
-            }
-          }
-          if (entryCompiled.patterns.length > 0) {
-            entryCompiled.matchType = compiled.matchType;
-            compiled.entries.push(entryCompiled);
-          }
-        }
-        if (compiled.entries.length > 0) {
-          plugin._compiledBlacklistGroups[group.uid] = compiled;
-        }
-      } catch (e) {
-      }
-    }
-    plugin._blacklistCompilationDirty = false;
-    debugLog(
-      "BLACKLIST_COMPILE",
-      `Compiled ${plugin._compiledBlacklistWords.length} words, ${plugin._compiledBlacklistEntries.length} entries, ${Object.keys(plugin._compiledBlacklistGroups).length} groups`
-    );
-  } catch (e) {
-    debugError("BLACKLIST_COMPILE", "Failed to compile blacklist", e);
-  }
-}
-
 // src/services/fileFilter.js
 function globToRegex(glob) {
   let out = "";
@@ -30001,7 +30557,7 @@ var import_obsidian25 = require("obsidian");
 
 // src/core/AlwaysColorText.js
 var moment = window.moment;
-var AlwaysColorText = class extends import_obsidian26.Plugin {
+var AlwaysColorText = class _AlwaysColorText extends import_obsidian26.Plugin {
   constructor(...args) {
     super(...args);
     (function() {
@@ -30232,7 +30788,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         color: ${colorValue} !important;
         border-radius: ${radius}px !important;
         padding: ${vPad}px ${hPad}px !important;
-        ${borderRule}
+        ${borderRule}${this.getCornerShapeCss(presetEntry)}
       `;
       const style = document.createElement("style");
       style.id = "act-highlight-preset-transparency";
@@ -30611,6 +31167,21 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       return ["auto"];
     }
   }
+  async openPluginSettingsTab(innerTabId) {
+    try {
+      this.app.setting.open();
+      await this.app.setting.openTabById(
+        this.manifest && this.manifest.id || "always-color-text"
+      );
+      const tab = this.settingTab;
+      if (tab && innerTabId && tab._activeTab !== innerTabId) {
+        tab._activeTab = innerTabId;
+        tab._initializedSettingsUI = false;
+        tab.display();
+      }
+    } catch (_) {
+    }
+  }
   async openSettingsAndFocusRegex() {
     try {
       this.app.setting.open();
@@ -30986,7 +31557,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                       const vPad = params.vPad ?? 0;
                       const radius = params.radius ?? 8;
                       const bdb = this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : "";
-                      style = `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
+                      style = `background-color: ${rgba}; border-radius: ${radius}px;${this.getCornerShapeCss(qo)} padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
                     } else {
                       if (this.settings.quickHighlightUseGlobalStyle) {
                         const rgba = this.hexToRgba(
@@ -30996,7 +31567,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                         const radius = this.settings.highlightBorderRadius ?? 8;
                         const pad = this.settings.highlightHorizontalPadding ?? 4;
                         const border = this.generateBorderStyle(null, bg);
-                        style = `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
+                        style = `background-color: ${rgba}; border-radius: ${radius}px;${this.getCornerShapeCss(null)} padding-left: ${pad}px; padding-right: ${pad}px;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
                       } else if (this.settings.quickHighlightStyleEnable) {
                         const hexWithAlpha = this.hexToHexWithAlpha(
                           bg,
@@ -31055,7 +31626,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                         const vPad = params.vPad ?? 0;
                         const radius = params.radius ?? 8;
                         const bdb = this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : "";
-                        style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
+                        style += `background-color: ${rgba}; border-radius: ${radius}px;${this.getCornerShapeCss(qo)} padding-left: ${hPad}px; padding-right: ${hPad}px; padding-top: ${vPad}px; padding-bottom: ${vPad}px;${bdb}${border}`;
                       }
                     } else {
                       if (tc) style += `color: ${tc}; `;
@@ -31068,7 +31639,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                           const radius = this.settings.highlightBorderRadius ?? 8;
                           const pad = this.settings.highlightHorizontalPadding ?? 4;
                           const border = this.generateBorderStyle(null, bg);
-                          style += `background-color: ${rgba}; border-radius: ${radius}px; padding-left: ${pad}px; padding-right: ${pad}px;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
+                          style += `background-color: ${rgba}; border-radius: ${radius}px;${this.getCornerShapeCss(null)} padding-left: ${pad}px; padding-right: ${pad}px;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${border}`;
                         } else if (this.settings.quickHighlightStyleEnable) {
                           const hexWithAlpha = this.hexToHexWithAlpha(
                             bg,
@@ -31383,7 +31954,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                     styleStr += `background-color:${bc};`;
                   }
                 }
-                styleStr += `border-radius:${params.radius ?? 8}px; padding:${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss}`;
+                styleStr += `border-radius:${params.radius ?? 8}px;${this.getCornerShapeCss(style)} padding:${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss}`;
                 nameEl.setAttr("style", styleStr);
                 wrapper.appendChild(nameEl);
                 frag.appendChild(wrapper);
@@ -31616,7 +32187,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                             pair.backgroundColor,
                             null
                           );
-                          const styleStr = `background-color: ${hexWithAlpha}; border-radius: ${p.radius ?? 8}px; padding: ${p.vPad ?? 0}px ${p.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+                          const styleStr = `background-color: ${hexWithAlpha}; border-radius: ${p.radius ?? 8}px;${this.getCornerShapeCss(null)} padding: ${p.vPad ?? 0}px ${p.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
                           const html = `<span class="always-color-text-highlight" style="${styleStr}">${escapeHtml(selectedText)}</span>`;
                           editor.replaceSelection(html);
                         }
@@ -32492,28 +33063,20 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         }
       });
       addTrackedCommand({
+        id: "open-colored-texts-settings",
+        name: this.t(
+          "command_open_colored_texts_settings",
+          "Colored Texts Settings"
+        ),
+        callback: () => {
+          this.openPluginSettingsTab("always-color-texts");
+        }
+      });
+      addTrackedCommand({
         id: "manage-colored-texts",
         name: this.t("command_manage_colored_texts", "Manage Colored Texts"),
         callback: () => {
-          try {
-            this.app.setting.open();
-            const tabId = this.manifest && this.manifest.id || "always-color-text";
-            try {
-              this.app.setting.openTabById(tabId);
-            } catch (e) {
-            }
-            setTimeout(() => {
-              try {
-                const el = document.querySelector(
-                  "#always-colored-texts-header"
-                );
-                if (el && el.scrollIntoView)
-                  el.scrollIntoView({ behavior: "smooth", block: "start" });
-              } catch (_) {
-              }
-            }, 100);
-          } catch (_) {
-          }
+          this.openPluginSettingsTab("always-color-texts");
         }
       });
       addTrackedCommand({
@@ -33322,6 +33885,8 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
               br + "px",
               "important"
             );
+            this.applyCornerShapeToElement(fallbackSpan, quickStyle);
+            this.applyCornerShapeToElement(mark, quickStyle);
             try {
               const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
               if (borderCss) {
@@ -33399,6 +33964,8 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
               br + "px",
               "important"
             );
+            this.applyCornerShapeToElement(fallbackSpan, entryForMark);
+            this.applyCornerShapeToElement(mark, entryForMark);
             try {
               const borderCss = this.generateBorderStyle(tc, bc, entryForMark);
               if (borderCss) {
@@ -34004,7 +34571,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         }
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -34266,7 +34833,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         }
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -34401,7 +34968,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         }
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
         }
         this.applyCustomCssToElement(span, entry);
         textNode.replaceWith(span);
@@ -35274,6 +35841,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             } catch (_) {
               span.style.borderRadius = br;
             }
+            this.applyCornerShapeToElement(span, m.entryRef || m.entry || null);
             const borderCss = this.generateBorderStyle(
               null,
               bgColor,
@@ -35350,6 +35918,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             } catch (_) {
               span.style.borderRadius = br2;
             }
+            this.applyCornerShapeToElement(span, m.entryRef || m.entry || null);
             const borderCss2 = this.generateBorderStyle(
               hideText ? null : textColor,
               hideBg ? null : bgColor,
@@ -36125,7 +36694,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
             css += ` padding-left: ${hPad}px !important; padding-right: ${hPad}px !important;`;
             css += ` padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`;
-            css += ` border-radius: ${radius}px !important;`;
+            css += ` border-radius: ${radius}px !important;${this.getCornerShapeCss(entry)}`;
             if (borderCSS) css += borderCSS;
             if (this.settings.enableBoxDecorationBreak !== false) {
               css += ` box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
@@ -36317,6 +36886,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         const clearHighlightInline = () => {
           el.style.removeProperty("background-color");
           el.style.removeProperty("border-radius");
+          el.style.removeProperty("corner-shape");
           el.style.removeProperty("border-top-left-radius");
           el.style.removeProperty("border-top-right-radius");
           el.style.removeProperty("border-bottom-left-radius");
@@ -36346,6 +36916,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           }
           applyHalfPillSplit();
           applyBorderInline();
+          this.applyCornerShapeToElement(el, entry);
           el.style.boxDecorationBreak = "clone";
           el.style.WebkitBoxDecorationBreak = "clone";
         } else {
@@ -36357,6 +36928,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         el.style.removeProperty("color");
         el.style.removeProperty("background-color");
         el.style.removeProperty("border-radius");
+        el.style.removeProperty("corner-shape");
         el.style.removeProperty("border-top-left-radius");
         el.style.removeProperty("border-top-right-radius");
         el.style.removeProperty("border-bottom-left-radius");
@@ -38301,23 +38873,32 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
       });
       const found = /* @__PURE__ */ new Set();
-      const rebuilt = parsed.map(({ prop, val }) => {
+      const rebuilt = [];
+      for (const { prop, val } of parsed) {
         if (updates.hasOwnProperty(prop)) {
           found.add(prop);
-          return `${prop}: ${updates[prop]}`;
+          rebuilt.push(`${prop}: ${updates[prop]}`);
+          continue;
         }
+        if (!tc && prop === "color") continue;
+        if ((!bg || isTextOnly) && prop === "background-color") continue;
         if (tc && (prop === "border" || prop === "border-top" || prop === "border-bottom" || prop === "border-left" || prop === "border-right")) {
           const patched = val.replace(/#[0-9a-fA-F]{3,8}\b/g, tc).replace(/rgba?\s*\([^)]+\)/gi, tc);
-          return `${prop}: ${patched}`;
+          rebuilt.push(`${prop}: ${patched}`);
+          continue;
         }
-        return `${prop}: ${val}`;
-      });
+        if (!tc && (prop === "border" || prop === "border-top" || prop === "border-bottom" || prop === "border-left" || prop === "border-right")) {
+          const patched = val.replace(/#[0-9a-fA-F]{3,8}\b/g, "currentColor").replace(/rgba?\s*\([^)]+\)/gi, "currentColor");
+          rebuilt.push(`${prop}: ${patched}`);
+          continue;
+        }
+        rebuilt.push(`${prop}: ${val}`);
+      }
       for (const [prop, val] of Object.entries(updates)) {
         if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
       }
-      return rebuilt.join(";\n") + ";";
+      entry.customCss = rebuilt.join(";\n") + ";";
     } catch (_) {
-      return entry.customCss;
     }
   }
   /**
@@ -38367,6 +38948,29 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       }
       entry.customCss = rebuilt.join(";\n") + ";";
     } catch (_) {
+    }
+  }
+  /**
+   * Group customCss contribution for member entries. Highlight styling and
+   * custom properties always apply regardless of colortype; color
+   * declarations apply only when the group colortype forces them (structured
+   * colors are the colortype's job). Unforced (per-entry / forced-but-reset)
+   * groups contribute layout only, so stale auto-derived colors can never
+   * repaint members.
+   */
+  groupCssForMembers(group) {
+    try {
+      if (!group || !group.customCss) return "";
+      let type = "";
+      try {
+        type = resolveGroupColorOverride(group, (c) => this.isValidHexColor(c)).type;
+      } catch (_) {
+        type = group.styleType || "";
+      }
+      if (!type) return stripInheritedGroupCssColors(group.customCss);
+      return group.customCss;
+    } catch (_) {
+      return group && group.customCss || "";
     }
   }
   _mergeStyleWithCustomCss(baseStyle, customCss) {
@@ -38553,9 +39157,45 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
       borderStyle: entry && typeof entry.borderStyle === "string" ? entry.borderStyle : this.settings.borderStyle ?? "full",
       borderLineStyle: entry && typeof entry.borderLineStyle === "string" ? entry.borderLineStyle : this.settings.borderLineStyle ?? "solid",
       borderOpacity: entry && typeof entry.borderOpacity === "number" ? entry.borderOpacity : this.settings.borderOpacity ?? 100,
-      borderThickness: entry && typeof entry.borderThickness === "number" ? entry.borderThickness : this.settings.borderThickness ?? 1
+      borderThickness: entry && typeof entry.borderThickness === "number" ? entry.borderThickness : this.settings.borderThickness ?? 1,
+      cornerShape: entry && typeof entry.cornerShape === "string" && entry.cornerShape ? entry.cornerShape : this.settings.cornerShape ?? "round"
     };
     return result;
+  }
+  static CORNER_SHAPES = ["round", "scoop", "bevel", "notch", "square", "squircle"];
+  // Returns e.g. " corner-shape: scoop !important;" or "" when round/default/invalid.
+  // Used in stylesheet string builders where border-radius is emitted.
+  getCornerShapeCss(entryOrShape) {
+    try {
+      let v = null;
+      if (typeof entryOrShape === "string") v = entryOrShape;
+      else if (entryOrShape && typeof entryOrShape.cornerShape === "string") v = entryOrShape.cornerShape;
+      else if (entryOrShape && typeof entryOrShape.cornerShape !== "undefined") v = null;
+      else if (entryOrShape && entryOrShape.radius !== void 0) v = entryOrShape.cornerShape;
+      if (!v && this.settings && typeof this.settings.cornerShape === "string") {
+        if (!entryOrShape || typeof entryOrShape.cornerShape === "undefined") v = this.settings.cornerShape;
+      }
+      if (typeof v !== "string") return "";
+      v = v.trim().toLowerCase();
+      if (!v || v === "round") return "";
+      if (!_AlwaysColorText.CORNER_SHAPES.includes(v)) return "";
+      return ` corner-shape: ${v} !important;`;
+    } catch (_) {
+      return "";
+    }
+  }
+  // Applies corner-shape to a live element (or removes it when round/default).
+  applyCornerShapeToElement(el, entry) {
+    try {
+      if (!el || !el.style) return;
+      let v = entry && typeof entry.cornerShape === "string" ? entry.cornerShape.trim().toLowerCase() : this.settings && typeof this.settings.cornerShape === "string" ? this.settings.cornerShape.trim().toLowerCase() : "round";
+      if (!v || v === "round" || !_AlwaysColorText.CORNER_SHAPES.includes(v)) {
+        el.style.removeProperty("corner-shape");
+        return;
+      }
+      el.style.setProperty("corner-shape", v, "important");
+    } catch (_) {
+    }
   }
   // Combined list of styles shown in the right-click "Quick Styles" submenu.
   // User-defined Quick Styles are included by default (unless explicitly hidden
@@ -38876,7 +39516,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
     }
     if (styleType2 === "highlight") {
       const bg2 = bc ? this.hexToHexWithAlpha(bc, params.opacity ?? 25) : null;
-      const styleStr2 = `${bg2 ? `background-color: ${bg2}; ` : ""}border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+      const styleStr2 = `${bg2 ? `background-color: ${bg2}; ` : ""}border-radius: ${params.radius ?? 8}px;${this.getCornerShapeCss(style)} padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
       const html2 = `<span class="always-color-text-highlight" style="${styleStr2}">${escapeHtml(selectedText)}</span>`;
       editor.replaceSelection(html2);
       return;
@@ -38885,7 +39525,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
     let styleStr = "";
     if (tc) styleStr += `color: ${tc}; `;
     if (bg) styleStr += `background-color: ${bg}; `;
-    styleStr += `border-radius: ${params.radius ?? 8}px; padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
+    styleStr += `border-radius: ${params.radius ?? 8}px;${this.getCornerShapeCss(style)} padding: ${params.vPad ?? 0}px ${params.hPad ?? 4}px;${borderCss} box-decoration-break: clone; -webkit-box-decoration-break: clone;`;
     const html = `<span style="${styleStr}">${escapeHtml(selectedText)}</span>`;
     editor.replaceSelection(html);
   }
@@ -39600,6 +40240,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
             params.radius + "px",
             "important"
           );
+          this.applyCornerShapeToElement(element, entry);
           element.style.setProperty(
             "padding-left",
             params.hPad + "px",
@@ -39662,6 +40303,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         } else {
           element.style.removeProperty("background-color");
           element.style.removeProperty("border-radius");
+          element.style.removeProperty("corner-shape");
           element.style.removeProperty("padding-left");
           element.style.removeProperty("padding-right");
           element.style.removeProperty("padding-top");
@@ -39896,6 +40538,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
         } catch (_) {
           span.style.borderRadius = br;
         }
+        this.applyCornerShapeToElement(span, entry);
         if ((this.settings.enableBoxDecorationBreak ?? true) && !isInHeading) {
           span.style.boxDecorationBreak = "clone";
           span.style.WebkitBoxDecorationBreak = "clone";
@@ -39970,6 +40613,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
           } catch (_) {
             span.style.borderRadius = br2;
           }
+          this.applyCornerShapeToElement(span, entry);
           if (this.settings.enableBoxDecorationBreak ?? true) {
             span.style.boxDecorationBreak = "clone";
             span.style.WebkitBoxDecorationBreak = "clone";
@@ -40595,6 +41239,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                 } catch (_) {
                   span.style.borderRadius = br;
                 }
+                this.applyCornerShapeToElement(span, null);
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   span.style.boxDecorationBreak = "clone";
                   span.style.WebkitBoxDecorationBreak = "clone";
@@ -40673,6 +41318,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
               } catch (_) {
                 span.style.borderRadius = br2;
               }
+              this.applyCornerShapeToElement(span, null);
               if (this.settings.enableBoxDecorationBreak ?? true) {
                 span.style.boxDecorationBreak = "clone";
                 span.style.WebkitBoxDecorationBreak = "clone";
@@ -41258,6 +41904,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                   }
                   const br = (params.hPad > 0 && params.radius === 0 ? 0 : params.radius) + "px";
                   wrapper.style.borderRadius = br;
+                  this.applyCornerShapeToElement(wrapper, headingEntry);
                 }
                 if (this.settings.enableBoxDecorationBreak ?? true) {
                   wrapper.style.boxDecorationBreak = "clone";
@@ -42059,6 +42706,10 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                   lineStyleParts.push(`margin-bottom: ${vpad}px`);
                 }
                 lineStyleParts.push(`border-radius: ${params.radius ?? 4}px`);
+                {
+                  const _cs = this.getCornerShapeCss(m.entryRef || {});
+                  if (_cs) lineStyleParts.push(_cs.replace(/ !important;?/, ""));
+                }
                 const entryRef = m.entryRef || {};
                 const borderCss = this.generateBorderStyle(
                   resolvedTextColor && resolvedTextColor !== "currentColor" ? resolvedTextColor : null,
@@ -42076,7 +42727,7 @@ var AlwaysColorText = class extends import_obsidian26.Plugin {
                 const entryRef = m.entryRef || {};
                 const groupRef = entryRef._groupRef || entryRef.entryRef?._groupRef;
                 if (groupRef?.customCss) {
-                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, groupRef.customCss);
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, this.groupCssForMembers(groupRef));
                 }
                 if (entryRef.customCss) {
                   lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss);
@@ -42241,6 +42892,7 @@ ${strongRule}`;
                   } catch (_) {
                     span.style.borderRadius = br;
                   }
+                  this.applyCornerShapeToElement(span, entryRef);
                   const borderCss = this.generateBorderStyle(
                     null,
                     bgColor,
@@ -42351,6 +43003,7 @@ ${strongRule}`;
                 } catch (_) {
                   span.style.borderRadius = br2;
                 }
+                this.applyCornerShapeToElement(span, entryRef);
                 const borderCss = this.generateBorderStyle(
                   hideText ? null : textColor,
                   hideBg ? null : bgColor,
@@ -42405,7 +43058,7 @@ ${strongRule}`;
               debugLog("READING_RENDER_CSS", `Checking for custom CSS on: ${m.pattern || "unknown"}`);
               if (this.settings.enableCustomCss) {
                 const groupRef = entryRef?._groupRef || entryRef?.entryRef?._groupRef;
-                if (groupRef?.customCss) this.applyCustomCssToElement(span, groupRef);
+                if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
               }
               this.applyCustomCssToElement(span, entryRef);
               const entryStyleType = (m.entryRef || m.entry)?.styleType || "text";
@@ -45065,7 +45718,7 @@ ${strongRule}`;
         const textPart = hideText ? "" : `color: ${m.textColor} !important; --highlight-color: ${m.textColor}; `;
         const vPad = params.vPad;
         const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(m.backgroundColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+        const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(m.backgroundColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
       } else {
         let styleType2 = m.entryRef && m.entryRef.affectMarkElements ? "highlight" : m.styleType || "text";
@@ -45083,7 +45736,7 @@ ${strongRule}`;
           );
           const vPadH = params.vPad;
           const vPadCssH = vPadH >= 0 ? `padding-top: ${vPadH}px !important; padding-bottom: ${vPadH}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadH}px !important; margin-bottom: ${vPadH}px !important;`;
-          style = `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssH}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+          style = `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssH}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
         } else if (styleType2 === "both") {
           const textColor = m.textColor && m.textColor !== "currentColor" ? m.textColor : m.color || null;
           const bgColor = m.backgroundColor || m.color;
@@ -45099,7 +45752,7 @@ ${strongRule}`;
           const textPart = hideText ? "" : textColor ? `color: ${textColor} !important; --highlight-color: ${textColor}; ` : "";
           const vPadB = params.vPad;
           const vPadCssB = vPadB >= 0 ? `padding-top: ${vPadB}px !important; padding-bottom: ${vPadB}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPadB}px !important; margin-bottom: ${vPadB}px !important;`;
-          const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssB}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+          const bgPart = hideBg ? "" : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCssB}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
           style = `${textPart}${bgPart}${borderStyle}`;
         } else {
           if (this.settings.hideTextColors) continue;
@@ -46452,11 +47105,11 @@ ${strongRule}`;
           m.entryRef
         );
         const textPart = hideText || !textColor ? "" : `color: ${textColor} !important; `;
-        const bgPart = hideBg || !bgColor ? "" : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+        const bgPart = hideBg || !bgColor ? "" : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
         if (this.settings.enableCustomCss) {
           if (m.entryRef?._groupRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, m.entryRef._groupRef.customCss);
+            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef));
           }
           if (m.entryRef?.customCss) {
             style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
@@ -46496,7 +47149,7 @@ ${strongRule}`;
               style = (() => {
                 const vPad = params.vPad;
                 const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-                return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+                return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
               })();
             }
           } else if (styleType2 === "both") {
@@ -46519,7 +47172,7 @@ ${strongRule}`;
                 if (hideBg) return "";
                 const vPad = params.vPad;
                 const vPadCss = vPad >= 0 ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;` : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-                return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important; padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+                return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${this.settings.enableBoxDecorationBreak ?? true ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
               })();
               style = `${textPart}${bgPart}${borderStyle}`;
             }
@@ -46536,7 +47189,7 @@ ${strongRule}`;
         }
         if (this.settings.enableCustomCss) {
           if (m.entryRef?._groupRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, m.entryRef._groupRef.customCss);
+            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef));
           }
           if (m.entryRef?.customCss) {
             style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);

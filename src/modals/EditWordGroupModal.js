@@ -32,6 +32,8 @@ export class EditWordGroupModal extends Modal {
     this._limitMatchEnds = false;
     this._limitMatchExact = false;
     this._limitColorTarget = null; // 'text' | 'line' | 'child' | null
+    this._limitActiveOnly = false;
+    this._limitInactiveOnly = false;
     this._listDiv = null;
     this._cleanupHandlers = [];
     this._sortMode = "last-added";
@@ -340,7 +342,7 @@ export class EditWordGroupModal extends Modal {
     limitInput.placeholder = this.plugin.t("limit_input_placeholder", "limit");
     limitInput.title = this.plugin.t(
       "limit_input_tooltip",
-      "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child",
+      "0=all; number=last N; r=regex; w=words; h=highlight; c=text; b=text+bg; sw=starts; ew=ends; e=exact; ct=color-text; cl=color-line; cc=color-child; off=deactivated; on=active",
     );
     limitInput.style.width = "80px";
     limitInput.style.padding = "6px";
@@ -361,6 +363,8 @@ export class EditWordGroupModal extends Modal {
       this._limitMatchEnds = false;
       this._limitMatchExact = false;
       this._limitColorTarget = null; // 'text' | 'line' | 'child' | null
+      this._limitActiveOnly = false;
+      this._limitInactiveOnly = false;
       for (const tok of parts) {
         if (tok === "r") { this._limitRegexOnly = true; }
         else if (tok === "w") { this._limitWordsOnly = true; }
@@ -373,6 +377,8 @@ export class EditWordGroupModal extends Modal {
         else if (tok === "ct") { this._limitColorTarget = "text"; }
         else if (tok === "cl") { this._limitColorTarget = "line"; }
         else if (tok === "cc") { this._limitColorTarget = "nextLine"; }
+        else if (tok === "off" || tok === "inactive") { this._limitInactiveOnly = true; }
+        else if (tok === "on" || tok === "active") { this._limitActiveOnly = true; }
       }
       this._refreshGroupEntries();
     };
@@ -457,10 +463,13 @@ export class EditWordGroupModal extends Modal {
         return Date.now();
       }
     };
-    const addEntry = (entry) => {
+    const addEntry = async (entry) => {
       entry.uid = _newUid();
       entry.persistAtEnd = true;
       this.group.entries.push(entry);
+      // Write through to live settings so the subsequent refresh (which
+      // reloads the live group) does not drop the new row.
+      await this._mirrorEntryToLive(entry);
       this._sortMode = "last-added";
       this._refreshGroupEntries();
       setTimeout(() => {
@@ -527,7 +536,7 @@ export class EditWordGroupModal extends Modal {
     presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
       try {
-        new PresetModal(this.app, this.plugin, (preset) => {
+        new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
           const isFmt = !!preset.targetElement;
           const entry = {
@@ -541,6 +550,7 @@ export class EditWordGroupModal extends Modal {
             targetElement: preset.targetElement,
           };
           this.group.entries.push(entry);
+          await this._mirrorEntryToLive(entry);
           this._sortMode = "last-added";
           this._refreshGroupEntries();
         }).open();
@@ -615,6 +625,92 @@ export class EditWordGroupModal extends Modal {
       btnSave.removeEventListener("click", saveHandler),
     );
   }
+  // Mirror a clone entry into the live settings group and persist it.
+  // The modal edits a deep clone, but _refreshGroupEntries() reloads the live
+  // group from settings — so any clone mutation (color pick, reset, add,
+  // delete, type switch) would be silently discarded on the next refresh
+  // (search/sort/render) unless it is written through here first.
+  async _mirrorEntryToLive(entry) {
+    try {
+      const groups = this.plugin.settings.wordEntryGroups;
+      if (!Array.isArray(groups)) return;
+      const liveGroup = groups.find(
+        (g) => g && g.uid === this.group?.uid,
+      );
+      if (!liveGroup || !Array.isArray(liveGroup.entries)) return;
+      const live =
+        liveGroup.entries.find(
+          (e) => e && entry && e.uid && entry.uid && e.uid === entry.uid,
+        ) ||
+        liveGroup.entries.find(
+          (e) =>
+            e &&
+            entry &&
+            e.pattern === entry.pattern &&
+            !!e.isRegex === !!entry.isRegex,
+        );
+      if (live) {
+        for (const k of [
+          "pattern",
+          "groupedPatterns",
+          "color",
+          "textColor",
+          "backgroundColor",
+          "styleType",
+          "matchType",
+          "caseSensitive",
+          "markTarget",
+          "flags",
+          "presetLabel",
+          "targetElement",
+          "affectMarkElements",
+          "headingLevels",
+          "taskTypes",
+          "tagFilter",
+          "titleFilter",
+          "titleMatchType",
+          "customCss",
+          "_savedTextColor",
+          "_savedBackgroundColor",
+          "isRegex",
+          "active",
+        ]) {
+          if (k in entry) {
+            try {
+              live[k] = entry[k];
+            } catch (_) {}
+          }
+        }
+      } else {
+        liveGroup.entries.push(JSON.parse(JSON.stringify(entry)));
+      }
+      await this.plugin.saveSettings();
+    } catch (_) {}
+  }
+
+  async _mirrorDeleteToLive(entry) {
+    try {
+      const groups = this.plugin.settings.wordEntryGroups;
+      if (!Array.isArray(groups)) return;
+      const liveGroup = groups.find(
+        (g) => g && g.uid === this.group?.uid,
+      );
+      if (!liveGroup || !Array.isArray(liveGroup.entries)) return;
+      const idx = liveGroup.entries.findIndex(
+        (e) =>
+          e &&
+          entry &&
+          ((e.uid && entry.uid && e.uid === entry.uid) ||
+            (e.pattern === entry.pattern &&
+              !!e.isRegex === !!entry.isRegex)),
+      );
+      if (idx !== -1) {
+        liveGroup.entries.splice(idx, 1);
+        await this.plugin.saveSettings();
+      }
+    } catch (_) {}
+  }
+
   _refreshGroupEntries() {
     // IMPORTANT: Reload the group from current settings to get any external changes
     // (e.g., if entries were moved via EditEntryModal in another modal)
@@ -676,6 +772,12 @@ export class EditWordGroupModal extends Modal {
       entries = entries.filter(
         (e) => (e.markTarget || "text") === this._limitColorTarget,
       );
+    }
+    // Apply active/inactive filter (off=deactivated only, on=active only)
+    if (this._limitInactiveOnly) {
+      entries = entries.filter((e) => e && e.active === false);
+    } else if (this._limitActiveOnly) {
+      entries = entries.filter((e) => !e || e.active !== false);
     }
 
     // Sort entries
@@ -763,6 +865,7 @@ export class EditWordGroupModal extends Modal {
       row.style.alignItems = "center";
       row.style.gap = "8px";
       row.style.borderRadius = "var(--input-radius)";
+      if (entry.active === false) row.style.opacity = "0.55";
 
       // 1. STYLE SELECT (Text/Highlight/Both) - default should be "color" which is "text"
       const styleSelect = row.createEl("select");
@@ -787,8 +890,9 @@ export class EditWordGroupModal extends Modal {
         opt.value = val;
       });
       styleSelect.value = entry.styleType || "text";
-      const styleSelectHandler = () => {
+      const styleSelectHandler = async () => {
         entry.styleType = styleSelect.value;
+        await this._mirrorEntryToLive(entry);
         this._refreshGroupEntries();
       };
       styleSelect.addEventListener("change", styleSelectHandler);
@@ -808,8 +912,9 @@ export class EditWordGroupModal extends Modal {
       }
       matchSelect.innerHTML = `<option value="exact">${this.plugin.t("match_option_exact", "Exact")}</option><option value="contains">${this.plugin.t("match_option_contains", "Contains")}</option><option value="startswith">${this.plugin.t("match_option_starts_with", "Starts with")}</option><option value="endswith">${this.plugin.t("match_option_ends_with", "Ends with")}</option>`;
       matchSelect.value = entry.matchType || "contains";
-      const matchSelectHandler = () => {
+      const matchSelectHandler = async () => {
         entry.matchType = matchSelect.value;
+        await this._mirrorEntryToLive(entry);
       };
       matchSelect.addEventListener("change", matchSelectHandler);
 
@@ -1001,7 +1106,7 @@ export class EditWordGroupModal extends Modal {
             ? entry.textColor
             : entry.color || "#000000";
         cp.value = textColor;
-        const cpHandler = () => {
+        const cpHandler = async () => {
           const newColor = cp.value;
           if (!this.plugin.isValidHexColor(newColor)) return;
           if (entry.backgroundColor) {
@@ -1018,6 +1123,7 @@ export class EditWordGroupModal extends Modal {
           }
           styleSelect.value = entry.styleType;
           if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
+          await this._mirrorEntryToLive(entry);
         };
         cp.addEventListener("input", cpHandler);
         cp.title = "Text color";
@@ -1069,7 +1175,25 @@ export class EditWordGroupModal extends Modal {
                     : null;
                 const tcValid = !!tc;
                 const bcValid = !!bc;
-                if (!tcValid && !bcValid) return;
+                if (!tcValid && !bcValid) {
+                  // Reset: remove any hex/var codes so the group retains its
+                  // own colours and member entries fall back to group styling.
+                  // Pickers re-render as null black (#000000); preview uses
+                  // theme vars. Saved-color caches must also be cleared or the
+                  // row would ghost the old color back via _saved* fallback.
+                  entry.color = "";
+                  entry.textColor = null;
+                  entry.backgroundColor = null;
+                  entry._savedTextColor = "";
+                  entry._savedBackgroundColor = "";
+                  if (result && result.markTarget) entry.markTarget = result.markTarget;
+                  if (result && result.matchType) entry.matchType = result.matchType;
+                  if (result && typeof result.caseSensitive === "boolean") entry.caseSensitive = result.caseSensitive;
+                  if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
+                  await this._mirrorEntryToLive(entry);
+                  this._refreshGroupEntries();
+                  return;
+                }
                 if (tcValid && bcValid) {
                   entry.textColor = tc;
                   entry.backgroundColor = bc;
@@ -1097,6 +1221,7 @@ export class EditWordGroupModal extends Modal {
                 if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
                 if (tcValid && cp) cp.value = tc;
                 if (bcValid && cpBg) cpBg.value = bc;
+                await this._mirrorEntryToLive(entry);
                 this._refreshGroupEntries();
               },
               groupPickerMode,
@@ -1134,7 +1259,7 @@ export class EditWordGroupModal extends Modal {
         const bgColor =
           entry.backgroundColor || entry._savedBackgroundColor || "#000000";
         cpBg.value = bgColor;
-        const cpBgHandler = () => {
+        const cpBgHandler = async () => {
           const newColor = cpBg.value;
           if (!this.plugin.isValidHexColor(newColor)) return;
           entry.backgroundColor = newColor;
@@ -1156,6 +1281,7 @@ export class EditWordGroupModal extends Modal {
           entry._savedBackgroundColor = newColor;
           styleSelect.value = entry.styleType;
           if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
+          await this._mirrorEntryToLive(entry);
         };
         cpBg.addEventListener("input", cpBgHandler);
         cpBg.title = "Highlight color";
@@ -1209,7 +1335,25 @@ export class EditWordGroupModal extends Modal {
                     : null;
                 const tcValid = !!tc;
                 const bcValid = !!bc;
-                if (!tcValid && !bcValid) return;
+                if (!tcValid && !bcValid) {
+                  // Reset: remove any hex/var codes so the group retains its
+                  // own colours and member entries fall back to group styling.
+                  // Pickers re-render as null black (#000000); preview uses
+                  // theme vars. Saved-color caches must also be cleared or the
+                  // row would ghost the old color back via _saved* fallback.
+                  entry.color = "";
+                  entry.textColor = null;
+                  entry.backgroundColor = null;
+                  entry._savedTextColor = "";
+                  entry._savedBackgroundColor = "";
+                  if (result && result.markTarget) entry.markTarget = result.markTarget;
+                  if (result && result.matchType) entry.matchType = result.matchType;
+                  if (result && typeof result.caseSensitive === "boolean") entry.caseSensitive = result.caseSensitive;
+                  if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
+                  await this._mirrorEntryToLive(entry);
+                  this._refreshGroupEntries();
+                  return;
+                }
                 if (tcValid && bcValid) {
                   entry.textColor = tc;
                   entry.backgroundColor = bc;
@@ -1267,10 +1411,11 @@ export class EditWordGroupModal extends Modal {
       btnDel.style.cursor = "pointer";
       btnDel.style.padding = "6px 10px";
       btnDel.style.border = "none"; */
-      const delHandler = () => {
+      const delHandler = async () => {
         const idx = this.group.entries.indexOf(entry);
         if (idx > -1) {
           this.group.entries.splice(idx, 1);
+          await this._mirrorDeleteToLive(entry);
           this._refreshGroupEntries();
         }
       };
@@ -1314,9 +1459,10 @@ export class EditWordGroupModal extends Modal {
                   const modal = new RealTimeRegexTesterModal(
                     this.app,
                     this.plugin,
-                    (updatedEntry) => {
+                    async (updatedEntry) => {
                       if (updatedEntry) {
                         Object.assign(entry, updatedEntry);
+                        await this._mirrorEntryToLive(entry);
                         this._refreshGroupEntries();
                       }
                     },
@@ -1330,14 +1476,46 @@ export class EditWordGroupModal extends Modal {
                 });
             });
           }
+          const groupEntryIsActive = entry.active !== false;
+          menu.addItem((item) => {
+            item
+              .setTitle(
+                groupEntryIsActive
+                  ? this.plugin.t("deactivate_entry", "Deactivate Entry")
+                  : this.plugin.t("activate_entry", "Activate Entry"),
+              )
+              .setIcon(groupEntryIsActive ? "eye-off" : "eye")
+              .onClick(async () => {
+                try { menu.hide(); } catch (_) {}
+                try {
+                  entry.active = entry.active === false ? true : false;
+                  await this._mirrorEntryToLive(entry);
+                  try {
+                    this.plugin.compileWordEntries();
+                    this.plugin.compileTextBgColoringEntries();
+                    this.plugin.reconfigureEditorExtensions();
+                    this.plugin.forceRefreshAllEditors();
+                    this.plugin.forceRefreshAllReadingViews();
+                  } catch (_) {}
+                  this._refreshGroupEntries();
+                } catch (e) {
+                  debugError("MODAL", "toggle group entry active error", e);
+                }
+              });
+          });
           menu.addItem((item) => {
             item
               .setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry"))
               .setIcon("copy")
-              .onClick(() => {
+              .onClick(async () => {
                 try { menu.hide(); } catch (_) {}
                 const dup = JSON.parse(JSON.stringify(entry));
+                try {
+                  dup.uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+                } catch (_) {}
+                if (dup.active === false) dup.active = true;
                 this.group.entries.push(dup);
+                await this._mirrorEntryToLive(dup);
                 this._sortMode = "last-added";
                 this._refreshGroupEntries();
               });
@@ -1348,10 +1526,11 @@ export class EditWordGroupModal extends Modal {
               .setIcon("trash")
               .onClick(() => {
                 try { menu.hide(); } catch (_) {}
-                const doDelete = () => {
+                const doDelete = async () => {
                   const idx = this.group.entries.indexOf(entry);
                   if (idx > -1) {
                     this.group.entries.splice(idx, 1);
+                    await this._mirrorDeleteToLive(entry);
                     this._refreshGroupEntries();
                   }
                 };

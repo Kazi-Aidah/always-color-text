@@ -984,6 +984,7 @@ export class EditEntryModal extends Modal {
       const radius = p.radius ?? 8;
       const pad = p.hPad ?? 4;
       const vpad = p.vPad ?? 0;
+      const cornerShape = p.cornerShape ?? "round";
 
       while (preview.firstChild) preview.removeChild(preview.firstChild);
       if (!raw && !isTarget) return;
@@ -1011,6 +1012,7 @@ export class EditEntryModal extends Modal {
           span.style.setProperty("background-color", bgCss, "important");
           span.style.setProperty("color", "var(--text-normal)", "important");
           span.style.setProperty("border-radius", radius + "px", "important");
+          if (cornerShape && cornerShape !== "round") span.style.setProperty("corner-shape", cornerShape, "important");
           span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
           span.style.setProperty("box-decoration-break", "clone", "important");
           span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
@@ -1018,6 +1020,7 @@ export class EditEntryModal extends Modal {
           span.style.setProperty("color", effectiveText, "important");
           span.style.setProperty("background-color", bgCss, "important");
           span.style.setProperty("border-radius", radius + "px", "important");
+          if (cornerShape && cornerShape !== "round") span.style.setProperty("corner-shape", cornerShape, "important");
           span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
           span.style.setProperty("box-decoration-break", "clone", "important");
           span.style.setProperty("-webkit-box-decoration-break", "clone", "important");

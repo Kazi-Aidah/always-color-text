@@ -201,12 +201,14 @@ export class TextStylePresetsModal extends Modal {
     }
 
     const textColorVal = textHex || "var(--text-normal)";
+    const cornerShape = styleObj.cornerShape || this.plugin.settings.cornerShape || "round";
+    const cornerCss = cornerShape && cornerShape !== "round" ? `corner-shape:${cornerShape};` : "";
     const base =
       style === "text"
         ? `color:${textColorVal};background:transparent;`
         : style === "highlight"
-          ? `${bg}border-radius:${radius}px;padding:${vpad}px ${hpad}px;color:var(--text-normal);${border}`
-          : `color:${textColorVal};${bg}border-radius:${radius}px;padding:${vpad}px ${hpad}px;${border}`;
+          ? `${bg}border-radius:${radius}px;${cornerCss}padding:${vpad}px ${hpad}px;color:var(--text-normal);${border}`
+          : `color:${textColorVal};${bg}border-radius:${radius}px;${cornerCss}padding:${vpad}px ${hpad}px;${border}`;
 
     span.setAttribute(
       "style",
@@ -223,6 +225,7 @@ export class TextStylePresetsModal extends Modal {
       backgroundColor: "",
       backgroundOpacity: s.backgroundOpacity ?? 35,
       highlightBorderRadius: s.highlightBorderRadius ?? 4,
+      cornerShape: s.cornerShape ?? "round",
       highlightHorizontalPadding: s.highlightHorizontalPadding ?? 4,
       highlightVerticalPadding: s.highlightVerticalPadding ?? 0,
       enableBorderThickness: s.enableBorderThickness ?? false,
@@ -292,6 +295,7 @@ export class TextStylePresetsModal extends Modal {
         } catch (_) {}
         s.backgroundOpacity = entry.backgroundOpacity;
         s.highlightBorderRadius = entry.highlightBorderRadius;
+        s.cornerShape = entry.cornerShape;
         s.highlightHorizontalPadding = entry.highlightHorizontalPadding;
         s.highlightVerticalPadding = entry.highlightVerticalPadding;
         s.enableBorderThickness = entry.enableBorderThickness;
@@ -343,6 +347,7 @@ export class TextStylePresetsModal extends Modal {
         preset.styleType = temp.styleType;
         preset.backgroundOpacity = temp.backgroundOpacity;
         preset.highlightBorderRadius = temp.highlightBorderRadius;
+        preset.cornerShape = temp.cornerShape;
         preset.highlightHorizontalPadding = temp.highlightHorizontalPadding;
         preset.highlightVerticalPadding = temp.highlightVerticalPadding;
         preset.enableBorderThickness = temp.enableBorderThickness;
