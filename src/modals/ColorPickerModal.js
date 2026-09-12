@@ -15,6 +15,7 @@ export class ColorPickerModal extends Modal {
     isQuickOnce = false,
     preFillMarkTarget = "text",
     entry = null,
+    resolveInfo = null,
   ) {
     super(app);
     this.plugin = plugin;
@@ -26,6 +27,55 @@ export class ColorPickerModal extends Modal {
     this._eventListeners = []; // Track event listeners for cleanup
     this.isQuickOnce = !!isQuickOnce;
     this._entry = entry;
+    // Reverse-lookup info from the caller (right-click / command): the live
+    // entry that actually colors the selection + its group. When present it is
+    // the source of truth — the modal must open/edit THAT regex / markdown
+    // entry instead of treating the selection as a new literal.
+    this._resolveInfo = resolveInfo || null;
+    this._resolvedGroupUid = (resolveInfo && resolveInfo.groupUid) || null;
+    if (entry && !this._resolvedGroupUid && entry._groupUid) {
+      try {
+        this._resolvedGroupUid = entry._groupUid || null;
+      } catch (_) {}
+    }
+  }
+
+  _syncPreviewCornerShape(entry) {
+    // Keep the pick-color preview geometry in sync with the highlight shape.
+    // `corner-shape` is a managed (picker-owned) property: _applyCustomCss
+    // deliberately skips it, so every path that paints a background must set
+    // it here explicitly — otherwise the preview never reflects the shape.
+    try {
+      const span = this._previewSpan;
+      if (!span) return;
+      if (this.plugin && typeof this.plugin.applyCornerShapeToElement === "function") {
+        this.plugin.applyCornerShapeToElement(span, entry || this._entry || null);
+        return;
+      }
+      let shape = null;
+      try {
+        const p = this.plugin.getHighlightParams(entry || this._entry || null);
+        shape = p && p.cornerShape ? String(p.cornerShape).toLowerCase() : null;
+      } catch (_) {
+        shape = null;
+      }
+      if (!shape && this.plugin && this.plugin.settings && typeof this.plugin.settings.cornerShape === "string") {
+        shape = String(this.plugin.settings.cornerShape).toLowerCase();
+      }
+      if (shape && shape !== "round") {
+        span.style.setProperty("corner-shape", shape, "important");
+      } else {
+        try {
+          span.style.removeProperty("corner-shape");
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
+  _clearPreviewCornerShape() {
+    try {
+      if (this._previewSpan) this._previewSpan.style.removeProperty("corner-shape");
+    } catch (_) {}
   }
 
   _applyCustomCss(currentTextColor, currentBgColor) {
@@ -95,6 +145,31 @@ export class ColorPickerModal extends Modal {
           });
           cssToApply = this.plugin.syncEntryCssFromColorsForPreview(tempEntry) || entry.customCss;
         }
+        // Picker/slider-managed properties (colors, background, borders,
+        // radius, padding, shape) come from the live preview values set by
+        // apply()/reset — stale copies in the stored CSS must not clobber
+        // them, or the preview freezes on picks (and shows wrong borders).
+        // Only unmanaged custom properties are layered on top here.
+        const MANAGED_CSS_PROPS = new Set([
+          "color",
+          "background",
+          "background-color",
+          "border",
+          "border-top",
+          "border-bottom",
+          "border-left",
+          "border-right",
+          "border-color",
+          "border-radius",
+          "padding",
+          "padding-top",
+          "padding-bottom",
+          "padding-left",
+          "padding-right",
+          "corner-shape",
+          "box-decoration-break",
+          "-webkit-box-decoration-break",
+        ]);
         const decl = this.plugin.sanitizeCssDeclarations(cssToApply);
         if (decl) {
           decl
@@ -104,8 +179,10 @@ export class ColorPickerModal extends Modal {
             .forEach((p) => {
               const idx = p.indexOf(":");
               if (idx === -1) return;
+              const prop = p.slice(0, idx).trim();
+              if (MANAGED_CSS_PROPS.has(prop.toLowerCase())) return;
               this._previewSpan.style.setProperty(
-                p.slice(0, idx).trim(),
+                prop,
                 p.slice(idx + 1).trim(),
                 "important",
               );
@@ -417,39 +494,13 @@ export class ColorPickerModal extends Modal {
       : this.plugin.t("selected_text_preview", "Selected Text");
     preview.style.display = "inline";
 
-    // Preview-only fallback for accessibility: when no color is pre-filled,
-    // show var(--text-normal) / var(--color-accent) instead of browser-default black.
-    // These will be overwritten by applyPrefill / swatch clicks when a real color exists.
+    // Preview-only fallback for accessibility: null text previews as
+    // var(--text-normal) instead of browser-default black. A background /
+    // highlight is shown only when a background color is actually set — a
+    // text with no background must preview with none. Real colors applied
+    // via applyPrefill / swatch clicks overwrite these.
     if (!initText) {
       preview.style.color = "var(--text-normal)";
-    }
-    if (!initBg && !this.isQuickOnce) {
-      // Only apply accent bg fallback when a background panel would be shown
-      const willShowBg = this.mode !== "text";
-      if (willShowBg) {
-        const p = this.plugin.getHighlightParams(matchedEntry || {});
-        const op = (matchedEntry && typeof matchedEntry.backgroundOpacity === "number")
-          ? matchedEntry.backgroundOpacity
-          : (this.plugin.settings.backgroundOpacity ?? 25);
-        const radius = p.radius ?? 8;
-        const hPad = p.hPad ?? 4;
-        const vPad = p.vPad ?? 0;
-        // Use color-mix so --color-accent resolves natively at paint time, not via getComputedStyle
-        const accentBg = `color-mix(in srgb, var(--color-accent) ${op}%, transparent)`;
-        preview.style.setProperty("background-color", accentBg, "important");
-        preview.style.borderRadius = radius + "px";
-        preview.style.paddingLeft = preview.style.paddingRight = hPad + "px";
-        try {
-          preview.style.setProperty("padding-top", vPad + "px");
-          preview.style.setProperty("padding-bottom", vPad + "px");
-        } catch (e) {
-          preview.style.paddingTop = preview.style.paddingBottom = vPad + "px";
-        }
-        if (this.plugin.settings.enableBoxDecorationBreak ?? true) {
-          preview.style.boxDecorationBreak = "clone";
-          preview.style.WebkitBoxDecorationBreak = "clone";
-        }
-      }
     }
 
     this._applyCustomCss();
@@ -457,11 +508,12 @@ export class ColorPickerModal extends Modal {
     if (!initText) {
       preview.style.setProperty('color', 'var(--text-normal)', 'important');
     }
-    if (!initBg && !this.isQuickOnce && this.mode !== "text") {
-      const _op2 = (matchedEntry && typeof matchedEntry.backgroundOpacity === "number")
-        ? matchedEntry.backgroundOpacity
-        : (this.plugin.settings.backgroundOpacity ?? 25);
-      preview.style.setProperty('background-color', `color-mix(in srgb, var(--color-accent) ${_op2}%, transparent)`, 'important');
+    if (!initBg) {
+      try {
+        preview.style.removeProperty('background-color');
+      } catch (_) {
+        preview.style.backgroundColor = "";
+      }
     }
 
     // For Highlight Once: show no styling until a color is picked
@@ -474,6 +526,9 @@ export class ColorPickerModal extends Modal {
         preview.style.borderLeft = "";
         preview.style.borderRight = "";
         preview.style.borderRadius = "";
+        try {
+          preview.style.removeProperty("corner-shape");
+        } catch (_) {}
         preview.style.paddingLeft = "";
         preview.style.paddingRight = "";
         // Restore text color fallback even in Quick Once mode
@@ -673,6 +728,7 @@ export class ColorPickerModal extends Modal {
           }
 
           this.plugin.applyBorderStyleToElement(preview, null, val, entry);
+          this._syncPreviewCornerShape(entry);
           this._hasUserChanges = true;
         }
         hex.value = val;
@@ -778,30 +834,17 @@ export class ColorPickerModal extends Modal {
           }
         } else {
           this.selectedBgColor = null;
-          // Clear all border styles when resetting background color
+          // No background set → no highlight or border in the preview.
           preview.style.border = "";
           preview.style.borderTop = "";
           preview.style.borderBottom = "";
           preview.style.borderLeft = "";
           preview.style.borderRight = "";
-          // Null background must preview as theme accent, not empty.
-          // Use color-mix so --color-accent resolves natively at paint time.
           try {
-            let _op = 25;
-            try {
-              _op = (matchedEntry && typeof matchedEntry.backgroundOpacity === "number")
-                ? matchedEntry.backgroundOpacity
-                : (this.plugin.settings.backgroundOpacity ?? 25);
-            } catch (_) {}
-            preview.style.setProperty(
-              "background-color",
-              `color-mix(in srgb, var(--color-accent) ${_op}%, transparent)`,
-              "important",
-            );
-            // Border fallback is also accent when bg is null.
-            try {
-              this.plugin.applyBorderStyleToElement(preview, null, "var(--color-accent)", matchedEntry || this._entry);
-            } catch (_) {}
+            preview.style.removeProperty("corner-shape");
+          } catch (_) {}
+          try {
+            preview.style.removeProperty('background-color');
           } catch (_) {
             preview.style.backgroundColor = "";
           }
@@ -817,17 +860,14 @@ export class ColorPickerModal extends Modal {
             preview.style.setProperty("color", "var(--text-normal)", "important");
           }
           if (type === "background" && !this.selectedBgColor) {
-            let _op2 = 25;
             try {
-              _op2 = (matchedEntry && typeof matchedEntry.backgroundOpacity === "number")
-                ? matchedEntry.backgroundOpacity
-                : (this.plugin.settings.backgroundOpacity ?? 25);
+              preview.style.removeProperty('background-color');
+            } catch (_) {
+              preview.style.backgroundColor = "";
+            }
+            try {
+              preview.style.removeProperty("corner-shape");
             } catch (_) {}
-            preview.style.setProperty(
-              "background-color",
-              `color-mix(in srgb, var(--color-accent) ${_op2}%, transparent)`,
-              "important",
-            );
           }
         } catch (_) {}
       };
@@ -944,14 +984,14 @@ export class ColorPickerModal extends Modal {
 
     let allEntries = Array.isArray(this.plugin.settings.wordEntries)
       ? this.plugin.settings.wordEntries.map((e) =>
-          Object.assign({}, e, { _groupUid: null }),
+          Object.assign({}, e, { _groupUid: null, _live: e }),
         )
       : [];
     if (Array.isArray(this.plugin.settings.wordEntryGroups)) {
       this.plugin.settings.wordEntryGroups.forEach((g) => {
         if (g && g.active && Array.isArray(g.entries)) {
           g.entries.forEach((e) => {
-            allEntries.push(Object.assign({}, e, { _groupUid: g.uid }));
+            allEntries.push(Object.assign({}, e, { _groupUid: g.uid, _live: e }));
           });
         }
       });
@@ -1071,11 +1111,81 @@ export class ColorPickerModal extends Modal {
               initText = e.color;
               existingStyle = existingStyle || "text";
             }
+            // Keep the live reference so later uid-based move/delete/update
+            // works even for contextual regex matches (re.test(word) fails).
+            try {
+              if (e && e._live) matchedEntry._live = e._live;
+            } catch (_) {}
             break;
           }
         } catch (err) {}
       }
     }
+    // Reverse-lookup override: the caller already resolved the live entry that
+    // colors this selection (regex / markdown included). It wins over the
+    // bare-string search above, which can never match contextual patterns
+    // (`==foo==`, `# Heading`, `**bold**`) against inner text alone.
+    try {
+      const resolvedLive = (this._entry && this._entry.uid)
+        ? this._entry
+        : (this._resolveInfo && this._resolveInfo.entry) || null;
+      // Also accept a candidate object { entry, groupUid } passed as entry.
+      const resolvedEntry = resolvedLive && resolvedLive.entry && !resolvedLive.pattern
+        ? resolvedLive.entry
+        : resolvedLive;
+      if (resolvedEntry && (resolvedEntry.uid || resolvedEntry.pattern)) {
+        let liveRef = null;
+        let liveGroupUid = (this._resolvedGroupUid != null)
+          ? this._resolvedGroupUid
+          : (this._resolveInfo && this._resolveInfo.groupUid) || null;
+        try {
+          const uid = resolvedEntry.uid ? String(resolvedEntry.uid) : null;
+          if (uid) {
+            const main = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+            for (const le of main) {
+              if (le && String(le.uid || "") === uid) { liveRef = le; liveGroupUid = null; break; }
+            }
+            if (!liveRef && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+              for (const g of this.plugin.settings.wordEntryGroups) {
+                if (!g || !Array.isArray(g.entries)) continue;
+                for (const le of g.entries) {
+                  if (le && String(le.uid || "") === uid) { liveRef = le; liveGroupUid = g.uid || null; break; }
+                }
+                if (liveRef) break;
+              }
+            }
+          }
+        } catch (_) {}
+        const src = liveRef || resolvedEntry;
+        matchedEntry = Object.assign({}, src, { _groupUid: liveGroupUid, _live: liveRef || src });
+        matchedGroupUid = liveGroupUid;
+        matchedMatchType = src.matchType || matchedMatchType;
+        this._entry = liveRef || resolvedEntry;
+        // Re-derive colors from the resolved entry so the picker opens with
+        // its correct regex colors (not stale search results).
+        initText = null;
+        initBg = null;
+        existingStyle = null;
+        if (src.backgroundColor) {
+          if (src.textColor && src.textColor !== "currentColor" && this.plugin.isValidHexColor(src.textColor))
+            initText = src.textColor;
+          if (this.plugin.isValidHexColor(src.backgroundColor)) initBg = src.backgroundColor;
+          existingStyle =
+            src.textColor && src.textColor !== "currentColor" && this.plugin.isValidHexColor(src.textColor) &&
+            src.backgroundColor && this.plugin.isValidHexColor(src.backgroundColor)
+              ? "both"
+              : src.styleType || (src.backgroundColor ? "highlight" : "text");
+        } else if (src.color && this.plugin.isValidHexColor(src.color)) {
+          initText = src.color;
+          existingStyle = "text";
+        } else if (src.textColor && src.textColor !== "currentColor" && this.plugin.isValidHexColor(src.textColor)) {
+          initText = src.textColor;
+          existingStyle = "text";
+        }
+      } else if (this._resolvedGroupUid) {
+        matchedGroupUid = this._resolvedGroupUid;
+      }
+    } catch (_) {}
     this._selectedGroupUid = matchedGroupUid || null;
     if (this._groupSelect) {
       this._groupSelect.value = this._selectedGroupUid || "";
@@ -1103,10 +1213,42 @@ export class ColorPickerModal extends Modal {
     }
 
     if (editBtn) {
-      // Resolve original entry reference from settings arrays (not a clone)
+      // Resolve original entry reference from settings arrays (not a clone).
+      // Prefer the reverse-lookup live reference (uid) — pattern/re.test(word)
+      // can never match contextual regexes (`==foo==`, `# H`, `**b**`) against
+      // inner text alone.
       let originalEntry = null;
       if (!this.isQuickOnce) {
-        if (matchedEntry) {
+        try {
+          if (matchedEntry && matchedEntry._live) {
+            originalEntry = matchedEntry._live;
+          } else if (this._entry && this._entry.uid) {
+            const uid = String(this._entry.uid);
+            const main = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+            originalEntry = main.find((e) => e && String(e.uid || "") === uid) || null;
+            if (!originalEntry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+              for (const g of this.plugin.settings.wordEntryGroups) {
+                if (!g || !Array.isArray(g.entries)) continue;
+                originalEntry = g.entries.find((e) => e && String(e.uid || "") === uid) || null;
+                if (originalEntry) break;
+              }
+            }
+          } else if (matchedEntry && matchedEntry.uid) {
+            const uid = String(matchedEntry.uid);
+            const main = Array.isArray(this.plugin.settings.wordEntries) ? this.plugin.settings.wordEntries : [];
+            originalEntry = main.find((e) => e && String(e.uid || "") === uid) || null;
+            if (!originalEntry && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+              for (const g of this.plugin.settings.wordEntryGroups) {
+                if (!g || !Array.isArray(g.entries)) continue;
+                originalEntry = g.entries.find((e) => e && String(e.uid || "") === uid) || null;
+                if (originalEntry) break;
+              }
+            }
+          }
+        } catch (_) {
+          originalEntry = null;
+        }
+        if (!originalEntry && matchedEntry) {
           try {
             const word = this._selectedText || "";
             const caseSensitive2 = !!this.plugin.settings.caseSensitive;
@@ -1274,6 +1416,7 @@ export class ColorPickerModal extends Modal {
                       tempEntry.backgroundColor || null,
                       tempEntry,
                     );
+                    this._syncPreviewCornerShape(tempEntry);
                     this.selectedBgColor = tempEntry.backgroundColor;
                   }
                   if (
@@ -1562,6 +1705,7 @@ export class ColorPickerModal extends Modal {
             val,
             matchedEntry,
           );
+          this._syncPreviewCornerShape(matchedEntry);
         }
       }
     };
@@ -1597,6 +1741,7 @@ export class ColorPickerModal extends Modal {
         preview.style.boxDecorationBreak = "clone";
         preview.style.WebkitBoxDecorationBreak = "clone";
       }
+      this._syncPreviewCornerShape(matchedEntry);
       setPanelColor(bp, initBg);
       this.selectedBgColor = initBg;
       // prefill does not count as a change; do not set selectedBgColor
@@ -1675,26 +1820,42 @@ export class ColorPickerModal extends Modal {
           }
           if (sourceArr) {
             let srcIdx = -1;
-            for (let i = 0; i < sourceArr.length; i++) {
-              const e = sourceArr[i];
-              if (!e) continue;
-              let match = false;
-              if (e.isRegex && this.plugin.settings.enableRegexSupport) {
-                try {
-                  const re = new RegExp(e.pattern, e.flags || "");
-                  match = re.test(word);
-                } catch (_) {
-                  match = false;
+            // Prefer uid match (works for contextual regex / markdown entries
+            // where re.test(word) can never hit the bare selection).
+            try {
+              const uid = matchedEntry.uid ? String(matchedEntry.uid) : null;
+              if (uid) {
+                for (let i = 0; i < sourceArr.length; i++) {
+                  const e = sourceArr[i];
+                  if (e && String(e.uid || "") === uid) { srcIdx = i; break; }
                 }
-              } else {
-                match =
-                  eq(e.pattern || "", word) ||
-                  (Array.isArray(e.groupedPatterns) &&
-                    e.groupedPatterns.some((p) => eq(p, word)));
+              } else if (matchedEntry._live) {
+                const li = sourceArr.indexOf(matchedEntry._live);
+                if (li !== -1) srcIdx = li;
               }
-              if (match) {
-                srcIdx = i;
-                break;
+            } catch (_) {}
+            if (srcIdx === -1) {
+              for (let i = 0; i < sourceArr.length; i++) {
+                const e = sourceArr[i];
+                if (!e) continue;
+                let match = false;
+                if (e.isRegex && this.plugin.settings.enableRegexSupport) {
+                  try {
+                    const re = new RegExp(e.pattern, e.flags || "");
+                    match = re.test(word);
+                  } catch (_) {
+                    match = false;
+                  }
+                } else {
+                  match =
+                    eq(e.pattern || "", word) ||
+                    (Array.isArray(e.groupedPatterns) &&
+                      e.groupedPatterns.some((p) => eq(p, word)));
+                }
+                if (match) {
+                  srcIdx = i;
+                  break;
+                }
               }
             }
             if (srcIdx !== -1) {
@@ -1737,6 +1898,25 @@ export class ColorPickerModal extends Modal {
           caseSensitive
             ? String(a) === String(b)
             : String(a).toLowerCase() === String(b).toLowerCase();
+        // Prefer uid removal for reverse-lookup matches (contextual regex).
+        try {
+          const uid = matchedEntry && matchedEntry.uid ? String(matchedEntry.uid) : null;
+          if (uid) {
+            for (let i = targetArr.length - 1; i >= 0; i--) {
+              const e = targetArr[i];
+              if (e && String(e.uid || "") === uid) {
+                targetArr.splice(i, 1);
+                await this.plugin.saveSettings();
+                if (selectedGroup) {
+                  this.plugin.compileWordEntries();
+                }
+                this.plugin.reconfigureEditorExtensions();
+                this.plugin.forceRefreshAllEditors();
+                return;
+              }
+            }
+          }
+        } catch (_) {}
         for (let i = targetArr.length - 1; i >= 0; i--) {
           const e = targetArr[i];
           if (!e) continue;
@@ -1814,6 +1994,8 @@ export class ColorPickerModal extends Modal {
               finalEntry.backgroundOpacity = st.backgroundOpacity;
             if (st.highlightBorderRadius != null)
               finalEntry.highlightBorderRadius = st.highlightBorderRadius;
+            if (st.cornerShape != null)
+              finalEntry.cornerShape = st.cornerShape;
             if (st.highlightHorizontalPadding != null)
               finalEntry.highlightHorizontalPadding =
                 st.highlightHorizontalPadding;
@@ -2211,6 +2393,7 @@ export class ColorPickerModal extends Modal {
       styleType: effectiveStyleType,
       backgroundOpacity: preset.backgroundOpacity ?? null,
       highlightBorderRadius: preset.highlightBorderRadius ?? null,
+      cornerShape: preset.cornerShape ?? null,
       highlightHorizontalPadding: preset.highlightHorizontalPadding ?? null,
       highlightVerticalPadding: preset.highlightVerticalPadding ?? null,
       enableBorderThickness:
@@ -2256,6 +2439,7 @@ export class ColorPickerModal extends Modal {
     for (const k of [
       "backgroundOpacity",
       "highlightBorderRadius",
+      "cornerShape",
       "highlightHorizontalPadding",
       "highlightVerticalPadding",
       "enableBorderThickness",
@@ -2309,6 +2493,9 @@ export class ColorPickerModal extends Modal {
         this._previewSpan.style.borderLeft = "";
         this._previewSpan.style.borderRight = "";
         this._previewSpan.style.borderRadius = "";
+        try {
+          this._previewSpan.style.removeProperty("corner-shape");
+        } catch (_) {}
         this._previewSpan.style.paddingLeft = "";
         this._previewSpan.style.paddingRight = "";
         this._previewSpan.style.removeProperty("padding-top");

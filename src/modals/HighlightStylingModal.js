@@ -1018,15 +1018,42 @@ export class HighlightStylingModal extends Modal {
           });
           const tempCss = this.plugin.syncEntryCssFromColorsForPreview(tempEntry);
           let decl = this.plugin.sanitizeCssDeclarations(tempCss || this.entry.customCss);
-          // Per-entry groups must preview without group CSS colors: a stale
-          // auto-derived `color:` (e.g. orange from a reset forced type) would
-          // otherwise repaint the preview. Layout still previews, with the
-          // border in var(--color-accent) for accessibility.
-          if (decl && isGroup && !style) {
+          // Previews must match forced rendering (option 1): stale CSS colors
+          // never repaint the preview — per-entry shows theme/accent, text
+          // shows no highlight or border, highlight/both show the background
+          // with borders following it. Highlight entries additionally get
+          // border tokens rewritten to the background so a stale text-colored
+          // border in their own CSS can't leak through. Layout previews.
+          if (decl && !isGroup && renderStyle === "highlight") {
             try {
+              const _bHl =
+                hasValidB && bRaw ? bRaw.trim() : "var(--color-accent)";
               decl = this.plugin.sanitizeCssDeclarations(
-                stripInheritedGroupCssColors(decl, "var(--color-accent)"),
+                stripInheritedGroupCssColors(decl, _bHl, {}),
               );
+            } catch (_) {}
+          }
+          if (decl && isGroup) {
+            try {
+              if (!style) {
+                decl = this.plugin.sanitizeCssDeclarations(
+                  stripInheritedGroupCssColors(decl, "var(--color-accent)"),
+                );
+              } else if (style === "text") {
+                decl = this.plugin.sanitizeCssDeclarations(
+                  stripInheritedGroupCssColors(decl, "currentColor", {
+                    dropBorder: true,
+                  }),
+                );
+              } else {
+                const _bForBorder =
+                  hasValidB && bRaw
+                    ? bRaw.trim()
+                    : "var(--color-accent)";
+                decl = this.plugin.sanitizeCssDeclarations(
+                  stripInheritedGroupCssColors(decl, _bForBorder, {}),
+                );
+              }
             } catch (_) {}
           }
           if (decl) {
@@ -1044,6 +1071,40 @@ export class HighlightStylingModal extends Modal {
       }
       if (!hasValidB && renderStyle !== 'text') {
         span.style.setProperty('background-color', bgCss, 'important');
+      }
+      // Sliders/inputs mutate entry fields live and recompute the managed
+      // values above on every render — stale geometry in customCss (radius,
+      // padding, border, shape) must not freeze the preview over them.
+      if (renderStyle !== 'text') {
+        span.style.setProperty("border-radius", radius + "px", "important");
+        if (cornerShape && cornerShape !== "round") {
+          span.style.setProperty("corner-shape", cornerShape, "important");
+        } else {
+          try {
+            span.style.removeProperty("corner-shape");
+          } catch (_) {}
+        }
+        span.style.setProperty("padding", `${vpad}px ${pad}px`, "important");
+        try {
+          span.style.setProperty("box-decoration-break", "clone", "important");
+          span.style.setProperty("-webkit-box-decoration-break", "clone", "important");
+        } catch (_) {}
+        if (borderStyle) {
+          borderStyle.split(';').map(s => s.trim()).filter(Boolean).forEach(bs => {
+            const idx = bs.indexOf(':');
+            if (idx === -1) return;
+            const prop = bs.slice(0, idx).trim();
+            const val = bs.slice(idx + 1).trim().replace(/\s*!important\s*$/, '');
+            span.style.setProperty(prop, val, 'important');
+          });
+        } else {
+          // No border wanted — clear any stale border the customCss added.
+          ["border", "border-top", "border-bottom", "border-left", "border-right"].forEach((bp) => {
+            try {
+              span.style.removeProperty(bp);
+            } catch (_) {}
+          });
+        }
       }
       previewWrap.appendChild(span);
     };
@@ -1255,7 +1316,19 @@ export class HighlightStylingModal extends Modal {
         evt.preventDefault();
         evt.stopPropagation();
         const currentColor = getColorInputValue(colorInput) || "#000000";
-        const isTextPicker = colorInput === tColor;
+        // Show only the panels matching the colortype: text shows the color
+        // panel, highlight the highlight panel, both shows both panels.
+        // Per-entry (no type) shows both so either channel can be picked.
+        const nestedStyle =
+          (this.entry && this.entry.styleType) || styleSelect.value || "";
+        const nestedMode =
+          nestedStyle === "text"
+            ? "text"
+            : nestedStyle === "highlight"
+              ? "background"
+              : "text-and-background";
+        const showNestedText = nestedMode !== "background";
+        const showNestedBg = nestedMode !== "text";
         const modal = new ColorPickerModal(
           this.app,
           this.plugin,
@@ -1273,26 +1346,31 @@ export class HighlightStylingModal extends Modal {
                 ? result.backgroundColor
                 : null;
 
-            // The nested picker is authoritative: a null side means that panel
-            // was reset (untouched panels keep their prefilled valid color, so
-            // null can only come from an explicit Reset). Clearing must remove
-            // hex/var codes and show null black — never restore the old color.
-            if (tc) {
-              setColorInputValue(tColor, tc);
-              this._tPickerTouched = true;
-            } else {
-              setColorInputValue(tColor, "#000000");
-              this._tPickerTouched = false;
-              this._openHadRealText = false;
+            // The nested picker is authoritative per shown panel: a null
+            // result for a shown panel means Reset (untouched panels keep
+            // their prefilled valid color). Clearing removes hex/var codes
+            // and shows null black — never restore the old color. Hidden
+            // panels are left untouched.
+            if (showNestedText) {
+              if (tc) {
+                setColorInputValue(tColor, tc);
+                this._tPickerTouched = true;
+              } else {
+                setColorInputValue(tColor, "#000000");
+                this._tPickerTouched = false;
+                this._openHadRealText = false;
+              }
             }
 
-            if (bc) {
-              setColorInputValue(bColor, bc);
-              this._bPickerTouched = true;
-            } else {
-              setColorInputValue(bColor, "#000000");
-              this._bPickerTouched = false;
-              this._openHadRealBg = false;
+            if (showNestedBg) {
+              if (bc) {
+                setColorInputValue(bColor, bc);
+                this._bPickerTouched = true;
+              } else {
+                setColorInputValue(bColor, "#000000");
+                this._bPickerTouched = false;
+                this._openHadRealBg = false;
+              }
             }
 
             if (result && result.markTarget) {
@@ -1311,7 +1389,7 @@ export class HighlightStylingModal extends Modal {
             dispatchHighlightColorsChanged();
             renderPreview();
           },
-          "text-and-background",
+          nestedMode,
           this.previewTextOverride || currentColor,
           false,
           this.entry ? this.entry.markTarget : "text",
@@ -1326,8 +1404,8 @@ export class HighlightStylingModal extends Modal {
             || ((this._tPickerTouched || this._openHadRealText) ? getColorInputValue(tColor) : null);
           const _realB = (_e && _e.backgroundColor && this.plugin.isValidHexColor(_e.backgroundColor) ? _e.backgroundColor : null)
             || ((this._bPickerTouched || this._openHadRealBg) ? getColorInputValue(bColor) : null);
-          if (_realT && this.plugin.isValidHexColor(_realT)) modal._preFillTextColor = _realT;
-          if (_realB && this.plugin.isValidHexColor(_realB)) {
+          if (showNestedText && _realT && this.plugin.isValidHexColor(_realT)) modal._preFillTextColor = _realT;
+          if (showNestedBg && _realB && this.plugin.isValidHexColor(_realB)) {
             modal._preFillBgColor = _realB;
             modal._preFillBorderColor = _realB;
           }

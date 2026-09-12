@@ -68,8 +68,43 @@ export function resolveGroupColorOverride(group, isValidHex) {
  * auto-derived from earlier (now reset) group colors keeps tinting members —
  * e.g. a stale `color: #fa8231` painting every member orange.
  */
-export function stripInheritedGroupCssColors(css, borderColor) {
+/**
+ * Pick the border source color for an entry. Highlight colortype always
+ * follows the highlight/background color — never the text color. All other
+ * types prefer a real text color, then background, then nothing (callers
+ * fall back to black).
+ */
+export function resolveBorderSourceColor(
+  styleType,
+  textColor,
+  backgroundColor,
+  isValidHex,
+) {
+  const valid = (c) => {
+    try {
+      return !!isValidHex(c);
+    } catch (_) {
+      return false;
+    }
+  };
+  if (
+    styleType !== "highlight" &&
+    textColor &&
+    textColor !== "currentColor" &&
+    valid(textColor)
+  ) {
+    return textColor;
+  }
+  if (backgroundColor && valid(backgroundColor)) return backgroundColor;
+  return null;
+}
+
+export function stripInheritedGroupCssColors(css, borderColor, opts) {
   const fallback = borderColor || "currentColor";
+  const keep = (opts && opts.keep) || "none";
+  const dropBorder = !!(opts && opts.dropBorder);
+  const keepColor = keep === "text" || keep === "both";
+  const keepBg = keep === "bg" || keep === "both";
   if (!css || typeof css !== "string") return css;
   try {
     const parts = css
@@ -85,7 +120,8 @@ export function stripInheritedGroupCssColors(css, borderColor) {
       }
       const prop = p.slice(0, idx).trim().toLowerCase();
       const val = p.slice(idx + 1).trim();
-      if (prop === "color" || prop === "background-color") continue;
+      if (prop === "color" && !keepColor) continue;
+      if (prop === "background-color" && !keepBg) continue;
       if (
         prop === "border" ||
         prop === "border-top" ||
@@ -93,6 +129,7 @@ export function stripInheritedGroupCssColors(css, borderColor) {
         prop === "border-left" ||
         prop === "border-right"
       ) {
+        if (dropBorder) continue;
         out.push(
           `${prop}: ${val
             .replace(/#[0-9a-fA-F]{3,8}\b/g, fallback)
@@ -138,7 +175,7 @@ export function applyGroupColorOverride(copy, group, isValidHex) {
       copy.backgroundColor = group.backgroundColor;
   }
   // type "" (per-entry or forced-but-reset): no color/type forcing at all.
-  return type;
+  return { type, text, bg };
 }
 
 export class PatternMatcher {
@@ -550,9 +587,10 @@ export function compileWordEntriesLogic(plugin) {
               copy._caseSensitiveOverride = groupCase;
             // Group colortype forces member colours (narrowed by availability so
             // a reset channel never strips members); per-entry forces nothing.
-            const _effGroupType = applyGroupColorOverride(copy, group, (c) =>
+            const _effGroup = applyGroupColorOverride(copy, group, (c) =>
               plugin.isValidHexColor(c),
             );
+            const _effGroupType = _effGroup.type;
             // Highlight layout always applies when set on the group,
             // independent of colortype; reset (undefined) never applies.
             if (typeof group.backgroundOpacity !== "undefined")
@@ -583,6 +621,26 @@ export function compileWordEntriesLogic(plugin) {
               // CSS colors; layout still inherits.
               if (!_effGroupType)
                 copy.customCss = stripInheritedGroupCssColors(copy.customCss);
+            }
+            // Forced colortypes are strict (option 1): conflicting color
+            // channels are suppressed from the member CSS so only the forced
+            // colors render — text forces text-only (no highlight/border),
+            // highlight/both force the group background (borders follow it).
+            if (copy.customCss && _effGroupType === "text") {
+              copy.customCss = stripInheritedGroupCssColors(
+                copy.customCss,
+                "currentColor",
+                { dropBorder: true },
+              );
+            } else if (
+              copy.customCss &&
+              (_effGroupType === "highlight" || _effGroupType === "both")
+            ) {
+              copy.customCss = stripInheritedGroupCssColors(
+                copy.customCss,
+                _effGroup.bg || "var(--color-accent)",
+                {},
+              );
             }
             copy.groupEnableFolders = Array.isArray(group.enableFolders)
               ? group.enableFolders.slice()
@@ -876,9 +934,10 @@ export function compileTextBgColoringEntriesLogic(plugin) {
               copy._caseSensitiveOverride = groupCase;
             // Group colortype forces member colours (narrowed by availability so
             // a reset channel never strips members); per-entry forces nothing.
-            const _effGroupType = applyGroupColorOverride(copy, group, (c) =>
+            const _effGroup = applyGroupColorOverride(copy, group, (c) =>
               plugin.isValidHexColor(c),
             );
+            const _effGroupType = _effGroup.type;
             // Highlight layout always applies when set on the group,
             // independent of colortype; reset (undefined) never applies.
             if (typeof group.backgroundOpacity !== "undefined")
@@ -909,6 +968,26 @@ export function compileTextBgColoringEntriesLogic(plugin) {
               // CSS colors; layout still inherits.
               if (!_effGroupType)
                 copy.customCss = stripInheritedGroupCssColors(copy.customCss);
+            }
+            // Forced colortypes are strict (option 1): conflicting color
+            // channels are suppressed from the member CSS so only the forced
+            // colors render — text forces text-only (no highlight/border),
+            // highlight/both force the group background (borders follow it).
+            if (copy.customCss && _effGroupType === "text") {
+              copy.customCss = stripInheritedGroupCssColors(
+                copy.customCss,
+                "currentColor",
+                { dropBorder: true },
+              );
+            } else if (
+              copy.customCss &&
+              (_effGroupType === "highlight" || _effGroupType === "both")
+            ) {
+              copy.customCss = stripInheritedGroupCssColors(
+                copy.customCss,
+                _effGroup.bg || "var(--color-accent)",
+                {},
+              );
             }
             copy.groupEnableFolders = Array.isArray(group.enableFolders)
               ? group.enableFolders.slice()

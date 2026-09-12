@@ -59,6 +59,85 @@ function getColorInputValue(input) {
   return input.value;
 }
 
+/**
+ * Resolve picker init for the Style Text modal (pure, exported for tests).
+ *
+ * A default-preset prefill is only a picker suggestion, never a real color:
+ * `presetPrefillText/Bg` are true exactly when the effective init came from
+ * the default preset rather than the entry. Callers must not mark the picker
+ * touched for those, or the preview would render the preset (e.g. black from
+ * a clamped "currentColor") instead of the theme fallbacks for a null entry.
+ * "currentColor" preset values are excluded — they are highlight-mode
+ * markers, not displayable colors for a native color input.
+ */
+export function resolveEditEntryColorInit({ entry, textStylePresets, isValidHexColor }) {
+  const isValid = (c) => {
+    try {
+      return !!isValidHexColor(c);
+    } catch (_) {
+      return false;
+    }
+  };
+  const hasRealText = !!(
+    entry &&
+    ((entry.textColor &&
+      entry.textColor !== "currentColor" &&
+      isValid(entry.textColor)) ||
+      (entry.color && isValid(entry.color)))
+  );
+  const hasRealBg = !!(
+    entry &&
+    entry.backgroundColor &&
+    isValid(entry.backgroundColor)
+  );
+  const initTextColor =
+    (entry &&
+      (entry.textColor && entry.textColor !== "currentColor"
+        ? entry.textColor
+        : isValid(entry.color)
+          ? entry.color
+          : "")) ||
+    "";
+  const initBgColor = (entry && (entry.backgroundColor || "")) || "";
+  let defTc = "";
+  let defBg = "";
+  try {
+    const presets = textStylePresets || [];
+    const def = presets.find((p) => p && p.isDefault) || presets[0];
+    if (def) {
+      if (
+        def.textColor &&
+        def.textColor !== "currentColor" &&
+        isValid(def.textColor)
+      ) {
+        defTc = def.textColor;
+      } else if (isValid(def.color)) {
+        defTc = def.color;
+      }
+      if (isValid(def.backgroundColor)) defBg = def.backgroundColor;
+    }
+  } catch (_) {}
+  const effectiveInitText = isValid(initTextColor)
+    ? initTextColor
+    : hasRealText
+      ? ""
+      : defTc || "";
+  const effectiveInitBg = isValid(initBgColor)
+    ? initBgColor
+    : hasRealBg
+      ? ""
+      : defBg || "";
+  return {
+    effectiveInitText,
+    effectiveInitBg,
+    hasRealText,
+    hasRealBg,
+    // True only when the suggestion came from the default preset.
+    presetPrefillText: !hasRealText && !!effectiveInitText,
+    presetPrefillBg: !hasRealBg && !!effectiveInitBg,
+  };
+}
+
 export class EditEntryModal extends Modal {
   constructor(
     app,
@@ -93,7 +172,9 @@ export class EditEntryModal extends Modal {
     try {
       this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-edit-entry-modal");
-      this.modalEl.style.maxWidth = "700px";
+      // Default 650px wide, still shrinking with narrow screens/viewports.
+      this.modalEl.style.width = "650px";
+      this.modalEl.style.maxWidth = "95vw";
       this.modalEl.style.padding = "20px";
     } catch (e) {}
 
@@ -313,10 +394,12 @@ export class EditEntryModal extends Modal {
     this._bgPickerTouched = false;
     // Snapshot real colors at open time — prevents syncEntryColorsFromInputs mutations
     // from making picker-default values appear as intentional colors in renderPreview.
-    const _openHadRealText = !!(this.entry &&
+    // Stored on `this` (not consts) so a nested-picker Reset can invalidate them —
+    // otherwise the stale open-time flag turns the reset black into a real color.
+    this._openHadRealText = !!(this.entry &&
       ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) ||
        (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
-    const _openHadRealBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
+    this._openHadRealBg = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
 
     // ===== act-pickr-row =====
     const pickrRow = contentEl.createDiv();
@@ -466,7 +549,7 @@ export class EditEntryModal extends Modal {
       const style = styleSelect.value;
       const curTextVal = getColorInputValue(textColorInput);
       const isVarText = curTextVal && /^var\(/.test(curTextVal.trim());
-      const hasValidText = curTextVal && this.plugin.isValidHexColor(curTextVal) && (isVarText || _openHadRealText || this._textPickerTouched);
+      const hasValidText = curTextVal && this.plugin.isValidHexColor(curTextVal) && (isVarText || this._openHadRealText || (this._textPickerTouched && !this._presetPrefillText));
       // Storage: keep empty when picker NULL so editor is not colored; preview fallback is handled in renderPreview with var(--text-normal)
       const effectiveText = hasValidText ? curTextVal : "";
       if (this.entry)
@@ -490,7 +573,7 @@ export class EditEntryModal extends Modal {
       const style = styleSelect.value;
       const curBgVal = getColorInputValue(bgColorInput);
       const isVarBg = curBgVal && /^var\(/.test(curBgVal.trim());
-      const hasValidBg = curBgVal && this.plugin.isValidHexColor(curBgVal) && (isVarBg || _openHadRealBg || this._bgPickerTouched);
+      const hasValidBg = curBgVal && this.plugin.isValidHexColor(curBgVal) && (isVarBg || this._openHadRealBg || (this._bgPickerTouched && !this._presetPrefillBg));
       // Storage: keep empty when picker NULL so editor is not colored; preview fallback is var(--color-accent) in renderPreview
       const effectiveBg = hasValidBg ? curBgVal : "";
       if (this.entry)
@@ -525,7 +608,20 @@ export class EditEntryModal extends Modal {
               : this.entry && this.entry.pattern
                 ? String(this.entry.pattern)
                 : "";
-        const isTextPicker = colorInput === textColorInput;
+        // Show only the panels matching the colortype: text shows the color
+        // panel, highlight the highlight panel, both shows both panels.
+        const nestedStyle =
+          (styleSelect && styleSelect.value) ||
+          (this.entry && this.entry.styleType) ||
+          "";
+        const nestedMode =
+          nestedStyle === "text"
+            ? "text"
+            : nestedStyle === "highlight"
+              ? "background"
+              : "text-and-background";
+        const showNestedText = nestedMode !== "background";
+        const showNestedBg = nestedMode !== "text";
         const modal = new ColorPickerModal(
           this.app,
           this.plugin,
@@ -542,28 +638,34 @@ export class EditEntryModal extends Modal {
               this.plugin.isValidHexColor(result.backgroundColor)
                 ? result.backgroundColor
                 : null;
-            const fallback =
-              color && this.plugin.isValidHexColor(color) ? color : null;
-            let changed = false;
 
-            if (tc) {
-              setColorInputValue(textColorInput, tc);
-              this._textPickerTouched = true;
-              changed = true;
-            } else if (fallback && isTextPicker && !bc) {
-              setColorInputValue(textColorInput, fallback);
-              this._textPickerTouched = true;
-              changed = true;
+            // Authoritative per shown panel: a null result for a shown panel
+            // means Reset — clear to null black (never restore the old
+            // color). Hidden panels are left untouched.
+            if (showNestedText) {
+              if (tc) {
+                setColorInputValue(textColorInput, tc);
+                this._textPickerTouched = true;
+                this._presetPrefillText = false;
+              } else {
+                setColorInputValue(textColorInput, "#000000");
+                this._textPickerTouched = false;
+                this._presetPrefillText = false;
+                this._openHadRealText = false;
+              }
             }
 
-            if (bc) {
-              setColorInputValue(bgColorInput, bc);
-              this._bgPickerTouched = true;
-              changed = true;
-            } else if (fallback && !isTextPicker && !tc) {
-              setColorInputValue(bgColorInput, fallback);
-              this._bgPickerTouched = true;
-              changed = true;
+            if (showNestedBg) {
+              if (bc) {
+                setColorInputValue(bgColorInput, bc);
+                this._bgPickerTouched = true;
+                this._presetPrefillBg = false;
+              } else {
+                setColorInputValue(bgColorInput, "#000000");
+                this._bgPickerTouched = false;
+                this._presetPrefillBg = false;
+                this._openHadRealBg = false;
+              }
             }
 
             if (result && result.markTarget) {
@@ -580,28 +682,57 @@ export class EditEntryModal extends Modal {
               }
             }
 
-            if (!changed) {
-              if (currentColor && this.plugin.isValidHexColor(currentColor)) {
-                if (isTextPicker) setColorInputValue(textColorInput, currentColor);
-                else setColorInputValue(bgColorInput, currentColor);
-              }
-            }
-
             applyTextColorToEntry(false);
             applyBgColorToEntry(false);
             dispatchColorsChanged();
           },
-          "text-and-background",
+          nestedMode,
           displayText,
           false,
           this.entry ? this.entry.markTarget : "text",
           this.entry,
         );
         modal._hideHeaderControls = true;
-        const preText = getColorInputValue(textColorInput);
-        const preBg = getColorInputValue(bgColorInput);
-        if (preText) modal._preFillTextColor = preText;
-        if (preBg) modal._preFillBgColor = preBg;
+        // Only prefill real colors — never the null-black display fill.
+        // Otherwise a reset-to-null entry reopens with #000000 ghosted as real.
+        try {
+          const _e = this.entry;
+          let _realT = null;
+          let _realB = null;
+          if (_e) {
+            if (
+              _e.textColor &&
+              _e.textColor !== "currentColor" &&
+              this.plugin.isValidHexColor(_e.textColor)
+            ) {
+              _realT = _e.textColor;
+            } else if (this.plugin.isValidHexColor(_e.color)) {
+              _realT = _e.color;
+            }
+            if (
+              _e.backgroundColor &&
+              this.plugin.isValidHexColor(_e.backgroundColor)
+            ) {
+              _realB = _e.backgroundColor;
+            }
+          }
+          if (
+            !_realT &&
+            (this._textPickerTouched || this._openHadRealText)
+          ) {
+            _realT = getColorInputValue(textColorInput);
+          }
+          if (!_realB && (this._bgPickerTouched || this._openHadRealBg)) {
+            _realB = getColorInputValue(bgColorInput);
+          }
+          if (showNestedText && _realT && this.plugin.isValidHexColor(_realT)) {
+            modal._preFillTextColor = _realT;
+          }
+          if (showNestedBg && _realB && this.plugin.isValidHexColor(_realB)) {
+            modal._preFillBgColor = _realB;
+            modal._preFillBorderColor = _realB;
+          }
+        } catch (_) {}
         modal.open();
       });
     };
@@ -633,6 +764,7 @@ export class EditEntryModal extends Modal {
     // Add real-time syncing to this.entry when colors change
     const textInputHandler = () => {
       this._textPickerTouched = true;
+      this._presetPrefillText = false;
       applyTextColorToEntry();
     };
     textColorInput.addEventListener("input", textInputHandler);
@@ -644,6 +776,7 @@ export class EditEntryModal extends Modal {
 
     const bgInputHandler = () => {
       this._bgPickerTouched = true;
+      this._presetPrefillBg = false;
       applyBgColorToEntry();
     };
     bgColorInput.addEventListener("input", bgInputHandler);
@@ -791,42 +924,29 @@ export class EditEntryModal extends Modal {
     }
     styleSelect.value = initialStyle || "text";
     // No prefilled hardcoded colors - use default text style preset if available, otherwise leave empty for var(--text-normal)/var(--color-accent) preview
-    const getDefaultPresetColors = () => {
-      try {
-        const presets = this.plugin.settings.textStylePresets || [];
-        const def = presets.find(p=>p&&p.isDefault) || presets[0];
-        if (def) {
-          const tc = def.textColor && this.plugin.isValidHexColor(def.textColor) ? def.textColor : (def.color && this.plugin.isValidHexColor(def.color) ? def.color : "");
-          const bg = def.backgroundColor && this.plugin.isValidHexColor(def.backgroundColor) ? def.backgroundColor : "";
-          return { tc, bg };
-        }
-      } catch(e) {}
-      return { tc: "", bg: "" };
-    };
-    const defColors = getDefaultPresetColors();
-    const hasRealTextAtOpen = !!(this.entry && ((this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor)) || (this.entry.color && this.plugin.isValidHexColor(this.entry.color))));
-    const hasRealBgAtOpen = !!(this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor));
-    const initTextColor =
-      (this.entry &&
-        (this.entry.textColor && this.entry.textColor !== "currentColor"
-          ? this.entry.textColor
-          : this.plugin.isValidHexColor(this.entry.color)
-            ? this.entry.color
-            : "")) || "";
-    const initBgColor =
-      (this.entry && (this.entry.backgroundColor || "")) || "";
-    // Only prefill from default preset if entry had no real colors (new entry with no colours → preview var, picker shows default preset or empty)
-    const effectiveInitText = this.plugin.isValidHexColor(initTextColor) ? initTextColor : (hasRealTextAtOpen ? "" : (defColors.tc || ""));
-    const effectiveInitBg = this.plugin.isValidHexColor(initBgColor) ? initBgColor : (hasRealBgAtOpen ? "" : (defColors.bg || ""));
+    const {
+      effectiveInitText,
+      effectiveInitBg,
+      hasRealText: hasRealTextAtOpen,
+      hasRealBg: hasRealBgAtOpen,
+      presetPrefillText,
+      presetPrefillBg,
+    } = resolveEditEntryColorInit({
+      entry: this.entry,
+      textStylePresets: this.plugin.settings.textStylePresets,
+      isValidHexColor: (c) => this.plugin.isValidHexColor(c),
+    });
     setColorInputValue(textColorInput, effectiveInitText || "");
     if (effectiveInitBg) setColorInputValue(bgColorInput, effectiveInitBg);
     else setColorInputValue(bgColorInput, "");
-    // Track whether picker was prefilled from real entry or default preset (for hasValid checks)
-    this._textPickerTouched = !!effectiveInitText;
-    this._bgPickerTouched = !!effectiveInitBg;
-    // For new entries with no colours, ensure hasValid is false so preview shows var
-    if (!hasRealTextAtOpen && !effectiveInitText) this._textPickerTouched = false;
-    if (!hasRealBgAtOpen && !effectiveInitBg) this._bPickerTouched = false;
+    // A default-preset prefill is only a picker suggestion, not a user pick:
+    // it must not count as a real color, or the preview would render the
+    // preset instead of the theme fallbacks for a null entry. Pickers, entry
+    // fields and saving are untouched — visual aid only.
+    this._presetPrefillText = presetPrefillText;
+    this._presetPrefillBg = presetPrefillBg;
+    this._textPickerTouched = !!effectiveInitText && !presetPrefillText;
+    this._bgPickerTouched = !!effectiveInitBg && !presetPrefillBg;
     if (isRegex) {
       textInput.value = this.entry.pattern || "";
       if (matchSelect) {
@@ -964,11 +1084,11 @@ export class EditEntryModal extends Modal {
       const p = this.plugin.getHighlightParams(this.entry);
       // Text color: var(--text-normal) when picker null/invalid
       const isVarText = tRaw && /^var\(/.test(tRaw.trim());
-      const hasValidText = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarText || _openHadRealText || this._textPickerTouched);
+      const hasValidText = tRaw && this.plugin.isValidHexColor(tRaw) && (isVarText || this._openHadRealText || (this._textPickerTouched && !this._presetPrefillText));
       const effectiveText = hasValidText ? tRaw : "var(--text-normal)";
       // Background: color-mix when picker null (avoids hexToRgba resolving var to black)
       const isVarBg = bRaw && /^var\(/.test(bRaw.trim());
-      const hasValidBg = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarBg || _openHadRealBg || this._bgPickerTouched);
+      const hasValidBg = bRaw && this.plugin.isValidHexColor(bRaw) && (isVarBg || this._openHadRealBg || (this._bgPickerTouched && !this._presetPrefillBg));
       const opacity = p.opacity ?? 25;
       const bgCss = hasValidBg
         ? (isVarBg ? `color-mix(in srgb, ${bRaw.trim()} ${opacity}%, transparent)` : this.plugin.hexToRgba(bRaw, opacity))
@@ -1702,6 +1822,8 @@ export class EditEntryModal extends Modal {
         if (typeof this.entry.highlightBorderRadius === "number")
           foundArray[foundIdx].highlightBorderRadius =
             this.entry.highlightBorderRadius;
+        if (typeof this.entry.cornerShape === "string")
+          foundArray[foundIdx].cornerShape = this.entry.cornerShape;
         if (typeof this.entry.highlightHorizontalPadding === "number")
           foundArray[foundIdx].highlightHorizontalPadding =
             this.entry.highlightHorizontalPadding;
@@ -1845,6 +1967,8 @@ export class EditEntryModal extends Modal {
           newEntry.backgroundOpacity = this.entry.backgroundOpacity;
         if (typeof this.entry.highlightBorderRadius === "number")
           newEntry.highlightBorderRadius = this.entry.highlightBorderRadius;
+        if (typeof this.entry.cornerShape === "string")
+          newEntry.cornerShape = this.entry.cornerShape;
         if (typeof this.entry.highlightHorizontalPadding === "number")
           newEntry.highlightHorizontalPadding =
             this.entry.highlightHorizontalPadding;
@@ -1974,6 +2098,7 @@ export class EditEntryModal extends Modal {
     const shapeKeys = [
       "backgroundOpacity",
       "highlightBorderRadius",
+      "cornerShape",
       "highlightHorizontalPadding",
       "highlightVerticalPadding",
       "enableBorderThickness",

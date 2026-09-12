@@ -18,6 +18,7 @@ import {
   compileTextBgColoringEntriesLogic,
   stripInheritedGroupCssColors,
   resolveGroupColorOverride,
+  resolveBorderSourceColor,
 } from "./patternCompiler.js";
 
 function makePlugin(settings) {
@@ -456,6 +457,114 @@ describe("group null colors are ignored; entry colours apply", () => {
     expect(compiled[0].entryRef.borderThickness).toBe(3);
   });
 
+  it("forced text strips highlight/border from member css", () => {
+    const compiled = compileWithGroup(
+      {
+        uid: "g14",
+        name: "force text strict",
+        active: true,
+        styleType: "text",
+        color: "#ff0000",
+        textColor: null,
+        backgroundColor: null,
+      },
+      [
+        {
+          uid: "e14",
+          pattern: "strict-text",
+          isRegex: false,
+          styleType: "both",
+          textColor: "#2d98da",
+          color: "",
+          backgroundColor: "#00ff00",
+          customCss:
+            "color: #2d98da;\nbackground-color: rgba(0,255,0,0.3);\nborder: 2px solid #2d98da;\nborder-radius: 9px;",
+        },
+      ],
+    );
+    expect(compiled.length).toBeGreaterThan(0);
+    const ref = compiled[0].entryRef;
+    expect(ref.styleType).toBe("text");
+    expect(ref.backgroundColor).toBeNull();
+    expect(compiled[0].textColor).toBe("#ff0000");
+    const css = ref.customCss || "";
+    // No highlight, no border from CSS either — layout props survive.
+    expect(css).not.toMatch(/(^|;)\s*color\s*:/);
+    expect(css).not.toMatch(/(^|;)\s*background-color\s*:/);
+    expect(css).not.toMatch(/(^|;)\s*border\s*:/);
+    expect(css).not.toMatch(/(^|;)\s*border-(top|bottom|left|right)\s*:/);
+    expect(css).toContain("border-radius: 9px");
+  });
+
+  it("forced highlight strips text color from member css, borders follow group bg", () => {
+    const compiled = compileTextBgWithGroup(
+      {
+        uid: "g15",
+        name: "force highlight strict",
+        active: true,
+        styleType: "highlight",
+        color: "",
+        textColor: "currentColor",
+        backgroundColor: "#3867d6",
+      },
+      [
+        {
+          uid: "e15",
+          pattern: "strict-hl",
+          isRegex: false,
+          styleType: "both",
+          textColor: "#fa8231",
+          color: "",
+          backgroundColor: "#00ff00",
+          customCss:
+            "color: #fa8231;\nbackground-color: rgba(0,255,0,0.3);\nborder: 2px solid #fa8231;",
+        },
+      ],
+    );
+    expect(compiled.length).toBeGreaterThan(0);
+    const ref = compiled[0].entryRef;
+    expect(ref.styleType).toBe("highlight");
+    expect(ref.textColor).toBe("currentColor");
+    expect(ref.backgroundColor).toBe("#3867d6");
+    const css = ref.customCss || "";
+    expect(css).not.toMatch(/(^|;)\s*color\s*:/);
+    expect(css).not.toMatch(/(^|;)\s*background-color\s*:/);
+    expect(css).toContain("#3867d6");
+    expect(css).not.toContain("#fa8231");
+  });
+
+  it("highlight colortype borders follow the background, never text", () => {
+    const isValid = (c) =>
+      typeof c === "string" && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c.trim());
+    // Highlight with both colors set: background wins.
+    expect(
+      resolveBorderSourceColor("highlight", "#ff0000", "#00ff00", isValid),
+    ).toBe("#00ff00");
+    // Highlight with currentColor text marker: background wins.
+    expect(
+      resolveBorderSourceColor(
+        "highlight",
+        "currentColor",
+        "#00ff00",
+        isValid,
+      ),
+    ).toBe("#00ff00");
+    // Highlight with no background: nothing (callers fall back to black).
+    expect(
+      resolveBorderSourceColor("highlight", "#ff0000", null, isValid),
+    ).toBeNull();
+    // Other types unchanged: real text wins, then background.
+    expect(resolveBorderSourceColor("both", "#ff0000", "#00ff00", isValid)).toBe(
+      "#ff0000",
+    );
+    expect(resolveBorderSourceColor("text", "#ff0000", null, isValid)).toBe(
+      "#ff0000",
+    );
+    expect(
+      resolveBorderSourceColor(undefined, "#ff0000", "#00ff00", isValid),
+    ).toBe("#ff0000");
+  });
+
   it("forced group css colors still reach members", () => {
     const compiled = compileWithGroup(
       {
@@ -482,7 +591,11 @@ describe("group null colors are ignored; entry colours apply", () => {
     );
     expect(compiled.length).toBeGreaterThan(0);
     expect(compiled[0].textColor).toBe("#ff0000");
-    expect(compiled[0].entryRef.customCss || "").toContain("#ff0000");
+    // Structured fields (not CSS) carry forced colors; group CSS contributes
+    // layout only.
+    expect(compiled[0].entryRef.textColor || compiled[0].entryRef.color).toBe(
+      "#ff0000",
+    );
   });
 
   it("single black text group color (non-polluted) still overrides", () => {

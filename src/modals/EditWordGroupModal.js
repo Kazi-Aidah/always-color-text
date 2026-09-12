@@ -1176,16 +1176,27 @@ export class EditWordGroupModal extends Modal {
                 const tcValid = !!tc;
                 const bcValid = !!bc;
                 if (!tcValid && !bcValid) {
-                  // Reset: remove any hex/var codes so the group retains its
-                  // own colours and member entries fall back to group styling.
-                  // Pickers re-render as null black (#000000); preview uses
-                  // theme vars. Saved-color caches must also be cleared or the
+                  // Reset: remove hex/var codes for the shown channel(s) so the
+                  // group retains its own colours. Single-panel modals (text /
+                  // highlight colortype) clear only their channel; the combined
+                  // modal clears all. Saved-color caches are cleared too or the
                   // row would ghost the old color back via _saved* fallback.
-                  entry.color = "";
-                  entry.textColor = null;
-                  entry.backgroundColor = null;
-                  entry._savedTextColor = "";
-                  entry._savedBackgroundColor = "";
+                  const resetStyle = (entry && entry.styleType) || "";
+                  if (resetStyle === "highlight") {
+                    entry.backgroundColor = null;
+                    entry._savedBackgroundColor = "";
+                    if (!entry.textColor) entry.textColor = "currentColor";
+                  } else if (resetStyle === "text") {
+                    entry.color = "";
+                    entry.textColor = null;
+                    entry._savedTextColor = "";
+                  } else {
+                    entry.color = "";
+                    entry.textColor = null;
+                    entry.backgroundColor = null;
+                    entry._savedTextColor = "";
+                    entry._savedBackgroundColor = "";
+                  }
                   if (result && result.markTarget) entry.markTarget = result.markTarget;
                   if (result && result.matchType) entry.matchType = result.matchType;
                   if (result && typeof result.caseSensitive === "boolean") entry.caseSensitive = result.caseSensitive;
@@ -1336,16 +1347,27 @@ export class EditWordGroupModal extends Modal {
                 const tcValid = !!tc;
                 const bcValid = !!bc;
                 if (!tcValid && !bcValid) {
-                  // Reset: remove any hex/var codes so the group retains its
-                  // own colours and member entries fall back to group styling.
-                  // Pickers re-render as null black (#000000); preview uses
-                  // theme vars. Saved-color caches must also be cleared or the
+                  // Reset: remove hex/var codes for the shown channel(s) so the
+                  // group retains its own colours. Single-panel modals (text /
+                  // highlight colortype) clear only their channel; the combined
+                  // modal clears all. Saved-color caches are cleared too or the
                   // row would ghost the old color back via _saved* fallback.
-                  entry.color = "";
-                  entry.textColor = null;
-                  entry.backgroundColor = null;
-                  entry._savedTextColor = "";
-                  entry._savedBackgroundColor = "";
+                  const resetStyle = (entry && entry.styleType) || "";
+                  if (resetStyle === "highlight") {
+                    entry.backgroundColor = null;
+                    entry._savedBackgroundColor = "";
+                    if (!entry.textColor) entry.textColor = "currentColor";
+                  } else if (resetStyle === "text") {
+                    entry.color = "";
+                    entry.textColor = null;
+                    entry._savedTextColor = "";
+                  } else {
+                    entry.color = "";
+                    entry.textColor = null;
+                    entry.backgroundColor = null;
+                    entry._savedTextColor = "";
+                    entry._savedBackgroundColor = "";
+                  }
                   if (result && result.markTarget) entry.markTarget = result.markTarget;
                   if (result && result.matchType) entry.matchType = result.matchType;
                   if (result && typeof result.caseSensitive === "boolean") entry.caseSensitive = result.caseSensitive;

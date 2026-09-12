@@ -4583,10 +4583,18 @@ export class ColorSettingTab extends PluginSettingTab {
               let decl = this.plugin.sanitizeCssDeclarations(group.customCss);
               // Per-entry preview must not repaint via stale group CSS colors
               // (e.g. orange from a reset forced type); layout still previews.
-              if (decl && isPerEntryPreview) {
-                decl = this.plugin.sanitizeCssDeclarations(
-                  stripInheritedGroupCssColors(decl, "var(--color-accent)"),
-                );
+              // Forced colortypes preview through the same gate as the editor
+              // so the preview matches what members render.
+              if (decl) {
+                if (isPerEntryPreview) {
+                  decl = this.plugin.sanitizeCssDeclarations(
+                    stripInheritedGroupCssColors(decl, "var(--color-accent)"),
+                  );
+                } else {
+                  decl = this.plugin.sanitizeCssDeclarations(
+                    this.plugin.groupCssForMembers(group),
+                  );
+                }
               }
               if (decl) {
                 decl.split(";").map(s => s.trim()).filter(Boolean).forEach(part => {

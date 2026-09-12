@@ -381,6 +381,37 @@ describe("group highlight styling preview", () => {
     expect(group.backgroundColor).toBeUndefined();
   });
 
+  it("stale customCss geometry does not freeze slider preview", () => {
+    const plugin = makePlugin();
+    plugin.settings.enableCustomCss = true;
+    const entry = {
+      uid: "e5",
+      pattern: "stale-css",
+      isRegex: false,
+      styleType: "both",
+      textColor: "#ff0000",
+      backgroundColor: "#00ff00",
+      color: "",
+      customCss:
+        "color: #ff0000;\nbackground-color: rgba(0,255,0,0.3);\nborder-radius: 6px;\npadding: 0px 4px;",
+    };
+    const modal = new HighlightStylingModal({}, plugin, entry, null, null);
+    modal.onOpen();
+
+    const radiusInput = findByAttr(
+      modal.contentEl,
+      "data-act-radius-input",
+    )[0];
+    expect(radiusInput).toBeTruthy();
+    radiusInput.value = "50";
+    radiusInput._fire("input");
+
+    const span = previewSpan(modal.contentEl, "stale-css");
+    expect(span).toBeTruthy();
+    // Managed value wins over the stale `border-radius: 6px` in customCss.
+    expect(span.style["border-radius"]).toBe("50px");
+  });
+
   it("real colors still initialize pickers with their own values", () => {
     const plugin = makePlugin();
     const group = {

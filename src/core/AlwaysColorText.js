@@ -9,7 +9,7 @@ import { defaultSettings } from '../settings/defaultSettings.js';
 import { ColorSettingTab } from '../settings/SettingsTab.js';
 import { buildEditorExtension } from '../features/editorDecorator.js';
 import { buildReadingViewProcessor } from '../features/readingViewProcessor.js';
-import { compileWordEntriesLogic, compileTextBgColoringEntriesLogic, compileBlacklistEntriesLogic, PatternMatcher, SettingsIndex, resolveGroupColorOverride, stripInheritedGroupCssColors } from '../services/patternCompiler.js';
+import { compileWordEntriesLogic, compileTextBgColoringEntriesLogic, compileBlacklistEntriesLogic, PatternMatcher, SettingsIndex, resolveGroupColorOverride, stripInheritedGroupCssColors, resolveBorderSourceColor } from '../services/patternCompiler.js';
 import { evaluatePathRulesLogic, hasGlobalExcludeLogic, getBestFolderEntryLogic, globToRegex } from '../services/fileFilter.js';
 import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS, GLOBAL_STYLE_KEYS, IS_DEVELOPMENT } from './constants.js';
 import { Decoration, syntaxTree, forceRebuildEffect } from './cmSetup.js';
@@ -34,6 +34,8 @@ import { EditBlacklistGroupModal } from '../modals/EditBlacklistGroupModal.js';
 import { ColorPickerModal } from '../modals/ColorPickerModal.js';
 import { AlertModal } from '../modals/AlertModal.js';
 import { ConfirmationModal } from '../modals/ConfirmationModal.js';
+import { findColoringEntries, buildSelectionContext } from '../utils/reverseLookup.js';
+import { SelectColoringEntryModal } from '../modals/SelectColoringEntryModal.js';
 
 // Moment is provided by Obsidian
 const moment = window.moment;
@@ -1375,230 +1377,25 @@ class AlwaysColorText extends Plugin {
                     );
                     return;
                   }
-                  new ColorPickerModal(
-                    this.app,
-                    this,
-                    async (color, result) => {
-                      const sel = result || {};
-                      const tc =
-                        sel.textColor && this.isValidHexColor(sel.textColor)
-                          ? sel.textColor
-                          : null;
-                      const bc =
-                        sel.backgroundColor &&
-                        this.isValidHexColor(sel.backgroundColor)
-                          ? sel.backgroundColor
-                          : null;
-                      const selGroupUid = sel.selectedGroupUid || null;
-                      const matchType =
-                        sel.matchType ||
-                        this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact");
-                      const markTarget = sel.markTarget || "text";
-
-                      // Improved entry finding logic to match what the modal uses
-                      const findEntry = (arr) => {
-                        const caseSensitive = !!this.settings.caseSensitive;
-                        const eq = (a, b) =>
-                          caseSensitive
-                            ? String(a) === String(b)
-                            : String(a).toLowerCase() ===
-                              String(b).toLowerCase();
-
-                        return arr.findIndex((e) => {
-                          if (!e) return false;
-                          if (e.isRegex) {
-                            if (!this.settings.enableRegexSupport) return false;
-                            // Use pre-validated testRegex instead of creating new RegExp
-                            if (e.testRegex && e.testRegex instanceof RegExp) {
-                              try {
-                                return e.testRegex.test(selectedText);
-                              } catch (_) {
-                                return false;
-                              }
-                            }
-                            // Fallback: validate before creating regex
-                            try {
-                              if (!this.validateAndSanitizeRegex(e.pattern)) return false;
-                              const re = new RegExp(e.pattern, e.flags || "");
-                              return re.test(selectedText);
-                            } catch (_) {
-                              return false;
-                            }
-                          }
-
-                          const entryMatchType = (
-                            e.matchType ||
-                            this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")
-                          ).toLowerCase();
-                          const a = caseSensitive
-                            ? String(selectedText)
-                            : String(selectedText).toLowerCase();
-                          const b = caseSensitive
-                            ? String(e.pattern || "")
-                            : String(e.pattern || "").toLowerCase();
-
-                          if (entryMatchType === "exact") {
-                            return (
-                              eq(e.pattern || "", selectedText) ||
-                              (Array.isArray(e.groupedPatterns) &&
-                                e.groupedPatterns.some((p) =>
-                                  eq(p, selectedText),
-                                ))
-                            );
-                          } else if (entryMatchType === "startswith") {
-                            return b && a.startsWith(b);
-                          } else if (entryMatchType === "endswith") {
-                            return b && a.endsWith(b);
-                          } else if (entryMatchType === "contains") {
-                            return b && a.includes(b);
-                          }
-                          return eq(e.pattern || "", selectedText);
-                        });
-                      };
-
-                      const ps = sel.presetStyle || null;
-                      const applyPresetStyleToEntry = (ent) => {
-                        if (!ps || !ent) return;
-                        const keys = [
-                          "styleType",
-                          "backgroundOpacity",
-                          "highlightBorderRadius",
-                          "highlightHorizontalPadding",
-                          "highlightVerticalPadding",
-                          "enableBorderThickness",
-                          "borderStyle",
-                          "borderLineStyle",
-                          "borderOpacity",
-                          "borderThickness",
-                        ];
-                        for (const k of keys) {
-                          if (ps[k] != null) ent[k] = ps[k];
-                        }
-                        // Matching defaults: preset value wins, global Defaults
-                        // section is the fallback (handled at entry creation).
-                        if (ps.matchType) ent.matchType = ps.matchType;
-                        if (typeof ps.caseSensitive === "boolean")
-                          ent.caseSensitive = ps.caseSensitive;
-                        if (ps.wordGroup) ent.groupUid = ps.wordGroup;
-                        if (ent.customCss) this.syncEntryCssFromColors(ent);
-                      };
-                      const applyToArr = (arr) => {
-                        const idx = findEntry(arr);
-                        if (idx !== -1) {
-                          const entry = arr[idx];
-                          entry.markTarget = markTarget;
-                          if (tc && bc) {
-                            entry.textColor = tc;
-                            entry.backgroundColor = bc;
-                            entry.color = "";
-                            entry.styleType = "both";
-                            entry._savedTextColor = tc;
-                            entry._savedBackgroundColor = bc;
-                          } else if (tc) {
-                            entry.color = tc;
-                            entry.styleType = "text";
-                            entry.textColor = null;
-                            entry.backgroundColor = null;
-                            entry._savedTextColor = tc;
-                          } else if (bc) {
-                            entry.color = "";
-                            entry.textColor = "currentColor";
-                            entry.backgroundColor = bc;
-                            entry.styleType = "highlight";
-                            entry._savedBackgroundColor = bc;
-                          } else if (color && this.isValidHexColor(color)) {
-                            entry.color = color;
-                            entry.styleType = "text";
-                            entry._savedTextColor = color;
-                          }
-                          if (!entry.isRegex) entry.matchType = matchType;
-                          applyPresetStyleToEntry(entry);
-                          this.syncEntryCssFromColors(entry);
-                        } else {
-                          let ne = null;
-                          if (tc && bc) {
-                            ne = {
-                              pattern: selectedText,
-                              color: "",
-                              textColor: tc,
-                              backgroundColor: bc,
-                              isRegex: false,
-                              flags: "",
-                              styleType: "both",
-                              matchType,
-                              markTarget,
-                              _savedTextColor: tc,
-                              _savedBackgroundColor: bc,
-                            };
-                          } else if (tc) {
-                            ne = {
-                              pattern: selectedText,
-                              color: tc,
-                              isRegex: false,
-                              flags: "",
-                              styleType: "text",
-                              matchType,
-                              markTarget,
-                              _savedTextColor: tc,
-                            };
-                          } else if (bc) {
-                            ne = {
-                              pattern: selectedText,
-                              color: "",
-                              textColor: "currentColor",
-                              backgroundColor: bc,
-                              isRegex: false,
-                              flags: "",
-                              styleType: "highlight",
-                              matchType,
-                              markTarget,
-                              _savedBackgroundColor: bc,
-                            };
-                          } else if (color && this.isValidHexColor(color)) {
-                            ne = {
-                              pattern: selectedText,
-                              color: color,
-                              isRegex: false,
-                              flags: "",
-                              styleType: "text",
-                              matchType,
-                              markTarget,
-                              _savedTextColor: color,
-                            };
-                          }
-                          if (ne) {
-                            applyPresetStyleToEntry(ne);
-                            arr.push(ne);
-                          }
-                        }
-                      };
-                      if (selGroupUid) {
-                        const group = Array.isArray(
-                          this.settings.wordEntryGroups,
-                        )
-                          ? this.settings.wordEntryGroups.find(
-                              (g) => g && g.uid === selGroupUid,
-                            )
-                          : null;
-                        if (group) {
-                          if (!Array.isArray(group.entries)) group.entries = [];
-                          applyToArr(group.entries);
-                        } else {
-                          applyToArr(this.settings.wordEntries);
-                        }
-                      } else {
-                        applyToArr(this.settings.wordEntries);
-                      }
-                      await this.saveSettings();
-                      this.compileWordEntries();
-                      this.compileTextBgColoringEntries();
-                      this.reconfigureEditorExtensions();
-                      this.refreshEditor(view, true);
-                    },
-                    "text-and-background",
-                    selectedText,
-                    false,
-                  ).open();
+                  this.openColorPickerForSelection(editor, view, selectedText, (resolved) => {
+                    new ColorPickerModal(
+                      this.app,
+                      this,
+                      async (color, result) => {
+                        try {
+                          await this.savePickedColorsForSelection(selectedText, result || {}, color, { resolved });
+                        } catch (_) {}
+                        this.reconfigureEditorExtensions();
+                        this.refreshEditor(view, true);
+                      },
+                      "text-and-background",
+                      selectedText,
+                      false,
+                      "text",
+                      (resolved && resolved.entry) || null,
+                      { groupUid: (resolved && resolved.groupUid) || null },
+                    ).open();
+                  });
                 });
             });
           }
@@ -2332,137 +2129,25 @@ class AlwaysColorText extends Plugin {
             );
             return;
           }
-          new ColorPickerModal(
-            this.app,
-            this,
-            async (color, result) => {
-              const sel = result || {};
-              const tc =
-                sel.textColor && this.isValidHexColor(sel.textColor)
-                  ? sel.textColor
-                  : null;
-              const bc =
-                sel.backgroundColor && this.isValidHexColor(sel.backgroundColor)
-                  ? sel.backgroundColor
-                  : null;
-              const selGroupUid = sel.selectedGroupUid || null;
-              const matchType =
-                sel.matchType ||
-                this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact");
-              const caseSensitive = typeof sel.caseSensitive === "boolean"
-                ? sel.caseSensitive
-                : !!this.settings.caseSensitive;
-              const applyToArr = (arr) => {
-                const idx = arr.findIndex(
-                  (e) => e && e.pattern === word && !e.isRegex,
-                );
-                if (idx !== -1) {
-                  const entry = arr[idx];
-                  if (tc && bc) {
-                    entry.textColor = tc;
-                    entry.backgroundColor = bc;
-                    entry.color = "";
-                    entry.styleType = "both";
-                    entry._savedTextColor = tc;
-                    entry._savedBackgroundColor = bc;
-                  } else if (tc) {
-                    entry.color = tc;
-                    entry.styleType = "text";
-                    entry.textColor = null;
-                    entry.backgroundColor = null;
-                    entry._savedTextColor = tc;
-                  } else if (bc) {
-                    entry.color = "";
-                    entry.textColor = "currentColor";
-                    entry.backgroundColor = bc;
-                    entry.styleType = "highlight";
-                    entry._savedBackgroundColor = bc;
-                  } else if (color && this.isValidHexColor(color)) {
-                    entry.color = color;
-                    entry.styleType = "text";
-                    entry._savedTextColor = color;
-                  }
-                  if (!entry.isRegex) entry.matchType = matchType;
-                  if (!entry.isRegex) entry.caseSensitive = caseSensitive;
-                  this.syncEntryCssFromColors(entry);
-                } else {
-                  if (tc && bc) {
-                    arr.push({
-                      pattern: word,
-                      color: "",
-                      textColor: tc,
-                      backgroundColor: bc,
-                      isRegex: false,
-                      flags: "",
-                      styleType: "both",
-                      matchType,
-                      caseSensitive,
-                      _savedTextColor: tc,
-                      _savedBackgroundColor: bc,
-                    });
-                  } else if (tc) {
-                    arr.push({
-                      pattern: word,
-                      color: tc,
-                      isRegex: false,
-                      flags: "",
-                      styleType: "text",
-                      matchType,
-                      caseSensitive,
-                      _savedTextColor: tc,
-                    });
-                  } else if (bc) {
-                    arr.push({
-                      pattern: word,
-                      color: "",
-                      textColor: "currentColor",
-                      backgroundColor: bc,
-                      isRegex: false,
-                      flags: "",
-                      styleType: "highlight",
-                      matchType,
-                      caseSensitive,
-                      _savedBackgroundColor: bc,
-                    });
-                  } else if (color && this.isValidHexColor(color)) {
-                    arr.push({
-                      pattern: word,
-                      color: color,
-                      isRegex: false,
-                      flags: "",
-                      styleType: "text",
-                      matchType,
-                      caseSensitive,
-                      _savedTextColor: color,
-                    });
-                  }
-                }
-              };
-              if (selGroupUid) {
-                const group = Array.isArray(this.settings.wordEntryGroups)
-                  ? this.settings.wordEntryGroups.find(
-                      (g) => g && g.uid === selGroupUid,
-                    )
-                  : null;
-                if (group) {
-                  if (!Array.isArray(group.entries)) group.entries = [];
-                  applyToArr(group.entries);
-                } else {
-                  applyToArr(this.settings.wordEntries);
-                }
-              } else {
-                applyToArr(this.settings.wordEntries);
-              }
-              await this.saveSettings();
-              this.compileWordEntries();
-              this.compileTextBgColoringEntries();
-              this.reconfigureEditorExtensions();
-              this.forceRefreshAllEditors();
-            },
-            "text-and-background",
-            word,
-            false,
-          ).open();
+          this.openColorPickerForSelection(editor, view, word, (resolved) => {
+            new ColorPickerModal(
+              this.app,
+              this,
+              async (color, result) => {
+                try {
+                  await this.savePickedColorsForSelection(word, result || {}, color, { resolved });
+                } catch (_) {}
+                this.reconfigureEditorExtensions();
+                this.forceRefreshAllEditors();
+              },
+              "text-and-background",
+              word,
+              false,
+              "text",
+              (resolved && resolved.entry) || null,
+              { groupUid: (resolved && resolved.groupUid) || null },
+            ).open();
+          });
         },
       });
       addTrackedCommand({
@@ -2484,117 +2169,26 @@ class AlwaysColorText extends Plugin {
             return;
           }
           const filePath = activeFile.path;
-          new ColorPickerModal(
-            this.app,
-            this,
-            async (color, result) => {
-              const sel = result || {};
-              const tc =
-                sel.textColor && this.isValidHexColor(sel.textColor)
-                  ? sel.textColor
-                  : null;
-              const bc =
-                sel.backgroundColor && this.isValidHexColor(sel.backgroundColor)
-                  ? sel.backgroundColor
-                  : null;
-              // No color picked at all — do nothing
-              if (!tc && !bc && !(color && this.isValidHexColor(color))) return;
-              const selGroupUid = sel.selectedGroupUid || null;
-              const matchType =
-                sel.matchType ||
-                this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact");
-              const fileInclusionRule = { path: filePath, mode: "include", isRegex: false, flags: "" };
-              const applyToArr = (arr) => {
-                const idx = arr.findIndex(
-                  (e) => e && e.pattern === word && !e.isRegex,
-                );
-                let entry;
-                if (idx !== -1) {
-                  entry = arr[idx];
-                  if (tc && bc) {
-                    entry.textColor = tc;
-                    entry.backgroundColor = bc;
-                    entry.color = "";
-                    entry.styleType = "both";
-                    entry._savedTextColor = tc;
-                    entry._savedBackgroundColor = bc;
-                  } else if (tc) {
-                    entry.color = tc;
-                    entry.styleType = "text";
-                    entry.textColor = null;
-                    entry.backgroundColor = null;
-                    entry._savedTextColor = tc;
-                  } else if (bc) {
-                    entry.color = "";
-                    entry.textColor = "currentColor";
-                    entry.backgroundColor = bc;
-                    entry.styleType = "highlight";
-                    entry._savedBackgroundColor = bc;
-                  } else if (color && this.isValidHexColor(color)) {
-                    entry.color = color;
-                    entry.styleType = "text";
-                    entry._savedTextColor = color;
-                  }
-                  if (!entry.isRegex) entry.matchType = matchType;
-                  this.syncEntryCssFromColors(entry);
-                } else {
-                  if (tc && bc) {
-                    entry = {
-                      pattern: word, color: "", textColor: tc, backgroundColor: bc,
-                      isRegex: false, flags: "", styleType: "both", matchType,
-                      _savedTextColor: tc, _savedBackgroundColor: bc,
-                    };
-                  } else if (tc) {
-                    entry = {
-                      pattern: word, color: tc, isRegex: false, flags: "",
-                      styleType: "text", matchType, _savedTextColor: tc,
-                    };
-                  } else if (bc) {
-                    entry = {
-                      pattern: word, color: "", textColor: "currentColor", backgroundColor: bc,
-                      isRegex: false, flags: "", styleType: "highlight", matchType,
-                      _savedBackgroundColor: bc,
-                    };
-                  } else if (color && this.isValidHexColor(color)) {
-                    entry = {
-                      pattern: word, color: color, isRegex: false, flags: "",
-                      styleType: "text", matchType, _savedTextColor: color,
-                    };
-                  }
-                  if (entry) arr.push(entry);
-                }
-                // Add the file inclusion rule if not already present
-                if (entry) {
-                  if (!Array.isArray(entry.inclusionRules)) entry.inclusionRules = [];
-                  const alreadyHasRule = entry.inclusionRules.some(
-                    (r) => r && r.path === filePath && r.mode === "include",
-                  );
-                  if (!alreadyHasRule) entry.inclusionRules.push(fileInclusionRule);
-                }
-              };
-              if (selGroupUid) {
-                const group = Array.isArray(this.settings.wordEntryGroups)
-                  ? this.settings.wordEntryGroups.find((g) => g && g.uid === selGroupUid)
-                  : null;
-                if (group) {
-                  if (!Array.isArray(group.entries)) group.entries = [];
-                  applyToArr(group.entries);
-                } else {
-                  applyToArr(this.settings.wordEntries);
-                }
-              } else {
-                applyToArr(this.settings.wordEntries);
-              }
-              await this.saveSettings();
-              this.compileWordEntries();
-              this.compileTextBgColoringEntries();
-              this.reconfigureEditorExtensions();
-              this.forceRefreshAllEditors();
-            },
-            "text-and-background",
-            word,
-            false,
-          ).open();
+          const fileInclusionRule = { path: filePath, mode: "include", isRegex: false, flags: "" };
+          this.openColorPickerForSelection(editor, view, word, (resolved) => {
+            new ColorPickerModal(
+              this.app,
+              this,
+              async (color, result) => {
+                try {
+                  await this.savePickedColorsForSelection(word, result || {}, color, { resolved, fileInclusionRule });
+                } catch (_) {}
+                this.reconfigureEditorExtensions();
+                this.forceRefreshAllEditors();
+              },
+              "text-and-background",
+              word,
+              false,
+              "text",
+              (resolved && resolved.entry) || null,
+              { groupUid: (resolved && resolved.groupUid) || null },
+            ).open();
+          });
         },
       });
       addTrackedCommand({
@@ -6491,6 +6085,7 @@ class AlwaysColorText extends Plugin {
     if (e.backgroundOpacity === s.backgroundOpacity) delete e.backgroundOpacity;
     if (e.highlightBorderRadius === s.highlightBorderRadius)
       delete e.highlightBorderRadius;
+    if (e.cornerShape === s.cornerShape) delete e.cornerShape;
     if (e.highlightHorizontalPadding === s.highlightHorizontalPadding)
       delete e.highlightHorizontalPadding;
     if (e.highlightVerticalPadding === s.highlightVerticalPadding)
@@ -6958,6 +6553,7 @@ class AlwaysColorText extends Plugin {
             // PRESERVE custom styling properties from original entry
             backgroundOpacity: e.backgroundOpacity,
             highlightBorderRadius: e.highlightBorderRadius,
+            cornerShape: e.cornerShape,
             highlightHorizontalPadding: e.highlightHorizontalPadding,
             highlightVerticalPadding: e.highlightVerticalPadding,
             enableBorderThickness: e.enableBorderThickness,
@@ -7072,6 +6668,8 @@ class AlwaysColorText extends Plugin {
                 we.backgroundOpacity = e.backgroundOpacity;
               if (typeof e.highlightBorderRadius === "number")
                 we.highlightBorderRadius = e.highlightBorderRadius;
+              if (typeof e.cornerShape === "string")
+                we.cornerShape = e.cornerShape;
               if (typeof e.highlightHorizontalPadding === "number")
                 we.highlightHorizontalPadding = e.highlightHorizontalPadding;
               if (typeof e.highlightVerticalPadding === "number")
@@ -7157,6 +6755,8 @@ class AlwaysColorText extends Plugin {
               newEntry.backgroundOpacity = e.backgroundOpacity;
             if (typeof e.highlightBorderRadius === "number")
               newEntry.highlightBorderRadius = e.highlightBorderRadius;
+            if (typeof e.cornerShape === "string")
+              newEntry.cornerShape = e.cornerShape;
             if (typeof e.highlightHorizontalPadding === "number")
               newEntry.highlightHorizontalPadding =
                 e.highlightHorizontalPadding;
@@ -8638,6 +8238,8 @@ class AlwaysColorText extends Plugin {
           typeof e.highlightBorderRadius === "number"
             ? e.highlightBorderRadius
             : undefined;
+        x.cornerShape =
+          typeof e.cornerShape === "string" ? e.cornerShape : undefined;
         x.highlightHorizontalPadding =
           typeof e.highlightHorizontalPadding === "number"
             ? e.highlightHorizontalPadding
@@ -8878,6 +8480,8 @@ class AlwaysColorText extends Plugin {
             typeof e.highlightBorderRadius === "number"
               ? e.highlightBorderRadius
               : undefined;
+          x.cornerShape =
+            typeof e.cornerShape === "string" ? e.cornerShape : undefined;
           x.highlightHorizontalPadding =
             typeof e.highlightHorizontalPadding === "number"
               ? e.highlightHorizontalPadding
@@ -9047,6 +8651,338 @@ class AlwaysColorText extends Plugin {
     }
     await this.saveSettings();
     this.reconfigureEditorExtensions();
+  }
+
+  // ---- Reverse lookup: which entry actually colors the current selection? ----
+  // Returns { candidates, ctx } where candidates are best-first
+  // [{ entry (live ref), groupUid, groupName, kind, detail, specificity }].
+  // Uses surrounding line/window context so regexes like `==...==` or heading
+  // patterns match even when the bare selection (inner text) would not.
+  resolveColoringCandidates(selectedText, editor, view) {
+    try {
+      const ctx = buildSelectionContext(editor || null, view || null);
+      try {
+        if (view && view.file && view.file.path && !ctx.filePath) ctx.filePath = view.file.path;
+      } catch (_) {}
+      let candidates = [];
+      try {
+        candidates = findColoringEntries(this, selectedText, ctx) || [];
+      } catch (_) {
+        candidates = [];
+      }
+      return { candidates, ctx };
+    } catch (_) {
+      return { candidates: [], ctx: {} };
+    }
+  }
+
+  findLiveColoringEntryByUid(uid) {
+    try {
+      if (!uid) return null;
+      const id = String(uid);
+      const main = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+      for (const e of main) {
+        if (e && String(e.uid || "") === id) return { entry: e, groupUid: null };
+      }
+      const groups = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : [];
+      for (const g of groups) {
+        if (!g || !Array.isArray(g.entries)) continue;
+        for (const e of g.entries) {
+          if (e && String(e.uid || "") === id) return { entry: e, groupUid: g.uid || null };
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  // Central save for the pick-color flow. When `resolved` is a reverse-lookup
+  // candidate ({ entry, groupUid }) the picked colors update THAT entry
+  // (preserving its regex / targetElement) instead of creating a new literal.
+  // Otherwise falls back to the legacy find-by-pattern / create-new behavior.
+  async savePickedColorsForSelection(selectedText, sel, color, opts = {}) {
+    const tc = sel && sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
+    const bc = sel && sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
+    if (!tc && !bc && !(color && this.isValidHexColor(color))) return;
+    const selGroupUid = (sel && sel.selectedGroupUid) || opts.fallbackGroupUid || null;
+    const matchType = (sel && sel.matchType) || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact");
+    const markTarget = (sel && sel.markTarget) || "text";
+    const caseSensitive = sel && typeof sel.caseSensitive === "boolean" ? sel.caseSensitive : !!this.settings.caseSensitive;
+    const ps = (sel && sel.presetStyle) || null;
+    const applyPresetStyleToEntry = (ent) => {
+      if (!ps || !ent) return;
+      const keys = ["styleType", "backgroundOpacity", "highlightBorderRadius", "cornerShape", "highlightHorizontalPadding", "highlightVerticalPadding", "enableBorderThickness", "borderStyle", "borderLineStyle", "borderOpacity", "borderThickness"];
+      for (const k of keys) {
+        if (ps[k] != null) ent[k] = ps[k];
+      }
+      if (ps.matchType) ent.matchType = ps.matchType;
+      if (typeof ps.caseSensitive === "boolean") ent.caseSensitive = ps.caseSensitive;
+      if (ps.wordGroup) ent.groupUid = ps.wordGroup;
+      if (ent.customCss) this.syncEntryCssFromColors(ent);
+    };
+
+    // 1) Resolved existing entry (regex / markdown / literal): update in place.
+    const resolved = opts.resolved || null;
+    if (resolved && resolved.entry) {
+      let live = null;
+      try {
+        const uid = resolved.entry.uid ? String(resolved.entry.uid) : null;
+        live = uid ? this.findLiveColoringEntryByUid(uid) : null;
+      } catch (_) {
+        live = null;
+      }
+      // Fall back to the passed reference when uid lookup fails (e.g. unsaved clone).
+      const target = (live && live.entry) || resolved.entry;
+      if (target) {
+        try {
+          target.markTarget = markTarget;
+          if (tc && bc) {
+            target.textColor = tc;
+            target.backgroundColor = bc;
+            target.color = "";
+            target.styleType = "both";
+            target._savedTextColor = tc;
+            target._savedBackgroundColor = bc;
+          } else if (tc) {
+            // Preserve highlight entries that also carry a background: only
+            // clear the background when the modal explicitly picked text-only.
+            // The picker reports bgSelected via sel.backgroundColor, so reaching
+            // here with tc-only means the user wants text-only.
+            if (target.backgroundColor && target.styleType !== "text") {
+              target.textColor = tc;
+              target.color = "";
+              target.styleType = "both";
+              target._savedTextColor = tc;
+            } else {
+              target.color = tc;
+              target.styleType = "text";
+              target.textColor = null;
+              target.backgroundColor = null;
+              target._savedTextColor = tc;
+            }
+          } else if (bc) {
+            target.color = "";
+            target.textColor = target.textColor && target.textColor !== "currentColor" ? target.textColor : "currentColor";
+            // Keep an existing real text color when switching to highlight-only? No:
+            // highlight-only means text stays default, so force currentColor unless both were picked.
+            if (tc) {
+              target.textColor = tc;
+              target.styleType = "both";
+            } else {
+              target.textColor = "currentColor";
+              target.styleType = "highlight";
+            }
+            target.backgroundColor = bc;
+            target._savedBackgroundColor = bc;
+          } else if (color && this.isValidHexColor(color)) {
+            target.color = color;
+            target.styleType = "text";
+            target._savedTextColor = color;
+          }
+          if (!target.isRegex) {
+            target.matchType = matchType;
+            if (typeof target.caseSensitive === "undefined") target.caseSensitive = caseSensitive;
+          }
+          if (opts.fileInclusionRule && target) {
+            if (!Array.isArray(target.inclusionRules)) target.inclusionRules = [];
+            const already = target.inclusionRules.some((r) => r && r.path === opts.fileInclusionRule.path && r.mode === "include");
+            if (!already) target.inclusionRules.push(opts.fileInclusionRule);
+          }
+          applyPresetStyleToEntry(target);
+          this.syncEntryCssFromColors(target);
+        } catch (_) {}
+        // Group reassignment: move the resolved entry when the picker group differs.
+        try {
+          const fromGroupUid = (live && live.groupUid) || resolved.groupUid || null;
+          const toGroupUid = selGroupUid || null;
+          if (fromGroupUid !== toGroupUid) {
+            const removeFrom = (uid, groupUid) => {
+              try {
+                if (groupUid) {
+                  const g = (Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : []).find((gg) => gg && gg.uid === groupUid);
+                  if (g && Array.isArray(g.entries)) {
+                    const i = g.entries.findIndex((e) => e && String(e.uid || "") === String(uid));
+                    if (i !== -1) return g.entries.splice(i, 1)[0];
+                  }
+                } else {
+                  const arr = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+                  const i = arr.findIndex((e) => e && String(e.uid || "") === String(uid));
+                  if (i !== -1) return arr.splice(i, 1)[0];
+                }
+              } catch (_) {}
+              return null;
+            };
+            const uid = target.uid ? String(target.uid) : null;
+            if (uid) {
+              const moved = removeFrom(uid, fromGroupUid);
+              const node = moved || target;
+              if (toGroupUid) {
+                const g = (Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : []).find((gg) => gg && gg.uid === toGroupUid);
+                if (g) {
+                  if (!Array.isArray(g.entries)) g.entries = [];
+                  if (!g.entries.some((e) => e && String(e.uid || "") === uid)) g.entries.push(node);
+                } else if (!Array.isArray(this.settings.wordEntries)) {
+                  this.settings.wordEntries = [node];
+                } else if (!this.settings.wordEntries.some((e) => e && String(e.uid || "") === uid)) {
+                  this.settings.wordEntries.push(node);
+                }
+              } else {
+                if (!Array.isArray(this.settings.wordEntries)) this.settings.wordEntries = [];
+                if (!this.settings.wordEntries.some((e) => e && String(e.uid || "") === uid)) this.settings.wordEntries.push(node);
+              }
+            }
+          }
+        } catch (_) {}
+        await this.saveSettings();
+        this.compileWordEntries();
+        this.compileTextBgColoringEntries();
+        this.reconfigureEditorExtensions();
+        return { updatedExisting: true, entry: target };
+      }
+    }
+
+    // 2) Legacy path: find by pattern in the target array, else create new literal.
+    const findEntry = (arr) => {
+      const cs = !!this.settings.caseSensitive;
+      const eq = (a, b) => (cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
+      return arr.findIndex((e) => {
+        if (!e) return false;
+        if (e.isRegex) {
+          if (!this.settings.enableRegexSupport) return false;
+          if (e.testRegex && e.testRegex instanceof RegExp) {
+            try {
+              return e.testRegex.test(selectedText);
+            } catch (_) {
+              return false;
+            }
+          }
+          try {
+            if (!this.validateAndSanitizeRegex(e.pattern)) return false;
+            const re = new RegExp(e.pattern, e.flags || "");
+            return re.test(selectedText);
+          } catch (_) {
+            return false;
+          }
+        }
+        const entryMatchType = (e.matchType || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")).toLowerCase();
+        const a = cs ? String(selectedText) : String(selectedText).toLowerCase();
+        const b = cs ? String(e.pattern || "") : String(e.pattern || "").toLowerCase();
+        if (entryMatchType === "exact") {
+          return eq(e.pattern || "", selectedText) || (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, selectedText)));
+        } else if (entryMatchType === "startswith") {
+          return b && a.startsWith(b);
+        } else if (entryMatchType === "endswith") {
+          return b && a.endsWith(b);
+        } else if (entryMatchType === "contains") {
+          return b && a.includes(b);
+        }
+        return eq(e.pattern || "", selectedText);
+      });
+    };
+    const applyToArr = (arr) => {
+      const idx = findEntry(arr);
+      if (idx !== -1) {
+        const entry = arr[idx];
+        entry.markTarget = markTarget;
+        if (tc && bc) {
+          entry.textColor = tc;
+          entry.backgroundColor = bc;
+          entry.color = "";
+          entry.styleType = "both";
+          entry._savedTextColor = tc;
+          entry._savedBackgroundColor = bc;
+        } else if (tc) {
+          entry.color = tc;
+          entry.styleType = "text";
+          entry.textColor = null;
+          entry.backgroundColor = null;
+          entry._savedTextColor = tc;
+        } else if (bc) {
+          entry.color = "";
+          entry.textColor = "currentColor";
+          entry.backgroundColor = bc;
+          entry.styleType = "highlight";
+          entry._savedBackgroundColor = bc;
+        } else if (color && this.isValidHexColor(color)) {
+          entry.color = color;
+          entry.styleType = "text";
+          entry._savedTextColor = color;
+        }
+        if (!entry.isRegex) entry.matchType = matchType;
+        applyPresetStyleToEntry(entry);
+        this.syncEntryCssFromColors(entry);
+        if (opts.fileInclusionRule) {
+          if (!Array.isArray(entry.inclusionRules)) entry.inclusionRules = [];
+          const already = entry.inclusionRules.some((r) => r && r.path === opts.fileInclusionRule.path && r.mode === "include");
+          if (!already) entry.inclusionRules.push(opts.fileInclusionRule);
+        }
+      } else {
+        let ne = null;
+        if (tc && bc) {
+          ne = { pattern: selectedText, color: "", textColor: tc, backgroundColor: bc, isRegex: false, flags: "", styleType: "both", matchType, markTarget, caseSensitive, _savedTextColor: tc, _savedBackgroundColor: bc };
+        } else if (tc) {
+          ne = { pattern: selectedText, color: tc, isRegex: false, flags: "", styleType: "text", matchType, markTarget, caseSensitive, _savedTextColor: tc };
+        } else if (bc) {
+          ne = { pattern: selectedText, color: "", textColor: "currentColor", backgroundColor: bc, isRegex: false, flags: "", styleType: "highlight", matchType, markTarget, caseSensitive, _savedBackgroundColor: bc };
+        } else if (color && this.isValidHexColor(color)) {
+          ne = { pattern: selectedText, color: color, isRegex: false, flags: "", styleType: "text", matchType, markTarget, caseSensitive, _savedTextColor: color };
+        }
+        if (ne) {
+          applyPresetStyleToEntry(ne);
+          if (opts.fileInclusionRule) {
+            ne.inclusionRules = [opts.fileInclusionRule];
+          }
+          arr.push(ne);
+        }
+      }
+    };
+    if (selGroupUid) {
+      const group = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups.find((g) => g && g.uid === selGroupUid) : null;
+      if (group) {
+        if (!Array.isArray(group.entries)) group.entries = [];
+        applyToArr(group.entries);
+      } else {
+        applyToArr(this.settings.wordEntries);
+      }
+    } else {
+      applyToArr(this.settings.wordEntries);
+    }
+    await this.saveSettings();
+    this.compileWordEntries();
+    this.compileTextBgColoringEntries();
+    this.reconfigureEditorExtensions();
+    return { updatedExisting: false };
+  }
+
+  // Open the pick-color modal for a selection, resolving to the entry that
+  // actually colors the text (regex / markdown included). When several entries
+  // match, the user picks which one to edit; "create new" keeps legacy behavior.
+  // `openWith` receives (resolvedCandidate|null, selectedGroupUid) and must open
+  // the ColorPickerModal itself so callers can attach file-scoped rules.
+  openColorPickerForSelection(editor, view, selectedText, openWith) {
+    try {
+      const { candidates } = this.resolveColoringCandidates(selectedText, editor, view);
+      if (!candidates || candidates.length === 0) {
+        openWith(null);
+        return;
+      }
+      if (candidates.length === 1) {
+        openWith(candidates[0]);
+        return;
+      }
+      try {
+        new SelectColoringEntryModal(this.app, this, selectedText, candidates, (chosen) => {
+          try {
+            openWith(chosen || null);
+          } catch (_) {}
+        }).open();
+      } catch (_) {
+        openWith(candidates[0]);
+      }
+    } catch (_) {
+      try {
+        openWith(null);
+      } catch (_) {}
+    }
   }
 
   // Add a new entry (word or regex)
@@ -10183,18 +10119,13 @@ class AlwaysColorText extends Plugin {
       entry && typeof entry.borderOpacity === "number"
         ? entry.borderOpacity
         : (this.settings.borderOpacity ?? 100);
-    let sourceColor = null;
-    if (
-      textColor &&
-      textColor !== "currentColor" &&
-      this.isValidHexColor(textColor)
-    ) {
-      sourceColor = textColor;
-    } else if (backgroundColor && this.isValidHexColor(backgroundColor)) {
-      sourceColor = backgroundColor;
-    } else {
-      sourceColor = "#000000";
-    }
+    let sourceColor =
+      resolveBorderSourceColor(
+        entry && entry.styleType,
+        textColor,
+        backgroundColor,
+        (c) => this.isValidHexColor(c),
+      ) || "#000000";
     const borderColorRgba = this.hexToRgba(sourceColor, borderOpacity);
     const borderStyleType =
       entry && typeof entry.borderStyle === "string"
@@ -10407,14 +10338,32 @@ class AlwaysColorText extends Plugin {
   groupCssForMembers(group) {
     try {
       if (!group || !group.customCss) return "";
-      let type = "";
+      let resolved = null;
       try {
-        type = resolveGroupColorOverride(group, (c) => this.isValidHexColor(c)).type;
+        resolved = resolveGroupColorOverride(group, (c) =>
+          this.isValidHexColor(c),
+        );
       } catch (_) {
-        type = group.styleType || "";
+        resolved = null;
       }
-      if (!type) return stripInheritedGroupCssColors(group.customCss);
-      return group.customCss;
+      const type = (resolved && resolved.type) || "";
+      // Unforced (per-entry / forced-but-reset / legacy without type):
+      // layout applies, colors never tint members.
+      if (!type || type === "legacy")
+        return type === "legacy"
+          ? group.customCss
+          : stripInheritedGroupCssColors(group.customCss);
+      // Forced text: text-only — no highlight, no border from group CSS.
+      if (type === "text")
+        return stripInheritedGroupCssColors(group.customCss, "currentColor", {
+          dropBorder: true,
+        });
+      // Forced highlight/both: group background rules; borders follow it.
+      return stripInheritedGroupCssColors(
+        group.customCss,
+        (resolved && resolved.bg) || "var(--color-accent)",
+        {},
+      );
     } catch (_) {
       return (group && group.customCss) || "";
     }
@@ -10609,18 +10558,16 @@ class AlwaysColorText extends Plugin {
         : (this.settings.borderOpacity ?? 100);
     let borderColor;
     const isVar = (s) => typeof s === "string" && s.trim().startsWith("var(");
-    if (
-      textColor &&
-      textColor !== "currentColor" &&
-      this.isValidHexColor(textColor)
-    ) {
-      borderColor = isVar(textColor)
-        ? `color-mix(in srgb, ${textColor.trim()} ${borderOpacity}%, transparent)`
-        : this.hexToRgba(textColor, borderOpacity);
-    } else if (backgroundColor && this.isValidHexColor(backgroundColor)) {
-      borderColor = isVar(backgroundColor)
-        ? `color-mix(in srgb, ${backgroundColor.trim()} ${borderOpacity}%, transparent)`
-        : this.hexToRgba(backgroundColor, borderOpacity);
+    const sourceColor = resolveBorderSourceColor(
+      entry && entry.styleType,
+      textColor,
+      backgroundColor,
+      (c) => this.isValidHexColor(c),
+    );
+    if (sourceColor) {
+      borderColor = isVar(sourceColor)
+        ? `color-mix(in srgb, ${sourceColor.trim()} ${borderOpacity}%, transparent)`
+        : this.hexToRgba(sourceColor, borderOpacity);
     } else {
       borderColor = "rgba(0,0,0,1)";
     }
@@ -10942,6 +10889,8 @@ class AlwaysColorText extends Plugin {
           entry.backgroundOpacity = styleEntry.backgroundOpacity;
         if (typeof styleEntry.highlightBorderRadius === "number")
           entry.highlightBorderRadius = styleEntry.highlightBorderRadius;
+        if (typeof styleEntry.cornerShape === "string")
+          entry.cornerShape = styleEntry.cornerShape;
         if (typeof styleEntry.highlightHorizontalPadding === "number")
           entry.highlightHorizontalPadding =
             styleEntry.highlightHorizontalPadding;
@@ -11053,6 +11002,8 @@ class AlwaysColorText extends Plugin {
           newEntry.backgroundOpacity = styleEntry.backgroundOpacity;
         if (typeof styleEntry.highlightBorderRadius === "number")
           newEntry.highlightBorderRadius = styleEntry.highlightBorderRadius;
+        if (typeof styleEntry.cornerShape === "string")
+          newEntry.cornerShape = styleEntry.cornerShape;
         if (typeof styleEntry.highlightHorizontalPadding === "number")
           newEntry.highlightHorizontalPadding =
             styleEntry.highlightHorizontalPadding;

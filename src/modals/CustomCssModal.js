@@ -61,8 +61,10 @@ export function deriveHighlightCssFromEntry(entry, plugin) {
       const thickness = entry.borderThickness ?? settings.borderThickness ?? 1;
       const lineStyle = entry.borderLineStyle ?? settings.borderLineStyle ?? 'solid';
       const borderSide = entry.borderStyle ?? settings.borderStyle ?? 'full';
-      // Use explicit color instead of currentColor so it works regardless of context
-      const borderColor = tc || 'currentColor';
+      // Highlight colortype: border follows the background, never text color.
+      const borderColor = styleType === 'highlight'
+        ? (bg || 'currentColor')
+        : (tc || 'currentColor');
       const borderVal = `${thickness}px ${lineStyle} ${borderColor}`;
       switch (borderSide) {
         case 'top':    lines.push(`border-top: ${borderVal}`); break;
@@ -287,7 +289,11 @@ export function patchCssLayoutFromEntry(css, entry, plugin) {
       const thickness = entry.borderThickness ?? settings.borderThickness ?? 1;
       const lineStyle = entry.borderLineStyle ?? settings.borderLineStyle ?? 'solid';
       const tc = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color;
-      const borderColor = tc || 'currentColor';
+      // Highlight colortype: border follows the background, never text color.
+      const entryStyleType = entry.styleType || (entry.backgroundColor ? 'highlight' : 'text');
+      const borderColor = entryStyleType === 'highlight'
+        ? (entry.backgroundColor || 'currentColor')
+        : (tc || 'currentColor');
       const borderVal = `${thickness}px ${lineStyle} ${borderColor}`;
       const borderSide = entry.borderStyle ?? settings.borderStyle ?? 'full';
       const borderProps = {

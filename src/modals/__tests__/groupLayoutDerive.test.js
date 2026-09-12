@@ -88,6 +88,51 @@ describe("deriveHighlightCssFromEntry layout gating", () => {
     expect(css).toContain("border-radius: 10px");
   });
 
+  it("highlight entries derive borders from the background, never text", () => {
+    const plugin = makePlugin();
+    const css = deriveHighlightCssFromEntry(
+      {
+        pattern: "hl",
+        styleType: "highlight",
+        textColor: "#ff0000",
+        backgroundColor: "#00ff00",
+        enableBorderThickness: true,
+        borderThickness: 2,
+        borderLineStyle: "solid",
+        borderStyle: "full",
+      },
+      plugin,
+    );
+    expect(css).toContain("border: 2px solid #00ff00");
+    // No border declaration may carry the text color.
+    const borderLines = css
+      .split(";")
+      .map((s) => s.trim())
+      .filter((s) => /^border(-top|-bottom|-left|-right)?\s*:/.test(s));
+    expect(borderLines.length).toBeGreaterThan(0);
+    for (const line of borderLines) expect(line).not.toContain("#ff0000");
+  });
+
+  it("patchCssLayoutFromEntry uses background for highlight borders", () => {
+    const plugin = makePlugin();
+    const out = patchCssLayoutFromEntry(
+      "background-color: rgba(0,255,0,0.3);\nborder: 2px solid #ff0000;",
+      {
+        pattern: "hl",
+        styleType: "highlight",
+        textColor: "#ff0000",
+        backgroundColor: "#00ff00",
+        enableBorderThickness: true,
+        borderThickness: 2,
+        borderLineStyle: "solid",
+        borderStyle: "full",
+      },
+      plugin,
+    );
+    expect(out).toContain("border: 2px solid #00ff00");
+    expect(out).not.toContain("#ff0000");
+  });
+
   it("patchCssLayoutFromEntry patches layout for text entries with layout set", () => {
     const plugin = makePlugin();
     const out = patchCssLayoutFromEntry(
