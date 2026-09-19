@@ -19849,71 +19849,6 @@ var import_obsidian18 = require("obsidian");
 
 // src/modals/AlertModal.js
 var import_obsidian16 = require("obsidian");
-var AlertModal = class extends import_obsidian16.Modal {
-  constructor(app, plugin, title, message, customAction) {
-    super(app);
-    this.plugin = plugin;
-    this.title = title;
-    this.message = message;
-    this.customAction = customAction;
-    this._eventListeners = [];
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    this._eventListeners = [];
-    try {
-      this.modalEl.addClass("act-modal");
-    } catch (e) {
-    }
-    const h2 = contentEl.createEl("h2", { text: this.title });
-    h2.style.marginTop = "0";
-    try {
-      h2.style.color = "var(--text-warning)";
-    } catch (e) {
-    }
-    contentEl.createEl("p", { text: this.message });
-    const buttonDiv = contentEl.createDiv();
-    buttonDiv.style.display = "flex";
-    buttonDiv.style.justifyContent = "flex-end";
-    buttonDiv.style.marginTop = "20px";
-    buttonDiv.style.gap = "10px";
-    if (this.customAction) {
-      const actionBtn = buttonDiv.createEl("button", {
-        text: this.customAction.text
-      });
-      actionBtn.addClass("mod-cta");
-      const actionHandler = () => {
-        this.close();
-        if (this.customAction.callback) this.customAction.callback();
-      };
-      actionBtn.addEventListener("click", actionHandler);
-      this._eventListeners.push({
-        el: actionBtn,
-        event: "click",
-        handler: actionHandler
-      });
-    }
-    const okButton = buttonDiv.createEl("button", {
-      text: this.plugin.t("btn_ok", "OK")
-    });
-    if (!this.customAction) okButton.addClass("mod-cta");
-    const okHandler = () => this.close();
-    okButton.addEventListener("click", okHandler);
-    this._eventListeners.push({
-      el: okButton,
-      event: "click",
-      handler: okHandler
-    });
-  }
-  onClose() {
-    this._eventListeners.forEach(({ el, event, handler }) => {
-      el.removeEventListener(event, handler);
-    });
-    this._eventListeners = [];
-    this.contentEl.empty();
-  }
-};
 
 // src/modals/GroupRulesModal.js
 var import_obsidian17 = require("obsidian");
@@ -20799,6 +20734,14 @@ var EditWordGroupModal = class extends import_obsidian18.Modal {
       try {
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
+          if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
+            this.plugin.settings.enableRegexSupport = true;
+            await this.plugin.saveSettings();
+          }
+          if (preset.disableRegexSafety && !this.plugin.settings.disableRegexSafety) {
+            this.plugin.settings.disableRegexSafety = true;
+            await this.plugin.saveSettings();
+          }
           const isFmt = !!preset.targetElement;
           const entry = {
             pattern: isFmt ? getTargetPatternText(this.plugin, preset.targetElement, false) : preset.pattern,
@@ -22151,24 +22094,16 @@ var EditBlacklistGroupModal = class extends import_obsidian20.Modal {
     presetsBtn.style.padding = "6px 12px";
     presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
-      if (!this.plugin.settings.enableRegexSupport) {
-        new AlertModal(
-          this.app,
-          this.plugin,
-          this.plugin.t("regex_support", "Regex Support"),
-          this.plugin.t("notice_regex_support_disabled"),
-          {
-            text: this.plugin.t("btn_take_me_there", "Take me there"),
-            callback: () => {
-              this.close();
-              this.plugin.openSettingsAndFocusRegex();
-            }
-          }
-        ).open();
-        return;
-      }
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
+        if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
+          this.plugin.settings.enableRegexSupport = true;
+          await this.plugin.saveSettings();
+        }
+        if (preset.disableRegexSafety && !this.plugin.settings.disableRegexSafety) {
+          this.plugin.settings.disableRegexSafety = true;
+          await this.plugin.saveSettings();
+        }
         const isFmt = !!preset.targetElement;
         const entry = {
           pattern: isFmt ? getTargetPatternText(this.plugin, preset.targetElement, false) : preset.pattern,
@@ -28695,6 +28630,26 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         );
       } catch (_) {
       }
+      const deprecationNoticeSetting = new import_obsidian25.Setting(otaContainer).setName(
+        this.plugin.t(
+          "one_time_actions_deprecation_notice_heading",
+          "Notice"
+        )
+      ).setDesc(
+        this.plugin.t(
+          "one_time_actions_deprecation_notice",
+          "One-Time Actions will be removed from this plugin in the future and moved to a dedicated plugin currently in development."
+        )
+      ).setDisabled(true);
+      try {
+        const nameEl = deprecationNoticeSetting.settingEl.querySelector(".setting-item-name");
+        if (nameEl) {
+          nameEl.style.fontSize = "18px";
+          nameEl.style.fontWeight = "bold";
+        }
+        deprecationNoticeSetting.settingEl.querySelector(".setting-item-info")?.classList.add("act-setting-disabled");
+      } catch (e) {
+      }
       new import_obsidian25.Setting(otaContainer).setName(this.plugin.t("setting_color_once", "Color Once")).setDesc(
         this.plugin.t(
           "setting_color_once_desc",
@@ -29412,23 +29367,17 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
       presetsBtn.style.cursor = "pointer";
       presetsBtn.style.flex = "0 0 auto";
       const presetsHandler = () => {
-        if (!this.plugin.settings.enableRegexSupport) {
-          new AlertModal(
-            this.app,
-            this.plugin,
-            this.plugin.t("regex_support", "Regex Support"),
-            this.plugin.t("notice_regex_support_disabled"),
-            {
-              text: this.plugin.t("btn_take_me_there", "Take me there"),
-              callback: () => {
-                this.plugin.openSettingsAndFocusRegex();
-              }
-            }
-          ).open();
-          return;
-        }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
+          if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
+            this.plugin.settings.enableRegexSupport = true;
+            await this.plugin.saveSettings();
+            this._refreshEntries();
+          }
+          if (preset.disableRegexSafety && !this.plugin.settings.disableRegexSafety) {
+            this.plugin.settings.disableRegexSafety = true;
+            await this.plugin.saveSettings();
+          }
           new ColorPickerModal(
             this.app,
             this.plugin,
@@ -29981,23 +29930,17 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
       blacklistPresetsBtn.style.cursor = "pointer";
       blacklistPresetsBtn.style.flex = "0 0 auto";
       const blacklistPresetsHandler = () => {
-        if (!this.plugin.settings.enableRegexSupport) {
-          new AlertModal(
-            this.app,
-            this.plugin,
-            this.plugin.t("regex_support", "Regex Support"),
-            this.plugin.t("notice_regex_support_disabled"),
-            {
-              text: this.plugin.t("btn_take_me_there", "Take me there"),
-              callback: () => {
-                this.plugin.openSettingsAndFocusRegex();
-              }
-            }
-          ).open();
-          return;
-        }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
+          if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
+            this.plugin.settings.enableRegexSupport = true;
+            await this.plugin.saveSettings();
+            this._refreshBlacklistWords();
+          }
+          if (preset.disableRegexSafety && !this.plugin.settings.disableRegexSafety) {
+            this.plugin.settings.disableRegexSafety = true;
+            await this.plugin.saveSettings();
+          }
           const isFmt = !!preset.targetElement;
           const newEntry = {
             pattern: isFmt ? getTargetPatternText(this.plugin, preset.targetElement, false) : preset.pattern,

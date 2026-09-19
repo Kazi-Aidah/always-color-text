@@ -6537,6 +6537,29 @@ export class ColorSettingTab extends PluginSettingTab {
         );
       } catch (_) {}
 
+      const deprecationNoticeSetting = new Setting(otaContainer)
+        .setName(
+          this.plugin.t(
+            "one_time_actions_deprecation_notice_heading",
+            "Notice",
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "one_time_actions_deprecation_notice",
+            "One-Time Actions will be removed from this plugin in the future and moved to a dedicated plugin currently in development.",
+          ),
+        )
+        .setDisabled(true);
+      try {
+        const nameEl = deprecationNoticeSetting.settingEl.querySelector('.setting-item-name');
+        if (nameEl) {
+          nameEl.style.fontSize = '18px';
+          nameEl.style.fontWeight = 'bold';
+        }
+        deprecationNoticeSetting.settingEl.querySelector('.setting-item-info')?.classList.add('act-setting-disabled');
+      } catch (e) {}
+
       new Setting(otaContainer)
         .setName(this.plugin.t("setting_color_once", "Color Once"))
         .setDesc(
