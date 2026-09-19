@@ -4510,7 +4510,7 @@ export class ColorSettingTab extends PluginSettingTab {
           const tRaw =
             group.textColor && group.textColor !== "currentColor"
               ? group.textColor
-              : "";
+              : (group.color && this.plugin.isValidHexColor(group.color) ? group.color : "");
           const bRaw = group.backgroundColor || "";
           // Preview-only fallback for accessibility when picker NULL: var(--text-normal) / var(--color-accent)
           // Polluted groups saved with default black/black (both #000000) are treated as NULL for preview.

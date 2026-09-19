@@ -26419,7 +26419,7 @@ var ColorSettingTab = class extends import_obsidian24.PluginSettingTab {
             else if (hasBg) styleType2 = "highlight";
             else styleType2 = "text";
           }
-          const tRaw = group.textColor && group.textColor !== "currentColor" ? group.textColor : "";
+          const tRaw = group.textColor && group.textColor !== "currentColor" ? group.textColor : group.color && this.plugin.isValidHexColor(group.color) ? group.color : "";
           const bRaw = group.backgroundColor || "";
           const isPollutedGroupBothBlack = styleType2 === "both" && String(tRaw).toLowerCase() === "#000000" && String(bRaw).toLowerCase() === "#000000";
           const hasValidTRaw = !isPollutedGroupBothBlack && tRaw && this.plugin.isValidHexColor(tRaw);
