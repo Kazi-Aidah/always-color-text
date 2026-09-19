@@ -200,9 +200,7 @@ export class ColorPickerModal extends Modal {
     const cpm = this.plugin.settings.colorPickerMode || "both";
     const isForceBoth = this.mode === "text-and-background";
     const forcedSingle = this.mode === "text" || this.mode === "background";
-    // When mode is explicitly text-and-background (e.g. right-click on entry pickers or quick colors),
-    // always show both panels even if user's colorPickerMode is set to single
-    const effectiveCpm = isForceBoth && (cpm === "text" || cpm === "background") ? "both" : cpm;
+    const effectiveCpm = cpm;
     const isBoth =
       !forcedSingle &&
       (effectiveCpm === "both" ||
@@ -918,7 +916,7 @@ export class ColorPickerModal extends Modal {
         "background",
       );
     } else {
-      // Use effectiveCpm so that text-and-background always shows both even when user prefers single mode
+      // Respect user's colorPickerMode setting (text, background, or both variants)
       const buildCpm = typeof effectiveCpm !== "undefined" ? effectiveCpm : cpm;
       if (buildCpm === "text") {
         lastPanelEl = buildPanel(

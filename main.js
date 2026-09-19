@@ -16280,7 +16280,7 @@ var ColorPickerModal = class extends import_obsidian12.Modal {
     const cpm = this.plugin.settings.colorPickerMode || "both";
     const isForceBoth = this.mode === "text-and-background";
     const forcedSingle = this.mode === "text" || this.mode === "background";
-    const effectiveCpm = isForceBoth && (cpm === "text" || cpm === "background") ? "both" : cpm;
+    const effectiveCpm = cpm;
     const isBoth = !forcedSingle && (effectiveCpm === "both" || effectiveCpm === "both-bg-left" || effectiveCpm === "both-v-text-top" || effectiveCpm === "both-v-bg-top");
     const isHorizontalBoth = !forcedSingle && (effectiveCpm === "both" || effectiveCpm === "both-bg-left");
     const isVerticalBoth = !forcedSingle && (effectiveCpm === "both-v-text-top" || effectiveCpm === "both-v-bg-top");

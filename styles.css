@@ -131,7 +131,6 @@ mark.always-color-text-highlight-marks * {
   background-color: var(--background-modifier-form-field);
   border: 1px solid var(--background-modifier-border);
   color: var(--text-normal);
-  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
@@ -673,7 +672,6 @@ body.is-mobile .act-regex-tester-controls {
   width: 64px;
   padding: 6px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
   z-index: 999;
   position: relative;
 }
@@ -682,7 +680,6 @@ body.is-mobile .act-regex-tester-controls {
 .act-modal-action-btn {
   padding: 8px 12px;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
@@ -702,7 +699,6 @@ body.is-mobile .act-regex-tester-controls {
   width: 64px;
   padding: 6px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 4px;
 }
 
 .act-edit-entry-style-select {
@@ -814,7 +810,6 @@ button.mod-cta {
   opacity: 0.8;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   background-color: var(--background-primary);
-  border-radius: 4px;
 }
 
 /* Highlight preset support for reading/live preview */
@@ -1659,7 +1654,6 @@ body:not(.is-mobile) .act-group-button-row {
   height: 100%;
   padding: 0;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
 }
 
@@ -2172,7 +2166,6 @@ body.is-mobile .act-group-rule-row .act-group-rule-type {
 .act-mobile-tip-word {
     background: hsla(var(--interactive-accent-hsl), 1) !important;
     padding: 1px 8px !important;
-    border-radius: 6px !important;
     font-weight: bold !important;
     color: var(--text-on-accent);
     display: inline-block !important;
