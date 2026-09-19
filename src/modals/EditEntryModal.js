@@ -501,7 +501,6 @@ export class EditEntryModal extends Modal {
     const textInput = box.createEl("div");
     textInput.contentEditable = "true";
     textInput.style.width = "100%";
-    textInput.style.minHeight = "40px";
     textInput.style.border = "1px solid var(--background-modifier-border-focus)";
     textInput.style.borderRadius = "var(--input-radius)";
     textInput.style.outline = "none";
@@ -1531,7 +1530,8 @@ export class EditEntryModal extends Modal {
               text: key ? key : this.plugin.t("rule_choose_key", "Choose key…"),
             });
             clip(keyBtn);
-            keyBtn.style.flex = "1 1 auto";
+            keyBtn.style.flex = "1 1 0";
+            keyBtn.style.minWidth = "0";
             keyBtn.addEventListener("click", () => {
               openPicker("property", (v) => {
                 r.path = String(v || "");
@@ -1546,7 +1546,8 @@ export class EditEntryModal extends Modal {
                 val ? val : this.plugin.t("rule_choose_value", "Choose value…"),
             });
             clip(valBtn);
-            valBtn.style.flex = "1 1 auto";
+            valBtn.style.flex = "1 1 0";
+            valBtn.style.minWidth = "0";
             valBtn.addEventListener("click", () => {
               const cur = String(r.path || "");
               const curCi = cur.indexOf(":");
@@ -1569,6 +1570,7 @@ export class EditEntryModal extends Modal {
               "matches file/folder title",
             );
             inp.style.flex = "1 1 auto";
+            inp.style.minWidth = "0";
             inp.style.padding = "6px 10px";
             inp.style.border = "1px solid var(--background-modifier-border)";
             const patternInputHandler = () => {

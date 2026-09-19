@@ -425,24 +425,18 @@ export class EditBlacklistGroupModal extends Modal {
     presetsBtn.style.padding = "6px 12px";
     presetsBtn.style.borderRadius = "var(--input-radius)";
     const presetsHandler = () => {
-      if (!this.plugin.settings.enableRegexSupport) {
-        new AlertModal(
-          this.app,
-          this.plugin,
-          this.plugin.t("regex_support", "Regex Support"),
-          this.plugin.t("notice_regex_support_disabled"),
-          {
-            text: this.plugin.t("btn_take_me_there", "Take me there"),
-            callback: () => {
-              this.close();
-              this.plugin.openSettingsAndFocusRegex();
-            },
-          },
-        ).open();
-        return;
-      }
       new PresetModal(this.app, this.plugin, async (preset) => {
         if (!preset) return;
+        // Auto-enable regex support if the preset requires it (no targetElement)
+        if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
+          this.plugin.settings.enableRegexSupport = true;
+          await this.plugin.saveSettings();
+        }
+        // Auto-enable regex safety if the preset requires it
+        if (preset.disableRegexSafety && !this.plugin.settings.disableRegexSafety) {
+          this.plugin.settings.disableRegexSafety = true;
+          await this.plugin.saveSettings();
+        }
           const isFmt = !!preset.targetElement;
           const entry = {
             pattern: isFmt

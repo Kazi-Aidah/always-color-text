@@ -7384,23 +7384,19 @@ export class ColorSettingTab extends PluginSettingTab {
       presetsBtn.style.cursor = "pointer";
       presetsBtn.style.flex = "0 0 auto";
       const presetsHandler = () => {
-        if (!this.plugin.settings.enableRegexSupport) {
-          new AlertModal(
-            this.app,
-            this.plugin,
-            this.plugin.t("regex_support", "Regex Support"),
-            this.plugin.t("notice_regex_support_disabled"),
-            {
-              text: this.plugin.t("btn_take_me_there", "Take me there"),
-              callback: () => {
-                this.plugin.openSettingsAndFocusRegex();
-              },
-            },
-          ).open();
-          return;
-        }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
+          // Auto-enable regex support if the preset requires it (no targetElement)
+          if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
+            this.plugin.settings.enableRegexSupport = true;
+            await this.plugin.saveSettings();
+            this._refreshEntries();
+          }
+          // Auto-enable regex safety if the preset requires it
+          if (preset.disableRegexSafety && !this.plugin.settings.disableRegexSafety) {
+            this.plugin.settings.disableRegexSafety = true;
+            await this.plugin.saveSettings();
+          }
           new ColorPickerModal(
             this.app,
             this.plugin,
@@ -8015,23 +8011,19 @@ export class ColorSettingTab extends PluginSettingTab {
       blacklistPresetsBtn.style.cursor = "pointer";
       blacklistPresetsBtn.style.flex = "0 0 auto";
       const blacklistPresetsHandler = () => {
-        if (!this.plugin.settings.enableRegexSupport) {
-          new AlertModal(
-            this.app,
-            this.plugin,
-            this.plugin.t("regex_support", "Regex Support"),
-            this.plugin.t("notice_regex_support_disabled"),
-            {
-              text: this.plugin.t("btn_take_me_there", "Take me there"),
-              callback: () => {
-                this.plugin.openSettingsAndFocusRegex();
-              },
-            },
-          ).open();
-          return;
-        }
         new PresetModal(this.app, this.plugin, async (preset) => {
           if (!preset) return;
+          // Auto-enable regex support if the preset requires it (no targetElement)
+          if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
+            this.plugin.settings.enableRegexSupport = true;
+            await this.plugin.saveSettings();
+            this._refreshBlacklistWords();
+          }
+          // Auto-enable regex safety if the preset requires it
+          if (preset.disableRegexSafety && !this.plugin.settings.disableRegexSafety) {
+            this.plugin.settings.disableRegexSafety = true;
+            await this.plugin.saveSettings();
+          }
           const isFmt = !!preset.targetElement;
           const newEntry = {
             pattern: isFmt

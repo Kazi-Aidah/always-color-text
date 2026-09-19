@@ -345,7 +345,6 @@ div[contenteditable="true"]:focus {
 
 .act-edit-entry-textbox [contenteditable] {
   width: 100%;
-  min-height: 40px;
   border: none;
   outline: none;
   background: transparent;
@@ -1851,7 +1850,7 @@ div[data-swatch-index] {
   display: flex;
   align-items: center;
   min-height: 54px;
-  border: 1px solid var(--background-modifier-border);
+  border: 2px solid var(--background-modifier-border);
   border-radius: var(--radius-m, 8px);
   background: var(--background-secondary);
   margin-bottom: 16px;
@@ -1889,7 +1888,7 @@ div[data-swatch-index] {
   display: flex;
   align-items: center;
   min-height: 54px;
-  border: 1px solid var(--background-modifier-border);
+  border: 0px solid var(--background-modifier-border);
   border-radius: var(--radius-m, 8px);
   background: var(--background-secondary);
   overflow: hidden;
@@ -1945,14 +1944,28 @@ div[data-swatch-index] {
   flex: 1 1 auto !important;
   overflow-y: auto !important;
   min-height: 0 !important;
-  padding-right: 4px !important;
+  padding: 10px 4px 10px 0 !important;
   margin-bottom: 0 !important;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0px,
+    black 10px,
+    black calc(100% - 10px),
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0px,
+    black 10px,
+    black calc(100% - 10px),
+    transparent 100%
+  ) !important;
 }
 .act-tsp-add-row {
   flex-shrink: 0 !important;
   position: sticky !important;
   bottom: 0 !important;
-  border-top: 1px solid var(--background-modifier-border) !important;
+  border-top: none !important;
   padding: 12px 0 4px 0 !important;
   margin-top: 0 !important;
   z-index: 1 !important;

@@ -193,7 +193,8 @@ export class GroupRulesModal extends Modal {
               text: key ? key : this.plugin.t('rule_choose_key', 'Choose key…'),
             });
             clip(keyBtn);
-            keyBtn.style.flex = '1 1 auto';
+            keyBtn.style.flex = '1 1 0';
+            keyBtn.style.minWidth = '0';
             keyBtn.addEventListener('click', () => {
               openPicker('property', (v) => {
                 r.path = String(v || '');
@@ -206,7 +207,8 @@ export class GroupRulesModal extends Modal {
               text: val ? val : this.plugin.t('rule_choose_value', 'Choose value…'),
             });
             clip(valBtn);
-            valBtn.style.flex = '1 1 auto';
+            valBtn.style.flex = '1 1 0';
+            valBtn.style.minWidth = '0';
             valBtn.addEventListener('click', () => {
               const cur = String(r.path || '');
               const curCi = cur.indexOf(':');
@@ -228,6 +230,7 @@ export class GroupRulesModal extends Modal {
               'matches file/folder title',
             );
             inp.style.flex = '1 1 auto';
+            inp.style.minWidth = '0';
             inp.style.padding = '6px 10px';
             inp.style.border = '1px solid var(--background-modifier-border)';
             const patternInputHandler = () => {
