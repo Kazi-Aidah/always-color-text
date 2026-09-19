@@ -497,7 +497,6 @@ div[contenteditable="true"]:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 8px;
   flex-shrink: 0;
 }
 
@@ -2093,6 +2092,22 @@ body.is-mobile .modal.act-reorder-presets-modal {
 .act-highlight-modal .act-highlight-top-row {
   flex-shrink: 0 !important;
 }
+.act-highlight-slider-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+.act-highlight-range-slider {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+.act-highlight-slider-value {
+  min-width: 1.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: var(--font-ui-small);
+}
 .act-highlight-styling-modal .act-highlight-pane-row,
 .act-highlight-modal .act-highlight-pane-row {
   flex: 1 1 auto !important;
@@ -2260,7 +2275,7 @@ body.is-mobile .act-group-rule-row .act-group-rule-type {
   flex: 0 0 auto !important;
 }
 .act-mobile-tip-word {
-    background: hsla(var(--interactive-accent-hsl), 1) !important;
+    background: var(--color-accent) !important;
     padding: 1px 8px !important;
     font-weight: bold !important;
     color: var(--text-on-accent);

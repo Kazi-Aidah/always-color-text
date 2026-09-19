@@ -10597,15 +10597,32 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
     });
     const grid = hlWrap.createDiv();
     grid.addClass("act-highlight-grid");
+    const addWheelCycling = (sel) => {
+      sel.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const opts = sel.options;
+        if (opts.length === 0) return;
+        const dir = e.deltaY > 0 ? 1 : -1;
+        const next = (sel.selectedIndex + dir + opts.length) % opts.length;
+        sel.selectedIndex = next;
+        sel.dispatchEvent(new Event("change"));
+      });
+    };
     const makeSliderRow = (label, min, max, value, onChange, onReset) => {
       const left = grid.createDiv();
       const lab = left.createDiv();
       lab.textContent = label;
       const right = grid.createDiv();
+      right.addClass("act-highlight-slider-row");
       const slider = right.createEl("input", { type: "range" });
+      slider.addClass("act-highlight-range-slider");
       slider.min = String(min);
       slider.max = String(max);
+      slider.step = "5";
       slider.value = String(value);
+      const valDisplay = right.createSpan();
+      valDisplay.addClass("act-highlight-slider-value");
+      valDisplay.textContent = String(value);
       const resetBtn = right.createEl("button");
       resetBtn.addClass("act-highlight-reset-btn", "clickable-icon");
       try {
@@ -10614,12 +10631,14 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
       }
       const handler = () => {
         onChange(Number(slider.value));
+        valDisplay.textContent = String(slider.value);
         renderPreview();
       };
       slider.addEventListener("input", handler);
       this._handlers.push({ el: slider, ev: "input", fn: handler });
       const resetHandler = () => {
         onReset(slider);
+        valDisplay.textContent = String(slider.value);
         renderPreview();
       };
       resetBtn.addEventListener("click", resetHandler);
@@ -10726,6 +10745,7 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
       if (!CORNER_SHAPES.includes(shapeSel.value)) shapeSel.value = "round";
       renderPreview();
     });
+    addWheelCycling(shapeSel);
     const hPadLeft = grid.createDiv();
     hPadLeft.textContent = this.plugin.t(
       "label_horizontal_padding",
@@ -10867,6 +10887,7 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
       sidesSel.value = this.plugin.settings.borderStyle ?? "full";
       renderPreview();
     });
+    addWheelCycling(sidesSel);
     const styleLeft = grid2.createDiv();
     styleLeft.textContent = this.plugin.t("label_border_style", "Border Style");
     const styleRight = grid2.createDiv();
@@ -10901,21 +10922,28 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
       lineSel.value = this.plugin.settings.borderLineStyle ?? "solid";
       renderPreview();
     });
+    addWheelCycling(lineSel);
     const bOpLeft = grid2.createDiv();
     bOpLeft.textContent = this.plugin.t(
       "label_border_opacity",
       "Border Opacity"
     );
     const bOpRight = grid2.createDiv();
+    bOpRight.addClass("act-highlight-slider-row");
     const bOpSlider = bOpRight.createEl("input", { type: "range" });
+    bOpSlider.addClass("act-highlight-range-slider");
     bOpSlider.setAttribute("data-act-border-opacity", "true");
     bOpSlider.min = "0";
     bOpSlider.max = "100";
-    bOpSlider.value = String(
-      this.entry && typeof this.entry.borderOpacity === "number" ? this.entry.borderOpacity : this.plugin.settings.borderOpacity ?? 100
-    );
+    bOpSlider.step = "5";
+    const initBOp = this.entry && typeof this.entry.borderOpacity === "number" ? this.entry.borderOpacity : this.plugin.settings.borderOpacity ?? 100;
+    bOpSlider.value = String(initBOp);
+    const bOpValDisplay = bOpRight.createSpan();
+    bOpValDisplay.addClass("act-highlight-slider-value");
+    bOpValDisplay.textContent = String(initBOp);
     bOpSlider.addEventListener("input", () => {
       if (this.entry) this.entry.borderOpacity = Number(bOpSlider.value || 0);
+      bOpValDisplay.textContent = String(bOpSlider.value);
       renderPreview();
     });
     const bOpReset = bOpRight.createEl("button");
@@ -10927,6 +10955,7 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
     bOpReset.addEventListener("click", () => {
       if (this.entry) this.entry.borderOpacity = void 0;
       bOpSlider.value = String(this.plugin.settings.borderOpacity ?? 100);
+      bOpValDisplay.textContent = bOpSlider.value;
       renderPreview();
     });
     const thickLeft = grid2.createDiv();
