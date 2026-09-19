@@ -881,8 +881,7 @@ body.theme-dark .always-color-text-highlight-marks:not(.act-fixer-noauto) {
 .act-modal select {
   text-align: center;
   text-align-last: center;
-  padding-left: 4px !important;
-  padding-right: 4px !important;
+  padding: 0 var(--dropdown-padding-start) 0 var(--dropdown-padding-start);
 }
 
 /* Edit Word Group Modal — Top Row — Narrow (mobile portrait) only */
