@@ -1965,6 +1965,103 @@ body.is-mobile .act-tsp-add-row {
   padding-bottom: 8px !important;
 }
 
+/* ── Text Style Presets: header row with reorder button ── */
+.act-tsp-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.act-tsp-header-row h2 {
+  margin: 0;
+}
+.act-tsp-reorder-btn {
+  flex-shrink: 0;
+  cursor: pointer;
+  font-size: 0.85em;
+  padding: 4px 10px;
+  border-radius: var(--input-radius);
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--background-modifier-border);
+}
+.act-tsp-reorder-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+/* ── Reorder Presets Modal ── */
+.modal.act-reorder-presets-modal {
+  width: 520px;
+  max-width: 90vw;
+  padding-bottom: 0;
+}
+.act-reorder-presets-modal .modal-content {
+  padding: 20px 24px 0;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+}
+.act-reorder-presets-modal h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.act-reorder-toggle-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.act-reorder-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  user-select: none;
+}
+.act-reorder-toggle-label input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+.act-reorder-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
+  padding-bottom: 40px;
+}
+.act-reorder-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-secondary);
+  min-height: 34px;
+}
+.act-reorder-drag-handle {
+  flex-shrink: 0;
+  cursor: grab;
+  color: var(--text-muted);
+}
+.act-reorder-row-preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding: 6px 0;
+}
+.act-reorder-row-preview .act-tsp-span {
+  font-size: 0.9em;
+}
+body.is-mobile .modal.act-reorder-presets-modal {
+  width: 95vw;
+}
+
 /* ── Per-entry group preview: show text-normal for text, accent for background (preview only) ── */
 .act-color-picker-preview-wrap,
 .act-custom-css-preview-wrap,
@@ -2172,6 +2269,8 @@ body.is-mobile .act-group-rule-row .act-group-rule-type {
     vertical-align: middle !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
+    border-radius: var(--radius-s);
+    margin-right: 6px;
 }
 /* Prevent clipping of inline-block highlight in Setting row */
 .act-mobile-tip .setting-item-name {
@@ -2196,6 +2295,8 @@ body.is-mobile .act-mobile-tip-word {
   text-align: center !important;
   white-space: normal !important;
   padding: 1px 8px !important;
+  border-radius: var(--radius-s);
+  margin-right: 6px;
 }
 body.is-mobile .act-mobile-tip-rest {
   display: block !important;

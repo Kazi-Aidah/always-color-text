@@ -174,6 +174,7 @@ export class ThemeFixerAdjustModal extends Modal {
   _themeVar(name, cls) {
     try {
       const prev = document.body.className;
+      document.body.classList.remove("theme-dark", "theme-light");
       document.body.classList.add(cls);
       const v = getComputedStyle(document.body).getPropertyValue(name).trim();
       document.body.className = prev;

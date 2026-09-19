@@ -2,6 +2,7 @@ import { Modal, setIcon, Menu } from 'obsidian';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { CustomCssModal } from './CustomCssModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
+import { ReorderPresetsModal } from './ReorderPresetsModal.js';
 import { defaultSettings } from '../settings/defaultSettings.js';
 
 export class TextStylePresetsModal extends Modal {
@@ -26,8 +27,17 @@ export class TextStylePresetsModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
 
-    contentEl.createEl("h2", {
+    const headerRow = contentEl.createDiv({ cls: "act-tsp-header-row" });
+    headerRow.createEl("h2", {
       text: this.plugin.t("text_style_presets_header", "Text Style Presets"),
+    });
+    const reorderBtn = headerRow.createEl("button", {
+      text: this.plugin.t("reorder_presets", "Reorder Presets"),
+      cls: "act-tsp-reorder-btn",
+    });
+    reorderBtn.addEventListener("click", () => {
+      const modal = new ReorderPresetsModal(this.app, this.plugin, () => this._render());
+      modal.open();
     });
 
     const presets = Array.isArray(this.plugin.settings.textStylePresets)

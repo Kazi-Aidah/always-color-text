@@ -904,6 +904,33 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                         }
                       }
 
+                      if (foundIdx === -1) {
+                        const groups = Array.isArray(
+                          this.plugin.settings.wordEntryGroups,
+                        )
+                          ? this.plugin.settings.wordEntryGroups
+                          : [];
+                        for (const g of groups) {
+                          if (!g || !Array.isArray(g.entries)) continue;
+                          for (let i = 0; i < g.entries.length; i++) {
+                            if (g.entries[i].uid === entryUid) {
+                              g.entries.splice(i, 1);
+                              await this.plugin.saveSettings();
+                              this.plugin.compileWordEntries();
+                              try {
+                                this.plugin.reconfigureEditorExtensions();
+                              } catch (_) {}
+                              try {
+                                this.plugin.refreshEditor(this.view, true);
+                              } catch (_) {}
+                              this.refreshSuggestions();
+                              new Notice(`Entry "${actualItem.label}" deleted`);
+                              return;
+                            }
+                          }
+                        }
+                      }
+
                       if (foundIdx >= 0 && foundArray) {
                         foundArray.splice(foundIdx, 1);
                         await this.plugin.saveSettings();
@@ -933,11 +960,40 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                       try {
                         const entry = actualItem.entry;
                         const dup = JSON.parse(JSON.stringify(entry));
-                        const targetArray =
-                          this.plugin.settings.wordEntries.includes(entry)
-                            ? this.plugin.settings.wordEntries
-                            : this.plugin.settings.textBgColoringEntries;
-                        targetArray.push(dup);
+                        try {
+                          dup.uid =
+                            Date.now().toString(36) +
+                            Math.random().toString(36).slice(2);
+                        } catch (_) {
+                          dup.uid = Date.now();
+                        }
+                        if (
+                          this.plugin.settings.wordEntries.includes(entry) ||
+                          this.plugin.settings.textBgColoringEntries.includes(
+                            entry,
+                          )
+                        ) {
+                          const targetArray =
+                            this.plugin.settings.wordEntries.includes(entry)
+                              ? this.plugin.settings.wordEntries
+                              : this.plugin.settings.textBgColoringEntries;
+                          targetArray.push(dup);
+                        } else {
+                          const groups = Array.isArray(
+                            this.plugin.settings.wordEntryGroups,
+                          )
+                            ? this.plugin.settings.wordEntryGroups
+                            : [];
+                          for (const g of groups) {
+                            if (g && Array.isArray(g.entries)) {
+                              const idx = g.entries.indexOf(entry);
+                              if (idx !== -1) {
+                                g.entries.push(dup);
+                                break;
+                              }
+                            }
+                          }
+                        }
                         await this.plugin.saveSettings();
                         this.plugin.compileWordEntries();
                         this.plugin.compileTextBgColoringEntries();
@@ -1250,6 +1306,23 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
     const title = content.createDiv({ cls: "suggestion-title act" });
     title.createEl("span", { text: actualItem.label });
     const aux = el.createDiv({ cls: "suggestion-aux act" });
+    if (actualItem._groupUid) {
+      const grp = Array.isArray(this.plugin.settings.wordEntryGroups)
+        ? this.plugin.settings.wordEntryGroups.find(
+            (g) => g && g.uid === actualItem._groupUid,
+          )
+        : null;
+      if (grp && grp.name) {
+        const grpBadge = aux.createEl("kbd", { text: grp.name });
+        try {
+          grpBadge.classList.add("suggestion-hotkey");
+          grpBadge.classList.add("act");
+          grpBadge.style.opacity = "0.7";
+          grpBadge.style.fontSize = "0.8em";
+          grpBadge.style.marginRight = "4px";
+        } catch (_) {}
+      }
+    }
     const textMap = { color: "color", highlight: "highlight", both: "both" };
     const k = aux.createEl("kbd", {
       text: textMap[actualItem.style] || "color",
@@ -1426,7 +1499,6 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
               const entry = actualItem.entry;
               const entryUid = entry.uid;
 
-              // Find by uid for reliability
               let foundIdx = -1;
               let foundArray = null;
 
@@ -1453,8 +1525,38 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                     entryUid
                   ) {
                     foundIdx = i;
-                    foundArray = this.plugin.settings.textBgColoringEntries;
+                    foundArray =
+                      this.plugin.settings.textBgColoringEntries;
                     break;
+                  }
+                }
+              }
+
+              if (foundIdx === -1) {
+                const groups = Array.isArray(
+                  this.plugin.settings.wordEntryGroups,
+                )
+                  ? this.plugin.settings.wordEntryGroups
+                  : [];
+                for (const g of groups) {
+                  if (!g || !Array.isArray(g.entries)) continue;
+                  for (let i = 0; i < g.entries.length; i++) {
+                    if (g.entries[i].uid === entryUid) {
+                      g.entries.splice(i, 1);
+                      await this.plugin.saveSettings();
+                      this.plugin.compileWordEntries();
+                      try {
+                        this.plugin.reconfigureEditorExtensions();
+                      } catch (_) {}
+                      try {
+                        this.plugin.refreshEditor(this.view, true);
+                      } catch (_) {}
+                      this.refreshSuggestions();
+                      new Notice(
+                        `Entry "${actualItem.label}" deleted`,
+                      );
+                      return;
+                    }
                   }
                 }
               }
@@ -1470,8 +1572,8 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                 try {
                   this.plugin.refreshEditor(this.view, true);
                 } catch (_) {}
+                this.refreshSuggestions();
                 new Notice(`Entry "${actualItem.label}" deleted`);
-                this.close();
               }
             });
         });
@@ -1528,8 +1630,8 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                 try {
                   this.plugin.refreshEditor(this.view, true);
                 } catch (_) {}
+                this.refreshSuggestions();
                 new Notice(`"${this.selectedText}" removed from entry`);
-                this.close();
               });
           });
         }
@@ -1745,12 +1847,38 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
               try {
                 const entry = actualItem.entry;
                 const dup = JSON.parse(JSON.stringify(entry));
-                const targetArray = this.plugin.settings.wordEntries.includes(
-                  entry,
-                )
-                  ? this.plugin.settings.wordEntries
-                  : this.plugin.settings.textBgColoringEntries;
-                targetArray.push(dup);
+                try {
+                  dup.uid =
+                    Date.now().toString(36) +
+                    Math.random().toString(36).slice(2);
+                } catch (_) {
+                  dup.uid = Date.now();
+                }
+                if (
+                  this.plugin.settings.wordEntries.includes(entry) ||
+                  this.plugin.settings.textBgColoringEntries.includes(entry)
+                ) {
+                  const targetArray =
+                    this.plugin.settings.wordEntries.includes(entry)
+                      ? this.plugin.settings.wordEntries
+                      : this.plugin.settings.textBgColoringEntries;
+                  targetArray.push(dup);
+                } else {
+                  const groups = Array.isArray(
+                    this.plugin.settings.wordEntryGroups,
+                  )
+                    ? this.plugin.settings.wordEntryGroups
+                    : [];
+                  for (const g of groups) {
+                    if (g && Array.isArray(g.entries)) {
+                      const idx = g.entries.indexOf(entry);
+                      if (idx !== -1) {
+                        g.entries.push(dup);
+                        break;
+                      }
+                    }
+                  }
+                }
                 await this.plugin.saveSettings();
                 this.plugin.compileWordEntries();
                 this.plugin.compileTextBgColoringEntries();
@@ -1764,13 +1892,6 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
                 new Notice(
                   this.plugin.t("notice_entry_duplicated", "Entry duplicated"),
                 );
-                this.close();
-                new AddToExistingEntryModal(
-                  this.app,
-                  this.plugin,
-                  this.selectedText,
-                  this.view,
-                ).open();
               } catch (e) {
                 debugError("RIGHTCLICK", "duplicate entry error", e);
               }
