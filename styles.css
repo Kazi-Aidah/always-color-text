@@ -2349,3 +2349,8 @@ body.is-tablet .act-mobile-tip .setting-item-control {
 body.is-tablet .act-mobile-tip .act-mobile-tip-dismiss {
   width: 100% !important;
 }
+
+/* Plugin settings - center align setting items */
+.act-settings-container .setting-item {
+  align-items: center;
+}

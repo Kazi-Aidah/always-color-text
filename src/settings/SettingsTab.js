@@ -5482,6 +5482,7 @@ export class ColorSettingTab extends PluginSettingTab {
     }
     // First-time render: build full UI
     containerEl.empty();
+    containerEl.addClass("act-settings-container");
     // Clear any previous cleanup handlers
     this.onClose();
     this._cleanupHandlers = [];

@@ -27738,6 +27738,7 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
       return;
     }
     containerEl2.empty();
+    containerEl2.addClass("act-settings-container");
     this.onClose();
     this._cleanupHandlers = [];
     containerEl2.createEl("h1", {
