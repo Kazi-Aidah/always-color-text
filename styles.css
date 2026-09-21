@@ -635,18 +635,36 @@ body.is-mobile .act-regex-tester-controls {
   gap: 8px !important;
 }
 
-/* @media (min-width: 768px) {
-  .act-regex-name {
-    max-width: 125px !important;
-    width: 125px !important;
-  }
+/* ====== REGEX TESTER MODAL — MOBILE LAYOUT ====== */
+
+/* Row 1: flags row takes full width, flag buttons stretch equally */
+body.is-mobile .act-regex-tester-controls .act-regex-tester-flags {
+  flex: 1 1 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(6, 1fr) !important;
+  gap: 6px !important;
 }
 
-@media (max-width: 600px) {
-  .act-regex-name {
-    width: 1000px !important;
-  }
-} */
+/* Row 2: colortype + colorline/text selects share a row equally */
+body.is-mobile .act-regex-tester-controls .act-regex-tester-style,
+body.is-mobile .act-regex-tester-controls .act-regex-tester-mark-target {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+/* Row 3: color pickers stretch width equally */
+body.is-mobile .act-regex-tester-controls .act-regex-tester-text-color,
+body.is-mobile .act-regex-tester-controls .act-regex-tester-bg-color {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  height: 40px !important;
+}
+
+/* Subject wrap: use touch-radius on mobile */
+body.is-mobile .act-subject-wrap,
+body.is-mobile .act-regex-tester-subject-wrap {
+  border-radius: var(--touch-radius-xxs) !important;
+}
 
 .always-colored-texts-header {
     margin-top: 50px !important;
