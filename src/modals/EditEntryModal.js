@@ -527,6 +527,7 @@ export class EditEntryModal extends Modal {
     });
     rulesHeader.style.marginTop = "24px";
     const rulesContainer = contentEl.createDiv();
+    try { rulesContainer.addClass("act-rules-container"); } catch (_) {}
     rulesContainer.style.marginTop = "8px";
     const addRuleBtn = contentEl.createEl("button", {
       text: this.plugin.t("btn_add_rule", "+ Add Rule"),

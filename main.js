@@ -10319,9 +10319,9 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
     spacer.style.flex = "1";
     if (!isGroup && !fromQuickOnce) {
       const groupSelect = headerRow.createEl("select");
+      try { groupSelect.addClass("act-highlight-group-select"); } catch (e) {}
       groupSelect.style.minWidth = "120px";
       groupSelect.style.border = "1px solid var(--background-modifier-border)";
-      groupSelect.style.borderRadius = "4px";
       groupSelect.style.background = "var(--background-modifier-form-field)";
       const defaultOpt = groupSelect.createEl("option", {
         text: this.plugin.t("no_group", "No Group")
@@ -10404,9 +10404,9 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
     if (!fromQuickOnce) {
       const markTargetSelect = headerRow.createEl("select");
       this._markTargetSelect = markTargetSelect;
+      try { markTargetSelect.addClass("act-highlight-mark-target"); } catch (e) {}
       markTargetSelect.style.minWidth = "120px";
       markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
-      markTargetSelect.style.borderRadius = "4px";
       markTargetSelect.style.background = "var(--background-modifier-form-field)";
       [
         ["text", this.plugin.t("mark_target_text", "Color Text")],
@@ -10431,9 +10431,9 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
     let matchSelect = null;
     if (!fromQuickOnce) {
       matchSelect = headerRow.createEl("select");
+      try { matchSelect.addClass("act-highlight-match-select"); } catch (e) {}
       matchSelect.style.minWidth = "120px";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
-      matchSelect.style.borderRadius = "4px";
       matchSelect.style.background = "var(--background-modifier-form-field)";
       const caseSelect = headerRow.createEl("select");
       caseSelect.style.minWidth = "120px";
@@ -10460,10 +10460,10 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
       });
       caseSelect.style.display = "none";
       stylePresetBtn = headerRow.createEl("button", { text: this.plugin.t("btn_style", "Style") });
+      try { stylePresetBtn.addClass("act-highlight-style-btn"); } catch (e) {}
       stylePresetBtn.style.minWidth = "80px";
       stylePresetBtn.style.padding = "6px 10px";
       stylePresetBtn.style.border = "1px solid var(--background-modifier-border)";
-      stylePresetBtn.style.borderRadius = "4px";
       stylePresetBtn.style.background = "var(--background-modifier-form-field)";
       stylePresetBtn.style.cursor = "pointer";
     }
@@ -10544,7 +10544,6 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
       opt.value = val;
     });
     styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "4px";
     styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.value = this.entry && this.entry.styleType ? this.entry.styleType : isGroup ? "" : "both";
     const pickerRow = styleCol.createDiv();
@@ -15254,6 +15253,7 @@ var EditEntryModal = class extends import_obsidian12.Modal {
     });
     rulesHeader.style.marginTop = "24px";
     const rulesContainer = contentEl.createDiv();
+    try { rulesContainer.addClass("act-rules-container"); } catch (_) {}
     rulesContainer.style.marginTop = "8px";
     const addRuleBtn = contentEl.createEl("button", {
       text: this.plugin.t("btn_add_rule", "+ Add Rule")

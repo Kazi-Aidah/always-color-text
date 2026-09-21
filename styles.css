@@ -529,7 +529,7 @@ body.is-mobile .act-highlight-grid {
 
 body.is-mobile .act-highlight-grid > div:nth-child(even) {
   flex-wrap: wrap;
-  padding-bottom: 8px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--background-modifier-border-hover);
 }
 
@@ -547,24 +547,45 @@ body.is-mobile .act-highlight-grid > div:last-child {
   border-bottom: none;
 }
 
-/* On mobile, header selects take full width so they don't crowd the title */
+/* Highlight Styling Modal — Mobile Header Layout */
+
+/* All mobile: hide spacer, title full width */
 body.is-mobile .act-highlight-header-row {
-  flex-direction: column;
-  align-items: stretch;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
 body.is-mobile .act-highlight-header-row h2 {
-  width: 100%;
+  flex: 0 0 100% !important;
+  width: 100% !important;
 }
 
 body.is-mobile .act-highlight-header-row > div[style*="flex: 1"] {
-  display: none;
+  display: none !important;
 }
 
-body.is-mobile .act-highlight-header-row select {
-  width: 100%;
-  min-width: 0 !important;
-  box-sizing: border-box;
+/* Hide all header buttons and dropdowns on mobile */
+body.is-mobile .act-highlight-header-row .act-highlight-group-select,
+body.is-mobile .act-highlight-header-row .act-highlight-mark-target,
+body.is-mobile .act-highlight-header-row .act-highlight-match-select,
+body.is-mobile .act-highlight-header-row .act-highlight-style-btn {
+  display: none !important;
+}
+
+/* Preview wrap: smaller border radius on mobile */
+body.is-mobile .act-highlight-preview-wrap {
+  border-radius: var(--touch-radius-xxs) !important;
+}
+
+/* Inclusion/exclusion rules: remove top margin on mobile */
+body.is-mobile .act-group-rule-row.act-entry-rule-row {
+  margin-top: 0 !important;
+}
+
+/* Rules container: remove top margin on mobile */
+body.is-mobile .act-rules-container {
+  margin-top: 0 !important;
 }
 
 /* ====== COLOR PICKER MODAL - HEADER CONTROLS ====== */
@@ -1630,7 +1651,7 @@ body:not(.is-mobile) .act-group-button-row {
   .act-pickr-row select {
     min-width: 70px;
     padding: 4px 6px;
-    font-size: 11px;
+    font-size: var(--font-ui-smaller);
   }
 
   .act-pickr-row button.act-pickr-icon-btn {
@@ -1868,7 +1889,7 @@ div[data-swatch-index] {
   display: flex;
   align-items: center;
   min-height: 54px;
-  border: 2px solid var(--background-modifier-border);
+  border: 2px solid var(--background-modifier-border-hover);
   border-radius: var(--radius-m, 8px);
   background: var(--background-secondary);
   margin-bottom: 16px;
@@ -1906,7 +1927,7 @@ div[data-swatch-index] {
   display: flex;
   align-items: center;
   min-height: 54px;
-  border: 0px solid var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-m, 8px);
   background: var(--background-secondary);
   overflow: hidden;
@@ -1941,9 +1962,6 @@ div[data-swatch-index] {
 .act-tsp-add-row {
   display: flex;
   justify-content: space-between;
-}
-.act-tsp-add-row button {
-  padding: 6px 14px;
 }
 
 /* Sticky footer for Text Style Presets modal – reuses highlight footer pattern */
@@ -2008,12 +2026,10 @@ body.is-mobile .act-tsp-add-row {
 .act-tsp-reorder-btn {
   flex-shrink: 0;
   cursor: pointer;
-  font-size: 0.85em;
-  padding: 4px 10px;
-  border-radius: var(--input-radius);
+  font-size: var(--font-ui-smaller);
   color: var(--text-muted);
   background: transparent;
-  border: 1px solid var(--background-modifier-border);
+  border: none;
 }
 .act-tsp-reorder-btn:hover {
   color: var(--text-normal);
