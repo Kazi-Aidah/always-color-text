@@ -10319,7 +10319,10 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
     spacer.style.flex = "1";
     if (!isGroup && !fromQuickOnce) {
       const groupSelect = headerRow.createEl("select");
-      try { groupSelect.addClass("act-highlight-group-select"); } catch (e) {}
+      try {
+        groupSelect.addClass("act-highlight-group-select");
+      } catch (e) {
+      }
       groupSelect.style.minWidth = "120px";
       groupSelect.style.border = "1px solid var(--background-modifier-border)";
       groupSelect.style.background = "var(--background-modifier-form-field)";
@@ -10404,7 +10407,10 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
     if (!fromQuickOnce) {
       const markTargetSelect = headerRow.createEl("select");
       this._markTargetSelect = markTargetSelect;
-      try { markTargetSelect.addClass("act-highlight-mark-target"); } catch (e) {}
+      try {
+        markTargetSelect.addClass("act-highlight-mark-target");
+      } catch (e) {
+      }
       markTargetSelect.style.minWidth = "120px";
       markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
       markTargetSelect.style.background = "var(--background-modifier-form-field)";
@@ -10431,7 +10437,10 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
     let matchSelect = null;
     if (!fromQuickOnce) {
       matchSelect = headerRow.createEl("select");
-      try { matchSelect.addClass("act-highlight-match-select"); } catch (e) {}
+      try {
+        matchSelect.addClass("act-highlight-match-select");
+      } catch (e) {
+      }
       matchSelect.style.minWidth = "120px";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.background = "var(--background-modifier-form-field)";
@@ -10460,7 +10469,10 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
       });
       caseSelect.style.display = "none";
       stylePresetBtn = headerRow.createEl("button", { text: this.plugin.t("btn_style", "Style") });
-      try { stylePresetBtn.addClass("act-highlight-style-btn"); } catch (e) {}
+      try {
+        stylePresetBtn.addClass("act-highlight-style-btn");
+      } catch (e) {
+      }
       stylePresetBtn.style.minWidth = "80px";
       stylePresetBtn.style.padding = "6px 10px";
       stylePresetBtn.style.border = "1px solid var(--background-modifier-border)";
@@ -15253,7 +15265,10 @@ var EditEntryModal = class extends import_obsidian12.Modal {
     });
     rulesHeader.style.marginTop = "24px";
     const rulesContainer = contentEl.createDiv();
-    try { rulesContainer.addClass("act-rules-container"); } catch (_) {}
+    try {
+      rulesContainer.addClass("act-rules-container");
+    } catch (_) {
+    }
     rulesContainer.style.marginTop = "8px";
     const addRuleBtn = contentEl.createEl("button", {
       text: this.plugin.t("btn_add_rule", "+ Add Rule")
