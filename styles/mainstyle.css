@@ -1241,7 +1241,6 @@ body.is-mobile .blacklist-words-list .act-entry-row .act-md-element-config {
   min-width: 0 !important;
 }
 }
-}
 body:not(.is-mobile) .act-blacklist-regex-btn,
 body:not(.is-mobile) .act-blacklist-delete-btn {
   display: none !important;

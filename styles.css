@@ -189,32 +189,6 @@ body.theme-dark .always-color-text-highlight-marks:not(.act-fixer-noauto) {
   }
 
 /* ── ui.css ────────────────────────────────────────────── */
-/* CRITICAL: Override CSS Variables FIRST - Use calc() to force recalculation */
-/* Support for highlight preset (==...==) - affects both mark elements and .cm-highlight in live preview */
-/* Force internal formatting spans to inherit color from our wrapper in Live Preview */
-/* When the ==...== highlight preset is active, the plugin adds
-   act-highlight-preset-active to <body>. This neutralises the
-   cm-highlight wrapper so only the inner always-color-text-highlight
-   span's inline styles are visible. Static CSS beats any timing
-   issue with MutationObserver patching.
-   Specificity must beat interfering rules like:
-   body .cm-s-obsidian span.cm-highlight { background-color: ... !important }
-   which is (0,0,2,2). We use (0,0,3,2) to win. */
-/* Hide cm-highlight background in live preview to show only inner styled span */
-/* 
-.cm-highlight {
-  background-color: transparent !important;
-  color: inherit !important;
-}
-
-.cm-s-obsidian span.cm-highlight {
-  background-color: transparent !important;
-  color: inherit !important;
-}
-*/
-/* Fix for Inline Spoilers: Ensure text is hidden when inside a spoiler */
-/* Force highlight color through nested spans */
-/* Ensure highlight styles overpower internal elements in Reading Mode */
 /* Settings button rows base layout */
 .entries-button-row,
 .blacklist-button-row,
@@ -1119,7 +1093,6 @@ body.is-mobile .blacklist-words-list .act-entry-row .act-md-element-config {
   flex: 1 1 auto !important;
   width: auto !important;
   min-width: 0 !important;
-}
 }
 }
 body:not(.is-mobile) .act-blacklist-regex-btn,
