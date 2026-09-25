@@ -6590,6 +6590,10 @@ export class ColorSettingTab extends PluginSettingTab {
             .onChange(async (v) => {
               this.plugin.settings.enableQuickColorOnce = v;
               await this.plugin.saveSettings();
+              // Add/remove the "Color / Highlight Once" command right away so
+              // it (and its mobile toolbar button) never lingers while every
+              // One-Time Action is disabled.
+              this.plugin.reregisterCommandsWithLanguage();
             }),
         );
 
@@ -6607,6 +6611,7 @@ export class ColorSettingTab extends PluginSettingTab {
             .onChange(async (v) => {
               this.plugin.settings.enableQuickHighlightOnce = v;
               await this.plugin.saveSettings();
+              this.plugin.reregisterCommandsWithLanguage();
               this._initializedSettingsUI = false;
               this.display();
             }),
@@ -6631,6 +6636,7 @@ export class ColorSettingTab extends PluginSettingTab {
             .onChange(async (v) => {
               this.plugin.settings.enableQuickColorHighlightOnce = v;
               await this.plugin.saveSettings();
+              this.plugin.reregisterCommandsWithLanguage();
             }),
         );
 

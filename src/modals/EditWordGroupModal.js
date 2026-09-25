@@ -89,8 +89,29 @@ export class EditWordGroupModal extends Modal {
       value: "false",
     });
     activeSelect.value = String(!!this.group.active);
-    const activeSelectHandler = () => {
-      this.group.active = activeSelect.value === "true";
+    // The Active/Inactive choice is a state toggle (same as the dropdown on
+    // the settings list), not a modal field: persist it immediately. The
+    // modal edits the live settings object after the first list refresh, so
+    // without this write-through + save the change only lived in memory and
+    // the group came back with its old state after a reload.
+    const activeSelectHandler = async () => {
+      const isActive = activeSelect.value === "true";
+      this.group.active = isActive;
+      try {
+        const groups = Array.isArray(this.plugin.settings.wordEntryGroups)
+          ? this.plugin.settings.wordEntryGroups
+          : [];
+        const liveGroup = groups.find((g) => g && g.uid === this.group?.uid);
+        if (liveGroup) liveGroup.active = isActive;
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        if (this.plugin.settings.showWordGroupsInCommands)
+          this.plugin.reregisterCommandsWithLanguage();
+      } catch (e) {
+        debugError("MODAL", "toggle group active error", e);
+      }
     };
     activeSelect.addEventListener("change", activeSelectHandler);
     this._cleanupHandlers.push(() =>

@@ -20299,8 +20299,22 @@ var EditWordGroupModal = class extends import_obsidian18.Modal {
       value: "false"
     });
     activeSelect.value = String(!!this.group.active);
-    const activeSelectHandler = () => {
-      this.group.active = activeSelect.value === "true";
+    const activeSelectHandler = async () => {
+      const isActive = activeSelect.value === "true";
+      this.group.active = isActive;
+      try {
+        const groups = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+        const liveGroup = groups.find((g) => g && g.uid === this.group?.uid);
+        if (liveGroup) liveGroup.active = isActive;
+        await this.plugin.saveSettings();
+        this.plugin.reconfigureEditorExtensions();
+        this.plugin.forceRefreshAllEditors();
+        this.plugin.forceRefreshAllReadingViews();
+        if (this.plugin.settings.showWordGroupsInCommands)
+          this.plugin.reregisterCommandsWithLanguage();
+      } catch (e) {
+        debugError("MODAL", "toggle group active error", e);
+      }
     };
     activeSelect.addEventListener("change", activeSelectHandler);
     this._cleanupHandlers.push(
@@ -28706,6 +28720,7 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         (t) => t.setValue(this.plugin.settings.enableQuickColorOnce).onChange(async (v) => {
           this.plugin.settings.enableQuickColorOnce = v;
           await this.plugin.saveSettings();
+          this.plugin.reregisterCommandsWithLanguage();
         })
       );
       new import_obsidian25.Setting(otaContainer).setName(this.plugin.t("setting_highlight_once", "Highlight Once")).setDesc(
@@ -28717,6 +28732,7 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         (t) => t.setValue(this.plugin.settings.enableQuickHighlightOnce).onChange(async (v) => {
           this.plugin.settings.enableQuickHighlightOnce = v;
           await this.plugin.saveSettings();
+          this.plugin.reregisterCommandsWithLanguage();
           this._initializedSettingsUI = false;
           this.display();
         })
@@ -28735,6 +28751,7 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         (t) => t.setValue(this.plugin.settings.enableQuickColorHighlightOnce).onChange(async (v) => {
           this.plugin.settings.enableQuickColorHighlightOnce = v;
           await this.plugin.saveSettings();
+          this.plugin.reregisterCommandsWithLanguage();
         })
       );
       if (this.plugin.settings.enableQuickHighlightOnce || this.plugin.settings.enableQuickColorHighlightOnce) {
@@ -34293,8 +34310,11 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           return false;
         }
       };
+      const anyQuickOnceEnabled = !!(this.settings.enableQuickColorOnce || this.settings.enableQuickHighlightOnce || this.settings.enableQuickColorHighlightOnce);
       const addTrackedCommand = (cmd) => {
         if (!cmd || !cmd.id || isCommandHidden(cmd.id)) return null;
+        if (cmd.id === "color-highlight-once-selected-text" && !anyQuickOnceEnabled)
+          return null;
         if (!cmd.icon) {
           const icon = resolveCommandIcon(cmd.id);
           if (icon) cmd.icon = icon;
@@ -37874,7 +37894,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         const finalColor = styleType2 === "both" || styleType2 === "highlight" ? "" : hasValidColor ? color : "";
         const finalText = hasValidText ? textColor : styleType2 === "highlight" ? "currentColor" : null;
         const finalBg = hasValidBg ? backgroundColor : null;
-        const mapped = {
+        const mapped = Object.assign({}, e, {
           pattern: e.pattern || e.word || "",
           color: finalColor,
           textColor: finalText,
@@ -37912,7 +37932,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           tagFilter: e.tagFilter || void 0,
           titleFilter: e.titleFilter || void 0,
           titleMatchType: e.titleMatchType ? normalizeTitleMatchType(e.titleMatchType) : void 0
-        };
+        });
+        delete mapped.hex;
+        delete mapped.word;
         try {
           if (Array.isArray(e.inclusionRules)) {
             mapped.inclusionRules = e.inclusionRules.map((r) => ({
@@ -39436,6 +39458,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       });
       s.enableQuickColorOnce = !!s.enableQuickColorOnce;
       s.enableQuickHighlightOnce = !!s.enableQuickHighlightOnce;
+      s.enableQuickColorHighlightOnce = !!s.enableQuickColorHighlightOnce;
       s.quickHighlightStyleEnable = !!s.quickHighlightStyleEnable;
       s.quickHighlightUseGlobalStyle = !!s.quickHighlightUseGlobalStyle;
       s.quickHighlightOpacity = Math.max(

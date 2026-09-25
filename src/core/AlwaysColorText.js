@@ -2256,8 +2256,21 @@ class AlwaysColorText extends Plugin {
         }
       };
 
+      // One-Time Actions (Color Once / Highlight Once / Color & Highlight
+      // Once) are opt-in. While every one of them is disabled the matching
+      // command must not be registered, so it never shows up in the command
+      // palette or on the mobile toolbar — same rule the editor context menu
+      // already applies.
+      const anyQuickOnceEnabled = !!(
+        this.settings.enableQuickColorOnce ||
+        this.settings.enableQuickHighlightOnce ||
+        this.settings.enableQuickColorHighlightOnce
+      );
+
       const addTrackedCommand = (cmd) => {
         if (!cmd || !cmd.id || isCommandHidden(cmd.id)) return null;
+        if (cmd.id === "color-highlight-once-selected-text" && !anyQuickOnceEnabled)
+          return null;
         // Every command needs an icon: the mobile toolbar falls back to the
         // "question mark in a circle" glyph for iconless commands.
         if (!cmd.icon) {
@@ -6660,7 +6673,13 @@ class AlwaysColorText extends Plugin {
               ? "currentColor"
               : null;
           const finalBg = hasValidBg ? backgroundColor : null;
-          const mapped = {
+          // Start from the loaded entry instead of a fixed allowlist: every
+          // per-entry field this style normalization does not handle (active,
+          // caseSensitive, colorTarget, affectMarkElements, persistAtEnd,
+          // folder/tag filters…) must survive the reload. An allowlist here
+          // silently dropped them, so a deactivated entry came back active
+          // after every restart (and the next save made the loss permanent).
+          const mapped = Object.assign({}, e, {
             pattern: e.pattern || e.word || "",
             color: finalColor,
             textColor: finalText,
@@ -6720,7 +6739,10 @@ class AlwaysColorText extends Plugin {
             tagFilter: e.tagFilter || undefined,
             titleFilter: e.titleFilter || undefined,
             titleMatchType: e.titleMatchType ? normalizeTitleMatchType(e.titleMatchType) : undefined,
-           };
+          });
+          // Legacy key aliases whose value was folded into pattern/color above.
+          delete mapped.hex;
+          delete mapped.word;
           // Preserve per-entry inclusion/exclusion rules on load
           try {
             if (Array.isArray(e.inclusionRules)) {
@@ -8734,6 +8756,7 @@ class AlwaysColorText extends Plugin {
       });
       s.enableQuickColorOnce = !!s.enableQuickColorOnce;
       s.enableQuickHighlightOnce = !!s.enableQuickHighlightOnce;
+      s.enableQuickColorHighlightOnce = !!s.enableQuickColorHighlightOnce;
       s.quickHighlightStyleEnable = !!s.quickHighlightStyleEnable;
       s.quickHighlightUseGlobalStyle = !!s.quickHighlightUseGlobalStyle;
       s.quickHighlightOpacity = Math.max(
