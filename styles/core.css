@@ -1,4 +1,14 @@
-.always-color-text-highlight {
+/* ── GLOBAL TOGGLE GATE ──────────────────────────────────────────────────────
+   Every COLORING rule in this file is prefixed with `:where(html.act-enabled)`
+   so it only matches while the plugin's "Enable Global Color" toggle is ON.
+   `:where()` contributes zero specificity, so the rules keep exactly the same
+   weight they had before — they simply stop applying when coloring is
+   disabled globally (the class is synced from JS via
+   AlwaysColorText.syncGlobalToggleCssState()).
+
+   UI-only rules (settings previews, drag ghosts, modal layout) are NOT gated —
+   they must keep working regardless of the toggle. */
+:where(html.act-enabled) .always-color-text-highlight {
   --text-normal: var(--highlight-color, currentColor) !important;
   --link-color: var(--highlight-color, currentColor) !important;
   --link-external-color: var(--highlight-color, currentColor) !important;
@@ -16,31 +26,31 @@
   line-height: inherit !important;
 }
 /* Color .markdown-rendered code text when comment coloring is in use (reading view) */
-.markdown-rendered code {
+:where(html.act-enabled) .markdown-rendered code {
   color: var(--highlight-color, inherit) !important;
 }
-.always-color-text-highlight-marks {
+:where(html.act-enabled) .always-color-text-highlight-marks {
   /* Affects mark elements in reading mode and .cm-highlight in live preview */
   background-color: var(--highlight-background, transparent) !important;
   color: var(--highlight-color, currentColor) !important;
 }
-.always-color-text-highlight .cm-strong,
-.always-color-text-highlight .cm-em,
-.always-color-text-highlight .cm-strong.cm-em,
-.always-color-text-highlight .cm-formatting {
+:where(html.act-enabled) .always-color-text-highlight .cm-strong,
+:where(html.act-enabled) .always-color-text-highlight .cm-em,
+:where(html.act-enabled) .always-color-text-highlight .cm-strong.cm-em,
+:where(html.act-enabled) .always-color-text-highlight .cm-formatting {
   color: var(--highlight-color, inherit) !important;
 }
-mark.always-color-text-highlight-marks {
+:where(html.act-enabled) mark.always-color-text-highlight-marks {
   background-color: var(--highlight-background, transparent) !important;
   color: var(--highlight-color, currentColor) !important;
 }
-.cm-highlight.always-color-text-highlight-marks {
+:where(html.act-enabled) .cm-highlight.always-color-text-highlight-marks {
   background-color: var(--highlight-background, transparent) !important;
   color: var(--highlight-color, currentColor) !important;
 }
-body.act-highlight-preset-active .cm-s-obsidian span.cm-highlight,
-body.act-highlight-preset-active .cm-editor .cm-highlight,
-body.act-highlight-preset-active .cm-highlight {
+:where(html.act-enabled) body.act-highlight-preset-active .cm-s-obsidian span.cm-highlight,
+:where(html.act-enabled) body.act-highlight-preset-active .cm-editor .cm-highlight,
+:where(html.act-enabled) body.act-highlight-preset-active .cm-highlight {
   background-color: transparent !important;
   color: inherit !important;
   border: none !important;
@@ -48,27 +58,27 @@ body.act-highlight-preset-active .cm-highlight {
   padding: 0 !important;
   border-radius: 0 !important;
 }
-.inline_spoilers-spoiler .always-color-text-highlight,
-.inline_spoilers-editor-spoiler .always-color-text-highlight,
-.is-live-preview .cm-content .inline_spoilers-editor-spoiler .always-color-text-highlight,
-.markdown-reading-view .markdown-rendered .inline_spoilers-spoiler .always-color-text-highlight,
-body .inline_spoilers-spoiler .always-color-text-highlight,
-body .inline_spoilers-editor-spoiler .always-color-text-highlight {
+:where(html.act-enabled) .inline_spoilers-spoiler .always-color-text-highlight,
+:where(html.act-enabled) .inline_spoilers-editor-spoiler .always-color-text-highlight,
+:where(html.act-enabled) .is-live-preview .cm-content .inline_spoilers-editor-spoiler .always-color-text-highlight,
+:where(html.act-enabled) .markdown-reading-view .markdown-rendered .inline_spoilers-spoiler .always-color-text-highlight,
+:where(html.act-enabled) body .inline_spoilers-spoiler .always-color-text-highlight,
+:where(html.act-enabled) body .inline_spoilers-editor-spoiler .always-color-text-highlight {
   color: inherit !important;
   background-color: transparent !important;
   --text-normal: inherit !important;
   --link-color: inherit !important;
   --link-external-color: inherit !important;
 }
-.cm-highlight .always-color-text-highlight-marks {
+:where(html.act-enabled) .cm-highlight .always-color-text-highlight-marks {
   background-color: var(--highlight-background, transparent) !important;
   color: var(--highlight-color, currentColor) !important;
 }
-mark .always-color-text-highlight-marks {
+:where(html.act-enabled) mark .always-color-text-highlight-marks {
   background-color: var(--highlight-background, transparent) !important;
   color: var(--highlight-color, currentColor) !important;
 }
-mark.always-color-text-highlight-marks * {
+:where(html.act-enabled) mark.always-color-text-highlight-marks * {
   background-color: transparent !important;
   color: inherit !important;
   --text-normal: inherit !important;
@@ -80,37 +90,37 @@ mark.always-color-text-highlight-marks * {
   padding: 0 !important;
   border-radius: 0 !important;
 }
-li.act-colored-list-item::marker {
+:where(html.act-enabled) li.act-colored-list-item::marker {
   color: var(--act-marker-color, inherit) !important;
 }
-li.act-colored-list-item .list-bullet,
-li.act-colored-list-item .list-number {
+:where(html.act-enabled) li.act-colored-list-item .list-bullet,
+:where(html.act-enabled) li.act-colored-list-item .list-number {
   color: var(--act-marker-color, inherit) !important;
 }
-.markdown-preview-view li.act-colored-list-item::marker {
+:where(html.act-enabled) .markdown-preview-view li.act-colored-list-item::marker {
   color: var(--act-marker-color, inherit) !important;
 }
-.markdown-preview-view li.act-colored-list-item .list-bullet,
-.markdown-preview-view li.act-colored-list-item .list-number {
+:where(html.act-enabled) .markdown-preview-view li.act-colored-list-item .list-bullet,
+:where(html.act-enabled) .markdown-preview-view li.act-colored-list-item .list-number {
   color: var(--act-marker-color, inherit) !important;
 }
-li.act-colored-list-item input[type="checkbox"] {
+:where(html.act-enabled) li.act-colored-list-item input[type="checkbox"] {
   accent-color: var(--act-marker-color, inherit);
 }
-li.act-colored-list-item {
+:where(html.act-enabled) li.act-colored-list-item {
   color: var(--act-marker-color, inherit);
 }
-li.act-color-marker::marker {
+:where(html.act-enabled) li.act-color-marker::marker {
   color: var(--act-color) !important;
 }
-.markdown-preview-view li.act-color-marker::marker {
+:where(html.act-enabled) .markdown-preview-view li.act-color-marker::marker {
   color: var(--act-color) !important;
 }
-.markdown-preview-view li.act-color-marker > .list-bullet,
-.markdown-preview-view li.act-color-marker > .list-number {
+:where(html.act-enabled) .markdown-preview-view li.act-color-marker > .list-bullet,
+:where(html.act-enabled) .markdown-preview-view li.act-color-marker > .list-number {
   color: var(--act-color) !important;
 }
-.markdown-preview-view li.act-color-marker input[type="checkbox"] {
+:where(html.act-enabled) .markdown-preview-view li.act-color-marker input[type="checkbox"] {
   accent-color: var(--act-color);
 }
 .act-color-picker-preview-wrap {
@@ -148,29 +158,29 @@ li.act-color-marker::marker {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   background-color: var(--background-primary);
 }
-.markdown-rendered .always-color-text-highlight mark {
+:where(html.act-enabled) .markdown-rendered .always-color-text-highlight mark {
   color: var(--highlight-color, currentColor) !important;
   background-color: var(--highlight-background, transparent) !important;
 }
-.cm-editor .always-color-text-highlight .cm-highlight {
+:where(html.act-enabled) .cm-editor .always-color-text-highlight .cm-highlight {
   color: var(--highlight-color, currentColor) !important;
   background-color: var(--highlight-background, transparent) !important;
 }
-.cm-editor .always-color-text-highlight .cm-comment {
+:where(html.act-enabled) .cm-editor .always-color-text-highlight .cm-comment {
   color: var(--highlight-color, currentColor) !important;
 }
 .drag-ghost-hidden {
   opacity: 0 !important;
   pointer-events: none;
 }
-body.theme-light .always-color-text-highlight:not(.act-fixer-noauto),
-body.theme-light .always-color-text-highlight-marks:not(.act-fixer-noauto) {
+:where(html.act-enabled) body.theme-light .always-color-text-highlight:not(.act-fixer-noauto),
+:where(html.act-enabled) body.theme-light .always-color-text-highlight-marks:not(.act-fixer-noauto) {
   filter: brightness(var(--act-fixer-light-b, 1))
     contrast(var(--act-fixer-light-c, 1))
     saturate(var(--act-fixer-light-s, 1));
 }
-body.theme-dark .always-color-text-highlight:not(.act-fixer-noauto),
-body.theme-dark .always-color-text-highlight-marks:not(.act-fixer-noauto) {
+:where(html.act-enabled) body.theme-dark .always-color-text-highlight:not(.act-fixer-noauto),
+:where(html.act-enabled) body.theme-dark .always-color-text-highlight-marks:not(.act-fixer-noauto) {
   filter: brightness(var(--act-fixer-dark-b, 1))
     contrast(var(--act-fixer-dark-c, 1))
     saturate(var(--act-fixer-dark-s, 1));

@@ -343,41 +343,41 @@ body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-delete-btn {
   order: 99 !important;
 }
 /* Markdown: just element dropdown (no config) -> dropdown + X same row */
-body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-select):not(:has(.act-md-element-config)):not(:has(.act-md-element-config-wrapper)) .act-md-element-select {
+body.is-mobile .blacklist-words-list .act-row--select-only .act-md-element-select {
   flex: 1 1 0 !important;
   width: auto !important;
   min-width: 0 !important;
   order: 0 !important;
 }
-body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-select):not(:has(.act-md-element-config)):not(:has(.act-md-element-config-wrapper)) .act-blacklist-delete-btn {
+body.is-mobile .blacklist-words-list .act-row--select-only .act-blacklist-delete-btn {
   order: 99 !important;
   margin-left: 0 !important;
 }
 /* Markdown: plain input (heading, tag, task-list) -> select row1 (100%), input+X row2 */
-body.is-mobile .blacklist-words-list .act-entry-row:has(> .act-md-element-config):not(:has(.act-md-element-config-wrapper)) .act-md-element-select {
+body.is-mobile .blacklist-words-list .act-row--plain-input .act-md-element-select {
   flex: 1 1 100% !important;
   width: 100% !important;
   min-width: 0 !important;
   order: 0 !important;
 }
-body.is-mobile .blacklist-words-list .act-entry-row:has(> .act-md-element-config):not(:has(.act-md-element-config-wrapper)) .act-md-element-config {
+body.is-mobile .blacklist-words-list .act-row--plain-input .act-md-element-config {
   flex: 1 1 0 !important;
   width: auto !important;
   min-width: 0 !important;
   order: 1 !important;
 }
-body.is-mobile .blacklist-words-list .act-entry-row:has(> .act-md-element-config):not(:has(.act-md-element-config-wrapper)) .act-blacklist-delete-btn {
+body.is-mobile .blacklist-words-list .act-row--plain-input .act-blacklist-delete-btn {
   order: 99 !important;
   margin-left: 0 !important;
 }
 /* Markdown: element dropdown row1, second dropdown+input+X row2 (wrapper case) */
-body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-config-wrapper) .act-md-element-select {
+body.is-mobile .blacklist-words-list .act-row--wrapper .act-md-element-select {
   flex: 1 1 100% !important;
   width: 100% !important;
   min-width: 0 !important;
   order: 0 !important;
 }
-body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-config-wrapper) .act-md-element-config-wrapper {
+body.is-mobile .blacklist-words-list .act-row--wrapper .act-md-element-config-wrapper {
   flex: 1 1 0 !important;
   width: auto !important;
   min-width: 0 !important;
@@ -386,7 +386,7 @@ body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-config-w
   gap: 6px !important;
   order: 1 !important;
 }
-body.is-mobile .blacklist-words-list .act-entry-row:has(.act-md-element-config-wrapper) .act-blacklist-delete-btn {
+body.is-mobile .blacklist-words-list .act-row--wrapper .act-blacklist-delete-btn {
   order: 99 !important;
   margin-left: 0 !important;
 }
@@ -1115,20 +1115,25 @@ div[data-swatch-index] {
   min-height: 0 !important;
   padding: 10px 4px 10px 0 !important;
   margin-bottom: 0 !important;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0px,
-    black 10px,
-    black calc(100% - 10px),
-    transparent 100%
-  ) !important;
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0px,
-    black 10px,
-    black calc(100% - 10px),
-    transparent 100%
-  ) !important;
+  position: relative !important;
+}
+.act-text-style-presets-modal .act-tsp-grid::before,
+.act-text-style-presets-modal .act-tsp-grid::after {
+  content: "";
+  position: sticky !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 10px !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+.act-text-style-presets-modal .act-tsp-grid::before {
+  top: 0 !important;
+  background: linear-gradient(to bottom, var(--background-primary) 0%, transparent 100%) !important;
+}
+.act-text-style-presets-modal .act-tsp-grid::after {
+  bottom: 0 !important;
+  background: linear-gradient(to top, var(--background-primary) 0%, transparent 100%) !important;
 }
 .act-tsp-add-row {
   flex-shrink: 0 !important;

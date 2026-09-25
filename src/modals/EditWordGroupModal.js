@@ -1054,7 +1054,16 @@ export class EditWordGroupModal extends Modal {
           entry,
           onConfigChange,
         );
-        if (cfgInput) row.appendChild(cfgInput);
+        if (cfgInput) {
+          row.appendChild(cfgInput);
+          if (cfgInput.classList && cfgInput.classList.contains("act-md-element-config-wrapper")) {
+            row.classList.add("act-row--wrapper");
+          } else {
+            row.classList.add("act-row--plain-input");
+          }
+        } else {
+          row.classList.add("act-row--select-only");
+        }
       } else {
       const patternInput = row.createEl("input", {
         type: "text",

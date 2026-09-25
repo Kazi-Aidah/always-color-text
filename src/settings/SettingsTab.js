@@ -354,7 +354,16 @@ export class ColorSettingTab extends PluginSettingTab {
           entry,
           onConfigChange,
         );
-        if (cfgInput) row.appendChild(cfgInput);
+        if (cfgInput) {
+          row.appendChild(cfgInput);
+          if (cfgInput.classList && cfgInput.classList.contains("act-md-element-config-wrapper")) {
+            row.classList.add("act-row--wrapper");
+          } else {
+            row.classList.add("act-row--plain-input");
+          }
+        } else {
+          row.classList.add("act-row--select-only");
+        }
       }
 
       const flagsInput = row.createEl("input", {
@@ -1833,7 +1842,16 @@ export class ColorSettingTab extends PluginSettingTab {
             entry,
             onConfigChange,
           );
-          if (cfgInput) row.appendChild(cfgInput);
+          if (cfgInput) {
+            row.appendChild(cfgInput);
+            if (cfgInput.classList && cfgInput.classList.contains("act-md-element-config-wrapper")) {
+              row.classList.add("act-row--wrapper");
+            } else {
+              row.classList.add("act-row--plain-input");
+            }
+          } else {
+            row.classList.add("act-row--select-only");
+          }
         } else if (kind === "regex" && entry.presetLabel) {
           const badge = row.createEl("span", { text: entry.presetLabel });
           try {
@@ -5707,8 +5725,9 @@ export class ColorSettingTab extends PluginSettingTab {
         )
         .addToggle((t) =>
           t.setValue(this.plugin.settings.enabled).onChange(async (v) => {
-            this.plugin.settings.enabled = v;
-            await this.debouncedSaveSettings();
+            // Full toggle path: syncs the static-CSS gate, drops/rebuilds the
+            // markdown-element stylesheet and clears leftover decorations.
+            await this.plugin.setGlobalEnabled(v);
           }),
         );
 
@@ -5999,35 +6018,35 @@ export class ColorSettingTab extends PluginSettingTab {
               this.plugin.settings.disableToggleModes.ribbon = !v;
               await this.plugin.saveSettings();
               try {
-                if (v && !this.ribbonIcon) {
-                  this.ribbonIcon = this.addRibbonIcon(
+                if (v && !this.plugin.ribbonIcon) {
+                  this.plugin.ribbonIcon = this.plugin.addRibbonIcon(
                     "palette",
-                    this.t("ribbon_title", "Always color text"),
+                    this.plugin.t("ribbon_title", "Always color text"),
                     async () => {
-                      this.settings.enabled = !this.settings.enabled;
-                      await this.saveSettings();
-                      this.updateStatusBar();
-                      this.reconfigureEditorExtensions();
-                      this.forceRefreshAllEditors();
-                      this.forceRefreshAllReadingViews();
-                      if (this.settings.enabled)
+                      await this.plugin.setGlobalEnabled(
+                        !this.plugin.settings.enabled,
+                      );
+                      if (this.plugin.settings.enabled)
                         new Notice(
-                          this.t("notice_enabled", "Always color text enabled"),
+                          this.plugin.t(
+                            "notice_enabled",
+                            "Always color text enabled",
+                          ),
                         );
                       else
                         new Notice(
-                          this.t(
+                          this.plugin.t(
                             "notice_disabled",
                             "Always color text disabled",
                           ),
                         );
                     },
                   );
-                } else if (!v && this.ribbonIcon && this.ribbonIcon.remove) {
+                } else if (!v && this.plugin.ribbonIcon && this.plugin.ribbonIcon.remove) {
                   try {
-                    this.ribbonIcon.remove();
+                    this.plugin.ribbonIcon.remove();
                   } catch (e) {}
-                  this.ribbonIcon = null;
+                  this.plugin.ribbonIcon = null;
                 }
               } catch (e) {}
             }),
@@ -6047,14 +6066,10 @@ export class ColorSettingTab extends PluginSettingTab {
                 if (v && !this.plugin.statusBar) {
                   this.plugin.statusBar = this.plugin.addStatusBarItem();
                   this.plugin.updateStatusBar();
-                  this.plugin.statusBar.onclick = () => {
-                    this.plugin.settings.enabled =
-                      !this.plugin.settings.enabled;
-                    this.plugin.saveSettings();
-                    this.plugin.updateStatusBar();
-                    this.plugin.reconfigureEditorExtensions();
-                    this.plugin.forceRefreshAllEditors();
-                    this.plugin.forceRefreshAllReadingViews();
+                  this.plugin.statusBar.onclick = async () => {
+                    await this.plugin.setGlobalEnabled(
+                      !this.plugin.settings.enabled,
+                    );
                   };
                 } else if (!v && this.plugin.statusBar) {
                   try {

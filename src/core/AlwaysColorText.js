@@ -159,6 +159,237 @@ class AlwaysColorText extends Plugin {
     this._lpTableRaf = null;
   }
 
+  // --- Keep the static stylesheet (styles/core.css) gate in sync with the
+  // global toggle. All COLORING rules in core.css are prefixed with
+  // `:where(html.act-enabled)`, so without this class the plugin's static CSS
+  // applies nothing — which is exactly what we want when "Enable Global Color"
+  // is switched off.
+  syncGlobalToggleCssState() {
+    try {
+      document.documentElement.classList.toggle(
+        "act-enabled",
+        !!this.settings.enabled,
+      );
+    } catch (_) {}
+  }
+
+  // Remove inline styling applied to the inline title / tab title by
+  // applyTitleHighlights. Used when the plugin unloads and whenever the global
+  // toggle turns off (titles are outside the injected stylesheet's scope, so
+  // they must be reset explicitly).
+  clearTitleHighlights() {
+    try {
+      document
+        .querySelectorAll(".inline-title, .workspace-tab-header-inner-title")
+        .forEach((el) => {
+          for (const p of [
+            "color",
+            "--highlight-color",
+            "background-color",
+            "border-radius",
+            "padding-left",
+            "padding-right",
+            "padding-top",
+            "padding-bottom",
+            "margin-top",
+            "margin-bottom",
+            "border",
+            "border-top",
+            "border-bottom",
+            "border-left",
+            "border-right",
+            "box-decoration-break",
+            "-webkit-box-decoration-break",
+            "corner-shape",
+          ]) {
+            try {
+              el.style.removeProperty(p);
+            } catch (_) {}
+          }
+        });
+    } catch (_) {}
+  }
+
+  // Strip markdown-element decorations that were written directly into the
+  // reading-view DOM (list markers, list/task colors, inline-colored headings).
+  // Everything here is marked by the plugin itself, so only our own styling is
+  // removed. Called when the global toggle is switched off — the injected
+  // stylesheet is dropped separately, but inline styles/classes would survive.
+  clearMarkdownElementDecorations() {
+    // Headings (and other blocks) colored inline by markdown-element entries
+    try {
+      document.querySelectorAll("[data-act-md-colored]").forEach((el) => {
+        try {
+          el.style.removeProperty("color");
+          el.style.removeProperty("--highlight-color");
+          el.style.removeProperty("background-color");
+          el.style.removeProperty("padding-left");
+          el.style.removeProperty("padding-right");
+          el.style.removeProperty("padding-top");
+          el.style.removeProperty("padding-bottom");
+          el.style.removeProperty("border-radius");
+          el.style.removeProperty("border");
+          el.style.removeProperty("box-decoration-break");
+          el.style.removeProperty("-webkit-box-decoration-break");
+          el.removeAttribute("data-act-md-colored");
+        } catch (_) {}
+      });
+    } catch (_) {}
+    // List / task markers + list item text color
+    try {
+      document
+        .querySelectorAll("li.act-colored-list-item, p.act-colored-list-item, li.act-color-marker")
+        .forEach((li) => {
+          try {
+            li.style.removeProperty("--act-marker-color");
+            li.style.removeProperty("--act-color");
+            li.style.removeProperty("color");
+            li.classList.remove("act-colored-list-item");
+            li.classList.remove("act-color-marker");
+          } catch (_) {}
+          try {
+            li.querySelectorAll(".list-bullet, .list-number").forEach((m) => {
+              try {
+                m.style.removeProperty("color");
+              } catch (_) {}
+            });
+          } catch (_) {}
+          try {
+            li.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+              try {
+                cb.style.removeProperty("accent-color");
+              } catch (_) {}
+            });
+          } catch (_) {}
+        });
+    } catch (_) {}
+    // Highlight-preset elements (reading-mode <mark>, live-preview .cm-highlight)
+    // that were styled inline
+    try {
+      document
+        .querySelectorAll(".always-color-text-highlight-marks")
+        .forEach((el) => {
+          try {
+            for (const p of [
+              "color",
+              "background-color",
+              "--highlight-color",
+              "--highlight-background",
+              "padding-left",
+              "padding-right",
+              "padding-top",
+              "padding-bottom",
+              "border-radius",
+              "border",
+              "border-top",
+              "border-bottom",
+              "border-left",
+              "border-right",
+              "corner-shape",
+              "box-decoration-break",
+              "-webkit-box-decoration-break",
+            ]) {
+              try {
+                el.style.removeProperty(p);
+              } catch (_) {}
+            }
+            el.classList.remove("always-color-text-highlight-marks");
+          } catch (_) {}
+        });
+    } catch (_) {}
+  }
+
+  // --- Single entry point for the "Enable Global Color" toggle -------------
+  // Every toggle surface (settings toggle, ribbon, status bar, command palette)
+  // goes through here so the injected stylesheets, the static-CSS gate
+  // (styles/core.css) and the reading-view decorations always stay in sync
+  // with settings.enabled.
+  async setGlobalEnabled(value) {
+    this.settings.enabled = !!value;
+    await this.saveSettings();
+    try {
+      this.updateStatusBar();
+    } catch (_) {}
+
+    // Gate/un-gate the static stylesheet rules (styles/core.css)
+    this.syncGlobalToggleCssState();
+
+    this._lpCalloutCache = new WeakMap();
+    try {
+      this.applyThemeFixer();
+    } catch (_) {}
+    try {
+      this.applyFormattingPresetStyles();
+    } catch (_) {}
+    try {
+      if (this.settings.enabled) this.applyHighlightPresetTransparency();
+      else this.removeHighlightPresetTransparency();
+    } catch (_) {}
+
+    // Regenerates — or removes, when the toggle is off — the markdown-element
+    // stylesheet (act-formatting-styles) and re-registers the editor extensions.
+    try {
+      this.reconfigureEditorExtensions();
+    } catch (_) {}
+    try {
+      this.forceRefreshAllEditors();
+    } catch (_) {}
+    try {
+      this.forceRefreshAllReadingViews();
+    } catch (_) {}
+
+    if (this.settings.enabled) {
+      this.removeDisabledNeutralizerStyles();
+    } else {
+      this.applyDisabledNeutralizerStyles();
+      try {
+        this.clearAllHighlights();
+      } catch (_) {}
+      // Strip markdown-element decorations written straight into the DOM
+      // (list markers, task/list colors, inline-colored headings, marks, tags).
+      try {
+        this.clearMarkdownElementDecorations();
+      } catch (_) {}
+      try {
+        this._applyLivePreviewTagHighlights();
+      } catch (_) {}
+    }
+
+    try {
+      if (this.settings.enabled) {
+        if (!this.settings.disableLivePreviewColoring) {
+          this.applyEnabledLivePreviewCalloutStyles();
+          this.applyEnabledLivePreviewTextColorStyles();
+        } else {
+          this.removeEnabledLivePreviewCalloutStyles();
+          this.removeEnabledLivePreviewTextColorStyles();
+        }
+        this.applyEnabledReadingCalloutStyles();
+        if (this.settings.hideHighlights) {
+          this.applyHideHighlightsNeutralizerStyles();
+        } else {
+          this.removeHideHighlightsNeutralizerStyles();
+        }
+      } else {
+        this.removeEnabledLivePreviewCalloutStyles();
+        this.removeEnabledLivePreviewTextColorStyles();
+        this.removeEnabledReadingCalloutStyles();
+        this.removeHideHighlightsNeutralizerStyles();
+      }
+      if (!this.settings.disableLivePreviewColoring) {
+        this.refreshAllLivePreviewCallouts();
+        this.forceReprocessLivePreviewCallouts();
+        this.refreshAllLivePreviewTables();
+        this.forceReprocessLivePreviewTables();
+      }
+      this.refreshAllBasesViews();
+      this.forceReprocessBasesViews();
+    } catch (_) {}
+    try {
+      this.reregisterCommandsWithLanguage();
+    } catch (_) {}
+  }
+
   applyDisabledNeutralizerStyles() {
     try {
       let style = document.getElementById("act-inline-neutralizer");
@@ -867,6 +1098,9 @@ class AlwaysColorText extends Plugin {
       this.rescheduleAutoBackup();
     } catch (_) {}
 
+    // Sync the static-stylesheet gate (styles/core.css) with the saved toggle
+    this.syncGlobalToggleCssState();
+
     if (this.settings.enabled) {
       this.removeDisabledNeutralizerStyles();
       if (!this.settings.disableLivePreviewColoring) {
@@ -925,58 +1159,11 @@ class AlwaysColorText extends Plugin {
         "palette",
         this.t("ribbon_title", "Always color text"),
         async () => {
-          this.settings.enabled = !this.settings.enabled;
-          await this.saveSettings();
-          this.updateStatusBar();
-          // Clear the callout cache when toggling via ribbon
-          this._lpCalloutCache = new WeakMap();
-          this.reconfigureEditorExtensions();
-          this.forceRefreshAllEditors();
-          this.forceRefreshAllReadingViews();
+          await this.setGlobalEnabled(!this.settings.enabled);
           if (this.settings.enabled)
             new Notice(this.t("notice_enabled", "Always color text enabled"));
           else
             new Notice(this.t("notice_disabled", "Always color text disabled"));
-          if (this.settings.enabled) {
-            this.removeDisabledNeutralizerStyles();
-          } else {
-            this.applyDisabledNeutralizerStyles();
-          }
-          if (!this.settings.enabled) {
-            try {
-              this.clearAllHighlights();
-            } catch (_) {}
-          }
-          try {
-            if (this.settings.enabled) {
-              if (!this.settings.disableLivePreviewColoring) {
-                this.applyEnabledLivePreviewCalloutStyles();
-                this.applyEnabledLivePreviewTextColorStyles();
-              } else {
-                this.removeEnabledLivePreviewCalloutStyles();
-                this.removeEnabledLivePreviewTextColorStyles();
-              }
-              this.applyEnabledReadingCalloutStyles();
-              if (this.settings.hideHighlights) {
-                this.applyHideHighlightsNeutralizerStyles();
-              } else {
-                this.removeHideHighlightsNeutralizerStyles();
-              }
-            } else {
-              this.removeEnabledLivePreviewCalloutStyles();
-              this.removeEnabledLivePreviewTextColorStyles();
-              this.removeEnabledReadingCalloutStyles();
-              this.removeHideHighlightsNeutralizerStyles();
-            }
-            if (!this.settings.disableLivePreviewColoring) {
-              this.refreshAllLivePreviewCallouts();
-              this.forceReprocessLivePreviewCallouts();
-              this.refreshAllLivePreviewTables();
-              this.forceReprocessLivePreviewTables();
-            }
-            this.refreshAllBasesViews();
-            this.forceReprocessBasesViews();
-          } catch (_) {}
         },
       );
     }
@@ -985,59 +1172,12 @@ class AlwaysColorText extends Plugin {
     if (!this.settings.disableToggleModes.statusBar) {
       this.statusBar = this.addStatusBarItem();
       this.updateStatusBar();
-      this.statusBar.onclick = () => {
-        this.settings.enabled = !this.settings.enabled;
-        this.saveSettings();
-        this.updateStatusBar();
-        // Clear the callout cache when toggling via status bar
-        this._lpCalloutCache = new WeakMap();
-        this.reconfigureEditorExtensions();
-        this.forceRefreshAllEditors();
-        this.forceRefreshAllReadingViews();
+      this.statusBar.onclick = async () => {
+        await this.setGlobalEnabled(!this.settings.enabled);
         if (this.settings.enabled)
           new Notice(this.t("notice_enabled", "Always color text enabled"));
         else
           new Notice(this.t("notice_disabled", "Always color text disabled"));
-        if (this.settings.enabled) {
-          this.removeDisabledNeutralizerStyles();
-        } else {
-          this.applyDisabledNeutralizerStyles();
-        }
-        if (!this.settings.enabled) {
-          try {
-            this.clearAllHighlights();
-          } catch (_) {}
-        }
-        try {
-          if (this.settings.enabled) {
-            if (!this.settings.disableLivePreviewColoring) {
-              this.applyEnabledLivePreviewCalloutStyles();
-              this.applyEnabledLivePreviewTextColorStyles();
-            } else {
-              this.removeEnabledLivePreviewCalloutStyles();
-              this.removeEnabledLivePreviewTextColorStyles();
-            }
-            this.applyEnabledReadingCalloutStyles();
-            if (this.settings.hideHighlights) {
-              this.applyHideHighlightsNeutralizerStyles();
-            } else {
-              this.removeHideHighlightsNeutralizerStyles();
-            }
-          } else {
-            this.removeEnabledLivePreviewCalloutStyles();
-            this.removeEnabledLivePreviewTextColorStyles();
-            this.removeEnabledReadingCalloutStyles();
-            this.removeHideHighlightsNeutralizerStyles();
-          }
-          if (!this.settings.disableLivePreviewColoring) {
-            this.refreshAllLivePreviewCallouts();
-            this.forceReprocessLivePreviewCallouts();
-            this.refreshAllLivePreviewTables();
-            this.forceReprocessLivePreviewTables();
-          }
-          this.refreshAllBasesViews();
-          this.forceReprocessBasesViews();
-        } catch (_) {}
       };
     } else {
       this.statusBar = null;
@@ -2442,43 +2582,12 @@ class AlwaysColorText extends Plugin {
           ? this.t("command_disable_global", "Disable Global Coloring")
           : this.t("command_enable_global", "Enable Global Coloring"),
         callback: async () => {
-          this.settings.enabled = !this.settings.enabled;
-          await this.saveSettings();
+          await this.setGlobalEnabled(!this.settings.enabled);
           new Notice(
             this.settings.enabled
               ? this.t("notice_global_enabled", "Always Color Text Enabled")
               : this.t("notice_global_disabled", "Always Color Text Disabled"),
           );
-          this._lpCalloutCache = new WeakMap();
-          this.reconfigureEditorExtensions();
-          this.forceRefreshAllEditors();
-          this.forceRefreshAllReadingViews();
-          if (this.settings.enabled) {
-            this.removeDisabledNeutralizerStyles();
-          } else {
-            this.applyDisabledNeutralizerStyles();
-            this.clearAllHighlights();
-          }
-          try {
-            if (this.settings.enabled) {
-              if (!this.settings.disableLivePreviewColoring) {
-                this.applyEnabledLivePreviewCalloutStyles();
-              } else {
-                this.removeEnabledLivePreviewCalloutStyles();
-              }
-              this.applyEnabledReadingCalloutStyles();
-            } else {
-              this.removeEnabledLivePreviewCalloutStyles();
-              this.removeEnabledReadingCalloutStyles();
-            }
-            if (!this.settings.disableLivePreviewColoring) {
-              this.refreshAllLivePreviewCallouts();
-              this.forceReprocessLivePreviewCallouts();
-            }
-          } catch (_) {}
-          try {
-            this.reregisterCommandsWithLanguage();
-          } catch (_) {}
         },
       });
       addTrackedCommand({
@@ -4926,6 +5035,12 @@ class AlwaysColorText extends Plugin {
       document.querySelectorAll("style[data-act-line-style]").forEach(el => el.remove());
     } catch (e) {}
 
+    // Drop the static-stylesheet gate class so no state is left on <html>
+    // (Obsidian unloads styles.css with the plugin, but stay tidy regardless).
+    try {
+      document.documentElement.classList.remove("act-enabled");
+    } catch (e) {}
+
     // Clear any pending timers
     try {
       if (this._refreshTimeout) {
@@ -5125,6 +5240,7 @@ class AlwaysColorText extends Plugin {
   }
 
   enablePluginFeatures() {
+    this.syncGlobalToggleCssState();
     this.applyThemeFixer();
     this.applyFormattingPresetStyles();
     this.applyFormattingStyles();
@@ -5401,36 +5517,21 @@ class AlwaysColorText extends Plugin {
     } catch (_) {}
     // Clear JS-applied title styling (inline-title / tab-title live outside
     // the stylesheet scope, so they must be reset explicitly on disable).
-    try {
-      document
-        .querySelectorAll(".inline-title, .workspace-tab-header-inner-title")
-        .forEach((el) => {
-          for (const p of [
-            "color",
-            "--highlight-color",
-            "background-color",
-            "border-radius",
-            "padding-left",
-            "padding-right",
-            "padding-top",
-            "padding-bottom",
-            "margin-top",
-            "margin-bottom",
-            "border",
-            "border-top",
-            "border-bottom",
-            "border-left",
-            "border-right",
-            "box-decoration-break",
-            "-webkit-box-decoration-break",
-            "corner-shape",
-          ]) {
-            try {
-              el.style.removeProperty(p);
-            } catch (_) {}
-          }
-        });
-    } catch (_) {}
+    this.clearTitleHighlights();
+    // If the features are torn down while the global toggle is OFF, nothing of
+    // ours may remain in the DOM — otherwise markdown elements keep their
+    // (inline) coloring even though the plugin is "disabled".
+    if (!this.settings.enabled) {
+      try {
+        this.clearAllHighlights();
+      } catch (_) {}
+      try {
+        this.clearMarkdownElementDecorations();
+      } catch (_) {}
+      try {
+        this._applyLivePreviewTagHighlights();
+      } catch (_) {}
+    }
     try {
       for (const k of [
         "light-b",
@@ -6968,6 +7069,15 @@ class AlwaysColorText extends Plugin {
       const styleId = "act-formatting-styles";
       let styleEl = document.getElementById(styleId);
 
+      // Global toggle OFF → markdown-element coloring must not be applied at
+      // all. Drop the injected stylesheet (editor + reading view) and reset the
+      // JS-applied title styling instead of regenerating rules.
+      if (!this.settings.enabled) {
+        if (styleEl) styleEl.remove();
+        this.clearTitleHighlights();
+        return;
+      }
+
       const we = this.settings.wordEntries || [];
       const weAll = (this.settings.wordEntryGroups || [])
         .reduce((acc, g) => acc.concat(g.entries || []), [])
@@ -7161,6 +7271,42 @@ class AlwaysColorText extends Plugin {
   // since CSS cannot match tag text. This guarantees single-tag coloring works even
   // on Obsidian builds that don't expose a usable per-tag selector.
   _applyLivePreviewTagHighlights() {
+    // Global toggle off → never (re)apply tag coloring; strip any inline tag
+    // styling that is still hanging around from when coloring was enabled.
+    if (!this.settings.enabled) {
+      try {
+        document
+          .querySelectorAll(".cm-hashtag, .cm-hashtag-begin, .cm-hashtag-end")
+          .forEach((el) => {
+            for (const p of [
+              "color",
+              "background-color",
+              "border-radius",
+              "corner-shape",
+              "border-top-left-radius",
+              "border-top-right-radius",
+              "border-bottom-left-radius",
+              "border-bottom-right-radius",
+              "border",
+              "border-top",
+              "border-bottom",
+              "border-left",
+              "border-right",
+              "padding-left",
+              "padding-right",
+              "padding-top",
+              "padding-bottom",
+              "margin-top",
+              "margin-bottom",
+            ]) {
+              try {
+                el.style.removeProperty(p);
+              } catch (_) {}
+            }
+          });
+      } catch (_) {}
+      return;
+    }
     try {
       const all = (this.settings.wordEntries || []).concat(
         (this.settings.wordEntryGroups || []).reduce(
@@ -7529,6 +7675,11 @@ class AlwaysColorText extends Plugin {
   // border-radius, border, box-decoration-break, custom CSS incl. corner-shape)
   // mirroring applyElementHighlights / applyFormattingStyles.
   applyTitleHighlights() {
+    // Global toggle off → titles must not be colored; clear leftovers instead.
+    if (!this.settings.enabled) {
+      this.clearTitleHighlights();
+      return;
+    }
     const clearTitleStyling = (el) => {
       el.style.removeProperty("color");
       el.style.removeProperty("--highlight-color");
@@ -7882,6 +8033,9 @@ class AlwaysColorText extends Plugin {
       this.enablePluginFeatures();
     }
     this.updateStatusBar();
+    // Keep the static-stylesheet gate (styles/core.css) in sync on every save,
+    // so no code path can leave stale coloring rules active (or suppress them).
+    this.syncGlobalToggleCssState();
     try {
       this.forceRefreshAllEditors();
     } catch (e) {}
@@ -14102,11 +14256,20 @@ class AlwaysColorText extends Plugin {
               try {
                 headingEl.style.setProperty("--highlight-color", c);
               } catch (e) {}
+              // Marker so the global-toggle-off cleanup knows this inline
+              // styling came from us (clearMarkdownElementDecorations).
+              try {
+                headingEl.setAttribute("data-act-md-colored", "");
+              } catch (e) {}
               try {
                 const info = this._domRefs.get(block);
                 if (info) info.matchCount = 1;
               } catch (e) {}
               continue;
+            } else if (headingEl.hasAttribute("data-act-md-colored")) {
+              headingEl.style.removeProperty("color");
+              headingEl.style.removeProperty("--highlight-color");
+              headingEl.removeAttribute("data-act-md-colored");
             }
           }
         }
