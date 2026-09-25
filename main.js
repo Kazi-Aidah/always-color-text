@@ -116,7 +116,6 @@ var require_en = __commonJS({
       "command_open_regex_tester": "Add Regex (Open Regex Tester)",
       "command_open_blacklist_regex_tester": "Add Blacklist Regex",
       "command_manage_colored_texts": "Manage Colored Texts",
-      "command_open_colored_texts_settings": "Colored Texts Settings",
       "command_open_plugin_settings": "Open Plugin Settings",
       "command_toggle_hide_text_colors": "Hide/Unhide Text Colors",
       "command_toggle_hide_highlights": "Hide/Unhide Highlights",
@@ -6215,7 +6214,7 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 
 // src/core/AlwaysColorText.js
-var import_obsidian28 = require("obsidian");
+var import_obsidian29 = require("obsidian");
 
 // src/utils/BloomFilter.js
 var BloomFilter = class {
@@ -31405,6 +31404,117 @@ function getBestFolderEntryLogic(filePath, settings, normalizePath2, _parentFold
   }
 }
 
+// src/core/commandIcons.js
+var import_obsidian26 = require("obsidian");
+var FALLBACK_ICON = "circle";
+var COMMAND_ICONS = {
+  // Coloring
+  "set-color-for-selection": "palette",
+  "color-text-for-current-file": "file-input",
+  "add-to-existing-entry": "plus-circle",
+  "color-highlight-once-selected-text": "highlighter",
+  // Toggles
+  "toggle-coloring-for-current-document": "file-xcorner",
+  "toggle-lightweight-mode": "zap",
+  "toggle-always-color-text": "power",
+  "toggle-hide-text-colors": "eye-off",
+  "toggle-hide-highlights": "view",
+  // Navigation / help
+  "show-latest-release-notes": "book-open",
+  "open-plugin-settings": "settings",
+  "manage-colored-texts": "list",
+  // Regex testers
+  "open-regex-tester": "regex",
+  "open-blacklist-regex-tester": "shield-off"
+};
+var DYNAMIC_COMMAND_ICON_RULES = [
+  { pattern: /^toggle-word-group-/, icon: "tag" },
+  { pattern: /^toggle-blacklist-group-/, icon: "circle-slashed" }
+];
+function resolveCommandIcon(commandId) {
+  if (typeof commandId !== "string" || !commandId) return null;
+  const colon = commandId.indexOf(":");
+  const bare = colon === -1 ? commandId : commandId.slice(colon + 1);
+  const prefix = colon === -1 ? "" : commandId.slice(0, colon + 1);
+  if (prefix && prefix !== "always-color-text:") return null;
+  const staticIcon = COMMAND_ICONS[bare];
+  if (staticIcon) return staticIcon;
+  for (const rule of DYNAMIC_COMMAND_ICON_RULES) {
+    if (rule.pattern.test(bare)) return rule.icon;
+  }
+  return null;
+}
+function isValidIconId(iconId) {
+  if (typeof iconId !== "string" || !iconId.trim()) return false;
+  const id = iconId.trim();
+  try {
+    if (typeof import_obsidian26.getIcon === "function") return !!(0, import_obsidian26.getIcon)(id);
+  } catch (_) {
+  }
+  try {
+    if (typeof import_obsidian26.getIconIds !== "function") return true;
+    const ids = (0, import_obsidian26.getIconIds)();
+    if (!Array.isArray(ids) || ids.length === 0) return true;
+    const known = new Set(ids);
+    if (known.has(id)) return true;
+    const bare = id.startsWith("lucide-") ? id.slice(7) : id;
+    if (known.has(`lucide-${bare}`)) return true;
+    if (known.has(bare)) return true;
+    return false;
+  } catch (_) {
+    return true;
+  }
+}
+function pickIcon(preferred) {
+  if (!preferred) return null;
+  if (isValidIconId(preferred)) return preferred;
+  if (isValidIconId(FALLBACK_ICON)) return FALLBACK_ICON;
+  return preferred;
+}
+function enforceCommandIcons(app, pluginId = "always-color-text") {
+  try {
+    const registry = app && app.commands && app.commands.commands;
+    if (!registry || typeof registry !== "object") return 0;
+    const prefix = `${pluginId}:`;
+    let changed = 0;
+    for (const key of Object.keys(registry)) {
+      if (key.lastIndexOf(prefix, 0) !== 0) continue;
+      const command = registry[key];
+      if (!command) continue;
+      const desired = pickIcon(resolveCommandIcon(key));
+      if (!desired) continue;
+      const current = typeof command.icon === "string" ? command.icon.trim() : "";
+      if (current && (current === desired || isValidIconId(current))) {
+        continue;
+      }
+      command.icon = desired;
+      changed += 1;
+    }
+    return changed;
+  } catch (_) {
+    return 0;
+  }
+}
+function refreshMobileToolbar(app) {
+  try {
+    const toolbar = app && app.mobileToolbar;
+    if (!toolbar || typeof toolbar.compileToolbar !== "function") return false;
+    const vault = app.vault;
+    const config = vault && typeof vault.getConfig === "function" ? vault.getConfig("mobileToolbarCommands") : null;
+    if (!Array.isArray(config)) return false;
+    toolbar.lastCommandIds = null;
+    toolbar.compileToolbar();
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+function applyCommandIcons(app, pluginId = "always-color-text") {
+  const changed = enforceCommandIcons(app, pluginId);
+  refreshMobileToolbar(app);
+  return changed;
+}
+
 // src/utils/headingUtils.js
 function getHeadingLevelsFromPattern(pattern) {
   try {
@@ -31463,7 +31573,7 @@ function getEntryForHeadingLevel(entries, level) {
 var import_i18n = __toESM(require_i18n());
 
 // src/modals/RegexTesterModal.js
-var import_obsidian26 = require("obsidian");
+var import_obsidian27 = require("obsidian");
 
 // src/utils/reverseLookup.js
 function collectLiveEntries(settings) {
@@ -32196,8 +32306,8 @@ function buildSelectionContext(editor, view) {
 }
 
 // src/modals/SelectColoringEntryModal.js
-var import_obsidian27 = require("obsidian");
-var SelectColoringEntryModal = class extends import_obsidian27.FuzzySuggestModal {
+var import_obsidian28 = require("obsidian");
+var SelectColoringEntryModal = class extends import_obsidian28.FuzzySuggestModal {
   constructor(app, plugin, selectedText, candidates, onChoose) {
     super(app);
     this.plugin = plugin;
@@ -32251,7 +32361,7 @@ var SelectColoringEntryModal = class extends import_obsidian27.FuzzySuggestModal
 
 // src/core/AlwaysColorText.js
 var moment = window.moment;
-var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
+var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
   constructor(...args) {
     super(...args);
     (function() {
@@ -33284,9 +33394,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         async () => {
           await this.setGlobalEnabled(!this.settings.enabled);
           if (this.settings.enabled)
-            new import_obsidian28.Notice(this.t("notice_enabled", "Always color text enabled"));
+            new import_obsidian29.Notice(this.t("notice_enabled", "Always color text enabled"));
           else
-            new import_obsidian28.Notice(this.t("notice_disabled", "Always color text disabled"));
+            new import_obsidian29.Notice(this.t("notice_disabled", "Always color text disabled"));
         }
       );
     }
@@ -33296,9 +33406,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       this.statusBar.onclick = async () => {
         await this.setGlobalEnabled(!this.settings.enabled);
         if (this.settings.enabled)
-          new import_obsidian28.Notice(this.t("notice_enabled", "Always color text enabled"));
+          new import_obsidian29.Notice(this.t("notice_enabled", "Always color text enabled"));
         else
-          new import_obsidian28.Notice(this.t("notice_disabled", "Always color text disabled"));
+          new import_obsidian29.Notice(this.t("notice_disabled", "Always color text disabled"));
       };
     } else {
       this.statusBar = null;
@@ -33528,7 +33638,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
                     view
                   ).open();
                 } catch (e) {
-                  new import_obsidian28.Notice(
+                  new import_obsidian29.Notice(
                     this.t(
                       "notice_error_opening_modal",
                       "Unable to open modal"
@@ -33542,7 +33652,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
             menu.addItem((item) => {
               item.setTitle(this.t("menu_always_color_text", "Always color text")).setIcon("palette").onClick(() => {
                 if (this.isWordBlacklisted(selectedText, view.file.path)) {
-                  new import_obsidian28.Notice(
+                  new import_obsidian29.Notice(
                     this.t(
                       "notice_blacklisted_cannot_color",
                       `"${selectedText}" is blacklisted and cannot be colored.`,
@@ -33589,7 +33699,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
               }
               this._openQuickStylesSubmenu = null;
             }
-            const sub = new import_obsidian28.Menu();
+            const sub = new import_obsidian29.Menu();
             stylesArr.forEach((style) => {
               sub.addItem((subItem) => {
                 const frag = document.createDocumentFragment();
@@ -33867,7 +33977,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
               chevronIcon.style.cursor = "pointer";
               chevronIcon.style.marginLeft = "auto";
               try {
-                (0, import_obsidian28.setIcon)(chevronIcon, "chevron-right");
+                (0, import_obsidian29.setIcon)(chevronIcon, "chevron-right");
               } catch (_) {
               }
               chevronIcon.addEventListener("click", (ev) => {
@@ -33911,7 +34021,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
               try {
                 const iconRight = document.createElement("div");
                 iconRight.className = "menu-item-icon mod-submenu";
-                (0, import_obsidian28.setIcon)(iconRight, "chevron-right");
+                (0, import_obsidian29.setIcon)(iconRight, "chevron-right");
                 item.dom?.appendChild(iconRight);
               } catch (_) {
               }
@@ -34089,7 +34199,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
                 }
                 await this.saveSettings();
                 this.refreshEditor(view, true);
-                new import_obsidian28.Notice(
+                new import_obsidian29.Notice(
                   this.t(
                     "notice_removed_always_color",
                     `Removed always coloring for "${selectedText}".`,
@@ -34122,7 +34232,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
                     groupedPatterns: null
                   });
                   await this.saveSettings();
-                  new import_obsidian28.Notice(
+                  new import_obsidian29.Notice(
                     this.t(
                       "notice_added_to_blacklist",
                       `"${selectedText}" added to blacklist.`,
@@ -34134,7 +34244,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
                     this.settingTab._refreshBlacklistWords();
                   }
                 } else {
-                  new import_obsidian28.Notice(
+                  new import_obsidian29.Notice(
                     this.t(
                       "notice_already_blacklisted",
                       `"${selectedText}" is already blacklisted.`,
@@ -34161,6 +34271,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
             this.refreshAllLivePreviewCallouts();
           } catch (_) {
           }
+          try {
+            this.enforceCommandIcons();
+          } catch (_) {
+          }
         })
       );
     } catch (_) {
@@ -34181,6 +34295,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       };
       const addTrackedCommand = (cmd) => {
         if (!cmd || !cmd.id || isCommandHidden(cmd.id)) return null;
+        if (!cmd.icon) {
+          const icon = resolveCommandIcon(cmd.id);
+          if (icon) cmd.icon = icon;
+        }
         this._registeredCommandIds.push(cmd.id);
         return this.addCommand(cmd);
       };
@@ -34190,7 +34308,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t(
                 "notice_select_text_first",
                 "Please select some text first."
@@ -34226,14 +34344,14 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t("notice_select_text_first", "Please select some text first.")
             );
             return;
           }
           const activeFile = this.app.workspace.getActiveFile();
           if (!activeFile) {
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t("notice_no_active_file", "No active file found.")
             );
             return;
@@ -34268,7 +34386,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t(
                 "notice_select_text_first",
                 "Please select some text first."
@@ -34300,7 +34418,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         callback: async () => {
           const md = this.app.workspace.getActiveFile();
           if (!md) {
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t(
                 "notice_no_active_file",
                 "No active file to toggle coloring for."
@@ -34312,7 +34430,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
             const index = this.settings.disabledFiles.indexOf(md.path);
             if (index > -1) this.settings.disabledFiles.splice(index, 1);
             await this.saveSettings();
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t(
                 "notice_coloring_enabled_for_path",
                 `Coloring enabled for ${md.path}`,
@@ -34322,7 +34440,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
           } else {
             this.settings.disabledFiles.push(md.path);
             await this.saveSettings();
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t(
                 "notice_coloring_disabled_for_path",
                 `Coloring disabled for ${md.path}`,
@@ -34361,7 +34479,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         callback: async () => {
           this.settings.extremeLightweightMode = !this.settings.extremeLightweightMode;
           await this.saveSettings();
-          new import_obsidian28.Notice(
+          new import_obsidian29.Notice(
             this.settings.extremeLightweightMode ? this.t(
               "notice_lightweight_mode_enabled",
               "Lightweight Mode enabled"
@@ -34383,7 +34501,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         editorCallback: (editor, view) => {
           const word = editor.getSelection().trim();
           if (!word) {
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t(
                 "notice_select_text_first_once",
                 "Please select text first to color/highlight once."
@@ -34454,7 +34572,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         name: this.settings.enabled ? this.t("command_disable_global", "Disable Global Coloring") : this.t("command_enable_global", "Enable Global Coloring"),
         callback: async () => {
           await this.setGlobalEnabled(!this.settings.enabled);
-          new import_obsidian28.Notice(
+          new import_obsidian29.Notice(
             this.settings.enabled ? this.t("notice_global_enabled", "Always Color Text Enabled") : this.t("notice_global_disabled", "Always Color Text Disabled")
           );
         }
@@ -34466,7 +34584,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
           try {
             new ChangelogModal(this.app, this).open();
           } catch (e) {
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t(
                 "notice_unable_open_changelog",
                 "Unable to open changelog modal."
@@ -34491,16 +34609,6 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
             }
           } catch (_) {
           }
-        }
-      });
-      addTrackedCommand({
-        id: "open-colored-texts-settings",
-        name: this.t(
-          "command_open_colored_texts_settings",
-          "Colored Texts Settings"
-        ),
-        callback: () => {
-          this.openPluginSettingsTab("always-color-texts");
         }
       });
       addTrackedCommand({
@@ -34555,7 +34663,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
               this.forceRefreshAllReadingViews();
             }).open();
           } catch (e) {
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t(
                 "notice_error_opening_regex_tester",
                 "Error opening regex tester"
@@ -34603,7 +34711,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
               this.forceRefreshAllReadingViews();
             }).open();
           } catch (e) {
-            new import_obsidian28.Notice(
+            new import_obsidian29.Notice(
               this.t(
                 "notice_error_opening_blacklist_regex_tester",
                 "Error opening blacklist regex tester"
@@ -34659,7 +34767,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
             } catch (_) {
             }
             const msg = this.settings.hideTextColors ? this.t("notice_text_colors_hidden", "Text colors hidden") : this.t("notice_text_colors_visible", "Text colors visible");
-            new import_obsidian28.Notice(msg);
+            new import_obsidian29.Notice(msg);
           } catch (_) {
           }
         }
@@ -34717,7 +34825,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
             } catch (_) {
             }
             const msg = this.settings.hideHighlights ? this.t("notice_highlights_hidden", "Highlights hidden") : this.t("notice_highlights_visible", "Highlights visible");
-            new import_obsidian28.Notice(msg);
+            new import_obsidian29.Notice(msg);
           } catch (_) {
           }
         }
@@ -34729,6 +34837,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         this.registerBlacklistGroupCommands();
       }
       this._commandsRegistered = true;
+      this.enforceCommandIcons();
     } catch (e) {
     }
   }
@@ -34764,6 +34873,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         this.addCommand({
           id: commandId,
           name: commandName,
+          icon: resolveCommandIcon(commandId),
           callback: async () => {
             try {
               const latestGroup = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups.find(
@@ -34783,7 +34893,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
                 "notice_word_group_deactivated",
                 `Word group "${latestGroupName}" deactivated`
               );
-              new import_obsidian28.Notice(status);
+              new import_obsidian29.Notice(status);
               this._cacheDirty = true;
               this.reconfigureEditorExtensions();
               this.forceRefreshAllEditors();
@@ -34830,6 +34940,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
         this.addCommand({
           id: commandId,
           name: commandName,
+          icon: resolveCommandIcon(commandId),
           callback: async () => {
             try {
               const latestGroup = Array.isArray(
@@ -34851,7 +34962,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
                 "notice_blacklist_group_deactivated",
                 `Blacklist group "${latestGroupName}" deactivated`
               );
-              new import_obsidian28.Notice(status);
+              new import_obsidian29.Notice(status);
               this._cacheDirty = true;
               this.reconfigureEditorExtensions();
               this.forceRefreshAllEditors();
@@ -34864,6 +34975,22 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       });
     } catch (e) {
       debugError("COMMANDS", "Error registering blacklist group commands:", e);
+    }
+  }
+  /**
+   * Make sure every command of this plugin carries a valid icon in the
+   * command registry (what the mobile toolbar reads from) and that the
+   * mobile toolbar re-renders — it caches compiled buttons, so without a
+   * refresh already-built "?" buttons would survive until Obsidian
+   * restarts. Mirrors how Commander reinforces toolbar icons, but owned by
+   * this plugin so it works regardless of Commander being installed.
+   */
+  enforceCommandIcons() {
+    try {
+      const pluginId = this.manifest && this.manifest.id || "always-color-text";
+      return applyCommandIcons(this.app, pluginId);
+    } catch (_) {
+      return 0;
     }
   }
   removeRegisteredCommands() {
@@ -34906,6 +35033,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       this._commandsRegistered = false;
       this._registeredCommandIds = [];
       this.registerCommandPalette();
+      this.enforceCommandIcons();
     } catch (e) {
       debugError(
         "SETTINGS",
@@ -35139,7 +35267,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       }
       {
         let vpInput;
-        new import_obsidian28.Setting(containerEl).setName(
+        new import_obsidian29.Setting(containerEl).setName(
           this.plugin.t(
             "highlight_vertical_padding",
             "Highlight vertical padding (px)"
@@ -36609,6 +36737,16 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
     } catch (e) {
     }
     this.disablePluginFeatures();
+    try {
+      const app = this.app;
+      setTimeout(() => {
+        try {
+          refreshMobileToolbar(app);
+        } catch (_) {
+        }
+      }, 0);
+    } catch (_) {
+    }
   }
   // --- Register CodeMirror, markdown, and listeners ---
   // Per-mode color adjustments: each theme mode has its own brightness,
@@ -36775,7 +36913,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       this.activeLeafChangeListener = this.app.workspace.on(
         "active-leaf-change",
         (leaf) => {
-          if (leaf && leaf.view instanceof import_obsidian28.MarkdownView) {
+          if (leaf && leaf.view instanceof import_obsidian29.MarkdownView) {
             try {
               if (leaf.view.getMode && leaf.view.getMode() === "preview") {
                 setTimeout(() => {
@@ -36818,7 +36956,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
     this.setupSearchObserver();
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
-        const activeLeaf = this.app.workspace.getActiveViewOfType(import_obsidian28.MarkdownView);
+        const activeLeaf = this.app.workspace.getActiveViewOfType(import_obsidian29.MarkdownView);
         if (activeLeaf && activeLeaf.getMode && activeLeaf.getMode() === "preview") {
           clearTimeout(this._layoutChangeReadingTimer);
           this._layoutChangeReadingTimer = setTimeout(() => {
@@ -36948,6 +37086,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
             "command_show_release_notes",
             "Show Latest Release Notes"
           ),
+          icon: resolveCommandIcon("show-latest-release-notes"),
           callback: async () => {
             try {
               new ChangelogModal(this.app, this).open();
@@ -36956,6 +37095,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
           }
         });
         this._changelogCommandRegistered = true;
+        this.enforceCommandIcons();
       }
     } catch (e) {
     }
@@ -37993,8 +38133,8 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
   async fetchLatestRelease() {
     const url = "https://api.github.com/repos/Kazi-Aidah/always-color-text/releases/latest";
     try {
-      if (typeof import_obsidian28.requestUrl === "function") {
-        const res = await (0, import_obsidian28.requestUrl)({
+      if (typeof import_obsidian29.requestUrl === "function") {
+        const res = await (0, import_obsidian29.requestUrl)({
           url,
           headers: {
             Accept: "application/vnd.github.v3+json",
@@ -38027,9 +38167,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       const url = `https://api.github.com/repos/Kazi-Aidah/always-color-text/releases?page=${page}&per_page=100`;
       try {
         let data = null;
-        if (typeof import_obsidian28.requestUrl === "function") {
+        if (typeof import_obsidian29.requestUrl === "function") {
           try {
-            const res = await (0, import_obsidian28.requestUrl)({
+            const res = await (0, import_obsidian29.requestUrl)({
               url,
               headers: {
                 Accept: "application/vnd.github.v3+json",
@@ -38924,7 +39064,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       this._autoBackupTimer = setInterval(() => {
         this.runAutoBackup().catch((e) => {
           try {
-            new import_obsidian28.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
+            new import_obsidian29.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
           } catch (_) {
           }
         });
@@ -38933,7 +39073,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
     if (remaining === 0) {
       this.runAutoBackup().catch((e) => {
         try {
-          new import_obsidian28.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
+          new import_obsidian29.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
         } catch (_) {
         }
       });
@@ -38942,7 +39082,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       this._autoBackupTimer = setTimeout(() => {
         this.runAutoBackup().catch((e) => {
           try {
-            new import_obsidian28.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
+            new import_obsidian29.Notice(`Always Color Text: Auto backup failed \u2014 ${e?.message || e}`);
           } catch (_) {
           }
         });
@@ -39853,7 +39993,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
   // --- FORCE REFRESH all open Markdown editors ---
   forceRefreshAllEditors() {
     this.app.workspace.iterateAllLeaves((leaf) => {
-      if (leaf.view instanceof import_obsidian28.MarkdownView && leaf.view.editor?.cm) {
+      if (leaf.view instanceof import_obsidian29.MarkdownView && leaf.view.editor?.cm) {
         leaf.view.editor.cm.dispatch({
           effects: forceRebuildEffect.of(null)
         });
@@ -39904,7 +40044,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
     } catch (e) {
     }
     this.app.workspace.iterateAllLeaves((leaf) => {
-      if (leaf.view instanceof import_obsidian28.MarkdownView && leaf.view.getMode && leaf.view.getMode() === "preview") {
+      if (leaf.view instanceof import_obsidian29.MarkdownView && leaf.view.getMode && leaf.view.getMode() === "preview") {
         const root = leaf.view.previewMode && leaf.view.previewMode.containerEl || leaf.view.contentEl || leaf.view.containerEl;
         try {
           if (this.settings.enabled) {
@@ -39943,7 +40083,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
       return;
     }
     this._lastRerender = Date.now();
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian28.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian29.MarkdownView);
     if (activeView) {
       this.refreshEditor(activeView, true);
       setTimeout(() => {
@@ -39985,7 +40125,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
     const callback = () => {
       if (token !== this._refreshSeq) return;
       if (!this.app || !this.app.workspace) return;
-      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian28.MarkdownView);
+      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian29.MarkdownView);
       if (activeView) {
         this.refreshEditor(activeView, force);
       }
@@ -41125,7 +41265,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
   }
   async _applyQuickColorACT(selectedText, textColor, backgroundColor, view, styleEntry = null) {
     if (this.isWordBlacklisted(selectedText, view?.file?.path)) {
-      new import_obsidian28.Notice(
+      new import_obsidian29.Notice(
         this.t(
           "notice_blacklisted_cannot_color",
           `"${selectedText}" is blacklisted and cannot be colored.`,
@@ -41482,7 +41622,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian28.Plugin {
   _getFrontmatter(filePath) {
     try {
       const file = this.app.vault.getAbstractFileByPath(filePath);
-      if (!file || !(file instanceof import_obsidian28.TFile)) return null;
+      if (!file || !(file instanceof import_obsidian29.TFile)) return null;
       const cache = this.app.metadataCache.getFileCache(file);
       return cache && cache.frontmatter ? cache.frontmatter : null;
     } catch (e) {
@@ -45277,7 +45417,7 @@ ${strongRule}`;
       }
       this.app.workspace.iterateAllLeaves((leaf) => {
         try {
-          if (!(leaf.view instanceof import_obsidian28.MarkdownView)) return;
+          if (!(leaf.view instanceof import_obsidian29.MarkdownView)) return;
           if (leaf.view.getMode && leaf.view.getMode() !== "source") return;
           const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
           if (view) {
@@ -45333,7 +45473,7 @@ ${strongRule}`;
         try {
           this.app.workspace.iterateAllLeaves((leaf) => {
             try {
-              if (!(leaf.view instanceof import_obsidian28.MarkdownView)) return;
+              if (!(leaf.view instanceof import_obsidian29.MarkdownView)) return;
               if (leaf.view.getMode && leaf.view.getMode() !== "source") return;
               const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
               if (view) {
@@ -45457,7 +45597,7 @@ ${strongRule}`;
       }
       this.app.workspace.iterateAllLeaves((leaf) => {
         try {
-          if (!(leaf.view instanceof import_obsidian28.MarkdownView)) return;
+          if (!(leaf.view instanceof import_obsidian29.MarkdownView)) return;
           if (leaf.view.getMode && leaf.view.getMode() !== "source") return;
           const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
           if (view) {
@@ -45557,7 +45697,7 @@ ${strongRule}`;
         try {
           this.app.workspace.iterateAllLeaves((leaf) => {
             try {
-              if (!(leaf.view instanceof import_obsidian28.MarkdownView)) return;
+              if (!(leaf.view instanceof import_obsidian29.MarkdownView)) return;
               if (leaf.view.getMode && leaf.view.getMode() !== "source") return;
               const view = leaf.view && (leaf.view.editor?.cm?.view || leaf.view.editor?.view || leaf.view.view || null);
               if (view) {

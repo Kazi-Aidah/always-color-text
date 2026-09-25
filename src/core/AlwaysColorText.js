@@ -12,6 +12,7 @@ import { buildReadingViewProcessor } from '../features/readingViewProcessor.js';
 import { compileWordEntriesLogic, compileTextBgColoringEntriesLogic, compileBlacklistEntriesLogic, PatternMatcher, SettingsIndex, resolveGroupColorOverride, stripInheritedGroupCssColors, resolveBorderSourceColor } from '../services/patternCompiler.js';
 import { evaluatePathRulesLogic, hasGlobalExcludeLogic, getBestFolderEntryLogic, globToRegex } from '../services/fileFilter.js';
 import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS, GLOBAL_STYLE_KEYS, IS_DEVELOPMENT } from './constants.js';
+import { resolveCommandIcon, applyCommandIcons, refreshMobileToolbar } from './commandIcons.js';
 import { Decoration, syntaxTree, forceRebuildEffect } from './cmSetup.js';
 import { debugLog, debugError, debugWarn, escapeHtml } from '../utils/debug.js';
 import { RegexCache } from '../utils/RegexCache.js';
@@ -2226,6 +2227,12 @@ class AlwaysColorText extends Plugin {
           try {
             this.refreshAllLivePreviewCallouts();
           } catch (_) {}
+          // Reinforce command icons once the workspace is ready (same point
+          // Commander applies its mobile toolbar icon mappings) so the
+          // mobile toolbar compiles them correctly from now on.
+          try {
+            this.enforceCommandIcons();
+          } catch (_) {}
         }),
       );
     } catch (_) {}
@@ -2251,6 +2258,12 @@ class AlwaysColorText extends Plugin {
 
       const addTrackedCommand = (cmd) => {
         if (!cmd || !cmd.id || isCommandHidden(cmd.id)) return null;
+        // Every command needs an icon: the mobile toolbar falls back to the
+        // "question mark in a circle" glyph for iconless commands.
+        if (!cmd.icon) {
+          const icon = resolveCommandIcon(cmd.id);
+          if (icon) cmd.icon = icon;
+        }
         this._registeredCommandIds.push(cmd.id);
         return this.addCommand(cmd);
       };
@@ -2624,16 +2637,6 @@ class AlwaysColorText extends Plugin {
         },
       });
       addTrackedCommand({
-        id: "open-colored-texts-settings",
-        name: this.t(
-          "command_open_colored_texts_settings",
-          "Colored Texts Settings",
-        ),
-        callback: () => {
-          this.openPluginSettingsTab("always-color-texts");
-        },
-      });
-      addTrackedCommand({
         id: "manage-colored-texts",
         name: this.t("command_manage_colored_texts", "Manage Colored Texts"),
         callback: () => {
@@ -2873,6 +2876,10 @@ class AlwaysColorText extends Plugin {
       }
 
       this._commandsRegistered = true;
+
+      // Reinforce icons on the freshly registered commands (and refresh the
+      // mobile toolbar) so no command renders as a "?" button.
+      this.enforceCommandIcons();
     } catch (e) {}
   }
 
@@ -2914,6 +2921,7 @@ class AlwaysColorText extends Plugin {
         this.addCommand({
           id: commandId,
           name: commandName,
+          icon: resolveCommandIcon(commandId),
           callback: async () => {
             try {
               const latestGroup = Array.isArray(this.settings.wordEntryGroups)
@@ -2997,6 +3005,7 @@ class AlwaysColorText extends Plugin {
         this.addCommand({
           id: commandId,
           name: commandName,
+          icon: resolveCommandIcon(commandId),
           callback: async () => {
             try {
               const latestGroup = Array.isArray(
@@ -3041,6 +3050,23 @@ class AlwaysColorText extends Plugin {
       });
     } catch (e) {
       debugError("COMMANDS", "Error registering blacklist group commands:", e);
+    }
+  }
+
+  /**
+   * Make sure every command of this plugin carries a valid icon in the
+   * command registry (what the mobile toolbar reads from) and that the
+   * mobile toolbar re-renders — it caches compiled buttons, so without a
+   * refresh already-built "?" buttons would survive until Obsidian
+   * restarts. Mirrors how Commander reinforces toolbar icons, but owned by
+   * this plugin so it works regardless of Commander being installed.
+   */
+  enforceCommandIcons() {
+    try {
+      const pluginId = (this.manifest && this.manifest.id) || "always-color-text";
+      return applyCommandIcons(this.app, pluginId);
+    } catch (_) {
+      return 0;
     }
   }
 
@@ -3096,6 +3122,9 @@ class AlwaysColorText extends Plugin {
       this._registeredCommandIds = [];
       // Re-register with new language
       this.registerCommandPalette();
+      // Commands were removed and re-added: reinforce their icons (and the
+      // mobile toolbar) again so toolbar buttons never fall back to "?".
+      this.enforceCommandIcons();
     } catch (e) {
       debugError(
         "SETTINGS",
@@ -5201,6 +5230,19 @@ class AlwaysColorText extends Plugin {
     } catch (e) {}
     // Disable features (unregister processors/listeners) as final step
     this.disablePluginFeatures();
+
+    // Our commands are removed right after this method returns. The mobile
+    // toolbar caches its compiled buttons, so rebuild it on the next tick —
+    // otherwise the (now dead) buttons would linger until the toolbar
+    // configuration changes.
+    try {
+      const app = this.app;
+      setTimeout(() => {
+        try {
+          refreshMobileToolbar(app);
+        } catch (_) {}
+      }, 0);
+    } catch (_) {}
   }
 
   // --- Register CodeMirror, markdown, and listeners ---
@@ -5607,6 +5649,7 @@ class AlwaysColorText extends Plugin {
             "command_show_release_notes",
             "Show Latest Release Notes",
           ),
+          icon: resolveCommandIcon("show-latest-release-notes"),
           callback: async () => {
             try {
               new ChangelogModal(this.app, this).open();
@@ -5614,6 +5657,7 @@ class AlwaysColorText extends Plugin {
           },
         });
         this._changelogCommandRegistered = true;
+        this.enforceCommandIcons();
       }
     } catch (e) {}
   }
