@@ -713,7 +713,24 @@ export class EditWordGroupModal extends Modal {
           }
         }
       } else {
-        liveGroup.entries.push(JSON.parse(JSON.stringify(entry)));
+        // Not in this group's live list: only add it back when it really still
+        // belongs here. The regex tester can file an entry under another group
+        // (or the default list) — re-adding it would duplicate it.
+        const sameUid = (e) =>
+          !!(e && entry && e.uid && entry.uid && e.uid === entry.uid);
+        const inFileList =
+          Array.isArray(this.plugin.settings.wordEntries) &&
+          this.plugin.settings.wordEntries.some(sameUid);
+        const inOtherGroup = groups.some(
+          (g) =>
+            g &&
+            g.uid !== liveGroup.uid &&
+            Array.isArray(g.entries) &&
+            g.entries.some(sameUid),
+        );
+        if (!inFileList && !inOtherGroup) {
+          liveGroup.entries.push(JSON.parse(JSON.stringify(entry)));
+        }
       }
       await this.plugin.saveSettings();
     } catch (_) {}

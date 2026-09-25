@@ -2672,23 +2672,27 @@ class AlwaysColorText extends Plugin {
               } catch (e) {}
               if (!Array.isArray(this.settings.wordEntries))
                 this.settings.wordEntries = [];
-              const idx = this.settings.wordEntries.findIndex(
-                (e) => e && e.pattern === entry.pattern && e.isRegex,
-              );
-              if (idx !== -1) {
-                const existing = this.settings.wordEntries[idx];
-                existing.pattern = entry.pattern;
-                existing.color = entry.color;
-                existing.textColor = entry.textColor;
-                existing.backgroundColor = entry.backgroundColor;
-                existing.styleType = entry.styleType;
-                existing.flags = entry.flags;
-                existing.presetLabel =
-                  entry.presetLabel || existing.presetLabel || undefined;
-                existing.persistAtEnd = true;
-              } else {
-                entry.persistAtEnd = true;
-                this.settings.wordEntries.push(entry);
+              // A regex filed under a word group by the tester must not be
+              // pushed into the default list as well (it would duplicate).
+              if (!entry.groupUid) {
+                const idx = this.settings.wordEntries.findIndex(
+                  (e) => e && e.pattern === entry.pattern && e.isRegex,
+                );
+                if (idx !== -1) {
+                  const existing = this.settings.wordEntries[idx];
+                  existing.pattern = entry.pattern;
+                  existing.color = entry.color;
+                  existing.textColor = entry.textColor;
+                  existing.backgroundColor = entry.backgroundColor;
+                  existing.styleType = entry.styleType;
+                  existing.flags = entry.flags;
+                  existing.presetLabel =
+                    entry.presetLabel || existing.presetLabel || undefined;
+                  existing.persistAtEnd = true;
+                } else {
+                  entry.persistAtEnd = true;
+                  this.settings.wordEntries.push(entry);
+                }
               }
               try {
                 this.settingTab &&

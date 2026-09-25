@@ -96,6 +96,105 @@ export function resolveRegexTesterPreviewColors({ tRaw, bRaw, tTouched, bTouched
   };
 }
 
+/**
+ * Which entry a group dropdown should preselect in the regex tester.
+ *
+ * - Editing an existing entry → the group that currently holds it (by
+ *   `entry.groupUid` first, then by searching every group's entries).
+ * - Otherwise an explicitly preselected group (`_preselectedGroupUid`) that
+ *   still exists, so callers can open the tester inside a group context.
+ *
+ * @param {object} opts
+ * @param {object|null} opts.editingEntry
+ * @param {string|null} [opts.preselectedGroupUid]
+ * @param {Array<object>} opts.groupsList
+ * @returns {string} group uid, or "" for the default list (No Group)
+ */
+export function resolveRegexTesterGroupInit({
+  editingEntry,
+  preselectedGroupUid = null,
+  groupsList,
+}) {
+  const groups = (Array.isArray(groupsList) ? groupsList : []).filter(Boolean);
+  if (editingEntry) {
+    if (
+      editingEntry.groupUid &&
+      groups.some((g) => g.uid === editingEntry.groupUid)
+    ) {
+      return editingEntry.groupUid;
+    }
+    const sameEntry = (e) =>
+      !!e && (e === editingEntry || (!!editingEntry.uid && e.uid === editingEntry.uid));
+    for (const g of groups) {
+      if (Array.isArray(g.entries) && g.entries.some(sameEntry)) {
+        return g.uid || "";
+      }
+    }
+    return "";
+  }
+  if (preselectedGroupUid && groups.some((g) => g.uid === preselectedGroupUid)) {
+    return String(preselectedGroupUid);
+  }
+  return "";
+}
+
+/**
+ * File an entry in exactly one place: a word group, or the default word list.
+ * An entry that already sits in the target location is left untouched so the
+ * group's ordering (which drives render priority) stays stable.
+ *
+ * Mutates `settings`.
+ *
+ * @param {object} settings plugin settings
+ * @param {object} entry the entry to place
+ * @param {string} [targetGroupUid] group uid, or "" for the default list
+ * @returns {string} the group uid the entry now belongs to ("" = default list)
+ */
+export function placeEntryInGroup(settings, entry, targetGroupUid = "") {
+  if (!entry || !settings) return "";
+  if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
+  if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
+  const targetUid = targetGroupUid ? String(targetGroupUid) : "";
+  const targetGroup = targetUid
+    ? settings.wordEntryGroups.find((g) => g && g.uid === targetUid) || null
+    : null;
+  const sameEntry = (e) =>
+    !!e && (e === entry || (!!entry.uid && e.uid === entry.uid));
+  const holds = (list) => Array.isArray(list) && list.some(sameEntry);
+  const currentGroup =
+    settings.wordEntryGroups.find((g) => g && holds(g.entries)) || null;
+  const alreadyPlaced = targetGroup
+    ? currentGroup === targetGroup
+    : !currentGroup && holds(settings.wordEntries);
+  if (alreadyPlaced) return targetGroup ? targetGroup.uid || "" : "";
+
+  const removeFrom = (list) => {
+    if (!Array.isArray(list)) return;
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (sameEntry(list[i])) list.splice(i, 1);
+    }
+  };
+  removeFrom(settings.wordEntries);
+  settings.wordEntryGroups.forEach((g) => removeFrom(g && g.entries));
+
+  if (targetGroup) {
+    if (!Array.isArray(targetGroup.entries)) targetGroup.entries = [];
+    try {
+      entry.groupUid = targetGroup.uid || "";
+    } catch (e) {}
+    targetGroup.entries.push(entry);
+    return targetGroup.uid || "";
+  }
+  try {
+    delete entry.groupUid;
+  } catch (e) {}
+  if (!entry.matchType) {
+    entry.matchType = settings.partialMatch ? "contains" : "exact";
+  }
+  settings.wordEntries.push(entry);
+  return "";
+}
+
 export class RealTimeRegexTesterModal extends Modal {
   constructor(
     app,
@@ -116,6 +215,7 @@ export class RealTimeRegexTesterModal extends Modal {
     this._preFillStyleType = "both";
     this._preFillTextColor = "";
     this._preFillBgColor = "";
+    this._preselectedGroupUid = null;
     this._handlers = [];
     this._rafId = null;
     this._debounceId = null;
@@ -133,14 +233,65 @@ export class RealTimeRegexTesterModal extends Modal {
       this.modalEl.style.maxWidth = "95vw";
       this.modalEl.style.padding = "20px";
     } catch (e) {}
-    const title = contentEl.createEl("h2", {
+    // Header row: "Regex Tester" heading on the left, word group dropdown on the right
+    const headerRow = contentEl.createDiv();
+    try {
+      headerRow.addClass("act-regex-tester-header");
+    } catch (e) {}
+    headerRow.style.display = "flex";
+    headerRow.style.alignItems = "center";
+    headerRow.style.gap = "8px";
+    headerRow.style.flexWrap = "wrap";
+    headerRow.style.marginBottom = "12px";
+    const title = headerRow.createEl("h2", {
       text: this.plugin.t("regex_tester_header", "Regex Tester"),
     });
     title.style.marginTop = "0";
-    title.style.marginBottom = "12px";
+    title.style.marginBottom = "0";
+    title.style.flex = "1 1 auto";
     try {
       title.addClass("act-regex-title");
     } catch (e) {}
+
+    // Group dropdown: which word group the saved regex is filed under
+    const groupsRaw = Array.isArray(this.plugin.settings.wordEntryGroups)
+      ? this.plugin.settings.wordEntryGroups
+      : [];
+    const currentGroupUid = resolveRegexTesterGroupInit({
+      editingEntry: this._editingEntry,
+      preselectedGroupUid: this._preselectedGroupUid,
+      groupsList: groupsRaw,
+    });
+    const visibleGroups = this.plugin.settings.hideInactiveGroupsInDropdowns
+      ? groupsRaw.filter((g) => g && g.active)
+      : groupsRaw.filter(Boolean);
+    // Never hide the group the entry already belongs to — saving would
+    // otherwise silently move it out of that group.
+    const currentGroup = currentGroupUid
+      ? groupsRaw.find((g) => g && g.uid === currentGroupUid)
+      : null;
+    if (currentGroup && !visibleGroups.includes(currentGroup)) {
+      visibleGroups.push(currentGroup);
+    }
+    let groupSelect = null;
+    if (visibleGroups.length > 0) {
+      groupSelect = headerRow.createEl("select");
+      try {
+        groupSelect.addClass("act-regex-tester-group-select");
+      } catch (e) {}
+      groupSelect.createEl("option", {
+        text: this.plugin.t("no_group", "No Group"),
+        value: "",
+      });
+      visibleGroups.forEach((g) => {
+        const name =
+          g.name && String(g.name).trim().length > 0
+            ? g.name
+            : "(unnamed group)";
+        groupSelect.createEl("option", { text: name, value: String(g.uid || "") });
+      });
+      groupSelect.value = currentGroupUid || "";
+    }
     const controlsRow = contentEl.createDiv();
     controlsRow.style.display = "flex";
     controlsRow.style.gap = "8px";
@@ -162,9 +313,6 @@ export class RealTimeRegexTesterModal extends Modal {
     flagNames.forEach((f) => {
       const b = flagsRow.createEl("button", { text: f });
       b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--input-radius)";
-      b.style.border = "1px solid var(--background-modifier-border)";
-      b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
       try {
         b.addClass("act-regex-tester-flag");
@@ -185,9 +333,6 @@ export class RealTimeRegexTesterModal extends Modal {
       opt.value = val;
     });
     styleSelect.value = this._preFillStyleType || "both";
-    styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "var(--input-radius)";
-    styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.marginTop = "0";
 
     const markTargetSelect = controlsRow.createEl("select");
@@ -204,9 +349,6 @@ export class RealTimeRegexTesterModal extends Modal {
     });
     markTargetSelect.value =
       (this._editingEntry && this._editingEntry.markTarget) || "text";
-    markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
-    markTargetSelect.style.borderRadius = "var(--input-radius)";
-    markTargetSelect.style.background = "var(--background-modifier-form-field)";
     markTargetSelect.style.marginTop = "0";
 
     const textColorInput = controlsRow.createEl("input", { type: "color" });
@@ -907,43 +1049,18 @@ export class RealTimeRegexTesterModal extends Modal {
               this._editingEntry._savedBackgroundColor ||
               "";
           }
-          let idx = -1;
-          if (updated && updated.uid)
-            idx = this.plugin.settings.wordEntries.findIndex(
-              (e) => e && e.uid === updated.uid,
+          // Keep the ORIGINAL entry object — parent modals and the group
+          // lists hold a reference to it — and file it under the group chosen
+          // in the header dropdown (or leave it alone when there is none).
+          Object.assign(this._editingEntry, updated);
+          if (groupSelect) {
+            const placedGroupUid = placeEntryInGroup(
+              this.plugin.settings,
+              this._editingEntry,
+              groupSelect.value || "",
             );
-          if (idx === -1)
-            idx = this.plugin.settings.wordEntries.indexOf(this._editingEntry);
-          if (idx === -1)
-            idx = this.plugin.settings.wordEntries.findIndex(
-              (e) =>
-                e &&
-                e.isRegex &&
-                String(e.pattern) === String(this._editingEntry.pattern),
-            );
-          if (idx !== -1) this.plugin.settings.wordEntries[idx] = updated;
-          else
-            this.plugin.settings.wordEntries.push(
-              Object.assign(
-                {
-                  matchType: this.plugin.settings.partialMatch
-                    ? "contains"
-                    : "exact",
-                },
-                updated,
-              ),
-            );
-          this._editingEntry.pattern = updated.pattern;
-          this._editingEntry.flags = updated.flags;
-          this._editingEntry.presetLabel = updated.presetLabel;
-          this._editingEntry.styleType = updated.styleType;
-          this._editingEntry.markTarget = updated.markTarget;
-          this._editingEntry.color = updated.color;
-          this._editingEntry.textColor = updated.textColor;
-          this._editingEntry.backgroundColor = updated.backgroundColor;
-          this._editingEntry._savedTextColor = updated._savedTextColor;
-          this._editingEntry._savedBackgroundColor =
-            updated._savedBackgroundColor;
+            updated.groupUid = placedGroupUid || undefined;
+          }
           await this.plugin.saveSettings();
           this.plugin.compileWordEntries();
           this.plugin.compileTextBgColoringEntries();
@@ -975,7 +1092,9 @@ export class RealTimeRegexTesterModal extends Modal {
         }
       }
 
-      // Default: add to word entries (colored texts) - but skip if skipWordEntriesPush flag is set
+      // Default: file in the word group picked in the header (or the default
+      // list) - but skip if skipWordEntriesPush flag is set
+      let savedGroupUid = null;
       if (!this._skipWordEntriesPush) {
         const uid = (() => {
           try {
@@ -1021,15 +1140,10 @@ export class RealTimeRegexTesterModal extends Modal {
           entry._savedTextColor = hasValidTForSave2 ? tRawForSave2 : "";
           entry._savedBackgroundColor = hasValidBForSave2 ? bRawForSave2 : "";
         }
-        this.plugin.settings.wordEntries.push(
-          Object.assign(
-            {
-              matchType: this.plugin.settings.partialMatch
-                ? "contains"
-                : "exact",
-            },
-            entry,
-          ),
+        savedGroupUid = placeEntryInGroup(
+          this.plugin.settings,
+          entry,
+          groupSelect ? groupSelect.value || "" : "",
         );
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -1075,6 +1189,8 @@ export class RealTimeRegexTesterModal extends Modal {
         cbEntry._savedTextColor = cbHasValidT ? cbTForSave : "";
         cbEntry._savedBackgroundColor = cbHasValidB ? cbBForSave : "";
       }
+      // Let the caller know the entry was filed under a word group
+      if (savedGroupUid) cbEntry.groupUid = savedGroupUid;
       try {
         this.onAdded && this.onAdded(cbEntry);
       } catch (e) {}

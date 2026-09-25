@@ -51,9 +51,6 @@ export class BlacklistRegexTesterModal extends Modal {
     flagNames.forEach((f) => {
       const b = flagsRow.createEl("button", { text: f });
       b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--input-radius)";
-      b.style.border = "1px solid var(--background-modifier-border)";
-      b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
       try {
         b.addClass("act-regex-tester-flag");

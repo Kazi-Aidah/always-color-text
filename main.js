@@ -11855,9 +11855,6 @@ var BlacklistRegexTesterModal = class extends import_obsidian7.Modal {
     flagNames.forEach((f) => {
       const b = flagsRow.createEl("button", { text: f });
       b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--input-radius)";
-      b.style.border = "1px solid var(--background-modifier-border)";
-      b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
       try {
         b.addClass("act-regex-tester-flag");
@@ -18733,6 +18730,67 @@ function resolveRegexTesterPreviewColors({ tRaw, bRaw, tTouched, bTouched, isVal
     effectiveBForBorder: hasValidB ? String(bRaw).trim() : "var(--color-accent)"
   };
 }
+function resolveRegexTesterGroupInit({
+  editingEntry,
+  preselectedGroupUid = null,
+  groupsList
+}) {
+  const groups = (Array.isArray(groupsList) ? groupsList : []).filter(Boolean);
+  if (editingEntry) {
+    if (editingEntry.groupUid && groups.some((g) => g.uid === editingEntry.groupUid)) {
+      return editingEntry.groupUid;
+    }
+    const sameEntry = (e) => !!e && (e === editingEntry || !!editingEntry.uid && e.uid === editingEntry.uid);
+    for (const g of groups) {
+      if (Array.isArray(g.entries) && g.entries.some(sameEntry)) {
+        return g.uid || "";
+      }
+    }
+    return "";
+  }
+  if (preselectedGroupUid && groups.some((g) => g.uid === preselectedGroupUid)) {
+    return String(preselectedGroupUid);
+  }
+  return "";
+}
+function placeEntryInGroup(settings, entry, targetGroupUid = "") {
+  if (!entry || !settings) return "";
+  if (!Array.isArray(settings.wordEntries)) settings.wordEntries = [];
+  if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
+  const targetUid = targetGroupUid ? String(targetGroupUid) : "";
+  const targetGroup = targetUid ? settings.wordEntryGroups.find((g) => g && g.uid === targetUid) || null : null;
+  const sameEntry = (e) => !!e && (e === entry || !!entry.uid && e.uid === entry.uid);
+  const holds = (list) => Array.isArray(list) && list.some(sameEntry);
+  const currentGroup = settings.wordEntryGroups.find((g) => g && holds(g.entries)) || null;
+  const alreadyPlaced = targetGroup ? currentGroup === targetGroup : !currentGroup && holds(settings.wordEntries);
+  if (alreadyPlaced) return targetGroup ? targetGroup.uid || "" : "";
+  const removeFrom = (list) => {
+    if (!Array.isArray(list)) return;
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (sameEntry(list[i])) list.splice(i, 1);
+    }
+  };
+  removeFrom(settings.wordEntries);
+  settings.wordEntryGroups.forEach((g) => removeFrom(g && g.entries));
+  if (targetGroup) {
+    if (!Array.isArray(targetGroup.entries)) targetGroup.entries = [];
+    try {
+      entry.groupUid = targetGroup.uid || "";
+    } catch (e) {
+    }
+    targetGroup.entries.push(entry);
+    return targetGroup.uid || "";
+  }
+  try {
+    delete entry.groupUid;
+  } catch (e) {
+  }
+  if (!entry.matchType) {
+    entry.matchType = settings.partialMatch ? "contains" : "exact";
+  }
+  settings.wordEntries.push(entry);
+  return "";
+}
 var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
   constructor(app, plugin, onAdded, advancedRuleEntry = null, skipWordEntriesPush = false) {
     super(app);
@@ -18747,6 +18805,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
     this._preFillStyleType = "both";
     this._preFillTextColor = "";
     this._preFillBgColor = "";
+    this._preselectedGroupUid = null;
     this._handlers = [];
     this._rafId = null;
     this._debounceId = null;
@@ -18765,14 +18824,53 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
       this.modalEl.style.padding = "20px";
     } catch (e) {
     }
-    const title = contentEl.createEl("h2", {
+    const headerRow = contentEl.createDiv();
+    try {
+      headerRow.addClass("act-regex-tester-header");
+    } catch (e) {
+    }
+    headerRow.style.display = "flex";
+    headerRow.style.alignItems = "center";
+    headerRow.style.gap = "8px";
+    headerRow.style.flexWrap = "wrap";
+    headerRow.style.marginBottom = "12px";
+    const title = headerRow.createEl("h2", {
       text: this.plugin.t("regex_tester_header", "Regex Tester")
     });
     title.style.marginTop = "0";
-    title.style.marginBottom = "12px";
+    title.style.marginBottom = "0";
+    title.style.flex = "1 1 auto";
     try {
       title.addClass("act-regex-title");
     } catch (e) {
+    }
+    const groupsRaw = Array.isArray(this.plugin.settings.wordEntryGroups) ? this.plugin.settings.wordEntryGroups : [];
+    const currentGroupUid = resolveRegexTesterGroupInit({
+      editingEntry: this._editingEntry,
+      preselectedGroupUid: this._preselectedGroupUid,
+      groupsList: groupsRaw
+    });
+    const visibleGroups = this.plugin.settings.hideInactiveGroupsInDropdowns ? groupsRaw.filter((g) => g && g.active) : groupsRaw.filter(Boolean);
+    const currentGroup = currentGroupUid ? groupsRaw.find((g) => g && g.uid === currentGroupUid) : null;
+    if (currentGroup && !visibleGroups.includes(currentGroup)) {
+      visibleGroups.push(currentGroup);
+    }
+    let groupSelect = null;
+    if (visibleGroups.length > 0) {
+      groupSelect = headerRow.createEl("select");
+      try {
+        groupSelect.addClass("act-regex-tester-group-select");
+      } catch (e) {
+      }
+      groupSelect.createEl("option", {
+        text: this.plugin.t("no_group", "No Group"),
+        value: ""
+      });
+      visibleGroups.forEach((g) => {
+        const name = g.name && String(g.name).trim().length > 0 ? g.name : "(unnamed group)";
+        groupSelect.createEl("option", { text: name, value: String(g.uid || "") });
+      });
+      groupSelect.value = currentGroupUid || "";
     }
     const controlsRow = contentEl.createDiv();
     controlsRow.style.display = "flex";
@@ -18797,9 +18895,6 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
     flagNames.forEach((f) => {
       const b = flagsRow.createEl("button", { text: f });
       b.style.padding = "6px 10px";
-      b.style.borderRadius = "var(--input-radius)";
-      b.style.border = "1px solid var(--background-modifier-border)";
-      b.style.background = "var(--background-modifier-form-field)";
       b.style.cursor = "pointer";
       try {
         b.addClass("act-regex-tester-flag");
@@ -18822,9 +18917,6 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
       opt.value = val;
     });
     styleSelect.value = this._preFillStyleType || "both";
-    styleSelect.style.border = "1px solid var(--background-modifier-border)";
-    styleSelect.style.borderRadius = "var(--input-radius)";
-    styleSelect.style.background = "var(--background-modifier-form-field)";
     styleSelect.style.marginTop = "0";
     const markTargetSelect = controlsRow.createEl("select");
     try {
@@ -18840,9 +18932,6 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
       opt.value = val;
     });
     markTargetSelect.value = this._editingEntry && this._editingEntry.markTarget || "text";
-    markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
-    markTargetSelect.style.borderRadius = "var(--input-radius)";
-    markTargetSelect.style.background = "var(--background-modifier-form-field)";
     markTargetSelect.style.marginTop = "0";
     const textColorInput = controlsRow.createEl("input", { type: "color" });
     try {
@@ -19478,37 +19567,15 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
             updated._savedTextColor = hasValidTForSave ? tRawForSave : this._editingEntry._savedTextColor || "";
             updated._savedBackgroundColor = hasValidBForSave ? bRawForSave : this._editingEntry._savedBackgroundColor || "";
           }
-          let idx = -1;
-          if (updated && updated.uid)
-            idx = this.plugin.settings.wordEntries.findIndex(
-              (e) => e && e.uid === updated.uid
+          Object.assign(this._editingEntry, updated);
+          if (groupSelect) {
+            const placedGroupUid = placeEntryInGroup(
+              this.plugin.settings,
+              this._editingEntry,
+              groupSelect.value || ""
             );
-          if (idx === -1)
-            idx = this.plugin.settings.wordEntries.indexOf(this._editingEntry);
-          if (idx === -1)
-            idx = this.plugin.settings.wordEntries.findIndex(
-              (e) => e && e.isRegex && String(e.pattern) === String(this._editingEntry.pattern)
-            );
-          if (idx !== -1) this.plugin.settings.wordEntries[idx] = updated;
-          else
-            this.plugin.settings.wordEntries.push(
-              Object.assign(
-                {
-                  matchType: this.plugin.settings.partialMatch ? "contains" : "exact"
-                },
-                updated
-              )
-            );
-          this._editingEntry.pattern = updated.pattern;
-          this._editingEntry.flags = updated.flags;
-          this._editingEntry.presetLabel = updated.presetLabel;
-          this._editingEntry.styleType = updated.styleType;
-          this._editingEntry.markTarget = updated.markTarget;
-          this._editingEntry.color = updated.color;
-          this._editingEntry.textColor = updated.textColor;
-          this._editingEntry.backgroundColor = updated.backgroundColor;
-          this._editingEntry._savedTextColor = updated._savedTextColor;
-          this._editingEntry._savedBackgroundColor = updated._savedBackgroundColor;
+            updated.groupUid = placedGroupUid || void 0;
+          }
           await this.plugin.saveSettings();
           this.plugin.compileWordEntries();
           this.plugin.compileTextBgColoringEntries();
@@ -19543,6 +19610,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
           debugError("REGEX_TESTER", "entry update error", e);
         }
       }
+      let savedGroupUid = null;
       if (!this._skipWordEntriesPush) {
         const uid = (() => {
           try {
@@ -19586,13 +19654,10 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
           entry._savedTextColor = hasValidTForSave2 ? tRawForSave2 : "";
           entry._savedBackgroundColor = hasValidBForSave2 ? bRawForSave2 : "";
         }
-        this.plugin.settings.wordEntries.push(
-          Object.assign(
-            {
-              matchType: this.plugin.settings.partialMatch ? "contains" : "exact"
-            },
-            entry
-          )
+        savedGroupUid = placeEntryInGroup(
+          this.plugin.settings,
+          entry,
+          groupSelect ? groupSelect.value || "" : ""
         );
         await this.plugin.saveSettings();
         this.plugin.compileWordEntries();
@@ -19636,6 +19701,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
         cbEntry._savedTextColor = cbHasValidT ? cbTForSave : "";
         cbEntry._savedBackgroundColor = cbHasValidB ? cbBForSave : "";
       }
+      if (savedGroupUid) cbEntry.groupUid = savedGroupUid;
       try {
         this.onAdded && this.onAdded(cbEntry);
       } catch (e) {
@@ -20903,7 +20969,14 @@ var EditWordGroupModal = class extends import_obsidian18.Modal {
           }
         }
       } else {
-        liveGroup.entries.push(JSON.parse(JSON.stringify(entry)));
+        const sameUid = (e) => !!(e && entry && e.uid && entry.uid && e.uid === entry.uid);
+        const inFileList = Array.isArray(this.plugin.settings.wordEntries) && this.plugin.settings.wordEntries.some(sameUid);
+        const inOtherGroup = groups.some(
+          (g) => g && g.uid !== liveGroup.uid && Array.isArray(g.entries) && g.entries.some(sameUid)
+        );
+        if (!inFileList && !inOtherGroup) {
+          liveGroup.entries.push(JSON.parse(JSON.stringify(entry)));
+        }
       }
       await this.plugin.saveSettings();
     } catch (_) {
@@ -34654,22 +34727,24 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
               }
               if (!Array.isArray(this.settings.wordEntries))
                 this.settings.wordEntries = [];
-              const idx = this.settings.wordEntries.findIndex(
-                (e) => e && e.pattern === entry.pattern && e.isRegex
-              );
-              if (idx !== -1) {
-                const existing = this.settings.wordEntries[idx];
-                existing.pattern = entry.pattern;
-                existing.color = entry.color;
-                existing.textColor = entry.textColor;
-                existing.backgroundColor = entry.backgroundColor;
-                existing.styleType = entry.styleType;
-                existing.flags = entry.flags;
-                existing.presetLabel = entry.presetLabel || existing.presetLabel || void 0;
-                existing.persistAtEnd = true;
-              } else {
-                entry.persistAtEnd = true;
-                this.settings.wordEntries.push(entry);
+              if (!entry.groupUid) {
+                const idx = this.settings.wordEntries.findIndex(
+                  (e) => e && e.pattern === entry.pattern && e.isRegex
+                );
+                if (idx !== -1) {
+                  const existing = this.settings.wordEntries[idx];
+                  existing.pattern = entry.pattern;
+                  existing.color = entry.color;
+                  existing.textColor = entry.textColor;
+                  existing.backgroundColor = entry.backgroundColor;
+                  existing.styleType = entry.styleType;
+                  existing.flags = entry.flags;
+                  existing.presetLabel = entry.presetLabel || existing.presetLabel || void 0;
+                  existing.persistAtEnd = true;
+                } else {
+                  entry.persistAtEnd = true;
+                  this.settings.wordEntries.push(entry);
+                }
               }
               try {
                 this.settingTab && entry && entry.uid && this.settingTab._newEntriesSet && this.settingTab._newEntriesSet.add(entry.uid);

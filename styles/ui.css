@@ -279,6 +279,22 @@ div[contenteditable="true"]:focus {
   flex-wrap: wrap !important;
   align-items: center !important;
 }
+/* Header row: "Regex Tester" title on the left, word group dropdown on the right */
+.act-regex-tester-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+.act-regex-tester-header h2 {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+.act-regex-tester-header .act-regex-tester-group-select {
+  flex: 0 0 auto !important;
+  min-width: 120px !important;
+  max-width: 45% !important;
+}
 /* ====== REGEX TESTER MODAL — MOBILE LAYOUT ====== */
 /* Row 1: flags row takes full width, flag buttons stretch equally */
 /* Row 2: colortype + colorline/text selects share a row equally */

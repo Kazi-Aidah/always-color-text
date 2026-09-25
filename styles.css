@@ -480,6 +480,22 @@ div[contenteditable="true"]:focus {
   flex-wrap: wrap !important;
   align-items: center !important;
 }
+/* Header row: "Regex Tester" title on the left, word group dropdown on the right */
+.act-regex-tester-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+.act-regex-tester-header h2 {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+.act-regex-tester-header .act-regex-tester-group-select {
+  flex: 0 0 auto !important;
+  min-width: 120px !important;
+  max-width: 45% !important;
+}
 /* ====== REGEX TESTER MODAL — MOBILE LAYOUT ====== */
 /* Row 1: flags row takes full width, flag buttons stretch equally */
 /* Row 2: colortype + colorline/text selects share a row equally */
@@ -816,22 +832,28 @@ body.is-mobile .act-rules-container {
 body.is-mobile .act-regex-tester-controls {
   gap: 8px !important;
 }
-body.is-mobile .act-regex-tester-controls .act-regex-tester-flags {
-  flex: 1 1 100% !important;
-  display: grid !important;
-  grid-template-columns: repeat(6, 1fr) !important;
-  gap: 6px !important;
-}
-body.is-mobile .act-regex-tester-controls .act-regex-tester-style,
-body.is-mobile .act-regex-tester-controls .act-regex-tester-mark-target {
-  flex: 1 1 0 !important;
-  min-width: 0 !important;
-}
-body.is-mobile .act-regex-tester-controls .act-regex-tester-text-color,
-body.is-mobile .act-regex-tester-controls .act-regex-tester-bg-color {
-  flex: 1 1 0 !important;
-  width: auto !important;
-  height: 40px !important;
+/* Narrow phones only: the controls row splits in two (flags on their own
+   line, selects/colors below). Tablets and non-narrow phones keep the single
+   desktop-style row; the title row always keeps the group dropdown on the
+   right of the heading. */
+@media (max-width: 640px) {
+  body.is-mobile .act-regex-tester-controls .act-regex-tester-flags {
+    flex: 1 1 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 6px !important;
+  }
+  body.is-mobile .act-regex-tester-controls .act-regex-tester-style,
+  body.is-mobile .act-regex-tester-controls .act-regex-tester-mark-target {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+  }
+  body.is-mobile .act-regex-tester-controls .act-regex-tester-text-color,
+  body.is-mobile .act-regex-tester-controls .act-regex-tester-bg-color {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    height: 40px !important;
+  }
 }
 body.is-mobile .act-subject-wrap,
 body.is-mobile .act-regex-tester-subject-wrap {
