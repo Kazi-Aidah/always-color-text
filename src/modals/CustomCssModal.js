@@ -1,4 +1,11 @@
 ﻿import { Modal, setIcon } from 'obsidian';
+import {
+  splitCustomCss,
+  validateCustomCssInput,
+  buildScopedBlockRules,
+  applyCustomCssToElementCore,
+  reassembleCustomCss,
+} from '../core/customCssRules.js';
 
 /**
  * Derives a CSS string from an entry's highlight styling properties,
@@ -106,8 +113,6 @@ export function deriveHighlightCssFromEntry(entry, plugin) {
   return lines.join(';\n') + ';';
 }
 
-const DANGEROUS_PATTERNS = ['url(', 'expression(', 'javascript:', 'vbscript:', 'data:', '@import', '@charset', '@namespace', '<', '>', '{', '}', ';'];
-
 /**
  * Parses a CSS declarations string back into an entry's structured fields.
  * This makes CustomCssModal and HighlightStylingModal interchangeable.
@@ -118,7 +123,9 @@ const DANGEROUS_PATTERNS = ['url(', 'expression(', 'javascript:', 'vbscript:', '
  */
 export function parseCssIntoEntry(css, entry, plugin) {
   if (!css || !entry) return;
-  const parts = css.split(';').map(s => s.trim()).filter(Boolean);
+  // Only top-level declarations map to structured fields: comments are
+  // stripped and `&`-rooted blocks are state styling (never color fields).
+  const parts = splitCustomCss(css).decls.split(';').map(s => s.trim()).filter(Boolean);
   for (const part of parts) {
     const idx = part.indexOf(':');
     if (idx === -1) continue;
@@ -313,8 +320,10 @@ export function patchCssLayoutFromEntry(css, entry, plugin) {
     }
   }
 
-  // Parse, patch, rebuild
-  const sanitized = plugin.sanitizeCssDeclarations(css);
+  // Parse, patch, rebuild — comments and `&`-rooted blocks are split out
+  // first so the declaration rebuild never discards them.
+  const split = splitCustomCss(css);
+  const sanitized = plugin.sanitizeCssDeclarations(split.decls);
   if (!sanitized) return css;
   const parts = sanitized.split(';').map(s => s.trim()).filter(Boolean);
   const parsed = parts.map(p => {
@@ -341,7 +350,7 @@ export function patchCssLayoutFromEntry(css, entry, plugin) {
     if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
   }
 
-  return rebuilt.join(';\n') + ';';
+  return reassembleCustomCss(split, rebuilt.join(';\n') + ';');
 }
 
 /** Extract a hex color from a CSS value (handles #hex, rgb(), rgba()) */
@@ -370,6 +379,7 @@ export class CustomCssModal extends Modal {
     this._handlers = [];
     this._debounceTimer = null;
     this._previewSpan = null;
+    this._previewStyleEl = null;
     this._validationEl = null;
     this._textarea = null;
   }
@@ -387,7 +397,10 @@ export class CustomCssModal extends Modal {
     try {
       this.modalEl.addClass("act-modal");
       this.modalEl.addClass('act-custom-css-modal');
-      this.modalEl.style.minWidth = '540px';
+      // 540px on desktop, but never wider than the viewport (mobile).
+      this.modalEl.style.width = '540px';
+      this.modalEl.style.maxWidth = '95vw';
+      this.modalEl.style.minWidth = '0';
     } catch (_) {}
 
     // 1. Heading
@@ -432,7 +445,7 @@ export class CustomCssModal extends Modal {
 
     const taBox = textareaWrap.createDiv();
     taBox.style.border = '1px solid var(--background-modifier-border)';
-    taBox.style.borderRadius = 'var(--button-radius)';
+    taBox.style.borderRadius = 'var(--touch-radius-xxs)';
     taBox.style.background = 'var(--background-modifier-form-field)';
     taBox.style.transition = 'border-color 0.15s';
 
@@ -441,6 +454,7 @@ export class CustomCssModal extends Modal {
     this._textarea.style.width = '100%';
     this._textarea.style.minHeight = '160px';
     this._textarea.style.border = 'none';
+    this._textarea.style.borderRadius = 'var(--touch-radius-xxs)';
     this._textarea.style.outline = 'none';
     this._textarea.style.background = 'transparent';
     this._textarea.style.color = 'var(--text-normal)';
@@ -491,7 +505,7 @@ export class CustomCssModal extends Modal {
     this._validationEl.style.marginBottom = '8px';
     this._validationEl.style.padding = '6px 10px';
     this._validationEl.style.borderRadius = '4px';
-    this._validationEl.style.background = 'var(--background-modifier-error)';
+    this._validationEl.style.background = 'transparent';
     this._validationEl.style.color = 'var(--text-error)';
     this._validationEl.style.fontSize = '12px';
     this._validationEl.style.whiteSpace = 'pre-wrap';
@@ -623,20 +637,18 @@ export class CustomCssModal extends Modal {
     // Apply sanitized custom CSS on top (directly, bypassing enableCustomCss gate)
     const raw = this._textarea ? this._textarea.value : '';
     if (raw.trim()) {
-      const sanitized = this.plugin.sanitizeCssDeclarations(raw);
-      if (sanitized) {
-        const parts = sanitized.split(';').map(s => s.trim()).filter(Boolean);
-        for (const p of parts) {
-          const idx = p.indexOf(':');
-          if (idx === -1) continue;
-          const prop = p.slice(0, idx).trim();
-          const val = p.slice(idx + 1).trim();
-          try {
-            this._previewSpan.style.setProperty(prop, val, 'important');
-          } catch (_) {
-            this._previewSpan.style[prop] = val;
-          }
+      // Declarations + scope marker/var routing, so `&`-rooted blocks
+      // (`&:hover`, `&::after`, …) work live in the preview.
+      applyCustomCssToElementCore(this._previewSpan, raw, 'preview');
+      const rules = buildScopedBlockRules(raw, 'preview');
+      if (rules) {
+        if (!this._previewStyleEl) {
+          this._previewStyleEl = document.createElement('style');
+          document.head.appendChild(this._previewStyleEl);
         }
+        this._previewStyleEl.textContent = rules;
+      } else if (this._previewStyleEl) {
+        this._previewStyleEl.textContent = '';
       }
     }
   }
@@ -650,26 +662,10 @@ export class CustomCssModal extends Modal {
       return;
     }
 
-    const warnings = [];
-    const parts = raw.split(";").map(s => s.replace(/\n/g, " ").trim()).filter(Boolean);
-
-    for (const part of parts) {
-      const idx = part.indexOf(':');
-      if (idx === -1) continue;
-      const prop = part.slice(0, idx).trim().toLowerCase();
-      const val = part.slice(idx + 1).trim();
-
-      if (!/^[a-z\-]+$/.test(prop)) {
-        warnings.push(`Invalid property name: "${prop}" (must match /^[a-z\\-]+$/)`);
-      }
-
-      for (const d of DANGEROUS_PATTERNS) {
-        if (val.toLowerCase().includes(d)) {
-          warnings.push(`Dangerous value in "${prop}": contains "${d}"`);
-          break;
-        }
-      }
-    }
+    // Comments are ignored; `&`-rooted blocks are validated selector-first
+    // (only safe pseudo selectors allowed), then their declarations get the
+    // same property/value checks as top-level ones.
+    const warnings = validateCustomCssInput(raw);
 
     if (warnings.length > 0) {
       this._validationEl.textContent = warnings.join('\n');
@@ -699,6 +695,13 @@ export class CustomCssModal extends Modal {
       });
     } catch (_) {}
     this._handlers = [];
+    // Remove the preview-only pseudo-rule stylesheet (lives in <head>).
+    try {
+      if (this._previewStyleEl) {
+        this._previewStyleEl.remove();
+        this._previewStyleEl = null;
+      }
+    } catch (_) {}
     this.contentEl.empty();
   }
 }

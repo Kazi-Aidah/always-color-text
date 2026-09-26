@@ -1,4 +1,5 @@
 import { REGEX_CONSTANTS, EDITOR_PERFORMANCE_CONSTANTS } from '../core/constants.js';
+import { splitCustomCss } from '../core/customCssRules.js';
 import { debugLog, debugError, debugWarn } from '../utils/debug.js';
 import { RegexCache } from '../utils/RegexCache.js';
 
@@ -107,21 +108,17 @@ export function stripInheritedGroupCssColors(css, borderColor, opts) {
   const keepBg = keep === "bg" || keep === "both";
   if (!css || typeof css !== "string") return css;
   try {
-    const parts = css
-      .split(";")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const out = [];
-    for (const p of parts) {
+    // Comments are dropped; `&`-rooted blocks are filtered with the same
+    // per-declaration rules and re-emitted after the declarations, so block
+    // selectors/bodies survive color stripping intact.
+    const split = splitCustomCss(css);
+    const mapDecl = (p) => {
       const idx = p.indexOf(":");
-      if (idx === -1) {
-        out.push(p);
-        continue;
-      }
+      if (idx === -1) return p;
       const prop = p.slice(0, idx).trim().toLowerCase();
       const val = p.slice(idx + 1).trim();
-      if (prop === "color" && !keepColor) continue;
-      if (prop === "background-color" && !keepBg) continue;
+      if (prop === "color" && !keepColor) return null;
+      if (prop === "background-color" && !keepBg) return null;
       if (
         prop === "border" ||
         prop === "border-top" ||
@@ -129,18 +126,34 @@ export function stripInheritedGroupCssColors(css, borderColor, opts) {
         prop === "border-left" ||
         prop === "border-right"
       ) {
-        if (dropBorder) continue;
-        out.push(
-          `${prop}: ${val
-            .replace(/#[0-9a-fA-F]{3,8}\b/g, fallback)
-            .replace(/rgba?\s*\([^)]+\)/gi, fallback)
-            .replace(/var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)/g, fallback)}`,
-        );
-        continue;
+        if (dropBorder) return null;
+        return `${prop}: ${val
+          .replace(/#[0-9a-fA-F]{3,8}\b/g, fallback)
+          .replace(/rgba?\s*\([^)]+\)/gi, fallback)
+          .replace(/var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)/g, fallback)}`;
       }
-      out.push(`${prop}: ${val}`);
+      return `${prop}: ${val}`;
+    };
+    const mapBody = (body) => {
+      const out = [];
+      for (const p of String(body).split(";")) {
+        const t = p.trim();
+        if (!t) continue;
+        const m = mapDecl(t);
+        if (m !== null) out.push(m);
+      }
+      return out;
+    };
+
+    const out = mapBody(split.decls);
+    let result = out.length > 0 ? out.join(";\n") + ";" : "";
+    for (const b of split.blocks) {
+      if (!b.selector.trim()) continue;
+      const bodyOut = mapBody(b.body);
+      if (bodyOut.length === 0) continue;
+      result += (result ? "\n" : "") + `${b.selector}{${bodyOut.join(";\n")};}`;
     }
-    return out.length > 0 ? out.join(";\n") + ";" : "";
+    return result;
   } catch (_) {
     return css;
   }

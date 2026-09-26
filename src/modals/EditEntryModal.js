@@ -336,11 +336,15 @@ export class EditEntryModal extends Modal {
     headerRow.addClass("act-pickr-header");
 
     const title = headerRow.createEl("h2", {
-      text: isTarget
-        ? this.plugin.t("style_target_modal_header", "Style Target")
-        : isRegex
-          ? this.plugin.t("style_regex_modal_header", "Style Regex")
-          : this.plugin.t("style_text_modal_header", "Style Text"),
+      // Time & Date entries edit the moment.js format — the title says so
+      // instead of "Edit Regex Style" (their pattern stays hidden).
+      text: dtFormat
+        ? this.plugin.t("style_time_modal_header", "Edit Time Style")
+        : isTarget
+          ? this.plugin.t("style_target_modal_header", "Style Target")
+          : isRegex
+            ? this.plugin.t("style_regex_modal_header", "Style Regex")
+            : this.plugin.t("style_text_modal_header", "Style Text"),
     });
     title.style.marginTop = "0";
     title.style.marginBottom = "0";

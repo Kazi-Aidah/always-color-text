@@ -411,9 +411,6 @@ button.mod-cta {
 .act-entry-row {
   padding: 10px;
 }
-.act-edit-word-group-modal .color-words-list .act-entry-row {
-  padding: 4px 10px;
-}
 /* Round checkboxes in blacklist entry rows */
 .blacklist-words-list input[type="checkbox"] {
     border-radius: 100px;
@@ -571,4 +568,8 @@ padding: 2px 0px !important;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+/* Edit-entry modal: the button stands in for the pattern box — full width. */
+.act-edit-entry-modal .act-datetime-format-btn {
+  width: 100%;
 }

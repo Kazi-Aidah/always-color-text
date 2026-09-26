@@ -632,6 +632,7 @@ module.exports = {
   "style_text_modal_header": "Edit Text Style",
   "style_target_modal_header": "Edit Target Style",
   "style_regex_modal_header": "Edit Regex Style",
+  "style_time_modal_header": "Edit Time Style",
   "opt_case_sensitive": "is case sensitive",
   "opt_not_case_sensitive": "not case sensitive",
   "opt_case_all": "Case Sensitivity (All)",

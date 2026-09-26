@@ -12,6 +12,7 @@ import { buildReadingViewProcessor } from '../features/readingViewProcessor.js';
 import { compileWordEntriesLogic, compileTextBgColoringEntriesLogic, compileBlacklistEntriesLogic, PatternMatcher, SettingsIndex, resolveGroupColorOverride, stripInheritedGroupCssColors, resolveBorderSourceColor } from '../services/patternCompiler.js';
 import { evaluatePathRulesLogic, hasGlobalExcludeLogic, getBestFolderEntryLogic, globToRegex } from '../services/fileFilter.js';
 import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS, GLOBAL_STYLE_KEYS, IS_DEVELOPMENT } from './constants.js';
+import { splitCustomCss, sanitizeDeclString, applyScopeToStyleString, applyCustomCssToElementCore, buildScopedBlockRules, buildSelectorBlockRules, reassembleCustomCss } from './customCssRules.js';
 import { resolveCommandIcon, applyCommandIcons, refreshMobileToolbar } from './commandIcons.js';
 import { Decoration, syntaxTree, forceRebuildEffect } from './cmSetup.js';
 import { debugLog, debugError, debugWarn, escapeHtml } from '../utils/debug.js';
@@ -1012,6 +1013,8 @@ class AlwaysColorText extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    // Stamp `&`-block pseudo rules (hover etc.) for loaded custom CSS.
+    this.rebuildCustomCssBlockRules();
     this.applyThemeFixer();
     // Initialize Quick Colors/Styles settings if missing
     if (typeof this.settings.quickColorsEnabled === "undefined")
@@ -4543,7 +4546,7 @@ class AlwaysColorText extends Plugin {
 
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) }, this._scopeIdForGroup(groupRef));
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -4845,7 +4848,7 @@ class AlwaysColorText extends Plugin {
 
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) }, this._scopeIdForGroup(groupRef));
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -5017,7 +5020,7 @@ class AlwaysColorText extends Plugin {
 
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) }, this._scopeIdForGroup(groupRef));
         }
         this.applyCustomCssToElement(span, entry);
         textNode.replaceWith(span);
@@ -7135,6 +7138,9 @@ class AlwaysColorText extends Plugin {
 
   // --- Save settings and refresh plugin state ---
   applyFormattingStyles() {
+    // Keep `&`-block pseudo rules (hover etc.) in sync on every refresh, and
+    // drop them while the plugin/custom CSS is disabled (method self-gates).
+    this.rebuildCustomCssBlockRules();
     try {
       const styleId = "act-formatting-styles";
       let styleEl = document.getElementById(styleId);
@@ -7271,6 +7277,12 @@ class AlwaysColorText extends Plugin {
             if (extra) css += ` ${extra}`;
           }
           css += ` } \n`;
+
+          // `&`-rooted pseudo blocks for this markdown element: rewrite `&` to
+          // the element selector so `:hover` outranks the base rule above.
+          if (this.settings.enableCustomCss && entry.customCss) {
+            css += buildSelectorBlockRules(entry.customCss, selector);
+          }
 
           // For hashtags in live preview Obsidian splits the tag into a
           // `.cm-hashtag-begin` ("#") span and a `.cm-hashtag-end` (name) span.
@@ -8106,6 +8118,8 @@ class AlwaysColorText extends Plugin {
     // Keep the static-stylesheet gate (styles/core.css) in sync on every save,
     // so no code path can leave stale coloring rules active (or suppress them).
     this.syncGlobalToggleCssState();
+    // Refresh `&`-block pseudo rules (hover etc.) for the saved custom CSS.
+    this.rebuildCustomCssBlockRules();
     try {
       this.forceRefreshAllEditors();
     } catch (e) {}
@@ -10435,8 +10449,9 @@ class AlwaysColorText extends Plugin {
         updates['background-color'] = this.hexToRgba(bg, opacity);
       }
 
-      const sanitized = this.sanitizeCssDeclarations(entry.customCss);
-      if (!sanitized) return entry.customCss;
+      const split = splitCustomCss(entry.customCss);
+      const sanitized = this.sanitizeCssDeclarations(split.decls);
+      if (!sanitized && !split.blocks.length) return entry.customCss;
       const parts = sanitized.split(';').map(s => s.trim()).filter(Boolean);
       const parsed = parts.map(p => {
         const idx = p.indexOf(':');
@@ -10482,7 +10497,9 @@ class AlwaysColorText extends Plugin {
         if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
       }
 
-      entry.customCss = rebuilt.join(';\n') + ';';
+      // Blocks/comments are carried over untouched — only top-level
+      // declarations are patched with the structured colors.
+      entry.customCss = reassembleCustomCss(split, rebuilt.length ? rebuilt.join(';\n') + ';' : '');
     } catch (_) {}
   }
 
@@ -10512,8 +10529,9 @@ class AlwaysColorText extends Plugin {
       // (we only patch the color part, not the whole border value)
 
       // Parse existing CSS into an ordered list of [prop, value] pairs
-      const sanitized = this.sanitizeCssDeclarations(entry.customCss);
-      if (!sanitized) return;
+      const split = splitCustomCss(entry.customCss);
+      const sanitized = this.sanitizeCssDeclarations(split.decls);
+      if (!sanitized && !split.blocks.length) return;
       const parts = sanitized.split(';').map(s => s.trim()).filter(Boolean);
       const parsed = parts.map(p => {
         const idx = p.indexOf(':');
@@ -10548,7 +10566,9 @@ class AlwaysColorText extends Plugin {
         }
       }
 
-      entry.customCss = rebuilt.join(';\n') + ';';
+      // Blocks/comments carry over untouched — only top-level declarations
+      // are patched with the structured colors (blocks are explicit states).
+      entry.customCss = reassembleCustomCss(split, rebuilt.length ? rebuilt.join(';\n') + ';' : '');
     } catch (_) {}
   }
 
@@ -10594,10 +10614,72 @@ class AlwaysColorText extends Plugin {
     }
   }
 
-  _mergeStyleWithCustomCss(baseStyle, customCss) {
+  /**
+   * Rebuild the managed stylesheet holding `&`-rooted pseudo-block rules
+   * (`&:hover`, `&::after`, …) for every entry/group that has custom CSS.
+   * Rules are marker-scoped via `[style*="--act-hov-<scope>-"]`, matching the
+   * markers applyCustomCssToElement / _mergeStyleWithCustomCss stamp into
+   * inline styles. Inert while the plugin or custom CSS is disabled.
+   */
+  rebuildCustomCssBlockRules() {
+    try {
+      const STYLE_ID = "act-custom-css-block-rules";
+      const node = document.getElementById(STYLE_ID);
+      const on = this.settings && this.settings.enabled && this.settings.enableCustomCss;
+      if (!on) {
+        if (node) node.remove();
+        return;
+      }
+      const groups = Array.isArray(this.settings.wordEntryGroups)
+        ? this.settings.wordEntryGroups
+        : [];
+      let css = "";
+      // Groups first: entry rules are emitted later so they win ties,
+      // mirroring the group-then-entry order used for inline styles.
+      for (const g of groups) {
+        if (!g || !g.uid || !g.customCss) continue;
+        css += buildScopedBlockRules(this.groupCssForMembers(g), this._scopeIdForGroup(g));
+      }
+      const entries = (Array.isArray(this.settings.wordEntries)
+        ? this.settings.wordEntries
+        : []
+      ).concat(
+        groups.reduce((acc, g) => acc.concat(Array.isArray(g.entries) ? g.entries : []), []),
+      );
+      for (const e of entries) {
+        if (!e || !e.uid || !e.customCss) continue;
+        css += buildScopedBlockRules(e.customCss, this._scopeIdForEntry(e));
+      }
+      let el = node;
+      if (!el) {
+        el = document.createElement("style");
+        el.id = STYLE_ID;
+        document.head.appendChild(el);
+      }
+      if (el.textContent !== css) el.textContent = css;
+    } catch (_) {}
+  }
+
+  /**
+   * Scope id helpers — must match the ids used by
+   * rebuildCustomCssBlockRules() so marker-scoped hover rules hit exactly the
+   * elements that received that scope's custom CSS.
+   */
+  _scopeIdForEntry(entry) {
+    const uid = entry && (entry.uid || (entry.entryRef && entry.entryRef.uid));
+    return uid ? `e${uid}` : null;
+  }
+
+  _scopeIdForGroup(group) {
+    return group && group.uid ? `g${group.uid}` : null;
+  }
+
+  _mergeStyleWithCustomCss(baseStyle, customCss, scopeId = null) {
     if (!customCss || !customCss.trim()) return baseStyle;
     const sanitized = this.sanitizeCssDeclarations(customCss);
-    if (!sanitized) return baseStyle;
+    // Blocks-only CSS (no top-level declarations) still needs its scope
+    // marker + var routing so `&:hover` blocks can take effect.
+    if (!sanitized && !splitCustomCss(customCss).blocks.length) return baseStyle;
 
     // Collect the property names declared in custom CSS
     const customProps = new Set();
@@ -10640,72 +10722,19 @@ class AlwaysColorText extends Plugin {
       .join("; ");
 
     const base = filteredBase.join("; ");
-    return base ? `${base}; ${customWithImportant}` : customWithImportant;
+    const merged = base ? `${base}; ${customWithImportant}` : customWithImportant;
+    return applyScopeToStyleString(merged, customCss, scopeId, baseStyle);
   }
 
    sanitizeCssDeclarations(input) {
      try {
        if (!input || typeof input !== "string") return "";
        debugLog("SANITIZE_CSS_START", `Input: "${input}"`);
-       // Normalize line endings, then split only on semicolons
-       // (newlines within a value like linear-gradient(...\n...) must be preserved)
-       const normalized = String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-       // Split on semicolons only; collapse newlines inside values to spaces
-       const parts = normalized
-         .split(";")
-         .map((s) => s.replace(/\n/g, " ").trim())
-         .filter((s) => s.length > 0);
-       const out = [];
-       for (const p of parts) {
-         const idx = p.indexOf(":");
-         if (idx === -1) {
-           debugLog("SANITIZE_CSS_SKIP", `No colon in: "${p}"`);
-           continue;
-         }
-         const prop = p.slice(0, idx).trim().toLowerCase();
-         let val = p.slice(idx + 1).trim();
-         if (!/^[a-z\-]+$/.test(prop)) {
-           debugLog("SANITIZE_CSS_SKIP", `Invalid prop name: "${prop}"`);
-           continue;
-         }
-
-         // Remove !important if user added it, we will add it ourselves
-         val = val.replace(/!important/gi, "").trim();
-
-         // BLOCKLIST: skip declarations with dangerous value patterns
-         const valLower = val.toLowerCase();
-         if (
-           valLower.includes("url(") ||
-           valLower.includes("expression(") ||
-           valLower.includes("javascript:") ||
-           valLower.includes("data:") ||
-           valLower.includes("vbscript:") ||
-           valLower.includes("@import") ||
-           valLower.includes("@charset") ||
-           valLower.includes("@namespace") ||
-           val.includes("<") ||
-           val.includes(">") ||
-           val.includes("{") ||
-           val.includes("}") ||
-           val.includes(";") // Prevent nested declarations
-         ) {
-           debugLog("SANITIZE_CSS_SKIP", `Dangerous value for: "${prop}": "${val}"`);
-           continue;
-         }
-
-         // Validate value doesn't contain control characters
-         if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(val)) {
-           debugLog("SANITIZE_CSS_SKIP", `Control character in value: "${prop}"`);
-           continue;
-         }
-
-         if (val.length === 0) {
-           debugLog("SANITIZE_CSS_SKIP", `Empty value for: "${prop}"`);
-           continue;
-         }
-         out.push(`${prop}: ${val}`);
-       }
-       const result = out.join("; ") + (out.length > 0 ? ";" : "");
+       // Comments are stripped and `&`-rooted pseudo blocks are split out
+       // here: only plain declarations flow through this function. Block
+       // rules are rendered separately (see customCssRules.js).
+       const split = splitCustomCss(input);
+       const result = sanitizeDeclString(split.decls);
        debugLog("SANITIZE_CSS_RESULT", `Output: "${result}"`);
        return result;
      } catch (e) {
@@ -10714,7 +10743,7 @@ class AlwaysColorText extends Plugin {
      }
    }
 
-  applyCustomCssToElement(element, entry = null) {
+  applyCustomCssToElement(element, entry = null, scopeId = null) {
     try {
       if (!this.settings || !this.settings.enableCustomCss) {
         debugLog("APPLY_CSS_SKIP", "Feature disabled");
@@ -10730,34 +10759,15 @@ class AlwaysColorText extends Plugin {
         debugLog("APPLY_CSS_SKIP", "No customCss");
         return;
       }
-      const decl = this.sanitizeCssDeclarations(css);
-      if (!decl) {
-        debugLog("APPLY_CSS_SKIP", "Sanitized decl is empty");
-        return;
-      }
-
-      debugLog("APPLY_CSS_START", `Applying to element: ${element.nodeName}, decl: ${decl}`);
-
-      // Split declarations and apply them with !important
-      const parts = decl
-        .split(";")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-      for (const p of parts) {
-        const idx = p.indexOf(":");
-        if (idx === -1) continue;
-        const prop = p.slice(0, idx).trim();
-        const val = p.slice(idx + 1).trim();
-        try {
-          debugLog("APPLY_CSS_PROP", `Setting ${prop}: ${val}`);
-          // Use setProperty with 'important' to override Obsidian's defaults
-          element.style.setProperty(prop, val, "important");
-        } catch (e) {
-          debugLog("APPLY_CSS_FALLBACK", `Setting ${prop}: ${val} via fallback`);
-          // Fallback if setProperty fails
-          element.style[prop] = val;
-        }
-      }
+      // Scope marker/var routing so `&`-rooted blocks (hover etc.) can beat
+      // the inline !important declarations via the managed stylesheet.
+      const scope = scopeId || this._scopeIdForEntry(entry);
+      const res = applyCustomCssToElementCore(element, css, scope);
+      debugLog(
+        "APPLY_CSS_START",
+        `Applied ${res.declCount} declaration(s), ${res.blockCount} block(s) to ${element.nodeName}` +
+          (scope ? ` [scope ${scope}]` : ""),
+      );
     } catch (e) {
       debugError("APPLY_CSS_ERROR", e);
     }
@@ -15435,10 +15445,10 @@ class AlwaysColorText extends Plugin {
                 const entryRef = m.entryRef || {};
                 const groupRef = entryRef._groupRef || entryRef.entryRef?._groupRef;
                 if (groupRef?.customCss) {
-                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, this.groupCssForMembers(groupRef));
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, this.groupCssForMembers(groupRef), this._scopeIdForGroup(groupRef));
                 }
                 if (entryRef.customCss) {
-                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss);
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss, this._scopeIdForEntry(entryRef));
                 }
               }
 
@@ -15488,7 +15498,22 @@ class AlwaysColorText extends Plugin {
               const strongRule = (strongLayoutParts.length && tagName !== "li")
                 ? `${tagName}.${cssClass}{${strongLayoutParts.join("; ")}}`
                 : "";
-              const rule = `${baseRule}\n${strongRule}`;
+              // `&`-rooted pseudo blocks (hover/focus/…) for this line: direct
+              // rules with the line selector, so `:hover` outranks the base
+              // rule inside this same sheet.
+              let hoverRules = "";
+              if (this.settings.enableCustomCss) {
+                const lineEntry = m.entryRef || {};
+                const lineGroup = lineEntry._groupRef || lineEntry.entryRef?._groupRef;
+                const lineSelector = `${tagName}.${cssClass}`;
+                if (lineGroup?.customCss) {
+                  hoverRules += buildSelectorBlockRules(this.groupCssForMembers(lineGroup), lineSelector);
+                }
+                if (lineEntry.customCss) {
+                  hoverRules += buildSelectorBlockRules(lineEntry.customCss, lineSelector);
+                }
+              }
+              const rule = `${baseRule}\n${strongRule}${hoverRules ? "\n" + hoverRules : ""}`;
               if (styleEl.textContent !== rule) styleEl.textContent = rule;
 
               // Skip span creation for line mode (block already styled via CSS)
@@ -15843,7 +15868,7 @@ class AlwaysColorText extends Plugin {
               debugLog("READING_RENDER_CSS", `Checking for custom CSS on: ${m.pattern || "unknown"}`);
               if (this.settings.enableCustomCss) {
                 const groupRef = entryRef?._groupRef || entryRef?.entryRef?._groupRef;
-                if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
+                if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) }, this._scopeIdForGroup(groupRef));
               }
               this.applyCustomCssToElement(span, entryRef);
 
@@ -21342,10 +21367,10 @@ class AlwaysColorText extends Plugin {
         // Merge group CSS then entry CSS (custom CSS wins over base styles)
         if (this.settings.enableCustomCss) {
           if (m.entryRef?._groupRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef));
+            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef), this._scopeIdForGroup(m.entryRef._groupRef));
           }
           if (m.entryRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
+            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss, this._scopeIdForEntry(m.entryRef));
           }
         }
       } else {
@@ -21444,10 +21469,10 @@ class AlwaysColorText extends Plugin {
         // Merge group CSS then entry CSS (custom CSS wins over base styles)
         if (this.settings.enableCustomCss) {
           if (m.entryRef?._groupRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef));
+            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef), this._scopeIdForGroup(m.entryRef._groupRef));
           }
           if (m.entryRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
+            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss, this._scopeIdForEntry(m.entryRef));
           }
         }
       }
@@ -21521,7 +21546,21 @@ class AlwaysColorText extends Plugin {
         const strongLayoutRule = layoutStyleParts.length 
           ? `div.cm-line.${cssClass}:not(.HyperMD-list-line){${layoutStyleParts.join("; ")}}` 
           : "";
-        const rule = `${baseRule}\n${strongLayoutRule}`;
+        // `&`-rooted pseudo blocks (hover/focus/…) for this line: direct rules
+        // with the line selector, so `:hover` outranks the base rule inside
+        // this same sheet.
+        let hoverRules = "";
+        if (this.settings.enableCustomCss) {
+          const lineSelector = `div.cm-line.${cssClass}`;
+          const lineGroup = m.entryRef && (m.entryRef._groupRef || m.entryRef.entryRef?._groupRef);
+          if (lineGroup && lineGroup.customCss) {
+            hoverRules += buildSelectorBlockRules(this.groupCssForMembers(lineGroup), lineSelector);
+          }
+          if (m.entryRef && m.entryRef.customCss) {
+            hoverRules += buildSelectorBlockRules(m.entryRef.customCss, lineSelector);
+          }
+        }
+        const rule = `${baseRule}\n${strongLayoutRule}${hoverRules ? "\n" + hoverRules : ""}`;
         if (styleEl.textContent !== rule) styleEl.textContent = rule;
 
         // Determine target line position

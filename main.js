@@ -638,6 +638,7 @@ var require_en = __commonJS({
       "style_text_modal_header": "Edit Text Style",
       "style_target_modal_header": "Edit Target Style",
       "style_regex_modal_header": "Edit Regex Style",
+      "style_time_modal_header": "Edit Time Style",
       "opt_case_sensitive": "is case sensitive",
       "opt_not_case_sensitive": "not case sensitive",
       "opt_case_all": "Case Sensitivity (All)",
@@ -7951,6 +7952,421 @@ var import_obsidian5 = require("obsidian");
 
 // src/modals/CustomCssModal.js
 var import_obsidian3 = require("obsidian");
+
+// src/core/customCssRules.js
+var DANGEROUS_PATTERNS = [
+  "url(",
+  "expression(",
+  "javascript:",
+  "vbscript:",
+  "data:",
+  "@import",
+  "@charset",
+  "@namespace",
+  "<",
+  ">",
+  "{",
+  "}",
+  ";"
+];
+function stripCssComments(css, sink) {
+  if (!css || typeof css !== "string") return "";
+  let out = "";
+  let i = 0;
+  const n = css.length;
+  while (i < n) {
+    const ch = css[i];
+    if (ch === '"' || ch === "'") {
+      const quote = ch;
+      out += ch;
+      i++;
+      while (i < n) {
+        const c = css[i];
+        if (c === "\\" && i + 1 < n) {
+          out += c + css[i + 1];
+          i += 2;
+          continue;
+        }
+        out += c;
+        i++;
+        if (c === quote) break;
+      }
+      continue;
+    }
+    if (ch === "/" && css[i + 1] === "*") {
+      const end = css.indexOf("*/", i + 2);
+      const stop = end === -1 ? n : end + 2;
+      if (sink) sink.push(css.slice(i, stop));
+      out += css.slice(i, stop).replace(/[^\n]/g, " ");
+      i = stop;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+  return out;
+}
+function splitCustomCss(css) {
+  const comments = [];
+  const src = stripCssComments(css, comments);
+  const blocks = [];
+  const errors = [];
+  let declsOut = "";
+  let pending = "";
+  let i = 0;
+  const n = src.length;
+  const readString = (pos) => {
+    const quote = src[pos];
+    let j = pos + 1;
+    while (j < n) {
+      if (src[j] === "\\") {
+        j += 2;
+        continue;
+      }
+      if (src[j] === quote) return j + 1;
+      j++;
+    }
+    return n;
+  };
+  while (i < n) {
+    const ch = src[i];
+    if (ch === '"' || ch === "'") {
+      const end = readString(i);
+      pending += src.slice(i, end);
+      i = end;
+      continue;
+    }
+    if (ch === "{") {
+      const cut = Math.max(pending.lastIndexOf(";"), pending.lastIndexOf("}"));
+      const before = pending.slice(0, cut + 1);
+      const selector = pending.slice(cut + 1).trim();
+      declsOut += before;
+      let depth = 1;
+      let end = -1;
+      let nested = false;
+      for (let j = i + 1; j < n; j++) {
+        const c = src[j];
+        if (c === '"' || c === "'") {
+          j = readString(j) - 1;
+        } else if (c === "{") {
+          depth++;
+          nested = true;
+        } else if (c === "}") {
+          depth--;
+          if (depth === 0) {
+            end = j;
+            break;
+          }
+        }
+      }
+      if (end === -1) {
+        errors.push(`Unclosed "{" block for selector "${selector}"`);
+        pending = "";
+        break;
+      }
+      if (nested) errors.push(`Nested blocks are not supported: "${selector}"`);
+      const body = src.slice(i + 1, end);
+      blocks.push({
+        selector,
+        body: body.trim(),
+        raw: src.slice(cut + 1, end + 1).trim()
+      });
+      pending = "";
+      i = end + 1;
+      continue;
+    }
+    if (ch === "}") {
+      errors.push('Unexpected "}" outside of a block \u2014 check for mismatched braces');
+      i++;
+      continue;
+    }
+    pending += ch;
+    i++;
+  }
+  declsOut += pending;
+  return { decls: declsOut, blocks, errors, comments };
+}
+var SAFE_BLOCK_SELECTOR_RE = /^&(?:::?(?:hover|focus|focus-visible|focus-within|active|visited|target|any-link|link|defined|disabled|enabled|checked|indeterminate|required|optional|valid|invalid|in-range|out-of-range|read-only|read-write|placeholder-shown|default|playing|paused|stuck|user-valid|user-invalid|current|past|future|local|remote|scope|root|empty|first-child|last-child|only-child|first-of-type|last-of-type|only-of-type|before|after|first-line|first-letter|selection|backdrop|marker|placeholder|file-selector-button|cue|grammar-error|spelling-error|autofill|open|closed)|::?(?:nth-(?:last-)?(?:child|of-type|col)|dir|lang)\(\s*[a-zA-Z0-9+\- ]*\))+$/;
+function isSafeBlockSelector(sel) {
+  if (typeof sel !== "string") return false;
+  const s = sel.trim();
+  if (!s || !s.startsWith("&")) return false;
+  return s.split(",").map((p) => p.trim()).every((p) => SAFE_BLOCK_SELECTOR_RE.test(p));
+}
+function hasPseudoElement(sel) {
+  if (typeof sel !== "string") return false;
+  return sel.includes("::") || /:(?:before|after|first-line|first-letter)(?![a-z-])/.test(sel);
+}
+function sanitizeDeclString(input) {
+  if (!input || typeof input !== "string") return "";
+  const normalized = input.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const parts = normalized.split(";").map((s) => s.replace(/\n/g, " ").trim()).filter((s) => s.length > 0);
+  const out = [];
+  for (const p of parts) {
+    const idx = p.indexOf(":");
+    if (idx === -1) continue;
+    const prop = p.slice(0, idx).trim().toLowerCase();
+    let val = p.slice(idx + 1).trim();
+    if (!/^[a-z\-]+$/.test(prop)) continue;
+    val = val.replace(/!important/gi, "").trim();
+    const valLower = val.toLowerCase();
+    if (valLower.includes("url(") || valLower.includes("expression(") || valLower.includes("javascript:") || valLower.includes("data:") || valLower.includes("vbscript:") || valLower.includes("@import") || valLower.includes("@charset") || valLower.includes("@namespace") || val.includes("<") || val.includes(">") || val.includes("{") || val.includes("}") || val.includes(";")) {
+      continue;
+    }
+    if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(val)) continue;
+    if (val.length === 0) continue;
+    out.push(`${prop}: ${val}`);
+  }
+  return out.join("; ") + (out.length > 0 ? ";" : "");
+}
+function parseDeclPairs(str) {
+  if (!str || typeof str !== "string") return [];
+  const out = [];
+  for (const p of str.split(";")) {
+    const s = p.trim();
+    if (!s) continue;
+    const idx = s.indexOf(":");
+    if (idx === -1) continue;
+    out.push({
+      prop: s.slice(0, idx).trim().toLowerCase(),
+      val: s.slice(idx + 1).trim()
+    });
+  }
+  return out;
+}
+function blockDeclProperties(blocks) {
+  const props = /* @__PURE__ */ new Set();
+  if (!Array.isArray(blocks)) return props;
+  for (const b of blocks) {
+    if (!b || !isSafeBlockSelector(b.selector)) continue;
+    if (hasPseudoElement(b.selector)) continue;
+    for (const { prop } of parseDeclPairs(sanitizeDeclString(b.body))) {
+      props.add(prop);
+    }
+  }
+  return props;
+}
+function scopeToken(scopeId) {
+  if (scopeId === null || scopeId === void 0) return null;
+  const t = String(scopeId).replace(/[^A-Za-z0-9_-]/g, "_");
+  return t.length ? t : null;
+}
+function scopeMarkerProp(tok) {
+  return `--act-hov-${tok}-_s`;
+}
+function scopeVarName(tok, prop) {
+  return `--act-hov-${tok}-${prop}`;
+}
+function scopeMarkerSelector(tok) {
+  return `[style*="--act-hov-${tok}-"]`;
+}
+function applyScopeToStyleString(styleStr, rawCss, scopeId, prevStr) {
+  try {
+    const tok = scopeToken(scopeId);
+    if (!tok) return styleStr;
+    const split = splitCustomCss(rawCss);
+    const declared = new Set(
+      parseDeclPairs(sanitizeDeclString(split.decls)).map((p) => p.prop)
+    );
+    const touched = blockDeclProperties(split.blocks);
+    if (!split.blocks.length && declared.size === 0) return styleStr;
+    const prevParts = String(prevStr || "").split(";");
+    const prevVarFor = (prop) => {
+      for (const p of prevParts) {
+        const s = p.trim();
+        if (!s) continue;
+        const idx = s.indexOf(":");
+        if (idx === -1) continue;
+        if (s.slice(0, idx).trim().toLowerCase() !== prop) continue;
+        const m = s.slice(idx + 1).trim().match(/^var\((--act-hov-[^,)]+)\s*,/);
+        if (m) return m[1];
+      }
+      return null;
+    };
+    const parts = String(styleStr || "").split(";").map((s) => s.trim()).filter(Boolean);
+    const out = [];
+    for (const p of parts) {
+      const idx = p.indexOf(":");
+      if (idx === -1) {
+        out.push(p);
+        continue;
+      }
+      const prop = p.slice(0, idx).trim().toLowerCase();
+      const rawVal = p.slice(idx + 1).trim();
+      const hasImp = /\s*!important\s*$/i.test(rawVal);
+      const val = rawVal.replace(/\s*!important\s*$/i, "").trim();
+      const imp = hasImp ? " !important" : "";
+      if (touched.has(prop)) {
+        const vn = scopeVarName(tok, prop);
+        if (val.includes(`var(${vn},`)) {
+          out.push(p);
+          continue;
+        }
+        out.push(`${prop}: var(${vn}, ${val})${imp}`);
+        continue;
+      }
+      if (declared.has(prop)) {
+        const outer = prevVarFor(prop);
+        if (outer && !val.includes(`var(${outer}`)) {
+          out.push(`${prop}: var(${outer}, ${val})${imp}`);
+          continue;
+        }
+      }
+      out.push(p);
+    }
+    if (split.blocks.length) {
+      const marker = scopeMarkerProp(tok);
+      if (!out.some((p) => p.startsWith(`${marker}:`))) out.push(`${marker}: 1`);
+    }
+    return out.join("; ");
+  } catch (_) {
+    return styleStr;
+  }
+}
+function applyCustomCssToElementCore(element, rawCss, scopeId) {
+  const split = splitCustomCss(rawCss);
+  const pairs = parseDeclPairs(sanitizeDeclString(split.decls));
+  const touched = blockDeclProperties(split.blocks);
+  const tok = scopeToken(scopeId);
+  const hasBlocks = split.blocks.length > 0;
+  const setP = (prop, value) => {
+    try {
+      element.style.setProperty(prop, value, "important");
+    } catch (_) {
+      try {
+        element.style[prop] = value;
+      } catch (__) {
+      }
+    }
+  };
+  const getP = (prop) => {
+    try {
+      return element.style.getPropertyValue(prop) || "";
+    } catch (_) {
+      return "";
+    }
+  };
+  if (hasBlocks && tok) setP(scopeMarkerProp(tok), "1");
+  for (const { prop, val } of pairs) {
+    let value = val;
+    if (tok && touched.has(prop)) {
+      value = `var(${scopeVarName(tok, prop)}, ${val})`;
+    } else {
+      const m = getP(prop).match(/^var\((--act-hov-[^,)]+)\s*,/);
+      if (m) value = `var(${m[1]}, ${val})`;
+    }
+    setP(prop, value);
+  }
+  if (tok) {
+    for (const prop of touched) {
+      if (pairs.some((p) => p.prop === prop)) continue;
+      const cur = getP(prop);
+      if (!cur || cur.includes(`var(${scopeVarName(tok, prop)},`)) continue;
+      setP(prop, `var(${scopeVarName(tok, prop)}, ${cur})`);
+    }
+  }
+  return { declCount: pairs.length, blockCount: split.blocks.length };
+}
+function buildScopedBlockRules(css, scopeId) {
+  try {
+    const tok = scopeToken(scopeId);
+    if (!tok) return "";
+    const split = splitCustomCss(css);
+    if (!split.blocks.length) return "";
+    const markerSel = scopeMarkerSelector(tok);
+    let out = "";
+    for (const b of split.blocks) {
+      if (!isSafeBlockSelector(b.selector)) continue;
+      const pairs = parseDeclPairs(sanitizeDeclString(b.body));
+      if (!pairs.length) continue;
+      const sels = b.selector.split(",").map((s) => s.trim().replace(/^&/, "")).map((rest) => markerSel + rest);
+      const chunks = [];
+      if (!hasPseudoElement(b.selector)) {
+        chunks.push(
+          pairs.map(({ prop, val }) => `${scopeVarName(tok, prop)}: ${val}`).join("; ")
+        );
+      }
+      chunks.push(
+        pairs.map(({ prop, val }) => `${prop}: ${val} !important`).join("; ")
+      );
+      out += `${sels.join(", ")} { ${chunks.filter(Boolean).join("; ")} }
+`;
+    }
+    return out;
+  } catch (_) {
+    return "";
+  }
+}
+function buildSelectorBlockRules(css, baseSelector) {
+  try {
+    if (!baseSelector) return "";
+    const split = splitCustomCss(css);
+    if (!split.blocks.length) return "";
+    const bases = String(baseSelector).split(",").map((s) => s.trim()).filter(Boolean);
+    if (!bases.length) return "";
+    let out = "";
+    for (const b of split.blocks) {
+      if (!isSafeBlockSelector(b.selector)) continue;
+      const pairs = parseDeclPairs(sanitizeDeclString(b.body));
+      if (!pairs.length) continue;
+      const rests = b.selector.split(",").map((s) => s.trim().replace(/^&/, ""));
+      const sels = [];
+      for (const base of bases) for (const rest of rests) sels.push(base + rest);
+      const body = pairs.map(({ prop, val }) => `${prop}: ${val} !important`).join("; ");
+      out += `${sels.join(", ")} { ${body} }
+`;
+    }
+    return out;
+  } catch (_) {
+    return "";
+  }
+}
+function validateCustomCssInput(raw) {
+  const warnings = [];
+  if (!raw || !String(raw).trim()) return warnings;
+  const split = splitCustomCss(raw);
+  for (const e of split.errors) warnings.push(e);
+  const checkDecls = (text, where) => {
+    const parts = String(text).split(";").map((s) => s.replace(/\n/g, " ").trim()).filter(Boolean);
+    for (const part of parts) {
+      const idx = part.indexOf(":");
+      if (idx === -1) continue;
+      const prop = part.slice(0, idx).trim().toLowerCase();
+      const val = part.slice(idx + 1).trim();
+      if (!/^[a-z\-]+$/.test(prop)) {
+        warnings.push(
+          `Invalid property name: "${prop}" (must match /^[a-z\\-]+$/)${where}`
+        );
+      }
+      for (const d of DANGEROUS_PATTERNS) {
+        if (val.toLowerCase().includes(d)) {
+          warnings.push(`Dangerous value in "${prop}": contains "${d}"${where}`);
+          break;
+        }
+      }
+    }
+  };
+  checkDecls(split.decls, "");
+  for (const b of split.blocks) {
+    if (!isSafeBlockSelector(b.selector)) {
+      warnings.push(
+        `Unsupported block selector: "${b.selector}" \u2014 only &-rooted pseudo selectors are allowed (e.g. &:hover, &:focus, ::before, ::after)`
+      );
+      continue;
+    }
+    checkDecls(b.body, ` (in block "${b.selector}")`);
+  }
+  return warnings;
+}
+function reassembleCustomCss(split, declsText) {
+  if (!split) return declsText || "";
+  let out = declsText || "";
+  for (const b of split.blocks || []) out += (out ? "\n" : "") + b.raw;
+  for (const c of split.comments || []) out += (out ? "\n" : "") + c;
+  return out;
+}
+
+// src/modals/CustomCssModal.js
 function deriveHighlightCssFromEntry(entry, plugin) {
   const lines = [];
   const settings = plugin.settings;
@@ -8027,10 +8443,9 @@ function deriveHighlightCssFromEntry(entry, plugin) {
   }
   return lines.join(";\n") + ";";
 }
-var DANGEROUS_PATTERNS = ["url(", "expression(", "javascript:", "vbscript:", "data:", "@import", "@charset", "@namespace", "<", ">", "{", "}", ";"];
 function parseCssIntoEntry(css, entry, plugin) {
   if (!css || !entry) return;
-  const parts = css.split(";").map((s) => s.trim()).filter(Boolean);
+  const parts = splitCustomCss(css).decls.split(";").map((s) => s.trim()).filter(Boolean);
   for (const part of parts) {
     const idx = part.indexOf(":");
     if (idx === -1) continue;
@@ -8195,7 +8610,8 @@ function patchCssLayoutFromEntry(css, entry, plugin) {
       }
     }
   }
-  const sanitized = plugin.sanitizeCssDeclarations(css);
+  const split = splitCustomCss(css);
+  const sanitized = plugin.sanitizeCssDeclarations(split.decls);
   if (!sanitized) return css;
   const parts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
   const parsed = parts.map((p) => {
@@ -8218,7 +8634,7 @@ function patchCssLayoutFromEntry(css, entry, plugin) {
   for (const [prop, val] of Object.entries(updates)) {
     if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
   }
-  return rebuilt.join(";\n") + ";";
+  return reassembleCustomCss(split, rebuilt.join(";\n") + ";");
 }
 function extractHex(val, plugin) {
   const trimmed = val.trim();
@@ -8241,6 +8657,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     this._handlers = [];
     this._debounceTimer = null;
     this._previewSpan = null;
+    this._previewStyleEl = null;
     this._validationEl = null;
     this._textarea = null;
   }
@@ -8254,7 +8671,9 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     try {
       this.modalEl.addClass("act-modal");
       this.modalEl.addClass("act-custom-css-modal");
-      this.modalEl.style.minWidth = "540px";
+      this.modalEl.style.width = "540px";
+      this.modalEl.style.maxWidth = "95vw";
+      this.modalEl.style.minWidth = "0";
     } catch (_) {
     }
     const heading = contentEl.createEl("h2", {
@@ -8286,7 +8705,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     textareaLabel.style.letterSpacing = "0.05em";
     const taBox = textareaWrap.createDiv();
     taBox.style.border = "1px solid var(--background-modifier-border)";
-    taBox.style.borderRadius = "var(--button-radius)";
+    taBox.style.borderRadius = "var(--touch-radius-xxs)";
     taBox.style.background = "var(--background-modifier-form-field)";
     taBox.style.transition = "border-color 0.15s";
     this._textarea = taBox.createEl("div");
@@ -8294,6 +8713,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     this._textarea.style.width = "100%";
     this._textarea.style.minHeight = "160px";
     this._textarea.style.border = "none";
+    this._textarea.style.borderRadius = "var(--touch-radius-xxs)";
     this._textarea.style.outline = "none";
     this._textarea.style.background = "transparent";
     this._textarea.style.color = "var(--text-normal)";
@@ -8340,7 +8760,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     this._validationEl.style.marginBottom = "8px";
     this._validationEl.style.padding = "6px 10px";
     this._validationEl.style.borderRadius = "4px";
-    this._validationEl.style.background = "var(--background-modifier-error)";
+    this._validationEl.style.background = "transparent";
     this._validationEl.style.color = "var(--text-error)";
     this._validationEl.style.fontSize = "12px";
     this._validationEl.style.whiteSpace = "pre-wrap";
@@ -8459,20 +8879,16 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     }
     const raw = this._textarea ? this._textarea.value : "";
     if (raw.trim()) {
-      const sanitized = this.plugin.sanitizeCssDeclarations(raw);
-      if (sanitized) {
-        const parts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
-        for (const p of parts) {
-          const idx = p.indexOf(":");
-          if (idx === -1) continue;
-          const prop = p.slice(0, idx).trim();
-          const val = p.slice(idx + 1).trim();
-          try {
-            this._previewSpan.style.setProperty(prop, val, "important");
-          } catch (_) {
-            this._previewSpan.style[prop] = val;
-          }
+      applyCustomCssToElementCore(this._previewSpan, raw, "preview");
+      const rules = buildScopedBlockRules(raw, "preview");
+      if (rules) {
+        if (!this._previewStyleEl) {
+          this._previewStyleEl = document.createElement("style");
+          document.head.appendChild(this._previewStyleEl);
         }
+        this._previewStyleEl.textContent = rules;
+      } else if (this._previewStyleEl) {
+        this._previewStyleEl.textContent = "";
       }
     }
   }
@@ -8483,23 +8899,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
       this._validationEl.style.display = "none";
       return;
     }
-    const warnings = [];
-    const parts = raw.split(";").map((s) => s.replace(/\n/g, " ").trim()).filter(Boolean);
-    for (const part of parts) {
-      const idx = part.indexOf(":");
-      if (idx === -1) continue;
-      const prop = part.slice(0, idx).trim().toLowerCase();
-      const val = part.slice(idx + 1).trim();
-      if (!/^[a-z\-]+$/.test(prop)) {
-        warnings.push(`Invalid property name: "${prop}" (must match /^[a-z\\-]+$/)`);
-      }
-      for (const d of DANGEROUS_PATTERNS) {
-        if (val.toLowerCase().includes(d)) {
-          warnings.push(`Dangerous value in "${prop}": contains "${d}"`);
-          break;
-        }
-      }
-    }
+    const warnings = validateCustomCssInput(raw);
     if (warnings.length > 0) {
       this._validationEl.textContent = warnings.join("\n");
       this._validationEl.style.display = "block";
@@ -8530,6 +8930,13 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     } catch (_) {
     }
     this._handlers = [];
+    try {
+      if (this._previewStyleEl) {
+        this._previewStyleEl.remove();
+        this._previewStyleEl = null;
+      }
+    } catch (_) {
+    }
     this.contentEl.empty();
   }
 };
@@ -9623,28 +10030,39 @@ function stripInheritedGroupCssColors(css, borderColor, opts) {
   const keepBg = keep === "bg" || keep === "both";
   if (!css || typeof css !== "string") return css;
   try {
-    const parts = css.split(";").map((s) => s.trim()).filter(Boolean);
-    const out = [];
-    for (const p of parts) {
+    const split = splitCustomCss(css);
+    const mapDecl = (p) => {
       const idx = p.indexOf(":");
-      if (idx === -1) {
-        out.push(p);
-        continue;
-      }
+      if (idx === -1) return p;
       const prop = p.slice(0, idx).trim().toLowerCase();
       const val = p.slice(idx + 1).trim();
-      if (prop === "color" && !keepColor) continue;
-      if (prop === "background-color" && !keepBg) continue;
+      if (prop === "color" && !keepColor) return null;
+      if (prop === "background-color" && !keepBg) return null;
       if (prop === "border" || prop === "border-top" || prop === "border-bottom" || prop === "border-left" || prop === "border-right") {
-        if (dropBorder) continue;
-        out.push(
-          `${prop}: ${val.replace(/#[0-9a-fA-F]{3,8}\b/g, fallback).replace(/rgba?\s*\([^)]+\)/gi, fallback).replace(/var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)/g, fallback)}`
-        );
-        continue;
+        if (dropBorder) return null;
+        return `${prop}: ${val.replace(/#[0-9a-fA-F]{3,8}\b/g, fallback).replace(/rgba?\s*\([^)]+\)/gi, fallback).replace(/var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)/g, fallback)}`;
       }
-      out.push(`${prop}: ${val}`);
+      return `${prop}: ${val}`;
+    };
+    const mapBody = (body) => {
+      const out2 = [];
+      for (const p of String(body).split(";")) {
+        const t = p.trim();
+        if (!t) continue;
+        const m = mapDecl(t);
+        if (m !== null) out2.push(m);
+      }
+      return out2;
+    };
+    const out = mapBody(split.decls);
+    let result = out.length > 0 ? out.join(";\n") + ";" : "";
+    for (const b of split.blocks) {
+      if (!b.selector.trim()) continue;
+      const bodyOut = mapBody(b.body);
+      if (bodyOut.length === 0) continue;
+      result += (result ? "\n" : "") + `${b.selector}{${bodyOut.join(";\n")};}`;
     }
-    return out.length > 0 ? out.join(";\n") + ";" : "";
+    return result;
   } catch (_) {
     return css;
   }
@@ -15455,7 +15873,9 @@ var EditEntryModal = class extends import_obsidian12.Modal {
     const headerRow = contentEl.createDiv();
     headerRow.addClass("act-pickr-header");
     const title = headerRow.createEl("h2", {
-      text: isTarget ? this.plugin.t("style_target_modal_header", "Style Target") : isRegex ? this.plugin.t("style_regex_modal_header", "Style Regex") : this.plugin.t("style_text_modal_header", "Style Text")
+      // Time & Date entries edit the moment.js format — the title says so
+      // instead of "Edit Regex Style" (their pattern stays hidden).
+      text: dtFormat ? this.plugin.t("style_time_modal_header", "Edit Time Style") : isTarget ? this.plugin.t("style_target_modal_header", "Style Target") : isRegex ? this.plugin.t("style_regex_modal_header", "Style Regex") : this.plugin.t("style_text_modal_header", "Style Text")
     });
     title.style.marginTop = "0";
     title.style.marginBottom = "0";
@@ -33851,6 +34271,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
   }
   async onload() {
     await this.loadSettings();
+    this.rebuildCustomCssBlockRules();
     this.applyThemeFixer();
     if (typeof this.settings.quickColorsEnabled === "undefined")
       this.settings.quickColorsEnabled = false;
@@ -36730,7 +37151,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         }
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) }, this._scopeIdForGroup(groupRef));
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -36992,7 +37413,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         }
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) }, this._scopeIdForGroup(groupRef));
         }
         this.applyCustomCssToElement(span, entry);
         frag.appendChild(span);
@@ -37127,7 +37548,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         }
         if (this.settings.enableCustomCss) {
           const groupRef = entry?._groupRef || entry?.entryRef?._groupRef;
-          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
+          if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) }, this._scopeIdForGroup(groupRef));
         }
         this.applyCustomCssToElement(span, entry);
         textNode.replaceWith(span);
@@ -38815,6 +39236,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
   }
   // --- Save settings and refresh plugin state ---
   applyFormattingStyles() {
+    this.rebuildCustomCssBlockRules();
     try {
       const styleId = "act-formatting-styles";
       let styleEl = document.getElementById(styleId);
@@ -38880,6 +39302,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           }
           css += ` } 
 `;
+          if (this.settings.enableCustomCss && entry.customCss) {
+            css += buildSelectorBlockRules(entry.customCss, selector);
+          }
           if ((t.key === "tag" || t.key === "all-tags") && isHighlight) {
             const cmSel = buildMarkdownCmSelector(t, entry, hasBoldItalic);
             if (cmSel) {
@@ -39589,6 +40014,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     }
     this.updateStatusBar();
     this.syncGlobalToggleCssState();
+    this.rebuildCustomCssBlockRules();
     try {
       this.forceRefreshAllEditors();
     } catch (e) {
@@ -41401,8 +41827,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
         updates["background-color"] = this.hexToRgba(bg, opacity);
       }
-      const sanitized = this.sanitizeCssDeclarations(entry.customCss);
-      if (!sanitized) return entry.customCss;
+      const split = splitCustomCss(entry.customCss);
+      const sanitized = this.sanitizeCssDeclarations(split.decls);
+      if (!sanitized && !split.blocks.length) return entry.customCss;
       const parts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
       const parsed = parts.map((p) => {
         const idx = p.indexOf(":");
@@ -41434,7 +41861,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       for (const [prop, val] of Object.entries(updates)) {
         if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
       }
-      entry.customCss = rebuilt.join(";\n") + ";";
+      entry.customCss = reassembleCustomCss(split, rebuilt.length ? rebuilt.join(";\n") + ";" : "");
     } catch (_) {
     }
   }
@@ -41458,8 +41885,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
         updates["background-color"] = this.hexToRgba(bg, opacity);
       }
-      const sanitized = this.sanitizeCssDeclarations(entry.customCss);
-      if (!sanitized) return;
+      const split = splitCustomCss(entry.customCss);
+      const sanitized = this.sanitizeCssDeclarations(split.decls);
+      if (!sanitized && !split.blocks.length) return;
       const parts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
       const parsed = parts.map((p) => {
         const idx = p.indexOf(":");
@@ -41483,7 +41911,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           rebuilt.push(`${prop}: ${val}`);
         }
       }
-      entry.customCss = rebuilt.join(";\n") + ";";
+      entry.customCss = reassembleCustomCss(split, rebuilt.length ? rebuilt.join(";\n") + ";" : "");
     } catch (_) {
     }
   }
@@ -41523,10 +41951,61 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       return group && group.customCss || "";
     }
   }
-  _mergeStyleWithCustomCss(baseStyle, customCss) {
+  /**
+   * Rebuild the managed stylesheet holding `&`-rooted pseudo-block rules
+   * (`&:hover`, `&::after`, …) for every entry/group that has custom CSS.
+   * Rules are marker-scoped via `[style*="--act-hov-<scope>-"]`, matching the
+   * markers applyCustomCssToElement / _mergeStyleWithCustomCss stamp into
+   * inline styles. Inert while the plugin or custom CSS is disabled.
+   */
+  rebuildCustomCssBlockRules() {
+    try {
+      const STYLE_ID = "act-custom-css-block-rules";
+      const node = document.getElementById(STYLE_ID);
+      const on = this.settings && this.settings.enabled && this.settings.enableCustomCss;
+      if (!on) {
+        if (node) node.remove();
+        return;
+      }
+      const groups = Array.isArray(this.settings.wordEntryGroups) ? this.settings.wordEntryGroups : [];
+      let css = "";
+      for (const g of groups) {
+        if (!g || !g.uid || !g.customCss) continue;
+        css += buildScopedBlockRules(this.groupCssForMembers(g), this._scopeIdForGroup(g));
+      }
+      const entries = (Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : []).concat(
+        groups.reduce((acc, g) => acc.concat(Array.isArray(g.entries) ? g.entries : []), [])
+      );
+      for (const e of entries) {
+        if (!e || !e.uid || !e.customCss) continue;
+        css += buildScopedBlockRules(e.customCss, this._scopeIdForEntry(e));
+      }
+      let el = node;
+      if (!el) {
+        el = document.createElement("style");
+        el.id = STYLE_ID;
+        document.head.appendChild(el);
+      }
+      if (el.textContent !== css) el.textContent = css;
+    } catch (_) {
+    }
+  }
+  /**
+   * Scope id helpers — must match the ids used by
+   * rebuildCustomCssBlockRules() so marker-scoped hover rules hit exactly the
+   * elements that received that scope's custom CSS.
+   */
+  _scopeIdForEntry(entry) {
+    const uid = entry && (entry.uid || entry.entryRef && entry.entryRef.uid);
+    return uid ? `e${uid}` : null;
+  }
+  _scopeIdForGroup(group) {
+    return group && group.uid ? `g${group.uid}` : null;
+  }
+  _mergeStyleWithCustomCss(baseStyle, customCss, scopeId = null) {
     if (!customCss || !customCss.trim()) return baseStyle;
     const sanitized = this.sanitizeCssDeclarations(customCss);
-    if (!sanitized) return baseStyle;
+    if (!sanitized && !splitCustomCss(customCss).blocks.length) return baseStyle;
     const customProps = /* @__PURE__ */ new Set();
     const customParts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
     for (const p of customParts) {
@@ -41562,44 +42041,15 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       return `${p.slice(0, idx).trim()}: ${p.slice(idx + 1).trim()} !important`;
     }).join("; ");
     const base = filteredBase.join("; ");
-    return base ? `${base}; ${customWithImportant}` : customWithImportant;
+    const merged = base ? `${base}; ${customWithImportant}` : customWithImportant;
+    return applyScopeToStyleString(merged, customCss, scopeId, baseStyle);
   }
   sanitizeCssDeclarations(input) {
     try {
       if (!input || typeof input !== "string") return "";
       debugLog("SANITIZE_CSS_START", `Input: "${input}"`);
-      const normalized = String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-      const parts = normalized.split(";").map((s) => s.replace(/\n/g, " ").trim()).filter((s) => s.length > 0);
-      const out = [];
-      for (const p of parts) {
-        const idx = p.indexOf(":");
-        if (idx === -1) {
-          debugLog("SANITIZE_CSS_SKIP", `No colon in: "${p}"`);
-          continue;
-        }
-        const prop = p.slice(0, idx).trim().toLowerCase();
-        let val = p.slice(idx + 1).trim();
-        if (!/^[a-z\-]+$/.test(prop)) {
-          debugLog("SANITIZE_CSS_SKIP", `Invalid prop name: "${prop}"`);
-          continue;
-        }
-        val = val.replace(/!important/gi, "").trim();
-        const valLower = val.toLowerCase();
-        if (valLower.includes("url(") || valLower.includes("expression(") || valLower.includes("javascript:") || valLower.includes("data:") || valLower.includes("vbscript:") || valLower.includes("@import") || valLower.includes("@charset") || valLower.includes("@namespace") || val.includes("<") || val.includes(">") || val.includes("{") || val.includes("}") || val.includes(";")) {
-          debugLog("SANITIZE_CSS_SKIP", `Dangerous value for: "${prop}": "${val}"`);
-          continue;
-        }
-        if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(val)) {
-          debugLog("SANITIZE_CSS_SKIP", `Control character in value: "${prop}"`);
-          continue;
-        }
-        if (val.length === 0) {
-          debugLog("SANITIZE_CSS_SKIP", `Empty value for: "${prop}"`);
-          continue;
-        }
-        out.push(`${prop}: ${val}`);
-      }
-      const result = out.join("; ") + (out.length > 0 ? ";" : "");
+      const split = splitCustomCss(input);
+      const result = sanitizeDeclString(split.decls);
       debugLog("SANITIZE_CSS_RESULT", `Output: "${result}"`);
       return result;
     } catch (e) {
@@ -41607,7 +42057,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       return "";
     }
   }
-  applyCustomCssToElement(element, entry = null) {
+  applyCustomCssToElement(element, entry = null, scopeId = null) {
     try {
       if (!this.settings || !this.settings.enableCustomCss) {
         debugLog("APPLY_CSS_SKIP", "Feature disabled");
@@ -41622,26 +42072,12 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         debugLog("APPLY_CSS_SKIP", "No customCss");
         return;
       }
-      const decl = this.sanitizeCssDeclarations(css);
-      if (!decl) {
-        debugLog("APPLY_CSS_SKIP", "Sanitized decl is empty");
-        return;
-      }
-      debugLog("APPLY_CSS_START", `Applying to element: ${element.nodeName}, decl: ${decl}`);
-      const parts = decl.split(";").map((s) => s.trim()).filter((s) => s.length > 0);
-      for (const p of parts) {
-        const idx = p.indexOf(":");
-        if (idx === -1) continue;
-        const prop = p.slice(0, idx).trim();
-        const val = p.slice(idx + 1).trim();
-        try {
-          debugLog("APPLY_CSS_PROP", `Setting ${prop}: ${val}`);
-          element.style.setProperty(prop, val, "important");
-        } catch (e) {
-          debugLog("APPLY_CSS_FALLBACK", `Setting ${prop}: ${val} via fallback`);
-          element.style[prop] = val;
-        }
-      }
+      const scope = scopeId || this._scopeIdForEntry(entry);
+      const res = applyCustomCssToElementCore(element, css, scope);
+      debugLog(
+        "APPLY_CSS_START",
+        `Applied ${res.declCount} declaration(s), ${res.blockCount} block(s) to ${element.nodeName}` + (scope ? ` [scope ${scope}]` : "")
+      );
     } catch (e) {
       debugError("APPLY_CSS_ERROR", e);
     }
@@ -45293,10 +45729,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                 const entryRef = m.entryRef || {};
                 const groupRef = entryRef._groupRef || entryRef.entryRef?._groupRef;
                 if (groupRef?.customCss) {
-                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, this.groupCssForMembers(groupRef));
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, this.groupCssForMembers(groupRef), this._scopeIdForGroup(groupRef));
                 }
                 if (entryRef.customCss) {
-                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss);
+                  lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss, this._scopeIdForEntry(entryRef));
                 }
               }
               const baseParts = [];
@@ -45326,8 +45762,20 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
               const tagName = (block.tagName || "div").toLowerCase();
               const baseRule = `${tagName}.${cssClass}{${baseParts.join("; ")}}`;
               const strongRule = strongLayoutParts.length && tagName !== "li" ? `${tagName}.${cssClass}{${strongLayoutParts.join("; ")}}` : "";
+              let hoverRules = "";
+              if (this.settings.enableCustomCss) {
+                const lineEntry = m.entryRef || {};
+                const lineGroup = lineEntry._groupRef || lineEntry.entryRef?._groupRef;
+                const lineSelector = `${tagName}.${cssClass}`;
+                if (lineGroup?.customCss) {
+                  hoverRules += buildSelectorBlockRules(this.groupCssForMembers(lineGroup), lineSelector);
+                }
+                if (lineEntry.customCss) {
+                  hoverRules += buildSelectorBlockRules(lineEntry.customCss, lineSelector);
+                }
+              }
               const rule = `${baseRule}
-${strongRule}`;
+${strongRule}${hoverRules ? "\n" + hoverRules : ""}`;
               if (styleEl.textContent !== rule) styleEl.textContent = rule;
               frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
               pos = m.end;
@@ -45624,7 +46072,7 @@ ${strongRule}`;
               debugLog("READING_RENDER_CSS", `Checking for custom CSS on: ${m.pattern || "unknown"}`);
               if (this.settings.enableCustomCss) {
                 const groupRef = entryRef?._groupRef || entryRef?.entryRef?._groupRef;
-                if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) });
+                if (groupRef?.customCss) this.applyCustomCssToElement(span, { customCss: this.groupCssForMembers(groupRef) }, this._scopeIdForGroup(groupRef));
               }
               this.applyCustomCssToElement(span, entryRef);
               const entryStyleType = (m.entryRef || m.entry)?.styleType || "text";
@@ -49675,10 +50123,10 @@ ${strongRule}`;
         style = `${textPart}${bgPart}${borderStyle}`;
         if (this.settings.enableCustomCss) {
           if (m.entryRef?._groupRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef));
+            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef), this._scopeIdForGroup(m.entryRef._groupRef));
           }
           if (m.entryRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
+            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss, this._scopeIdForEntry(m.entryRef));
           }
         }
       } else {
@@ -49755,10 +50203,10 @@ ${strongRule}`;
         }
         if (this.settings.enableCustomCss) {
           if (m.entryRef?._groupRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef));
+            style = this._mergeStyleWithCustomCss(style, this.groupCssForMembers(m.entryRef._groupRef), this._scopeIdForGroup(m.entryRef._groupRef));
           }
           if (m.entryRef?.customCss) {
-            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss);
+            style = this._mergeStyleWithCustomCss(style, m.entryRef.customCss, this._scopeIdForEntry(m.entryRef));
           }
         }
       }
@@ -49798,8 +50246,19 @@ ${strongRule}`;
         }
         const baseRule = `div.cm-line.${cssClass}{${colorProp}${lineStyleParts.join("; ")}}`;
         const strongLayoutRule = layoutStyleParts.length ? `div.cm-line.${cssClass}:not(.HyperMD-list-line){${layoutStyleParts.join("; ")}}` : "";
+        let hoverRules = "";
+        if (this.settings.enableCustomCss) {
+          const lineSelector = `div.cm-line.${cssClass}`;
+          const lineGroup = m.entryRef && (m.entryRef._groupRef || m.entryRef.entryRef?._groupRef);
+          if (lineGroup && lineGroup.customCss) {
+            hoverRules += buildSelectorBlockRules(this.groupCssForMembers(lineGroup), lineSelector);
+          }
+          if (m.entryRef && m.entryRef.customCss) {
+            hoverRules += buildSelectorBlockRules(m.entryRef.customCss, lineSelector);
+          }
+        }
         const rule = `${baseRule}
-${strongLayoutRule}`;
+${strongLayoutRule}${hoverRules ? "\n" + hoverRules : ""}`;
         if (styleEl.textContent !== rule) styleEl.textContent = rule;
         let lineStart;
         if (markTarget === "nextLine") {
