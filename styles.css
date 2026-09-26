@@ -263,24 +263,28 @@
 /* Checkbox styling in reading mode */
 /* Ensure colored text in list items inherits parent color */
 /* Legacy marker styling for backward compatibility */
-/* Preset Modal - Force width to override Obsidian defaults */
-.act-preset-modal {
+/* Preset Modal - Force width to override Obsidian defaults.
+   Desktop-only: below 900px (phones, narrow windows) a fixed 870px dialog
+   overflows the viewport — mobile.css sizes it to fit instead. */
+@media (min-width: 900px) {
+  .act-preset-modal {
     --dialog-width: 1200px !important;
     max-width: 1200px !important;
     width: 870px !important;
-}
-.act-preset-modal .modal-content {
-  max-width: 1200px !important;
-  width: 800px !important;
-}
-.act-preset-modal .modal {
-  width: 800px !important;
-  max-width: 1200px !important;
-}
-.modal .act-preset-modal {
-  min-width: 800px !important;
-  width: 800px !important;
-  max-width: 1200px !important;
+  }
+  .act-preset-modal .modal-content {
+    max-width: 1200px !important;
+    width: 800px !important;
+  }
+  .act-preset-modal .modal {
+    width: 800px !important;
+    max-width: 1200px !important;
+  }
+  .modal .act-preset-modal {
+    min-width: 800px !important;
+    width: 800px !important;
+    max-width: 1200px !important;
+  }
 }
 /* Highlight Styling Modal - Force width via !important */
 .act-highlight-modal {
@@ -716,6 +720,60 @@ padding: 2px 0px !important;
   }
 /* Let selects shrink and share the first row evenly on very narrow */
 
+/* ====== PRESETS — TIME & DATE FORMAT STEP ====== */
+.act-preset-format-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-2);
+}
+.act-preset-format-title {
+  margin: 0;
+  font-size: var(--font-ui-large);
+  font-weight: 600;
+}
+.act-preset-format-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+  padding: var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--touch-radius-xxs);
+  background: var(--background-modifier-form-field);
+}
+.act-preset-format-label {
+  color: var(--text-muted);
+  font-size: var(--font-smallest);
+  text-transform: uppercase;
+}
+.act-preset-format-preview-text {
+  color: var(--text-normal);
+  font-size: var(--font-ui-large);
+  overflow-wrap: anywhere;
+}
+.act-preset-format-error {
+  color: var(--text-error);
+  font-size: var(--font-small);
+}
+/* Hidden while the format is valid — no empty gap left behind */
+.act-preset-format-error:empty {
+  display: none;
+}
+.act-preset-format-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--size-4-2);
+  margin-block-start: var(--size-4-2);
+}
+/* Time & Date entries: this button replaces the pattern/flags inputs in the
+   entry rows — it shows the moment.js format and re-opens the format step. */
+.act-datetime-format-btn {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 /* ── mobile.css ────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .color-swatch-grid {
@@ -943,6 +1001,11 @@ body.is-mobile .color-words-list .act-entry-row .act-style-select {
   min-width: 0 !important;
   width: auto !important;
   max-width: none !important;
+}
+/* Time & Date: color-type dropdown (order 2) must come before the format
+   button on phones/tablets — without this the button defaults to order 0. */
+body.is-mobile .color-words-list .act-entry-row .act-datetime-format-btn {
+  order: 3;
 }
 body.is-mobile .color-words-list .act-entry-row input[type="color"] {
   order: 3 !important;
@@ -2245,5 +2308,30 @@ body.is-tablet .act-mobile-tip .act-mobile-tip-dismiss {
 /* Plugin settings - center align setting items */
 .act-settings-container .setting-item {
   align-items: center;
+}
+
+/* ====== PRESETS MODAL — NARROW SCREENS ======
+   The desktop rules in ui.css force a fixed ~870px dialog and only apply from
+   900px up; below that the modal must fit the viewport instead of overflowing
+   it, and the single-column preset list needs to scroll inside the modal. */
+@media (max-width: 899px) {
+  .act-preset-modal {
+    width: calc(100% - var(--size-4-6) * 2);
+    max-width: calc(100% - var(--size-4-6) * 2);
+    min-width: 0;
+  }
+  .act-preset-modal .modal-content {
+    width: auto;
+    max-width: none;
+    max-height: calc(100vh - var(--size-4-12) * 2);
+    max-height: calc(100dvh - var(--size-4-12) * 2);
+    overflow-y: auto;
+  }
+}
+/* Format step: Back / Use format stack full-width on phones for tap targets */
+@media (max-width: 600px) {
+  .act-preset-format-actions {
+    flex-direction: column;
+  }
 }
 

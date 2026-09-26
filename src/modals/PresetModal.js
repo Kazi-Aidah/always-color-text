@@ -1,14 +1,55 @@
-﻿import { Modal } from 'obsidian';
+﻿import { Modal, Setting, moment } from 'obsidian';
+import {
+  DEFAULT_DATE_TIME_FORMAT,
+  evaluateDateTimeFormat,
+} from '../utils/momentFormat.js';
+import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
+
+// moment.js displaying/format docs — the "format reference" link in the step.
+const DATE_TIME_DOCS_URL = "https://momentjs.com/docs/#/displaying/format/";
 
 export class PresetModal extends Modal {
-  constructor(app, plugin, onChoose) {
+  constructor(app, plugin, onChoose, opts) {
     super(app);
     this.plugin = plugin;
     this.onChoose = onChoose;
+    this._opts = opts || {};
     this._listeners = [];
+    this._pendingFormat =
+      (this._opts.startWithFormat && this._opts.initialFormat) ||
+      DEFAULT_DATE_TIME_FORMAT;
+  }
+  /**
+   * Open only the Time & Date format step for an EXISTING entry — the format
+   * buttons in the entry rows use this so users edit the moment.js format and
+   * never see the generated regex. `onSaved(entry)` persists/recompiles.
+   */
+  static openForDateTimeFormat(app, plugin, entry, onSaved) {
+    const modal = new PresetModal(
+      app,
+      plugin,
+      async (preset) => {
+        if (!preset) return;
+        entry.pattern = preset.pattern;
+        entry.flags = preset.flags || "";
+        entry.presetLabel = preset.label;
+        if (preset.dateTimeFormat) entry.dateTimeFormat = preset.dateTimeFormat;
+        else delete entry.dateTimeFormat;
+        try {
+          if (typeof onSaved === "function") await onSaved(entry);
+        } catch (e) {}
+      },
+      {
+        startWithFormat: true,
+        initialFormat: getEntryDateTimeFormat(entry, plugin),
+      },
+    );
+    modal.open();
+    return modal;
   }
   onOpen() {
     const { contentEl } = this;
+    this._clearListeners();
     contentEl.empty();
     // Add class to force styling via CSS
     this.modalEl.addClass("act-modal");
@@ -19,6 +60,16 @@ export class PresetModal extends Modal {
       this.modalEl.style.width = "1200px !important";
     } catch (e) {}
     contentEl.style.maxWidth = "1200px !important";
+
+    // "Edit format" mode: opened from an entry's format button to re-edit its
+    // moment.js format — skip the preset list entirely.
+    if (this._opts.startWithFormat) {
+      this._showFormatStep({
+        label: this.plugin.t("preset_time_date", "Time & Date"),
+        needsFormat: true,
+      });
+      return;
+    }
 
     const presets = [
       {
@@ -101,43 +152,18 @@ export class PresetModal extends Modal {
         targetElement: "codeblock",
       },
       {
-        label: this.plugin.t("preset_dates_yyyy_mm_dd", "Dates (YYYY-MM-DD)"),
-        pattern: "\\b\\d{4}-\\d{2}-\\d{2}\\b",
+        label: this.plugin.t("preset_time_date", "Time & Date"),
+        pattern: "",
         flags: "",
-        examples: [this.plugin.t("preset_example_date_iso", "2009-01-19")],
-      },
-      {
-        label: this.plugin.t("preset_dates_yyyy_mmm_dd", "Dates (YYYY-MMM-DD)"),
-        pattern:
-          "\\b\\d{4}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{2}\\b",
-        flags: "i",
-        examples: [this.plugin.t("preset_example_date_text", "2025-Jan-19")],
-      },
-      {
-        label: this.plugin.t("preset_times_am_pm", "Times (AM/PM)"),
-        pattern: "(?:1[0-2]|0?[1-9]):[0-5][0-9](?:am|pm)",
-        flags: "i",
-        examples: [this.plugin.t("preset_example_time_ampm", "9:05pm")],
-      },
-      {
-        label: this.plugin.t("preset_times_short_am_pm", "Times (2pm, 10pm)"),
-        pattern: "(?:1[0-2]|0?[1-9])(?:\\s?[ap]m)",
-        flags: "i",
         examples: [
-          this.plugin.t("preset_example_time_short_ampm", "2pm, 10pm"),
+          this.plugin.t(
+            "preset_example_time_date",
+            "Any moment.js format (hh:mm a, D MMMM Y)",
+          ),
         ],
-      },
-      {
-        label: this.plugin.t("preset_times_24h", "Times (24h)"),
-        pattern: "\\b(?:[01]\\d|2[0-3]):[0-5]\\d\\b",
-        flags: "",
-        examples: [this.plugin.t("preset_example_time_24h", "13:00")],
-      },
-      {
-        label: this.plugin.t("preset_relative_dates", "Relative dates"),
-        pattern: "\\b(?:today|tomorrow|yesterday|next week|last week)\\b",
-        flags: "i",
-        examples: [this.plugin.t("preset_example_relative", "today, tomorrow")],
+        // Opens the format step instead of choosing immediately: the pattern
+        // is built from whatever format the user types.
+        needsFormat: true,
       },
       {
         label: this.plugin.t("preset_basic_urls", "Basic URLs"),
@@ -378,6 +404,21 @@ export class PresetModal extends Modal {
         !formattingPresets.includes(p),
     );
 
+    // Presets that need extra input (Time & Date) swap this modal to their own
+    // step first; everything else is handed straight to the caller.
+    const choosePreset = (p) => {
+      if (!p) return;
+      if (p.needsFormat) {
+        this._showFormatStep(p);
+        return;
+      }
+      try {
+        this.onChoose && this.onChoose(p);
+      } finally {
+        this.close();
+      }
+    };
+
     // Create three-column container
     const container = contentEl.createDiv();
     container.style.display = "grid";
@@ -385,7 +426,8 @@ export class PresetModal extends Modal {
     container.style.gap = "12px";
     container.style.maxWidth = "100%";
 
-    // Add responsive styles
+    // Add responsive styles (removed again in onClose — reopening must not
+    // stack duplicate style elements on <head>)
     const mediaRule = `
       @media (max-width: 1024px) {
         .preset-columns { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
@@ -394,9 +436,16 @@ export class PresetModal extends Modal {
         .preset-columns { grid-template-columns: 1fr !important; gap: 8px !important; }
       }
     `;
+    if (this._mediaStyleEl) {
+      try {
+        this._mediaStyleEl.remove();
+      } catch (e) {}
+      this._mediaStyleEl = null;
+    }
     const style = document.createElement("style");
     style.textContent = mediaRule;
     document.head.appendChild(style);
+    this._mediaStyleEl = style;
 
     container.className = "preset-columns";
 
@@ -431,13 +480,7 @@ export class PresetModal extends Modal {
         btn.style.flex = "1";
         btn.title = p.examples && p.examples[0] ? p.examples[0] : "";
 
-        const handler = () => {
-          try {
-            this.onChoose && this.onChoose(p);
-          } finally {
-            this.close();
-          }
-        };
+        const handler = () => choosePreset(p);
         btn.addEventListener("click", handler);
         this._listeners.push({ el: btn, h: handler });
       });
@@ -473,13 +516,7 @@ export class PresetModal extends Modal {
         badge.style.fontSize = "10px";
         badge.style.color = "var(--text-warning)";
       }
-      const handler = () => {
-        try {
-          this.onChoose && this.onChoose(p);
-        } finally {
-          this.close();
-        }
-      };
+      const handler = () => choosePreset(p);
       btn.addEventListener("click", handler);
       this._listeners.push({ el: btn, h: handler });
     });
@@ -526,13 +563,7 @@ export class PresetModal extends Modal {
         badge.style.fontSize = "10px";
         badge.style.color = "var(--text-warning)";
       }
-      const handler = () => {
-        try {
-          this.onChoose && this.onChoose(p);
-        } finally {
-          this.close();
-        }
-      };
+      const handler = () => choosePreset(p);
       btn.addEventListener("click", handler);
       this._listeners.push({ el: btn, h: handler });
     });
@@ -579,24 +610,211 @@ export class PresetModal extends Modal {
         badge.style.fontSize = "10px";
         badge.style.color = "var(--text-warning)";
       }
-      const handler = () => {
-        try {
-          this.onChoose && this.onChoose(p);
-        } finally {
-          this.close();
-        }
-      };
+      const handler = () => choosePreset(p);
       btn.addEventListener("click", handler);
       this._listeners.push({ el: btn, h: handler });
     });
   }
-  onClose() {
-    this._listeners.forEach((x) => {
+  _clearListeners() {
+    (this._listeners || []).forEach((x) => {
       try {
-        x.el.removeEventListener("click", x.h);
+        x.el.removeEventListener(x.event || "click", x.h);
       } catch (e) {}
     });
     this._listeners = [];
+  }
+  _formatErrorText(code) {
+    const errors = {
+      empty: [
+        "preset_time_date_error_empty",
+        "Enter a moment.js format to see a preview.",
+      ],
+      render: [
+        "preset_time_date_error_render",
+        "moment.js can't render this format.",
+      ],
+      mismatch: [
+        "preset_time_date_error_mismatch",
+        "This format can't be matched reliably — try a simpler one.",
+      ],
+      "too-long": [
+        "preset_time_date_error_too_long",
+        "This format makes a pattern that is too long — simplify it.",
+      ],
+      blocked: [
+        "preset_time_date_error_blocked",
+        "Regex safety blocks this pattern — simplify the format.",
+      ],
+    };
+    const err = errors[code];
+    return err ? this.plugin.t(err[0], err[1]) : "";
+  }
+  /**
+   * Description of the Format field: the "{link}" placeholder in
+   * "For more syntax, refer to {link}." is replaced by a real moment.js docs
+   * anchor, so the reference lives inside the description line itself.
+   */
+  _formatDescFragment() {
+    const frag = document.createDocumentFragment();
+    const anchor = document.createElement("a");
+    anchor.href = DATE_TIME_DOCS_URL;
+    anchor.target = "_blank";
+    anchor.className = "act-preset-format-link";
+    anchor.textContent = this.plugin.t(
+      "preset_time_date_docs",
+      "format reference",
+    );
+    const sentence = this.plugin.t(
+      "preset_time_date_format_desc",
+      "For more syntax, refer to {link}.",
+    );
+    const parts = String(sentence).split("{link}");
+    if (parts.length > 1) {
+      frag.append(parts[0], anchor, parts.slice(1).join("{link}"));
+    } else {
+      // Translation lost the placeholder — keep the link anyway.
+      frag.append(sentence, " ", anchor);
+    }
+    return frag;
+  }
+  /**
+   * Second step of the "Time & Date" preset: type a moment.js format and see
+   * the rendered text it produces. The generated regex is handed to the caller
+   * internally — the user never sees it; entries keep showing the format.
+   */
+  _showFormatStep(preset) {
+    const { contentEl } = this;
+    this._clearListeners();
+    contentEl.empty();
+
+    const step = contentEl.createDiv({ cls: "act-preset-format-step" });
+    step.createEl("h3", { text: preset.label, cls: "act-preset-format-title" });
+
+    const previewWrap = step.createDiv({ cls: "act-preset-format-preview" });
+    previewWrap.createEl("span", {
+      text: this.plugin.t("preset_time_date_preview", "Preview"),
+      cls: "act-preset-format-label",
+    });
+    const previewText = previewWrap.createEl("span", {
+      cls: "act-preset-format-preview-text",
+    });
+    const errorEl = step.createEl("span", { cls: "act-preset-format-error" });
+
+    let format = this._pendingFormat || DEFAULT_DATE_TIME_FORMAT;
+    let state = { ok: false, error: "empty", sample: "", pattern: "" };
+
+    const formatSetting = new Setting(step)
+      .setName(this.plugin.t("preset_time_date_format", "Format"))
+      .setDesc(this._formatDescFragment());
+    let inputEl = null;
+    formatSetting.addText((text) => {
+      text.setPlaceholder(DEFAULT_DATE_TIME_FORMAT);
+      text.setValue(format);
+      text.onChange((value) => {
+        format = value;
+        this._pendingFormat = value;
+        update();
+      });
+      inputEl = text.inputEl || null;
+    });
+
+    const actions = step.createDiv({ cls: "act-preset-format-actions" });
+
+    const backBtn = actions.createEl("button", {
+      text: this.plugin.t("btn_back", "Back"),
+    });
+    const backHandler = () => {
+      // Edit mode has no preset list behind it — Back simply cancels.
+      if (this._opts.startWithFormat) this.close();
+      else this.onOpen();
+    };
+    backBtn.addEventListener("click", backHandler);
+    this._listeners.push({ el: backBtn, h: backHandler });
+
+    const useBtn = actions.createEl("button", {
+      text: this.plugin.t("btn_use_format", "Use format"),
+    });
+    useBtn.addClass("mod-cta");
+
+    const update = () => {
+      state = evaluateDateTimeFormat(format, moment, (pattern) => {
+        try {
+          return this.plugin.validateAndSanitizeRegex(pattern);
+        } catch (_) {
+          return true;
+        }
+      });
+      previewText.textContent = state.sample || format || "";
+      errorEl.textContent = state.ok ? "" : this._formatErrorText(state.error);
+      useBtn.disabled = !state.ok;
+    };
+
+    const useHandler = () => {
+      if (!state.ok) return;
+      const chosen = Object.assign({}, preset, {
+        pattern: state.pattern,
+        // `i` for locale month/weekday names, `u` for the \p{L} name class.
+        flags: "iu",
+        label: `${preset.label} (${String(format).trim()})`,
+        examples: [state.sample],
+        previewText: state.sample,
+        // The entry stores the format itself so its row can show a format
+        // button instead of the generated regex.
+        dateTimeFormat: String(format).trim(),
+        needsFormat: false,
+      });
+      try {
+        this.onChoose && this.onChoose(chosen);
+      } finally {
+        this.close();
+      }
+    };
+    useBtn.addEventListener("click", useHandler);
+    this._listeners.push({ el: useBtn, h: useHandler });
+
+    if (inputEl) {
+      const keyHandler = (ev) => {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          useHandler();
+        }
+      };
+      inputEl.addEventListener("keydown", keyHandler);
+      this._listeners.push({ el: inputEl, h: keyHandler, event: "keydown" });
+    }
+
+    update();
+    try {
+      inputEl && inputEl.focus && inputEl.focus();
+    } catch (e) {}
+  }
+  onClose() {
+    this._clearListeners();
+    if (this._mediaStyleEl) {
+      try {
+        this._mediaStyleEl.remove();
+      } catch (e) {}
+      this._mediaStyleEl = null;
+    }
     this.contentEl.empty();
   }
+}
+
+/**
+ * Format button shown INSTEAD of the pattern/flags inputs for Time & Date
+ * entries: it displays the moment.js format and re-opens the format step on
+ * click, so the generated regex never surfaces in the UI.
+ * @returns {HTMLButtonElement}
+ */
+export function createDateTimeFormatButton(host, app, plugin, entry, onSaved) {
+  const btn = host.createEl("button", {
+    text: getEntryDateTimeFormat(entry, plugin),
+    cls: "act-datetime-format-btn",
+  });
+  btn.title = plugin.t("edit_date_time_format", "Edit date & time format");
+  const handler = () => {
+    PresetModal.openForDateTimeFormat(app, plugin, entry, onSaved);
+  };
+  btn.addEventListener("click", handler);
+  return btn;
 }

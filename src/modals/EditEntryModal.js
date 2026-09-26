@@ -10,6 +10,8 @@ import { AddToExistingEntryModal } from './AddToExistingEntryModal.js';
 import { LinkedMatcherModal } from './LinkedMatcherModal.js';
 import { RulePickerModal } from './RulePickerModal.js';
 import { RuleValueModal } from './RuleValueModal.js';
+import { PresetModal, createDateTimeFormatButton } from './PresetModal.js';
+import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
@@ -188,6 +190,9 @@ export class EditEntryModal extends Modal {
       this.entry.targetElement = tgt;
     }
     const isTarget = !!tgt;
+    // Time & Date entries: the pattern box is replaced by a format button —
+    // the generated regex must never be shown to the user.
+    const dtFormat = getEntryDateTimeFormat(this.entry, this.plugin);
 
     const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups)
       ? this.plugin.settings.wordEntryGroups
@@ -480,6 +485,9 @@ export class EditEntryModal extends Modal {
       if (openRegexBtn) openRegexBtn.style.display = "none";
       caseSel.style.display = "none";
     }
+    // No "Open in Regex Tester" for Time & Date entries either — the button
+    // would put the raw regex in front of the user.
+    if (dtFormat && openRegexBtn) openRegexBtn.style.display = "none";
 
     // ===== Preview Wrap =====
     const previewWrap = contentEl.createDiv();
@@ -517,6 +525,47 @@ export class EditEntryModal extends Modal {
       set(v) { this.textContent = v; },
       configurable: true,
     });
+
+    // Time & Date: the format button stands in for the whole pattern box and
+    // re-opens the moment.js format step — the regex never shows. The box
+    // stays in the DOM (hidden) so the save path keeps reading a pattern.
+    if (dtFormat) {
+      box.style.display = "none";
+      createDateTimeFormatButton(
+        contentEl,
+        this.app,
+        this.plugin,
+        this.entry,
+        async () => {
+          try {
+            textInput.value = this.entry.pattern || "";
+            renderPreview();
+          } catch (_) {}
+          try {
+            await this.plugin.saveSettings();
+            this.plugin.compileWordEntries();
+            this.plugin.compileTextBgColoringEntries();
+            this.plugin.reconfigureEditorExtensions();
+            this.plugin.forceRefreshAllEditors();
+            this.plugin.forceRefreshAllReadingViews();
+          } catch (_) {}
+          try {
+            if (
+              this.plugin.settingTab &&
+              typeof this.plugin.settingTab._refreshEntries === "function"
+            )
+              this.plugin.settingTab._refreshEntries();
+          } catch (_) {}
+          try {
+            if (
+              this.parentModal &&
+              typeof this.parentModal._refreshEntries === "function"
+            )
+              this.parentModal._refreshEntries();
+          } catch (_) {}
+        },
+      );
+    }
 
     // ===== Inclusion / Exclusion Rules =====
     const rulesHeader = contentEl.createEl("h3", {
@@ -597,8 +646,11 @@ export class EditEntryModal extends Modal {
         evt.preventDefault();
         evt.stopPropagation();
         const currentColor = getColorInputValue(colorInput) || "#000000";
+        // Time & Date: show the entry name, never the generated regex.
         const displayText =
-          this.entry && this.entry.isRegex
+          dtFormat
+            ? String(this.entry.presetLabel || dtFormat)
+            : this.entry && this.entry.isRegex
             ? this.entry.pattern || ""
             : Array.isArray(this.entry.groupedPatterns) &&
                 this.entry.groupedPatterns.length > 0

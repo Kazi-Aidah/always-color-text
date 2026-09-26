@@ -38,9 +38,16 @@ const TARGET_CSS = {
   mark: ".cm-highlight and mark",
 };
 
+// Own-property lookup: a plain-object map must not resolve inherited keys —
+// a target/label of "toString" or "constructor" would otherwise hit
+// Object.prototype and resolve to garbage.
+const own = (obj, key) =>
+  Object.prototype.hasOwnProperty.call(obj, key);
+
 export function getTargetLabel(plugin, targetElement, affectMarkElements) {
   if (targetElement) {
-    const entry = TARGET_KEYS[String(targetElement)];
+    const key = String(targetElement);
+    const entry = own(TARGET_KEYS, key) ? TARGET_KEYS[key] : null;
     if (entry) return plugin.t(entry[0], entry[1]);
   }
   if (affectMarkElements) return plugin.t("target_highlight", "Highlight");
@@ -50,7 +57,8 @@ export function getTargetLabel(plugin, targetElement, affectMarkElements) {
 // Describes, in plain text, what CSS a target entry colors. This is stored as
 // the entry's pattern (replacing the dead regex) so the data stays meaningful.
 export function getTargetPatternText(plugin, targetElement, affectMarkElements) {
-  let css = TARGET_CSS[String(targetElement)];
+  const key = String(targetElement);
+  let css = own(TARGET_CSS, key) ? TARGET_CSS[key] : "";
   if (!css && affectMarkElements) css = TARGET_CSS.mark;
   if (!css) css = String(targetElement || "");
   return plugin.t("targets_css", "Targets") + " " + css;
@@ -81,9 +89,10 @@ export function resolveTargetElement(plugin, entry) {
   if (entry.affectMarkElements) return "mark";
   if (entry.targetElement) return String(entry.targetElement);
   const name = String(entry.presetLabel || "").trim().toLowerCase();
-  if (FORMATTING_NAMES[name]) return FORMATTING_NAMES[name];
-  if (entry.pattern && FORMATTING_REGEX[String(entry.pattern)])
-    return FORMATTING_REGEX[String(entry.pattern)];
+  if (own(FORMATTING_NAMES, name)) return FORMATTING_NAMES[name];
+  const pattern = String(entry.pattern || "");
+  if (pattern && own(FORMATTING_REGEX, pattern))
+    return FORMATTING_REGEX[pattern];
   return null;
 }
 

@@ -1,5 +1,6 @@
 import { PluginSettingTab, Setting, Modal, Notice, setIcon, setTooltip, Menu, FuzzySuggestModal, TFolder, normalizePath, debounce, Platform } from 'obsidian';
-import { PresetModal } from '../modals/PresetModal.js';
+import { PresetModal, createDateTimeFormatButton } from '../modals/PresetModal.js';
+import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
 import { RealTimeRegexTesterModal } from '../modals/RealTimeRegexTesterModal.js';
 import { HighlightStylingModal } from '../modals/HighlightStylingModal.js';
 import { EditEntryModal } from '../modals/EditEntryModal.js';
@@ -227,6 +228,10 @@ export class ColorSettingTab extends PluginSettingTab {
           ? "regex"
           : "word";
 
+      // Time & Date entries: the row shows the moment.js FORMAT as a button
+      // instead of the pattern/flags inputs — users never see the regex.
+      const dtFormat = getEntryDateTimeFormat(entry, this.plugin);
+
       // ELEMENT 1: Style selector (moved first)
       const styleSelect = row.createEl("select");
       styleSelect.style.padding = "6px";
@@ -323,6 +328,10 @@ export class ColorSettingTab extends PluginSettingTab {
         "word_pattern_placeholder_long",
         "pattern, word or comma-separated words (e.g. hello, world, foo)",
       );
+      // Hidden for Time & Date entries: the inputs stay as this row's value
+      // binding (the debounced row flush reads them), but the format button
+      // below is the visible editing surface.
+      if (dtFormat) textInput.style.display = "none";
 
       // ELEMENT 3: (no type UI) — full-width button to switch markdown element
       let mdElementLabel = null;
@@ -378,6 +387,35 @@ export class ColorSettingTab extends PluginSettingTab {
       flagsInput.style.flex = "0 0 auto";
       try { flagsInput.addClass("act-flags-input"); } catch (e) {
         try { flagsInput.classList.add("act-flags-input"); } catch (_) {}
+      }
+      if (dtFormat) flagsInput.style.display = "none";
+
+      // Time & Date: the format button stands in for both hidden inputs and
+      // re-opens the moment.js format step on click.
+      if (dtFormat) {
+        createDateTimeFormatButton(
+          row,
+          this.app,
+          this.plugin,
+          entry,
+          async () => {
+            try {
+              // Keep the hidden inputs in sync so the debounced row→settings
+              // flush can't write the previous pattern back.
+              textInput.value = entry.pattern || "";
+              flagsInput.value = entry.flags || "";
+              await this.plugin.saveSettings();
+              this.plugin.compileWordEntries();
+              this.plugin.compileTextBgColoringEntries();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+              this._refreshEntries();
+            } catch (e) {
+              debugError("SETTINGS", "edit date format error", e);
+            }
+          },
+        );
       }
 
       // ELEMENT 4: Color pickers (with swatches grouped)
@@ -503,7 +541,7 @@ export class ColorSettingTab extends PluginSettingTab {
       if (initBgEntry && initBgEntry.backgroundColor)
         setColorInputValue(cpBg, initBgEntry.backgroundColor);
       // Set flags input visibility based on current style and regex state
-      flagsInput.style.display = kind === "regex" ? "" : "none";
+      flagsInput.style.display = kind === "regex" && !dtFormat ? "" : "none";
 
       // Initialize matchSelect value with entry.matchType or default based on partialMatch
       try {
@@ -771,7 +809,9 @@ export class ColorSettingTab extends PluginSettingTab {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const menu = new Menu(this.app);
-          if (entry.isRegex) {
+          // Hidden for Time & Date entries — they edit via the format button,
+          // and this tool would put the raw regex in front of the user.
+          if (entry.isRegex && !dtFormat) {
             menu.addItem((item) => {
               item
                 .setTitle(
@@ -1212,7 +1252,7 @@ export class ColorSettingTab extends PluginSettingTab {
       const updateVisibility = () => {
         const style = styleSelect.value;
         matchSelect.style.display = kind === "word" ? "" : "none";
-        textInput.style.display = kind === "markdown" ? "none" : "";
+        textInput.style.display = kind === "markdown" || dtFormat ? "none" : "";
         if (mdElementLabel)
           mdElementLabel.style.display = kind === "markdown" ? "" : "none";
         if (style === "text") {
@@ -1220,7 +1260,7 @@ export class ColorSettingTab extends PluginSettingTab {
           if (swatchSelect) swatchSelect.style.display = "";
           cpBg.style.display = "none";
           if (swatchSelect2) swatchSelect2.style.display = "none";
-          flagsInput.style.display = kind === "regex" ? "" : "none";
+          flagsInput.style.display = kind === "regex" && !dtFormat ? "" : "none";
           if (nameInput) nameInput.style.display = kind === "regex" ? "" : "none";
           try {
             // Synchronize picker values with entry fields
@@ -1237,7 +1277,7 @@ export class ColorSettingTab extends PluginSettingTab {
           if (swatchSelect) swatchSelect.style.display = "none";
           cpBg.style.display = "";
           if (swatchSelect2) swatchSelect2.style.display = "";
-          flagsInput.style.display = kind === "regex" ? "" : "none";
+          flagsInput.style.display = kind === "regex" && !dtFormat ? "" : "none";
           if (nameInput) nameInput.style.display = kind === "regex" ? "" : "none";
           try {
             const val =
@@ -1254,7 +1294,7 @@ export class ColorSettingTab extends PluginSettingTab {
           if (swatchSelect) swatchSelect.style.display = "";
           cpBg.style.display = "";
           if (swatchSelect2) swatchSelect2.style.display = "";
-          flagsInput.style.display = kind === "regex" ? "" : "none";
+          flagsInput.style.display = kind === "regex" && !dtFormat ? "" : "none";
           if (nameInput) nameInput.style.display = kind === "regex" ? "" : "none";
           try {
             const t =
@@ -1686,6 +1726,7 @@ export class ColorSettingTab extends PluginSettingTab {
           const text = [
             ...patterns.map((p) => p.toLowerCase()),
             String(e.presetLabel || "").toLowerCase(),
+            String(e.dateTimeFormat || "").toLowerCase(),
             String(e.flags || "").toLowerCase(),
             getTargetLabel(this.plugin, e.targetElement, e.affectMarkElements)
               ? getTargetLabel(
@@ -1809,6 +1850,10 @@ export class ColorSettingTab extends PluginSettingTab {
             ? "regex"
             : "word";
 
+        // Time & Date entries: show the moment.js format as a button instead
+        // of the pattern/flags inputs — the regex stays out of sight.
+        const dtFormat = getEntryDateTimeFormat(entry, this.plugin);
+
         const displayPatterns =
           Array.isArray(entry.groupedPatterns) &&
           entry.groupedPatterns.length > 0
@@ -1884,6 +1929,7 @@ export class ColorSettingTab extends PluginSettingTab {
               ? "enter regex pattern"
               : "Keyword or pattern, or comma-separated words",
           );
+          if (dtFormat) textInput.style.display = "none";
         }
 
         let flagsInput = null;
@@ -1906,9 +1952,43 @@ export class ColorSettingTab extends PluginSettingTab {
           }
         }
 
+        if (dtFormat) flagsInput.style.display = "none";
+
+        // Time & Date: the format button stands in for both hidden inputs and
+        // re-opens the moment.js format step on click.
+        if (dtFormat) {
+          createDateTimeFormatButton(
+            row,
+            this.app,
+            this.plugin,
+            entry,
+            async () => {
+              try {
+                // Keep the hidden inputs in sync so a later row flush can't
+                // write the previous pattern back.
+                if (textInput) textInput.value = entry.pattern || "";
+                if (flagsInput) flagsInput.value = entry.flags || "";
+                await this.plugin.saveSettings();
+                try { this.plugin.compileBlacklistEntries(); } catch (_) {}
+                try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+                try { this.plugin.forceRefreshAllEditors(); } catch (_) {}
+                try { this.plugin.forceRefreshAllReadingViews(); } catch (_) {}
+                this._refreshBlacklistWords();
+              } catch (e) {
+                debugError(
+                  "SETTINGS",
+                  "edit blacklist date format error",
+                  e,
+                );
+              }
+            },
+          );
+        }
+
         // Mobile row 2: regex icon button (like X) — visible only on mobile via CSS
         let blacklistRegexBtn = null;
-        if (kind === "regex") {
+        // Skipped for Time & Date entries: no raw-regex tools for them.
+        if (kind === "regex" && !dtFormat) {
           blacklistRegexBtn = row.createEl("button");
           try {
             blacklistRegexBtn.addClass("act-blacklist-regex-btn");
@@ -2166,7 +2246,8 @@ export class ColorSettingTab extends PluginSettingTab {
             if (ev && ev.stopPropagation) ev.stopPropagation();
             const menu = new Menu(this.app);
 
-            if (kind === "regex") {
+            // Hidden for Time & Date entries — no raw regex on screen.
+            if (kind === "regex" && !dtFormat) {
               menu.addItem((item) => {
                 item
                   .setTitle(
@@ -4119,6 +4200,7 @@ export class ColorSettingTab extends PluginSettingTab {
             const text = [
               ...patterns.map((p) => p.toLowerCase()),
               String(e.presetLabel || "").toLowerCase(),
+              String(e.dateTimeFormat || "").toLowerCase(),
               String(e.flags || "").toLowerCase(),
               String(e.styleType || "").toLowerCase(),
               tName,
@@ -7467,6 +7549,9 @@ export class ColorSettingTab extends PluginSettingTab {
                 presetLabel: preset.label,
                 persistAtEnd: true,
                 matchType,
+                // Time & Date: remember the moment.js format so the row can
+                // show a format button instead of the generated regex.
+                dateTimeFormat: preset.dateTimeFormat || undefined,
               };
               // Markdown-element presets become targeted entries (rendered as the
               // element dropdown), not regex patterns.
@@ -7527,7 +7612,7 @@ export class ColorSettingTab extends PluginSettingTab {
               this._refreshEntries();
             },
             "text-and-background",
-            "",
+            preset.previewText || "",
             false,
           ).open();
         }).open();
@@ -8080,6 +8165,8 @@ export class ColorSettingTab extends PluginSettingTab {
             presetLabel: preset.label,
             persistAtEnd: true,
             targetElement: preset.targetElement,
+            // Time & Date: format kept so the row shows a format button.
+            dateTimeFormat: preset.dateTimeFormat || undefined,
           };
           try {
             newEntry.uid =

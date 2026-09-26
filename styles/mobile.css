@@ -225,6 +225,11 @@ body.is-mobile .color-words-list .act-entry-row .act-style-select {
   width: auto !important;
   max-width: none !important;
 }
+/* Time & Date: color-type dropdown (order 2) must come before the format
+   button on phones/tablets — without this the button defaults to order 0. */
+body.is-mobile .color-words-list .act-entry-row .act-datetime-format-btn {
+  order: 3;
+}
 body.is-mobile .color-words-list .act-entry-row input[type="color"] {
   order: 3 !important;
   flex: 0 0 auto !important;
@@ -1526,4 +1531,29 @@ body.is-tablet .act-mobile-tip .act-mobile-tip-dismiss {
 /* Plugin settings - center align setting items */
 .act-settings-container .setting-item {
   align-items: center;
+}
+
+/* ====== PRESETS MODAL — NARROW SCREENS ======
+   The desktop rules in ui.css force a fixed ~870px dialog and only apply from
+   900px up; below that the modal must fit the viewport instead of overflowing
+   it, and the single-column preset list needs to scroll inside the modal. */
+@media (max-width: 899px) {
+  .act-preset-modal {
+    width: calc(100% - var(--size-4-6) * 2);
+    max-width: calc(100% - var(--size-4-6) * 2);
+    min-width: 0;
+  }
+  .act-preset-modal .modal-content {
+    width: auto;
+    max-width: none;
+    max-height: calc(100vh - var(--size-4-12) * 2);
+    max-height: calc(100dvh - var(--size-4-12) * 2);
+    overflow-y: auto;
+  }
+}
+/* Format step: Back / Use format stack full-width on phones for tap targets */
+@media (max-width: 600px) {
+  .act-preset-format-actions {
+    flex-direction: column;
+  }
 }

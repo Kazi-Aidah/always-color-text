@@ -62,24 +62,28 @@
 /* Checkbox styling in reading mode */
 /* Ensure colored text in list items inherits parent color */
 /* Legacy marker styling for backward compatibility */
-/* Preset Modal - Force width to override Obsidian defaults */
-.act-preset-modal {
+/* Preset Modal - Force width to override Obsidian defaults.
+   Desktop-only: below 900px (phones, narrow windows) a fixed 870px dialog
+   overflows the viewport — mobile.css sizes it to fit instead. */
+@media (min-width: 900px) {
+  .act-preset-modal {
     --dialog-width: 1200px !important;
     max-width: 1200px !important;
     width: 870px !important;
-}
-.act-preset-modal .modal-content {
-  max-width: 1200px !important;
-  width: 800px !important;
-}
-.act-preset-modal .modal {
-  width: 800px !important;
-  max-width: 1200px !important;
-}
-.modal .act-preset-modal {
-  min-width: 800px !important;
-  width: 800px !important;
-  max-width: 1200px !important;
+  }
+  .act-preset-modal .modal-content {
+    max-width: 1200px !important;
+    width: 800px !important;
+  }
+  .act-preset-modal .modal {
+    width: 800px !important;
+    max-width: 1200px !important;
+  }
+  .modal .act-preset-modal {
+    min-width: 800px !important;
+    width: 800px !important;
+    max-width: 1200px !important;
+  }
 }
 /* Highlight Styling Modal - Force width via !important */
 .act-highlight-modal {
@@ -514,3 +518,57 @@ padding: 2px 0px !important;
     margin-top: 0 !important;
   }
 /* Let selects shrink and share the first row evenly on very narrow */
+
+/* ====== PRESETS — TIME & DATE FORMAT STEP ====== */
+.act-preset-format-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-2);
+}
+.act-preset-format-title {
+  margin: 0;
+  font-size: var(--font-ui-large);
+  font-weight: 600;
+}
+.act-preset-format-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+  padding: var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--touch-radius-xxs);
+  background: var(--background-modifier-form-field);
+}
+.act-preset-format-label {
+  color: var(--text-muted);
+  font-size: var(--font-smallest);
+  text-transform: uppercase;
+}
+.act-preset-format-preview-text {
+  color: var(--text-normal);
+  font-size: var(--font-ui-large);
+  overflow-wrap: anywhere;
+}
+.act-preset-format-error {
+  color: var(--text-error);
+  font-size: var(--font-small);
+}
+/* Hidden while the format is valid — no empty gap left behind */
+.act-preset-format-error:empty {
+  display: none;
+}
+.act-preset-format-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--size-4-2);
+  margin-block-start: var(--size-4-2);
+}
+/* Time & Date entries: this button replaces the pattern/flags inputs in the
+   entry rows — it shows the moment.js format and re-opens the format step. */
+.act-datetime-format-btn {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

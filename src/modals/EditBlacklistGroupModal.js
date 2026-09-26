@@ -4,7 +4,8 @@ import { BlacklistRegexTesterModal } from './BlacklistRegexTesterModal.js';
 import { SelectBlacklistGroupModal } from './SelectBlacklistGroupModal.js';
 import { AlertModal } from './AlertModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
-import { PresetModal } from './PresetModal.js';
+import { PresetModal, createDateTimeFormatButton } from './PresetModal.js';
+import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
 import { GroupRulesModal } from './GroupRulesModal.js';
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
@@ -447,6 +448,8 @@ export class EditBlacklistGroupModal extends Modal {
             matchType: "contains",
             presetLabel: preset.label,
             targetElement: preset.targetElement, // Preserve targetElement for logic-based coloring
+            // Time & Date: format kept so the row shows a format button.
+            dateTimeFormat: preset.dateTimeFormat || undefined,
           };
         this.group.entries.push(entry);
         this._sortMode = "last-added";
@@ -629,6 +632,9 @@ export class EditBlacklistGroupModal extends Modal {
       }
       // Determine the matcher kind for this entry.
       const kind = entry.targetElement ? "markdown" : entry.isRegex ? "regex" : "word";
+      // Time & Date entries: the moment.js format shows as a button instead
+      // of the pattern/flags inputs — the generated regex stays hidden.
+      const dtFormat = getEntryDateTimeFormat(entry, this.plugin);
       updateVisibility();
 
       // Show badge / target label if applicable (before pattern input)
@@ -748,6 +754,8 @@ export class EditBlacklistGroupModal extends Modal {
       };
       patternInput.addEventListener("change", patternHandler);
       patternInput.addEventListener("blur", patternHandler);
+      // Hidden for Time & Date entries — the format button below edits it.
+      if (dtFormat) patternInput.style.display = "none";
       }
 
       // 3. FLAGS INPUT (only if regex kind)
@@ -767,6 +775,27 @@ export class EditBlacklistGroupModal extends Modal {
           entry.flags = flagsInput.value || "";
         };
         flagsInput.addEventListener("change", flagsHandler);
+        if (dtFormat) flagsInput.style.display = "none";
+      }
+
+      // Time & Date: the format button stands in for both hidden inputs and
+      // re-opens the moment.js format step on click.
+      if (dtFormat) {
+        createDateTimeFormatButton(
+          row,
+          this.app,
+          this.plugin,
+          entry,
+          async () => {
+            try {
+              if (flagsInput) flagsInput.value = entry.flags || "";
+              // Like every other edit in this modal, applied on "Save Group".
+              this._refreshGroupEntries();
+            } catch (e) {
+              debugError("GROUPS", "edit date format error", e);
+            }
+          },
+        );
       }
 
       // 5. DELETE BUTTON (commented out — use right-click context menu to delete)
@@ -793,7 +822,8 @@ export class EditBlacklistGroupModal extends Modal {
           ev && ev.preventDefault && ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
           const menu = new Menu(this.app);
-          if (entry.isRegex) {
+          // Hidden for Time & Date entries — no raw regex on screen.
+          if (entry.isRegex && !dtFormat) {
             menu.addItem((item) => {
               item
                 .setTitle(

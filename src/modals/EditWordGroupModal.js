@@ -2,7 +2,8 @@ import { Modal, Notice, setIcon, Menu } from 'obsidian';
 import { debugLog, debugError } from '../utils/debug.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
-import { PresetModal } from './PresetModal.js';
+import { PresetModal, createDateTimeFormatButton } from './PresetModal.js';
+import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { AlertModal } from './AlertModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
@@ -579,6 +580,8 @@ export class EditWordGroupModal extends Modal {
             matchType: "contains",
             presetLabel: preset.label,
             targetElement: preset.targetElement,
+            // Time & Date: format kept so the row shows a format button.
+            dateTimeFormat: preset.dateTimeFormat || undefined,
           };
           this.group.entries.push(entry);
           await this._mirrorEntryToLive(entry);
@@ -693,6 +696,7 @@ export class EditWordGroupModal extends Modal {
           "markTarget",
           "flags",
           "presetLabel",
+          "dateTimeFormat",
           "targetElement",
           "affectMarkElements",
           "headingLevels",
@@ -1019,6 +1023,10 @@ export class EditWordGroupModal extends Modal {
       // Determine the matcher kind for this entry.
       const kind = entry.targetElement ? "markdown" : entry.isRegex ? "regex" : "word";
 
+      // Time & Date entries: the moment.js format shows as a button instead
+      // of the pattern/flags inputs — the generated regex stays hidden.
+      const dtFormat = getEntryDateTimeFormat(entry, this.plugin);
+
       // Update visibility based on kind
       const updateVisibility = () => {
         matchSelect.style.display = kind === "word" ? "" : "none";
@@ -1124,6 +1132,8 @@ export class EditWordGroupModal extends Modal {
       };
       patternInput.addEventListener("change", patternHandler);
       patternInput.addEventListener("blur", patternHandler);
+      // Hidden for Time & Date entries — the format button below edits it.
+      if (dtFormat) patternInput.style.display = "none";
       }
 
       // FLAGS INPUT (only if regex kind) - comes before type dropdown
@@ -1146,6 +1156,27 @@ export class EditWordGroupModal extends Modal {
           entry.flags = flagsInput.value || "";
         };
         flagsInput.addEventListener("change", flagsHandler);
+        if (dtFormat) flagsInput.style.display = "none";
+      }
+
+      // Time & Date: the format button stands in for both hidden inputs and
+      // re-opens the moment.js format step on click.
+      if (dtFormat) {
+        createDateTimeFormatButton(
+          row,
+          this.app,
+          this.plugin,
+          entry,
+          async () => {
+            try {
+              if (flagsInput) flagsInput.value = entry.flags || "";
+              await this._mirrorEntryToLive(entry);
+              this._refreshGroupEntries();
+            } catch (e) {
+              debugError("GROUPS", "edit date format error", e);
+            }
+          },
+        );
       }
 
       // 6. TEXT COLOR PICKER (if text or both)
@@ -1526,7 +1557,8 @@ export class EditWordGroupModal extends Modal {
                 modal.open();
               });
           });
-          if (entry.isRegex) {
+          // Hidden for Time & Date entries — no raw regex on screen.
+          if (entry.isRegex && !dtFormat) {
             menu.addItem((item) => {
               item
                 .setTitle(
