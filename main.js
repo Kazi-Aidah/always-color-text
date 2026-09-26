@@ -33320,6 +33320,39 @@ function buildSelectionContext(editor, view) {
   return ctx;
 }
 
+// src/utils/hideChannels.js
+function getHideFlags(settings) {
+  const s = settings || {};
+  return {
+    hideText: s.hideTextColors === true,
+    hideBg: s.hideHighlights === true
+  };
+}
+function resolveTextColor(entry) {
+  const e = entry || {};
+  return e.textColor && e.textColor !== "currentColor" ? e.textColor : e.color || null;
+}
+function resolveChannels(entry, flags) {
+  const e = entry || {};
+  const hideText = !!(flags && flags.hideText);
+  const hideBg = !!(flags && flags.hideBg);
+  const styleType2 = e.styleType || "text";
+  const textColor = resolveTextColor(e);
+  const backgroundColor = e.backgroundColor || null;
+  const color = textColor && !hideText ? textColor : null;
+  const background = backgroundColor && !hideBg ? backgroundColor : null;
+  const isHighlight = !hideBg && (styleType2 === "highlight" || styleType2 === "both" || !!backgroundColor);
+  return {
+    color,
+    background,
+    isHighlight,
+    visible: !!(color || background || isHighlight),
+    styleType: styleType2,
+    hideText,
+    hideBg
+  };
+}
+
 // src/modals/SelectColoringEntryModal.js
 var import_obsidian28 = require("obsidian");
 var SelectColoringEntryModal = class extends import_obsidian28.FuzzySuggestModal {
@@ -33576,6 +33609,19 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (_) {
     }
     try {
+      document.querySelectorAll("span[data-act-task-marker]").forEach((s) => {
+        try {
+          const parent = s.parentNode;
+          if (!parent) return;
+          while (s.firstChild) parent.insertBefore(s.firstChild, s);
+          parent.removeChild(s);
+          if (parent.normalize) parent.normalize();
+        } catch (_) {
+        }
+      });
+    } catch (_) {
+    }
+    try {
       document.querySelectorAll(".always-color-text-highlight-marks").forEach((el) => {
         try {
           for (const p of [
@@ -33604,6 +33650,66 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           }
           el.classList.remove("always-color-text-highlight-marks");
         } catch (_) {
+        }
+      });
+    } catch (_) {
+    }
+  }
+  // --- Hide Text Colors / Hide Highlights --------------------------------
+  // Both commands re-resolve every channel through hideChannels.js, so any
+  // artifact that BAKES the resolved values in has to be rebuilt from scratch:
+  //   - <style data-act-line-style>  (line-target backgrounds, per class)
+  //   - inline markdown-element decorations (headings, list/task markers,
+  //     marks) which are stamped onto the DOM rather than re-derived per frame
+  //   - act-highlight-preset-transparency (the ==...== reading-mark sheet)
+  //   - the inline overrides written by neutralizeExistingHighlightBackgrounds()
+  //     (undone only while the command is off, see below)
+  // Everything else (applyFormattingStyles, editor extensions, reading
+  // re-processing) already re-reads the flags on its own, but running them
+  // after this reset is what makes the cleared state visible.
+  resetChannelDerivedArtifacts() {
+    try {
+      document.querySelectorAll("style[data-act-line-style]").forEach((el) => el.remove());
+    } catch (_) {
+    }
+    try {
+      this.clearMarkdownElementDecorations();
+    } catch (_) {
+    }
+    if (!this.settings.hideHighlights) {
+      try {
+        this.restoreInlineHighlightNeutralization();
+      } catch (_) {
+      }
+    }
+    try {
+      if (this.settings.enabled) this.applyHighlightPresetTransparency();
+      else this.removeHighlightPresetTransparency();
+    } catch (_) {
+    }
+  }
+  // neutralizeExistingHighlightBackgrounds() stamps inline overrides onto the
+  // existing .always-color-text-highlight spans (transparent background, zero
+  // padding, no border). Removing the stylesheet is not enough — the inline
+  // values survive it, so "Unhide Highlights" would leave every highlight
+  // colourless until a full re-render. Undo exactly what that pass wrote; the
+  // refresh that follows repaints from the current flags.
+  restoreInlineHighlightNeutralization() {
+    try {
+      document.querySelectorAll(".always-color-text-highlight").forEach((el) => {
+        for (const p of [
+          "background-color",
+          "padding-left",
+          "padding-right",
+          "border",
+          "border-radius",
+          "box-shadow",
+          "display"
+        ]) {
+          try {
+            el.style.removeProperty(p);
+          } catch (_) {
+          }
         }
       });
     } catch (_) {
@@ -33753,6 +33859,14 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           .cm-content .always-color-text-highlight,
           .cm-line .always-color-text-highlight,
           .is-live-preview .cm-content .always-color-text-highlight { background-color: transparent !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
+          /* ==...== highlights: reading-view <mark> and the live-preview
+             .cm-highlight wrapper are highlights too, so hiding highlights has
+             to neutralize them (plugin-painted or theme default) as well. */
+          .always-color-text-highlight-marks,
+          mark,
+          .cm-highlight { background-color: transparent !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
+          mark.always-color-text-highlight-marks,
+          .cm-highlight.always-color-text-highlight-marks { padding: 0 !important; }
         `;
         document.head.appendChild(style);
       }
@@ -33789,18 +33903,20 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         return;
       }
       const params = this.getHighlightParams(presetEntry);
-      const tc = presetEntry.textColor && presetEntry.textColor !== "currentColor" ? presetEntry.textColor : presetEntry.color || null;
-      const bc = presetEntry.backgroundColor || null;
+      const hideFlags = getHideFlags(this.settings);
+      const presetCh = resolveChannels(presetEntry, hideFlags);
+      const tc = presetCh.color;
+      const bc = presetCh.background;
       let bgRgba = "transparent";
       if (bc && this.isValidHexColor(bc)) {
         bgRgba = this.hexToRgba(bc, params.opacity);
       }
       const colorValue = tc && this.isValidHexColor(tc) ? tc : "inherit";
-      const radius = params.radius ?? 4;
-      const hPad = params.hPad ?? 4;
-      const vPad = params.vPad ?? 0;
+      const radius = hideFlags.hideBg ? 0 : params.radius ?? 4;
+      const hPad = hideFlags.hideBg ? 0 : params.hPad ?? 4;
+      const vPad = hideFlags.hideBg ? 0 : params.vPad ?? 0;
       let borderRule = "";
-      if (params.enableBorder && (bc || tc)) {
+      if (!hideFlags.hideBg && params.enableBorder && (bc || tc)) {
         const borderColor = tc && this.isValidHexColor(tc) ? this.hexToRgba(tc, params.borderOpacity) : bc && this.isValidHexColor(bc) ? this.hexToRgba(bc, params.borderOpacity) : null;
         if (borderColor) {
           const bStyle = `${params.borderThickness}px ${params.borderLineStyle} ${borderColor}`;
@@ -35753,6 +35869,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             await this.saveSettings();
             this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
+            this.resetChannelDerivedArtifacts();
             this.removeEnabledReadingCalloutStyles();
             if (this.settings.enabled && !this.settings.hideTextColors) {
               this.applyEnabledReadingCalloutStyles();
@@ -35805,6 +35922,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             await this.saveSettings();
             this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
+            this.resetChannelDerivedArtifacts();
             this.removeEnabledReadingCalloutStyles();
             if (this.settings.enabled && !this.settings.hideHighlights) {
               this.applyEnabledReadingCalloutStyles();
@@ -36327,7 +36445,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     try {
       let we;
       let weAll;
-      if (Array.isArray(entries) && entries.length > 0) {
+      if (Array.isArray(entries)) {
         we = entries;
         weAll = entries;
       } else {
@@ -36387,7 +36505,15 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           ) || weAll.find(
             (e) => e && e.isRegex && typeof e.pattern === "string" && e.pattern.includes("==[\\s\\S]*?==")
           ) || null;
-          if (quickStyle || presetEntry || highlightRegexEntry) {
+          const styleSource = quickStyle || presetEntry || highlightRegexEntry;
+          const hideFlags = getHideFlags(this.settings);
+          const sourceEntry = !styleSource ? null : quickStyle ? Object.assign({}, quickStyle, {
+            // quick styles default to "both" when unspecified
+            styleType: quickStyle.styleType || "both",
+            textColor: quickStyle.textColor || quickStyle.color || null
+          }) : styleSource;
+          const ch = sourceEntry ? resolveChannels(sourceEntry, hideFlags) : null;
+          if (ch && ch.visible) {
             try {
               mark.classList.add("always-color-text-highlight-marks");
               if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) {
@@ -36396,165 +36522,150 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             } catch (_) {
             }
           } else {
+            for (const el of [mark, fallbackSpan]) {
+              if (!el || !el.style) continue;
+              for (const p of [
+                "color",
+                "background-color",
+                "--highlight-color",
+                "--highlight-background",
+                "padding-left",
+                "padding-right",
+                "padding-top",
+                "padding-bottom",
+                "margin-top",
+                "margin-bottom",
+                "border-radius",
+                "corner-shape",
+                "border",
+                "border-top",
+                "border-bottom",
+                "border-left",
+                "border-right"
+              ]) {
+                try {
+                  el.style.removeProperty(p);
+                } catch (_) {
+                }
+              }
+            }
+            try {
+              mark.classList.remove("always-color-text-highlight-marks");
+              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) {
+                fallbackSpan.classList.remove("always-color-text-highlight-marks");
+              }
+            } catch (_) {
+            }
             continue;
           }
-          if (quickStyle) {
-            const params = this.getHighlightParams(quickStyle);
-            const styleType2 = quickStyle.styleType || "both";
-            const tc = quickStyle.textColor || quickStyle.color || null;
-            const bc = quickStyle.backgroundColor || null;
+          if (styleSource && ch) {
+            const params = this.getHighlightParams(sourceEntry);
+            const tc = ch.color;
+            const bc = ch.background;
+            const paintTargets = fallbackSpan && fallbackSpan !== mark ? [fallbackSpan, mark] : [mark];
             if (bc) {
               const bgRgba = this.hexToRgba(bc, params.opacity);
-              fallbackSpan.style.setProperty(
-                "background-color",
-                bgRgba,
-                "important"
-              );
-              try {
-                mark.style.setProperty("background-color", bgRgba, "important");
-              } catch (_) {
+              for (const el of paintTargets) {
+                try {
+                  el.style.setProperty("background-color", bgRgba, "important");
+                  el.style.setProperty("--highlight-background", bgRgba);
+                } catch (_) {
+                }
               }
-              try {
-                fallbackSpan.style.setProperty(
-                  "--highlight-background",
-                  bgRgba
-                );
-              } catch (_) {
-              }
-              try {
-                mark.style.setProperty("--highlight-background", bgRgba);
-              } catch (_) {
+            } else if (ch.hideBg) {
+              for (const el of paintTargets) {
+                try {
+                  el.style.removeProperty("background-color");
+                  el.style.removeProperty("--highlight-background");
+                } catch (_) {
+                }
               }
             }
             if (tc) {
-              fallbackSpan.style.setProperty("color", tc, "important");
-              fallbackSpan.style.setProperty("--highlight-color", tc);
-              try {
-                mark.style.setProperty("color", tc, "important");
-              } catch (_) {
+              for (const el of paintTargets) {
+                try {
+                  el.style.setProperty("color", tc, "important");
+                  el.style.setProperty("--highlight-color", tc);
+                } catch (_) {
+                }
               }
-              try {
-                mark.style.setProperty("--highlight-color", tc);
-              } catch (_) {
+            } else if (ch.hideText) {
+              for (const el of paintTargets) {
+                try {
+                  el.style.removeProperty("color");
+                  el.style.removeProperty("--highlight-color");
+                } catch (_) {
+                }
               }
             }
-            fallbackSpan.style.setProperty(
-              "padding-left",
-              params.hPad + "px",
-              "important"
-            );
-            fallbackSpan.style.setProperty(
-              "padding-right",
-              params.hPad + "px",
-              "important"
-            );
-            const vpad = params.vPad;
-            fallbackSpan.style.setProperty(
-              "padding-top",
-              (vpad >= 0 ? vpad : 0) + "px",
-              "important"
-            );
-            fallbackSpan.style.setProperty(
-              "padding-bottom",
-              (vpad >= 0 ? vpad : 0) + "px",
-              "important"
-            );
-            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
-            fallbackSpan.style.setProperty(
-              "border-radius",
-              br + "px",
-              "important"
-            );
-            this.applyCornerShapeToElement(fallbackSpan, quickStyle);
-            this.applyCornerShapeToElement(mark, quickStyle);
-            try {
-              const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
-              if (borderCss) {
-                fallbackSpan.style.cssText += borderCss;
-              }
-              if (borderCss) {
-                mark.style.cssText += borderCss;
-              }
-            } catch (_) {
-            }
-          } else if (presetEntry || highlightRegexEntry) {
-            const entryForMark = presetEntry || highlightRegexEntry;
-            const params = this.getHighlightParams(entryForMark);
-            const tc = entryForMark.textColor && entryForMark.textColor !== "currentColor" ? entryForMark.textColor : entryForMark.color || null;
-            const bc = entryForMark.backgroundColor || null;
-            if (bc) {
-              const bgRgba = this.hexToRgba(bc, params.opacity);
-              fallbackSpan.style.setProperty(
-                "background-color",
-                bgRgba,
-                "important"
-              );
-              try {
-                mark.style.setProperty("background-color", bgRgba, "important");
-              } catch (_) {
-              }
-              try {
-                fallbackSpan.style.setProperty(
-                  "--highlight-background",
-                  bgRgba
+            if (!ch.hideBg) {
+              for (const el of paintTargets) {
+                el.style.setProperty(
+                  "padding-left",
+                  params.hPad + "px",
+                  "important"
                 );
-              } catch (_) {
+                el.style.setProperty(
+                  "padding-right",
+                  params.hPad + "px",
+                  "important"
+                );
+                const vpad = params.vPad;
+                el.style.setProperty(
+                  "padding-top",
+                  (vpad >= 0 ? vpad : 0) + "px",
+                  "important"
+                );
+                el.style.setProperty(
+                  "padding-bottom",
+                  (vpad >= 0 ? vpad : 0) + "px",
+                  "important"
+                );
+                const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
+                el.style.setProperty(
+                  "border-radius",
+                  br + "px",
+                  "important"
+                );
               }
+              this.applyCornerShapeToElement(fallbackSpan, sourceEntry);
+              this.applyCornerShapeToElement(mark, sourceEntry);
               try {
-                mark.style.setProperty("--highlight-background", bgRgba);
+                const borderCss = this.generateBorderStyle(
+                  tc,
+                  bc,
+                  sourceEntry
+                );
+                if (borderCss) {
+                  for (const el of paintTargets) {
+                    el.style.cssText += borderCss;
+                  }
+                }
               } catch (_) {
               }
-            }
-            if (tc) {
-              fallbackSpan.style.setProperty("color", tc, "important");
-              fallbackSpan.style.setProperty("--highlight-color", tc);
-              try {
-                mark.style.setProperty("color", tc, "important");
-              } catch (_) {
+            } else {
+              for (const el of paintTargets) {
+                for (const p of [
+                  "padding-left",
+                  "padding-right",
+                  "padding-top",
+                  "padding-bottom",
+                  "margin-top",
+                  "margin-bottom",
+                  "border-radius",
+                  "corner-shape",
+                  "border",
+                  "border-top",
+                  "border-bottom",
+                  "border-left",
+                  "border-right"
+                ]) {
+                  try {
+                    el.style.removeProperty(p);
+                  } catch (_) {
+                  }
+                }
               }
-              try {
-                mark.style.setProperty("--highlight-color", tc);
-              } catch (_) {
-              }
-            }
-            fallbackSpan.style.setProperty(
-              "padding-left",
-              params.hPad + "px",
-              "important"
-            );
-            fallbackSpan.style.setProperty(
-              "padding-right",
-              params.hPad + "px",
-              "important"
-            );
-            const vpad = params.vPad;
-            fallbackSpan.style.setProperty(
-              "padding-top",
-              (vpad >= 0 ? vpad : 0) + "px",
-              "important"
-            );
-            fallbackSpan.style.setProperty(
-              "padding-bottom",
-              (vpad >= 0 ? vpad : 0) + "px",
-              "important"
-            );
-            const br = params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
-            fallbackSpan.style.setProperty(
-              "border-radius",
-              br + "px",
-              "important"
-            );
-            this.applyCornerShapeToElement(fallbackSpan, entryForMark);
-            this.applyCornerShapeToElement(mark, entryForMark);
-            try {
-              const borderCss = this.generateBorderStyle(tc, bc, entryForMark);
-              if (borderCss) {
-                fallbackSpan.style.cssText += borderCss;
-              }
-              if (borderCss) {
-                mark.style.cssText += borderCss;
-              }
-            } catch (_) {
             }
           }
         }
@@ -36761,11 +36872,29 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     }
   }
   // Helper: Style checkbox elements
+  // Colour used by list / task markers and checkboxes. Those are painted as
+  // TEXT, so they follow the same rules as every other text channel:
+  //   Hide Text Colors → no marker colour at all
+  //   Hide Highlights  → only a real text colour survives (a marker painted
+  //                      from an entry's background colour belongs to the
+  //                      highlight channel, which the command is hiding)
+  _markerColorFor(entry) {
+    if (!entry) return null;
+    const flags = getHideFlags(this.settings);
+    if (flags.hideText) return null;
+    const textColour = entry.color || entry.textColor || null;
+    const bgColour = entry.backgroundColor && entry.backgroundColor !== "currentColor" ? entry.backgroundColor : null;
+    if (textColour) return textColour;
+    if (flags.hideBg) return null;
+    return bgColour;
+  }
   _styleCheckbox(checkbox, entry) {
     try {
-      const color = entry.color || entry.textColor || (entry.backgroundColor && entry.backgroundColor !== "currentColor" ? entry.backgroundColor : null);
+      const color = this._markerColorFor(entry);
       if (color) {
         checkbox.style.accentColor = color;
+      } else {
+        checkbox.style.removeProperty("accent-color");
       }
     } catch (e) {
     }
@@ -36773,7 +36902,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
   // Helper: Style list markers (bullets/numbers)
   _styleListMarker(li, entry, isOrdered) {
     try {
-      const color = entry.color || entry.textColor || (entry.backgroundColor && entry.backgroundColor !== "currentColor" ? entry.backgroundColor : null);
+      const color = this._markerColorFor(entry);
       if (color) {
         li.style.setProperty("--act-marker-color", color);
         const marker = li.querySelector(".list-bullet, .list-number");
@@ -36801,8 +36930,29 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (e) {
     }
   }
+  // Unwrap the spans _styleTaskMarker created in an earlier pass. Needed on
+  // every re-run: the colour can disappear (hide command, entry removed) and,
+  // without unwrapping first, each refresh would nest one more coloured span
+  // inside the previous one.
+  _clearTaskMarkerSpans(root) {
+    if (!root || !root.querySelectorAll) return;
+    const spans = root.querySelectorAll("span[data-act-task-marker]");
+    for (const s of Array.from(spans)) {
+      const parent = s.parentNode;
+      if (!parent) continue;
+      while (s.firstChild) parent.insertBefore(s.firstChild, s);
+      parent.removeChild(s);
+      try {
+        if (parent.normalize) parent.normalize();
+      } catch (_) {
+      }
+    }
+  }
   _styleTaskMarker(li, entry) {
     try {
+      this._clearTaskMarkerSpans(li);
+      const color = this._markerColorFor(entry);
+      if (!color) return;
       const walker = document.createTreeWalker(
         li,
         NodeFilter.SHOW_TEXT,
@@ -36818,9 +36968,8 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       );
       let n;
       while (n = walker.nextNode()) {
-        const color = entry.color || entry.textColor || (entry.backgroundColor && entry.backgroundColor !== "currentColor" ? entry.backgroundColor : null);
-        if (!color) continue;
         const span = document.createElement("span");
+        span.setAttribute("data-act-task-marker", "1");
         try {
           span.style.setProperty("color", color, "important");
         } catch (_) {
@@ -39263,26 +39412,27 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         const selector = buildMarkdownSelector(t, entry, hasBoldItalic);
         if (!selector) return;
         {
-          const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
-          const bgColor = entry.backgroundColor || null;
-          const styleType2 = entry.styleType || "text";
+          const flags = getHideFlags(this.settings);
+          const ch = resolveChannels(entry, flags);
+          const textColor = ch.color;
+          const bgColor = ch.background;
           const borderCSS = this.generateBorderStyle(
             textColor,
             bgColor,
             entry
           );
-          let isHighlight = styleType2 === "highlight" || styleType2 === "both" || !!bgColor;
-          if ((t.key === "tag" || t.key === "all-tags") && borderCSS)
+          let isHighlight = ch.isHighlight;
+          if (!flags.hideBg && (t.key === "tag" || t.key === "all-tags") && borderCSS)
             isHighlight = true;
+          const extra = this.settings.enableCustomCss ? this.sanitizeCssDeclarations(entry.customCss || "") : "";
+          if (!ch.visible && !extra) return;
           css += `${selector} {`;
-          if (textColor || bgColor) {
-            if (textColor) css += ` color: ${textColor} !important;`;
-            if (bgColor) {
-              const opacityRaw = typeof entry.backgroundOpacity === "number" ? entry.backgroundOpacity : this.settings.backgroundOpacity ?? 25;
-              const opacity = opacityRaw <= 1 && opacityRaw > 0 ? opacityRaw * 100 : opacityRaw;
-              const bgRgba = this.hexToRgba(bgColor, opacity);
-              css += ` background-color: ${bgRgba} !important;`;
-            }
+          if (textColor) css += ` color: ${textColor} !important;`;
+          if (bgColor) {
+            const opacityRaw = typeof entry.backgroundOpacity === "number" ? entry.backgroundOpacity : this.settings.backgroundOpacity ?? 25;
+            const opacity = opacityRaw <= 1 && opacityRaw > 0 ? opacityRaw * 100 : opacityRaw;
+            const bgRgba = this.hexToRgba(bgColor, opacity);
+            css += ` background-color: ${bgRgba} !important;`;
           }
           if (isHighlight) {
             const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
@@ -39297,7 +39447,6 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             }
           }
           {
-            const extra = this.settings.enableCustomCss ? this.sanitizeCssDeclarations(entry.customCss || "") : "";
             if (extra) css += ` ${extra}`;
           }
           css += ` } 
@@ -39434,13 +39583,14 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         const isBegin = !!opts.isBegin;
         const isEnd = !!opts.isEnd;
         const beginHidden = !!opts.beginHidden;
-        const textColor = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color || null;
-        const bg = entry.backgroundColor || null;
+        const flags = getHideFlags(this.settings);
+        const ch = resolveChannels(entry, flags);
+        const textColor = ch.color;
+        const bg = ch.background;
         const isTag = entry.targetElement === "tag" || entry.targetElement === "all-tags";
-        const styleType2 = entry.styleType || "text";
         const borderCSS = this.generateBorderStyle(textColor, bg, entry);
-        let isHighlight = styleType2 === "highlight" || styleType2 === "both" || !!bg;
-        if (isTag && borderCSS) isHighlight = true;
+        let isHighlight = ch.isHighlight;
+        if (!flags.hideBg && isTag && borderCSS) isHighlight = true;
         const radius = typeof entry.highlightBorderRadius === "number" ? entry.highlightBorderRadius : this.settings.highlightBorderRadius ?? 8;
         const hPad = typeof entry.highlightHorizontalPadding === "number" ? entry.highlightHorizontalPadding : this.settings.highlightHorizontalPadding ?? 4;
         const vPad = typeof entry.highlightVerticalPadding === "number" ? entry.highlightVerticalPadding : this.settings.highlightVerticalPadding ?? 0;
@@ -45690,15 +45840,26 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                 }
               } catch (e) {
               }
+              const hideFlags = getHideFlags(this.settings);
+              const refEntry = m.entryRef || {};
+              const lineCh = resolveChannels(
+                {
+                  styleType: m.styleType || refEntry.styleType,
+                  textColor: m.textColor || refEntry.textColor,
+                  color: m.color || refEntry.color,
+                  backgroundColor: m.backgroundColor || refEntry.backgroundColor
+                },
+                hideFlags
+              );
               let colorProp = "";
               const lineStyleParts = [];
-              const resolvedTextColor = m.textColor || m.color || m.entryRef && (m.entryRef.textColor || m.entryRef.color) || null;
+              const resolvedTextColor = lineCh.color;
               if (resolvedTextColor) {
                 colorProp = `color: ${resolvedTextColor};`;
               }
-              if (m.backgroundColor || m.entryRef && m.entryRef.backgroundColor) {
-                const bg = m.backgroundColor || m.entryRef.backgroundColor;
-                const params = this.getHighlightParams(m.entryRef || {});
+              if (lineCh.background) {
+                const bg = lineCh.background;
+                const params = this.getHighlightParams(refEntry);
                 lineStyleParts.push(`background-color: ${this.hexToRgba(bg, params.opacity ?? 25)}`);
                 const vpad = params.vPad ?? 0;
                 lineStyleParts.push(`padding-top: ${vpad >= 0 ? vpad : 0}px`);
@@ -45709,14 +45870,13 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                 }
                 lineStyleParts.push(`border-radius: ${params.radius ?? 4}px`);
                 {
-                  const _cs = this.getCornerShapeCss(m.entryRef || {});
+                  const _cs = this.getCornerShapeCss(refEntry);
                   if (_cs) lineStyleParts.push(_cs.replace(/ !important;?/, ""));
                 }
-                const entryRef = m.entryRef || {};
                 const borderCss = this.generateBorderStyle(
                   resolvedTextColor && resolvedTextColor !== "currentColor" ? resolvedTextColor : null,
                   bg,
-                  entryRef
+                  refEntry
                 );
                 if (borderCss) {
                   borderCss.trim().split(";").map((s) => s.trim()).filter(Boolean).forEach((decl) => {

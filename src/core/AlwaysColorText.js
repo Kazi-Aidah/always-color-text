@@ -37,6 +37,7 @@ import { ColorPickerModal } from '../modals/ColorPickerModal.js';
 import { AlertModal } from '../modals/AlertModal.js';
 import { ConfirmationModal } from '../modals/ConfirmationModal.js';
 import { findColoringEntries, buildSelectionContext } from '../utils/reverseLookup.js';
+import { getHideFlags, resolveChannels, resolveTextColor } from '../utils/hideChannels.js';
 import { SelectColoringEntryModal } from '../modals/SelectColoringEntryModal.js';
 
 // Moment is provided by Obsidian
@@ -265,6 +266,21 @@ class AlwaysColorText extends Plugin {
           } catch (_) {}
         });
     } catch (_) {}
+    // Task markers: _styleTaskMarker wraps "[x]"/"[ ]" in a coloured span, so
+    // they have to be unwrapped or the marker keeps its colour after a toggle.
+    try {
+      document
+        .querySelectorAll("span[data-act-task-marker]")
+        .forEach((s) => {
+          try {
+            const parent = s.parentNode;
+            if (!parent) return;
+            while (s.firstChild) parent.insertBefore(s.firstChild, s);
+            parent.removeChild(s);
+            if (parent.normalize) parent.normalize();
+          } catch (_) {}
+        });
+    } catch (_) {}
     // Highlight-preset elements (reading-mode <mark>, live-preview .cm-highlight)
     // that were styled inline
     try {
@@ -297,6 +313,69 @@ class AlwaysColorText extends Plugin {
             }
             el.classList.remove("always-color-text-highlight-marks");
           } catch (_) {}
+        });
+    } catch (_) {}
+  }
+
+  // --- Hide Text Colors / Hide Highlights --------------------------------
+  // Both commands re-resolve every channel through hideChannels.js, so any
+  // artifact that BAKES the resolved values in has to be rebuilt from scratch:
+  //   - <style data-act-line-style>  (line-target backgrounds, per class)
+  //   - inline markdown-element decorations (headings, list/task markers,
+  //     marks) which are stamped onto the DOM rather than re-derived per frame
+  //   - act-highlight-preset-transparency (the ==...== reading-mark sheet)
+  //   - the inline overrides written by neutralizeExistingHighlightBackgrounds()
+  //     (undone only while the command is off, see below)
+  // Everything else (applyFormattingStyles, editor extensions, reading
+  // re-processing) already re-reads the flags on its own, but running them
+  // after this reset is what makes the cleared state visible.
+  resetChannelDerivedArtifacts() {
+    try {
+      document
+        .querySelectorAll("style[data-act-line-style]")
+        .forEach((el) => el.remove());
+    } catch (_) {}
+    try {
+      this.clearMarkdownElementDecorations();
+    } catch (_) {}
+    // Undo the inline half of the highlight neutralizer, but only when the
+    // command is off — otherwise a toggle of the *other* command would undo
+    // the hiding we are supposed to keep.
+    if (!this.settings.hideHighlights) {
+      try {
+        this.restoreInlineHighlightNeutralization();
+      } catch (_) {}
+    }
+    try {
+      if (this.settings.enabled) this.applyHighlightPresetTransparency();
+      else this.removeHighlightPresetTransparency();
+    } catch (_) {}
+  }
+
+  // neutralizeExistingHighlightBackgrounds() stamps inline overrides onto the
+  // existing .always-color-text-highlight spans (transparent background, zero
+  // padding, no border). Removing the stylesheet is not enough — the inline
+  // values survive it, so "Unhide Highlights" would leave every highlight
+  // colourless until a full re-render. Undo exactly what that pass wrote; the
+  // refresh that follows repaints from the current flags.
+  restoreInlineHighlightNeutralization() {
+    try {
+      document
+        .querySelectorAll(".always-color-text-highlight")
+        .forEach((el) => {
+          for (const p of [
+            "background-color",
+            "padding-left",
+            "padding-right",
+            "border",
+            "border-radius",
+            "box-shadow",
+            "display",
+          ]) {
+            try {
+              el.style.removeProperty(p);
+            } catch (_) {}
+          }
         });
     } catch (_) {}
   }
@@ -443,6 +522,14 @@ class AlwaysColorText extends Plugin {
           .cm-content .always-color-text-highlight,
           .cm-line .always-color-text-highlight,
           .is-live-preview .cm-content .always-color-text-highlight { background-color: transparent !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
+          /* ==...== highlights: reading-view <mark> and the live-preview
+             .cm-highlight wrapper are highlights too, so hiding highlights has
+             to neutralize them (plugin-painted or theme default) as well. */
+          .always-color-text-highlight-marks,
+          mark,
+          .cm-highlight { background-color: transparent !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
+          mark.always-color-text-highlight-marks,
+          .cm-highlight.always-color-text-highlight-marks { padding: 0 !important; }
         `;
         document.head.appendChild(style);
       }
@@ -485,26 +572,29 @@ class AlwaysColorText extends Plugin {
         return;
       }
 
-      // Build the entry's colors
+      // Build the entry's colors, honouring the two hide commands: this sheet
+      // paints the ==...== preset onto reading-mode <mark> elements, so it must
+      // drop exactly the channel the user just hid (otherwise "Hide Highlights"
+      // leaves every mark coloured).
       const params = this.getHighlightParams(presetEntry);
-      const tc =
-        presetEntry.textColor && presetEntry.textColor !== "currentColor"
-          ? presetEntry.textColor
-          : presetEntry.color || null;
-      const bc = presetEntry.backgroundColor || null;
+      const hideFlags = getHideFlags(this.settings);
+      const presetCh = resolveChannels(presetEntry, hideFlags);
+      const tc = presetCh.color;
+      const bc = presetCh.background;
 
       let bgRgba = "transparent";
       if (bc && this.isValidHexColor(bc)) {
         bgRgba = this.hexToRgba(bc, params.opacity);
       }
       const colorValue = tc && this.isValidHexColor(tc) ? tc : "inherit";
-      const radius = params.radius ?? 4;
-      const hPad = params.hPad ?? 4;
-      const vPad = params.vPad ?? 0;
+      // The box (radius/padding/border) belongs to the highlight channel.
+      const radius = hideFlags.hideBg ? 0 : params.radius ?? 4;
+      const hPad = hideFlags.hideBg ? 0 : params.hPad ?? 4;
+      const vPad = hideFlags.hideBg ? 0 : params.vPad ?? 0;
 
       // Build border CSS if enabled
       let borderRule = "";
-      if (params.enableBorder && (bc || tc)) {
+      if (!hideFlags.hideBg && params.enableBorder && (bc || tc)) {
         const borderColor = tc && this.isValidHexColor(tc)
           ? this.hexToRgba(tc, params.borderOpacity)
           : bc && this.isValidHexColor(bc)
@@ -2788,6 +2878,9 @@ class AlwaysColorText extends Plugin {
             await this.saveSettings();
             this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
+            // Rebuild everything that bakes the resolved colors in (line-target
+            // sheets, inline markdown-element decorations, ==...== mark sheet).
+            this.resetChannelDerivedArtifacts();
             // Update CSS styles for reading callouts based on hideTextColors setting
             this.removeEnabledReadingCalloutStyles();
             if (this.settings.enabled && !this.settings.hideTextColors) {
@@ -2840,6 +2933,9 @@ class AlwaysColorText extends Plugin {
             await this.saveSettings();
             this.reregisterCommandsWithLanguage();
             this._cacheDirty = true;
+            // Rebuild everything that bakes the resolved colors in (line-target
+            // sheets, inline markdown-element decorations, ==...== mark sheet).
+            this.resetChannelDerivedArtifacts();
             // Update CSS styles for reading callouts based on hideHighlights setting
             this.removeEnabledReadingCalloutStyles();
             if (this.settings.enabled && !this.settings.hideHighlights) {
@@ -3512,7 +3608,11 @@ class AlwaysColorText extends Plugin {
     try {
       let we;
       let weAll;
-      if (Array.isArray(entries) && entries.length > 0) {
+      // `entries` is the hide-flag-filtered list coming from
+      // getSortedWordEntries(). Distinguish "not provided" (null/undefined →
+      // fall back to the raw settings) from "provided but empty" (every entry
+      // filtered out by Hide Text Colors / Hide Highlights → paint nothing).
+      if (Array.isArray(entries)) {
         we = entries;
         weAll = entries;
       } else {
@@ -3632,7 +3732,19 @@ class AlwaysColorText extends Plugin {
           // NOTE: styledSpan alone is NOT sufficient — a mark may contain a plugin
           // span from an unrelated word-color rule. Only add the class when there is
           // an explicit highlight preset/quickStyle match for this mark.
-          if (quickStyle || presetEntry || highlightRegexEntry) {
+          const styleSource = quickStyle || presetEntry || highlightRegexEntry;
+          const hideFlags = getHideFlags(this.settings);
+          const sourceEntry = !styleSource
+            ? null
+            : quickStyle
+              ? Object.assign({}, quickStyle, {
+                  // quick styles default to "both" when unspecified
+                  styleType: quickStyle.styleType || "both",
+                  textColor: quickStyle.textColor || quickStyle.color || null,
+                })
+              : styleSource;
+          const ch = sourceEntry ? resolveChannels(sourceEntry, hideFlags) : null;
+          if (ch && ch.visible) {
             try {
               mark.classList.add("always-color-text-highlight-marks");
               if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) {
@@ -3640,169 +3752,170 @@ class AlwaysColorText extends Plugin {
               }
             } catch (_) {}
           } else {
-            // No highlight preset match — leave this mark completely untouched so
-            // the theme's default highlight color (yellow) is preserved.
+            // No highlight preset match. That also happens when Hide Highlights
+            // filtered the preset out of the entry list — so strip anything an
+            // earlier pass painted inline and drop the marker class, instead of
+            // leaving a stale colour behind.
+            for (const el of [mark, fallbackSpan]) {
+              if (!el || !el.style) continue;
+              for (const p of [
+                "color",
+                "background-color",
+                "--highlight-color",
+                "--highlight-background",
+                "padding-left",
+                "padding-right",
+                "padding-top",
+                "padding-bottom",
+                "margin-top",
+                "margin-bottom",
+                "border-radius",
+                "corner-shape",
+                "border",
+                "border-top",
+                "border-bottom",
+                "border-left",
+                "border-right",
+              ]) {
+                try {
+                  el.style.removeProperty(p);
+                } catch (_) {}
+              }
+            }
+            try {
+              mark.classList.remove("always-color-text-highlight-marks");
+              if (fallbackSpan && fallbackSpan !== mark && fallbackSpan.classList) {
+                fallbackSpan.classList.remove("always-color-text-highlight-marks");
+              }
+            } catch (_) {}
+            // Leave the theme's own default look alone when the plugin never
+            // painted this mark; Hide Highlights neutralizes it via stylesheet.
             continue;
           }
 
-          if (quickStyle) {
-            const params = this.getHighlightParams(quickStyle);
-            const styleType = quickStyle.styleType || "both";
-            const tc = quickStyle.textColor || quickStyle.color || null;
-            const bc = quickStyle.backgroundColor || null;
+          // Quick styles and the highlight preset both paint the mark, so they
+          // share one gated application: "Hide Text Colors" / "Hide Highlights"
+          // must strip exactly the channel they name (and nothing else, so a
+          // word/regex span that happens to sit inside the mark keeps its own
+          // colour unless that channel is the hidden one).
+          if (styleSource && ch) {
+            const params = this.getHighlightParams(sourceEntry);
+            const tc = ch.color;
+            const bc = ch.background;
+            const paintTargets =
+              fallbackSpan && fallbackSpan !== mark
+                ? [fallbackSpan, mark]
+                : [mark];
 
             if (bc) {
               const bgRgba = this.hexToRgba(bc, params.opacity);
-              fallbackSpan.style.setProperty(
-                "background-color",
-                bgRgba,
-                "important",
-              );
-              try {
-                mark.style.setProperty("background-color", bgRgba, "important");
-              } catch (_) {}
-              try {
-                fallbackSpan.style.setProperty(
-                  "--highlight-background",
-                  bgRgba,
-                );
-              } catch (_) {}
-              try {
-                mark.style.setProperty("--highlight-background", bgRgba);
-              } catch (_) {}
+              for (const el of paintTargets) {
+                try {
+                  el.style.setProperty("background-color", bgRgba, "important");
+                  el.style.setProperty("--highlight-background", bgRgba);
+                } catch (_) {}
+              }
+            } else if (ch.hideBg) {
+              for (const el of paintTargets) {
+                try {
+                  el.style.removeProperty("background-color");
+                  el.style.removeProperty("--highlight-background");
+                } catch (_) {}
+              }
             }
 
             if (tc) {
-              fallbackSpan.style.setProperty("color", tc, "important");
-              fallbackSpan.style.setProperty("--highlight-color", tc);
-              try {
-                mark.style.setProperty("color", tc, "important");
-              } catch (_) {}
-              try {
-                mark.style.setProperty("--highlight-color", tc);
-              } catch (_) {}
+              for (const el of paintTargets) {
+                try {
+                  el.style.setProperty("color", tc, "important");
+                  el.style.setProperty("--highlight-color", tc);
+                } catch (_) {}
+              }
+            } else if (ch.hideText) {
+              for (const el of paintTargets) {
+                try {
+                  el.style.removeProperty("color");
+                  el.style.removeProperty("--highlight-color");
+                } catch (_) {}
+              }
             }
 
-            fallbackSpan.style.setProperty(
-              "padding-left",
-              params.hPad + "px",
-              "important",
-            );
-            fallbackSpan.style.setProperty(
-              "padding-right",
-              params.hPad + "px",
-              "important",
-            );
-            const vpad = params.vPad;
-            fallbackSpan.style.setProperty(
-              "padding-top",
-              (vpad >= 0 ? vpad : 0) + "px",
-              "important",
-            );
-            fallbackSpan.style.setProperty(
-              "padding-bottom",
-              (vpad >= 0 ? vpad : 0) + "px",
-              "important",
-            );
-            const br =
-              params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
-            fallbackSpan.style.setProperty(
-              "border-radius",
-              br + "px",
-              "important",
-            );
-            this.applyCornerShapeToElement(fallbackSpan, quickStyle);
-            this.applyCornerShapeToElement(mark, quickStyle);
-            try {
-              const borderCss = this.generateBorderStyle(tc, bc, quickStyle);
-              if (borderCss) {
-                fallbackSpan.style.cssText += borderCss;
-              }
-              if (borderCss) {
-                mark.style.cssText += borderCss;
-              }
-            } catch (_) {}
-          } else if (presetEntry || highlightRegexEntry) {
-            const entryForMark = presetEntry || highlightRegexEntry;
-            const params = this.getHighlightParams(entryForMark);
-            const tc =
-              entryForMark.textColor &&
-              entryForMark.textColor !== "currentColor"
-                ? entryForMark.textColor
-                : entryForMark.color || null;
-            const bc = entryForMark.backgroundColor || null;
-
-            if (bc) {
-              const bgRgba = this.hexToRgba(bc, params.opacity);
-              fallbackSpan.style.setProperty(
-                "background-color",
-                bgRgba,
-                "important",
-              );
-              try {
-                mark.style.setProperty("background-color", bgRgba, "important");
-              } catch (_) {}
-              try {
-                fallbackSpan.style.setProperty(
-                  "--highlight-background",
-                  bgRgba,
+            // This path historically applied the box (padding / radius /
+            // corner shape / border) for ANY style source, whatever its
+            // styleType — so gate it only on the highlight channel itself:
+            // that keeps the flags-off output identical to the pre-command
+            // behaviour while still stripping the box when Hide Highlights is
+            // on.
+            if (!ch.hideBg) {
+              for (const el of paintTargets) {
+                el.style.setProperty(
+                  "padding-left",
+                  params.hPad + "px",
+                  "important",
                 );
-              } catch (_) {}
-              try {
-                mark.style.setProperty("--highlight-background", bgRgba);
-              } catch (_) {}
-            }
-
-            if (tc) {
-              fallbackSpan.style.setProperty("color", tc, "important");
-              fallbackSpan.style.setProperty("--highlight-color", tc);
-              try {
-                mark.style.setProperty("color", tc, "important");
-              } catch (_) {}
-              try {
-                mark.style.setProperty("--highlight-color", tc);
-              } catch (_) {}
-            }
-
-            fallbackSpan.style.setProperty(
-              "padding-left",
-              params.hPad + "px",
-              "important",
-            );
-            fallbackSpan.style.setProperty(
-              "padding-right",
-              params.hPad + "px",
-              "important",
-            );
-            const vpad = params.vPad;
-            fallbackSpan.style.setProperty(
-              "padding-top",
-              (vpad >= 0 ? vpad : 0) + "px",
-              "important",
-            );
-            fallbackSpan.style.setProperty(
-              "padding-bottom",
-              (vpad >= 0 ? vpad : 0) + "px",
-              "important",
-            );
-            const br =
-              params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
-            fallbackSpan.style.setProperty(
-              "border-radius",
-              br + "px",
-              "important",
-            );
-            this.applyCornerShapeToElement(fallbackSpan, entryForMark);
-            this.applyCornerShapeToElement(mark, entryForMark);
-            try {
-              const borderCss = this.generateBorderStyle(tc, bc, entryForMark);
-              if (borderCss) {
-                fallbackSpan.style.cssText += borderCss;
+                el.style.setProperty(
+                  "padding-right",
+                  params.hPad + "px",
+                  "important",
+                );
+                const vpad = params.vPad;
+                el.style.setProperty(
+                  "padding-top",
+                  (vpad >= 0 ? vpad : 0) + "px",
+                  "important",
+                );
+                el.style.setProperty(
+                  "padding-bottom",
+                  (vpad >= 0 ? vpad : 0) + "px",
+                  "important",
+                );
+                const br =
+                  params.hPad > 0 && params.radius === 0 ? 0 : params.radius;
+                el.style.setProperty(
+                  "border-radius",
+                  br + "px",
+                  "important",
+                );
               }
-              if (borderCss) {
-                mark.style.cssText += borderCss;
+              this.applyCornerShapeToElement(fallbackSpan, sourceEntry);
+              this.applyCornerShapeToElement(mark, sourceEntry);
+              try {
+                const borderCss = this.generateBorderStyle(
+                  tc,
+                  bc,
+                  sourceEntry,
+                );
+                if (borderCss) {
+                  for (const el of paintTargets) {
+                    el.style.cssText += borderCss;
+                  }
+                }
+              } catch (_) {}
+            } else {
+              // Highlight channel hidden — make sure no box styling lingers
+              // from a pass that ran before the command was toggled.
+              for (const el of paintTargets) {
+                for (const p of [
+                  "padding-left",
+                  "padding-right",
+                  "padding-top",
+                  "padding-bottom",
+                  "margin-top",
+                  "margin-bottom",
+                  "border-radius",
+                  "corner-shape",
+                  "border",
+                  "border-top",
+                  "border-bottom",
+                  "border-left",
+                  "border-right",
+                ]) {
+                  try {
+                    el.style.removeProperty(p);
+                  } catch (_) {}
+                }
               }
-            } catch (_) {}
+            }
           }
           // Default fallback if no preset found: restore default appearance by ensuring class is present (done at top)
           // and maybe remove the 'transparent' override if possible?
@@ -4059,19 +4172,42 @@ class AlwaysColorText extends Plugin {
   }
 
   // Helper: Style checkbox elements
+  // Colour used by list / task markers and checkboxes. Those are painted as
+  // TEXT, so they follow the same rules as every other text channel:
+  //   Hide Text Colors → no marker colour at all
+  //   Hide Highlights  → only a real text colour survives (a marker painted
+  //                      from an entry's background colour belongs to the
+  //                      highlight channel, which the command is hiding)
+  _markerColorFor(entry) {
+    if (!entry) return null;
+    const flags = getHideFlags(this.settings);
+    // Markers render as TEXT, so "Hide Text Colors" removes every marker colour.
+    if (flags.hideText) return null;
+    // Historical resolution order, kept verbatim so that the flags-off result
+    // is exactly what it always was: the legacy `color` field wins over
+    // `textColor`, and a "currentColor" background is not a colour.
+    const textColour = entry.color || entry.textColor || null;
+    const bgColour =
+      entry.backgroundColor && entry.backgroundColor !== "currentColor"
+        ? entry.backgroundColor
+        : null;
+    if (textColour) return textColour;
+    // Only a background-derived colour is left, and it belongs to the
+    // highlight channel, which "Hide Highlights" hides.
+    if (flags.hideBg) return null;
+    return bgColour;
+  }
+
   _styleCheckbox(checkbox, entry) {
     try {
       // Determine color to use
-      const color =
-        entry.color ||
-        entry.textColor ||
-        (entry.backgroundColor && entry.backgroundColor !== "currentColor"
-          ? entry.backgroundColor
-          : null);
+      const color = this._markerColorFor(entry);
 
       if (color) {
         // Modern approach: use accent-color (limited browser support)
         checkbox.style.accentColor = color;
+      } else {
+        checkbox.style.removeProperty("accent-color");
       }
     } catch (e) {}
   }
@@ -4079,12 +4215,7 @@ class AlwaysColorText extends Plugin {
   // Helper: Style list markers (bullets/numbers)
   _styleListMarker(li, entry, isOrdered) {
     try {
-      const color =
-        entry.color ||
-        entry.textColor ||
-        (entry.backgroundColor && entry.backgroundColor !== "currentColor"
-          ? entry.backgroundColor
-          : null);
+      const color = this._markerColorFor(entry);
 
       if (color) {
         // Method 1: Use CSS ::marker pseudo-element (modern browsers)
@@ -4119,8 +4250,31 @@ class AlwaysColorText extends Plugin {
     } catch (e) {}
   }
 
+  // Unwrap the spans _styleTaskMarker created in an earlier pass. Needed on
+  // every re-run: the colour can disappear (hide command, entry removed) and,
+  // without unwrapping first, each refresh would nest one more coloured span
+  // inside the previous one.
+  _clearTaskMarkerSpans(root) {
+    if (!root || !root.querySelectorAll) return;
+    const spans = root.querySelectorAll("span[data-act-task-marker]");
+    for (const s of Array.from(spans)) {
+      const parent = s.parentNode;
+      if (!parent) continue;
+      while (s.firstChild) parent.insertBefore(s.firstChild, s);
+      parent.removeChild(s);
+      try {
+        if (parent.normalize) parent.normalize();
+      } catch (_) {}
+    }
+  }
+
   _styleTaskMarker(li, entry) {
     try {
+      this._clearTaskMarkerSpans(li);
+      const color = this._markerColorFor(entry);
+      // No colour left (hide command or no colour configured): the unwrap
+      // above already restored the plain text.
+      if (!color) return;
       const walker = document.createTreeWalker(
         li,
         NodeFilter.SHOW_TEXT,
@@ -4136,14 +4290,8 @@ class AlwaysColorText extends Plugin {
       );
       let n;
       while ((n = walker.nextNode())) {
-        const color =
-          entry.color ||
-          entry.textColor ||
-          (entry.backgroundColor && entry.backgroundColor !== "currentColor"
-            ? entry.backgroundColor
-            : null);
-        if (!color) continue;
         const span = document.createElement("span");
+        span.setAttribute("data-act-task-marker", "1");
         try {
           span.style.setProperty("color", color, "important");
         } catch (_) {
@@ -7195,49 +7343,53 @@ class AlwaysColorText extends Plugin {
         if (!selector) return; // text-filtered tag/inline-title handled in reading view
 
         {
-          const textColor =
-            entry.textColor && entry.textColor !== "currentColor"
-              ? entry.textColor
-              : entry.color || null;
-          const bgColor = entry.backgroundColor || null;
+          const flags = getHideFlags(this.settings);
+          const ch = resolveChannels(entry, flags);
+          const textColor = ch.color;
+          const bgColor = ch.background;
 
           // Only apply box/highlight styling (padding, radius, border) when the
           // entry is a highlight/both style, or actually has a background color.
           // A color-only ("text") entry should emit just `color`, matching the
           // behavior of word/regex entries.
-          const styleType = entry.styleType || "text";
           const borderCSS = this.generateBorderStyle(
             textColor,
             bgColor,
             entry,
           );
-          let isHighlight =
-            styleType === "highlight" || styleType === "both" || !!bgColor;
+          let isHighlight = ch.isHighlight;
           // For tags only, also treat a configured border (even without a
           // background) as a highlight so the border + radius are forced through.
           // Other element types keep the original behavior: a color-only entry
           // emits just `color` (no padding/border/radius).
-          if ((t.key === "tag" || t.key === "all-tags") && borderCSS)
+          if (!flags.hideBg && (t.key === "tag" || t.key === "all-tags") && borderCSS)
             isHighlight = true;
+
+          const extra = this.settings.enableCustomCss
+            ? this.sanitizeCssDeclarations(entry.customCss || "")
+            : "";
+
+          // Both channels hidden (Hide Text Colors on a colour-only entry, or
+          // Hide Highlights on a highlight-only one) → emit nothing at all for
+          // this element, so the theme/Obsidian default shows through.
+          if (!ch.visible && !extra) return;
 
           css += `${selector} {`;
 
-          if (textColor || bgColor) {
-            if (textColor) css += ` color: ${textColor} !important;`;
-            if (bgColor) {
-              const opacityRaw =
-                typeof entry.backgroundOpacity === "number"
-                  ? entry.backgroundOpacity
-                  : (this.settings.backgroundOpacity ?? 25);
-              // hexToRgba expects 0-100. If we have a small float (<=1), it might be a legacy 0-1 value, so multiply by 100.
-              // Otherwise assume it's 0-100.
-              const opacity =
-                opacityRaw <= 1 && opacityRaw > 0
-                  ? opacityRaw * 100
-                  : opacityRaw;
-              const bgRgba = this.hexToRgba(bgColor, opacity);
-              css += ` background-color: ${bgRgba} !important;`;
-            }
+          if (textColor) css += ` color: ${textColor} !important;`;
+          if (bgColor) {
+            const opacityRaw =
+              typeof entry.backgroundOpacity === "number"
+                ? entry.backgroundOpacity
+                : (this.settings.backgroundOpacity ?? 25);
+            // hexToRgba expects 0-100. If we have a small float (<=1), it might be a legacy 0-1 value, so multiply by 100.
+            // Otherwise assume it's 0-100.
+            const opacity =
+              opacityRaw <= 1 && opacityRaw > 0
+                ? opacityRaw * 100
+                : opacityRaw;
+            const bgRgba = this.hexToRgba(bgColor, opacity);
+            css += ` background-color: ${bgRgba} !important;`;
           }
 
           // Add highlight styling properties
@@ -7271,9 +7423,6 @@ class AlwaysColorText extends Plugin {
             }
           }
           {
-            const extra = this.settings.enableCustomCss
-              ? this.sanitizeCssDeclarations(entry.customCss || "")
-              : "";
             if (extra) css += ` ${extra}`;
           }
           css += ` } \n`;
@@ -7440,18 +7589,18 @@ class AlwaysColorText extends Plugin {
         const isBegin = !!opts.isBegin;
         const isEnd = !!opts.isEnd;
         const beginHidden = !!opts.beginHidden;
-        const textColor =
-          entry.textColor && entry.textColor !== "currentColor"
-            ? entry.textColor
-            : entry.color || null;
-        const bg = entry.backgroundColor || null;
+        // Honour the "Hide Text Colors" / "Hide Highlights" commands here too —
+        // this is the only place specific-tag (tagFilter) entries are painted
+        // in live preview, CSS can't express them.
+        const flags = getHideFlags(this.settings);
+        const ch = resolveChannels(entry, flags);
+        const textColor = ch.color;
+        const bg = ch.background;
         const isTag = entry.targetElement === "tag" || entry.targetElement === "all-tags";
 
-        const styleType = entry.styleType || "text";
         const borderCSS = this.generateBorderStyle(textColor, bg, entry);
-        let isHighlight =
-          styleType === "highlight" || styleType === "both" || !!bg;
-        if (isTag && borderCSS) isHighlight = true;
+        let isHighlight = ch.isHighlight;
+        if (!flags.hideBg && isTag && borderCSS) isHighlight = true;
 
         const radius =
           typeof entry.highlightBorderRadius === "number"
@@ -15401,15 +15550,30 @@ class AlwaysColorText extends Plugin {
               } catch (e) {}
 
               // Build line style CSS (same as Live Preview)
+              // The line target ("Apply to: colour line / next line") paints
+              // both channels, so it has to honour the hide commands exactly
+              // like the inline-span path does.
+              const hideFlags = getHideFlags(this.settings);
+              const refEntry = m.entryRef || {};
+              const lineCh = resolveChannels(
+                {
+                  styleType: m.styleType || refEntry.styleType,
+                  textColor: m.textColor || refEntry.textColor,
+                  color: m.color || refEntry.color,
+                  backgroundColor:
+                    m.backgroundColor || refEntry.backgroundColor,
+                },
+                hideFlags,
+              );
               let colorProp = "";
               const lineStyleParts = [];
-              const resolvedTextColor = m.textColor || m.color || (m.entryRef && (m.entryRef.textColor || m.entryRef.color)) || null;
+              const resolvedTextColor = lineCh.color;
               if (resolvedTextColor) {
                 colorProp = `color: ${resolvedTextColor};`;
               }
-              if (m.backgroundColor || (m.entryRef && m.entryRef.backgroundColor)) {
-                const bg = m.backgroundColor || m.entryRef.backgroundColor;
-                const params = this.getHighlightParams(m.entryRef || {});
+              if (lineCh.background) {
+                const bg = lineCh.background;
+                const params = this.getHighlightParams(refEntry);
                 lineStyleParts.push(`background-color: ${this.hexToRgba(bg, params.opacity ?? 25)}`);
                 const vpad = params.vPad ?? 0;
                 lineStyleParts.push(`padding-top: ${vpad >= 0 ? vpad : 0}px`);
@@ -15420,16 +15584,15 @@ class AlwaysColorText extends Plugin {
                 }
                 lineStyleParts.push(`border-radius: ${params.radius ?? 4}px`);
                 {
-                  const _cs = this.getCornerShapeCss(m.entryRef || {});
+                  const _cs = this.getCornerShapeCss(refEntry);
                   if (_cs) lineStyleParts.push(_cs.replace(/ !important;?/, ""));
                 }
 
                 // Add border styles for Reading Mode
-                const entryRef = m.entryRef || {};
                 const borderCss = this.generateBorderStyle(
                   resolvedTextColor && resolvedTextColor !== "currentColor" ? resolvedTextColor : null,
                   bg,
-                  entryRef
+                  refEntry
                 );
                 if (borderCss) {
                   // Keep !important for borders to override Obsidian's default styles
