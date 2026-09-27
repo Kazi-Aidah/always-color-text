@@ -191,6 +191,169 @@ export function applyGroupColorOverride(copy, group, isValidHex) {
   return { type, text, bg };
 }
 
+/**
+ * Markdown-element targeting derived from an entry's label/pattern.
+ * Extracted so the editor compile and the regex tester preview share ONE
+ * derivation (a label containing "bold"/"italic" routes the entry out of the
+ * text matcher and into element styling — the preview must know this too).
+ */
+export function deriveTargetElement(e) {
+  return (
+    e.targetElement ||
+    (e.presetLabel && /bold\s*italic/i.test(e.presetLabel)
+      ? "strong-em"
+      : e.presetLabel && /bold/i.test(e.presetLabel)
+        ? "strong"
+        : e.presetLabel && /italic/i.test(e.presetLabel)
+          ? "em"
+          : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1"
+            ? "strong"
+            : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1"
+              ? "em"
+              : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1"
+                ? "strong-em"
+                : undefined)
+  );
+}
+
+/**
+ * Shared per-pattern compile core — the SINGLE source of truth for how a
+ * pattern becomes a runnable regex. Used by compileWordEntriesLogic,
+ * compileTextBgColoringEntriesLogic AND the regex tester preview, so the
+ * tester's preview can never drift from what the editor actually runs.
+ *
+ * Steps (identical order to the original inline loops):
+ *   1. trim; empty → { empty: true }
+ *   2. plugin.sanitizePattern (throws "Pattern too long" — propagates to the
+ *      caller exactly like the original inline call did)
+ *   3. known-problematic pattern gate → { blocked: true, pattern }
+ *   4. flags: sanitize to [gimsuy], force "g", force "i" unless effective
+ *      case sensitivity (entry override → entry flag → false)
+ *   5. regex branch (enableRegexSupport && isRegex) with
+ *      validateAndSanitizeRegex gate, else the literal branch with
+ *      match-type word-boundary wrapping
+ *   6. bloom filter addPattern + fastTest creation
+ *
+ * @param {object} plugin - plugin instance (or a test double)
+ * @param {object} e - source entry (isRegex, flags, caseSensitive,
+ *   _caseSensitiveOverride)
+ * @param {string} pattern - raw pattern (trimmed here)
+ * @param {object} compiledBase - channel-specific compiled fields
+ *   (color/styleType/matchType/entryRef/…); must NOT contain pattern,
+ *   isRegex, flags, caseSensitive, regex, testRegex, invalid or specificity —
+ *   those are filled in here.
+ * @returns {{empty: true}
+ *   | {blocked: true, pattern: string}
+ *   | {blocked: false, compiled: object, pattern: string, flags: string,
+ *      effectiveCaseSensitive: boolean, error?: Error}}
+ */
+export function compilePatternCore(plugin, e, pattern, compiledBase) {
+  pattern = String(pattern).trim();
+  if (!pattern) return { empty: true };
+  pattern = plugin.sanitizePattern(pattern, !!e.isRegex);
+  const isRegex = !!e.isRegex;
+
+  if (
+    !plugin.settings.disableRegexSafety &&
+    plugin.isKnownProblematicPattern(pattern)
+  ) {
+    return { blocked: true, pattern };
+  }
+
+  const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
+  let flags = rawFlags || "";
+  if (!flags.includes("g")) flags += "g";
+  const effectiveCaseSensitive =
+    typeof e._caseSensitiveOverride === "boolean"
+      ? e._caseSensitiveOverride
+      : typeof e.caseSensitive === "boolean"
+        ? e.caseSensitive
+        : false;
+  if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
+
+  const compiled = Object.assign({}, compiledBase, {
+    pattern,
+    isRegex,
+    flags,
+    caseSensitive: effectiveCaseSensitive,
+    regex: null,
+    testRegex: null,
+    invalid: false,
+    specificity: pattern.replace(/\*/g, "").length,
+  });
+
+  let error = null;
+  try {
+    if (plugin.settings.enableRegexSupport && isRegex) {
+      if (!plugin.validateAndSanitizeRegex(pattern)) {
+        compiled.invalid = true;
+        return {
+          blocked: false,
+          compiled,
+          pattern,
+          flags,
+          effectiveCaseSensitive,
+        };
+      }
+      compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
+      const testFlags = flags.replace(/g/g, "");
+      compiled.testRegex = plugin._regexCache.getOrCreate(pattern, testFlags);
+    } else {
+      const esc = plugin.escapeRegex(pattern);
+      const matchTypeLower = String(compiled.matchType || "exact").toLowerCase();
+      const isSentence = plugin.isSentenceLikePattern(pattern);
+      // Use \p{L}\p{N} with the u flag — covers every Unicode letter and digit
+      // including supplementary plane characters (emoji, historic scripts, etc.)
+      // that a manual code-point range list would miss.
+      const UWC = "\\p{L}\\p{N}\\-'";
+      let finalPattern = esc;
+      if (!isSentence && matchTypeLower === "startswith") {
+        finalPattern = `(?<![${UWC}])` + esc;
+      } else if (!isSentence && matchTypeLower === "endswith") {
+        finalPattern = esc + `(?![${UWC}])`;
+      } else if (
+        !isSentence &&
+        matchTypeLower === "exact" &&
+        String(pattern).length === 1
+      ) {
+        finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
+      }
+      // Always include the u flag so \p{L}/\p{N} and supplementary-plane
+      // characters are handled correctly.
+      const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
+      compiled.regex = plugin._regexCache.getOrCreate(finalPattern, literalFlags);
+      compiled.testRegex = effectiveCaseSensitive
+        ? plugin._regexCache.getOrCreate(finalPattern, "u")
+        : plugin._regexCache.getOrCreate(finalPattern, "iu");
+    }
+  } catch (err) {
+    compiled.invalid = true;
+    compiled.regex = null;
+    compiled.testRegex = null;
+    error = err;
+  }
+  try {
+    plugin._bloomFilter && plugin._bloomFilter.addPattern(pattern, isRegex);
+  } catch (_) {}
+  try {
+    compiled.fastTest = plugin.createFastTester(
+      pattern,
+      compiled.isRegex,
+      effectiveCaseSensitive,
+    );
+  } catch (e) {
+    compiled.fastTest = (text) => true;
+  }
+  return {
+    blocked: false,
+    compiled,
+    pattern,
+    flags,
+    effectiveCaseSensitive,
+    error,
+  };
+}
+
 export class PatternMatcher {
   constructor(settings, helpers) {
     this.settings = settings || {};
@@ -693,57 +856,8 @@ export function compileWordEntriesLogic(plugin) {
       }
       const isRegex = !!e.isRegex;
 
-      for (let pattern of patterns) {
-        pattern = String(pattern).trim();
-        if (!pattern) continue;
-        pattern = plugin.sanitizePattern(pattern, isRegex);
-
-        if (
-          !plugin.settings.disableRegexSafety &&
-          plugin.isKnownProblematicPattern(pattern)
-        ) {
-          debugWarn(
-            "COMPILE",
-            `Blocked dangerous pattern: ${pattern.substring(0, 50)}`,
-          );
-          const compiled = {
-            pattern,
-            color,
-            isRegex,
-            flags: "",
-            regex: null,
-            testRegex: null,
-            invalid: true,
-            specificity: 0,
-          };
-          plugin._compiledWordEntries.push(compiled);
-          try {
-            const { Notice } = require("obsidian");
-            new Notice(
-              plugin.t(
-                "notice_pattern_blocked",
-                "Pattern blocked for Memory Safety: " +
-                  pattern.substring(0, 30) +
-                  "...",
-              ),
-            );
-          } catch (e) {}
-          continue;
-        }
-
-        const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
-        let flags = rawFlags || "";
-        if (!flags.includes("g")) flags += "g";
-        const effectiveCaseSensitive =
-          typeof e._caseSensitiveOverride === "boolean"
-            ? e._caseSensitiveOverride
-            : typeof e.caseSensitive === "boolean"
-              ? e.caseSensitive
-              : false;
-        if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
-
-        const compiled = {
-          pattern,
+      for (const rawPattern of patterns) {
+        const compiledBase = {
           color,
           textColor: e.textColor || e.color || color,
           backgroundColor: e.backgroundColor || null,
@@ -752,30 +866,9 @@ export function compileWordEntriesLogic(plugin) {
           matchType:
             e.matchType ||
             plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
-          isRegex,
-          flags,
-          regex: null,
-          testRegex: null,
-          invalid: false,
-          specificity: pattern.replace(/\*/g, "").length,
           presetLabel: e.presetLabel || undefined,
           entryRef: e,
-          caseSensitive: effectiveCaseSensitive,
-          targetElement:
-            e.targetElement ||
-            (e.presetLabel && /bold\s*italic/i.test(e.presetLabel)
-              ? "strong-em"
-              : e.presetLabel && /bold/i.test(e.presetLabel)
-                ? "strong"
-                : e.presetLabel && /italic/i.test(e.presetLabel)
-                  ? "em"
-                  : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1"
-                    ? "strong"
-                    : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1"
-                      ? "em"
-                      : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1"
-                        ? "strong-em"
-                        : undefined),
+          targetElement: deriveTargetElement(e),
           inclusionRules: Array.isArray(e.inclusionRules)
             ? e.inclusionRules.slice()
             : [],
@@ -812,74 +905,38 @@ export function compileWordEntriesLogic(plugin) {
           blocksProcessed: 0,
           _hotLogged: false,
         };
-        if (!pattern) {
-          compiled.invalid = true;
+        const res = compilePatternCore(plugin, e, rawPattern, compiledBase);
+        if (res.empty) continue;
+        if (res.blocked) {
+          debugWarn(
+            "COMPILE",
+            `Blocked dangerous pattern: ${res.pattern.substring(0, 50)}`,
+          );
+          const compiled = {
+            pattern: res.pattern,
+            color,
+            isRegex,
+            flags: "",
+            regex: null,
+            testRegex: null,
+            invalid: true,
+            specificity: 0,
+          };
           plugin._compiledWordEntries.push(compiled);
+          try {
+            const { Notice } = require("obsidian");
+            new Notice(
+              plugin.t(
+                "notice_pattern_blocked",
+                "Pattern blocked for Memory Safety: " +
+                  res.pattern.substring(0, 30) +
+                  "...",
+              ),
+            );
+          } catch (e) {}
           continue;
         }
-        try {
-          if (plugin.settings.enableRegexSupport && isRegex) {
-            if (!plugin.validateAndSanitizeRegex(pattern)) {
-              compiled.invalid = true;
-              plugin._compiledWordEntries.push(compiled);
-              continue;
-            }
-            compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
-            const testFlags = flags.replace(/g/g, "");
-            compiled.testRegex = plugin._regexCache.getOrCreate(
-              pattern,
-              testFlags,
-            );
-          } else {
-            const esc = plugin.escapeRegex(pattern);
-            const matchTypeLower = String(
-              compiled.matchType || "exact",
-            ).toLowerCase();
-            const isSentence = plugin.isSentenceLikePattern(pattern);
-            // Use \p{L}\p{N} with the u flag — covers every Unicode letter and digit
-            // including supplementary plane characters (emoji, historic scripts, etc.)
-            // that a manual code-point range list would miss.
-            const UWC = "\\p{L}\\p{N}\\-'";
-            let finalPattern = esc;
-            if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = `(?<![${UWC}])` + esc;
-            } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = esc + `(?![${UWC}])`;
-            } else if (
-              !isSentence &&
-              matchTypeLower === "exact" &&
-              String(pattern).length === 1
-            ) {
-              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
-            }
-            // Always include the u flag so \p{L}/\p{N} and supplementary-plane
-            // characters are handled correctly.
-            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
-            compiled.regex = plugin._regexCache.getOrCreate(
-              finalPattern,
-              literalFlags,
-            );
-            compiled.testRegex = effectiveCaseSensitive
-              ? plugin._regexCache.getOrCreate(finalPattern, "u")
-              : plugin._regexCache.getOrCreate(finalPattern, "iu");
-          }
-        } catch (err) {
-          compiled.invalid = true;
-        }
-        try {
-          plugin._bloomFilter &&
-            plugin._bloomFilter.addPattern(pattern, isRegex);
-        } catch (_) {}
-        try {
-          compiled.fastTest = plugin.createFastTester(
-            pattern,
-            compiled.isRegex,
-            effectiveCaseSensitive,
-          );
-        } catch (e) {
-          compiled.fastTest = (text) => true;
-        }
-        plugin._compiledWordEntries.push(compiled);
+        plugin._compiledWordEntries.push(res.compiled);
       }
     }
     plugin._compiledWordEntries.sort(
@@ -1043,69 +1100,18 @@ export function compileTextBgColoringEntriesLogic(plugin) {
       const bgOk = plugin.isValidHexColor(backgroundColor);
       if (!textOk || !bgOk) continue;
 
-      for (let pattern of patterns) {
-        pattern = String(pattern).trim();
-        if (!pattern) continue;
-        pattern = plugin.sanitizePattern(pattern, isRegex);
-        if (
-          !plugin.settings.disableRegexSafety &&
-          plugin.isKnownProblematicPattern(pattern)
-        ) {
-          debugWarn(
-            "COMPILE_TEXTBG",
-            `Blocked dangerous pattern: ${pattern.substring(0, 50)}`,
-          );
-          const compiled = {
-            pattern,
-            textColor,
-            backgroundColor,
-            markTarget: e.markTarget || "text",
-            matchType:
-              e.matchType ||
-              plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
-            isRegex,
-            flags: "",
-            regex: null,
-            testRegex: null,
-            invalid: true,
-            specificity: 0,
-            isTextBg: true,
-            entryRef: e,
-          };
-          plugin._compiledTextBgEntries.push(compiled);
-          continue;
-        }
-
-        const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
-        let flags = rawFlags || "";
-        if (!flags.includes("g")) flags += "g";
-        const effectiveCaseSensitive =
-          typeof e._caseSensitiveOverride === "boolean"
-            ? e._caseSensitiveOverride
-            : typeof e.caseSensitive === "boolean"
-              ? e.caseSensitive
-              : false;
-        if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
-
-          const compiled = {
-            pattern,
-            textColor,
-            backgroundColor,
-            styleType: e.styleType || "both",
-            markTarget: e.markTarget || "text",
-            matchType:
-              e.matchType ||
-              plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
-            isRegex,
-            flags,
-            regex: null,
-            testRegex: null,
-            invalid: false,
-            specificity: pattern.replace(/\*/g, "").length,
-            isTextBg: true,
-            presetLabel: e.presetLabel || undefined,
-            entryRef: e,
-            caseSensitive: effectiveCaseSensitive,
+      for (const rawPattern of patterns) {
+        const compiledBase = {
+          textColor,
+          backgroundColor,
+          styleType: e.styleType || "both",
+          markTarget: e.markTarget || "text",
+          matchType:
+            e.matchType ||
+            plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
+          isTextBg: true,
+          presetLabel: e.presetLabel || undefined,
+          entryRef: e,
           inclusionRules: Array.isArray(e.inclusionRules)
             ? e.inclusionRules.slice()
             : [],
@@ -1138,77 +1144,41 @@ export function compileTextBgColoringEntriesLogic(plugin) {
           customCss: e.customCss || null,
         };
 
-        try {
-          if (plugin.settings.enableRegexSupport && isRegex) {
-            if (!plugin.validateAndSanitizeRegex(pattern)) {
-              compiled.invalid = true;
-              plugin._compiledTextBgEntries.push(compiled);
-              continue;
-            }
-            compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
-            const testFlags = flags.replace(/g/g, "");
-            compiled.testRegex = plugin._regexCache.getOrCreate(
-              pattern,
-              testFlags,
-            );
-          } else {
-            const esc = plugin.escapeRegex(pattern);
-            const matchTypeLower = String(
-              compiled.matchType || "exact",
-            ).toLowerCase();
-            const isSentence = plugin.isSentenceLikePattern(pattern);
-            // Use \p{L}\p{N} with the u flag — covers every Unicode letter and digit
-            // including supplementary plane characters (emoji, historic scripts, etc.)
-            // that a manual code-point range list would miss.
-            const UWC = "\\p{L}\\p{N}\\-'";
-            let finalPattern = esc;
-            if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = `(?<![${UWC}])` + esc;
-            } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = esc + `(?![${UWC}])`;
-            } else if (
-              !isSentence &&
-              matchTypeLower === "exact" &&
-              String(pattern).length === 1
-            ) {
-              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
-            }
-            // Always include the u flag so \p{L}/\p{N} and supplementary-plane
-            // characters are handled correctly.
-            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
-            compiled.regex = plugin._regexCache.getOrCreate(
-              finalPattern,
-              literalFlags,
-            );
-            compiled.testRegex = effectiveCaseSensitive
-              ? plugin._regexCache.getOrCreate(finalPattern, "u")
-              : plugin._regexCache.getOrCreate(finalPattern, "iu");
-          }
-          try {
-            compiled.fastTest = plugin.createFastTester(
-              pattern,
-              isRegex,
-              effectiveCaseSensitive,
-            );
-          } catch (e) {
-            compiled.fastTest = (text) => true;
-          }
-          try {
-            plugin._bloomFilter &&
-              plugin._bloomFilter.addPattern(pattern, isRegex);
-          } catch (_) {}
+        const res = compilePatternCore(plugin, e, rawPattern, compiledBase);
+        if (res.empty) continue;
+        if (res.blocked) {
+          debugWarn(
+            "COMPILE_TEXTBG",
+            `Blocked dangerous pattern: ${res.pattern.substring(0, 50)}`,
+          );
+          const compiled = {
+            pattern: res.pattern,
+            textColor,
+            backgroundColor,
+            markTarget,
+            matchType:
+              e.matchType ||
+              plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
+            isRegex,
+            flags: "",
+            regex: null,
+            testRegex: null,
+            invalid: true,
+            specificity: 0,
+            isTextBg: true,
+            entryRef: e,
+          };
           plugin._compiledTextBgEntries.push(compiled);
-        } catch (err) {
-          compiled.invalid = true;
-          compiled.regex = null;
-          compiled.testRegex = null;
+          continue;
+        }
+        if (res.error) {
           debugError(
             "COMPILE_TEXTBG",
-            `Failed to compile pattern: ${pattern}`,
-            err,
+            `Failed to compile pattern: ${res.pattern}`,
+            res.error,
           );
-          plugin._compiledTextBgEntries.push(compiled);
         }
+        plugin._compiledTextBgEntries.push(res.compiled);
       }
     }
     plugin._compiledTextBgEntries.sort(

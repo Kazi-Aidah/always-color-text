@@ -185,7 +185,6 @@ export const defaultSettings = {
   linkIdenticalMatchers: false,
   hiddenCommands: [],
   enabled: true,
-  highlightStyle: "text",
   backgroundOpacity: 35, // percent
   highlightBorderRadius: 4, // px
   cornerShape: "round", // css corner-shape: round|scoop|bevel|notch|square|squircle
@@ -223,8 +222,6 @@ export const defaultSettings = {
     command: false,
     ribbon: false,
   },
-  enableAlwaysHighlight: false,
-  enableAlwaysColor: true,
   partialMatch: true,
   blacklistWords: [],
   // New: pattern-capable blacklist entries
@@ -233,7 +230,6 @@ export const defaultSettings = {
   enableAddToExistingMenu: true,
   enableAlwaysColorTextMenu: true,
   hideInactiveGroupsInDropdowns: true,
-  hideInactiveBlacklistGroupsInDropdowns: true,
   showWordGroupsInCommands: true,
   showBlacklistGroupsInCommands: true,
   symbolWordColoring: false,
@@ -252,8 +248,6 @@ export const defaultSettings = {
   disableLivePreviewColoring: false,
   // Text & Background Coloring entries
   textBgColoringEntries: [],
-  // Enable/disable Text & Background Coloring option in right-click menu
-  enableTextBgMenu: true,
   // Use swatch names for coloring entries
   // useSwatchNamesForText: false,
   linkSwatchUpdatesToEntries: false,
@@ -289,8 +283,6 @@ export const defaultSettings = {
   pathSortMode: "last-added",
   language: "en",
   customSwatchesFolded: false,
-  globalHighlightFolded: false,
-  readingModeHighlightFilter: null, // null: show all, 'highlight': show only highlights, 'text': show only text colors
   entriesSearchLimit: 0,
   blacklistSearchLimit: 0,
   pathSearchLimit: 0,

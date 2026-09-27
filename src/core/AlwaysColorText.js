@@ -218,10 +218,10 @@ class AlwaysColorText extends Plugin {
   // Everything here is marked by the plugin itself, so only our own styling is
   // removed. Called when the global toggle is switched off — the injected
   // stylesheet is dropped separately, but inline styles/classes would survive.
-  clearMarkdownElementDecorations() {
+  clearMarkdownElementDecorations(root = document) {
     // Headings (and other blocks) colored inline by markdown-element entries
     try {
-      document.querySelectorAll("[data-act-md-colored]").forEach((el) => {
+      root.querySelectorAll("[data-act-md-colored]").forEach((el) => {
         try {
           el.style.removeProperty("color");
           el.style.removeProperty("--highlight-color");
@@ -240,7 +240,7 @@ class AlwaysColorText extends Plugin {
     } catch (_) {}
     // List / task markers + list item text color
     try {
-      document
+      root
         .querySelectorAll("li.act-colored-list-item, p.act-colored-list-item, li.act-color-marker")
         .forEach((li) => {
           try {
@@ -269,7 +269,7 @@ class AlwaysColorText extends Plugin {
     // Task markers: _styleTaskMarker wraps "[x]"/"[ ]" in a coloured span, so
     // they have to be unwrapped or the marker keeps its colour after a toggle.
     try {
-      document
+      root
         .querySelectorAll("span[data-act-task-marker]")
         .forEach((s) => {
           try {
@@ -284,7 +284,7 @@ class AlwaysColorText extends Plugin {
     // Highlight-preset elements (reading-mode <mark>, live-preview .cm-highlight)
     // that were styled inline
     try {
-      document
+      root
         .querySelectorAll(".always-color-text-highlight-marks")
         .forEach((el) => {
           try {
@@ -349,6 +349,150 @@ class AlwaysColorText extends Plugin {
     try {
       if (this.settings.enabled) this.applyHighlightPresetTransparency();
       else this.removeHighlightPresetTransparency();
+    } catch (_) {}
+  }
+
+  // Reading-mode line targets put a pattern-derived class straight onto the
+  // rendered blocks (unlike Live Preview, no CM-decoration rebuild ever takes
+  // them away), so record every class we add on the element itself and sweep
+  // it in clearReadingLineTargetClasses() when the global toggle goes off or
+  // the features are disabled.
+  addReadingLineTargetClass(el, cssClass) {
+    if (!el || !cssClass) return;
+    try {
+      el.classList.add(cssClass);
+    } catch (_) {
+      return;
+    }
+    try {
+      const parts = String(el.dataset.actLineTargets || "")
+        .split(/\s+/)
+        .filter(Boolean);
+      if (!parts.includes(cssClass)) parts.push(cssClass);
+      el.dataset.actLineTargets = parts.join(" ");
+    } catch (_) {}
+  }
+
+  clearReadingLineTargetClasses(root = document) {
+    try {
+      root.querySelectorAll("[data-act-line-targets]").forEach((el) => {
+        try {
+          String(el.getAttribute("data-act-line-targets") || "")
+            .split(/\s+/)
+            .filter(Boolean)
+            .forEach((cls) => {
+              try {
+                el.classList.remove(cls);
+              } catch (_) {}
+            });
+        } catch (_) {}
+        try {
+          el.removeAttribute("data-act-line-targets");
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
+  // The pattern-derived class shared by the Live Preview and reading-mode
+  // line-target <style> sheets — both derivations MUST stay identical or a
+  // sweep keyed on one would miss the other.
+  lineTargetCssClass(entry) {
+    const rawPattern = (entry && (entry.presetLabel || entry.pattern)) || "";
+    const slug = String(rawPattern)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-{2,}/g, "-");
+    return slug || `act-line-${((entry && entry.uid) || "x").toString().slice(-6)}`;
+  }
+
+  // Sweep line-target <style> sheets and recorded reading classes whose
+  // source entry no longer exists (deleted, renamed, blacklisted...).
+  // Nothing else ever removes a sheet once created — only the hide commands
+  // and unload remove them wholesale — so a deleted line-target entry used
+  // to keep painting forever. Called from saveSettings when entry data
+  // actually changed.
+  sweepOrphanLineTargets() {
+    const keep = new Set();
+    try {
+      this._cacheDirty = true; // make sure the compiled view is fresh
+      const painted = this.getSortedWordEntries() || [];
+      const candidates = [...painted];
+      for (const list of [this.settings.quickStyles, this.settings.quickColors]) {
+        if (Array.isArray(list)) candidates.push(...list);
+      }
+      for (const e of candidates) {
+        if (e && (e.markTarget === "line" || e.markTarget === "nextLine")) {
+          keep.add(this.lineTargetCssClass(e));
+        }
+      }
+    } catch (_) {
+      return; // cannot compute the keep-set → sweep nothing rather than too much
+    }
+    try {
+      document.querySelectorAll("style[data-act-line-style]").forEach((s) => {
+        try {
+          const cls = String(s.id || "")
+            .replace(/^act-line-style-reading-/, "")
+            .replace(/^act-line-style-/, "");
+          if (cls && !keep.has(cls)) s.remove();
+        } catch (_) {}
+      });
+    } catch (_) {}
+    try {
+      document.querySelectorAll("[data-act-line-targets]").forEach((el) => {
+        try {
+          const parts = String(el.getAttribute("data-act-line-targets") || "")
+            .split(/\s+/)
+            .filter(Boolean);
+          const kept = [];
+          for (const cls of parts) {
+            if (keep.has(cls)) {
+              kept.push(cls);
+            } else {
+              try {
+                el.classList.remove(cls);
+              } catch (_) {}
+            }
+          }
+          if (kept.length) {
+            el.setAttribute("data-act-line-targets", kept.join(" "));
+          } else {
+            el.removeAttribute("data-act-line-targets");
+          }
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
+  // Apply a generateBorderStyle() result as idempotent declarations.
+  // The old approach — appending the border string to style.cssText —
+  // re-appended the same border on every pass: the inline style attribute
+  // grew without bound, and appending to a value without a trailing ";"
+  // could corrupt parsing. setProperty
+  // overwrites in place; !important is honoured exactly as written, which is
+  // what the cssText append did too.
+  applyInlineBorderCss(el, borderCss) {
+    if (!el || !borderCss) return;
+    try {
+      for (const part of String(borderCss).split(";")) {
+        const idx = part.indexOf(":");
+        if (idx === -1) continue;
+        const prop = part.slice(0, idx).trim();
+        let val = part.slice(idx + 1).trim();
+        if (!prop || !val) continue;
+        const important = /!important\s*$/i.test(val);
+        if (important) val = val.replace(/\s*!important\s*$/i, "").trim();
+        if (!val) continue;
+        try {
+          el.style.setProperty(prop, val, important ? "important" : "");
+        } catch (_) {
+          try {
+            el.style[prop] = val;
+          } catch (_) {}
+        }
+      }
     } catch (_) {}
   }
 
@@ -431,6 +575,18 @@ class AlwaysColorText extends Plugin {
       try {
         this.clearMarkdownElementDecorations();
       } catch (_) {}
+      // Line-target <style> sheets are plain <head> elements (not gated by
+      // html.act-enabled like styles/core.css) and reading-mode line classes
+      // live on the rendered blocks — both must be swept explicitly or lines
+      // stay colored with the plugin switched off.
+      try {
+        document
+          .querySelectorAll("style[data-act-line-style]")
+          .forEach((el) => el.remove());
+      } catch (_) {}
+      try {
+        this.clearReadingLineTargetClasses();
+      } catch (_) {}
       try {
         this._applyLivePreviewTagHighlights();
       } catch (_) {}
@@ -445,7 +601,13 @@ class AlwaysColorText extends Plugin {
           this.removeEnabledLivePreviewCalloutStyles();
           this.removeEnabledLivePreviewTextColorStyles();
         }
-        this.applyEnabledReadingCalloutStyles();
+        // Mirror the hide-text command: with Hide Text Colors active the
+        // reading callout stylesheet has to stay REMOVED, not re-applied.
+        if (this.settings.hideTextColors) {
+          this.removeEnabledReadingCalloutStyles();
+        } else {
+          this.applyEnabledReadingCalloutStyles();
+        }
         if (this.settings.hideHighlights) {
           this.applyHideHighlightsNeutralizerStyles();
         } else {
@@ -457,15 +619,44 @@ class AlwaysColorText extends Plugin {
         this.removeEnabledReadingCalloutStyles();
         this.removeHideHighlightsNeutralizerStyles();
       }
-      if (!this.settings.disableLivePreviewColoring) {
+    } catch (e) {
+      debugError("ACT", "setGlobalEnabled callout styles failed", e);
+    }
+    // Individually guarded: one failing refresh must not silently skip the
+    // remaining pipelines (the old single try/catch swallowed both the
+    // failure and everything after it).
+    if (!this.settings.disableLivePreviewColoring) {
+      try {
         this.refreshAllLivePreviewCallouts();
-        this.forceReprocessLivePreviewCallouts();
-        this.refreshAllLivePreviewTables();
-        this.forceReprocessLivePreviewTables();
+      } catch (e) {
+        debugError("ACT", "refreshAllLivePreviewCallouts failed", e);
       }
+      try {
+        this.forceReprocessLivePreviewCallouts();
+      } catch (e) {
+        debugError("ACT", "forceReprocessLivePreviewCallouts failed", e);
+      }
+      try {
+        this.refreshAllLivePreviewTables();
+      } catch (e) {
+        debugError("ACT", "refreshAllLivePreviewTables failed", e);
+      }
+      try {
+        this.forceReprocessLivePreviewTables();
+      } catch (e) {
+        debugError("ACT", "forceReprocessLivePreviewTables failed", e);
+      }
+    }
+    try {
       this.refreshAllBasesViews();
+    } catch (e) {
+      debugError("ACT", "refreshAllBasesViews failed", e);
+    }
+    try {
       this.forceReprocessBasesViews();
-    } catch (_) {}
+    } catch (e) {
+      debugError("ACT", "forceReprocessBasesViews failed", e);
+    }
     try {
       this.reregisterCommandsWithLanguage();
     } catch (_) {}
@@ -2331,23 +2522,29 @@ class AlwaysColorText extends Plugin {
     } catch (_) {}
   }
 
+  // Whether the user hid this command from the palette. Shared by
+  // registerCommandPalette (via its local alias below) and by the group-command
+  // registrars, which predate the addTrackedCommand helper and would otherwise
+  // re-register a hidden command on every reregisterCommandsWithLanguage().
+  isCommandHidden(id) {
+    try {
+      const pluginId =
+        (this.manifest && this.manifest.id) || "always-color-text";
+      const hidden = Array.isArray(this.settings.hiddenCommands)
+        ? this.settings.hiddenCommands
+        : [];
+      return hidden.includes(id) || hidden.includes(`${pluginId}:${id}`);
+    } catch (_) {
+      return false;
+    }
+  }
+
   registerCommandPalette() {
     try {
       if (this.settings?.disableToggleModes?.command) return;
       if (this._commandsRegistered) return;
 
-      const pluginId =
-        (this.manifest && this.manifest.id) || "always-color-text";
-      const isCommandHidden = (id) => {
-        try {
-          const hidden = Array.isArray(this.settings.hiddenCommands)
-            ? this.settings.hiddenCommands
-            : [];
-          return hidden.includes(id) || hidden.includes(`${pluginId}:${id}`);
-        } catch (_) {
-          return false;
-        }
-      };
+      const isCommandHidden = (id) => this.isCommandHidden(id);
 
       // One-Time Actions (Color Once / Highlight Once / Color & Highlight
       // Once) are opt-in. While every one of them is disabled the matching
@@ -2586,6 +2783,20 @@ class AlwaysColorText extends Plugin {
             );
             return;
           }
+          // Honour the per-action "once" flags exactly like the editor
+          // context menu does: only offer the channels whose once-action is
+          // enabled (Color Once → text, Highlight Once → background,
+          // Color & Highlight Once → both). The old hardcoded
+          // "text-and-background" exposed channels the user had disabled.
+          const onceText = !!this.settings.enableQuickColorOnce;
+          const onceBg = !!this.settings.enableQuickHighlightOnce;
+          const onceBoth = !!this.settings.enableQuickColorHighlightOnce;
+          const onceType =
+            onceBoth || (onceText && onceBg)
+              ? "text-and-background"
+              : onceText
+                ? "text"
+                : "background";
           new ColorPickerModal(
             this.app,
             this,
@@ -2689,7 +2900,7 @@ class AlwaysColorText extends Plugin {
                 editor.replaceSelection(span);
               }
             },
-            "text-and-background",
+            onceType,
             word,
             true,
           ).open();
@@ -2886,6 +3097,16 @@ class AlwaysColorText extends Plugin {
             if (this.settings.enabled && !this.settings.hideTextColors) {
               this.applyEnabledReadingCalloutStyles();
             }
+            // This command force-clears hideHighlights (mutual exclusion), so
+            // the highlight neutralizer has to follow the resolved flag —
+            // otherwise #act-hide-highlights-neutralizer keeps every highlight
+            // background transparent while the setting says they are visible.
+            if (this.settings.hideHighlights) {
+              this.applyHideHighlightsNeutralizerStyles();
+              this.neutralizeExistingHighlightBackgrounds();
+            } else {
+              this.removeHideHighlightsNeutralizerStyles();
+            }
             // Clear the callout cache to force re-evaluation when hideTextColors changes
             this._lpCalloutCache = new WeakMap();
             this.reconfigureEditorExtensions();
@@ -2915,7 +3136,11 @@ class AlwaysColorText extends Plugin {
               ? this.t("notice_text_colors_hidden", "Text colors hidden")
               : this.t("notice_text_colors_visible", "Text colors visible");
             new Notice(msg);
-          } catch (_) {}
+          } catch (e) {
+            // Never swallow silently: a mid-way throw leaves half of the
+            // surfaces repainted, and without a log it is invisible.
+            debugError("ACT", "toggle-hide-text-colors callback failed", e);
+          }
         },
       });
       // Add command to see only text colors
@@ -2977,7 +3202,11 @@ class AlwaysColorText extends Plugin {
               ? this.t("notice_highlights_hidden", "Highlights hidden")
               : this.t("notice_highlights_visible", "Highlights visible");
             new Notice(msg);
-          } catch (_) {}
+          } catch (e) {
+            // Never swallow silently: a mid-way throw leaves half of the
+            // surfaces repainted, and without a log it is invisible.
+            debugError("ACT", "toggle-hide-highlights callback failed", e);
+          }
         },
       });
 
@@ -3031,6 +3260,9 @@ class AlwaysColorText extends Plugin {
               { groupName },
             );
 
+        // Same hidden-command gate as the palette registrar: a command the
+        // user hid must not come back on re-registration.
+        if (this.isCommandHidden(commandId)) return;
         try {
           this._registeredCommandIds.push(commandId);
         } catch (_) {}
@@ -3115,6 +3347,9 @@ class AlwaysColorText extends Plugin {
               { groupName },
             );
 
+        // Same hidden-command gate as the palette registrar: a command the
+        // user hid must not come back on re-registration.
+        if (this.isCommandHidden(commandId)) return;
         try {
           this._registeredCommandIds.push(commandId);
         } catch (_) {}
@@ -3887,7 +4122,7 @@ class AlwaysColorText extends Plugin {
                 );
                 if (borderCss) {
                   for (const el of paintTargets) {
-                    el.style.cssText += borderCss;
+                    this.applyInlineBorderCss(el, borderCss);
                   }
                 }
               } catch (_) {}
@@ -4034,23 +4269,28 @@ class AlwaysColorText extends Plugin {
         }
       }
 
-      if (
-        !taskCheckedEntry &&
-        !taskUncheckedEntry &&
-        !bulletEntry &&
-        !numberedEntry
-      )
-        return;
+      const hasAnyListEntry = !!(
+        taskCheckedEntry ||
+        taskUncheckedEntry ||
+        bulletEntry ||
+        numberedEntry
+      );
       let listItems = Array.from(element.querySelectorAll?.("li") || []);
       if (element && element.nodeName === "LI" && listItems.length === 0)
         listItems = [element];
+      if (!hasAnyListEntry) {
+        // No list/task entries any more (they were all deleted): still walk
+        // the items once to strip marker colours an earlier pass left behind —
+        // the old early `return` here made that clear impossible.
+        for (const li of listItems) this._clearListItemPaint(li);
+      }
       try {
         debugLog(
           "MARKDOWN_FORMAT",
           `Found ${listItems.length} list items (node=${element.nodeName})`,
         );
       } catch (_) {}
-      for (const li of listItems) {
+      if (hasAnyListEntry) for (const li of listItems) {
         if (li.closest("code, pre")) continue;
         // Extract actual content, stripping markdown prefixes
         const contentText = this.extractListItemContent(li);
@@ -4091,6 +4331,9 @@ class AlwaysColorText extends Plugin {
                 const tn = document.createTextNode(ex.textContent);
                 ex.replaceWith(tn);
               }
+              // Also strip marker colours / task-marker spans the resets
+              // above do not cover.
+              this._clearListItemPaint(li);
             } catch (_) {}
             continue;
           }
@@ -4098,6 +4341,9 @@ class AlwaysColorText extends Plugin {
             if (!contentBlacklisted) this._colorListItemContent(li, entry);
             if (checkbox) this._styleCheckbox(checkbox, entry);
             else this._styleTaskMarker(li, entry);
+          } else {
+            // This state's entry is gone (deleted) — drop its marker colour.
+            this._clearListItemPaint(li);
           }
         } else if (!isTaskItem && (bulletEntry || numberedEntry)) {
           const isOrdered = li.parentElement?.tagName === "OL";
@@ -4118,13 +4364,23 @@ class AlwaysColorText extends Plugin {
                 const tn = document.createTextNode(ex.textContent);
                 ex.replaceWith(tn);
               }
+              // Also strip marker colours / task-marker spans the resets
+              // above do not cover.
+              this._clearListItemPaint(li);
             } catch (_) {}
             continue;
           }
           if (entry) {
             if (!contentBlacklisted) this._colorListItemContent(li, entry);
             this._styleListMarker(li, entry, isOrdered);
+          } else {
+            // This entry is gone (deleted) — drop the marker colour it left.
+            this._clearListItemPaint(li);
           }
+        } else {
+          // The item's type has no entry configured any more (e.g. only task
+          // entries remain but this is a plain bullet): clear stale paint.
+          this._clearListItemPaint(li);
         }
       }
       let paragraphs = Array.from(element.querySelectorAll?.("p") || []);
@@ -4157,12 +4413,17 @@ class AlwaysColorText extends Plugin {
               const tn = document.createTextNode(ex.textContent);
               ex.replaceWith(tn);
             }
+            // Also strip the checkbox/marker colour the resets miss.
+            this._clearListItemPaint(p);
           } catch (_) {}
           continue;
         }
         if (entry) {
           this._styleCheckbox(checkbox, entry);
           if (!contentBlacklistedP) this._colorListItemContent(p, entry);
+        } else {
+          // The task entry is gone (deleted) — drop the colour it left here.
+          this._clearListItemPaint(p);
         }
       }
     } catch (e) {
@@ -4196,6 +4457,52 @@ class AlwaysColorText extends Plugin {
     // highlight channel, which "Hide Highlights" hides.
     if (flags.hideBg) return null;
     return bgColour;
+  }
+
+  // Strip every marker/list paint _styleListMarker / _styleTaskMarker /
+  // _styleCheckbox / _colorListItemContent could have applied to a list
+  // item (or task paragraph). Deleting a list/task entry used to leave its
+  // colour on the item forever: the processor only ever painted, and the
+  // "no list entries" path returned before any reset could run.
+  _clearListItemPaint(el) {
+    try {
+      if (!el) return;
+      // Cheap guard so the clear stays off the hot path on large lists:
+      // only touch items that actually carry our paint.
+      const hasOurs =
+        el.classList.contains("act-colored-list-item") ||
+        el.classList.contains("act-color-marker") ||
+        !!el.getAttribute("style") ||
+        !!el.querySelector("span[data-act-task-marker]") ||
+        !!el.querySelector('.list-bullet[style], .list-number[style]') ||
+        !!el.querySelector('input[type="checkbox"][style]');
+      if (!hasOurs) return;
+      el.style.removeProperty("--act-marker-color");
+      el.style.removeProperty("--act-color");
+      el.style.removeProperty("color");
+      el.classList.remove("act-colored-list-item");
+      el.classList.remove("act-color-marker");
+      el.querySelectorAll(".list-bullet, .list-number").forEach((m) => {
+        try {
+          m.style.removeProperty("color");
+        } catch (_) {}
+      });
+      el.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        try {
+          cb.style.removeProperty("accent-color");
+        } catch (_) {}
+      });
+      // _styleTaskMarker wraps "[x]"/"[ ]" in a coloured span: unwrap it.
+      el.querySelectorAll("span[data-act-task-marker]").forEach((s) => {
+        try {
+          const parent = s.parentNode;
+          if (!parent) return;
+          while (s.firstChild) parent.insertBefore(s.firstChild, s);
+          parent.removeChild(s);
+          if (parent.normalize) parent.normalize();
+        } catch (_) {}
+      });
+    } catch (_) {}
   }
 
   _styleCheckbox(checkbox, entry) {
@@ -5231,6 +5538,10 @@ class AlwaysColorText extends Plugin {
     try {
       document.querySelectorAll("style[data-act-line-style]").forEach(el => el.remove());
     } catch (e) {}
+    // ...and the pattern-derived line-target classes recorded on reading blocks
+    try {
+      this.clearReadingLineTargetClasses();
+    } catch (e) {}
 
     // Drop the static-stylesheet gate class so no state is left on <html>
     // (Obsidian unloads styles.css with the plugin, but stay tidy regardless).
@@ -5738,6 +6049,16 @@ class AlwaysColorText extends Plugin {
       try {
         this.clearMarkdownElementDecorations();
       } catch (_) {}
+      // Line-target sheets/classes are DOM-resident and not gated by
+      // html.act-enabled, so they have to go too (see setGlobalEnabled).
+      try {
+        document
+          .querySelectorAll("style[data-act-line-style]")
+          .forEach((el) => el.remove());
+      } catch (_) {}
+      try {
+        this.clearReadingLineTargetClasses();
+      } catch (_) {}
       try {
         this._applyLivePreviewTagHighlights();
       } catch (_) {}
@@ -6194,7 +6515,7 @@ class AlwaysColorText extends Plugin {
               m.entryRef || m.entry || null,
             );
             if (borderCss) {
-              span.style.cssText += borderCss;
+              this.applyInlineBorderCss(span, borderCss);
             }
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = "clone";
@@ -6282,7 +6603,7 @@ class AlwaysColorText extends Plugin {
               m.entryRef || m.entry || null,
             );
             if (borderCss2) {
-              span.style.cssText += borderCss2;
+              this.applyInlineBorderCss(span, borderCss2);
             }
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = "clone";
@@ -7339,7 +7660,10 @@ class AlwaysColorText extends Plugin {
         if (!entry) return;
         // Double-check entry itself isn't blacklisted (covers per-entry granularity)
         if (this.isMarkdownEntryBlacklisted(entry)) return;
-        const selector = buildMarkdownSelector(t, entry, hasBoldItalic);
+        const selector = buildMarkdownSelector(t, entry, hasBoldItalic, {
+          editor: !this.settings.disableLivePreviewColoring,
+          reading: !this.settings.disableReadingModeColoring,
+        });
         if (!selector) return; // text-filtered tag/inline-title handled in reading view
 
         {
@@ -7438,7 +7762,13 @@ class AlwaysColorText extends Plugin {
           // When the "#" is visible, join the two halves into a single pill by
           // zeroing the inner border + corner radii; when the "#" is hidden by a
           // CSS snippet we leave the end span intact (scoped via :not(.act-tag-begin-hidden)).
-          if ((t.key === "tag" || t.key === "all-tags") && isHighlight) {
+          // Live-preview-only pill fixups: skip them when LP coloring is off,
+          // otherwise the disabled mode keeps emitting editor rules.
+          if (
+            (t.key === "tag" || t.key === "all-tags") &&
+            isHighlight &&
+            !this.settings.disableLivePreviewColoring
+          ) {
             const cmSel = buildMarkdownCmSelector(t, entry, hasBoldItalic);
             if (cmSel) {
               const fixCmEditorScope = (sel) => {
@@ -8269,6 +8599,33 @@ class AlwaysColorText extends Plugin {
     this.syncGlobalToggleCssState();
     // Refresh `&`-block pseudo rules (hover etc.) for the saved custom CSS.
     this.rebuildCustomCssBlockRules();
+    // Entry data changed → (a) the Live Preview callout/table/Bases caches
+    // are keyed on content length + flags, NOT on the entries themselves, so
+    // without a forced reprocess a colour edit never repaints there, and
+    // (b) line-target sheets/classes whose source entry is gone must be
+    // swept before the refresh below re-creates the live ones.
+    try {
+      const entriesSig = JSON.stringify([
+        data.wordEntries,
+        data.wordEntryGroups,
+        data.quickStyles,
+        data.quickColors,
+        data.textBgColoringEntries,
+        data.blacklistEntries,
+      ]);
+      if (entriesSig !== this._lastSavedEntriesSig) {
+        this._lastSavedEntriesSig = entriesSig;
+        this.sweepOrphanLineTargets();
+        if (this.settings.enabled) {
+          // forceReprocess* clears the sig caches and repaints.
+          this.forceReprocessLivePreviewCallouts();
+          this.forceReprocessLivePreviewTables();
+          this.forceReprocessBasesViews();
+        }
+      }
+    } catch (e) {
+      debugError("ACT", "entry-change refresh failed", e);
+    }
     try {
       this.forceRefreshAllEditors();
     } catch (e) {}
@@ -9670,29 +10027,12 @@ class AlwaysColorText extends Plugin {
       return;
     }
 
-    // Fallback: refresh all if no active view
+    // Fallback: refresh all if no active view. (A former second activeView
+    // branch here was unreachable — the branch above always returns — and
+    // duplicated this refresh plus a stamp-clear that
+    // forceRefreshAllReadingViews already performs itself.)
     this.forceRefreshAllEditors();
     this.forceRefreshAllReadingViews();
-    if (activeView) {
-      this.refreshEditor(activeView, true);
-
-      // Force a more aggressive refresh for reading mode
-      if (activeView.getMode && activeView.getMode() === "preview") {
-        // SCROLL-FIX: Don't call previewMode.rerender() — it rebuilds the DOM and
-        // loses scroll position. processActiveFileOnly (called via forceRefreshAllReadingViews
-        // above) re-applies highlights onto the existing DOM, which is sufficient.
-        try {
-          const root =
-            (activeView.previewMode && activeView.previewMode.containerEl) ||
-            activeView.contentEl ||
-            activeView.containerEl;
-          if (root && activeView.file && activeView.file.path) {
-            try { delete root.dataset.actProcessed; } catch (_) {}
-            this.processActiveFileOnly(root, { sourcePath: activeView.file.path });
-          }
-        } catch (e) {}
-      }
-    }
   }
 
   // --- Update Status Bar Text ---
@@ -12348,6 +12688,14 @@ class AlwaysColorText extends Plugin {
         if (!hideText && finalTextColor) {
           element.style.setProperty("color", finalTextColor, "important");
           element.style.setProperty("--highlight-color", finalTextColor);
+        } else if (hideText) {
+          // Hide Text Colors: strip the text color baked in by an earlier
+          // pass, or the element keeps a stale inline color while the
+          // highlight channel is already cleared below. (No `else` when the
+          // flag is off: a colorless entry must not wipe a color another
+          // entry applied to the same element.)
+          element.style.removeProperty("color");
+          element.style.removeProperty("--highlight-color");
         }
 
         // Mirror applyFormattingStyles isHighlight logic: styleType (highlight/both) OR
@@ -12475,9 +12823,24 @@ class AlwaysColorText extends Plugin {
       options && Array.isArray(options.entries)
         ? options.entries
         : this.getSortedWordEntries();
-    if (entries.length === 0) return;
     // Ensure element is attached to document (isConnected is more reliable than offsetParent)
     if (!el.isConnected) return;
+    if (entries.length === 0) {
+      // The disabled/excluded-file branches call us with an empty entry list
+      // precisely to strip colors applied by an earlier pass ("CRITICAL: Must
+      // clear existing highlights when disabled"). Returning before the clear
+      // would leave those stale highlight spans behind.
+      if (!options || options.clearExisting !== false) {
+        try {
+          el.querySelectorAll(".always-color-text-highlight").forEach((hl) => {
+            try {
+              hl.replaceWith(document.createTextNode(hl.textContent));
+            } catch (_) {}
+          });
+        } catch (_) {}
+      }
+      return;
+    }
 
     // Split entries into element-targeted and regex-based
     const elementEntries = entries.filter((e) => e && e.targetElement);
@@ -12755,7 +13118,7 @@ class AlwaysColorText extends Plugin {
         try {
           const borderCss = this.generateBorderStyle(null, bgBase, entry);
           if (borderCss) {
-            span.style.cssText += borderCss;
+            this.applyInlineBorderCss(span, borderCss);
           }
         } catch (_) {}
       } else if (styleType === "both") {
@@ -12857,7 +13220,7 @@ class AlwaysColorText extends Plugin {
             entry,
           );
           if (borderCss) {
-            span.style.cssText += borderCss;
+            this.applyInlineBorderCss(span, borderCss);
           }
         } catch (_) {}
       }
@@ -14478,6 +14841,13 @@ class AlwaysColorText extends Plugin {
                 if (info) info.matchCount = 1;
               } catch (e) {}
             }
+            // The entry may have changed from text to highlight/both — the
+            // wrapper owns the styling now, so drop an earlier text pass.
+            if (headingEl.hasAttribute("data-act-md-colored")) {
+              headingEl.style.removeProperty("color");
+              headingEl.style.removeProperty("--highlight-color");
+              headingEl.removeAttribute("data-act-md-colored");
+            }
             continue;
           } else {
             const c = headingEntry.color || headingEntry.textColor;
@@ -14502,6 +14872,13 @@ class AlwaysColorText extends Plugin {
               headingEl.removeAttribute("data-act-md-colored");
             }
           }
+        } else if (headingEl.hasAttribute("data-act-md-colored")) {
+          // No entry matches this heading level any more (the entry was
+          // deleted or its level changed): nothing repaints this heading,
+          // so the inline colour from an earlier pass has to go right here.
+          headingEl.style.removeProperty("color");
+          headingEl.style.removeProperty("--highlight-color");
+          headingEl.removeAttribute("data-act-md-colored");
         }
       }
 
@@ -15505,13 +15882,7 @@ class AlwaysColorText extends Plugin {
             const markTarget = m.entryRef && m.entryRef.markTarget;
             if (markTarget === "line" || markTarget === "nextLine") {
               // Generate CSS class from pattern/label (same as Live Preview logic)
-              const rawPattern = (m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern)) || "";
-              const cssClass = String(rawPattern)
-                .trim()
-                .toLowerCase()
-                .replace(/[^a-z0-9_-]/g, "-")
-                .replace(/^-+|-+$/g, "")
-                .replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
+              const cssClass = this.lineTargetCssClass(m.entryRef);
 
               // Determine target block element
               let targetBlock = block;
@@ -15537,15 +15908,15 @@ class AlwaysColorText extends Plugin {
 
               // Add CSS class to the target block element
               if (targetBlock && targetBlock !== block) {
-                targetBlock.classList.add(cssClass);
+                this.addReadingLineTargetClass(targetBlock, cssClass);
               }
-              block.classList.add(cssClass);
+              this.addReadingLineTargetClass(block, cssClass);
 
               // Also add class to the parent wrapper (el-p, el-h1, etc.) for Reading Mode
               try {
                 const parent = block.parentElement;
                 if (parent && parent.className && /\bel-/.test(parent.className)) {
-                  parent.classList.add(cssClass);
+                  this.addReadingLineTargetClass(parent, cssClass);
                 }
               } catch (e) {}
 
@@ -21648,13 +22019,7 @@ class AlwaysColorText extends Plugin {
       if (markTarget === "line" || markTarget === "nextLine") {
         // --- Line coloring: CSS class on .cm-line div only (no span wrapper) ---
         // Uses inheritance so child spans with their own inline styles keep their colors
-        const rawPattern = (m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern)) || "";
-        const cssClass = String(rawPattern)
-          .trim()
-          .toLowerCase()
-          .replace(/[^a-z0-9_-]/g, "-")
-          .replace(/^-+|-+$/g, "")
-          .replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
+        const cssClass = this.lineTargetCssClass(m.entryRef);
 
         // Build a permissive style: color without !important so children can override
         // Other properties (background, border, padding) still apply to the line div

@@ -2,8 +2,10 @@
  * Bugfix spec: word-group-modal-entry-bugs
  * Task 1: Bug condition exploration test
  *
- * These tests demonstrate that BOTH bugs exist on UNFIXED code.
- * They are EXPECTED TO FAIL on unfixed code — failure confirms the bugs exist.
+ * STATUS (current code): both bugs are FIXED — every test in this file
+ * passes. The sub-tests below are kept as regression guards (the file was
+ * previously green-except for one `it.fails` whose failure was actually a
+ * fast-check v2 API call, not the modal bug it described).
  *
  * Bug 1 (Requirement 1.1 / 2.1): Regex entries rendered in EditWordGroupModal
  *   do not have a presetLabel input field.
@@ -608,14 +610,16 @@ describe("Preservation — word-group-modal-entry-bugs", () => {
   // -------------------------------------------------------------------------
   // Preservation PBT 2 — fix-checking property for presetLabel input value
   // This is a FIX-CHECKING property, NOT a preservation property.
-  // It is EXPECTED TO FAIL on unfixed code (no presetLabel input exists yet).
-  // It will PASS after the fix is applied.
+  // History: it was wrapped in `it.fails` while the input was missing, but
+  // after Bug 1 was fixed the wrapper kept masking a DIFFERENT failure — a
+  // fast-check v2-only `fc.fullUnicodeString` call — so it never turned
+  // green. With the arb updated for fast-check v4 it passes on current code.
   // -------------------------------------------------------------------------
 
   describe("Preservation PBT 2 (fix-checking): presetLabel input value matches entry.presetLabel", () => {
-    it.fails(
-      "EXPECTED TO FAIL on unfixed code — for any regex entry, the rendered " +
-        "presetLabel input value MUST equal String(entry.presetLabel || '')",
+    it(
+      "for any regex entry, the rendered presetLabel input value MUST equal " +
+        "String(entry.presetLabel || '')",
       () => {
         /**
          * Validates: Requirements 2.1, 3.2
@@ -624,8 +628,8 @@ describe("Preservation — word-group-modal-entry-bugs", () => {
          * unicode, long strings). For each regex entry, asserts the rendered
          * presetLabel input value always equals String(entry.presetLabel || "").
          *
-         * EXPECTED TO FAIL on unfixed code — no presetLabel input is rendered.
-         * Will PASS after the fix is applied.
+         * Passes on current code: EditWordGroupModal renders the presetLabel
+         * input for regex rows (see Bug 1 sub-test above).
          */
         fc.assert(
           fc.property(
@@ -634,7 +638,8 @@ describe("Preservation — word-group-modal-entry-bugs", () => {
               fc.constant(""),
               fc.constant("   "),
               fc.string({ minLength: 1, maxLength: 80 }),
-              fc.fullUnicodeString({ minLength: 1, maxLength: 40 }),
+              // v4 equivalent of the removed v2 `fullUnicodeString`.
+              fc.string({ unit: "binary", minLength: 1, maxLength: 40 }),
             ),
             (presetLabel) => {
               const entry = {

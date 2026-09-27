@@ -6181,6 +6181,22 @@ export class ColorSettingTab extends PluginSettingTab {
               await this.debouncedSaveSettings();
               try {
                 if (!v) {
+                  // Reading-only artifacts must go too: clearHighlightsInRoot
+                  // only unwrapped highlight spans, leaving the element
+                  // stylesheet's .markdown-rendered rules, the reading
+                  // line-target sheets and the reading callout stylesheet
+                  // colouring the view the user just switched off.
+                  try {
+                    this.plugin.applyFormattingStyles();
+                  } catch (e) {}
+                  try {
+                    document
+                      .querySelectorAll('style[data-act-line-style="reading"]')
+                      .forEach((el) => el.remove());
+                  } catch (e) {}
+                  try {
+                    this.plugin.removeEnabledReadingCalloutStyles();
+                  } catch (e) {}
                   this.plugin.app.workspace.iterateAllLeaves((leaf) => {
                     if (
                       leaf.view instanceof MarkdownView &&
@@ -6196,6 +6212,12 @@ export class ColorSettingTab extends PluginSettingTab {
                         if (root) {
                           try {
                             this.plugin.clearHighlightsInRoot(root);
+                          } catch (e) {}
+                          try {
+                            this.plugin.clearMarkdownElementDecorations(root);
+                          } catch (e) {}
+                          try {
+                            this.plugin.clearReadingLineTargetClasses(root);
                           } catch (e) {}
                           try {
                             const obs =
@@ -6218,6 +6240,17 @@ export class ColorSettingTab extends PluginSettingTab {
                 } else {
                   try {
                     this.plugin.forceRefreshAllReadingViews();
+                  } catch (e) {}
+                  // forceRefreshAllReadingViews rebuilds sheets/classes; the
+                  // callout stylesheet needs an explicit re-apply (mirrors
+                  // what the hide-text command does).
+                  try {
+                    if (
+                      this.plugin.settings.enabled &&
+                      !this.plugin.settings.hideTextColors
+                    ) {
+                      this.plugin.applyEnabledReadingCalloutStyles();
+                    }
                   } catch (e) {}
                 }
               } catch (e) {
@@ -6260,6 +6293,12 @@ export class ColorSettingTab extends PluginSettingTab {
                       this.plugin.removeEnabledLivePreviewTextColorStyles();
                     } catch (_) {}
                   }
+                  // The markdown-element stylesheet's editor half is now
+                  // gated on disableLivePreviewColoring — regenerate it so
+                  // the toggle takes effect immediately.
+                  try {
+                    this.plugin.applyFormattingStyles();
+                  } catch (_) {}
                   try {
                     this.plugin.refreshAllLivePreviewCallouts();
                   } catch (_) {}

@@ -6626,7 +6626,6 @@ var defaultSettings = {
   linkIdenticalMatchers: false,
   hiddenCommands: [],
   enabled: true,
-  highlightStyle: "text",
   backgroundOpacity: 35,
   // percent
   highlightBorderRadius: 4,
@@ -6674,8 +6673,6 @@ var defaultSettings = {
     command: false,
     ribbon: false
   },
-  enableAlwaysHighlight: false,
-  enableAlwaysColor: true,
   partialMatch: true,
   blacklistWords: [],
   // New: pattern-capable blacklist entries
@@ -6684,7 +6681,6 @@ var defaultSettings = {
   enableAddToExistingMenu: true,
   enableAlwaysColorTextMenu: true,
   hideInactiveGroupsInDropdowns: true,
-  hideInactiveBlacklistGroupsInDropdowns: true,
   showWordGroupsInCommands: true,
   showBlacklistGroupsInCommands: true,
   symbolWordColoring: false,
@@ -6703,8 +6699,6 @@ var defaultSettings = {
   disableLivePreviewColoring: false,
   // Text & Background Coloring entries
   textBgColoringEntries: [],
-  // Enable/disable Text & Background Coloring option in right-click menu
-  enableTextBgMenu: true,
   // Use swatch names for coloring entries
   // useSwatchNamesForText: false,
   linkSwatchUpdatesToEntries: false,
@@ -6744,9 +6738,6 @@ var defaultSettings = {
   pathSortMode: "last-added",
   language: "en",
   customSwatchesFolded: false,
-  globalHighlightFolded: false,
-  readingModeHighlightFilter: null,
-  // null: show all, 'highlight': show only highlights, 'text': show only text colors
   entriesSearchLimit: 0,
   blacklistSearchLimit: 0,
   pathSearchLimit: 0,
@@ -6910,14 +6901,14 @@ function pushLiteral(segments, text) {
 }
 function parseFormat(format, moment3, depth) {
   const segments = [];
-  const fmt = String(format == null ? "" : format);
+  const fmt2 = String(format == null ? "" : format);
   let i = 0;
-  while (i < fmt.length) {
-    const ch = fmt[i];
+  while (i < fmt2.length) {
+    const ch = fmt2[i];
     if (ch === "[") {
-      const end = fmt.indexOf("]", i + 1);
+      const end = fmt2.indexOf("]", i + 1);
       if (end !== -1) {
-        pushLiteral(segments, fmt.slice(i + 1, end));
+        pushLiteral(segments, fmt2.slice(i + 1, end));
         i = end + 1;
         continue;
       }
@@ -6929,9 +6920,9 @@ function parseFormat(format, moment3, depth) {
       let j = i + 1;
       let body = "";
       let closed = false;
-      while (j < fmt.length) {
-        if (fmt[j] === "'") {
-          if (fmt[j + 1] === "'") {
+      while (j < fmt2.length) {
+        if (fmt2[j] === "'") {
+          if (fmt2[j + 1] === "'") {
             body += "'";
             j += 2;
             continue;
@@ -6940,7 +6931,7 @@ function parseFormat(format, moment3, depth) {
           j += 1;
           break;
         }
-        body += fmt[j];
+        body += fmt2[j];
         j += 1;
       }
       if (closed) {
@@ -6953,7 +6944,7 @@ function parseFormat(format, moment3, depth) {
       continue;
     }
     if (/[A-Za-z]/.test(ch)) {
-      const token = matchToken(fmt, i);
+      const token = matchToken(fmt2, i);
       if (token) {
         const def = TOKENS[token];
         if (def.localized) {
@@ -7002,11 +6993,11 @@ function matches(pattern, text) {
   }
 }
 function evaluateDateTimeFormat(format, moment3, validateRegex) {
-  const fmt = String(format == null ? "" : format).trim();
-  if (!fmt) return { ok: false, error: "empty", sample: "", pattern: "" };
-  const sample = renderFormat(fmt, moment3);
+  const fmt2 = String(format == null ? "" : format).trim();
+  if (!fmt2) return { ok: false, error: "empty", sample: "", pattern: "" };
+  const sample = renderFormat(fmt2, moment3);
   if (!sample) return { ok: false, error: "render", sample: "", pattern: "" };
-  const segments = parseFormat(fmt, moment3, 0);
+  const segments = parseFormat(fmt2, moment3, 0);
   if (!segments.length) return { ok: false, error: "empty", sample, pattern: "" };
   let pattern = joinSegments(segments, true);
   if (!matches(pattern, sample)) pattern = joinSegments(segments, false);
@@ -7036,10 +7027,10 @@ function getEntryDateTimeFormat(entry, plugin) {
   const label = String(entry.presetLabel || "");
   const prefix = plugin.t("preset_time_date", "Time & Date") + " (";
   if (label.startsWith(prefix) && label.endsWith(")")) {
-    const fmt = label.slice(prefix.length, -1).trim();
-    if (fmt) {
-      entry.dateTimeFormat = fmt;
-      return fmt;
+    const fmt2 = label.slice(prefix.length, -1).trim();
+    if (fmt2) {
+      entry.dateTimeFormat = fmt2;
+      return fmt2;
     }
   }
   return "";
@@ -10095,6 +10086,93 @@ function applyGroupColorOverride(copy, group, isValidHex) {
   }
   return { type, text, bg };
 }
+function deriveTargetElement(e) {
+  return e.targetElement || (e.presetLabel && /bold\s*italic/i.test(e.presetLabel) ? "strong-em" : e.presetLabel && /bold/i.test(e.presetLabel) ? "strong" : e.presetLabel && /italic/i.test(e.presetLabel) ? "em" : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" ? "strong" : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" ? "em" : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" ? "strong-em" : void 0);
+}
+function compilePatternCore(plugin, e, pattern, compiledBase) {
+  pattern = String(pattern).trim();
+  if (!pattern) return { empty: true };
+  pattern = plugin.sanitizePattern(pattern, !!e.isRegex);
+  const isRegex = !!e.isRegex;
+  if (!plugin.settings.disableRegexSafety && plugin.isKnownProblematicPattern(pattern)) {
+    return { blocked: true, pattern };
+  }
+  const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
+  let flags = rawFlags || "";
+  if (!flags.includes("g")) flags += "g";
+  const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : false;
+  if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
+  const compiled = Object.assign({}, compiledBase, {
+    pattern,
+    isRegex,
+    flags,
+    caseSensitive: effectiveCaseSensitive,
+    regex: null,
+    testRegex: null,
+    invalid: false,
+    specificity: pattern.replace(/\*/g, "").length
+  });
+  let error = null;
+  try {
+    if (plugin.settings.enableRegexSupport && isRegex) {
+      if (!plugin.validateAndSanitizeRegex(pattern)) {
+        compiled.invalid = true;
+        return {
+          blocked: false,
+          compiled,
+          pattern,
+          flags,
+          effectiveCaseSensitive
+        };
+      }
+      compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
+      const testFlags = flags.replace(/g/g, "");
+      compiled.testRegex = plugin._regexCache.getOrCreate(pattern, testFlags);
+    } else {
+      const esc = plugin.escapeRegex(pattern);
+      const matchTypeLower = String(compiled.matchType || "exact").toLowerCase();
+      const isSentence = plugin.isSentenceLikePattern(pattern);
+      const UWC = "\\p{L}\\p{N}\\-'";
+      let finalPattern = esc;
+      if (!isSentence && matchTypeLower === "startswith") {
+        finalPattern = `(?<![${UWC}])` + esc;
+      } else if (!isSentence && matchTypeLower === "endswith") {
+        finalPattern = esc + `(?![${UWC}])`;
+      } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
+        finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
+      }
+      const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
+      compiled.regex = plugin._regexCache.getOrCreate(finalPattern, literalFlags);
+      compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "u") : plugin._regexCache.getOrCreate(finalPattern, "iu");
+    }
+  } catch (err) {
+    compiled.invalid = true;
+    compiled.regex = null;
+    compiled.testRegex = null;
+    error = err;
+  }
+  try {
+    plugin._bloomFilter && plugin._bloomFilter.addPattern(pattern, isRegex);
+  } catch (_) {
+  }
+  try {
+    compiled.fastTest = plugin.createFastTester(
+      pattern,
+      compiled.isRegex,
+      effectiveCaseSensitive
+    );
+  } catch (e2) {
+    compiled.fastTest = (text) => true;
+  }
+  return {
+    blocked: false,
+    compiled,
+    pattern,
+    flags,
+    effectiveCaseSensitive,
+    error
+  };
+}
 var PatternMatcher = class {
   constructor(settings, helpers) {
     this.settings = settings || {};
@@ -10450,61 +10528,17 @@ function compileWordEntriesLogic(plugin) {
         continue;
       }
       const isRegex = !!e.isRegex;
-      for (let pattern of patterns) {
-        pattern = String(pattern).trim();
-        if (!pattern) continue;
-        pattern = plugin.sanitizePattern(pattern, isRegex);
-        if (!plugin.settings.disableRegexSafety && plugin.isKnownProblematicPattern(pattern)) {
-          debugWarn(
-            "COMPILE",
-            `Blocked dangerous pattern: ${pattern.substring(0, 50)}`
-          );
-          const compiled2 = {
-            pattern,
-            color,
-            isRegex,
-            flags: "",
-            regex: null,
-            testRegex: null,
-            invalid: true,
-            specificity: 0
-          };
-          plugin._compiledWordEntries.push(compiled2);
-          try {
-            const { Notice: Notice13 } = require("obsidian");
-            new Notice13(
-              plugin.t(
-                "notice_pattern_blocked",
-                "Pattern blocked for Memory Safety: " + pattern.substring(0, 30) + "..."
-              )
-            );
-          } catch (e2) {
-          }
-          continue;
-        }
-        const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
-        let flags = rawFlags || "";
-        if (!flags.includes("g")) flags += "g";
-        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : false;
-        if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
-        const compiled = {
-          pattern,
+      for (const rawPattern of patterns) {
+        const compiledBase = {
           color,
           textColor: e.textColor || e.color || color,
           backgroundColor: e.backgroundColor || null,
           styleType: e.styleType || "text",
           markTarget: e.markTarget || "text",
           matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
-          isRegex,
-          flags,
-          regex: null,
-          testRegex: null,
-          invalid: false,
-          specificity: pattern.replace(/\*/g, "").length,
           presetLabel: e.presetLabel || void 0,
           entryRef: e,
-          caseSensitive: effectiveCaseSensitive,
-          targetElement: e.targetElement || (e.presetLabel && /bold\s*italic/i.test(e.presetLabel) ? "strong-em" : e.presetLabel && /bold/i.test(e.presetLabel) ? "strong" : e.presetLabel && /italic/i.test(e.presetLabel) ? "em" : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" ? "strong" : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" ? "em" : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" ? "strong-em" : void 0),
+          targetElement: deriveTargetElement(e),
           inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
           exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
           groupUid: e._groupUid || null,
@@ -10529,63 +10563,37 @@ function compileWordEntriesLogic(plugin) {
           blocksProcessed: 0,
           _hotLogged: false
         };
-        if (!pattern) {
-          compiled.invalid = true;
+        const res = compilePatternCore(plugin, e, rawPattern, compiledBase);
+        if (res.empty) continue;
+        if (res.blocked) {
+          debugWarn(
+            "COMPILE",
+            `Blocked dangerous pattern: ${res.pattern.substring(0, 50)}`
+          );
+          const compiled = {
+            pattern: res.pattern,
+            color,
+            isRegex,
+            flags: "",
+            regex: null,
+            testRegex: null,
+            invalid: true,
+            specificity: 0
+          };
           plugin._compiledWordEntries.push(compiled);
+          try {
+            const { Notice: Notice13 } = require("obsidian");
+            new Notice13(
+              plugin.t(
+                "notice_pattern_blocked",
+                "Pattern blocked for Memory Safety: " + res.pattern.substring(0, 30) + "..."
+              )
+            );
+          } catch (e2) {
+          }
           continue;
         }
-        try {
-          if (plugin.settings.enableRegexSupport && isRegex) {
-            if (!plugin.validateAndSanitizeRegex(pattern)) {
-              compiled.invalid = true;
-              plugin._compiledWordEntries.push(compiled);
-              continue;
-            }
-            compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
-            const testFlags = flags.replace(/g/g, "");
-            compiled.testRegex = plugin._regexCache.getOrCreate(
-              pattern,
-              testFlags
-            );
-          } else {
-            const esc = plugin.escapeRegex(pattern);
-            const matchTypeLower = String(
-              compiled.matchType || "exact"
-            ).toLowerCase();
-            const isSentence = plugin.isSentenceLikePattern(pattern);
-            const UWC = "\\p{L}\\p{N}\\-'";
-            let finalPattern = esc;
-            if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = `(?<![${UWC}])` + esc;
-            } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = esc + `(?![${UWC}])`;
-            } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
-              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
-            }
-            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
-            compiled.regex = plugin._regexCache.getOrCreate(
-              finalPattern,
-              literalFlags
-            );
-            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "u") : plugin._regexCache.getOrCreate(finalPattern, "iu");
-          }
-        } catch (err) {
-          compiled.invalid = true;
-        }
-        try {
-          plugin._bloomFilter && plugin._bloomFilter.addPattern(pattern, isRegex);
-        } catch (_) {
-        }
-        try {
-          compiled.fastTest = plugin.createFastTester(
-            pattern,
-            compiled.isRegex,
-            effectiveCaseSensitive
-          );
-        } catch (e2) {
-          compiled.fastTest = (text) => true;
-        }
-        plugin._compiledWordEntries.push(compiled);
+        plugin._compiledWordEntries.push(res.compiled);
       }
     }
     plugin._compiledWordEntries.sort(
@@ -10701,55 +10709,16 @@ function compileTextBgColoringEntriesLogic(plugin) {
       const textOk = textColor === "currentColor" || plugin.isValidHexColor(textColor);
       const bgOk = plugin.isValidHexColor(backgroundColor);
       if (!textOk || !bgOk) continue;
-      for (let pattern of patterns) {
-        pattern = String(pattern).trim();
-        if (!pattern) continue;
-        pattern = plugin.sanitizePattern(pattern, isRegex);
-        if (!plugin.settings.disableRegexSafety && plugin.isKnownProblematicPattern(pattern)) {
-          debugWarn(
-            "COMPILE_TEXTBG",
-            `Blocked dangerous pattern: ${pattern.substring(0, 50)}`
-          );
-          const compiled2 = {
-            pattern,
-            textColor,
-            backgroundColor,
-            markTarget: e.markTarget || "text",
-            matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
-            isRegex,
-            flags: "",
-            regex: null,
-            testRegex: null,
-            invalid: true,
-            specificity: 0,
-            isTextBg: true,
-            entryRef: e
-          };
-          plugin._compiledTextBgEntries.push(compiled2);
-          continue;
-        }
-        const rawFlags = String(e.flags || "").replace(/[^gimsuy]/g, "");
-        let flags = rawFlags || "";
-        if (!flags.includes("g")) flags += "g";
-        const effectiveCaseSensitive = typeof e._caseSensitiveOverride === "boolean" ? e._caseSensitiveOverride : typeof e.caseSensitive === "boolean" ? e.caseSensitive : false;
-        if (!effectiveCaseSensitive && !flags.includes("i")) flags += "i";
-        const compiled = {
-          pattern,
+      for (const rawPattern of patterns) {
+        const compiledBase = {
           textColor,
           backgroundColor,
           styleType: e.styleType || "both",
           markTarget: e.markTarget || "text",
           matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
-          isRegex,
-          flags,
-          regex: null,
-          testRegex: null,
-          invalid: false,
-          specificity: pattern.replace(/\*/g, "").length,
           isTextBg: true,
           presetLabel: e.presetLabel || void 0,
           entryRef: e,
-          caseSensitive: effectiveCaseSensitive,
           inclusionRules: Array.isArray(e.inclusionRules) ? e.inclusionRules.slice() : [],
           exclusionRules: Array.isArray(e.exclusionRules) ? e.exclusionRules.slice() : [],
           groupUid: e._groupUid || null,
@@ -10769,66 +10738,39 @@ function compileTextBgColoringEntriesLogic(plugin) {
           borderThickness: e.borderThickness,
           customCss: e.customCss || null
         };
-        try {
-          if (plugin.settings.enableRegexSupport && isRegex) {
-            if (!plugin.validateAndSanitizeRegex(pattern)) {
-              compiled.invalid = true;
-              plugin._compiledTextBgEntries.push(compiled);
-              continue;
-            }
-            compiled.regex = plugin._regexCache.getOrCreate(pattern, flags);
-            const testFlags = flags.replace(/g/g, "");
-            compiled.testRegex = plugin._regexCache.getOrCreate(
-              pattern,
-              testFlags
-            );
-          } else {
-            const esc = plugin.escapeRegex(pattern);
-            const matchTypeLower = String(
-              compiled.matchType || "exact"
-            ).toLowerCase();
-            const isSentence = plugin.isSentenceLikePattern(pattern);
-            const UWC = "\\p{L}\\p{N}\\-'";
-            let finalPattern = esc;
-            if (!isSentence && matchTypeLower === "startswith") {
-              finalPattern = `(?<![${UWC}])` + esc;
-            } else if (!isSentence && matchTypeLower === "endswith") {
-              finalPattern = esc + `(?![${UWC}])`;
-            } else if (!isSentence && matchTypeLower === "exact" && String(pattern).length === 1) {
-              finalPattern = `(?<![${UWC}])` + esc + `(?![${UWC}])`;
-            }
-            const literalFlags = effectiveCaseSensitive ? "gu" : "giu";
-            compiled.regex = plugin._regexCache.getOrCreate(
-              finalPattern,
-              literalFlags
-            );
-            compiled.testRegex = effectiveCaseSensitive ? plugin._regexCache.getOrCreate(finalPattern, "u") : plugin._regexCache.getOrCreate(finalPattern, "iu");
-          }
-          try {
-            compiled.fastTest = plugin.createFastTester(
-              pattern,
-              isRegex,
-              effectiveCaseSensitive
-            );
-          } catch (e2) {
-            compiled.fastTest = (text) => true;
-          }
-          try {
-            plugin._bloomFilter && plugin._bloomFilter.addPattern(pattern, isRegex);
-          } catch (_) {
-          }
+        const res = compilePatternCore(plugin, e, rawPattern, compiledBase);
+        if (res.empty) continue;
+        if (res.blocked) {
+          debugWarn(
+            "COMPILE_TEXTBG",
+            `Blocked dangerous pattern: ${res.pattern.substring(0, 50)}`
+          );
+          const compiled = {
+            pattern: res.pattern,
+            textColor,
+            backgroundColor,
+            markTarget,
+            matchType: e.matchType || plugin.settings.matchType || (plugin.settings.partialMatch ? "contains" : "exact"),
+            isRegex,
+            flags: "",
+            regex: null,
+            testRegex: null,
+            invalid: true,
+            specificity: 0,
+            isTextBg: true,
+            entryRef: e
+          };
           plugin._compiledTextBgEntries.push(compiled);
-        } catch (err) {
-          compiled.invalid = true;
-          compiled.regex = null;
-          compiled.testRegex = null;
+          continue;
+        }
+        if (res.error) {
           debugError(
             "COMPILE_TEXTBG",
-            `Failed to compile pattern: ${pattern}`,
-            err
+            `Failed to compile pattern: ${res.pattern}`,
+            res.error
           );
-          plugin._compiledTextBgEntries.push(compiled);
         }
+        plugin._compiledTextBgEntries.push(res.compiled);
       }
     }
     plugin._compiledTextBgEntries.sort(
@@ -15365,9 +15307,14 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
   }
   return { cm, rend };
 }
-function buildMarkdownSelector(t, entry, hasBoldItalic) {
+function buildMarkdownSelector(t, entry, hasBoldItalic, modes) {
   const { cm, rend } = buildMarkdownParts(t, entry, hasBoldItalic);
-  return [cm, rend].filter(Boolean).join(", ");
+  const wantEditor = !modes || modes.editor !== false;
+  const wantReading = !modes || modes.reading !== false;
+  const parts = [];
+  if (wantEditor && cm) parts.push(cm);
+  if (wantReading && rend) parts.push(rend);
+  return parts.join(", ");
 }
 function buildMarkdownCmSelector(t, entry, hasBoldItalic) {
   const { cm } = buildMarkdownParts(t, entry, hasBoldItalic);
@@ -19487,6 +19434,841 @@ var ColorPickerModal = class extends import_obsidian13.Modal {
   }
 };
 
+// src/utils/headingUtils.js
+function getHeadingLevelsFromPattern(pattern) {
+  try {
+    if (!pattern || typeof pattern !== "string") return [];
+    const levels = /* @__PURE__ */ new Set();
+    const quantMatch = pattern.match(/#\{(\d+)(?:,(\d+))?\}/);
+    if (quantMatch) {
+      let start = parseInt(quantMatch[1], 10);
+      let end = quantMatch[2] ? parseInt(quantMatch[2], 10) : start;
+      if (!Number.isFinite(start) || start < 1) start = 1;
+      if (!Number.isFinite(end) || end > 6) end = 6;
+      for (let l = start; l <= end; l++) levels.add(l);
+    } else {
+      const hashRun = pattern.match(/#+/);
+      if (hashRun) {
+        const len = hashRun[0].length;
+        if (len >= 1 && len <= 6) levels.add(len);
+      }
+    }
+    return Array.from(levels);
+  } catch (e) {
+    return [];
+  }
+}
+function getEntryForHeadingLevel(entries, level) {
+  if (!Array.isArray(entries) || level < 1 || level > 6) return null;
+  let match = null;
+  let bestSpan = Infinity;
+  try {
+    for (const entry of entries) {
+      if (!entry || !entry.pattern) continue;
+      const pattern = String(entry.pattern);
+      const levels = getHeadingLevelsFromPattern(pattern);
+      if (Array.isArray(levels) && levels.length > 0 && levels.includes(level)) {
+        const span = levels.length;
+        if (span < bestSpan) {
+          bestSpan = span;
+          match = entry;
+        }
+      }
+    }
+    if (match) return match;
+  } catch (e) {
+  }
+  for (const entry of entries) {
+    if (!entry || !entry.pattern) continue;
+    const pattern = String(entry.pattern);
+    if (/#\{1,6\}/.test(pattern)) {
+      return entry;
+    }
+  }
+  return null;
+}
+
+// src/services/previewMatcher.js
+var SPOILER_RE = /\|\|[\s\S]*?\|\|/g;
+var CODEBLOCK_RE = /```[\s\S]*?```/g;
+var HEADING_RE = /^(#{1,6})\s+(.*)$/gm;
+function attempt(fn, fallback) {
+  try {
+    const v = fn();
+    return v === void 0 ? fallback : v;
+  } catch (_) {
+    return fallback;
+  }
+}
+function isPatternBlacklisted(settings, pattern) {
+  const p = String(pattern);
+  const bw = Array.isArray(settings.blacklistWords) ? settings.blacklistWords : [];
+  if (settings.caseSensitive) {
+    if (bw.includes(p)) return true;
+  } else {
+    const lower = p.toLowerCase();
+    if (bw.map((w) => String(w).toLowerCase()).includes(lower)) return true;
+  }
+  const blEntries = Array.isArray(settings.blacklistEntries) ? settings.blacklistEntries : [];
+  for (const be of blEntries) {
+    if (!be || be.isRegex) continue;
+    const patterns = Array.isArray(be.groupedPatterns) && be.groupedPatterns.length > 0 ? be.groupedPatterns : [be.pattern];
+    for (const bp of patterns) {
+      if (!bp) continue;
+      if (settings.caseSensitive) {
+        if (bp === p) return true;
+      } else {
+        if (String(bp).toLowerCase() === p.toLowerCase()) return true;
+      }
+    }
+  }
+  return false;
+}
+function applyHideFilters(compiled, settings) {
+  let styleType2 = compiled.styleType;
+  let backgroundColor = compiled.backgroundColor;
+  let textColor = compiled.textColor;
+  if (settings.hideHighlights) {
+    if (styleType2 === "highlight") return null;
+    if (styleType2 === "both" && !compiled.isTextBg) {
+      styleType2 = "text";
+      backgroundColor = null;
+      textColor = textColor || compiled.color || null;
+    }
+    if (backgroundColor && !styleType2 && !compiled.isTextBg) {
+      backgroundColor = null;
+      styleType2 = "text";
+      textColor = textColor || compiled.color || null;
+    }
+  }
+  if (settings.hideTextColors) {
+    if (styleType2 === "text") return null;
+    if (styleType2 === "both") styleType2 = "highlight";
+    if (!styleType2 && compiled.color && !backgroundColor) return null;
+  }
+  return { styleType: styleType2, backgroundColor, textColor };
+}
+function matchPassesPaintGate(m, settings) {
+  if (m.skip || m.start >= m.end) return false;
+  const customCssOk = !!(settings.enableCustomCss && m.entryRef && m.entryRef.customCss);
+  const hideText = settings.hideTextColors === true;
+  const hideBg = settings.hideHighlights === true;
+  if (m.isTextBg) {
+    if (hideText && hideBg && !customCssOk) return false;
+    return true;
+  }
+  const styleType2 = m.entryRef && m.entryRef.affectMarkElements ? "highlight" : m.styleType || "text";
+  if (styleType2 === "text") return !(hideText && !customCssOk);
+  if (styleType2 === "highlight") return !(hideBg && !customCssOk);
+  if (styleType2 === "both") return !(hideText && hideBg && !customCssOk);
+  return !(hideText && !customCssOk);
+}
+function selectPaintedMatches(candidates) {
+  const all = candidates.slice().sort((a, b) => {
+    if (a.start !== b.start) return a.start - b.start;
+    const lenDiff = b.end - b.start - (a.end - a.start);
+    if (lenDiff !== 0) return lenDiff;
+    const ar = a.entryRef && !!a.entryRef.isRegex;
+    const br = b.entryRef && !!b.entryRef.isRegex;
+    if (ar !== br) return ar ? 1 : -1;
+    return 0;
+  });
+  const selected = [];
+  for (const m of all) {
+    let overlaps = false;
+    const overlappingIndices = [];
+    for (let i = 0; i < selected.length; i++) {
+      const s = selected[i];
+      if (m.start < s.end && m.end > s.start) {
+        overlaps = true;
+        overlappingIndices.push(i);
+      }
+    }
+    if (!overlaps) {
+      selected.push(Object.assign({}, m));
+    } else {
+      const mLength = m.end - m.start;
+      const allShorter = overlappingIndices.every((i) => {
+        const s = selected[i];
+        return s.end - s.start < mLength;
+      });
+      if (allShorter) {
+        for (let i = overlappingIndices.length - 1; i >= 0; i--) {
+          selected.splice(overlappingIndices[i], 1);
+        }
+        selected.push(Object.assign({}, m));
+      }
+    }
+  }
+  const sortedSel = selected.sort((a, b) => a.start - b.start || a.end - b.end).slice(0, 1e3);
+  const limited = (() => {
+    const merged = [];
+    for (const m of sortedSel) {
+      const last = merged[merged.length - 1];
+      if (last && m.isTextBg && last.isTextBg && m.textColor === last.textColor && m.backgroundColor === last.backgroundColor && m.start <= last.end) {
+        if (m.end > last.end) last.end = m.end;
+      } else {
+        merged.push(m);
+      }
+    }
+    return merged;
+  })();
+  if (limited.some((m) => m.isTextBg)) {
+    const fullTextBg = limited.filter((m) => m.isTextBg);
+    const filtered = [];
+    limited.sort((a, b) => a.start - b.start || a.end - b.end);
+    for (const m of limited) {
+      if (!m.isTextBg) {
+        let overlapsTextBg = false;
+        for (const f of fullTextBg) {
+          if (m.start < f.end && m.end > f.start) {
+            const fStyle = f.styleType || (f.entryRef ? f.entryRef.styleType : null);
+            if (fStyle !== "highlight") {
+              overlapsTextBg = true;
+              break;
+            }
+          }
+        }
+        if (overlapsTextBg) continue;
+      }
+      filtered.push(m);
+    }
+    limited.length = 0;
+    for (const m of filtered) limited.push(m);
+  }
+  limited.sort((a, b) => a.start - b.start || a.end - b.end);
+  const painted = limited.filter((m) => !m.skip && m.start < m.end);
+  return { painted, selected: limited };
+}
+function buildDraftEntry(input) {
+  return {
+    isRegex: true,
+    pattern: String(input.pattern || ""),
+    flags: String(input.flags || ""),
+    presetLabel: input.presetLabel || void 0,
+    matchType: typeof input.matchType === "string" && input.matchType ? input.matchType : void 0,
+    styleType: input.styleType || "text",
+    markTarget: input.markTarget || "text",
+    caseSensitive: typeof input.caseSensitive === "boolean" ? input.caseSensitive : void 0,
+    color: input.color || "",
+    textColor: input.textColor == null ? null : input.textColor,
+    backgroundColor: input.backgroundColor || null,
+    customCss: input.customCss || null,
+    affectMarkElements: input.affectMarkElements || false
+  };
+}
+function buildPreviewBase(e, channel, settings) {
+  const matchType = e.matchType || settings.matchType || (settings.partialMatch ? "contains" : "exact");
+  if (channel === "textBg") {
+    return {
+      textColor: e.textColor || "currentColor",
+      backgroundColor: e.backgroundColor,
+      styleType: e.styleType || "both",
+      markTarget: e.markTarget || "text",
+      matchType,
+      isTextBg: true,
+      presetLabel: e.presetLabel || void 0,
+      entryRef: e
+    };
+  }
+  const color = e.color;
+  return {
+    color,
+    textColor: e.textColor || e.color || color,
+    backgroundColor: e.backgroundColor || null,
+    styleType: e.styleType || "text",
+    markTarget: e.markTarget || "text",
+    matchType,
+    presetLabel: e.presetLabel || void 0,
+    entryRef: e,
+    targetElement: deriveTargetElement(e)
+  };
+}
+function computePreviewMatches(plugin, input) {
+  const settings = plugin.settings || {};
+  const notes = [];
+  const rejected = {
+    wholeWord: 0,
+    spoiler: 0,
+    codeblock: 0,
+    heading: 0,
+    blacklistedList: 0,
+    context: 0,
+    zeroWidth: 0,
+    prefilter: 0,
+    overlap: 0,
+    wordCompletion: 0,
+    paintHidden: 0
+  };
+  const out = {
+    status: "ok",
+    reason: null,
+    matches: [],
+    count: 0,
+    notes,
+    rejected,
+    effectiveFlags: "",
+    literalMode: false,
+    chunked: false,
+    capped: false,
+    channel: "word",
+    regexSource: "",
+    regexFlags: ""
+  };
+  const fail = (status, reason) => {
+    out.status = status;
+    out.reason = reason || null;
+    return out;
+  };
+  const patRaw = String(input.pattern || "");
+  if (!patRaw.trim()) return fail("empty");
+  if (settings.enabled === false) return fail("disabled");
+  const group = input.group || null;
+  if (group && group.active === false) return fail("inactive", "group");
+  if (input.entryActive === false) return fail("inactive", "entry");
+  const e = buildDraftEntry(input);
+  if (group) {
+    const groupCase = typeof group.caseSensitiveOverride === "boolean" ? group.caseSensitiveOverride : void 0;
+    const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
+    if (groupMatch) e.matchType = groupMatch;
+    if (groupCase !== void 0) e._caseSensitiveOverride = groupCase;
+    applyGroupColorOverride(e, group, (c) => plugin.isValidHexColor(c));
+  }
+  let channel = "word";
+  if (e.backgroundColor) {
+    channel = "textBg";
+    const textColor = e.textColor || "currentColor";
+    const textOk = textColor === "currentColor" || plugin.isValidHexColor(textColor);
+    const bgOk = plugin.isValidHexColor(e.backgroundColor);
+    if (!textOk || !bgOk) return fail("no-color");
+  } else {
+    if (!plugin.isValidHexColor(e.color) && !plugin.isValidHexColor(e.textColor)) {
+      return fail("no-color");
+    }
+  }
+  out.channel = channel;
+  let pat;
+  try {
+    pat = plugin.sanitizePattern(patRaw, true);
+  } catch (_) {
+    return fail("too-long");
+  }
+  if (!pat) return fail("empty");
+  if (!settings.disableRegexSafety && typeof plugin.validateAndSanitizeRegex === "function" && !plugin.validateAndSanitizeRegex(pat)) {
+    return fail("blocked");
+  }
+  e.pattern = pat;
+  const base = buildPreviewBase(e, channel, settings);
+  let res;
+  try {
+    res = compilePatternCore(plugin, e, pat, base);
+  } catch (_) {
+    return fail("too-long");
+  }
+  if (res.empty) return fail("empty");
+  if (res.blocked) return fail("blocked");
+  const compiled = res.compiled;
+  out.effectiveFlags = compiled.flags;
+  out.regexSource = compiled.regex ? compiled.regex.source : "";
+  out.regexFlags = compiled.regex ? compiled.regex.flags : "";
+  out.literalMode = !(settings.enableRegexSupport && compiled.isRegex);
+  if (out.literalMode) notes.push({ id: "regex-off" });
+  const cleanedInputFlags = String(input.flags || "").replace(/[^gimsuy]/g, "");
+  if (compiled.flags !== cleanedInputFlags) {
+    notes.push({ id: "flags", value: compiled.flags });
+  }
+  if (!compiled.regex || compiled.invalid) return fail("invalid");
+  if (deriveTargetElement(e)) {
+    notes.push({ id: "target-element" });
+    out.count = 0;
+    return out;
+  }
+  let wordMatchStyle = null;
+  if (channel === "word") {
+    if (isPatternBlacklisted(settings, compiled.pattern)) {
+      return fail("blacklisted");
+    }
+    const eff = applyHideFilters(compiled, settings);
+    if (!eff) return fail("hidden");
+    wordMatchStyle = eff;
+  }
+  const sample = String(input.sample || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const wordList = attempt(() => plugin.getSortedWordEntries(), null) || [];
+  const textPassCount = wordList.filter((x) => x && !deriveTargetElement(x)).length + (input.editing ? 0 : 1);
+  const useChunks = channel === "word" && sample.length > EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE && textPassCount <= EDITOR_PERFORMANCE_CONSTANTS.PATTERN_CHUNK_SIZE;
+  out.chunked = useChunks;
+  if (useChunks) notes.push({ id: "chunked" });
+  const candidates = [];
+  const candidateCeiling = EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
+  const blEntries = Array.isArray(settings.blacklistEntries) ? settings.blacklistEntries : [];
+  const hasCodeblockBlacklist = !!blEntries.find(
+    (x) => x && x.presetLabel === "Codeblocks" && !!x.isRegex
+  );
+  if (hasCodeblockBlacklist) {
+    for (const m of sample.matchAll(CODEBLOCK_RE)) {
+      if (candidates.length >= candidateCeiling) break;
+      candidates.push({
+        start: m.index,
+        end: m.index + m[0].length,
+        skip: true,
+        kind: "codeblock"
+      });
+    }
+  }
+  for (const m of sample.matchAll(SPOILER_RE)) {
+    if (candidates.length >= candidateCeiling) break;
+    candidates.push({
+      start: m.index,
+      end: m.index + m[0].length,
+      skip: true,
+      kind: "spoiler"
+    });
+  }
+  const codeblockEntry = wordList.find(
+    (x) => x && x.presetLabel === "Codeblocks"
+  );
+  if (codeblockEntry && !hasCodeblockBlacklist) {
+    for (const m of sample.matchAll(CODEBLOCK_RE)) {
+      if (candidates.length >= candidateCeiling) break;
+      const s = m.index;
+      const en = m.index + m[0].length;
+      if (codeblockEntry.backgroundColor) {
+        candidates.push({
+          start: s,
+          end: en,
+          textColor: codeblockEntry.textColor || "currentColor",
+          backgroundColor: codeblockEntry.backgroundColor,
+          isTextBg: true,
+          entryRef: codeblockEntry,
+          kind: "codeblock"
+        });
+      } else {
+        const c = codeblockEntry.color || codeblockEntry.textColor;
+        if (c) {
+          candidates.push({
+            start: s,
+            end: en,
+            color: c,
+            entryRef: codeblockEntry,
+            kind: "codeblock"
+          });
+        }
+      }
+    }
+  }
+  for (const m of sample.matchAll(HEADING_RE)) {
+    if (candidates.length >= candidateCeiling) break;
+    const entryToUse = getEntryForHeadingLevel(wordList, m[1].length);
+    if (entryToUse && !entryToUse.targetElement) {
+      const s = m.index;
+      const en = m.index + m[0].length;
+      if (entryToUse.backgroundColor) {
+        candidates.push({
+          start: s,
+          end: en,
+          textColor: entryToUse.textColor || "currentColor",
+          backgroundColor: entryToUse.backgroundColor,
+          isTextBg: true,
+          entryRef: entryToUse,
+          kind: "heading"
+        });
+      } else {
+        const c = entryToUse.color || entryToUse.textColor;
+        if (c) {
+          candidates.push({
+            start: s,
+            end: en,
+            color: c,
+            entryRef: entryToUse,
+            kind: "heading"
+          });
+        }
+      }
+    }
+  }
+  const PER_PATTERN_CAP = EDITOR_PERFORMANCE_CONSTANTS.MAX_MATCHES_PER_PATTERN;
+  const maxTotal = plugin._isTyping ? 500 : settings.extremeLightweightMode ? EDITOR_PERFORMANCE_CONSTANTS.LIGHTWEIGHT_MAX_TOTAL_MATCHES : EDITOR_PERFORMANCE_CONSTANTS.MAX_TOTAL_MATCHES;
+  const mtEff = String(
+    compiled.matchType || settings.matchType || (settings.partialMatch ? "contains" : "exact")
+  ).toLowerCase();
+  const isSentencePattern = attempt(
+    () => plugin.isSentenceLikePattern(compiled.pattern),
+    false
+  );
+  const listRanges = attempt(
+    () => plugin.getBlacklistedListItemRanges(sample, 0, input.filePath),
+    []
+  ) || [];
+  const wordSet = attempt(
+    () => plugin.buildBlacklistWordSet(input.filePath),
+    null
+  );
+  if (settings.enableWordCompletionColoring && channel === "word") {
+    notes.push({ id: "word-completion" });
+  }
+  if (settings.disableLivePreviewColoring) notes.push({ id: "lp-off" });
+  const contextBlacklisted = (segText, idx, len) => {
+    if (wordSet && wordSet.size > 0) {
+      const fullWord = attempt(() => plugin.extractFullWord(segText, idx, idx + len), "") || "";
+      if (wordSet.has(String(fullWord).toLowerCase())) return true;
+      return false;
+    }
+    return attempt(
+      () => plugin.isContextBlacklisted(segText, idx, idx + len, input.filePath),
+      false
+    );
+  };
+  if (channel === "word") {
+    const segments = [];
+    if (useChunks) {
+      const size = EDITOR_PERFORMANCE_CONSTANTS.TEXT_CHUNK_SIZE;
+      for (let i = 0; i < sample.length; i += size) {
+        segments.push({ text: sample.slice(i, i + size), from: i });
+      }
+    } else {
+      segments.push({ text: sample, from: 0 });
+    }
+    const regex = compiled.regex;
+    for (const seg of segments) {
+      if (compiled.fastTest) {
+        const ok = attempt(() => compiled.fastTest(seg.text), true);
+        if (!ok) {
+          rejected.prefilter++;
+          continue;
+        }
+      }
+      try {
+        regex.lastIndex = 0;
+      } catch (_) {
+      }
+      let matchCount = 0;
+      let match;
+      try {
+        while (match = regex.exec(seg.text)) {
+          const matched = match[0];
+          if (matched.length === 0) {
+            rejected.zeroWidth++;
+            break;
+          }
+          if (matchCount >= PER_PATTERN_CAP) {
+            out.capped = true;
+            break;
+          }
+          if (candidates.length > maxTotal) {
+            out.capped = true;
+            break;
+          }
+          const idx = match.index;
+          const s = seg.from + idx;
+          const en = s + matched.length;
+          if (listRanges.length > 0 && attempt(
+            () => plugin.isMatchInBlacklistedRange(s, en, listRanges),
+            false
+          )) {
+            rejected.blacklistedList++;
+            continue;
+          }
+          const ovl = [];
+          for (let i = 0; i < candidates.length; i++) {
+            const existing = candidates[i];
+            if (!existing || !existing.isTextBg) continue;
+            if (s < existing.end && en > existing.start) ovl.push(i);
+          }
+          if (ovl.length > 0) {
+            const mLength = en - s;
+            const allShorter = ovl.every(
+              (i) => candidates[i].end - candidates[i].start < mLength
+            );
+            if (!allShorter) {
+              const blocker = candidates[ovl[0]];
+              if (blocker.kind === "codeblock") rejected.codeblock++;
+              else if (blocker.kind === "heading") rejected.heading++;
+              else rejected.overlap++;
+              continue;
+            }
+            for (let i = ovl.length - 1; i >= 0; i--) {
+              candidates.splice(ovl[i], 1);
+            }
+          }
+          const sentenceExempt = useChunks && isSentencePattern;
+          if (mtEff === "exact" && !sentenceExempt && !attempt(
+            () => plugin.isWholeWordMatch(seg.text, idx, idx + matched.length),
+            true
+          )) {
+            rejected.wholeWord++;
+            continue;
+          }
+          if (contextBlacklisted(seg.text, idx, matched.length)) {
+            rejected.context++;
+            continue;
+          }
+          candidates.push({
+            start: s,
+            end: en,
+            color: wordMatchStyle.textColor && wordMatchStyle.textColor !== "currentColor" ? wordMatchStyle.textColor : compiled.color,
+            styleType: wordMatchStyle.styleType,
+            textColor: wordMatchStyle.textColor,
+            backgroundColor: wordMatchStyle.backgroundColor,
+            entryRef: compiled,
+            customCss: compiled.customCss,
+            isDraft: true
+          });
+          matchCount++;
+        }
+      } catch (_) {
+        break;
+      }
+    }
+  } else {
+    const regex = compiled.regex;
+    let prefilterBlocked = false;
+    if (compiled.fastTest) {
+      const ok = attempt(() => compiled.fastTest(sample), true);
+      if (!ok) {
+        rejected.prefilter++;
+        prefilterBlocked = true;
+      }
+    }
+    if (!prefilterBlocked) {
+      try {
+        regex.lastIndex = 0;
+      } catch (_) {
+      }
+      let match;
+      try {
+        while (match = regex.exec(sample)) {
+          const matched = match[0];
+          if (matched.length === 0) {
+            rejected.zeroWidth++;
+            break;
+          }
+          const idx = match.index;
+          const en = idx + matched.length;
+          if (settings.enableWordCompletionColoring) {
+            const nextChar = sample[en];
+            if (!nextChar || !/[\s]/.test(nextChar)) {
+              rejected.wordCompletion++;
+              continue;
+            }
+          }
+          if (!attempt(
+            () => plugin.matchSatisfiesType(sample, idx, en, compiled),
+            true
+          )) {
+            continue;
+          }
+          if (contextBlacklisted(sample, idx, matched.length)) {
+            rejected.context++;
+            continue;
+          }
+          if (listRanges.length > 0 && attempt(
+            () => plugin.isMatchInBlacklistedRange(idx, en, listRanges),
+            false
+          )) {
+            rejected.blacklistedList++;
+            continue;
+          }
+          let colorStart = idx;
+          let colorEnd = en;
+          const entryMt = String(e.matchType || "").toLowerCase();
+          if ((entryMt === "contains" || entryMt === "startswith" || entryMt === "endswith") && !isSentencePattern) {
+            while (colorStart > 0 && attempt(() => plugin.isWordCharacter(sample[colorStart - 1]), false)) {
+              colorStart--;
+            }
+            while (colorEnd < sample.length && attempt(() => plugin.isWordCharacter(sample[colorEnd]), false)) {
+              colorEnd++;
+            }
+          }
+          candidates.push({
+            start: colorStart,
+            end: colorEnd,
+            textColor: compiled.textColor,
+            backgroundColor: compiled.backgroundColor,
+            isTextBg: true,
+            entryRef: compiled,
+            customCss: compiled.customCss,
+            isDraft: true
+          });
+          if (candidates.length > maxTotal) {
+            out.capped = true;
+            break;
+          }
+        }
+      } catch (_) {
+      }
+    }
+  }
+  let nextId = 0;
+  for (const c of candidates) c._id = nextId++;
+  const { painted, selected } = selectPaintedMatches(candidates);
+  const paintedIds = new Set(painted.map((m) => m._id));
+  for (const c of candidates) {
+    if (!c.isDraft) continue;
+    if (paintedIds.has(c._id)) continue;
+    const blocker = selected.find((p) => c.start < p.end && c.end > p.start);
+    if (blocker && blocker.skip && blocker.kind === "spoiler") {
+      rejected.spoiler++;
+    } else if (blocker && (blocker.kind === "codeblock" || blocker.skip)) {
+      rejected.codeblock++;
+    } else if (blocker && blocker.kind === "heading") {
+      rejected.heading++;
+    } else {
+      rejected.overlap++;
+    }
+  }
+  const prePaint = painted.filter((m) => m.isDraft);
+  const finalMatches = [];
+  for (const m of prePaint) {
+    if (matchPassesPaintGate(m, settings)) finalMatches.push(m);
+  }
+  rejected.paintHidden = prePaint.length - finalMatches.length;
+  if (rejected.zeroWidth > 0) {
+    notes.push({ id: "zero-width", n: rejected.zeroWidth });
+  }
+  if (rejected.spoiler > 0) notes.push({ id: "spoiler", n: rejected.spoiler });
+  if (rejected.codeblock > 0) {
+    notes.push({ id: "codeblock", n: rejected.codeblock });
+  }
+  if (rejected.heading > 0) {
+    notes.push({ id: "heading", n: rejected.heading });
+  }
+  if (rejected.blacklistedList > 0) {
+    notes.push({ id: "blacklist-list", n: rejected.blacklistedList });
+  }
+  if (rejected.context > 0) {
+    notes.push({ id: "context", n: rejected.context });
+  }
+  if (rejected.wholeWord > 0) {
+    notes.push({ id: "whole-word", n: rejected.wholeWord });
+  }
+  if (rejected.overlap > 0) {
+    notes.push({ id: "overlap", n: rejected.overlap });
+  }
+  if (rejected.wordCompletion > 0) {
+    notes.push({ id: "word-completion-gate", n: rejected.wordCompletion });
+  }
+  if (rejected.paintHidden > 0) {
+    notes.push({ id: "paint-hidden", n: rejected.paintHidden });
+  }
+  if (out.capped) notes.push({ id: "capped" });
+  out.matches = finalMatches.map((m) => ({ start: m.start, end: m.end }));
+  out.count = out.matches.length;
+  return out;
+}
+var STATUS_MESSAGES = {
+  disabled: [
+    "preview_status_disabled",
+    "Always Color Text is disabled \u2014 nothing is colored"
+  ],
+  "inactive-group": [
+    "preview_status_group_inactive",
+    "The selected group is inactive \u2014 the editor skips its entries"
+  ],
+  "inactive-entry": [
+    "preview_status_entry_inactive",
+    "This entry is disabled \u2014 the editor skips it"
+  ],
+  "no-color": [
+    "preview_status_no_color",
+    "No usable color \u2014 the editor skips entries without a valid color"
+  ],
+  "too-long": [
+    "preview_status_too_long",
+    "Pattern too long \u2014 the editor limits patterns to 200 characters"
+  ],
+  blocked: [
+    "preview_status_blocked",
+    "Pattern blocked for memory safety \u2014 the editor won't match it"
+  ],
+  invalid: [
+    "preview_status_invalid",
+    "Pattern can't compile \u2014 the editor won't match it"
+  ],
+  blacklisted: [
+    "preview_status_blacklisted",
+    "Pattern is blacklisted \u2014 the editor filters it out"
+  ],
+  hidden: [
+    "preview_status_hidden",
+    "Hidden by a color-hiding setting \u2014 the editor filters it out"
+  ],
+  empty: ["", ""]
+};
+function describePreviewStatus(result, t) {
+  const key = result.status === "inactive" ? `inactive-${result.reason === "group" ? "group" : "entry"}` : result.status;
+  const msg = STATUS_MESSAGES[key];
+  if (!msg) return "";
+  return t(msg[0], msg[1]);
+}
+var NOTE_MESSAGES = {
+  flags: ["preview_note_flags", "editor flags: {flags}"],
+  "regex-off": [
+    "preview_note_regex_off",
+    "regex support is off \u2014 the editor matches this as literal text"
+  ],
+  "zero-width": [
+    "preview_note_zero_width",
+    "zero-width matches ({n}) aren't painted and stop the editor's scan"
+  ],
+  spoiler: ["preview_note_spoiler", "{n} matches hidden in spoilers"],
+  codeblock: ["preview_note_codeblock", "{n} matches hidden in code blocks"],
+  heading: ["preview_note_heading", "{n} matches covered by heading coloring"],
+  "blacklist-list": [
+    "preview_note_blacklist_list",
+    "{n} matches in blacklisted list items"
+  ],
+  context: ["preview_note_context", "{n} matches blacklisted by word rules"],
+  "whole-word": [
+    "preview_note_whole_word",
+    "Live Preview needs whole words here ({n}) \u2014 reading mode would color them"
+  ],
+  overlap: ["preview_note_overlap", "{n} matches covered by other highlights"],
+  "word-completion": [
+    "preview_note_word_completion",
+    "word-completion coloring: on the line you edit, matches must end at a word boundary"
+  ],
+  "word-completion-gate": [
+    "preview_note_word_completion_gate",
+    "word-completion coloring removed {n} matches (must end at whitespace)"
+  ],
+  "paint-hidden": [
+    "preview_note_paint_hidden",
+    "{n} matches hidden by color-hiding settings"
+  ],
+  capped: ["preview_note_capped", "the editor stops at 500 matches per pattern"],
+  chunked: [
+    "preview_note_chunked",
+    "long sample: the editor matches in 2000-character chunks"
+  ],
+  "target-element": [
+    "preview_note_target_element",
+    "styled via markdown-element rules, not the text matcher \u2014 preview may differ"
+  ],
+  "lp-off": [
+    "preview_note_lp_off",
+    "Live Preview coloring is off \u2014 matches apply in reading mode"
+  ]
+};
+function fmt(text, vars) {
+  let out = text;
+  for (const k of Object.keys(vars || {})) {
+    out = out.split(`{${k}}`).join(String(vars[k]));
+  }
+  return out;
+}
+function describePreviewNotes(result, t) {
+  const parts = [];
+  for (const note of result.notes || []) {
+    const msg = NOTE_MESSAGES[note.id];
+    if (!msg) continue;
+    const vars = {};
+    if (note.n !== void 0) vars.n = note.n;
+    if (note.value !== void 0) vars.flags = note.value;
+    parts.push(fmt(t(msg[0], msg[1]), vars));
+  }
+  return parts.join(" \xB7 ");
+}
+
 // src/modals/RealTimeRegexTesterModal.js
 var HARDCODED_LEGACY_DEFAULTS = ["#87c760", "#1d5010", "#58bc54", "#205613"];
 function isHardcodedLegacyDefault(c) {
@@ -20028,8 +20810,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
       const raw = rawRaw.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
       const patRaw = String(regexInput.value || "").trim();
       const flags = Object.keys(flagButtons).filter((k) => flagButtons[k].dataset.on === "1").join("");
-      const f = flags.includes("g") ? flags : flags + "g";
-      const markTarget = markTargetSelect.value || "text";
+      const markTarget2 = markTargetSelect.value || "text";
       const style = styleSelect.value;
       const tRaw = textColorInput.value;
       const bRaw = bgColorInput.value;
@@ -20053,7 +20834,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
       const effectiveTForBorder = _pv.effectiveTForBorder;
       const borderStyle = style === "text" ? "" : style === "highlight" ? this.plugin.generateBorderStyle(null, effectiveBForBorder) : this.plugin.generateBorderStyle(effectiveTForBorder, effectiveBForBorder);
       const matchStyle = style === "text" ? `color:${t};background:transparent;` : style === "highlight" ? `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}` : `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
-      if (markTarget === "line" || markTarget === "nextLine") {
+      if (markTarget2 === "line" || markTarget2 === "nextLine") {
         previewWrap.style.display = "block";
         previewWrap.style.textAlign = "left";
         previewWrap.style.alignItems = "";
@@ -20064,92 +20845,98 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
         previewWrap.style.justifyContent = "center";
         previewWrap.style.textAlign = "";
       }
-      if (!patRaw) {
-        status.textContent = "";
-        if (markTarget === "line" || markTarget === "nextLine") {
+      const renderPlain = (msg, footer) => {
+        status.textContent = msg || "";
+        if (markTarget2 === "line" || markTarget2 === "nextLine") {
           if (!raw) {
             previewWrap.innerHTML = `<div style="display:block;opacity:0.6;">${escapeHtml(raw) || "<br>"}</div>`;
           } else {
             const lines = raw.split("\n");
-            let out2 = "";
+            let outPlain = "";
             for (let i = 0; i < lines.length; i++) {
               const esc = escapeHtml(lines[i]);
-              out2 += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
+              outPlain += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
             }
-            previewWrap.innerHTML = out2;
+            previewWrap.innerHTML = outPlain || escapeHtml(raw).replace(/\n/g, "<br>");
           }
         } else {
           previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
         }
-        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
-        return;
+        matchFooter.textContent = footer || "0 " + this.plugin.t("matches", "matches");
+      };
+      if (!patRaw) return renderPlain("");
+      const draftTValid = !!(tRaw && this.plugin.isValidHexColor(tRaw) && (this._tPickerTouched || !!this._preFillTextColor));
+      const draftBValid = !!(bRaw && this.plugin.isValidHexColor(bRaw) && (this._bPickerTouched || !!this._preFillBgColor));
+      let draftColor = "";
+      let draftTextColor = null;
+      let draftBgColor = null;
+      if (style === "text") {
+        draftColor = draftTValid ? tRaw : "";
+      } else if (style === "highlight") {
+        draftTextColor = "currentColor";
+        draftBgColor = draftBValid ? bRaw : "";
+      } else {
+        draftTextColor = draftTValid ? tRaw : "";
+        draftBgColor = draftBValid ? bRaw : "";
       }
-      const pat = this.plugin.sanitizePattern(patRaw, true);
-      if (!pat) {
-        status.textContent = "";
-        if (markTarget === "line" || markTarget === "nextLine") {
-          const lines = raw.split("\n");
-          let out2 = "";
-          for (let i = 0; i < lines.length; i++) {
-            const esc = escapeHtml(lines[i]);
-            out2 += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
-          }
-          previewWrap.innerHTML = out2 || escapeHtml(raw).replace(/\n/g, "<br>");
-        } else {
-          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        }
-        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
-        return;
+      let selGroup = null;
+      if (groupSelect && groupSelect.value) {
+        selGroup = (groupsRaw || []).find(
+          (g) => g && String(g.uid || "") === String(groupSelect.value)
+        ) || null;
       }
-      if (!this.plugin.settings.disableRegexSafety && !this.plugin.validateAndSanitizeRegex(pat)) {
-        status.textContent = "";
-        if (markTarget === "line" || markTarget === "nextLine") {
-          const lines = raw.split("\n");
-          let out2 = "";
-          for (let i = 0; i < lines.length; i++) {
-            const esc = escapeHtml(lines[i]);
-            out2 += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
-          }
-          previewWrap.innerHTML = out2 || escapeHtml(raw).replace(/\n/g, "<br>");
-        } else {
-          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        }
-        matchFooter.textContent = "0 " + this.plugin.t("matches", "matches");
-        return;
-      }
-      let re;
+      let result;
       try {
-        re = new RegExp(pat, f);
-      } catch (e) {
-        status.textContent = "";
-        if (markTarget === "line" || markTarget === "nextLine") {
-          const lines = raw.split("\n");
-          let out2 = "";
-          for (let i = 0; i < lines.length; i++) {
-            const esc = escapeHtml(lines[i]);
-            out2 += `<div style="display:block;min-height:1.2em;">${esc || "&#8203;"}</div>`;
-          }
-          previewWrap.innerHTML = out2 || escapeHtml(raw).replace(/\n/g, "<br>");
-        } else {
-          previewWrap.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
-        }
-        matchFooter.textContent = "0 matches";
-        return;
+        result = computePreviewMatches(this.plugin, {
+          pattern: patRaw,
+          flags,
+          sample: raw,
+          caseSensitive: this._editingEntry && typeof this._editingEntry.caseSensitive === "boolean" ? this._editingEntry.caseSensitive : !!this.plugin.settings.caseSensitive,
+          matchType: this._editingEntry ? this._editingEntry.matchType : void 0,
+          presetLabel: nameInput.value.trim() || void 0,
+          styleType: style,
+          markTarget: markTarget2,
+          color: draftColor,
+          textColor: draftTextColor,
+          backgroundColor: draftBgColor,
+          entryActive: this._editingEntry && typeof this._editingEntry.active === "boolean" ? this._editingEntry.active : void 0,
+          group: selGroup,
+          filePath: (() => {
+            try {
+              const f = this.app.workspace.getActiveFile();
+              return f ? f.path : null;
+            } catch (_) {
+              return null;
+            }
+          })(),
+          editing: !!this._editingEntry,
+          customCss: this._editingEntry ? this._editingEntry.customCss : void 0,
+          affectMarkElements: this._editingEntry ? this._editingEntry.affectMarkElements : void 0
+        });
+      } catch (err) {
+        debugError("REGEX_TESTER", "preview compute failed", err);
+        return renderPlain(this.plugin.t("preview_error", "Preview failed"));
       }
-      if (markTarget === "line" || markTarget === "nextLine") {
+      if (result.status !== "ok") {
+        return renderPlain(
+          describePreviewStatus(result, (k, d) => this.plugin.t(k, d))
+        );
+      }
+      const matches2 = result.matches;
+      const matchCount = matches2.length;
+      const footerText = `${matchCount} match${matchCount === 1 ? "" : "es"}`;
+      status.textContent = describePreviewNotes(
+        result,
+        (k, d) => this.plugin.t(k, d)
+      );
+      if (markTarget2 === "line" || markTarget2 === "nextLine") {
         const lines = raw.split("\n");
         const active = /* @__PURE__ */ new Set();
-        let count2 = 0;
-        let iter2 = 0;
-        for (const m of raw.matchAll(re)) {
-          if (iter2++ > 4e3) break;
-          const s = m.index ?? 0;
-          const lineIdx = raw.slice(0, s).split("\n").length - 1;
+        for (const m of matches2) {
+          const lineIdx = raw.slice(0, m.start).split("\n").length - 1;
           let targetIdx = lineIdx;
-          if (markTarget === "nextLine") targetIdx = lineIdx + 1;
+          if (markTarget2 === "nextLine") targetIdx = lineIdx + 1;
           if (targetIdx >= 0 && targetIdx < lines.length) active.add(targetIdx);
-          if (m[0] !== void 0) count2++;
-          if (count2 > 2e3) break;
         }
         let out2 = "";
         for (let i = 0; i < lines.length; i++) {
@@ -20165,43 +20952,20 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
           out2 = `<div style="display:block;min-height:1.2em;opacity:0.6;">&#8203;</div>`;
         }
         previewWrap.innerHTML = out2;
-        matchFooter.textContent = `${count2} match${count2 === 1 ? "" : "es"}`;
-        status.textContent = "";
+        matchFooter.textContent = footerText;
         return;
       }
       let lastIndex = 0;
       let out = "";
-      let count = 0;
-      let iter = 0;
-      for (const m of raw.matchAll(re)) {
-        if (iter++ > 4e3) break;
-        const s = m.index ?? 0;
-        const matched = m[0] ?? "";
-        const len = matched.length;
-        const e = s + len;
-        if (len === 0) {
-          out += escapeHtml(raw.slice(lastIndex, s));
-          out += `<span style="${matchStyle};border-left:2px solid ${t};margin:0 1px;">&#8203;</span>`;
-          lastIndex = s;
-          if (lastIndex < raw.length && raw.slice(s, s + 1)) {
-          }
-          count++;
-          if (count > 2e3) break;
-          if (iter > 1e3 && len === 0) {
-            if (s >= raw.length) break;
-          }
-          continue;
-        }
-        out += escapeHtml(raw.slice(lastIndex, s));
-        out += `<span style="${matchStyle}">${escapeHtml(raw.slice(s, e))}</span>`;
-        lastIndex = e;
-        count++;
-        if (count > 2e3) break;
+      for (const m of matches2) {
+        if (m.start < lastIndex) continue;
+        out += escapeHtml(raw.slice(lastIndex, m.start));
+        out += `<span style="${matchStyle}">${escapeHtml(raw.slice(m.start, m.end))}</span>`;
+        lastIndex = m.end;
       }
       out += escapeHtml(raw.slice(lastIndex));
       previewWrap.innerHTML = out.replace(/\n/g, "<br>");
-      matchFooter.textContent = `${count} match${count === 1 ? "" : "es"}`;
-      status.textContent = "";
+      matchFooter.textContent = footerText;
     };
     const render = () => {
       if (this._rafId) cancelAnimationFrame(this._rafId);
@@ -20306,7 +21070,19 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
     render();
     const addHandler = async () => {
       const patRaw = String(regexInput.value || "").trim();
-      const pat = this.plugin.sanitizePattern(patRaw, true);
+      let pat;
+      try {
+        pat = this.plugin.sanitizePattern(patRaw, true);
+      } catch (err) {
+        debugError("REGEX_TESTER", "sanitizePattern failed", err);
+        new import_obsidian14.Notice(
+          this.plugin.t(
+            "notice_pattern_too_long",
+            "Pattern too long \u2014 the editor limits patterns to 200 characters"
+          )
+        );
+        return;
+      }
       const label = String(nameInput.value || "").trim();
       const flags = Object.keys(flagButtons).filter((k) => flagButtons[k].dataset.on === "1").join("");
       if (!pat) {
@@ -20342,7 +21118,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
       if (this._editingEntry) {
         try {
           const style = styleSelect.value;
-          const markTarget = markTargetSelect.value;
+          const markTarget2 = markTargetSelect.value;
           const tRawForSave = textColorInput.value;
           const bRawForSave = bgColorInput.value;
           const hasValidTForSave = tRawForSave && this.plugin.isValidHexColor(tRawForSave) && (this._tPickerTouched || !!this._preFillTextColor);
@@ -20352,7 +21128,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
             flags,
             presetLabel: label || void 0,
             styleType: style,
-            markTarget,
+            markTarget: markTarget2,
             isRegex: true
           });
           if (style === "text") {
@@ -20427,7 +21203,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
           }
         })();
         const style = styleSelect.value;
-        const markTarget = markTargetSelect.value;
+        const markTarget2 = markTargetSelect.value;
         const entry = {
           uid,
           isRegex: true,
@@ -20435,7 +21211,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
           flags,
           presetLabel: label || void 0,
           styleType: style,
-          markTarget,
+          markTarget: markTarget2,
           persistAtEnd: true
         };
         const tRawForSave2 = textColorInput.value;
@@ -29299,6 +30075,18 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
           await this.debouncedSaveSettings();
           try {
             if (!v) {
+              try {
+                this.plugin.applyFormattingStyles();
+              } catch (e) {
+              }
+              try {
+                document.querySelectorAll('style[data-act-line-style="reading"]').forEach((el) => el.remove());
+              } catch (e) {
+              }
+              try {
+                this.plugin.removeEnabledReadingCalloutStyles();
+              } catch (e) {
+              }
               this.plugin.app.workspace.iterateAllLeaves((leaf) => {
                 if (leaf.view instanceof MarkdownView && leaf.view.getMode && leaf.view.getMode() === "preview") {
                   try {
@@ -29306,6 +30094,14 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
                     if (root) {
                       try {
                         this.plugin.clearHighlightsInRoot(root);
+                      } catch (e) {
+                      }
+                      try {
+                        this.plugin.clearMarkdownElementDecorations(root);
+                      } catch (e) {
+                      }
+                      try {
+                        this.plugin.clearReadingLineTargetClasses(root);
                       } catch (e) {
                       }
                       try {
@@ -29330,6 +30126,12 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
             } else {
               try {
                 this.plugin.forceRefreshAllReadingViews();
+              } catch (e) {
+              }
+              try {
+                if (this.plugin.settings.enabled && !this.plugin.settings.hideTextColors) {
+                  this.plugin.applyEnabledReadingCalloutStyles();
+                }
               } catch (e) {
               }
             }
@@ -29371,6 +30173,10 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
                   this.plugin.removeEnabledLivePreviewTextColorStyles();
                 } catch (_) {
                 }
+              }
+              try {
+                this.plugin.applyFormattingStyles();
+              } catch (_) {
               }
               try {
                 this.plugin.refreshAllLivePreviewCallouts();
@@ -32530,60 +33336,6 @@ function applyCommandIcons(app, pluginId = "always-color-text") {
   return changed;
 }
 
-// src/utils/headingUtils.js
-function getHeadingLevelsFromPattern(pattern) {
-  try {
-    if (!pattern || typeof pattern !== "string") return [];
-    const levels = /* @__PURE__ */ new Set();
-    const quantMatch = pattern.match(/#\{(\d+)(?:,(\d+))?\}/);
-    if (quantMatch) {
-      let start = parseInt(quantMatch[1], 10);
-      let end = quantMatch[2] ? parseInt(quantMatch[2], 10) : start;
-      if (!Number.isFinite(start) || start < 1) start = 1;
-      if (!Number.isFinite(end) || end > 6) end = 6;
-      for (let l = start; l <= end; l++) levels.add(l);
-    } else {
-      const hashRun = pattern.match(/#+/);
-      if (hashRun) {
-        const len = hashRun[0].length;
-        if (len >= 1 && len <= 6) levels.add(len);
-      }
-    }
-    return Array.from(levels);
-  } catch (e) {
-    return [];
-  }
-}
-function getEntryForHeadingLevel(entries, level) {
-  if (!Array.isArray(entries) || level < 1 || level > 6) return null;
-  let match = null;
-  let bestSpan = Infinity;
-  try {
-    for (const entry of entries) {
-      if (!entry || !entry.pattern) continue;
-      const pattern = String(entry.pattern);
-      const levels = getHeadingLevelsFromPattern(pattern);
-      if (Array.isArray(levels) && levels.length > 0 && levels.includes(level)) {
-        const span = levels.length;
-        if (span < bestSpan) {
-          bestSpan = span;
-          match = entry;
-        }
-      }
-    }
-    if (match) return match;
-  } catch (e) {
-  }
-  for (const entry of entries) {
-    if (!entry || !entry.pattern) continue;
-    const pattern = String(entry.pattern);
-    if (/#\{1,6\}/.test(pattern)) {
-      return entry;
-    }
-  }
-  return null;
-}
-
 // src/core/AlwaysColorText.js
 var import_i18n = __toESM(require_i18n());
 
@@ -33556,9 +34308,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
   // Everything here is marked by the plugin itself, so only our own styling is
   // removed. Called when the global toggle is switched off — the injected
   // stylesheet is dropped separately, but inline styles/classes would survive.
-  clearMarkdownElementDecorations() {
+  clearMarkdownElementDecorations(root = document) {
     try {
-      document.querySelectorAll("[data-act-md-colored]").forEach((el) => {
+      root.querySelectorAll("[data-act-md-colored]").forEach((el) => {
         try {
           el.style.removeProperty("color");
           el.style.removeProperty("--highlight-color");
@@ -33578,7 +34330,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (_) {
     }
     try {
-      document.querySelectorAll("li.act-colored-list-item, p.act-colored-list-item, li.act-color-marker").forEach((li) => {
+      root.querySelectorAll("li.act-colored-list-item, p.act-colored-list-item, li.act-color-marker").forEach((li) => {
         try {
           li.style.removeProperty("--act-marker-color");
           li.style.removeProperty("--act-color");
@@ -33609,7 +34361,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (_) {
     }
     try {
-      document.querySelectorAll("span[data-act-task-marker]").forEach((s) => {
+      root.querySelectorAll("span[data-act-task-marker]").forEach((s) => {
         try {
           const parent = s.parentNode;
           if (!parent) return;
@@ -33622,7 +34374,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (_) {
     }
     try {
-      document.querySelectorAll(".always-color-text-highlight-marks").forEach((el) => {
+      root.querySelectorAll(".always-color-text-highlight-marks").forEach((el) => {
         try {
           for (const p of [
             "color",
@@ -33685,6 +34437,143 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     try {
       if (this.settings.enabled) this.applyHighlightPresetTransparency();
       else this.removeHighlightPresetTransparency();
+    } catch (_) {
+    }
+  }
+  // Reading-mode line targets put a pattern-derived class straight onto the
+  // rendered blocks (unlike Live Preview, no CM-decoration rebuild ever takes
+  // them away), so record every class we add on the element itself and sweep
+  // it in clearReadingLineTargetClasses() when the global toggle goes off or
+  // the features are disabled.
+  addReadingLineTargetClass(el, cssClass) {
+    if (!el || !cssClass) return;
+    try {
+      el.classList.add(cssClass);
+    } catch (_) {
+      return;
+    }
+    try {
+      const parts = String(el.dataset.actLineTargets || "").split(/\s+/).filter(Boolean);
+      if (!parts.includes(cssClass)) parts.push(cssClass);
+      el.dataset.actLineTargets = parts.join(" ");
+    } catch (_) {
+    }
+  }
+  clearReadingLineTargetClasses(root = document) {
+    try {
+      root.querySelectorAll("[data-act-line-targets]").forEach((el) => {
+        try {
+          String(el.getAttribute("data-act-line-targets") || "").split(/\s+/).filter(Boolean).forEach((cls) => {
+            try {
+              el.classList.remove(cls);
+            } catch (_) {
+            }
+          });
+        } catch (_) {
+        }
+        try {
+          el.removeAttribute("data-act-line-targets");
+        } catch (_) {
+        }
+      });
+    } catch (_) {
+    }
+  }
+  // The pattern-derived class shared by the Live Preview and reading-mode
+  // line-target <style> sheets — both derivations MUST stay identical or a
+  // sweep keyed on one would miss the other.
+  lineTargetCssClass(entry) {
+    const rawPattern = entry && (entry.presetLabel || entry.pattern) || "";
+    const slug = String(rawPattern).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-");
+    return slug || `act-line-${(entry && entry.uid || "x").toString().slice(-6)}`;
+  }
+  // Sweep line-target <style> sheets and recorded reading classes whose
+  // source entry no longer exists (deleted, renamed, blacklisted...).
+  // Nothing else ever removes a sheet once created — only the hide commands
+  // and unload remove them wholesale — so a deleted line-target entry used
+  // to keep painting forever. Called from saveSettings when entry data
+  // actually changed.
+  sweepOrphanLineTargets() {
+    const keep = /* @__PURE__ */ new Set();
+    try {
+      this._cacheDirty = true;
+      const painted = this.getSortedWordEntries() || [];
+      const candidates = [...painted];
+      for (const list of [this.settings.quickStyles, this.settings.quickColors]) {
+        if (Array.isArray(list)) candidates.push(...list);
+      }
+      for (const e of candidates) {
+        if (e && (e.markTarget === "line" || e.markTarget === "nextLine")) {
+          keep.add(this.lineTargetCssClass(e));
+        }
+      }
+    } catch (_) {
+      return;
+    }
+    try {
+      document.querySelectorAll("style[data-act-line-style]").forEach((s) => {
+        try {
+          const cls = String(s.id || "").replace(/^act-line-style-reading-/, "").replace(/^act-line-style-/, "");
+          if (cls && !keep.has(cls)) s.remove();
+        } catch (_) {
+        }
+      });
+    } catch (_) {
+    }
+    try {
+      document.querySelectorAll("[data-act-line-targets]").forEach((el) => {
+        try {
+          const parts = String(el.getAttribute("data-act-line-targets") || "").split(/\s+/).filter(Boolean);
+          const kept = [];
+          for (const cls of parts) {
+            if (keep.has(cls)) {
+              kept.push(cls);
+            } else {
+              try {
+                el.classList.remove(cls);
+              } catch (_) {
+              }
+            }
+          }
+          if (kept.length) {
+            el.setAttribute("data-act-line-targets", kept.join(" "));
+          } else {
+            el.removeAttribute("data-act-line-targets");
+          }
+        } catch (_) {
+        }
+      });
+    } catch (_) {
+    }
+  }
+  // Apply a generateBorderStyle() result as idempotent declarations.
+  // The old approach — appending the border string to style.cssText —
+  // re-appended the same border on every pass: the inline style attribute
+  // grew without bound, and appending to a value without a trailing ";"
+  // could corrupt parsing. setProperty
+  // overwrites in place; !important is honoured exactly as written, which is
+  // what the cssText append did too.
+  applyInlineBorderCss(el, borderCss) {
+    if (!el || !borderCss) return;
+    try {
+      for (const part of String(borderCss).split(";")) {
+        const idx = part.indexOf(":");
+        if (idx === -1) continue;
+        const prop = part.slice(0, idx).trim();
+        let val = part.slice(idx + 1).trim();
+        if (!prop || !val) continue;
+        const important = /!important\s*$/i.test(val);
+        if (important) val = val.replace(/\s*!important\s*$/i, "").trim();
+        if (!val) continue;
+        try {
+          el.style.setProperty(prop, val, important ? "important" : "");
+        } catch (_) {
+          try {
+            el.style[prop] = val;
+          } catch (_2) {
+          }
+        }
+      }
     } catch (_) {
     }
   }
@@ -33767,6 +34656,14 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       } catch (_) {
       }
       try {
+        document.querySelectorAll("style[data-act-line-style]").forEach((el) => el.remove());
+      } catch (_) {
+      }
+      try {
+        this.clearReadingLineTargetClasses();
+      } catch (_) {
+      }
+      try {
         this._applyLivePreviewTagHighlights();
       } catch (_) {
       }
@@ -33780,7 +34677,11 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           this.removeEnabledLivePreviewCalloutStyles();
           this.removeEnabledLivePreviewTextColorStyles();
         }
-        this.applyEnabledReadingCalloutStyles();
+        if (this.settings.hideTextColors) {
+          this.removeEnabledReadingCalloutStyles();
+        } else {
+          this.applyEnabledReadingCalloutStyles();
+        }
         if (this.settings.hideHighlights) {
           this.applyHideHighlightsNeutralizerStyles();
         } else {
@@ -33792,15 +34693,40 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         this.removeEnabledReadingCalloutStyles();
         this.removeHideHighlightsNeutralizerStyles();
       }
-      if (!this.settings.disableLivePreviewColoring) {
+    } catch (e) {
+      debugError("ACT", "setGlobalEnabled callout styles failed", e);
+    }
+    if (!this.settings.disableLivePreviewColoring) {
+      try {
         this.refreshAllLivePreviewCallouts();
-        this.forceReprocessLivePreviewCallouts();
-        this.refreshAllLivePreviewTables();
-        this.forceReprocessLivePreviewTables();
+      } catch (e) {
+        debugError("ACT", "refreshAllLivePreviewCallouts failed", e);
       }
+      try {
+        this.forceReprocessLivePreviewCallouts();
+      } catch (e) {
+        debugError("ACT", "forceReprocessLivePreviewCallouts failed", e);
+      }
+      try {
+        this.refreshAllLivePreviewTables();
+      } catch (e) {
+        debugError("ACT", "refreshAllLivePreviewTables failed", e);
+      }
+      try {
+        this.forceReprocessLivePreviewTables();
+      } catch (e) {
+        debugError("ACT", "forceReprocessLivePreviewTables failed", e);
+      }
+    }
+    try {
       this.refreshAllBasesViews();
+    } catch (e) {
+      debugError("ACT", "refreshAllBasesViews failed", e);
+    }
+    try {
       this.forceReprocessBasesViews();
-    } catch (_) {
+    } catch (e) {
+      debugError("ACT", "forceReprocessBasesViews failed", e);
     }
     try {
       this.reregisterCommandsWithLanguage();
@@ -35412,19 +36338,24 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (_) {
     }
   }
+  // Whether the user hid this command from the palette. Shared by
+  // registerCommandPalette (via its local alias below) and by the group-command
+  // registrars, which predate the addTrackedCommand helper and would otherwise
+  // re-register a hidden command on every reregisterCommandsWithLanguage().
+  isCommandHidden(id) {
+    try {
+      const pluginId = this.manifest && this.manifest.id || "always-color-text";
+      const hidden = Array.isArray(this.settings.hiddenCommands) ? this.settings.hiddenCommands : [];
+      return hidden.includes(id) || hidden.includes(`${pluginId}:${id}`);
+    } catch (_) {
+      return false;
+    }
+  }
   registerCommandPalette() {
     try {
       if (this.settings?.disableToggleModes?.command) return;
       if (this._commandsRegistered) return;
-      const pluginId = this.manifest && this.manifest.id || "always-color-text";
-      const isCommandHidden = (id) => {
-        try {
-          const hidden = Array.isArray(this.settings.hiddenCommands) ? this.settings.hiddenCommands : [];
-          return hidden.includes(id) || hidden.includes(`${pluginId}:${id}`);
-        } catch (_) {
-          return false;
-        }
-      };
+      const isCommandHidden = (id) => this.isCommandHidden(id);
       const anyQuickOnceEnabled = !!(this.settings.enableQuickColorOnce || this.settings.enableQuickHighlightOnce || this.settings.enableQuickColorHighlightOnce);
       const addTrackedCommand = (cmd) => {
         if (!cmd || !cmd.id || isCommandHidden(cmd.id)) return null;
@@ -35644,6 +36575,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             );
             return;
           }
+          const onceText = !!this.settings.enableQuickColorOnce;
+          const onceBg = !!this.settings.enableQuickHighlightOnce;
+          const onceBoth = !!this.settings.enableQuickColorHighlightOnce;
+          const onceType = onceBoth || onceText && onceBg ? "text-and-background" : onceText ? "text" : "background";
           new ColorPickerModal(
             this.app,
             this,
@@ -35696,7 +36631,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                 editor.replaceSelection(span);
               }
             },
-            "text-and-background",
+            onceType,
             word,
             true
           ).open();
@@ -35874,6 +36809,12 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             if (this.settings.enabled && !this.settings.hideTextColors) {
               this.applyEnabledReadingCalloutStyles();
             }
+            if (this.settings.hideHighlights) {
+              this.applyHideHighlightsNeutralizerStyles();
+              this.neutralizeExistingHighlightBackgrounds();
+            } else {
+              this.removeHideHighlightsNeutralizerStyles();
+            }
             this._lpCalloutCache = /* @__PURE__ */ new WeakMap();
             this.reconfigureEditorExtensions();
             this.forceRefreshAllEditors();
@@ -35906,7 +36847,8 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             }
             const msg = this.settings.hideTextColors ? this.t("notice_text_colors_hidden", "Text colors hidden") : this.t("notice_text_colors_visible", "Text colors visible");
             new import_obsidian29.Notice(msg);
-          } catch (_) {
+          } catch (e) {
+            debugError("ACT", "toggle-hide-text-colors callback failed", e);
           }
         }
       });
@@ -35965,7 +36907,8 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             }
             const msg = this.settings.hideHighlights ? this.t("notice_highlights_hidden", "Highlights hidden") : this.t("notice_highlights_visible", "Highlights visible");
             new import_obsidian29.Notice(msg);
-          } catch (_) {
+          } catch (e) {
+            debugError("ACT", "toggle-hide-highlights callback failed", e);
           }
         }
       });
@@ -36005,6 +36948,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           "Activate {groupName} Word Group",
           { groupName }
         );
+        if (this.isCommandHidden(commandId)) return;
         try {
           this._registeredCommandIds.push(commandId);
         } catch (_) {
@@ -36072,6 +37016,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           "Activate {groupName} Blacklist Group",
           { groupName }
         );
+        if (this.isCommandHidden(commandId)) return;
         try {
           this._registeredCommandIds.push(commandId);
         } catch (_) {
@@ -36638,7 +37583,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                 );
                 if (borderCss) {
                   for (const el of paintTargets) {
-                    el.style.cssText += borderCss;
+                    this.applyInlineBorderCss(el, borderCss);
                   }
                 }
               } catch (_) {
@@ -36745,11 +37690,13 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           }
         }
       }
-      if (!taskCheckedEntry && !taskUncheckedEntry && !bulletEntry && !numberedEntry)
-        return;
+      const hasAnyListEntry = !!(taskCheckedEntry || taskUncheckedEntry || bulletEntry || numberedEntry);
       let listItems = Array.from(element.querySelectorAll?.("li") || []);
       if (element && element.nodeName === "LI" && listItems.length === 0)
         listItems = [element];
+      if (!hasAnyListEntry) {
+        for (const li of listItems) this._clearListItemPaint(li);
+      }
       try {
         debugLog(
           "MARKDOWN_FORMAT",
@@ -36757,7 +37704,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         );
       } catch (_) {
       }
-      for (const li of listItems) {
+      if (hasAnyListEntry) for (const li of listItems) {
         if (li.closest("code, pre")) continue;
         const contentText = this.extractListItemContent(li);
         const contentBlacklisted = this.containsBlacklistedWord(
@@ -36793,6 +37740,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                 const tn = document.createTextNode(ex.textContent);
                 ex.replaceWith(tn);
               }
+              this._clearListItemPaint(li);
             } catch (_) {
             }
             continue;
@@ -36801,6 +37749,8 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             if (!contentBlacklisted) this._colorListItemContent(li, entry);
             if (checkbox) this._styleCheckbox(checkbox, entry);
             else this._styleTaskMarker(li, entry);
+          } else {
+            this._clearListItemPaint(li);
           }
         } else if (!isTaskItem && (bulletEntry || numberedEntry)) {
           const isOrdered = li.parentElement?.tagName === "OL";
@@ -36819,6 +37769,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                 const tn = document.createTextNode(ex.textContent);
                 ex.replaceWith(tn);
               }
+              this._clearListItemPaint(li);
             } catch (_) {
             }
             continue;
@@ -36826,7 +37777,11 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           if (entry) {
             if (!contentBlacklisted) this._colorListItemContent(li, entry);
             this._styleListMarker(li, entry, isOrdered);
+          } else {
+            this._clearListItemPaint(li);
           }
+        } else {
+          this._clearListItemPaint(li);
         }
       }
       let paragraphs = Array.from(element.querySelectorAll?.("p") || []);
@@ -36856,6 +37811,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
               const tn = document.createTextNode(ex.textContent);
               ex.replaceWith(tn);
             }
+            this._clearListItemPaint(p);
           } catch (_) {
           }
           continue;
@@ -36863,6 +37819,8 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         if (entry) {
           this._styleCheckbox(checkbox, entry);
           if (!contentBlacklistedP) this._colorListItemContent(p, entry);
+        } else {
+          this._clearListItemPaint(p);
         }
       }
     } catch (e) {
@@ -36887,6 +37845,46 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     if (textColour) return textColour;
     if (flags.hideBg) return null;
     return bgColour;
+  }
+  // Strip every marker/list paint _styleListMarker / _styleTaskMarker /
+  // _styleCheckbox / _colorListItemContent could have applied to a list
+  // item (or task paragraph). Deleting a list/task entry used to leave its
+  // colour on the item forever: the processor only ever painted, and the
+  // "no list entries" path returned before any reset could run.
+  _clearListItemPaint(el) {
+    try {
+      if (!el) return;
+      const hasOurs = el.classList.contains("act-colored-list-item") || el.classList.contains("act-color-marker") || !!el.getAttribute("style") || !!el.querySelector("span[data-act-task-marker]") || !!el.querySelector(".list-bullet[style], .list-number[style]") || !!el.querySelector('input[type="checkbox"][style]');
+      if (!hasOurs) return;
+      el.style.removeProperty("--act-marker-color");
+      el.style.removeProperty("--act-color");
+      el.style.removeProperty("color");
+      el.classList.remove("act-colored-list-item");
+      el.classList.remove("act-color-marker");
+      el.querySelectorAll(".list-bullet, .list-number").forEach((m) => {
+        try {
+          m.style.removeProperty("color");
+        } catch (_) {
+        }
+      });
+      el.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        try {
+          cb.style.removeProperty("accent-color");
+        } catch (_) {
+        }
+      });
+      el.querySelectorAll("span[data-act-task-marker]").forEach((s) => {
+        try {
+          const parent = s.parentNode;
+          if (!parent) return;
+          while (s.firstChild) parent.insertBefore(s.firstChild, s);
+          parent.removeChild(s);
+          if (parent.normalize) parent.normalize();
+        } catch (_) {
+        }
+      });
+    } catch (_) {
+    }
   }
   _styleCheckbox(checkbox, entry) {
     try {
@@ -37750,6 +38748,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (e) {
     }
     try {
+      this.clearReadingLineTargetClasses();
+    } catch (e) {
+    }
+    try {
       document.documentElement.classList.remove("act-enabled");
     } catch (e) {
     }
@@ -38182,6 +39184,14 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       } catch (_) {
       }
       try {
+        document.querySelectorAll("style[data-act-line-style]").forEach((el) => el.remove());
+      } catch (_) {
+      }
+      try {
+        this.clearReadingLineTargetClasses();
+      } catch (_) {
+      }
+      try {
         this._applyLivePreviewTagHighlights();
       } catch (_) {
       }
@@ -38579,7 +39589,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
               m.entryRef || m.entry || null
             );
             if (borderCss) {
-              span.style.cssText += borderCss;
+              this.applyInlineBorderCss(span, borderCss);
             }
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = "clone";
@@ -38656,7 +39666,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
               m.entryRef || m.entry || null
             );
             if (borderCss2) {
-              span.style.cssText += borderCss2;
+              this.applyInlineBorderCss(span, borderCss2);
             }
             if (this.settings.enableBoxDecorationBreak ?? true) {
               span.style.boxDecorationBreak = "clone";
@@ -39409,7 +40419,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         const entry = reversedWe.find((e) => e && e.targetElement === t.key) || reversedWeAll.find((e) => e && e.targetElement === t.key);
         if (!entry) return;
         if (this.isMarkdownEntryBlacklisted(entry)) return;
-        const selector = buildMarkdownSelector(t, entry, hasBoldItalic);
+        const selector = buildMarkdownSelector(t, entry, hasBoldItalic, {
+          editor: !this.settings.disableLivePreviewColoring,
+          reading: !this.settings.disableReadingModeColoring
+        });
         if (!selector) return;
         {
           const flags = getHideFlags(this.settings);
@@ -39454,7 +40467,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           if (this.settings.enableCustomCss && entry.customCss) {
             css += buildSelectorBlockRules(entry.customCss, selector);
           }
-          if ((t.key === "tag" || t.key === "all-tags") && isHighlight) {
+          if ((t.key === "tag" || t.key === "all-tags") && isHighlight && !this.settings.disableLivePreviewColoring) {
             const cmSel = buildMarkdownCmSelector(t, entry, hasBoldItalic);
             if (cmSel) {
               const fixCmEditorScope = (sel) => {
@@ -40166,6 +41179,27 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     this.syncGlobalToggleCssState();
     this.rebuildCustomCssBlockRules();
     try {
+      const entriesSig = JSON.stringify([
+        data.wordEntries,
+        data.wordEntryGroups,
+        data.quickStyles,
+        data.quickColors,
+        data.textBgColoringEntries,
+        data.blacklistEntries
+      ]);
+      if (entriesSig !== this._lastSavedEntriesSig) {
+        this._lastSavedEntriesSig = entriesSig;
+        this.sweepOrphanLineTargets();
+        if (this.settings.enabled) {
+          this.forceReprocessLivePreviewCallouts();
+          this.forceReprocessLivePreviewTables();
+          this.forceReprocessBasesViews();
+        }
+      }
+    } catch (e) {
+      debugError("ACT", "entry-change refresh failed", e);
+    }
+    try {
       this.forceRefreshAllEditors();
     } catch (e) {
     }
@@ -40694,17 +41728,17 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     }
   }
   // --- Save a persistent color for a word ---
-  async saveEntry(word, color, markTarget = "text") {
+  async saveEntry(word, color, markTarget2 = "text") {
     const pattern = String(word);
     const col = String(color);
-    debugLog("SAVE", "saveEntry", { pattern, color: col, markTarget });
+    debugLog("SAVE", "saveEntry", { pattern, color: col, markTarget: markTarget2 });
     const idx = this.settings.wordEntries.findIndex(
       (e) => e && e.pattern === pattern && !e.isRegex
     );
     if (idx !== -1) {
       this.settings.wordEntries[idx].color = col;
       this.settings.wordEntries[idx].styleType = "text";
-      this.settings.wordEntries[idx].markTarget = markTarget;
+      this.settings.wordEntries[idx].markTarget = markTarget2;
       this.settings.wordEntries[idx].textColor = null;
       this.settings.wordEntries[idx].backgroundColor = null;
     } else {
@@ -40716,7 +41750,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         styleType: "text",
         textColor: null,
         backgroundColor: null,
-        markTarget,
+        markTarget: markTarget2,
         matchType: this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact"),
         caseSensitive: !!this.settings.caseSensitive
       });
@@ -40776,7 +41810,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     if (!tc && !bc && !(color && this.isValidHexColor(color))) return;
     const selGroupUid = sel && sel.selectedGroupUid || opts.fallbackGroupUid || null;
     const matchType = sel && sel.matchType || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact");
-    const markTarget = sel && sel.markTarget || "text";
+    const markTarget2 = sel && sel.markTarget || "text";
     const caseSensitive = sel && typeof sel.caseSensitive === "boolean" ? sel.caseSensitive : !!this.settings.caseSensitive;
     const ps = sel && sel.presetStyle || null;
     const applyPresetStyleToEntry = (ent) => {
@@ -40802,7 +41836,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       const target = live && live.entry || resolved.entry;
       if (target) {
         try {
-          target.markTarget = markTarget;
+          target.markTarget = markTarget2;
           if (tc && bc) {
             target.textColor = tc;
             target.backgroundColor = bc;
@@ -40944,7 +41978,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       const idx = findEntry(arr);
       if (idx !== -1) {
         const entry = arr[idx];
-        entry.markTarget = markTarget;
+        entry.markTarget = markTarget2;
         if (tc && bc) {
           entry.textColor = tc;
           entry.backgroundColor = bc;
@@ -40980,13 +42014,13 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       } else {
         let ne = null;
         if (tc && bc) {
-          ne = { pattern: selectedText, color: "", textColor: tc, backgroundColor: bc, isRegex: false, flags: "", styleType: "both", matchType, markTarget, caseSensitive, _savedTextColor: tc, _savedBackgroundColor: bc };
+          ne = { pattern: selectedText, color: "", textColor: tc, backgroundColor: bc, isRegex: false, flags: "", styleType: "both", matchType, markTarget: markTarget2, caseSensitive, _savedTextColor: tc, _savedBackgroundColor: bc };
         } else if (tc) {
-          ne = { pattern: selectedText, color: tc, isRegex: false, flags: "", styleType: "text", matchType, markTarget, caseSensitive, _savedTextColor: tc };
+          ne = { pattern: selectedText, color: tc, isRegex: false, flags: "", styleType: "text", matchType, markTarget: markTarget2, caseSensitive, _savedTextColor: tc };
         } else if (bc) {
-          ne = { pattern: selectedText, color: "", textColor: "currentColor", backgroundColor: bc, isRegex: false, flags: "", styleType: "highlight", matchType, markTarget, caseSensitive, _savedBackgroundColor: bc };
+          ne = { pattern: selectedText, color: "", textColor: "currentColor", backgroundColor: bc, isRegex: false, flags: "", styleType: "highlight", matchType, markTarget: markTarget2, caseSensitive, _savedBackgroundColor: bc };
         } else if (color && this.isValidHexColor(color)) {
-          ne = { pattern: selectedText, color, isRegex: false, flags: "", styleType: "text", matchType, markTarget, caseSensitive, _savedTextColor: color };
+          ne = { pattern: selectedText, color, isRegex: false, flags: "", styleType: "text", matchType, markTarget: markTarget2, caseSensitive, _savedTextColor: color };
         }
         if (ne) {
           applyPresetStyleToEntry(ne);
@@ -41048,7 +42082,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     }
   }
   // Add a new entry (word or regex)
-  async addNewEntry(pattern, color, isRegex, flags = "", name = "", markTarget = "text") {
+  async addNewEntry(pattern, color, isRegex, flags = "", name = "", markTarget2 = "text") {
     try {
       const patternStr = String(pattern || "").trim();
       if (!patternStr) {
@@ -41083,7 +42117,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         flags: String(flags || "").replace(/[^gimsuy]/g, ""),
         styleType: "text",
         backgroundColor: null,
-        markTarget,
+        markTarget: markTarget2,
         matchType: !isRegex ? this.settings.partialMatch ? "contains" : "exact" : "regex",
         caseSensitive: !!this.settings.caseSensitive,
         presetLabel: name ? String(name) : void 0,
@@ -41273,22 +42307,6 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     }
     this.forceRefreshAllEditors();
     this.forceRefreshAllReadingViews();
-    if (activeView) {
-      this.refreshEditor(activeView, true);
-      if (activeView.getMode && activeView.getMode() === "preview") {
-        try {
-          const root = activeView.previewMode && activeView.previewMode.containerEl || activeView.contentEl || activeView.containerEl;
-          if (root && activeView.file && activeView.file.path) {
-            try {
-              delete root.dataset.actProcessed;
-            } catch (_) {
-            }
-            this.processActiveFileOnly(root, { sourcePath: activeView.file.path });
-          }
-        } catch (e) {
-        }
-      }
-    }
   }
   // --- Update Status Bar Text ---
   updateStatusBar() {
@@ -43365,6 +44383,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         if (!hideText && finalTextColor) {
           element.style.setProperty("color", finalTextColor, "important");
           element.style.setProperty("--highlight-color", finalTextColor);
+        } else if (hideText) {
+          element.style.removeProperty("color");
+          element.style.removeProperty("--highlight-color");
         }
         const styleType2 = entry.styleType || "text";
         const borderCSS = this.generateBorderStyle(finalTextColor, backgroundColor, entry);
@@ -43469,8 +44490,21 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
   // Apply Highlights in Reading View (Markdown Post Processor) - optional folderEntry may override match colors
   applyHighlights(el, folderEntry = null, options = {}) {
     const entries = options && Array.isArray(options.entries) ? options.entries : this.getSortedWordEntries();
-    if (entries.length === 0) return;
     if (!el.isConnected) return;
+    if (entries.length === 0) {
+      if (!options || options.clearExisting !== false) {
+        try {
+          el.querySelectorAll(".always-color-text-highlight").forEach((hl) => {
+            try {
+              hl.replaceWith(document.createTextNode(hl.textContent));
+            } catch (_) {
+            }
+          });
+        } catch (_) {
+        }
+      }
+      return;
+    }
     const elementEntries = entries.filter((e) => e && e.targetElement);
     const regexEntries = entries.filter((e) => e && !e.targetElement);
     if (elementEntries.length > 0) {
@@ -43690,7 +44724,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         try {
           const borderCss = this.generateBorderStyle(null, bgBase, entry);
           if (borderCss) {
-            span.style.cssText += borderCss;
+            this.applyInlineBorderCss(span, borderCss);
           }
         } catch (_) {
         }
@@ -43783,7 +44817,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             entry
           );
           if (borderCss) {
-            span.style.cssText += borderCss;
+            this.applyInlineBorderCss(span, borderCss);
           }
         } catch (_) {
         }
@@ -45070,6 +46104,11 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
               } catch (e) {
               }
             }
+            if (headingEl.hasAttribute("data-act-md-colored")) {
+              headingEl.style.removeProperty("color");
+              headingEl.style.removeProperty("--highlight-color");
+              headingEl.removeAttribute("data-act-md-colored");
+            }
             continue;
           } else {
             const c = headingEntry.color || headingEntry.textColor;
@@ -45095,6 +46134,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
               headingEl.removeAttribute("data-act-md-colored");
             }
           }
+        } else if (headingEl.hasAttribute("data-act-md-colored")) {
+          headingEl.style.removeProperty("color");
+          headingEl.style.removeProperty("--highlight-color");
+          headingEl.removeAttribute("data-act-md-colored");
         }
       }
       const originalText = text;
@@ -45805,12 +46848,11 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
               i = j;
               continue;
             }
-            const markTarget = m.entryRef && m.entryRef.markTarget;
-            if (markTarget === "line" || markTarget === "nextLine") {
-              const rawPattern = m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern) || "";
-              const cssClass = String(rawPattern).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
+            const markTarget2 = m.entryRef && m.entryRef.markTarget;
+            if (markTarget2 === "line" || markTarget2 === "nextLine") {
+              const cssClass = this.lineTargetCssClass(m.entryRef);
               let targetBlock = block;
-              if (markTarget === "nextLine") {
+              if (markTarget2 === "nextLine") {
                 try {
                   const walker2 = document.createTreeWalker(
                     block,
@@ -45830,13 +46872,13 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                 }
               }
               if (targetBlock && targetBlock !== block) {
-                targetBlock.classList.add(cssClass);
+                this.addReadingLineTargetClass(targetBlock, cssClass);
               }
-              block.classList.add(cssClass);
+              this.addReadingLineTargetClass(block, cssClass);
               try {
                 const parent = block.parentElement;
                 if (parent && parent.className && /\bel-/.test(parent.className)) {
-                  parent.classList.add(cssClass);
+                  this.addReadingLineTargetClass(parent, cssClass);
                 }
               } catch (e) {
               }
@@ -50371,10 +51413,9 @@ ${strongRule}${hoverRules ? "\n" + hoverRules : ""}`;
         }
       }
       const isDark = (m.color || m.textColor || m.backgroundColor) && this.isDarkColor(m.color || m.textColor || m.backgroundColor);
-      const markTarget = m.entryRef && m.entryRef.markTarget;
-      if (markTarget === "line" || markTarget === "nextLine") {
-        const rawPattern = m.entryRef && (m.entryRef.presetLabel || m.entryRef.pattern) || "";
-        const cssClass = String(rawPattern).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-") || `act-line-${(m.entryRef && m.entryRef.uid || "x").toString().slice(-6)}`;
+      const markTarget2 = m.entryRef && m.entryRef.markTarget;
+      if (markTarget2 === "line" || markTarget2 === "nextLine") {
+        const cssClass = this.lineTargetCssClass(m.entryRef);
         let colorProp = "";
         const lineStyleParts = [];
         const layoutStyleParts = [];
@@ -50421,7 +51462,7 @@ ${strongRule}${hoverRules ? "\n" + hoverRules : ""}`;
 ${strongLayoutRule}${hoverRules ? "\n" + hoverRules : ""}`;
         if (styleEl.textContent !== rule) styleEl.textContent = rule;
         let lineStart;
-        if (markTarget === "nextLine") {
+        if (markTarget2 === "nextLine") {
           const matchLine = view.state.doc.lineAt(m.start);
           lineStart = matchLine.number < view.state.doc.lines ? view.state.doc.line(matchLine.number + 1).from : matchLine.from;
         } else {

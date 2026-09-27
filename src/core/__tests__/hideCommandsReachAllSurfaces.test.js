@@ -59,6 +59,8 @@ const CONSULTS_FLAGS =
  *
  * - clearMarkdownElementDecorations / neutralizeExistingHighlightBackgrounds:
  *   they REMOVE paint (or paint the neutralizer), they are the teardown side
+ * - _clearListItemPaint: teardown sibling of clearMarkdownElementDecorations
+ *   for list/task markers — it only ever removes colours and unwraps spans
  * - compressEntry / loadSettings / saveEntry / savePickedColorsForSelection:
  *   settings (de)serialisation, nothing is painted
  * - hexToRgba: colour maths
@@ -69,6 +71,7 @@ const CONSULTS_FLAGS =
  */
 const KNOWN_NON_PAINTING = new Set([
   "clearMarkdownElementDecorations",
+  "_clearListItemPaint",
   "neutralizeExistingHighlightBackgrounds",
   "compressEntry",
   "loadSettings",
@@ -230,7 +233,7 @@ describe("the neutralizer covers every highlight surface", () => {
 
 describe("decorations stamped onto the DOM are undone, not just re-painted", () => {
   it("unwraps task-marker spans when clearing", () => {
-    const fn = /clearMarkdownElementDecorations\(\)\s*\{[\s\S]*?\n  \}/.exec(
+    const fn = /clearMarkdownElementDecorations\([^)]*\)\s*\{[\s\S]*?\n  \}/.exec(
       mainSrc,
     );
     expect(fn).not.toBeNull();

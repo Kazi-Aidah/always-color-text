@@ -244,9 +244,18 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
 }
 
 // Full selector (editor + reading) used by applyFormattingStyles.
-export function buildMarkdownSelector(t, entry, hasBoldItalic) {
+// `modes` (optional): { editor, reading } — which scopes the selector may
+// emit. Both default to on, so existing callers keep byte-identical output.
+// Used by applyFormattingStyles so "Color in reading mode" / "Color in live
+// preview mode" actually gate their half of the shared stylesheet.
+export function buildMarkdownSelector(t, entry, hasBoldItalic, modes) {
   const { cm, rend } = buildMarkdownParts(t, entry, hasBoldItalic);
-  return [cm, rend].filter(Boolean).join(", ");
+  const wantEditor = !modes || modes.editor !== false;
+  const wantReading = !modes || modes.reading !== false;
+  const parts = [];
+  if (wantEditor && cm) parts.push(cm);
+  if (wantReading && rend) parts.push(rend);
+  return parts.join(", ");
 }
 
 // Editor-only selector (used for live-preview tag begin/end splitting).
