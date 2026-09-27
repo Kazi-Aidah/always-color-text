@@ -1589,7 +1589,6 @@ export class ColorSettingTab extends PluginSettingTab {
           );
         } catch (_) {}
         this._disabledFilesSearchInput.style.flex = "1 1 auto";
-        this._disabledFilesSearchInput.style.padding = "6px 6px 6px 30px"; // Increased left padding for icon
         // this._disabledFilesSearchInput.style.marginBottom = '6px';
         this._disabledFilesSearchInput.style.border =
           "1px solid var(--background-modifier-border)";
@@ -5628,20 +5627,10 @@ export class ColorSettingTab extends PluginSettingTab {
     tabs.forEach((tab) => {
       const btn = tabContainer.createEl("button", { text: tab.label });
       btn.addClass("act-tab-button");
-      btn.style.flex = "1 1 auto";
-      btn.style.cursor = "pointer";
-      btn.style.border = "none";
-      btn.style.background = "transparent";
-      btn.style.boxShadow = "none";
-      btn.style.borderRadius = "var(--input-radius)";
-      btn.style.padding = "8px 16px";
 
       if (this._activeTab === tab.id) {
         btn.addClass("mod-cta");
         btn.addClass("act-tab-active");
-        btn.style.fontWeight = "bold";
-      } else {
-        btn.style.color = "var(--text-muted)";
       }
 
       btn.onclick = () => {
@@ -7326,7 +7315,6 @@ export class ColorSettingTab extends PluginSettingTab {
         "Search colored words/patterns…",
       );
       entriesSearch.style.flex = "1 1 auto";
-      entriesSearch.style.padding = "6px";
       entriesSearch.style.border =
         "1px solid var(--background-modifier-border)";
       const entriesIcon = entriesSearchContainer.createDiv();
@@ -7773,7 +7761,6 @@ export class ColorSettingTab extends PluginSettingTab {
         "Search groups…",
       );
       groupSearch.style.flex = "1 1 auto";
-      groupSearch.style.padding = "6px";
       groupSearch.style.border = "1px solid var(--background-modifier-border)";
       groupSearch.addEventListener("input", () => {
         this._groupSearch = groupSearch.value || "";
@@ -7984,7 +7971,6 @@ export class ColorSettingTab extends PluginSettingTab {
         "Search blacklisted words or patterns…",
       );
       blSearch.style.flex = "1 1 auto";
-      blSearch.style.padding = "6px";
       blSearch.style.border = "1px solid var(--background-modifier-border)";
       const blIcon = blSearchContainer.createDiv();
       try {
@@ -8334,7 +8320,6 @@ export class ColorSettingTab extends PluginSettingTab {
         "Search blacklist groups…",
       );
       blGroupSearch.style.flex = "1 1 auto";
-      blGroupSearch.style.padding = "6px";
       blGroupSearch.style.border =
         "1px solid var(--background-modifier-border)";
       blGroupSearch.addEventListener("input", () => {
@@ -8507,7 +8492,6 @@ export class ColorSettingTab extends PluginSettingTab {
         "Search file/folder rules…",
       );
       prSearch.style.flex = "1 1 auto";
-      prSearch.style.padding = "6px";
       prSearch.style.border = "1px solid var(--background-modifier-border)";
       const prIcon = prSearchContainer.createDiv();
       try {

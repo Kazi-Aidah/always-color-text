@@ -31,3 +31,6 @@ yarn-error.log*
 
 # Local backups
 backups/
+
+# Orphaned legacy stylesheet (pre-split monolith; not part of the build)
+styles/mainstyle.css

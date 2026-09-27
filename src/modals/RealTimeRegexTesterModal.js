@@ -537,13 +537,7 @@ export class RealTimeRegexTesterModal extends Modal {
     regexInput.style.background = "var(--background-modifier-form-field)";
     regexInput.style.fontFamily = "var(--font-ui-medium)";
     const subjectWrap = contentEl.createDiv();
-    subjectWrap.style.marginTop = "10px";
-    subjectWrap.style.border = "1px solid var(--background-modifier-border)";
     subjectWrap.addClass("act-subject-wrap");
-    subjectWrap.style.borderRadius = "var(--input-radius)";
-    subjectWrap.style.cornerShape = "var(--corner-shape)";
-    subjectWrap.style.overflow = "hidden";
-    subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("textarea");
     try {
       testInput.addClass("act-regex-tester-subject");

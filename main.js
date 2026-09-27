@@ -20693,13 +20693,7 @@ var RealTimeRegexTesterModal = class extends import_obsidian14.Modal {
     regexInput.style.background = "var(--background-modifier-form-field)";
     regexInput.style.fontFamily = "var(--font-ui-medium)";
     const subjectWrap = contentEl.createDiv();
-    subjectWrap.style.marginTop = "10px";
-    subjectWrap.style.border = "1px solid var(--background-modifier-border)";
     subjectWrap.addClass("act-subject-wrap");
-    subjectWrap.style.borderRadius = "var(--input-radius)";
-    subjectWrap.style.cornerShape = "var(--corner-shape)";
-    subjectWrap.style.overflow = "hidden";
-    subjectWrap.style.background = "var(--background-modifier-form-field)";
     const testInput = subjectWrap.createEl("textarea");
     try {
       testInput.addClass("act-regex-tester-subject");
@@ -22195,7 +22189,6 @@ var EditWordGroupModal = class extends import_obsidian18.Modal {
       }
     }
     searchInput.style.flex = "1 1 auto";
-    searchInput.style.padding = "6px";
     searchInput.style.border = "1px solid var(--background-modifier-border)";
     searchInput.style.borderRadius = "var(--input-radius)";
     searchInput.value = this._searchQuery;
@@ -23653,7 +23646,6 @@ var EditBlacklistGroupModal = class extends import_obsidian20.Modal {
       }
     }
     searchInput.style.flex = "1 1 auto";
-    searchInput.style.padding = "6px";
     searchInput.style.border = "1px solid var(--background-modifier-border)";
     searchInput.style.borderRadius = "var(--input-radius)";
     searchInput.value = this._searchQuery;
@@ -24364,7 +24356,6 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
     }
     textWrap.style.flex = "1 1 120px";
     textWrap.style.minWidth = "120px";
-    textWrap.style.marginTop = "20px";
     const textSample = textWrap.createDiv();
     textSample.textContent = this.plugin.t("text_color_title", "Text Color");
     textSample.style.padding = "2px 6px";
@@ -26861,7 +26852,6 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         } catch (_) {
         }
         this._disabledFilesSearchInput.style.flex = "1 1 auto";
-        this._disabledFilesSearchInput.style.padding = "6px 6px 6px 30px";
         this._disabledFilesSearchInput.style.border = "1px solid var(--background-modifier-border)";
         this._disabledFilesSearchInput.value = String(
           this._disabledFilesSearchQuery || ""
@@ -29610,19 +29600,9 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
     tabs.forEach((tab) => {
       const btn = tabContainer.createEl("button", { text: tab.label });
       btn.addClass("act-tab-button");
-      btn.style.flex = "1 1 auto";
-      btn.style.cursor = "pointer";
-      btn.style.border = "none";
-      btn.style.background = "transparent";
-      btn.style.boxShadow = "none";
-      btn.style.borderRadius = "var(--input-radius)";
-      btn.style.padding = "8px 16px";
       if (this._activeTab === tab.id) {
         btn.addClass("mod-cta");
         btn.addClass("act-tab-active");
-        btn.style.fontWeight = "bold";
-      } else {
-        btn.style.color = "var(--text-muted)";
       }
       btn.onclick = () => {
         this._activeTab = tab.id;
@@ -31009,7 +30989,6 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         "Search colored words/patterns\u2026"
       );
       entriesSearch.style.flex = "1 1 auto";
-      entriesSearch.style.padding = "6px";
       entriesSearch.style.border = "1px solid var(--background-modifier-border)";
       const entriesIcon = entriesSearchContainer.createDiv();
       try {
@@ -31420,7 +31399,6 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         "Search groups\u2026"
       );
       groupSearch.style.flex = "1 1 auto";
-      groupSearch.style.padding = "6px";
       groupSearch.style.border = "1px solid var(--background-modifier-border)";
       groupSearch.addEventListener("input", () => {
         this._groupSearch = groupSearch.value || "";
@@ -31613,7 +31591,6 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         "Search blacklisted words or patterns\u2026"
       );
       blSearch.style.flex = "1 1 auto";
-      blSearch.style.padding = "6px";
       blSearch.style.border = "1px solid var(--background-modifier-border)";
       const blIcon = blSearchContainer.createDiv();
       try {
@@ -31943,7 +31920,6 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         "Search blacklist groups\u2026"
       );
       blGroupSearch.style.flex = "1 1 auto";
-      blGroupSearch.style.padding = "6px";
       blGroupSearch.style.border = "1px solid var(--background-modifier-border)";
       blGroupSearch.addEventListener("input", () => {
         this._blacklistGroupSearch = blGroupSearch.value || "";
@@ -32103,7 +32079,6 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         "Search file/folder rules\u2026"
       );
       prSearch.style.flex = "1 1 auto";
-      prSearch.style.padding = "6px";
       prSearch.style.border = "1px solid var(--background-modifier-border)";
       const prIcon = prSearchContainer.createDiv();
       try {

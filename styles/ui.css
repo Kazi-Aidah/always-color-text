@@ -9,13 +9,23 @@
   flex-wrap: wrap;
   width: 100%;
 }
-/* Search input with left icon */
+/* Search input with left icon.
+   The icon offset is scoped to the plugin's own containers instead of using
+   !important, so it still beats Obsidian's generic input rules. */
 .act-search-input {
-  padding-left: 28px !important;
+  padding: 6px;
+  padding-left: 28px;
   background-color: var(--background-modifier-form-field);
   border: 1px solid var(--background-modifier-border);
   color: var(--text-normal);
+  border-radius: var(--input-radius);
   transition: all 0.2s ease;
+}
+/* Re-assert the icon offset from a scope Obsidian's generic input rules
+   (e.g. input[type="text"]) can't out-specify. */
+.vertical-tab-content .act-search-input,
+.act-modal .act-search-input {
+  padding-left: 28px;
 }
 .act-search-input:focus {
   border-color: var(--interactive-accent);
@@ -50,9 +60,32 @@
   margin-top: 12px;
   width: 100%;
 }
-.act-tab-button.act-tab-active {
-  background-color: var(--interactive-accent) !important;
-  color: var(--text-on-accent) !important;
+/* Scoped to `body` + the container + element type so the specificity (0,2,2)
+   beats Obsidian's `button:not(.clickable-icon)` (0,1,1) and
+   `button:not(.clickable-icon).mobile-tap` (0,2,1), which otherwise paint the
+   tabs with --interactive-normal/--interactive-hover and --input-shadow — that
+   inset 1px ring reads as a border. The `body` prefix also means we do not
+   depend on plugin CSS loading after app.css. No !important needed. */
+body .act-tabs-container button.act-tab-button {
+  flex: 1 1 auto;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: var(--input-radius);
+  padding: var(--size-4-2) var(--size-4-4);
+}
+.act-tabs-container button.act-tab-button.act-tab-active {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-weight: bold;
+}
+.act-tabs-container button.act-tab-button:not(.act-tab-active) {
+  color: var(--text-muted);
+}
+/* Re-state Obsidian's keyboard focus ring, which box-shadow: none above hides. */
+.act-tabs-container button.act-tab-button:focus-visible {
+  box-shadow: 0 0 0 3px var(--background-modifier-border-focus);
 }
 /* Fix for conflicting Bold + BoldItalic styles in Reading Mode */
 /* ====== LIST AND CHECKBOX STYLING FOR READING MODE ====== */
@@ -108,9 +141,19 @@
 div[contenteditable="true"]:focus {
   /* handled by parent wrapper via JS focus/blur — see taBox in CustomCssModal */
 }
+/* Subject-wrap chrome (previously set inline from JS) lives here so the
+   :focus-within rule below wins on specificity instead of !important. */
+.act-subject-wrap {
+  margin-top: 10px; /* legacy literal, kept to preserve current spacing (off the 4px grid) */
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--input-radius);
+  corner-shape: var(--corner-shape);
+  overflow: hidden;
+  background: var(--background-modifier-form-field);
+}
 .act-edit-entry-textbox:focus-within,
 .act-subject-wrap:focus-within {
-  border-color: var(--color-accent) !important;
+  border-color: var(--color-accent);
 }
 .act-edit-entry-row1 {
   display: flex;
@@ -140,9 +183,9 @@ div[contenteditable="true"]:focus {
   line-height: 1.5;
   border-radius: var(--input-radius);
 }
-.act-edit-entry-style-select {
+.act-modal .act-edit-entry-style-select {
   min-width: 120px;
-  max-width: 140px !important;
+  max-width: 140px;
 }
 .act-edit-entry-row2 {
   display: flex;
@@ -178,11 +221,11 @@ div[contenteditable="true"]:focus {
 .act-highlight-style-col {
   min-width: 100px;
 }
-.act-highlight-style-select {
+.act-highlight-modal .act-highlight-style-select {
   width: 100%;
-  min-width: 140px !important;
-  max-width: 140px !important;
-  padding: 6px 8px !important;
+  min-width: 140px;
+  max-width: 140px;
+  padding: var(--size-2-3) var(--size-4-2);
 }
 .act-highlight-picker-row {
   display: flex;
@@ -218,9 +261,9 @@ div[contenteditable="true"]:focus {
   align-items: center;
   gap: 8px;
 }
-.act-highlight-input-small {
-  width: 60px !important;
-  max-width: 60px !important;
+.act-highlight-modal .act-highlight-input-small {
+  width: 60px;
+  max-width: 60px;
 }
 .act-highlight-reset-btn {
   color: var(--text-muted);
@@ -255,60 +298,57 @@ div[contenteditable="true"]:focus {
 /* Regex Tester Modal - Prevent responsive wrapping of rows */
 .act-regex-row-expr,
 .act-regex-row-style {
-  display: flex !important;
-  gap: 12px !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap;
+  align-items: center;
 }
 .act-regex-row-expr input,
 .act-regex-row-style input,
 .act-regex-row-style select {
-  flex-shrink: 0 !important;
-  min-width: auto !important;
+  flex-shrink: 0;
+  min-width: auto;
 }
 .act-regex-name {
   min-width: 0;
 }
 /* RealTime / Blacklist Regex Tester - controls row with flags, selects, color pickers */
 .act-regex-tester-controls {
-  display: flex !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  max-width: 100% !important;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  max-width: 100%;
 }
 .act-regex-tester-flags {
-  display: flex !important;
-  gap: 6px !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 /* Header row: "Regex Tester" title on the left, word group dropdown on the right */
 .act-regex-tester-header {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .act-regex-tester-header h2 {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .act-regex-tester-header .act-regex-tester-group-select {
-  flex: 0 0 auto !important;
-  min-width: 120px !important;
-  max-width: 45% !important;
+  flex: 0 0 auto;
+  min-width: 120px;
+  max-width: 45%;
 }
 /* ====== REGEX TESTER MODAL — MOBILE LAYOUT ====== */
 /* Row 1: flags row takes full width, flag buttons stretch equally */
 /* Row 2: colortype + colorline/text selects share a row equally */
 /* Row 3: color pickers stretch width equally */
 /* Subject wrap: use touch-radius on mobile */
-.always-colored-texts-header {
-    margin-top: 50px !important;
-}
 .prompt.act .suggestion-item.mod-complex.is-selected.act .suggestion-title span {
-    color: var(--text-normal) !important;
+    color: var(--text-normal);
 }
 /* Modal action row for Always Color Text */
 .act-prompt-bottom-row {
@@ -349,25 +389,27 @@ div[contenteditable="true"]:focus {
   padding: 6px;
   border: 1px solid var(--background-modifier-border);
 }
-.act-edit-entry-style-select {
-  flex: 1 0% !important;
+.act-modal .act-edit-entry-style-select {
+  flex: 1 0%;
 }
 /* Flag button styling for regex testers */
-button.mod-cta {
-  background-color: var(--interactive-accent) !important;
-  color: var(--text-on-accent) !important;
+.act-modal button.mod-cta {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
 }
 .act-toggle {
    margin-inline-start: -25px;
    margin-bottom: 15px;
 }
 /* Delete all groups setting - remove border and padding */
-.act-delete-groups-setting {
-  border-top: 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
+/* Both dividers below are Obsidian .setting-item elements; the extra class
+   raises specificity enough to beat .setting-item without !important. */
+.setting-item.act-delete-groups-setting {
+  border-top: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: none;
 }
 /* Disabled files list: keep file name and × button on one line */
 .act-disabled-file {
@@ -393,20 +435,19 @@ button.mod-cta {
    font-size: small;
    color: var(--text-muted);
 }
-.act-section-divider {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  /* border-top: 2px solid var(--background-modifier-border) !important; */
-  border-radius: 0px !important;
-  margin: 0px !important;
-  padding: 6px !important;
+.setting-item.act-section-divider {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  padding: var(--size-2-3);
 }
 .act-entry-row input, .act-entry-row select  {
-  border-radius: var(--input-radius) !important;
+  border-radius: var(--input-radius);
 }
-.act-entry-row button, .act-entry-row select  {
-  border-radius: var(--button-radius) !important;
+.act-entry-row button  {
+  border-radius: var(--button-radius);
 }
 .act-entry-row {
   padding: 10px;
@@ -415,25 +456,22 @@ button.mod-cta {
 .blacklist-words-list input[type="checkbox"] {
     border-radius: 100px;
 }
-.act-search-input {
-  border-radius: var(--input-radius) !important;
+.act-modal .act-edit-entry-group-select {
+  min-width: 120px;
+  width: 120px;
 }
-.act-edit-entry-group-select {
-  min-width: 120px !important;
-  width: 120px !important;
-}
-.act-edit-entry-style-select {
-  min-width: 140px !important;
+.act-modal .act-edit-entry-style-select {
+  min-width: 140px;
 }
 .act-color-dots {
-   gap: 0px !important;
+   gap: 0px;
    padding: 6px 0px;
 }
 /* Drag and Drop Reordering */
 /* Highlight preset support for reading/live preview */
 /* Fix comments preset coloring */
 .menu-item.tappable.has-submenu.act-color-dots {
-padding: 2px 0px !important;
+padding: 2px 0px;
 }
 /* Theme Text Color Fixer: per-mode color adjustments (brightness / contrast /
    saturation) driven by CSS variables so the Adjust modal can tune them live.
@@ -442,16 +480,16 @@ padding: 2px 0px !important;
 /* Dark/Light previews sit side by side on desktop; only collapse to a stacked
    column on small / phone viewports. */
 .dropdown.act-group-select {
-  background-color: var(--background-modifier-form-field) !important;
+  background-color: var(--background-modifier-form-field);
 }
 /* Hide color-target select (Color Text/Line/Next Line) in entry rows — accessible via Edit Entry modal */
 .act-entry-row .act-color-target-select {
-  display: none !important;
+  display: none;
 }
 /* Also explicitly hide in word group modal entry rows */
 .act-edit-word-group-modal .act-entry-row .act-color-target-select,
 .color-words-list .act-entry-row .act-color-target-select {
-  display: none !important;
+  display: none;
 }
 /* Center-align all select elements inside ACT modals consistently */
 .act-modal select {
@@ -473,19 +511,19 @@ padding: 2px 0px !important;
 */
 /* Settings button — visible on both desktop and mobile */
 .act-entry-settings-btn {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex: 0 0 auto !important;
-  width: 32px !important;
-  height: 32px !important;
-  padding: 4px !important;
-  color: var(--text-muted) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  color: var(--text-muted);
 }
 .act-entry-settings-btn svg,
 .act-entry-settings-btn .svg-icon {
-  color: var(--text-muted) !important;
-  stroke: var(--text-muted) !important;
+  color: var(--text-muted);
+  stroke: var(--text-muted);
 }
 /* Make the entry row wrap on mobile */
 /* Hide match and color-target selects on mobile; keep style select for row 2 */
@@ -510,9 +548,6 @@ padding: 2px 0px !important;
     width: 36px;
     max-width: 36px;
     min-width: 36px;
-  }
-.act-edit-swatches-preview-row .act-edit-swatches-text-wrap {
-    margin-top: 0 !important;
   }
 /* Let selects shrink and share the first row evenly on very narrow */
 

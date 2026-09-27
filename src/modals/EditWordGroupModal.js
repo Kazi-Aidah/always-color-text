@@ -335,7 +335,6 @@ export class EditWordGroupModal extends Modal {
       } catch (_) {}
     }
     searchInput.style.flex = "1 1 auto";
-    searchInput.style.padding = "6px";
     searchInput.style.border = "1px solid var(--background-modifier-border)";
     searchInput.style.borderRadius = "var(--input-radius)";
     searchInput.value = this._searchQuery;

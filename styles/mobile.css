@@ -1128,6 +1128,13 @@ div[data-swatch-index] {
   margin-bottom: 0 !important;
   position: relative !important;
 }
+/* Scroll-fade overlays on the preset grid — disabled.
+   `.act-tsp-grid` is a grid container, so these in-flow ::before/::after boxes
+   were laid out as grid items: the ::before claimed the first cell and pushed
+   every preset one slot to the right (the "extra empty preset" at the start of
+   the grid). The gradients also rendered as a band with a wrong colour against
+   the modal background (the "shadow" on .act-tsp-grid). */
+/*
 .act-text-style-presets-modal .act-tsp-grid::before,
 .act-text-style-presets-modal .act-tsp-grid::after {
   content: "";
@@ -1146,6 +1153,7 @@ div[data-swatch-index] {
   bottom: 0 !important;
   background: linear-gradient(to top, var(--background-primary) 0%, transparent 100%) !important;
 }
+*/
 .act-tsp-add-row {
   flex-shrink: 0 !important;
   position: sticky !important;

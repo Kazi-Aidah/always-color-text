@@ -67,7 +67,6 @@ export class EditColorSwatchesModal extends Modal {
     } catch (e) {}
     textWrap.style.flex = "1 1 120px";
     textWrap.style.minWidth = "120px";
-    textWrap.style.marginTop = "20px";
 
     const textSample = textWrap.createDiv();
     textSample.textContent = this.plugin.t("text_color_title", "Text Color");
