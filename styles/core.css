@@ -23,7 +23,7 @@
      to recalculate paragraph height, which moves heading offsetTop values and makes
      Obsidian's Outline panel scroll to the wrong position. */
   vertical-align: baseline;
-  line-height: inherit !important;
+  line-height: inherit;
 }
 /* Color .markdown-rendered code text when comment coloring is in use (reading view) */
 :where(html.act-enabled) .markdown-rendered code {
@@ -176,7 +176,7 @@
   color: var(--highlight-color, currentColor);
 }
 .drag-ghost-hidden {
-  opacity: 0 !important;
+  opacity: 0;
   pointer-events: none;
 }
 :where(html.act-enabled) body.theme-light .always-color-text-highlight:not(.act-fixer-noauto),

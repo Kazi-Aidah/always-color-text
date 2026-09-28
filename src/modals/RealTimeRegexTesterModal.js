@@ -375,13 +375,11 @@ export class RealTimeRegexTesterModal extends Modal {
     this._bPickerTouched = _init.bTouched;
     // Native color inputs cannot be empty — NULL shows black until the user picks.
     textColorInput.value = this._preFillTextColor || "#000000";
-    textColorInput.style.width = "48px";
     const bgColorInput = controlsRow.createEl("input", { type: "color" });
     try {
       bgColorInput.addClass("act-regex-tester-bg-color");
     } catch (e) {}
     bgColorInput.value = this._preFillBgColor || "#000000";
-    bgColorInput.style.width = "48px";
     const onTextPickerContext = (ev) => {
       try {
         ev.preventDefault();

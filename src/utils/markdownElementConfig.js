@@ -300,7 +300,10 @@ export function createMarkdownElementConfigInput(plugin, entry, onChange) {
     wrapper.style.display = "flex";
     wrapper.style.alignItems = "center";
     wrapper.style.gap = "6px";
-    wrapper.style.flex = "1 1 auto";
+    // `flex` is set in styles/ui.css (`.act-md-element-config-wrapper`), not
+    // inline: an inline `flex` beats stylesheet rules, so the mobile rules
+    // that size this wrapper (they used to rely on `!important`) could never
+    // take effect.
     wrapper.style.minWidth = "0";
 
     const select = document.createElement("select");

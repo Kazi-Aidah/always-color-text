@@ -241,7 +241,6 @@ export class ColorSettingTab extends PluginSettingTab {
       styleSelect.style.color = "var(--text-normal)";
       styleSelect.style.flex = "0 0 auto";
       styleSelect.style.maxWidth = "80px";
-      styleSelect.style.width = "stretch";
       styleSelect.style.minWidth = "60px";
       styleSelect.style.textAlign = "center";
       try {
@@ -298,7 +297,6 @@ export class ColorSettingTab extends PluginSettingTab {
           type: "text",
           value: String(entry.presetLabel || ""),
         });
-        nameInput.style.flex = "0 0 60px";
         nameInput.style.padding = "6px";
         nameInput.style.borderRadius = "var(--input-radius)";
         nameInput.style.border = "1px solid var(--background-modifier-border)";
@@ -380,7 +378,6 @@ export class ColorSettingTab extends PluginSettingTab {
         value: entry.flags || "",
       });
       flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
-      flagsInput.style.width = "64px";
       flagsInput.style.padding = "6px";
       flagsInput.style.borderRadius = "var(--input-radius)";
       flagsInput.style.border = "1px solid var(--background-modifier-border)";
@@ -1605,6 +1602,9 @@ export class ColorSettingTab extends PluginSettingTab {
             this._disabledFilesSearchIcon.classList.add("act-search-icon");
           } catch (_) {}
         }
+        try {
+          setIcon(this._disabledFilesSearchIcon, "search");
+        } catch (e) {}
 
         const searchHandler = () => {
           this._disabledFilesSearchQuery = String(
@@ -1828,7 +1828,6 @@ export class ColorSettingTab extends PluginSettingTab {
         row.style.display = "flex";
         row.style.alignItems = "center";
         row.style.marginBottom = "8px";
-        row.style.gap = "8px";
         try {
           row.addClass("act-entry-row");
         } catch (e) {
@@ -1938,7 +1937,6 @@ export class ColorSettingTab extends PluginSettingTab {
             value: entry.flags || "",
           });
           flagsInput.placeholder = this.plugin.t("flags_placeholder", "flags");
-          flagsInput.style.width = "50px";
           flagsInput.style.padding = "6px";
           flagsInput.style.borderRadius = "var(--input-radius)";
           flagsInput.style.border = "1px solid var(--background-modifier-border)";
@@ -7325,6 +7323,9 @@ export class ColorSettingTab extends PluginSettingTab {
           entriesIcon.classList.add("act-search-icon");
         } catch (_) {}
       }
+      try {
+        setIcon(entriesIcon, "search");
+      } catch (e) {}
       const entriesSearchHandler = () => {
         this._entriesSearchQuery = String(entriesSearch.value || "")
           .trim()
@@ -7813,6 +7814,9 @@ export class ColorSettingTab extends PluginSettingTab {
           groupIcon.classList.add("act-search-icon");
         } catch (_) {}
       }
+      try {
+        setIcon(groupIcon, "search");
+      } catch (e) {}
 
       const groupsContainer = containerEl.createDiv();
       groupsContainer.addClass("act-groups-container");

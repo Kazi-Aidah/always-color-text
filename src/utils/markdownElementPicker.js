@@ -42,12 +42,18 @@ function fitSelectToText(select) {
 // place and `onChange` is invoked so the caller can persist/re-render.
 export function createMarkdownElementButton(app, plugin, entry, onChange) {
   const select = document.createElement("select");
-  select.className = "act-md-element-select dropdown";
 
   // When a per-element config input is rendered beside this dropdown, size the
   // dropdown to its label text and let the input take the remaining width.
   // Otherwise, make the dropdown full width.
   const hasConfig = !!getElementConfig(entry.targetElement);
+  // The flex sizing comes from CSS (`.act-md-select--*` in styles/ui.css), not
+  // from an inline style: an inline `flex` always beats a stylesheet rule, and
+  // the styles/mobile.css rules that give this dropdown its own full-width
+  // line on phones (they used to rely on `!important`) can then never win.
+  select.className =
+    "act-md-element-select dropdown " +
+    (hasConfig ? "act-md-select--with-config" : "act-md-select--no-config");
   select.style.padding = "6px 10px";
   select.style.borderRadius = "var(--input-radius)";
   select.style.border = "1px solid var(--background-modifier-border)";
@@ -59,12 +65,14 @@ export function createMarkdownElementButton(app, plugin, entry, onChange) {
   // solid background above can otherwise make the native shadow disappear.
   select.style.boxShadow = "var(--input-shadow, 0 1px 0 rgba(0, 0, 0, 0.05))";
 
+  // `flex` intentionally not set inline — see the `.act-md-select--*` comment
+  // above. `width` stays inline because it is measured from the selected
+  // label; every rule that restyles this dropdown also sets an explicit
+  // flex-basis, which is what flex layout sizes from.
   if (hasConfig) {
-    select.style.flex = "0 0 auto";
     select.style.minWidth = "0";
     select.style.width = "auto";
   } else {
-    select.style.flex = "1 1 auto";
     select.style.width = "100%";
   }
 

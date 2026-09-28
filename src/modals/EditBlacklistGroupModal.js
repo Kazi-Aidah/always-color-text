@@ -1,4 +1,4 @@
-import { Modal, Menu, Notice } from 'obsidian';
+import { Modal, Menu, Notice, setIcon } from 'obsidian';
 import { debugError } from '../utils/debug.js';
 import { BlacklistRegexTesterModal } from './BlacklistRegexTesterModal.js';
 import { SelectBlacklistGroupModal } from './SelectBlacklistGroupModal.js';
@@ -270,6 +270,9 @@ export class EditBlacklistGroupModal extends Modal {
         searchIcon.classList.add("act-search-icon");
       } catch (_) {}
     }
+    try {
+      setIcon(searchIcon, "search");
+    } catch (e) {}
 
     const limitInput = searchRow.createEl("input", { type: "text" });
     limitInput.value = String(this._limit);
@@ -324,10 +327,8 @@ export class EditBlacklistGroupModal extends Modal {
     // ENTRIES LIST CONTAINER
     this._listDiv = contentEl.createDiv();
     this._listDiv.addClass("blacklist-entries-list");
-    this._listDiv.style.flex = "1 1 auto";
     this._listDiv.style.minHeight = "120px";
     this._listDiv.style.overflowY = "auto";
-    this._listDiv.style.marginBottom = "0";
     this._listDiv.style.borderRadius = "var(--input-radius)";
     this._refreshGroupEntries();
 
@@ -336,9 +337,7 @@ export class EditBlacklistGroupModal extends Modal {
     buttonRow.addClass("act-group-button-row");
     buttonRow.style.display = "flex";
     buttonRow.style.flexWrap = "wrap";
-    buttonRow.style.gap = "10px";
     buttonRow.style.marginBottom = "15px";
-    buttonRow.style.alignItems = "center";
 
     const sortModes = ["last-added", "a-z", "reverse-a-z"];
     const sortLabels = {
@@ -390,7 +389,6 @@ export class EditBlacklistGroupModal extends Modal {
     addWordsBtn.style.cursor = "pointer";
     addWordsBtn.style.padding = "6px 12px";
     addWordsBtn.style.borderRadius = "var(--input-radius)";
-    addWordsBtn.style.flex = "1";
     addWordsBtn.addClass("mod-cta");
     const addWordsHandler = () =>
       addEntry({ pattern: "", isRegex: false, flags: "", matchType: "contains" });
@@ -406,7 +404,6 @@ export class EditBlacklistGroupModal extends Modal {
     addRegexBtn.style.cursor = "pointer";
     addRegexBtn.style.padding = "6px 12px";
     addRegexBtn.style.borderRadius = "var(--input-radius)";
-    addRegexBtn.style.flex = "1";
     addRegexBtn.addClass("mod-cta");
     addRegexBtn.style.display = this.plugin.settings.enableRegexSupport
       ? ""

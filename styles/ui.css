@@ -36,6 +36,9 @@
   width: 100%;
   margin-bottom: 12px;
 }
+/* Search icon: JS injects a native Obsidian icon (setIcon "search") into this
+   box. Stroking it with currentColor keeps it in step with the theme — no
+   CSS mask needed (css-masks is only partially supported in Obsidian). */
 .act-search-icon {
   position: absolute;
   left: 8px;
@@ -43,15 +46,17 @@
   transform: translateY(-50%);
   width: 16px;
   height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
   opacity: 0.7;
-  background-color: var(--text-muted);
-  -webkit-mask: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m21 21-4.34-4.34'/%3E%3Ccircle stroke='black' stroke-width='2' cx='11' cy='11' r='8'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
-  mask: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m21 21-4.34-4.34'/%3E%3Ccircle stroke='black' stroke-width='2' cx='11' cy='11' r='8'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+  color: var(--text-muted);
 }
-/*-webkit-mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
-} */
+.act-search-icon svg {
+  width: 16px;
+  height: 16px;
+}
 /* Color Swatch Grid */
 .color-swatch-grid {
   display: grid;
@@ -102,11 +107,11 @@ body .act-tabs-container button.act-tab-button {
   .act-preset-modal {
     --dialog-width: 1200px;
     max-width: 1200px;
-    width: 870px !important;
+    width: 870px;
   }
   .act-preset-modal .modal-content {
     max-width: 1200px;
-    width: 800px !important;
+    width: 800px;
   }
   .act-preset-modal .modal {
     width: 800px;
@@ -114,7 +119,7 @@ body .act-tabs-container button.act-tab-button {
   }
   .modal .act-preset-modal {
     min-width: 800px;
-    width: 800px !important;
+    width: 800px;
     max-width: 1200px;
   }
 }
@@ -125,11 +130,11 @@ body .act-tabs-container button.act-tab-button {
   width: 900px;
 }
 html body .act-highlight-modal .modal-content {
-  max-width: 900px !important;
+  max-width: 900px;
 }
 .modal .act-highlight-modal {
-  min-width: 980px !important;
-  width: 1100px !important;
+  min-width: 980px;
+  width: 1100px;
   max-width: 1200px;
 }
 /* ====== EDIT ENTRY MODAL STYLING ====== */
@@ -458,6 +463,24 @@ div[contenteditable="true"]:focus {
 .act-entry-row input, .act-entry-row select  {
   border-radius: var(--input-radius);
 }
+/* Markdown-element dropdown: base flex sizing.
+   Kept in CSS rather than written inline by createMarkdownElementButton(),
+   because an inline `flex` beats every stylesheet rule — including the
+   styles/mobile.css rules that give this dropdown its own full-width line on
+   phones (which could no longer rely on `!important`). */
+.act-md-element-select.act-md-select--with-config {
+  flex: 0 0 auto;
+}
+.act-md-element-select.act-md-select--no-config {
+  flex: 1 1 auto;
+}
+/* Config wrapper around the match dropdown + title text input (tab-title /
+   inline-title): same reason as above. The bare `.act-md-element-config` input
+   keeps its `flex` inline — every rule targeting it declared the same value,
+   so no rule ever needed `!important` to win. */
+.act-md-element-config-wrapper {
+  flex: 1 1 auto;
+}
 .act-entry-row button  {
   border-radius: var(--button-radius);
 }
@@ -624,4 +647,75 @@ padding: 2px 0px;
 /* Edit-entry modal: the button stands in for the pattern box — full width. */
 .act-edit-entry-modal .act-datetime-format-btn {
   width: 100%;
+}
+
+/* ===== Base (desktop) layout for modal controls ===========================
+   These values used to be pushed in as inline styles from JS. Inline styles
+   outrank any stylesheet rule, so the mobile media queries in mobile.css had
+   to fight them with !important. Defining the desktop values here — in CSS,
+   loaded before mobile.css — lets the mobile rules win by plain cascade
+   order instead, with no !important anywhere. */
+.act-edit-word-group-modal .act-toprow .act-wg-case-select,
+.act-edit-word-group-modal .act-toprow .act-wg-match-select {
+  flex: 0 0 auto;
+  width: fit-content;
+}
+.act-edit-word-group-modal .act-toprow .act-wg-edit-btn,
+.act-edit-word-group-modal .act-toprow .act-wg-css-btn {
+  flex: 0 0 auto;
+}
+.act-regex-tester-controls .act-regex-tester-text-color,
+.act-regex-tester-controls .act-regex-tester-bg-color {
+  width: 48px;
+}
+.act-group-rule-row .act-group-rule-mode {
+  flex: 1 1 120px;
+}
+.act-group-rule-row .act-group-rule-type {
+  flex: 1 1 90px;
+}
+
+/* Entry-row controls — desktop sizes (JS no longer writes these inline). */
+.color-words-list .act-entry-row .act-regex-name {
+  flex: 0 0 60px;
+}
+.color-words-list .act-entry-row .act-flags-input {
+  width: 64px;
+}
+.blacklist-words-list .act-entry-row .act-flags-input {
+  width: 50px;
+}
+.act-edit-word-group-modal .color-words-list .act-entry-row .act-flags-input {
+  width: 50px;
+}
+
+/* Group-modal entries list: scrollable on desktop, reflowed by mobile.css. */
+.act-edit-word-group-modal .color-words-list,
+.act-edit-blacklist-group-modal .blacklist-entries-list {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+}
+
+/* Group-modal "Add Words / Add Regex" buttons split the row on desktop. */
+.act-group-button-row .act-group-btn-add {
+  flex: 1;
+}
+
+/* Row gaps that used to be written inline by JS: the base values live here now,
+   so mobile.css narrow-screen overrides win by cascade order (no !important). */
+.act-toprow {
+  gap: 10px;
+}
+.blacklist-words-list .act-entry-row {
+  gap: 8px;
+}
+
+/* Desktop width for the entries style <select>: was an inline "width: stretch".
+   Scoped to the settings tab so the word-group modal's select is untouched;
+   the body.is-mobile rule (higher specificity) still wins on phones. */
+.vertical-tab-content
+  .color-words-list
+  .act-entry-row
+  .act-style-select {
+  width: stretch;
 }

@@ -68,7 +68,6 @@ export class EditWordGroupModal extends Modal {
     topRow.addClass("act-toprow");
     topRow.style.display = "flex";
     topRow.style.alignItems = "center";
-    topRow.style.gap = "10px";
     topRow.style.marginBottom = "15px";
     topRow.style.flexWrap = "wrap";
 
@@ -146,8 +145,6 @@ export class EditWordGroupModal extends Modal {
     caseSelect.style.border = "1px solid var(--background-modifier-border)";
     caseSelect.style.background = "var(--background-modifier-form-field)";
     caseSelect.style.textAlign = "center";
-    caseSelect.style.flex = "0 0 auto";
-    caseSelect.style.width = "fit-content";
     caseSelect.createEl("option", {
       text: this.plugin.t("opt_case_all", "Case Sensitivity (All)"),
       value: "per-entry",
@@ -184,8 +181,6 @@ export class EditWordGroupModal extends Modal {
       "1px solid var(--background-modifier-border)";
     matchTypeSelect.style.background = "var(--background-modifier-form-field)";
     matchTypeSelect.style.textAlign = "center";
-    matchTypeSelect.style.flex = "0 0 auto";
-    matchTypeSelect.style.width = "fit-content";
     matchTypeSelect.createEl("option", {
       text: this.plugin.t("opt_match_all", "Per entry"),
       value: "per-entry",
@@ -227,7 +222,6 @@ export class EditWordGroupModal extends Modal {
       "edit_group_highlight_styling",
       "Edit Group Highlight Styling",
     );
-    editBtn.style.flex = "0 0 auto";
     editBtn.style.display = "flex";
     editBtn.style.alignItems = "center";
     editBtn.style.justifyContent = "center";
@@ -258,7 +252,6 @@ export class EditWordGroupModal extends Modal {
         setIcon(cssBtn, "code");
       } catch (e) {}
       cssBtn.title = this.plugin.t("edit_custom_css_btn", "Edit Custom CSS");
-      cssBtn.style.flex = "0 0 auto";
       cssBtn.style.display = "flex";
       cssBtn.style.alignItems = "center";
       cssBtn.style.justifyContent = "center";
@@ -357,6 +350,9 @@ export class EditWordGroupModal extends Modal {
         searchIcon.classList.add("act-search-icon");
       } catch (_) {}
     }
+    try {
+      setIcon(searchIcon, "search");
+    } catch (e) {}
 
     const limitInput = searchRow.createEl("input", { type: "text" });
     limitInput.value = String(this._limit);
@@ -424,11 +420,8 @@ export class EditWordGroupModal extends Modal {
     this._listDiv = contentEl.createDiv();
     this._listDiv.addClass("color-words-list");
     this._listDiv.addClass("word-group");
-    this._listDiv.style.flex = "1 1 auto";
     this._listDiv.style.minHeight = "120px";
     this._listDiv.style.overflowY = "auto";
-    this._listDiv.style.marginBottom = "0";
-    this._listDiv.style.borderRadius = "var(--input-radius)";
     // No inline background: `.color-words-list` is transparent in CSS, so the
     // row cards (var(--setting-items-background)) read against the modal.
     this._refreshGroupEntries();
@@ -438,9 +431,7 @@ export class EditWordGroupModal extends Modal {
     buttonRow.addClass("act-group-button-row");
     buttonRow.style.display = "flex";
     buttonRow.style.flexWrap = "wrap";
-    buttonRow.style.gap = "10px";
     buttonRow.style.marginBottom = "15px";
-    buttonRow.style.alignItems = "center";
 
     const sortModes = [
       "last-added",
@@ -506,7 +497,6 @@ export class EditWordGroupModal extends Modal {
     addWordsBtn.style.cursor = "pointer";
     addWordsBtn.style.padding = "6px 12px";
     addWordsBtn.style.borderRadius = "var(--input-radius)";
-    addWordsBtn.style.flex = "1";
     addWordsBtn.addClass("mod-cta");
     const addWordsHandler = () =>
       addEntry({
@@ -530,7 +520,6 @@ export class EditWordGroupModal extends Modal {
     addRegexBtn.style.cursor = "pointer";
     addRegexBtn.style.padding = "6px 12px";
     addRegexBtn.style.borderRadius = "var(--input-radius)";
-    addRegexBtn.style.flex = "1";
     addRegexBtn.addClass("mod-cta");
     addRegexBtn.style.display = this.plugin.settings.enableRegexSupport
       ? ""
@@ -1144,7 +1133,6 @@ export class EditWordGroupModal extends Modal {
           type: "text",
           value: entry.flags || "",
         });
-        flagsInput.style.width = "50px";
         flagsInput.style.padding = "6px";
         flagsInput.style.borderRadius = "var(--input-radius)";
         flagsInput.style.border = "1px solid var(--background-modifier-border)";

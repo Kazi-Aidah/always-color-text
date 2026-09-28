@@ -1482,7 +1482,6 @@ export class EditEntryModal extends Modal {
         try { modeSel.addClass("act-group-rule-mode"); } catch (_) { try { modeSel.classList.add("act-group-rule-mode"); } catch (_) {} }
         modeSel.style.textAlign = "center";
         modeSel.style.minWidth = "120px";
-        modeSel.style.flex = "1 1 120px";
         modeSel.style.border = "1px solid var(--background-modifier-border)";
         modeSel.style.background = "var(--background-modifier-form-field)";
 
@@ -1518,7 +1517,6 @@ export class EditEntryModal extends Modal {
         typeSel.value = ruleType;
         try { typeSel.addClass("act-group-rule-type"); } catch (_) { try { typeSel.classList.add("act-group-rule-type"); } catch (_) {} }
         typeSel.style.minWidth = "100px";
-        typeSel.style.flex = "1 1 90px";
         typeSel.style.border = "1px solid var(--background-modifier-border)";
         typeSel.style.background = "var(--background-modifier-form-field)";
         // Per-rule memory of chosen value for each type.
@@ -1552,7 +1550,6 @@ export class EditEntryModal extends Modal {
         chooseRow.style.display = "flex";
         chooseRow.style.gap = "8px";
         chooseRow.style.alignItems = "center";
-        chooseRow.style.flex = "1 1 160px";
         chooseRow.style.minWidth = "0";
         chooseRow.style.flexWrap = "nowrap";
 

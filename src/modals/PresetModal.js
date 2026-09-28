@@ -54,12 +54,9 @@ export class PresetModal extends Modal {
     // Add class to force styling via CSS
     this.modalEl.addClass("act-modal");
     this.modalEl.addClass("act-preset-modal");
-    // Force wider modal - override Obsidian's default dialog width!!
-    try {
-      this.modalEl.style.maxWidth = "1200px !important";
-      this.modalEl.style.width = "1200px !important";
-    } catch (e) {}
-    contentEl.style.maxWidth = "1200px !important";
+    // Modal width is handled entirely in CSS (.act-preset-modal / --dialog-width).
+    // (An earlier attempt wrote `style.width = "1200px !important"`, which the
+    // CSSOM silently discards — it never did anything.)
 
     // "Edit format" mode: opened from an entry's format button to re-edit its
     // moment.js format — skip the preset list entirely.
