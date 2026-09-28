@@ -116,6 +116,7 @@ var require_en = __commonJS({
       "command_open_regex_tester": "Add Regex (Open Regex Tester)",
       "command_open_blacklist_regex_tester": "Add Blacklist Regex",
       "command_manage_colored_texts": "Manage Colored Texts",
+      "command_edit_last_added_entry": "Edit Last Added Entry",
       "command_open_text_style_presets": "Edit Text Style Presets",
       "command_open_color_swatches": "Edit Color Swatches",
       "notice_unable_open_text_style_presets": "Unable to open Text Style Presets modal.",
@@ -144,6 +145,7 @@ var require_en = __commonJS({
       "notice_already_blacklisted": '"{word}" is already in blacklist.',
       "notice_select_text_first": "Please select some text first.",
       "notice_no_active_file": "No active file to toggle coloring for.",
+      "notice_no_entries_to_edit": "No entries yet \u2014 add one first.",
       "notice_coloring_enabled_for_path": "Coloring enabled for {path}",
       "notice_coloring_disabled_for_path": "Coloring disabled for {path}",
       "notice_global_enabled": "Always Color Text Enabled",
@@ -415,6 +417,8 @@ var require_en = __commonJS({
       // "use_swatch_names_desc": "If enabled, the text will be colored using the name of the swatch (e.g., 'Red') instead of the hex code.",
       "link_swatch_updates": "Link swatch updates to text colors",
       "link_swatch_updates_desc": "If enabled, updating a swatch color will update all text colored with that swatch.",
+      "link_preset_updates": "Link preset updates to entries",
+      "link_preset_updates_desc": "When a preset is edited, the entries and word groups using it adopt the new style automatically.",
       "link_swatches_to_entries": "Link swatch updates to colored texts",
       "link_swatches_to_entries_desc": "When a custom swatch's color changes, update all entries using that swatch",
       "default_colors_header": "Default Swatches",
@@ -868,6 +872,7 @@ var require_es = __commonJS({
       "command_open_regex_tester": "A\xF1adir Regex (Abrir Probador de Regex)",
       "command_open_blacklist_regex_tester": "Agregar Expresi\xF3n Regular de Lista Negra",
       "command_manage_colored_texts": "Gestionar Textos Coloreados",
+      "command_edit_last_added_entry": "Editar la \xFAltima entrada a\xF1adida",
       "command_toggle_hide_text_colors": "Ocultar/Mostrar colores de texto",
       "command_toggle_hide_highlights": "Ocultar/Mostrar resaltados",
       "command_hide_text_colors": "Ocultar colores de texto",
@@ -891,6 +896,7 @@ var require_es = __commonJS({
       "notice_already_blacklisted": '"{word}" ya est\xE1 en la lista negra.',
       "notice_select_text_first": "Por favor, selecciona primero alg\xFAn texto.",
       "notice_no_active_file": "No hay un archivo activo para activar o desactivar el coloreado.",
+      "notice_no_entries_to_edit": "A\xFAn no hay entradas: a\xF1ade una primero.",
       "notice_coloring_enabled_for_path": "Coloreado activado para {path}",
       "notice_coloring_disabled_for_path": "Coloreado desactivado para {path}",
       "notice_global_enabled": "Always Color Text Activado",
@@ -1458,6 +1464,7 @@ var require_fr = __commonJS({
       "command_open_regex_tester": "Ajouter Regex (Ouvrir le Testeur Regex)",
       "command_open_blacklist_regex_tester": "Ajouter Regex \xE0 la Liste Noire",
       "command_manage_colored_texts": "G\xE9rer les textes color\xE9s",
+      "command_edit_last_added_entry": "Modifier la derni\xE8re entr\xE9e ajout\xE9e",
       "command_toggle_hide_text_colors": "Masquer/Afficher les couleurs de texte",
       "command_toggle_hide_highlights": "Masquer/Afficher les surbrillances",
       "command_hide_text_colors": "Masquer les couleurs de texte",
@@ -1477,6 +1484,7 @@ var require_fr = __commonJS({
       "notice_already_blacklisted": '"{word}" est d\xE9j\xE0 sur liste noire.',
       "notice_select_text_first": "Veuillez d'abord s\xE9lectionner du texte.",
       "notice_no_active_file": "Aucun fichier actif pour activer/d\xE9sactiver le coloriage.",
+      "notice_no_entries_to_edit": "Pas encore d'entr\xE9es : ajoutez-en une d'abord.",
       "notice_coloring_enabled_for_path": "Coloriage activ\xE9 pour {path}",
       "notice_coloring_disabled_for_path": "Coloriage d\xE9sactiv\xE9 pour {path}",
       "notice_global_enabled": "Always Color Text Activ\xE9",
@@ -2044,6 +2052,7 @@ var require_hi = __commonJS({
       "command_open_regex_tester": "\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902 (\u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091F\u0947\u0938\u094D\u091F\u0930 \u0916\u094B\u0932\u0947\u0902)",
       "command_open_blacklist_regex_tester": "\u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F \u092E\u0947\u0902 \u0930\u0947\u091C\u0947\u0915\u094D\u0938 \u091C\u094B\u0921\u093C\u0947\u0902",
       "command_manage_colored_texts": "\u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092A\u094D\u0930\u092C\u0902\u0927\u093F\u0924 \u0915\u0930\u0947\u0902",
+      "command_edit_last_added_entry": "\u0905\u0902\u0924\u093F\u092E \u091C\u094B\u0921\u093C\u0940 \u0917\u0908 \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
       "command_toggle_hide_text_colors": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917 \u091B\u093F\u092A\u093E\u090F\u0901/\u0926\u093F\u0916\u093E\u090F\u0901",
       "command_toggle_hide_highlights": "\u0939\u093E\u0907\u0932\u093E\u0907\u091F\u094D\u0938 \u091B\u093F\u092A\u093E\u090F\u0901/\u0926\u093F\u0916\u093E\u090F\u0901",
       "command_hide_text_colors": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0930\u0902\u0917 \u091B\u093F\u092A\u093E\u090F\u0901",
@@ -2063,6 +2072,7 @@ var require_hi = __commonJS({
       "notice_already_blacklisted": '"{word}" \u092A\u0939\u0932\u0947 \u0938\u0947 \u0939\u0940 \u092C\u094D\u0932\u0948\u0915\u0932\u093F\u0938\u094D\u091F\u0947\u0921 \u0939\u0948\u0964',
       "notice_select_text_first": "\u0915\u0943\u092A\u092F\u093E \u092A\u0939\u0932\u0947 \u0915\u0941\u091B \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u0941\u0928\u0947\u0902\u0964",
       "notice_no_active_file": "\u0930\u0902\u0917\u093E\u0908 \u091F\u0949\u0917\u0932 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0915\u094B\u0908 \u0938\u0915\u094D\u0930\u093F\u092F \u092B\u093C\u093E\u0907\u0932 \u0928\u0939\u0940\u0902 \u0939\u0948\u0964",
+      "notice_no_entries_to_edit": "\u0905\u092D\u0940 \u0915\u094B\u0908 \u092A\u094D\u0930\u0935\u093F\u0937\u094D\u091F\u093F \u0928\u0939\u0940\u0902 \u2014 \u092A\u0939\u0932\u0947 \u090F\u0915 \u091C\u094B\u0921\u093C\u0947\u0902\u0964",
       "notice_coloring_enabled_for_path": "{path} \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u091A\u093E\u0932\u0942",
       "notice_coloring_disabled_for_path": "{path} \u0915\u0947 \u0932\u093F\u090F \u0930\u0902\u0917\u093E\u0908 \u092C\u0902\u0926",
       "notice_global_enabled": "\u0939\u092E\u0947\u0936\u093E \u0930\u0902\u0917\u0940\u0928 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u091A\u093E\u0932\u0942",
@@ -2626,6 +2636,7 @@ var require_it = __commonJS({
       "command_open_regex_tester": "Aggiungi Regex (Apri Tester Regex)",
       "command_open_blacklist_regex_tester": "Aggiungi Regex alla Lista Nera",
       "command_manage_colored_texts": "Gestisci testi colorati",
+      "command_edit_last_added_entry": "Modifica l'ultima voce aggiunta",
       "command_toggle_hide_text_colors": "Nascondi/Mostra colori del testo",
       "command_toggle_hide_highlights": "Nascondi/Mostra evidenziazioni",
       "command_hide_text_colors": "Nascondi colori del testo",
@@ -2649,6 +2660,7 @@ var require_it = __commonJS({
       "notice_already_blacklisted": '"{word}" \xE8 gi\xE0 in blacklist.',
       "notice_select_text_first": "Seleziona prima del testo da colorare.",
       "notice_no_active_file": "Nessun file attivo per attivare/disattivare la colorazione.",
+      "notice_no_entries_to_edit": "Ancora nessuna voce: aggiungine una prima.",
       "notice_coloring_enabled_for_path": "Colorazione abilitata per {path}",
       "notice_coloring_disabled_for_path": "Colorazione disabilitata per {path}",
       "notice_global_enabled": "Always Color Text abilitato",
@@ -3205,6 +3217,7 @@ var require_bn = __commonJS({
       "command_open_regex_tester": "Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8 (Regex \u09AA\u09B0\u09C0\u0995\u09CD\u09B7\u0995 \u0996\u09C1\u09B2\u09C1\u09A8)",
       "command_open_blacklist_regex_tester": "\u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7 Regex \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
       "command_manage_colored_texts": "\u09B0\u0999\u09BE\u09AF\u09BC\u09BF\u09A4 \u099F\u09C7\u0995\u09CD\u09B8\u099F\u0997\u09C1\u09B2\u09BF \u09AA\u09B0\u09BF\u099A\u09BE\u09B2\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
+      "command_edit_last_added_entry": "\u09B8\u09B0\u09CD\u09AC\u09B6\u09C7\u09B7 \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "command_toggle_hide_text_colors": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u09B2\u09C1\u0995\u09BE\u09A8/\u09A6\u09C7\u0996\u09BE\u09A8",
       "command_toggle_hide_highlights": "\u09B9\u09BE\u0987\u09B2\u09BE\u0987\u099F \u09B2\u09C1\u0995\u09BE\u09A8/\u09A6\u09C7\u0996\u09BE\u09A8",
       "command_hide_text_colors": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B0\u0999 \u09B2\u09C1\u0995\u09BE\u09A8",
@@ -3224,6 +3237,7 @@ var require_bn = __commonJS({
       "notice_already_blacklisted": '"{word}" \u0987\u09A4\u09BF\u09AE\u09A7\u09CD\u09AF\u09C7\u0987 \u09AC\u09CD\u09B2\u09CD\u09AF\u09BE\u0995\u09B2\u09BF\u09B8\u09CD\u099F\u09C7 \u09B0\u09AF\u09BC\u09C7\u099B\u09C7\u0964',
       "notice_select_text_first": "\u09A6\u09AF\u09BC\u09BE \u0995\u09B0\u09C7 \u09AA\u09CD\u09B0\u09A5\u09AE\u09C7 \u0995\u09BF\u099B\u09C1 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8\u0964",
       "notice_no_active_file": "\u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u099F\u0997\u09B2 \u0995\u09B0\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u0995\u09CB\u09A8\u09CB \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u09AB\u09BE\u0987\u09B2 \u09A8\u09C7\u0987\u0964",
+      "notice_no_entries_to_edit": "\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8\u09CB \u098F\u09A8\u09CD\u099F\u09CD\u09B0\u09BF \u09A8\u09C7\u0987 \u2014 \u0986\u0997\u09C7 \u098F\u0995\u099F\u09BF \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8\u0964",
       "notice_coloring_enabled_for_path": "{path} \u098F\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09B8\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
       "notice_coloring_disabled_for_path": "{path} \u098F\u09B0 \u099C\u09A8\u09CD\u09AF \u09B0\u0999\u09BE\u09AF\u09BC\u09A8 \u09A8\u09BF\u09B7\u09CD\u0995\u09CD\u09B0\u09BF\u09AF\u09BC \u0995\u09B0\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7",
       "notice_global_enabled": "\u0985\u09B2\u0993\u09AF\u09BC\u09C7\u099C \u0995\u09BE\u09B2\u09BE\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u09B8\u0995\u09CD\u09B7\u09AE",
@@ -3813,6 +3827,7 @@ var require_ru = __commonJS({
       "command_open_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex (\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043E\u0440 Regex)",
       "command_open_blacklist_regex_tester": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C Regex \u0432 \u0447\u0451\u0440\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A",
       "command_manage_colored_texts": "\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043E\u043A\u0440\u0430\u0448\u0435\u043D\u043D\u044B\u043C\u0438 \u0442\u0435\u043A\u0441\u0442\u0430\u043C\u0438",
+      "command_edit_last_added_entry": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044E\u044E \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043D\u0443\u044E \u0437\u0430\u043F\u0438\u0441\u044C",
       "command_toggle_hide_text_colors": "\u0421\u043A\u0440\u044B\u0442\u044C/\u043F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430",
       "command_toggle_hide_highlights": "\u0421\u043A\u0440\u044B\u0442\u044C/\u043F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u043F\u043E\u0434\u0441\u0432\u0435\u0442\u043A\u0438",
       "command_hide_text_colors": "\u0421\u043A\u0440\u044B\u0442\u044C \u0446\u0432\u0435\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430",
@@ -3834,6 +3849,7 @@ var require_ru = __commonJS({
       "notice_already_blacklisted": "\xAB{word}\xBB \u0443\u0436\u0435 \u043D\u0430\u0445\u043E\u0434\u0438\u0442\u0441\u044F \u0432 \u0447\u0451\u0440\u043D\u043E\u043C \u0441\u043F\u0438\u0441\u043A\u0435.",
       "notice_select_text_first": "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0434\u0435\u043B\u0438\u0442\u0435 \u0442\u0435\u043A\u0441\u0442.",
       "notice_no_active_file": "\u041D\u0435\u0442 \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430 \u0434\u043B\u044F \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u043E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u044F.",
+      "notice_no_entries_to_edit": "\u0417\u0430\u043F\u0438\u0441\u0435\u0439 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442 \u2014 \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0434\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u043E\u0434\u043D\u0443.",
       "notice_coloring_enabled_for_path": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E \u0434\u043B\u044F {path}",
       "notice_coloring_disabled_for_path": "\u041E\u043A\u0440\u0430\u0448\u0438\u0432\u0430\u043D\u0438\u0435 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u043E \u0434\u043B\u044F {path}",
       "notice_global_enabled": "Always Color Text \u0432\u043A\u043B\u044E\u0447\u0451\u043D",
@@ -4412,6 +4428,7 @@ var require_zh_cn = __commonJS({
       "command_open_regex_tester": "\u6DFB\u52A0\u6B63\u5219\u8868\u8FBE\u5F0F\uFF08\u6253\u5F00\u6B63\u5219\u8868\u8FBE\u5F0F\u6D4B\u8BD5\u5668\uFF09",
       "command_open_blacklist_regex_tester": "\u6DFB\u52A0\u9ED1\u540D\u5355\u6B63\u5219\u8868\u8FBE\u5F0F",
       "command_manage_colored_texts": "\u7BA1\u7406\u5DF2\u7740\u8272\u7684\u6587\u672C",
+      "command_edit_last_added_entry": "\u7F16\u8F91\u6700\u8FD1\u6DFB\u52A0\u7684\u6761\u76EE",
       "command_toggle_hide_text_colors": "\u9690\u85CF/\u663E\u793A\u6587\u672C\u989C\u8272",
       "command_toggle_hide_highlights": "\u9690\u85CF/\u663E\u793A\u9AD8\u4EAE",
       "command_hide_text_colors": "\u9690\u85CF\u6587\u672C\u989C\u8272",
@@ -4431,6 +4448,7 @@ var require_zh_cn = __commonJS({
       "notice_already_blacklisted": '"{word}" \u5DF2\u5728\u9ED1\u540D\u5355\u4E2D\u3002',
       "notice_select_text_first": "\u8BF7\u5148\u9009\u62E9\u4E00\u4E9B\u6587\u5B57\u3002",
       "notice_no_active_file": "\u6CA1\u6709\u6D3B\u52A8\u6587\u4EF6\u53EF\u5207\u6362\u7740\u8272\u3002",
+      "notice_no_entries_to_edit": "\u8FD8\u6CA1\u6709\u6761\u76EE \u2014 \u8BF7\u5148\u6DFB\u52A0\u4E00\u4E2A\u3002",
       "notice_coloring_enabled_for_path": "\u5DF2\u4E3A {path} \u542F\u7528\u7740\u8272",
       "notice_coloring_disabled_for_path": "\u5DF2\u4E3A {path} \u7981\u7528\u7740\u8272",
       "notice_global_enabled": "\u6587\u5B57\u81EA\u52A8\u7740\u8272\u5DF2\u542F\u7528",
@@ -4990,6 +5008,7 @@ var require_de = __commonJS({
       "command_open_regex_tester": "Regex hinzuf\xFCgen (Regex-Tester \xF6ffnen)",
       "command_open_blacklist_regex_tester": "Blacklist-Regex hinzuf\xFCgen",
       "command_manage_colored_texts": "Gef\xE4rbte Texte verwalten",
+      "command_edit_last_added_entry": "Zuletzt hinzugef\xFCgten Eintrag bearbeiten",
       "command_toggle_hide_text_colors": "Textfarben ausblenden/einblenden",
       "command_toggle_hide_highlights": "Hervorhebungen ausblenden/einblenden",
       "command_hide_text_colors": "Textfarben ausblenden",
@@ -5013,6 +5032,7 @@ var require_de = __commonJS({
       "notice_already_blacklisted": '"{word}" steht bereits auf der schwarzen Liste.',
       "notice_select_text_first": "Bitte w\xE4hlen Sie zuerst etwas Text aus.",
       "notice_no_active_file": "Keine aktive Datei zum Umschalten der F\xE4rbung.",
+      "notice_no_entries_to_edit": "Noch keine Eintr\xE4ge \u2014 f\xFCge zuerst einen hinzu.",
       "notice_coloring_enabled_for_path": "F\xE4rbung aktiviert f\xFCr {path}",
       "notice_coloring_disabled_for_path": "F\xE4rbung deaktiviert f\xFCr {path}",
       "notice_global_enabled": "Always Color Text Aktiviert",
@@ -5576,6 +5596,7 @@ var require_ar = __commonJS({
       "command_open_regex_tester": "\u0625\u0636\u0627\u0641\u0629 Regex (\u0641\u062A\u062D \u0645\u062E\u062A\u0628\u0631 Regex)",
       "command_open_blacklist_regex_tester": "\u0625\u0636\u0627\u0641\u0629 Regex \u0644\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621",
       "command_manage_colored_texts": "\u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u0646\u0635\u0648\u0635 \u0627\u0644\u0645\u0644\u0648\u0646\u0629",
+      "command_edit_last_added_entry": "\u062A\u0639\u062F\u064A\u0644 \u0622\u062E\u0631 \u0639\u0646\u0635\u0631 \u062A\u0645\u062A \u0625\u0636\u0627\u0641\u062A\u0647",
       "command_toggle_hide_text_colors": "\u0625\u062E\u0641\u0627\u0621/\u0625\u0638\u0647\u0627\u0631 \u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635",
       "command_toggle_hide_highlights": "\u0625\u062E\u0641\u0627\u0621/\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u062A\u0645\u064A\u064A\u0632",
       "command_hide_text_colors": "\u0625\u062E\u0641\u0627\u0621 \u0623\u0644\u0648\u0627\u0646 \u0627\u0644\u0646\u0635",
@@ -5599,6 +5620,7 @@ var require_ar = __commonJS({
       "notice_already_blacklisted": '"{word}" \u0645\u0648\u062C\u0648\u062F \u0628\u0627\u0644\u0641\u0639\u0644 \u0641\u064A \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u0648\u062F\u0627\u0621.',
       "notice_select_text_first": "\u0627\u0644\u0631\u062C\u0627\u0621 \u062A\u062D\u062F\u064A\u062F \u0628\u0639\u0636 \u0627\u0644\u0646\u0635 \u0623\u0648\u0644\u0627\u064B.",
       "notice_no_active_file": "\u0644\u0627 \u064A\u0648\u062C\u062F \u0645\u0644\u0641 \u0646\u0634\u0637 \u0644\u062A\u0628\u062F\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0647.",
+      "notice_no_entries_to_edit": "\u0644\u0627 \u062A\u0648\u062C\u062F \u0639\u0646\u0627\u0635\u0631 \u0628\u0639\u062F \u2014 \u0623\u0636\u0641 \u0648\u0627\u062D\u062F\u064B\u0627 \u0623\u0648\u0644\u0627\u064B.",
       "notice_coloring_enabled_for_path": "\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0640 {path}",
       "notice_coloring_disabled_for_path": "\u062A\u0645 \u062A\u0639\u0637\u064A\u0644 \u0627\u0644\u062A\u0644\u0648\u064A\u0646 \u0644\u0640 {path}",
       "notice_global_enabled": "\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 Always Color Text",
@@ -6450,8 +6472,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     name: "Default",
     isDefault: true,
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 50,
     highlightBorderRadius: 8,
     highlightHorizontalPadding: 6,
@@ -6467,8 +6489,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     isDefault: false,
     name: "Sharp",
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 50,
     highlightBorderRadius: 0,
     highlightHorizontalPadding: 6,
@@ -6484,8 +6506,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     isDefault: false,
     name: "Round",
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 50,
     highlightBorderRadius: 8,
     highlightHorizontalPadding: 6,
@@ -6501,8 +6523,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     isDefault: false,
     name: "Pill",
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 50,
     highlightBorderRadius: 9999,
     highlightHorizontalPadding: 10,
@@ -6518,8 +6540,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     isDefault: false,
     name: "Sharp Outlined",
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 25,
     highlightBorderRadius: 0,
     highlightHorizontalPadding: 6,
@@ -6535,8 +6557,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     isDefault: false,
     name: "Round Outlined",
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 25,
     highlightBorderRadius: 8,
     highlightHorizontalPadding: 6,
@@ -6552,8 +6574,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     isDefault: false,
     name: "Pill Outlined",
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 25,
     highlightBorderRadius: 9999,
     highlightHorizontalPadding: 10,
@@ -6569,8 +6591,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     isDefault: false,
     name: "Dashed Underline",
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 0,
     highlightBorderRadius: 0,
     highlightHorizontalPadding: 0,
@@ -6586,8 +6608,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     isDefault: false,
     name: "Double Underline",
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 0,
     highlightBorderRadius: 0,
     highlightHorizontalPadding: 0,
@@ -6603,8 +6625,8 @@ var DEFAULT_TEXT_STYLE_PRESETS = [
     isDefault: false,
     name: "Underline",
     styleType: "highlight",
-    textColor: "currentColor",
-    backgroundColor: "",
+    textColor: "var(--text-normal)",
+    backgroundColor: "var(--color-accent)",
     backgroundOpacity: 0,
     highlightBorderRadius: 0,
     highlightHorizontalPadding: 0,
@@ -6703,9 +6725,10 @@ var defaultSettings = {
   disableLivePreviewColoring: false,
   // Text & Background Coloring entries
   textBgColoringEntries: [],
-  // Use swatch names for coloring entries
-  // useSwatchNamesForText: false,
-  linkSwatchUpdatesToEntries: false,
+  // Swatch edits repaint every text painted with that swatch
+  linkSwatchUpdatesToEntries: true,
+  // Editing a text style preset restyles the entries (and groups) using it
+  linkPresetUpdatesToEntries: true,
   colorPickerMode: "both",
   advancedRules: [],
   pathRules: [],
@@ -6753,7 +6776,10 @@ var defaultSettings = {
   themeFixerLightBrightness: 0.75,
   themeFixerLightContrast: 1,
   themeFixerLightSaturation: 0.8,
-  enableCustomCss: false,
+  // Custom CSS ships enabled: every entry/group can already be opened with a
+  // derived CSS prefill, so hiding it behind a default-off toggle only
+  // disabled styling that was already configured.
+  enableCustomCss: true,
   // Automatic backups
   autoBackupEnabled: false,
   autoBackupFolder: "",
@@ -8310,6 +8336,58 @@ function buildSelectorBlockRules(css, baseSelector) {
     return "";
   }
 }
+var LAYOUT_DECL_PROPS = /* @__PURE__ */ new Set([
+  "padding",
+  "padding-left",
+  "padding-right",
+  "padding-inline-start",
+  "padding-inline-end",
+  "margin",
+  "margin-left",
+  "margin-right",
+  "margin-inline-start",
+  "margin-inline-end",
+  "text-indent"
+]);
+function buildLineTargetRule({
+  selector,
+  strongSelector = null,
+  styleStr = "",
+  hoverRules = "",
+  extractColor = false
+}) {
+  try {
+    if (!selector) return "";
+    let colorProp = "";
+    const baseParts = [];
+    const strongParts = [];
+    for (const decl of String(styleStr || "").split(";")) {
+      const trimmed = decl.trim();
+      if (!trimmed) continue;
+      const colonIdx = trimmed.indexOf(":");
+      if (colonIdx === -1) continue;
+      const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
+      if (extractColor && prop === "color") {
+        colorProp = `${trimmed.replace(/\s*!important/gi, "")};`;
+        continue;
+      }
+      if (LAYOUT_DECL_PROPS.has(prop)) {
+        const val = trimmed.replace(/\s*!important/gi, "");
+        strongParts.push(`${val} !important`);
+        baseParts.push(val);
+        continue;
+      }
+      if (extractColor && prop === "--highlight-color") continue;
+      baseParts.push(trimmed);
+    }
+    const baseRule = `${selector}{${colorProp}${baseParts.join("; ")}}`;
+    const strongRule = strongSelector && strongParts.length ? `${strongSelector}{${strongParts.join("; ")}}` : "";
+    return `${baseRule}
+${strongRule}${hoverRules ? "\n" + hoverRules : ""}`;
+  } catch (_) {
+    return "";
+  }
+}
 function validateCustomCssInput(raw) {
   const warnings = [];
   if (!raw || !String(raw).trim()) return warnings;
@@ -9314,6 +9392,199 @@ var ReorderPresetsModal = class extends import_obsidian4.Modal {
   }
 };
 
+// src/utils/presetLinker.js
+var PRESET_STYLE_FIELDS = [
+  "styleType",
+  "backgroundOpacity",
+  "highlightBorderRadius",
+  "cornerShape",
+  "highlightHorizontalPadding",
+  "highlightVerticalPadding",
+  "enableBorderThickness",
+  "borderStyle",
+  "borderLineStyle",
+  "borderOpacity",
+  "borderThickness"
+];
+var PRESET_SHAPE_FIELDS = PRESET_STYLE_FIELDS.filter(
+  (k) => k !== "styleType"
+);
+var PRESET_LINK_FIELDS = PRESET_STYLE_FIELDS.concat(["customCss"]);
+function presetSignature(style, defaults) {
+  return PRESET_STYLE_FIELDS.map((k) => {
+    let v = style && style[k] !== void 0 ? style[k] : void 0;
+    if (v === void 0 && defaults && defaults[k] !== void 0) v = defaults[k];
+    return JSON.stringify(v);
+  }).join("|");
+}
+function visitLinkableEntries(settings, visit) {
+  if (!settings || typeof visit !== "function") return;
+  const walk = (arr) => {
+    if (!Array.isArray(arr)) return;
+    for (const e of arr) if (e) visit(e);
+  };
+  walk(settings.wordEntries);
+  walk(settings.textBgColoringEntries);
+  if (Array.isArray(settings.wordEntryGroups)) {
+    for (const g of settings.wordEntryGroups) if (g) walk(g.entries);
+  }
+}
+function presetLinkMatcher(preset, settings, prevSignature, allPresets) {
+  const uid = preset && preset.uid || null;
+  const sig = (style) => presetSignature(style, settings);
+  const prevSig = typeof prevSignature === "string" ? prevSignature : sig(preset);
+  let ambiguous = false;
+  if (Array.isArray(allPresets)) {
+    let others = 0;
+    for (const p of allPresets) {
+      if (!p || p === preset) continue;
+      if (uid && p.uid === uid) continue;
+      if (sig(p) === prevSig) others += 1;
+    }
+    ambiguous = others > 0;
+  }
+  return (target) => {
+    if (!target) return false;
+    if (uid && target.presetUid === uid) return true;
+    if (target.presetUid) return false;
+    return !ambiguous && sig(target) === prevSig;
+  };
+}
+function entriesUsingPreset(settings, preset, prevSignature, allPresets) {
+  const out = [];
+  if (!preset) return out;
+  const matches2 = presetLinkMatcher(preset, settings, prevSignature, allPresets);
+  visitLinkableEntries(settings, (entry) => {
+    if (matches2(entry)) out.push(entry);
+  });
+  return out;
+}
+function groupsUsingPreset(settings, preset, prevSignature, allPresets) {
+  const out = [];
+  if (!settings || !preset) return out;
+  if (!Array.isArray(settings.wordEntryGroups)) return out;
+  const matches2 = presetLinkMatcher(preset, settings, prevSignature, allPresets);
+  for (const group of settings.wordEntryGroups) {
+    if (matches2(group)) out.push(group);
+  }
+  return out;
+}
+function applyPresetStyleToEntry(entry, preset, isValidHexColor) {
+  if (!entry || !preset) return false;
+  const valid = typeof isValidHexColor === "function" ? isValidHexColor : () => true;
+  let changed = false;
+  const set = (k, v) => {
+    if (entry[k] !== v) {
+      entry[k] = v;
+      changed = true;
+    }
+  };
+  for (const k of PRESET_STYLE_FIELDS) {
+    if (k in preset && preset[k] !== void 0) set(k, preset[k]);
+  }
+  if (typeof preset.customCss === "string" && preset.customCss.trim()) {
+    set("customCss", preset.customCss);
+  }
+  const hasText = !!(entry.color && valid(entry.color) || entry.textColor && entry.textColor !== "currentColor" && valid(entry.textColor));
+  const hasBg = !!(entry.backgroundColor && valid(entry.backgroundColor));
+  if (!hasText && !hasBg) {
+    if (preset.styleType) set("styleType", preset.styleType);
+    if (preset.styleType === "text" && preset.textColor && preset.textColor !== "currentColor" && valid(preset.textColor)) {
+      set("color", preset.textColor);
+      set("textColor", null);
+      set("backgroundColor", null);
+    } else {
+      if ("textColor" in preset && preset.textColor !== void 0)
+        set("textColor", preset.textColor);
+      if ("backgroundColor" in preset && preset.backgroundColor !== void 0)
+        set("backgroundColor", preset.backgroundColor);
+      if (preset.styleType === "highlight" && preset.backgroundColor)
+        set("color", "");
+    }
+  }
+  if (preset.uid) set("presetUid", preset.uid);
+  if (adoptPresetColortype(entry, preset, isValidHexColor)) changed = true;
+  return changed;
+}
+function adoptPresetColortype(entry, preset, isValidHexColor) {
+  if (!entry || !preset || !preset.styleType) return false;
+  const valid = typeof isValidHexColor === "function" ? isValidHexColor : () => true;
+  const paint = (c) => typeof c === "string" && c.trim() && c !== "currentColor" && c !== "inherit" ? valid(c) ? c.trim() : null : null;
+  const real = (c) => c && c !== "currentColor" ? c : null;
+  const themeText = (c) => typeof c === "string" && /^var\(\s*--text-normal\s*(,|\s*\))/.test(c.trim());
+  const chosen = (c) => real(c) && !themeText(c) ? c : null;
+  let changed = false;
+  const set = (k, v) => {
+    if (v && entry[k] !== v) {
+      entry[k] = v;
+      changed = true;
+    }
+  };
+  if (entry.styleType !== preset.styleType) set("styleType", preset.styleType);
+  const type = preset.styleType;
+  const needText = type === "text" || type === "both";
+  const needBg = type === "highlight" || type === "both";
+  const ownText = paint(entry.textColor) || paint(entry.color) || (entry.textColor === "currentColor" ? "currentColor" : null);
+  const ownBg = paint(entry.backgroundColor);
+  if (needText && !ownText) {
+    const t = paint(preset.textColor) || paint(preset.backgroundColor) || real(ownBg);
+    if (t) {
+      set("textColor", t);
+      if (type === "text") set("color", t);
+    }
+  }
+  if (needBg && !ownBg) {
+    const b = paint(preset.backgroundColor) || chosen(preset.textColor) || chosen(ownText) || "var(--color-accent)";
+    set("backgroundColor", b);
+  }
+  return changed;
+}
+function applyPresetShapeToGroup(group, preset) {
+  if (!group || !preset) return false;
+  let changed = false;
+  const set = (k, v) => {
+    if (group[k] !== v) {
+      group[k] = v;
+      changed = true;
+    }
+  };
+  for (const k of PRESET_SHAPE_FIELDS) {
+    if (k in preset && preset[k] !== void 0) set(k, preset[k]);
+  }
+  if (typeof preset.customCss === "string" && preset.customCss.trim()) {
+    set("customCss", preset.customCss);
+  }
+  if (preset.uid) set("presetUid", preset.uid);
+  return changed;
+}
+function propagatePresetToEntries(settings, preset, prevSignature, allPresets, isValidHexColor) {
+  if (!settings || !preset) return 0;
+  let count = 0;
+  for (const entry of entriesUsingPreset(
+    settings,
+    preset,
+    prevSignature,
+    allPresets
+  )) {
+    try {
+      if (applyPresetStyleToEntry(entry, preset, isValidHexColor)) count += 1;
+    } catch (_) {
+    }
+  }
+  for (const group of groupsUsingPreset(
+    settings,
+    preset,
+    prevSignature,
+    allPresets
+  )) {
+    try {
+      if (applyPresetShapeToGroup(group, preset)) count += 1;
+    } catch (_) {
+    }
+  }
+  return count;
+}
+
 // src/modals/TextStylePresetsModal.js
 var TextStylePresetsModal = class extends import_obsidian5.Modal {
   constructor(app, plugin, onPick = null) {
@@ -9547,9 +9818,10 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
       }
     }
   }
-  _editGlobalStyle() {
+  _editGlobalStyle(defaultPreset) {
     const s = this.plugin.settings;
     const entry = this._globalStyleObj();
+    const prevSignature = presetSignature(entry, s);
     this._ensureAccentColors(entry);
     try {
       const modal = new HighlightStylingModal(
@@ -9578,6 +9850,12 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
         s.matchType = entry.matchType;
         s.caseSensitive = entry.caseSensitive;
         s.wordGroup = entry.groupUid;
+        if (defaultPreset && defaultPreset.uid) {
+          this._propagatePresetChange(
+            Object.assign({}, this._globalStyleObj(), { uid: defaultPreset.uid }),
+            prevSignature
+          );
+        }
         this.plugin.saveSettings();
         this._render();
       };
@@ -9585,8 +9863,36 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
     } catch (e) {
     }
   }
+  /**
+   * "Link preset updates to entries": restyle every entry using `preset` with
+   * the style it now holds, and reshape every group carrying its stamp (the
+   * group's members inherit that shape at compile time). Runs after the
+   * preset itself was written; the entries' custom CSS is re-synced from
+   * their colors by the save that follows.
+   *
+   * @param {object} preset      preset after the edit
+   * @param {string} prevSignature presetSignature() taken before the edit
+   * @returns {number} entries and groups updated
+   */
+  _propagatePresetChange(preset, prevSignature) {
+    try {
+      if (!this.plugin.settings.linkPresetUpdatesToEntries) return 0;
+      const presets = Array.isArray(this.plugin.settings.textStylePresets) ? this.plugin.settings.textStylePresets : [];
+      const quickStyles = Array.isArray(this.plugin.settings.quickStyles) ? this.plugin.settings.quickStyles : [];
+      return propagatePresetToEntries(
+        this.plugin.settings,
+        preset,
+        prevSignature,
+        presets.concat(quickStyles),
+        (c) => this.plugin.isValidHexColor(c)
+      );
+    } catch (_) {
+      return 0;
+    }
+  }
   _editPreset(preset) {
     try {
+      const prevSignature = presetSignature(preset, this.plugin.settings);
       const accent = this._resolveAccentHex();
       const temp = JSON.parse(JSON.stringify(preset));
       if (!temp.backgroundColor || !this.plugin.isValidHexColor(temp.backgroundColor)) {
@@ -9635,6 +9941,7 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
             preset.textColor = temp.textColor;
           }
         }
+        this._propagatePresetChange(preset, prevSignature);
         this.plugin.saveSettings();
         this._render();
       };
@@ -9644,6 +9951,7 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
   }
   _editCustomCss(preset) {
     try {
+      const prevSignature = presetSignature(preset, this.plugin.settings);
       const modal = new CustomCssModal(this.app, this.plugin, preset);
       const orig = modal.onClose.bind(modal);
       modal.onClose = () => {
@@ -9651,6 +9959,7 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
           orig();
         } catch (_) {
         }
+        this._propagatePresetChange(preset, prevSignature);
         this.plugin.saveSettings();
         this._render();
       };
@@ -9693,7 +10002,7 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
   _openDefaultMenu(preset, evt) {
     const menu = new import_obsidian5.Menu();
     menu.addItem(
-      (item) => item.setTitle(this.plugin.t("edit_highlight_styling", "Edit Highlight Styling")).setIcon("pencil").onClick(() => this._editGlobalStyle())
+      (item) => item.setTitle(this.plugin.t("edit_highlight_styling", "Edit Highlight Styling")).setIcon("pencil").onClick(() => this._editGlobalStyle(preset))
     );
     if (this.plugin.settings.enableCustomCss) {
       menu.addItem(
@@ -9785,6 +10094,7 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
   }
   _editQuickStyle(preset) {
     try {
+      const prevSignature = presetSignature(preset, this.plugin.settings);
       const modal = new HighlightStylingModal(
         this.app,
         this.plugin,
@@ -9798,6 +10108,7 @@ var TextStylePresetsModal = class extends import_obsidian5.Modal {
           orig();
         } catch (_) {
         }
+        this._propagatePresetChange(preset, prevSignature);
         this.plugin.saveSettings();
         this._render();
       };
@@ -10082,6 +10393,62 @@ function applyGroupColorOverride(copy, group, isValidHex) {
       copy.backgroundColor = group.backgroundColor;
   }
   return { type, text, bg };
+}
+function applyGroupPresetChannels(copy, group, settings, isValidHex) {
+  try {
+    if (!copy || !group) return false;
+    if (deriveTargetElement(copy)) return false;
+    const uid = group.presetUid;
+    if (!uid || !settings) return false;
+    let preset = null;
+    for (const list of [settings.textStylePresets, settings.quickStyles]) {
+      if (!Array.isArray(list)) continue;
+      preset = list.find((p) => p && p.uid === uid) || null;
+      if (preset) break;
+    }
+    if (!preset) return false;
+    const valid = (c) => {
+      try {
+        return !!isValidHex(c);
+      } catch (_) {
+        return false;
+      }
+    };
+    const paint = (c) => typeof c === "string" && c.trim() && c !== "currentColor" && c !== "inherit" ? valid(c) ? c.trim() : null : null;
+    const real = (c) => c && c !== "currentColor" ? c : null;
+    const themeText = (c) => typeof c === "string" && /^var\(\s*--text-normal\s*(,|\s*\))/.test(c.trim());
+    const chosen = (c) => real(c) && !themeText(c) ? c : null;
+    const ownText = paint(copy.textColor) || paint(copy.color) || (copy.textColor === "currentColor" ? "currentColor" : null);
+    const ownBg = paint(copy.backgroundColor);
+    const presetText = paint(preset.textColor) || paint(preset.color) || (preset.textColor === "currentColor" ? "currentColor" : null);
+    const presetBg = paint(preset.backgroundColor);
+    const groupText = paint(group.textColor) || paint(group.color) || (group.textColor === "currentColor" ? "currentColor" : null);
+    const groupBg = paint(group.backgroundColor);
+    const text = ownText || real(ownBg) || real(presetText) || presetBg || real(groupBg) || groupText || null;
+    const bg = ownBg || chosen(ownText) || presetBg || chosen(presetText) || groupBg || chosen(groupText) || "var(--color-accent)";
+    let changed = false;
+    const set = (k, v) => {
+      if (v && copy[k] !== v) {
+        copy[k] = v;
+        changed = true;
+      }
+    };
+    set("textColor", text);
+    set("backgroundColor", bg);
+    if (!(ownBg || chosen(ownText))) {
+      const type = preset.styleType || copy.styleType;
+      if (type && copy.styleType !== type) {
+        copy.styleType = type;
+        changed = true;
+      }
+    } else if (!copy.styleType || copy.styleType === "text") {
+      copy.styleType = "both";
+      changed = true;
+    }
+    return changed;
+  } catch (_) {
+    return false;
+  }
 }
 function deriveTargetElement(e) {
   return e.targetElement || (e.presetLabel && /bold\s*italic/i.test(e.presetLabel) ? "strong-em" : e.presetLabel && /bold/i.test(e.presetLabel) ? "strong" : e.presetLabel && /italic/i.test(e.presetLabel) ? "em" : e.pattern === "(\\*\\*|__)(?=\\S)([^\\r]*?\\S)\\1" ? "strong" : e.pattern === "(\\*|_)(?=\\S)([^\\r]*?\\S)\\1" ? "em" : e.pattern === "(\\*\\*\\*|___)(?=\\S)([^\\r]*?\\S)\\1" ? "strong-em" : void 0);
@@ -10466,6 +10833,13 @@ function compileWordEntriesLogic(plugin) {
               (c) => plugin.isValidHexColor(c)
             );
             const _effGroupType = _effGroup.type;
+            if (!_effGroupType)
+              applyGroupPresetChannels(
+                copy,
+                group,
+                plugin.settings,
+                (c) => plugin.isValidHexColor(c)
+              );
             if (typeof group.backgroundOpacity !== "undefined")
               copy.backgroundOpacity = group.backgroundOpacity;
             if (typeof group.highlightBorderRadius !== "undefined")
@@ -10643,6 +11017,13 @@ function compileTextBgColoringEntriesLogic(plugin) {
               (c) => plugin.isValidHexColor(c)
             );
             const _effGroupType = _effGroup.type;
+            if (!_effGroupType)
+              applyGroupPresetChannels(
+                copy,
+                group,
+                plugin.settings,
+                (c) => plugin.isValidHexColor(c)
+              );
             if (typeof group.backgroundOpacity !== "undefined")
               copy.backgroundOpacity = group.backgroundOpacity;
             if (typeof group.highlightBorderRadius !== "undefined")
@@ -11896,22 +12277,32 @@ var HighlightStylingModal = class extends import_obsidian6.Modal {
       const presetHandler = () => {
         new TextStylePresetsModal(this.app, this.plugin, (preset) => {
           if (!preset || !this.entry) return;
-          const shapeKeys = ["styleType", "backgroundOpacity", "highlightBorderRadius", "cornerShape", "highlightHorizontalPadding", "highlightVerticalPadding", "enableBorderThickness", "borderStyle", "borderLineStyle", "borderOpacity", "borderThickness", "customCss"];
-          for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
-          if ("textColor" in preset) this.entry.textColor = preset.textColor;
-          if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
-          if ("color" in preset) this.entry.color = preset.color;
-          if (preset.styleType === "text" && preset.textColor && this.plugin.isValidHexColor(preset.textColor)) {
-            this.entry.color = preset.textColor;
-            this.entry.textColor = null;
-            this.entry.backgroundColor = null;
-          } else if (preset.styleType === "highlight" && preset.backgroundColor) {
-            this.entry.backgroundColor = preset.backgroundColor;
-            this.entry.textColor = "currentColor";
-            this.entry.color = "";
+          if (Array.isArray(this.entry.entries)) {
+            applyPresetShapeToGroup(this.entry, preset);
+          } else {
+            const shapeKeys = ["styleType", "backgroundOpacity", "highlightBorderRadius", "cornerShape", "highlightHorizontalPadding", "highlightVerticalPadding", "enableBorderThickness", "borderStyle", "borderLineStyle", "borderOpacity", "borderThickness", "customCss"];
+            for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
+            if (preset.uid) this.entry.presetUid = preset.uid;
+            if ("textColor" in preset) this.entry.textColor = preset.textColor;
+            if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
+            if ("color" in preset) this.entry.color = preset.color;
+            if (preset.styleType === "text" && preset.textColor && this.plugin.isValidHexColor(preset.textColor)) {
+              this.entry.color = preset.textColor;
+              this.entry.textColor = null;
+              this.entry.backgroundColor = null;
+            } else if (preset.styleType === "highlight" && preset.backgroundColor) {
+              this.entry.backgroundColor = preset.backgroundColor;
+              this.entry.textColor = "currentColor";
+              this.entry.color = "";
+            }
+            adoptPresetColortype(
+              this.entry,
+              preset,
+              (c) => this.plugin.isValidHexColor(c)
+            );
           }
           try {
-            if (styleSelect) styleSelect.value = this.entry.styleType || "both";
+            if (styleSelect) styleSelect.value = this.entry.styleType || (isGroup ? "" : "both");
           } catch (_) {
           }
           try {
@@ -15573,7 +15964,10 @@ var LINKED_STYLE_FIELDS = [
   "borderThickness",
   "inclusionRules",
   "exclusionRules",
-  "customCss"
+  "customCss",
+  // Linked entries share a style, so they follow the same preset when
+  // "Link preset updates to entries" is on.
+  "presetUid"
 ];
 function propagateStyle(sourceEntry, targets) {
   for (const { entry } of targets) {
@@ -17354,6 +17748,7 @@ var EditEntryModal = class extends import_obsidian12.Modal {
     for (const k of shapeKeys) {
       if (k in preset) this.entry[k] = preset[k];
     }
+    if (preset.uid) this.entry.presetUid = preset.uid;
     if (!hasAnyColor) {
       if ("styleType" in preset) this.entry.styleType = preset.styleType;
       if ("textColor" in preset) this.entry.textColor = preset.textColor;
@@ -17365,8 +17760,12 @@ var EditEntryModal = class extends import_obsidian12.Modal {
       } else if (preset.styleType === "highlight" && preset.backgroundColor) {
         this.entry.color = "";
       }
-    } else {
     }
+    adoptPresetColortype(
+      this.entry,
+      preset,
+      (c) => this.plugin.isValidHexColor(c)
+    );
     try {
       if (this._styleSelect) {
         this._styleSelect.value = this.entry.styleType || "text";
@@ -19016,6 +19415,7 @@ var ColorPickerModal = class extends import_obsidian13.Modal {
           }
           if (finalEntry) {
             finalEntry.styleType = st.styleType;
+            if (st.presetUid) finalEntry.presetUid = st.presetUid;
             if (st.backgroundOpacity != null)
               finalEntry.backgroundOpacity = st.backgroundOpacity;
             if (st.highlightBorderRadius != null)
@@ -19035,6 +19435,11 @@ var ColorPickerModal = class extends import_obsidian13.Modal {
               finalEntry.borderOpacity = st.borderOpacity;
             if (st.borderThickness != null)
               finalEntry.borderThickness = st.borderThickness;
+            adoptPresetColortype(
+              finalEntry,
+              st,
+              (c) => this.plugin.isValidHexColor(c)
+            );
             this.plugin.saveSettings();
           }
         } catch (e) {
@@ -19323,7 +19728,15 @@ var ColorPickerModal = class extends import_obsidian13.Modal {
       textColor = this.selectedTextColor || presetText;
       backgroundColor = this.selectedBgColor || presetBg;
     }
-    const effectiveStyleType = entryHasAnyColor && this._entry && this._entry.styleType ? this._entry.styleType : preset.styleType || "highlight";
+    const effectiveStyleType = preset.styleType || this._entry && this._entry.styleType || "highlight";
+    const _paint = (c) => c && typeof c === "string" && c.trim() && c !== "currentColor" && c !== "inherit" && this.plugin.isValidHexColor(c) ? c.trim() : null;
+    const _real = (c) => c && c !== "currentColor" ? c : null;
+    if (effectiveStyleType !== "highlight" && !_paint(textColor)) {
+      textColor = _paint(presetText) || _paint(presetBg) || _real(_paint(backgroundColor)) || textColor;
+    }
+    if (effectiveStyleType !== "text" && !_paint(backgroundColor)) {
+      backgroundColor = _paint(presetBg) || _real(_paint(textColor)) || "var(--color-accent)";
+    }
     const styleFields = {
       styleType: effectiveStyleType,
       backgroundOpacity: preset.backgroundOpacity ?? null,
@@ -19338,6 +19751,9 @@ var ColorPickerModal = class extends import_obsidian13.Modal {
       borderThickness: preset.borderThickness ?? null
     };
     this._appliedPresetStyle = Object.assign({}, styleFields);
+    this._appliedPresetStyle.textColor = textColor || null;
+    this._appliedPresetStyle.backgroundColor = backgroundColor || null;
+    if (preset.uid) this._appliedPresetStyle.presetUid = preset.uid;
     if (preset.matchType) this._appliedPresetStyle.matchType = preset.matchType;
     if (typeof preset.caseSensitive === "boolean")
       this._appliedPresetStyle.caseSensitive = preset.caseSensitive;
@@ -19723,7 +20139,18 @@ function computePreviewMatches(plugin, input) {
     const groupMatch = typeof group.matchTypeOverride === "string" && group.matchTypeOverride ? group.matchTypeOverride : void 0;
     if (groupMatch) e.matchType = groupMatch;
     if (groupCase !== void 0) e._caseSensitiveOverride = groupCase;
-    applyGroupColorOverride(e, group, (c) => plugin.isValidHexColor(c));
+    const _ov = applyGroupColorOverride(
+      e,
+      group,
+      (c) => plugin.isValidHexColor(c)
+    );
+    if (!_ov.type)
+      applyGroupPresetChannels(
+        e,
+        group,
+        settings,
+        (c) => plugin.isValidHexColor(c)
+      );
   }
   let channel = "word";
   if (e.backgroundColor) {
@@ -24436,6 +24863,10 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
           groups.forEach((g) => {
             if (g && Array.isArray(g.entries)) g.entries.forEach(updateEntry);
           });
+          const bgEntries = Array.isArray(
+            this.plugin.settings.textBgColoringEntries
+          ) ? this.plugin.settings.textBgColoringEntries : [];
+          bgEntries.forEach(updateEntry);
         }
       }
       await this.plugin.saveSettings();
@@ -28227,6 +28658,10 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
                   g.entries.forEach(updateEntry);
                 }
               });
+              const bgEntries = Array.isArray(
+                this.plugin.settings.textBgColoringEntries
+              ) ? this.plugin.settings.textBgColoringEntries : [];
+              bgEntries.forEach(updateEntry);
             }
             await this.plugin.saveSettings();
             try {
@@ -30475,6 +30910,22 @@ var ColorSettingTab = class extends import_obsidian25.PluginSettingTab {
         (t) => t.setValue(this.plugin.settings.linkSwatchUpdatesToEntries).onChange(async (v) => {
           this.plugin.settings.linkSwatchUpdatesToEntries = v;
           await this.plugin.saveSettings();
+        })
+      );
+      new import_obsidian25.Setting(containerEl2).setName(
+        this.plugin.t(
+          "link_preset_updates",
+          "Link preset updates to entries"
+        )
+      ).setDesc(
+        this.plugin.t(
+          "link_preset_updates_desc",
+          "When a preset is edited, the entries and word groups using it adopt the new style automatically."
+        )
+      ).addToggle(
+        (t) => t.setValue(this.plugin.settings.linkPresetUpdatesToEntries ?? true).onChange(async (v) => {
+          this.plugin.settings.linkPresetUpdatesToEntries = v;
+          await this.debouncedSaveSettings();
         })
       );
       addGroupHeader(this.plugin.t("appearance_header", "Appearance"));
@@ -33354,7 +33805,8 @@ var COMMAND_ICONS = {
   "show-latest-release-notes": "book-open",
   "open-plugin-settings": "settings",
   "manage-colored-texts": "list",
-  "open-text-style-presets": "layers",
+  "edit-last-added-entry": "pencil",
+  "open-text-style-presets": "layout-grid",
   "open-color-swatches": "swatch-book",
   // Regex testers
   "open-regex-tester": "regex",
@@ -35454,10 +35906,31 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     if (!this.settings._tspColorMigrated && Array.isArray(this.settings.textStylePresets)) {
       for (const p of this.settings.textStylePresets) {
         if (p && typeof p.uid === "string" && p.uid.startsWith("tsp-")) {
-          if (p.backgroundColor) p.backgroundColor = "";
+          if (p.backgroundColor && !String(p.backgroundColor).trim().startsWith("var("))
+            p.backgroundColor = "";
         }
       }
       this.settings._tspColorMigrated = true;
+    }
+    if (!this.settings._tspChannelDefaultsMigrated && Array.isArray(this.settings.textStylePresets)) {
+      try {
+        if (this.settings.textStylePresets === defaultSettings.textStylePresets) {
+          this.settings.textStylePresets = JSON.parse(
+            JSON.stringify(defaultSettings.textStylePresets)
+          );
+        }
+        const seeds = new Set(
+          (defaultSettings.textStylePresets || []).map((s) => s.uid)
+        );
+        for (const p of this.settings.textStylePresets) {
+          if (!p || !seeds.has(p.uid)) continue;
+          if (!p.textColor || p.textColor === "currentColor")
+            p.textColor = "var(--text-normal)";
+          if (!p.backgroundColor) p.backgroundColor = "var(--color-accent)";
+        }
+        this.settings._tspChannelDefaultsMigrated = true;
+      } catch (e) {
+      }
     }
     if (typeof this.settings.quickStylesEnabled === "undefined")
       this.settings.quickStylesEnabled = true;
@@ -36798,6 +37271,36 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         name: this.t("command_manage_colored_texts", "Manage Colored Texts"),
         callback: () => {
           this.openPluginSettingsTab("always-color-texts");
+        }
+      });
+      addTrackedCommand({
+        id: "edit-last-added-entry",
+        name: this.t("command_edit_last_added_entry", "Edit Last Added Entry"),
+        callback: () => {
+          try {
+            const entries = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+            const last = entries.length ? entries[entries.length - 1] : null;
+            if (!last) {
+              new import_obsidian29.Notice(
+                this.t(
+                  "notice_no_entries_to_edit",
+                  "No entries yet \u2014 add one first."
+                )
+              );
+              return;
+            }
+            new EditEntryModal(this.app, this, last, () => {
+              try {
+                const tab = this.settingTab;
+                if (tab && tab.containerEl && tab.containerEl.isConnected && tab._activeTab === "always-color-texts") {
+                  tab.display();
+                }
+              } catch (_) {
+              }
+            }).open();
+          } catch (e) {
+            debugError("COMMAND", "Unable to open the last added entry", e);
+          }
         }
       });
       addTrackedCommand({
@@ -41879,6 +42382,12 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       this.settings = s;
     } catch (e) {
     }
+    try {
+      if (typeof this.syncAllEntriesCssFromColors === "function") {
+        this.syncAllEntriesCssFromColors();
+      }
+    } catch (e) {
+    }
   }
   // --- Save a persistent color for a word ---
   async saveEntry(word, color, markTarget2 = "text") {
@@ -41966,7 +42475,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     const markTarget2 = sel && sel.markTarget || "text";
     const caseSensitive = sel && typeof sel.caseSensitive === "boolean" ? sel.caseSensitive : !!this.settings.caseSensitive;
     const ps = sel && sel.presetStyle || null;
-    const applyPresetStyleToEntry = (ent) => {
+    const applyPresetStyleToEntry2 = (ent) => {
       if (!ps || !ent) return;
       const keys = ["styleType", "backgroundOpacity", "highlightBorderRadius", "cornerShape", "highlightHorizontalPadding", "highlightVerticalPadding", "enableBorderThickness", "borderStyle", "borderLineStyle", "borderOpacity", "borderThickness"];
       for (const k of keys) {
@@ -41975,6 +42484,8 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       if (ps.matchType) ent.matchType = ps.matchType;
       if (typeof ps.caseSensitive === "boolean") ent.caseSensitive = ps.caseSensitive;
       if (ps.wordGroup) ent.groupUid = ps.wordGroup;
+      if (ps.presetUid) ent.presetUid = ps.presetUid;
+      adoptPresetColortype(ent, ps, (c) => this.isValidHexColor(c));
       if (ent.customCss) this.syncEntryCssFromColors(ent);
     };
     const resolved = opts.resolved || null;
@@ -42036,7 +42547,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             const already = target.inclusionRules.some((r) => r && r.path === opts.fileInclusionRule.path && r.mode === "include");
             if (!already) target.inclusionRules.push(opts.fileInclusionRule);
           }
-          applyPresetStyleToEntry(target);
+          applyPresetStyleToEntry2(target);
           this.syncEntryCssFromColors(target);
         } catch (_) {
         }
@@ -42157,7 +42668,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           entry._savedTextColor = color;
         }
         if (!entry.isRegex) entry.matchType = matchType;
-        applyPresetStyleToEntry(entry);
+        applyPresetStyleToEntry2(entry);
         this.syncEntryCssFromColors(entry);
         if (opts.fileInclusionRule) {
           if (!Array.isArray(entry.inclusionRules)) entry.inclusionRules = [];
@@ -42176,7 +42687,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           ne = { pattern: selectedText, color, isRegex: false, flags: "", styleType: "text", matchType, markTarget: markTarget2, caseSensitive, _savedTextColor: color };
         }
         if (ne) {
-          applyPresetStyleToEntry(ne);
+          applyPresetStyleToEntry2(ne);
           if (opts.fileInclusionRule) {
             ne.inclusionRules = [opts.fileInclusionRule];
           }
@@ -43132,65 +43643,99 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
    */
   /**
    * Same as syncEntryCssFromColors but returns the patched CSS string without
-   * mutating the entry. Used for live preview rendering.
+   * mutating the entry. Used for live preview rendering, so what the preview
+   * shows is exactly what a save would persist.
    */
   syncEntryCssFromColorsForPreview(entry) {
     if (!entry || !entry.customCss) return entry ? entry.customCss : "";
     try {
-      const settings = this.settings;
-      const styleType2 = entry.styleType || (entry.backgroundColor ? "highlight" : "text");
-      const isTextOnly = styleType2 === "text";
-      const tc = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color;
-      const bg = entry.backgroundColor;
-      const updates = {};
-      if (tc) updates["color"] = tc;
-      if (bg && !isTextOnly) {
-        const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
-        updates["background-color"] = this.hexToRgba(bg, opacity);
+      const copy = Object.assign({}, entry);
+      this.syncEntryCssFromColors(copy);
+      return copy.customCss;
+    } catch (_) {
+      return entry.customCss;
+    }
+  }
+  /**
+   * Background color CSS for an entry's custom CSS at its opacity.
+   *
+   * A `var(--x)` input stays a `var()` reference (via color-mix) instead of
+   * being baked into a literal rgba(), so the CSS keeps pointing at whatever
+   * the color picker's variable input holds — change the variable and the
+   * custom CSS follows. Literal hex inputs resolve to rgba() as before.
+   */
+  _entryBackgroundCss(bg, opacity) {
+    const trimmed = String(bg || "").trim();
+    if (/^var\(/.test(trimmed)) {
+      return `color-mix(in srgb, ${trimmed} ${opacity}%, transparent)`;
+    }
+    return this.hexToRgba(trimmed, opacity);
+  }
+  /**
+   * Every entry/group that can carry custom CSS, as one flat list.
+   * Used by syncAllEntriesCssFromColors.
+   */
+  _entriesWithCustomCss() {
+    const s = this.settings || {};
+    const out = [];
+    const push = (e) => {
+      if (e && typeof e.customCss === "string" && e.customCss.trim()) out.push(e);
+    };
+    const walk = (arr) => {
+      if (Array.isArray(arr)) arr.forEach(push);
+    };
+    walk(s.wordEntries);
+    walk(s.textBgColoringEntries);
+    walk(s.quickStyles);
+    if (Array.isArray(s.wordEntryGroups)) {
+      for (const g of s.wordEntryGroups) {
+        if (!g) continue;
+        walk(g.entries);
       }
-      const split = splitCustomCss(entry.customCss);
-      const sanitized = this.sanitizeCssDeclarations(split.decls);
-      if (!sanitized && !split.blocks.length) return entry.customCss;
-      const parts = sanitized.split(";").map((s) => s.trim()).filter(Boolean);
-      const parsed = parts.map((p) => {
-        const idx = p.indexOf(":");
-        if (idx === -1) return { prop: p, val: "" };
-        return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
-      });
-      const found = /* @__PURE__ */ new Set();
-      const rebuilt = [];
-      for (const { prop, val } of parsed) {
-        if (updates.hasOwnProperty(prop)) {
-          found.add(prop);
-          rebuilt.push(`${prop}: ${updates[prop]}`);
-          continue;
-        }
-        if (!tc && prop === "color") continue;
-        if ((!bg || isTextOnly) && prop === "background-color") continue;
-        if (tc && (prop === "border" || prop === "border-top" || prop === "border-bottom" || prop === "border-left" || prop === "border-right")) {
-          const patched = val.replace(/#[0-9a-fA-F]{3,8}\b/g, tc).replace(/rgba?\s*\([^)]+\)/gi, tc);
-          rebuilt.push(`${prop}: ${patched}`);
-          continue;
-        }
-        if (!tc && (prop === "border" || prop === "border-top" || prop === "border-bottom" || prop === "border-left" || prop === "border-right")) {
-          const patched = val.replace(/#[0-9a-fA-F]{3,8}\b/g, "currentColor").replace(/rgba?\s*\([^)]+\)/gi, "currentColor");
-          rebuilt.push(`${prop}: ${patched}`);
-          continue;
-        }
-        rebuilt.push(`${prop}: ${val}`);
-      }
-      for (const [prop, val] of Object.entries(updates)) {
-        if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
-      }
-      entry.customCss = reassembleCustomCss(split, rebuilt.length ? rebuilt.join(";\n") + ";" : "");
+    }
+    return out;
+  }
+  /**
+   * Patch every entry's custom CSS from its own colors.
+   *
+   * Color edits happen in a dozen places (settings row pickers, color picker,
+   * group modal, swatch link, matcher link, …) and every one of them would
+   * have to remember to call syncEntryCssFromColors — miss one and the old
+   * literal in the CSS keeps winning at render time, freezing the entry on
+   * its original color. Doing it in bulk at the sanitize/compile choke points
+   * makes "CSS mirrors the picker" hold no matter where the color changed.
+   *
+   * Cheap and idempotent: only entries with custom CSS are touched, and
+   * re-running produces the same string.
+   */
+  syncAllEntriesCssFromColors() {
+    try {
+      const list = this._entriesWithCustomCss();
+      for (const e of list) this.syncEntryCssFromColors(e);
     } catch (_) {
     }
   }
   /**
-   * If an entry has customCss, patch only the color/background/border-color values
+   * If an entry has customCss, patch only the color/background/border values
    * in the existing CSS string to reflect the entry's current color fields.
    * All other user-defined properties (font-size, font-weight, etc.) are preserved.
-   * Call this immediately after mutating entry.color / entry.textColor / entry.backgroundColor.
+   *
+   * Why this exists: custom CSS declarations win over the base style at render
+   * time, so a `color:` literal that is never refreshed freezes the entry on
+   * the color it had when the CSS was written. The CSS must therefore mirror
+   * the color picker / variable input instead of holding its own value:
+   *   • hex and `var(--x)` picker values are written back verbatim,
+   *   • borders take their color from the same source the CSS prefill derives
+   *     it from (background for highlights, text color otherwise),
+   *   • declarations for a color the entry no longer has are dropped, so a
+   *     reset actually clears the styling,
+   *   • an entry with no structured color at all is left untouched — there the
+   *     CSS *is* the color source, and rewriting it would delete styling the
+   *     user typed on purpose.
+   *
+   * Blocks and comments carry over untouched (blocks are explicit states such
+   * as `&:hover`). Called after individual color edits and in bulk by
+   * syncAllEntriesCssFromColors() before every save/compile.
    */
   syncEntryCssFromColors(entry) {
     if (!entry || !entry.customCss) return;
@@ -43200,12 +43745,30 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       const isTextOnly = styleType2 === "text";
       const tc = entry.textColor && entry.textColor !== "currentColor" ? entry.textColor : entry.color;
       const bg = entry.backgroundColor;
+      if (!tc && !bg) return;
       const updates = {};
       if (tc) updates["color"] = tc;
       if (bg && !isTextOnly) {
         const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
-        updates["background-color"] = this.hexToRgba(bg, opacity);
+        updates["background-color"] = this._entryBackgroundCss(bg, opacity);
       }
+      const borderColor = styleType2 === "highlight" ? bg : tc;
+      const isPlainColorValue = (v) => /^(#[0-9a-f]{3,8}\b|rgba?\(|var\()/i.test(String(v).trim());
+      const retoken = (val, color) => String(val).replace(/#[0-9a-fA-F]{3,8}\b/g, color).replace(/rgba?\s*\([^)]+\)/gi, color);
+      const BORDER_PROPS = /* @__PURE__ */ new Set([
+        "border",
+        "border-top",
+        "border-bottom",
+        "border-left",
+        "border-right"
+      ]);
+      const BORDER_COLOR_PROPS = /* @__PURE__ */ new Set([
+        "border-color",
+        "border-top-color",
+        "border-bottom-color",
+        "border-left-color",
+        "border-right-color"
+      ]);
       const split = splitCustomCss(entry.customCss);
       const sanitized = this.sanitizeCssDeclarations(split.decls);
       if (!sanitized && !split.blocks.length) return;
@@ -43216,21 +43779,38 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
       });
       const found = /* @__PURE__ */ new Set();
-      const rebuilt = parsed.map(({ prop, val }) => {
-        if (updates.hasOwnProperty(prop)) {
+      const rebuilt = [];
+      for (const { prop, val } of parsed) {
+        if (Object.prototype.hasOwnProperty.call(updates, prop)) {
           found.add(prop);
-          return `${prop}: ${updates[prop]}`;
+          rebuilt.push(`${prop}: ${updates[prop]}`);
+          continue;
         }
-        if (tc && (prop === "border" || prop === "border-top" || prop === "border-bottom" || prop === "border-left" || prop === "border-right")) {
-          const patched = val.replace(/#[0-9a-fA-F]{3,8}\b/g, tc).replace(/rgba?\s*\([^)]+\)/gi, tc);
-          return `${prop}: ${patched}`;
+        if (prop === "background") {
+          const bgCss = updates["background-color"];
+          if (isPlainColorValue(val)) {
+            if (!bgCss) continue;
+            found.add("background-color");
+            rebuilt.push(`background: ${bgCss}`);
+            continue;
+          }
+          rebuilt.push(`background: ${val}`);
+          continue;
         }
-        return `${prop}: ${val}`;
-      });
+        if (!updates.color && prop === "color") continue;
+        if (!updates["background-color"] && prop === "background-color") continue;
+        if (BORDER_COLOR_PROPS.has(prop)) {
+          rebuilt.push(`${prop}: ${borderColor || val}`);
+          continue;
+        }
+        if (BORDER_PROPS.has(prop)) {
+          rebuilt.push(`${prop}: ${borderColor ? retoken(val, borderColor) : val}`);
+          continue;
+        }
+        rebuilt.push(`${prop}: ${val}`);
+      }
       for (const [prop, val] of Object.entries(updates)) {
-        if (!found.has(prop)) {
-          rebuilt.push(`${prop}: ${val}`);
-        }
+        if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
       }
       entry.customCss = reassembleCustomCss(split, rebuilt.length ? rebuilt.join(";\n") + ";" : "");
     } catch (_) {
@@ -44420,6 +45000,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
   }
   // Compile word entries into runtime structures (regexes, testRegex, validity)
   compileWordEntries() {
+    this.syncAllEntriesCssFromColors();
     try {
       if (this._filteredEntriesCache) this._filteredEntriesCache.clear();
     } catch (_) {
@@ -44429,6 +45010,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
   }
   // Compile text + background coloring entries
   compileTextBgColoringEntries() {
+    this.syncAllEntriesCssFromColors();
     try {
       if (this._filteredEntriesCache) this._filteredEntriesCache.clear();
     } catch (_) {
@@ -47063,6 +47645,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                   lineStyleParts.push(`margin-top: ${vpad}px`);
                   lineStyleParts.push(`margin-bottom: ${vpad}px`);
                 }
+                const hpad = params.hPad ?? 4;
+                lineStyleParts.push(`padding-left: ${hpad}px`);
+                lineStyleParts.push(`padding-right: ${hpad}px`);
                 lineStyleParts.push(`border-radius: ${params.radius ?? 4}px`);
                 {
                   const _cs = this.getCornerShapeCss(refEntry);
@@ -47090,22 +47675,6 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                   lineStyleStr = this._mergeStyleWithCustomCss(lineStyleStr, entryRef.customCss, this._scopeIdForEntry(entryRef));
                 }
               }
-              const baseParts = [];
-              const strongLayoutParts = [];
-              for (const decl of lineStyleStr.split(";")) {
-                const trimmed = decl.trim();
-                if (!trimmed) continue;
-                const colonIdx = trimmed.indexOf(":");
-                if (colonIdx === -1) continue;
-                const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
-                if (prop === "padding-left" || prop === "padding-right" || prop === "margin-left" || prop === "margin-right" || prop === "padding" || prop === "margin" || prop === "text-indent" || prop === "padding-inline-start" || prop === "padding-inline-end" || prop === "margin-inline-start" || prop === "margin-inline-end") {
-                  const val = trimmed.replace(/\s*!important/gi, "");
-                  strongLayoutParts.push(val + " !important");
-                  baseParts.push(val);
-                } else {
-                  baseParts.push(trimmed);
-                }
-              }
               const styleId = `act-line-style-reading-${cssClass}`;
               let styleEl = document.getElementById(styleId);
               if (!styleEl) {
@@ -47115,13 +47684,11 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                 document.head.appendChild(styleEl);
               }
               const tagName = (block.tagName || "div").toLowerCase();
-              const baseRule = `${tagName}.${cssClass}{${baseParts.join("; ")}}`;
-              const strongRule = strongLayoutParts.length && tagName !== "li" ? `${tagName}.${cssClass}{${strongLayoutParts.join("; ")}}` : "";
+              const lineSelector = `${tagName}.${cssClass}`;
               let hoverRules = "";
               if (this.settings.enableCustomCss) {
                 const lineEntry = m.entryRef || {};
                 const lineGroup = lineEntry._groupRef || lineEntry.entryRef?._groupRef;
-                const lineSelector = `${tagName}.${cssClass}`;
                 if (lineGroup?.customCss) {
                   hoverRules += buildSelectorBlockRules(this.groupCssForMembers(lineGroup), lineSelector);
                 }
@@ -47129,8 +47696,12 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
                   hoverRules += buildSelectorBlockRules(lineEntry.customCss, lineSelector);
                 }
               }
-              const rule = `${baseRule}
-${strongRule}${hoverRules ? "\n" + hoverRules : ""}`;
+              const rule = buildLineTargetRule({
+                selector: lineSelector,
+                strongSelector: tagName === "li" ? null : lineSelector,
+                styleStr: lineStyleStr,
+                hoverRules
+              });
               if (styleEl.textContent !== rule) styleEl.textContent = rule;
               frag.appendChild(document.createTextNode(text.slice(m.start, m.end)));
               pos = m.end;
@@ -51569,40 +52140,9 @@ ${strongRule}${hoverRules ? "\n" + hoverRules : ""}`;
       const markTarget2 = m.entryRef && m.entryRef.markTarget;
       if (markTarget2 === "line" || markTarget2 === "nextLine") {
         const cssClass = this.lineTargetCssClass(m.entryRef);
-        let colorProp = "";
-        const lineStyleParts = [];
-        const layoutStyleParts = [];
-        for (const decl of style.split(";")) {
-          const trimmed = decl.trim();
-          if (!trimmed) continue;
-          const colonIdx = trimmed.indexOf(":");
-          if (colonIdx === -1) continue;
-          const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
-          if (prop === "color" && !trimmed.includes("!important")) {
-            colorProp = `${trimmed};`;
-          } else if (prop === "color") {
-            colorProp = trimmed.replace(/\s*!important/g, "") + ";";
-          } else if (prop === "padding-left" || prop === "padding-right" || prop === "margin-left" || prop === "margin-right" || prop === "padding" || prop === "margin" || prop === "text-indent" || prop === "padding-inline-start" || prop === "padding-inline-end" || prop === "margin-inline-start" || prop === "margin-inline-end") {
-            const val = trimmed.replace(/\s*!important/gi, "");
-            layoutStyleParts.push(val + " !important");
-            lineStyleParts.push(val);
-          } else if (prop !== "--highlight-color") {
-            lineStyleParts.push(trimmed);
-          }
-        }
-        const styleId = `act-line-style-${cssClass}`;
-        let styleEl = document.getElementById(styleId);
-        if (!styleEl) {
-          styleEl = document.createElement("style");
-          styleEl.id = styleId;
-          styleEl.setAttribute("data-act-line-style", "1");
-          document.head.appendChild(styleEl);
-        }
-        const baseRule = `div.cm-line.${cssClass}{${colorProp}${lineStyleParts.join("; ")}}`;
-        const strongLayoutRule = layoutStyleParts.length ? `div.cm-line.${cssClass}:not(.HyperMD-list-line){${layoutStyleParts.join("; ")}}` : "";
+        const lineSelector = `div.cm-line.${cssClass}`;
         let hoverRules = "";
         if (this.settings.enableCustomCss) {
-          const lineSelector = `div.cm-line.${cssClass}`;
           const lineGroup = m.entryRef && (m.entryRef._groupRef || m.entryRef.entryRef?._groupRef);
           if (lineGroup && lineGroup.customCss) {
             hoverRules += buildSelectorBlockRules(this.groupCssForMembers(lineGroup), lineSelector);
@@ -51611,8 +52151,21 @@ ${strongRule}${hoverRules ? "\n" + hoverRules : ""}`;
             hoverRules += buildSelectorBlockRules(m.entryRef.customCss, lineSelector);
           }
         }
-        const rule = `${baseRule}
-${strongLayoutRule}${hoverRules ? "\n" + hoverRules : ""}`;
+        const rule = buildLineTargetRule({
+          selector: lineSelector,
+          strongSelector: `${lineSelector}:not(.HyperMD-list-line)`,
+          styleStr: style,
+          hoverRules,
+          extractColor: true
+        });
+        const styleId = `act-line-style-${cssClass}`;
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) {
+          styleEl = document.createElement("style");
+          styleEl.id = styleId;
+          styleEl.setAttribute("data-act-line-style", "1");
+          document.head.appendChild(styleEl);
+        }
         if (styleEl.textContent !== rule) styleEl.textContent = rule;
         let lineStart;
         if (markTarget2 === "nextLine") {

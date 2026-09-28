@@ -545,6 +545,87 @@ export function buildSelectorBlockRules(css, baseSelector) {
   }
 }
 
+/**
+ * Horizontal layout declarations: on a line-target block they must outrank
+ * the theme's/Obsidian's block padding, so the strong rule re-adds
+ * `!important` for exactly this set and nothing else.
+ */
+const LAYOUT_DECL_PROPS = new Set([
+  'padding',
+  'padding-left',
+  'padding-right',
+  'padding-inline-start',
+  'padding-inline-end',
+  'margin',
+  'margin-left',
+  'margin-right',
+  'margin-inline-start',
+  'margin-inline-end',
+  'text-indent',
+]);
+
+/**
+ * Stylesheet text for one line-target class: a permissive base rule plus a
+ * strong rule carrying the layout declarations with `!important`, so the
+ * entry's horizontal padding/margin wins over theme block padding.
+ *
+ * Both line-coloring views (Live Preview `.cm-line`, reading-mode blocks)
+ * render through this builder — a padding fix applied in only one of them is
+ * exactly the kind of drift this function exists to prevent.
+ *
+ * @param {object} o
+ * @param {string} o.selector base selector (`p.colorline`, `div.cm-line.colorline`)
+ * @param {string|null} [o.strongSelector] selector for the `!important` layout rule; null → no strong rule (list lines keep Obsidian's indentation)
+ * @param {string} [o.styleStr] declaration string; custom-CSS declarations may already carry `!important`
+ * @param {string} [o.hoverRules] `&`-block rules already rendered against `o.selector`
+ * @param {boolean} [o.extractColor] pull `color` out of the parts (Live Preview wants it low-specificity) and drop `--highlight-color`
+ * @returns {string} rule text for a `<style>` element
+ */
+export function buildLineTargetRule({
+  selector,
+  strongSelector = null,
+  styleStr = '',
+  hoverRules = '',
+  extractColor = false,
+}) {
+  try {
+    if (!selector) return '';
+    let colorProp = '';
+    const baseParts = [];
+    const strongParts = [];
+    for (const decl of String(styleStr || '').split(';')) {
+      const trimmed = decl.trim();
+      if (!trimmed) continue;
+      const colonIdx = trimmed.indexOf(':');
+      if (colonIdx === -1) continue;
+      const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
+      if (extractColor && prop === 'color') {
+        colorProp = `${trimmed.replace(/\s*!important/gi, '')};`;
+        continue;
+      }
+      if (LAYOUT_DECL_PROPS.has(prop)) {
+        // The base copy stays !important-free so children and `li`
+        // indentation can still win there; the strong copy wins everywhere
+        // else. Custom CSS keeps its own value — it merged in earlier.
+        const val = trimmed.replace(/\s*!important/gi, '');
+        strongParts.push(`${val} !important`);
+        baseParts.push(val);
+        continue;
+      }
+      if (extractColor && prop === '--highlight-color') continue;
+      baseParts.push(trimmed);
+    }
+    const baseRule = `${selector}{${colorProp}${baseParts.join('; ')}}`;
+    const strongRule =
+      strongSelector && strongParts.length
+        ? `${strongSelector}{${strongParts.join('; ')}}`
+        : '';
+    return `${baseRule}\n${strongRule}${hoverRules ? '\n' + hoverRules : ''}`;
+  } catch (_) {
+    return '';
+  }
+}
+
 /* ── Validation (modal) ───────────────────────────────────────── */
 
 /**

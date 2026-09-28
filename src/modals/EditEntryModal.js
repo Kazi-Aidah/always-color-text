@@ -12,6 +12,7 @@ import { RulePickerModal } from './RulePickerModal.js';
 import { RuleValueModal } from './RuleValueModal.js';
 import { PresetModal, createDateTimeFormatButton } from './PresetModal.js';
 import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
+import { adoptPresetColortype } from '../utils/presetLinker.js';
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
@@ -2167,6 +2168,9 @@ export class EditEntryModal extends Modal {
     for (const k of shapeKeys) {
       if (k in preset) this.entry[k] = preset[k];
     }
+    // Remember which preset shaped this entry so "Link preset updates to
+    // entries" can restyle it when that preset changes.
+    if (preset.uid) this.entry.presetUid = preset.uid;
     // Only copy styleType/colors if entry has no colors yet
     if (!hasAnyColor) {
       if ("styleType" in preset) this.entry.styleType = preset.styleType;
@@ -2180,10 +2184,16 @@ export class EditEntryModal extends Modal {
       } else if (preset.styleType === "highlight" && preset.backgroundColor) {
         this.entry.color = "";
       }
-    } else {
-      // Entry already has colors - keep its styleType and colors, only shape changes
-      // Ensure styleType stays consistent with existing colors (don't let preset wipe it)
     }
+    // The preset's COLORTYPE always applies — even when the entry already has
+    // colours (it decides how those colours are rendered) — and any channel
+    // the new colortype needs is filled from the preset, so picking a preset
+    // can't leave an entry nothing paints. The colours themselves are kept.
+    adoptPresetColortype(
+      this.entry,
+      preset,
+      (c) => this.plugin.isValidHexColor(c),
+    );
     try {
       if (this._styleSelect) {
         this._styleSelect.value = this.entry.styleType || "text";

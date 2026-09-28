@@ -37,8 +37,9 @@ const HOISTED = vi.hoisted(() => {
     "circle-slashed",
     "circle",
     // New static commands (validated against Obsidian's Lucide set).
-    "layers",
+    "layout-grid",
     "swatch-book",
+    "pencil",
     // A valid custom icon a user may have picked (e.g. via Commander).
     "star",
   ]);
@@ -363,6 +364,16 @@ describe("source regression: no iconless commands can be registered", () => {
     expect(source).not.toContain('id: "open-colored-texts-settings"');
     expect(COMMAND_ICONS["manage-colored-texts"]).toBeTruthy();
     expect(COMMAND_ICONS["open-colored-texts-settings"]).toBeUndefined();
+  });
+
+  it("registers edit-last-added-entry against the newest word entry", () => {
+    // The command exists so a freshly added entry can be fixed without
+    // hunting for it: newest = whatever got appended last (the same rule
+    // the add-to-existing modal pins its "last added" item with).
+    expect(source).toContain('id: "edit-last-added-entry"');
+    expect(source).toContain("entries[entries.length - 1]");
+    expect(source).toContain("new EditEntryModal(this.app, this, last,");
+    expect(resolveCommandIcon("edit-last-added-entry")).toBe("pencil");
   });
 
   it("every literal command id used at registration resolves an icon", () => {

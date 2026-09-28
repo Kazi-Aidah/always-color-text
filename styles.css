@@ -610,14 +610,15 @@ div[contenteditable="true"]:focus {
   color: var(--text-on-accent);
 }
 /* "Delete Group" footer buttons: translucent red instead of Obsidian's solid
-   error fill (same treatment as the entry delete buttons). The
-   .modal + .act- chain out-specifies button.mod-warning and
-   .is-mobile button.mod-warning, so no !important is needed. */
-.modal button.mod-warning.act-delete-group-btn {
+   error fill — MOBILE ONLY; on desktop Obsidian's own mod-warning fill is
+   kept. The .modal + .act- chain out-specifies button.mod-warning and
+   .is-mobile button.mod-warning, so no !important is needed. The hover rule
+   is scoped too, so desktop can never flash the red tint. */
+body.is-mobile .modal button.mod-warning.act-delete-group-btn {
   background: rgba(var(--color-red-rgb), 0.2);
 }
 @media (hover: hover) {
-  .modal button.mod-warning.act-delete-group-btn:hover {
+  body.is-mobile .modal button.mod-warning.act-delete-group-btn:hover {
     background: rgba(var(--color-red-rgb), 0.32);
   }
 }

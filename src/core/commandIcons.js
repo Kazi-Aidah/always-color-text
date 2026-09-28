@@ -49,7 +49,8 @@ export const COMMAND_ICONS = {
   'show-latest-release-notes': 'book-open',
   'open-plugin-settings': 'settings',
   'manage-colored-texts': 'list',
-  'open-text-style-presets': 'layers',
+  'edit-last-added-entry': 'pencil',
+  'open-text-style-presets': 'layout-grid',
   'open-color-swatches': 'swatch-book',
 
   // Regex testers

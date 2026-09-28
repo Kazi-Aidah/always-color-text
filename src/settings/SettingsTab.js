@@ -3086,6 +3086,13 @@ export class ColorSettingTab extends PluginSettingTab {
                   g.entries.forEach(updateEntry);
                 }
               });
+
+              const bgEntries = Array.isArray(
+                this.plugin.settings.textBgColoringEntries,
+              )
+                ? this.plugin.settings.textBgColoringEntries
+                : [];
+              bgEntries.forEach(updateEntry);
             }
             await this.plugin.saveSettings();
             try {
@@ -6508,6 +6515,28 @@ export class ColorSettingTab extends PluginSettingTab {
             .onChange(async (v) => {
               this.plugin.settings.linkSwatchUpdatesToEntries = v;
               await this.plugin.saveSettings();
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName(
+          this.plugin.t(
+            "link_preset_updates",
+            "Link preset updates to entries",
+          ),
+        )
+        .setDesc(
+          this.plugin.t(
+            "link_preset_updates_desc",
+            "When a preset is edited, the entries and word groups using it adopt the new style automatically.",
+          ),
+        )
+        .addToggle((t) =>
+          t
+            .setValue(this.plugin.settings.linkPresetUpdatesToEntries ?? true)
+            .onChange(async (v) => {
+              this.plugin.settings.linkPresetUpdatesToEntries = v;
+              await this.debouncedSaveSettings();
             }),
         );
 

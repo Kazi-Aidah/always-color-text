@@ -192,6 +192,133 @@ export function applyGroupColorOverride(copy, group, isValidHex) {
 }
 
 /**
+ * A group that carries a STYLE PRESET paints its members through the preset's
+ * shape (opacity / radius / padding / border), but with the colortype set to
+ * Per-Entry each member keeps its own colours. That leaves two holes:
+ * a member holding only ONE channel shows half the style (colour with no
+ * highlight), and a member holding NEITHER shows nothing at all.
+ *
+ * Paints BOTH channels for every member of such a group:
+ *   - one channel present → the other channel takes that same colour (the
+ *     highlight runs at the member's background opacity, so a duplicated
+ *     colour stays readable);
+ *   - neither channel     → the preset's colours, then the group's, then the
+ *     theme accent on inherited text, so the member is never invisible;
+ *   - `currentColor` (an explicit "inherit the theme text") is kept as its
+ *     own value and never duplicated into the highlight.
+ * Only colour-only members are promoted to "both" — a highlight member already
+ * paints its highlight and keeps the colortype it was saved with. A member
+ * with NO colour of its own takes the preset's colortype instead, so a
+ * highlight preset shows its shape and borders in its own background colour.
+ *
+ * Members are painted only when the group itself has a preset stamp
+ * (`group.presetUid`); groups without one are untouched.
+ *
+ * @param {object} copy      member copy being compiled
+ * @param {object} group     owning group (looked up through `presetUid`)
+ * @param {object} settings  plugin settings (preset lookup)
+ * @param {(c: any) => boolean} isValidHex
+ * @returns {boolean} whether the member changed
+ */
+export function applyGroupPresetChannels(copy, group, settings, isValidHex) {
+  try {
+    if (!copy || !group) return false;
+    // Markdown-element entries (<strong>, headings, …) are painted by the
+    // element path, not the highlight channel: giving one a background would
+    // move it out of the word compile and silently stop it styling, so they
+    // keep exactly the colours they were saved with.
+    if (deriveTargetElement(copy)) return false;
+    const uid = group.presetUid;
+    if (!uid || !settings) return false;
+    let preset = null;
+    for (const list of [settings.textStylePresets, settings.quickStyles]) {
+      if (!Array.isArray(list)) continue;
+      preset = list.find((p) => p && p.uid === uid) || null;
+      if (preset) break;
+    }
+    if (!preset) return false;
+
+    const valid = (c) => {
+      try {
+        return !!isValidHex(c);
+      } catch (_) {
+        return false;
+      }
+    };
+    // A colour that actually paints: currentColor/inherit only restate the
+    // theme text, so they are never copied into the OTHER channel.
+    const paint = (c) =>
+      typeof c === "string" && c.trim() && c !== "currentColor" && c !== "inherit"
+        ? valid(c)
+          ? c.trim()
+          : null
+        : null;
+    const real = (c) => (c && c !== "currentColor" ? c : null);
+    // `var(--text-normal)` paints the text channel, but it is the theme's own
+    // default rather than a colour the member chose: like currentColor it
+    // stays in the text channel, so an entry saved with the default preset's
+    // text colour can never grow a text-coloured background here.
+    const themeText = (c) =>
+      typeof c === "string" && /^var\(\s*--text-normal\s*(,|\s*\))/.test(c.trim());
+    const chosen = (c) => (real(c) && !themeText(c) ? c : null);
+    const ownText =
+      paint(copy.textColor) ||
+      paint(copy.color) ||
+      (copy.textColor === "currentColor" ? "currentColor" : null);
+    const ownBg = paint(copy.backgroundColor);
+    const presetText =
+      paint(preset.textColor) ||
+      paint(preset.color) ||
+      (preset.textColor === "currentColor" ? "currentColor" : null);
+    const presetBg = paint(preset.backgroundColor);
+    const groupText =
+      paint(group.textColor) ||
+      paint(group.color) ||
+      (group.textColor === "currentColor" ? "currentColor" : null);
+    const groupBg = paint(group.backgroundColor);
+
+    const text =
+      ownText || real(ownBg) || real(presetText) || presetBg || real(groupBg) || groupText || null;
+    const bg =
+      ownBg ||
+      chosen(ownText) ||
+      presetBg ||
+      chosen(presetText) ||
+      groupBg ||
+      chosen(groupText) ||
+      "var(--color-accent)";
+
+    let changed = false;
+    const set = (k, v) => {
+      if (v && copy[k] !== v) {
+        copy[k] = v;
+        changed = true;
+      }
+    };
+    set("textColor", text);
+    set("backgroundColor", bg);
+    if (!(ownBg || chosen(ownText))) {
+      // The member brings no colour of its own, so it renders exactly like
+      // the preset: the preset's colortype decides which channel paints and
+      // which colour the border follows (a highlight preset borders in its
+      // background, not in the theme text).
+      const type = preset.styleType || copy.styleType;
+      if (type && copy.styleType !== type) {
+        copy.styleType = type;
+        changed = true;
+      }
+    } else if (!copy.styleType || copy.styleType === "text") {
+      // Colour-only members gain the highlight the preset's shape is built for.
+      copy.styleType = "both";
+      changed = true;
+    }
+    return changed;
+  } catch (_) {
+    return false;
+  }
+}
+
+/**
  * Markdown-element targeting derived from an entry's label/pattern.
  * Extracted so the editor compile and the regex tester preview share ONE
  * derivation (a label containing "bold"/"italic" routes the entry out of the
@@ -767,6 +894,13 @@ export function compileWordEntriesLogic(plugin) {
               plugin.isValidHexColor(c),
             );
             const _effGroupType = _effGroup.type;
+            // Per-entry colortype on a group that carries a style preset:
+            // paint both channels of every member so the preset's shape has
+            // something to show (see applyGroupPresetChannels).
+            if (!_effGroupType)
+              applyGroupPresetChannels(copy, group, plugin.settings, (c) =>
+                plugin.isValidHexColor(c),
+              );
             // Highlight layout always applies when set on the group,
             // independent of colortype; reset (undefined) never applies.
             if (typeof group.backgroundOpacity !== "undefined")
@@ -1008,6 +1142,13 @@ export function compileTextBgColoringEntriesLogic(plugin) {
               plugin.isValidHexColor(c),
             );
             const _effGroupType = _effGroup.type;
+            // Per-entry colortype on a group that carries a style preset:
+            // paint both channels of every member so the preset's shape has
+            // something to show (see applyGroupPresetChannels).
+            if (!_effGroupType)
+              applyGroupPresetChannels(copy, group, plugin.settings, (c) =>
+                plugin.isValidHexColor(c),
+              );
             // Highlight layout always applies when set on the group,
             // independent of colortype; reset (undefined) never applies.
             if (typeof group.backgroundOpacity !== "undefined")

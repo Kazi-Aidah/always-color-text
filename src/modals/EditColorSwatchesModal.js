@@ -224,6 +224,12 @@ export class EditColorSwatchesModal extends Modal {
           groups.forEach((g) => {
             if (g && Array.isArray(g.entries)) g.entries.forEach(updateEntry);
           });
+          const bgEntries = Array.isArray(
+            this.plugin.settings.textBgColoringEntries,
+          )
+            ? this.plugin.settings.textBgColoringEntries
+            : [];
+          bgEntries.forEach(updateEntry);
         }
       }
 

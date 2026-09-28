@@ -4,6 +4,7 @@ import { ColorPickerModal } from './ColorPickerModal.js';
 import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { deriveHighlightCssFromEntry, parseCssIntoEntry, patchCssLayoutFromEntry } from './CustomCssModal.js';
 import { stripInheritedGroupCssColors } from '../services/patternCompiler.js';
+import { adoptPresetColortype, applyPresetShapeToGroup } from '../utils/presetLinker.js';
 
 function resolveVarToHex(varStr) {
   try {
@@ -1179,22 +1180,40 @@ export class HighlightStylingModal extends Modal {
       const presetHandler = () => {
         new TextStylePresetsModal(this.app, this.plugin, (preset) => {
           if (!preset || !this.entry) return;
-          const shapeKeys = ["styleType","backgroundOpacity","highlightBorderRadius","cornerShape","highlightHorizontalPadding","highlightVerticalPadding","enableBorderThickness","borderStyle","borderLineStyle","borderOpacity","borderThickness","customCss"];
-          for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
-          // Colors: only apply if preset has them, preserve entry colors otherwise
-          if ("textColor" in preset) this.entry.textColor = preset.textColor;
-          if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
-          if ("color" in preset) this.entry.color = preset.color;
-          if (preset.styleType === "text" && preset.textColor && this.plugin.isValidHexColor(preset.textColor)) {
-            this.entry.color = preset.textColor;
-            this.entry.textColor = null;
-            this.entry.backgroundColor = null;
-          } else if (preset.styleType === "highlight" && preset.backgroundColor) {
-            this.entry.backgroundColor = preset.backgroundColor;
-            this.entry.textColor = "currentColor";
-            this.entry.color = "";
+          // Groups take the preset's SHAPE only — the same rule the preset
+          // edit propagation follows. Their colortype is the user's choice
+          // (a Per-Entry group must survive a preset) and their colours are
+          // never overwritten; members pick up the shape, and a colourless
+          // member the preset's colours, at compile time.
+          if (Array.isArray(this.entry.entries)) {
+            applyPresetShapeToGroup(this.entry, preset);
+          } else {
+            const shapeKeys = ["styleType","backgroundOpacity","highlightBorderRadius","cornerShape","highlightHorizontalPadding","highlightVerticalPadding","enableBorderThickness","borderStyle","borderLineStyle","borderOpacity","borderThickness","customCss"];
+            for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
+            // Stamp the preset so a later preset edit can restyle this entry.
+            if (preset.uid) this.entry.presetUid = preset.uid;
+            // Colors: only apply if preset has them, preserve entry colors otherwise
+            if ("textColor" in preset) this.entry.textColor = preset.textColor;
+            if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
+            if ("color" in preset) this.entry.color = preset.color;
+            if (preset.styleType === "text" && preset.textColor && this.plugin.isValidHexColor(preset.textColor)) {
+              this.entry.color = preset.textColor;
+              this.entry.textColor = null;
+              this.entry.backgroundColor = null;
+            } else if (preset.styleType === "highlight" && preset.backgroundColor) {
+              this.entry.backgroundColor = preset.backgroundColor;
+              this.entry.textColor = "currentColor";
+              this.entry.color = "";
+            }
+            // Entries keep their colours, but the preset's COLORTYPE still
+            // applies and any channel it needs is filled from the preset (then
+            // from the entry's own other colour) — so a colour-only entry can't
+            // end up on a highlight preset that paints nothing.
+            adoptPresetColortype(this.entry, preset, (c) =>
+              this.plugin.isValidHexColor(c),
+            );
           }
-          try { if (styleSelect) styleSelect.value = this.entry.styleType || "both"; } catch(_){}
+          try { if (styleSelect) styleSelect.value = this.entry.styleType || (isGroup ? "" : "both"); } catch(_){}
           try { if (tColor) { const tv = (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) ? this.entry.textColor : (this.entry.color && this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : getColorInputValue(tColor))); if (tv) setColorInputValue(tColor, tv); } } catch(_){}
           try { if (bColor) { const bv = (this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor) ? this.entry.backgroundColor : getColorInputValue(bColor)); if (bv) setColorInputValue(bColor, bv); } } catch(_){}
           try { opacitySlider.value = String(this.entry.backgroundOpacity ?? this.plugin.settings.backgroundOpacity ?? 35); } catch(_){}

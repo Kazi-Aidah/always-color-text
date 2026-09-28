@@ -4,6 +4,7 @@ import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { debugLog } from '../utils/debug.js';
 import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
+import { adoptPresetColortype } from '../utils/presetLinker.js';
 
 export class ColorPickerModal extends Modal {
   constructor(
@@ -1988,6 +1989,7 @@ export class ColorPickerModal extends Modal {
           }
           if (finalEntry) {
             finalEntry.styleType = st.styleType;
+            if (st.presetUid) finalEntry.presetUid = st.presetUid;
             if (st.backgroundOpacity != null)
               finalEntry.backgroundOpacity = st.backgroundOpacity;
             if (st.highlightBorderRadius != null)
@@ -2009,6 +2011,14 @@ export class ColorPickerModal extends Modal {
               finalEntry.borderOpacity = st.borderOpacity;
             if (st.borderThickness != null)
               finalEntry.borderThickness = st.borderThickness;
+            // The saved entry only received the colours the picker actually
+            // wrote; the preset's COLORTYPE still needs its channels, so fill
+            // any channel the type needs from the style just applied (then
+            // from the entry's own other colour) — otherwise a one-colour
+            // pick plus a highlight preset saves an entry that paints nothing.
+            adoptPresetColortype(finalEntry, st, (c) =>
+              this.plugin.isValidHexColor(c),
+            );
             this.plugin.saveSettings();
           }
         } catch (e) {}
@@ -2383,10 +2393,33 @@ export class ColorPickerModal extends Modal {
       backgroundColor = this.selectedBgColor || presetBg;
     }
 
-    // When entry already has colors, keep its styleType and only apply shape - don't switch text/highlight/both
-    const effectiveStyleType = entryHasAnyColor && this._entry && this._entry.styleType
-      ? this._entry.styleType
-      : preset.styleType || "highlight";
+    // The preset's COLORTYPE always applies: it decides how the colours are
+    // rendered, so a preset pick switches the entry to it even when the entry
+    // already carries colours (the entry's own colours are still kept above).
+    const effectiveStyleType =
+      preset.styleType || (this._entry && this._entry.styleType) || "highlight";
+    // …and every channel that colortype needs is filled, so switching e.g.
+    // Color → Highlight can't leave an entry nothing paints: the preset's
+    // colour first (it chose that colortype), then the colour already in the
+    // other channel, then the theme accent for the highlight.
+    const _paint = (c) =>
+      c &&
+      typeof c === "string" &&
+      c.trim() &&
+      c !== "currentColor" &&
+      c !== "inherit" &&
+      this.plugin.isValidHexColor(c)
+        ? c.trim()
+        : null;
+    const _real = (c) => (c && c !== "currentColor" ? c : null);
+    if (effectiveStyleType !== "highlight" && !_paint(textColor)) {
+      textColor =
+        _paint(presetText) || _paint(presetBg) || _real(_paint(backgroundColor)) || textColor;
+    }
+    if (effectiveStyleType !== "text" && !_paint(backgroundColor)) {
+      backgroundColor =
+        _paint(presetBg) || _real(_paint(textColor)) || "var(--color-accent)";
+    }
     const styleFields = {
       styleType: effectiveStyleType,
       backgroundOpacity: preset.backgroundOpacity ?? null,
@@ -2407,6 +2440,12 @@ export class ColorPickerModal extends Modal {
     // Remember the full style so submitFn can persist the SHAPE on close
     // (submitFn itself only writes colors + a basic styleType).
     this._appliedPresetStyle = Object.assign({}, styleFields);
+    // The EFFECTIVE colours travel with the style so a save path that only
+    // receives `presetStyle` can still fill a channel the pick left empty.
+    this._appliedPresetStyle.textColor = textColor || null;
+    this._appliedPresetStyle.backgroundColor = backgroundColor || null;
+    // …and which preset it came from, so preset edits can restyle the entry.
+    if (preset.uid) this._appliedPresetStyle.presetUid = preset.uid;
     // Carry matching defaults from the preset (if set); the global Defaults
     // section remains the fallback when these are absent.
     if (preset.matchType) this._appliedPresetStyle.matchType = preset.matchType;

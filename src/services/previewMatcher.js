@@ -26,6 +26,7 @@ import { EDITOR_PERFORMANCE_CONSTANTS } from "../core/constants.js";
 import {
   compilePatternCore,
   applyGroupColorOverride,
+  applyGroupPresetChannels,
   deriveTargetElement,
 } from "./patternCompiler.js";
 import { getEntryForHeadingLevel } from "../utils/headingUtils.js";
@@ -381,7 +382,15 @@ export function computePreviewMatches(plugin, input) {
         : undefined;
     if (groupMatch) e.matchType = groupMatch;
     if (groupCase !== undefined) e._caseSensitiveOverride = groupCase;
-    applyGroupColorOverride(e, group, (c) => plugin.isValidHexColor(c));
+    const _ov = applyGroupColorOverride(e, group, (c) =>
+      plugin.isValidHexColor(c),
+    );
+    // Per-entry colortype + a group style preset: the preview must paint both
+    // channels exactly like the compiler does.
+    if (!_ov.type)
+      applyGroupPresetChannels(e, group, settings, (c) =>
+        plugin.isValidHexColor(c),
+      );
   }
 
   // Channel + compile-time color gates (word 840-856 / textBg 1081-1101).

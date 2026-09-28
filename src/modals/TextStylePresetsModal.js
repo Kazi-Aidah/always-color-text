@@ -4,6 +4,7 @@ import { CustomCssModal } from './CustomCssModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
 import { ReorderPresetsModal } from './ReorderPresetsModal.js';
 import { defaultSettings } from '../settings/defaultSettings.js';
+import { presetSignature, propagatePresetToEntries } from '../utils/presetLinker.js';
 
 export class TextStylePresetsModal extends Modal {
   constructor(app, plugin, onPick = null) {
@@ -286,9 +287,12 @@ export class TextStylePresetsModal extends Modal {
     }
   }
 
-  _editGlobalStyle() {
+  _editGlobalStyle(defaultPreset) {
     const s = this.plugin.settings;
     const entry = this._globalStyleObj();
+    // Style the default preset had before this edit — used to find the
+    // entries that follow it (see _propagatePresetChange).
+    const prevSignature = presetSignature(entry, s);
     this._ensureAccentColors(entry);
     try {
       const modal = new HighlightStylingModal(
@@ -316,6 +320,14 @@ export class TextStylePresetsModal extends Modal {
         s.matchType = entry.matchType;
         s.caseSensitive = entry.caseSensitive;
         s.wordGroup = entry.groupUid;
+        // Entries explicitly linked to the default preset follow it; the
+        // global style object carries no colors, so their colors stay theirs.
+        if (defaultPreset && defaultPreset.uid) {
+          this._propagatePresetChange(
+            Object.assign({}, this._globalStyleObj(), { uid: defaultPreset.uid }),
+            prevSignature,
+          );
+        }
         this.plugin.saveSettings();
         this._render();
       };
@@ -323,8 +335,41 @@ export class TextStylePresetsModal extends Modal {
     } catch (e) {}
   }
 
+  /**
+   * "Link preset updates to entries": restyle every entry using `preset` with
+   * the style it now holds, and reshape every group carrying its stamp (the
+   * group's members inherit that shape at compile time). Runs after the
+   * preset itself was written; the entries' custom CSS is re-synced from
+   * their colors by the save that follows.
+   *
+   * @param {object} preset      preset after the edit
+   * @param {string} prevSignature presetSignature() taken before the edit
+   * @returns {number} entries and groups updated
+   */
+  _propagatePresetChange(preset, prevSignature) {
+    try {
+      if (!this.plugin.settings.linkPresetUpdatesToEntries) return 0;
+      const presets = Array.isArray(this.plugin.settings.textStylePresets)
+        ? this.plugin.settings.textStylePresets
+        : [];
+      const quickStyles = Array.isArray(this.plugin.settings.quickStyles)
+        ? this.plugin.settings.quickStyles
+        : [];
+      return propagatePresetToEntries(
+        this.plugin.settings,
+        preset,
+        prevSignature,
+        presets.concat(quickStyles),
+        (c) => this.plugin.isValidHexColor(c),
+      );
+    } catch (_) {
+      return 0;
+    }
+  }
+
   _editPreset(preset) {
     try {
+      const prevSignature = presetSignature(preset, this.plugin.settings);
       const accent = this._resolveAccentHex();
       // Edit a clone so the original stays "unset" (accent) unless the user
       // actually picks a different color.
@@ -391,6 +436,7 @@ export class TextStylePresetsModal extends Modal {
             preset.textColor = temp.textColor;
           }
         }
+        this._propagatePresetChange(preset, prevSignature);
         this.plugin.saveSettings();
         this._render();
       };
@@ -400,12 +446,14 @@ export class TextStylePresetsModal extends Modal {
 
   _editCustomCss(preset) {
     try {
+      const prevSignature = presetSignature(preset, this.plugin.settings);
       const modal = new CustomCssModal(this.app, this.plugin, preset);
       const orig = modal.onClose.bind(modal);
       modal.onClose = () => {
         try {
           orig();
         } catch (_) {}
+        this._propagatePresetChange(preset, prevSignature);
         this.plugin.saveSettings();
         this._render();
       };
@@ -452,7 +500,7 @@ export class TextStylePresetsModal extends Modal {
       item
         .setTitle(this.plugin.t("edit_highlight_styling", "Edit Highlight Styling"))
         .setIcon("pencil")
-        .onClick(() => this._editGlobalStyle()),
+        .onClick(() => this._editGlobalStyle(preset)),
     );
     if (this.plugin.settings.enableCustomCss) {
       menu.addItem((item) =>
@@ -608,6 +656,7 @@ export class TextStylePresetsModal extends Modal {
 
   _editQuickStyle(preset) {
     try {
+      const prevSignature = presetSignature(preset, this.plugin.settings);
       const modal = new HighlightStylingModal(
         this.app,
         this.plugin,
@@ -620,6 +669,7 @@ export class TextStylePresetsModal extends Modal {
         try {
           orig();
         } catch (_) {}
+        this._propagatePresetChange(preset, prevSignature);
         this.plugin.saveSettings();
         this._render();
       };

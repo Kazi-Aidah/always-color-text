@@ -12,7 +12,7 @@ import { buildReadingViewProcessor } from '../features/readingViewProcessor.js';
 import { compileWordEntriesLogic, compileTextBgColoringEntriesLogic, compileBlacklistEntriesLogic, PatternMatcher, SettingsIndex, resolveGroupColorOverride, stripInheritedGroupCssColors, resolveBorderSourceColor } from '../services/patternCompiler.js';
 import { evaluatePathRulesLogic, hasGlobalExcludeLogic, getBestFolderEntryLogic, globToRegex } from '../services/fileFilter.js';
 import { EDITOR_PERFORMANCE_CONSTANTS, REGEX_CONSTANTS, GLOBAL_STYLE_KEYS, IS_DEVELOPMENT } from './constants.js';
-import { splitCustomCss, sanitizeDeclString, applyScopeToStyleString, applyCustomCssToElementCore, buildScopedBlockRules, buildSelectorBlockRules, reassembleCustomCss } from './customCssRules.js';
+import { splitCustomCss, sanitizeDeclString, applyScopeToStyleString, applyCustomCssToElementCore, buildScopedBlockRules, buildSelectorBlockRules, buildLineTargetRule, reassembleCustomCss } from './customCssRules.js';
 import { resolveCommandIcon, applyCommandIcons, refreshMobileToolbar } from './commandIcons.js';
 import { Decoration, syntaxTree, forceRebuildEffect } from './cmSetup.js';
 import { debugLog, debugError, debugWarn, escapeHtml } from '../utils/debug.js';
@@ -39,6 +39,7 @@ import { EditColorSwatchesModal } from '../modals/EditColorSwatchesModal.js';
 import { AlertModal } from '../modals/AlertModal.js';
 import { ConfirmationModal } from '../modals/ConfirmationModal.js';
 import { findColoringEntries, buildSelectionContext } from '../utils/reverseLookup.js';
+import { adoptPresetColortype } from '../utils/presetLinker.js';
 import { getHideFlags, resolveChannels, resolveTextColor } from '../utils/hideChannels.js';
 import { SelectColoringEntryModal } from '../modals/SelectColoringEntryModal.js';
 
@@ -1340,10 +1341,49 @@ class AlwaysColorText extends Plugin {
     ) {
       for (const p of this.settings.textStylePresets) {
         if (p && typeof p.uid === "string" && p.uid.startsWith("tsp-")) {
-          if (p.backgroundColor) p.backgroundColor = "";
+          // A `var(...)` is live theme CSS, not the concrete hex this migration
+          // is after — and it is the channel default presets ship with now.
+          if (
+            p.backgroundColor &&
+            !String(p.backgroundColor).trim().startsWith("var(")
+          )
+            p.backgroundColor = "";
         }
       }
       this.settings._tspColorMigrated = true;
+    }
+    // Built-in presets now carry their own channel colours (theme text, accent
+    // highlight) instead of rendering empty, so an entry that adopts one never
+    // ends up with a channel nothing paints. Existing vaults are filled in once
+    // here — empty channels only, so a colour the user picked on a built-in is
+    // never overwritten. User-added presets are left entirely alone.
+    if (
+      !this.settings._tspChannelDefaultsMigrated &&
+      Array.isArray(this.settings.textStylePresets)
+    ) {
+      try {
+        // Load hands out the defaults array by reference when the vault has
+        // never saved one; copy it before writing so the shipped defaults keep
+        // their own colours for later "reset built-in presets".
+        if (
+          this.settings.textStylePresets ===
+          defaultSettings.textStylePresets
+        ) {
+          this.settings.textStylePresets = JSON.parse(
+            JSON.stringify(defaultSettings.textStylePresets),
+          );
+        }
+        const seeds = new Set(
+          (defaultSettings.textStylePresets || []).map((s) => s.uid),
+        );
+        for (const p of this.settings.textStylePresets) {
+          if (!p || !seeds.has(p.uid)) continue;
+          if (!p.textColor || p.textColor === "currentColor")
+            p.textColor = "var(--text-normal)";
+          if (!p.backgroundColor) p.backgroundColor = "var(--color-accent)";
+        }
+        this.settings._tspChannelDefaultsMigrated = true;
+      } catch (e) {}
     }
     if (typeof this.settings.quickStylesEnabled === "undefined")
       this.settings.quickStylesEnabled = true;
@@ -2960,6 +3000,47 @@ class AlwaysColorText extends Plugin {
         name: this.t("command_manage_colored_texts", "Manage Colored Texts"),
         callback: () => {
           this.openPluginSettingsTab("always-color-texts");
+        },
+      });
+      // Fix a freshly added entry without hunting for it in the list: the
+      // newest entry is whatever got appended last (same rule the
+      // add-to-existing modal uses for its "last added" pin).
+      addTrackedCommand({
+        id: "edit-last-added-entry",
+        name: this.t("command_edit_last_added_entry", "Edit Last Added Entry"),
+        callback: () => {
+          try {
+            const entries = Array.isArray(this.settings.wordEntries)
+              ? this.settings.wordEntries
+              : [];
+            const last = entries.length ? entries[entries.length - 1] : null;
+            if (!last) {
+              new Notice(
+                this.t(
+                  "notice_no_entries_to_edit",
+                  "No entries yet — add one first.",
+                ),
+              );
+              return;
+            }
+            new EditEntryModal(this.app, this, last, () => {
+              // saveSettings() already repainted the views; an open entry
+              // list would otherwise keep showing the pre-edit values.
+              try {
+                const tab = this.settingTab;
+                if (
+                  tab &&
+                  tab.containerEl &&
+                  tab.containerEl.isConnected &&
+                  tab._activeTab === "always-color-texts"
+                ) {
+                  tab.display();
+                }
+              } catch (_) {}
+            }).open();
+          } catch (e) {
+            debugError("COMMAND", "Unable to open the last added entry", e);
+          }
         },
       });
       // Open the Text Style Presets modal directly (no settings detour).
@@ -9407,6 +9488,16 @@ class AlwaysColorText extends Plugin {
 
       this.settings = s;
     } catch (e) {}
+
+    // Custom CSS must never lag behind the color picker: patch every entry's
+    // color declarations from its structured colors before these settings are
+    // persisted or re-rendered. Runs on load, save and import, so a stale
+    // literal left by an older version heals itself too.
+    try {
+      if (typeof this.syncAllEntriesCssFromColors === "function") {
+        this.syncAllEntriesCssFromColors();
+      }
+    } catch (e) {}
   }
 
   // --- Save a persistent color for a word ---
@@ -9507,6 +9598,12 @@ class AlwaysColorText extends Plugin {
       if (ps.matchType) ent.matchType = ps.matchType;
       if (typeof ps.caseSensitive === "boolean") ent.caseSensitive = ps.caseSensitive;
       if (ps.wordGroup) ent.groupUid = ps.wordGroup;
+      // Keep the preset link so later preset edits can restyle this entry.
+      if (ps.presetUid) ent.presetUid = ps.presetUid;
+      // The preset's COLORTYPE needs both of its channels: the pick may have
+      // written only one colour, so fill the channel that is missing (preset
+      // colour first, then the entry's own other colour, then the accent).
+      adoptPresetColortype(ent, ps, (c) => this.isValidHexColor(c));
       if (ent.customCss) this.syncEntryCssFromColors(ent);
     };
 
@@ -10965,83 +11062,102 @@ class AlwaysColorText extends Plugin {
 
   /**
    * Same as syncEntryCssFromColors but returns the patched CSS string without
-   * mutating the entry. Used for live preview rendering.
+   * mutating the entry. Used for live preview rendering, so what the preview
+   * shows is exactly what a save would persist.
    */
   syncEntryCssFromColorsForPreview(entry) {
     if (!entry || !entry.customCss) return entry ? entry.customCss : '';
     try {
-      const settings = this.settings;
-      const styleType = entry.styleType || (entry.backgroundColor ? 'highlight' : 'text');
-      const isTextOnly = styleType === 'text';
-      const tc = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color;
-      const bg = entry.backgroundColor;
+      const copy = Object.assign({}, entry);
+      this.syncEntryCssFromColors(copy);
+      return copy.customCss;
+    } catch (_) {
+      return entry.customCss;
+    }
+  }
 
-      const updates = {};
-      if (tc) updates['color'] = tc;
-      if (bg && !isTextOnly) {
-        const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
-        updates['background-color'] = this.hexToRgba(bg, opacity);
+  /**
+   * Background color CSS for an entry's custom CSS at its opacity.
+   *
+   * A `var(--x)` input stays a `var()` reference (via color-mix) instead of
+   * being baked into a literal rgba(), so the CSS keeps pointing at whatever
+   * the color picker's variable input holds — change the variable and the
+   * custom CSS follows. Literal hex inputs resolve to rgba() as before.
+   */
+  _entryBackgroundCss(bg, opacity) {
+    const trimmed = String(bg || '').trim();
+    if (/^var\(/.test(trimmed)) {
+      return `color-mix(in srgb, ${trimmed} ${opacity}%, transparent)`;
+    }
+    return this.hexToRgba(trimmed, opacity);
+  }
+
+  /**
+   * Every entry/group that can carry custom CSS, as one flat list.
+   * Used by syncAllEntriesCssFromColors.
+   */
+  _entriesWithCustomCss() {
+    const s = this.settings || {};
+    const out = [];
+    const push = (e) => {
+      if (e && typeof e.customCss === 'string' && e.customCss.trim()) out.push(e);
+    };
+    const walk = (arr) => {
+      if (Array.isArray(arr)) arr.forEach(push);
+    };
+    walk(s.wordEntries);
+    walk(s.textBgColoringEntries);
+    walk(s.quickStyles);
+    if (Array.isArray(s.wordEntryGroups)) {
+      for (const g of s.wordEntryGroups) {
+        if (!g) continue;
+        walk(g.entries);
       }
+    }
+    return out;
+  }
 
-      const split = splitCustomCss(entry.customCss);
-      const sanitized = this.sanitizeCssDeclarations(split.decls);
-      if (!sanitized && !split.blocks.length) return entry.customCss;
-      const parts = sanitized.split(';').map(s => s.trim()).filter(Boolean);
-      const parsed = parts.map(p => {
-        const idx = p.indexOf(':');
-        if (idx === -1) return { prop: p, val: '' };
-        return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
-      });
-
-      const found = new Set();
-      const rebuilt = [];
-      for (const { prop, val } of parsed) {
-        if (updates.hasOwnProperty(prop)) {
-          found.add(prop);
-          rebuilt.push(`${prop}: ${updates[prop]}`);
-          continue;
-        }
-        // Drop stale colors the entry no longer has: a reset color must
-        // remove its CSS, not linger (e.g. per-entry groups keeping an old
-        // `color: #fa8231` that repaints every member orange).
-        if (!tc && prop === 'color') continue;
-        if ((!bg || isTextOnly) && prop === 'background-color') continue;
-        if (tc && (prop === 'border' || prop === 'border-top' || prop === 'border-bottom' ||
-                   prop === 'border-left' || prop === 'border-right')) {
-          const patched = val
-            .replace(/#[0-9a-fA-F]{3,8}\b/g, tc)
-            .replace(/rgba?\s*\([^)]+\)/gi, tc);
-          rebuilt.push(`${prop}: ${patched}`);
-          continue;
-        }
-        // No text color left: border color tokens fall back to currentColor
-        // instead of a stale hardcoded color.
-        if (!tc && (prop === 'border' || prop === 'border-top' || prop === 'border-bottom' ||
-                    prop === 'border-left' || prop === 'border-right')) {
-          const patched = val
-            .replace(/#[0-9a-fA-F]{3,8}\b/g, 'currentColor')
-            .replace(/rgba?\s*\([^)]+\)/gi, 'currentColor');
-          rebuilt.push(`${prop}: ${patched}`);
-          continue;
-        }
-        rebuilt.push(`${prop}: ${val}`);
-      }
-
-      for (const [prop, val] of Object.entries(updates)) {
-        if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
-      }
-
-      // Blocks/comments are carried over untouched — only top-level
-      // declarations are patched with the structured colors.
-      entry.customCss = reassembleCustomCss(split, rebuilt.length ? rebuilt.join(';\n') + ';' : '');
+  /**
+   * Patch every entry's custom CSS from its own colors.
+   *
+   * Color edits happen in a dozen places (settings row pickers, color picker,
+   * group modal, swatch link, matcher link, …) and every one of them would
+   * have to remember to call syncEntryCssFromColors — miss one and the old
+   * literal in the CSS keeps winning at render time, freezing the entry on
+   * its original color. Doing it in bulk at the sanitize/compile choke points
+   * makes "CSS mirrors the picker" hold no matter where the color changed.
+   *
+   * Cheap and idempotent: only entries with custom CSS are touched, and
+   * re-running produces the same string.
+   */
+  syncAllEntriesCssFromColors() {
+    try {
+      const list = this._entriesWithCustomCss();
+      for (const e of list) this.syncEntryCssFromColors(e);
     } catch (_) {}
   }
 
   /**
-   * If an entry has customCss, patch only the color/background/border-color values
+   * If an entry has customCss, patch only the color/background/border values
    * in the existing CSS string to reflect the entry's current color fields.
    * All other user-defined properties (font-size, font-weight, etc.) are preserved.
-   * Call this immediately after mutating entry.color / entry.textColor / entry.backgroundColor.
+   *
+   * Why this exists: custom CSS declarations win over the base style at render
+   * time, so a `color:` literal that is never refreshed freezes the entry on
+   * the color it had when the CSS was written. The CSS must therefore mirror
+   * the color picker / variable input instead of holding its own value:
+   *   • hex and `var(--x)` picker values are written back verbatim,
+   *   • borders take their color from the same source the CSS prefill derives
+   *     it from (background for highlights, text color otherwise),
+   *   • declarations for a color the entry no longer has are dropped, so a
+   *     reset actually clears the styling,
+   *   • an entry with no structured color at all is left untouched — there the
+   *     CSS *is* the color source, and rewriting it would delete styling the
+   *     user typed on purpose.
+   *
+   * Blocks and comments carry over untouched (blocks are explicit states such
+   * as `&:hover`). Called after individual color edits and in bulk by
+   * syncAllEntriesCssFromColors() before every save/compile.
    */
   syncEntryCssFromColors(entry) {
     if (!entry || !entry.customCss) return;
@@ -11052,17 +11168,33 @@ class AlwaysColorText extends Plugin {
       const tc = (entry.textColor && entry.textColor !== 'currentColor') ? entry.textColor : entry.color;
       const bg = entry.backgroundColor;
 
-      // Build a map of properties we want to update/insert
+      // No structured color at all: the custom CSS is the color source.
+      if (!tc && !bg) return;
+
       const updates = {};
       if (tc) updates['color'] = tc;
       if (bg && !isTextOnly) {
         const opacity = entry.backgroundOpacity ?? settings.backgroundOpacity ?? 35;
-        updates['background-color'] = this.hexToRgba(bg, opacity);
+        updates['background-color'] = this._entryBackgroundCss(bg, opacity);
       }
-      // Update border-color inside any border declarations if they exist in the CSS
-      // (we only patch the color part, not the whole border value)
+      // Borders follow the same source deriveHighlightCssFromEntry uses:
+      // highlight borders track the background, everything else the text color.
+      const borderColor = styleType === 'highlight' ? bg : tc;
 
-      // Parse existing CSS into an ordered list of [prop, value] pairs
+      const isPlainColorValue = (v) =>
+        /^(#[0-9a-f]{3,8}\b|rgba?\(|var\()/i.test(String(v).trim());
+      const retoken = (val, color) =>
+        String(val)
+          .replace(/#[0-9a-fA-F]{3,8}\b/g, color)
+          .replace(/rgba?\s*\([^)]+\)/gi, color);
+      const BORDER_PROPS = new Set([
+        'border', 'border-top', 'border-bottom', 'border-left', 'border-right',
+      ]);
+      const BORDER_COLOR_PROPS = new Set([
+        'border-color', 'border-top-color', 'border-bottom-color',
+        'border-left-color', 'border-right-color',
+      ]);
+
       const split = splitCustomCss(entry.customCss);
       const sanitized = this.sanitizeCssDeclarations(split.decls);
       if (!sanitized && !split.blocks.length) return;
@@ -11073,31 +11205,46 @@ class AlwaysColorText extends Plugin {
         return { prop: p.slice(0, idx).trim().toLowerCase(), val: p.slice(idx + 1).trim() };
       });
 
-      // Track which update keys were found in the existing CSS
       const found = new Set();
-
-      const rebuilt = parsed.map(({ prop, val }) => {
-        if (updates.hasOwnProperty(prop)) {
+      const rebuilt = [];
+      for (const { prop, val } of parsed) {
+        if (Object.prototype.hasOwnProperty.call(updates, prop)) {
           found.add(prop);
-          return `${prop}: ${updates[prop]}`;
+          rebuilt.push(`${prop}: ${updates[prop]}`);
+          continue;
         }
-        // Patch border-color inside border shorthand values (e.g. "1px solid #oldcolor")
-        if (tc && (prop === 'border' || prop === 'border-top' || prop === 'border-bottom' ||
-                   prop === 'border-left' || prop === 'border-right')) {
-          // Replace the color token (hex or rgb/rgba) in the border value
-          const patched = val
-            .replace(/#[0-9a-fA-F]{3,8}\b/g, tc)
-            .replace(/rgba?\s*\([^)]+\)/gi, tc);
-          return `${prop}: ${patched}`;
+        // `background: <color>` shorthand: patch/drop a plain color only —
+        // gradients and images are not entry colors and stay as typed.
+        if (prop === 'background') {
+          const bgCss = updates['background-color'];
+          if (isPlainColorValue(val)) {
+            if (!bgCss) continue; // color reset — drop the stale shorthand
+            found.add('background-color');
+            rebuilt.push(`background: ${bgCss}`);
+            continue;
+          }
+          rebuilt.push(`background: ${val}`);
+          continue;
         }
-        return `${prop}: ${val}`;
-      });
+        // Colors the entry no longer has must not linger in the CSS, or a
+        // reset would keep repainting (e.g. an old `color: #fa8231`).
+        if (!updates.color && prop === 'color') continue;
+        if (!updates['background-color'] && prop === 'background-color') continue;
+        if (BORDER_COLOR_PROPS.has(prop)) {
+          rebuilt.push(`${prop}: ${borderColor || val}`);
+          continue;
+        }
+        if (BORDER_PROPS.has(prop)) {
+          // Patch only the color token inside the shorthand ("1px solid #x").
+          rebuilt.push(`${prop}: ${borderColor ? retoken(val, borderColor) : val}`);
+          continue;
+        }
+        rebuilt.push(`${prop}: ${val}`);
+      }
 
       // Append any update properties that weren't already in the CSS
       for (const [prop, val] of Object.entries(updates)) {
-        if (!found.has(prop)) {
-          rebuilt.push(`${prop}: ${val}`);
-        }
+        if (!found.has(prop)) rebuilt.push(`${prop}: ${val}`);
       }
 
       // Blocks/comments carry over untouched — only top-level declarations
@@ -12574,6 +12721,9 @@ class AlwaysColorText extends Plugin {
 
   // Compile word entries into runtime structures (regexes, testRegex, validity)
   compileWordEntries() {
+    // Keep custom CSS in step with any color edited since the last save, so a
+    // re-render can never paint the previous color out of stale CSS.
+    this.syncAllEntriesCssFromColors();
     // PERF: Invalidate per-file filtered-entries cache and element stamps so
     // reading mode re-processes with the new patterns on next open.
     try {
@@ -12585,6 +12735,8 @@ class AlwaysColorText extends Plugin {
 
   // Compile text + background coloring entries
   compileTextBgColoringEntries() {
+    // Same CSS/color sync as compileWordEntries — both paint from customCss.
+    this.syncAllEntriesCssFromColors();
     // PERF: Same invalidation as compileWordEntries — both affect what gets rendered.
     try {
       if (this._filteredEntriesCache) this._filteredEntriesCache.clear();
@@ -15998,6 +16150,12 @@ class AlwaysColorText extends Plugin {
                   lineStyleParts.push(`margin-top: ${vpad}px`);
                   lineStyleParts.push(`margin-bottom: ${vpad}px`);
                 }
+                // Horizontal padding mirrors the Live Preview line rule —
+                // without it the Highlight Styling modal's Horizontal
+                // Padding silently does nothing in reading mode.
+                const hpad = params.hPad ?? 4;
+                lineStyleParts.push(`padding-left: ${hpad}px`);
+                lineStyleParts.push(`padding-right: ${hpad}px`);
                 lineStyleParts.push(`border-radius: ${params.radius ?? 4}px`);
                 {
                   const _cs = this.getCornerShapeCss(refEntry);
@@ -16031,37 +16189,6 @@ class AlwaysColorText extends Plugin {
                 }
               }
 
-              // Handle layout-critical properties: use !important for non-list elements to win over Obsidian defaults,
-              // but keep it weak for list items (li) so Obsidian's default indentation/padding wins.
-              const baseParts = [];
-              const strongLayoutParts = [];
-              for (const decl of lineStyleStr.split(";")) {
-                const trimmed = decl.trim();
-                if (!trimmed) continue;
-                const colonIdx = trimmed.indexOf(":");
-                if (colonIdx === -1) continue;
-                const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
-                if (
-                  prop === "padding-left" ||
-                  prop === "padding-right" ||
-                  prop === "margin-left" ||
-                  prop === "margin-right" ||
-                  prop === "padding" ||
-                  prop === "margin" ||
-                  prop === "text-indent" ||
-                  prop === "padding-inline-start" ||
-                  prop === "padding-inline-end" ||
-                  prop === "margin-inline-start" ||
-                  prop === "margin-inline-end"
-                ) {
-                  const val = trimmed.replace(/\s*!important/gi, "");
-                  strongLayoutParts.push(val + " !important");
-                  baseParts.push(val);
-                } else {
-                  baseParts.push(trimmed);
-                }
-              }
-
               const styleId = `act-line-style-reading-${cssClass}`;
               let styleEl = document.getElementById(styleId);
               if (!styleEl) {
@@ -16072,11 +16199,7 @@ class AlwaysColorText extends Plugin {
               }
               // Reading Mode uses block elements (p, h1, etc.) instead of .cm-line
               const tagName = (block.tagName || "div").toLowerCase();
-              const baseRule = `${tagName}.${cssClass}{${baseParts.join("; ")}}`;
-              // Apply strong layout styles only if it's not a list item
-              const strongRule = (strongLayoutParts.length && tagName !== "li")
-                ? `${tagName}.${cssClass}{${strongLayoutParts.join("; ")}}`
-                : "";
+              const lineSelector = `${tagName}.${cssClass}`;
               // `&`-rooted pseudo blocks (hover/focus/…) for this line: direct
               // rules with the line selector, so `:hover` outranks the base
               // rule inside this same sheet.
@@ -16084,7 +16207,6 @@ class AlwaysColorText extends Plugin {
               if (this.settings.enableCustomCss) {
                 const lineEntry = m.entryRef || {};
                 const lineGroup = lineEntry._groupRef || lineEntry.entryRef?._groupRef;
-                const lineSelector = `${tagName}.${cssClass}`;
                 if (lineGroup?.customCss) {
                   hoverRules += buildSelectorBlockRules(this.groupCssForMembers(lineGroup), lineSelector);
                 }
@@ -16092,7 +16214,15 @@ class AlwaysColorText extends Plugin {
                   hoverRules += buildSelectorBlockRules(lineEntry.customCss, lineSelector);
                 }
               }
-              const rule = `${baseRule}\n${strongRule}${hoverRules ? "\n" + hoverRules : ""}`;
+              // Layout-critical declarations (the entry's horizontal padding
+              // among them) move into a strong rule with !important — but
+              // never for list items, so Obsidian's indentation still wins.
+              const rule = buildLineTargetRule({
+                selector: lineSelector,
+                strongSelector: tagName === "li" ? null : lineSelector,
+                styleStr: lineStyleStr,
+                hoverRules,
+              });
               if (styleEl.textContent !== rule) styleEl.textContent = rule;
 
               // Skip span creation for line mode (block already styled via CSS)
@@ -22068,42 +22198,30 @@ class AlwaysColorText extends Plugin {
 
         // Build a permissive style: color without !important so children can override
         // Other properties (background, border, padding) still apply to the line div
-        let colorProp = "";
-        const lineStyleParts = [];
-        const layoutStyleParts = [];
-        for (const decl of style.split(";")) {
-          const trimmed = decl.trim();
-          if (!trimmed) continue;
-          const colonIdx = trimmed.indexOf(":");
-          if (colonIdx === -1) continue;
-          const prop = trimmed.slice(0, colonIdx).trim().toLowerCase();
-          if (prop === "color" && !trimmed.includes("!important")) {
-            colorProp = `${trimmed};`;
-          } else if (prop === "color") {
-            // Strip !important from color so children can override
-            colorProp = trimmed.replace(/\s*!important/g, "") + ";";
-          } else if (
-            prop === "padding-left" ||
-            prop === "padding-right" ||
-            prop === "margin-left" ||
-            prop === "margin-right" ||
-            prop === "padding" ||
-            prop === "margin" ||
-            prop === "text-indent" ||
-            prop === "padding-inline-start" ||
-            prop === "padding-inline-end" ||
-            prop === "margin-inline-start" ||
-            prop === "margin-inline-end"
-          ) {
-            // Horizontal layout: use !important for non-list lines to win over Obsidian defaults,
-            // but keep it weak for list lines so Obsidian's inline indentation wins.
-            const val = trimmed.replace(/\s*!important/gi, "");
-            layoutStyleParts.push(val + " !important");
-            lineStyleParts.push(val); 
-          } else if (prop !== "--highlight-color") {
-            lineStyleParts.push(trimmed);
+        const lineSelector = `div.cm-line.${cssClass}`;
+        // `&`-rooted pseudo blocks (hover/focus/…) for this line: direct rules
+        // with the line selector, so `:hover` outranks the base rule inside
+        // this same sheet.
+        let hoverRules = "";
+        if (this.settings.enableCustomCss) {
+          const lineGroup = m.entryRef && (m.entryRef._groupRef || m.entryRef.entryRef?._groupRef);
+          if (lineGroup && lineGroup.customCss) {
+            hoverRules += buildSelectorBlockRules(this.groupCssForMembers(lineGroup), lineSelector);
+          }
+          if (m.entryRef && m.entryRef.customCss) {
+            hoverRules += buildSelectorBlockRules(m.entryRef.customCss, lineSelector);
           }
         }
+        // Layout declarations (the entry's horizontal padding among them)
+        // carry !important on non-list lines so they beat Obsidian's
+        // defaults; list lines keep their inline indentation.
+        const rule = buildLineTargetRule({
+          selector: lineSelector,
+          strongSelector: `${lineSelector}:not(.HyperMD-list-line)`,
+          styleStr: style,
+          hoverRules,
+          extractColor: true,
+        });
 
         const styleId = `act-line-style-${cssClass}`;
         let styleEl = document.getElementById(styleId);
@@ -22113,27 +22231,6 @@ class AlwaysColorText extends Plugin {
           styleEl.setAttribute("data-act-line-style", "1");
           document.head.appendChild(styleEl);
         }
-        // Apply base styles (including color with lower specificity so inline child spans override)
-        const baseRule = `div.cm-line.${cssClass}{${colorProp}${lineStyleParts.join("; ")}}`;
-        // Apply strong layout styles ONLY to non-list lines
-        const strongLayoutRule = layoutStyleParts.length 
-          ? `div.cm-line.${cssClass}:not(.HyperMD-list-line){${layoutStyleParts.join("; ")}}` 
-          : "";
-        // `&`-rooted pseudo blocks (hover/focus/…) for this line: direct rules
-        // with the line selector, so `:hover` outranks the base rule inside
-        // this same sheet.
-        let hoverRules = "";
-        if (this.settings.enableCustomCss) {
-          const lineSelector = `div.cm-line.${cssClass}`;
-          const lineGroup = m.entryRef && (m.entryRef._groupRef || m.entryRef.entryRef?._groupRef);
-          if (lineGroup && lineGroup.customCss) {
-            hoverRules += buildSelectorBlockRules(this.groupCssForMembers(lineGroup), lineSelector);
-          }
-          if (m.entryRef && m.entryRef.customCss) {
-            hoverRules += buildSelectorBlockRules(m.entryRef.customCss, lineSelector);
-          }
-        }
-        const rule = `${baseRule}\n${strongLayoutRule}${hoverRules ? "\n" + hoverRules : ""}`;
         if (styleEl.textContent !== rule) styleEl.textContent = rule;
 
         // Determine target line position

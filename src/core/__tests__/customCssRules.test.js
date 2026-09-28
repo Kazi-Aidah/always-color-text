@@ -25,6 +25,7 @@ import {
   applyCustomCssToElementCore,
   buildScopedBlockRules,
   buildSelectorBlockRules,
+  buildLineTargetRule,
   validateCustomCssInput,
   reassembleCustomCss,
 } from "../customCssRules.js";
@@ -485,6 +486,86 @@ describe("buildSelectorBlockRules", () => {
     expect(buildSelectorBlockRules("&:has(div) { color: red; }", ".x")).toBe("");
     expect(buildSelectorBlockRules("color: red;", ".x")).toBe("");
     expect(buildSelectorBlockRules("&:hover { color: red; }", "")).toBe("");
+  });
+});
+
+describe("buildLineTargetRule", () => {
+  // Reading-mode line style for an entry with Horizontal Padding 6 / Vertical 2.
+  const readingStyle =
+    "box-sizing: border-box; color: currentColor; background-color: rgba(15, 185, 177, 0.5); padding-top: 2px; padding-bottom: 2px; padding-left: 6px; padding-right: 6px; border-radius: 8px;";
+
+  it("gives the entry's horizontal padding a strong !important rule", () => {
+    const [base, strong] = buildLineTargetRule({
+      selector: "p.colorline",
+      strongSelector: "p.colorline",
+      styleStr: readingStyle,
+    }).split("\n");
+    expect(base).toContain(
+      "padding-left: 6px; padding-right: 6px; border-radius: 8px",
+    );
+    expect(strong).toBe(
+      "p.colorline{padding-left: 6px !important; padding-right: 6px !important}",
+    );
+  });
+
+  it("lets custom CSS that merged in last win inside the strong rule", () => {
+    // _mergeStyleWithCustomCss appends its declarations with !important
+    // behind the entry's own; both copies must survive the split, last one
+    // winning, or the Custom CSS field silently stops working.
+    const styleStr =
+      "background-color: rgba(0,0,0,0.5); padding-left: 6px; padding-right: 6px; padding-left: 12px !important; padding-right: 12px !important;";
+    const strong = buildLineTargetRule({
+      selector: "p.colorline",
+      strongSelector: "p.colorline",
+      styleStr,
+    }).split("\n")[1];
+    expect(strong).toContain("padding-left: 6px !important");
+    expect(strong.endsWith("padding-right: 12px !important}")).toBe(true);
+  });
+
+  it("emits no strong rule when the caller passes none (list lines)", () => {
+    expect(
+      buildLineTargetRule({
+        selector: "li.colorline",
+        strongSelector: null,
+        styleStr: "padding-left: 6px",
+      }),
+    ).toBe("li.colorline{padding-left: 6px}\n");
+  });
+
+  it("renders the Live Preview shape: color extracted, highlight var dropped", () => {
+    const [base, strong] = buildLineTargetRule({
+      selector: "div.cm-line.x",
+      strongSelector: "div.cm-line.x:not(.HyperMD-list-line)",
+      styleStr:
+        "color: #fff !important; background-color: rgba(0,0,0,0.5) !important; padding: 2px 6px !important; --highlight-color: #fff;",
+      extractColor: true,
+    }).split("\n");
+    expect(base.startsWith("div.cm-line.x{color: #fff;")).toBe(true);
+    expect(base).not.toContain("--highlight-color");
+    // The base copy of a layout declaration stays !important-free…
+    expect(base).not.toContain("padding: 2px 6px !important");
+    // …and only the strong copy carries it.
+    expect(strong).toBe(
+      "div.cm-line.x:not(.HyperMD-list-line){padding: 2px 6px !important}",
+    );
+  });
+
+  it("appends hover rules after the layout rule", () => {
+    const rule = buildLineTargetRule({
+      selector: "p.x",
+      strongSelector: "p.x",
+      styleStr: "padding-left: 6px",
+      hoverRules: "p.x:hover { padding-left: 9px !important }\n",
+    });
+    expect(rule.split("\n")[0]).toBe("p.x{padding-left: 6px}");
+    expect(rule).toContain("p.x:hover");
+  });
+
+  it("returns an empty string without a selector", () => {
+    expect(
+      buildLineTargetRule({ selector: "", styleStr: "color: red" }),
+    ).toBe("");
   });
 });
 

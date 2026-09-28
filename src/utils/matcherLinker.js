@@ -57,6 +57,9 @@ export const LINKED_STYLE_FIELDS = [
   'inclusionRules',
   'exclusionRules',
   'customCss',
+  // Linked entries share a style, so they follow the same preset when
+  // "Link preset updates to entries" is on.
+  'presetUid',
 ];
 
 // Write the source entry's style fields into every target entry in place.
