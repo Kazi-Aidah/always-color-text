@@ -86,6 +86,11 @@ module.exports = {
   "command_open_regex_tester": "Add Regex (Open Regex Tester)",
   "command_open_blacklist_regex_tester": "Add Blacklist Regex",
   "command_manage_colored_texts": "Manage Colored Texts",
+  "command_open_text_style_presets": "Edit Text Style Presets",
+  "command_open_color_swatches": "Edit Color Swatches",
+  "notice_unable_open_text_style_presets":
+    "Unable to open Text Style Presets modal.",
+  "notice_unable_open_color_swatches": "Unable to open Edit Color Swatches modal.",
   "command_open_plugin_settings": "Open Plugin Settings",
   "command_toggle_hide_text_colors": "Hide/Unhide Text Colors",
   "command_toggle_hide_highlights": "Hide/Unhide Highlights",

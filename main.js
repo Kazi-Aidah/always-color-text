@@ -116,6 +116,10 @@ var require_en = __commonJS({
       "command_open_regex_tester": "Add Regex (Open Regex Tester)",
       "command_open_blacklist_regex_tester": "Add Blacklist Regex",
       "command_manage_colored_texts": "Manage Colored Texts",
+      "command_open_text_style_presets": "Edit Text Style Presets",
+      "command_open_color_swatches": "Edit Color Swatches",
+      "notice_unable_open_text_style_presets": "Unable to open Text Style Presets modal.",
+      "notice_unable_open_color_swatches": "Unable to open Edit Color Swatches modal.",
       "command_open_plugin_settings": "Open Plugin Settings",
       "command_toggle_hide_text_colors": "Hide/Unhide Text Colors",
       "command_toggle_hide_highlights": "Hide/Unhide Highlights",
@@ -8676,7 +8680,6 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     previewWrap.style.marginBottom = "12px";
     previewWrap.style.padding = "10px 12px";
     previewWrap.style.border = "1px solid var(--background-modifier-border)";
-    previewWrap.style.borderRadius = "var(--button-radius)";
     previewWrap.style.background = "var(--background-modifier-form-field)";
     previewWrap.style.minHeight = "2.5em";
     previewWrap.style.display = "flex";
@@ -8695,8 +8698,8 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     textareaLabel.style.textTransform = "uppercase";
     textareaLabel.style.letterSpacing = "0.05em";
     const taBox = textareaWrap.createDiv();
+    taBox.addClass("act-custom-css-editor");
     taBox.style.border = "1px solid var(--background-modifier-border)";
-    taBox.style.borderRadius = "var(--touch-radius-xxs)";
     taBox.style.background = "var(--background-modifier-form-field)";
     taBox.style.transition = "border-color 0.15s";
     this._textarea = taBox.createEl("div");
@@ -8704,7 +8707,7 @@ var CustomCssModal = class extends import_obsidian3.Modal {
     this._textarea.style.width = "100%";
     this._textarea.style.minHeight = "160px";
     this._textarea.style.border = "none";
-    this._textarea.style.borderRadius = "var(--touch-radius-xxs)";
+    this._textarea.style.borderRadius = "inherit";
     this._textarea.style.outline = "none";
     this._textarea.style.background = "transparent";
     this._textarea.style.color = "var(--text-normal)";
@@ -22290,7 +22293,6 @@ var EditWordGroupModal = class extends import_obsidian18.Modal {
     this._listDiv.style.overflowY = "auto";
     this._listDiv.style.marginBottom = "0";
     this._listDiv.style.borderRadius = "var(--input-radius)";
-    this._listDiv.style.backgroundColor = "var(--background-primary)";
     this._refreshGroupEntries();
     const buttonRow = contentEl.createDiv();
     buttonRow.addClass("act-group-button-row");
@@ -22446,6 +22448,7 @@ var EditWordGroupModal = class extends import_obsidian18.Modal {
       text: this.plugin.t("btn_delete_group", "Delete Group")
     });
     btnDelete.addClass("mod-warning");
+    btnDelete.addClass("act-delete-group-btn");
     btnDelete.style.cursor = "pointer";
     btnDelete.style.padding = "8px 16px";
     const deleteHandler = () => {
@@ -23844,6 +23847,7 @@ var EditBlacklistGroupModal = class extends import_obsidian20.Modal {
       text: this.plugin.t("btn_delete_group", "Delete Group")
     });
     btnDelete.addClass("mod-warning");
+    btnDelete.addClass("act-delete-group-btn");
     btnDelete.style.cursor = "pointer";
     btnDelete.style.padding = "8px 16px";
     const deleteHandler = () => {
@@ -24327,7 +24331,6 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
     } catch (e) {
     }
     previewRow.style.display = "flex";
-    previewRow.style.gap = "8px";
     previewRow.style.marginTop = "8px";
     previewRow.style.marginBottom = "4px";
     previewRow.style.flexWrap = "wrap";
@@ -24340,7 +24343,6 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
     }
     bgWrap.style.flex = "1 1 120px";
     bgWrap.style.minWidth = "120px";
-    bgWrap.style.marginTop = "20px";
     const bgSample = bgWrap.createDiv();
     bgSample.textContent = this.plugin.t(
       "bg_color_preview_label",
@@ -24407,6 +24409,19 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
       cus.forEach(
         (s, i) => out.push({ name: s.name, color: s.color, _src: "custom", _idx: i })
       );
+      try {
+        const order = Array.isArray(this.plugin.settings.swatchOrder) ? this.plugin.settings.swatchOrder.filter((c) => typeof c === "string") : [];
+        if (order.length) {
+          const rank = new Map(order.map((c, i) => [c.toLowerCase(), i]));
+          const key = (s) => String(s && s.color || "").toLowerCase();
+          out.sort((a, b) => {
+            const ra = rank.has(key(a)) ? rank.get(key(a)) : Number.MAX_SAFE_INTEGER;
+            const rb = rank.has(key(b)) ? rank.get(key(b)) : Number.MAX_SAFE_INTEGER;
+            return ra - rb;
+          });
+        }
+      } catch (_) {
+      }
       return out;
     };
     let combined = buildCombined();
@@ -24421,6 +24436,7 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
       this.plugin.settings.swatches = def;
       this.plugin.settings.userCustomSwatches = cus;
       this.plugin.settings.customSwatches = combined.map((s) => s.color);
+      this.plugin.settings.swatchOrder = combined.map((s) => s.color);
       if (this.plugin.settings.linkSwatchUpdatesToEntries) {
         const newAll = [...def, ...cus];
         const colorMap = {};
@@ -24551,29 +24567,6 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
       }
       grid.querySelectorAll(".drag-ghost-hidden").forEach((el) => el.classList.remove("drag-ghost-hidden"));
     };
-    const mobileDeleteRow = contentEl.createDiv();
-    mobileDeleteRow.style.display = "none";
-    mobileDeleteRow.style.marginTop = "8px";
-    const mobileDeleteBtn = mobileDeleteRow.createEl("button");
-    mobileDeleteBtn.textContent = this.plugin.t("delete_swatch", "Delete Swatch");
-    mobileDeleteBtn.style.color = "var(--text-error)";
-    mobileDeleteBtn.style.width = "100%";
-    const updateMobileDelete = () => {
-      const isTouch = window.matchMedia("(pointer: coarse)").matches;
-      mobileDeleteRow.style.display = isTouch && this._activeIndex !== null ? "block" : "none";
-    };
-    const mobileDeleteHandler = async () => {
-      if (this._activeIndex === null) return;
-      const swatches = getSwatches();
-      swatches.splice(this._activeIndex, 1);
-      this._activeIndex = null;
-      await saveSwatches();
-      renderGrid();
-      updateButtonLabel();
-      updateMobileDelete();
-    };
-    mobileDeleteBtn.addEventListener("click", mobileDeleteHandler);
-    this._eventListeners.push({ el: mobileDeleteBtn, event: "click", handler: mobileDeleteHandler });
     const renderGrid = () => {
       grid.empty();
       const swatches = getSwatches();
@@ -24617,7 +24610,6 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
               await saveSwatches();
               renderGrid();
               updateButtonLabel();
-              updateMobileDelete();
             })
           );
           menu.showAtMouseEvent(ev);
@@ -24651,6 +24643,18 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
         dragActive = true;
         dragBtn.style.cursor = "grabbing";
       };
+      const swatchAtPoint = (clientX, clientY, from) => {
+        const viaDom = from ? from.closest("button[data-swatch-index]") : null;
+        if (viaDom && viaDom.parentNode === grid) return viaDom;
+        const btns = grid.querySelectorAll("button[data-swatch-index]");
+        for (const b of btns) {
+          const r = b.getBoundingClientRect();
+          if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+            return b;
+          }
+        }
+        return null;
+      };
       const swapAtPoint = (clientX, clientY) => {
         if (!this._ghost || !dragBtn) return;
         this._ghost.style.left = clientX - offsetX + "px";
@@ -24658,7 +24662,7 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
         this._ghost.style.display = "none";
         const from = document.elementFromPoint(clientX, clientY);
         this._ghost.style.display = "";
-        const targetBtn = from ? from.closest("button[data-swatch-index]") : null;
+        const targetBtn = swatchAtPoint(clientX, clientY, from);
         if (!targetBtn || targetBtn === dragBtn || targetBtn.parentNode !== grid) return;
         const children = Array.from(grid.querySelectorAll("button[data-swatch-index]"));
         const cur = children.indexOf(dragBtn);
@@ -24679,18 +24683,17 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
         });
       };
       const endDrag = async () => {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-        document.removeEventListener("touchmove", onTouchMove);
-        document.removeEventListener("touchend", onTouchEnd);
-        document.removeEventListener("touchcancel", onTouchEnd);
+        document.removeEventListener("mousemove", onMouseMove, { capture: true });
+        document.removeEventListener("mouseup", onMouseUp, { capture: true });
+        document.removeEventListener("touchmove", onTouchMove, { capture: true });
+        document.removeEventListener("touchend", onTouchEnd, { capture: true });
+        document.removeEventListener("touchcancel", onTouchEnd, { capture: true });
         if (dragBtn) dragBtn.style.cursor = "grab";
         removeGhost();
         if (dragActive) {
           didDrag = true;
           await saveSwatches();
           renderGrid();
-          updateMobileDelete();
         }
         dragActive = false;
         dragBtn = null;
@@ -24714,6 +24717,7 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
         if (e.button !== 0) return;
         const btn = e.target.closest("button[data-swatch-index]");
         if (!btn || btn.parentNode !== grid) return;
+        e.stopPropagation();
         didDrag = false;
         dragBtn = btn;
         const rect = btn.getBoundingClientRect();
@@ -24721,8 +24725,11 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
         startY = e.clientY;
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
+        document.addEventListener("mousemove", onMouseMove, {
+          passive: false,
+          capture: true
+        });
+        document.addEventListener("mouseup", onMouseUp, { capture: true });
       };
       grid.addEventListener("mousedown", gridMouseDown);
       this._eventListeners.push({ el: grid, event: "mousedown", handler: gridMouseDown });
@@ -24743,7 +24750,6 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
           renderPreviews("");
           updateButtonLabel();
           renderGrid();
-          updateMobileDelete();
           return;
         }
         this._activeIndex = i;
@@ -24753,7 +24759,6 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
         renderPreviews(color);
         renderGrid();
         updateButtonLabel();
-        updateMobileDelete();
       };
       grid.addEventListener("click", gridClick);
       this._eventListeners.push({ el: grid, event: "click", handler: gridClick });
@@ -24776,6 +24781,7 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
         if (e.touches.length !== 1) return;
         const btn = e.target.closest("button[data-swatch-index]");
         if (!btn || btn.parentNode !== grid) return;
+        e.stopPropagation();
         dragBtn = btn;
         const { clientX, clientY } = e.touches[0];
         startX = clientX;
@@ -24783,9 +24789,9 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
         const r = btn.getBoundingClientRect();
         offsetX = clientX - r.left;
         offsetY = clientY - r.top;
-        document.addEventListener("touchmove", onTouchMove, { passive: false });
-        document.addEventListener("touchend", onTouchEnd);
-        document.addEventListener("touchcancel", onTouchEnd);
+        document.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+        document.addEventListener("touchend", onTouchEnd, { capture: true });
+        document.addEventListener("touchcancel", onTouchEnd, { capture: true });
       };
       grid.addEventListener("touchstart", gridTouchStart, { passive: true });
       this._eventListeners.push({ el: grid, event: "touchstart", handler: gridTouchStart });
@@ -24872,7 +24878,6 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
     });
     renderGrid();
     updateButtonLabel();
-    updateMobileDelete();
     const footer = contentEl.createDiv();
     footer.style.marginTop = "12px";
     const resetBtn = footer.createEl("button");
@@ -24899,12 +24904,12 @@ var EditColorSwatchesModal = class extends import_obsidian21.Modal {
           this.plugin.settings.swatches = JSON.parse(
             JSON.stringify(originals)
           );
+          delete this.plugin.settings.swatchOrder;
           combined = buildCombined();
           this._activeIndex = null;
           await this.plugin.saveSettings();
           renderGrid();
           updateButtonLabel();
-          updateMobileDelete();
         }
       ).open();
     };
@@ -25103,25 +25108,7 @@ var QuickMenuColorsModal = class extends import_obsidian22.Modal {
           };
           delBtn.addEventListener("click", delHandler);
           this._eventListeners.push({ el: delBtn, event: "click", handler: delHandler });
-          let dragStarted = false;
-          let startX = 0, startY = 0;
-          dragHandle.addEventListener("mousedown", (e) => {
-            if (e.button !== 0) return;
-            e.preventDefault();
-            e.stopPropagation();
-            startX = e.clientX;
-            startY = e.clientY;
-            dragStarted = false;
-          });
-          dragHandle.addEventListener("touchstart", (e) => {
-            if (e.touches.length !== 1) return;
-            e.preventDefault();
-            e.stopPropagation();
-            const t = e.touches[0];
-            startX = t.clientX;
-            startY = t.clientY;
-            dragStarted = false;
-          }, { passive: false });
+          this._setupDrag(row, dragHandle, listDiv, container, colors);
         });
       }
       const btnRow = container.createDiv();
@@ -25146,6 +25133,177 @@ var QuickMenuColorsModal = class extends import_obsidian22.Modal {
     } catch (e) {
       debugError("QUICK_MENU_COLORS_MODAL", e);
     }
+  }
+  /**
+   * Robust drag & drop reordering for one Quick Colors row. Same approach as
+   * ReorderPresetsModal: a document-level (capture) mouse/touch listener pair,
+   * a cloned ghost that follows the cursor, and an elementFromPoint hit test
+   * that reorders both the DOM row and the `colors` array in lockstep.
+   * On release the new order is written back to settings and re-rendered.
+   */
+  _setupDrag(row, dragHandle, listDiv, container, colors) {
+    let dragStarted = false;
+    let ghost = null;
+    let sX = 0, sY = 0, oX = 0, oY = 0;
+    const createGhost = () => {
+      const rect = row.getBoundingClientRect();
+      ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+      const clone = row.cloneNode(true);
+      const origInputs = row.querySelectorAll("input, select, textarea");
+      const cloneInputs = clone.querySelectorAll("input, select, textarea");
+      origInputs.forEach((el, idx) => {
+        if (cloneInputs[idx]) cloneInputs[idx].value = el.value;
+      });
+      ghost.appendChild(clone);
+      ghost.style.width = rect.width + "px";
+      ghost.style.height = rect.height + "px";
+      ghost.style.left = rect.left + "px";
+      ghost.style.top = rect.top + "px";
+      row.classList.add("drag-ghost-hidden");
+      document.body.classList.add("act-dragging-active");
+      dragHandle.style.cursor = "grabbing";
+      if (navigator.vibrate) navigator.vibrate(30);
+    };
+    const doReorder = (currentX, currentY) => {
+      if (!ghost) return;
+      ghost.style.left = currentX - oX + "px";
+      ghost.style.top = currentY - oY + "px";
+      ghost.style.display = "none";
+      const from = document.elementFromPoint(currentX, currentY);
+      ghost.style.display = "";
+      let targetRow = from ? from.closest("div[data-qc-index]") : null;
+      if (!targetRow || targetRow.parentNode !== listDiv) {
+        targetRow = null;
+        const rows = listDiv.querySelectorAll("div[data-qc-index]");
+        for (const r of rows) {
+          const rect = r.getBoundingClientRect();
+          if (currentX >= rect.left && currentX <= rect.right && currentY >= rect.top && currentY <= rect.bottom) {
+            targetRow = r;
+            break;
+          }
+        }
+      }
+      if (!targetRow || targetRow === row || targetRow.parentNode !== listDiv)
+        return;
+      const children = Array.from(listDiv.querySelectorAll("div[data-qc-index]"));
+      const cur = children.indexOf(row);
+      const tgt = children.indexOf(targetRow);
+      if (cur === -1 || tgt === -1 || cur === tgt) return;
+      if (navigator.vibrate) navigator.vibrate(30);
+      if (cur < tgt) targetRow.after(row);
+      else listDiv.insertBefore(row, targetRow);
+      const item = colors.splice(cur, 1)[0];
+      colors.splice(tgt, 0, item);
+      Array.from(listDiv.querySelectorAll("div[data-qc-index]")).forEach(
+        (r, idx) => r.setAttribute("data-qc-index", idx.toString())
+      );
+    };
+    const cleanupDrag = async () => {
+      document.removeEventListener("mousemove", onDocMouseMove, { capture: true });
+      document.removeEventListener("mouseup", onDocMouseUp, { capture: true });
+      document.removeEventListener("touchmove", onDocTouchMove, { capture: true });
+      document.removeEventListener("touchend", onDocTouchEnd, { capture: true });
+      document.removeEventListener("touchcancel", onDocTouchEnd, { capture: true });
+      document.body.classList.remove("act-dragging-active");
+      dragHandle.style.cursor = "grab";
+      if (ghost) {
+        try {
+          ghost.remove();
+        } catch (_) {
+        }
+        ghost = null;
+      }
+      row.classList.remove("drag-ghost-hidden");
+      if (dragStarted) {
+        this.plugin.settings.quickColors = colors;
+        try {
+          await this.plugin.saveSettings();
+        } catch (e) {
+          debugError("QUICK_MENU_COLORS_MODAL", "save order failed", e);
+        }
+        this._renderQuickColorsUI(container);
+      }
+      dragStarted = false;
+    };
+    const onDocMouseMove = (e) => {
+      e.preventDefault();
+      if (!dragStarted) {
+        if (Math.hypot(e.clientX - sX, e.clientY - sY) > 4) {
+          createGhost();
+          dragStarted = true;
+        } else {
+          return;
+        }
+      }
+      doReorder(e.clientX, e.clientY);
+    };
+    const onDocMouseUp = () => {
+      cleanupDrag();
+    };
+    const onDocTouchMove = (e) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      if (!dragStarted) {
+        if (Math.hypot(t.clientX - sX, t.clientY - sY) > 4) {
+          createGhost();
+          dragStarted = true;
+        } else {
+          return;
+        }
+      }
+      doReorder(t.clientX, t.clientY);
+    };
+    const onDocTouchEnd = () => {
+      cleanupDrag();
+    };
+    dragHandle.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      sX = e.clientX;
+      sY = e.clientY;
+      const rect = row.getBoundingClientRect();
+      oX = e.clientX - rect.left;
+      oY = e.clientY - rect.top;
+      dragStarted = false;
+      document.addEventListener("mousemove", onDocMouseMove, {
+        passive: false,
+        capture: true
+      });
+      document.addEventListener("mouseup", onDocMouseUp, {
+        passive: false,
+        capture: true
+      });
+    });
+    dragHandle.addEventListener(
+      "touchstart",
+      (e) => {
+        if (e.touches.length !== 1) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const t = e.touches[0];
+        sX = t.clientX;
+        sY = t.clientY;
+        const rect = row.getBoundingClientRect();
+        oX = t.clientX - rect.left;
+        oY = t.clientY - rect.top;
+        dragStarted = false;
+        document.addEventListener("touchmove", onDocTouchMove, {
+          passive: false,
+          capture: true
+        });
+        document.addEventListener("touchend", onDocTouchEnd, {
+          passive: false,
+          capture: true
+        });
+        document.addEventListener("touchcancel", onDocTouchEnd, {
+          passive: false,
+          capture: true
+        });
+      },
+      { passive: false }
+    );
   }
   onClose() {
     this._eventListeners.forEach(({ el, event, handler }) => {
@@ -33219,6 +33377,8 @@ var COMMAND_ICONS = {
   "show-latest-release-notes": "book-open",
   "open-plugin-settings": "settings",
   "manage-colored-texts": "list",
+  "open-text-style-presets": "layers",
+  "open-color-swatches": "swatch-book",
   // Regex testers
   "open-regex-tester": "regex",
   "open-blacklist-regex-tester": "shield-off"
@@ -36661,6 +36821,47 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         name: this.t("command_manage_colored_texts", "Manage Colored Texts"),
         callback: () => {
           this.openPluginSettingsTab("always-color-texts");
+        }
+      });
+      addTrackedCommand({
+        id: "open-text-style-presets",
+        name: this.t(
+          "command_open_text_style_presets",
+          "Edit Text Style Presets"
+        ),
+        callback: () => {
+          try {
+            new TextStylePresetsModal(this.app, this).open();
+          } catch (e) {
+            debugError(
+              "COMMAND",
+              "Unable to open Text Style Presets modal",
+              e
+            );
+            new import_obsidian29.Notice(
+              this.t(
+                "notice_unable_open_text_style_presets",
+                "Unable to open Text Style Presets modal."
+              )
+            );
+          }
+        }
+      });
+      addTrackedCommand({
+        id: "open-color-swatches",
+        name: this.t("command_open_color_swatches", "Edit Color Swatches"),
+        callback: () => {
+          try {
+            new EditColorSwatchesModal(this.app, this).open();
+          } catch (e) {
+            debugError("COMMAND", "Unable to open Edit Color Swatches modal", e);
+            new import_obsidian29.Notice(
+              this.t(
+                "notice_unable_open_color_swatches",
+                "Unable to open Edit Color Swatches modal."
+              )
+            );
+          }
         }
       });
       addTrackedCommand({

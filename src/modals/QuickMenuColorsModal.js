@@ -216,28 +216,9 @@ export class QuickMenuColorsModal extends Modal {
           delBtn.addEventListener("click", delHandler);
           this._eventListeners.push({ el: delBtn, event: "click", handler: delHandler });
 
-          // Simplified drag handlers (basic functionality without full drag-and-drop)
-          let dragStarted = false;
-          let startX = 0, startY = 0;
-
-          dragHandle.addEventListener("mousedown", (e) => {
-            if (e.button !== 0) return;
-            e.preventDefault();
-            e.stopPropagation();
-            startX = e.clientX;
-            startY = e.clientY;
-            dragStarted = false;
-          });
-
-          dragHandle.addEventListener("touchstart", (e) => {
-            if (e.touches.length !== 1) return;
-            e.preventDefault();
-            e.stopPropagation();
-            const t = e.touches[0];
-            startX = t.clientX;
-            startY = t.clientY;
-            dragStarted = false;
-          }, { passive: false });
+          // Full drag & drop reordering (the old handlers only recorded the
+          // start point, so reordering never actually happened).
+          this._setupDrag(row, dragHandle, listDiv, container, colors);
         });
       }
 
@@ -267,6 +248,200 @@ export class QuickMenuColorsModal extends Modal {
     } catch (e) {
       debugError("QUICK_MENU_COLORS_MODAL", e);
     }
+  }
+
+  /**
+   * Robust drag & drop reordering for one Quick Colors row. Same approach as
+   * ReorderPresetsModal: a document-level (capture) mouse/touch listener pair,
+   * a cloned ghost that follows the cursor, and an elementFromPoint hit test
+   * that reorders both the DOM row and the `colors` array in lockstep.
+   * On release the new order is written back to settings and re-rendered.
+   */
+  _setupDrag(row, dragHandle, listDiv, container, colors) {
+    let dragStarted = false;
+    let ghost = null;
+    let sX = 0,
+      sY = 0,
+      oX = 0,
+      oY = 0;
+
+    const createGhost = () => {
+      const rect = row.getBoundingClientRect();
+      ghost = document.body.createDiv({ cls: "drag-reorder-ghost" });
+      const clone = row.cloneNode(true);
+      // cloneNode does not copy live input values — copy them across.
+      const origInputs = row.querySelectorAll("input, select, textarea");
+      const cloneInputs = clone.querySelectorAll("input, select, textarea");
+      origInputs.forEach((el, idx) => {
+        if (cloneInputs[idx]) cloneInputs[idx].value = el.value;
+      });
+      ghost.appendChild(clone);
+      ghost.style.width = rect.width + "px";
+      ghost.style.height = rect.height + "px";
+      ghost.style.left = rect.left + "px";
+      ghost.style.top = rect.top + "px";
+      row.classList.add("drag-ghost-hidden");
+      document.body.classList.add("act-dragging-active");
+      dragHandle.style.cursor = "grabbing";
+      if (navigator.vibrate) navigator.vibrate(30);
+    };
+
+    const doReorder = (currentX, currentY) => {
+      if (!ghost) return;
+      ghost.style.left = currentX - oX + "px";
+      ghost.style.top = currentY - oY + "px";
+
+      // Hide the ghost so the hit test reaches the row underneath it.
+      ghost.style.display = "none";
+      const from = document.elementFromPoint(currentX, currentY);
+      ghost.style.display = "";
+
+      let targetRow = from ? from.closest("div[data-qc-index]") : null;
+      if (!targetRow || targetRow.parentNode !== listDiv) {
+        // Fallback: match by geometry, so an overlay (or a pointer-events
+        // quirk) can never silently swallow every swap.
+        targetRow = null;
+        const rows = listDiv.querySelectorAll("div[data-qc-index]");
+        for (const r of rows) {
+          const rect = r.getBoundingClientRect();
+          if (
+            currentX >= rect.left &&
+            currentX <= rect.right &&
+            currentY >= rect.top &&
+            currentY <= rect.bottom
+          ) {
+            targetRow = r;
+            break;
+          }
+        }
+      }
+      if (!targetRow || targetRow === row || targetRow.parentNode !== listDiv)
+        return;
+
+      const children = Array.from(listDiv.querySelectorAll("div[data-qc-index]"));
+      const cur = children.indexOf(row);
+      const tgt = children.indexOf(targetRow);
+      if (cur === -1 || tgt === -1 || cur === tgt) return;
+
+      if (navigator.vibrate) navigator.vibrate(30);
+      if (cur < tgt) targetRow.after(row);
+      else listDiv.insertBefore(row, targetRow);
+
+      const item = colors.splice(cur, 1)[0];
+      colors.splice(tgt, 0, item);
+      Array.from(listDiv.querySelectorAll("div[data-qc-index]")).forEach(
+        (r, idx) => r.setAttribute("data-qc-index", idx.toString()),
+      );
+    };
+
+    const cleanupDrag = async () => {
+      document.removeEventListener("mousemove", onDocMouseMove, { capture: true });
+      document.removeEventListener("mouseup", onDocMouseUp, { capture: true });
+      document.removeEventListener("touchmove", onDocTouchMove, { capture: true });
+      document.removeEventListener("touchend", onDocTouchEnd, { capture: true });
+      document.removeEventListener("touchcancel", onDocTouchEnd, { capture: true });
+      document.body.classList.remove("act-dragging-active");
+      dragHandle.style.cursor = "grab";
+      if (ghost) {
+        try {
+          ghost.remove();
+        } catch (_) {}
+        ghost = null;
+      }
+      row.classList.remove("drag-ghost-hidden");
+      if (dragStarted) {
+        this.plugin.settings.quickColors = colors;
+        try {
+          await this.plugin.saveSettings();
+        } catch (e) {
+          debugError("QUICK_MENU_COLORS_MODAL", "save order failed", e);
+        }
+        this._renderQuickColorsUI(container);
+      }
+      dragStarted = false;
+    };
+
+    const onDocMouseMove = (e) => {
+      e.preventDefault();
+      if (!dragStarted) {
+        if (Math.hypot(e.clientX - sX, e.clientY - sY) > 4) {
+          createGhost();
+          dragStarted = true;
+        } else {
+          return;
+        }
+      }
+      doReorder(e.clientX, e.clientY);
+    };
+    const onDocMouseUp = () => {
+      cleanupDrag();
+    };
+
+    const onDocTouchMove = (e) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      if (!dragStarted) {
+        if (Math.hypot(t.clientX - sX, t.clientY - sY) > 4) {
+          createGhost();
+          dragStarted = true;
+        } else {
+          return;
+        }
+      }
+      doReorder(t.clientX, t.clientY);
+    };
+    const onDocTouchEnd = () => {
+      cleanupDrag();
+    };
+
+    dragHandle.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      sX = e.clientX;
+      sY = e.clientY;
+      const rect = row.getBoundingClientRect();
+      oX = e.clientX - rect.left;
+      oY = e.clientY - rect.top;
+      dragStarted = false;
+      document.addEventListener("mousemove", onDocMouseMove, {
+        passive: false,
+        capture: true,
+      });
+      document.addEventListener("mouseup", onDocMouseUp, {
+        passive: false,
+        capture: true,
+      });
+    });
+    dragHandle.addEventListener(
+      "touchstart",
+      (e) => {
+        if (e.touches.length !== 1) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const t = e.touches[0];
+        sX = t.clientX;
+        sY = t.clientY;
+        const rect = row.getBoundingClientRect();
+        oX = t.clientX - rect.left;
+        oY = t.clientY - rect.top;
+        dragStarted = false;
+        document.addEventListener("touchmove", onDocTouchMove, {
+          passive: false,
+          capture: true,
+        });
+        document.addEventListener("touchend", onDocTouchEnd, {
+          passive: false,
+          capture: true,
+        });
+        document.addEventListener("touchcancel", onDocTouchEnd, {
+          passive: false,
+          capture: true,
+        });
+      },
+      { passive: false },
+    );
   }
 
   onClose() {

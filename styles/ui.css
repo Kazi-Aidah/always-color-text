@@ -100,37 +100,37 @@ body .act-tabs-container button.act-tab-button {
    overflows the viewport — mobile.css sizes it to fit instead. */
 @media (min-width: 900px) {
   .act-preset-modal {
-    --dialog-width: 1200px !important;
-    max-width: 1200px !important;
+    --dialog-width: 1200px;
+    max-width: 1200px;
     width: 870px !important;
   }
   .act-preset-modal .modal-content {
-    max-width: 1200px !important;
+    max-width: 1200px;
     width: 800px !important;
   }
   .act-preset-modal .modal {
-    width: 800px !important;
-    max-width: 1200px !important;
+    width: 800px;
+    max-width: 1200px;
   }
   .modal .act-preset-modal {
-    min-width: 800px !important;
+    min-width: 800px;
     width: 800px !important;
-    max-width: 1200px !important;
+    max-width: 1200px;
   }
 }
 /* Highlight Styling Modal - Force width via !important */
 .act-highlight-modal {
-  --dialog-width: 900px !important;
-  max-width: 900px !important;
-  width: 900px !important;
+  --dialog-width: 900px;
+  max-width: 900px;
+  width: 900px;
 }
-.act-highlight-modal .modal-content {
+html body .act-highlight-modal .modal-content {
   max-width: 900px !important;
 }
 .modal .act-highlight-modal {
   min-width: 980px !important;
   width: 1100px !important;
-  max-width: 1200px !important;
+  max-width: 1200px;
 }
 /* ====== EDIT ENTRY MODAL STYLING ====== */
 /* Accent border on focus for all contenteditable divs */
@@ -397,6 +397,18 @@ div[contenteditable="true"]:focus {
   background-color: var(--interactive-accent);
   color: var(--text-on-accent);
 }
+/* "Delete Group" footer buttons: translucent red instead of Obsidian's solid
+   error fill (same treatment as the entry delete buttons). The
+   .modal + .act- chain out-specifies button.mod-warning and
+   .is-mobile button.mod-warning, so no !important is needed. */
+.modal button.mod-warning.act-delete-group-btn {
+  background: rgba(var(--color-red-rgb), 0.2);
+}
+@media (hover: hover) {
+  .modal button.mod-warning.act-delete-group-btn:hover {
+    background: rgba(var(--color-red-rgb), 0.32);
+  }
+}
 .act-toggle {
    margin-inline-start: -25px;
    margin-bottom: 15px;
@@ -449,7 +461,12 @@ div[contenteditable="true"]:focus {
 .act-entry-row button  {
   border-radius: var(--button-radius);
 }
-.act-entry-row {
+/* Row padding only applies to rows that sit inside a setting item — the
+   blacklist rows (settings tab + blacklist group modal) are standalone rows
+   that already carry their own inline margin and must not get inner padding.
+   Colored-text rows keep their card padding from
+   `.color-words-list .act-entry-row`. */
+.setting-item .act-entry-row {
   padding: 10px;
 }
 /* Round checkboxes in blacklist entry rows */

@@ -473,6 +473,7 @@ export class EditBlacklistGroupModal extends Modal {
       text: this.plugin.t("btn_delete_group", "Delete Group"),
     });
     btnDelete.addClass("mod-warning");
+    btnDelete.addClass("act-delete-group-btn");
     btnDelete.style.cursor = "pointer";
     btnDelete.style.padding = "8px 16px";
     const deleteHandler = () => {

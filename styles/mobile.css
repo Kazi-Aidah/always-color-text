@@ -62,47 +62,50 @@ body.is-mobile .act-highlight-grid > div:last-child {
   border-bottom: none;
 }
 body.is-mobile .act-highlight-header-row {
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 8px !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 body.is-mobile .act-highlight-header-row h2 {
   flex: 0 0 100% !important;
   width: 100% !important;
 }
 body.is-mobile .act-highlight-header-row > div[style*="flex: 1"] {
-  display: none !important;
+  display: none;
 }
 body.is-mobile .act-highlight-header-row .act-highlight-group-select,
 body.is-mobile .act-highlight-header-row .act-highlight-mark-target,
 body.is-mobile .act-highlight-header-row .act-highlight-match-select,
 body.is-mobile .act-highlight-header-row .act-highlight-style-btn {
-  display: none !important;
+  display: none;
 }
 body.is-mobile .act-highlight-preview-wrap {
-  border-radius: var(--touch-radius-xxs) !important;
+  border-radius: var(--touch-radius-xxs);
+}
+body.is-mobile .act-custom-css-modal .act-custom-css-editor {
+  border-radius: var(--touch-radius-xxs);
 }
 body.is-mobile .act-group-rule-row.act-entry-rule-row {
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 body.is-mobile .act-rules-container {
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 @media (max-width: 600px) {
   .act-modal-header-controls {
-    flex-wrap: wrap !important;
-    row-gap: 6px !important;
+    flex-wrap: wrap;
+    row-gap: 6px;
   }
   /* Each control takes a natural width and wraps to the next line */
   .act-modal-header-controls select,
   .act-modal-header-controls button {
-    flex: 0 0 auto !important;
-    min-width: 0 !important;
+    flex: 0 0 auto;
+    min-width: 0;
   }
   /* Title takes full width so controls sit on their own row below */
   .act-modal-header-controls h2 {
-    flex: 1 1 100% !important;
-    margin-bottom: 4px !important;
+    flex: 1 1 100%;
+    margin-bottom: 4px;
   }
 }
 @media (max-width: 600px) {
@@ -119,26 +122,26 @@ body.is-mobile .act-regex-tester-controls {
    right of the heading. */
 @media (max-width: 640px) {
   body.is-mobile .act-regex-tester-controls .act-regex-tester-flags {
-    flex: 1 1 100% !important;
-    display: grid !important;
-    grid-template-columns: repeat(6, 1fr) !important;
-    gap: 6px !important;
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
   }
   body.is-mobile .act-regex-tester-controls .act-regex-tester-style,
   body.is-mobile .act-regex-tester-controls .act-regex-tester-mark-target {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
+    flex: 1 1 0;
+    min-width: 0;
   }
   body.is-mobile .act-regex-tester-controls .act-regex-tester-text-color,
   body.is-mobile .act-regex-tester-controls .act-regex-tester-bg-color {
-    flex: 1 1 0 !important;
+    flex: 1 1 0;
     width: auto !important;
-    height: 40px !important;
+    height: 40px;
   }
 }
 body.is-mobile .act-subject-wrap,
 body.is-mobile .act-regex-tester-subject-wrap {
-  border-radius: var(--touch-radius-xxs) !important;
+  border-radius: var(--touch-radius-xxs);
 }
 @media (max-width: 640px) {
   .act-theme-fixer-modal .act-fixer-panels {
@@ -148,38 +151,38 @@ body.is-mobile .act-regex-tester-subject-wrap {
 @media (max-width: 600px) {
   .act-edit-word-group-modal .act-toprow {
       gap: 8px !important;
-      flex-wrap: wrap !important;
+      flex-wrap: wrap;
   }
 
   .act-edit-word-group-modal .act-toprow .act-wg-case-select {
       flex: 1 1 100% !important;
       width: 100% !important;
-      min-width: 0 !important;
-      box-sizing: border-box !important;
+      min-width: 0;
+      box-sizing: border-box;
   }
 
   .act-edit-word-group-modal .act-toprow .act-wg-match-select {
       flex: 1 1 0 !important;
       width: auto !important;
-      min-width: 0 !important;
+      min-width: 0;
   }
 
   .act-edit-word-group-modal .act-toprow .act-wg-edit-btn,
   .act-edit-word-group-modal .act-toprow .act-wg-css-btn {
       flex: 0 0 36px !important;
       width: 36px !important;
-      min-width: 36px !important;
+      min-width: 36px;
       height: 36px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      box-sizing: border-box !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
   }
 }
 body.is-mobile .act-group-row {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: center !important;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 10px !important;
 }
 body.is-mobile .act-group-styling-preview {
@@ -188,42 +191,58 @@ body.is-mobile .act-group-styling-preview {
 
     transform: scale(1.3);
 }
+/* Tablet: the styling preview chip sits between the Active select and the
+   name input (visible again on tablets) — give it clearance on both sides
+   instead of the auto margins the phone layout uses. Declared after the
+   .is-mobile rule above so it wins at equal specificity. */
+body.is-tablet .act-group-styling-preview {
+    margin-left: 12px;
+    margin-right: 12px;
+}
 body.is-mobile .act-group-row [title="Duplicate Group"] {
     margin-left: auto;
 }
-body.is-mobile .act-group-row input {
-    order: 99;
-    flex: 0 0 100% !important;
-    width: 100% !important;
+/* Group name input is mobile-phone only: it used to take a whole extra
+   line per group. Renaming still works through Edit Group Settings (which
+   has the same field) and the name still shows in every entry's group dropdown. */
+body.is-mobile .act-group-row input,
+body.is-mobile .act-blacklist-group-row input {
+  display: none;
+}
+/* Tablets also carry .is-mobile, but their screens are wide enough for the
+   desktop-style row — same specificity, declared after, so it wins. */
+body.is-tablet .act-group-row input,
+body.is-tablet .act-blacklist-group-row input {
+  display: inline-block;
 }
 body.is-mobile .color-words-list .act-entry-row {
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 6px !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   width: 100% !important;
 }
 body.is-mobile .color-words-list .act-entry-row .act-match-select,
 body.is-mobile .color-words-list .act-entry-row .act-color-target-select {
-  display: none !important;
+  display: none;
 }
 /* body.is-mobile .color-words-list .act-entry-row .act-regex-name { display: none !important; } */
 body.is-mobile .color-words-list .act-entry-row .act-regex-name {
-  order: 0 !important;
+  order: 0;
   flex: 1 1 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  width: 100%;
+  min-width: 0;
 }
 body.is-mobile .color-words-list .act-entry-row input[type="text"]:not(.act-flags-input):not(.act-regex-name) {
-  flex: 1 1 100% !important;
-  min-width: 0 !important;
-  order: 1 !important;
+  flex: 1 1 100%;
+  min-width: 0;
+  order: 1;
 }
 body.is-mobile .color-words-list .act-entry-row .act-style-select {
-  order: 2 !important;
-  flex: 0 0 auto !important;
-  min-width: 0 !important;
+  order: 2;
+  flex: 0 0 auto;
+  min-width: 0;
   width: auto !important;
-  max-width: none !important;
+  max-width: none;
 }
 /* Time & Date: color-type dropdown (order 2) must come before the format
    button on phones/tablets — without this the button defaults to order 0. */
@@ -231,204 +250,204 @@ body.is-mobile .color-words-list .act-entry-row .act-datetime-format-btn {
   order: 3;
 }
 body.is-mobile .color-words-list .act-entry-row input[type="color"] {
-  order: 3 !important;
-  flex: 0 0 auto !important;
-  width: 36px !important;
-  height: 36px !important;
+  order: 3;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
 }
 body.is-mobile .color-words-list .act-entry-row input[type="checkbox"] {
-  order: 4 !important;
-  flex: 0 0 auto !important;
+  order: 4;
+  flex: 0 0 auto;
   margin-left: 2px !important;
   margin-right: 2px !important;
 }
 body.is-mobile .color-words-list .act-entry-row .act-flags-input {
-  order: 5 !important;
-  flex: 0 0 auto !important;
+  order: 5;
+  flex: 0 0 auto;
   width: 80px !important;
 }
 body.is-mobile .color-words-list .act-entry-row .act-entry-settings-btn {
-  display: flex !important;
-  order: 6 !important;
-  flex: 0 0 auto !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 32px !important;
-  height: 32px !important;
-  padding: 4px !important;
-  margin-left: auto !important;
+  display: flex;
+  order: 6;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  margin-left: auto;
 }
 body.is-mobile .color-words-list .act-entry-row .act-md-element-select {
   flex: 1 1 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  width: 100%;
+  min-width: 0;
 }
 body.is-mobile .color-words-list .act-entry-row .act-md-element-config-wrapper {
   flex: 1 1 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  gap: 6px !important;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
 body.is-mobile .color-words-list .act-entry-row .act-md-element-config {
-  flex: 1 1 auto !important;
-  width: auto !important;
-  min-width: 0 !important;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
 }
 body.is-mobile .blacklist-words-list .act-entry-row {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100% !important;
-  background-color: var(--setting-items-background) !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  border-radius: var(--setting-items-radius) !important;
+  background-color: var(--setting-items-background);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--setting-items-radius);
   padding: 10px !important;
-  margin-top: 6px !important;
-  margin-bottom: 0 !important;
-  box-sizing: border-box !important;
-  flex-wrap: nowrap !important;
+  margin-top: 6px;
+  margin-bottom: 0;
+  box-sizing: border-box;
+  flex-wrap: nowrap;
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-regex-btn {
-  flex: 0 0 32px !important;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-  cursor: pointer !important;
-  color: var(--text-muted) !important;
-  background: var(--interactive-normal) !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: var(--button-radius) !important;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-muted);
+  background: var(--interactive-normal);
+  border: none;
+  box-shadow: none;
+  border-radius: var(--button-radius);
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-delete-btn {
-  flex: 0 0 32px !important;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   cursor: pointer !important;
-  color: var(--color-red) !important;
-  background: rgba(var(--color-red-rgb), 0.2) !important;
-  border: none !important;
-  border-radius: var(--button-radius) !important;
-  margin-left: auto !important;
+  color: var(--color-red);
+  background: rgba(var(--color-red-rgb), 0.2);
+  border: none;
+  border-radius: var(--button-radius);
+  margin-left: auto;
 }
 @media (max-width: 480px) {
 /* Very narrow phone only: dropdown and inputs break into two rows */
 body.is-mobile .blacklist-words-list .act-entry-row {
-  flex-wrap: wrap !important;
+  flex-wrap: wrap;
   gap: 6px !important;
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-regex-name {
-  order: -1 !important;
-  flex: 1 1 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  padding: 6px !important;
+  order: -1;
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+  padding: 6px;
 }
 body.is-mobile .blacklist-words-list .act-entry-row input[type="text"]:not(.act-flags-input):not(.act-regex-name):not(.act-md-element-config) {
-  flex: 1 1 0 !important;
-  width: auto !important;
-  min-width: 0 !important;
-  order: 2 !important;
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  order: 2;
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-flags-input {
   flex: 0 0 80px !important;
   width: 80px !important;
-  order: 3 !important;
-  align-self: center !important;
+  order: 3;
+  align-self: center;
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-regex-btn {
-  order: 1 !important;
+  order: 1;
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-blacklist-delete-btn {
-  order: 99 !important;
+  order: 99;
 }
 /* Markdown: just element dropdown (no config) -> dropdown + X same row */
 body.is-mobile .blacklist-words-list .act-row--select-only .act-md-element-select {
   flex: 1 1 0 !important;
-  width: auto !important;
-  min-width: 0 !important;
-  order: 0 !important;
+  width: auto;
+  min-width: 0;
+  order: 0;
 }
 body.is-mobile .blacklist-words-list .act-row--select-only .act-blacklist-delete-btn {
-  order: 99 !important;
-  margin-left: 0 !important;
+  order: 99;
+  margin-left: 0;
 }
 /* Markdown: plain input (heading, tag, task-list) -> select row1 (100%), input+X row2 */
 body.is-mobile .blacklist-words-list .act-row--plain-input .act-md-element-select {
   flex: 1 1 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  order: 0 !important;
+  width: 100%;
+  min-width: 0;
+  order: 0;
 }
 body.is-mobile .blacklist-words-list .act-row--plain-input .act-md-element-config {
-  flex: 1 1 0 !important;
-  width: auto !important;
-  min-width: 0 !important;
-  order: 1 !important;
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  order: 1;
 }
 body.is-mobile .blacklist-words-list .act-row--plain-input .act-blacklist-delete-btn {
-  order: 99 !important;
-  margin-left: 0 !important;
+  order: 99;
+  margin-left: 0;
 }
 /* Markdown: element dropdown row1, second dropdown+input+X row2 (wrapper case) */
 body.is-mobile .blacklist-words-list .act-row--wrapper .act-md-element-select {
   flex: 1 1 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  order: 0 !important;
+  width: 100%;
+  min-width: 0;
+  order: 0;
 }
 body.is-mobile .blacklist-words-list .act-row--wrapper .act-md-element-config-wrapper {
   flex: 1 1 0 !important;
-  width: auto !important;
-  min-width: 0 !important;
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  gap: 6px !important;
-  order: 1 !important;
+  width: auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  order: 1;
 }
 body.is-mobile .blacklist-words-list .act-row--wrapper .act-blacklist-delete-btn {
-  order: 99 !important;
-  margin-left: 0 !important;
+  order: 99;
+  margin-left: 0;
 }
 body.is-mobile .blacklist-words-list .act-entry-row .act-md-element-config {
   flex: 1 1 auto !important;
-  width: auto !important;
-  min-width: 0 !important;
+  width: auto;
+  min-width: 0;
 }
 }
 body:not(.is-mobile) .act-blacklist-regex-btn,
 body:not(.is-mobile) .act-blacklist-delete-btn {
-  display: none !important;
+  display: none;
 }
 
 /* ====== FILE/FOLDER RULES — MOBILE LAYOUT — X BUTTON (same as blacklist) ====== */
 body.is-mobile .path-rules-list .act-path-delete-btn {
-  flex: 0 0 32px !important;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-  order: 99 !important;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  order: 99;
   cursor: pointer !important;
-  color: var(--color-red) !important;
-  background: rgba(var(--color-red-rgb), 0.2) !important;
-  border: none !important;
-  border-radius: var(--button-radius) !important;
-  margin-left: 0 !important;
+  color: var(--color-red);
+  background: rgba(var(--color-red-rgb), 0.2);
+  border: none;
+  border-radius: var(--button-radius);
+  margin-left: 0;
 }
 body:not(.is-mobile) .act-path-delete-btn {
   display: none !important;
@@ -436,31 +455,31 @@ body:not(.is-mobile) .act-path-delete-btn {
 /* ====== PATH RULES — KEEP is-mobile STYLING ALWAYS, BREAK INTO TWO ROWS ONLY WHEN VERY NARROW ====== */
 body.is-mobile .path-rules-list > div {
   /* base is-mobile styling kept via JS (background/border/padding), ensure row stays single line unless narrow */
-  flex-wrap: nowrap !important;
+  flex-wrap: nowrap;
 }
 @media (max-width: 480px) {
   body.is-mobile .path-rules-list > div {
-    flex-wrap: wrap !important;
+    flex-wrap: wrap;
   }
 body.is-mobile .path-rules-list .act-path-mode-sel,
   body.is-mobile .path-rules-list .act-path-type-sel {
-    flex: 1 1 calc(50% - 4px) !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    box-sizing: border-box;
   }
 body.is-mobile .path-rules-list .act-path-choose-area {
-    flex: 1 1 calc(100% - 40px) !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
+    flex: 1 1 calc(100% - 40px);
+    min-width: 0;
+    box-sizing: border-box;
   }
 }
 @media (min-width: 481px) {
   body.is-mobile .path-rules-list .act-path-mode-sel,
   body.is-mobile .path-rules-list .act-path-type-sel {
-    flex: 0 0 auto !important;
+    flex: 0 0 auto;
   }
 body.is-mobile .path-rules-list .act-path-choose-area {
-    flex: 1 1 auto !important;
+    flex: 1 1 auto;
   }
 }
 
@@ -468,34 +487,34 @@ body.is-mobile .path-rules-list .act-path-choose-area {
 
 /* Stack columns vertically on mobile */
 body.is-mobile .act-edit-entry-main {
-  flex-direction: column !important;
+  flex-direction: column;
 }
 
 body.is-mobile .act-edit-entry-left-column,
 body.is-mobile .act-edit-entry-right-column {
-  flex: 1 1 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
 }
 
 /* Fix style select height and width in right column on mobile */
 body.is-mobile .act-edit-entry-style-select {
-  flex: 0 0 auto !important;
+  flex: 0 0 auto;
   width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
+  min-width: 0;
+  max-width: 100%;
   /* height: auto !important; */
-  align-self: auto !important;
-  box-sizing: border-box !important;
+  align-self: auto;
+  box-sizing: border-box;
 }
 
 /* Edit Entry Modal: 100% width selects & buttons */
 body.is-mobile .act-edit-entry-controls > select,
 body.is-mobile .act-edit-entry-controls > button {
-    flex: 0 0 100% !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     box-sizing: border-box;
 }
 
@@ -523,18 +542,18 @@ body.is-mobile .act-edit-entry-controls > button {
 /* Mobile: the whole modal scrolls like a page — override Obsidian's fixed-height modal */
 body.is-mobile .act-edit-word-group-modal,
 body.is-mobile .act-edit-blacklist-group-modal {
-  height: auto !important;
-  max-height: 95vh !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  height: auto;
+  max-height: 95vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 body.is-mobile .act-edit-word-group-modal .modal-content,
 body.is-mobile .act-edit-blacklist-group-modal .modal-content {
-  display: block !important;
-  height: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
+  display: block;
+  height: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 /* Entries list: no inner scroll on mobile — content flows naturally */
@@ -542,8 +561,8 @@ body.is-mobile .act-edit-word-group-modal .color-words-list,
 body.is-mobile .act-edit-blacklist-group-modal .blacklist-entries-list {
   flex: none !important;
   height: auto !important;
-  max-height: none !important;
-  overflow-y: visible !important;
+  max-height: none;
+  overflow-y: visible;
   margin-bottom: 10px !important;
 }
 
@@ -573,42 +592,42 @@ body.is-mobile .act-edit-blacklist-group-modal .blacklist-entries-list {
    !important overrides any inline flex:1 set by JS.
 ──────────────────────────────────────────────────────────────── */
 body.is-mobile .act-group-button-row {
-  display: flex !important;
-  flex-wrap: wrap !important;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px !important;
   align-items: stretch !important;
 }
 
 /* Sort — ~65% of the row (leaves ~35% for Presets) */
 body.is-mobile .act-group-button-row .act-group-btn-sort {
-  order: 1 !important;
+  order: 1;
   flex: 0 0 calc(65% - 4px) !important;
   width: calc(65% - 4px) !important;
-  box-sizing: border-box !important;
+  box-sizing: border-box;
 }
 
 /* Presets — fills the remaining ~35% */
 body.is-mobile .act-group-button-row .act-group-btn-presets {
-  order: 2 !important;
-  flex: 1 0 calc(35% - 4px) !important;
+  order: 2;
+  flex: 1 0 calc(35% - 4px);
   width: calc(35% - 4px) !important;
-  box-sizing: border-box !important;
+  box-sizing: border-box;
 }
 
 /* Add Words — exactly half the row */
 body.is-mobile .act-group-button-row .act-group-btn-add {
-  order: 3 !important;
+  order: 3;
   flex: 0 0 calc(50% - 4px) !important;
   width: calc(50% - 4px) !important;
-  box-sizing: border-box !important;
+  box-sizing: border-box;
 }
 
 /* Add Regex — exactly half the row, matches Add Words */
 body.is-mobile .act-group-button-row .act-group-btn-regex {
-  order: 4 !important;
-  flex: 0 0 calc(50% - 4px) !important;
-  width: calc(50% - 4px) !important;
-  box-sizing: border-box !important;
+  order: 4;
+  flex: 0 0 calc(50% - 4px);
+  width: calc(50% - 4px);
+  box-sizing: border-box;
 }
 
 /* Enable/disable grid — desktop: single row of 6 columns */
@@ -618,9 +637,9 @@ body.is-mobile .act-group-button-row .act-group-btn-regex {
 
 /* Mobile: 3-column grid — label | input1 | input2 — two rows */
 body.is-mobile .act-group-enable-disable-row {
-  display: grid !important;
-  grid-template-columns: auto 1fr 1fr !important;
-  gap: 6px !important;
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 6px;
 }
 
 body.is-mobile .act-group-enable-label,
@@ -636,11 +655,11 @@ body.is-mobile .act-group-disable-label {
 .entries-button-row .mod-cta,
 .blacklist-button-row .mod-cta,
 .path-button-row .mod-cta {
-    min-height: var(--input-height) !important;
+    min-height: var(--input-height);
 }
 
 .color-words-list {
-    background-color: transparent !important;
+    background-color: transparent;
     border-radius: calc(var(--setting-items-radius) + 4px) !important;
 }
 
@@ -657,7 +676,7 @@ body.is-mobile .act-group-disable-label {
 
 .color-words-list .act-entry-row {
     background-color: var(--setting-items-background);
-    border-radius: var(--setting-items-radius) !important;
+    border-radius: var(--setting-items-radius);
     padding: 10px;
     margin-top: 6px;
     border: 1px solid var(--background-modifier-border);
@@ -680,7 +699,7 @@ body:not(.is-mobile) .act-edit-word-group-hr {
 
 body:not(.is-mobile) .act-group-button-row {
     margin-top: 16px;
-    margin-bottom: 4px !important;
+    margin-bottom: 4px;
 }
 
 .act-disabled-file {
@@ -716,7 +735,7 @@ body:not(.is-mobile) .act-group-button-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100% !important;
+  width: 100%;
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
@@ -797,7 +816,7 @@ body:not(.is-mobile) .act-group-button-row {
 
 /* Force heading p margin-top to zero inside act-modals (fixes excessive top margin) */
 .act-modal p {
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 
 /* Button label text */
@@ -827,8 +846,8 @@ body:not(.is-mobile) .act-group-button-row {
 
 .act-edit-entry-modal .act-pickr-header .act-edit-entry-style-select {
   flex: 0 0 auto;
-  min-width: 90px !important;
-  max-width: 110px !important;
+  min-width: 90px;
+  max-width: 110px;
 }
 
 /* Compact color pickers sitting in the header row */
@@ -847,30 +866,30 @@ body:not(.is-mobile) .act-group-button-row {
 
 /* Mobile: title on top row, selects + color pickers in single row below */
 body.is-mobile .act-edit-entry-modal .act-pickr-header {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 body.is-mobile .act-edit-entry-modal .act-pickr-header h2 {
-  flex: 1 1 100% !important;
-  width: 100% !important;
-  order: 1 !important;
+  flex: 1 1 100%;
+  width: 100%;
+  order: 1;
 }
 
 body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-group-select,
 body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-style-select,
 body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
-  order: 2 !important;
-  flex: 1 1 0 !important;
-  min-width: 0 !important;
-  max-width: none !important;
+  order: 2;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
 }
 
 body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 6px !important;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
 }
 
 /* Mark Target dropdown inside act-pickr-row */
@@ -892,6 +911,7 @@ body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
 /* ====== EDIT COLOR SWATCHES MODAL ====== */
 .act-edit-swatches-modal .act-color-picker-preview-wrap {
   min-height: 0;
+  max-height: 60px;
   padding: 8px;
   text-align: center;
 }
@@ -919,48 +939,56 @@ body.is-mobile .act-edit-entry-modal .act-pickr-header .act-edit-entry-pickers {
   margin-top: 8px;
   margin-bottom: 4px;
   flex-wrap: wrap;
-  height: 80px;
+  /* No fixed height: both previews stretch to the same content-driven height
+     (the old 80px left dead space and mismatched boxes on desktop). */
 }
 
 @media (max-width: 600px) {
   .act-edit-swatches-preview-row {
-    flex-direction: column !important;
+    flex-direction: column;
+    gap: 0;
     height: auto !important;
   }
 }
 
 body.is-mobile .act-edit-swatches-preview-row {
-  flex-direction: column !important;
+  flex-direction: column;
+  gap: 0;
   height: auto !important;
 }
 body.is-mobile .act-edit-swatches-preview-row .act-color-picker-preview-wrap {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  width: 100% !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
 }
 body.is-mobile .act-edit-swatches-preview-row .act-edit-swatches-text-wrap {
-  margin-top: 0 !important;
+  margin-top: 0;
+}
+/* Mobile keeps the approved stacked spacing: 20px above the first preview
+   (desktop drops that offset so the two boxes line up). */
+body.is-mobile .act-edit-swatches-bg-wrap {
+  margin-top: 20px;
 }
 
 /* Quick Colors pickers – match colored text entry pickers exactly */
 [data-qc-index] {
-  gap: 6px !important;
+  gap: 6px;
 }
 [data-qc-index] input[type="color"] {
-  width: 30px !important;
-  height: 30px !important;
-  border: none !important;
-  border-radius: var(--input-radius) !important;
-  cursor: pointer !important;
-  flex: 0 0 auto !important;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: var(--input-radius);
+  cursor: pointer;
+  flex: 0 0 auto;
 }
 
 /* ===== ROBUST DRAG & DROP STYLES (Obsidian + Electron compatible) ===== */
 
 /* Body drag state: prevents text selection and conflicts during drag */
 body.act-dragging-active {
-  -webkit-user-select: none !important;
-  user-select: none !important;
+  -webkit-user-select: none;
+  user-select: none;
   cursor: grabbing !important;
 }
 
@@ -977,8 +1005,8 @@ a,
 .color-swatch-grid button,
 div[data-qc-index],
 div[data-swatch-index] {
-  -webkit-app-region: no-drag !important;
-  app-region: no-drag !important;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 
 /* Core drag handle styling — touch friendly, no text selection */
@@ -987,6 +1015,17 @@ div[data-swatch-index] {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none; /* Prevent iOS long-press menu */
+}
+
+/* Reorder-by-drag swatches (Edit Color Swatches modal): the drag owns the
+   gesture, otherwise the WebView claims the touch for scrolling and the
+   reorder never sees a touchmove. */
+.act-edit-swatches-modal .color-swatch-grid button {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
 }
 
 /* Drop indicator — shows where item will be inserted (replaces inline DOM swapping) */
@@ -1015,10 +1054,11 @@ div[data-swatch-index] {
   height: 0;
 }
 
-/* Text Style Presets modal */
+/* Text Style Presets modal: fluid on small screens, capped at 900px so it
+   never fills a desktop window (was 1400px — too wide). */
 .modal.act-text-style-presets-modal {
   width: 96vw;
-  max-width: 1400px;
+  max-width: 900px;
 }
 .act-text-style-presets-modal .modal-content {
   padding: 20px 24px;
@@ -1110,22 +1150,22 @@ div[data-swatch-index] {
 
 /* Sticky footer for Text Style Presets modal – reuses highlight footer pattern */
 .act-text-style-presets-modal .modal-content {
-  display: flex !important;
-  flex-direction: column !important;
-  max-height: 85vh !important;
-  height: 100% !important;
-  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  height: 100%;
+  overflow: hidden;
 }
 .act-text-style-presets-modal h2,
 .act-text-style-presets-modal .act-tsp-top-box {
-  flex-shrink: 0 !important;
+  flex-shrink: 0;
 }
 .act-text-style-presets-modal .act-tsp-grid {
   flex: 1 1 auto !important;
-  overflow-y: auto !important;
-  min-height: 0 !important;
-  padding: 10px 4px 10px 0 !important;
-  margin-bottom: 0 !important;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 10px 4px 10px 0;
+  margin-bottom: 0;
   position: relative !important;
 }
 /* Scroll-fade overlays on the preset grid — disabled.
@@ -1156,18 +1196,18 @@ div[data-swatch-index] {
 */
 .act-tsp-add-row {
   flex-shrink: 0 !important;
-  position: sticky !important;
-  bottom: 0 !important;
-  border-top: none !important;
-  padding: 12px 0 4px 0 !important;
-  margin-top: 0 !important;
-  z-index: 1 !important;
+  position: sticky;
+  bottom: 0;
+  border-top: none;
+  padding: 12px 0 4px 0;
+  margin-top: 0;
+  z-index: 1;
 }
 body.is-mobile .act-text-style-presets-modal .modal-content {
-  max-height: 90vh !important;
+  max-height: 90vh;
 }
 body.is-mobile .act-tsp-add-row {
-  padding-bottom: 8px !important;
+  padding-bottom: 8px;
 }
 
 /* ── Text Style Presets: header row with reorder button ── */
@@ -1191,6 +1231,17 @@ body.is-mobile .act-tsp-add-row {
 .act-tsp-reorder-btn:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
+}
+/* Narrow phones: title and reorder button stack, button spans the row. */
+@media (max-width: 600px) {
+  body.is-mobile .act-tsp-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  body.is-mobile .act-tsp-reorder-btn {
+    width: 100%;
+  }
 }
 
 /* ── Reorder Presets Modal ── */
@@ -1284,26 +1335,26 @@ body.is-mobile .modal.act-reorder-presets-modal {
 /* ── Highlight Styling modals: sticky footer like word groups ── */
 .act-highlight-styling-modal .modal-content,
 .act-highlight-modal .modal-content {
-  display: flex !important;
-  flex-direction: column !important;
-  max-height: 85vh !important;
-  height: 100% !important;
-  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  height: 100%;
+  overflow: hidden;
 }
 .act-highlight-styling-modal .act-highlight-header-row,
 .act-highlight-modal .act-highlight-header-row,
 .act-highlight-styling-modal .act-highlight-top-row,
 .act-highlight-modal .act-highlight-top-row {
-  flex-shrink: 0 !important;
+  flex-shrink: 0;
 }
 .act-highlight-slider-row {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .act-highlight-range-slider {
   flex: 1 1 auto !important;
-  min-width: 0 !important;
+  min-width: 0;
 }
 .act-highlight-slider-value {
   min-width: 1.5em;
@@ -1314,33 +1365,33 @@ body.is-mobile .modal.act-reorder-presets-modal {
 }
 .act-highlight-styling-modal .act-highlight-pane-row,
 .act-highlight-modal .act-highlight-pane-row {
-  flex: 1 1 auto !important;
-  overflow-y: auto !important;
-  min-height: 0 !important;
-  padding-right: 4px !important;
-  margin-bottom: 0 !important;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
+  margin-bottom: 0;
 }
 .act-highlight-footer {
-  flex-shrink: 0 !important;
-  position: sticky !important;
-  bottom: 0 !important;
-  background: var(--background-primary) !important;
-  border-top: 1px solid var(--background-modifier-border) !important;
-  padding: 12px 0 4px 0 !important;
-  margin-top: 0 !important;
-  z-index: 1 !important;
-  display: flex !important;
-  justify-content: space-between !important;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  background: var(--background-primary);
+  border-top: 1px solid var(--background-modifier-border);
+  padding: 12px 0 4px 0;
+  margin-top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
 }
 .act-highlight-footer.act-group-highlight-footer {
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 body.is-mobile .act-highlight-styling-modal .modal-content,
 body.is-mobile .act-highlight-modal .modal-content {
-  max-height: 90vh !important;
+  max-height: 90vh;
 }
 body.is-mobile .act-highlight-footer {
-  padding-bottom: 8px !important;
+  padding-bottom: 8px;
 }
 
 /* All Tags — when # is visible, join hashtag halves into single pill
@@ -1349,14 +1400,14 @@ body.is-mobile .act-highlight-footer {
    so an "all tags" highlight looks like one pill; hidden hash is flagged via
    .act-tag-begin-hidden on .cm-editor (see updateTagBeginVisibility). */
 .cm-editor:not(.act-tag-begin-hidden) .cm-hashtag-begin {
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-  padding-right: 0 !important;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-right: 0;
 }
 .cm-editor:not(.act-tag-begin-hidden) .cm-hashtag-end {
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-  padding-left: 0 !important;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 0;
 }
 
 /* ====== GROUP INCLUSION / EXCLUSION RULES — MOBILE WRAP FIX ====== */
@@ -1364,53 +1415,53 @@ body.is-mobile .act-highlight-footer {
    Row is flex-wrap so on narrow mobile mode+type stay on line 1 and
    chooseRow (choose button/input + X) wraps to line 2 together. */
 .act-group-rule-row {
-  flex-wrap: wrap !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .act-group-rule-row .act-group-rule-choose-area {
-  min-width: 0 !important;
+  min-width: 0;
 }
 
 .act-group-rule-row .act-group-rule-choose-row {
-  flex: 1 1 160px !important;
-  min-width: 0 !important;
-  width: auto !important;
-  display: flex !important;
-  gap: 8px !important;
-  align-items: center !important;
-  flex-wrap: nowrap !important;
+  flex: 1 1 160px;
+  min-width: 0;
+  width: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
 }
 
 .act-group-rule-row .act-group-rule-choose-row .act-group-rule-choose-area {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* Use blacklist-style X button — always visible (override the
    blacklist's body:not(.is-mobile) {display:none} rule) */
 .act-group-rule-row .act-group-rule-delete {
-  flex: 0 0 32px !important;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-  cursor: pointer !important;
-  color: var(--color-red) !important;
-  background: rgba(var(--color-red-rgb), 0.2) !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: var(--button-radius) !important;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-red);
+  background: rgba(var(--color-red-rgb), 0.2);
+  border: none;
+  box-shadow: none;
+  border-radius: var(--button-radius);
 }
 /* Override blacklist hidden-on-desktop for group rules context */
 .act-group-rules-modal .act-blacklist-delete-btn,
 .act-edit-entry-modal .act-blacklist-delete-btn,
 .act-group-rule-row .act-blacklist-delete-btn {
-  display: flex !important;
+  display: flex;
 }
 
 body.is-mobile .act-group-rules-modal,
@@ -1419,32 +1470,32 @@ body.is-mobile .act-edit-entry-modal {
 }
 
 body.is-mobile .act-group-rule-row {
-  gap: 8px !important;
-  background-color: var(--setting-items-background) !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  border-radius: var(--setting-items-radius) !important;
-  padding: 10px !important;
-  margin-top: 6px !important;
-  margin-bottom: 0 !important;
+  gap: 8px;
+  background-color: var(--setting-items-background);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--setting-items-radius);
+  padding: 10px;
+  margin-top: 6px;
+  margin-bottom: 0;
 }
 @media (max-width: 480px) {
 /* On very narrow phone the chooseRow (choose + X) breaks to its own row */
 body.is-mobile .act-group-rule-row .act-group-rule-choose-row {
   flex: 1 1 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  width: 100%;
+  min-width: 0;
 }
 body.is-mobile .act-group-rule-row .act-group-rule-mode,
 body.is-mobile .act-group-rule-row .act-group-rule-type {
   flex: 1 1 0 !important;
-  min-width: 0 !important;
+  min-width: 0;
 }
 }
 
 /* Also handle narrow modals on desktop via media query */
 @media (max-width: 600px) {
   .act-group-rule-row {
-    flex-wrap: wrap !important;
+    flex-wrap: wrap;
   }
 }
 
@@ -1454,8 +1505,8 @@ body.is-mobile .act-group-rule-row .act-group-rule-type {
   background: var(--background-secondary) !important;
   border-radius: var(--setting-items-radius) !important;
   padding: 10px 12px !important;
-  margin-bottom: 12px !important;
-  align-items: center !important;
+  margin-bottom: 12px;
+  align-items: center;
 }
 .act-mobile-tip .setting-item-name {
   font-weight: 500;
@@ -1465,75 +1516,75 @@ body.is-mobile .act-group-rule-row .act-group-rule-type {
   color: var(--text-muted);
 }
 .act-mobile-tip .setting-item-info {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .act-mobile-tip .setting-item-control {
-  margin-left: auto !important;
-  justify-content: flex-end !important;
+  margin-left: auto;
+  justify-content: flex-end;
   flex: 0 0 auto !important;
 }
 .act-mobile-tip-word {
     background: var(--color-accent) !important;
-    padding: 1px 8px !important;
-    font-weight: bold !important;
+    padding: 1px 8px;
+    font-weight: bold;
     color: var(--text-on-accent);
-    display: inline-block !important;
+    display: inline-block;
     line-height: 1.5 !important;
-    vertical-align: middle !important;
-    white-space: nowrap !important;
-    flex-shrink: 0 !important;
+    vertical-align: middle;
+    white-space: nowrap;
+    flex-shrink: 0;
     border-radius: var(--radius-s);
     margin-right: 6px;
 }
 /* Prevent clipping of inline-block highlight in Setting row */
 .act-mobile-tip .setting-item-name {
   line-height: 1.6 !important;
-  overflow: visible !important;
-  white-space: normal !important;
-  align-items: center !important;
+  overflow: visible;
+  white-space: normal;
+  align-items: center;
 }
 .act-mobile-tip .setting-item-info {
-  overflow: visible !important;
+  overflow: visible;
 }
 /* Mobile: Mobile Tip centered in its row, rest below */
 body.is-mobile .act-mobile-tip .setting-item-name {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  text-align: center !important;
-  gap: 6px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
 }
 body.is-mobile .act-mobile-tip-word {
-  display: inline-block !important;
-  text-align: center !important;
-  white-space: normal !important;
-  padding: 1px 8px !important;
+  display: inline-block;
+  text-align: center;
+  white-space: normal;
+  padding: 1px 8px;
   border-radius: var(--radius-s);
   margin-right: 6px;
 }
 body.is-mobile .act-mobile-tip-rest {
   display: block !important;
-  text-align: center !important;
-  white-space: normal !important;
+  text-align: center;
+  white-space: normal;
 }
 /* Tablet: dismiss button forcibly under title/description row, right bottom */
 body.is-tablet .act-mobile-tip {
-  flex-wrap: wrap !important;
+  flex-wrap: wrap;
 }
 body.is-tablet .act-mobile-tip .setting-item-info {
-  flex: 1 1 100% !important;
-  width: 100% !important;
+  flex: 1 1 100%;
+  width: 100%;
 }
 body.is-tablet .act-mobile-tip .setting-item-control {
-  flex: 1 1 100% !important;
-  width: 100% !important;
-  display: flex !important;
-  justify-content: flex-end !important;
+  flex: 1 1 100%;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
   margin-top: 8px !important;
 }
 body.is-tablet .act-mobile-tip .act-mobile-tip-dismiss {
-  width: 100% !important;
+  width: 100%;
 }
 
 /* Plugin settings - center align setting items */
@@ -1554,8 +1605,10 @@ body.is-tablet .act-mobile-tip .act-mobile-tip-dismiss {
   .act-preset-modal .modal-content {
     width: auto;
     max-width: none;
+    /* 100dvh would be identical here: Obsidian's desktop window and mobile
+       WebView have a fixed viewport (no collapsible browser chrome), so the
+       plain vh value is used to keep a single max-height declaration. */
     max-height: calc(100vh - var(--size-4-12) * 2);
-    max-height: calc(100dvh - var(--size-4-12) * 2);
     overflow-y: auto;
   }
 }

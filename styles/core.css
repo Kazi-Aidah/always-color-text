@@ -9,54 +9,54 @@
    UI-only rules (settings previews, drag ghosts, modal layout) are NOT gated —
    they must keep working regardless of the toggle. */
 :where(html.act-enabled) .always-color-text-highlight {
-  --text-normal: var(--highlight-color, currentColor) !important;
-  --link-color: var(--highlight-color, currentColor) !important;
-  --link-external-color: var(--highlight-color, currentColor) !important;
-  --link-unresolved-color: var(--highlight-color, currentColor) !important;
-  --link-color-hover: var(--highlight-color, currentColor) !important;
-  --link-external-color-hover: var(--highlight-color, currentColor) !important;
+  --text-normal: var(--highlight-color, currentColor);
+  --link-color: var(--highlight-color, currentColor);
+  --link-external-color: var(--highlight-color, currentColor);
+  --link-unresolved-color: var(--highlight-color, currentColor);
+  --link-color-hover: var(--highlight-color, currentColor);
+  --link-external-color-hover: var(--highlight-color, currentColor);
   /* Use important on color to override all theme variables */
-  color: var(--highlight-color, inherit) !important;
+  color: var(--highlight-color, inherit);
   background-color: var(--highlight-background, transparent);
   /* OUTLINE-OFFSET FIX: Prevent highlight spans from shifting the line-box height of
      surrounding text. Without these, a span with padding/background causes the browser
      to recalculate paragraph height, which moves heading offsetTop values and makes
      Obsidian's Outline panel scroll to the wrong position. */
-  vertical-align: baseline !important;
+  vertical-align: baseline;
   line-height: inherit !important;
 }
 /* Color .markdown-rendered code text when comment coloring is in use (reading view) */
 :where(html.act-enabled) .markdown-rendered code {
-  color: var(--highlight-color, inherit) !important;
+  color: var(--highlight-color, inherit);
 }
 :where(html.act-enabled) .always-color-text-highlight-marks {
   /* Affects mark elements in reading mode and .cm-highlight in live preview */
-  background-color: var(--highlight-background, transparent) !important;
-  color: var(--highlight-color, currentColor) !important;
+  background-color: var(--highlight-background, transparent);
+  color: var(--highlight-color, currentColor);
 }
 :where(html.act-enabled) .always-color-text-highlight .cm-strong,
 :where(html.act-enabled) .always-color-text-highlight .cm-em,
 :where(html.act-enabled) .always-color-text-highlight .cm-strong.cm-em,
 :where(html.act-enabled) .always-color-text-highlight .cm-formatting {
-  color: var(--highlight-color, inherit) !important;
+  color: var(--highlight-color, inherit);
 }
 :where(html.act-enabled) mark.always-color-text-highlight-marks {
-  background-color: var(--highlight-background, transparent) !important;
-  color: var(--highlight-color, currentColor) !important;
+  background-color: var(--highlight-background, transparent);
+  color: var(--highlight-color, currentColor);
 }
 :where(html.act-enabled) .cm-highlight.always-color-text-highlight-marks {
-  background-color: var(--highlight-background, transparent) !important;
-  color: var(--highlight-color, currentColor) !important;
+  background-color: var(--highlight-background, transparent);
+  color: var(--highlight-color, currentColor);
 }
 :where(html.act-enabled) body.act-highlight-preset-active .cm-s-obsidian span.cm-highlight,
 :where(html.act-enabled) body.act-highlight-preset-active .cm-editor .cm-highlight,
 :where(html.act-enabled) body.act-highlight-preset-active .cm-highlight {
-  background-color: transparent !important;
-  color: inherit !important;
-  border: none !important;
-  border-bottom: none !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
+  background-color: transparent;
+  color: inherit;
+  border: none;
+  border-bottom: none;
+  padding: 0;
+  border-radius: 0;
 }
 :where(html.act-enabled) .inline_spoilers-spoiler .always-color-text-highlight,
 :where(html.act-enabled) .inline_spoilers-editor-spoiler .always-color-text-highlight,
@@ -64,45 +64,45 @@
 :where(html.act-enabled) .markdown-reading-view .markdown-rendered .inline_spoilers-spoiler .always-color-text-highlight,
 :where(html.act-enabled) body .inline_spoilers-spoiler .always-color-text-highlight,
 :where(html.act-enabled) body .inline_spoilers-editor-spoiler .always-color-text-highlight {
-  color: inherit !important;
-  background-color: transparent !important;
-  --text-normal: inherit !important;
-  --link-color: inherit !important;
-  --link-external-color: inherit !important;
+  color: inherit;
+  background-color: transparent;
+  --text-normal: inherit;
+  --link-color: inherit;
+  --link-external-color: inherit;
 }
 :where(html.act-enabled) .cm-highlight .always-color-text-highlight-marks {
-  background-color: var(--highlight-background, transparent) !important;
-  color: var(--highlight-color, currentColor) !important;
+  background-color: var(--highlight-background, transparent);
+  color: var(--highlight-color, currentColor);
 }
 :where(html.act-enabled) mark .always-color-text-highlight-marks {
-  background-color: var(--highlight-background, transparent) !important;
-  color: var(--highlight-color, currentColor) !important;
+  background-color: var(--highlight-background, transparent);
+  color: var(--highlight-color, currentColor);
 }
 :where(html.act-enabled) mark.always-color-text-highlight-marks * {
-  background-color: transparent !important;
-  color: inherit !important;
-  --text-normal: inherit !important;
-  --link-color: inherit !important;
-  --link-external-color: inherit !important;
+  background-color: transparent;
+  color: inherit;
+  --text-normal: inherit;
+  --link-color: inherit;
+  --link-external-color: inherit;
 }
 .markdown-rendered strong.act-transparent-strong {
-  background-color: transparent !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
 }
 :where(html.act-enabled) li.act-colored-list-item::marker {
-  color: var(--act-marker-color, inherit) !important;
+  color: var(--act-marker-color, inherit);
 }
 :where(html.act-enabled) li.act-colored-list-item .list-bullet,
 :where(html.act-enabled) li.act-colored-list-item .list-number {
-  color: var(--act-marker-color, inherit) !important;
+  color: var(--act-marker-color, inherit);
 }
 :where(html.act-enabled) .markdown-preview-view li.act-colored-list-item::marker {
-  color: var(--act-marker-color, inherit) !important;
+  color: var(--act-marker-color, inherit);
 }
 :where(html.act-enabled) .markdown-preview-view li.act-colored-list-item .list-bullet,
 :where(html.act-enabled) .markdown-preview-view li.act-colored-list-item .list-number {
-  color: var(--act-marker-color, inherit) !important;
+  color: var(--act-marker-color, inherit);
 }
 :where(html.act-enabled) li.act-colored-list-item input[type="checkbox"] {
   accent-color: var(--act-marker-color, inherit);
@@ -111,14 +111,14 @@
   color: var(--act-marker-color, inherit);
 }
 :where(html.act-enabled) li.act-color-marker::marker {
-  color: var(--act-color) !important;
+  color: var(--act-color);
 }
 :where(html.act-enabled) .markdown-preview-view li.act-color-marker::marker {
-  color: var(--act-color) !important;
+  color: var(--act-color);
 }
 :where(html.act-enabled) .markdown-preview-view li.act-color-marker > .list-bullet,
 :where(html.act-enabled) .markdown-preview-view li.act-color-marker > .list-number {
-  color: var(--act-color) !important;
+  color: var(--act-color);
 }
 :where(html.act-enabled) .markdown-preview-view li.act-color-marker input[type="checkbox"] {
   accent-color: var(--act-color);
@@ -150,6 +150,12 @@
   padding: 12px;
   background: var(--background-modifier-form-field);
 }
+/* Edit Custom CSS modal: preview and editor box use the standard input radius
+   (mobile override in mobile.css uses --touch-radius-xxs for the editor). */
+.act-custom-css-preview-wrap,
+.act-custom-css-modal .act-custom-css-editor {
+  border-radius: var(--input-radius);
+}
 .drag-reorder-ghost {
   position: fixed;
   z-index: 9999;
@@ -159,15 +165,15 @@
   background-color: var(--background-primary);
 }
 :where(html.act-enabled) .markdown-rendered .always-color-text-highlight mark {
-  color: var(--highlight-color, currentColor) !important;
-  background-color: var(--highlight-background, transparent) !important;
+  color: var(--highlight-color, currentColor);
+  background-color: var(--highlight-background, transparent);
 }
 :where(html.act-enabled) .cm-editor .always-color-text-highlight .cm-highlight {
-  color: var(--highlight-color, currentColor) !important;
-  background-color: var(--highlight-background, transparent) !important;
+  color: var(--highlight-color, currentColor);
+  background-color: var(--highlight-background, transparent);
 }
 :where(html.act-enabled) .cm-editor .always-color-text-highlight .cm-comment {
-  color: var(--highlight-color, currentColor) !important;
+  color: var(--highlight-color, currentColor);
 }
 .drag-ghost-hidden {
   opacity: 0 !important;
@@ -186,11 +192,11 @@
     saturate(var(--act-fixer-dark-s, 1));
 }
 .act-edit-swatches-preview-row .act-color-picker-preview-wrap {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    width: 100% !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
   }
 .act-group-rule-row .act-group-rule-choose-row {
-    flex: 1 1 100% !important;
-    width: 100% !important;
+    flex: 1 1 100%;
+    width: 100%;
   }

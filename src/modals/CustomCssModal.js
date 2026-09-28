@@ -415,7 +415,7 @@ export class CustomCssModal extends Modal {
     previewWrap.style.marginBottom = '12px';
     previewWrap.style.padding = '10px 12px';
     previewWrap.style.border = '1px solid var(--background-modifier-border)';
-    previewWrap.style.borderRadius = 'var(--button-radius)';
+    // radius: handled in CSS (--input-radius) so mobile can override per-element
     previewWrap.style.background = 'var(--background-modifier-form-field)';
     previewWrap.style.minHeight = '2.5em';
     previewWrap.style.display = 'flex';
@@ -444,8 +444,8 @@ export class CustomCssModal extends Modal {
     textareaLabel.style.letterSpacing = '0.05em';
 
     const taBox = textareaWrap.createDiv();
+    taBox.addClass('act-custom-css-editor');
     taBox.style.border = '1px solid var(--background-modifier-border)';
-    taBox.style.borderRadius = 'var(--touch-radius-xxs)';
     taBox.style.background = 'var(--background-modifier-form-field)';
     taBox.style.transition = 'border-color 0.15s';
 
@@ -454,7 +454,7 @@ export class CustomCssModal extends Modal {
     this._textarea.style.width = '100%';
     this._textarea.style.minHeight = '160px';
     this._textarea.style.border = 'none';
-    this._textarea.style.borderRadius = 'var(--touch-radius-xxs)';
+    this._textarea.style.borderRadius = 'inherit';
     this._textarea.style.outline = 'none';
     this._textarea.style.background = 'transparent';
     this._textarea.style.color = 'var(--text-normal)';

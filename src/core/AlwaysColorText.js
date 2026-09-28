@@ -34,6 +34,8 @@ import { EditWordGroupModal } from '../modals/EditWordGroupModal.js';
 import { SelectBlacklistGroupModal } from '../modals/SelectBlacklistGroupModal.js';
 import { EditBlacklistGroupModal } from '../modals/EditBlacklistGroupModal.js';
 import { ColorPickerModal } from '../modals/ColorPickerModal.js';
+import { TextStylePresetsModal } from '../modals/TextStylePresetsModal.js';
+import { EditColorSwatchesModal } from '../modals/EditColorSwatchesModal.js';
 import { AlertModal } from '../modals/AlertModal.js';
 import { ConfirmationModal } from '../modals/ConfirmationModal.js';
 import { findColoringEntries, buildSelectionContext } from '../utils/reverseLookup.js';
@@ -2958,6 +2960,49 @@ class AlwaysColorText extends Plugin {
         name: this.t("command_manage_colored_texts", "Manage Colored Texts"),
         callback: () => {
           this.openPluginSettingsTab("always-color-texts");
+        },
+      });
+      // Open the Text Style Presets modal directly (no settings detour).
+      addTrackedCommand({
+        id: "open-text-style-presets",
+        name: this.t(
+          "command_open_text_style_presets",
+          "Edit Text Style Presets",
+        ),
+        callback: () => {
+          try {
+            new TextStylePresetsModal(this.app, this).open();
+          } catch (e) {
+            debugError(
+              "COMMAND",
+              "Unable to open Text Style Presets modal",
+              e,
+            );
+            new Notice(
+              this.t(
+                "notice_unable_open_text_style_presets",
+                "Unable to open Text Style Presets modal.",
+              ),
+            );
+          }
+        },
+      });
+      // Open the Edit Color Swatches modal directly (no settings detour).
+      addTrackedCommand({
+        id: "open-color-swatches",
+        name: this.t("command_open_color_swatches", "Edit Color Swatches"),
+        callback: () => {
+          try {
+            new EditColorSwatchesModal(this.app, this).open();
+          } catch (e) {
+            debugError("COMMAND", "Unable to open Edit Color Swatches modal", e);
+            new Notice(
+              this.t(
+                "notice_unable_open_color_swatches",
+                "Unable to open Edit Color Swatches modal.",
+              ),
+            );
+          }
         },
       });
       // Add command for opening regex tester

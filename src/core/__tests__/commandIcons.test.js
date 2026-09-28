@@ -36,6 +36,9 @@ const HOISTED = vi.hoisted(() => {
     "tag",
     "circle-slashed",
     "circle",
+    // New static commands (validated against Obsidian's Lucide set).
+    "layers",
+    "swatch-book",
     // A valid custom icon a user may have picked (e.g. via Commander).
     "star",
   ]);

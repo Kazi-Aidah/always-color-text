@@ -37,7 +37,7 @@ export class EditColorSwatchesModal extends Modal {
       previewRow.addClass("act-edit-swatches-preview-row");
     } catch (e) {}
     previewRow.style.display = "flex";
-    previewRow.style.gap = "8px";
+    // gap comes from CSS (.act-edit-swatches-preview-row) so mobile can set 0
     previewRow.style.marginTop = "8px";
     previewRow.style.marginBottom = "4px";
     previewRow.style.flexWrap = "wrap";
@@ -50,7 +50,8 @@ export class EditColorSwatchesModal extends Modal {
     } catch (e) {}
     bgWrap.style.flex = "1 1 120px";
     bgWrap.style.minWidth = "120px";
-    bgWrap.style.marginTop = "20px";
+    // No offset here: a margin on only one preview left the two boxes with
+    // different heights and tops on desktop (mobile spacing lives in CSS).
 
     const bgSample = bgWrap.createDiv();
     bgSample.textContent = this.plugin.t(
@@ -121,6 +122,9 @@ export class EditColorSwatchesModal extends Modal {
 
     // Combined working list: default swatches (editable) followed by user custom
     // swatches. Each entry is tagged with _src so saves can be split back.
+    // `swatchOrder` is the visual order the user arranged (defaults and customs
+    // can be interleaved by dragging in this modal) — without it a drag across
+    // the default/custom boundary would silently revert on reopen.
     const buildCombined = () => {
       const def = Array.isArray(this.plugin.settings.swatches)
         ? this.plugin.settings.swatches
@@ -135,6 +139,22 @@ export class EditColorSwatchesModal extends Modal {
       cus.forEach((s, i) =>
         out.push({ name: s.name, color: s.color, _src: "custom", _idx: i }),
       );
+      try {
+        const order = Array.isArray(this.plugin.settings.swatchOrder)
+          ? this.plugin.settings.swatchOrder.filter((c) => typeof c === "string")
+          : [];
+        if (order.length) {
+          const rank = new Map(order.map((c, i) => [c.toLowerCase(), i]));
+          const key = (s) => String((s && s.color) || "").toLowerCase();
+          // Stable sort: swatches missing from the saved order keep their
+          // defaults-then-customs position (new swatches go to the end).
+          out.sort((a, b) => {
+            const ra = rank.has(key(a)) ? rank.get(key(a)) : Number.MAX_SAFE_INTEGER;
+            const rb = rank.has(key(b)) ? rank.get(key(b)) : Number.MAX_SAFE_INTEGER;
+            return ra - rb;
+          });
+        }
+      } catch (_) {}
       return out;
     };
 
@@ -160,6 +180,8 @@ export class EditColorSwatchesModal extends Modal {
       this.plugin.settings.swatches = def;
       this.plugin.settings.userCustomSwatches = cus;
       this.plugin.settings.customSwatches = combined.map((s) => s.color);
+      // Persist the on-screen order (interleaved defaults + customs included).
+      this.plugin.settings.swatchOrder = combined.map((s) => s.color);
 
       if (this.plugin.settings.linkSwatchUpdatesToEntries) {
         const newAll = [...def, ...cus];
@@ -331,34 +353,9 @@ export class EditColorSwatchesModal extends Modal {
         .forEach((el) => el.classList.remove("drag-ghost-hidden"));
     };
 
-    // ===== Mobile-only "Delete Swatch" button (shown below grid when active) =====
-    const mobileDeleteRow = contentEl.createDiv();
-    mobileDeleteRow.style.display = "none"; // hidden until a swatch is active
-    mobileDeleteRow.style.marginTop = "8px";
-    const mobileDeleteBtn = mobileDeleteRow.createEl("button");
-    mobileDeleteBtn.textContent = this.plugin.t("delete_swatch", "Delete Swatch");
-    mobileDeleteBtn.style.color = "var(--text-error)";
-    mobileDeleteBtn.style.width = "100%";
-
-    const updateMobileDelete = () => {
-      // Show only on touch devices and only when a swatch is selected
-      const isTouch = window.matchMedia("(pointer: coarse)").matches;
-      mobileDeleteRow.style.display =
-        isTouch && this._activeIndex !== null ? "block" : "none";
-    };
-
-    const mobileDeleteHandler = async () => {
-      if (this._activeIndex === null) return;
-      const swatches = getSwatches();
-      swatches.splice(this._activeIndex, 1);
-      this._activeIndex = null;
-      await saveSwatches();
-      renderGrid();
-      updateButtonLabel();
-      updateMobileDelete();
-    };
-    mobileDeleteBtn.addEventListener("click", mobileDeleteHandler);
-    this._eventListeners.push({ el: mobileDeleteBtn, event: "click", handler: mobileDeleteHandler });
+    // "Delete Swatch" lives in the right-click / long-press context menu only
+    // (a full-width button under the grid popped up on desktop, tablet and
+    // phone alike and was redundant with it).
 
     const renderGrid = () => {
       grid.empty();
@@ -412,7 +409,6 @@ export class EditColorSwatchesModal extends Modal {
                 await saveSwatches();
                 renderGrid();
                 updateButtonLabel();
-                updateMobileDelete();
               }),
           );
           menu.showAtMouseEvent(ev);
@@ -453,6 +449,27 @@ export class EditColorSwatchesModal extends Modal {
         dragBtn.style.cursor = "grabbing";
       };
 
+      // Hit test: elementFromPoint first (same as the Reorder Presets drag,
+      // which reorders fine), then a geometry fallback so an overlay or a
+      // pointer-events quirk can never silently swallow every swap.
+      const swatchAtPoint = (clientX, clientY, from) => {
+        const viaDom = from ? from.closest("button[data-swatch-index]") : null;
+        if (viaDom && viaDom.parentNode === grid) return viaDom;
+        const btns = grid.querySelectorAll("button[data-swatch-index]");
+        for (const b of btns) {
+          const r = b.getBoundingClientRect();
+          if (
+            clientX >= r.left &&
+            clientX <= r.right &&
+            clientY >= r.top &&
+            clientY <= r.bottom
+          ) {
+            return b;
+          }
+        }
+        return null;
+      };
+
       const swapAtPoint = (clientX, clientY) => {
         if (!this._ghost || !dragBtn) return;
         this._ghost.style.left = clientX - offsetX + "px";
@@ -464,7 +481,7 @@ export class EditColorSwatchesModal extends Modal {
         const from = document.elementFromPoint(clientX, clientY);
         this._ghost.style.display = "";
 
-        const targetBtn = from ? from.closest("button[data-swatch-index]") : null;
+        const targetBtn = swatchAtPoint(clientX, clientY, from);
         if (!targetBtn || targetBtn === dragBtn || targetBtn.parentNode !== grid) return;
 
         const children = Array.from(grid.querySelectorAll("button[data-swatch-index]"));
@@ -493,11 +510,11 @@ export class EditColorSwatchesModal extends Modal {
       };
 
       const endDrag = async () => {
-        document.removeEventListener("mousemove",   onMouseMove);
-        document.removeEventListener("mouseup",     onMouseUp);
-        document.removeEventListener("touchmove",   onTouchMove);
-        document.removeEventListener("touchend",    onTouchEnd);
-        document.removeEventListener("touchcancel", onTouchEnd);
+        document.removeEventListener("mousemove",   onMouseMove, { capture: true });
+        document.removeEventListener("mouseup",     onMouseUp,   { capture: true });
+        document.removeEventListener("touchmove",   onTouchMove, { capture: true });
+        document.removeEventListener("touchend",    onTouchEnd,  { capture: true });
+        document.removeEventListener("touchcancel", onTouchEnd,  { capture: true });
         if (dragBtn) dragBtn.style.cursor = "grab";
         removeGhost();
 
@@ -505,7 +522,6 @@ export class EditColorSwatchesModal extends Modal {
           didDrag = true;
           await saveSwatches();
           renderGrid();
-          updateMobileDelete();
         }
 
         dragActive = false;
@@ -532,7 +548,10 @@ export class EditColorSwatchesModal extends Modal {
         if (e.button !== 0) return; // left button only
         const btn = e.target.closest("button[data-swatch-index]");
         if (!btn || btn.parentNode !== grid) return;
-        // DO NOT preventDefault here — it would kill the click event for selection
+        // DO NOT preventDefault here — it would kill the click event for selection.
+        // Keep the gesture for this grid only (mousedown is a different event from
+        // click, so swatch selection is unaffected).
+        e.stopPropagation();
         didDrag = false;
         dragBtn = btn;
         const rect = btn.getBoundingClientRect();
@@ -540,9 +559,15 @@ export class EditColorSwatchesModal extends Modal {
         startY  = e.clientY;
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
-        // Do NOT start drag here immediately — wait for movement threshold in onMouseMove
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup",   onMouseUp);
+        // Do NOT start drag here immediately — wait for movement threshold in onMouseMove.
+        // Capture phase: a nested stopPropagation() (Obsidian's own modal/workspace
+        // handlers) must not be able to blind this drag — the Reorder Presets drag,
+        // which reorders fine, registers the same way.
+        document.addEventListener("mousemove", onMouseMove, {
+          passive: false,
+          capture: true,
+        });
+        document.addEventListener("mouseup", onMouseUp, { capture: true });
       };
       grid.addEventListener("mousedown", gridMouseDown);
       this._eventListeners.push({ el: grid, event: "mousedown", handler: gridMouseDown });
@@ -563,7 +588,6 @@ export class EditColorSwatchesModal extends Modal {
           renderPreviews("");
           updateButtonLabel();
           renderGrid();
-          updateMobileDelete();
           return;
         }
         this._activeIndex = i;
@@ -573,7 +597,6 @@ export class EditColorSwatchesModal extends Modal {
         renderPreviews(color);
         renderGrid();
         updateButtonLabel();
-        updateMobileDelete();
       };
       grid.addEventListener("click", gridClick);
       this._eventListeners.push({ el: grid, event: "click", handler: gridClick });
@@ -599,6 +622,7 @@ export class EditColorSwatchesModal extends Modal {
         if (e.touches.length !== 1) return;
         const btn = e.target.closest("button[data-swatch-index]");
         if (!btn || btn.parentNode !== grid) return;
+        e.stopPropagation();
         dragBtn = btn;
         const { clientX, clientY } = e.touches[0];
         startX = clientX;
@@ -606,9 +630,9 @@ export class EditColorSwatchesModal extends Modal {
         const r = btn.getBoundingClientRect();
         offsetX = clientX - r.left;
         offsetY = clientY - r.top;
-        document.addEventListener("touchmove",   onTouchMove,  { passive: false });
-        document.addEventListener("touchend",    onTouchEnd);
-        document.addEventListener("touchcancel", onTouchEnd);
+        document.addEventListener("touchmove",   onTouchMove,  { passive: false, capture: true });
+        document.addEventListener("touchend",    onTouchEnd,   { capture: true });
+        document.addEventListener("touchcancel", onTouchEnd,   { capture: true });
       };
       grid.addEventListener("touchstart", gridTouchStart, { passive: true });
       this._eventListeners.push({ el: grid, event: "touchstart", handler: gridTouchStart });
@@ -707,7 +731,6 @@ export class EditColorSwatchesModal extends Modal {
     // Build everything AFTER the action button exists so the label can reference it
     renderGrid();
     updateButtonLabel();
-    updateMobileDelete();
 
     // ===== Footer: Reset button on the bottom-left, under the swatches =====
     const footer = contentEl.createDiv();
@@ -737,12 +760,14 @@ export class EditColorSwatchesModal extends Modal {
           this.plugin.settings.swatches = JSON.parse(
             JSON.stringify(originals),
           );
+          // Saved order refers to the pre-reset colours — drop it so the
+          // rebuilt defaults keep their canonical order.
+          delete this.plugin.settings.swatchOrder;
           combined = buildCombined();
           this._activeIndex = null;
           await this.plugin.saveSettings();
           renderGrid();
           updateButtonLabel();
-          updateMobileDelete();
         },
       ).open();
     };

@@ -429,7 +429,8 @@ export class EditWordGroupModal extends Modal {
     this._listDiv.style.overflowY = "auto";
     this._listDiv.style.marginBottom = "0";
     this._listDiv.style.borderRadius = "var(--input-radius)";
-    this._listDiv.style.backgroundColor = "var(--background-primary)";
+    // No inline background: `.color-words-list` is transparent in CSS, so the
+    // row cards (var(--setting-items-background)) read against the modal.
     this._refreshGroupEntries();
 
     // BUTTON ROW: Sort | Add Rule | Presets
@@ -607,6 +608,7 @@ export class EditWordGroupModal extends Modal {
       text: this.plugin.t("btn_delete_group", "Delete Group"),
     });
     btnDelete.addClass("mod-warning");
+    btnDelete.addClass("act-delete-group-btn");
     btnDelete.style.cursor = "pointer";
     btnDelete.style.padding = "8px 16px";
     const deleteHandler = () => {
