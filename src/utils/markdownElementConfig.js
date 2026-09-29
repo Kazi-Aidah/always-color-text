@@ -1,5 +1,20 @@
 import { MARKDOWN_TARGETS, getMarkdownTarget } from "./markdownTargets.js";
 
+// Targets whose matching is driven by `titleFilter` / `titleMatchType` — the
+// inline & tab titles and the file-explorer names. Their text lives outside
+// `.cm-content` / `.markdown-rendered`, so CSS can never match it: entries are
+// resolved in JS (applyTitleHighlights) instead of by the stylesheet.
+export const TITLE_FILTER_TARGET_KEYS = [
+  "inline-title",
+  "tab-title",
+  "file-name",
+  "folder-name",
+];
+
+export function isTitleFilterTarget(key) {
+  return TITLE_FILTER_TARGET_KEYS.includes(String(key));
+}
+
 // Editor/rendered selector prefixes used to outrank Obsidian's own base CSS.
 export const EDITOR_PREFIX = ".workspace .cm-s-obsidian .cm-content";
 export const RENDER_PREFIX = ".markdown-rendered";
@@ -78,6 +93,22 @@ export function getElementConfig(key) {
         field: "titleFilter",
         matchField: "titleMatchType",
         placeholder: "tab title text",
+        defaultValue: "",
+      };
+    case "file-name":
+      return {
+        field: "titleFilter",
+        matchField: "titleMatchType",
+        placeholderKey: "md_cfg_file_name",
+        placeholder: "file name text",
+        defaultValue: "",
+      };
+    case "folder-name":
+      return {
+        field: "titleFilter",
+        matchField: "titleMatchType",
+        placeholderKey: "md_cfg_folder_name",
+        placeholder: "folder name text",
         defaultValue: "",
       };
     default:
@@ -212,15 +243,27 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
       cm = names.map(cmTag).join(", ");
       rend = names.map(rendTag).join(", ");
     }
-  } else if (t.key === "inline-title" || t.key === "tab-title") {
-    const field = "titleFilter";
-    if (entry[field] && String(entry[field]).trim().length > 0) {
-      // Filtered by text — cannot be expressed in CSS; handled by applyTitleHighlights.
+  } else if (
+    t.key === "inline-title" ||
+    t.key === "tab-title" ||
+    t.key === "file-name" ||
+    t.key === "folder-name"
+  ) {
+    // Titles and file-explorer names: a text filter cannot be expressed in
+    // CSS, so a filtered entry emits no selector at all and is resolved in JS
+    // by applyTitleHighlights (which also styles the unfiltered case).
+    if (entry.titleFilter && String(entry.titleFilter).trim().length > 0) {
       cm = "";
       rend = "";
     } else if (t.key === "tab-title") {
       cm = ".workspace .workspace-tab-header-inner-title";
       rend = ".workspace-tab-header-inner-title";
+    } else if (t.key === "file-name") {
+      cm = ".workspace .nav-file-title-content";
+      rend = ".nav-file-title-content";
+    } else if (t.key === "folder-name") {
+      cm = ".workspace .nav-folder-title-content";
+      rend = ".nav-folder-title-content";
     } else {
       cm = ".workspace .cm-s-obsidian .inline-title";
       // The inline title is not always nested inside `.markdown-rendered`
@@ -266,8 +309,8 @@ export function buildMarkdownCmSelector(t, entry, hasBoldItalic) {
 
 // A text input shown to the right of the element dropdown for configurable
 // targets (heading levels, task types, tag filter, inline-title filter).
-// For inline-title / tab-title also renders a "contains/exact/starts with/ends with"
-// dropdown next to the filter input.
+// For inline-title / tab-title / file-name / folder-name also renders a
+// "contains/exact/starts with/ends with" dropdown next to the filter input.
 export function createMarkdownElementConfigInput(plugin, entry, onChange) {
   const cfg = getElementConfig(entry.targetElement);
   if (!cfg) return null;
@@ -281,7 +324,10 @@ export function createMarkdownElementConfigInput(plugin, entry, onChange) {
   input.style.border = "1px solid var(--background-modifier-border)";
   input.style.background = "var(--background-modifier-form-field)";
   input.style.color = "var(--text-normal)";
-  input.placeholder = plugin.t("md_cfg_" + cfg.field, cfg.placeholder);
+  input.placeholder = plugin.t(
+    cfg.placeholderKey || "md_cfg_" + cfg.field,
+    cfg.placeholder,
+  );
   input.value = entry[cfg.field] != null ? entry[cfg.field] : cfg.defaultValue;
   input.title = plugin.t(
     "md_cfg_title",
@@ -346,7 +392,7 @@ export function createMarkdownElementConfigInput(plugin, entry, onChange) {
   return input;
 }
 
-// ---- Reading-view text matching for tag / inline-title filters ----
+// ---- Reading-view text matching for tag / title / file-name filters ----
 
 export function tagTextMatches(filter, text) {
   const t = (text || "").trim();

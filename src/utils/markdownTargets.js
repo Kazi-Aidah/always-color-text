@@ -168,6 +168,23 @@ export const MARKDOWN_TARGETS = [
     cmSelector: ".inline-title",
     renderedSelector: ".inline-title",
   },
+  // --- File explorer (names are matched in JS, like the titles above) ---
+  {
+    key: "file-name",
+    labelKey: "target_file_name",
+    label: "File Name",
+    group: "other",
+    cmSelector: ".nav-file-title-content",
+    renderedSelector: ".nav-file-title-content",
+  },
+  {
+    key: "folder-name",
+    labelKey: "target_folder_name",
+    label: "Folder Name",
+    group: "other",
+    cmSelector: ".nav-folder-title-content",
+    renderedSelector: ".nav-folder-title-content",
+  },
 ];
 
 // Ordered groups used to build the dropdown's optgroups.

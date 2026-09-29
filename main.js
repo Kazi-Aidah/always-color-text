@@ -546,6 +546,8 @@ var require_en = __commonJS({
       "preset_all_tags": "All Tags",
       "preset_inline_title": "Inline Title (note name)",
       "preset_tab_title": "Tab Title (note name in tab)",
+      "preset_file_name": "File Name (file explorer)",
+      "preset_folder_name": "Folder Name (file explorer)",
       "preset_options_label": "Preset options",
       // Preset Examples
       "preset_example_heading": "# Heading",
@@ -583,6 +585,8 @@ var require_en = __commonJS({
       "preset_example_tag_all": "#any-tag",
       "preset_example_inline_title": "Note title",
       "preset_example_tab_title": "Note title",
+      "preset_example_file_name": "My note",
+      "preset_example_folder_name": "My folder",
       // Blacklist Settings
       "blacklist_words_header": "Blacklists",
       "blacklist_words_desc": "Keywords or patterns here will never be colored, even for partial matches.",
@@ -874,6 +878,8 @@ var require_en = __commonJS({
       "target_task_list": "Checkbox / Task List",
       "target_all_tags": "All Tags",
       "target_tab_title": "Tab Title",
+      "target_file_name": "File Name",
+      "target_folder_name": "Folder Name",
       "target_group_text": "Text Formatting",
       "target_group_links": "Links",
       "target_group_lists": "Lists",
@@ -884,6 +890,8 @@ var require_en = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "title text",
+      "md_cfg_file_name": "file name text",
+      "md_cfg_folder_name": "folder name text",
       "title_match_mode_title": "How the title text must match the filter",
       // Advanced rules
       "rule_choose_placeholder_pattern": "Choose pattern\u2026"
@@ -1618,6 +1626,8 @@ var require_es = __commonJS({
       "preset_all_tags": "Todas las Etiquetas",
       "preset_inline_title": "T\xEDtulo en L\xEDnea (nombre de la nota)",
       "preset_tab_title": "T\xEDtulo de Pesta\xF1a (nombre de la nota en la pesta\xF1a)",
+      "preset_file_name": "Nombre de archivo (explorador de archivos)",
+      "preset_folder_name": "Nombre de carpeta (explorador de archivos)",
       "preset_options_label": "Opciones del preajuste",
       "preset_example_time_date": "Cualquier formato de moment.js (hh:mm a, D MMMM Y)",
       "preset_example_internal_link": "[[Mi Nota]]",
@@ -1628,6 +1638,8 @@ var require_es = __commonJS({
       "preset_example_tag_all": "#cualquier-etiqueta",
       "preset_example_inline_title": "T\xEDtulo de la nota",
       "preset_example_tab_title": "T\xEDtulo de la nota",
+      "preset_example_file_name": "Mi nota",
+      "preset_example_folder_name": "Mi carpeta",
       "group_rules_button": "Editar Reglas",
       "group_rules_modal_title": "Editar Reglas",
       "group_rules_add": "+ A\xF1adir regla",
@@ -1728,6 +1740,8 @@ var require_es = __commonJS({
       "target_task_list": "Casilla / Lista de Tareas",
       "target_all_tags": "Todas las Etiquetas",
       "target_tab_title": "T\xEDtulo de Pesta\xF1a",
+      "target_file_name": "Nombre de archivo",
+      "target_folder_name": "Nombre de carpeta",
       "target_group_text": "Formato de Texto",
       "target_group_links": "Enlaces",
       "target_group_lists": "Listas",
@@ -1737,6 +1751,8 @@ var require_es = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "texto del t\xEDtulo",
+      "md_cfg_file_name": "texto del nombre de archivo",
+      "md_cfg_folder_name": "texto del nombre de carpeta",
       "title_match_mode_title": "C\xF3mo debe coincidir el texto del t\xEDtulo con el filtro",
       "rule_choose_placeholder_pattern": "Elegir patr\xF3n\u2026"
     };
@@ -2470,6 +2486,8 @@ var require_fr = __commonJS({
       "preset_all_tags": "Toutes les balises",
       "preset_inline_title": "Titre en ligne (nom de la note)",
       "preset_tab_title": "Titre de l'onglet (nom de la note dans l'onglet)",
+      "preset_file_name": "Nom de fichier (explorateur de fichiers)",
+      "preset_folder_name": "Nom de dossier (explorateur de fichiers)",
       "preset_options_label": "Options du pr\xE9r\xE9glage",
       "preset_example_time_date": "N'importe quel format moment.js (hh:mm a, D MMMM Y)",
       "preset_example_internal_link": "[[Ma note]]",
@@ -2480,6 +2498,8 @@ var require_fr = __commonJS({
       "preset_example_tag_all": "#n-importe-quelle-balise",
       "preset_example_inline_title": "Titre de la note",
       "preset_example_tab_title": "Titre de la note",
+      "preset_example_file_name": "Ma note",
+      "preset_example_folder_name": "Mon dossier",
       "group_rules_button": "Modifier les r\xE8gles",
       "group_rules_modal_title": "Modifier les r\xE8gles",
       "group_rules_add": "+ Ajouter une r\xE8gle",
@@ -2580,6 +2600,8 @@ var require_fr = __commonJS({
       "target_task_list": "Case \xE0 cocher / liste de t\xE2ches",
       "target_all_tags": "Toutes les balises",
       "target_tab_title": "Titre de l'onglet",
+      "target_file_name": "Nom de fichier",
+      "target_folder_name": "Nom de dossier",
       "target_group_text": "Formatage du texte",
       "target_group_links": "Liens",
       "target_group_lists": "Listes",
@@ -2589,6 +2611,8 @@ var require_fr = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "texte du titre",
+      "md_cfg_file_name": "texte du nom de fichier",
+      "md_cfg_folder_name": "texte du nom de dossier",
       "title_match_mode_title": "Comment le texte du titre doit correspondre au filtre",
       "rule_choose_placeholder_pattern": "Choisir un motif\u2026"
     };
@@ -3322,6 +3346,8 @@ var require_hi = __commonJS({
       "preset_all_tags": "\u0938\u092D\u0940 \u091F\u0948\u0917",
       "preset_inline_title": "\u0907\u0928\u0932\u093E\u0907\u0928 \u0936\u0940\u0930\u094D\u0937\u0915 (\u0928\u094B\u091F \u0915\u093E \u0928\u093E\u092E)",
       "preset_tab_title": "\u091F\u0948\u092C \u0936\u0940\u0930\u094D\u0937\u0915 (\u091F\u0948\u092C \u092E\u0947\u0902 \u0928\u094B\u091F \u0915\u093E \u0928\u093E\u092E)",
+      "preset_file_name": "\u092B\u093C\u093E\u0907\u0932 \u0928\u093E\u092E (\u092B\u093C\u093E\u0907\u0932 \u090F\u0915\u094D\u0938\u092A\u094D\u0932\u094B\u0930\u0930)",
+      "preset_folder_name": "\u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u0928\u093E\u092E (\u092B\u093C\u093E\u0907\u0932 \u090F\u0915\u094D\u0938\u092A\u094D\u0932\u094B\u0930\u0930)",
       "preset_options_label": "\u092A\u094D\u0930\u0940\u0938\u0947\u091F \u0935\u093F\u0915\u0932\u094D\u092A",
       "preset_example_time_date": "\u0915\u094B\u0908 \u092D\u0940 moment.js \u092B\u0949\u0930\u094D\u092E\u0947\u091F (hh:mm a, D MMMM Y)",
       "preset_example_internal_link": "[[\u092E\u0947\u0930\u093E \u0928\u094B\u091F]]",
@@ -3332,6 +3358,8 @@ var require_hi = __commonJS({
       "preset_example_tag_all": "#\u0915\u094B\u0908-\u091F\u0948\u0917",
       "preset_example_inline_title": "\u0928\u094B\u091F \u0936\u0940\u0930\u094D\u0937\u0915",
       "preset_example_tab_title": "\u0928\u094B\u091F \u0936\u0940\u0930\u094D\u0937\u0915",
+      "preset_example_file_name": "\u092E\u0947\u0930\u093E \u0928\u094B\u091F",
+      "preset_example_folder_name": "\u092E\u0947\u0930\u093E \u092B\u093C\u094B\u0932\u094D\u0921\u0930",
       "group_rules_button": "\u0928\u093F\u092F\u092E \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
       "group_rules_modal_title": "\u0928\u093F\u092F\u092E \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
       "group_rules_add": "+ \u0928\u093F\u092F\u092E \u091C\u094B\u0921\u093C\u0947\u0902",
@@ -3432,6 +3460,8 @@ var require_hi = __commonJS({
       "target_task_list": "\u091A\u0947\u0915\u092C\u0949\u0915\u094D\u0938 / \u091F\u093E\u0938\u094D\u0915 \u0932\u093F\u0938\u094D\u091F",
       "target_all_tags": "\u0938\u092D\u0940 \u091F\u0948\u0917",
       "target_tab_title": "\u091F\u0948\u092C \u0936\u0940\u0930\u094D\u0937\u0915",
+      "target_file_name": "\u092B\u093C\u093E\u0907\u0932 \u0928\u093E\u092E",
+      "target_folder_name": "\u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u0928\u093E\u092E",
       "target_group_text": "\u091F\u0947\u0915\u094D\u0938\u094D\u091F \u092B\u0949\u0930\u094D\u092E\u0947\u091F\u093F\u0902\u0917",
       "target_group_links": "\u0932\u093F\u0902\u0915",
       "target_group_lists": "\u0938\u0942\u091A\u093F\u092F\u093E\u0901",
@@ -3441,6 +3471,8 @@ var require_hi = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "\u0936\u0940\u0930\u094D\u0937\u0915 \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
+      "md_cfg_file_name": "\u092B\u093C\u093E\u0907\u0932 \u0928\u093E\u092E \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
+      "md_cfg_folder_name": "\u092B\u093C\u094B\u0932\u094D\u0921\u0930 \u0928\u093E\u092E \u091F\u0947\u0915\u094D\u0938\u094D\u091F",
       "title_match_mode_title": "\u0936\u0940\u0930\u094D\u0937\u0915 \u091F\u0947\u0915\u094D\u0938\u094D\u091F \u0915\u094B \u092B\u093C\u093F\u0932\u094D\u091F\u0930 \u0938\u0947 \u0915\u0948\u0938\u0947 \u092E\u0947\u0932 \u0916\u093E\u0928\u093E \u091A\u093E\u0939\u093F\u090F",
       "rule_choose_placeholder_pattern": "\u092A\u0948\u091F\u0930\u094D\u0928 \u091A\u0941\u0928\u0947\u0902\u2026"
     };
@@ -4174,6 +4206,8 @@ var require_it = __commonJS({
       "preset_all_tags": "Tutti i tag",
       "preset_inline_title": "Titolo in linea (nome della nota)",
       "preset_tab_title": "Titolo scheda (nome della nota nella scheda)",
+      "preset_file_name": "Nome file (esplora file)",
+      "preset_folder_name": "Nome cartella (esplora file)",
       "preset_options_label": "Opzioni preset",
       "preset_example_time_date": "Qualsiasi formato moment.js (hh:mm a, D MMMM Y)",
       "preset_example_internal_link": "[[La mia nota]]",
@@ -4184,6 +4218,8 @@ var require_it = __commonJS({
       "preset_example_tag_all": "#qualsiasi-tag",
       "preset_example_inline_title": "Titolo della nota",
       "preset_example_tab_title": "Titolo della nota",
+      "preset_example_file_name": "La mia nota",
+      "preset_example_folder_name": "La mia cartella",
       "group_rules_button": "Modifica regole",
       "group_rules_modal_title": "Modifica regole",
       "group_rules_add": "+ Aggiungi regola",
@@ -4284,6 +4320,8 @@ var require_it = __commonJS({
       "target_task_list": "Casella di spunta / elenco attivit\xE0",
       "target_all_tags": "Tutti i tag",
       "target_tab_title": "Titolo scheda",
+      "target_file_name": "Nome file",
+      "target_folder_name": "Nome cartella",
       "target_group_text": "Formattazione testo",
       "target_group_links": "Link",
       "target_group_lists": "Elenchi",
@@ -4293,6 +4331,8 @@ var require_it = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "testo del titolo",
+      "md_cfg_file_name": "testo del nome file",
+      "md_cfg_folder_name": "testo del nome cartella",
       "title_match_mode_title": "Come il testo del titolo deve corrispondere al filtro",
       "rule_choose_placeholder_pattern": "Scegli pattern\u2026"
     };
@@ -5026,6 +5066,8 @@ var require_bn = __commonJS({
       "preset_all_tags": "\u09B8\u09AC \u099F\u09CD\u09AF\u09BE\u0997",
       "preset_inline_title": "\u0987\u09A8\u09B2\u09BE\u0987\u09A8 \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE (\u09A8\u09CB\u099F\u09C7\u09B0 \u09A8\u09BE\u09AE)",
       "preset_tab_title": "\u099F\u09CD\u09AF\u09BE\u09AC \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE (\u099F\u09CD\u09AF\u09BE\u09AC\u09C7 \u09A8\u09CB\u099F\u09C7\u09B0 \u09A8\u09BE\u09AE)",
+      "preset_file_name": "\u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u09A8\u09BE\u09AE (\u09AB\u09BE\u0987\u09B2 \u098F\u0995\u09CD\u09B8\u09AA\u09CD\u09B2\u09CB\u09B0\u09BE\u09B0)",
+      "preset_folder_name": "\u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0\u09C7\u09B0 \u09A8\u09BE\u09AE (\u09AB\u09BE\u0987\u09B2 \u098F\u0995\u09CD\u09B8\u09AA\u09CD\u09B2\u09CB\u09B0\u09BE\u09B0)",
       "preset_options_label": "\u09AA\u09CD\u09B0\u09BF\u09B8\u09C7\u099F \u0985\u09AA\u09B6\u09A8",
       "preset_example_time_date": "\u09AF\u09C7\u0995\u09CB\u09A8\u09CB moment.js \u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u099F (hh:mm a, D MMMM Y)",
       "preset_example_internal_link": "[[My Note]]",
@@ -5036,6 +5078,8 @@ var require_bn = __commonJS({
       "preset_example_tag_all": "#any-tag",
       "preset_example_inline_title": "\u09A8\u09CB\u099F\u09C7\u09B0 \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE",
       "preset_example_tab_title": "\u09A8\u09CB\u099F\u09C7\u09B0 \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE",
+      "preset_example_file_name": "\u0986\u09AE\u09BE\u09B0 \u09A8\u09CB\u099F",
+      "preset_example_folder_name": "\u0986\u09AE\u09BE\u09B0 \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0",
       "group_rules_button": "\u09A8\u09BF\u09AF\u09BC\u09AE \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "group_rules_modal_title": "\u09A8\u09BF\u09AF\u09BC\u09AE \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8",
       "group_rules_add": "+ \u09A8\u09BF\u09AF\u09BC\u09AE \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8",
@@ -5136,6 +5180,8 @@ var require_bn = __commonJS({
       "target_task_list": "\u099A\u09C7\u0995\u09AC\u0995\u09CD\u09B8 / \u099F\u09BE\u09B8\u09CD\u0995 \u09B2\u09BF\u09B8\u09CD\u099F",
       "target_all_tags": "\u09B8\u09AC \u099F\u09CD\u09AF\u09BE\u0997",
       "target_tab_title": "\u099F\u09CD\u09AF\u09BE\u09AC \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE",
+      "target_file_name": "\u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u09A8\u09BE\u09AE",
+      "target_folder_name": "\u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0\u09C7\u09B0 \u09A8\u09BE\u09AE",
       "target_group_text": "\u099F\u09C7\u0995\u09CD\u09B8\u099F \u09AB\u09B0\u09AE\u09CD\u09AF\u09BE\u099F\u09BF\u0982",
       "target_group_links": "\u09B2\u09BF\u0982\u0995",
       "target_group_lists": "\u09A4\u09BE\u09B2\u09BF\u0995\u09BE",
@@ -5145,6 +5191,8 @@ var require_bn = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "\u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE \u099F\u09C7\u0995\u09CD\u09B8\u099F",
+      "md_cfg_file_name": "\u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u09A8\u09BE\u09AE \u099F\u09C7\u0995\u09CD\u09B8\u099F",
+      "md_cfg_folder_name": "\u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0\u09C7\u09B0 \u09A8\u09BE\u09AE \u099F\u09C7\u0995\u09CD\u09B8\u099F",
       "title_match_mode_title": "\u09AB\u09BF\u09B2\u09CD\u099F\u09BE\u09B0\u09C7\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09B6\u09BF\u09B0\u09CB\u09A8\u09BE\u09AE\u09C7\u09B0 \u099F\u09C7\u0995\u09CD\u09B8\u099F \u0995\u09C0\u09AD\u09BE\u09AC\u09C7 \u09AE\u09C7\u09B2\u09A4\u09C7 \u09B9\u09AC\u09C7",
       "rule_choose_placeholder_pattern": "\u09AA\u09CD\u09AF\u09BE\u099F\u09BE\u09B0\u09CD\u09A8 \u09AC\u09C7\u099B\u09C7 \u09A8\u09BF\u09A8\u2026"
     };
@@ -5903,6 +5951,8 @@ var require_ru = __commonJS({
       "preset_all_tags": "\u0412\u0441\u0435 \u0442\u0435\u0433\u0438",
       "preset_inline_title": "\u0412\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u0439 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A (\u0438\u043C\u044F \u0437\u0430\u043C\u0435\u0442\u043A\u0438)",
       "preset_tab_title": "\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A \u0432\u043A\u043B\u0430\u0434\u043A\u0438 (\u0438\u043C\u044F \u0437\u0430\u043C\u0435\u0442\u043A\u0438 \u043D\u0430 \u0432\u043A\u043B\u0430\u0434\u043A\u0435)",
+      "preset_file_name": "\u0418\u043C\u044F \u0444\u0430\u0439\u043B\u0430 (\u043F\u0440\u043E\u0432\u043E\u0434\u043D\u0438\u043A \u0444\u0430\u0439\u043B\u043E\u0432)",
+      "preset_folder_name": "\u0418\u043C\u044F \u043F\u0430\u043F\u043A\u0438 (\u043F\u0440\u043E\u0432\u043E\u0434\u043D\u0438\u043A \u0444\u0430\u0439\u043B\u043E\u0432)",
       "preset_options_label": "\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B \u043F\u0440\u0435\u0441\u0435\u0442\u0430",
       "preset_example_time_date": "\u041B\u044E\u0431\u043E\u0439 \u0444\u043E\u0440\u043C\u0430\u0442 moment.js (hh:mm a, D MMMM Y)",
       "preset_example_internal_link": "[[My Note]]",
@@ -5913,6 +5963,8 @@ var require_ru = __commonJS({
       "preset_example_tag_all": "#any-tag",
       "preset_example_inline_title": "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0437\u0430\u043C\u0435\u0442\u043A\u0438",
       "preset_example_tab_title": "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0437\u0430\u043C\u0435\u0442\u043A\u0438",
+      "preset_example_file_name": "\u041C\u043E\u044F \u0437\u0430\u043C\u0435\u0442\u043A\u0430",
+      "preset_example_folder_name": "\u041C\u043E\u044F \u043F\u0430\u043F\u043A\u0430",
       "group_rules_button": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u0440\u0430\u0432\u0438\u043B\u0430",
       "group_rules_modal_title": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u0440\u0430\u0432\u0438\u043B\u0430",
       "group_rules_add": "+ \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043F\u0440\u0430\u0432\u0438\u043B\u043E",
@@ -6013,6 +6065,8 @@ var require_ru = __commonJS({
       "target_task_list": "\u0427\u0435\u043A\u0431\u043E\u043A\u0441 / \u0421\u043F\u0438\u0441\u043E\u043A \u0437\u0430\u0434\u0430\u0447",
       "target_all_tags": "\u0412\u0441\u0435 \u0442\u0435\u0433\u0438",
       "target_tab_title": "\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A \u0432\u043A\u043B\u0430\u0434\u043A\u0438",
+      "target_file_name": "\u0418\u043C\u044F \u0444\u0430\u0439\u043B\u0430",
+      "target_folder_name": "\u0418\u043C\u044F \u043F\u0430\u043F\u043A\u0438",
       "target_group_text": "\u0424\u043E\u0440\u043C\u0430\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 \u0442\u0435\u043A\u0441\u0442\u0430",
       "target_group_links": "\u0421\u0441\u044B\u043B\u043A\u0438",
       "target_group_lists": "\u0421\u043F\u0438\u0441\u043A\u0438",
@@ -6022,6 +6076,8 @@ var require_ru = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "\u0442\u0435\u043A\u0441\u0442 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043A\u0430",
+      "md_cfg_file_name": "\u0442\u0435\u043A\u0441\u0442 \u0438\u043C\u0435\u043D\u0438 \u0444\u0430\u0439\u043B\u0430",
+      "md_cfg_folder_name": "\u0442\u0435\u043A\u0441\u0442 \u0438\u043C\u0435\u043D\u0438 \u043F\u0430\u043F\u043A\u0438",
       "title_match_mode_title": "\u041A\u0430\u043A \u0442\u0435\u043A\u0441\u0442 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043A\u0430 \u0434\u043E\u043B\u0436\u0435\u043D \u0441\u043E\u0432\u043F\u0430\u0434\u0430\u0442\u044C \u0441 \u0444\u0438\u043B\u044C\u0442\u0440\u043E\u043C",
       "rule_choose_placeholder_pattern": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u2026"
     };
@@ -6755,6 +6811,8 @@ var require_zh_cn = __commonJS({
       "preset_all_tags": "\u6240\u6709\u6807\u7B7E",
       "preset_inline_title": "\u5185\u8054\u6807\u9898\uFF08\u7B14\u8BB0\u540D\u79F0\uFF09",
       "preset_tab_title": "\u6807\u7B7E\u9875\u6807\u9898\uFF08\u6807\u7B7E\u9875\u4E2D\u7684\u7B14\u8BB0\u540D\u79F0\uFF09",
+      "preset_file_name": "\u6587\u4EF6\u540D\uFF08\u6587\u4EF6\u6D4F\u89C8\u5668\uFF09",
+      "preset_folder_name": "\u6587\u4EF6\u5939\u540D\uFF08\u6587\u4EF6\u6D4F\u89C8\u5668\uFF09",
       "preset_options_label": "\u9884\u8BBE\u9009\u9879",
       "preset_example_time_date": "\u4EFB\u610F moment.js \u683C\u5F0F (hh:mm a, D MMMM Y)",
       "preset_example_internal_link": "[[\u6211\u7684\u7B14\u8BB0]]",
@@ -6765,6 +6823,8 @@ var require_zh_cn = __commonJS({
       "preset_example_tag_all": "#any-tag",
       "preset_example_inline_title": "\u7B14\u8BB0\u6807\u9898",
       "preset_example_tab_title": "\u7B14\u8BB0\u6807\u9898",
+      "preset_example_file_name": "\u6211\u7684\u7B14\u8BB0",
+      "preset_example_folder_name": "\u6211\u7684\u6587\u4EF6\u5939",
       "group_rules_button": "\u7F16\u8F91\u89C4\u5219",
       "group_rules_modal_title": "\u7F16\u8F91\u89C4\u5219",
       "group_rules_add": "+ \u6DFB\u52A0\u89C4\u5219",
@@ -6865,6 +6925,8 @@ var require_zh_cn = __commonJS({
       "target_task_list": "\u590D\u9009\u6846 / \u4EFB\u52A1\u5217\u8868",
       "target_all_tags": "\u6240\u6709\u6807\u7B7E",
       "target_tab_title": "\u6807\u7B7E\u9875\u6807\u9898",
+      "target_file_name": "\u6587\u4EF6\u540D",
+      "target_folder_name": "\u6587\u4EF6\u5939\u540D",
       "target_group_text": "\u6587\u672C\u683C\u5F0F",
       "target_group_links": "\u94FE\u63A5",
       "target_group_lists": "\u5217\u8868",
@@ -6874,6 +6936,8 @@ var require_zh_cn = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "\u6807\u9898\u6587\u672C",
+      "md_cfg_file_name": "\u6587\u4EF6\u540D\u6587\u672C",
+      "md_cfg_folder_name": "\u6587\u4EF6\u5939\u540D\u6587\u672C",
       "title_match_mode_title": "\u6807\u9898\u6587\u672C\u5FC5\u987B\u5982\u4F55\u4E0E\u8FC7\u6EE4\u5668\u5339\u914D",
       "rule_choose_placeholder_pattern": "\u9009\u62E9\u6A21\u5F0F\u2026"
     };
@@ -7607,6 +7671,8 @@ var require_de = __commonJS({
       "preset_all_tags": "Alle Tags",
       "preset_inline_title": "Inline-Titel (Notizname)",
       "preset_tab_title": "Tab-Titel (Notizname im Tab)",
+      "preset_file_name": "Dateiname (Datei-Explorer)",
+      "preset_folder_name": "Ordnername (Datei-Explorer)",
       "preset_options_label": "Voreinstellungsoptionen",
       "preset_example_time_date": "Beliebiges moment.js-Format (hh:mm a, D MMMM Y)",
       "preset_example_internal_link": "[[Meine Notiz]]",
@@ -7617,6 +7683,8 @@ var require_de = __commonJS({
       "preset_example_tag_all": "#beliebiges-tag",
       "preset_example_inline_title": "Notiztitel",
       "preset_example_tab_title": "Notiztitel",
+      "preset_example_file_name": "Meine Notiz",
+      "preset_example_folder_name": "Mein Ordner",
       "group_rules_button": "Regeln bearbeiten",
       "group_rules_modal_title": "Regeln bearbeiten",
       "group_rules_add": "+ Regel hinzuf\xFCgen",
@@ -7717,6 +7785,8 @@ var require_de = __commonJS({
       "target_task_list": "Checkbox / Aufgabenliste",
       "target_all_tags": "Alle Tags",
       "target_tab_title": "Tab-Titel",
+      "target_file_name": "Dateiname",
+      "target_folder_name": "Ordnername",
       "target_group_text": "Textformatierung",
       "target_group_links": "Links",
       "target_group_lists": "Listen",
@@ -7726,6 +7796,8 @@ var require_de = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "Titeltext",
+      "md_cfg_file_name": "Dateiname-Text",
+      "md_cfg_folder_name": "Ordnername-Text",
       "title_match_mode_title": "Wie der Titeltext mit dem Filter \xFCbereinstimmen muss",
       "rule_choose_placeholder_pattern": "Muster ausw\xE4hlen\u2026"
     };
@@ -8459,6 +8531,8 @@ var require_ar = __commonJS({
       "preset_all_tags": "\u0643\u0644 \u0627\u0644\u0648\u0633\u0648\u0645",
       "preset_inline_title": "\u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0636\u0645\u0646 (\u0627\u0633\u0645 \u0627\u0644\u0645\u0644\u0627\u062D\u0638\u0629)",
       "preset_tab_title": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062A\u0628\u0648\u064A\u0628 (\u0627\u0633\u0645 \u0627\u0644\u0645\u0644\u0627\u062D\u0638\u0629 \u0641\u064A \u0627\u0644\u062A\u0628\u0648\u064A\u0628)",
+      "preset_file_name": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0644\u0641 (\u0645\u0633\u062A\u0643\u0634\u0641 \u0627\u0644\u0645\u0644\u0641\u0627\u062A)",
+      "preset_folder_name": "\u0627\u0633\u0645 \u0627\u0644\u0645\u062C\u0644\u062F (\u0645\u0633\u062A\u0643\u0634\u0641 \u0627\u0644\u0645\u0644\u0641\u0627\u062A)",
       "preset_options_label": "\u062E\u064A\u0627\u0631\u0627\u062A \u0627\u0644\u0625\u0639\u062F\u0627\u062F \u0627\u0644\u0645\u0633\u0628\u0642",
       "preset_example_time_date": "\u0623\u064A \u062A\u0646\u0633\u064A\u0642 moment.js (hh:mm a, D MMMM Y)",
       "preset_example_internal_link": "[[My Note]]",
@@ -8469,6 +8543,8 @@ var require_ar = __commonJS({
       "preset_example_tag_all": "#any-tag",
       "preset_example_inline_title": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0644\u0627\u062D\u0638\u0629",
       "preset_example_tab_title": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0644\u0627\u062D\u0638\u0629",
+      "preset_example_file_name": "\u0645\u0644\u0641\u064A",
+      "preset_example_folder_name": "\u0645\u062C\u0644\u062F\u064A",
       "group_rules_button": "\u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u0642\u0648\u0627\u0639\u062F",
       "group_rules_modal_title": "\u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u0642\u0648\u0627\u0639\u062F",
       "group_rules_add": "+ \u0625\u0636\u0627\u0641\u0629 \u0642\u0627\u0639\u062F\u0629",
@@ -8569,6 +8645,8 @@ var require_ar = __commonJS({
       "target_task_list": "\u0645\u0631\u0628\u0639 \u0627\u062E\u062A\u064A\u0627\u0631 / \u0642\u0627\u0626\u0645\u0629 \u0645\u0647\u0627\u0645",
       "target_all_tags": "\u0643\u0644 \u0627\u0644\u0648\u0633\u0648\u0645",
       "target_tab_title": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062A\u0628\u0648\u064A\u0628",
+      "target_file_name": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0644\u0641",
+      "target_folder_name": "\u0627\u0633\u0645 \u0627\u0644\u0645\u062C\u0644\u062F",
       "target_group_text": "\u062A\u0646\u0633\u064A\u0642 \u0627\u0644\u0646\u0635",
       "target_group_links": "\u0627\u0644\u0631\u0648\u0627\u0628\u0637",
       "target_group_lists": "\u0627\u0644\u0642\u0648\u0627\u0626\u0645",
@@ -8578,6 +8656,8 @@ var require_ar = __commonJS({
       "md_cfg_taskTypes": "[ ], [x]",
       "md_cfg_tagFilter": "tag1, tag2",
       "md_cfg_titleFilter": "\u0646\u0635 \u0627\u0644\u0639\u0646\u0648\u0627\u0646",
+      "md_cfg_file_name": "\u0646\u0635 \u0627\u0633\u0645 \u0627\u0644\u0645\u0644\u0641",
+      "md_cfg_folder_name": "\u0646\u0635 \u0627\u0633\u0645 \u0627\u0644\u0645\u062C\u0644\u062F",
       "title_match_mode_title": "\u0643\u064A\u0641 \u064A\u062C\u0628 \u0623\u0646 \u064A\u0637\u0627\u0628\u0642 \u0646\u0635 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0631\u0634\u062D",
       "rule_choose_placeholder_pattern": "\u0627\u062E\u062A\u0631 \u0646\u0645\u0637\u0627\u064B\u2026"
     };
@@ -9803,6 +9883,25 @@ var PresetModal = class _PresetModal extends import_obsidian.Modal {
         examples: [this.plugin.t("preset_example_tab_title", "Note title")],
         group: "markdown",
         targetElement: "tab-title"
+      },
+      {
+        label: this.plugin.t("preset_file_name", "File Name (file explorer)"),
+        pattern: "",
+        flags: "",
+        examples: [this.plugin.t("preset_example_file_name", "My note")],
+        group: "markdown",
+        targetElement: "file-name"
+      },
+      {
+        label: this.plugin.t(
+          "preset_folder_name",
+          "Folder Name (file explorer)"
+        ),
+        pattern: "",
+        flags: "",
+        examples: [this.plugin.t("preset_example_folder_name", "My folder")],
+        group: "markdown",
+        targetElement: "folder-name"
       },
       {
         label: this.plugin.t("preset_domain_names", "Domain names"),
@@ -17780,7 +17879,9 @@ var TARGET_KEYS = {
   tag: ["target_tag", "Tag"],
   "all-tags": ["target_all_tags", "All Tags"],
   "tab-title": ["target_tab_title", "Tab Title"],
-  "inline-title": ["target_inline_title", "Inline Title"]
+  "inline-title": ["target_inline_title", "Inline Title"],
+  "file-name": ["target_file_name", "File Name"],
+  "folder-name": ["target_folder_name", "Folder Name"]
 };
 var TARGET_CSS = {
   strong: ".cm-strong and strong",
@@ -17988,6 +18089,23 @@ var MARKDOWN_TARGETS = [
     group: "other",
     cmSelector: ".inline-title",
     renderedSelector: ".inline-title"
+  },
+  // --- File explorer (names are matched in JS, like the titles above) ---
+  {
+    key: "file-name",
+    labelKey: "target_file_name",
+    label: "File Name",
+    group: "other",
+    cmSelector: ".nav-file-title-content",
+    renderedSelector: ".nav-file-title-content"
+  },
+  {
+    key: "folder-name",
+    labelKey: "target_folder_name",
+    label: "Folder Name",
+    group: "other",
+    cmSelector: ".nav-folder-title-content",
+    renderedSelector: ".nav-folder-title-content"
   }
 ];
 var MARKDOWN_TARGET_GROUPS = [
@@ -18002,6 +18120,15 @@ function getMarkdownTarget(key) {
 }
 
 // src/utils/markdownElementConfig.js
+var TITLE_FILTER_TARGET_KEYS = [
+  "inline-title",
+  "tab-title",
+  "file-name",
+  "folder-name"
+];
+function isTitleFilterTarget(key) {
+  return TITLE_FILTER_TARGET_KEYS.includes(String(key));
+}
 var EDITOR_PREFIX = ".workspace .cm-s-obsidian .cm-content";
 var RENDER_PREFIX = ".markdown-rendered";
 function parseTagFilterNames(filter) {
@@ -18065,6 +18192,22 @@ function getElementConfig(key) {
         field: "titleFilter",
         matchField: "titleMatchType",
         placeholder: "tab title text",
+        defaultValue: ""
+      };
+    case "file-name":
+      return {
+        field: "titleFilter",
+        matchField: "titleMatchType",
+        placeholderKey: "md_cfg_file_name",
+        placeholder: "file name text",
+        defaultValue: ""
+      };
+    case "folder-name":
+      return {
+        field: "titleFilter",
+        matchField: "titleMatchType",
+        placeholderKey: "md_cfg_folder_name",
+        placeholder: "folder name text",
         defaultValue: ""
       };
     default:
@@ -18159,14 +18302,19 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
       cm = names.map(cmTag).join(", ");
       rend = names.map(rendTag).join(", ");
     }
-  } else if (t.key === "inline-title" || t.key === "tab-title") {
-    const field = "titleFilter";
-    if (entry[field] && String(entry[field]).trim().length > 0) {
+  } else if (t.key === "inline-title" || t.key === "tab-title" || t.key === "file-name" || t.key === "folder-name") {
+    if (entry.titleFilter && String(entry.titleFilter).trim().length > 0) {
       cm = "";
       rend = "";
     } else if (t.key === "tab-title") {
       cm = ".workspace .workspace-tab-header-inner-title";
       rend = ".workspace-tab-header-inner-title";
+    } else if (t.key === "file-name") {
+      cm = ".workspace .nav-file-title-content";
+      rend = ".nav-file-title-content";
+    } else if (t.key === "folder-name") {
+      cm = ".workspace .nav-folder-title-content";
+      rend = ".nav-folder-title-content";
     } else {
       cm = ".workspace .cm-s-obsidian .inline-title";
       rend = `${RENDER_PREFIX} .inline-title, .workspace .inline-title`;
@@ -18206,7 +18354,10 @@ function createMarkdownElementConfigInput(plugin, entry, onChange) {
   input.style.border = "1px solid var(--background-modifier-border)";
   input.style.background = "var(--background-modifier-form-field)";
   input.style.color = "var(--text-normal)";
-  input.placeholder = plugin.t("md_cfg_" + cfg.field, cfg.placeholder);
+  input.placeholder = plugin.t(
+    cfg.placeholderKey || "md_cfg_" + cfg.field,
+    cfg.placeholder
+  );
   input.value = entry[cfg.field] != null ? entry[cfg.field] : cfg.defaultValue;
   input.title = plugin.t(
     "md_cfg_title",
@@ -36818,18 +36969,17 @@ function matchTargetElementEntry(entry, ctx) {
         return null;
       }
       case "inline-title":
-      case "tab-title": {
+      case "tab-title":
+      case "file-name":
+      case "folder-name": {
         try {
           const filter = String(entry.titleFilter || "").trim();
           if (!filter) return { kind: "markdown-possible", detail: key };
-          const mode = String(entry.titleMatchType || "contains").toLowerCase();
+          const mode = normalizeTitleMatchType(entry.titleMatchType);
           const f = filter.toLowerCase();
           const cur = sel.toLowerCase().trim();
-          if (mode === "exact" && cur === f) return { kind: "markdown", detail: key };
-          if (mode === "startswith" && cur.startsWith(f)) return { kind: "markdown", detail: key };
-          if (mode === "endswith" && cur.endsWith(f)) return { kind: "markdown", detail: key };
-          if (cur.includes(f)) return { kind: "markdown", detail: key };
-          return null;
+          const hit = mode === "exact" ? cur === f : mode === "startswith" ? cur.startsWith(f) : mode === "endswith" ? cur.endsWith(f) : cur.includes(f);
+          return hit ? { kind: "markdown", detail: key } : null;
         } catch (_) {
           return null;
         }
@@ -37210,6 +37360,10 @@ var SelectColoringEntryModal = class extends import_obsidian28.FuzzySuggestModal
 
 // src/core/AlwaysColorText.js
 var moment2 = window.moment;
+var TITLE_TARGETS = MARKDOWN_TARGETS.filter((t) => isTitleFilterTarget(t.key)).map(
+  (t) => ({ key: t.key, cls: String(t.cmSelector).replace(/^\./, "") })
+);
+var TITLE_TARGET_SELECTOR = TITLE_TARGETS.map((t) => "." + t.cls).join(", ");
 var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
   constructor(...args) {
     super(...args);
@@ -37316,13 +37470,13 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (_) {
     }
   }
-  // Remove inline styling applied to the inline title / tab title by
-  // applyTitleHighlights. Used when the plugin unloads and whenever the global
-  // toggle turns off (titles are outside the injected stylesheet's scope, so
-  // they must be reset explicitly).
+  // Remove inline styling applied to the inline title / tab title / file
+  // explorer names by applyTitleHighlights. Used when the plugin unloads and
+  // whenever the global toggle turns off (these elements are outside the
+  // injected stylesheet's scope, so they must be reset explicitly).
   clearTitleHighlights() {
     try {
-      document.querySelectorAll(".inline-title, .workspace-tab-header-inner-title").forEach((el) => {
+      document.querySelectorAll(TITLE_TARGET_SELECTOR).forEach((el) => {
         for (const p of [
           "color",
           "--highlight-color",
@@ -44005,9 +44159,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (_) {
     }
   }
-  // Apply text-filter (titleFilter) matching for inline-title / tab-title
-  // targets. These elements live outside `.cm-content`/`.markdown-rendered`
-  // (the inline title is in `.cm-sizer`, the tab title in the view header), so
+  // Apply text-filter (titleFilter) matching for the inline title / tab title
+  // and the file-explorer file & folder names. These elements live outside
+  // `.cm-content`/`.markdown-rendered` (the inline title is in `.cm-sizer`, the
+  // tab title in the view header, the file names in the file explorer), so
   // CSS text matching is impossible — we resolve the match in JS instead.
   // This handles BOTH filtered (titleFilter set) and unfiltered (match-all)
   // entries, and applies the full highlight box model (background, padding,
@@ -44045,14 +44200,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
           []
         )
       );
-      const targets = [
-        { key: "inline-title", sel: ".inline-title" },
-        { key: "tab-title", sel: ".workspace-tab-header-inner-title" }
-      ];
       const hideText = this.settings.hideTextColors === true;
       const hideBg = this.settings.hideHighlights === true;
-      targets.forEach(({ key, sel }) => {
-        const els = Array.from(document.querySelectorAll(sel));
+      TITLE_TARGETS.forEach(({ key, cls }) => {
+        const els = Array.from(document.querySelectorAll("." + cls));
         if (!els.length) return;
         if (this.isMarkdownElementBlacklisted(key)) {
           els.forEach(clearTitleStyling);
@@ -44193,10 +44344,11 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     }
     this.ensureTitleObserver();
   }
-  // Tab switches and inline-title edits recreate/update title DOM nodes
-  // without re-running applyFormattingStyles, so keep title highlights in
-  // sync via a lightweight debounced observer (attributes excluded to avoid
-  // loops from our own inline-style writes).
+  // Tab switches, inline-title edits and file-explorer changes (create, rename,
+  // expand/collapse) recreate or update these DOM nodes without re-running
+  // applyFormattingStyles, so keep the highlights in sync via a lightweight
+  // debounced observer (attributes excluded to avoid loops from our own
+  // inline-style writes).
   ensureTitleObserver() {
     if (this._titleObserver) return;
     try {
@@ -44208,7 +44360,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             if (t && t.closest) {
               try {
                 if (t.closest(
-                  ".inline-title, .workspace-tab-header-inner-title, .workspace-tab-header"
+                  TITLE_TARGET_SELECTOR + ", .workspace-tab-header"
                 ))
                   return true;
               } catch (_) {
@@ -44216,7 +44368,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             } else if (t && t.parentElement && t.parentElement.closest) {
               try {
                 if (t.parentElement.closest(
-                  ".inline-title, .workspace-tab-header-inner-title, .workspace-tab-header"
+                  TITLE_TARGET_SELECTOR + ", .workspace-tab-header"
                 ))
                   return true;
               } catch (_) {
@@ -44225,11 +44377,9 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             for (const n of m.addedNodes || []) {
               if (n && n.querySelector) {
                 try {
-                  if (n.classList && (n.classList.contains("inline-title") || n.classList.contains(
-                    "workspace-tab-header-inner-title"
-                  ) || n.classList.contains("workspace-tab-header")) || n.querySelector(
-                    ".inline-title, .workspace-tab-header-inner-title"
-                  ))
+                  if (n.classList && (TITLE_TARGETS.some(
+                    (x) => n.classList.contains(x.cls)
+                  ) || n.classList.contains("workspace-tab-header")) || n.querySelector(TITLE_TARGET_SELECTOR))
                     return true;
                 } catch (_) {
                 }
@@ -44238,11 +44388,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
             for (const n of m.removedNodes || []) {
               if (n && n.querySelector) {
                 try {
-                  if (n.classList && (n.classList.contains("inline-title") || n.classList.contains(
-                    "workspace-tab-header-inner-title"
-                  )) || n.querySelector(
-                    ".inline-title, .workspace-tab-header-inner-title"
-                  ))
+                  if (n.classList && TITLE_TARGETS.some((x) => n.classList.contains(x.cls)) || n.querySelector(TITLE_TARGET_SELECTOR))
                     return true;
                 } catch (_) {
                 }
@@ -44579,7 +44725,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         const mtLower = rawMt.toLowerCase();
         const normalized = mtLower === "startswith" || rawMt === "startsWith" || mtLower === "starts with" ? "startswith" : mtLower === "endswith" || rawMt === "endsWith" || mtLower === "ends with" ? "endswith" : mtLower === "exact" ? "exact" : mtLower === "contains" ? "contains" : this.settings.partialMatch ? "contains" : "exact";
         x.matchType = normalized;
-        if (x.targetElement === "tab-title" || x.targetElement === "inline-title") {
+        if (isTitleFilterTarget(x.targetElement)) {
           const rawTitleMt = x.titleMatchType != null ? String(x.titleMatchType) : "";
           x.titleMatchType = rawTitleMt ? normalizeTitleMatchType(rawTitleMt) : "contains";
           if (x.titleFilter != null) x.titleFilter = String(x.titleFilter);
@@ -44667,7 +44813,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         group.entries = group.entries.map((e) => {
           if (!e) return e;
           e.markTarget = typeof e.markTarget === "string" && e.markTarget ? e.markTarget : "text";
-          if (e.targetElement === "tab-title" || e.targetElement === "inline-title") {
+          if (isTitleFilterTarget(e.targetElement)) {
             const raw = e.titleMatchType != null ? String(e.titleMatchType) : "";
             e.titleMatchType = raw ? normalizeTitleMatchType(raw) : "contains";
             if (e.titleFilter != null) e.titleFilter = String(e.titleFilter);

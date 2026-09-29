@@ -24,6 +24,8 @@ const TARGET_KEYS = {
   "all-tags": ["target_all_tags", "All Tags"],
   "tab-title": ["target_tab_title", "Tab Title"],
   "inline-title": ["target_inline_title", "Inline Title"],
+  "file-name": ["target_file_name", "File Name"],
+  "folder-name": ["target_folder_name", "Folder Name"],
 };
 
 // The actual CodeMirror / rendered-DOM selectors the engine colors for a

@@ -269,6 +269,25 @@ export class PresetModal extends Modal {
         targetElement: "tab-title",
       },
       {
+        label: this.plugin.t("preset_file_name", "File Name (file explorer)"),
+        pattern: "",
+        flags: "",
+        examples: [this.plugin.t("preset_example_file_name", "My note")],
+        group: "markdown",
+        targetElement: "file-name",
+      },
+      {
+        label: this.plugin.t(
+          "preset_folder_name",
+          "Folder Name (file explorer)",
+        ),
+        pattern: "",
+        flags: "",
+        examples: [this.plugin.t("preset_example_folder_name", "My folder")],
+        group: "markdown",
+        targetElement: "folder-name",
+      },
+      {
         label: this.plugin.t("preset_domain_names", "Domain names"),
         pattern: "\\b[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}\\b",
         flags: "",

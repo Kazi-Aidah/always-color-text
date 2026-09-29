@@ -531,6 +531,8 @@ module.exports = {
   "preset_all_tags": "All Tags",
   "preset_inline_title": "Inline Title (note name)",
   "preset_tab_title": "Tab Title (note name in tab)",
+  "preset_file_name": "File Name (file explorer)",
+  "preset_folder_name": "Folder Name (file explorer)",
   "preset_options_label": "Preset options",
 
   // Preset Examples
@@ -569,6 +571,8 @@ module.exports = {
   "preset_example_tag_all": "#any-tag",
   "preset_example_inline_title": "Note title",
   "preset_example_tab_title": "Note title",
+  "preset_example_file_name": "My note",
+  "preset_example_folder_name": "My folder",
   
   // Blacklist Settings
   "blacklist_words_header": "Blacklists",
@@ -883,6 +887,8 @@ module.exports = {
   "target_task_list": "Checkbox / Task List",
   "target_all_tags": "All Tags",
   "target_tab_title": "Tab Title",
+  "target_file_name": "File Name",
+  "target_folder_name": "Folder Name",
   "target_group_text": "Text Formatting",
   "target_group_links": "Links",
   "target_group_lists": "Lists",
@@ -894,6 +900,8 @@ module.exports = {
   "md_cfg_taskTypes": "[ ], [x]",
   "md_cfg_tagFilter": "tag1, tag2",
   "md_cfg_titleFilter": "title text",
+  "md_cfg_file_name": "file name text",
+  "md_cfg_folder_name": "folder name text",
   "title_match_mode_title": "How the title text must match the filter",
 
   // Advanced rules

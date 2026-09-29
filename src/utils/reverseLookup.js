@@ -14,6 +14,8 @@
 // heading entry `^\s*#{1,6}\s+.*$` never matches `My Heading` alone, but it
 // matches the line `# My Heading` containing the selection.
 
+import { normalizeTitleMatchType } from "./markdownElementConfig.js";
+
 export function collectLiveEntries(settings) {
   const out = [];
   try {
@@ -479,18 +481,27 @@ export function matchTargetElementEntry(entry, ctx) {
         return null;
       }
       case "inline-title":
-      case "tab-title": {
+      case "tab-title":
+      case "file-name":
+      case "folder-name": {
         try {
           const filter = String(entry.titleFilter || "").trim();
           if (!filter) return { kind: "markdown-possible", detail: key };
-          const mode = String(entry.titleMatchType || "contains").toLowerCase();
+          const mode = normalizeTitleMatchType(entry.titleMatchType);
           const f = filter.toLowerCase();
           const cur = sel.toLowerCase().trim();
-          if (mode === "exact" && cur === f) return { kind: "markdown", detail: key };
-          if (mode === "startswith" && cur.startsWith(f)) return { kind: "markdown", detail: key };
-          if (mode === "endswith" && cur.endsWith(f)) return { kind: "markdown", detail: key };
-          if (cur.includes(f)) return { kind: "markdown", detail: key };
-          return null;
+          // Mirror titleTextMatches: the selected mode must gate the comparison.
+          // An exact / starts-with / ends-with filter must not fall through to a
+          // substring match, or a selection gets colored that the DOM never colors.
+          const hit =
+            mode === "exact"
+              ? cur === f
+              : mode === "startswith"
+                ? cur.startsWith(f)
+                : mode === "endswith"
+                  ? cur.endsWith(f)
+                  : cur.includes(f);
+          return hit ? { kind: "markdown", detail: key } : null;
         } catch (_) {
           return null;
         }

@@ -26,7 +26,7 @@ import { RealTimeRegexTesterModal } from '../modals/RealTimeRegexTesterModal.js'
 import { HighlightStylingModal } from '../modals/HighlightStylingModal.js';
 import { CustomCssModal } from '../modals/CustomCssModal.js';
 import { MARKDOWN_TARGETS } from '../utils/markdownTargets.js';
-import { buildMarkdownSelector, buildMarkdownCmSelector, buildRenderedSelector, tagTextMatches, titleTextMatches, normalizeTitleMatchType } from '../utils/markdownElementConfig.js';
+import { buildMarkdownSelector, buildMarkdownCmSelector, buildRenderedSelector, tagTextMatches, titleTextMatches, normalizeTitleMatchType, isTitleFilterTarget } from '../utils/markdownElementConfig.js';
 import { EditEntryModal } from '../modals/EditEntryModal.js';
 import { BlacklistRegexTesterModal } from '../modals/BlacklistRegexTesterModal.js';
 import { ChangelogModal } from '../modals/ChangelogModal.js';
@@ -45,6 +45,16 @@ import { SelectColoringEntryModal } from '../modals/SelectColoringEntryModal.js'
 
 // Moment is provided by Obsidian
 const moment = window.moment;
+
+// Targets whose text is matched by `titleFilter` (the inline/tab titles plus
+// the file-explorer file & folder names). Their elements live outside
+// `.cm-content` / `.markdown-rendered`, so CSS can never match their text —
+// they are resolved in JS by applyTitleHighlights. Derived from the target
+// registry so a newly added text-matched target joins this path by itself.
+const TITLE_TARGETS = MARKDOWN_TARGETS.filter((t) => isTitleFilterTarget(t.key)).map(
+  (t) => ({ key: t.key, cls: String(t.cmSelector).replace(/^\./, "") }),
+);
+const TITLE_TARGET_SELECTOR = TITLE_TARGETS.map((t) => "." + t.cls).join(", ");
 
 class AlwaysColorText extends Plugin {
   constructor(...args) {
@@ -179,14 +189,14 @@ class AlwaysColorText extends Plugin {
     } catch (_) {}
   }
 
-  // Remove inline styling applied to the inline title / tab title by
-  // applyTitleHighlights. Used when the plugin unloads and whenever the global
-  // toggle turns off (titles are outside the injected stylesheet's scope, so
-  // they must be reset explicitly).
+  // Remove inline styling applied to the inline title / tab title / file
+  // explorer names by applyTitleHighlights. Used when the plugin unloads and
+  // whenever the global toggle turns off (these elements are outside the
+  // injected stylesheet's scope, so they must be reset explicitly).
   clearTitleHighlights() {
     try {
       document
-        .querySelectorAll(".inline-title, .workspace-tab-header-inner-title")
+        .querySelectorAll(TITLE_TARGET_SELECTOR)
         .forEach((el) => {
           for (const p of [
             "color",
@@ -6164,8 +6174,8 @@ class AlwaysColorText extends Plugin {
       const s = document.getElementById("act-formatting-styles");
       if (s) s.remove();
     } catch (_) {}
-    // Clear JS-applied title styling (inline-title / tab-title live outside
-    // the stylesheet scope, so they must be reset explicitly on disable).
+    // Clear JS-applied title/name styling (titles and file-explorer names live
+    // outside the stylesheet scope, so they must be reset explicitly on disable).
     this.clearTitleHighlights();
     // If the features are torn down while the global toggle is OFF, nothing of
     // ours may remain in the DOM — otherwise markdown elements keep their
@@ -7940,8 +7950,8 @@ class AlwaysColorText extends Plugin {
       } else {
         if (styleEl) styleEl.remove();
       }
-      // Inline / tab titles can't be matched by text via CSS, so apply any
-      // text-filter (titleFilter) for those targets via JS here.
+      // Titles and file-explorer names can't be matched by text via CSS, so
+      // apply any text-filter (titleFilter) for those targets via JS here.
       this.applyTitleHighlights();
       // Specific-tag (tagFilter) coloring in live preview must also be resolved
       // in JS since CSS cannot match tag text.
@@ -8355,9 +8365,10 @@ class AlwaysColorText extends Plugin {
     } catch (_) {}
   }
 
-  // Apply text-filter (titleFilter) matching for inline-title / tab-title
-  // targets. These elements live outside `.cm-content`/`.markdown-rendered`
-  // (the inline title is in `.cm-sizer`, the tab title in the view header), so
+  // Apply text-filter (titleFilter) matching for the inline title / tab title
+  // and the file-explorer file & folder names. These elements live outside
+  // `.cm-content`/`.markdown-rendered` (the inline title is in `.cm-sizer`, the
+  // tab title in the view header, the file names in the file explorer), so
   // CSS text matching is impossible — we resolve the match in JS instead.
   // This handles BOTH filtered (titleFilter set) and unfiltered (match-all)
   // entries, and applies the full highlight box model (background, padding,
@@ -8396,14 +8407,10 @@ class AlwaysColorText extends Plugin {
           [],
         ),
       );
-      const targets = [
-        { key: "inline-title", sel: ".inline-title" },
-        { key: "tab-title", sel: ".workspace-tab-header-inner-title" },
-      ];
       const hideText = this.settings.hideTextColors === true;
       const hideBg = this.settings.hideHighlights === true;
-      targets.forEach(({ key, sel }) => {
-        const els = Array.from(document.querySelectorAll(sel));
+      TITLE_TARGETS.forEach(({ key, cls }) => {
+        const els = Array.from(document.querySelectorAll("." + cls));
         if (!els.length) return;
         // If this title element is blacklisted, clear any existing styling and skip
         if (this.isMarkdownElementBlacklisted(key)) {
@@ -8411,8 +8418,9 @@ class AlwaysColorText extends Plugin {
           return;
         }
         // All (non-blacklisted) entries for this target. Entries with an empty
-        // titleFilter match every title; filtered entries must match the text.
-        // LAST entry wins, consistent with applyFormattingStyles.
+        // titleFilter match every title / file-explorer name; filtered entries
+        // must match the text. LAST entry wins, consistent with
+        // applyFormattingStyles.
         const candidates = all.filter(
           (e) =>
             e &&
@@ -8570,10 +8578,11 @@ class AlwaysColorText extends Plugin {
     this.ensureTitleObserver();
   }
 
-  // Tab switches and inline-title edits recreate/update title DOM nodes
-  // without re-running applyFormattingStyles, so keep title highlights in
-  // sync via a lightweight debounced observer (attributes excluded to avoid
-  // loops from our own inline-style writes).
+  // Tab switches, inline-title edits and file-explorer changes (create, rename,
+  // expand/collapse) recreate or update these DOM nodes without re-running
+  // applyFormattingStyles, so keep the highlights in sync via a lightweight
+  // debounced observer (attributes excluded to avoid loops from our own
+  // inline-style writes).
   ensureTitleObserver() {
     if (this._titleObserver) return;
     try {
@@ -8586,7 +8595,7 @@ class AlwaysColorText extends Plugin {
               try {
                 if (
                   t.closest(
-                    ".inline-title, .workspace-tab-header-inner-title, .workspace-tab-header",
+                    TITLE_TARGET_SELECTOR + ", .workspace-tab-header",
                   )
                 )
                   return true;
@@ -8596,7 +8605,7 @@ class AlwaysColorText extends Plugin {
               try {
                 if (
                   t.parentElement.closest(
-                    ".inline-title, .workspace-tab-header-inner-title, .workspace-tab-header",
+                    TITLE_TARGET_SELECTOR + ", .workspace-tab-header",
                   )
                 )
                   return true;
@@ -8607,14 +8616,11 @@ class AlwaysColorText extends Plugin {
                 try {
                   if (
                     (n.classList &&
-                      (n.classList.contains("inline-title") ||
-                        n.classList.contains(
-                          "workspace-tab-header-inner-title",
-                        ) ||
+                      (TITLE_TARGETS.some((x) =>
+                        n.classList.contains(x.cls),
+                      ) ||
                         n.classList.contains("workspace-tab-header"))) ||
-                    n.querySelector(
-                      ".inline-title, .workspace-tab-header-inner-title",
-                    )
+                    n.querySelector(TITLE_TARGET_SELECTOR)
                   )
                     return true;
                 } catch (_) {}
@@ -8625,13 +8631,8 @@ class AlwaysColorText extends Plugin {
                 try {
                   if (
                     (n.classList &&
-                      (n.classList.contains("inline-title") ||
-                        n.classList.contains(
-                          "workspace-tab-header-inner-title",
-                        ))) ||
-                    n.querySelector(
-                      ".inline-title, .workspace-tab-header-inner-title",
-                    )
+                      TITLE_TARGETS.some((x) => n.classList.contains(x.cls))) ||
+                    n.querySelector(TITLE_TARGET_SELECTOR)
                   )
                     return true;
                 } catch (_) {}
@@ -9049,9 +9050,10 @@ class AlwaysColorText extends Plugin {
                     ? "contains"
                     : "exact";
         x.matchType = normalized;
-        // Normalize title-specific match mode for tab-title / inline-title entries.
+        // Normalize title/name-specific match mode for the text-filtered
+        // targets (inline-title / tab-title / file-name / folder-name).
         // Default is "contains" to preserve legacy behavior where only substring search existed.
-        if (x.targetElement === "tab-title" || x.targetElement === "inline-title") {
+        if (isTitleFilterTarget(x.targetElement)) {
           const rawTitleMt = x.titleMatchType != null ? String(x.titleMatchType) : "";
           x.titleMatchType = rawTitleMt ? normalizeTitleMatchType(rawTitleMt) : "contains";
           // Keep titleFilter as trimmed string (empty means no filter)
@@ -9206,7 +9208,7 @@ class AlwaysColorText extends Plugin {
             typeof e.markTarget === "string" && e.markTarget
               ? e.markTarget
               : "text";
-          if (e.targetElement === "tab-title" || e.targetElement === "inline-title") {
+          if (isTitleFilterTarget(e.targetElement)) {
             const raw = e.titleMatchType != null ? String(e.titleMatchType) : "";
             e.titleMatchType = raw ? normalizeTitleMatchType(raw) : "contains";
             if (e.titleFilter != null) e.titleFilter = String(e.titleFilter);
