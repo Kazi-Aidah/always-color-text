@@ -523,6 +523,15 @@ module.exports = {
   "preset_group_markdown_formatting": "Markdown Formatting",
   "preset_group_other_patterns": "Other Patterns",
   "preset_group_brackets": "Brackets",
+  "preset_internal_link": "Internal Link ([[note]])",
+  "preset_inline_code": "Inline Code (`code`)",
+  "preset_strikethrough": "Strikethrough (~~...~~)",
+  "preset_blockquote": "Blockquote",
+  "preset_tag": "Tag (#tag)",
+  "preset_all_tags": "All Tags",
+  "preset_inline_title": "Inline Title (note name)",
+  "preset_tab_title": "Tab Title (note name in tab)",
+  "preset_options_label": "Preset options",
 
   // Preset Examples
   "preset_example_heading": "# Heading",
@@ -552,6 +561,14 @@ module.exports = {
   "preset_example_single_quotes_word": "'word'",
   "preset_example_highlight": "==highlighted text==",
   "preset_example_all_text": "This will target all texts.",
+  "preset_example_internal_link": "[[My Note]]",
+  "preset_example_inline_code": "`code`",
+  "preset_example_strike": "~~struck~~",
+  "preset_example_quote": "> quoted text",
+  "preset_example_tag": "#project",
+  "preset_example_tag_all": "#any-tag",
+  "preset_example_inline_title": "Note title",
+  "preset_example_tab_title": "Note title",
   
   // Blacklist Settings
   "blacklist_words_header": "Blacklists",
@@ -778,5 +795,107 @@ module.exports = {
 
   // Group Select & Commands
   "no_group": "No Group",
-  "command_color_text_for_file": "Color Selected Text for Current File"
+  "command_color_text_for_file": "Color Selected Text for Current File",
+
+  // Missing Keys Added (second pass — scanned from source)
+
+  // Text Style Presets modal
+  "text_style_presets_header": "Text Style Presets",
+  "rename_preset": "Rename Preset",
+  "new_preset_name": "New Preset",
+  "btn_add_preset": "+ Add Style",
+  "btn_reset_presets": "Reset",
+  "confirm_reset_presets_title": "Reset built-in presets?",
+  "confirm_reset_presets": "Reset built-in presets to their original styles? Your added styles will not be deleted.",
+  "make_default": "Make Default",
+  "edit_highlight_styling": "Edit Highlight Styling",
+  "edit_custom_css": "Edit Custom CSS",
+  "rename": "Rename",
+  "duplicate": "Duplicate",
+  "delete": "Delete",
+  "save": "Save",
+  "delete_rule": "Delete Rule",
+
+  // Swatches & color picker
+  "btn_save_swatch": "Save Swatch",
+  "delete_swatch": "Delete Swatch",
+  "btn_style": "Style",
+  "opt_style_default": "Per-Entry",
+  "color_target_tooltip": "Color target: text = matched text only, line = entire line, next line = next line",
+
+  // Notices
+  "create_new_entry_for": "Create new entry for \"{word}\"",
+  "kind_markdown": "Markdown",
+  "entry_moved_to_group": "Entry moved to \"{groupName}\"",
+  "no_blacklist_groups_available": "No blacklist groups available",
+  "notice_error_moving_entry": "Error moving entry. Please try again.",
+  "notice_added_to_existing": "\"{word}\" added to existing entry",
+  "notice_already_in_entry": "\"{word}\" already exists in entry",
+  "notice_error_opening_modal": "Unable to open modal",
+  "notice_pattern_too_long": "Pattern too long — the editor limits patterns to 200 characters",
+  "notice_word_group_activated": "Word group \"{group}\" activated",
+  "notice_word_group_deactivated": "Word group \"{group}\" deactivated",
+
+  // Settings
+  "dismiss": "Dismiss",
+  "group_limit_input_tooltip": "0=all; number=last N; ct=color-text; cl=color-line; cc=color-child",
+  "one_time_actions_deprecation_notice_heading": "Notice",
+  "one_time_actions_deprecation_notice": "One-Time Actions will be removed from this plugin in the future and moved to a dedicated plugin currently in development.",
+  "search_disabled_files_placeholder": "Search disabled files…",
+  "search_disabled_files_aria_label": "Search disabled files",
+
+  // Regex tester preview status
+  "preview_error": "Preview failed",
+  "preview_status_disabled": "Always Color Text is disabled — nothing is colored",
+  "preview_status_group_inactive": "The selected group is inactive — the editor skips its entries",
+  "preview_status_entry_inactive": "This entry is disabled — the editor skips it",
+  "preview_status_no_color": "No usable color — the editor skips entries without a valid color",
+  "preview_status_too_long": "Pattern too long — the editor limits patterns to 200 characters",
+  "preview_status_blocked": "Pattern blocked for memory safety — the editor won't match it",
+  "preview_status_invalid": "Pattern can't compile — the editor won't match it",
+  "preview_status_blacklisted": "Pattern is blacklisted — the editor filters it out",
+  "preview_status_hidden": "Hidden by a color-hiding setting — the editor filters it out",
+
+  // Regex tester preview notes
+  "preview_note_flags": "editor flags: {flags}",
+  "preview_note_regex_off": "regex support is off — the editor matches this as literal text",
+  "preview_note_zero_width": "zero-width matches ({n}) aren't painted and stop the editor's scan",
+  "preview_note_spoiler": "{n} matches hidden in spoilers",
+  "preview_note_codeblock": "{n} matches hidden in code blocks",
+  "preview_note_heading": "{n} matches covered by heading coloring",
+  "preview_note_blacklist_list": "{n} matches in blacklisted list items",
+  "preview_note_context": "{n} matches blacklisted by word rules",
+  "preview_note_whole_word": "Live Preview needs whole words here ({n}) — reading mode would color them",
+  "preview_note_overlap": "{n} matches covered by other highlights",
+  "preview_note_word_completion": "word-completion coloring: on the line you edit, matches must end at a word boundary",
+  "preview_note_word_completion_gate": "word-completion coloring removed {n} matches (must end at whitespace)",
+  "preview_note_paint_hidden": "{n} matches hidden by color-hiding settings",
+  "preview_note_capped": "the editor stops at 500 matches per pattern",
+  "preview_note_chunked": "long sample: the editor matches in 2000-character chunks",
+  "preview_note_target_element": "styled via markdown-element rules, not the text matcher — preview may differ",
+  "preview_note_lp_off": "Live Preview coloring is off — matches apply in reading mode",
+
+  // Markdown element targets
+  "target_codeblock": "Code Block",
+  "target_comment": "Comment",
+  "target_bullet_list": "Bullet Lists",
+  "target_numbered_list": "Numbered Lists",
+  "target_task_list": "Checkbox / Task List",
+  "target_all_tags": "All Tags",
+  "target_tab_title": "Tab Title",
+  "target_group_text": "Text Formatting",
+  "target_group_links": "Links",
+  "target_group_lists": "Lists",
+  "target_group_other": "Other",
+
+  // Markdown element config inputs
+  "md_cfg_title": "Additional matching options for this element",
+  "md_cfg_headingLevels": "1, 2, 3, 4, 5, 6",
+  "md_cfg_taskTypes": "[ ], [x]",
+  "md_cfg_tagFilter": "tag1, tag2",
+  "md_cfg_titleFilter": "title text",
+  "title_match_mode_title": "How the title text must match the filter",
+
+  // Advanced rules
+  "rule_choose_placeholder_pattern": "Choose pattern…"
 };

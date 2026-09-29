@@ -3418,10 +3418,12 @@ class AlwaysColorText extends Plugin {
                 ? this.t(
                     "notice_word_group_activated",
                     `Word group "${latestGroupName}" activated`,
+                    { group: latestGroupName },
                   )
                 : this.t(
                     "notice_word_group_deactivated",
                     `Word group "${latestGroupName}" deactivated`,
+                    { group: latestGroupName },
                   );
               new Notice(status);
 
