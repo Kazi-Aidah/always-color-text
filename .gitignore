@@ -34,3 +34,6 @@ backups/
 
 # Orphaned legacy stylesheet (pre-split monolith; not part of the build)
 styles/mainstyle.css
+
+# Build output (built by `npm run build`, shipped as a GitHub release asset only)
+main.js

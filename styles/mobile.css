@@ -1603,6 +1603,58 @@ body.is-tablet .act-mobile-tip .act-mobile-tip-dismiss {
   align-items: center;
 }
 
+/* ====== QUICK COLORS ROW — Edit Swatches gets its own line ======
+   Markup (SettingsTab._refreshQuickMenuColorsSetting): [toggle] [name/description]
+   [Edit Swatches control]. `.act-quick-colors-setting` marks that row.
+   Desktop keeps the single line, with the control separated from the
+   description by one grid step (replaces the old 10px inline margin so the
+   stacked rules below can drop it without fighting an inline style). */
+.act-quick-colors-setting .setting-item-control {
+  margin-left: var(--size-4-3);
+}
+
+/* Phones: the control wraps to a second row, full width (big tap target),
+   while the toggle + name/description keep the first row.
+   Tablets also carry .is-mobile but are wide enough for the single row —
+   :not(.is-tablet) keeps them on it (a tablet narrowed to <=600px still
+   stacks through the media query below). */
+body.is-mobile:not(.is-tablet) .act-quick-colors-setting {
+  flex-wrap: wrap;
+}
+/* Basis 0 + grow: the text always fits on row 1 however long the translation
+   is — that is what pushes the 100%-wide control onto row 2. */
+body.is-mobile:not(.is-tablet) .act-quick-colors-setting .setting-item-info {
+  flex: 1 1 0;
+  min-width: 0;
+}
+body.is-mobile:not(.is-tablet) .act-quick-colors-setting .setting-item-control {
+  flex: 0 0 100%;
+  margin-left: 0;
+  margin-top: var(--size-2-3);
+}
+body.is-mobile:not(.is-tablet) .act-quick-colors-setting .setting-item-control > button {
+  width: 100%;
+}
+
+/* Narrow view (desktop window / split pane below 600px): same stacked row. */
+@media (max-width: 600px) {
+  .act-quick-colors-setting {
+    flex-wrap: wrap;
+  }
+  .act-quick-colors-setting .setting-item-info {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .act-quick-colors-setting .setting-item-control {
+    flex: 0 0 100%;
+    margin-left: 0;
+    margin-top: var(--size-2-3);
+  }
+  .act-quick-colors-setting .setting-item-control > button {
+    width: 100%;
+  }
+}
+
 /* Format preview: finger-friendly corners only where the pointer is a thumb */
 body.is-mobile .act-preset-format-preview {
   border-radius: var(--touch-radius-xxs);

@@ -3413,10 +3413,15 @@ export class ColorSettingTab extends PluginSettingTab {
         });
 
       try {
+        // Hook for the mobile/narrow CSS (stacked "Edit Swatches" row).
+        quickMenuColorsSetting.settingEl.addClass("act-quick-colors-setting");
+
         quickMenuColorsSetting.settingEl.style.marginTop = "0px";
         quickMenuColorsSetting.settingEl.style.marginBottom = "8px";
         quickMenuColorsSetting.settingEl.style.borderTop = "none";
-        quickMenuColorsSetting.controlEl.style.marginLeft = "10px";
+        // Control spacing lives in styles/mobile.css (".act-quick-colors-setting
+        // .setting-item-control") so the stacked mobile row can zero it without
+        // fighting an inline style.
 
         // Move the toggle to the left of the title/description
         const ctrl = quickMenuColorsSetting.controlEl;
@@ -8044,6 +8049,9 @@ export class ColorSettingTab extends PluginSettingTab {
           blIcon.classList.add("act-search-icon");
         } catch (_) {}
       }
+      try {
+        setIcon(blIcon, "search");
+      } catch (e) {}
       const blSearchHandler = () => {
         this._blacklistSearchQuery = String(blSearch.value || "")
           .trim()
@@ -8398,6 +8406,9 @@ export class ColorSettingTab extends PluginSettingTab {
           blGroupIcon.classList.add("act-search-icon");
         } catch (_) {}
       }
+      try {
+        setIcon(blGroupIcon, "search");
+      } catch (e) {}
 
       const blGroupsContainer = containerEl.createDiv();
       blGroupsContainer.addClass("act-blacklist-groups-container");
@@ -8565,6 +8576,9 @@ export class ColorSettingTab extends PluginSettingTab {
           prIcon.classList.add("act-search-icon");
         } catch (_) {}
       }
+      try {
+        setIcon(prIcon, "search");
+      } catch (e) {}
       const prSearchHandler = () => {
         this._pathRulesSearchQuery = String(prSearch.value || "")
           .trim()
