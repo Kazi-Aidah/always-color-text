@@ -10137,12 +10137,15 @@ class AlwaysColorText extends Plugin {
   }
 
   // --- Reconfigure CodeMirror extensions for all editors ---
-   reconfigureEditorExtensions() {
+  reconfigureEditorExtensions() {
     // Regenerate the global markdown-element stylesheet so editor (live
     // preview) styling reflects the current markdown-target entries.
     try {
       this.applyFormattingStyles();
     } catch (e) {}
+    // The editor rebuild below repaints CM decorations but not the DOM-based
+    // callout/table passes, whose signatures ignore rule state.
+    this.invalidateLpDomPaintCaches();
     if (this.extension) {
       this.app.workspace.unregisterEditorExtension(this.extension);
       this.app.workspace.registerEditorExtension(this.extension);
@@ -12732,6 +12735,7 @@ class AlwaysColorText extends Plugin {
       if (this._filteredEntriesCache) this._filteredEntriesCache.clear();
     } catch (_) {}
     this._clearActProcessedStamps();
+    this.invalidateLpDomPaintCaches();
     return compileWordEntriesLogic(this);
   }
 
@@ -12744,6 +12748,7 @@ class AlwaysColorText extends Plugin {
       if (this._filteredEntriesCache) this._filteredEntriesCache.clear();
     } catch (_) {}
     this._clearActProcessedStamps();
+    this.invalidateLpDomPaintCaches();
     return compileTextBgColoringEntriesLogic(this);
   }
 
@@ -12755,6 +12760,19 @@ class AlwaysColorText extends Plugin {
       for (const el of stamped) {
         try { delete el.dataset.actProcessed; } catch (_) {}
       }
+    } catch (_) {}
+  }
+
+  // rules/entries changed :: invalidateLpDomPaintCaches
+  // Live Preview paints callouts and tables into the DOM and then skips any
+  // element whose signature (text length, flags) is unchanged. That signature
+  // carries no rule state, so a rules-only change would keep their old colors
+  // while reading mode repaints. Drop the caches so the next pass repaints.
+  invalidateLpDomPaintCaches() {
+    try {
+      this._lpCalloutCache = new WeakMap();
+      this._lpTableCache = new WeakMap();
+      this._lpTablesLastRun = 0;
     } catch (_) {}
   }
 
@@ -19132,15 +19150,16 @@ class AlwaysColorText extends Plugin {
     );
 
     // FIRST: Process text+bg entries (they have priority and override other styling)
-    // Filter text+bg entries by file rules just like regular entries
+    // Filter text+bg entries with the same full gate the word channel gets —
+    // group-level Edit Rules included (see buildDecoChunked).
     let textBgEntries = Array.isArray(this._compiledTextBgEntries)
       ? this._compiledTextBgEntries
       : [];
     if (filePath) {
-      textBgEntries = textBgEntries.filter((entry) => {
-        if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern, entry);
-      });
+      textBgEntries = this.filterEntriesByAdvancedRules(
+        filePath,
+        textBgEntries,
+      );
     }
     for (const entry of textBgEntries) {
       if (!entry || entry.invalid) continue;
@@ -20638,15 +20657,19 @@ class AlwaysColorText extends Plugin {
     const blacklistWordSet = this.buildBlacklistWordSet(filePath);
 
     // FIRST: Process text+bg entries (they have priority)
-    // Filter text+bg entries by file rules just like regular entries
+    // This pass reads _compiledTextBgEntries directly instead of the caller's
+    // already-filtered list, so the full gate has to be re-applied here.
+    // shouldColorText alone never sees group-level Edit Rules, which is how a
+    // word group's "does not color in" rule stayed unenforced in Live Preview
+    // while reading mode (fed the filtered list) honoured it.
     let textBgEntries = Array.isArray(this._compiledTextBgEntries)
       ? this._compiledTextBgEntries
       : [];
     if (filePath) {
-      textBgEntries = textBgEntries.filter((entry) => {
-        if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern, entry);
-      });
+      textBgEntries = this.filterEntriesByAdvancedRules(
+        filePath,
+        textBgEntries,
+      );
     }
       if (textBgEntries.length > 0) {
         for (const entry of textBgEntries) {

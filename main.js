@@ -45435,6 +45435,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
       this.applyFormattingStyles();
     } catch (e) {
     }
+    this.invalidateLpDomPaintCaches();
     if (this.extension) {
       this.app.workspace.unregisterEditorExtension(this.extension);
       this.app.workspace.registerEditorExtension(this.extension);
@@ -47493,6 +47494,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (_) {
     }
     this._clearActProcessedStamps();
+    this.invalidateLpDomPaintCaches();
     return compileWordEntriesLogic(this);
   }
   // Compile text + background coloring entries
@@ -47503,6 +47505,7 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     } catch (_) {
     }
     this._clearActProcessedStamps();
+    this.invalidateLpDomPaintCaches();
     return compileTextBgColoringEntriesLogic(this);
   }
   // Remove all data-act-processed stamps from the DOM so reading views re-render
@@ -47516,6 +47519,19 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
         } catch (_) {
         }
       }
+    } catch (_) {
+    }
+  }
+  // rules/entries changed :: invalidateLpDomPaintCaches
+  // Live Preview paints callouts and tables into the DOM and then skips any
+  // element whose signature (text length, flags) is unchanged. That signature
+  // carries no rule state, so a rules-only change would keep their old colors
+  // while reading mode repaints. Drop the caches so the next pass repaints.
+  invalidateLpDomPaintCaches() {
+    try {
+      this._lpCalloutCache = /* @__PURE__ */ new WeakMap();
+      this._lpTableCache = /* @__PURE__ */ new WeakMap();
+      this._lpTablesLastRun = 0;
     } catch (_) {
     }
   }
@@ -52483,10 +52499,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     );
     let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
     if (filePath) {
-      textBgEntries = textBgEntries.filter((entry) => {
-        if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern, entry);
-      });
+      textBgEntries = this.filterEntriesByAdvancedRules(
+        filePath,
+        textBgEntries
+      );
     }
     for (const entry of textBgEntries) {
       if (!entry || entry.invalid) continue;
@@ -53531,10 +53547,10 @@ var AlwaysColorText = class _AlwaysColorText extends import_obsidian29.Plugin {
     const blacklistWordSet = this.buildBlacklistWordSet(filePath);
     let textBgEntries = Array.isArray(this._compiledTextBgEntries) ? this._compiledTextBgEntries : [];
     if (filePath) {
-      textBgEntries = textBgEntries.filter((entry) => {
-        if (!entry || !entry.pattern) return true;
-        return this.shouldColorText(filePath, entry.pattern, entry);
-      });
+      textBgEntries = this.filterEntriesByAdvancedRules(
+        filePath,
+        textBgEntries
+      );
     }
     if (textBgEntries.length > 0) {
       for (const entry of textBgEntries) {
