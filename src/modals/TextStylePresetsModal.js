@@ -86,12 +86,20 @@ export class TextStylePresetsModal extends Modal {
       (p) => p && !seedUids.has(p.uid),
     );
     const allItems = builtInPresets.concat(quickStyles).concat(customPresets);
+    const renderedUids = new Set();
     allItems.forEach((preset) => {
       if (!preset) return;
-      if (defaultPreset && preset.uid === defaultPreset.uid) return;
+      // Assign the uid before the default check below: compared while still
+      // undefined, a uid-less preset matched a uid-less default and vanished
+      // from the grid instead of being given an identity.
       if (!preset.uid)
         preset.uid =
           "qs-" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+      if (defaultPreset && preset.uid === defaultPreset.uid) return;
+      // One row per uid: a quick style kept in both lists would otherwise
+      // render once per list (duplicating it in the grid).
+      if (renderedUids.has(preset.uid)) return;
+      renderedUids.add(preset.uid);
       const box = grid.createDiv({ cls: "act-tsp-box" });
       const preview = box.createDiv({ cls: "act-tsp-preview" });
       this._applyStyle(preview, preset, preset.name || "Style");
@@ -166,49 +174,15 @@ export class TextStylePresetsModal extends Modal {
     }
 
     let border = "";
-    if (style !== "text" && p.enableBorder) {
-      const thickness = p.borderThickness ?? 1;
-      const line = p.borderLineStyle || "solid";
-      const color = bgHex || accent;
-      const css = `${thickness}px ${line} ${color} !important;`;
-      switch (p.borderStyle || "full") {
-        case "bottom":
-          border = ` border-bottom: ${css}`;
-          break;
-        case "top":
-          border = ` border-top: ${css}`;
-          break;
-        case "left":
-          border = ` border-left: ${css}`;
-          break;
-        case "right":
-          border = ` border-right: ${css}`;
-          break;
-        case "top-bottom":
-          border = ` border-top: ${css} border-bottom: ${css}`;
-          break;
-        case "left-right":
-          border = ` border-left: ${css} border-right: ${css}`;
-          break;
-        case "top-left-right":
-          border = ` border-top: ${css} border-left: ${css} border-right: ${css}`;
-          break;
-        case "bottom-left-right":
-          border = ` border-bottom: ${css} border-left: ${css} border-right: ${css}`;
-          break;
-        case "top-right":
-          border = ` border-top: ${css} border-right: ${css}`;
-          break;
-        case "top-left":
-          border = ` border-top: ${css} border-left: ${css}`;
-          break;
-        case "bottom-right":
-          border = ` border-bottom: ${css} border-right: ${css}`;
-          break;
-        case "full":
-        default:
-          border = ` border: ${css}`;
-      }
+    if (style !== "text" && typeof this.plugin.generateBorderStyle === "function") {
+      // Border colour follows the colortype via the plugin's own generator —
+      // the same call the editor preview and the runtime use (text colour
+      // for both/text colortypes, background for highlight, accent when
+      // unset). Hand-picking bgHex here made a "both" preset's preview
+      // border disagree with Edit Highlight Styling.
+      border =
+        this.plugin.generateBorderStyle(textHex || accent, bgHex || accent, styleObj) ||
+        "";
     }
 
     const textColorVal = textHex || "var(--text-normal)";
@@ -414,26 +388,61 @@ export class TextStylePresetsModal extends Modal {
         preset.matchType = temp.matchType;
         preset.caseSensitive = temp.caseSensitive;
         preset.wordGroup = temp.groupUid;
-        // Colors persist only if the preset already had a real color, or the
-        // user picked a color different from the accent default.
-        if (
+        // Colors persist per channel: a channel the preset already holds
+        // takes temp's value (so a reset — empty temp — clears it), while an
+        // unset channel only takes a value the user actually picked. The
+        // accent hex on temp is the editor's PRE-FILL for the native picker,
+        // never a choice, so it must not be copied back as a colour. The text
+        // channel only carries a pick in the modes that can hold one: in
+        // highlight mode the editor forces it to currentColor, so copying it
+        // back would drop the preset's text color on every background edit.
+        const presetBgHeld =
           preset.backgroundColor &&
-          this.plugin.isValidHexColor(preset.backgroundColor)
-        ) {
-          preset.backgroundColor = temp.backgroundColor;
-          preset.textColor = temp.textColor;
+          this.plugin.isValidHexColor(preset.backgroundColor);
+        if (temp.styleType === "text") {
+          // The text colortype stores its colour in temp.color — saveData
+          // nulls temp.textColor (structural marker) and temp.backgroundColor
+          // (unused by this colortype), so neither may drive the copy-back:
+          // doing so nulled a held colour and lost the actual pick, wiping
+          // the stored background too. temp.color undefined means the editor
+          // never synced (closed untouched) — keep the preset as it was.
+          if (temp.color !== undefined && temp.color !== null) {
+            const presetTextHeld =
+              preset.textColor &&
+              preset.textColor !== "currentColor" &&
+              this.plugin.isValidHexColor(preset.textColor);
+            if (presetTextHeld) {
+              preset.textColor = temp.color;
+            } else if (
+              temp.color &&
+              temp.color.toLowerCase() !== accent.toLowerCase()
+            ) {
+              preset.textColor = temp.color;
+            }
+          }
+          // Background stays untouched: its null on temp is structural.
         } else {
-          if (
+          if (presetBgHeld) {
+            preset.backgroundColor = temp.backgroundColor;
+          } else if (
             temp.backgroundColor &&
             temp.backgroundColor.toLowerCase() !== accent.toLowerCase()
           ) {
             preset.backgroundColor = temp.backgroundColor;
           }
-          if (
-            temp.textColor &&
-            temp.textColor.toLowerCase() !== accent.toLowerCase()
-          ) {
-            preset.textColor = temp.textColor;
+          if (temp.styleType === "both") {
+            const presetTextHeld =
+              preset.textColor &&
+              preset.textColor !== "currentColor" &&
+              this.plugin.isValidHexColor(preset.textColor);
+            if (presetTextHeld) {
+              preset.textColor = temp.textColor;
+            } else if (
+              temp.textColor &&
+              temp.textColor.toLowerCase() !== accent.toLowerCase()
+            ) {
+              preset.textColor = temp.textColor;
+            }
           }
         }
         this._propagatePresetChange(preset, prevSignature);

@@ -352,6 +352,17 @@ describe("status gates (why the editor matches nothing)", () => {
     expect(describePreviewStatus(res, t)).toContain("disabled");
   });
 
+  it("plugin disabled + ignoreGlobalEnabled (the tester) → still paints, with a note", () => {
+    const res = computePreviewMatches(
+      makePlugin({ enabled: false }),
+      baseInput({ ignoreGlobalEnabled: true }),
+    );
+    expect(res.status).toBe("ok");
+    expect(res.count).toBeGreaterThan(0);
+    expect(noteIds(res)).toContain("plugin-off");
+    expect(describePreviewNotes(res, t)).toContain("tester previews anyway");
+  });
+
   it("inactive group → inactive/group", () => {
     const res = computePreviewMatches(
       makePlugin(),

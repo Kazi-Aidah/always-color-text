@@ -878,6 +878,7 @@ module.exports = {
   "preview_note_chunked": "long sample: the editor matches in 2000-character chunks",
   "preview_note_target_element": "styled via markdown-element rules, not the text matcher — preview may differ",
   "preview_note_lp_off": "Live Preview coloring is off — matches apply in reading mode",
+  "preview_note_plugin_off": "Always Color Text is off — the editor paints nothing, the tester previews anyway",
 
   // Markdown element targets
   "target_codeblock": "Code Block",

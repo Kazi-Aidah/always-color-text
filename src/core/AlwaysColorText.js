@@ -40,6 +40,7 @@ import { AlertModal } from '../modals/AlertModal.js';
 import { ConfirmationModal } from '../modals/ConfirmationModal.js';
 import { findColoringEntries, buildSelectionContext } from '../utils/reverseLookup.js';
 import { adoptPresetColortype } from '../utils/presetLinker.js';
+import { deriveQuickMenuOrder, orderQuickMenuByOrder } from '../utils/presetOrdering.js';
 import { getHideFlags, resolveChannels, resolveTextColor } from '../utils/hideChannels.js';
 import { SelectColoringEntryModal } from '../modals/SelectColoringEntryModal.js';
 
@@ -682,7 +683,11 @@ class AlwaysColorText extends Plugin {
         style = document.createElement("style");
         style.id = "act-inline-neutralizer";
         style.textContent = `
-          span.always-color-text-highlight { color: inherit !important; background-color: transparent !important; padding: 0 !important; border: none !important; }
+          /* The Theme Color Adjustments preview spans carry .act-fixer-noauto:
+             they are plugin UI (settings modal), not document content, so the
+             preview must keep showing the real swatch colors and preset chips
+             even while "Enable Global Color" is off. */
+          span.always-color-text-highlight:not(.act-fixer-noauto) { color: inherit !important; background-color: transparent !important; padding: 0 !important; border: none !important; }
           .callout span.always-color-text-highlight { color: inherit !important; background-color: transparent !important; padding: 0 !important; border: none !important; }
           .is-live-preview .callout span.always-color-text-highlight { color: inherit !important; background-color: transparent !important; padding: 0 !important; border: none !important; }
           .is-live-preview .cm-callout span.always-color-text-highlight { color: inherit !important; background-color: transparent !important; padding: 0 !important; border: none !important; }
@@ -1335,6 +1340,52 @@ class AlwaysColorText extends Plugin {
         this.settings.textStylePresets = [];
       }
     }
+    // loadSettings hands out the defaultSettings arrays by reference when the
+    // vault has never saved one; pushing a preset onto that reference pollutes
+    // the shipped seed list the presets modal, reset and reorder all derive
+    // their "built-in" set from.
+    if (this.settings.textStylePresets === defaultSettings.textStylePresets) {
+      this.settings.textStylePresets = JSON.parse(
+        JSON.stringify(defaultSettings.textStylePresets || []),
+      );
+    }
+    if (this.settings.quickStyles === defaultSettings.quickStyles) {
+      this.settings.quickStyles = JSON.parse(
+        JSON.stringify(defaultSettings.quickStyles || []),
+      );
+    }
+    // Repair lists an older reorder save could leave behind: quick styles were
+    // written into textStylePresets as well (showing them twice in the presets
+    // modal) and single items were stored more than once. Only a copy that
+    // still exists in its own list, or an extra occurrence of the same uid, is
+    // dropped — nothing user-made is lost.
+    try {
+      const qsUids = new Set(
+        (this.settings.quickStyles || [])
+          .filter((q) => q && q.uid)
+          .map((q) => q.uid),
+      );
+      const seenTsp = new Set();
+      this.settings.textStylePresets = (
+        Array.isArray(this.settings.textStylePresets)
+          ? this.settings.textStylePresets
+          : []
+      ).filter((p) => {
+        if (!p) return false;
+        if (p.uid && (qsUids.has(p.uid) || seenTsp.has(p.uid))) return false;
+        if (p.uid) seenTsp.add(p.uid);
+        return true;
+      });
+      const seenQs = new Set();
+      this.settings.quickStyles = (
+        Array.isArray(this.settings.quickStyles) ? this.settings.quickStyles : []
+      ).filter((q) => {
+        if (!q) return false;
+        if (q.uid && seenQs.has(q.uid)) return false;
+        if (q.uid) seenQs.add(q.uid);
+        return true;
+      });
+    } catch (e) {}
     if (
       Array.isArray(this.settings.textStylePresets) &&
       this.settings.textStylePresets.length > 0 &&
@@ -1342,6 +1393,10 @@ class AlwaysColorText extends Plugin {
     ) {
       this.settings.textStylePresets[0].isDefault = true;
     }
+    // The Quick Menu's arrangement is its own list (see
+    // ensureQuickMenuOrder) — snapshot it here, after the list repair above,
+    // so regular preset reorders stop dragging menu items along.
+    this.ensureQuickMenuOrder();
     // One-time migration: built-in presets were previously auto-assigned a
     // concrete accent hex on edit. Clear those so they render with the live
     // var(--color-accent) until the user explicitly picks a color.
@@ -10081,6 +10136,11 @@ class AlwaysColorText extends Plugin {
         ".always-color-text-highlight",
       );
       for (const hl of highlights) {
+        // Modal previews (Theme Color Adjustments) are UI, not note content:
+        // a global-toggle sweep must never flatten them into plain text.
+        try {
+          if (hl.closest && hl.closest(".act-theme-fixer-modal")) continue;
+        } catch (_) {}
         try {
           const textNode = document.createTextNode(hl.textContent);
           hl.replaceWith(textNode);
@@ -11622,6 +11682,25 @@ class AlwaysColorText extends Plugin {
     } catch (_) {}
   }
 
+  // The Quick Menu's arrangement lives in its own settings list, separate
+  // from the regular preset and quick-style orderings: dragging menu items
+  // and reordering presets must never disturb each other. Vaults that
+  // predate the list get a snapshot of the order the menu showed; while no
+  // item is flagged the snapshot stays empty and is taken again once the
+  // menu has members.
+  ensureQuickMenuOrder() {
+    try {
+      const order = this.settings.quickMenuOrder;
+      if (Array.isArray(order) && order.length) return;
+      this.settings.quickMenuOrder = deriveQuickMenuOrder({
+        quickStyles: this.settings.quickStyles,
+        presets: this.settings.textStylePresets,
+      });
+    } catch (e) {
+      this.settings.quickMenuOrder = [];
+    }
+  }
+
   // Combined list of styles shown in the right-click "Quick Styles" submenu.
   // User-defined Quick Styles are included by default (unless explicitly hidden
   // via showInQuickMenu === false). Text Style Presets are included only when
@@ -11640,7 +11719,9 @@ class AlwaysColorText extends Plugin {
     presets.forEach((p) => {
       if (p && p.showInQuickMenu === true) result.push(p);
     });
-    return result;
+    // Ordered by the Quick Menu's own arrangement, not by the regular list
+    // orderings above — members it does not know yet land at the end.
+    return orderQuickMenuByOrder(result, this.settings.quickMenuOrder);
   }
 
   // Helper: Generate tooltip text explaining why text is colored

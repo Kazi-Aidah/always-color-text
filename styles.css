@@ -544,6 +544,31 @@ div[contenteditable="true"]:focus {
   flex-wrap: wrap;
   align-items: center;
 }
+/* Style (preset) button + Edit Entry settings icon — same pair, in the same
+   order as the Pick Color modal's row: Style → settings → colortype → pickers */
+.act-regex-tester-controls .act-regex-tester-style-btn {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-modifier-form-field);
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+}
+.act-regex-tester-controls button.act-pickr-icon-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  padding: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-modifier-form-field);
+  cursor: pointer;
+}
+/* Status / diagnostics line under the preview — hidden */
+.act-regex-tester-status {
+  display: none;
+}
 /* Header row: "Regex Tester" title on the left, word group dropdown on the right */
 .act-regex-tester-header {
   display: flex;
@@ -562,7 +587,7 @@ div[contenteditable="true"]:focus {
 }
 /* ====== REGEX TESTER MODAL — MOBILE LAYOUT ====== */
 /* Row 1: flags row takes full width, flag buttons stretch equally */
-/* Row 2: colortype + colorline/text selects share a row equally */
+/* Row 2: Style button + settings icon + colortype share a row */
 /* Row 3: color pickers stretch width equally */
 /* Subject wrap: use touch-radius on mobile */
 .prompt.act .suggestion-item.mod-complex.is-selected.act .suggestion-title span {
@@ -822,7 +847,7 @@ padding: 2px 0px;
   gap: var(--size-2-2);
   padding: var(--size-4-3);
   border: 1px solid var(--background-modifier-border);
-  border-radius: var(--touch-radius-xxs);
+  border-radius: var(--radius-s);
   background: var(--background-modifier-form-field);
 }
 .act-preset-format-label {
@@ -1067,9 +1092,15 @@ body.is-mobile .act-regex-tester-controls {
     gap: 6px;
   }
   body.is-mobile .act-regex-tester-controls .act-regex-tester-style,
-  body.is-mobile .act-regex-tester-controls .act-regex-tester-mark-target {
+  body.is-mobile .act-regex-tester-controls .act-regex-tester-style-btn {
     flex: 1 1 0;
     min-width: 0;
+  }
+  body.is-mobile .act-regex-tester-controls button.act-pickr-icon-btn {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    height: 40px;
   }
   body.is-mobile .act-regex-tester-controls .act-regex-tester-text-color,
   body.is-mobile .act-regex-tester-controls .act-regex-tester-bg-color {
@@ -1603,7 +1634,6 @@ body.is-mobile .act-group-disable-label {
 
 .color-words-list {
     background-color: transparent;
-    border-radius: calc(var(--setting-items-radius) + 4px);
 }
 
 
@@ -2533,6 +2563,11 @@ body.is-tablet .act-mobile-tip .act-mobile-tip-dismiss {
 /* Plugin settings - center align setting items */
 .act-settings-container .setting-item {
   align-items: center;
+}
+
+/* Format preview: finger-friendly corners only where the pointer is a thumb */
+body.is-mobile .act-preset-format-preview {
+  border-radius: var(--touch-radius-xxs);
 }
 
 /* ====== PRESETS MODAL — NARROW SCREENS ======

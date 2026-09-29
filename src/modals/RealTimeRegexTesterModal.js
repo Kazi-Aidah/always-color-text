@@ -1,6 +1,9 @@
-import { Modal, Notice } from 'obsidian';
+import { Modal, Notice, setIcon } from 'obsidian';
 import { escapeHtml, debugError } from '../utils/debug.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
+import { EditEntryModal } from './EditEntryModal.js';
+import { TextStylePresetsModal } from './TextStylePresetsModal.js';
+import { adoptPresetColortype, applyPresetStyleToEntry } from '../utils/presetLinker.js';
 import {
   computePreviewMatches,
   describePreviewStatus,
@@ -15,6 +18,82 @@ function isHardcodedLegacyDefault(c) {
 
 function isBareBlack(c) {
   return String(c || "").toLowerCase() === "#000000";
+}
+
+/**
+ * Entry fields a Style preset (or an Edit Entry visit) can carry onto the
+ * regex being built here. They drive the preview's shape and are merged onto
+ * the entry when the tester saves.
+ */
+const STYLE_SHAPE_KEYS = [
+  "backgroundOpacity",
+  "highlightBorderRadius",
+  "cornerShape",
+  "highlightHorizontalPadding",
+  "highlightVerticalPadding",
+  "enableBorderThickness",
+  "borderStyle",
+  "borderLineStyle",
+  "borderOpacity",
+  "borderThickness",
+  "customCss",
+];
+
+const VAR_COLOR_RE = /^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/;
+
+function isVarColor(str) {
+  return typeof str === "string" && VAR_COLOR_RE.test(str.trim());
+}
+
+/** Resolve a var(--…) colour to hex so a native <input type="color"> can show it. */
+function resolveVarToHex(varStr) {
+  try {
+    const tmp = document.createElement("div");
+    tmp.style.color = varStr;
+    tmp.style.display = "none";
+    document.body.appendChild(tmp);
+    const computed = getComputedStyle(tmp).color;
+    document.body.removeChild(tmp);
+    const m = computed.match(/\d+/g);
+    if (m && m.length >= 3) {
+      return (
+        "#" +
+        m
+          .slice(0, 3)
+          .map((x) => parseInt(x, 10).toString(16).padStart(2, "0"))
+          .join("")
+      );
+    }
+  } catch (_) {}
+  return null;
+}
+
+/**
+ * Write a colour into a native colour input. var(--…) colours (which the
+ * input cannot hold) are staged in `dataset.varColor` and shown as their
+ * resolved hex.
+ */
+function setColorInputValue(input, colorStr) {
+  if (!colorStr) {
+    input.value = "#000000";
+    delete input.dataset.varColor;
+    return;
+  }
+  if (isVarColor(colorStr)) {
+    input.dataset.varColor = colorStr.trim();
+    input.value = resolveVarToHex(colorStr) || "#000000";
+  } else {
+    delete input.dataset.varColor;
+    input.value = colorStr;
+  }
+}
+
+/** Read back what the picker holds — the staged var() colour when present. */
+function getColorInputValue(input) {
+  if (input.dataset.varColor && isVarColor(input.dataset.varColor)) {
+    return input.dataset.varColor;
+  }
+  return input.value;
 }
 
 /**
@@ -99,6 +178,70 @@ export function resolveRegexTesterPreviewColors({ tRaw, bRaw, tTouched, bTouched
     effectiveTForBorder: hasValidT ? String(tRaw).trim() : "var(--color-accent)",
     effectiveBForBorder: hasValidB ? String(bRaw).trim() : "var(--color-accent)",
   };
+}
+
+/** Scratch uid for the style holder of a brand-new regex. */
+function makeStyleHolderUid() {
+  return (
+    "rt-style-" +
+    Date.now().toString(36) +
+    Math.random().toString(36).slice(2)
+  );
+}
+
+/**
+ * What a freshly opened tester stages from the DEFAULT Style preset.
+ *
+ * A brand-new tester (no entry being edited, no colour staged by the caller)
+ * opens with the default preset already applied: its shape (radius, padding,
+ * border, corner shape, CSS) seeds the style holder, and the colours its
+ * colortype needs come back for the pickers — so the first match paints
+ * instead of the preview falling over to "no usable colour".
+ *
+ * Returns null when the preset must keep out of the way: an entry is being
+ * edited, the caller staged colours of its own (an explicit pick always wins
+ * over the default), or there is no preset at all.
+ *
+ * @param {object} opts
+ * @param {object|null} opts.editingEntry entry being edited (no seed then)
+ * @param {string} opts.preFillTextColor colour staged by the caller
+ * @param {string} opts.preFillBgColor colour staged by the caller
+ * @param {string} opts.preFillStyleType colortype staged by the caller
+ * @param {Array<object>} opts.presets plugin.settings.textStylePresets
+ * @param {Function} opts.isValidHexColor
+ * @returns {{styleEntry:object, styleType:string, textColor:string, bgColor:string}|null}
+ */
+export function resolveRegexTesterDefaultPreset({
+  editingEntry,
+  preFillTextColor,
+  preFillBgColor,
+  preFillStyleType,
+  presets,
+  isValidHexColor,
+}) {
+  if (editingEntry) return null;
+  if (preFillTextColor || preFillBgColor) return null;
+  const list = (Array.isArray(presets) ? presets : []).filter(Boolean);
+  const preset = list.find((p) => p && p.isDefault) || list[0] || null;
+  if (!preset) return null;
+  const styleEntry = {
+    uid: makeStyleHolderUid(),
+    isRegex: true,
+    styleType: preFillStyleType || "both",
+    markTarget: "text",
+  };
+  // Same call a manual preset application makes: shape + preset link + a
+  // colortype whose every channel actually holds a colour.
+  applyPresetStyleToEntry(styleEntry, preset, isValidHexColor);
+  const st = styleEntry.styleType || preFillStyleType || "both";
+  const text =
+    st === "text"
+      ? styleEntry.color || styleEntry.textColor || ""
+      : styleEntry.textColor && styleEntry.textColor !== "currentColor"
+        ? styleEntry.textColor
+        : styleEntry.color || "";
+  const bg = st === "text" ? "" : styleEntry.backgroundColor || "";
+  return { styleEntry, styleType: st, textColor: text, bgColor: bg };
 }
 
 /**
@@ -227,6 +370,10 @@ export class RealTimeRegexTesterModal extends Modal {
     this._lastValidHTML = "";
     this._tPickerTouched = false;
     this._bPickerTouched = false;
+    // Holds the entry's Style (preset / Edit Entry) shape while editing, or a
+    // scratch object for a brand new regex. The preview reads its shape and
+    // the save path merges it onto the created entry.
+    this._styleEntry = null;
   }
   onOpen() {
     const { contentEl } = this;
@@ -238,6 +385,28 @@ export class RealTimeRegexTesterModal extends Modal {
       this.modalEl.style.maxWidth = "95vw";
       this.modalEl.style.padding = "20px";
     } catch (e) {}
+    // A brand-new tester opens with the default Style preset already applied
+    // (shape holder + colours), unless this is an edit or the caller staged
+    // colours of its own. Runs first: the controls below read these fields.
+    try {
+      const seed = resolveRegexTesterDefaultPreset({
+        editingEntry: this._editingEntry,
+        preFillTextColor: this._preFillTextColor,
+        preFillBgColor: this._preFillBgColor,
+        preFillStyleType: this._preFillStyleType,
+        presets: (this.plugin.settings &&
+          this.plugin.settings.textStylePresets) || [],
+        isValidHexColor: (c) => this.plugin.isValidHexColor(c),
+      });
+      if (seed) {
+        this._styleEntry = seed.styleEntry;
+        this._preFillStyleType = seed.styleType;
+        this._preFillTextColor = seed.textColor;
+        this._preFillBgColor = seed.bgColor;
+      }
+    } catch (e) {
+      debugError("REGEX_TESTER", "default preset seed failed", e);
+    }
     // Header row: "Regex Tester" heading on the left, word group dropdown on the right
     const headerRow = contentEl.createDiv();
     try {
@@ -324,6 +493,49 @@ export class RealTimeRegexTesterModal extends Modal {
       } catch (e) {}
       flagButtons[f] = b;
     });
+    // Style holder: the entry itself while editing, the default-preset seed
+    // (staged above) for a brand-new regex, or null until one is needed.
+    if (this._editingEntry) this._styleEntry = this._editingEntry;
+    // The mark-target (Color Text/Line/Child) dropdown no longer lives in the
+    // tester — the value simply follows the entry being edited.
+    let markTargetValue =
+      (this._editingEntry && this._editingEntry.markTarget) || "text";
+
+    // Style (preset) button — same entry point the Pick Color modal has.
+    const styleBtn = controlsRow.createEl("button");
+    try {
+      styleBtn.title = this.plugin.t("btn_style", "Style");
+      styleBtn.addClass("act-regex-tester-style-btn");
+    } catch (e) {}
+    styleBtn.style.flex = "0 0 auto";
+    styleBtn.style.display = "flex";
+    styleBtn.style.alignItems = "center";
+    styleBtn.style.justifyContent = "center";
+    styleBtn.style.padding = "6px 10px";
+    styleBtn.style.cursor = "pointer";
+    styleBtn.style.gap = "4px";
+    const styleBtnLabel = styleBtn.createEl("span", {
+      text: this.plugin.t("btn_style", "Style"),
+    });
+    styleBtnLabel.style.fontSize = "12px";
+
+    // Settings icon — opens Edit Entry, exactly like the Pick Color modal.
+    const entrySettingsBtn = controlsRow.createEl("button");
+    try {
+      setIcon(entrySettingsBtn, "settings");
+    } catch (e) {}
+    entrySettingsBtn.title = this.plugin.t("edit_entry_header", "Edit Entry");
+    try {
+      entrySettingsBtn.addClass("act-pickr-icon-btn");
+    } catch (e) {}
+    entrySettingsBtn.style.flex = "0 0 auto";
+    entrySettingsBtn.style.display = "flex";
+    entrySettingsBtn.style.alignItems = "center";
+    entrySettingsBtn.style.justifyContent = "center";
+    entrySettingsBtn.style.padding = "6px";
+    entrySettingsBtn.style.cursor = "pointer";
+
+    // Color type (text / highlight / both)
     const styleSelect = controlsRow.createEl("select");
     try {
       styleSelect.addClass("act-regex-tester-style");
@@ -339,22 +551,6 @@ export class RealTimeRegexTesterModal extends Modal {
     });
     styleSelect.value = this._preFillStyleType || "both";
     styleSelect.style.marginTop = "0";
-
-    const markTargetSelect = controlsRow.createEl("select");
-    try {
-      markTargetSelect.addClass("act-regex-tester-mark-target");
-    } catch (e) {}
-    [
-      ["text", this.plugin.t("mark_target_text", "Color Text")],
-      ["line", this.plugin.t("mark_target_line", "Color Line")],
-      ["nextLine", this.plugin.t("mark_target_child_line", "Color Child")],
-    ].forEach(([val, label]) => {
-      const opt = markTargetSelect.createEl("option", { text: label });
-      opt.value = val;
-    });
-    markTargetSelect.value =
-      (this._editingEntry && this._editingEntry.markTarget) || "text";
-    markTargetSelect.style.marginTop = "0";
 
     const textColorInput = controlsRow.createEl("input", { type: "color" });
     try {
@@ -374,12 +570,12 @@ export class RealTimeRegexTesterModal extends Modal {
     this._tPickerTouched = _init.tTouched;
     this._bPickerTouched = _init.bTouched;
     // Native color inputs cannot be empty — NULL shows black until the user picks.
-    textColorInput.value = this._preFillTextColor || "#000000";
+    setColorInputValue(textColorInput, this._preFillTextColor || "");
     const bgColorInput = controlsRow.createEl("input", { type: "color" });
     try {
       bgColorInput.addClass("act-regex-tester-bg-color");
     } catch (e) {}
-    bgColorInput.value = this._preFillBgColor || "#000000";
+    setColorInputValue(bgColorInput, this._preFillBgColor || "");
     const onTextPickerContext = (ev) => {
       try {
         ev.preventDefault();
@@ -406,16 +602,16 @@ export class RealTimeRegexTesterModal extends Modal {
               color && this.plugin.isValidHexColor(color) ? color : null;
             let changed = false;
             if (tc) {
-              textColorInput.value = tc;
+              setColorInputValue(textColorInput, tc);
               this._tPickerTouched = true;
               changed = true;
             } else if (fallback && !bc) {
-              textColorInput.value = fallback;
+              setColorInputValue(textColorInput, fallback);
               this._tPickerTouched = true;
               changed = true;
             }
             if (bc) {
-              bgColorInput.value = bc;
+              setColorInputValue(bgColorInput, bc);
               this._bPickerTouched = true;
               changed = true;
             }
@@ -424,15 +620,17 @@ export class RealTimeRegexTesterModal extends Modal {
           "text-and-background",
           (typeof regexInput !== "undefined" && regexInput.value) || "",
           false,
-          this._editingEntry ? this._editingEntry.markTarget : "text",
+          markTargetValue,
           this._editingEntry,
         );
         modal._hideHeaderControls = true;
         modal._forceBothPanels = true;
-        if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
-        if (bgColorInput.value) {
-          modal._preFillBgColor = bgColorInput.value;
-          modal._preFillBorderColor = bgColorInput.value;
+        const stagedText = getColorInputValue(textColorInput);
+        const stagedBg = getColorInputValue(bgColorInput);
+        if (stagedText) modal._preFillTextColor = stagedText;
+        if (stagedBg) {
+          modal._preFillBgColor = stagedBg;
+          modal._preFillBorderColor = stagedBg;
         }
         modal.open();
       } catch (e) {}
@@ -463,16 +661,16 @@ export class RealTimeRegexTesterModal extends Modal {
               color && this.plugin.isValidHexColor(color) ? color : null;
             let changed = false;
             if (bc) {
-              bgColorInput.value = bc;
+              setColorInputValue(bgColorInput, bc);
               this._bPickerTouched = true;
               changed = true;
             } else if (fallback && !tc) {
-              bgColorInput.value = fallback;
+              setColorInputValue(bgColorInput, fallback);
               this._bPickerTouched = true;
               changed = true;
             }
             if (tc) {
-              textColorInput.value = tc;
+              setColorInputValue(textColorInput, tc);
               this._tPickerTouched = true;
               changed = true;
             }
@@ -481,15 +679,17 @@ export class RealTimeRegexTesterModal extends Modal {
           "text-and-background",
           (typeof regexInput !== "undefined" && regexInput.value) || "",
           false,
-          this._editingEntry ? this._editingEntry.markTarget : "text",
+          markTargetValue,
           this._editingEntry,
         );
         modal._hideHeaderControls = true;
         modal._forceBothPanels = true;
-        if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
-        if (bgColorInput.value) {
-          modal._preFillBgColor = bgColorInput.value;
-          modal._preFillBorderColor = bgColorInput.value;
+        const stagedText = getColorInputValue(textColorInput);
+        const stagedBg = getColorInputValue(bgColorInput);
+        if (stagedText) modal._preFillTextColor = stagedText;
+        if (stagedBg) {
+          modal._preFillBgColor = stagedBg;
+          modal._preFillBorderColor = stagedBg;
         }
         modal.open();
       } catch (e) {}
@@ -649,10 +849,13 @@ export class RealTimeRegexTesterModal extends Modal {
       const flags = Object.keys(flagButtons)
         .filter((k) => flagButtons[k].dataset.on === "1")
         .join("");
-      const markTarget = markTargetSelect.value || "text";
+      const markTarget = markTargetValue;
       const style = styleSelect.value;
-      const tRaw = textColorInput.value;
-      const bRaw = bgColorInput.value;
+      const tRaw = getColorInputValue(textColorInput);
+      const bRaw = getColorInputValue(bgColorInput);
+      // Shape (radius, padding, opacity, border, corner shape) comes from the
+      // entry / applied Style preset, falling back to the global defaults.
+      const hp = this.plugin.getHighlightParams(this._styleEntry);
       // NULL (untouched picker) → text var(--text-normal), bg/border var(--color-accent). Never black.
       const _pv = resolveRegexTesterPreviewColors({
         tRaw,
@@ -660,30 +863,43 @@ export class RealTimeRegexTesterModal extends Modal {
         tTouched: this._tPickerTouched,
         bTouched: this._bPickerTouched,
         isValidHexColor: (c) => this.plugin.isValidHexColor(c),
-        opacity: this.plugin.settings.backgroundOpacity ?? 25,
+        opacity: hp.opacity ?? 25,
         hexToRgba: (c, o) => this.plugin.hexToRgba(c, o),
       });
       const hasValidT = _pv.hasValidT;
       const hasValidB = _pv.hasValidB;
       const t = _pv.t;
       const rgba = _pv.bgCss;
-      const radius = this.plugin.settings.highlightBorderRadius ?? 8;
-      const pad = this.plugin.settings.highlightHorizontalPadding ?? 4;
-      const vpad = this.plugin.settings.highlightVerticalPadding ?? 0;
+      const radius = hp.radius ?? 8;
+      const pad = hp.hPad ?? 4;
+      const vpad = hp.vPad ?? 0;
+      const cornerShape = hp.cornerShape || "round";
+      const cornerCss =
+        cornerShape && cornerShape !== "round"
+          ? `corner-shape:${cornerShape};`
+          : "";
       const effectiveBForBorder = _pv.effectiveBForBorder;
       const effectiveTForBorder = _pv.effectiveTForBorder;
       const borderStyle =
         style === "text"
           ? ""
           : style === "highlight"
-            ? this.plugin.generateBorderStyle(null, effectiveBForBorder)
-            : this.plugin.generateBorderStyle(effectiveTForBorder, effectiveBForBorder);
+            ? this.plugin.generateBorderStyle(
+                null,
+                effectiveBForBorder,
+                this._styleEntry,
+              )
+            : this.plugin.generateBorderStyle(
+                effectiveTForBorder,
+                effectiveBForBorder,
+                this._styleEntry,
+              );
       const matchStyle =
         style === "text"
           ? `color:${t};background:transparent;`
           : style === "highlight"
-            ? `background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`
-            : `color:${t};background-color:${rgba};border-radius:${radius}px;padding:${vpad}px ${pad}px;${borderStyle}`;
+            ? `background-color:${rgba};border-radius:${radius}px;${cornerCss}padding:${vpad}px ${pad}px;color:var(--text-normal);${borderStyle}`
+            : `color:${t};background-color:${rgba};border-radius:${radius}px;${cornerCss}padding:${vpad}px ${pad}px;${borderStyle}`;
       // For line-level previews, adjust wrapper to block layout
       if (markTarget === "line" || markTarget === "nextLine") {
         previewWrap.style.display = "block";
@@ -785,9 +1001,10 @@ export class RealTimeRegexTesterModal extends Modal {
             }
           })(),
           editing: !!this._editingEntry,
-          customCss: this._editingEntry
-            ? this._editingEntry.customCss
-            : undefined,
+          // The tester is a style-design surface: it keeps painting matches
+          // while the global toggle is off (the editor itself paints nothing).
+          ignoreGlobalEnabled: true,
+          customCss: this._styleEntry ? this._styleEntry.customCss : undefined,
           affectMarkElements: this._editingEntry
             ? this._editingEntry.affectMarkElements
             : undefined,
@@ -917,10 +1134,10 @@ export class RealTimeRegexTesterModal extends Modal {
       styleSelect.value = this._preFillStyleType;
     }
     if (this._preFillTextColor) {
-      textColorInput.value = this._preFillTextColor;
+      setColorInputValue(textColorInput, this._preFillTextColor);
     }
     if (this._preFillBgColor) {
-      bgColorInput.value = this._preFillBgColor;
+      setColorInputValue(bgColorInput, this._preFillBgColor);
     }
     updatePickerVisibility();
     const onInputImmediate = () => {
@@ -937,18 +1154,237 @@ export class RealTimeRegexTesterModal extends Modal {
       const ev = el === styleSelect ? "change" : "input";
       const baseFn = el === styleSelect ? styleChange : onInputImmediate;
       const fn = (...args) => {
-        if (el === textColorInput) this._tPickerTouched = true;
-        if (el === bgColorInput) this._bPickerTouched = true;
+        // A hand-picked colour replaces any staged var(--…) value.
+        if (el === textColorInput) {
+          delete textColorInput.dataset.varColor;
+          this._tPickerTouched = true;
+        }
+        if (el === bgColorInput) {
+          delete bgColorInput.dataset.varColor;
+          this._bPickerTouched = true;
+        }
         return baseFn(...args);
       };
       el.addEventListener(ev, fn);
       this._handlers.push({ el, ev, fn });
     });
-    const markTargetChange = () => {
-      render();
+
+    // ── Style button + Settings icon (same pair the Pick Color modal has) ──
+    const pickedTextColor = () => {
+      const v = getColorInputValue(textColorInput);
+      return v && this._tPickerTouched && this.plugin.isValidHexColor(v)
+        ? v
+        : "";
     };
-    markTargetSelect.addEventListener("change", markTargetChange);
-    this._handlers.push({ el: markTargetSelect, ev: "change", fn: markTargetChange });
+    const pickedBgColor = () => {
+      const v = getColorInputValue(bgColorInput);
+      return v && this._bPickerTouched && this.plugin.isValidHexColor(v)
+        ? v
+        : "";
+    };
+    const stageTextColor = (c) => {
+      if (c && this.plugin.isValidHexColor(c)) {
+        setColorInputValue(textColorInput, c);
+        this._tPickerTouched = true;
+      } else {
+        setColorInputValue(textColorInput, "");
+        this._tPickerTouched = false;
+      }
+    };
+    const stageBgColor = (c) => {
+      if (c && this.plugin.isValidHexColor(c)) {
+        setColorInputValue(bgColorInput, c);
+        this._bPickerTouched = true;
+      } else {
+        setColorInputValue(bgColorInput, "");
+        this._bPickerTouched = false;
+      }
+    };
+    // Reflect a style entry's colortype + colours back into the controls.
+    const syncControlsFromStyleEntry = (entry) => {
+      if (!entry) return;
+      try {
+        if (entry.styleType) styleSelect.value = entry.styleType;
+        if (entry.markTarget) markTargetValue = entry.markTarget;
+      } catch (e) {}
+      const st = entry.styleType || styleSelect.value;
+      if (st !== "highlight") {
+        const t = st === "text" ? entry.color : entry.textColor;
+        if (st === "text" || (t && t !== "currentColor")) stageTextColor(t);
+      }
+      if (st !== "text") {
+        const b = entry.backgroundColor;
+        if (st === "highlight" || b) stageBgColor(b);
+      }
+    };
+    const ensureStyleEntry = () => {
+      if (!this._styleEntry) {
+        this._styleEntry = {
+          uid:
+            "rt-style-" +
+            Date.now().toString(36) +
+            Math.random().toString(36).slice(2),
+          isRegex: true,
+          styleType: styleSelect.value || "both",
+          markTarget: markTargetValue,
+        };
+      }
+      return this._styleEntry;
+    };
+    // Copy the Style holder's shape (+ preset link / matching defaults) onto a
+    // freshly created entry. The colours themselves always come from the
+    // picker state the save path already reads.
+    const mergeStyleInto = (target) => {
+      const st = this._styleEntry;
+      if (!st || !target || st === target) return;
+      for (const k of STYLE_SHAPE_KEYS) {
+        if (st[k] !== undefined && st[k] !== null) target[k] = st[k];
+      }
+      if (st.presetUid) target.presetUid = st.presetUid;
+      // case sensitivity only — Edit Entry disables (and forces "regex" on)
+      // the match type for regex entries, so that one is never a user choice.
+      if (typeof st.caseSensitive === "boolean")
+        target.caseSensitive = st.caseSensitive;
+    };
+    // A Style preset: shape always applies, colours keep whatever is already
+    // painted here and the preset fills the channels the colortype needs.
+    const applyPresetStyle = (preset) => {
+      if (!preset) return;
+      try {
+        const entry = ensureStyleEntry();
+        const st = styleSelect.value || "both";
+        const tCur = pickedTextColor();
+        const bCur = pickedBgColor();
+        if (st === "text") {
+          entry.color = tCur;
+          entry.textColor = null;
+          entry.backgroundColor = null;
+        } else if (st === "highlight") {
+          entry.color = "";
+          entry.textColor = "currentColor";
+          entry.backgroundColor = bCur;
+        } else {
+          entry.color = "";
+          entry.textColor = tCur;
+          entry.backgroundColor = bCur;
+        }
+        for (const k of STYLE_SHAPE_KEYS) {
+          if (k in preset && preset[k] != null) entry[k] = preset[k];
+        }
+        if (preset.uid) entry.presetUid = preset.uid;
+        entry.styleType = preset.styleType || st;
+        adoptPresetColortype(entry, preset, (c) =>
+          this.plugin.isValidHexColor(c),
+        );
+        syncControlsFromStyleEntry(entry);
+        updatePickerVisibility();
+        render();
+      } catch (e) {
+        debugError("REGEX_TESTER", "preset apply failed", e);
+      }
+    };
+    const makeDraftEntry = () => {
+      const st = styleSelect.value || "both";
+      const t = pickedTextColor();
+      const b = pickedBgColor();
+      const draft = {
+        uid:
+          "rt-" + Date.now().toString(36) + Math.random().toString(36).slice(2),
+        isRegex: true,
+        pattern: String(regexInput.value || "").trim(),
+        flags: Object.keys(flagButtons)
+          .filter((k) => flagButtons[k].dataset.on === "1")
+          .join(""),
+        presetLabel: String(nameInput.value || "").trim() || undefined,
+        styleType: st,
+        markTarget: markTargetValue,
+        caseSensitive: !!this.plugin.settings.caseSensitive,
+        matchType: this.plugin.settings.partialMatch ? "contains" : "exact",
+      };
+      if (st === "text") {
+        draft.color = t;
+        draft.textColor = null;
+        draft.backgroundColor = null;
+      } else if (st === "highlight") {
+        draft.color = "";
+        draft.textColor = "currentColor";
+        draft.backgroundColor = b;
+      } else {
+        draft.color = "";
+        draft.textColor = t;
+        draft.backgroundColor = b;
+      }
+      // Scratch entry: Edit Entry edits it in place and never files it —
+      // the tester's own Add/Save button creates the real entry.
+      draft._isNewFromPickModal = true;
+      draft._originalState = {
+        pattern: draft.pattern,
+        styleType: draft.styleType,
+        color: draft.color,
+        textColor: draft.textColor,
+        backgroundColor: draft.backgroundColor,
+        matchType: draft.matchType,
+        markTarget: draft.markTarget,
+      };
+      return draft;
+    };
+    const openEntrySettings = () => {
+      try {
+        let target;
+        if (this._editingEntry) {
+          // Live entry: Edit Entry writes the style straight onto it.
+          target = this._editingEntry;
+          this._styleEntry = this._editingEntry;
+        } else {
+          const draft = makeDraftEntry();
+          target = this._styleEntry = Object.assign(
+            {},
+            this._styleEntry || {},
+            draft,
+          );
+        }
+        const onSaved = (entry) => {
+          try {
+            const e = entry || target;
+            this._styleEntry = this._editingEntry ? this._editingEntry : e;
+            syncControlsFromStyleEntry(e);
+            updatePickerVisibility();
+            render();
+          } catch (err) {
+            debugError("REGEX_TESTER", "entry settings sync failed", err);
+          }
+        };
+        new EditEntryModal(
+          this.app,
+          this.plugin,
+          target,
+          onSaved,
+          null,
+          false,
+        ).open();
+      } catch (e) {
+        debugError("REGEX_TESTER", "open entry settings failed", e);
+      }
+    };
+    const styleBtnHandler = () => {
+      try {
+        new TextStylePresetsModal(
+          this.app,
+          this.plugin,
+          (preset) => applyPresetStyle(preset),
+        ).open();
+      } catch (e) {
+        debugError("REGEX_TESTER", "open style presets failed", e);
+      }
+    };
+    styleBtn.addEventListener("click", styleBtnHandler);
+    this._handlers.push({ el: styleBtn, ev: "click", fn: styleBtnHandler });
+    entrySettingsBtn.addEventListener("click", openEntrySettings);
+    this._handlers.push({
+      el: entrySettingsBtn,
+      ev: "click",
+      fn: openEntrySettings,
+    });
     testInput.addEventListener("input", onInputDebounced);
     this._handlers.push({ el: testInput, ev: "input", fn: onInputDebounced });
     regexInput.addEventListener("input", onInputDebounced);
@@ -1011,9 +1447,9 @@ export class RealTimeRegexTesterModal extends Modal {
       if (this._editingEntry) {
         try {
           const style = styleSelect.value;
-          const markTarget = markTargetSelect.value;
-          const tRawForSave = textColorInput.value;
-          const bRawForSave = bgColorInput.value;
+          const markTarget = markTargetValue;
+          const tRawForSave = getColorInputValue(textColorInput);
+          const bRawForSave = getColorInputValue(bgColorInput);
           const hasValidTForSave = tRawForSave && this.plugin.isValidHexColor(tRawForSave) && (this._tPickerTouched || !!this._preFillTextColor);
           const hasValidBForSave = bRawForSave && this.plugin.isValidHexColor(bRawForSave) && (this._bPickerTouched || !!this._preFillBgColor);
           const updated = Object.assign({}, this._editingEntry, {
@@ -1062,6 +1498,10 @@ export class RealTimeRegexTesterModal extends Modal {
           // lists hold a reference to it — and file it under the group chosen
           // in the header dropdown (or leave it alone when there is none).
           Object.assign(this._editingEntry, updated);
+          try {
+            if (this._editingEntry.customCss)
+              this.plugin.syncEntryCssFromColors(this._editingEntry);
+          } catch (e) {}
           if (groupSelect) {
             const placedGroupUid = placeEntryInGroup(
               this.plugin.settings,
@@ -1115,7 +1555,7 @@ export class RealTimeRegexTesterModal extends Modal {
           }
         })();
         const style = styleSelect.value;
-        const markTarget = markTargetSelect.value;
+        const markTarget = markTargetValue;
         const entry = {
           uid,
           isRegex: true,
@@ -1126,8 +1566,8 @@ export class RealTimeRegexTesterModal extends Modal {
           markTarget: markTarget,
           persistAtEnd: true,
         };
-        const tRawForSave2 = textColorInput.value;
-        const bRawForSave2 = bgColorInput.value;
+        const tRawForSave2 = getColorInputValue(textColorInput);
+        const bRawForSave2 = getColorInputValue(bgColorInput);
         const hasValidTForSave2 = tRawForSave2 && this.plugin.isValidHexColor(tRawForSave2) && (this._tPickerTouched || !!this._preFillTextColor);
         const hasValidBForSave2 = bRawForSave2 && this.plugin.isValidHexColor(bRawForSave2) && (this._bPickerTouched || !!this._preFillBgColor);
         if (style === "text") {
@@ -1149,6 +1589,11 @@ export class RealTimeRegexTesterModal extends Modal {
           entry._savedTextColor = hasValidTForSave2 ? tRawForSave2 : "";
           entry._savedBackgroundColor = hasValidBForSave2 ? bRawForSave2 : "";
         }
+        // Style (preset / Edit Entry) shape travels with the new entry.
+        mergeStyleInto(entry);
+        try {
+          if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
+        } catch (e) {}
         savedGroupUid = placeEntryInGroup(
           this.plugin.settings,
           entry,
@@ -1164,12 +1609,12 @@ export class RealTimeRegexTesterModal extends Modal {
       }
 
       // Always call the onAdded callback with the entry object (use hasValid so empty pickers → var preview not black)
-      const cbTForSave = textColorInput.value;
-      const cbBForSave = bgColorInput.value;
+      const cbTForSave = getColorInputValue(textColorInput);
+      const cbBForSave = getColorInputValue(bgColorInput);
       const cbHasValidT = cbTForSave && this.plugin.isValidHexColor(cbTForSave) && (this._tPickerTouched || !!this._preFillTextColor);
       const cbHasValidB = cbBForSave && this.plugin.isValidHexColor(cbBForSave) && (this._bPickerTouched || !!this._preFillBgColor);
       const cbStyle = styleSelect.value;
-      const cbMarkTarget = markTargetSelect.value;
+      const cbMarkTarget = markTargetValue;
       const cbEntry = {
         isRegex: true,
         pattern: pat,
@@ -1198,6 +1643,11 @@ export class RealTimeRegexTesterModal extends Modal {
         cbEntry._savedTextColor = cbHasValidT ? cbTForSave : "";
         cbEntry._savedBackgroundColor = cbHasValidB ? cbBForSave : "";
       }
+      // Style (preset / Edit Entry) shape travels with the callback entry too.
+      mergeStyleInto(cbEntry);
+      try {
+        if (cbEntry.customCss) this.plugin.syncEntryCssFromColors(cbEntry);
+      } catch (e) {}
       // Let the caller know the entry was filed under a word group
       if (savedGroupUid) cbEntry.groupUid = savedGroupUid;
       try {

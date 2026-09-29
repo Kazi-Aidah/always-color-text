@@ -5,6 +5,7 @@ import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { debugLog } from '../utils/debug.js';
 import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
 import { adoptPresetColortype } from '../utils/presetLinker.js';
+import { orderSwatchesByOrder } from '../utils/swatchOrdering.js';
 
 export class ColorPickerModal extends Modal {
   constructor(
@@ -601,7 +602,8 @@ export class ColorPickerModal extends Modal {
       .map((sw) => sw && sw.color)
       .filter((c) => typeof c === "string" && this.plugin.isValidHexColor(c));
 
-    // Defaults are always shown, with custom swatches appended after.
+    // Defaults first, customs after — only the fallback layout: the grid is
+    // re-sorted by the user's saved order once the items are built.
     const colorPool = namedColors.concat(userCustomColors);
 
     const seen = new Set();
@@ -623,6 +625,13 @@ export class ColorPickerModal extends Modal {
         name: (customMatch && customMatch.name) || (match && match.name),
       });
     }
+
+    // Show the swatches exactly as the user arranged them in Edit Color
+    // Swatches; without a saved order the defaults-then-customs layout stays.
+    const orderedSwatchItems = orderSwatchesByOrder(
+      swatchItems,
+      this.plugin.settings.swatchOrder,
+    );
 
     this.panelStates = {};
     const buildPanel = (titleText, type) => {
@@ -889,7 +898,7 @@ export class ColorPickerModal extends Modal {
         handler: resetHandler,
       });
 
-      swatchItems.forEach((item) => {
+      orderedSwatchItems.forEach((item) => {
         const btn = grid.createEl("button");
         btn.style.backgroundColor = item.color;
         btn.style.width = "100%";

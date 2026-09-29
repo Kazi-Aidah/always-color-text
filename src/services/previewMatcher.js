@@ -322,6 +322,9 @@ function buildPreviewBase(e, channel, settings) {
  * @param {object|null} [input.group] selected group (with overrides)
  * @param {string|null} [input.filePath] active file path
  * @param {boolean} [input.editing] draft already compiled (editing, not adding)
+ * @param {boolean} [input.ignoreGlobalEnabled] tester-only: preview the style
+ *   even while the global toggle is off (the editor still paints nothing —
+ *   surfaced as a `plugin-off` note instead of a hard `disabled` stop)
  * @returns {object} result with status, matches, notes, rejected counters
  */
 export function computePreviewMatches(plugin, input) {
@@ -363,7 +366,13 @@ export function computePreviewMatches(plugin, input) {
 
   const patRaw = String(input.pattern || "");
   if (!patRaw.trim()) return fail("empty");
-  if (settings.enabled === false) return fail("disabled");
+  if (settings.enabled === false) {
+    // The tester is a design surface: it keeps previewing the style while the
+    // global toggle is off, and says so instead of going blank. Every other
+    // caller still gets the editor's hard stop.
+    if (input.ignoreGlobalEnabled !== true) return fail("disabled");
+    notes.push({ id: "plugin-off" });
+  }
 
   const group = input.group || null;
   if (group && group.active === false) return fail("inactive", "group");
@@ -1028,6 +1037,10 @@ const NOTE_MESSAGES = {
   "lp-off": [
     "preview_note_lp_off",
     "Live Preview coloring is off — matches apply in reading mode",
+  ],
+  "plugin-off": [
+    "preview_note_plugin_off",
+    "Always Color Text is off — the editor paints nothing, the tester previews anyway",
   ],
 };
 

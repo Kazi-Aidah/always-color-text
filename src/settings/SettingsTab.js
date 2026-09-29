@@ -25,6 +25,7 @@ import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
 import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
+import { syncSwatchOrder, replaceSwatchColorInOrder } from '../utils/swatchOrdering.js';
 function resolveVarToHex(varStr) {
   const toHex = (rgbStr) => {
     try {
@@ -112,7 +113,23 @@ function setColorInputValue(input, colorStr) {
   }
 }
 function getColorInputValue(input) {
-  if (input.dataset.varColor && isVarColor(input.dataset.varColor)) return input.dataset.varColor;
+  const storedVar = input.dataset.varColor;
+  if (storedVar && isVarColor(storedVar)) {
+    // The snapshot only describes what the picker showed when the var() was
+    // applied. Once the user picks a colour, input.value is newer than the
+    // snapshot and must win — reading the stale var() back here made every
+    // consumer (preview, entry sync, save) revert to the old colour, so the
+    // picker snapped straight back.
+    const resolved = resolveVarToHex(storedVar);
+    if (
+      resolved &&
+      input.value &&
+      String(input.value).toLowerCase() !== resolved.toLowerCase()
+    ) {
+      return input.value;
+    }
+    return storedVar;
+  }
   return input.value;
 }
 export class ColorSettingTab extends PluginSettingTab {
@@ -899,6 +916,8 @@ export class ColorSettingTab extends PluginSettingTab {
 
       // cpHandler and other color handlers remain below
       const cpHandler = async () => {
+        // a user pick supersedes the var() snapshot taken when the row rendered
+        delete cp.dataset.varColor;
         const newColor = cp.value;
         if (!this.plugin.isValidHexColor(newColor)) {
           new Notice(
@@ -953,6 +972,7 @@ export class ColorSettingTab extends PluginSettingTab {
       };
 
       const cpBgHandler = async () => {
+        delete cpBg.dataset.varColor;
         const newColor = cpBg.value;
         if (!this.plugin.isValidHexColor(newColor)) return;
         const idx = resolveIdx();
@@ -2944,6 +2964,7 @@ export class ColorSettingTab extends PluginSettingTab {
           this.plugin.settings.userCustomSwatches = newOrder;
           this.plugin.settings.customSwatches =
             this.plugin.settings.userCustomSwatches.map((s) => s.color);
+          syncSwatchOrder(this.plugin.settings);
           await this.plugin.saveSettings();
           this._refreshCustomSwatches();
         };
@@ -3042,6 +3063,10 @@ export class ColorSettingTab extends PluginSettingTab {
             this.plugin.settings.userCustomSwatches[i].color = val;
             this.plugin.settings.customSwatches =
               this.plugin.settings.userCustomSwatches.map((s) => s.color);
+            // A recolor must stay at its slot in the saved order, otherwise
+            // the old color's rank vanishes and the swatch jumps to the end.
+            replaceSwatchColorInOrder(this.plugin.settings, prev, val);
+            syncSwatchOrder(this.plugin.settings);
             if (this.plugin.settings.linkSwatchUpdatesToEntries) {
               const updateEntry = (e) => {
                 try {
@@ -3110,6 +3135,7 @@ export class ColorSettingTab extends PluginSettingTab {
             this.plugin.settings.userCustomSwatches.splice(i, 1);
             this.plugin.settings.customSwatches =
               this.plugin.settings.userCustomSwatches.map((s) => s.color);
+            syncSwatchOrder(this.plugin.settings);
             await this.plugin.saveSettings();
             this._refreshCustomSwatches();
           };
@@ -3225,6 +3251,7 @@ export class ColorSettingTab extends PluginSettingTab {
               this.plugin.settings.userCustomSwatches = userCustomSwatches;
               this.plugin.settings.customSwatches =
                 this.plugin.settings.userCustomSwatches.map((s) => s.color);
+              syncSwatchOrder(this.plugin.settings);
               await this.plugin.saveSettings();
               this._refreshCustomSwatches();
             };
@@ -3296,6 +3323,7 @@ export class ColorSettingTab extends PluginSettingTab {
               row.classList.remove("drag-ghost-hidden");
               this.plugin.settings.userCustomSwatches = userCustomSwatches;
               this.plugin.settings.customSwatches = this.plugin.settings.userCustomSwatches.map((s) => s.color);
+              syncSwatchOrder(this.plugin.settings);
               await this.plugin.saveSettings();
               this._refreshCustomSwatches();
             };
@@ -3329,6 +3357,7 @@ export class ColorSettingTab extends PluginSettingTab {
             this.plugin.settings.userCustomSwatches.push(newSwatch);
             this.plugin.settings.customSwatches =
               this.plugin.settings.userCustomSwatches.map((s) => s.color);
+            syncSwatchOrder(this.plugin.settings);
             await this.plugin.saveSettings();
 
             // Auto-unfold Custom Swatches when adding a color

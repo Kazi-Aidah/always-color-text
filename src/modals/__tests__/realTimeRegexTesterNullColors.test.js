@@ -63,7 +63,9 @@ describe("regex tester NULL colors → var(--text-normal)/var(--color-accent), n
   });
 
   it("preset colors are ignored: NULL still previews as var even if a preset has colors", () => {
-    // The tester never pulls preset colors in — no preset params exist on the helper.
+    // No preset params exist on the helper — the modal stages the default
+    // preset's colours into the prefill BEFORE this runs (see
+    // resolveRegexTesterDefaultPreset), so a NULL here is a genuine NULL.
     const init = resolveRegexTesterColorInit({
       editingEntry: null,
       preFillTextColor: "",

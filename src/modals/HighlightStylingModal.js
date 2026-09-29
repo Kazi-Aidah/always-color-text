@@ -25,7 +25,7 @@ function resolveVarToHex(varStr) {
 function isVarColor(str) {
   return typeof str === "string" && /^var\(\s*--[\w-]+\s*(,\s*[^)]+)?\)$/.test(str.trim());
 }
-function setColorInputValue(input, colorStr) {
+export function setColorInputValue(input, colorStr) {
   if (!colorStr) {
     input.value = input.type === "color" ? "#000000" : "";
     delete input.dataset.varColor;
@@ -42,8 +42,24 @@ function setColorInputValue(input, colorStr) {
     input.value = colorStr;
   }
 }
-function getColorInputValue(input) {
-  if (input.dataset.varColor && isVarColor(input.dataset.varColor)) return input.dataset.varColor;
+export function getColorInputValue(input) {
+  const storedVar = input.dataset.varColor;
+  if (storedVar && isVarColor(storedVar)) {
+    // The snapshot only describes what the picker showed when the var() was
+    // applied. Once the user picks a colour, input.value is newer than the
+    // snapshot and must win — reading the stale var() back here made every
+    // consumer (preview, entry sync, save) revert to the old colour, so the
+    // picker snapped straight back (built-in presets ship var() colours).
+    const resolved = resolveVarToHex(storedVar);
+    if (
+      resolved &&
+      input.value &&
+      String(input.value).toLowerCase() !== resolved.toLowerCase()
+    ) {
+      return input.value;
+    }
+    return storedVar;
+  }
   return input.value;
 }
 
@@ -462,22 +478,33 @@ export class HighlightStylingModal extends Modal {
         ? this.entry.backgroundColor
         : nullBgDisplay);
 
-    // Listen for color changes from parent EditEntryModal and update in real-time
+    // Listen for color changes from parent EditEntryModal and update our inputs
+    // The text colour the entry REPRESENTS under the current Style: the "text"
+    // colortype stores its pick in entry.color (saveData nulls textColor as a
+    // structural marker), so resolving textColor first showed the stale
+    // open-time colour and stamped it straight back over a fresh pick the
+    // moment one was made — the picker appeared to "regress" on every change.
+    const resolveEntryTextColor = () => {
+      const e = this.entry;
+      if (!e) return null;
+      const ok = (c) => !!(c && c !== "currentColor" && this.plugin.isValidHexColor(c));
+      let st = e.styleType;
+      try {
+        st = styleSelect.value;
+      } catch (_) {}
+      if (st === "text") return ok(e.color) ? e.color : ok(e.textColor) ? e.textColor : null;
+      return ok(e.textColor) ? e.textColor : ok(e.color) ? e.color : null;
+    };
     const syncColorsFromParent = (evt) => {
       try {
         if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
           // Colors changed in parent EditEntryModal, sync our inputs immediately
           const initTextColor =
-            (this.entry &&
-              (this.entry.textColor && this.entry.textColor !== "currentColor"
-                ? this.entry.textColor
-                : this.plugin.isValidHexColor(this.entry.color)
-                  ? this.entry.color
-                  : "")) ||
+            resolveEntryTextColor() ||
             getColorInputValue(tColor) ||
             nullTextDisplay;
           const initBgColor =
-            (this.entry && (this.entry.backgroundColor || "")) ||
+            (this.entry && this.entry.backgroundColor) ||
             getColorInputValue(bColor) ||
             nullBgDisplay;
           if (this.plugin.isValidHexColor(initTextColor))
@@ -1168,8 +1195,11 @@ export class HighlightStylingModal extends Modal {
       renderPreview();
     };
     styleSelect.addEventListener("change", styleChange);
-    const tColorStyleChange = () => { this._tPickerTouched = true; styleChange(); };
-    const bColorStyleChange = () => { this._bPickerTouched = true; styleChange(); };
+    // A user edit invalidates the var() snapshot taken at open time: only a
+    // programmatic setColorInputValue() may write one. Clearing it here (and
+    // below) keeps every later read on the colour the user actually picked.
+    const tColorStyleChange = () => { delete tColor.dataset.varColor; this._tPickerTouched = true; styleChange(); };
+    const bColorStyleChange = () => { delete bColor.dataset.varColor; this._bPickerTouched = true; styleChange(); };
     tColor.addEventListener("input", tColorStyleChange);
     bColor.addEventListener("input", bColorStyleChange);
     this._handlers.push({ el: styleSelect, ev: "change", fn: styleChange });
@@ -1454,10 +1484,9 @@ export class HighlightStylingModal extends Modal {
         // Only prefill real colors — never the null-black display fill.
         // Otherwise a reset-to-null entry reopens with #000000 ghosted as real.
         try {
-          const _e = this.entry;
-          const _realT = (_e && ((_e.textColor && _e.textColor !== "currentColor" && this.plugin.isValidHexColor(_e.textColor)) ? _e.textColor : (this.plugin.isValidHexColor(_e.color) ? _e.color : null)))
+          const _realT = resolveEntryTextColor()
             || ((this._tPickerTouched || this._openHadRealText) ? getColorInputValue(tColor) : null);
-          const _realB = (_e && _e.backgroundColor && this.plugin.isValidHexColor(_e.backgroundColor) ? _e.backgroundColor : null)
+          const _realB = (this.entry && this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor) ? this.entry.backgroundColor : null)
             || ((this._bPickerTouched || this._openHadRealBg) ? getColorInputValue(bColor) : null);
           if (showNestedText && _realT && this.plugin.isValidHexColor(_realT)) modal._preFillTextColor = _realT;
           if (showNestedBg && _realB && this.plugin.isValidHexColor(_realB)) {
@@ -1473,11 +1502,13 @@ export class HighlightStylingModal extends Modal {
 
     // Add real-time syncing to this.entry when colors change
     const tColorInputHandler = () => {
+      delete tColor.dataset.varColor;
       this._tPickerTouched = true;
       dispatchHighlightColorsChanged();
       renderPreview();
     };
     const bColorInputHandler = () => {
+      delete bColor.dataset.varColor;
       this._bPickerTouched = true;
       dispatchHighlightColorsChanged();
       renderPreview();
@@ -1491,19 +1522,19 @@ export class HighlightStylingModal extends Modal {
     const colorSyncHandler = (evt) => {
       try {
         if (evt.detail && evt.detail.entry && evt.detail.entry === this.entry) {
-          // Colors changed in parent modal, sync our inputs
+          // Colors changed in parent modal, sync our inputs — but never let an
+          // empty entry channel or a stale colour stomp a freshly picked
+          // value: resolve against the current Style, then keep whatever the
+          // picker itself holds, and only fall back to the null-black
+          // DISPLAY fill when there is nothing else to show.
           const initTextColor =
-            (this.entry &&
-              (this.entry.textColor && this.entry.textColor !== "currentColor"
-                ? this.entry.textColor
-                : this.plugin.isValidHexColor(this.entry.color)
-                  ? this.entry.color
-                  : nullTextDisplay)) ||
+            resolveEntryTextColor() ||
+            getColorInputValue(tColor) ||
             nullTextDisplay;
           const initBgColor =
-            this.entry && this.entry.backgroundColor
-              ? this.entry.backgroundColor
-              : nullBgDisplay;
+            (this.entry && this.entry.backgroundColor) ||
+            getColorInputValue(bColor) ||
+            nullBgDisplay;
           if (this.plugin.isValidHexColor(initTextColor))
             setColorInputValue(tColor, initTextColor);
           if (this.plugin.isValidHexColor(initBgColor))
@@ -1542,25 +1573,45 @@ export class HighlightStylingModal extends Modal {
           try {
             updatePickerVisibility();
           } catch (_) {}
-          // Groups: a null group color must stay null so member entries'
-          // own colours apply. Only write picker values when the picker was
-          // touched or the group already had a real color at open time —
-          // otherwise the native input's default (#ffffff/#000000) would
-          // pollute the group and override every entry (e.g. black bg).
+          // A channel with no real color (untouched null-black DISPLAY fill)
+          // stores empty instead of #000000 — otherwise the native picker
+          // default would be saved as a real black and defeat a reset; the
+          // entry's stored channel counts as real too, so a color pushed in
+          // by the parent EditEntryModal is not thrown away. Groups keep the
+          // open-time rule only: a both-black "polluted" group is deliberately
+          // treated as null and must not store the black its pickers display.
           const tHad = this._tPickerTouched || this._openHadRealText;
           const bHad = this._bPickerTouched || this._openHadRealBg;
+          const tEntryHas = !!(
+            this.entry &&
+            ((this.entry.textColor &&
+              this.entry.textColor !== "currentColor" &&
+              this.plugin.isValidHexColor(this.entry.textColor)) ||
+              (this.entry.color && this.plugin.isValidHexColor(this.entry.color)))
+          );
+          const bEntryHas = !!(
+            this.entry &&
+            this.entry.backgroundColor &&
+            this.plugin.isValidHexColor(this.entry.backgroundColor)
+          );
+          const channel = (had, input, entryHas) =>
+            had || (!isGroup && entryHas)
+              ? getColorInputValue(input) || ""
+              : isGroup
+                ? undefined
+                : "";
           if (st === "text") {
-            this.entry.color = isGroup && !tHad ? undefined : (getColorInputValue(tColor) || "");
+            this.entry.color = channel(tHad, tColor, tEntryHas);
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = isGroup && !bHad ? undefined : (getColorInputValue(bColor) || "");
+            this.entry.backgroundColor = channel(bHad, bColor, bEntryHas);
           } else {
             this.entry.color = "";
-            this.entry.textColor = isGroup && !tHad ? undefined : (getColorInputValue(tColor) || "");
-            this.entry.backgroundColor = isGroup && !bHad ? undefined : (getColorInputValue(bColor) || "");
+            this.entry.textColor = channel(tHad, tColor, tEntryHas);
+            this.entry.backgroundColor = channel(bHad, bColor, bEntryHas);
           }
         }
       }
@@ -1641,25 +1692,25 @@ export class HighlightStylingModal extends Modal {
           const isVarBSave = bRawSave && /^var\(/.test(bRawSave.trim());
           const hasValidTSave = tRawSave && this.plugin.isValidHexColor(tRawSave) && (isVarTSave || hasEntryTextSave || this._tPickerTouched);
           const hasValidBSave = bRawSave && this.plugin.isValidHexColor(bRawSave) && (isVarBSave || hasEntryBgSave || this._bPickerTouched);
-          // When style needs a color but picker is null, save var(--text-normal)/var(--color-accent) for preview consistency.
-          // Groups are exempt: a null group color must stay null (undefined)
-          // so it is ignored and member entries' own colours apply. Saving a
-          // placeholder var here would override every entry in the group.
-          const effectiveTSave = hasValidTSave ? tRawSave : "var(--text-normal)";
-          const effectiveBSave = hasValidBSave ? bRawSave : "var(--color-accent)";
+          // A channel the user reset (or never set) is saved EMPTY — no
+          // placeholder var is written back, so the removal survives the save
+          // and rendering falls back to the theme default (preview only).
+          // Groups keep the `undefined` marker: a null group color must stay
+          // ignored so member entries' own colours apply.
+          const unset = isGroup ? undefined : "";
           this.entry.styleType = st;
           if (st === "text") {
-            this.entry.color = hasValidTSave ? tRawSave : (isGroup ? undefined : "var(--text-normal)");
+            this.entry.color = hasValidTSave ? tRawSave : unset;
             this.entry.textColor = null;
             this.entry.backgroundColor = null;
           } else if (st === "highlight") {
             this.entry.color = "";
             this.entry.textColor = "currentColor";
-            this.entry.backgroundColor = hasValidBSave ? bRawSave : (isGroup ? undefined : "var(--color-accent)");
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : unset;
           } else {
             this.entry.color = "";
-            this.entry.textColor = hasValidTSave ? tRawSave : (isGroup ? undefined : "var(--text-normal)");
-            this.entry.backgroundColor = hasValidBSave ? bRawSave : (isGroup ? undefined : "var(--color-accent)");
+            this.entry.textColor = hasValidTSave ? tRawSave : unset;
+            this.entry.backgroundColor = hasValidBSave ? bRawSave : unset;
           }
           if (isGroup) {
             // Collapse a both-black text+background combo (native picker

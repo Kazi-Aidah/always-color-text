@@ -58,7 +58,23 @@ function setColorInputValue(input, colorStr) {
   }
 }
 function getColorInputValue(input) {
-  if (input.dataset.varColor && isVarColor(input.dataset.varColor)) return input.dataset.varColor;
+  const storedVar = input.dataset.varColor;
+  if (storedVar && isVarColor(storedVar)) {
+    // The snapshot only describes what the picker showed when the var() was
+    // applied. Once the user picks a colour, input.value is newer than the
+    // snapshot and must win — reading the stale var() back here made every
+    // consumer (preview, entry sync, save) revert to the old colour, so the
+    // picker snapped straight back.
+    const resolved = resolveVarToHex(storedVar);
+    if (
+      resolved &&
+      input.value &&
+      String(input.value).toLowerCase() !== resolved.toLowerCase()
+    ) {
+      return input.value;
+    }
+    return storedVar;
+  }
   return input.value;
 }
 
@@ -850,7 +866,11 @@ export class EditEntryModal extends Modal {
     });
 
     // Add real-time syncing to this.entry when colors change
+    // A user edit invalidates the var() snapshot taken at open time: only a
+    // programmatic setColorInputValue() may write one, so that every later
+    // read keeps returning the colour the user actually picked.
     const textInputHandler = () => {
+      delete textColorInput.dataset.varColor;
       this._textPickerTouched = true;
       this._presetPrefillText = false;
       applyTextColorToEntry();
@@ -863,6 +883,7 @@ export class EditEntryModal extends Modal {
     });
 
     const bgInputHandler = () => {
+      delete bgColorInput.dataset.varColor;
       this._bgPickerTouched = true;
       this._presetPrefillBg = false;
       applyBgColorToEntry();

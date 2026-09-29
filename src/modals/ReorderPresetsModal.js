@@ -1,5 +1,11 @@
 import { Modal, Menu, setIcon } from 'obsidian';
 import { defaultSettings } from '../settings/defaultSettings.js';
+import {
+  reconcilePresetOrder,
+  deriveQuickMenuOrder,
+  orderQuickMenuByOrder,
+  reconcileQuickMenuOrder,
+} from '../utils/presetOrdering.js';
 
 export class ReorderPresetsModal extends Modal {
   constructor(app, plugin, onComplete = null) {
@@ -67,10 +73,24 @@ export class ReorderPresetsModal extends Modal {
       return style.showInQuickMenu === true;
     };
 
-    allItems.forEach((preset) => {
+    // One row per uid: a quick style kept in both settings lists would show
+    // up twice here, and saving that duplicated order amplified the damage.
+    const renderedUids = new Set();
+
+    // In "Quick Menu items only" mode the rows follow the Quick Menu's own
+    // arrangement, so what is dragged is exactly what the menu displays —
+    // and saving writes only that arrangement, never the regular lists.
+    const items =
+      this._quickMenuOnly
+        ? orderQuickMenuByOrder(allItems, this.plugin.settings.quickMenuOrder)
+        : allItems;
+
+    items.forEach((preset) => {
       if (!preset) return;
       if (defaultPreset && preset.uid === defaultPreset.uid) return;
       if (!preset.uid) return;
+      if (renderedUids.has(preset.uid)) return;
+      renderedUids.add(preset.uid);
 
       const isBuiltIn = seedUids.has(preset.uid);
       const isQuickStyle = Array.isArray(quickStyles) && quickStyles.includes(preset);
@@ -194,25 +214,13 @@ export class ReorderPresetsModal extends Modal {
     }
 
     let border = "";
-    if (style !== "text" && p.enableBorder) {
-      const thickness = p.borderThickness ?? 1;
-      const line = p.borderLineStyle || "solid";
-      const color = bgHex || accent;
-      const css = `${thickness}px ${line} ${color} !important;`;
-      switch (p.borderStyle || "full") {
-        case "bottom": border = ` border-bottom: ${css}`; break;
-        case "top": border = ` border-top: ${css}`; break;
-        case "left": border = ` border-left: ${css}`; break;
-        case "right": border = ` border-right: ${css}`; break;
-        case "top-bottom": border = ` border-top: ${css} border-bottom: ${css}`; break;
-        case "left-right": border = ` border-left: ${css} border-right: ${css}`; break;
-        case "top-left-right": border = ` border-top: ${css} border-left: ${css} border-right: ${css}`; break;
-        case "bottom-left-right": border = ` border-bottom: ${css} border-left: ${css} border-right: ${css}`; break;
-        case "top-right": border = ` border-top: ${css} border-right: ${css}`; break;
-        case "top-left": border = ` border-top: ${css} border-left: ${css}`; break;
-        case "bottom-right": border = ` border-bottom: ${css} border-right: ${css}`; break;
-        case "full": default: border = ` border: ${css}`;
-      }
+    if (style !== "text" && typeof this.plugin.generateBorderStyle === "function") {
+      // Same generator as the editor preview and runtime: border colour
+      // follows the colortype (text for both/text, background for highlight)
+      // instead of always taking the background.
+      border =
+        this.plugin.generateBorderStyle(textHex || accent, bgHex || accent, styleObj) ||
+        "";
     }
 
     const textColorVal = textHex || "var(--text-normal)";
@@ -354,54 +362,47 @@ export class ReorderPresetsModal extends Modal {
     const rows = Array.from(container.querySelectorAll(".act-reorder-row"));
     const uidOrder = rows.map((r) => r.getAttribute("data-uid")).filter(Boolean);
 
-    const presets = this.plugin.settings.textStylePresets;
-    const quickStyles = this.plugin.settings.quickStyles;
+    if (this._quickMenuOnly) {
+      // Quick Menu arrangement only: the regular preset and quick-style
+      // lists keep their own ordering untouched, so arranging the menu can
+      // never reshuffle a preset (the old save applied this row order to
+      // both lists, which moved presets the filter had hidden).
+      this.plugin.settings.quickMenuOrder = reconcileQuickMenuOrder({
+        quickMenuOrder: this.plugin.settings.quickMenuOrder,
+        memberUids: deriveQuickMenuOrder({
+          quickStyles: this.plugin.settings.quickStyles,
+          presets: this.plugin.settings.textStylePresets,
+        }),
+        uidOrder,
+      });
+      this.plugin.saveSettings();
+      return;
+    }
+
+    // Regular ordering. Snapshot the Quick Menu's arrangement first when it
+    // does not exist yet, so this reorder cannot drag menu items along.
+    if (
+      !Array.isArray(this.plugin.settings.quickMenuOrder) ||
+      !this.plugin.settings.quickMenuOrder.length
+    ) {
+      this.plugin.settings.quickMenuOrder = deriveQuickMenuOrder({
+        quickStyles: this.plugin.settings.quickStyles,
+        presets: this.plugin.settings.textStylePresets,
+      });
+    }
+
     const seedUids = new Set(
       (defaultSettings.textStylePresets || []).map((s) => s.uid),
     );
-
-    const presetByUid = new Map();
-    presets.forEach((p) => { if (p && p.uid) presetByUid.set(p.uid, p); });
-    const qsByUid = new Map();
-    if (Array.isArray(quickStyles)) {
-      quickStyles.forEach((s) => { if (s && s.uid) qsByUid.set(s.uid, s); });
-    }
-
-    const reorderableUids = uidOrder.filter((uid) => {
-      return qsByUid.has(uid) || !seedUids.has(uid);
+    const next = reconcilePresetOrder({
+      presets: this.plugin.settings.textStylePresets,
+      quickStyles: this.plugin.settings.quickStyles,
+      seedUids,
+      uidOrder,
     });
 
-    const newTsp = [];
-    let ri = 0;
-    presets.forEach((p) => {
-      if (!p) return;
-      if (seedUids.has(p.uid)) {
-        newTsp.push(p);
-      } else {
-        if (ri < reorderableUids.length) {
-          const uid = reorderableUids[ri++];
-          const item = presetByUid.get(uid) || qsByUid.get(uid);
-          if (item) newTsp.push(item);
-        } else {
-          newTsp.push(p);
-        }
-      }
-    });
-    while (ri < reorderableUids.length) {
-      const uid = reorderableUids[ri++];
-      const item = presetByUid.get(uid) || qsByUid.get(uid);
-      if (item) newTsp.push(item);
-    }
-
-    this.plugin.settings.textStylePresets = newTsp;
-
-    if (Array.isArray(quickStyles)) {
-      const newQs = [];
-      reorderableUids.forEach((uid) => {
-        if (qsByUid.has(uid)) newQs.push(qsByUid.get(uid));
-      });
-      this.plugin.settings.quickStyles = newQs;
-    }
+    this.plugin.settings.textStylePresets = next.presets;
+    this.plugin.settings.quickStyles = next.quickStyles;
 
     this.plugin.saveSettings();
   }
