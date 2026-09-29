@@ -13,7 +13,7 @@ import { RuleValueModal } from './RuleValueModal.js';
 import { PresetModal, createDateTimeFormatButton } from './PresetModal.js';
 import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
 import { adoptPresetColortype } from '../utils/presetLinker.js';
-import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
+import { getTargetPatternText, getTargetPreviewText, resolveTargetElement } from '../utils/targetLabels.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
 import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
@@ -139,6 +139,33 @@ export function resolveEditEntryColorInit({ entry, textStylePresets, isValidHexC
     presetPrefillText: !hasRealText && !!effectiveInitText,
     presetPrefillBg: !hasRealBg && !!effectiveInitBg,
   };
+}
+
+/**
+ * Preview text for the Style Target / Style Text modal (pure, exported for
+ * tests).
+ *
+ * A filtered markdown element reads "File Name: Metro": the element name plus
+ * the text input next to its dropdown, because that filter — not the element
+ * alone — decides what gets colored. Everything else keeps its chain:
+ * preset → typed text → selector description → "Sample Text".
+ */
+export function resolveEditEntryPreviewText({ plugin, entry, isTarget, raw }) {
+  if (!isTarget) {
+    if (entry && entry.isRegex && entry.presetLabel) return entry.presetLabel;
+    return raw || "Sample Text";
+  }
+  return (
+    getTargetPreviewText(plugin, entry) ||
+    (entry && entry.presetLabel) ||
+    raw ||
+    getTargetPatternText(
+      plugin,
+      entry && entry.targetElement,
+      entry && entry.affectMarkElements,
+    ) ||
+    "Sample Text"
+  );
 }
 
 export class EditEntryModal extends Modal {
@@ -665,18 +692,10 @@ export class EditEntryModal extends Modal {
               : this.entry && this.entry.pattern
                 ? String(this.entry.pattern)
                 : "";
-        // Show only the panels matching the colortype: text shows the color
-        // panel, highlight the highlight panel, both shows both panels.
-        const nestedStyle =
-          (styleSelect && styleSelect.value) ||
-          (this.entry && this.entry.styleType) ||
-          "";
-        const nestedMode =
-          nestedStyle === "text"
-            ? "text"
-            : nestedStyle === "highlight"
-              ? "background"
-              : "text-and-background";
+        // Right-click always offers BOTH panels: hiding one of them left the
+        // other color unsettable from here (its swatch is hidden in the form
+        // for a single-color-type entry anyway).
+        const nestedMode = "text-and-background";
         const showNestedText = nestedMode !== "background";
         const showNestedBg = nestedMode !== "text";
         const modal = new ColorPickerModal(
@@ -739,6 +758,17 @@ export class EditEntryModal extends Modal {
               }
             }
 
+            // Both panels are authoritative now: a color picked on the
+            // channel the entry's color type ignores must upgrade the type,
+            // or it is stored but never rendered (the form only applies
+            // background for the highlight type and text for the text type).
+            // styleChange then syncs the entry, the swatch visibility and the
+            // preview — both inputs hold real colors at this point.
+            if (tc && bc && styleSelect.value !== "both") {
+              styleSelect.value = "both";
+              styleSelect.dispatchEvent(new Event("change"));
+            }
+
             applyTextColorToEntry(false);
             applyBgColorToEntry(false);
             dispatchColorsChanged();
@@ -750,6 +780,7 @@ export class EditEntryModal extends Modal {
           this.entry,
         );
         modal._hideHeaderControls = true;
+        modal._forceBothPanels = true;
         // Only prefill real colors — never the null-black display fill.
         // Otherwise a reset-to-null entry reopens with #000000 ghosted as real.
         try {
@@ -1165,18 +1196,12 @@ export class EditEntryModal extends Modal {
 
       while (preview.firstChild) preview.removeChild(preview.firstChild);
       if (!raw && !isTarget) return;
-      let displayText;
-      if (isTarget) {
-        displayText = getTargetLabel(this.plugin, this.entry.targetElement, this.entry.affectMarkElements)
-          || this.entry.presetLabel
-          || raw
-          || getTargetPatternText(this.plugin, this.entry.targetElement, this.entry.affectMarkElements)
-          || "Sample Text";
-      } else if (this.entry && this.entry.isRegex && this.entry.presetLabel) {
-        displayText = this.entry.presetLabel;
-      } else {
-        displayText = raw || "Sample Text";
-      }
+      const displayText = resolveEditEntryPreviewText({
+        plugin: this.plugin,
+        entry: this.entry,
+        isTarget,
+        raw,
+      });
       if (!displayText) return;
       const makeSpan = (text) => {
         const span = document.createElement("span");

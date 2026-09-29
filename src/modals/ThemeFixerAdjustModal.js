@@ -61,7 +61,7 @@ export class ThemeFixerAdjustModal extends Modal {
 
       const panel = col.createDiv();
       panel.style.position = "relative";
-      panel.style.borderRadius = "8px";
+      panel.style.borderRadius = "var(--radius-s)";
       panel.style.padding = "14px";
       panel.style.minHeight = "150px";
       panel.classList.add(mode.key === "dark" ? "theme-dark" : "theme-light");
@@ -257,13 +257,17 @@ export class ThemeFixerAdjustModal extends Modal {
     // Cap how many presets render in the preview so the row stays manageable.
     const MAX_PRESETS_PREVIEW = 10;
     const presets = all.slice(0, MAX_PRESETS_PREVIEW);
-    const sw = this._sampleColors();
     const line = container.createDiv();
     line.style.lineHeight = "2";
     line.style.textAlign = "center";
+    // Cycle the swatch colours through the preset chips the same way the
+    // sample line above does, so each preset shape (radius / border / padding)
+    // is previewed with the plugin's real swatch colors at the preset's own
+    // opacity — not just with the preset's base colour.
+    const sw = this._sampleColors();
     presets.forEach((pst, i) => {
-      const fallback = sw.length ? sw[i % sw.length] : "#3b82f6";
-      const { text, bg, hasBg } = this._presetColors(pst, fallback);
+      const { text, bg } = this._presetColors(pst);
+      const styleType = (pst && pst.styleType) || "highlight";
       const span = line.createEl("span");
       span.className = "always-color-text-highlight act-fixer-noauto";
       span.style.display = "inline-block";
@@ -277,22 +281,27 @@ export class ThemeFixerAdjustModal extends Modal {
         span.style.setProperty("--highlight-color", text);
         span.style.color = text;
       }
-      if (hasBg) {
-        const op =
-          typeof pst.backgroundOpacity === "number"
-            ? pst.backgroundOpacity
-            : params.opacity ?? 25;
-        const bgColor = this._withAlpha(bg, op / 100);
+      // Same highlight test as the renderer: highlight/both style types, or
+      // any preset that carries a background colour of its own. Text-only
+      // presets stay unfilled (and unbordered), exactly as they render.
+      const isHighlight = styleType === "highlight" || styleType === "both" || !!bg;
+      const fill = isHighlight
+        ? sw.length
+          ? sw[i % sw.length]
+          : bg || "var(--color-accent)"
+        : null;
+      if (fill) {
+        // Swatch colour at the preset's own opacity — hex becomes rgba(), a
+        // var() stays a var() through color-mix (so the preview shows
+        // 50%/25%/0% presets as the translucent/absent fills they are).
+        const bgColor = this._withAlpha(fill, (params.opacity ?? 25) / 100);
         span.style.setProperty("--highlight-background", bgColor);
         span.style.backgroundColor = bgColor;
       }
       // Respect border sides / line style / thickness per preset via the
-      // plugin's own generator (handles "underline", "left", etc.).
-      const border = this.plugin.generateBorderStyle(
-        text || null,
-        hasBg ? bg : null,
-        pst,
-      );
+      // plugin's own generator (handles "underline", "left", etc.). The border
+      // follows the fill colour, just like it does on a real highlight.
+      const border = fill ? this.plugin.generateBorderStyle(text, fill, pst) : "";
       if (border) {
         span.style.cssText = span.style.cssText + border;
       }
@@ -307,20 +316,24 @@ export class ThemeFixerAdjustModal extends Modal {
     });
   }
 
-  _presetColors(pst, fallback) {
-    const okHex = (x) =>
+  // The preset's own colours, hex or var() only. `currentColor` (and any
+  // empty/invalid value) resolves to null so the chip inherits instead of
+  // borrowing a colour the preset never asked for — the preview has to show
+  // what the preset itself says.
+  _presetColors(pst) {
+    const okColor = (x) =>
       typeof this.plugin.isValidHexColor === "function"
         ? this.plugin.isValidHexColor(x)
         : /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(x || "");
-    const tcRaw = pst && pst.textColor ? pst.textColor : null;
-    const bcRaw = pst && pst.backgroundColor ? pst.backgroundColor : null;
-    const tcHex = tcRaw && tcRaw !== "currentColor" && okHex(tcRaw) ? tcRaw : null;
-    const bcHex = bcRaw && okHex(bcRaw) ? bcRaw : null;
-    if (bcHex) return { text: tcHex, bg: bcHex, hasBg: true };
-    if (tcHex) return { text: tcHex, bg: null, hasBg: false };
-    // Preset has no usable color of its own → borrow a swatch color so a
-    // highlight actually appears in the preview.
-    return { text: null, bg: fallback || "#3b82f6", hasBg: true };
+    const tcRaw =
+      pst && typeof pst.textColor === "string" ? pst.textColor.trim() : "";
+    const bcRaw =
+      pst && typeof pst.backgroundColor === "string"
+        ? pst.backgroundColor.trim()
+        : "";
+    const text = tcRaw && tcRaw !== "currentColor" && okColor(tcRaw) ? tcRaw : null;
+    const bg = bcRaw && okColor(bcRaw) ? bcRaw : null;
+    return { text, bg };
   }
 
   _sampleColors() {
@@ -338,24 +351,30 @@ export class ThemeFixerAdjustModal extends Modal {
     return out;
   }
 
-  _withAlpha(hex, a) {
-    if (!hex) return "transparent";
-    hex = String(hex).trim();
-    if (hex.startsWith("#")) {
-      let h = hex.slice(1);
+  // Blend a colour with the given alpha (0-1). Hex becomes rgba(); a CSS
+  // variable stays a variable through color-mix so it keeps pointing at the
+  // variable instead of being baked into a literal (this is what makes a
+  // var(--color-accent) preset honour its own backgroundOpacity).
+  _withAlpha(color, a) {
+    if (!color) return "transparent";
+    const pct = Math.max(0, Math.min(100, Math.round(a * 100)));
+    const c = String(color).trim();
+    if (/^var\(/.test(c)) return `color-mix(in srgb, ${c} ${pct}%, transparent)`;
+    if (c.startsWith("#")) {
+      let h = c.slice(1);
       if (h.length === 3)
         h = h
           .split("")
-          .map((c) => c + c)
+          .map((x) => x + x)
           .join("");
       if (h.length === 6) {
         const r = parseInt(h.slice(0, 2), 16);
         const g = parseInt(h.slice(2, 4), 16);
         const b = parseInt(h.slice(4, 6), 16);
-        return `rgba(${r}, ${g}, ${b}, ${a})`;
+        return `rgba(${r}, ${g}, ${b}, ${pct / 100})`;
       }
     }
-    return hex;
+    return c;
   }
 
   _num(v, dflt) {

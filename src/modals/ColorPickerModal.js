@@ -28,6 +28,12 @@ export class ColorPickerModal extends Modal {
     this._eventListeners = []; // Track event listeners for cleanup
     this.isQuickOnce = !!isQuickOnce;
     this._entry = entry;
+    // Set by the right-click swatch pickers (colored text, word group, quick
+    // color and regex tester rows): the picker must then offer BOTH the text
+    // and the highlight panel, so neither the entry's color type (which used
+    // to force a single panel) nor a single-panel colorPickerMode layout can
+    // block setting the other color from there.
+    this._forceBothPanels = false;
     // Reverse-lookup info from the caller (right-click / command): the live
     // entry that actually colors the selection + its group. When present it is
     // the source of truth — the modal must open/edit THAT regex / markdown
@@ -199,9 +205,23 @@ export class ColorPickerModal extends Modal {
     this._eventListeners = []; // Reset listeners
     this._hasUserChanges = false;
     const cpm = this.plugin.settings.colorPickerMode || "both";
+    // Honour _forceBothPanels before any panel/layout decision: the entry's
+    // color type (text / highlight) is no reason to hide the other channel
+    // from a right-click pick.
+    if (
+      this._forceBothPanels &&
+      (this.mode === "text" || this.mode === "background")
+    ) {
+      this.mode = "text-and-background";
+    }
     const isForceBoth = this.mode === "text-and-background";
     const forcedSingle = this.mode === "text" || this.mode === "background";
-    const effectiveCpm = cpm;
+    // The single-panel layouts still rule the regular picker; the swatch
+    // pickers fall back to the default side-by-side pair instead.
+    const effectiveCpm =
+      this._forceBothPanels && (cpm === "text" || cpm === "background")
+        ? "both"
+        : cpm;
     const isBoth =
       !forcedSingle &&
       (effectiveCpm === "both" ||
@@ -268,7 +288,6 @@ export class ColorPickerModal extends Modal {
     if (!hideControls && !isQuick && groups.length > 0) {
       const groupSelect = headerRow.createEl("select");
       groupSelect.style.padding = "6px";
-      groupSelect.style.borderRadius = "4px";
       groupSelect.style.border = "1px solid var(--background-modifier-border)";
       groupSelect.style.textAlign = "center";
       groupSelect.style.maxWidth = "120px";
@@ -329,7 +348,6 @@ export class ColorPickerModal extends Modal {
       presetBtn.style.alignItems = "center";
       presetBtn.style.justifyContent = "center";
       presetBtn.style.padding = "6px 10px";
-      presetBtn.style.borderRadius = "4px";
       presetBtn.style.border = "1px solid var(--background-modifier-border)";
       presetBtn.style.background = "var(--background-modifier-form-field)";
       presetBtn.style.cursor = "pointer";
@@ -376,7 +394,6 @@ export class ColorPickerModal extends Modal {
       editBtn.style.alignItems = "center";
       editBtn.style.justifyContent = "center";
       editBtn.style.padding = "6px";
-      editBtn.style.borderRadius = "4px";
       editBtn.style.border = "1px solid var(--background-modifier-border)";
       editBtn.style.background = "var(--background-modifier-form-field)";
       editBtn.style.cursor = "pointer";
@@ -387,7 +404,6 @@ export class ColorPickerModal extends Modal {
     if (!hideControls && !isQuick) {
       const markTargetSelect = pickrRow.createEl("select");
       markTargetSelect.style.padding = "6px";
-      markTargetSelect.style.borderRadius = "4px";
       markTargetSelect.style.border = "1px solid var(--background-modifier-border)";
       markTargetSelect.style.textAlign = "center";
       try {
@@ -419,7 +435,6 @@ export class ColorPickerModal extends Modal {
     if (!hideControls && !isQuick) {
       const caseSelect = pickrRow.createEl("select");
       caseSelect.style.padding = "6px";
-      caseSelect.style.borderRadius = "4px";
       caseSelect.style.border = "1px solid var(--background-modifier-border)";
       caseSelect.style.textAlign = "center";
       try {
@@ -445,7 +460,6 @@ export class ColorPickerModal extends Modal {
     if (!hideControls && !isQuick) {
       const matchSelect = pickrRow.createEl("select");
       matchSelect.style.padding = "6px";
-      matchSelect.style.borderRadius = "4px";
       matchSelect.style.border = "1px solid var(--background-modifier-border)";
       matchSelect.style.textAlign = "center";
       try {
@@ -648,7 +662,6 @@ export class ColorPickerModal extends Modal {
       colorInput.style.width = "44px";
       colorInput.style.height = "44px";
       colorInput.style.border = "none";
-      colorInput.style.borderRadius = "12px";
       colorInput.style.cursor = "pointer";
       colorInput.value = "#000000";
 
@@ -656,7 +669,6 @@ export class ColorPickerModal extends Modal {
       hex.title = titleText;
       hex.style.flex = "1";
       hex.style.padding = "8px";
-      hex.style.borderRadius = "8px";
       hex.style.border = "1px solid var(--background-modifier-border)";
       hex.style.width = "160px";
       hex.placeholder = "#000000 or var()";
@@ -886,7 +898,6 @@ export class ColorPickerModal extends Modal {
         btn.style.minHeight = "44px";
         // btn.style.border = '1px solid var(--background-modifier-border)';
         btn.style.setProperty("border", "transparent", "important");
-        btn.style.borderRadius = "12px";
         btn.style.cursor = "pointer";
         btn.style.opacity = "1";
         btn.setAttr("title", item.name || item.color);

@@ -1318,6 +1318,7 @@ export class EditWordGroupModal extends Modal {
               entry ? entry.markTarget : "text",
               entry,
             );
+            modal._forceBothPanels = true;
             try {
               if (preFillText) modal._preFillTextColor = preFillText;
               if (preFillBg) {
@@ -1479,7 +1480,9 @@ export class EditWordGroupModal extends Modal {
                 if (result && typeof result.caseSensitive === "boolean") entry.caseSensitive = result.caseSensitive;
                 if (entry.customCss) this.plugin.syncEntryCssFromColors(entry);
                 if (tcValid && cp) cp.value = tc;
-                if (bcValid) cpBg.value = bc;
+                // Mirror the text handler's guard: a swatch is only rendered
+                // for its own color type, so it may be missing.
+                if (bcValid && cpBg) cpBg.value = bc;
                 this._refreshGroupEntries();
               },
               bgPickerMode,
@@ -1488,6 +1491,7 @@ export class EditWordGroupModal extends Modal {
               entry ? entry.markTarget : "text",
               entry,
             );
+            modal._forceBothPanels = true;
             try {
               if (preFillText) modal._preFillTextColor = preFillText;
               if (preFillBg) {

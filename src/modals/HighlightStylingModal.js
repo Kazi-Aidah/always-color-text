@@ -5,6 +5,7 @@ import { TextStylePresetsModal } from './TextStylePresetsModal.js';
 import { deriveHighlightCssFromEntry, parseCssIntoEntry, patchCssLayoutFromEntry } from './CustomCssModal.js';
 import { stripInheritedGroupCssColors } from '../services/patternCompiler.js';
 import { adoptPresetColortype, applyPresetShapeToGroup } from '../utils/presetLinker.js';
+import { getTargetPreviewText } from '../utils/targetLabels.js';
 
 function resolveVarToHex(varStr) {
   try {
@@ -373,24 +374,28 @@ export class HighlightStylingModal extends Modal {
     const previewWrap = topRow.createDiv();
     previewWrap.addClass("act-highlight-preview-wrap");
 
+    // Filtered markdown elements preview as "File Name: Metro" — the filter is
+    // recomputed on every render so an edit in the parent Style Target modal
+    // is not frozen behind the text captured when this one opened.
+    const previewText = () => {
+      if (this.previewTextOverride) return this.previewTextOverride;
+      const targetText = getTargetPreviewText(this.plugin, this.entry);
+      if (targetText) return targetText;
+      if (isGroup) return this.entry.name || "Group";
+      if (!this.entry) return "";
+      if (this.entry.isRegex) return this.entry.presetLabel || String(this.entry.pattern || "");
+      if (Array.isArray(this.entry.groupedPatterns) && this.entry.groupedPatterns.length > 0)
+        return this.entry.groupedPatterns.join(", ");
+      return String(this.entry.pattern || "");
+    };
+
     const words = previewWrap.createDiv();
     previewWrap.style.display = "flex";
     previewWrap.style.alignItems = "center";
     previewWrap.style.justifyContent = "center";
     words.style.textAlign = "center";
     words.style.opacity = "0.8";
-    words.textContent = this.previewTextOverride
-      ? this.previewTextOverride
-      : isGroup
-        ? this.entry.name || "Group"
-        : this.entry
-          ? this.entry.isRegex
-            ? this.entry.presetLabel || String(this.entry.pattern || "")
-            : Array.isArray(this.entry.groupedPatterns) &&
-                this.entry.groupedPatterns.length > 0
-              ? this.entry.groupedPatterns.join(", ")
-              : String(this.entry.pattern || "")
-          : "";
+    words.textContent = previewText();
     const styleCol = topRow.createDiv();
     styleCol.addClass("act-highlight-style-col");
     const styleSelect = styleCol.createEl("select");
@@ -1033,10 +1038,7 @@ export class HighlightStylingModal extends Modal {
           span.style.setProperty(prop, val, 'important');
         });
       }
-      const displayText =
-        !isGroup && this.entry && this.entry.isRegex && this.entry.presetLabel
-          ? this.entry.presetLabel
-          : words.textContent || "";
+      const displayText = previewText();
       span.textContent = displayText;
       // Apply custom CSS on top if present — use current picker colors, not stored entry colors
       if (this.entry && this.entry.customCss && this.plugin.settings.enableCustomCss) {
@@ -1364,17 +1366,10 @@ export class HighlightStylingModal extends Modal {
         evt.preventDefault();
         evt.stopPropagation();
         const currentColor = getColorInputValue(colorInput) || "#000000";
-        // Show only the panels matching the colortype: text shows the color
-        // panel, highlight the highlight panel, both shows both panels.
-        // Per-entry (no type) shows both so either channel can be picked.
-        const nestedStyle =
-          (this.entry && this.entry.styleType) || styleSelect.value || "";
-        const nestedMode =
-          nestedStyle === "text"
-            ? "text"
-            : nestedStyle === "highlight"
-              ? "background"
-              : "text-and-background";
+        // Right-click always offers BOTH panels: hiding one of them left the
+        // other color unsettable from here (its swatch is hidden in the form
+        // for a single-color-type entry anyway).
+        const nestedMode = "text-and-background";
         const showNestedText = nestedMode !== "background";
         const showNestedBg = nestedMode !== "text";
         const modal = new ColorPickerModal(
@@ -1434,6 +1429,17 @@ export class HighlightStylingModal extends Modal {
               }
             }
 
+            // Both panels are authoritative now: a color picked on the
+            // channel the entry's color type ignores must upgrade the type,
+            // or syncEntryColorsFromInputs drops it again (it only stores
+            // background for the highlight type and text for the text type).
+            // Both inputs hold real colors at this point, so the change
+            // handler can safely sync entry fields from them.
+            if (tc && bc && styleSelect.value !== "both") {
+              styleSelect.value = "both";
+              styleSelect.dispatchEvent(new Event("change"));
+            }
+
             dispatchHighlightColorsChanged();
             renderPreview();
           },
@@ -1444,6 +1450,7 @@ export class HighlightStylingModal extends Modal {
           this.entry,
         );
         modal._hideHeaderControls = true;
+        modal._forceBothPanels = true;
         // Only prefill real colors — never the null-black display fill.
         // Otherwise a reset-to-null entry reopens with #000000 ghosted as real.
         try {

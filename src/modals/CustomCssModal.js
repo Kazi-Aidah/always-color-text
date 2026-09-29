@@ -6,6 +6,7 @@ import {
   applyCustomCssToElementCore,
   reassembleCustomCss,
 } from '../core/customCssRules.js';
+import { getTargetPreviewText } from '../utils/targetLabels.js';
 
 /**
  * Derives a CSS string from an entry's highlight styling properties,
@@ -422,11 +423,15 @@ export class CustomCssModal extends Modal {
     previewWrap.style.alignItems = 'center';
     previewWrap.style.justifyContent = 'center';
 
-    const sampleText = this.entry.name
-      ? this.entry.name
-      : this.entry.isRegex
-        ? (this.entry.presetLabel || this.entry.pattern || 'Sample Text')
-        : (this.entry.pattern || 'Sample Text');
+    // Filtered markdown elements read "File Name: Metro": the preview echoes
+    // the element's own text input, not the (dead) selector description.
+    const sampleText =
+      getTargetPreviewText(this.plugin, this.entry) ||
+      (this.entry.name
+        ? this.entry.name
+        : this.entry.isRegex
+          ? (this.entry.presetLabel || this.entry.pattern || 'Sample Text')
+          : (this.entry.pattern || 'Sample Text'));
 
     this._previewSpan = previewWrap.createEl('span');
     this._previewSpan.style.display = 'inline';

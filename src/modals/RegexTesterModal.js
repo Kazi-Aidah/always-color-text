@@ -175,6 +175,7 @@ export class RegexTesterModal extends Modal {
           exprInput.value || "",
         );
         modal._hideHeaderControls = true;
+        modal._forceBothPanels = true;
         if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
         if (bgColorInput.value) {
           modal._preFillBgColor = bgColorInput.value;
@@ -227,6 +228,7 @@ export class RegexTesterModal extends Modal {
           exprInput.value || "",
         );
         modal._hideHeaderControls = true;
+        modal._forceBothPanels = true;
         if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
         if (bgColorInput.value) {
           modal._preFillBgColor = bgColorInput.value;

@@ -186,6 +186,7 @@ export class QuickMenuColorsModal extends Modal {
               this.plugin.t("selected_text_preview", "Selected Text"),
             );
             modal._hideHeaderControls = true;
+            modal._forceBothPanels = true;
             modal._preFillTextColor = tCp.value;
             modal._preFillBgColor = bCp.value;
             modal._preFillBorderColor = bCp.value;

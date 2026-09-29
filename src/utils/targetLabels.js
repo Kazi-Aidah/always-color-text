@@ -28,6 +28,20 @@ const TARGET_KEYS = {
   "folder-name": ["target_folder_name", "Folder Name"],
 };
 
+// Targets whose preview must also echo the element's own text input: the
+// filter typed next to the dropdown ("Metro" in "File Name: Metro") is what
+// actually gets colored, so the element name alone hides the half the user
+// wrote. Structural inputs (heading levels, task checkbox types) stay out —
+// they are prefilled with defaults and would only bury the name. Targets
+// outside this map still preview their element name, just without a suffix.
+const PREVIEW_FILTER_KEYS = {
+  tag: "tagFilter",
+  "inline-title": "titleFilter",
+  "tab-title": "titleFilter",
+  "file-name": "titleFilter",
+  "folder-name": "titleFilter",
+};
+
 // The actual CodeMirror / rendered-DOM selectors the engine colors for a
 // target element. Used to describe what a target entry affects instead of
 // showing the (inert) regex it carries.
@@ -96,5 +110,24 @@ export function resolveTargetElement(plugin, entry) {
   if (pattern && own(FORMATTING_REGEX, pattern))
     return FORMATTING_REGEX[pattern];
   return null;
+}
+
+/**
+ * Preview text for a markdown-element entry, shared by the Style Target,
+ * Edit Highlight Styling and Edit Custom CSS modal previews.
+ *
+ * @param {object} plugin - used to translate the element label (plugin.t)
+ * @param {object|null} entry - entry being previewed
+ * @returns {string} "File Name: Metro" when a filtered element carries a
+ * value, the bare element name when it has no input (or an empty one), and
+ * "" for anything that is not a labelable markdown element.
+ */
+export function getTargetPreviewText(plugin, entry) {
+  const key = resolveTargetElement(plugin, entry);
+  const label = getTargetLabel(plugin, key, entry && entry.affectMarkElements);
+  if (!label) return "";
+  if (!entry || !own(PREVIEW_FILTER_KEYS, key)) return label;
+  const value = String(entry[PREVIEW_FILTER_KEYS[key]] || "").trim();
+  return value ? `${label}: ${value}` : label;
 }
 

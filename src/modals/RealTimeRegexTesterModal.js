@@ -428,6 +428,7 @@ export class RealTimeRegexTesterModal extends Modal {
           this._editingEntry,
         );
         modal._hideHeaderControls = true;
+        modal._forceBothPanels = true;
         if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
         if (bgColorInput.value) {
           modal._preFillBgColor = bgColorInput.value;
@@ -484,6 +485,7 @@ export class RealTimeRegexTesterModal extends Modal {
           this._editingEntry,
         );
         modal._hideHeaderControls = true;
+        modal._forceBothPanels = true;
         if (textColorInput.value) modal._preFillTextColor = textColorInput.value;
         if (bgColorInput.value) {
           modal._preFillBgColor = bgColorInput.value;

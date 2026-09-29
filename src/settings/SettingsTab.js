@@ -1175,6 +1175,7 @@ export class ColorSettingTab extends PluginSettingTab {
             preExisting ? preExisting.markTarget : "text",
             preExisting,
           );
+          modal._forceBothPanels = true;
           try {
             if (preFillText && this.plugin.isValidHexColor(preFillText)) modal._preFillTextColor = preFillText;
             if (preFillBg && this.plugin.isValidHexColor(preFillBg)) {
@@ -3549,6 +3550,7 @@ export class ColorSettingTab extends PluginSettingTab {
               this.plugin.t("selected_text_preview", "Selected Text"),
             );
             modal._hideHeaderControls = true;
+            modal._forceBothPanels = true;
             modal._preFillTextColor = tCp.value;
             modal._preFillBgColor = bCp.value;
             modal._preFillBorderColor = bCp.value;
