@@ -191,7 +191,7 @@ All colored texts appear in settings with search and multiple sort options.
 
 ![Colored Texts settings tab with search and sort options](assets/1.17.0/settings-colored-texts.png)
 
-The coolest part about them is the ability to [[#Deactivate Entries|deactivate entries]] and [[#Entry Filtering (Limit Input)|limits]].
+The coolest part about them is the ability to [deactivate entries](#deactivate-entries) and [limits](#entry-filtering-limit-input).
 
 
 ### Grouped Entries
