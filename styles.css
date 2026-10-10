@@ -12,6 +12,14 @@
    UI-only rules (settings previews, drag ghosts, modal layout) are NOT gated —
    they must keep working regardless of the toggle. */
 :where(html.act-enabled) .always-color-text-highlight {
+  /* Reset the highlight channels so a text-only (colortype=color) span never
+     inherits a --highlight-background/--highlight-color set on an ancestor
+     (theme default, outer ==mark==, parent highlight). `initial` makes the
+     custom property guaranteed-invalid, so the var() fallbacks below apply:
+     transparent background + inherited text color. Highlight spans override
+     this via inline style, which still wins. */
+  --highlight-color: initial;
+  --highlight-background: initial;
   --text-normal: var(--highlight-color, currentColor);
   --link-color: var(--highlight-color, currentColor);
   --link-external-color: var(--highlight-color, currentColor);
@@ -34,6 +42,8 @@
 }
 :where(html.act-enabled) .always-color-text-highlight-marks {
   /* Affects mark elements in reading mode and .cm-highlight in live preview */
+  --highlight-color: initial;
+  --highlight-background: initial;
   background-color: var(--highlight-background, transparent);
   color: var(--highlight-color, currentColor);
 }
@@ -44,10 +54,14 @@
   color: var(--highlight-color, inherit);
 }
 :where(html.act-enabled) mark.always-color-text-highlight-marks {
+  --highlight-color: initial;
+  --highlight-background: initial;
   background-color: var(--highlight-background, transparent);
   color: var(--highlight-color, currentColor);
 }
 :where(html.act-enabled) .cm-highlight.always-color-text-highlight-marks {
+  --highlight-color: initial;
+  --highlight-background: initial;
   background-color: var(--highlight-background, transparent);
   color: var(--highlight-color, currentColor);
 }
@@ -74,10 +88,14 @@
   --link-external-color: inherit;
 }
 :where(html.act-enabled) .cm-highlight .always-color-text-highlight-marks {
+  --highlight-color: initial;
+  --highlight-background: initial;
   background-color: var(--highlight-background, transparent);
   color: var(--highlight-color, currentColor);
 }
 :where(html.act-enabled) mark .always-color-text-highlight-marks {
+  --highlight-color: initial;
+  --highlight-background: initial;
   background-color: var(--highlight-background, transparent);
   color: var(--highlight-color, currentColor);
 }
@@ -174,10 +192,14 @@
   background-color: var(--background-primary);
 }
 :where(html.act-enabled) .markdown-rendered .always-color-text-highlight mark {
+  --highlight-color: initial;
+  --highlight-background: initial;
   color: var(--highlight-color, currentColor);
   background-color: var(--highlight-background, transparent);
 }
 :where(html.act-enabled) .cm-editor .always-color-text-highlight .cm-highlight {
+  --highlight-color: initial;
+  --highlight-background: initial;
   color: var(--highlight-color, currentColor);
   background-color: var(--highlight-background, transparent);
 }

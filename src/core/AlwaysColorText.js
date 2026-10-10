@@ -9642,12 +9642,190 @@ class AlwaysColorText extends Plugin {
   async savePickedColorsForSelection(selectedText, sel, color, opts = {}) {
     const tc = sel && sel.textColor && this.isValidHexColor(sel.textColor) ? sel.textColor : null;
     const bc = sel && sel.backgroundColor && this.isValidHexColor(sel.backgroundColor) ? sel.backgroundColor : null;
-    if (!tc && !bc && !(color && this.isValidHexColor(color))) return;
+    if (!tc && !bc && !(color && this.isValidHexColor(color))) {
+      // Reset-to-null (user tapped Reset on all panels then closed to save):
+      // remove the coloring for this selection instead of no-opping.
+      try {
+        const resolvedNull = opts.resolved || null;
+        if (resolvedNull && resolvedNull.entry) {
+          let liveNull = null;
+          try {
+            const uidNull = resolvedNull.entry.uid ? String(resolvedNull.entry.uid) : null;
+            liveNull = uidNull ? this.findLiveColoringEntryByUid(uidNull) : null;
+          } catch (_) {
+            liveNull = null;
+          }
+          const uidToRemove = (liveNull && liveNull.entry && liveNull.entry.uid)
+            ? String(liveNull.entry.uid)
+            : (resolvedNull.entry.uid ? String(resolvedNull.entry.uid) : null);
+          let removedNull = false;
+          if (uidToRemove) {
+            const mainArr = Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : [];
+            const mi = mainArr.findIndex((e) => e && String(e.uid || "") === uidToRemove);
+            if (mi !== -1) {
+              mainArr.splice(mi, 1);
+              removedNull = true;
+            }
+            if (!removedNull && Array.isArray(this.settings.wordEntryGroups)) {
+              for (const g of this.settings.wordEntryGroups) {
+                if (!g || !Array.isArray(g.entries)) continue;
+                const gi = g.entries.findIndex((e) => e && String(e.uid || "") === uidToRemove);
+                if (gi !== -1) {
+                  g.entries.splice(gi, 1);
+                  removedNull = true;
+                  break;
+                }
+              }
+            }
+          }
+          // Fallback: legacy pattern match when uid lookup fails.
+          if (!removedNull) {
+            const word = String(selectedText || "");
+            const cs = !!this.settings.caseSensitive;
+            const eq = (a, b) => (cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
+            const removeFromArr = (arr) => {
+              for (let i = arr.length - 1; i >= 0; i--) {
+                const e = arr[i];
+                if (!e) continue;
+                if (e.isRegex) {
+                  if (!this.settings.enableRegexSupport) continue;
+                  try {
+                    const re = e.testRegex instanceof RegExp ? e.testRegex : new RegExp(e.pattern, e.flags || "");
+                    if (re.test(word)) {
+                      arr.splice(i, 1);
+                      removedNull = true;
+                      break;
+                    }
+                  } catch (_) {}
+                } else if (
+                  eq(e.pattern || "", word) ||
+                  (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, word)))
+                ) {
+                  if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 1) {
+                    e.groupedPatterns = e.groupedPatterns.filter((p) => !eq(p, word));
+                    if (e.groupedPatterns.length === 1) {
+                      e.pattern = e.groupedPatterns[0];
+                      e.groupedPatterns = null;
+                    }
+                  } else {
+                    arr.splice(i, 1);
+                  }
+                  removedNull = true;
+                  break;
+                }
+              }
+            };
+            const gUid = (liveNull && liveNull.groupUid) || resolvedNull.groupUid || null;
+            if (gUid && Array.isArray(this.settings.wordEntryGroups)) {
+              const g = this.settings.wordEntryGroups.find((gg) => gg && gg.uid === gUid);
+              if (g && Array.isArray(g.entries)) removeFromArr(g.entries);
+            } else {
+              removeFromArr(Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : []);
+            }
+            if (!removedNull) {
+              removeFromArr(Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : []);
+              if (!removedNull && Array.isArray(this.settings.wordEntryGroups)) {
+                for (const g of this.settings.wordEntryGroups) {
+                  if (!g || !Array.isArray(g.entries)) continue;
+                  removeFromArr(g.entries);
+                  if (removedNull) break;
+                }
+              }
+            }
+          }
+          await this.saveSettings();
+          this.compileWordEntries();
+          this.compileTextBgColoringEntries();
+          this.reconfigureEditorExtensions();
+          return { removed: true };
+        }
+        // No resolved entry: legacy find-by-pattern delete.
+        {
+          const word = String(selectedText || "");
+          const cs = !!this.settings.caseSensitive;
+          const eq = (a, b) => (cs ? String(a) === String(b) : String(a).toLowerCase() === String(b).toLowerCase());
+          let removedLegacy = false;
+          const removeFromArr = (arr) => {
+            for (let i = arr.length - 1; i >= 0; i--) {
+              const e = arr[i];
+              if (!e) continue;
+              let match = false;
+              if (e.isRegex && this.settings.enableRegexSupport) {
+                try {
+                  const re = e.testRegex instanceof RegExp ? e.testRegex : new RegExp(e.pattern, e.flags || "");
+                  match = re.test(word);
+                } catch (_) {
+                  match = false;
+                }
+              } else {
+                match = eq(e.pattern || "", word) ||
+                  (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, word)));
+              }
+              if (match) {
+                if (!e.isRegex && Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 1) {
+                  e.groupedPatterns = e.groupedPatterns.filter((p) => !eq(p, word));
+                  if (e.groupedPatterns.length === 1) {
+                    e.pattern = e.groupedPatterns[0];
+                    e.groupedPatterns = null;
+                  }
+                } else {
+                  arr.splice(i, 1);
+                }
+                removedLegacy = true;
+                break;
+              }
+            }
+          };
+        const selGroupUidNull = (sel && sel.selectedGroupUid) || opts.fallbackGroupUid || null;
+          if (selGroupUidNull && Array.isArray(this.settings.wordEntryGroups)) {
+            const g = this.settings.wordEntryGroups.find((gg) => gg && gg.uid === selGroupUidNull);
+            if (g && Array.isArray(g.entries)) removeFromArr(g.entries);
+          } else {
+            removeFromArr(Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : []);
+          }
+          if (!removedLegacy) {
+            removeFromArr(Array.isArray(this.settings.wordEntries) ? this.settings.wordEntries : []);
+            if (!removedLegacy && Array.isArray(this.settings.wordEntryGroups)) {
+              for (const g of this.settings.wordEntryGroups) {
+                if (!g || !Array.isArray(g.entries)) continue;
+                removeFromArr(g.entries);
+                if (removedLegacy) break;
+              }
+            }
+          }
+          await this.saveSettings();
+          this.compileWordEntries();
+          this.compileTextBgColoringEntries();
+          this.reconfigureEditorExtensions();
+          return { removed: removedLegacy };
+        }
+      } catch (_) {}
+      return { removed: false };
+    }
     const selGroupUid = (sel && sel.selectedGroupUid) || opts.fallbackGroupUid || null;
     const matchType = (sel && sel.matchType) || this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact");
     const markTarget = (sel && sel.markTarget) || "text";
     const caseSensitive = sel && typeof sel.caseSensitive === "boolean" ? sel.caseSensitive : !!this.settings.caseSensitive;
     const ps = (sel && sel.presetStyle) || null;
+    // Explicit per-channel resets from the pick-color modal (Reset button
+    // tapped, no later pick). A null channel with its flag set means "clear
+    // it even if the entry currently has one" (both -> text-only / highlight).
+    const textCleared = !!(sel && sel.textCleared);
+    const bgCleared = !!(sel && sel.backgroundCleared);
+    // Panel visibility: a null channel from a hidden panel means "untouched"
+    // (single-panel pickers), never "reset". Absent flags default to visible
+    // (clear), matching the legacy text-only/highlight-only downgrade.
+    const textPanelVisible = !sel || typeof sel.textPanelVisible !== "boolean" ? true : sel.textPanelVisible;
+    const bgPanelVisible = !sel || typeof sel.backgroundPanelVisible !== "boolean" ? true : sel.backgroundPanelVisible;
+    // Dropping a channel the entry's preset needs means the entry no longer
+    // conforms to that preset — unlink it so a later preset edit cannot
+    // refill the removed color via adoptPresetColortype.
+    const unlinkPresetIfChannelRemoved = (ent, hadText, hasText, hadBg, hasBg) => {
+      try {
+        if (!ent || !ent.presetUid) return;
+        if ((hadBg && !hasBg) || (hadText && !hasText)) delete ent.presetUid;
+      } catch (_) {}
+    };
     const applyPresetStyleToEntry = (ent) => {
       if (!ps || !ent) return;
       const keys = ["styleType", "backgroundOpacity", "highlightBorderRadius", "cornerShape", "highlightHorizontalPadding", "highlightVerticalPadding", "enableBorderThickness", "borderStyle", "borderLineStyle", "borderOpacity", "borderThickness"];
@@ -9689,11 +9867,15 @@ class AlwaysColorText extends Plugin {
             target._savedTextColor = tc;
             target._savedBackgroundColor = bc;
           } else if (tc) {
-            // Preserve highlight entries that also carry a background: only
-            // clear the background when the modal explicitly picked text-only.
-            // The picker reports bgSelected via sel.backgroundColor, so reaching
-            // here with tc-only means the user wants text-only.
-            if (target.backgroundColor && target.styleType !== "text") {
+            // Text kept, background null. Clear the background when the user
+            // explicitly reset it (or the bg panel was shown empty, i.e. a
+            // text-only intent); preserve it only when the bg panel was
+            // hidden (single-panel text picker must not wipe a highlight it
+            // could not display).
+            const hadBg = !!(target.backgroundColor && this.isValidHexColor(target.backgroundColor));
+            const hadText = !!((target.color && this.isValidHexColor(target.color)) ||
+              (target.textColor && target.textColor !== "currentColor" && this.isValidHexColor(target.textColor)));
+            if (hadBg && !bgCleared && !bgPanelVisible && target.styleType !== "text") {
               target.textColor = tc;
               target.color = "";
               target.styleType = "both";
@@ -9704,21 +9886,44 @@ class AlwaysColorText extends Plugin {
               target.textColor = null;
               target.backgroundColor = null;
               target._savedTextColor = tc;
+              try {
+                delete target._savedBackgroundColor;
+              } catch (_) {}
+              unlinkPresetIfChannelRemoved(target, hadText, true, hadBg, false);
             }
           } else if (bc) {
-            target.color = "";
-            target.textColor = target.textColor && target.textColor !== "currentColor" ? target.textColor : "currentColor";
-            // Keep an existing real text color when switching to highlight-only? No:
-            // highlight-only means text stays default, so force currentColor unless both were picked.
-            if (tc) {
-              target.textColor = tc;
-              target.styleType = "both";
+            // Background kept, text null. Mirror of the text branch: clear
+            // the text only on explicit reset (or visible empty panel);
+            // preserve a real text color when the text panel was hidden.
+            const hadBg = !!(target.backgroundColor && this.isValidHexColor(target.backgroundColor));
+            const hadText = !!((target.color && this.isValidHexColor(target.color)) ||
+              (target.textColor && target.textColor !== "currentColor" && this.isValidHexColor(target.textColor)));
+            if (hadText && !textCleared && !textPanelVisible) {
+              target.color = "";
+              target.textColor = target.textColor && target.textColor !== "currentColor" ? target.textColor : "currentColor";
+              if (tc) {
+                target.textColor = tc;
+                target.styleType = "both";
+              } else {
+                target.styleType = "both";
+              }
+              target.backgroundColor = bc;
+              target._savedBackgroundColor = bc;
             } else {
-              target.textColor = "currentColor";
-              target.styleType = "highlight";
+              target.color = "";
+              // Keep an existing real text color when switching to highlight-only? No:
+              // highlight-only means text stays default, so force currentColor unless both were picked.
+              if (tc) {
+                target.textColor = tc;
+                target.styleType = "both";
+              } else {
+                target.textColor = "currentColor";
+                target.styleType = "highlight";
+              }
+              target.backgroundColor = bc;
+              target._savedBackgroundColor = bc;
+              unlinkPresetIfChannelRemoved(target, hadText, false, hadBg, true);
             }
-            target.backgroundColor = bc;
-            target._savedBackgroundColor = bc;
           } else if (color && this.isValidHexColor(color)) {
             target.color = color;
             target.styleType = "text";
@@ -9734,6 +9939,47 @@ class AlwaysColorText extends Plugin {
             if (!already) target.inclusionRules.push(opts.fileInclusionRule);
           }
           applyPresetStyleToEntry(target);
+          // An explicit Reset in the same session wins over a preset applied
+          // in that session: adoptPresetColortype above refills any channel
+          // the preset's colortype needs, which would resurrect the color
+          // the user just removed. Re-enforce the cleared channels here.
+          try {
+            if (bgCleared && target.backgroundColor) {
+              target.backgroundColor = null;
+              try {
+                delete target._savedBackgroundColor;
+              } catch (_) {}
+              const hasText = !!((target.color && this.isValidHexColor(target.color)) ||
+                (target.textColor && target.textColor !== "currentColor" && this.isValidHexColor(target.textColor)));
+              if (target.styleType === "both" || target.styleType === "highlight") {
+                if (hasText) {
+                  if (target.textColor && target.textColor !== "currentColor") {
+                    target.color = target.textColor;
+                  }
+                  target.styleType = "text";
+                  target.textColor = null;
+                } else {
+                  target.styleType = "text";
+                }
+              }
+              if (target.presetUid) delete target.presetUid;
+            }
+            if (textCleared && (target.color || (target.textColor && target.textColor !== "currentColor"))) {
+              target.color = "";
+              target.textColor = "currentColor";
+              if (target.styleType === "both" || target.styleType === "text") {
+                target.styleType = target.backgroundColor ? "highlight" : "text";
+                if (target.styleType === "text") {
+                  target.textColor = null;
+                  target.backgroundColor = null;
+                }
+              }
+              try {
+                delete target._savedTextColor;
+              } catch (_) {}
+              if (target.presetUid) delete target.presetUid;
+            }
+          } catch (_) {}
           this.syncEntryCssFromColors(target);
         } catch (_) {}
         // Group reassignment: move the resolved entry when the picker group differs.
@@ -9837,17 +10083,35 @@ class AlwaysColorText extends Plugin {
           entry._savedTextColor = tc;
           entry._savedBackgroundColor = bc;
         } else if (tc) {
-          entry.color = tc;
-          entry.styleType = "text";
-          entry.textColor = null;
-          entry.backgroundColor = null;
-          entry._savedTextColor = tc;
+          const hadBgL = !!(entry.backgroundColor && this.isValidHexColor(entry.backgroundColor));
+          const hadTextL = !!((entry.color && this.isValidHexColor(entry.color)) ||
+            (entry.textColor && entry.textColor !== "currentColor" && this.isValidHexColor(entry.textColor)));
+          if (hadBgL && !bgCleared && !bgPanelVisible) {
+            entry.textColor = tc;
+            entry.color = "";
+            entry.styleType = "both";
+            entry._savedTextColor = tc;
+          } else {
+            entry.color = tc;
+            entry.styleType = "text";
+            entry.textColor = null;
+            entry.backgroundColor = null;
+            entry._savedTextColor = tc;
+            try {
+              delete entry._savedBackgroundColor;
+            } catch (_) {}
+            unlinkPresetIfChannelRemoved(entry, hadTextL, true, hadBgL, false);
+          }
         } else if (bc) {
+          const hadBgL = !!(entry.backgroundColor && this.isValidHexColor(entry.backgroundColor));
+          const hadTextL = !!((entry.color && this.isValidHexColor(entry.color)) ||
+            (entry.textColor && entry.textColor !== "currentColor" && this.isValidHexColor(entry.textColor)));
           entry.color = "";
           entry.textColor = "currentColor";
           entry.backgroundColor = bc;
           entry.styleType = "highlight";
           entry._savedBackgroundColor = bc;
+          unlinkPresetIfChannelRemoved(entry, hadTextL, false, hadBgL, true);
         } else if (color && this.isValidHexColor(color)) {
           entry.color = color;
           entry.styleType = "text";
@@ -9855,6 +10119,30 @@ class AlwaysColorText extends Plugin {
         }
         if (!entry.isRegex) entry.matchType = matchType;
         applyPresetStyleToEntry(entry);
+        try {
+          if (bgCleared && entry.backgroundColor) {
+            entry.backgroundColor = null;
+            try {
+              delete entry._savedBackgroundColor;
+            } catch (_) {}
+            entry.styleType = "text";
+            entry.textColor = null;
+            if (entry.presetUid) delete entry.presetUid;
+          }
+          if (textCleared && (entry.color || (entry.textColor && entry.textColor !== "currentColor"))) {
+            entry.color = "";
+            entry.textColor = "currentColor";
+            entry.styleType = entry.backgroundColor ? "highlight" : "text";
+            if (entry.styleType === "text") {
+              entry.textColor = null;
+              entry.backgroundColor = null;
+            }
+            try {
+              delete entry._savedTextColor;
+            } catch (_) {}
+            if (entry.presetUid) delete entry.presetUid;
+          }
+        } catch (_) {}
         this.syncEntryCssFromColors(entry);
         if (opts.fileInclusionRule) {
           if (!Array.isArray(entry.inclusionRules)) entry.inclusionRules = [];

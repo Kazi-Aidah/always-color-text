@@ -205,6 +205,11 @@ export class ColorPickerModal extends Modal {
     contentEl.empty();
     this._eventListeners = []; // Reset listeners
     this._hasUserChanges = false;
+    // Explicit per-channel reset tracking: distinguishes "user tapped Reset on
+    // this panel" (must clear the channel on save) from "panel left empty /
+    // hidden" (must preserve). Cleared by any later pick on that channel.
+    this._textReset = false;
+    this._bgReset = false;
     const cpm = this.plugin.settings.colorPickerMode || "both";
     // Honour _forceBothPanels before any panel/layout decision: the entry's
     // color type (text / highlight) is no reason to hide the other channel
@@ -712,6 +717,7 @@ export class ColorPickerModal extends Modal {
 
         if (type === "text") {
           this.selectedTextColor = val;
+          this._textReset = false;
           preview.style.color = val;
           try {
             preview.style.setProperty("--highlight-color", val);
@@ -719,6 +725,7 @@ export class ColorPickerModal extends Modal {
           this._hasUserChanges = true;
         } else {
           this.selectedBgColor = val;
+          this._bgReset = false;
           // Clear any existing border styles first
           preview.style.border = "";
           preview.style.borderTop = "";
@@ -846,6 +853,7 @@ export class ColorPickerModal extends Modal {
       const resetHandler = () => {
         if (type === "text") {
           this.selectedTextColor = null;
+          this._textReset = true;
           // Null text must preview as theme text, not empty/browser default.
           try {
             preview.style.setProperty("color", "var(--text-normal)", "important");
@@ -854,6 +862,7 @@ export class ColorPickerModal extends Modal {
           }
         } else {
           this.selectedBgColor = null;
+          this._bgReset = true;
           // No background set → no highlight or border in the preview.
           preview.style.border = "";
           preview.style.borderTop = "";
@@ -2076,6 +2085,15 @@ export class ColorPickerModal extends Modal {
                 {
                   textColor: textSelected ? textColor : null,
                   backgroundColor: bgSelected ? bgColor : null,
+                  // Explicit resets (Reset button tapped, no later pick):
+                  // save must clear that channel even when the other one
+                  // still has a color (e.g. both -> text-only).
+                  textCleared: !!this._textReset && !textSelected,
+                  backgroundCleared: !!this._bgReset && !bgSelected,
+                  // Panel visibility: a null channel from a hidden panel
+                  // means "untouched", never "reset" — preserve it.
+                  textPanelVisible: !!(this.panelStates && this.panelStates["text"]),
+                  backgroundPanelVisible: !!(this.panelStates && this.panelStates["background"]),
                   word,
                   selectedGroupUid: this._selectedGroupUid || null,
                   matchType:
@@ -2105,6 +2123,14 @@ export class ColorPickerModal extends Modal {
         // If an entry already has customCss, patch only the color values — preserve user's custom properties
         const syncCustomCss = (e) => {
           if (e && e.customCss) this.plugin.syncEntryCssFromColors(e);
+        };
+        // Dropping a channel the entry's preset needs unlinks the entry so a
+        // later preset edit (or applyPresetStyle below) cannot refill it.
+        const unlinkPresetIfChannelRemoved = (e, hadText, hasText, hadBg, hasBg) => {
+          try {
+            if (!e || !e.presetUid) return;
+            if ((hadBg && !hasBg) || (hadText && !hasText)) delete e.presetUid;
+          } catch (_) {}
         };
         let updated = false;
 
@@ -2184,12 +2210,14 @@ export class ColorPickerModal extends Modal {
               try {
                 const re = new RegExp(e.pattern, e.flags || "");
                 if (re.test(word)) {
+                  const hadBgR = !!(e.backgroundColor && this.plugin.isValidHexColor(e.backgroundColor));
                   e.color = textColor;
                   e.textColor = null; // Clear textColor field
                   e.backgroundColor = null; // Clear background field
                   e.styleType = "text"; // EXPLICITLY SET TO TEXT
                   e.markTarget = this._markTarget || "text";
                   syncCustomCss(e);
+                  unlinkPresetIfChannelRemoved(e, true, true, hadBgR, false);
                   updated = true;
                   if (!e.isRegex)
                     e.matchType =
@@ -2201,12 +2229,14 @@ export class ColorPickerModal extends Modal {
               } catch (err) {}
             } else {
               if (eq(e.pattern || "", word)) {
+                const hadBgE = !!(e.backgroundColor && this.plugin.isValidHexColor(e.backgroundColor));
                 e.color = textColor;
                 e.textColor = null; // Clear textColor field
                 e.backgroundColor = null; // Clear background field
                 e.styleType = "text"; // EXPLICITLY SET TO TEXT
                 e.markTarget = this._markTarget || "text";
                 syncCustomCss(e);
+                unlinkPresetIfChannelRemoved(e, true, true, hadBgE, false);
                 updated = true;
                 if (!e.isRegex)
                   e.matchType =
@@ -2219,12 +2249,14 @@ export class ColorPickerModal extends Modal {
                 Array.isArray(e.groupedPatterns) &&
                 e.groupedPatterns.some((p) => eq(p, word))
               ) {
+                const hadBgG = !!(e.backgroundColor && this.plugin.isValidHexColor(e.backgroundColor));
                 e.color = textColor;
                 e.textColor = null; // Clear textColor field
                 e.backgroundColor = null; // Clear background field
                 e.styleType = "text"; // EXPLICITLY SET TO TEXT
                 e.markTarget = this._markTarget || "text";
                 syncCustomCss(e);
+                unlinkPresetIfChannelRemoved(e, true, true, hadBgG, false);
                 updated = true;
                 if (!e.isRegex)
                   e.matchType =
@@ -2300,6 +2332,9 @@ export class ColorPickerModal extends Modal {
                   e.groupedPatterns.some((p) => eq(p, word)));
             }
             if (match) {
+              const hadTextH = !!((e.color && this.plugin.isValidHexColor(e.color)) ||
+                (e.textColor && e.textColor !== "currentColor" && this.plugin.isValidHexColor(e.textColor)));
+              const hadBgH = !!(e.backgroundColor && this.plugin.isValidHexColor(e.backgroundColor));
               e.backgroundColor = bgColor;
               // HIGHLIGHT ONLY: set textColor to currentColor and clear plain color
               e.textColor = "currentColor";
@@ -2307,6 +2342,7 @@ export class ColorPickerModal extends Modal {
               e.styleType = "highlight"; // EXPLICITLY SET TO HIGHLIGHT
               e.markTarget = this._markTarget || "text";
               syncCustomCss(e);
+              unlinkPresetIfChannelRemoved(e, hadTextH, false, hadBgH, true);
               debugLog("MODAL", "update highlight", e);
               updated = true;
               break;
@@ -2353,6 +2389,53 @@ export class ColorPickerModal extends Modal {
         // styleType) onto the saved entry (submitFn above only writes colors
         // and a basic styleType otherwise).
         applyPresetStyle();
+        // An explicit Reset wins over a preset applied in the same session:
+        // adoptPresetColortype refills any channel the preset's colortype
+        // needs, which would resurrect the removed color. Re-enforce clears.
+        try {
+          if ((this._bgReset && !bgSelected) || (this._textReset && !textSelected)) {
+            const isValid = (c) => this.plugin.isValidHexColor(c);
+            const findIn2 = (arr) => {
+              if (!Array.isArray(arr)) return null;
+              for (const e of arr) {
+                if (!e || e.isRegex) continue;
+                if (eq(e.pattern || "", word) ||
+                  (Array.isArray(e.groupedPatterns) && e.groupedPatterns.some((p) => eq(p, word)))) {
+                  return e;
+                }
+              }
+              return null;
+            };
+            let fe = findIn2(targetArr) || findIn2(this.plugin.settings.wordEntries);
+            if (!fe && Array.isArray(this.plugin.settings.wordEntryGroups)) {
+              for (const g of this.plugin.settings.wordEntryGroups) {
+                fe = findIn2(g.entries);
+                if (fe) break;
+              }
+            }
+            if (fe) {
+              if (this._bgReset && !bgSelected && fe.backgroundColor) {
+                fe.backgroundColor = null;
+                if (fe.styleType === "both" || fe.styleType === "highlight") {
+                  fe.styleType = "text";
+                  fe.textColor = null;
+                  if (fe.presetUid) delete fe.presetUid;
+                }
+              }
+              if (this._textReset && !textSelected && (fe.color || (fe.textColor && fe.textColor !== "currentColor"))) {
+                fe.color = "";
+                fe.textColor = "currentColor";
+                fe.styleType = fe.backgroundColor ? "highlight" : "text";
+                if (fe.styleType === "text") {
+                  fe.textColor = null;
+                  fe.backgroundColor = null;
+                }
+                if (fe.presetUid) delete fe.presetUid;
+              }
+              await this.plugin.saveSettings();
+            }
+          }
+        } catch (_) {}
 
         this.plugin.reconfigureEditorExtensions();
         this.plugin.forceRefreshAllEditors();
