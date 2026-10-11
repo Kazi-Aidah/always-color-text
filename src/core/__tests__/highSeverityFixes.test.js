@@ -114,7 +114,7 @@ describe("2. applyHighlights clears when the entry list is empty", () => {
     expect(block).toBeTruthy();
     expect(block[0]).toContain("clearExisting !== false");
     expect(block[0]).toContain(".always-color-text-highlight");
-    expect(block[0]).toContain("replaceWith");
+    expect(block[0]).toContain("_unwrapHighlightSpan");
   });
 
   it("the clear runs before the wrap/return path", () => {

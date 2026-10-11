@@ -7799,6 +7799,36 @@ class AlwaysColorText extends Plugin {
   }
 
   // --- Save settings and refresh plugin state ---
+  // Raw-settings readers for markdown elements (CSS injection, tag/title
+  // JS painters) must honor activation exactly like the compiler:
+  // entries are active unless explicitly `active === false`; groups need
+  // truthy `active` (they are always created with it). Returns { main, all }
+  // with `all` = active-group entries followed by main (same order the old
+  // code used), so deactivating an entry or group actually stops it.
+  _usableElementEntries() {
+    let main = [];
+    const grouped = [];
+    try {
+      main = (this.settings.wordEntries || []).filter(
+        (e) => e && e.active !== false,
+      );
+    } catch (_) {
+      main = [];
+    }
+    try {
+      const groups = Array.isArray(this.settings.wordEntryGroups)
+        ? this.settings.wordEntryGroups
+        : [];
+      for (const g of groups) {
+        if (!g || !g.active || !Array.isArray(g.entries)) continue;
+        for (const e of g.entries) {
+          if (e && e.active !== false) grouped.push(e);
+        }
+      }
+    } catch (_) {}
+    return { main, all: grouped.concat(main) };
+  }
+
   applyFormattingStyles() {
     // Keep `&`-block pseudo rules (hover etc.) in sync on every refresh, and
     // drop them while the plugin/custom CSS is disabled (method self-gates).
@@ -7816,13 +7846,12 @@ class AlwaysColorText extends Plugin {
         return;
       }
 
-      const we = this.settings.wordEntries || [];
-      const weAll = (this.settings.wordEntryGroups || [])
-        .reduce((acc, g) => acc.concat(g.entries || []), [])
-        .concat(we);
+      const usable = this._usableElementEntries();
+      const weActive = usable.main;
+      const weAll = usable.all;
 
       const hasBoldItalic =
-        we.some((e) => e.targetElement === "strong-em") ||
+        weActive.some((e) => e.targetElement === "strong-em") ||
         weAll.some((e) => e.targetElement === "strong-em");
 
       // Build the list of targetable markdown elements from the central registry,
@@ -7844,7 +7873,7 @@ class AlwaysColorText extends Plugin {
         // If this markdown element is blacklisted, suppress its coloring entirely
         if (this.isMarkdownElementBlacklisted(t.key)) return;
         // Find the LAST matching entry to ensure we get the user's latest configuration
-        const reversedWe = [...we].reverse();
+        const reversedWe = [...weActive].reverse();
         const reversedWeAll = [...weAll].reverse();
         const entry =
           reversedWe.find((e) => e && e.targetElement === t.key) ||
@@ -8062,12 +8091,8 @@ class AlwaysColorText extends Plugin {
       return;
     }
     try {
-      const all = (this.settings.wordEntries || []).concat(
-        (this.settings.wordEntryGroups || []).reduce(
-          (acc, g) => acc.concat(g.entries || []),
-          [],
-        ),
-      );
+      const usableTags = this._usableElementEntries();
+      const all = usableTags.all;
       // Only specific tags (with a filter) are handled via JS in live preview.
       // Generic "all tags" / "tag with empty filter" (colors every hashtag) is
       // handled purely via CSS (applyFormattingStyles) so both appear identical.
@@ -8456,12 +8481,8 @@ class AlwaysColorText extends Plugin {
       el.style.removeProperty("corner-shape");
     };
     try {
-      const all = (this.settings.wordEntries || []).concat(
-        (this.settings.wordEntryGroups || []).reduce(
-          (acc, g) => acc.concat(g.entries || []),
-          [],
-        ),
-      );
+      const usableTitles = this._usableElementEntries();
+      const all = usableTitles.all;
       const hideText = this.settings.hideTextColors === true;
       const hideBg = this.settings.hideHighlights === true;
       TITLE_TARGETS.forEach(({ key, cls }) => {
@@ -10430,8 +10451,7 @@ class AlwaysColorText extends Plugin {
           if (hl.closest && hl.closest(".act-theme-fixer-modal")) continue;
         } catch (_) {}
         try {
-          const textNode = document.createTextNode(hl.textContent);
-          hl.replaceWith(textNode);
+          this._unwrapHighlightSpan(hl);
         } catch (_) {}
       }
       debugLog("CLEAR_ALL", `Cleared ${highlights.length} highlights`);
@@ -13422,7 +13442,7 @@ class AlwaysColorText extends Plugin {
         try {
           el.querySelectorAll(".always-color-text-highlight").forEach((hl) => {
             try {
-              hl.replaceWith(document.createTextNode(hl.textContent));
+              this._unwrapHighlightSpan(hl);
             } catch (_) {}
           });
         } catch (_) {}
@@ -14458,8 +14478,7 @@ class AlwaysColorText extends Plugin {
         "span.always-color-text-highlight",
       );
       for (const ex of highlights) {
-        const tn = document.createTextNode(ex.textContent);
-        ex.replaceWith(tn);
+        this._unwrapHighlightSpan(ex);
       }
     }
 
@@ -15058,6 +15077,569 @@ class AlwaysColorText extends Plugin {
   }
 
   // Extracted helper: process a single block element (previously inlined inside _wrapMatchesRecursive)
+  // Unwrap one plugin highlight span without destroying element children
+  // (e.g. links pulled inside by link-spanning matches). For text-only
+  // spans this is identical to replacing with a single text node.
+  _unwrapHighlightSpan(ex) {
+    try {
+      if (!ex || !ex.parentNode) return;
+      const doc = ex.ownerDocument || document;
+      const frag = doc.createDocumentFragment();
+      let moved = false;
+      while (ex.firstChild) {
+        frag.appendChild(ex.firstChild);
+        moved = true;
+      }
+      if (!moved) frag.appendChild(doc.createTextNode(ex.textContent || ""));
+      ex.replaceWith(frag);
+    } catch (_) {
+      try {
+        ex.replaceWith(document.createTextNode(ex.textContent));
+      } catch (_) {}
+    }
+  }
+
+  // Segments of a block's visible text for link-spanning matching. Link text
+  // is included (it keeps the pattern continuous) but flagged; code is
+  // excluded; marks/spoilers/foreign content become barriers.
+  _collectLinkSpanSegments(block, usableLinks, includeHighlighted) {
+    const segs = [];
+    let combined = "";
+    try {
+      const walker = document.createTreeWalker(
+        block,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            try {
+              if (node.parentElement?.closest("code, pre"))
+                return NodeFilter.FILTER_REJECT;
+              if (
+                !includeHighlighted &&
+                node.parentElement?.closest(".always-color-text-highlight")
+              )
+                return NodeFilter.FILTER_REJECT;
+              if (node.parentElement?.closest(".act-skip-coloring"))
+                return NodeFilter.FILTER_REJECT;
+            } catch (_) {}
+            return NodeFilter.FILTER_ACCEPT;
+          },
+        },
+        false,
+      );
+      let n = null;
+      while ((n = walker.nextNode())) {
+        const t = n.textContent || "";
+        if (!t) continue;
+        let linkEl = null;
+        try {
+          linkEl =
+            n.parentElement?.closest("a.internal-link, a.external-link") ||
+            null;
+        } catch (_) {
+          linkEl = null;
+        }
+        const knownLink = linkEl && usableLinks.has(linkEl) ? linkEl : null;
+        let blocked = false;
+        try {
+          if (n.parentElement?.closest("mark, .inline_spoilers-spoiler"))
+            blocked = true;
+          else if (linkEl && !knownLink) blocked = true;
+        } catch (_) {}
+        let inHl = false;
+        try {
+          inHl = !!(
+            includeHighlighted &&
+            n.parentElement?.closest(".always-color-text-highlight")
+          );
+        } catch (_) {}
+        segs.push({
+          node: n,
+          start: combined.length,
+          end: combined.length + t.length,
+          linkEl: knownLink,
+          blocked: blocked || inHl,
+          inHl,
+        });
+        combined += t;
+      }
+    } catch (_) {}
+    return { segs, combined };
+  }
+
+  // Paint one link-spanning highlight span. Mirrors the per-node span
+  // styling (hide flags via resolveChannels, box styling, custom CSS,
+  // borders) so spanning matches render exactly like single-node ones.
+  // Unwraps the span again when nothing should be painted.
+  _paintLinkSpanningSpan(span, entry, folderEntry, styleTypeOverride) {
+    try {
+      const e = entry || {};
+      const styleType = styleTypeOverride || e.styleType || "text";
+      const src = { styleType };
+      if (styleType === "text") {
+        src.textColor = e.textColor;
+        src.color = e.color;
+        src.backgroundColor = null;
+      } else if (styleType === "highlight") {
+        src.textColor = null;
+        src.color = null;
+        src.backgroundColor =
+          e.backgroundColor ||
+          (folderEntry && folderEntry.defaultColor
+            ? folderEntry.defaultColor
+            : null);
+      } else {
+        src.textColor = e.textColor;
+        src.color = e.color;
+        src.backgroundColor =
+          e.backgroundColor ||
+          e.color ||
+          (folderEntry && folderEntry.defaultColor
+            ? folderEntry.defaultColor
+            : null);
+      }
+      const ch = resolveChannels(src, getHideFlags(this.settings));
+      const hasCustomCss = !!(this.settings.enableCustomCss && e.customCss);
+      if (!ch.visible && !hasCustomCss) {
+        this._unwrapHighlightSpan(span);
+        return false;
+      }
+      if (ch.color) {
+        try {
+          span.style.setProperty("color", ch.color, "important");
+        } catch (_) {
+          try {
+            span.style.color = ch.color;
+          } catch (_) {}
+        }
+        try {
+          span.style.setProperty("--highlight-color", ch.color);
+        } catch (_) {}
+      }
+      if (styleType === "highlight") {
+        try {
+          span.style.setProperty("display", "inline-block", "important");
+        } catch (_) {
+          try {
+            span.style.display = "inline-block";
+          } catch (_) {}
+        }
+      }
+      if (ch.isHighlight && ch.background) {
+        const params = this.getHighlightParams(e);
+        let rgba = ch.background;
+        try {
+          rgba = this.hexToRgba(ch.background, params.opacity ?? 25);
+        } catch (_) {}
+        try {
+          span.style.background = "";
+        } catch (_) {}
+        try {
+          span.style.setProperty("background-color", rgba, "important");
+        } catch (_) {
+          try {
+            span.style.backgroundColor = rgba;
+          } catch (_) {}
+        }
+        try {
+          const vpad = params.vPad ?? 0;
+          span.style.setProperty(
+            "padding-left",
+            (params.hPad ?? 4) + "px",
+            "important",
+          );
+          span.style.setProperty(
+            "padding-right",
+            (params.hPad ?? 4) + "px",
+            "important",
+          );
+          span.style.setProperty(
+            "padding-top",
+            ((vpad >= 0 ? vpad : 0)) + "px",
+            "important",
+          );
+          span.style.setProperty(
+            "padding-bottom",
+            ((vpad >= 0 ? vpad : 0)) + "px",
+            "important",
+          );
+          if (vpad < 0) {
+            span.style.setProperty("margin-top", vpad + "px", "important");
+            span.style.setProperty(
+              "margin-bottom",
+              vpad + "px",
+              "important",
+            );
+          }
+        } catch (_) {
+          try {
+            const vpad = params.vPad ?? 0;
+            span.style.paddingLeft = span.style.paddingRight =
+              (params.hPad ?? 4) + "px";
+            span.style.paddingTop = span.style.paddingBottom =
+              (vpad >= 0 ? vpad : 0) + "px";
+          } catch (_) {}
+        }
+        const br =
+          ((params.hPad ?? 4) > 0 && (params.radius ?? 8) === 0
+            ? 0
+            : (params.radius ?? 8)) + "px";
+        try {
+          span.style.setProperty("border-radius", br, "important");
+        } catch (_) {
+          try {
+            span.style.borderRadius = br;
+          } catch (_) {}
+        }
+        try {
+          this.applyCornerShapeToElement(span, e);
+        } catch (_) {}
+        try {
+          const borderCss =
+            styleType === "highlight"
+              ? this.generateBorderStyle(null, ch.background, e)
+              : this.generateBorderStyle(ch.color, ch.background, e);
+          if (borderCss) {
+            borderCss
+              .trim()
+              .split(";")
+              .map((s) => s.trim())
+              .filter(Boolean)
+              .forEach((decl) => {
+                const ci = decl.indexOf(":");
+                if (ci === -1) return;
+                const bp = decl.slice(0, ci).trim();
+                const bv = decl
+                  .slice(ci + 1)
+                  .replace(/!important/gi, "")
+                  .trim();
+                try {
+                  span.style.setProperty(bp, bv, "important");
+                } catch (_) {}
+              });
+          }
+        } catch (_) {}
+      }
+      if (this.settings.enableBoxDecorationBreak ?? true) {
+        try {
+          span.style.boxDecorationBreak = "clone";
+        } catch (_) {}
+        try {
+          span.style.WebkitBoxDecorationBreak = "clone";
+        } catch (_) {}
+      }
+      if (this.settings.enableCustomCss) {
+        try {
+          const groupRef = e._groupRef || e.entryRef?._groupRef;
+          if (groupRef?.customCss)
+            this.applyCustomCssToElement(
+              span,
+              { customCss: this.groupCssForMembers(groupRef) },
+              this._scopeIdForGroup(groupRef),
+            );
+        } catch (_) {}
+      }
+      try {
+        this.applyCustomCssToElement(span, e);
+      } catch (_) {}
+      if (styleType !== "text") {
+        try {
+          this.applyBorderStyleToElement(span, ch.color, ch.background, e);
+        } catch (_) {}
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Wrap one link-spanning match [start, end) (offsets into the block's
+  // combined text) in a single highlight span, pulling fully-covered link
+  // elements inside. Returns false when the range is no longer wrappable.
+  _wrapLinkSpanningRange(block, match, folderEntry, usableLinks) {
+    try {
+      const s = match.start;
+      const e = match.end;
+      if (!(e > s)) return false;
+      const { segs, combined } = this._collectLinkSpanSegments(
+        block,
+        usableLinks,
+        true,
+      );
+      if (!segs.length || s < 0 || e > combined.length) return false;
+      let si = -1;
+      let ei = -1;
+      for (let i = 0; i < segs.length; i++) {
+        const sg = segs[i];
+        if (si === -1 && sg.start <= s && s < sg.end) si = i;
+        if (sg.start < e && e <= sg.end) ei = i;
+      }
+      if (si === -1 || ei === -1 || si === ei) return false;
+      for (let i = si; i <= ei; i++) {
+        if (segs[i].blocked || segs[i].inHl) return false;
+      }
+      let coversLink = false;
+      let hasOutside = false;
+      for (let i = si; i <= ei; i++) {
+        if (segs[i].linkEl) coversLink = true;
+        else hasOutside = true;
+      }
+      if (!coversLink || !hasOutside) return false;
+      const touched = new Set();
+      for (let i = si; i <= ei; i++)
+        if (segs[i].linkEl) touched.add(segs[i].linkEl);
+      for (const le of touched) {
+        let ls = Infinity;
+        let leOff = -Infinity;
+        for (let i = 0; i < segs.length; i++) {
+          if (segs[i].linkEl === le) {
+            if (segs[i].start < ls) ls = segs[i].start;
+            if (segs[i].end > leOff) leOff = segs[i].end;
+          }
+        }
+        if (!(ls >= s && leOff <= e)) return false;
+      }
+      const startNode = segs[si].node;
+      const endNode = segs[ei].node;
+      const startOff = s - segs[si].start;
+      const endOff = e - segs[ei].start;
+      let range = null;
+      try {
+        range = document.createRange();
+        range.setStart(startNode, startOff);
+        range.setEnd(endNode, endOff);
+      } catch (_) {
+        return false;
+      }
+      try {
+        const probe = range.cloneContents();
+        const bad = probe.querySelector(
+          "p, li, div, td, th, blockquote, h1, h2, h3, h4, h5, h6, pre, code, ul, ol, table, tr, thead, tbody, hr, section, article, mark, .inline_spoilers-spoiler, .always-color-text-highlight",
+        );
+        if (bad) return false;
+        if (
+          match.boldItalicPreset &&
+          probe.querySelector("strong, em, .cm-strong, .cm-em")
+        )
+          return false;
+      } catch (_) {}
+      const span = document.createElement("span");
+      span.className = "always-color-text-highlight";
+      try {
+        range.surroundContents(span);
+      } catch (_) {
+        return false;
+      }
+      this._paintLinkSpanningSpan(
+        span,
+        match.entry,
+        folderEntry,
+        match.styleType || null,
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Link-spanning matches for reading mode.
+  //
+  // Word/regex matching runs per text node, and text inside links is
+  // reserved for the Markdown Element link entry — so a pattern that spans
+  // a link (e.g. regex \{>>[^\}]*\} on "{>> [[link]]}", rendered as text +
+  // <a> + text) could never match and its coloring silently disappeared
+  // (notably as soon as brackets turn the text into a link). This pre-pass
+  // matches entries against the block's combined text (link text included
+  // for continuity) and wraps ranges that cross a link element in a single
+  // highlight span — the link element itself moves inside the span, so the
+  // existing --link-color vars keep it legible. Matches fully inside a
+  // link are still left to the link entry.
+  _tryPaintLinkSpanningMatches(block, entries, folderEntry, opts = {}) {
+    try {
+      if (!block || !block.querySelectorAll) return;
+      if (opts && opts.effectiveStyle === "none") return;
+      const clearExisting = !opts || opts.clearExisting !== false;
+      if (!clearExisting) {
+        try {
+          if (block.querySelector(".always-color-text-highlight")) return;
+        } catch (_) {}
+      }
+      let linkNodes = null;
+      try {
+        linkNodes = block.querySelectorAll(
+          "a.internal-link, a.external-link",
+        );
+      } catch (_) {
+        return;
+      }
+      if (!linkNodes || !linkNodes.length) return;
+      const usableLinks = new Set();
+      for (const a of linkNodes) {
+        try {
+          if (!block.contains(a)) continue;
+          if (
+            a.closest(
+              "code, pre, mark, .inline_spoilers-spoiler, .always-color-text-highlight, .act-skip-coloring",
+            )
+          )
+            continue;
+          usableLinks.add(a);
+        } catch (_) {}
+      }
+      if (!usableLinks.size) return;
+      const { segs, combined } = this._collectLinkSpanSegments(
+        block,
+        usableLinks,
+        false,
+      );
+      if (!segs.length || !combined) return;
+      // A spanning match needs at least two paintable segments.
+      let paintable = 0;
+      for (const sg of segs) {
+        if (!sg.blocked) {
+          paintable++;
+          if (paintable >= 2) break;
+        }
+      }
+      if (paintable < 2) return;
+      const candidates = (entries || []).filter(
+        (en) =>
+          en &&
+          !en.invalid &&
+          !en.targetElement &&
+          en.markTarget !== "line" &&
+          en.markTarget !== "nextLine",
+      );
+      // Compile anything missing so the spanning pass sees the same regexes
+      // as the per-node pass below (which compiles lazily just after us).
+      try {
+        for (const en of candidates) {
+          if (!en.regex && this._patternMatcher)
+            this._patternMatcher.compilePattern(en);
+        }
+      } catch (_) {}
+      const ready = candidates.filter((en) => en && en.regex);
+      if (!ready.length) return;
+      const filePath = opts.filePath;
+      const cap =
+        opts && typeof opts.maxMatches === "number" ? opts.maxMatches : 500;
+      const found = [];
+      for (const entry of ready) {
+        const boldItalicPreset = /bold|italic/i.test(
+          String((entry && entry.presetLabel) || ""),
+        );
+        let mlist = null;
+        try {
+          mlist = this.safeMatchLoop(entry.regex, combined);
+        } catch (_) {
+          continue;
+        }
+        if (!mlist) continue;
+        for (const m of mlist) {
+          const mt = (m && m[0]) || "";
+          const s = m.index;
+          const en = s + mt.length;
+          if (!(en > s)) continue;
+          let fi = -1;
+          let li = -1;
+          let bad = false;
+          let coversLink = false;
+          let hasOutside = false;
+          for (let i = 0; i < segs.length; i++) {
+            const sg = segs[i];
+            if (sg.end <= s || sg.start >= en) continue;
+            if (sg.blocked) {
+              bad = true;
+              break;
+            }
+            if (fi === -1) fi = i;
+            li = i;
+            if (sg.linkEl) coversLink = true;
+            else hasOutside = true;
+          }
+          if (bad || fi === -1 || fi === li || !coversLink || !hasOutside)
+            continue;
+          let fullyContained = true;
+          const touched = new Set();
+          for (let i = fi; i <= li; i++)
+            if (segs[i].linkEl) touched.add(segs[i].linkEl);
+          for (const le of touched) {
+            let ls = Infinity;
+            let leOff = -Infinity;
+            for (let i = 0; i < segs.length; i++) {
+              if (segs[i].linkEl === le) {
+                if (segs[i].start < ls) ls = segs[i].start;
+                if (segs[i].end > leOff) leOff = segs[i].end;
+              }
+            }
+            if (!(ls >= s && leOff <= en)) {
+              fullyContained = false;
+              break;
+            }
+          }
+          if (!fullyContained) continue;
+          const matchedText = combined.slice(s, en);
+          try {
+            if (!this.matchSatisfiesType(combined, s, en, entry)) continue;
+          } catch (_) {}
+          try {
+            if (this.isWordBlacklisted(matchedText, filePath)) continue;
+          } catch (_) {}
+          found.push({
+            start: s,
+            end: en,
+            entry,
+            boldItalicPreset,
+            styleType: entry.isTextBg ? "both" : null,
+          });
+          if (found.length >= cap) break;
+        }
+        if (found.length >= cap) break;
+      }
+      if (!found.length) return;
+      // Longest-first greedy dedup, mirroring the per-node resolution.
+      found.sort((a, b) => {
+        const la = a.end - a.start;
+        const lb = b.end - b.start;
+        if (la !== lb) return lb - la;
+        return a.start - b.start;
+      });
+      const picked = [];
+      for (const m of found) {
+        let ov = false;
+        for (const p of picked) {
+          if (m.start < p.end && m.end > p.start) {
+            ov = true;
+            break;
+          }
+        }
+        if (!ov) picked.push(m);
+      }
+      if (!picked.length) return;
+      picked.sort((a, b) => a.start - b.start);
+      let painted = 0;
+      for (let k = picked.length - 1; k >= 0; k--) {
+        try {
+          if (
+            this._wrapLinkSpanningRange(
+              block,
+              picked[k],
+              folderEntry,
+              usableLinks,
+            )
+          )
+            painted++;
+        } catch (_) {}
+      }
+      if (painted > 0) {
+        try {
+          const info = this._domRefs.get(block);
+          if (info) info.matchCount = (info.matchCount || 0) + painted;
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
   _processBlock(block, entries, folderEntry, opts = {}) {
     if (block.matches && block.matches(".inline_spoilers-spoiler")) return;
     try {
@@ -15122,9 +15704,9 @@ class AlwaysColorText extends Plugin {
         }
 
         // Now remove highlights (separate loop to avoid modifying DOM during walk)
+        // Child-preserving unwrap: spanning spans may contain link elements.
         for (const ex of highlights) {
-          const tn = document.createTextNode(ex.textContent);
-          ex.replaceWith(tn);
+          this._unwrapHighlightSpan(ex);
         }
         highlights.length = 0; // Clear array
       }
@@ -15140,6 +15722,18 @@ class AlwaysColorText extends Plugin {
     } catch (e) {
       try {
         debugError("MARKDOWN_FORMAT", "per-block processing error", e);
+      } catch (_) {}
+    }
+
+    // Link-spanning matches (a pattern covering a link, e.g. \{>>[^\}]*\}
+    // on "{>> [[link]]}") can never match per text node, and link text is
+    // reserved for the link entry — wrap such ranges first so the coloring
+    // no longer vanishes; the per-node pass below skips wrapped content.
+    try {
+      this._tryPaintLinkSpanningMatches(block, entries, folderEntry, opts);
+    } catch (e) {
+      try {
+        debugError("LINK_SPAN", "spanning pass failed", e);
       } catch (_) {}
     }
 
@@ -20564,6 +21158,150 @@ class AlwaysColorText extends Plugin {
     return builder.finish();
   }
 
+  // Split link-overlapping word/regex matches at link boundaries (pure
+  // helper, unit testable). Matches fully inside a link are dropped (the
+  // Markdown Element link entry owns link text); matches that merely span
+  // across a link (e.g. regex \{>>[^\}]*\} on "{>> [[link]]}") survive as
+  // their outside-link parts plus the inside-link parts flagged
+  // `_linkInner` — CodeMirror splits a mark at widget boundaries, so the
+  // link piece renders as its own span and goes flat (see _linkPieceBox)
+  // instead of reading as a separate chip. Non-overlapping matches, skip
+  // ranges, element-targeted entries and line-target entries pass through
+  // untouched.
+  _splitMatchesAtLinks(allMatches, linkRanges) {
+    const out = [];
+    try {
+      if (!Array.isArray(linkRanges) || !linkRanges.length)
+        return Array.isArray(allMatches) ? allMatches : [];
+      for (const m of allMatches || []) {
+        if (!m || !m.entryRef || m.entryRef.targetElement || m.skip) {
+          out.push(m);
+          continue;
+        }
+        const ref = m.entryRef || {};
+        if (ref.markTarget === "line" || ref.markTarget === "nextLine") {
+          out.push(m);
+          continue;
+        }
+        const s = m.start;
+        const e = m.end;
+        let overlaps = false;
+        let inside = false;
+        for (const [ls, le] of linkRanges) {
+          if (s < le && e > ls) {
+            overlaps = true;
+            if (s >= ls && e <= le) {
+              inside = true;
+              break;
+            }
+          }
+        }
+        if (!overlaps) {
+          out.push(m);
+          continue;
+        }
+        if (inside) continue;
+        let parts = [[s, e, false]];
+        for (const [ls, le] of linkRanges) {
+          const next = [];
+          for (const [ps, pe, inner] of parts) {
+            if (le <= ps || ls >= pe) {
+              next.push([ps, pe, inner]);
+              continue;
+            }
+            if (ls > ps) next.push([ps, ls, inner]);
+            if (Math.max(ls, ps) < Math.min(le, pe))
+              next.push([Math.max(ls, ps), Math.min(le, pe), true]);
+            if (le < pe) next.push([le, pe, inner]);
+          }
+          parts = next;
+          if (!parts.length) break;
+        }
+        for (const [ps, pe, inner] of parts) {
+          if (pe <= ps) continue;
+          const copy = Object.assign({}, m, { start: ps, end: pe });
+          if (inner) {
+            copy._linkInner = true;
+          } else {
+            // Seam flags: an outer piece touching a link boundary goes
+            // flat on that side only (see _linkPieceBox).
+            for (const [ls, le] of linkRanges) {
+              if (pe === ls) {
+                copy._flatRight = true;
+                break;
+              }
+            }
+            for (const [ls, le] of linkRanges) {
+              if (ps === le) {
+                copy._flatLeft = true;
+                break;
+              }
+            }
+          }
+          out.push(copy);
+        }
+      }
+    } catch (_) {
+      return Array.isArray(allMatches) ? allMatches : [];
+    }
+    return out;
+  }
+
+  // Box geometry for a decoration piece: CodeMirror splits a mark at
+  // widget boundaries, so a link-spanning match renders as outer pieces
+  // plus a piece around the link pill. Outer pieces keep the entry's box
+  // styling except on the side facing the link (no padding, square
+  // corners); the link piece itself goes fully flat so it hugs the pill
+  // instead of reading as a separate chip. Pieces with no link seam keep
+  // the entry geometry untouched.
+  _linkPieceBox(params, m) {
+    try {
+      const p = params || {};
+      const inner = !!(m && m._linkInner);
+      const fL = inner || !!(m && m._flatLeft);
+      const fR = inner || !!(m && m._flatRight);
+      if (!fL && !fR)
+        return {
+          padL: p.hPad,
+          padR: p.hPad,
+          tl: p.radius,
+          tr: p.radius,
+          bl: p.radius,
+          br: p.radius,
+          flat: false,
+        };
+      const baseH = p.hPad;
+      const baseR = p.radius;
+      return {
+        padL: fL ? 0 : baseH,
+        padR: fR ? 0 : baseH,
+        tl: fL ? 0 : baseR,
+        tr: fR ? 0 : baseR,
+        bl: fL ? 0 : baseR,
+        br: fR ? 0 : baseR,
+        flat: true,
+      };
+    } catch (_) {
+      return { padL: 0, padR: 0, tl: 0, tr: 0, bl: 0, br: 0, flat: true };
+    }
+  }
+
+  // Radius declarations for a piece: the plain shorthand when nothing is
+  // flattened, per-corner zeros on the flattened sides otherwise.
+  _linkPieceRadius(piece, fallbackRadius) {
+    try {
+      if (!piece || !piece.flat) return `border-radius: ${fallbackRadius}px !important;`;
+      return (
+        `border-top-left-radius: ${piece.tl}px !important;` +
+        ` border-top-right-radius: ${piece.tr}px !important;` +
+        ` border-bottom-left-radius: ${piece.bl}px !important;` +
+        ` border-bottom-right-radius: ${piece.br}px !important;`
+      );
+    } catch (_) {
+      return `border-radius: ${fallbackRadius}px !important;`;
+    }
+  }
+
   // NEW METHOD: Chunked editor processing for large pattern sets or large text
   buildDecoChunked(
     view,
@@ -21363,15 +22101,13 @@ class AlwaysColorText extends Plugin {
         }
       }
       if (linkRanges.length) {
-        allMatches = allMatches.filter((m) => {
-          if (!m || !m.entryRef || m.entryRef.targetElement) return true;
-          const s = m.start;
-          const e = m.end;
-          for (const [ls, le] of linkRanges) {
-            if (s < le && e > ls) return false;
-          }
-          return true;
-        });
+        // Matches fully inside a link are dropped (the Markdown Element
+        // link entry owns link text); matches that merely span across a
+        // link (e.g. regex \{>>[^\}]*\} on "{>> [[link]]}") are split at
+        // the link boundaries — outer pieces keep the entry's box styling
+        // while the link piece goes flat (see _linkPieceBox) so it hugs
+        // the pill instead of reading as a separate chip.
+        allMatches = this._splitMatchesAtLinks(allMatches, linkRanges);
       }
     } catch (_) {}
 
@@ -22394,6 +23130,11 @@ class AlwaysColorText extends Plugin {
           last.isTextBg &&
           m.textColor === last.textColor &&
           m.backgroundColor === last.backgroundColor &&
+          // Link-split pieces must never re-merge: flat and boxed pieces
+          // render different geometry (see _linkPieceBox).
+          !!m._linkInner === !!last._linkInner &&
+          !!m._flatLeft === !!last._flatLeft &&
+          !!m._flatRight === !!last._flatRight &&
           m.start <= last.end
         ) {
           if (m.end > last.end) last.end = m.end;
@@ -22458,6 +23199,7 @@ class AlwaysColorText extends Plugin {
         }
 
         const params = this.getHighlightParams(m.entryRef);
+        const piece = this._linkPieceBox(params, m);
         const borderStyle = this.generateBorderStyle(
           hideText ? null : textColor,
           hideBg ? null : bgColor,
@@ -22466,7 +23208,7 @@ class AlwaysColorText extends Plugin {
         const textPart = hideText || !textColor ? "" : `color: ${textColor} !important; `;
         const bgPart = hideBg || !bgColor
           ? ""
-          : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+          : `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; ${this._linkPieceRadius(piece, params.radius)}${this.getCornerShapeCss(m.entryRef)} padding-left: ${piece.padL}px !important; padding-right: ${piece.padR}px !important; padding-top: ${params.vPad}px !important; padding-bottom: ${params.vPad}px !important;${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
         style = `${textPart}${bgPart}${borderStyle}`;
 
         // Merge group CSS then entry CSS (custom CSS wins over base styles)
@@ -22510,6 +23252,7 @@ class AlwaysColorText extends Plugin {
               style = "";
             } else {
               const params = this.getHighlightParams(m.entryRef);
+              const piece = this._linkPieceBox(params, m);
               const borderStyle = this.generateBorderStyle(
                 null,
                 bgColor,
@@ -22521,7 +23264,7 @@ class AlwaysColorText extends Plugin {
                   vPad >= 0
                     ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
                     : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-                return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.hPad > 0 && params.radius === 0 ? 0 : params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
+                return `background: none; background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; ${this._linkPieceRadius(piece, params.hPad > 0 && params.radius === 0 ? 0 : params.radius)}${this.getCornerShapeCss(m.entryRef)} padding-left: ${piece.padL}px !important; padding-right: ${piece.padR}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}${borderStyle}`;
               })();
             }
           } else if (styleType === "both") {
@@ -22538,6 +23281,7 @@ class AlwaysColorText extends Plugin {
               style = "";
             } else {
               const params = this.getHighlightParams(m.entryRef);
+              const piece = this._linkPieceBox(params, m);
               const borderStyle = this.generateBorderStyle(
                 hideText ? null : textColor,
                 hideBg ? null : bgColor,
@@ -22555,7 +23299,7 @@ class AlwaysColorText extends Plugin {
                   vPad >= 0
                     ? `padding-top: ${vPad}px !important; padding-bottom: ${vPad}px !important;`
                     : `padding-top: 0px !important; padding-bottom: 0px !important; margin-top: ${vPad}px !important; margin-bottom: ${vPad}px !important;`;
-                return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; border-radius: ${params.radius}px !important;${this.getCornerShapeCss(m.entryRef)} padding-left: ${params.hPad}px !important; padding-right: ${params.hPad}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
+                return `background-color: ${this.hexToRgba(bgColor, params.opacity)} !important; ${this._linkPieceRadius(piece, params.radius)}${this.getCornerShapeCss(m.entryRef)} padding-left: ${piece.padL}px !important; padding-right: ${piece.padR}px !important; ${vPadCss}${(this.settings.enableBoxDecorationBreak ?? true) ? " box-decoration-break: clone; -webkit-box-decoration-break: clone;" : ""}`;
               })();
               style = `${textPart}${bgPart}${borderStyle}`;
             }
@@ -22855,8 +23599,7 @@ class AlwaysColorText extends Plugin {
       }
       for (const el of toRemove) {
         try {
-          const tn = document.createTextNode(el.textContent);
-          el.replaceWith(tn);
+          this._unwrapHighlightSpan(el);
         } catch (e) {}
       }
     } catch (e) {

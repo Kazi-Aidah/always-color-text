@@ -85,7 +85,7 @@ describe("a global-toggle sweep never flattens the modal preview", () => {
   it("still unwraps document highlights", () => {
     expect(body).toContain("document.querySelectorAll");
     expect(body).toContain(".always-color-text-highlight");
-    expect(body).toContain("replaceWith");
+    expect(body).toContain("_unwrapHighlightSpan");
   });
 });
 
