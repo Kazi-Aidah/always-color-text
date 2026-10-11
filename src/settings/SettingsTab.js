@@ -12,6 +12,7 @@ import { EditWordGroupModal } from '../modals/EditWordGroupModal.js';
 import { SelectBlacklistGroupModal } from '../modals/SelectBlacklistGroupModal.js';
 import { EditBlacklistGroupModal } from '../modals/EditBlacklistGroupModal.js';
 import { ColorPickerModal } from '../modals/ColorPickerModal.js';
+import { MarkdownElementSelectModal } from '../modals/MarkdownElementSelectModal.js';
 import { EditColorSwatchesModal } from '../modals/EditColorSwatchesModal.js';
 import { AlertModal } from '../modals/AlertModal.js';
 import { ConfirmationModal } from '../modals/ConfirmationModal.js';
@@ -24,7 +25,7 @@ import { stripInheritedGroupCssColors } from '../services/patternCompiler.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
-import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
+import { createMarkdownElementConfigInput, applyPickedElementConfig } from '../utils/markdownElementConfig.js';
 import { syncSwatchOrder, replaceSwatchColorInOrder } from '../utils/swatchOrdering.js';
 function resolveVarToHex(varStr) {
   const toHex = (rgbStr) => {
@@ -1856,6 +1857,7 @@ export class ColorSettingTab extends PluginSettingTab {
             row.classList.add("act-entry-row");
           } catch (_) {}
         }
+        if (entry.active === false) row.style.opacity = "0.55";
 
         // Infer targetElement for legacy entries (stored only a preset name / regex)
         // so they're treated as markdown targets.
@@ -2226,6 +2228,7 @@ export class ColorSettingTab extends PluginSettingTab {
             } catch (e) {
               dup.uid = Date.now();
             }
+            if (dup.active === false) dup.active = true;
             this.plugin.settings.blacklistEntries.splice(entryIdx + 1, 0, dup);
             await this.plugin.saveSettings();
             this._suspendSorting = this._blacklistSortMode === "last-added";
@@ -2284,6 +2287,36 @@ export class ColorSettingTab extends PluginSettingTab {
                 .setTitle(this.plugin.t("duplicate_entry", "Duplicate Entry"))
                 .setIcon("copy")
                 .onClick(duplicateHandler);
+            });
+
+            const blIsActive = entry.active !== false;
+            menu.addItem((item) => {
+              item
+                .setTitle(
+                  blIsActive
+                    ? this.plugin.t("deactivate_entry", "Deactivate Entry")
+                    : this.plugin.t("activate_entry", "Activate Entry"),
+                )
+                .setIcon(blIsActive ? "eye-off" : "eye")
+                .onClick(async () => {
+                  try {
+                    const idx = resolveBlacklistIndex();
+                    const target =
+                      idx !== -1
+                        ? this.plugin.settings.blacklistEntries[idx]
+                        : entry;
+                    target.active = target.active === false ? true : false;
+                    entry.active = target.active;
+                    await this.plugin.saveSettings();
+                    try { this.plugin.compileBlacklistEntries(); } catch (_) {}
+                    try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+                    try { this.plugin.forceRefreshAllEditors(); } catch (_) {}
+                    try { this.plugin.forceRefreshAllReadingViews(); } catch (_) {}
+                    this._refreshBlacklistWords();
+                  } catch (e) {
+                    debugError("SETTINGS", "toggle blacklist active error", e);
+                  }
+                });
             });
 
             menu.addItem((item) => {
@@ -7528,60 +7561,71 @@ export class ColorSettingTab extends PluginSettingTab {
         sortBtn.removeEventListener("click", sortBtnHandler),
       );
 
-      // Add Rule button (replaces Add Words / Add Regex)
-      // Add Words button (left)
-      const addWordsBtn = buttonRowDiv.createEl("button");
-      addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
-      addWordsBtn.style.cursor = "pointer";
-      addWordsBtn.style.flex = "1";
-      addWordsBtn.addClass("mod-cta");
-      const addWordsHandler = async () => {
-        const uid = (() => {
-          try {
-            return (
-              Date.now().toString(36) + Math.random().toString(36).slice(2)
-            );
-          } catch (e) {
-            return Date.now();
-          }
-        })();
-        this.plugin.settings.wordEntries.push({
-          pattern: "",
-          color: "",
-          isRegex: false,
-          flags: "",
-          groupedPatterns: null,
-          styleType: "text",
-          uid,
-          persistAtEnd: true,
-          matchType: (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
-          caseSensitive: !!this.plugin.settings.caseSensitive,
-        });
-        this._suspendSorting = this._wordsSortMode === "last-added";
+      // Single "+ Add Entry" button with a popup menu:
+      // plain text adds a blank row, regex opens the tester (always shown,
+      // even when regex support is off), markdown opens the element picker
+      // then the color picker.
+      const addEntryBtn = buttonRowDiv.createEl("button");
+      addEntryBtn.textContent = this.plugin.t("btn_add_entry", "+ Add Entry");
+      addEntryBtn.style.cursor = "pointer";
+      addEntryBtn.style.flex = "1";
+      addEntryBtn.addClass("mod-cta");
+      // Plain text flow: the color picker comes first, then the entry is
+      // created with the picked color (blank pattern — the word itself is
+      // typed into the row afterwards). Cancelling the picker adds nothing,
+      // so no more colorless entries that render blank.
+      const addPlainTextEntry = () => {
         try {
-          this._newEntriesSet && this._newEntriesSet.add(uid);
+          new ColorPickerModal(
+            this.app,
+            this.plugin,
+            async (color, result) => {
+              const selColor =
+                color && this.plugin.isValidHexColor(color)
+                  ? color
+                  : result &&
+                      result.textColor &&
+                      this.plugin.isValidHexColor(result.textColor)
+                    ? result.textColor
+                    : null;
+              if (!selColor) return;
+              const uid = (() => {
+                try {
+                  return (
+                    Date.now().toString(36) + Math.random().toString(36).slice(2)
+                  );
+                } catch (e) {
+                  return Date.now();
+                }
+              })();
+              this.plugin.settings.wordEntries.push({
+                pattern: "",
+                color: selColor,
+                isRegex: false,
+                flags: "",
+                groupedPatterns: null,
+                styleType: "text",
+                uid,
+                persistAtEnd: true,
+                matchType: (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
+                caseSensitive: !!this.plugin.settings.caseSensitive,
+              });
+              this._suspendSorting = this._wordsSortMode === "last-added";
+              try {
+                this._newEntriesSet && this._newEntriesSet.add(uid);
+              } catch (e) {}
+              await this.plugin.saveSettings();
+              this.plugin.reconfigureEditorExtensions();
+              this.plugin.forceRefreshAllEditors();
+              this.plugin.forceRefreshAllReadingViews();
+              this._refreshEntries();
+            },
+            "text",
+            "",
+          ).open();
         } catch (e) {}
-        await this.plugin.saveSettings();
-        this.plugin.reconfigureEditorExtensions();
-        this.plugin.forceRefreshAllEditors();
-        this.plugin.forceRefreshAllReadingViews();
-        this._refreshEntries();
       };
-      addWordsBtn.addEventListener("click", addWordsHandler);
-      this._cleanupHandlers.push(() =>
-        addWordsBtn.removeEventListener("click", addWordsHandler),
-      );
-
-      // Add Regex button (right)
-      const addRegexBtn = buttonRowDiv.createEl("button");
-      addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
-      addRegexBtn.style.cursor = "pointer";
-      addRegexBtn.style.flex = "1";
-      addRegexBtn.addClass("mod-cta");
-      addRegexBtn.style.display = this.plugin.settings.enableRegexSupport
-        ? ""
-        : "none";
-      const addRegexHandler = () => {
+      const addRegexEntry = () => {
         try {
           this._suspendSorting = this._wordsSortMode === "last-added";
           const onAdded = (entry) => {
@@ -7594,9 +7638,133 @@ export class ColorSettingTab extends PluginSettingTab {
           new RealTimeRegexTesterModal(this.app, this.plugin, onAdded).open();
         } catch (e) {}
       };
-      addRegexBtn.addEventListener("click", addRegexHandler);
+      // Direct markdown flow: picker chooses the element, then the color
+      // picker creates the entry. Reuses the same entry-building as presets
+      // but skips the full preset list for a shorter path.
+      const addMarkdownEntryDirect = () => {
+        try {
+          new MarkdownElementSelectModal(this.app, this.plugin, (targetKey, picked) => {
+            if (!targetKey) return;
+            const target = getMarkdownTarget(targetKey);
+            const label = target
+              ? this.plugin.t(target.labelKey, target.label)
+              : targetKey;
+            new ColorPickerModal(
+              this.app,
+              this.plugin,
+              async (color, result) => {
+                const sel = result || {};
+                const tc =
+                  sel.textColor && this.plugin.isValidHexColor(sel.textColor)
+                    ? sel.textColor
+                    : null;
+                const bc =
+                  sel.backgroundColor &&
+                  this.plugin.isValidHexColor(sel.backgroundColor)
+                    ? sel.backgroundColor
+                    : null;
+                if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color)))
+                  return;
+                const matchType =
+                  this.plugin.settings.matchType ||
+                  (this.plugin.settings.partialMatch ? "contains" : "exact");
+                const entry = {
+                  isRegex: false,
+                  groupedPatterns: null,
+                  presetLabel: label,
+                  persistAtEnd: true,
+                  matchType,
+                  targetElement: targetKey,
+                  pattern: getTargetPatternText(this.plugin, targetKey, false),
+                  affectMarkElements: false,
+                };
+                // Per-element options picked in the element modal (heading
+                // levels, task types, tag/title filters, highlight color).
+                applyPickedElementConfig(this.plugin, entry, targetKey, picked);
+                try {
+                  entry.uid =
+                    Date.now().toString(36) + Math.random().toString(36).slice(2);
+                } catch (e) {
+                  entry.uid = Date.now();
+                }
+                if (tc && bc) {
+                  entry.textColor = tc;
+                  entry.backgroundColor = bc;
+                  entry.color = "";
+                  entry.styleType = "both";
+                  entry._savedTextColor = tc;
+                  entry._savedBackgroundColor = bc;
+                } else if (tc) {
+                  entry.color = tc;
+                  entry.styleType = "text";
+                  entry._savedTextColor = tc;
+                } else if (bc) {
+                  entry.textColor = "currentColor";
+                  entry.backgroundColor = bc;
+                  entry.color = "";
+                  entry.styleType = "highlight";
+                  entry._savedBackgroundColor = bc;
+                } else {
+                  entry.color = color;
+                  entry._savedTextColor = color;
+                  entry.styleType = "text";
+                }
+                this.plugin.settings.wordEntries.push(entry);
+                this._suspendSorting = this._wordsSortMode === "last-added";
+                try {
+                  this._newEntriesSet &&
+                    entry &&
+                    entry.uid &&
+                    this._newEntriesSet.add(entry.uid);
+                } catch (e) {}
+                await this.plugin.saveSettings();
+                this.plugin.compileWordEntries();
+                this.plugin.compileTextBgColoringEntries();
+                this.plugin.reconfigureEditorExtensions();
+                this.plugin.forceRefreshAllEditors();
+                this.plugin.forceRefreshAllReadingViews();
+                this._refreshEntries();
+              },
+              "text-and-background",
+              label,
+              false,
+            ).open();
+          }).open();
+        } catch (e) {}
+      };
+      const addEntryHandler = (ev) => {
+        try {
+          const menu = new Menu();
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("menu_add_plain_text", "Plain text"))
+              .setIcon("text")
+              .onClick(() => addPlainTextEntry()),
+          );
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("menu_add_regex", "Regex pattern"))
+              .setIcon("regex")
+              .onClick(() => addRegexEntry()),
+          );
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("menu_add_markdown", "Markdown element"))
+              .setIcon("heading")
+              .onClick(() => addMarkdownEntryDirect()),
+          );
+          if (ev && typeof ev.clientX === "number") {
+            menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+          } else {
+            menu.showAtMouseEvent(ev);
+          }
+        } catch (e) {
+          addPlainTextEntry();
+        }
+      };
+      addEntryBtn.addEventListener("click", addEntryHandler);
       this._cleanupHandlers.push(() =>
-        addRegexBtn.removeEventListener("click", addRegexHandler),
+        addEntryBtn.removeEventListener("click", addEntryHandler),
       );
 
       const presetsBtn = buttonRowDiv.createEl("button");
@@ -7656,6 +7824,15 @@ export class ColorSettingTab extends PluginSettingTab {
                   false,
                 );
                 entry.affectMarkElements = false;
+                if (preset.targetElement === "highlight-color") {
+                  entry.highlightColor = "red";
+                  entry.pattern = getTargetPatternText(
+                    this.plugin,
+                    preset.targetElement,
+                    false,
+                    entry.highlightColor,
+                  );
+                }
               } else {
                 entry.pattern = preset.pattern;
                 entry.flags = preset.flags || "";
@@ -8158,16 +8335,19 @@ export class ColorSettingTab extends PluginSettingTab {
         blacklistSortBtn.removeEventListener("click", blacklistSortHandler),
       );
 
-      // Add blacklist word button (left)
+      // Single "+ Add blacklist entry" button with a popup menu.
+      // Markdown element blacklisting is supported via targetElement, so all
+      // three matcher kinds are offered. Regex stays visible even when regex
+      // support is off.
       const blacklistAddBtn = blacklistButtonRowDiv.createEl("button");
       blacklistAddBtn.textContent = this.plugin.t(
-        "btn_add_blacklist_word",
-        "+ Add blacklist word",
+        "btn_add_blacklist_entry",
+        "+ Add blacklist entry",
       );
       blacklistAddBtn.style.cursor = "pointer";
       blacklistAddBtn.style.flex = "1";
       blacklistAddBtn.addClass("mod-cta");
-      const blacklistAddHandler = async () => {
+      const blacklistAddPlainHandler = async () => {
         const uid = (() => {
           try {
             return (
@@ -8195,24 +8375,6 @@ export class ColorSettingTab extends PluginSettingTab {
         await this.plugin.saveSettings();
         this._refreshBlacklistWords();
       };
-      blacklistAddBtn.addEventListener("click", blacklistAddHandler);
-      this._cleanupHandlers.push(() =>
-        blacklistAddBtn.removeEventListener("click", blacklistAddHandler),
-      );
-
-      // Add blacklist regex button (right)
-      const blacklistAddRegexBtn = blacklistButtonRowDiv.createEl("button");
-      blacklistAddRegexBtn.textContent = this.plugin.t(
-        "btn_add_blacklist_regex",
-        "+ Add blacklist regex",
-      );
-      blacklistAddRegexBtn.style.cursor = "pointer";
-      blacklistAddRegexBtn.style.flex = "1";
-      blacklistAddRegexBtn.addClass("mod-cta");
-      blacklistAddRegexBtn.style.display = this.plugin.settings
-        .enableRegexSupport
-        ? ""
-        : "none";
       const blacklistAddRegexHandler = () => {
         try {
           const onAdded = (entry) => {
@@ -8225,12 +8387,83 @@ export class ColorSettingTab extends PluginSettingTab {
           new BlacklistRegexTesterModal(this.app, this.plugin, onAdded).open();
         } catch (e) {}
       };
-      blacklistAddRegexBtn.addEventListener("click", blacklistAddRegexHandler);
+      const blacklistAddMarkdownHandler = () => {
+        try {
+          new MarkdownElementSelectModal(this.app, this.plugin, async (targetKey, picked) => {
+            if (!targetKey) return;
+            const target = getMarkdownTarget(targetKey);
+            const newEntry = {
+              pattern: getTargetPatternText(this.plugin, targetKey, false),
+              isRegex: false,
+              flags: "",
+              groupedPatterns: null,
+              presetLabel: target
+                ? this.plugin.t(target.labelKey, target.label)
+                : targetKey,
+              persistAtEnd: true,
+              targetElement: targetKey,
+            };
+            // Per-element options picked in the element modal (heading
+            // levels, task types, tag/title filters, highlight color).
+            applyPickedElementConfig(this.plugin, newEntry, targetKey, picked);
+            try {
+              newEntry.uid =
+                Date.now().toString(36) + Math.random().toString(36).slice(2);
+            } catch (e) {
+              newEntry.uid = Date.now();
+            }
+            if (!Array.isArray(this.plugin.settings.blacklistEntries))
+              this.plugin.settings.blacklistEntries = [];
+            this.plugin.settings.blacklistEntries.push(newEntry);
+            this._suspendSorting = this._blacklistSortMode === "last-added";
+            try {
+              this._blacklistNewSet &&
+                newEntry &&
+                newEntry.uid &&
+                this._blacklistNewSet.add(newEntry.uid);
+            } catch (e) {}
+            await this.plugin.saveSettings();
+            try { this.plugin.compileBlacklistEntries(); } catch (_) {}
+            try { this.plugin.reconfigureEditorExtensions(); } catch (_) {}
+            try { this.plugin.forceRefreshAllEditors(); } catch (_) {}
+            try { this.plugin.forceRefreshAllReadingViews(); } catch (_) {}
+            this._refreshBlacklistWords();
+          }).open();
+        } catch (e) {}
+      };
+      const blacklistAddHandler = (ev) => {
+        try {
+          const menu = new Menu();
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("menu_add_plain_text", "Plain text"))
+              .setIcon("text")
+              .onClick(() => blacklistAddPlainHandler()),
+          );
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("menu_add_regex", "Regex pattern"))
+              .setIcon("regex")
+              .onClick(() => blacklistAddRegexHandler()),
+          );
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("menu_add_markdown", "Markdown element"))
+              .setIcon("heading")
+              .onClick(() => blacklistAddMarkdownHandler()),
+          );
+          if (ev && typeof ev.clientX === "number") {
+            menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+          } else {
+            menu.showAtMouseEvent(ev);
+          }
+        } catch (e) {
+          blacklistAddPlainHandler();
+        }
+      };
+      blacklistAddBtn.addEventListener("click", blacklistAddHandler);
       this._cleanupHandlers.push(() =>
-        blacklistAddRegexBtn.removeEventListener(
-          "click",
-          blacklistAddRegexHandler,
-        ),
+        blacklistAddBtn.removeEventListener("click", blacklistAddHandler),
       );
 
       const blacklistPresetsBtn = blacklistButtonRowDiv.createEl("button");

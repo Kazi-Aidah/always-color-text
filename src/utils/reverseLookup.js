@@ -402,6 +402,23 @@ export function matchTargetElementEntry(entry, ctx) {
         }
         return null;
       }
+      case "highlight-color": {
+        // Colored highlights share the ==...== syntax (the color is a native
+        // marker / class, not source text), so the same delimiter check
+        // applies. The actual color filtering happens in the CSS/JS layer.
+        if (hasPos) {
+          if (insideDelimiters(line, ls, le, "==")) return { kind: "markdown", detail: "highlight-color" };
+          try {
+            const w = ctx?.windowText != null ? String(ctx.windowText) : null;
+            const ws = ctx?.windowSelStart;
+            const we = ctx?.windowSelEnd;
+            if (w != null && ws != null && we != null && insideDelimiters(w, ws, we, "=="))
+              return { kind: "markdown", detail: "highlight-color" };
+          } catch (_) {}
+          return null;
+        }
+        return null;
+      }
       case "inline-code": {
         if (hasPos) {
           if (insideDelimiters(line, ls, le, "`")) return { kind: "markdown", detail: "inline-code" };

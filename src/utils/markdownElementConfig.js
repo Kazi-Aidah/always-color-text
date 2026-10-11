@@ -1,4 +1,5 @@
 import { MARKDOWN_TARGETS, getMarkdownTarget } from "./markdownTargets.js";
+import { getTargetPatternText } from "./targetLabels.js";
 
 // Targets whose matching is driven by `titleFilter` / `titleMatchType` — the
 // inline & tab titles and the file-explorer names. Their text lives outside
@@ -18,6 +19,44 @@ export function isTitleFilterTarget(key) {
 // Editor/rendered selector prefixes used to outrank Obsidian's own base CSS.
 export const EDITOR_PREFIX = ".workspace .cm-s-obsidian .cm-content";
 export const RENDER_PREFIX = ".markdown-rendered";
+
+// Native Obsidian highlight colors (live preview `.cm-highlight-<color>`,
+// reading view `mark[data-highlight="<color>"]`). The plain `==text==`
+// highlight carries no color class / an empty data-highlight attribute.
+export const HIGHLIGHT_COLORS = [
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "cyan",
+  "blue",
+  "purple",
+  "pink",
+];
+
+export const DEFAULT_HIGHLIGHT_COLOR = "red";
+
+// Extra `.cm-highlight-<color>` classes excluded from the default-highlight
+// selector. Kept as one list so the registry, the editor selector and the
+// reading selector can never drift apart.
+export const HIGHLIGHT_COLOR_NOTS = HIGHLIGHT_COLORS.map((c) => `:not(.cm-highlight-${c})`).join("");
+
+export function normalizeHighlightColor(value) {
+  const c = String(value || "").trim().toLowerCase();
+  return HIGHLIGHT_COLORS.includes(c) ? c : null;
+}
+
+export function capitalizeHighlightColor(value) {
+  const c = String(value || "").trim().toLowerCase();
+  if (!c) return "";
+  return c.charAt(0).toUpperCase() + c.slice(1);
+}
+
+// Editor / rendered selectors matching ANY colored highlight (used when a
+// highlight-color entry carries no valid color yet).
+export function coloredHighlightCmBase() {
+  return HIGHLIGHT_COLORS.map((c) => `.cm-highlight.cm-highlight-${c}`).join(", ");
+}
 
 // Split a tag filter ("#a, b, #c") into clean lowercased tag names ("a","b","c").
 export function parseTagFilterNames(filter) {
@@ -110,6 +149,13 @@ export function getElementConfig(key) {
         placeholderKey: "md_cfg_folder_name",
         placeholder: "folder name text",
         defaultValue: "",
+      };
+    case "highlight-color":
+      return {
+        field: "highlightColor",
+        type: "select",
+        options: HIGHLIGHT_COLORS,
+        defaultValue: DEFAULT_HIGHLIGHT_COLOR,
       };
     default:
       return null;
@@ -271,6 +317,36 @@ function buildMarkdownParts(t, entry, hasBoldItalic) {
       // emit a fallback workspace-scoped selector alongside the scoped one.
       rend = `${RENDER_PREFIX} .inline-title, .workspace .inline-title`;
     }
+  } else if (t.key === "highlight") {
+    // Default (uncolored) highlights only — colored highlights carry an
+    // extra `.cm-highlight-<color>` class / non-empty `data-highlight`.
+    cm = `${EDITOR_PREFIX} .cm-highlight${HIGHLIGHT_COLOR_NOTS}`;
+    rend = [
+      `${RENDER_PREFIX} mark:not([data-highlight])`,
+      `${RENDER_PREFIX} mark[data-highlight=""]`,
+      `mark:not([data-highlight])`,
+      `mark[data-highlight=""]`,
+    ].join(", ");
+  } else if (t.key === "highlight-color") {
+    // A specific highlight color, picked via the second dropdown and stored
+    // as `entry.highlightColor`. Without a valid color, match any colored
+    // highlight rather than nothing (or the default one).
+    const hc = normalizeHighlightColor(entry.highlightColor);
+    if (hc) {
+      cm = `${EDITOR_PREFIX} .cm-highlight.cm-highlight-${hc}`;
+      rend = [
+        `${RENDER_PREFIX} mark[data-highlight="${hc}"]`,
+        `mark[data-highlight="${hc}"]`,
+      ].join(", ");
+    } else {
+      cm = HIGHLIGHT_COLORS.map(
+        (c) => `${EDITOR_PREFIX} .cm-highlight.cm-highlight-${c}`,
+      ).join(", ");
+      rend = [
+        `${RENDER_PREFIX} mark[data-highlight]:not([data-highlight=""])`,
+        `mark[data-highlight]:not([data-highlight=""])`,
+      ].join(", ");
+    }
   } else {
     cm = `${EDITOR_PREFIX} ${t.cmSelector}`;
     rend = t.renderedSelector
@@ -307,11 +383,69 @@ export function buildMarkdownCmSelector(t, entry, hasBoldItalic) {
   return cm;
 }
 
+// The color dropdown beside the "Highlight Color" markdown element: picks
+// which native highlight color (`entry.highlightColor`) the entry matches.
+// Stored lowercase (it maps directly onto `.cm-highlight-<color>` and
+// `mark[data-highlight="<color>"]`); option labels are capitalized for display.
+export function createHighlightColorSelect(plugin, entry, onChange) {
+  const select = document.createElement("select");
+  select.className = "act-md-element-config act-md-highlight-color-select dropdown";
+  select.style.flex = "1 1 auto";
+  select.style.minWidth = "0";
+  select.style.padding = "6px 8px";
+  select.style.borderRadius = "var(--input-radius)";
+  select.style.border = "1px solid var(--background-modifier-border)";
+  select.style.background = "var(--background-modifier-form-field)";
+  select.style.color = "var(--text-normal)";
+  select.style.cursor = "pointer";
+  select.title = plugin.t(
+    "md_cfg_highlight_color_title",
+    "Which highlight color this entry matches",
+  );
+  const current = normalizeHighlightColor(entry.highlightColor) || DEFAULT_HIGHLIGHT_COLOR;
+  for (const c of HIGHLIGHT_COLORS) {
+    const opt = document.createElement("option");
+    opt.value = c;
+    try {
+      opt.textContent = plugin.t(
+        "highlight_color_" + c,
+        capitalizeHighlightColor(c),
+      );
+    } catch (_) {
+      opt.textContent = capitalizeHighlightColor(c);
+    }
+    opt.style.backgroundColor = "var(--background-modifier-form-field)";
+    if (c === current) opt.selected = true;
+    select.appendChild(opt);
+  }
+  select.value = current;
+  const handler = () => {
+    entry.highlightColor = normalizeHighlightColor(select.value) || DEFAULT_HIGHLIGHT_COLOR;
+    try {
+      entry.pattern = getTargetPatternText(
+        plugin,
+        "highlight-color",
+        false,
+        entry.highlightColor,
+      );
+    } catch (_) {}
+    if (onChange) onChange();
+  };
+  select.addEventListener("change", handler);
+  return select;
+}
+
 // A text input shown to the right of the element dropdown for configurable
 // targets (heading levels, task types, tag filter, inline-title filter).
 // For inline-title / tab-title / file-name / folder-name also renders a
 // "contains/exact/starts with/ends with" dropdown next to the filter input.
 export function createMarkdownElementConfigInput(plugin, entry, onChange) {
+  // Highlight Color renders a second dropdown (the highlight color to match)
+  // instead of a text input: one "Highlight Color" element + a color choice,
+  // not one element option per color.
+  if (entry.targetElement === "highlight-color") {
+    return createHighlightColorSelect(plugin, entry, onChange);
+  }
   const cfg = getElementConfig(entry.targetElement);
   if (!cfg) return null;
   const input = document.createElement("input");
@@ -392,8 +526,36 @@ export function createMarkdownElementConfigInput(plugin, entry, onChange) {
   return input;
 }
 
-// ---- Reading-view text matching for tag / title / file-name filters ----
+// Applies a per-element config picked in MarkdownElementSelectModal onto a
+// freshly created entry: copies the relevant fields for the chosen element
+// (heading levels, task types, tag/title filters + match mode, highlight
+// color) and rebuilds the descriptive pattern. Missing/invalid values fall
+// back to the element defaults, so callers can pass the modal's second
+// callback argument straight through.
+export function applyPickedElementConfig(plugin, entry, targetKey, picked) {
+  const cfg = picked || {};
+  if (targetKey === "highlight-color") {
+    entry.highlightColor =
+      normalizeHighlightColor(cfg.highlightColor) || DEFAULT_HIGHLIGHT_COLOR;
+  } else {
+    if (cfg.headingLevels != null) entry.headingLevels = cfg.headingLevels;
+    if (cfg.taskTypes != null) entry.taskTypes = cfg.taskTypes;
+    if (cfg.tagFilter != null) entry.tagFilter = cfg.tagFilter;
+    if (cfg.titleFilter != null) entry.titleFilter = cfg.titleFilter;
+    if (cfg.titleMatchType != null)
+      entry.titleMatchType = normalizeTitleMatchType(cfg.titleMatchType);
+  }
+  try {
+    entry.pattern = getTargetPatternText(
+      plugin,
+      targetKey,
+      false,
+      entry.highlightColor,
+    );
+  } catch (_) {}
+}
 
+// ---- Reading-view text matching for tag / title / file-name filters ----
 export function tagTextMatches(filter, text) {
   const t = (text || "").trim();
   if (!t) return false;
@@ -456,6 +618,17 @@ export function buildRenderedSelector(entry) {
     return `${RENDER_PREFIX} ul li:not(.task-list-item), ul li:not(.task-list-item)`;
   if (entry.targetElement === "numbered-list")
     return `${RENDER_PREFIX} ol li:not(.task-list-item), ol li:not(.task-list-item)`;
+  if (entry.targetElement === "highlight")
+    // Default (uncolored) highlights only: no `data-highlight` attribute,
+    // or an empty one (Obsidian emits `data-highlight=""` for ==text==).
+    return `${RENDER_PREFIX} mark:not([data-highlight]), ${RENDER_PREFIX} mark[data-highlight=""], mark:not([data-highlight]), mark[data-highlight=""]`;
+  if (entry.targetElement === "highlight-color") {
+    const hc = normalizeHighlightColor(entry.highlightColor);
+    if (hc)
+      return `${RENDER_PREFIX} mark[data-highlight="${hc}"], mark[data-highlight="${hc}"]`;
+    // No valid color picked yet: match any colored highlight (never default).
+    return `${RENDER_PREFIX} mark[data-highlight]:not([data-highlight=""]), mark[data-highlight]:not([data-highlight=""])`;
+  }
   if (!t.renderedSelector) return "";
   return t.renderedSelector;
 }

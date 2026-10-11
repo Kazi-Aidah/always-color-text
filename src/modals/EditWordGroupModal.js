@@ -3,6 +3,7 @@ import { debugLog, debugError } from '../utils/debug.js';
 import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
 import { PresetModal, createDateTimeFormatButton } from './PresetModal.js';
+import { MarkdownElementSelectModal } from './MarkdownElementSelectModal.js';
 import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { AlertModal } from './AlertModal.js';
@@ -12,7 +13,7 @@ import { GroupRulesModal } from './GroupRulesModal.js';
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
-import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
+import { createMarkdownElementConfigInput, applyPickedElementConfig } from '../utils/markdownElementConfig.js';
 import { CustomCssModal } from './CustomCssModal.js';
 import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
 
@@ -490,40 +491,49 @@ export class EditWordGroupModal extends Modal {
       }, 50);
     };
 
-    // Add Words button (left)
-    const addWordsBtn = buttonRow.createEl("button");
-    addWordsBtn.addClass("act-group-btn-add");
-    addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
-    addWordsBtn.style.cursor = "pointer";
-    addWordsBtn.style.padding = "6px 12px";
-    addWordsBtn.style.borderRadius = "var(--input-radius)";
-    addWordsBtn.addClass("mod-cta");
-    const addWordsHandler = () =>
-      addEntry({
-        pattern: "",
-        color: "",
-        isRegex: false,
-        flags: "",
-        styleType: "text",
-        matchType: "contains",
-        caseSensitive: !!this.plugin.settings.caseSensitive,
-      });
-    addWordsBtn.addEventListener("click", addWordsHandler);
-    this._cleanupHandlers.push(() =>
-      addWordsBtn.removeEventListener("click", addWordsHandler),
-    );
-
-    // Add Regex button (right)
-    const addRegexBtn = buttonRow.createEl("button");
-    addRegexBtn.addClass("act-group-btn-add");
-    addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
-    addRegexBtn.style.cursor = "pointer";
-    addRegexBtn.style.padding = "6px 12px";
-    addRegexBtn.style.borderRadius = "var(--input-radius)";
-    addRegexBtn.addClass("mod-cta");
-    addRegexBtn.style.display = this.plugin.settings.enableRegexSupport
-      ? ""
-      : "none";
+    // Single "+ Add Entry" button with a popup menu (plain text / regex /
+    // markdown). Regex stays visible even when regex support is off.
+    // Markdown opens the element picker then the color picker.
+    const addEntryBtn = buttonRow.createEl("button");
+    addEntryBtn.addClass("act-group-btn-add");
+    addEntryBtn.textContent = this.plugin.t("btn_add_entry", "+ Add Entry");
+    addEntryBtn.style.cursor = "pointer";
+    addEntryBtn.style.padding = "6px 12px";
+    addEntryBtn.style.borderRadius = "var(--input-radius)";
+    addEntryBtn.addClass("mod-cta");
+    const addPlainHandler = () => {
+      // Color picker first, then the entry is created with the picked color
+      // (blank pattern — typed into the row afterwards). Cancelling the
+      // picker adds nothing, so no more colorless entries that render blank.
+      try {
+        new ColorPickerModal(
+          this.app,
+          this.plugin,
+          async (color, result) => {
+            const selColor =
+              color && this.plugin.isValidHexColor(color)
+                ? color
+                : result &&
+                    result.textColor &&
+                    this.plugin.isValidHexColor(result.textColor)
+                  ? result.textColor
+                  : null;
+            if (!selColor) return;
+            await addEntry({
+              pattern: "",
+              color: selColor,
+              isRegex: false,
+              flags: "",
+              styleType: "text",
+              matchType: "contains",
+              caseSensitive: !!this.plugin.settings.caseSensitive,
+            });
+          },
+          "text",
+          "",
+        ).open();
+      } catch (_) {}
+    };
     const addRegexHandler = () =>
       addEntry({
         pattern: "",
@@ -534,9 +544,106 @@ export class EditWordGroupModal extends Modal {
         matchType: "contains",
         caseSensitive: !!this.plugin.settings.caseSensitive,
       });
-    addRegexBtn.addEventListener("click", addRegexHandler);
+    const addMarkdownHandler = () => {
+      try {
+        new MarkdownElementSelectModal(this.app, this.plugin, (targetKey, picked) => {
+          if (!targetKey) return;
+          const target = getMarkdownTarget(targetKey);
+          const label = target
+            ? this.plugin.t(target.labelKey, target.label)
+            : targetKey;
+          new ColorPickerModal(
+            this.app,
+            this.plugin,
+            async (color, result) => {
+              const sel = result || {};
+              const tc =
+                sel.textColor && this.plugin.isValidHexColor(sel.textColor)
+                  ? sel.textColor
+                  : null;
+              const bc =
+                sel.backgroundColor &&
+                this.plugin.isValidHexColor(sel.backgroundColor)
+                  ? sel.backgroundColor
+                  : null;
+              if (!tc && !bc && (!color || !this.plugin.isValidHexColor(color)))
+                return;
+              const entry = {
+                pattern: getTargetPatternText(this.plugin, targetKey, false),
+                isRegex: false,
+                flags: "",
+                matchType: "contains",
+                caseSensitive: !!this.plugin.settings.caseSensitive,
+                presetLabel: label,
+                targetElement: targetKey,
+              };
+              // Per-element options picked in the element modal (heading
+              // levels, task types, tag/title filters, highlight color).
+              applyPickedElementConfig(this.plugin, entry, targetKey, picked);
+              if (tc && bc) {
+                entry.textColor = tc;
+                entry.backgroundColor = bc;
+                entry.color = "";
+                entry.styleType = "both";
+                entry._savedTextColor = tc;
+                entry._savedBackgroundColor = bc;
+              } else if (tc) {
+                entry.color = tc;
+                entry.styleType = "text";
+                entry._savedTextColor = tc;
+              } else if (bc) {
+                entry.textColor = "currentColor";
+                entry.backgroundColor = bc;
+                entry.color = "";
+                entry.styleType = "highlight";
+                entry._savedBackgroundColor = bc;
+              } else {
+                entry.color = color;
+                entry.styleType = "text";
+                entry._savedTextColor = color;
+              }
+              await addEntry(entry);
+            },
+            "text-and-background",
+            label,
+            false,
+          ).open();
+        }).open();
+      } catch (_) {}
+    };
+    const addEntryMenuHandler = (ev) => {
+      try {
+        const menu = new Menu();
+        menu.addItem((item) =>
+          item
+            .setTitle(this.plugin.t("menu_add_plain_text", "Plain text"))
+            .setIcon("text")
+            .onClick(() => addPlainHandler()),
+        );
+        menu.addItem((item) =>
+          item
+            .setTitle(this.plugin.t("menu_add_regex", "Regex pattern"))
+            .setIcon("regex")
+            .onClick(() => addRegexHandler()),
+        );
+        menu.addItem((item) =>
+          item
+            .setTitle(this.plugin.t("menu_add_markdown", "Markdown element"))
+            .setIcon("heading")
+            .onClick(() => addMarkdownHandler()),
+        );
+        if (ev && typeof ev.clientX === "number") {
+          menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+        } else {
+          menu.showAtMouseEvent(ev);
+        }
+      } catch (_) {
+        addPlainHandler();
+      }
+    };
+    addEntryBtn.addEventListener("click", addEntryMenuHandler);
     this._cleanupHandlers.push(() =>
-      addRegexBtn.removeEventListener("click", addRegexHandler),
+      addEntryBtn.removeEventListener("click", addEntryMenuHandler),
     );
 
     const presetsBtn = buttonRow.createEl("button");
@@ -571,6 +678,8 @@ export class EditWordGroupModal extends Modal {
             targetElement: preset.targetElement,
             // Time & Date: format kept so the row shows a format button.
             dateTimeFormat: preset.dateTimeFormat || undefined,
+            highlightColor:
+              preset.targetElement === "highlight-color" ? "red" : undefined,
           };
           this.group.entries.push(entry);
           await this._mirrorEntryToLive(entry);
@@ -1073,6 +1182,7 @@ export class EditWordGroupModal extends Modal {
           live.tagFilter = src.tagFilter;
           live.titleFilter = src.titleFilter;
           live.titleMatchType = src.titleMatchType;
+          live.highlightColor = src.highlightColor;
         };
         const onElementSwitch = () => {
           syncLiveEntry(entry);

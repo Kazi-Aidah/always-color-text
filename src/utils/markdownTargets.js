@@ -58,6 +58,24 @@ export const MARKDOWN_TARGETS = [
     labelKey: "target_highlight",
     label: "Highlight",
     group: "text",
+    // Default (uncolored) highlights only. Obsidian renders colored
+    // highlights with an extra class (`cm-highlight-red`, …) in live
+    // preview and a non-empty `data-highlight` attribute in reading
+    // view, so those are excluded here. Use the "Highlight Color"
+    // element below to target a specific highlight color.
+    cmSelector:
+      ".cm-highlight:not(.cm-highlight-red):not(.cm-highlight-orange):not(.cm-highlight-yellow):not(.cm-highlight-green):not(.cm-highlight-cyan):not(.cm-highlight-blue):not(.cm-highlight-purple):not(.cm-highlight-pink)",
+    renderedSelector:
+      'mark:not([data-highlight]), mark[data-highlight=""], .markdown-rendered mark:not([data-highlight]), .markdown-rendered mark[data-highlight=""]',
+  },
+  {
+    key: "highlight-color",
+    labelKey: "target_highlight_color",
+    label: "Highlight Color",
+    group: "text",
+    // The concrete color comes from the entry's `highlightColor` field
+    // (picked via the second dropdown). Placeholders below are replaced
+    // by buildMarkdownParts / buildRenderedSelector.
     cmSelector: ".cm-highlight",
     renderedSelector: "mark, .markdown-rendered mark",
   },

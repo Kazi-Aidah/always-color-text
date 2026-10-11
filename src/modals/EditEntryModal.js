@@ -12,7 +12,7 @@ import { RulePickerModal } from './RulePickerModal.js';
 import { RuleValueModal } from './RuleValueModal.js';
 import { PresetModal, createDateTimeFormatButton } from './PresetModal.js';
 import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
-import { adoptPresetColortype } from '../utils/presetLinker.js';
+import { adoptPresetColortype, PRESET_SHAPE_FIELDS, resolveEntryPresetState } from '../utils/presetLinker.js';
 import { getTargetPatternText, getTargetPreviewText, resolveTargetElement } from '../utils/targetLabels.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
@@ -182,6 +182,39 @@ export function resolveEditEntryPreviewText({ plugin, entry, isTarget, raw }) {
     ) ||
     "Sample Text"
   );
+}
+
+/**
+ * Build a brand-new word entry group that carries an entry's current
+ * highlight/border shape (pure, exported for tests).
+ *
+ * The group is per-entry (no `styleType`, no colors): members keep their own
+ * colors while the group's layout fields apply to them at compile time — so
+ * the moved entry renders exactly as before. No `presetUid` stamp either, or
+ * a later preset edit would overwrite the snapshotted customization. Colors
+ * and CSS stay on the entry itself.
+ */
+export function buildStyleGroupForEntry(entry, name, uid) {
+  const group = {
+    active: true,
+    name: String(name || ""),
+    entries: [],
+    enableFolders: [],
+    disableFolders: [],
+    enableTags: [],
+    disableTags: [],
+    inclusionRules: [],
+    exclusionRules: [],
+    // Per-entry colortype: no forcing, members keep their own colors.
+    styleType: "",
+    uid,
+  };
+  if (entry) {
+    for (const k of PRESET_SHAPE_FIELDS) {
+      if (k in entry && entry[k] !== undefined) group[k] = entry[k];
+    }
+  }
+  return group;
 }
 
 export class EditEntryModal extends Modal {
@@ -396,6 +429,7 @@ export class EditEntryModal extends Modal {
 
     const groupSelect = headerRow.createEl("select");
     groupSelect.addClass("act-edit-entry-group-select");
+    this._groupSelect = groupSelect;
     const defaultOpt = groupSelect.createEl("option", {
       text: this.plugin.t("no_group", "No Group"),
     });
@@ -540,6 +574,15 @@ export class EditEntryModal extends Modal {
     // ===== Preview Wrap =====
     const previewWrap = contentEl.createDiv();
     previewWrap.addClass("act-color-picker-preview-wrap");
+    // Positioning context for the preset label overlay: the wrap keeps its
+    // exact row/centering, the label floats top-left above the preview.
+    previewWrap.style.position = "relative";
+    const presetLabelWrap = previewWrap.createDiv();
+    presetLabelWrap.addClass("act-preset-label");
+    presetLabelWrap.style.position = "absolute";
+    presetLabelWrap.style.top = "var(--size-2-1)";
+    presetLabelWrap.style.left = "calc(var(--size-2-1) - 1px)";
+    presetLabelWrap.style.display = "none";
     const preview = previewWrap.createDiv();
     preview.addClass("act-edit-entry-preview");
     preview.style.display = "flex";
@@ -1137,6 +1180,7 @@ export class EditEntryModal extends Modal {
         live.tagFilter = src.tagFilter;
         live.titleFilter = src.titleFilter;
         live.titleMatchType = src.titleMatchType;
+        live.highlightColor = src.highlightColor;
       };
       const onElementSwitch = () => {
         syncLiveEntry(this.entry);
@@ -1185,7 +1229,103 @@ export class EditEntryModal extends Modal {
         ? this.entry.caseSensitive
         : !!this.plugin.settings.caseSensitive;
     caseSel.value = isCase ? "case" : "nocase";
+    // Preset label: "Using <name> Preset" overlay, top-left of the preview.
+    // Shown only for entries stamped with a presetUid whose preset still
+    // exists. Shape/border edits after the fact flip it to a "Modified"
+    // label that opens the snapshot/unlink options — color and match-mode
+    // edits never do (they are not preset shape).
+    const renderPresetLabel = () => {
+      try {
+        while (presetLabelWrap.firstChild) presetLabelWrap.removeChild(presetLabelWrap.firstChild);
+      } catch (_) {}
+      let state = null;
+      try {
+        state = resolveEntryPresetState(this.plugin.settings, this.entry);
+      } catch (_) {
+        state = null;
+      }
+      if (!state) {
+        try {
+          presetLabelWrap.style.display = "none";
+        } catch (_) {}
+        // No label: the wrap renders exactly as before (no reserved space).
+        try {
+          previewWrap.style.paddingTop = "";
+          previewWrap.style.paddingBottom = "";
+        } catch (_) {}
+        return;
+      }
+      try {
+        presetLabelWrap.style.display = "";
+      } catch (_) {}
+      // Reserve the label's own zone above the centered preview so the two
+      // never overlap, with matching space below so the preview stays
+      // visually centered: the wrap grows in height only while the label
+      // shows.
+      try {
+        previewWrap.style.paddingTop = "var(--size-4-5)";
+        previewWrap.style.paddingBottom = "var(--size-4-5)";
+      } catch (_) {}
+      const t = (k, fb, params) => {
+        try {
+          return this.plugin.t(k, fb, params);
+        } catch (_) {
+          return fb;
+        }
+      };
+      let label = t("preset_pill_using", "Using {name} Preset", {
+        name: state.name,
+      });
+      const diverged = !!state.diverged;
+      if (diverged) {
+        label += " (" + t("preset_pill_modified", "Modified") + ")";
+      }
+      const labelEl = presetLabelWrap.createEl("span", { text: label });
+      // Clean: accent tint. Diverged: translucent theme red (color-mix over
+      // var(--color-red) — the -rgb suffixed variants are deprecated).
+      labelEl.style.background = diverged
+        ? "color-mix(in oklch, var(--color-red) 50%, transparent)"
+        : "hsla(var(--interactive-accent-hsl), 0.5)";
+      labelEl.style.color = "var(--text-normal)";
+      labelEl.style.fontSize = "var(--font-ui-small)";
+      labelEl.style.padding = "var(--size-2-1) var(--size-4-2)";
+      labelEl.style.borderRadius = "var(--radius-s)";
+      labelEl.style.whiteSpace = "nowrap";
+      if (diverged) {
+        labelEl.style.cursor = "pointer";
+        labelEl.title = t("preset_pill_options", "Preset options");
+        labelEl.addEventListener("click", (evt) => {
+          try {
+            const menu = new Menu();
+            menu.addItem((item) =>
+              item
+                .setTitle(t("preset_pill_save_new", "Save as new preset"))
+                .setIcon("plus")
+                .onClick(() => this._saveEntryStyleAsPreset()),
+            );
+            menu.addItem((item) =>
+              item
+                .setTitle(t("preset_pill_unlink", "Stop using preset"))
+                .setIcon("unlink")
+                .onClick(() => this._unlinkEntryPreset()),
+            );
+            menu.addItem((item) =>
+              item
+                .setTitle(t("preset_pill_save_group", "Create new group with this style"))
+                .setIcon("group")
+                .onClick(() => this._createGroupWithEntryStyle()),
+            );
+            if (evt && typeof evt.clientX === "number") {
+              menu.showAtPosition({ x: evt.clientX, y: evt.clientY });
+            } else if (evt) {
+              menu.showAtMouseEvent(evt);
+            }
+          } catch (_) {}
+        });
+      }
+    };
     const renderPreview = () => {
+      renderPresetLabel();
       const raw = String(textInput.value || "");
       const style = styleSelect.value;
       const tRaw = getColorInputValue(textColorInput);
@@ -2279,6 +2419,240 @@ export class EditEntryModal extends Modal {
     } catch (e) {
       this._originalSnapshot = "";
     }
+  }
+  // Snapshot the entry's current highlight/border shape as a brand-new text
+  // style preset, link the entry to it (pill flips back to clean), and open
+  // the preset list so the addition is visible. Colors and CSS stay on the
+  // entry — a preset snapshots style, never the entry's own colors.
+  async _saveEntryStyleAsPreset() {
+    try {
+      const entry = this.entry;
+      if (!entry) return;
+      const t = (k, fb, params) => {
+        try {
+          return this.plugin.t(k, fb, params);
+        } catch (_) {
+          return fb;
+        }
+      };
+      const list = Array.isArray(this.plugin.settings.textStylePresets)
+        ? this.plugin.settings.textStylePresets
+        : (this.plugin.settings.textStylePresets = []);
+      let baseName = "";
+      try {
+        const state = resolveEntryPresetState(this.plugin.settings, entry);
+        baseName = (state && state.name) || "";
+      } catch (_) {}
+      const preset = {
+        uid:
+          "tsp-" + Date.now().toString(36) + Math.random().toString(36).slice(2),
+        name: (baseName || t("new_preset_name", "New Preset")) + " copy",
+        isDefault: false,
+        styleType: entry.styleType || "highlight",
+      };
+      for (const k of PRESET_SHAPE_FIELDS) {
+        if (k in entry && entry[k] !== undefined) preset[k] = entry[k];
+      }
+      list.push(preset);
+      entry.presetUid = preset.uid;
+      this._mirrorPresetUidToLive();
+      await this.plugin.saveSettings();
+      try {
+        if (typeof this._refreshPreview === "function") this._refreshPreview();
+      } catch (_) {}
+      try {
+        if (typeof this.onSaved === "function") this.onSaved();
+      } catch (_) {}
+      try {
+        new Notice(t("preset_pill_saved", 'Saved "{name}" preset', { name: preset.name }));
+      } catch (_) {}
+      try {
+        new TextStylePresetsModal(this.app, this.plugin, null).open();
+      } catch (_) {}
+    } catch (_) {}
+  }
+  // Drop the preset stamp: the entry keeps its current look as plain values
+  // and the label disappears.
+  async _unlinkEntryPreset() {
+    try {
+      if (!this.entry) return;
+      delete this.entry.presetUid;
+      this._mirrorPresetUidToLive();
+      await this.plugin.saveSettings();
+      try {
+        if (typeof this._refreshPreview === "function") this._refreshPreview();
+      } catch (_) {}
+      try {
+        if (typeof this.onSaved === "function") this.onSaved();
+      } catch (_) {}
+      try {
+        new Notice(this.plugin.t("preset_pill_unlinked", "Stopped using preset"));
+      } catch (_) {}
+    } catch (_) {}
+  }
+  // Mirror the preset stamp onto the live settings entry (by uid). The
+  // modal may edit a detached clone (group members) whose stamp would
+  // otherwise be lost: the save write-back copies colors/shape but not the
+  // stamp, so link/unlink flows write it through here before saving.
+  _mirrorPresetUidToLive() {
+    try {
+      const src = this.entry;
+      const uid = src && src.uid != null ? String(src.uid) : "";
+      if (!uid) return;
+      const settings = this.plugin.settings;
+      const lists = [];
+      try {
+        if (Array.isArray(settings.wordEntries)) lists.push(settings.wordEntries);
+        if (Array.isArray(settings.textBgColoringEntries))
+          lists.push(settings.textBgColoringEntries);
+        if (Array.isArray(settings.wordEntryGroups)) {
+          for (const g of settings.wordEntryGroups) {
+            if (g && Array.isArray(g.entries)) lists.push(g.entries);
+          }
+        }
+      } catch (_) {}
+      const hasStamp = !!src && "presetUid" in src;
+      for (const list of lists) {
+        try {
+          const live = list.find(
+            (e) => e && e.uid != null && String(e.uid) === uid,
+          );
+          if (!live) continue;
+          if (hasStamp) {
+            try {
+              live.presetUid = src.presetUid;
+            } catch (_) {}
+          } else {
+            try {
+              delete live.presetUid;
+            } catch (_) {}
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+  // Snapshot the entry's current highlight/border shape as a brand-new word
+  // group carrying the same styling, and move the entry inside it. The group
+  // is per-entry (members keep their own colors) with the layout fields set,
+  // so the entry renders exactly as before — future members pick the shape
+  // up automatically.
+  async _createGroupWithEntryStyle() {
+    try {
+      const entry = this.entry;
+      if (!entry) return;
+      const t = (k, fb, params) => {
+        try {
+          return this.plugin.t(k, fb, params);
+        } catch (_) {
+          return fb;
+        }
+      };
+      const settings = this.plugin.settings;
+      if (!Array.isArray(settings.wordEntryGroups)) settings.wordEntryGroups = [];
+      let baseName = "";
+      try {
+        const state = resolveEntryPresetState(settings, entry);
+        baseName = (state && state.name) || "";
+      } catch (_) {}
+      let uid = "";
+      try {
+        uid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+      } catch (_) {
+        uid = String(Date.now());
+      }
+      const group = buildStyleGroupForEntry(
+        entry,
+        t("preset_pill_group_name", "{name} Group", {
+          name: baseName || t("new_preset_name", "New Preset"),
+        }),
+        uid,
+      );
+      // Move the live entry (by identity, else by uid for group-opened
+      // clones) out of wherever it lives, then into the new group.
+      const entryUid = entry.uid ? String(entry.uid) : "";
+      const sameRef = (e) => {
+        try {
+          if (e === entry) return true;
+          if (entryUid && e && e.uid != null && String(e.uid) === entryUid)
+            return true;
+        } catch (_) {}
+        return false;
+      };
+      let live = null;
+      try {
+        if (Array.isArray(settings.wordEntries)) {
+          const idx = settings.wordEntries.findIndex(sameRef);
+          if (idx !== -1) live = settings.wordEntries.splice(idx, 1)[0] || null;
+        }
+      } catch (_) {}
+      try {
+        for (const g of settings.wordEntryGroups) {
+          if (!g || !Array.isArray(g.entries)) continue;
+          const idx = g.entries.findIndex(sameRef);
+          if (idx === -1) continue;
+          const removed = g.entries.splice(idx, 1)[0] || null;
+          if (!live) live = removed;
+        }
+      } catch (_) {}
+      if (!live) live = entry;
+      try {
+        live.groupUid = group.uid;
+      } catch (_) {}
+      try {
+        entry.groupUid = group.uid;
+      } catch (_) {}
+      group.entries.push(live);
+      settings.wordEntryGroups.push(group);
+      await this.plugin.saveSettings();
+      this.plugin.compileWordEntries();
+      this.plugin.compileTextBgColoringEntries();
+      this.plugin.reconfigureEditorExtensions();
+      this.plugin.forceRefreshAllEditors();
+      this.plugin.forceRefreshAllReadingViews();
+      try {
+        this.plugin.triggerActiveDocumentRerender();
+      } catch (_) {}
+      // Point the header group dropdown at the new group (it may have been
+      // hidden when no groups existed, and it lacks the new option).
+      try {
+        this.originalGroupUid = group.uid;
+        const sel = this._groupSelect;
+        if (sel) {
+          try {
+            const opt = sel.createEl("option", { text: group.name || "(unnamed group)" });
+            try {
+              opt.value = group.uid || "";
+            } catch (_) {}
+          } catch (_) {}
+          try {
+            sel.value = group.uid || "";
+          } catch (_) {}
+          try {
+            sel.style.display = "";
+          } catch (_) {}
+        }
+      } catch (_) {}
+      try {
+        if (typeof this.onSaved === "function") this.onSaved();
+      } catch (_) {}
+      try {
+        if (
+          this.parentModal &&
+          typeof this.parentModal._refreshEntries === "function"
+        )
+          this.parentModal._refreshEntries();
+      } catch (_) {}
+      try {
+        if (
+          this.plugin.settingTab &&
+          typeof this.plugin.settingTab._refreshEntries === "function"
+        )
+          this.plugin.settingTab._refreshEntries();
+      } catch (_) {}
+      try {
+        new Notice(t("preset_pill_group_created", 'Created "{name}" group with this entry', { name: group.name }));
+      } catch (_) {}
+    } catch (_) {}
   }
 
   onClose() {

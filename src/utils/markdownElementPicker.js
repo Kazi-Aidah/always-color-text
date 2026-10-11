@@ -4,7 +4,11 @@ import {
   getMarkdownTarget,
 } from "./markdownTargets.js";
 import { getTargetPatternText } from "./targetLabels.js";
-import { getElementConfig } from "./markdownElementConfig.js";
+import {
+  DEFAULT_HIGHLIGHT_COLOR,
+  getElementConfig,
+  normalizeHighlightColor,
+} from "./markdownElementConfig.js";
 
 // Sizes a <select> to the width of its *currently selected* label text (plus a
 // little room for the arrow), rather than the widest option in the list. This
@@ -81,10 +85,14 @@ export function createMarkdownElementButton(app, plugin, entry, onChange) {
     if (!targets.length) return;
     const og = document.createElement("optgroup");
     og.label = plugin.t(grp.labelKey, grp.label);
+    og.style.backgroundColor = "hsla(var(--interactive-accent-hsl), 0.5)";
     targets.forEach((t) => {
       const opt = document.createElement("option");
       opt.value = t.key;
       opt.textContent = plugin.t(t.labelKey, t.label);
+      // Pin options back to the neutral surface: without this they inherit
+      // the optgroup heading color and every option looks tinted.
+      opt.style.backgroundColor = "var(--background-modifier-form-field)";
       if (t.key === entry.targetElement) opt.selected = true;
       og.appendChild(opt);
     });
@@ -115,7 +123,15 @@ export function createMarkdownElementButton(app, plugin, entry, onChange) {
     entry.affectMarkElements = false;
     const t = getMarkdownTarget(newKey);
     entry.presetLabel = plugin.t(t ? t.labelKey : "type_markdown", t ? t.label : newKey);
-    entry.pattern = getTargetPatternText(plugin, newKey, false);
+    if (newKey === "highlight-color") {
+      // Default the color choice so the entry matches something immediately;
+      // the second dropdown lets the user change it afterwards.
+      if (!normalizeHighlightColor(entry.highlightColor))
+        entry.highlightColor = DEFAULT_HIGHLIGHT_COLOR;
+      entry.pattern = getTargetPatternText(plugin, newKey, false, entry.highlightColor);
+    } else {
+      entry.pattern = getTargetPatternText(plugin, newKey, false);
+    }
     try {
       fitSelectToText(select);
     } catch (e) {}

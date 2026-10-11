@@ -398,3 +398,76 @@ export function propagatePresetToEntries(
   }
   return count;
 }
+
+/**
+ * Shape-only identity for the preset pill: the highlight/border layout
+ * fields (PRESET_SHAPE_FIELDS — no styleType, no colors, no CSS). Missing
+ * fields fall back to `defaults` (the flat global style fields) exactly like
+ * presetSignature, so "inherited from the globals" and "explicitly set to
+ * the global value" compare equal.
+ *
+ * @param {object|null|undefined} style    preset or entry
+ * @param {object|null|undefined} defaults global style fields (usually settings)
+ * @returns {string}
+ */
+export function presetShapeSignature(style, defaults) {
+  return PRESET_SHAPE_FIELDS.map((k) => {
+    let v = style && style[k] !== undefined ? style[k] : undefined;
+    if (v === undefined && defaults && defaults[k] !== undefined) v = defaults[k];
+    return JSON.stringify(v);
+  }).join('|');
+}
+
+/**
+ * Find a text style preset by uid.
+ *
+ * @param {object} settings
+ * @param {string} uid
+ * @returns {object|null}
+ */
+export function findPresetByUid(settings, uid) {
+  if (!settings || !uid) return null;
+  const list = Array.isArray(settings.textStylePresets)
+    ? settings.textStylePresets
+    : [];
+  return list.find((p) => p && p.uid === uid) || null;
+}
+
+/**
+ * Whether an entry's highlight/border shape still matches its linked preset.
+ * Color, styleType, match-mode and CSS edits never move this comparison — it
+ * answers only "was the preset's shape customized afterwards".
+ *
+ * @param {object} entry
+ * @param {object} preset
+ * @param {object} defaults global style fields (usually settings)
+ * @returns {boolean}
+ */
+export function entryPresetShapeDiverged(entry, preset, defaults) {
+  if (!entry || !preset) return false;
+  return (
+    presetShapeSignature(entry, defaults) !==
+    presetShapeSignature(preset, defaults)
+  );
+}
+
+/**
+ * Pill state for an entry editor: which preset (by explicit `presetUid`
+ * stamp) shaped the entry, and whether its shape has been customized since.
+ * Entries without a stamp — or whose preset is gone — report null (no pill).
+ *
+ * @param {object} settings
+ * @param {object} entry
+ * @returns {{preset: object, name: string, diverged: boolean}|null}
+ */
+export function resolveEntryPresetState(settings, entry) {
+  const uid = entry && entry.presetUid;
+  if (!uid) return null;
+  const preset = findPresetByUid(settings, uid);
+  if (!preset) return null;
+  return {
+    preset,
+    name: (preset && preset.name) || 'Style',
+    diverged: entryPresetShapeDiverged(entry, preset, settings),
+  };
+}

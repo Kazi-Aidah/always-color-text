@@ -1224,18 +1224,31 @@ export class HighlightStylingModal extends Modal {
             for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
             // Stamp the preset so a later preset edit can restyle this entry.
             if (preset.uid) this.entry.presetUid = preset.uid;
-            // Colors: only apply if preset has them, preserve entry colors otherwise
-            if ("textColor" in preset) this.entry.textColor = preset.textColor;
-            if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
-            if ("color" in preset) this.entry.color = preset.color;
-            if (preset.styleType === "text" && preset.textColor && this.plugin.isValidHexColor(preset.textColor)) {
-              this.entry.color = preset.textColor;
-              this.entry.textColor = null;
-              this.entry.backgroundColor = null;
-            } else if (preset.styleType === "highlight" && preset.backgroundColor) {
-              this.entry.backgroundColor = preset.backgroundColor;
-              this.entry.textColor = "currentColor";
-              this.entry.color = "";
+            // Colors: the preset's colors apply ONLY when the entry has none
+            // of its own — user-set colors always win. (The colortype adopter
+            // below still runs: it never overwrites, it only fills channels
+            // the new type needs so the entry can never render blank.)
+            const hasValidText =
+              (this.entry.color && this.plugin.isValidHexColor(this.entry.color)) ||
+              (this.entry.textColor &&
+                this.entry.textColor !== "currentColor" &&
+                this.plugin.isValidHexColor(this.entry.textColor));
+            const hasValidBg =
+              this.entry.backgroundColor &&
+              this.plugin.isValidHexColor(this.entry.backgroundColor);
+            if (!hasValidText && !hasValidBg) {
+              if ("textColor" in preset) this.entry.textColor = preset.textColor;
+              if ("backgroundColor" in preset) this.entry.backgroundColor = preset.backgroundColor;
+              if ("color" in preset) this.entry.color = preset.color;
+              if (preset.styleType === "text" && preset.textColor && this.plugin.isValidHexColor(preset.textColor)) {
+                this.entry.color = preset.textColor;
+                this.entry.textColor = null;
+                this.entry.backgroundColor = null;
+              } else if (preset.styleType === "highlight" && preset.backgroundColor) {
+                this.entry.backgroundColor = preset.backgroundColor;
+                this.entry.textColor = "currentColor";
+                this.entry.color = "";
+              }
             }
             // Entries keep their colours, but the preset's COLORTYPE still
             // applies and any channel it needs is filled from the preset (then

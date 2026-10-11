@@ -19,6 +19,10 @@ import {
   applyPresetShapeToGroup,
   adoptPresetColortype,
   propagatePresetToEntries,
+  presetShapeSignature,
+  findPresetByUid,
+  entryPresetShapeDiverged,
+  resolveEntryPresetState,
 } from "./presetLinker.js";
 
 const basePreset = {
@@ -463,5 +467,84 @@ describe("group propagation", () => {
     expect(applyPresetShapeToGroup({ uid: "g" }, null)).toBe(false);
     expect(groupsUsingPreset(null, basePreset, "", [])).toEqual([]);
     expect(groupsUsingPreset(makeSettings(), null, "", [])).toEqual([]);
+  });
+});
+
+describe("preset pill — shape divergence", () => {
+  const settingsWith = (presets, extra = {}) =>
+    makeSettings({ textStylePresets: presets, ...extra });
+
+  it("matches when the entry carries the preset's shape", () => {
+    const entry = { uid: "e1", presetUid: "tsp-1" };
+    for (const k of PRESET_SHAPE_FIELDS) entry[k] = basePreset[k];
+    expect(entryPresetShapeDiverged(entry, basePreset, {})).toBe(false);
+  });
+
+  it("flags highlight/border edits as diverged", () => {
+    const entry = { uid: "e1", presetUid: "tsp-1" };
+    for (const k of PRESET_SHAPE_FIELDS) entry[k] = basePreset[k];
+    entry.highlightBorderRadius = 999;
+    expect(entryPresetShapeDiverged(entry, basePreset, {})).toBe(true);
+    entry.highlightBorderRadius = basePreset.highlightBorderRadius;
+    entry.borderStyle = "bottom";
+    expect(entryPresetShapeDiverged(entry, basePreset, {})).toBe(true);
+  });
+
+  it("ignores color, styleType, match-mode and CSS edits", () => {
+    const entry = { uid: "e1", presetUid: "tsp-1" };
+    for (const k of PRESET_SHAPE_FIELDS) entry[k] = basePreset[k];
+    Object.assign(entry, {
+      color: "#000000",
+      textColor: "#111111",
+      backgroundColor: "#222222",
+      styleType: "text",
+      matchType: "exact",
+      customCss: "color: red;",
+    });
+    expect(entryPresetShapeDiverged(entry, basePreset, {})).toBe(false);
+  });
+
+  it("treats an unset field as the global default", () => {
+    const defaults = { highlightBorderRadius: 6 };
+    const entry = { uid: "e1", presetUid: "tsp-1" };
+    for (const k of PRESET_SHAPE_FIELDS) {
+      if (k !== "highlightBorderRadius") entry[k] = basePreset[k];
+    }
+    const preset = { ...basePreset, highlightBorderRadius: 6 };
+    expect(entryPresetShapeDiverged(entry, preset, defaults)).toBe(false);
+    expect(
+      entryPresetShapeDiverged(entry, { ...preset, highlightBorderRadius: 7 }, defaults),
+    ).toBe(true);
+  });
+
+  it("is null-safe", () => {
+    expect(entryPresetShapeDiverged(null, basePreset, {})).toBe(false);
+    expect(entryPresetShapeDiverged({ uid: "e" }, null, {})).toBe(false);
+  });
+
+  it("finds presets by uid", () => {
+    const settings = settingsWith([basePreset]);
+    expect(findPresetByUid(settings, "tsp-1")).toBe(basePreset);
+    expect(findPresetByUid(settings, "nope")).toBeNull();
+    expect(findPresetByUid(null, "tsp-1")).toBeNull();
+  });
+
+  it("resolves pill state from the presetUid stamp only", () => {
+    const settings = settingsWith([{ ...basePreset }]);
+    expect(resolveEntryPresetState(settings, { uid: "e" })).toBeNull();
+    expect(
+      resolveEntryPresetState(settings, { uid: "e", presetUid: "gone" }),
+    ).toBeNull();
+    const clean = { uid: "e", presetUid: "tsp-1" };
+    for (const k of PRESET_SHAPE_FIELDS) clean[k] = basePreset[k];
+    expect(resolveEntryPresetState(settings, clean)).toMatchObject({
+      name: "Sunset",
+      diverged: false,
+    });
+    const edited = { ...clean, highlightBorderRadius: 999 };
+    expect(resolveEntryPresetState(settings, edited)).toMatchObject({
+      name: "Sunset",
+      diverged: true,
+    });
   });
 });

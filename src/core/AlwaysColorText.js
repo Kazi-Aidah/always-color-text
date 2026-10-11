@@ -4123,15 +4123,42 @@ class AlwaysColorText extends Plugin {
           // IMPORTANT: Do NOT match on (styleType === "highlight" && !targetElement) —
           // that catches any background-highlight word entry and causes every <mark>
           // in the document to be re-styled even when the user has no highlight preset.
+          // Native colored highlights carry `data-highlight="<color>"` (the
+          // default ==text== has none, or an empty one). A default-highlight
+          // entry must only paint default marks; a highlight-color entry only
+          // paints marks of its own color.
+          let markHighlightColor = null;
+          try {
+            const raw =
+              mark && typeof mark.getAttribute === "function"
+                ? mark.getAttribute("data-highlight")
+                : null;
+            const c = String(raw == null ? "" : raw).trim().toLowerCase();
+            markHighlightColor = c || null;
+          } catch (_) {
+            markHighlightColor = null;
+          }
           const findHighlightEntry = (entries) => {
             if (!Array.isArray(entries)) return null;
             const reversed = [...entries].reverse();
+            if (markHighlightColor) {
+              // Colored mark: only a highlight-color entry for this exact
+              // color may paint it — never a default-highlight entry.
+              return reversed.find(
+                (e) =>
+                  e &&
+                  e.targetElement === "highlight-color" &&
+                  String(e.highlightColor || "").trim().toLowerCase() ===
+                    markHighlightColor,
+              ) || null;
+            }
             return reversed.find(
               (e) =>
                 e &&
                 (e.presetLabel === "Highlighted Text (==...)" ||
                   e.presetLabel === "Highlights (====)" ||
-                  e.affectMarkElements === true),
+                  e.affectMarkElements === true ||
+                  e.targetElement === "highlight"),
             ) || null;
           };
 
@@ -9137,6 +9164,24 @@ class AlwaysColorText extends Plugin {
         } else if (x.titleMatchType) {
           // Non-title entries should not carry a stale titleMatchType
           x.titleMatchType = normalizeTitleMatchType(x.titleMatchType);
+        }
+        // Normalize the highlight-color choice (stored lowercase to map
+        // directly onto `.cm-highlight-<color>` / `mark[data-highlight]`).
+        // Invalid values fall back to red so the entry keeps matching.
+        if (x.targetElement === "highlight-color") {
+          const hc = String(x.highlightColor || "").trim().toLowerCase();
+          x.highlightColor = [
+            "red",
+            "orange",
+            "yellow",
+            "green",
+            "cyan",
+            "blue",
+            "purple",
+            "pink",
+          ].includes(hc)
+            ? hc
+            : "red";
         }
         x._savedTextColor =
           x._savedTextColor && this.isValidHexColor(x._savedTextColor)
@@ -19416,6 +19461,8 @@ class AlwaysColorText extends Plugin {
         ? this.settings.blacklistEntries
         : [];
       for (const bl of blEntries) {
+        if (!bl) continue;
+        if (bl.active === false) continue;
         if (bl && bl.targetElement && matchesFamily(String(bl.targetElement))) {
           // For heading/task/tag/title with config, could check finer overlap,
           // but for now any matching family blocks the element.
@@ -19430,6 +19477,8 @@ class AlwaysColorText extends Plugin {
         if (filePath && !this.isGroupEnabledForFile(g, filePath)) continue;
         const entries = Array.isArray(g.entries) ? g.entries : [];
         for (const bl of entries) {
+          if (!bl) continue;
+          if (bl.active === false) continue;
           if (bl && bl.targetElement && matchesFamily(String(bl.targetElement))) return true;
         }
       }

@@ -5,12 +5,13 @@ import { SelectBlacklistGroupModal } from './SelectBlacklistGroupModal.js';
 import { AlertModal } from './AlertModal.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
 import { PresetModal, createDateTimeFormatButton } from './PresetModal.js';
+import { MarkdownElementSelectModal } from './MarkdownElementSelectModal.js';
 import { getEntryDateTimeFormat } from '../utils/entryDateTimeFormat.js';
 import { GroupRulesModal } from './GroupRulesModal.js';
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
-import { createMarkdownElementConfigInput } from '../utils/markdownElementConfig.js';
+import { createMarkdownElementConfigInput, applyPickedElementConfig } from '../utils/markdownElementConfig.js';
 
 export class EditBlacklistGroupModal extends Modal {
   constructor(app, plugin, group, onSave, onDelete) {
@@ -382,37 +383,79 @@ export class EditBlacklistGroupModal extends Modal {
       }, 50);
     };
 
-    // Add Words button (left)
-    const addWordsBtn = buttonRow.createEl("button");
-    addWordsBtn.addClass("act-group-btn-add");
-    addWordsBtn.textContent = this.plugin.t("btn_add_words", "+ Add Words");
-    addWordsBtn.style.cursor = "pointer";
-    addWordsBtn.style.padding = "6px 12px";
-    addWordsBtn.style.borderRadius = "var(--input-radius)";
-    addWordsBtn.addClass("mod-cta");
-    const addWordsHandler = () =>
+    // Single "+ Add Entry" button with a popup menu. Markdown element
+    // blacklisting is supported via targetElement, so all three matcher
+    // kinds are offered. Regex stays visible even when regex support is off.
+    const addEntryBtn = buttonRow.createEl("button");
+    addEntryBtn.addClass("act-group-btn-add");
+    addEntryBtn.textContent = this.plugin.t("btn_add_entry", "+ Add Entry");
+    addEntryBtn.style.cursor = "pointer";
+    addEntryBtn.style.padding = "6px 12px";
+    addEntryBtn.style.borderRadius = "var(--input-radius)";
+    addEntryBtn.addClass("mod-cta");
+    const addPlainHandler = () =>
       addEntry({ pattern: "", isRegex: false, flags: "", matchType: "contains" });
-    addWordsBtn.addEventListener("click", addWordsHandler);
-    this._cleanupHandlers.push(() =>
-      addWordsBtn.removeEventListener("click", addWordsHandler),
-    );
-
-    // Add Regex button (right)
-    const addRegexBtn = buttonRow.createEl("button");
-    addRegexBtn.addClass("act-group-btn-add");
-    addRegexBtn.textContent = this.plugin.t("btn_add_regex", "+ Add Regex");
-    addRegexBtn.style.cursor = "pointer";
-    addRegexBtn.style.padding = "6px 12px";
-    addRegexBtn.style.borderRadius = "var(--input-radius)";
-    addRegexBtn.addClass("mod-cta");
-    addRegexBtn.style.display = this.plugin.settings.enableRegexSupport
-      ? ""
-      : "none";
     const addRegexHandler = () =>
       addEntry({ pattern: "", isRegex: true, flags: "", matchType: "contains" });
-    addRegexBtn.addEventListener("click", addRegexHandler);
+    const addMarkdownHandler = () => {
+      try {
+        new MarkdownElementSelectModal(this.app, this.plugin, (targetKey, picked) => {
+          if (!targetKey) return;
+          const target = getMarkdownTarget(targetKey);
+          const blacklistEntry = {
+            pattern: getTargetPatternText(
+              this.plugin,
+              targetKey,
+              false,
+            ),
+            isRegex: false,
+            flags: "",
+            matchType: "contains",
+            presetLabel: target
+              ? this.plugin.t(target.labelKey, target.label)
+              : targetKey,
+            targetElement: targetKey,
+          };
+          // Per-element options picked in the element modal (heading
+          // levels, task types, tag/title filters, highlight color).
+          applyPickedElementConfig(this.plugin, blacklistEntry, targetKey, picked);
+          addEntry(blacklistEntry);
+        }).open();
+      } catch (_) {}
+    };
+    const addEntryMenuHandler = (ev) => {
+      try {
+        const menu = new Menu();
+        menu.addItem((item) =>
+          item
+            .setTitle(this.plugin.t("menu_add_plain_text", "Plain text"))
+            .setIcon("text")
+            .onClick(() => addPlainHandler()),
+        );
+        menu.addItem((item) =>
+          item
+            .setTitle(this.plugin.t("menu_add_regex", "Regex pattern"))
+            .setIcon("regex")
+            .onClick(() => addRegexHandler()),
+        );
+        menu.addItem((item) =>
+          item
+            .setTitle(this.plugin.t("menu_add_markdown", "Markdown element"))
+            .setIcon("heading")
+            .onClick(() => addMarkdownHandler()),
+        );
+        if (ev && typeof ev.clientX === "number") {
+          menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+        } else {
+          menu.showAtMouseEvent(ev);
+        }
+      } catch (_) {
+        addPlainHandler();
+      }
+    };
+    addEntryBtn.addEventListener("click", addEntryMenuHandler);
     this._cleanupHandlers.push(() =>
-      addRegexBtn.removeEventListener("click", addRegexHandler),
+      addEntryBtn.removeEventListener("click", addEntryMenuHandler),
     );
 
     const presetsBtn = buttonRow.createEl("button");
@@ -599,6 +642,7 @@ export class EditBlacklistGroupModal extends Modal {
       row.style.gap = "8px";
       row.style.borderRadius = "var(--input-radius)";
       row.style.paddingTop = "8px";
+      if (entry.active === false) row.style.opacity = "0.55";
 
       // 1. MATCH TYPE SELECT
       const matchSelect = row.createEl("select");
@@ -667,6 +711,7 @@ export class EditBlacklistGroupModal extends Modal {
           live.tagFilter = src.tagFilter;
           live.titleFilter = src.titleFilter;
           live.titleMatchType = src.titleMatchType;
+          live.highlightColor = src.highlightColor;
         };
         const onElementSwitch = () => {
           syncLiveEntry(entry);
@@ -954,8 +999,23 @@ export class EditBlacklistGroupModal extends Modal {
               .setIcon("copy")
               .onClick(() => {
                 const dup = JSON.parse(JSON.stringify(entry));
+                if (dup.active === false) dup.active = true;
                 this.group.entries.push(dup);
                 this._sortMode = "last-added";
+                this._refreshGroupEntries();
+              });
+          });
+          const blGroupEntryIsActive = entry.active !== false;
+          menu.addItem((item) => {
+            item
+              .setTitle(
+                blGroupEntryIsActive
+                  ? this.plugin.t("deactivate_entry", "Deactivate Entry")
+                  : this.plugin.t("activate_entry", "Activate Entry"),
+              )
+              .setIcon(blGroupEntryIsActive ? "eye-off" : "eye")
+              .onClick(() => {
+                entry.active = entry.active === false ? true : false;
                 this._refreshGroupEntries();
               });
           });

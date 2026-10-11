@@ -3,6 +3,10 @@ import { debugLog, debugError } from '../utils/debug.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { BlacklistRegexTesterModal } from './BlacklistRegexTesterModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
+import { MarkdownElementSelectModal } from './MarkdownElementSelectModal.js';
+import { getTargetPatternText } from '../utils/targetLabels.js';
+import { getMarkdownTarget } from '../utils/markdownTargets.js';
+import { applyPickedElementConfig } from '../utils/markdownElementConfig.js';
 import { EditEntryModal } from './EditEntryModal.js';
 
 export class AddToExistingEntryModal extends FuzzySuggestModal {
@@ -434,8 +438,8 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
       );
       buttonRow.appendChild(addWordBtn);
 
-      // Add Regex button (only if regex support enabled)
-      if (this.plugin.settings.enableRegexSupport) {
+      // Add Regex button (always shown, even when regex support is off)
+      {
         const addRegexBtn = document.createElement("button");
         addRegexBtn.textContent = this.plugin.t(
           "btn_add_regex_short",
@@ -494,6 +498,119 @@ export class AddToExistingEntryModal extends FuzzySuggestModal {
           true,
         );
         buttonRow.appendChild(addRegexBtn);
+      }
+
+      // Add Markdown Element button (markdown blacklisting/targeting is
+      // supported, so this is always shown). Picks the element first, then
+      // the color, then creates a targetElement entry.
+      {
+        const addMdBtn = document.createElement("button");
+        addMdBtn.textContent = this.plugin.t(
+          "btn_add_markdown_element",
+          "+ Add Markdown Element",
+        );
+        addMdBtn.classList.add("act-modal-action-btn");
+        addMdBtn.addEventListener(
+          "mousedown",
+          (e) => {
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+          },
+          true,
+        );
+        addMdBtn.addEventListener(
+          "click",
+          (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            new MarkdownElementSelectModal(this.app, this.plugin, (targetKey, picked) => {
+              if (!targetKey) return;
+              const target = getMarkdownTarget(targetKey);
+              const label = target
+                ? this.plugin.t(target.labelKey, target.label)
+                : targetKey;
+              new ColorPickerModal(
+                this.app,
+                this.plugin,
+                async (color, result) => {
+                  const selColor =
+                    color && this.plugin.isValidHexColor(color)
+                      ? color
+                      : result &&
+                          result.textColor &&
+                          this.plugin.isValidHexColor(result.textColor)
+                        ? result.textColor
+                        : null;
+                  if (!selColor) return;
+                  const selGroupUid =
+                    result && result.selectedGroupUid
+                      ? result.selectedGroupUid
+                      : null;
+                  const newEntry = {
+                    pattern: getTargetPatternText(
+                      this.plugin,
+                      targetKey,
+                      false,
+                    ),
+                    color: selColor,
+                    isRegex: false,
+                    flags: "",
+                    styleType: "text",
+                    markTarget: result && result.markTarget ? result.markTarget : "text",
+                    matchType: "contains",
+                    presetLabel: label,
+                    targetElement: targetKey,
+                    caseSensitive: !!this.plugin.settings.caseSensitive,
+                  };
+                  // Per-element options picked in the element modal
+                  // (heading levels, task types, tag/title filters,
+                  // highlight color).
+                  applyPickedElementConfig(this.plugin, newEntry, targetKey, picked);
+                  try {
+                    newEntry.uid =
+                      Date.now().toString(36) +
+                      Math.random().toString(36).slice(2);
+                  } catch (_) {
+                    newEntry.uid = Date.now();
+                  }
+                  if (selGroupUid) {
+                    const group = Array.isArray(
+                      this.plugin.settings.wordEntryGroups,
+                    )
+                      ? this.plugin.settings.wordEntryGroups.find(
+                          (g) => g && g.uid === selGroupUid,
+                        )
+                      : null;
+                    if (group) {
+                      if (!Array.isArray(group.entries)) group.entries = [];
+                      group.entries.push(newEntry);
+                    } else {
+                      this.plugin.settings.wordEntries.push(newEntry);
+                    }
+                  } else {
+                    this.plugin.settings.wordEntries.push(newEntry);
+                  }
+                  this._lastAddedEntryUid = newEntry.uid;
+                  try {
+                    this.inputEl.dispatchEvent(
+                      new Event("input", { bubbles: true }),
+                    );
+                  } catch (_) {}
+                  await this.plugin.saveSettings();
+                  this.plugin.compileWordEntries();
+                  try {
+                    this.plugin.refreshEditor(this.view, true);
+                  } catch (_) {}
+                },
+                "text",
+                label,
+              ).open();
+            }).open();
+          },
+          true,
+        );
+        buttonRow.appendChild(addMdBtn);
       }
 
       // Insert button row after prompt-results

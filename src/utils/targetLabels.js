@@ -9,6 +9,7 @@ const TARGET_KEYS = {
   code: ["target_code", "Inline Code"],
   mark: ["target_mark", "Highlight"],
   highlight: ["target_highlight", "Highlight"],
+  "highlight-color": ["target_highlight_color", "Highlight Color"],
   strikethrough: ["target_strikethrough", "Strikethrough"],
   heading: ["target_heading", "Heading"],
   "inline-code": ["target_inline_code", "Inline Code"],
@@ -36,6 +37,7 @@ const TARGET_KEYS = {
 // outside this map still preview their element name, just without a suffix.
 const PREVIEW_FILTER_KEYS = {
   tag: "tagFilter",
+  "highlight-color": "highlightColor",
   "inline-title": "titleFilter",
   "tab-title": "titleFilter",
   "file-name": "titleFilter",
@@ -52,6 +54,7 @@ const TARGET_CSS = {
   a: ".cm-link and a",
   code: ".cm-inline-code and code",
   mark: ".cm-highlight and mark",
+  highlight: ".cm-highlight and mark",
 };
 
 // Own-property lookup: a plain-object map must not resolve inherited keys —
@@ -72,8 +75,15 @@ export function getTargetLabel(plugin, targetElement, affectMarkElements) {
 
 // Describes, in plain text, what CSS a target entry colors. This is stored as
 // the entry's pattern (replacing the dead regex) so the data stays meaningful.
-export function getTargetPatternText(plugin, targetElement, affectMarkElements) {
+export function getTargetPatternText(plugin, targetElement, affectMarkElements, highlightColor) {
   const key = String(targetElement);
+  if (key === "highlight-color") {
+    const c = String(highlightColor || "").trim().toLowerCase();
+    const css = c
+      ? `.cm-highlight-${c} and mark[data-highlight="${c}"]`
+      : ".cm-highlight-<color> and mark[data-highlight]";
+    return plugin.t("targets_css", "Targets") + " " + css;
+  }
   let css = own(TARGET_CSS, key) ? TARGET_CSS[key] : "";
   if (!css && affectMarkElements) css = TARGET_CSS.mark;
   if (!css) css = String(targetElement || "");
@@ -127,7 +137,14 @@ export function getTargetPreviewText(plugin, entry) {
   const label = getTargetLabel(plugin, key, entry && entry.affectMarkElements);
   if (!label) return "";
   if (!entry || !own(PREVIEW_FILTER_KEYS, key)) return label;
-  const value = String(entry[PREVIEW_FILTER_KEYS[key]] || "").trim();
-  return value ? `${label}: ${value}` : label;
+  const raw = String(entry[PREVIEW_FILTER_KEYS[key]] || "").trim();
+  if (!raw) return label;
+  // The highlight color is stored lowercase (CSS class/attr form) — show it
+  // capitalized next to the element name ("Highlight Color: Red").
+  const value =
+    key === "highlight-color"
+      ? raw.charAt(0).toUpperCase() + raw.slice(1)
+      : raw;
+  return `${label}: ${value}`;
 }
 
