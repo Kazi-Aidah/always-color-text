@@ -84,6 +84,15 @@ Take styling to the next level with per-entry and per-group custom CSS. When ena
 A "Style" button pops up in every modal for you to apply your styles!
 ![Style button and saved style presets in a modal](assets/1.17.0/text-style-presets.png)
 
+When an entry is using a preset, its preview shows a **“Using `preset-name` Preset”** label. If you edit that entry’s Highlight or Border styling, the label turns red.
+
+![Preset Label Options](assets/preset-label-options.png)
+
+Click it to:
+- **Save as New Preset**
+- **Stop using Preset** (Unlink from Preset)
+- **Create New Group with this Style**
+
 ---
 ### Quick Menu
 

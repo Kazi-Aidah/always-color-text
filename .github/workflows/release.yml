@@ -40,16 +40,6 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          body: |
-            ## Bug Fixes
-            - Fixed #36 – Page jumps to the top after checking a checkbox in Reading Mode (Thanks to @sharik14 in #36)
-            - Fixed #46 – Default yellow markdown highlight changes to an incorrect color in Reading Mode (Thanks to @sharik14 in #46)
-            - Fixed #47 – Mobile UI issues: accidental deletions without confirmation, poor group menu layout (Thanks to @vxdewz in #47)
-            - Fixed #48 – "Starts With" match type and Unicode regex flag don't match full expected character range (Thanks to @cubbage in #48)
-            - Fixed #49 – Clicking a heading in the Outline panel jumps to wrong position in Reading View (Thanks to @Miracle-ZT in #49)
-            - Fixed off-centered selects in plugin modals
-            - Improved Reading Mode scrolling performance
-            - Significantly Improved Mobile UI
           files: |
             main.js
             styles.css
