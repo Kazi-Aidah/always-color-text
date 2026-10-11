@@ -115,6 +115,45 @@ export function deriveHighlightCssFromEntry(entry, plugin) {
 }
 
 /**
+ * Whether a saved custom-CSS string is just an unedited derived snapshot —
+ * byte-identical (modulo whitespace) to what deriveHighlightCssFromEntry
+ * produces from the entry's own structured fields. The CSS modal pre-fills
+ * exactly that derivation, so "open and save without touching anything"
+ * stores a redundant copy; user-authored CSS (extra properties, blocks,
+ * different values) never compares equal.
+ *
+ * Used to stop such snapshots from shadowing later Style preset
+ * applications (saved CSS wins over structured fields at render time):
+ * snapshots may be dropped, authored CSS must not.
+ *
+ * @param {string|null|undefined} css
+ * @param {object} entry
+ * @param {object} plugin
+ * @returns {boolean}
+ */
+export function isDerivedSnapshotCss(css, entry, plugin) {
+  try {
+    if (!css || typeof css !== 'string' || !css.trim()) return false;
+    if (!entry) return false;
+    let derived = '';
+    try {
+      derived = deriveHighlightCssFromEntry(entry, plugin) || '';
+    } catch (_) {
+      return false;
+    }
+    const norm = (s) =>
+      String(s || '')
+        .replace(/\s+/g, '')
+        .replace(/;+/g, ';')
+        .replace(/;$/, '');
+    const a = norm(css);
+    return a.length > 0 && a === norm(derived);
+  } catch (_) {
+    return false;
+  }
+}
+
+/**
  * Parses a CSS declarations string back into an entry's structured fields.
  * This makes CustomCssModal and HighlightStylingModal interchangeable.
  * Only updates fields that are explicitly present in the CSS.
@@ -257,8 +296,13 @@ export function parseCssIntoEntry(css, entry, plugin) {
  * in an existing CSS string from the entry's structured fields.
  * Color properties are handled separately by syncEntryCssFromColors.
  * User-defined properties not managed by HighlightStylingModal are preserved.
+ *
+ * opts.dropStaleBorders (preset application only): a border side switch must
+ * not leave the old side painting alongside the new one, and effectively
+ * disabled borders must not linger at all — otherwise the just-applied style
+ * looks dead. Slider saves omit this flag and keep the old behavior.
  */
-export function patchCssLayoutFromEntry(css, entry, plugin) {
+export function patchCssLayoutFromEntry(css, entry, plugin, opts) {
   if (!css || !entry) return css;
   const settings = plugin.settings;
   const styleType = entry.styleType || (entry.backgroundColor ? 'highlight' : 'text');
@@ -334,6 +378,14 @@ export function patchCssLayoutFromEntry(css, entry, plugin) {
   });
 
   const found = new Set();
+  const BORDER_SIDE_PROPS = new Set([
+    'border',
+    'border-top',
+    'border-bottom',
+    'border-left',
+    'border-right',
+  ]);
+  const dropStaleBorders = !!(opts && opts.dropStaleBorders);
   const rebuilt = parsed.map(({ prop, val }) => {
     if (updates.hasOwnProperty(prop)) {
       found.add(prop);
@@ -341,6 +393,16 @@ export function patchCssLayoutFromEntry(css, entry, plugin) {
     }
     // Drop stale corner-shape when the effective shape is round (default)
     if (prop === 'corner-shape' && !updates.hasOwnProperty('corner-shape')) {
+      found.add(prop);
+      return null;
+    }
+    // Drop border sides the new shape no longer paints (side switch leaves
+    // the old side behind; disabled borders leave all of them behind).
+    if (
+      dropStaleBorders &&
+      BORDER_SIDE_PROPS.has(prop) &&
+      !updates.hasOwnProperty(prop)
+    ) {
       found.add(prop);
       return null;
     }
@@ -543,10 +605,17 @@ export class CustomCssModal extends Modal {
     // Save handler
     const save = async () => {
       if (this.entry) {
-        const css = this._textarea.value.trim() || undefined;
-        this.entry.customCss = css;
-        // Parse CSS back into structured fields so HighlightStylingModal stays in sync
+        let css = this._textarea.value.trim() || undefined;
         if (css) parseCssIntoEntry(css, this.entry, this.plugin);
+        // Saving the untouched prefill stores nothing: it is identical to
+        // what the structured fields already describe, and a stored snapshot
+        // would later shadow Style preset applications (saved CSS wins at
+        // render time). Authored CSS is unaffected.
+        try {
+          if (css && isDerivedSnapshotCss(css, this.entry, this.plugin))
+            css = undefined;
+        } catch (_) {}
+        this.entry.customCss = css;
       }
       await this.plugin.saveSettings();
       try { this.plugin.compileWordEntries(); } catch (_) {}

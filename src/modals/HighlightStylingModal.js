@@ -2,7 +2,7 @@ import { Modal, setIcon } from 'obsidian';
 import { escapeHtml } from '../utils/debug.js';
 import { ColorPickerModal } from './ColorPickerModal.js';
 import { TextStylePresetsModal } from './TextStylePresetsModal.js';
-import { deriveHighlightCssFromEntry, parseCssIntoEntry, patchCssLayoutFromEntry } from './CustomCssModal.js';
+import { deriveHighlightCssFromEntry, parseCssIntoEntry, patchCssLayoutFromEntry, isDerivedSnapshotCss } from './CustomCssModal.js';
 import { stripInheritedGroupCssColors } from '../services/patternCompiler.js';
 import { adoptPresetColortype, applyPresetShapeToGroup } from '../utils/presetLinker.js';
 import { getTargetPreviewText } from '../utils/targetLabels.js';
@@ -1220,6 +1220,23 @@ export class HighlightStylingModal extends Modal {
           if (Array.isArray(this.entry.entries)) {
             applyPresetShapeToGroup(this.entry, preset);
           } else {
+            const presetHasCss =
+              !!preset.customCss && !!String(preset.customCss).trim();
+            // A saved-but-unedited Custom CSS prefill is just a snapshot of
+            // the OLD shape — leaving it would shadow the preset being
+            // applied (saved CSS wins at render time), making the preset look
+            // dead. Drop snapshots before copying shape; authored CSS stays.
+            // A preset carrying its own CSS overwrites wholesale instead.
+            if (!presetHasCss) {
+              try {
+                if (
+                  this.entry.customCss &&
+                  isDerivedSnapshotCss(this.entry.customCss, this.entry, this.plugin)
+                ) {
+                  delete this.entry.customCss;
+                }
+              } catch (_) {}
+            }
             const shapeKeys = ["styleType","backgroundOpacity","highlightBorderRadius","cornerShape","highlightHorizontalPadding","highlightVerticalPadding","enableBorderThickness","borderStyle","borderLineStyle","borderOpacity","borderThickness","customCss"];
             for (const k of shapeKeys) if (k in preset) this.entry[k] = preset[k];
             // Stamp the preset so a later preset edit can restyle this entry.
@@ -1257,6 +1274,17 @@ export class HighlightStylingModal extends Modal {
             adoptPresetColortype(this.entry, preset, (c) =>
               this.plugin.isValidHexColor(c),
             );
+            // Authored CSS keeps user extras but its overlapping shape values
+            // move forward to the just-applied style (snapshots were dropped
+            // above, and preset-owned CSS lands verbatim) — or they shadow
+            // the preset and it looks dead.
+            try { if (this.entry.customCss) this.plugin.syncEntryCssFromColors(this.entry); } catch (_) {}
+            try {
+              if (this.entry.customCss && !presetHasCss) {
+                const patched = patchCssLayoutFromEntry(this.entry.customCss, this.entry, this.plugin, { dropStaleBorders: true });
+                if (typeof patched === "string") this.entry.customCss = patched;
+              }
+            } catch (_) {}
           }
           try { if (styleSelect) styleSelect.value = this.entry.styleType || (isGroup ? "" : "both"); } catch(_){}
           try { if (tColor) { const tv = (this.entry.textColor && this.entry.textColor !== "currentColor" && this.plugin.isValidHexColor(this.entry.textColor) ? this.entry.textColor : (this.entry.color && this.plugin.isValidHexColor(this.entry.color) ? this.entry.color : getColorInputValue(tColor))); if (tv) setColorInputValue(tColor, tv); } } catch(_){}

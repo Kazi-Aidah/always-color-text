@@ -5,7 +5,7 @@ import { HighlightStylingModal } from './HighlightStylingModal.js';
 import { RealTimeRegexTesterModal } from './RealTimeRegexTesterModal.js';
 import { CustomCssModal } from './CustomCssModal.js';
 import { TextStylePresetsModal } from './TextStylePresetsModal.js';
-import { deriveHighlightCssFromEntry } from './CustomCssModal.js';
+import { deriveHighlightCssFromEntry, isDerivedSnapshotCss, patchCssLayoutFromEntry } from './CustomCssModal.js';
 import { AddToExistingEntryModal } from './AddToExistingEntryModal.js';
 import { LinkedMatcherModal } from './LinkedMatcherModal.js';
 import { RulePickerModal } from './RulePickerModal.js';
@@ -2145,8 +2145,9 @@ export class EditEntryModal extends Modal {
           this.onSaved && this.onSaved(this.entry);
         } catch (e) {}
 
-        // Close parent modal; reopen only when appropriate
-        if (this.parentModal) {
+        // Close parent modal; reopen only when appropriate. Group modals
+        // (word/blacklist) stay open and refresh via onSaved above.
+        if (this.parentModal && !this._isGroupParentModal()) {
           try {
             // Prevent ColorPickerModal.onClose from running its submit/delete logic
             // since we've already saved the entry correctly here
@@ -2266,8 +2267,8 @@ export class EditEntryModal extends Modal {
           this.onSaved && this.onSaved(newEntry);
         } catch (e) {}
 
-        // Close parent modal
-        if (this.parentModal) {
+        // Close parent modal. Group modals stay open (see above).
+        if (this.parentModal && !this._isGroupParentModal()) {
           try {
             // Prevent ColorPickerModal.onClose from running its submit/delete logic
             if (this.fromPickColorModal) {
@@ -2338,6 +2339,27 @@ export class EditEntryModal extends Modal {
       this.entry.backgroundColor && this.plugin.isValidHexColor(this.entry.backgroundColor);
     const hasAnyColor = hasValidText || hasValidBg;
 
+    const presetHasCss =
+      !!preset.customCss && !!String(preset.customCss).trim();
+
+    // A saved-but-unedited Custom CSS prefill is just a snapshot of the OLD
+    // shape — leaving it would shadow the preset being applied (saved CSS
+    // wins over structured fields at render time), making the preset look
+    // dead. Drop snapshots before copying shape; CSS the user actually
+    // authored is left alone. Compared BEFORE the shape copy below. A preset
+    // carrying its own CSS overwrites wholesale instead (handled by the
+    // shape loop), so snapshots only matter when it has none.
+    if (!presetHasCss) {
+      try {
+        if (
+          this.entry.customCss &&
+          isDerivedSnapshotCss(this.entry.customCss, this.entry, this.plugin)
+        ) {
+          delete this.entry.customCss;
+        }
+      } catch (_) {}
+    }
+
     // Shape/style keys - always apply (colors handled separately)
     const shapeKeys = [
       "backgroundOpacity",
@@ -2381,6 +2403,26 @@ export class EditEntryModal extends Modal {
       preset,
       (c) => this.plugin.isValidHexColor(c),
     );
+    // Authored CSS keeps user extras (text-align…) but its overlapping shape
+    // values move forward to the just-applied style — or they shadow it and
+    // the preset looks dead. Same patch-forward the Highlight Styling save
+    // performs (snapshots were already dropped above, so this only touches
+    // authored CSS, and only when the preset didn't bring its own CSS which
+    // lands verbatim). Colors refresh first so opacity-baked rgba follows.
+    try {
+      if (this.entry.customCss) this.plugin.syncEntryCssFromColors(this.entry);
+    } catch (_) {}
+    try {
+      if (this.entry.customCss && !presetHasCss) {
+        const patched = patchCssLayoutFromEntry(
+          this.entry.customCss,
+          this.entry,
+          this.plugin,
+          { dropStaleBorders: true },
+        );
+        if (typeof patched === "string") this.entry.customCss = patched;
+      }
+    } catch (_) {}
     try {
       if (this._styleSelect) {
         this._styleSelect.value = this.entry.styleType || "text";
@@ -2419,6 +2461,21 @@ export class EditEntryModal extends Modal {
       this._originalSnapshot = JSON.stringify(this.entry || {});
     } catch (e) {
       this._originalSnapshot = "";
+    }
+  }
+  // Whether the parent modal owns the entry list being edited (word /
+  // blacklist group modals expose _refreshGroupEntries): it must survive
+  // saves — it refreshes itself via onSaved — while transient parents
+  // (color picker, add-to-existing) close with the save. Duck-typed to
+  // avoid a module cycle with the group modals.
+  _isGroupParentModal() {
+    try {
+      return !!(
+        this.parentModal &&
+        typeof this.parentModal._refreshGroupEntries === "function"
+      );
+    } catch (_) {
+      return false;
     }
   }
   // Snapshot the entry's current highlight/border shape as a brand-new text
