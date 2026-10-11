@@ -213,6 +213,20 @@ export class PresetModal extends Modal {
         targetElement: "highlight",
       },
       {
+        label: this.plugin.t(
+          "preset_highlight_color",
+          "Highlight Color",
+        ),
+        pattern: "==[\\s\\S]*?==",
+        flags: "s",
+        examples: [
+          this.plugin.t("preset_example_highlight_color", "==red highlight=="),
+        ],
+        group: "markdown",
+        targetElement: "highlight-color",
+        highlightColor: "red",
+      },
+      {
         label: this.plugin.t("preset_inline_code", "Inline Code (`code`)"),
         pattern: "`[^`\\n]+`",
         flags: "",

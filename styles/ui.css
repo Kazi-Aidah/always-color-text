@@ -592,6 +592,23 @@ padding: 2px 0px;
   stroke: var(--text-muted);
 }
 /* Make the entry row wrap on mobile */
+/* List button (row right-click menu) — mobile only, left of the settings icon */
+.act-entry-list-btn {
+  display: none;
+}
+.act-entry-list-btn svg,
+.act-entry-list-btn .svg-icon {
+  color: var(--text-faint);
+  stroke: var(--text-faint);
+}
+/* Icon pair wrapper (list + settings buttons): one box so row wrapping can
+   never split the icons apart. No visual styling of its own. */
+.act-entry-icon-pair {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--size-4-2);
+}
 /* Hide match and color-target selects on mobile; keep style select for row 2 */
 /* Regex name input — show on mobile (needed for regex entries) */
 /* Regex name input on mobile: full width on its own row above the text input */

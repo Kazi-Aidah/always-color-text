@@ -160,6 +160,11 @@
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
+/* Preset label overlay (Style Text / Style Target preview): base font size
+   lives here — not inline — so the mobile rule below can shrink it. */
+.act-preset-label > span {
+  font-size: var(--font-ui-small);
+}
 /* Pick Color modal only: the preview shares the content grid's rowGap with the
    color panels below it, so the generic margin would stack on top of that gap.
    Edit Entry / Edit Color Swatches keep the 12px. */
@@ -827,6 +832,23 @@ padding: 2px 0px;
   stroke: var(--text-muted);
 }
 /* Make the entry row wrap on mobile */
+/* List button (row right-click menu) — mobile only, left of the settings icon */
+.act-entry-list-btn {
+  display: none;
+}
+.act-entry-list-btn svg,
+.act-entry-list-btn .svg-icon {
+  color: var(--text-faint);
+  stroke: var(--text-faint);
+}
+/* Icon pair wrapper (list + settings buttons): one box so row wrapping can
+   never split the icons apart. No visual styling of its own. */
+.act-entry-icon-pair {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--size-4-2);
+}
 /* Hide match and color-target selects on mobile; keep style select for row 2 */
 /* Regex name input — show on mobile (needed for regex entries) */
 /* Regex name input on mobile: full width on its own row above the text input */
@@ -1260,14 +1282,34 @@ body.is-mobile .color-words-list .act-entry-row .act-flags-input {
 }
 body.is-mobile .color-words-list .act-entry-row .act-entry-settings-btn {
   display: flex;
-  order: 6;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
   padding: 4px;
+}
+/* Icon pair (list + settings) travels as one flex item at row 2's end: the
+   auto margin lives on the wrapper — never between the buttons, where it
+   would push each icon to opposite ends of a wrapped line. Fixed 32px icon
+   sizes match each other; no size variable equals them, so the literals are
+   intentional. */
+body.is-mobile .color-words-list .act-entry-row .act-entry-icon-pair {
+  display: flex;
+  order: 6;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--size-4-2);
   margin-left: auto;
+}
+body.is-mobile .color-words-list .act-entry-row .act-entry-list-btn {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: var(--size-4-1);
 }
 body.is-mobile .color-words-list .act-entry-row .act-md-element-select {
   flex: 1 1 100%;
@@ -2311,6 +2353,21 @@ body.is-mobile .modal.act-reorder-presets-modal {
   width: 95vw;
 }
 
+/* Preset label overlay (Style Text / Style Target preview) on narrow phones:
+   span the full wrap width with centered text, shrinking the font so long
+   "Using … (Modified)" labels stay on one line. Tablet and up keep the
+   compact corner label, so these rules stay off .is-tablet. (The
+   --font-ui-smaller fallback keeps the base size where a theme lacks the
+   smaller step.) */
+body.is-mobile:not(.is-tablet) .act-preset-label {
+  left: var(--size-2-1);
+  right: var(--size-2-1);
+}
+body.is-mobile:not(.is-tablet) .act-preset-label > span {
+  display: block;
+  text-align: center;
+  font-size: var(--font-ui-smaller, var(--font-ui-small));
+}
 /* ── Per-entry group preview: show text-normal for text, accent for background (preview only) ── */
 .act-color-picker-preview-wrap,
 .act-custom-css-preview-wrap,

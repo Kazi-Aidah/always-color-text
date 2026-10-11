@@ -909,7 +909,13 @@ export class ColorSettingTab extends PluginSettingTab {
                 delHandler();
               });
           });
-          menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+          // Button taps (mobile list icon, keyboard activation) may carry no
+          // coordinates — fall back to the mouse-event position then.
+          if (ev && typeof ev.clientX === "number") {
+            menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+          } else if (ev) {
+            menu.showAtMouseEvent(ev);
+          }
         } catch (e) {
           debugError("SETTINGS", "context menu error", e);
         }
@@ -1487,6 +1493,9 @@ export class ColorSettingTab extends PluginSettingTab {
           colorTargetSelect.removeEventListener("change", colorTargetChangeHandler);
         } catch (e) {}
         try {
+          entryListBtn.removeEventListener("click", entryListBtnHandler);
+        } catch (e) {}
+        try {
           entrySettingsBtn.removeEventListener("click", entrySettingsBtnHandler);
         } catch (e) {}
         try {
@@ -1521,6 +1530,39 @@ export class ColorSettingTab extends PluginSettingTab {
       };
       entrySettingsBtn.addEventListener("click", entrySettingsBtnHandler);
 
+      // ELEMENT 7: List button (opens the row right-click menu) — mobile
+      // only (hidden on desktop via CSS), placed left of the settings icon.
+      const entryListBtn = row.createEl("button");
+      entryListBtn.style.flex = "0 0 auto";
+      entryListBtn.style.padding = "4px";
+      entryListBtn.style.cursor = "pointer";
+      entryListBtn.style.background = "none";
+      entryListBtn.style.border = "none";
+      entryListBtn.style.boxShadow = "none";
+      entryListBtn.style.color = "var(--text-faint)";
+      entryListBtn.title = this.plugin.t("entry_options", "Entry options");
+      try { entryListBtn.addClass("act-entry-list-btn"); } catch (e) {
+        try { entryListBtn.classList.add("act-entry-list-btn"); } catch (_) {}
+      }
+      try { setIcon(entryListBtn, "list"); } catch (e) {}
+      const entryListBtnHandler = (ev) => {
+        try {
+          contextMenuHandler(ev);
+        } catch (e) {
+          debugError("SETTINGS", "entry list btn error", e);
+        }
+      };
+      entryListBtn.addEventListener("click", entryListBtnHandler);
+      // Pair the two icon buttons in one wrapper so row wrapping can never
+      // split them apart (an auto margin between the buttons pushes each to
+      // opposite ends of a wrapped line). appendChild moves the buttons.
+      try {
+        const iconPair = row.createDiv();
+        iconPair.addClass("act-entry-icon-pair");
+        iconPair.appendChild(entryListBtn);
+        iconPair.appendChild(entrySettingsBtn);
+      } catch (e) {}
+
       this._entryRows.set(entry, {
         row,
         elements: {
@@ -1534,6 +1576,7 @@ export class ColorSettingTab extends PluginSettingTab {
           flagsInput,
           del,
           entrySettingsBtn,
+          entryListBtn,
         },
         cleanup,
       });
@@ -7571,24 +7614,31 @@ export class ColorSettingTab extends PluginSettingTab {
       addEntryBtn.style.flex = "1";
       addEntryBtn.addClass("mod-cta");
       // Plain text flow: the color picker comes first, then the entry is
-      // created with the picked color (blank pattern — the word itself is
-      // typed into the row afterwards). Cancelling the picker adds nothing,
-      // so no more colorless entries that render blank.
+      // created with the picked colors (blank pattern — the word itself is
+      // typed into the row afterwards). Both panels are forced regardless of
+      // the color picker layout, so a picked background is never dropped:
+      // text+background becomes a both entry, background-only a highlight
+      // one. Cancelling the picker adds nothing, so no more colorless
+      // entries that render blank.
       const addPlainTextEntry = () => {
         try {
-          new ColorPickerModal(
+          const modal = new ColorPickerModal(
             this.app,
             this.plugin,
             async (color, result) => {
-              const selColor =
-                color && this.plugin.isValidHexColor(color)
-                  ? color
-                  : result &&
-                      result.textColor &&
-                      this.plugin.isValidHexColor(result.textColor)
-                    ? result.textColor
+              const sel = result || {};
+              const tc =
+                sel.textColor && this.plugin.isValidHexColor(sel.textColor)
+                  ? sel.textColor
+                  : color && this.plugin.isValidHexColor(color)
+                    ? color
                     : null;
-              if (!selColor) return;
+              const bc =
+                sel.backgroundColor &&
+                this.plugin.isValidHexColor(sel.backgroundColor)
+                  ? sel.backgroundColor
+                  : null;
+              if (!tc && !bc) return;
               const uid = (() => {
                 try {
                   return (
@@ -7598,9 +7648,11 @@ export class ColorSettingTab extends PluginSettingTab {
                   return Date.now();
                 }
               })();
-              this.plugin.settings.wordEntries.push({
+              const entry = {
                 pattern: "",
-                color: selColor,
+                color: "",
+                textColor: null,
+                backgroundColor: null,
                 isRegex: false,
                 flags: "",
                 groupedPatterns: null,
@@ -7609,7 +7661,20 @@ export class ColorSettingTab extends PluginSettingTab {
                 persistAtEnd: true,
                 matchType: (this.plugin.settings.matchType || (this.plugin.settings.partialMatch ? "contains" : "exact")),
                 caseSensitive: !!this.plugin.settings.caseSensitive,
-              });
+              };
+              if (tc && bc) {
+                entry.textColor = tc;
+                entry.backgroundColor = bc;
+                entry.styleType = "both";
+              } else if (bc) {
+                entry.textColor = "currentColor";
+                entry.backgroundColor = bc;
+                entry.styleType = "highlight";
+              } else {
+                entry.color = tc;
+                entry.styleType = "text";
+              }
+              this.plugin.settings.wordEntries.push(entry);
               this._suspendSorting = this._wordsSortMode === "last-added";
               try {
                 this._newEntriesSet && this._newEntriesSet.add(uid);
@@ -7622,7 +7687,9 @@ export class ColorSettingTab extends PluginSettingTab {
             },
             "text",
             "",
-          ).open();
+          );
+          modal._forceBothPanels = true;
+          modal.open();
         } catch (e) {}
       };
       const addRegexEntry = () => {
@@ -7825,7 +7892,7 @@ export class ColorSettingTab extends PluginSettingTab {
                 );
                 entry.affectMarkElements = false;
                 if (preset.targetElement === "highlight-color") {
-                  entry.highlightColor = "red";
+                  entry.highlightColor = preset.highlightColor || "red";
                   entry.pattern = getTargetPatternText(
                     this.plugin,
                     preset.targetElement,
@@ -8487,7 +8554,14 @@ export class ColorSettingTab extends PluginSettingTab {
           const isFmt = !!preset.targetElement;
           const newEntry = {
             pattern: isFmt
-              ? getTargetPatternText(this.plugin, preset.targetElement, false)
+              ? getTargetPatternText(
+                  this.plugin,
+                  preset.targetElement,
+                  false,
+                  preset.targetElement === "highlight-color"
+                    ? preset.highlightColor || "red"
+                    : undefined,
+                )
               : preset.pattern,
             isRegex: isFmt ? false : true,
             flags: isFmt ? "" : preset.flags || "",
@@ -8497,6 +8571,10 @@ export class ColorSettingTab extends PluginSettingTab {
             targetElement: preset.targetElement,
             // Time & Date: format kept so the row shows a format button.
             dateTimeFormat: preset.dateTimeFormat || undefined,
+            highlightColor:
+              preset.targetElement === "highlight-color"
+                ? preset.highlightColor || "red"
+                : undefined,
           };
           try {
             newEntry.uid =

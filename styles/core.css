@@ -157,6 +157,11 @@
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
+/* Preset label overlay (Style Text / Style Target preview): base font size
+   lives here — not inline — so the mobile rule below can shrink it. */
+.act-preset-label > span {
+  font-size: var(--font-ui-small);
+}
 /* Pick Color modal only: the preview shares the content grid's rowGap with the
    color panels below it, so the generic margin would stack on top of that gap.
    Edit Entry / Edit Color Swatches keep the 12px. */

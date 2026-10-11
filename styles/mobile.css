@@ -276,14 +276,34 @@ body.is-mobile .color-words-list .act-entry-row .act-flags-input {
 }
 body.is-mobile .color-words-list .act-entry-row .act-entry-settings-btn {
   display: flex;
-  order: 6;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
   padding: 4px;
+}
+/* Icon pair (list + settings) travels as one flex item at row 2's end: the
+   auto margin lives on the wrapper — never between the buttons, where it
+   would push each icon to opposite ends of a wrapped line. Fixed 32px icon
+   sizes match each other; no size variable equals them, so the literals are
+   intentional. */
+body.is-mobile .color-words-list .act-entry-row .act-entry-icon-pair {
+  display: flex;
+  order: 6;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--size-4-2);
   margin-left: auto;
+}
+body.is-mobile .color-words-list .act-entry-row .act-entry-list-btn {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: var(--size-4-1);
 }
 body.is-mobile .color-words-list .act-entry-row .act-md-element-select {
   flex: 1 1 100%;
@@ -1327,6 +1347,21 @@ body.is-mobile .modal.act-reorder-presets-modal {
   width: 95vw;
 }
 
+/* Preset label overlay (Style Text / Style Target preview) on narrow phones:
+   span the full wrap width with centered text, shrinking the font so long
+   "Using … (Modified)" labels stay on one line. Tablet and up keep the
+   compact corner label, so these rules stay off .is-tablet. (The
+   --font-ui-smaller fallback keeps the base size where a theme lacks the
+   smaller step.) */
+body.is-mobile:not(.is-tablet) .act-preset-label {
+  left: var(--size-2-1);
+  right: var(--size-2-1);
+}
+body.is-mobile:not(.is-tablet) .act-preset-label > span {
+  display: block;
+  text-align: center;
+  font-size: var(--font-ui-smaller, var(--font-ui-small));
+}
 /* ── Per-entry group preview: show text-normal for text, accent for background (preview only) ── */
 .act-color-picker-preview-wrap,
 .act-custom-css-preview-wrap,

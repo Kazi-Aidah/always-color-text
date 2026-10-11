@@ -581,7 +581,7 @@ export class EditEntryModal extends Modal {
     presetLabelWrap.addClass("act-preset-label");
     presetLabelWrap.style.position = "absolute";
     presetLabelWrap.style.top = "var(--size-2-1)";
-    presetLabelWrap.style.left = "calc(var(--size-2-1) - 1px)";
+    presetLabelWrap.style.left = "var(--size-2-1)";
     presetLabelWrap.style.display = "none";
     const preview = previewWrap.createDiv();
     preview.addClass("act-edit-entry-preview");
@@ -1263,7 +1263,7 @@ export class EditEntryModal extends Modal {
       // visually centered: the wrap grows in height only while the label
       // shows.
       try {
-        previewWrap.style.paddingTop = "var(--size-4-5)";
+        previewWrap.style.paddingTop = "var(--size-4-6)";
         previewWrap.style.paddingBottom = "var(--size-4-5)";
       } catch (_) {}
       const t = (k, fb, params) => {
@@ -1283,11 +1283,12 @@ export class EditEntryModal extends Modal {
       const labelEl = presetLabelWrap.createEl("span", { text: label });
       // Clean: accent tint. Diverged: translucent theme red (color-mix over
       // var(--color-red) — the -rgb suffixed variants are deprecated).
+      // (Font size lives in CSS so the mobile rule can shrink it; an inline
+      // size would always win over the stylesheet.)
       labelEl.style.background = diverged
         ? "color-mix(in oklch, var(--color-red) 50%, transparent)"
         : "hsla(var(--interactive-accent-hsl), 0.5)";
       labelEl.style.color = "var(--text-normal)";
-      labelEl.style.fontSize = "var(--font-ui-small)";
       labelEl.style.padding = "var(--size-2-1) var(--size-4-2)";
       labelEl.style.borderRadius = "var(--radius-s)";
       labelEl.style.whiteSpace = "nowrap";
@@ -2648,6 +2649,15 @@ export class EditEntryModal extends Modal {
           typeof this.plugin.settingTab._refreshEntries === "function"
         )
           this.plugin.settingTab._refreshEntries();
+      } catch (_) {}
+      // The groups list has its own refresher — entries-only refresh leaves
+      // a fresh group invisible until settings is reopened.
+      try {
+        if (
+          this.plugin.settingTab &&
+          typeof this.plugin.settingTab._refreshGroups === "function"
+        )
+          this.plugin.settingTab._refreshGroups();
       } catch (_) {}
       try {
         new Notice(t("preset_pill_group_created", 'Created "{name}" group with this entry', { name: group.name }));

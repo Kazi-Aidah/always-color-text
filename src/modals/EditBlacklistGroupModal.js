@@ -480,7 +480,14 @@ export class EditBlacklistGroupModal extends Modal {
           const isFmt = !!preset.targetElement;
           const entry = {
             pattern: isFmt
-              ? getTargetPatternText(this.plugin, preset.targetElement, false)
+              ? getTargetPatternText(
+                  this.plugin,
+                  preset.targetElement,
+                  false,
+                  preset.targetElement === "highlight-color"
+                    ? preset.highlightColor || "red"
+                    : undefined,
+                )
               : preset.pattern,
             isRegex: isFmt ? false : true,
             flags: isFmt ? "" : preset.flags || "",
@@ -489,6 +496,10 @@ export class EditBlacklistGroupModal extends Modal {
             targetElement: preset.targetElement, // Preserve targetElement for logic-based coloring
             // Time & Date: format kept so the row shows a format button.
             dateTimeFormat: preset.dateTimeFormat || undefined,
+            highlightColor:
+              preset.targetElement === "highlight-color"
+                ? preset.highlightColor || "red"
+                : undefined,
           };
         this.group.entries.push(entry);
         this._sortMode = "last-added";

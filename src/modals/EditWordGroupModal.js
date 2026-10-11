@@ -502,36 +502,59 @@ export class EditWordGroupModal extends Modal {
     addEntryBtn.style.borderRadius = "var(--input-radius)";
     addEntryBtn.addClass("mod-cta");
     const addPlainHandler = () => {
-      // Color picker first, then the entry is created with the picked color
-      // (blank pattern — typed into the row afterwards). Cancelling the
-      // picker adds nothing, so no more colorless entries that render blank.
+      // Color picker first, then the entry is created with the picked colors
+      // (blank pattern — typed into the row afterwards). Both panels are
+      // forced regardless of the color picker layout, so a picked background
+      // is never dropped: text+background becomes a both entry,
+      // background-only a highlight one. Cancelling the picker adds nothing.
       try {
-        new ColorPickerModal(
+        const modal = new ColorPickerModal(
           this.app,
           this.plugin,
           async (color, result) => {
-            const selColor =
-              color && this.plugin.isValidHexColor(color)
-                ? color
-                : result &&
-                    result.textColor &&
-                    this.plugin.isValidHexColor(result.textColor)
-                  ? result.textColor
+            const sel = result || {};
+            const tc =
+              sel.textColor && this.plugin.isValidHexColor(sel.textColor)
+                ? sel.textColor
+                : color && this.plugin.isValidHexColor(color)
+                  ? color
                   : null;
-            if (!selColor) return;
-            await addEntry({
+            const bc =
+              sel.backgroundColor &&
+              this.plugin.isValidHexColor(sel.backgroundColor)
+                ? sel.backgroundColor
+                : null;
+            if (!tc && !bc) return;
+            const entry = {
               pattern: "",
-              color: selColor,
+              color: "",
+              textColor: null,
+              backgroundColor: null,
               isRegex: false,
               flags: "",
               styleType: "text",
               matchType: "contains",
               caseSensitive: !!this.plugin.settings.caseSensitive,
-            });
+            };
+            if (tc && bc) {
+              entry.textColor = tc;
+              entry.backgroundColor = bc;
+              entry.styleType = "both";
+            } else if (bc) {
+              entry.textColor = "currentColor";
+              entry.backgroundColor = bc;
+              entry.styleType = "highlight";
+            } else {
+              entry.color = tc;
+              entry.styleType = "text";
+            }
+            await addEntry(entry);
           },
           "text",
           "",
-        ).open();
+        );
+        modal._forceBothPanels = true;
+        modal.open();
       } catch (_) {}
     };
     const addRegexHandler = () =>
@@ -669,7 +692,14 @@ export class EditWordGroupModal extends Modal {
           const isFmt = !!preset.targetElement;
           const entry = {
             pattern: isFmt
-              ? getTargetPatternText(this.plugin, preset.targetElement, false)
+              ? getTargetPatternText(
+                  this.plugin,
+                  preset.targetElement,
+                  false,
+                  preset.targetElement === "highlight-color"
+                    ? preset.highlightColor || "red"
+                    : undefined,
+                )
               : preset.pattern,
             isRegex: isFmt ? false : true,
             flags: isFmt ? "" : preset.flags || "",
@@ -679,7 +709,9 @@ export class EditWordGroupModal extends Modal {
             // Time & Date: format kept so the row shows a format button.
             dateTimeFormat: preset.dateTimeFormat || undefined,
             highlightColor:
-              preset.targetElement === "highlight-color" ? "red" : undefined,
+              preset.targetElement === "highlight-color"
+                ? preset.highlightColor || "red"
+                : undefined,
           };
           this.group.entries.push(entry);
           await this._mirrorEntryToLive(entry);
@@ -1761,7 +1793,13 @@ export class EditWordGroupModal extends Modal {
                 }
               });
           });
-          menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+          // Button taps (mobile list icon, keyboard activation) may carry no
+          // coordinates — fall back to the mouse-event position then.
+          if (ev && typeof ev.clientX === "number") {
+            menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
+          } else if (ev) {
+            menu.showAtMouseEvent(ev);
+          }
         } catch (e) {
           debugError("MODAL", "context menu error", e);
         }
@@ -1796,6 +1834,38 @@ export class EditWordGroupModal extends Modal {
           debugError("MODAL", "entry settings btn error", e);
         }
       });
+      // List button (opens the row right-click menu) — mobile only, placed
+      // left of the settings icon. Long-press/right-click is unavailable on
+      // phones, so this is how the menu options stay reachable there.
+      const entryListBtn = row.createEl("button");
+      entryListBtn.style.flex = "0 0 auto";
+      entryListBtn.style.padding = "4px";
+      entryListBtn.style.cursor = "pointer";
+      entryListBtn.style.background = "none";
+      entryListBtn.style.border = "none";
+      entryListBtn.style.boxShadow = "none";
+      entryListBtn.style.color = "var(--text-faint)";
+      entryListBtn.title = this.plugin.t("entry_options", "Entry options");
+      try { entryListBtn.addClass("act-entry-list-btn"); } catch (e) {
+        try { entryListBtn.classList.add("act-entry-list-btn"); } catch (_) {}
+      }
+      try { setIcon(entryListBtn, "list"); } catch (e) {}
+      entryListBtn.addEventListener("click", (ev) => {
+        try {
+          contextMenuHandler(ev);
+        } catch (e) {
+          debugError("MODAL", "entry list btn error", e);
+        }
+      });
+      // Pair the two icon buttons in one wrapper so row wrapping can never
+      // split them apart (an auto margin between the buttons pushes each to
+      // opposite ends of a wrapped line). appendChild moves the buttons.
+      try {
+        const iconPair = row.createDiv();
+        iconPair.addClass("act-entry-icon-pair");
+        iconPair.appendChild(entryListBtn);
+        iconPair.appendChild(entrySettingsBtn);
+      } catch (e) {}
     });
   }
 
