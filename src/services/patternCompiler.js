@@ -319,6 +319,251 @@ export function applyGroupPresetChannels(copy, group, settings, isValidHex) {
 }
 
 /**
+ * Paint a word group's settings-row preview ("Text" sample) EXACTLY like the
+ * editor paints the group's members, so the two can never disagree.
+ *
+ * Mirrors, in order:
+ *  1. the member pipeline in compileWordEntriesLogic /
+ *     compileTextBgColoringEntriesLogic (applyGroupColorOverride, then
+ *     applyGroupPresetChannels for unforced groups, then the nine group
+ *     layout fields inherited onto the copy);
+ *  2. PatternMatcher match construction (textColor preferred over color);
+ *  3. the editor paint branches for text / highlight / both (+ the isTextBg
+ *     branch) of the word-decoration pass — minus `!important` and minus the
+ *     global hide toggles (a settings preview shows what the style IS, not
+ *     whether global hides suppress it);
+ *  4. group custom CSS on top (the member's own CSS narrowed by forced type,
+ *     else the plugin's groupCssForMembers output), sanitized like the
+ *     editor merge.
+ *
+ * `plugin` supplies settings + isValidHexColor + getHighlightParams +
+ * hexToRgba + generateBorderStyle + getCornerShapeCss + groupCssForMembers +
+ * sanitizeCssDeclarations. Only writes style declarations on `previewEl`;
+ * never throws.
+ */
+export function applyGroupPreviewStyle(plugin, previewEl, group) {
+  try {
+    if (!previewEl) return;
+    const settings = (plugin && plugin.settings) || {};
+    const isValid = (c) => {
+      try {
+        return !!plugin.isValidHexColor(c);
+      } catch (_) {
+        return false;
+      }
+    };
+    const g = group || {};
+    const members = Array.isArray(g.entries) ? g.entries : [];
+    const rep =
+      members.find((e) => e && (e.textColor || e.color || e.backgroundColor)) ||
+      members[0] ||
+      {};
+    const copy = Object.assign({}, rep);
+    let effType = "";
+    let effBg = null;
+    try {
+      const eff = applyGroupColorOverride(copy, g, isValid);
+      effType = (eff && eff.type) || "";
+      effBg = (eff && eff.bg) || null;
+      if (!effType) applyGroupPresetChannels(copy, g, settings, isValid);
+    } catch (_) {}
+    // Highlight layout always applies when set on the group, independent of
+    // colortype (mirror the compiler member mapping).
+    try {
+      if (typeof g.backgroundOpacity !== "undefined")
+        copy.backgroundOpacity = g.backgroundOpacity;
+      if (typeof g.highlightBorderRadius !== "undefined")
+        copy.highlightBorderRadius = g.highlightBorderRadius;
+      if (typeof g.cornerShape !== "undefined")
+        copy.cornerShape = g.cornerShape;
+      if (typeof g.highlightHorizontalPadding !== "undefined")
+        copy.highlightHorizontalPadding = g.highlightHorizontalPadding;
+      if (typeof g.highlightVerticalPadding !== "undefined")
+        copy.highlightVerticalPadding = g.highlightVerticalPadding;
+      if (typeof g.enableBorderThickness !== "undefined")
+        copy.enableBorderThickness = g.enableBorderThickness;
+      if (g.borderStyle) copy.borderStyle = g.borderStyle;
+      if (g.borderLineStyle) copy.borderLineStyle = g.borderLineStyle;
+      if (typeof g.borderOpacity !== "undefined")
+        copy.borderOpacity = g.borderOpacity;
+      if (typeof g.borderThickness !== "undefined")
+        copy.borderThickness = g.borderThickness;
+    } catch (_) {}
+    // Matcher-equivalent fields (PatternMatcher prefers textColor).
+    const mColor =
+      copy.textColor && copy.textColor !== "currentColor"
+        ? copy.textColor
+        : copy.color;
+    const styleType = copy.affectMarkElements
+      ? "highlight"
+      : copy.styleType || "text";
+    const isTextBg = copy.isTextBg === true;
+    const isTextOnly = !isTextBg && styleType === "text";
+    const isHighlightOnly = !isTextBg && styleType === "highlight";
+    let p = null;
+    try {
+      p = plugin.getHighlightParams(copy);
+    } catch (_) {
+      p = null;
+    }
+    p = p || {};
+    const opacity = p.opacity ?? 25;
+    const radius = p.radius ?? 8;
+    const hPad = p.hPad ?? 4;
+    const vPad = p.vPad ?? 0;
+
+    const st = previewEl.style;
+    // Base reset so repaints never accumulate stale declarations.
+    try {
+      st.color = "";
+      st.backgroundColor = "transparent";
+      st.border = "none";
+      st.borderTop = "none";
+      st.borderBottom = "none";
+      st.borderLeft = "none";
+      st.borderRight = "none";
+      st.borderRadius = "";
+      st.paddingLeft = "";
+      st.paddingRight = "";
+      st.paddingTop = "";
+      st.paddingBottom = "";
+      st.marginTop = "";
+      st.marginBottom = "";
+    } catch (_) {}
+
+    if (isTextBg) {
+      if (copy.textColor) {
+        try {
+          st.color = copy.textColor;
+        } catch (_) {}
+      }
+      if (copy.backgroundColor) {
+        try {
+          st.backgroundColor = plugin.hexToRgba(copy.backgroundColor, opacity);
+        } catch (_) {}
+      }
+      let borderStyle = "";
+      try {
+        borderStyle =
+          plugin.generateBorderStyle(
+            copy.textColor || null,
+            copy.backgroundColor || null,
+            copy,
+          ) || "";
+      } catch (_) {}
+      if (borderStyle) {
+        try {
+          previewEl.style.cssText += borderStyle;
+        } catch (_) {}
+      }
+    } else if (isTextOnly) {
+      // Color declaration only — an empty channel leaves the theme text,
+      // exactly like the editor's dropped declaration.
+      if (mColor) {
+        try {
+          st.color = mColor;
+        } catch (_) {}
+      }
+    } else {
+      const textRaw =
+        copy.textColor && copy.textColor !== "currentColor"
+          ? copy.textColor
+          : mColor || null;
+      const bgRaw = copy.backgroundColor || mColor || "";
+      if (!isHighlightOnly && textRaw) {
+        try {
+          st.color = textRaw;
+        } catch (_) {}
+      }
+      try {
+        st.backgroundColor = plugin.hexToRgba(bgRaw, opacity);
+      } catch (_) {}
+      try {
+        st.borderRadius = radius + "px";
+      } catch (_) {}
+      try {
+        st.paddingLeft = hPad + "px";
+        st.paddingRight = hPad + "px";
+        if (vPad >= 0) {
+          st.paddingTop = vPad + "px";
+          st.paddingBottom = vPad + "px";
+        } else {
+          // Negative vPad pulls lines together via margins (editor parity).
+          st.paddingTop = "0px";
+          st.paddingBottom = "0px";
+          st.marginTop = vPad + "px";
+          st.marginBottom = vPad + "px";
+        }
+      } catch (_) {}
+      let borderStyle = "";
+      try {
+        borderStyle =
+          plugin.generateBorderStyle(
+            isHighlightOnly ? null : textRaw,
+            bgRaw,
+            copy,
+          ) || "";
+      } catch (_) {}
+      if (borderStyle) {
+        try {
+          previewEl.style.cssText += borderStyle;
+        } catch (_) {}
+      }
+      let cornerCss = "";
+      try {
+        cornerCss = plugin.getCornerShapeCss(copy) || "";
+      } catch (_) {}
+      if (cornerCss) {
+        try {
+          previewEl.style.cssText += cornerCss;
+        } catch (_) {}
+      }
+    }
+
+    // Group custom CSS on top (editor merge parity).
+    try {
+      let cssSrc = null;
+      if (copy.customCss) {
+        cssSrc = copy.customCss;
+        if (effType === "text") {
+          cssSrc = stripInheritedGroupCssColors(cssSrc, "currentColor", {
+            dropBorder: true,
+          });
+        } else if (effType === "highlight" || effType === "both") {
+          cssSrc = stripInheritedGroupCssColors(
+            cssSrc,
+            effBg || "var(--color-accent)",
+            {},
+          );
+        }
+      } else if (g.customCss && plugin.groupCssForMembers) {
+        cssSrc = plugin.groupCssForMembers(g);
+      }
+      if (cssSrc && plugin.sanitizeCssDeclarations) {
+        const decl = plugin.sanitizeCssDeclarations(cssSrc);
+        if (decl) {
+          decl
+            .split(";")
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .forEach((part) => {
+              const idx = part.indexOf(":");
+              if (idx === -1) return;
+              try {
+                previewEl.style.setProperty(
+                  part.slice(0, idx).trim(),
+                  part.slice(idx + 1).trim(),
+                  "important",
+                );
+              } catch (_) {}
+            });
+        }
+      }
+    } catch (_) {}
+  } catch (_) {}
+}
+
+/**
  * Markdown-element targeting derived from an entry's label/pattern.
  * Extracted so the editor compile and the regex tester preview share ONE
  * derivation (a label containing "bold"/"italic" routes the entry out of the

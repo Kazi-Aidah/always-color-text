@@ -5,6 +5,7 @@ import { ConfirmationModal } from './ConfirmationModal.js';
 import { ReorderPresetsModal } from './ReorderPresetsModal.js';
 import { defaultSettings } from '../settings/defaultSettings.js';
 import { presetSignature, propagatePresetToEntries } from '../utils/presetLinker.js';
+import { applyPresetPreviewStyle } from '../utils/presetPreview.js';
 
 export class TextStylePresetsModal extends Modal {
   constructor(app, plugin, onPick = null) {
@@ -140,65 +141,10 @@ export class TextStylePresetsModal extends Modal {
 
   // Render a preview span. Uses the preset's own colors when set, otherwise
   // falls back to the theme accent (var(--color-accent)) for a consistent look.
+  // Delegates to the shared renderer so the "Save as preset" modal previews
+  // the same way (see utils/presetPreview.js).
   _applyStyle(container, styleObj, text) {
-    container.empty();
-    const span = container.createSpan({ cls: "act-tsp-span" });
-    span.textContent = text;
-
-    const style = styleObj.styleType || "highlight";
-    const p = this.plugin.getHighlightParams(styleObj);
-    const opacity = p.opacity ?? 25;
-    const radius = p.radius ?? 8;
-    const hpad = p.hPad ?? 4;
-    const vpad = p.vPad ?? 0;
-    const accent = "var(--color-accent)";
-
-    const bgHex =
-      styleObj.backgroundColor && this.plugin.isValidHexColor(styleObj.backgroundColor)
-        ? styleObj.backgroundColor
-        : null;
-    const textHex =
-      styleObj.textColor &&
-      styleObj.textColor !== "currentColor" &&
-      this.plugin.isValidHexColor(styleObj.textColor)
-        ? styleObj.textColor
-        : null;
-
-    let bg = "";
-    if (style !== "text") {
-      if (bgHex) {
-        bg = `background: ${this.plugin.hexToRgba(bgHex, opacity)};`;
-      } else {
-        bg = `background: color-mix(in srgb, ${accent} ${opacity}%, transparent);`;
-      }
-    }
-
-    let border = "";
-    if (style !== "text" && typeof this.plugin.generateBorderStyle === "function") {
-      // Border colour follows the colortype via the plugin's own generator —
-      // the same call the editor preview and the runtime use (text colour
-      // for both/text colortypes, background for highlight, accent when
-      // unset). Hand-picking bgHex here made a "both" preset's preview
-      // border disagree with Edit Highlight Styling.
-      border =
-        this.plugin.generateBorderStyle(textHex || accent, bgHex || accent, styleObj) ||
-        "";
-    }
-
-    const textColorVal = textHex || "var(--text-normal)";
-    const cornerShape = styleObj.cornerShape || this.plugin.settings.cornerShape || "round";
-    const cornerCss = cornerShape && cornerShape !== "round" ? `corner-shape:${cornerShape};` : "";
-    const base =
-      style === "text"
-        ? `color:${textColorVal};background:transparent;`
-        : style === "highlight"
-          ? `${bg}border-radius:${radius}px;${cornerCss}padding:${vpad}px ${hpad}px;color:var(--text-normal);${border}`
-          : `color:${textColorVal};${bg}border-radius:${radius}px;${cornerCss}padding:${vpad}px ${hpad}px;${border}`;
-
-    span.setAttribute(
-      "style",
-      base + "box-decoration-break:clone;-webkit-box-decoration-break:clone;",
-    );
+    applyPresetPreviewStyle(this.plugin, container, styleObj, text);
   }
 
   // Build a style object that reflects the current Global Highlight Appearance

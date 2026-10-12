@@ -21,7 +21,7 @@ import { TextStylePresetsModal } from '../modals/TextStylePresetsModal.js';
 import { CommandVisibilityModal } from '../modals/CommandVisibilityModal.js';
 import { ThemeFixerAdjustModal } from '../modals/ThemeFixerAdjustModal.js';
 import { debugLog, debugError } from '../utils/debug.js';
-import { stripInheritedGroupCssColors } from '../services/patternCompiler.js';
+import { applyGroupPreviewStyle } from '../services/patternCompiler.js';
 import { MARKDOWN_TARGETS, getMarkdownTarget } from '../utils/markdownTargets.js';
 import { getTargetLabel, getTargetPatternText, resolveTargetElement } from '../utils/targetLabels.js';
 import { createMarkdownElementButton } from '../utils/markdownElementPicker.js';
@@ -4714,111 +4714,15 @@ export class ColorSettingTab extends PluginSettingTab {
           preview.style.cursor = "default";
           preview.textContent = "Text";
 
-          // Resolve styleType: text = text color only, highlight = background+border only, both = text+background+border
-          let styleType = group.styleType;
-          if (!styleType) {
-            const hasText = !!(group.textColor && group.textColor !== "currentColor");
-            const hasBg = !!group.backgroundColor;
-            if (hasText && hasBg) styleType = "both";
-            else if (hasBg) styleType = "highlight";
-            else styleType = "text";
-          }
-          const tRaw =
-            group.textColor && group.textColor !== "currentColor"
-              ? group.textColor
-              : (group.color && this.plugin.isValidHexColor(group.color) ? group.color : "");
-          const bRaw = group.backgroundColor || "";
-          // Preview-only fallback for accessibility when picker NULL: var(--text-normal) / var(--color-accent)
-          // Polluted groups saved with default black/black (both #000000) are treated as NULL for preview.
-          const isPollutedGroupBothBlack = styleType === "both" && String(tRaw).toLowerCase() === "#000000" && String(bRaw).toLowerCase() === "#000000";
-          const hasValidTRaw = !isPollutedGroupBothBlack && tRaw && this.plugin.isValidHexColor(tRaw);
-          const hasValidBRaw = !isPollutedGroupBothBlack && bRaw && this.plugin.isValidHexColor(bRaw);
-          // Per-entry groups (no colortype, no colors) preview as theme text +
-          // accent highlight/border so layout (radius/border/padding) is
-          // visible; they must never show a transparent empty box.
-          const isPerEntryPreview = !group.styleType && !hasValidTRaw && !hasValidBRaw;
-          if (isPerEntryPreview) styleType = "both";
-          const isTextOnly = styleType === "text";
-          const isHighlightOnly = styleType === "highlight";
-          const effectiveTRaw = hasValidTRaw ? tRaw : "var(--text-normal)";
-          const effectiveBRaw = hasValidBRaw ? bRaw : "var(--color-accent)";
-          // Respect styleType for what is displayed, but use fallback when NULL
-          const t = isHighlightOnly ? "" : effectiveTRaw;
-          const b = isTextOnly ? "" : effectiveBRaw;
-          const p = this.plugin.getHighlightParams(group);
-          const isVarBForPreview = b && /^var\(/.test(b.trim());
-          const rgba = !isTextOnly
-            ? (isVarBForPreview ? `color-mix(in srgb, ${b.trim()} ${p.opacity ?? 25}%, transparent)` : this.plugin.hexToRgba(b, p.opacity ?? 25))
-            : "transparent";
-
-          if (!isHighlightOnly) preview.style.color = t || "var(--text-normal)";
-          else preview.style.color = "var(--text-normal)";
-
-          if (!isTextOnly) {
-            preview.style.backgroundColor = rgba;
-          } else {
-            preview.style.backgroundColor = "transparent";
-          }
-
-          // Apply Highlight Styling Params
-          preview.style.borderRadius = (p.radius ?? 8) + "px";
-          preview.style.paddingLeft = (p.hPad ?? 4) + "px";
-          preview.style.paddingRight = (p.hPad ?? 4) + "px";
-          preview.style.paddingTop = (p.vPad ?? 0) + "px";
-          preview.style.paddingBottom = (p.vPad ?? 0) + "px";
-
-          // Clear any default border first
-          preview.style.border = "none";
-          preview.style.borderTop = "none";
-          preview.style.borderBottom = "none";
-          preview.style.borderLeft = "none";
-          preview.style.borderRight = "none";
-
-          if (!isTextOnly && p.enableBorder) {
-            const borderTForAccent = hasValidTRaw ? tRaw : "var(--color-accent)";
-            const borderBForAccent = hasValidBRaw ? bRaw : "var(--color-accent)";
-            const borderStyle = this.plugin.generateBorderStyle(
-              isHighlightOnly ? null : borderTForAccent,
-              borderBForAccent,
-              group,
-            );
-            if (borderStyle) {
-              preview.style.cssText += borderStyle;
-            }
-          } else if (!isTextOnly) {
-            // Highlight/both but borders disabled -> keep no border (transparent preview already shows background)
-            preview.style.border = "none";
-          } else {
-            // Text only -> never show border
-            preview.style.border = "none";
-          }
-
-          // Apply custom CSS on top
-          if (group.customCss) {
+          // Paint through the shared compiler-faithful renderer so the box
+          // always matches what members render in the editor.
+          try {
+            applyGroupPreviewStyle(this.plugin, preview, group);
+          } catch (_) {
             try {
-              let decl = this.plugin.sanitizeCssDeclarations(group.customCss);
-              // Per-entry preview must not repaint via stale group CSS colors
-              // (e.g. orange from a reset forced type); layout still previews.
-              // Forced colortypes preview through the same gate as the editor
-              // so the preview matches what members render.
-              if (decl) {
-                if (isPerEntryPreview) {
-                  decl = this.plugin.sanitizeCssDeclarations(
-                    stripInheritedGroupCssColors(decl, "var(--color-accent)"),
-                  );
-                } else {
-                  decl = this.plugin.sanitizeCssDeclarations(
-                    this.plugin.groupCssForMembers(group),
-                  );
-                }
-              }
-              if (decl) {
-                decl.split(";").map(s => s.trim()).filter(Boolean).forEach(part => {
-                  const idx = part.indexOf(":");
-                  if (idx === -1) return;
-                  preview.style.setProperty(part.slice(0, idx).trim(), part.slice(idx + 1).trim(), "important");
-                });
-              }
+              preview.style.color = "var(--text-normal)";
+              preview.style.backgroundColor = "transparent";
+              preview.style.border = "none";
             } catch (_) {}
           }
         }

@@ -819,7 +819,13 @@ module.exports = {
   "text_style_presets_header": "Text Style Presets",
   "rename_preset": "Rename Preset",
   "new_preset_name": "New Preset",
+  "save_preset_title": "Name New Preset",
+  "save_preset_name": "Preset name",
+  "save_group_title": "Name New Group",
+  "save_group_name": "Group name",
+  "new_group_name": "New Group",
   // Preset pill above the Style Text / Style Target preview
+  "preset_pill_none": "Preset Options",
   "preset_pill_using": "Using {name} Preset",
   "preset_pill_modified": "Modified",
   "preset_pill_options": "Preset options",
