@@ -5747,6 +5747,51 @@ export class ColorSettingTab extends PluginSettingTab {
             "View the most recent plugin release notes",
           ),
         )
+        .addButton((btn) => {
+          let updateBtnEl = null;
+          try {
+            btn
+              .setButtonText(
+                this.plugin.t("update_available_button", "Update Available"),
+              )
+              .onClick(() => {
+                try {
+                  this.plugin.openCommunityPluginPage();
+                } catch (e) {}
+              });
+          } catch (e) {}
+          try {
+            updateBtnEl = btn.buttonEl;
+            if (updateBtnEl) {
+              updateBtnEl.addClass("act-update-btn");
+              updateBtnEl.addClass("act-is-hidden");
+            }
+          } catch (e) {}
+          // Async update check: reveal the accent button only when the
+          // installed version is older than the latest GitHub release.
+          // Cached in-memory (6h) by checkForPluginUpdate, so opening
+          // Settings never blocks on the network.
+          try {
+            const check =
+              typeof this.plugin.checkForPluginUpdate === "function"
+                ? this.plugin.checkForPluginUpdate()
+                : Promise.resolve(null);
+            Promise.resolve(check)
+              .then((res) => {
+                try {
+                  if (!res || !res.hasUpdate || !res.latestVersion) return;
+                  const el =
+                    updateBtnEl || (btn && btn.buttonEl) || null;
+                  if (!el || !el.isConnected) return;
+                  try {
+                    el.removeClass("act-is-hidden");
+                  } catch (e) {}
+                } catch (e) {}
+              })
+              .catch(() => {});
+          } catch (e) {}
+          return btn;
+        })
         .addButton((btn) =>
           btn
             .setButtonText(
@@ -5758,6 +5803,9 @@ export class ColorSettingTab extends PluginSettingTab {
               } catch (e) {}
             }),
         );
+      try {
+        releaseNotesSettingEl.settingEl.addClass("act-release-notes");
+      } catch (e) {}
       try {
         releaseNotesSettingEl.settingEl.style.borderTop = "none";
       } catch (e) {}

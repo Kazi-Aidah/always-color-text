@@ -26,6 +26,7 @@ module.exports = {
   "latest_release_notes_label": "Последние заметки к выпуску",
   "latest_release_notes_desc": "Просматривайте последние заметки к выпуску плагина",
   "open_changelog_button": "Открыть список изменений",
+  "update_available_button": "Доступно обновление",
   "command_show_release_notes": "Показать последние заметки к выпуску",
   "changelog_view_on_github": "Посмотреть на GitHub",
   "changelog_loading": "Выпуски загружаются…",

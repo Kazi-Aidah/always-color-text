@@ -26,6 +26,7 @@ module.exports = {
   "latest_release_notes_label": "সর্বশেষ রিলিজ নোটস",
   "latest_release_notes_desc": "প্লাগইনের সর্বশেষ রিলিজ নোটস দেখুন",
   "open_changelog_button": "চেঞ্জলগ খুলুন",
+  "update_available_button": "আপডেট উপলব্ধ",
   "command_show_release_notes": "সর্বশেষ রিলিজ নোটস দেখান",
   "changelog_view_on_github": "GitHub এ দেখুন",
   "changelog_loading": "রিলিজ লোড হচ্ছে…",

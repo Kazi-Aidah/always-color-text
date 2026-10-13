@@ -26,6 +26,7 @@ module.exports = {
   "latest_release_notes_label": "ملاحظات الإصدار الأخير",
   "latest_release_notes_desc": "تحقق من أحدث ملاحظات الإصدار للإضافة",
   "open_changelog_button": "فتح سجل التغييرات",
+  "update_available_button": "يتوفر تحديث",
   "command_show_release_notes": "عرض ملاحظات الإصدار الأخير",
   "changelog_view_on_github": "عرض على GitHub",
   "changelog_loading": "جاري تحميل الإصدارات...",

@@ -26,6 +26,7 @@ module.exports = {
   "latest_release_notes_label": "Neueste Versionshinweise",
   "latest_release_notes_desc": "Prüfen Sie die neuesten Versionshinweise für das Plugin",
   "open_changelog_button": "Änderungsprotokoll öffnen",
+  "update_available_button": "Update verfügbar",
   "command_show_release_notes": "Neueste Versionshinweise anzeigen",
   "changelog_view_on_github": "Auf GitHub ansehen",
   "changelog_loading": "Lade Versionen...",

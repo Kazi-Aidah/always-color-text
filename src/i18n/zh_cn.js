@@ -26,6 +26,7 @@ module.exports = {
   "latest_release_notes_label": "最新发布说明",
   "latest_release_notes_desc": "查看插件的最新发布说明",
   "open_changelog_button": "打开更新日志",
+  "update_available_button": "有可用更新",
   "command_show_release_notes": "显示最新发布说明",
   "changelog_view_on_github": "在GitHub上查看",
   "changelog_loading": "加载发布…",

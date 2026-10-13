@@ -43,6 +43,7 @@ import { adoptPresetColortype } from '../utils/presetLinker.js';
 import { deriveQuickMenuOrder, orderQuickMenuByOrder } from '../utils/presetOrdering.js';
 import { getHideFlags, resolveChannels, resolveTextColor } from '../utils/hideChannels.js';
 import { SelectColoringEntryModal } from '../modals/SelectColoringEntryModal.js';
+import { normalizeVersionTag, isNewerVersion } from '../utils/versionCheck.js';
 
 // Moment is provided by Obsidian
 const moment = window.moment;
@@ -7823,6 +7824,68 @@ class AlwaysColorText extends Plugin {
     }
 
     return allReleases;
+  }
+
+  /**
+   * Compare the installed manifest version against the latest GitHub release.
+   * Throttled by an in-memory cache (default 6h) so opening Settings never
+   * hammers the releases API. Returns { hasUpdate, latestVersion,
+   * currentVersion } or { hasUpdate: false, ... } on failure — never throws.
+   */
+  async checkForPluginUpdate(force = false) {
+    const currentVersion =
+      (this.manifest && this.manifest.version) || "";
+    try {
+      const now = Date.now();
+      const cache = this._updateCheckCache || null;
+      const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+      if (
+        !force &&
+        cache &&
+        typeof cache.timestamp === "number" &&
+        now - cache.timestamp < CACHE_TTL_MS &&
+        typeof cache.hasUpdate === "boolean"
+      ) {
+        return {
+          hasUpdate: cache.hasUpdate,
+          latestVersion: cache.latestVersion || "",
+          currentVersion,
+        };
+      }
+      const latest = await this.fetchLatestRelease();
+      const tag = latest && (latest.tag_name || latest.name) || "";
+      const latestVersion = normalizeVersionTag(tag);
+      const hasUpdate = isNewerVersion(latestVersion, currentVersion);
+      this._updateCheckCache = {
+        hasUpdate,
+        latestVersion,
+        timestamp: now,
+      };
+      return { hasUpdate, latestVersion, currentVersion };
+    } catch (_) {
+      return { hasUpdate: false, latestVersion: "", currentVersion };
+    }
+  }
+
+  /**
+   * Open this plugin's page in the in-app Community Plugins browser, where
+   * the Update button lives. Uses the public obsidian://show-plugin URI, so
+   * it works on desktop and mobile. Falls back to the GitHub releases page
+   * when the URI cannot be handled.
+   */
+  openCommunityPluginPage() {
+    const id =
+      (this.manifest && this.manifest.id) || "always-color-text";
+    const uri = `obsidian://show-plugin?id=${encodeURIComponent(id)}`;
+    try {
+      window.open(uri);
+      return;
+    } catch (_) {}
+    try {
+      const fallback =
+        "https://github.com/Kazi-Aidah/always-color-text/releases";
+      window.open(fallback, "_blank");
+    } catch (_) {}
   }
 
   // --- Save settings and refresh plugin state ---

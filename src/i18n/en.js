@@ -26,6 +26,7 @@ module.exports = {
   "latest_release_notes_label": "Latest Release Notes",
   "latest_release_notes_desc": "Check the latest release notes for the plugin",
   "open_changelog_button": "Open Changelog",
+  "update_available_button": "Update Available",
   "mobile_color_hint": "Mobile Tip: You can long-press a color picker to choose from your swatches or enter variable colours.",
   "desktop_color_hint": "Desktop Tip: You can right-click a color picker to choose from your swatches or enter variable colours.",
   "command_show_release_notes": "Show Latest Release Notes",

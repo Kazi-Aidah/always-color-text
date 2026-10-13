@@ -762,3 +762,15 @@ padding: 2px 0px;
   .act-style-select {
   width: stretch;
 }
+
+/* "Update Available" button beside Open Changelog.
+   Explicitly requested accent background with text-on-accent label. Scoped
+   to the plugin-owned release-notes row. Hidden by default via
+   act-is-hidden until the async update check confirms a newer release. */
+.setting-item.act-release-notes .act-update-btn {
+  background-color: var(--color-accent);
+  color: var(--text-on-accent);
+}
+.setting-item.act-release-notes .act-update-btn.act-is-hidden {
+  display: none;
+}
