@@ -21,8 +21,8 @@
 
 const REGEX_META = /[.*+?^${}()|[\]\\]/g;
 
-/** Sensible starting point — renders like `25_September_2026`. */
-export const DEFAULT_DATE_TIME_FORMAT = "hh:mm a, D MMMM Y";
+/** Sensible starting point — renders like `9:5 pm, 25 September 2026`. */
+export const DEFAULT_DATE_TIME_FORMAT = "h:m a, D MMMM Y";
 
 /**
  * Hard cap mirroring `plugin.sanitizePattern()`: a regex longer than this

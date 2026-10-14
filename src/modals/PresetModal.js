@@ -155,7 +155,7 @@ export class PresetModal extends Modal {
         examples: [
           this.plugin.t(
             "preset_example_time_date",
-            "Any moment.js format (hh:mm a, D MMMM Y)",
+            "Any moment.js format (h:m a, D MMMM Y)",
           ),
         ],
         // Opens the format step instead of choosing immediately: the pattern
@@ -479,7 +479,102 @@ export class PresetModal extends Modal {
 
     container.className = "preset-columns";
 
-    // Left column: Markdown presets
+    // First column: Other presets
+    const rightCol = container.createDiv();
+    const rightTitle = rightCol.createEl("h3", {
+      text: this.plugin.t("preset_group_other_patterns", "Other Patterns"),
+    });
+    rightTitle.style.marginTop = "0";
+    rightTitle.style.marginBottom = "12px";
+    rightTitle.style.fontSize = "14px";
+    rightTitle.style.fontWeight = "600";
+    rightTitle.style.opacity = "0.8";
+
+    const rightList = rightCol.createDiv();
+    otherPresets.forEach((p) => {
+      const row = rightList.createDiv();
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.marginBottom = "8px";
+      const btn = row.createEl("button", { text: p.label });
+      btn.style.fontSize = "12px";
+      btn.style.padding = "6px 10px";
+      const infoDiv = row.createDiv();
+      infoDiv.style.flex = "1";
+      infoDiv.style.display = "flex";
+      infoDiv.style.flexDirection = "column";
+      infoDiv.style.gap = "2px";
+      const sample = infoDiv.createEl("span", {
+        text: p.examples && p.examples[0] ? p.examples[0] : "",
+      });
+      sample.style.opacity = "0.7";
+      sample.style.fontSize = "11px";
+      if (p.disableRegexSafety) {
+        const badge = infoDiv.createEl("span", {
+          text: this.plugin.t(
+            "requires_regex_safety_disabled",
+            "Requires regex safety disabled",
+          ),
+        });
+        badge.style.opacity = "0.6";
+        badge.style.fontSize = "10px";
+        badge.style.color = "var(--text-warning)";
+      }
+      const handler = () => choosePreset(p);
+      btn.addEventListener("click", handler);
+      this._listeners.push({ el: btn, h: handler });
+    });
+
+
+    // Second column: Bracket presets
+    const middleCol = container.createDiv();
+    const middleTitle = middleCol.createEl("h3", {
+      text: this.plugin.t("preset_group_brackets", "Brackets"),
+    });
+    middleTitle.style.marginTop = "0";
+    middleTitle.style.marginBottom = "12px";
+    middleTitle.style.fontSize = "14px";
+    middleTitle.style.fontWeight = "600";
+    middleTitle.style.opacity = "0.8";
+
+    const middleList = middleCol.createDiv();
+    bracketPresets.forEach((p) => {
+      const row = middleList.createDiv();
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.marginBottom = "8px";
+      const btn = row.createEl("button", { text: p.label });
+      btn.style.fontSize = "12px";
+      btn.style.padding = "6px 10px";
+      const infoDiv = row.createDiv();
+      infoDiv.style.flex = "1";
+      infoDiv.style.display = "flex";
+      infoDiv.style.flexDirection = "column";
+      infoDiv.style.gap = "2px";
+      const sample = infoDiv.createEl("span", {
+        text: p.examples && p.examples[0] ? p.examples[0] : "",
+      });
+      sample.style.opacity = "0.7";
+      sample.style.fontSize = "11px";
+      if (p.disableRegexSafety) {
+        const badge = infoDiv.createEl("span", {
+          text: this.plugin.t(
+            "requires_regex_safety_disabled",
+            "Requires regex safety disabled",
+          ),
+        });
+        badge.style.opacity = "0.6";
+        badge.style.fontSize = "10px";
+        badge.style.color = "var(--text-warning)";
+      }
+      const handler = () => choosePreset(p);
+      btn.addEventListener("click", handler);
+      this._listeners.push({ el: btn, h: handler });
+    });
+
+    // Third column: Markdown presets
     const leftCol = container.createDiv();
     const leftTitle = leftCol.createEl("h3", {
       text: this.plugin.t(
@@ -551,99 +646,7 @@ export class PresetModal extends Modal {
       this._listeners.push({ el: btn, h: handler });
     });
 
-    // Right column: Other presets
-    const rightCol = container.createDiv();
-    const rightTitle = rightCol.createEl("h3", {
-      text: this.plugin.t("preset_group_other_patterns", "Other Patterns"),
-    });
-    rightTitle.style.marginTop = "0";
-    rightTitle.style.marginBottom = "12px";
-    rightTitle.style.fontSize = "14px";
-    rightTitle.style.fontWeight = "600";
-    rightTitle.style.opacity = "0.8";
 
-    const rightList = rightCol.createDiv();
-    otherPresets.forEach((p) => {
-      const row = rightList.createDiv();
-      row.style.display = "flex";
-      row.style.alignItems = "center";
-      row.style.gap = "8px";
-      row.style.marginBottom = "8px";
-      const btn = row.createEl("button", { text: p.label });
-      btn.style.fontSize = "12px";
-      btn.style.padding = "6px 10px";
-      const infoDiv = row.createDiv();
-      infoDiv.style.flex = "1";
-      infoDiv.style.display = "flex";
-      infoDiv.style.flexDirection = "column";
-      infoDiv.style.gap = "2px";
-      const sample = infoDiv.createEl("span", {
-        text: p.examples && p.examples[0] ? p.examples[0] : "",
-      });
-      sample.style.opacity = "0.7";
-      sample.style.fontSize = "11px";
-      if (p.disableRegexSafety) {
-        const badge = infoDiv.createEl("span", {
-          text: this.plugin.t(
-            "requires_regex_safety_disabled",
-            "Requires regex safety disabled",
-          ),
-        });
-        badge.style.opacity = "0.6";
-        badge.style.fontSize = "10px";
-        badge.style.color = "var(--text-warning)";
-      }
-      const handler = () => choosePreset(p);
-      btn.addEventListener("click", handler);
-      this._listeners.push({ el: btn, h: handler });
-    });
-
-    // Middle column: Bracket presets
-    const middleCol = container.createDiv();
-    const middleTitle = middleCol.createEl("h3", {
-      text: this.plugin.t("preset_group_brackets", "Brackets"),
-    });
-    middleTitle.style.marginTop = "0";
-    middleTitle.style.marginBottom = "12px";
-    middleTitle.style.fontSize = "14px";
-    middleTitle.style.fontWeight = "600";
-    middleTitle.style.opacity = "0.8";
-
-    const middleList = middleCol.createDiv();
-    bracketPresets.forEach((p) => {
-      const row = middleList.createDiv();
-      row.style.display = "flex";
-      row.style.alignItems = "center";
-      row.style.gap = "8px";
-      row.style.marginBottom = "8px";
-      const btn = row.createEl("button", { text: p.label });
-      btn.style.fontSize = "12px";
-      btn.style.padding = "6px 10px";
-      const infoDiv = row.createDiv();
-      infoDiv.style.flex = "1";
-      infoDiv.style.display = "flex";
-      infoDiv.style.flexDirection = "column";
-      infoDiv.style.gap = "2px";
-      const sample = infoDiv.createEl("span", {
-        text: p.examples && p.examples[0] ? p.examples[0] : "",
-      });
-      sample.style.opacity = "0.7";
-      sample.style.fontSize = "11px";
-      if (p.disableRegexSafety) {
-        const badge = infoDiv.createEl("span", {
-          text: this.plugin.t(
-            "requires_regex_safety_disabled",
-            "Requires regex safety disabled",
-          ),
-        });
-        badge.style.opacity = "0.6";
-        badge.style.fontSize = "10px";
-        badge.style.color = "var(--text-warning)";
-      }
-      const handler = () => choosePreset(p);
-      btn.addEventListener("click", handler);
-      this._listeners.push({ el: btn, h: handler });
-    });
   }
   _clearListeners() {
     (this._listeners || []).forEach((x) => {

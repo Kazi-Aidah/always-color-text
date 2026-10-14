@@ -174,7 +174,7 @@ vi.mock("obsidian", () => {
   // "Today's date/time" stand-in: renders known formats, otherwise a marker
   // that no pattern can match (used to exercise the mismatch error path).
   const RENDERED = {
-    "hh:mm a, D MMMM Y": "09:05 pm, 25 September 2026",
+    "h:m a, D MMMM Y": "9:5 pm, 25 September 2026",
     DD_MMMM_Y: "25_September_2026",
     "YYYY-MM-DD": "2026-09-25",
     MMMM: "September",
@@ -229,8 +229,8 @@ describe("Time & Date preset — format step", () => {
     presetBtn._fire("click");
 
     const preview = findByClass(modal, "act-preset-format-preview-text");
-    // moment renders today's date/time with the default hh:mm a, D MMMM Y.
-    expect(preview.textContent).toBe("09:05 pm, 25 September 2026");
+    // moment renders today's date/time with the default h:m a, D MMMM Y.
+    expect(preview.textContent).toBe("9:5 pm, 25 September 2026");
 
     // The generated pattern must never surface in the UI.
     expect(findByClass(modal, "act-preset-format-regex")).toBeUndefined();

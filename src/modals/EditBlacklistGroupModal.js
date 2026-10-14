@@ -444,6 +444,12 @@ export class EditBlacklistGroupModal extends Modal {
             .setIcon("heading")
             .onClick(() => addMarkdownHandler()),
         );
+        menu.addItem((item) =>
+          item
+            .setTitle(this.plugin.t("menu_add_time_date", "Time & Date"))
+            .setIcon("clock")
+            .onClick(() => addTimeDateHandler()),
+        );
         if (ev && typeof ev.clientX === "number") {
           menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
         } else {
@@ -464,8 +470,10 @@ export class EditBlacklistGroupModal extends Modal {
     presetsBtn.style.cursor = "pointer";
     presetsBtn.style.padding = "6px 12px";
     presetsBtn.style.borderRadius = "var(--input-radius)";
-    const presetsHandler = () => {
-      new PresetModal(this.app, this.plugin, async (preset) => {
+    // Shared by the Presets button and the "+ Add Entry → Time & Date"
+    // shortcut: the shortcut opens the format step directly
+    // (startWithFormat), then follows the same save path below.
+    const handleBlacklistGroupPreset = async (preset) => {
         if (!preset) return;
         // Auto-enable regex support if the preset requires it (no targetElement)
         if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
@@ -504,7 +512,16 @@ export class EditBlacklistGroupModal extends Modal {
         this.group.entries.push(entry);
         this._sortMode = "last-added";
         this._refreshGroupEntries();
-      }).open();
+    };
+    const presetsHandler = () => {
+      new PresetModal(this.app, this.plugin, handleBlacklistGroupPreset).open();
+    };
+    const addTimeDateHandler = () => {
+      try {
+        new PresetModal(this.app, this.plugin, handleBlacklistGroupPreset, {
+          startWithFormat: true,
+        }).open();
+      } catch (_) {}
     };
     presetsBtn.addEventListener("click", presetsHandler);
     this._cleanupHandlers.push(() =>

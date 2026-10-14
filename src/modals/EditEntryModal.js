@@ -24,6 +24,88 @@ import {
   propagateStyle,
 } from '../utils/matcherLinker.js';
 
+// Matcher key for entries with identical matching behavior (isRegex + flags +
+// matchType + normalized patterns). Twins — e.g. two Time & Date entries with
+// the same format — share a key while having different uids/colors.
+export function entryMatcherKey(e) {
+  try {
+    if (!e) return "";
+    const normalizePatterns = (x) => {
+      try {
+        if (!x) return "";
+        if (Array.isArray(x.groupedPatterns) && x.groupedPatterns.length > 0)
+          return x.groupedPatterns
+            .map((p) => String(p || "").trim())
+            .filter(Boolean)
+            .join(",")
+            .toLowerCase();
+        return String(x.pattern || "")
+          .trim()
+          .toLowerCase();
+      } catch (_) {
+        return "";
+      }
+    };
+    const isR = !!e.isRegex;
+    const flags = String(e.flags || "").trim();
+    const m = String(e.matchType || "")
+      .trim()
+      .toLowerCase();
+    const p = normalizePatterns(e);
+    return `${isR ? "r" : "t"}|${flags}|${m}|${p}`;
+  } catch (_) {
+    return "";
+  }
+}
+
+// Live settings lookup for the entry being edited. Two phases: uid first
+// across ALL locations (groups in order, then the main list), matcher key
+// second in the same order. A single-pass uid-or-key `.find()` stops at the
+// first twin (same key, different uid/color) whenever the requested entry is
+// not first in array order — opening the purple entry would silently swap to
+// the orange one, including deactivated twins. Returns
+// `{ entry: liveRef, groupUid }` or null when the entry is not filed yet
+// (e.g. a brand-new pick-modal entry), in which case the caller keeps the
+// passed reference untouched.
+export function locateEntryInSettings(settings, entry) {
+  try {
+    if (!entry) return null;
+    const groupsList = Array.isArray(settings?.wordEntryGroups)
+      ? settings.wordEntryGroups
+      : [];
+    const main = Array.isArray(settings?.wordEntries)
+      ? settings.wordEntries
+      : [];
+    const entryUid = entry.uid ? String(entry.uid) : "";
+    const key = entryMatcherKey(entry);
+    const byUid = (e) => {
+      try {
+        return !!entryUid && !!e?.uid && String(e.uid) === entryUid;
+      } catch (_) {
+        return false;
+      }
+    };
+    const byKey = (e) => {
+      try {
+        return !!key && entryMatcherKey(e) === key;
+      } catch (_) {
+        return false;
+      }
+    };
+    for (const pred of [byUid, byKey]) {
+      if (pred === byKey && !key) continue;
+      for (const g of groupsList) {
+        if (!g || !Array.isArray(g.entries)) continue;
+        const f = g.entries.find(pred);
+        if (f) return { entry: f, groupUid: g.uid || null };
+      }
+      const m = main.find(pred);
+      if (m) return { entry: m, groupUid: null };
+    }
+  } catch (_) {}
+  return null;
+}
+
 function resolveVarToHex(varStr) {
   try {
     const tmp = document.createElement("div");
@@ -272,142 +354,21 @@ export class EditEntryModal extends Modal {
     // the generated regex must never be shown to the user.
     const dtFormat = getEntryDateTimeFormat(this.entry, this.plugin);
 
-    const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups)
-      ? this.plugin.settings.wordEntryGroups
-      : [];
+    // Resolve the live settings reference — uid first, matcher key second
+    // (see locateEntryInSettings). A single-pass uid-or-key find() stops at
+    // the first identical twin, so opening the purple entry would silently
+    // swap to the orange one. Not found (e.g. a brand-new pick-modal entry):
+    // keep the passed reference untouched.
     let currentGroupUid = null;
     try {
-      const entryUid =
-        this.entry && this.entry.uid ? String(this.entry.uid) : "";
-      const normalizePatterns = (e) => {
-        try {
-          if (!e) return "";
-          if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0)
-            return e.groupedPatterns
-              .map((p) => String(p || "").trim())
-              .filter(Boolean)
-              .join(",")
-              .toLowerCase();
-          return String(e.pattern || "")
-            .trim()
-            .toLowerCase();
-        } catch (_) {
-          return "";
-        }
-      };
-      const keyOf = (e) => {
-        try {
-          if (!e) return "";
-          const isR = !!e.isRegex;
-          const flags = String(e.flags || "").trim();
-          const m = String(e.matchType || "")
-            .trim()
-            .toLowerCase();
-          const p = normalizePatterns(e);
-          return `${isR ? "r" : "t"}|${flags}|${m}|${p}`;
-        } catch (_) {
-          return "";
-        }
-      };
-      const entryKey = keyOf(this.entry);
-      const matches = (e) => {
-        try {
-          if (!e) return false;
-          if (entryUid && e.uid && String(e.uid || "") === entryUid)
-            return true;
-          if (entryKey) return keyOf(e) === entryKey;
-          return false;
-        } catch (_) {
-          return false;
-        }
-      };
-      if (Array.isArray(groupsList)) {
-        for (const g of groupsList) {
-          if (!g || !Array.isArray(g.entries)) continue;
-          if (g.entries.some(matches)) {
-            currentGroupUid = g.uid || null;
-            break;
-          }
-        }
+      const loc = locateEntryInSettings(this.plugin.settings, this.entry);
+      if (loc) {
+        currentGroupUid = loc.groupUid;
+        this.entry = loc.entry;
       }
     } catch (e) {}
     // Store the original group UID so we can remove from it correctly later
     this.originalGroupUid = currentGroupUid;
-    try {
-      const entryUid =
-        this.entry && this.entry.uid ? String(this.entry.uid) : "";
-      const normalizePatterns = (e) => {
-        try {
-          if (!e) return "";
-          if (Array.isArray(e.groupedPatterns) && e.groupedPatterns.length > 0)
-            return e.groupedPatterns
-              .map((p) => String(p || "").trim())
-              .filter(Boolean)
-              .join(",")
-              .toLowerCase();
-          return String(e.pattern || "")
-            .trim()
-            .toLowerCase();
-        } catch (_) {
-          return "";
-        }
-      };
-      const keyOf = (e) => {
-        try {
-          if (!e) return "";
-          const isR = !!e.isRegex;
-          const flags = String(e.flags || "").trim();
-          const m = String(e.matchType || "")
-            .trim()
-            .toLowerCase();
-          const p = normalizePatterns(e);
-          return `${isR ? "r" : "t"}|${flags}|${m}|${p}`;
-        } catch (_) {
-          return "";
-        }
-      };
-      const entryKey = keyOf(this.entry);
-      const matches = (e) => {
-        try {
-          if (!e) return false;
-          if (entryUid && e.uid && String(e.uid || "") === entryUid)
-            return true;
-          if (entryKey) return keyOf(e) === entryKey;
-          return false;
-        } catch (_) {
-          return false;
-        }
-      };
-      const settings = this.plugin.settings;
-      let found = null;
-
-      // PRIORITY 1: Search in the current group first
-      if (currentGroupUid && Array.isArray(groupsList)) {
-        const currentGroup = groupsList.find(
-          (g) => g && g.uid === currentGroupUid,
-        );
-        if (currentGroup && Array.isArray(currentGroup.entries)) {
-          found = currentGroup.entries.find(matches) || null;
-        }
-      }
-
-      // PRIORITY 2: If not in current group, search wordEntries
-      if (!found && Array.isArray(settings.wordEntries)) {
-        found = settings.wordEntries.find(matches) || null;
-      }
-
-      // PRIORITY 3: Search other groups
-      if (!found && Array.isArray(groupsList)) {
-        for (const g of groupsList) {
-          if (!g || !Array.isArray(g.entries) || g.uid === currentGroupUid)
-            continue; // skip current group
-          found = g.entries.find(matches) || null;
-          if (found) break;
-        }
-      }
-
-      if (found) this.entry = found;
-    } catch (e) {}
 
     // ===== Header Row: Title + Group + Color Target + Color Pickers =====
     const headerRow = contentEl.createDiv();
@@ -431,6 +392,9 @@ export class EditEntryModal extends Modal {
     const groupSelect = headerRow.createEl("select");
     groupSelect.addClass("act-edit-entry-group-select");
     this._groupSelect = groupSelect;
+    const groupsList = Array.isArray(this.plugin.settings.wordEntryGroups)
+      ? this.plugin.settings.wordEntryGroups
+      : [];
     const defaultOpt = groupSelect.createEl("option", {
       text: this.plugin.t("no_group", "No Group"),
     });

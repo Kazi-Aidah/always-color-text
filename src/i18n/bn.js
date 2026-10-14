@@ -760,7 +760,7 @@ module.exports = {
   "preset_file_name": "ফাইলের নাম (ফাইল এক্সপ্লোরার)",
   "preset_folder_name": "ফোল্ডারের নাম (ফাইল এক্সপ্লোরার)",
   "preset_options_label": "প্রিসেট অপশন",
-  "preset_example_time_date": "যেকোনো moment.js ফরম্যাট (hh:mm a, D MMMM Y)",
+  "preset_example_time_date": "যেকোনো moment.js ফরম্যাট (h:m a, D MMMM Y)",
   "preset_example_internal_link": "[[My Note]]",
   "preset_example_inline_code": "`code`",
   "preset_example_strike": "~~struck~~",

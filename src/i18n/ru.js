@@ -762,7 +762,7 @@ module.exports = {
   "preset_file_name": "Имя файла (проводник файлов)",
   "preset_folder_name": "Имя папки (проводник файлов)",
   "preset_options_label": "Параметры пресета",
-  "preset_example_time_date": "Любой формат moment.js (hh:mm a, D MMMM Y)",
+  "preset_example_time_date": "Любой формат moment.js (h:m a, D MMMM Y)",
   "preset_example_internal_link": "[[My Note]]",
   "preset_example_inline_code": "`code`",
   "preset_example_strike": "~~struck~~",

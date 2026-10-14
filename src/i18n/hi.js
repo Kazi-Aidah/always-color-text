@@ -761,7 +761,7 @@ module.exports = {
   "preset_file_name": "फ़ाइल नाम (फ़ाइल एक्सप्लोरर)",
   "preset_folder_name": "फ़ोल्डर नाम (फ़ाइल एक्सप्लोरर)",
   "preset_options_label": "प्रीसेट विकल्प",
-  "preset_example_time_date": "कोई भी moment.js फॉर्मेट (hh:mm a, D MMMM Y)",
+  "preset_example_time_date": "कोई भी moment.js फॉर्मेट (h:m a, D MMMM Y)",
   "preset_example_internal_link": "[[मेरा नोट]]",
   "preset_example_inline_code": "`कोड`",
   "preset_example_strike": "~~काटा हुआ~~",

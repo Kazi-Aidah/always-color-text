@@ -762,7 +762,7 @@ module.exports = {
   "preset_file_name": "Nombre de archivo (explorador de archivos)",
   "preset_folder_name": "Nombre de carpeta (explorador de archivos)",
   "preset_options_label": "Opciones del preajuste",
-  "preset_example_time_date": "Cualquier formato de moment.js (hh:mm a, D MMMM Y)",
+  "preset_example_time_date": "Cualquier formato de moment.js (h:m a, D MMMM Y)",
   "preset_example_internal_link": "[[Mi Nota]]",
   "preset_example_inline_code": "`código`",
   "preset_example_strike": "~~tachado~~",

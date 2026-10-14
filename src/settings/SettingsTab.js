@@ -7772,6 +7772,12 @@ export class ColorSettingTab extends PluginSettingTab {
               .setIcon("heading")
               .onClick(() => addMarkdownEntryDirect()),
           );
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("menu_add_time_date", "Time & Date"))
+              .setIcon("clock")
+              .onClick(() => addTimeDateWordEntry()),
+          );
           if (ev && typeof ev.clientX === "number") {
             menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
           } else {
@@ -7790,8 +7796,11 @@ export class ColorSettingTab extends PluginSettingTab {
       presetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
       presetsBtn.style.cursor = "pointer";
       presetsBtn.style.flex = "0 0 auto";
-      const presetsHandler = () => {
-        new PresetModal(this.app, this.plugin, async (preset) => {
+      // Shared by the Presets button and the "+ Add Entry → Time & Date"
+      // shortcut: the shortcut skips the preset list and opens the format
+      // step directly (startWithFormat), then flows through the same color
+      // picker below.
+      const handleWordPreset = async (preset) => {
           if (!preset) return;
           // Auto-enable regex support if the preset requires it (no targetElement)
           if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
@@ -7904,7 +7913,16 @@ export class ColorSettingTab extends PluginSettingTab {
             preset.previewText || "",
             false,
           ).open();
-        }).open();
+      };
+      const presetsHandler = () => {
+        new PresetModal(this.app, this.plugin, handleWordPreset).open();
+      };
+      const addTimeDateWordEntry = () => {
+        try {
+          new PresetModal(this.app, this.plugin, handleWordPreset, {
+            startWithFormat: true,
+          }).open();
+        } catch (e) {}
       };
       presetsBtn.addEventListener("click", presetsHandler);
       this._cleanupHandlers.push(() =>
@@ -8471,6 +8489,12 @@ export class ColorSettingTab extends PluginSettingTab {
               .setIcon("heading")
               .onClick(() => blacklistAddMarkdownHandler()),
           );
+          menu.addItem((item) =>
+            item
+              .setTitle(this.plugin.t("menu_add_time_date", "Time & Date"))
+              .setIcon("clock")
+              .onClick(() => addTimeDateBlacklistEntry()),
+          );
           if (ev && typeof ev.clientX === "number") {
             menu.showAtPosition({ x: ev.clientX, y: ev.clientY });
           } else {
@@ -8489,8 +8513,10 @@ export class ColorSettingTab extends PluginSettingTab {
       blacklistPresetsBtn.textContent = this.plugin.t("btn_presets", "Presets");
       blacklistPresetsBtn.style.cursor = "pointer";
       blacklistPresetsBtn.style.flex = "0 0 auto";
-      const blacklistPresetsHandler = () => {
-        new PresetModal(this.app, this.plugin, async (preset) => {
+      // Shared by the blacklist Presets button and the "+ Add blacklist
+      // entry → Time & Date" shortcut: the shortcut opens the format step
+      // directly (startWithFormat), then follows the same save path below.
+      const handleBlacklistPreset = async (preset) => {
           if (!preset) return;
           // Auto-enable regex support if the preset requires it (no targetElement)
           if (!preset.targetElement && !this.plugin.settings.enableRegexSupport) {
@@ -8550,7 +8576,16 @@ export class ColorSettingTab extends PluginSettingTab {
           try { this.plugin.forceRefreshAllEditors(); } catch (_) {}
           try { this.plugin.forceRefreshAllReadingViews(); } catch (_) {}
           this._refreshBlacklistWords();
-        }).open();
+      };
+      const blacklistPresetsHandler = () => {
+        new PresetModal(this.app, this.plugin, handleBlacklistPreset).open();
+      };
+      const addTimeDateBlacklistEntry = () => {
+        try {
+          new PresetModal(this.app, this.plugin, handleBlacklistPreset, {
+            startWithFormat: true,
+          }).open();
+        } catch (e) {}
       };
       blacklistPresetsBtn.addEventListener("click", blacklistPresetsHandler);
       this._cleanupHandlers.push(() =>

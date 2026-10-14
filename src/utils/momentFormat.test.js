@@ -28,7 +28,7 @@ function makeMoment(render) {
 
 const moment = makeMoment((fmt) => {
   const known = {
-    "hh:mm a, D MMMM Y": "09:05 pm, 25 September 2026",
+    "h:m a, D MMMM Y": "9:5 pm, 25 September 2026",
     DD_MMMM_Y: "25_September_2026",
     "YYYY-MM-DD": "2026-09-25",
     "h:mm A": "9:05 AM",
@@ -65,11 +65,11 @@ describe("evaluateDateTimeFormat — moment format to regex", () => {
   it("compiles the default format and matches a rendered date/time", () => {
     const state = compile(DEFAULT_DATE_TIME_FORMAT);
     expect(state.ok).toBe(true);
-    expect(state.sample).toBe("09:05 pm, 25 September 2026");
+    expect(state.sample).toBe("9:5 pm, 25 September 2026");
 
     const re = new RegExp(state.pattern, "iu");
     // The previewed text, another time/date, another month/year.
-    expect(re.test("09:05 pm, 25 September 2026")).toBe(true);
+    expect(re.test("9:5 pm, 25 September 2026")).toBe(true);
     expect(re.test("11:59 am, 3 January 2026")).toBe(true);
     expect(re.test("12:01 pm, 10 December 1999")).toBe(true);
   });
@@ -77,9 +77,9 @@ describe("evaluateDateTimeFormat — moment format to regex", () => {
   it("keeps matches inside words out via \\b", () => {
     const state = compile(DEFAULT_DATE_TIME_FORMAT);
     const re = new RegExp(state.pattern, "iu");
-    expect(re.test("at 09:05 pm, 25 September 2026 now")).toBe(true);
-    expect(re.test("x09:05 pm, 25 September 2026")).toBe(false);
-    expect(re.test("09:05 pm, 25 September 2026x")).toBe(false);
+    expect(re.test("at 9:5 pm, 25 September 2026 now")).toBe(true);
+    expect(re.test("x9:5 pm, 25 September 2026")).toBe(false);
+    expect(re.test("9:5 pm, 25 September 2026x")).toBe(false);
   });
 
   it("compiles numeric formats strictly (padded tokens stay padded)", () => {

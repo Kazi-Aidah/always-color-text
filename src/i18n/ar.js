@@ -760,7 +760,7 @@ module.exports = {
   "preset_file_name": "اسم الملف (مستكشف الملفات)",
   "preset_folder_name": "اسم المجلد (مستكشف الملفات)",
   "preset_options_label": "خيارات الإعداد المسبق",
-  "preset_example_time_date": "أي تنسيق moment.js (hh:mm a, D MMMM Y)",
+  "preset_example_time_date": "أي تنسيق moment.js (h:m a, D MMMM Y)",
   "preset_example_internal_link": "[[My Note]]",
   "preset_example_inline_code": "`code`",
   "preset_example_strike": "~~struck~~",

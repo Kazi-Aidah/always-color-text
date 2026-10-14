@@ -761,7 +761,7 @@ module.exports = {
   "preset_file_name": "文件名（文件浏览器）",
   "preset_folder_name": "文件夹名（文件浏览器）",
   "preset_options_label": "预设选项",
-  "preset_example_time_date": "任意 moment.js 格式 (hh:mm a, D MMMM Y)",
+  "preset_example_time_date": "任意 moment.js 格式 (h:m a, D MMMM Y)",
   "preset_example_internal_link": "[[我的笔记]]",
   "preset_example_inline_code": "`code`",
   "preset_example_strike": "~~划掉的文字~~",

@@ -760,7 +760,7 @@ module.exports = {
   "preset_file_name": "Dateiname (Datei-Explorer)",
   "preset_folder_name": "Ordnername (Datei-Explorer)",
   "preset_options_label": "Voreinstellungsoptionen",
-  "preset_example_time_date": "Beliebiges moment.js-Format (hh:mm a, D MMMM Y)",
+  "preset_example_time_date": "Beliebiges moment.js-Format (h:m a, D MMMM Y)",
   "preset_example_internal_link": "[[Meine Notiz]]",
   "preset_example_inline_code": "`code`",
   "preset_example_strike": "~~durchgestrichen~~",
