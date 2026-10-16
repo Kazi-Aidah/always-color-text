@@ -16631,8 +16631,6 @@ class AlwaysColorText extends Plugin {
           if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
             continue;
           if (isBlacklisted(entry.pattern)) continue;
-          const mt = String(entry.matchType || "").toLowerCase();
-          void mt;
           const cs =
             typeof entry._caseSensitiveOverride === "boolean"
               ? entry._caseSensitiveOverride
