@@ -18395,6 +18395,10 @@ class AlwaysColorText extends Plugin {
                 forceProcess: true,
                 maxMatches: Infinity,
                 filePath: filePath,
+                // The cell itself holds the text (plain-text TDs have no
+                // child block elements), so it must be processed too —
+                // otherwise nothing in Live Preview tables ever gets colored.
+                includeSelf: true,
               });
             } else {
               this.applyHighlights(cell, folderEntry, {
