@@ -4,6 +4,40 @@ import { debugLog, debugError, debugWarn } from '../utils/debug.js';
 import { RegexCache } from '../utils/RegexCache.js';
 
 /**
+ * Characters from scripts written without word-delimiting spaces (Chinese Han,
+ * Japanese Hiragana/Katakana). Each glyph is its own unit, so a "contains"
+ * full-word expansion across them would swallow a whole sentence — e.g. pattern
+ * "爱" in "我爱学习" expanding to 0-4 (issue #58). They are treated as word
+ * boundaries: expansion stops at them and matching highlights the exact
+ * substring. Hangul is intentionally excluded — Korean uses spaces between
+ * words, so space-delimited expansion still applies there.
+ */
+export function isNoSpaceScriptChar(ch) {
+  if (!ch) return false;
+  try {
+    return /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(ch);
+  } catch (_) {
+    const code = String(ch).codePointAt(0) || 0;
+    return (
+      (code >= 0x3400 && code <= 0x4dbf) || // CJK Extension A
+      (code >= 0x4e00 && code <= 0x9fff) || // CJK Unified Ideographs
+      (code >= 0x3040 && code <= 0x309f) || // Hiragana
+      (code >= 0x30a0 && code <= 0x30ff) || // Katakana
+      (code >= 0xf900 && code <= 0xfaff) // CJK Compatibility Ideographs
+    );
+  }
+}
+
+export function containsNoSpaceScript(text) {
+  if (!text) return false;
+  const s = String(text);
+  for (const ch of s) {
+    if (isNoSpaceScriptChar(ch)) return true;
+  }
+  return false;
+}
+
+/**
  * Resolve a word group's color forcing for member entries.
  *
  * Colortype semantics (user-confirmed):
@@ -679,12 +713,19 @@ export function compilePatternCore(plugin, e, pattern, compiledBase) {
       // that a manual code-point range list would miss.
       const UWC = "\\p{L}\\p{N}\\-'";
       let finalPattern = esc;
-      if (!isSentence && matchTypeLower === "startswith") {
+      // Scripts without spaces (Han/Hiragana/Katakana) have no word boundaries:
+      // a lookaround against \p{L} would treat every adjacent CJK glyph as a
+      // word character, so an exact single "爱" could never match inside
+      // "我爱学习". Skip boundary wrapping for those patterns (issue #58) —
+      // the substring match plus boundary-aware expansion is the correct paint.
+      const hasNoSpaceScript = containsNoSpaceScript(pattern);
+      if (!isSentence && !hasNoSpaceScript && matchTypeLower === "startswith") {
         finalPattern = `(?<![${UWC}])` + esc;
-      } else if (!isSentence && matchTypeLower === "endswith") {
+      } else if (!isSentence && !hasNoSpaceScript && matchTypeLower === "endswith") {
         finalPattern = esc + `(?![${UWC}])`;
       } else if (
         !isSentence &&
+        !hasNoSpaceScript &&
         matchTypeLower === "exact" &&
         String(pattern).length === 1
       ) {
@@ -790,6 +831,10 @@ export class PatternMatcher {
 
   isWordCharacter(char) {
     if (!char) return false;
+    // Scripts without spaces (Han/Hiragana/Katakana) are word BOUNDARIES, not
+    // word characters (issue #58): otherwise a contains-match on "爱" expands
+    // across every adjacent CJK glyph and highlights the whole sentence.
+    if (isNoSpaceScriptChar(char)) return false;
     // Use \p{L} (Unicode letter) and \p{N} (Unicode number) via the u flag,
     // which covers all scripts including supplementary plane characters.
     // Hyphen and apostrophe are also treated as word-internal characters.
@@ -809,7 +854,6 @@ export class PatternMatcher {
         (code >= 0x0900 && code <= 0x0DFF) ||
         (code >= 0x0E00 && code <= 0x0E7F) ||
         (code >= 0x1E00 && code <= 0x1EFF) ||
-        (code >= 0x4E00 && code <= 0x9FFF) ||
         (code >= 0xAC00 && code <= 0xD7AF) ||
         (code >= 0xF900 && code <= 0xFAFF)
       );
@@ -820,23 +864,13 @@ export class PatternMatcher {
     let wordStart = start;
     let wordEnd = end;
 
-    const slice = text.substring(start, end);
-    const hasNonRoman =
-      this.containsNonRomanCharacters && this.containsNonRomanCharacters(slice);
-    if (hasNonRoman) {
-      while (wordStart > 0 && this.isCJKChar(text[wordStart - 1])) {
-        wordStart--;
-      }
-      while (wordEnd < text.length && this.isCJKChar(text[wordEnd])) {
-        wordEnd++;
-      }
-    } else {
-      while (wordStart > 0 && this.isWordCharacter(text[wordStart - 1])) {
-        wordStart--;
-      }
-      while (wordEnd < text.length && this.isWordCharacter(text[wordEnd])) {
-        wordEnd++;
-      }
+    // isWordCharacter already treats Han/Hiragana/Katakana as boundaries, so a
+    // single expansion loop is correct for every script (issue #58).
+    while (wordStart > 0 && this.isWordCharacter(text[wordStart - 1])) {
+      wordStart--;
+    }
+    while (wordEnd < text.length && this.isWordCharacter(text[wordEnd])) {
+      wordEnd++;
     }
 
     return text.substring(wordStart, wordEnd);
@@ -866,6 +900,14 @@ export class PatternMatcher {
 
     // For sentence-like patterns, always match
     if (isSentence) {
+      return true;
+    }
+
+    // No-space scripts (Han/Hiragana/Katakana) have no word delimiters: the
+    // regex-found substring IS the match (issue #58). Full-word extraction
+    // would glue Latin neighbours onto a CJK match (or vice versa), so every
+    // match type is satisfied by the substring itself.
+    if (containsNoSpaceScript(pattern)) {
       return true;
     }
 
@@ -953,8 +995,13 @@ export class PatternMatcher {
           (entry && entry.matchType) ||
             (this.settings.matchType || (this.settings.partialMatch ? "contains" : "exact")),
         ).toLowerCase();
+        // No-space-script (CJK) patterns never expand: the highlight is the
+        // matched substring itself (issue #58). Without this, a CJK match
+        // flanked by Latin word chars (e.g. "测试" in "test测试test") would
+        // swallow the neighbours.
         const useExpanded =
           !isSentence(entry.pattern) &&
+          !containsNoSpaceScript(entry.pattern) &&
           (mtLower === "contains" ||
             mtLower === "startswith" ||
             mtLower === "endswith");
@@ -1622,10 +1669,14 @@ export function compileBlacklistEntriesLogic(plugin) {
       if (!word) continue;
       try {
         const flags = plugin.settings.caseSensitive ? "u" : "iu";
-        // Use \p{L}\p{N} with the u flag for correct Unicode word boundaries
+        // Use \p{L}\p{N} with the u flag for correct Unicode word boundaries.
+        // No-space scripts (Han/Hiragana/Katakana) skip the wrapping (issue
+        // #58): adjacent CJK glyphs are boundaries, not word characters.
         const UWC = "\\p{L}\\p{N}\\-'";
         const esc = plugin.escapeRegex(String(word));
-        const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
+        const pattern = containsNoSpaceScript(String(word))
+          ? esc
+          : `(?<![${UWC}])${esc}(?![${UWC}])`;
         const regex = plugin._regexCache.getOrCreate(pattern, flags);
         if (regex) {
           plugin._compiledBlacklistWords.push({ word, regex, flags });
@@ -1660,9 +1711,12 @@ export function compileBlacklistEntriesLogic(plugin) {
             if (!p) continue;
             const flags = plugin.settings.caseSensitive ? "u" : "iu";
             // Use \p{L}\p{N} with the u flag for correct Unicode word boundaries
+            // (no-space scripts skip wrapping — issue #58).
             const UWC = "\\p{L}\\p{N}\\-'";
             const esc = plugin.escapeRegex(String(p));
-            const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
+            const pattern = containsNoSpaceScript(String(p))
+              ? esc
+              : `(?<![${UWC}])${esc}(?![${UWC}])`;
             const regex = plugin._regexCache.getOrCreate(pattern, flags);
             if (regex) {
               compiled.patterns.push({
@@ -1720,9 +1774,12 @@ export function compileBlacklistEntriesLogic(plugin) {
             for (const p of patterns) {
               if (!p) continue;
               // Use \p{L}\p{N} with the u flag for correct Unicode word boundaries
+              // (no-space scripts skip wrapping — issue #58).
               const UWC = "\\p{L}\\p{N}\\-'";
               const esc = plugin.escapeRegex(String(p));
-              const pattern = `(?<![${UWC}])${esc}(?![${UWC}])`;
+              const pattern = containsNoSpaceScript(String(p))
+                ? esc
+                : `(?<![${UWC}])${esc}(?![${UWC}])`;
               const flags = compiled.isCaseSensitive ? "u" : "iu";
               const regex = plugin._regexCache.getOrCreate(
                 pattern,

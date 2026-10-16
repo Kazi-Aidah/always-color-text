@@ -723,10 +723,20 @@ export function computePreviewMatches(plugin, input) {
 
           // Whole-word gate (21016-21046 short / 21534-21550 long). The long
           // path exempts sentence-like patterns; the short path does not.
+          // No-space-script patterns are exempt too (issue #58): the substring
+          // IS the match.
           const sentenceExempt = useChunks && isSentencePattern;
+          const noSpaceExempt = attempt(
+            () =>
+              plugin.containsNoSpaceScript
+                ? plugin.containsNoSpaceScript(compiled.pattern)
+                : false,
+            false,
+          );
           if (
             mtEff === "exact" &&
             !sentenceExempt &&
+            !noSpaceExempt &&
             !attempt(
               () => plugin.isWholeWordMatch(seg.text, idx, idx + matched.length),
               true,
@@ -825,14 +835,23 @@ export function computePreviewMatches(plugin, input) {
 
           // Span expansion (20564-20589): entry matchType ONLY — no
           // settings fallback here (unlike the whole-word gate).
+          // No-space-script patterns never expand (issue #58).
           let colorStart = idx;
           let colorEnd = en;
           const entryMt = String(e.matchType || "").toLowerCase();
+          const isNoSpacePattern = attempt(
+            () =>
+              plugin.containsNoSpaceScript
+                ? plugin.containsNoSpaceScript(e.pattern)
+                : false,
+            false,
+          );
           if (
             (entryMt === "contains" ||
               entryMt === "startswith" ||
               entryMt === "endswith") &&
-            !isSentencePattern
+            !isSentencePattern &&
+            !isNoSpacePattern
           ) {
             while (
               colorStart > 0 &&
