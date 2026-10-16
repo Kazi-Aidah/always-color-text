@@ -3807,6 +3807,36 @@ class AlwaysColorText extends Plugin {
     }
   }
 
+  // Scripts written without word-delimiting spaces (Chinese Han, Japanese
+  // Hiragana/Katakana). Each glyph is its own unit: a contains-match on "爱"
+  // must paint only "爱", not expand across adjacent glyphs to the whole
+  // sentence "我爱学习" (issue #58). Hangul is excluded on purpose — Korean
+  // uses spaces between words, so space-delimited expansion still applies.
+  isNoSpaceScriptChar(ch) {
+    if (!ch) return false;
+    try {
+      return /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(ch);
+    } catch (_) {
+      const code = String(ch).codePointAt(0) || 0;
+      return (
+        (code >= 0x3400 && code <= 0x4dbf) ||
+        (code >= 0x4e00 && code <= 0x9fff) ||
+        (code >= 0x3040 && code <= 0x309f) ||
+        (code >= 0x30a0 && code <= 0x30ff) ||
+        (code >= 0xf900 && code <= 0xfaff)
+      );
+    }
+  }
+
+  containsNoSpaceScript(text) {
+    if (!text) return false;
+    const s = String(text);
+    for (const ch of s) {
+      if (this.isNoSpaceScriptChar(ch)) return true;
+    }
+    return false;
+  }
+
   // NEW HELPER: Count non-Roman characters
   countNonRomanCharacters(text) {
     if (!text) return 0;
@@ -4980,9 +5010,11 @@ class AlwaysColorText extends Plugin {
         let colorStart = matchStart;
         let colorEnd = matchEnd;
 
-        // For non-sentence patterns, expand to full word boundaries for all partial match types
+        // For non-sentence patterns, expand to full word boundaries for all partial match types.
+        // No-space-script (CJK) patterns highlight the exact substring (issue #58).
         if (
           !isSentencePattern &&
+          !this.containsNoSpaceScript(entry.pattern) &&
           (mtLower === "contains" ||
             mtLower === "startswith" ||
             mtLower === "endswith")
@@ -5280,9 +5312,11 @@ class AlwaysColorText extends Plugin {
         let colorStart = matchStart;
         let colorEnd = matchEnd;
 
-        // For non-sentence patterns, expand to full word boundaries for all partial match types
+        // For non-sentence patterns, expand to full word boundaries for all partial match types.
+        // No-space-script (CJK) patterns highlight the exact substring (issue #58).
         if (
           !isSentencePattern &&
+          !this.containsNoSpaceScript(entry.pattern) &&
           (mtLower === "contains" ||
             mtLower === "startswith" ||
             mtLower === "endswith")
@@ -10749,10 +10783,16 @@ class AlwaysColorText extends Plugin {
   // Unicode-aware word character check.
   // Returns true for ASCII word chars, hyphens, apostrophes, and a broad range
   // of Unicode letters/digits (Latin Extended, Cyrillic, Arabic, Devanagari,
-  // CJK, Hangul, etc.) so that word expansion and boundary detection work
+  // Hangul, etc.) so that word expansion and boundary detection work
   // correctly for non-Latin scripts.
+  // Scripts without spaces (Han/Hiragana/Katakana) are NOT word characters
+  // (issue #58): otherwise a contains-match on "爱" expands across every
+  // adjacent CJK glyph and paints the whole sentence "我爱学习".
   isWordCharacter(char) {
     if (!char) return false;
+    try {
+      if (this.isNoSpaceScriptChar(char)) return false;
+    } catch (_) {}
     // Use \p{L} (Unicode letter) and \p{N} (Unicode number) via the u flag,
     // which covers all scripts including supplementary plane characters.
     // Hyphen and apostrophe are also treated as word-internal characters.
@@ -10772,9 +10812,7 @@ class AlwaysColorText extends Plugin {
         (code >= 0x0900 && code <= 0x0DFF) || // Devanagari–Malayalam
         (code >= 0x0E00 && code <= 0x0E7F) || // Thai
         (code >= 0x1E00 && code <= 0x1EFF) || // Latin Extended Additional
-        (code >= 0x4E00 && code <= 0x9FFF) || // CJK Unified Ideographs
-        (code >= 0xAC00 && code <= 0xD7AF) || // Hangul Syllables
-        (code >= 0xF900 && code <= 0xFAFF)    // CJK Compatibility Ideographs
+        (code >= 0xAC00 && code <= 0xD7AF) // Hangul Syllables
       );
     }
   }
@@ -10875,7 +10913,9 @@ class AlwaysColorText extends Plugin {
   extractFullWordAtPosition(text, start, end) {
     let wordStart = start;
     let wordEnd = end;
-    // isWordCharacter covers ASCII, Latin Extended, Cyrillic, Arabic, CJK, Hangul, etc.
+    // isWordCharacter covers ASCII, Latin Extended, Cyrillic, Arabic, Hangul,
+    // etc. Han/Hiragana/Katakana are boundaries (issue #58), so CJK matches
+    // never expand to the whole sentence.
     while (wordStart > 0 && this.isWordCharacter(text[wordStart - 1])) wordStart--;
     while (wordEnd < text.length && this.isWordCharacter(text[wordEnd])) wordEnd++;
     return text.substring(wordStart, wordEnd);
@@ -10905,6 +10945,14 @@ class AlwaysColorText extends Plugin {
       if (this.isSentenceLikePattern(pattern)) {
         return true;
       }
+
+      // No-space scripts (Han/Hiragana/Katakana) have no word delimiters: the
+      // regex-found substring IS the match (issue #58).
+      try {
+        if (this.containsNoSpaceScript(pattern)) {
+          return true;
+        }
+      } catch (_) {}
 
       // Extract the full word at the match position
       const fullWord = this.extractFullWordAtPosition(text, start, end);
@@ -16308,6 +16356,7 @@ class AlwaysColorText extends Plugin {
               let colorEnd = matchEnd;
               if (
                 !this.isSentenceLikePattern(entry.pattern) &&
+                !this.containsNoSpaceScript(entry.pattern) &&
                 (mtLower === "contains" ||
                   mtLower === "startswith" ||
                   mtLower === "endswith")
@@ -16401,6 +16450,7 @@ class AlwaysColorText extends Plugin {
             let colorEnd = matchEnd;
             if (
               !this.isSentenceLikePattern(entry.pattern) &&
+              !this.containsNoSpaceScript(entry.pattern) &&
               (mtLower === "contains" ||
                 mtLower === "startswith" ||
                 mtLower === "endswith")
@@ -16566,14 +16616,94 @@ class AlwaysColorText extends Plugin {
       }
 
       // --- Partial Match coloring for text+bg entries ---
-      if (
-        textBgEntries.some((e) =>
+      // No-space-script (CJK) patterns bypass token matching entirely (issue
+      // #58): a tokenizer sees a whole Chinese clause as one "word" and would
+      // paint it entirely. They are painted per substring occurrence instead.
+      const cjkTextBgPartial = textBgEntries.filter(
+        (e) =>
           ["contains", "startswith", "endswith"].includes(
             String(e.matchType || "").toLowerCase(),
-          ),
+          ) && this.containsNoSpaceScript(e.pattern),
+      );
+      if (cjkTextBgPartial.length > 0) {
+        for (const entry of cjkTextBgPartial) {
+          if (!entry || entry.invalid) continue;
+          if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
+            continue;
+          if (isBlacklisted(entry.pattern)) continue;
+          const mt = String(entry.matchType || "").toLowerCase();
+          void mt;
+          const cs =
+            typeof entry._caseSensitiveOverride === "boolean"
+              ? entry._caseSensitiveOverride
+              : typeof entry.caseSensitive === "boolean"
+                ? entry.caseSensitive
+                : this.settings.caseSensitive;
+          const hay = cs ? text : text.toLowerCase();
+          const pat = cs
+            ? String(entry.pattern || "")
+            : String(entry.pattern || "").toLowerCase();
+          if (!pat) continue;
+          let fromIndex = 0;
+          let found = 0;
+          while (fromIndex <= hay.length - pat.length && found < 500) {
+            const idx = hay.indexOf(pat, fromIndex);
+            if (idx === -1) break;
+            found++;
+            const start = idx;
+            const end = idx + pat.length;
+            let overlapsWithExisting = false;
+            for (const existingMatch of matches) {
+              if (start < existingMatch.end && end > existingMatch.start) {
+                overlapsWithExisting = true;
+                break;
+              }
+            }
+            if (!overlapsWithExisting) {
+              matches.push({
+                start,
+                end,
+                textColor: entry.textColor,
+                backgroundColor: entry.backgroundColor,
+                isTextBg: true,
+                styleType: "both",
+                entryRef: entry,
+              });
+            } else {
+              matches = matches.filter(
+                (m) =>
+                  !(
+                    m.start >= start &&
+                    m.end <= end &&
+                    m.end - m.start < end - start
+                  ),
+              );
+              matches.push({
+                start,
+                end,
+                textColor: entry.textColor,
+                backgroundColor: entry.backgroundColor,
+                isTextBg: true,
+                styleType: "both",
+                entryRef: entry,
+              });
+            }
+            fromIndex = idx + 1;
+          }
+        }
+      }
+      if (
+        textBgEntries.some(
+          (e) =>
+            ["contains", "startswith", "endswith"].includes(
+              String(e.matchType || "").toLowerCase(),
+            ) && !this.containsNoSpaceScript(e.pattern),
         )
       ) {
-        const wordRegex = /[\p{L}\p{N}'\-]+/gu;
+        // No-space-script glyphs are split points, not word characters (issue
+        // #58): otherwise a Chinese clause (or mixed token) becomes one word.
+        const wordRegex =
+          /((?![\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])[\p{L}\p{N}'\-])+/gu;
         let match;
         while ((match = wordRegex.exec(text))) {
           const w = match[0];
@@ -16590,10 +16720,12 @@ class AlwaysColorText extends Plugin {
           if (isBlacklisted(w)) continue;
 
           // Check text & background entries for partial matches
-          for (const entry of textBgEntries.filter((e) =>
-            ["contains", "startswith", "endswith"].includes(
-              String(e.matchType || "").toLowerCase(),
-            ),
+          // (CJK patterns were already painted per-substring above).
+          for (const entry of textBgEntries.filter(
+            (e) =>
+              ["contains", "startswith", "endswith"].includes(
+                String(e.matchType || "").toLowerCase(),
+              ) && !this.containsNoSpaceScript(e.pattern),
           )) {
             if (!entry || entry.invalid) continue;
             if (/^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(entry.pattern))
@@ -16676,7 +16808,9 @@ class AlwaysColorText extends Plugin {
       }
 
       // --- Partial Match coloring --- (respect already-resolved matches)
-      // Only process text-only entries (styleType === 'text') in this section
+      // Only process text-only entries (styleType === 'text') in this section.
+      // No-space-script (CJK) patterns bypass token matching (issue #58) and
+      // are painted per substring occurrence instead.
       {
         const textOnlyEntries = entries.filter(
           (e) =>
@@ -16686,10 +16820,102 @@ class AlwaysColorText extends Plugin {
             !e.isTextBg &&
             ["contains", "startswith", "endswith"].includes(
               String(e.matchType || "").toLowerCase(),
-            ),
+            ) &&
+            !this.containsNoSpaceScript(e.pattern),
         );
+        const cjkTextOnlyEntries = entries.filter(
+          (e) =>
+            e &&
+            !e.invalid &&
+            (!e.styleType || e.styleType === "text") &&
+            !e.isTextBg &&
+            ["contains", "startswith", "endswith"].includes(
+              String(e.matchType || "").toLowerCase(),
+            ) &&
+            this.containsNoSpaceScript(e.pattern),
+        );
+        if (cjkTextOnlyEntries.length > 0) {
+          for (const entry of cjkTextOnlyEntries) {
+            if (!entry || entry.invalid) continue;
+            if (
+              /^[\s~`!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]+$/.test(
+                entry.pattern,
+              )
+            )
+              continue;
+            if (isBlacklisted(entry.pattern)) continue;
+            const cs =
+              typeof entry._caseSensitiveOverride === "boolean"
+                ? entry._caseSensitiveOverride
+                : typeof entry.caseSensitive === "boolean"
+                  ? entry.caseSensitive
+                  : this.settings.caseSensitive;
+            const hay = cs ? text : text.toLowerCase();
+            const pat = cs
+              ? String(entry.pattern || "")
+              : String(entry.pattern || "").toLowerCase();
+            if (!pat) continue;
+            const useColor =
+              folderEntry && folderEntry.defaultColor
+                ? folderEntry.defaultColor
+                : entry.textColor && entry.textColor !== "currentColor"
+                  ? entry.textColor
+                  : entry.color;
+            let fromIndex = 0;
+            let found = 0;
+            while (fromIndex <= hay.length - pat.length && found < 500) {
+              const idx = hay.indexOf(pat, fromIndex);
+              if (idx === -1) break;
+              found++;
+              const matchStart = idx;
+              const matchEnd = idx + pat.length;
+              let overlapsWithExisting = false;
+              for (const existingMatch of matches) {
+                if (
+                  matchStart < existingMatch.end &&
+                  matchEnd > existingMatch.start
+                ) {
+                  overlapsWithExisting = true;
+                  break;
+                }
+              }
+              if (!overlapsWithExisting) {
+                matches.push({
+                  start: matchStart,
+                  end: matchEnd,
+                  color: useColor,
+                  styleType: "text",
+                  word: text.substring(matchStart, matchEnd),
+                  entry,
+                  folderEntry,
+                });
+              } else {
+                matches = matches.filter(
+                  (m) =>
+                    !(
+                      m.start >= matchStart &&
+                      m.end <= matchEnd &&
+                      m.end - m.start < matchEnd - matchStart
+                    ),
+                );
+                matches.push({
+                  start: matchStart,
+                  end: matchEnd,
+                  color: useColor,
+                  styleType: "text",
+                  word: text.substring(matchStart, matchEnd),
+                  entry,
+                  folderEntry,
+                });
+              }
+              fromIndex = idx + 1;
+            }
+          }
+        }
         if (textOnlyEntries.length > 0) {
-          const wordRegex = /[\p{L}\p{N}'\-]+/gu;
+          // No-space-script glyphs are split points (issue #58).
+          const wordRegex =
+            /((?![\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])[\p{L}\p{N}'\-])+/gu;
           let match;
           while ((match = wordRegex.exec(text))) {
             const w = match[0];
@@ -20297,7 +20523,8 @@ class AlwaysColorText extends Plugin {
           const mt = String(entry.matchType || "").toLowerCase();
           if (
             (mt === "contains" || mt === "startswith" || mt === "endswith") &&
-            !this.isSentenceLikePattern(entry.pattern)
+            !this.isSentenceLikePattern(entry.pattern) &&
+            !this.containsNoSpaceScript(entry.pattern)
           ) {
             // Find actual word boundaries using isWordCharacter (Unicode-aware)
             colorStart = matchStart;
@@ -20540,6 +20767,7 @@ class AlwaysColorText extends Plugin {
           ).toLowerCase();
           if (
             !this.isSentenceLikePattern(entry.pattern) &&
+            !this.containsNoSpaceScript(entry.pattern) &&
             mt === "exact" &&
             !this.isWholeWordMatch(
               text,
@@ -20570,9 +20798,11 @@ class AlwaysColorText extends Plugin {
         let colorEnd = match.index + matchedText.length;
 
         // For partial match types on non-sentence patterns, ALWAYS expand to full word first
+        // (no-space-script patterns highlight the exact substring — issue #58)
         if (
           (mt === "contains" || mt === "startswith" || mt === "endswith") &&
-          !this.isSentenceLikePattern(entry.pattern)
+          !this.isSentenceLikePattern(entry.pattern) &&
+          !this.containsNoSpaceScript(entry.pattern)
         ) {
           while (colorStart > 0 && this.isWordCharacter(text[colorStart - 1]))
             colorStart--;
@@ -20583,7 +20813,8 @@ class AlwaysColorText extends Plugin {
         // Validate that the expanded full word satisfies the partial match type
         if (
           (mt === "contains" || mt === "startswith" || mt === "endswith") &&
-          !this.isSentenceLikePattern(entry.pattern)
+          !this.isSentenceLikePattern(entry.pattern) &&
+          !this.containsNoSpaceScript(entry.pattern)
         ) {
           const fullWord = text.substring(colorStart, colorEnd);
           const cs =
@@ -20748,7 +20979,12 @@ class AlwaysColorText extends Plugin {
         ),
       );
       if (textOnlyEntries.length > 0) {
-        const wordRegex = /[\p{L}\p{N}'\-]+/gu;
+        // Tokenize into words. No-space-script glyphs (Han/Hiragana/Katakana)
+        // are split points, not word characters (issue #58): otherwise a whole
+        // Chinese sentence (or a mixed token like "test测试test") becomes one
+        // "word" and a Latin contains-match paints it entirely.
+        const wordRegex =
+          /((?![\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])[\p{L}\p{N}'\-])+/gu;
         let match;
         let wordMatchCount = 0;
         while ((match = wordRegex.exec(text))) {
@@ -21990,10 +22226,12 @@ class AlwaysColorText extends Plugin {
             const mt = String(entry.matchType || "").toLowerCase();
             if (
               (mt === "contains" || mt === "startswith" || mt === "endswith") &&
-              !this.isSentenceLikePattern(entry.pattern)
+              !this.isSentenceLikePattern(entry.pattern) &&
+              !this.containsNoSpaceScript(entry.pattern)
             ) {
               // Use isWordCharacter which covers all Unicode ranges (Latin Extended,
-              // Cyrillic, Arabic, CJK, Hangul, etc.) — not just ASCII.
+              // Cyrillic, Arabic, Hangul, etc.) — not just ASCII. Han/Hiragana/
+              // Katakana are boundaries (issue #58), never expanded across.
               colorStart = matchStart;
               colorEnd = matchEnd;
               while (
@@ -22441,6 +22679,7 @@ class AlwaysColorText extends Plugin {
           ).toLowerCase();
           if (
             mt === "exact" &&
+            !this.containsNoSpaceScript(entry.pattern) &&
             !this.isWholeWordMatch(
               text,
               match.index,
@@ -22519,7 +22758,8 @@ class AlwaysColorText extends Plugin {
       // _startswithRegex/_endswithRegex caching removed — native startsWith/endsWith
       // are used directly in the match loop below (Unicode-correct, no regex needed).
 
-      const wordRegex = /[\p{L}\p{N}'\-]+/gu;
+      const wordRegex =
+        /((?![\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])[\p{L}\p{N}'\-])+/gu;
       let match;
       while ((match = wordRegex.exec(text))) {
         const w = match[0];
@@ -22957,6 +23197,7 @@ class AlwaysColorText extends Plugin {
           ).toLowerCase();
           if (
             !this.isSentenceLikePattern(entry.pattern) &&
+            !this.containsNoSpaceScript(entry.pattern) &&
             mt === "exact" &&
             !this.isWholeWordMatch(
               chunkText,
@@ -23020,7 +23261,10 @@ class AlwaysColorText extends Plugin {
         // _startswithRegex/_endswithRegex caching removed — native startsWith/endsWith
         // are used directly in the match loop below (Unicode-correct, no regex needed).
 
-        const wordRegex = /[\p{L}\p{N}'\-]+/gu;
+        // No-space-script glyphs are split points, not word characters (issue
+        // #58): otherwise a Chinese sentence becomes one "word".
+        const wordRegex =
+          /((?![\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])[\p{L}\p{N}'\-])+/gu;
         let match;
         while ((match = wordRegex.exec(chunkText))) {
           const w = match[0];
